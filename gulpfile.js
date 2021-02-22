@@ -66,14 +66,14 @@ function test (done)
 {
     new TestServer({
         "configFile": __dirname + "/karma.conf.js",
-        "singleRun": false
+        "singleRun": true
     }, done).start();
 }
+
 
 exports.default = gulp.series(
     buildJavaScript,
     browser,
     watchFiles
 );
-
 exports.test = gulp.series(test);

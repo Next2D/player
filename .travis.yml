@@ -3,9 +3,7 @@ node_js:
   - 14
 install:
   - npm install
-cache:
-  directories:
-    - node_modules
+cache: npm
 branches:
   only:
     - develop
