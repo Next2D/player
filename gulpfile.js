@@ -3,7 +3,7 @@ const concat      = require("gulp-concat");
 const uglify      = require("gulp-uglify-es").default;
 const browserSync = require('browser-sync').create();
 const TestServer  = require("karma").Server;
-
+const jsdoc       = require("gulp-jsdoc3");
 
 /**
  * @description JavaScriptをまとめてminifyして出力
@@ -16,7 +16,7 @@ function buildJavaScript()
         ])
         .pipe(concat("next2d.js"))
         // .pipe(uglify({ "output": { "comments": /^!/ } }))
-        .pipe(gulp.dest("dist/"));
+        .pipe(gulp.dest("."));
 }
 
 /**
@@ -57,6 +57,39 @@ function watchFiles ()
         .on("change", gulp.series(buildJavaScript, reload));
 }
 
+/**
+ * @public
+ */
+function createHTML (done)
+{
+    return gulp
+        .src([
+            "src/**/*.js",
+            "!src/util/*.js"
+        ], { "read": false })
+        .pipe(jsdoc({
+            "opts": {
+                "destination": "docs/"
+            },
+            "plugins": [
+                "plugins/markdown"
+            ],
+            "markdown": {
+                "hardwrap": true
+            },
+            "templates": {
+                "footer": "version: 1.0.0",
+                "copyright": "(c) 2021 Next2D.",
+                "systemName": "Next2D",
+                "outputSourceFiles": true,
+                "outputSourcePath": true,
+                "path": "ink-docstrap",
+                "theme": "slate",
+                "navType": "vertical",
+                "linenums": true
+            }
+        }, done));
+}
 
 /**
  * @description テストを実行
@@ -76,4 +109,5 @@ exports.default = gulp.series(
     browser,
     watchFiles
 );
-exports.test = gulp.series(test);
+exports.test  = gulp.series(test);
+exports.jsdoc = gulp.series(createHTML);

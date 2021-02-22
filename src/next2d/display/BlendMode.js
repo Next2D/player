@@ -9,29 +9,6 @@ class BlendMode
     constructor() {}
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @public
-     */
-    toString ()
-    {
-        return "[object BlendMode]";
-    }
-
-    /**
-     * @description
-     *
-     * @return {string}
-     * @const
-     */
-    get namespace ()
-    {
-        return "next2d.display:BlendMode";
-    }
-
-    /**
      * @description 指定されたクラスのストリングを返します。
      *              Returns the string representation of the specified class.
      *
@@ -44,7 +21,8 @@ class BlendMode
     }
 
     /**
-     * @description
+     * @description 指定されたクラスの空間名を返します。
+     *              Returns the space name of the specified class.
      *
      * @return {string}
      * @const
@@ -227,5 +205,29 @@ class BlendMode
     static get SUBTRACT ()
     {
         return "subtract";
+    }
+
+    /**
+     * @description 指定されたオブジェクトのストリングを返します。
+     *              Returns the string representation of the specified object.
+     *
+     * @return {string}
+     * @public
+     */
+    toString ()
+    {
+        return "[object BlendMode]";
+    }
+
+    /**
+     * @description 指定されたオブジェクトの空間名を返します。
+     *              Returns the space name of the specified object.
+     *
+     * @return {string}
+     * @const
+     */
+    get namespace ()
+    {
+        return "next2d.display:BlendMode";
     }
 }
