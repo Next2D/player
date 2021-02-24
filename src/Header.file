@@ -1,0 +1,2 @@
+if (!("next2d" in window)) {
+    (function(window) {

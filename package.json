@@ -16,19 +16,21 @@
     "Next2D"
   ],
   "devDependencies": {
+    "@pixi/jsdoc-template": "^2.6.0",
     "browser-sync": "^2.26.14",
     "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",
+    "gulp-jsdoc3": "^3.0.0",
     "gulp-rename": "^2.0.0",
     "gulp-uglify-es": "^2.0.0",
     "jasmine": "^3.6.4",
     "jasmine-core": "^3.6.0",
+    "jsdoc": "^3.3.0-alpha5",
     "karma": "^6.1.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage": "^2.0.3",
     "karma-firefox-launcher": "^2.1.0",
     "karma-jasmine": "^4.0.1",
-    "karma-spec-reporter": "^0.0.32",
-    "gulp-jsdoc3": "^3.0.0"
+    "karma-spec-reporter": "^0.0.32"
   }
 }

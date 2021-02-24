@@ -65,12 +65,10 @@ function createHTML (done)
     return gulp
         .src([
             "src/**/*.js",
-            "!src/util/*.js"
+            "!src/util/*.js",
+            "README.md"
         ], { "read": false })
         .pipe(jsdoc({
-            "opts": {
-                "destination": "docs/"
-            },
             "plugins": [
                 "plugins/markdown"
             ],
@@ -78,15 +76,36 @@ function createHTML (done)
                 "hardwrap": true
             },
             "templates": {
-                "footer": "version: 1.0.0",
-                "copyright": "(c) 2021 Next2D.",
-                "systemName": "Next2D",
-                "outputSourceFiles": true,
-                "outputSourcePath": true,
-                "path": "ink-docstrap",
-                "theme": "slate",
-                "navType": "vertical",
-                "linenums": true
+                "cleverLinks"   : false,
+                "monospaceLinks": false,
+                "applicationName": "Next2D",
+                "disqus": "",
+                "googleAnalytics": "",
+                "favicon": "",
+                "openGraph": {
+                    "title": "Next2D Player API Documentation",
+                    "type": "website",
+                    "image": "",
+                    "site_name": "Next2D Player API Documentation",
+                    "url": "https://next2d.app/"
+                },
+                "meta": {
+                    "title": "Next2D Player API Documentation",
+                    "description": "Next2D Player API Documentation.",
+                    "keyword": "Next2D, WebGL, WebGL2, JavaScript, HTML5"
+                },
+                "linenums": true,
+                "default" : {
+                    "outputSourceFiles" : true
+                }
+            },
+            "opts": {
+                "encoding": "utf8",
+                "recurse": true,
+                "private": false,
+                "lenient": true,
+                "destination": "../next2d/doc/player/",
+                "template": "node_modules/@pixi/jsdoc-template"
             }
         }, done));
 }
