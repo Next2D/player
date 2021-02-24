@@ -1,3 +1,5 @@
+"use strict";
+
 let instanceId    = 0;
 let programId     = 0;
 
@@ -7,8 +9,21 @@ let programId     = 0;
  */
 const Util = {};
 
-// const
+/**
+ * @type {number}
+ */
 Util.$TWIPS = 20;
+
+// matrix array constants
+Util.$MATRIX_ARRAY_IDENTITY                    = new Float64Array([1, 0, 0, 1, 0, 0]);
+Util.$MATRIX_ARRAY_20_0_0_20_0_0               = new Float64Array([20, 0, 0, 20, 0, 0]);
+Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE       = new Float64Array([0.05, 0, 0, 0.05, 0, 0]);
+Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0         = new Float64Array([20 / Util.$devicePixelRatio, 0, 0, 20 / Util.$devicePixelRatio, 0, 0]);
+Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE = new Float64Array([1 / 20 * Util.$devicePixelRatio, 0, 0, 1 / 20 * Util.$devicePixelRatio, 0, 0]);
+
+// color array constant
+Util.$COLOR_ARRAY_IDENTITY = new Float64Array([1, 1, 1, 1, 0, 0, 0, 0]);
+
 
 // shortcut
 Util.$isNaN           = window.isNaN;
@@ -19,13 +34,50 @@ Util.$cos             = Math.cos;
 Util.$tan             = Math.tan;
 Util.$sqrt            = Math.sqrt;
 Util.$pow             = Math.pow;
+Util.$abs             = Math.abs;
+Util.$Array           = Math.Array;
 
 // params
-Util.$currentPlayerId = 0;
-Util.$players         = [];
-Util.$colorArray      = [];
-Util.$matrixArray     = [];
+Util.$currentPlayerId  = 0;
+Util.$isUpdated        = false;
+Util.$devicePixelRatio = Util.$min(2, window.devicePixelRatio);
+Util.$players          = [];
+Util.$colorArray       = [];
+Util.$matrixArray      = [];
+Util.$bounds           = [];
+Util.$arrays           = [];
 
+/**
+ * @param  {*} source
+ * @return {boolean}
+ * @static
+ */
+Util.$isArray = function (source)
+{
+    return Util.$Array.isArray(source);
+};
+
+/**
+ * @return {array}
+ * @static
+ */
+Util.$getArray = function ()
+{
+    return Util.$arrays.pop() || [];
+}
+
+/**
+ * @param  {array} array
+ * @return {void}
+ * @static
+ */
+Util.$poolArray = function (array)
+{
+    if (array.length) {
+        array.length = 0;
+    }
+    Util.$arrays.push(array);
+}
 
 /**
  * @param  {number} min
@@ -147,4 +199,33 @@ Util.$multiplicationMatrix = function(a, b)
         a[0] * b[4] + a[2] * b[5] + a[4],
         a[1] * b[4] + a[3] * b[5] + a[5]
     );
+};
+
+/**
+ * @param  {number} x_min
+ * @param  {number} x_max
+ * @param  {number} y_min
+ * @param  {number} y_max
+ * @return {object}
+ * @static
+ */
+Util.$getBoundsObject = function (x_min = 0, x_max = 0, y_min = 0, y_max = 0)
+{
+    const object = Util.$bounds.pop() || { "xMin": 0, "xMax": 0, "yMin": 0, "yMax": 0, };
+
+    object.xMin = x_min;
+    object.xMax = x_max;
+    object.yMin = y_min;
+    object.yMax = y_max;
+
+    return object;
+};
+
+/**
+ * @return {object}
+ * @static
+ */
+Util.$poolBoundsObject = function (bounds)
+{
+    Util.$bounds.push(bounds);
 };

@@ -13,6 +13,7 @@ class Player
 
     /**
      * @return {void}
+     * @method
      * @public
      */
     play ()
@@ -22,6 +23,7 @@ class Player
 
     /**
      * @return {void}
+     * @method
      * @public
      */
     stop ()

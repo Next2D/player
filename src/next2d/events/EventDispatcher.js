@@ -1,0 +1,9 @@
+/**
+ * @class
+ */
+class EventDispatcher
+{
+    constructor()
+    {
+    }
+}
