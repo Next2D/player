@@ -15,8 +15,20 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'src/**/*.js',
-      'test/**/*.js'
+      "src/util/Util.js",
+      "src/next2d/events/*.js",
+      "src/next2d/geom/*.js",
+      "src/next2d/display/DisplayObject.js",
+      "src/next2d/display/InteractiveObject.js",
+      "src/next2d/display/DisplayObjectContainer.js",
+      "src/next2d/display/Sprite.js",
+      "src/next2d/display/MovieClip.js",
+      "src/next2d/display/*.js",
+      "src/next2d/**/*.js",
+      "src/util/CacheStore.js",
+      "src/player/Player.js",
+      "src/player/Next2D.js",
+      "test/**/*.js"
     ],
 
 

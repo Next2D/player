@@ -1,6 +1,7 @@
 /**
  * @class
- * @extends Sprite
+ * @memberOf next2d.display
+ * @extends  Sprite
  */
 class MovieClip extends Sprite
 {

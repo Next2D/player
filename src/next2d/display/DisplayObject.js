@@ -1,5 +1,6 @@
 /**
  * @class
+ * @memberOf next2d.display
  */
 class DisplayObject extends EventDispatcher
 {

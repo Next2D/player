@@ -1,5 +1,6 @@
 /**
  * @class
+ * @memberOf next2d.geom
  */
 class Rectangle
 {
@@ -41,7 +42,8 @@ class Rectangle
      * 指定されたクラスのストリングを返します。
      * Returns the string representation of the specified class.
      *
-     * @return {string}
+     * @return  {string}
+     * @default [class Rectangle]
      * @method
      * @static
      */
@@ -54,7 +56,7 @@ class Rectangle
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member {number}
+     * @member  {string}
      * @default next2d.geom:Rectangle
      * @const
      * @static

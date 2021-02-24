@@ -1,6 +1,7 @@
 /**
  * @class
- * @extends DisplayObjectContainer
+ * @memberOf next2d.display
+ * @extends  DisplayObjectContainer
  */
 class Sprite extends DisplayObjectContainer
 {

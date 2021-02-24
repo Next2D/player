@@ -40,6 +40,7 @@ Util.$Array           = Math.Array;
 // params
 Util.$currentPlayerId  = 0;
 Util.$isUpdated        = false;
+Util.$event            = null;
 Util.$devicePixelRatio = Util.$min(2, window.devicePixelRatio);
 Util.$players          = [];
 Util.$colorArray       = [];

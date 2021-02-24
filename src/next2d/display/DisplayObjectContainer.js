@@ -1,6 +1,7 @@
 /**
  * @class
- * @extends InteractiveObject
+ * @memberOf next2d.display
+ * @extends  InteractiveObject
  */
 class DisplayObjectContainer extends InteractiveObject
 {

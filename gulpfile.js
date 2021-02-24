@@ -4,6 +4,33 @@ const uglify      = require("gulp-uglify-es").default;
 const browserSync = require('browser-sync').create();
 const TestServer  = require("karma").Server;
 const jsdoc       = require("gulp-jsdoc3");
+const preprocess  = require("gulp-preprocess");
+const minimist    = require('minimist');
+const replace     = require('gulp-replace');
+const rename      = require('gulp-rename');
+
+
+const options = minimist(process.argv.slice(2), {
+    "string": "title",
+    "boolean": [ "debugBuild", "prodBuild" ],
+    "default": {
+        "debugBuild": true,
+        "prodBuild":  false
+    }
+});
+
+/**
+ * @description 書き出した時間でバージョンを書き出す
+ * @public
+ */
+function buildVersion()
+{
+    return gulp.src("src/Footer.file")
+        .pipe(replace("###BUILD_VERSION###", Math.round((new Date()).getTime() / 1000)))
+        .pipe(rename("src/Footer.build.file"))
+        .pipe(gulp.dest("."));
+}
+
 
 /**
  * @description JavaScriptをまとめてminifyして出力
@@ -11,11 +38,38 @@ const jsdoc       = require("gulp-jsdoc3");
  */
 function buildJavaScript()
 {
-    return gulp.src([
-            "src/**/*.js"
+    const preprocessContext = {};
+    if (options.debugBuild) {
+        preprocessContext.DEBUG = true;
+    }
+
+    const build = gulp.src([
+            "src/Copyright.file",
+            "src/Header.file",
+            "src/util/Util.js",
+            "src/next2d/events/*.js",
+            "src/next2d/geom/*.js",
+            "src/next2d/display/DisplayObject.js",
+            "src/next2d/display/InteractiveObject.js",
+            "src/next2d/display/DisplayObjectContainer.js",
+            "src/next2d/display/Sprite.js",
+            "src/next2d/display/MovieClip.js",
+            "src/next2d/display/*.js",
+            "src/next2d/**/*.js",
+            "src/util/CacheStore.js",
+            "src/player/Player.js",
+            "src/player/Next2D.js",
+            "src/Footer.build.file"
         ])
         .pipe(concat("next2d.js"))
-        // .pipe(uglify({ "output": { "comments": /^!/ } }))
+        .pipe(preprocess({ "context": preprocessContext }));
+
+    if (options.prodBuild) {
+        build
+            .pipe(uglify({ "output": { "comments": /^!/ } }));
+    }
+
+    return build
         .pipe(gulp.dest("."));
 }
 
@@ -124,6 +178,7 @@ function test (done)
 
 
 exports.default = gulp.series(
+    buildVersion,
     buildJavaScript,
     browser,
     watchFiles

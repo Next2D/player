@@ -1,5 +1,6 @@
 /**
  * @class
+ * @memberOf next2d.geom
  */
 class Transform
 {
@@ -50,7 +51,8 @@ class Transform
      * 指定されたクラスのストリングを返します。
      * Returns the string representation of the specified class.
      *
-     * @return {string}
+     * @return  {string}
+     * @default [class Transform]
      * @method
      * @static
      */
@@ -63,7 +65,7 @@ class Transform
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member {number}
+     * @member  {string}
      * @default next2d.geom:Transform
      * @const
      * @static
