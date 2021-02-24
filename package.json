@@ -31,9 +31,7 @@
     "karma-coverage": "^2.0.3",
     "karma-firefox-launcher": "^2.1.0",
     "karma-jasmine": "^4.0.1",
-    "karma-spec-reporter": "^0.0.32"
-  },
-  "dependencies": {
+    "karma-spec-reporter": "^0.0.32",
     "gulp-preprocess": "^3.0.3",
     "gulp-replace": "^1.0.0",
     "minimist": "^1.2.5"

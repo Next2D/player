@@ -39,7 +39,7 @@ class Event
 
         this._$target                   = null;
         this._$currentTarget            = null;
-        this._$eventPhase               = this.EventPhase.AT_TARGET;
+        this._$eventPhase               = EventPhase.AT_TARGET;
 
         this._$stopImmediatePropagation = false;
         this._$stopPropagation          = false;

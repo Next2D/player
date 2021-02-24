@@ -47,6 +47,7 @@ function buildJavaScript()
             "src/Copyright.file",
             "src/Header.file",
             "src/util/Util.js",
+            "src/next2d/events/Event.js",
             "src/next2d/events/*.js",
             "src/next2d/geom/*.js",
             "src/next2d/display/DisplayObject.js",
