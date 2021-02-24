@@ -1,3 +1,6 @@
+let instanceId    = 0;
+let programId     = 0;
+
 /**
  * @description Global Object
  * @type {object}
@@ -8,18 +11,20 @@ const Util = {};
 Util.$TWIPS = 20;
 
 // shortcut
-Util.$isNaN        = window.isNaN;
-Util.$min          = Math.min;
-Util.$max          = Math.max;
-Util.$sin          = Math.sin;
-Util.$cos          = Math.cos;
-Util.$tan          = Math.tan;
-Util.$sqrt         = Math.sqrt;
-Util.$pow          = Math.pow;
+Util.$isNaN           = window.isNaN;
+Util.$min             = Math.min;
+Util.$max             = Math.max;
+Util.$sin             = Math.sin;
+Util.$cos             = Math.cos;
+Util.$tan             = Math.tan;
+Util.$sqrt            = Math.sqrt;
+Util.$pow             = Math.pow;
 
 // params
-Util.$colorArray  = [];
-Util.$matrixArray = [];
+Util.$currentPlayerId = 0;
+Util.$players         = [];
+Util.$colorArray      = [];
+Util.$matrixArray     = [];
 
 
 /**
