@@ -26,16 +26,18 @@ Util.$COLOR_ARRAY_IDENTITY = new Float64Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 
 // shortcut
-Util.$isNaN           = window.isNaN;
-Util.$min             = Math.min;
-Util.$max             = Math.max;
-Util.$sin             = Math.sin;
-Util.$cos             = Math.cos;
-Util.$tan             = Math.tan;
-Util.$sqrt            = Math.sqrt;
-Util.$pow             = Math.pow;
-Util.$abs             = Math.abs;
-Util.$Array           = Math.Array;
+Util.$isNaN = window.isNaN;
+Util.$min   = Math.min;
+Util.$max   = Math.max;
+Util.$sin   = Math.sin;
+Util.$cos   = Math.cos;
+Util.$tan   = Math.tan;
+Util.$sqrt  = Math.sqrt;
+Util.$pow   = Math.pow;
+Util.$abs   = Math.abs;
+Util.$Array = window.Array;
+Util.$Map   = window.Map;
+
 
 // params
 Util.$currentPlayerId  = 0;
@@ -47,10 +49,12 @@ Util.$colorArray       = [];
 Util.$matrixArray      = [];
 Util.$bounds           = [];
 Util.$arrays           = [];
+Util.$maps             = [];
 
 /**
  * @param  {*} source
  * @return {boolean}
+ * @method
  * @static
  */
 Util.$isArray = function (source)
@@ -60,6 +64,7 @@ Util.$isArray = function (source)
 
 /**
  * @return {array}
+ * @method
  * @static
  */
 Util.$getArray = function ()
@@ -70,6 +75,7 @@ Util.$getArray = function ()
 /**
  * @param  {array} array
  * @return {void}
+ * @method
  * @static
  */
 Util.$poolArray = function (array)
@@ -86,6 +92,7 @@ Util.$poolArray = function (array)
  * @param  {number} value
  * @param  {number} [default_value=null]
  * @return {number}
+ * @method
  * @static
  */
 Util.$clamp = function (min, max, value, default_value)
@@ -100,6 +107,7 @@ Util.$clamp = function (min, max, value, default_value)
 
 /**
  * @return {Float64Array}
+ * @method
  * @static
  */
 Util.$getColorArray = function (
@@ -124,6 +132,7 @@ Util.$getColorArray = function (
 /**
  * @param  {Float64Array} array
  * @return {void}
+ * @method
  * @static
  */
 Util.$poolColorArray = function (array)
@@ -135,6 +144,7 @@ Util.$poolColorArray = function (array)
  * @param   {Float64Array} a
  * @param   {Float64Array} b
  * @returns {Float64Array}
+ * @method
  * @static
  */
 Util.$multiplicationColor = function (a, b)
@@ -159,6 +169,7 @@ Util.$multiplicationColor = function (a, b)
  * @param  {number} [tx=0]
  * @param  {number} [ty=0]
  * @return {Float64Array}
+ * @method
  * @static
  */
 Util.$getMatrixArray = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
@@ -177,6 +188,7 @@ Util.$getMatrixArray = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
 
 /**
  * @return {Float64Array}
+ * @method
  * @static
  */
 Util.$poolMatrixArray = function (array)
@@ -208,6 +220,7 @@ Util.$multiplicationMatrix = function(a, b)
  * @param  {number} y_min
  * @param  {number} y_max
  * @return {object}
+ * @method
  * @static
  */
 Util.$getBoundsObject = function (x_min = 0, x_max = 0, y_min = 0, y_max = 0)
@@ -224,9 +237,89 @@ Util.$getBoundsObject = function (x_min = 0, x_max = 0, y_min = 0, y_max = 0)
 
 /**
  * @return {object}
+ * @method
  * @static
  */
 Util.$poolBoundsObject = function (bounds)
 {
     Util.$bounds.push(bounds);
 };
+
+/**
+ * @param  {Map} map
+ * @return void
+ * @method
+ * @static
+ */
+Util.$poolMap = function (map)
+{
+    if (map.size) {
+        map.clear();
+    }
+    Util.$maps.push(map);
+};
+
+/**
+ * @return {Map}
+ * @method
+ * @static
+ */
+Util.$getMap = function ()
+{
+    return Util.$maps.pop() || new Util.$Map();
+};
+
+/**
+ * @return {Player}
+ * @method
+ * @static
+ */
+Util.$currentPlayer = function ()
+{
+    return Util.$players[Util.$currentPlayerId];
+}
+
+/**
+ * @param  {Next2D} object
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$packages = function (object)
+{
+    object["display"] = {
+        "BlendMode": BlendMode,
+        "DisplayObject": DisplayObject,
+        "DisplayObjectContainer": DisplayObjectContainer,
+        "InteractiveObject": InteractiveObject,
+        "MovieClip": MovieClip,
+        "Sprite": Sprite
+    };
+
+    object["events"] = {
+        "Event": Event,
+        "EventDispatcher": EventDispatcher,
+        "EventPhase": EventPhase
+    };
+
+    object["filters"] = {
+    };
+
+    object["geom"] = {
+        "ColorTransform": ColorTransform,
+        "Matrix": Matrix,
+        "Point": Point,
+        "Rectangle": Rectangle,
+        "Transform": Transform
+    };
+
+    object["media"] = {
+    };
+
+    object["net"] = {
+    };
+
+    object["text"] = {
+    };
+}
+

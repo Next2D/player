@@ -1,8 +1,8 @@
 /*!
  * licenses: MIT Licenses.
- * version: 1.0.0
+ * version: 1.1614212172
  * author: Toshiyuki Ienaga <ienaga@tvon.jp>
- * copyright: (c) 2021 Toshiyuki Ienaga.
+ * copyright: (c) 2020-2021 Toshiyuki Ienaga.
  */
 if (!("next2d" in window)) {
     (function(window) {
@@ -35,30 +35,35 @@ Util.$COLOR_ARRAY_IDENTITY = new Float64Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 
 // shortcut
-Util.$isNaN           = window.isNaN;
-Util.$min             = Math.min;
-Util.$max             = Math.max;
-Util.$sin             = Math.sin;
-Util.$cos             = Math.cos;
-Util.$tan             = Math.tan;
-Util.$sqrt            = Math.sqrt;
-Util.$pow             = Math.pow;
-Util.$abs             = Math.abs;
-Util.$Array           = Math.Array;
+Util.$isNaN = window.isNaN;
+Util.$min   = Math.min;
+Util.$max   = Math.max;
+Util.$sin   = Math.sin;
+Util.$cos   = Math.cos;
+Util.$tan   = Math.tan;
+Util.$sqrt  = Math.sqrt;
+Util.$pow   = Math.pow;
+Util.$abs   = Math.abs;
+Util.$Array = window.Array;
+Util.$Map   = window.Map;
+
 
 // params
 Util.$currentPlayerId  = 0;
 Util.$isUpdated        = false;
+Util.$event            = null;
 Util.$devicePixelRatio = Util.$min(2, window.devicePixelRatio);
 Util.$players          = [];
 Util.$colorArray       = [];
 Util.$matrixArray      = [];
 Util.$bounds           = [];
 Util.$arrays           = [];
+Util.$maps             = [];
 
 /**
  * @param  {*} source
  * @return {boolean}
+ * @method
  * @static
  */
 Util.$isArray = function (source)
@@ -68,6 +73,7 @@ Util.$isArray = function (source)
 
 /**
  * @return {array}
+ * @method
  * @static
  */
 Util.$getArray = function ()
@@ -78,6 +84,7 @@ Util.$getArray = function ()
 /**
  * @param  {array} array
  * @return {void}
+ * @method
  * @static
  */
 Util.$poolArray = function (array)
@@ -94,6 +101,7 @@ Util.$poolArray = function (array)
  * @param  {number} value
  * @param  {number} [default_value=null]
  * @return {number}
+ * @method
  * @static
  */
 Util.$clamp = function (min, max, value, default_value)
@@ -108,6 +116,7 @@ Util.$clamp = function (min, max, value, default_value)
 
 /**
  * @return {Float64Array}
+ * @method
  * @static
  */
 Util.$getColorArray = function (
@@ -132,6 +141,7 @@ Util.$getColorArray = function (
 /**
  * @param  {Float64Array} array
  * @return {void}
+ * @method
  * @static
  */
 Util.$poolColorArray = function (array)
@@ -143,6 +153,7 @@ Util.$poolColorArray = function (array)
  * @param   {Float64Array} a
  * @param   {Float64Array} b
  * @returns {Float64Array}
+ * @method
  * @static
  */
 Util.$multiplicationColor = function (a, b)
@@ -167,6 +178,7 @@ Util.$multiplicationColor = function (a, b)
  * @param  {number} [tx=0]
  * @param  {number} [ty=0]
  * @return {Float64Array}
+ * @method
  * @static
  */
 Util.$getMatrixArray = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
@@ -185,6 +197,7 @@ Util.$getMatrixArray = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
 
 /**
  * @return {Float64Array}
+ * @method
  * @static
  */
 Util.$poolMatrixArray = function (array)
@@ -216,6 +229,7 @@ Util.$multiplicationMatrix = function(a, b)
  * @param  {number} y_min
  * @param  {number} y_max
  * @return {object}
+ * @method
  * @static
  */
 Util.$getBoundsObject = function (x_min = 0, x_max = 0, y_min = 0, y_max = 0)
@@ -232,12 +246,92 @@ Util.$getBoundsObject = function (x_min = 0, x_max = 0, y_min = 0, y_max = 0)
 
 /**
  * @return {object}
+ * @method
  * @static
  */
 Util.$poolBoundsObject = function (bounds)
 {
     Util.$bounds.push(bounds);
 };
+
+/**
+ * @param  {Map} map
+ * @return void
+ * @method
+ * @static
+ */
+Util.$poolMap = function (map)
+{
+    if (map.size) {
+        map.clear();
+    }
+    Util.$maps.push(map);
+};
+
+/**
+ * @return {Map}
+ * @method
+ * @static
+ */
+Util.$getMap = function ()
+{
+    return Util.$maps.pop() || new Util.$Map();
+};
+
+/**
+ * @return {Player}
+ * @method
+ * @static
+ */
+Util.$currentPlayer = function ()
+{
+    return Util.$players[Util.$currentPlayerId];
+}
+
+/**
+ * @param  {Next2D} object
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$packages = function (object)
+{
+    object["display"] = {
+        "BlendMode": BlendMode,
+        "DisplayObject": DisplayObject,
+        "DisplayObjectContainer": DisplayObjectContainer,
+        "InteractiveObject": InteractiveObject,
+        "MovieClip": MovieClip,
+        "Sprite": Sprite
+    };
+
+    object["events"] = {
+        "Event": Event,
+        "EventDispatcher": EventDispatcher,
+        "EventPhase": EventPhase
+    };
+
+    object["filters"] = {
+    };
+
+    object["geom"] = {
+        "ColorTransform": ColorTransform,
+        "Matrix": Matrix,
+        "Point": Point,
+        "Rectangle": Rectangle,
+        "Transform": Transform
+    };
+
+    object["media"] = {
+    };
+
+    object["net"] = {
+    };
+
+    object["text"] = {
+    };
+}
+
 
 /**
  * @class
@@ -567,255 +661,189 @@ class Event
         return "soundComplete";
     }
 
-
-}
-
-
-
-/**
- * @returns void
- * @private
- */
-Event.prototype._$initialization = function (type, bubbles = false, cancelable = false)
-{
-    this._$target                   = null;
-    this._$currentTarget            = null;
-    this._$eventPhase               = EventPhase.AT_TARGET;
-    this._$type                     = type + "";
-    this._$bubbles                  = Util.$toBoolean(bubbles);
-    this._$cancelable               = Util.$toBoolean(cancelable);
-    this._$stopImmediatePropagation = false;
-    this._$stopPropagation          = false;
-    this._$preventDefault           = false;
-
-    // extends
-    this._$called = false;
-    OriginalObject.call(this);
-};
-
-/**
- * properties
- */
-Util.$Object.defineProperties(Event.prototype, {
     /**
      * @description イベントがバブリングイベントかどうかを示します。
      *              Indicates whether an event is a bubbling event.
      *
-     * @memberof Event#
-     * @property {boolean} bubbles
+     * @member {boolean}
      * @readonly
      * @public
      */
-    bubbles: {
-        /**
-         * @return {boolean}
-         */
-        get: function () {
-            return this._$bubbles;
-        }
-    },
+    get bubbles ()
+    {
+        return this._$bubbles;
+    }
+
     /**
      * @description イベントに関連付けられた動作を回避できるかどうかを示します。
      *              Indicates whether the behavior associated
      *              with the event can be prevented.
      *
-     * @memberof Event#
-     * @property {boolean} cancelable
+     * @member {boolean}
      * @readonly
      * @public
      */
-    cancelable: {
-        /**
-         * @return {boolean}
-         */
-        get: function () {
-            return this._$cancelable;
-        }
-    },
+    get cancelable ()
+    {
+        return this._$cancelable;
+    }
+
     /**
      * @description イベントリスナーで Event オブジェクトをアクティブに処理しているオブジェクトです。
      *              The object that is actively processing the Event object
      *              with an event listener.
      *
-     * @memberof Event#
-     * @property {object} currentTarget
+     * @member   {object}
      * @readonly
      * @public
      */
-    currentTarget: {
-        /**
-         * @return {object}
-         */
-        get: function () {
-            return this._$currentTarget;
-        }
-    },
+    get currentTarget ()
+    {
+        return this._$currentTarget;
+    }
+
     /**
      * @description イベントフローの現在の段階です。
      *              The current phase in the event flow.
      *
-     * @memberof Event#
-     * @property {uint} eventPhase
+     * @member   {number}
      * @readonly
      * @public
      */
-    eventPhase: {
-        /**
-         * @return {uint}
-         */
-        get: function () {
-            return this._$eventPhase;
-        }
-    },
+    get eventPhase ()
+    {
+        return this._$eventPhase;
+    }
+
     /**
      * @description イベントターゲットです。
      *              The event target.
      *
-     * @memberof Event#
-     * @property {object} target
+     * @member   {object}
      * @readonly
      * @public
      */
-    target: {
-        /**
-         * @return {object}
-         */
-        get: function () {
-            return (this._$target) ? this._$target : this._$currentTarget;
-        }
-    },
+    get target ()
+    {
+        return (this._$target) ? this._$target : this._$currentTarget;
+    }
+
     /**
      * @description イベントのタイプです。
      *              The type of event.
      *
-     * @memberof Event#
-     * @property {string} type
+     * @member   {string}
      * @readonly
      * @public
      */
-    type: {
-        /**
-         * @return {string}
-         */
-        get: function () {
-            return this._$type;
-        }
+    get type ()
+    {
+        return this._$type;
     }
-});
 
-/**
- * @description Event サブクラスのインスタンスを複製します。
- *              Duplicates an instance of an Event subclass.
- *
- * @return {Event}
- * @public
- */
-Event.prototype.clone = function ()
-{
-    var event = new Event(this.type, this.bubbles, this.cancelable);
-    event._$currentTarget = this._$currentTarget;
-    return event;
-};
+    /**
+     * @description Event サブクラスのインスタンスを複製します。
+     *              Duplicates an instance of an Event subclass.
+     *
+     * @return {Event}
+     * @method
+     * @public
+     */
+    clone ()
+    {
+        const event = new Event(this.type, this.bubbles, this.cancelable);
+        event._$currentTarget = this._$currentTarget;
+        return event;
+    }
 
-/**
- * @description カスタム ActionScript 3.0 Event クラスに
- *              toString() メソッドを実装するためのユーティリティ関数です。
- *              A utility function for implementing the toString() method
- *              in custom ActionScript 3.0 Event classes.
- *
- * @return {string}
- * @public
- */
-Event.prototype.formatToString = function ()
-{
-    let str = "[" + arguments[0];
+    /**
+     * @description カスタム ActionScript 3.0 Event クラスに
+     *              toString() メソッドを実装するためのユーティリティ関数です。
+     *              A utility function for implementing the toString() method
+     *              in custom ActionScript 3.0 Event classes.
+     *
+     * @return {string}
+     * @method
+     * @public
+     */
+    formatToString ()
+    {
+        let str = `[${arguments[0]}`;
 
-    const length = arguments.length;
-    for (let idx = 1; idx < length; ++idx) {
-        str += " " + arguments[idx];
+        for (let idx = 1; idx < arguments.length; ++idx) {
 
-        const value = this[arguments[idx]];
-        switch (true) {
+            const name = arguments[idx];
 
-            case typeof value === "string":
-                str += "=\"" + value + "\"";
-                break;
+            str += ` ${name}=`;
 
-            default:
-                str += "=" + value;
-                break;
+            const value = this[name];
+            if (typeof value === "string") {
+                str += `"${value}"`;
+            } else {
+                str += `${value}`;
+            }
 
         }
+
+        return `${str}]`;
     }
-    str += "]";
 
-    return str;
-};
+    /**
+     * @description イベントで preventDefault() メソッドが呼び出されたかどうかを確認します。
+     *              Checks whether the preventDefault() method has been called on the event.
+     *
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    isDefaultPrevented ()
+    {
+        return (Util.$event) ? Util.$event.defaultPrevented : false;
+    }
 
-/**
- * @description イベントで preventDefault() メソッドが呼び出されたかどうかを確認します。
- *              Checks whether the preventDefault() method has been called on the event.
- *
- * @return {boolean}
- * @public
- */
-Event.prototype.isDefaultPrevented = function ()
-{
-    return (Util.$event) ? Util.$event.defaultPrevented : false;
-};
+    /**
+     * @description イベントのデフォルト動作をキャンセルできる場合に、その動作をキャンセルします。
+     *              Cancels an event's default behavior if that behavior can be canceled.
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    preventDefault ()
+    {
+        this._$preventDefault = true;
+    }
 
-/**
- * TODO
- * @description イベントのデフォルト動作をキャンセルできる場合に、その動作をキャンセルします。
- *              Cancels an event's default behavior if that behavior can be canceled.
- *
- * @return {void}
- * @public
- */
-Event.prototype.preventDefault = function ()
-{
-    this._$preventDefault = true;
-};
+    /**
+     * @description イベントフローの現在のノードおよび後続するノードで、
+     *              イベントリスナーが処理されないようにします。
+     *              Prevents processing of any event listeners in the current node
+     *              and any subsequent nodes in the event flow.
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    stopImmediatePropagation ()
+    {
+        this._$stopImmediatePropagation = true;
+    }
 
-/**
- * @description イベントフローの現在のノードおよび後続するノードで、
- *              イベントリスナーが処理されないようにします。
- *              Prevents processing of any event listeners in the current node
- *              and any subsequent nodes in the event flow.
- *
- * @return {void}
- * @public
- */
-Event.prototype.stopImmediatePropagation = function ()
-{
-    this._$stopImmediatePropagation = true;
-};
-
-/**
- * @description イベントフローの現在のノードに後続するノードで
- *              イベントリスナーが処理されないようにします。
- *              Prevents processing of any event listeners in nodes subsequent
- *              to the current node in the event flow.
- *
- * @return {void}
- * @public
- */
-Event.prototype.stopPropagation = function ()
-{
-    this._$stopPropagation = true;
-};
-
-/**
- * @description 指定されたオブジェクトのストリングを返します。
- *              Returns the string representation of the specified object.
- *
- * @returns {string}
- * @public
- */
-Event.prototype.toString = function ()
-{
-    return this.formatToString("Event", "type", "bubbles", "cancelable", "eventPhase");
-};
+    /**
+     * @description イベントフローの現在のノードに後続するノードで
+     *              イベントリスナーが処理されないようにします。
+     *              Prevents processing of any event listeners in nodes subsequent
+     *              to the current node in the event flow.
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    stopPropagation ()
+    {
+        this._$stopPropagation = true;
+    }
+}
 /**
  * @class
  * @memberOf next2d.events
@@ -823,7 +851,8 @@ Event.prototype.toString = function ()
 class EventDispatcher
 {
     /**
-     *
+     * EventDispatcher クラスは、イベントを送出するすべてのクラスの基本クラスです。
+     * The EventDispatcher class is the base class for all classes that dispatch events.
      *
      * @example <caption>Example usage of EventDispatcher.</caption>
      * // new ColorTransform
@@ -839,8 +868,958 @@ class EventDispatcher
      */
     constructor()
     {
+        this._$events = Util.$getMap();
+        this._$target = null;
     }
+
+    /**
+     * 指定されたクラスのストリングを返します。
+     * Returns the string representation of the specified class.
+     *
+     * @return  {string}
+     * @default [class EventDispatcher]
+     * @method
+     * @static
+     */
+    static toString()
+    {
+        return "[class EventDispatcher]";
+    }
+
+    /**
+     * @description 指定されたクラスの空間名を返します。
+     *              Returns the space name of the specified class.
+     *
+     * @member  {string}
+     * @default next2d.events:EventDispatcher
+     * @const
+     * @static
+     */
+    static get namespace ()
+    {
+        return "next2d.events:EventDispatcher";
+    }
+
+    /**
+     * @description 指定されたオブジェクトのストリングを返します。
+     *              Returns the string representation of the specified object.
+     *
+     * @return {string}
+     * @method
+     * @public
+     */
+    toString ()
+    {
+        return "[object EventDispatcher]";
+    }
+
+    /**
+     * @description 指定されたオブジェクトの空間名を返します。
+     *              Returns the space name of the specified object.
+     *
+     * @member  {string}
+     * @default next2d.events:EventDispatcher
+     * @const
+     * @public
+     */
+    get namespace ()
+    {
+        return "next2d.events:EventDispatcher";
+    }
+
+    /**
+     * @description イベントリスナーオブジェクトを EventDispatcher オブジェクトに登録し、
+     *              リスナーがイベントの通知を受け取るようにします。
+     *              Registers an event listener object with an EventDispatcher object
+     *              so that the listener receives notification of an event.
+     *
+     * @param  {string}   type
+     * @param  {function} listener
+     * @param  {boolean}  [use_capture=false]
+     * @param  {number}   [priority=0]
+     * @return {void}
+     * @method
+     * @public
+     */
+    addEventListener (type, listener, use_capture = false, priority = 0)
+    {
+
+        let events,
+            player,
+            isBroadcast = false;
+
+        switch (type) {
+
+            // broadcast event
+            case Event.ENTER_FRAME:
+            case Event.EXIT_FRAME:
+            case Event.FRAME_CONSTRUCTED:
+            case Event.RENDER:
+            case Event.ACTIVATE:
+            case Event.DEACTIVATE:
+            case "keyDown":
+            case "keyUp":
+
+                player = Util.$currentPlayer();
+
+                if (!player.broadcastEvents.size
+                    || !player.broadcastEvents.has(type)
+                ) {
+                    player.broadcastEvents.set(type, Util.$getArray());
+                }
+
+                events = player.broadcastEvents.get(type);
+
+                isBroadcast = true;
+
+                break;
+
+            // normal event
+            default:
+
+                // init
+                if (!this._$events.size || !this._$events.has(type)) {
+                    this._$events.set(type, Util.$getArray());
+                }
+
+                events = this._$events.get(type);
+
+                break;
+
+        }
+
+
+        // duplicate check
+        let length = events.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const event = events[idx];
+            if (use_capture !== event.useCapture) {
+                continue;
+            }
+
+            if (event.target !== this) {
+                continue;
+            }
+
+            if (event.listener === listener) {
+                length = idx;
+            }
+
+        }
+
+        // add or overwrite
+        events[length] = {
+            "listener":   listener,
+            "priority":   priority,
+            "useCapture": use_capture,
+            "target":     this
+        };
+
+        // set new event
+        if (isBroadcast) {
+
+            player.broadcastEvents.set(type, events);
+
+        } else {
+
+            // sort(DESC)
+            events.sort(function (a, b)
+            {
+                switch (true) {
+
+                    case (a.priority > b.priority):
+                        return -1;
+
+                    case (a.priority < b.priority):
+                        return 1;
+
+                    default:
+                        return 0;
+
+                }
+            });
+
+            this._$events.set(type, events);
+        }
+    }
+
+    /**
+     * @description イベントをイベントフローに送出します。
+     *              Dispatches an event into the event flow.
+     *
+     * @param  {Event} event
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    dispatchEvent (event)
+    {
+        switch (event.type) {
+
+            case Event.ENTER_FRAME:
+            case Event.EXIT_FRAME:
+            case Event.FRAME_CONSTRUCTED:
+            case Event.RENDER:
+            case Event.ACTIVATE:
+            case Event.DEACTIVATE:
+            case "keyDown":
+            case "keyUp":
+                {
+                    const stage = this.stage;
+
+                    const player = (stage)
+                        ? stage._$player
+                        : Util.$currentPlayer();
+
+                    if (player && player.broadcastEvents.size
+                        && player.broadcastEvents.has(event.type)
+                    ) {
+
+                        const events = player.broadcastEvents.get(event.type);
+
+                        const length = events.length;
+                        for (let idx = 0; idx < length; ++idx) {
+
+                            const obj = events[idx];
+                            if (obj.target !== this) {
+                                continue;
+                            }
+
+                            // start target
+                            event._$eventPhase = EventPhase.AT_TARGET;
+
+                            // event execute
+                            event._$currentTarget = obj.target;
+                            obj.listener.call(Util.$window, event);
+
+                            if (Util.$error) {
+
+                                Util.$currentPlayer()
+                                    .stage
+                                    .loaderInfo
+                                    .uncaughtErrorEvents
+                                    .dispatchEvent(
+                                        new UncaughtErrorEvent(
+                                            UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
+                                        )
+                                    );
+
+                                // reset
+                                Util.$error       = false;
+                                Util.$errorObject = null;
+
+                                return false;
+                            }
+
+                        }
+
+                        return true;
+                    }
+                }
+                break;
+
+            default:
+                {
+
+                    let events = Util.$getArray();
+                    if (this._$events.size && this._$events.has(event.type)) {
+                        events = this._$events.get(event.type).slice(0);
+                    }
+
+                    // parent
+                    const parentEvents = Util.$getArray();
+                    if (this instanceof DisplayObject) {
+
+                        let parent = this._$parent;
+                        while (parent) {
+
+                            if (parent.hasEventListener(event.type)) {
+                                parentEvents[parentEvents.length] = parent._$events.get(event.type);
+                            }
+
+                            parent = parent._$parent;
+
+                        }
+
+                    }
+
+                    event._$target = this;
+                    if (events.length || parentEvents.length) {
+
+                        // start capture
+                        event._$eventPhase = EventPhase.CAPTURING_PHASE;
+
+                        // stage => parent... end
+                        if (parentEvents.length) {
+
+                            switch (true) {
+
+                                case event._$stopImmediatePropagation:
+                                case event._$stopPropagation:
+                                    break;
+
+                                default:
+
+                                    parentEvents.reverse();
+                                    for (let idx = 0; idx < parentEvents.length; ++idx) {
+
+                                        const targets = parentEvents[idx];
+                                        for (let idx = 0; idx < targets.length; ++idx) {
+
+                                            const obj = targets[idx];
+                                            if (!obj.useCapture) {
+                                                continue;
+                                            }
+
+                                            // event execute
+                                            event._$currentTarget = obj.target;
+                                            if ("__$$original" in obj.listener) {
+                                                obj.listener(event);
+                                            } else {
+                                                obj.listener.call(Util.$window, event);
+                                            }
+
+                                            if (event._$stopImmediatePropagation) {
+                                                break;
+                                            }
+
+                                        }
+
+                                        if (event._$stopImmediatePropagation) {
+                                            break;
+                                        }
+
+                                    }
+                                    parentEvents.reverse();
+
+                                    break;
+                            }
+
+                        }
+
+
+                        // start target
+                        event._$eventPhase = EventPhase.AT_TARGET;
+                        switch (true) {
+
+                            case event._$stopImmediatePropagation:
+                            case event._$stopPropagation:
+                                break;
+
+                            default:
+
+                                const length = events.length;
+                                for (let idx = 0; idx < length; ++idx) {
+
+                                    const obj = events[idx];
+                                    if (obj.useCapture) {
+                                        continue;
+                                    }
+
+                                    // event execute
+                                    event._$currentTarget = obj.target;
+                                    if ("__$$original" in obj.listener) {
+                                        obj.listener(event);
+                                    } else {
+                                        obj.listener.call(Util.$window, event);
+                                    }
+
+                                    if (event._$stopImmediatePropagation) {
+                                        break;
+                                    }
+
+                                }
+
+                                break;
+
+                        }
+
+
+                        // start bubbling
+                        event._$eventPhase = EventPhase.BUBBLING_PHASE;
+                        switch (true) {
+
+                            case event._$stopImmediatePropagation:
+                            case event._$stopPropagation:
+                            case !event.bubbles:
+                                break;
+
+                            default:
+
+                                // this => parent... => stage end
+                                for (let idx = 0; idx < parentEvents.length; ++idx) {
+
+                                    const targets = parentEvents[idx];
+                                    for (let idx = 0; idx < targets.length; ++idx) {
+
+                                        const obj = targets[idx];
+                                        if (obj.useCapture) {
+                                            continue;
+                                        }
+
+                                        // event execute
+                                        event._$currentTarget = obj.target;
+                                        if ("__$$original" in obj.listener) {
+                                            obj.listener(event);
+                                        } else {
+                                            obj.listener.call(Util.$window, event);
+                                        }
+
+                                        if (event._$stopImmediatePropagation) {
+                                            break;
+                                        }
+                                    }
+
+                                    if (event._$stopImmediatePropagation) {
+                                        break;
+                                    }
+
+                                }
+
+                                break;
+
+                        }
+
+                        Util.$poolArray(events);
+                        Util.$poolArray(parentEvents);
+
+                        if (Util.$error) {
+
+                            Util.$currentPlayer()
+                                .stage
+                                .loaderInfo
+                                .uncaughtErrorEvents
+                                .dispatchEvent(
+                                    new UncaughtErrorEvent(
+                                        UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
+                                    )
+                                );
+
+                            // reset
+                            Util.$error       = false;
+                            Util.$errorObject = null;
+
+                            return false;
+                        }
+
+                        return true;
+
+                    }
+
+                    Util.$poolArray(events);
+                    Util.$poolArray(parentEvents);
+                }
+                break;
+
+        }
+
+        return false;
+    }
+
+
 }
+
+
+
+
+
+
+
+
+/**
+ * @description イベントをイベントフローに送出します。
+ *              Dispatches an event into the event flow.
+ *
+ * @param  {Event}   event
+ * @return {boolean}
+ * @public
+ */
+EventDispatcher.prototype.dispatchEvent = function (event)
+{
+
+    switch (event.type) {
+
+        case "enterFrame":
+        case "exitFrame":
+        case "frameConstructed":
+        case "render":
+        case "activate":
+        case "deactivate":
+        case "context3DCreate":
+        case "keyDown":
+        case "keyUp":
+        {
+            const stage = this.stage;
+
+            const player = (stage)
+                ? stage._$player
+                : Util.$currentPlayer();
+
+            if (player && player.broadcastEvents.size
+                && player.broadcastEvents.has(event.type)
+            ) {
+
+                const events = player.broadcastEvents.get(event.type);
+
+                const length = events.length;
+                for (let idx = 0; idx < length; ++idx) {
+
+                    const obj = events[idx];
+                    if (obj.target !== this) {
+                        continue;
+                    }
+
+                    // start target
+                    event._$eventPhase = EventPhase.AT_TARGET;
+
+                    // event execute
+                    event._$currentTarget = obj.target;
+                    obj.listener.call(Util.$window, event);
+
+                    if (Util.$error) {
+
+                        Util.$currentPlayer()
+                            .stage
+                            .loaderInfo
+                            .uncaughtErrorEvents
+                            .dispatchEvent(
+                                new UncaughtErrorEvent(
+                                    UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
+                                )
+                            );
+
+                        // reset
+                        Util.$error       = false;
+                        Util.$errorObject = null;
+
+                        return false;
+                    }
+
+                }
+
+                return true;
+            }
+        }
+            break;
+
+        default:
+        {
+
+            let events = Util.$getArray();
+            if (this._$events.size && this._$events.has(event.type)) {
+                events = this._$events.get(event.type).slice(0);
+            }
+
+            // parent
+            const parentEvents = Util.$getArray();
+            if (this instanceof DisplayObject) {
+
+                let parent = this._$parent;
+                while (parent) {
+
+                    if (parent.hasEventListener(event.type)) {
+                        parentEvents[parentEvents.length] = parent._$events.get(event.type);
+                    }
+
+                    parent = parent._$parent;
+
+                }
+
+            }
+
+            event._$target = this;
+            if (events.length || parentEvents.length) {
+
+                // start capture
+                event._$eventPhase = EventPhase.CAPTURING_PHASE;
+
+                // stage => parent... end
+                if (parentEvents.length) {
+
+                    switch (true) {
+
+                        case event._$stopImmediatePropagation:
+                        case event._$stopPropagation:
+                            break;
+
+                        default:
+
+                            parentEvents.reverse();
+                            for (let idx = 0; idx < parentEvents.length; ++idx) {
+
+                                const targets = parentEvents[idx];
+                                for (let idx = 0; idx < targets.length; ++idx) {
+
+                                    const obj = targets[idx];
+                                    if (!obj.useCapture) {
+                                        continue;
+                                    }
+
+                                    // event execute
+                                    event._$currentTarget = obj.target;
+                                    if ("__$$original" in obj.listener) {
+                                        obj.listener(event);
+                                    } else {
+                                        obj.listener.call(Util.$window, event);
+                                    }
+
+                                    if (event._$stopImmediatePropagation) {
+                                        break;
+                                    }
+
+                                }
+
+                                if (event._$stopImmediatePropagation) {
+                                    break;
+                                }
+
+                            }
+                            parentEvents.reverse();
+
+                            break;
+                    }
+
+                }
+
+
+                // start target
+                event._$eventPhase = EventPhase.AT_TARGET;
+                switch (true) {
+
+                    case event._$stopImmediatePropagation:
+                    case event._$stopPropagation:
+                        break;
+
+                    default:
+
+                        const length = events.length;
+                        for (let idx = 0; idx < length; ++idx) {
+
+                            const obj = events[idx];
+                            if (obj.useCapture) {
+                                continue;
+                            }
+
+                            // event execute
+                            event._$currentTarget = obj.target;
+                            if ("__$$original" in obj.listener) {
+                                obj.listener(event);
+                            } else {
+                                obj.listener.call(Util.$window, event);
+                            }
+
+                            if (event._$stopImmediatePropagation) {
+                                break;
+                            }
+
+                        }
+
+                        break;
+
+                }
+
+
+                // start bubbling
+                event._$eventPhase = EventPhase.BUBBLING_PHASE;
+                switch (true) {
+
+                    case event._$stopImmediatePropagation:
+                    case event._$stopPropagation:
+                    case !event.bubbles:
+                        break;
+
+                    default:
+
+                        // this => parent... => stage end
+                        for (let idx = 0; idx < parentEvents.length; ++idx) {
+
+                            const targets = parentEvents[idx];
+                            for (let idx = 0; idx < targets.length; ++idx) {
+
+                                const obj = targets[idx];
+                                if (obj.useCapture) {
+                                    continue;
+                                }
+
+                                // event execute
+                                event._$currentTarget = obj.target;
+                                if ("__$$original" in obj.listener) {
+                                    obj.listener(event);
+                                } else {
+                                    obj.listener.call(Util.$window, event);
+                                }
+
+                                if (event._$stopImmediatePropagation) {
+                                    break;
+                                }
+                            }
+
+                            if (event._$stopImmediatePropagation) {
+                                break;
+                            }
+
+                        }
+
+                        break;
+
+                }
+
+                Util.$poolArray(events);
+                Util.$poolArray(parentEvents);
+
+                if (Util.$error) {
+
+                    Util.$currentPlayer()
+                        .stage
+                        .loaderInfo
+                        .uncaughtErrorEvents
+                        .dispatchEvent(
+                            new UncaughtErrorEvent(
+                                UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
+                            )
+                        );
+
+                    // reset
+                    Util.$error       = false;
+                    Util.$errorObject = null;
+
+                    return false;
+                }
+
+                return true;
+
+            }
+
+            Util.$poolArray(events);
+            Util.$poolArray(parentEvents);
+        }
+            break;
+
+    }
+
+    // pool
+    Util.$poolInstance(event);
+
+    return false;
+};
+
+/**
+ * @description EventDispatcher オブジェクトに、特定のイベントタイプに対して登録されたリスナーがあるかどうかを確認します。
+ *              Checks whether the EventDispatcher object has any listeners registered for a specific type of event.
+ *
+ * @param   {string}  type
+ * @returns {boolean}
+ * @public
+ */
+EventDispatcher.prototype.hasEventListener = function (type)
+{
+    switch (type) {
+
+        case "enterFrame":
+        case "exitFrame":
+        case "frameConstructed":
+        case "render":
+        case "activate":
+        case "deactivate":
+        case "context3DCreate":
+        case "keyDown":
+        case "keyUp":
+
+            const stage  = this.stage;
+            const player = (stage)
+                ? stage._$player
+                : Util.$currentPlayer();
+
+            if (player && player.broadcastEvents.size
+                && player.broadcastEvents.has(type)
+            ) {
+                const events = player.broadcastEvents.get(type);
+
+                for (let idx = 0; idx < events.length; idx++) {
+                    if (events[idx].target === this) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+
+        default:
+            return this._$events.size && this._$events.has(type);
+
+    }
+};
+
+/**
+ * @description EventDispatcher オブジェクトからリスナーを削除します。
+ *              Removes a listener from
+ * the EventDispatcher object.
+ *
+ * @param   {string}   type
+ * @param   {function} listener
+ * @param   {boolean}  [use_capture=false]
+ * @returns void
+ * @public
+ */
+EventDispatcher.prototype.removeEventListener = function (type, listener, use_capture = false)
+{
+
+    if (!this.hasEventListener(type) || typeof listener !== "function") {
+        return;
+    }
+
+
+    const useCapture = Util.$toBoolean(use_capture);
+    let isBroadcast  = false;
+
+    let events, player;
+    switch (type) {
+
+        case "enterFrame":
+        case "exitFrame":
+        case "frameConstructed":
+        case "render":
+        case "activate":
+        case "deactivate":
+        case "context3DCreate":
+        case "keyDown":
+        case "keyUp":
+
+            isBroadcast = true;
+
+            player = Util.$currentPlayer();
+            if (player) {
+                events = player.broadcastEvents.get(type);
+            }
+
+            break;
+
+        default:
+            events = this._$events.get(type);
+            break;
+
+    }
+
+
+    // remove listener
+    let method = listener;
+    let caller = null;
+    if ("__$$original" in listener) {
+        method = listener.__$$original;
+        caller = listener.__$$caller;
+    }
+
+    const length = events.length;
+    for (let idx = 0; idx < length; ++idx) {
+
+        // event object
+        const obj = events[idx];
+
+        if (useCapture === obj.useCapture) {
+
+            let original = obj.listener;
+            let target   = null;
+            if ("__$$original" in obj.listener) {
+                original = obj.listener.__$$original;
+                target   = obj.listener.__$$caller;
+            }
+
+            if (original === method && caller === target) {
+                events.splice(idx, 1);
+                break;
+            }
+
+        }
+
+    }
+
+    // set new event
+    switch (true) {
+
+        case events.length === 0:
+
+            switch (true) {
+
+                case isBroadcast:
+                    player.broadcastEvents.delete(type);
+                    break;
+
+                default:
+                    this._$events.delete(type);
+                    break;
+
+            }
+
+            break;
+
+        default:
+
+            switch (true) {
+
+                case isBroadcast:
+                    player.broadcastEvents.set(type, events);
+                    break;
+
+                default:
+
+                    // event sort
+                    events.sort(function (a, b)
+                    {
+                        switch (true) {
+
+                            case a.priority > b.priority:
+                                return -1;
+
+                            case a.priority < b.priority:
+                                return 1;
+
+                            default:
+                                return 0;
+
+                        }
+                    });
+
+                    this._$events.set(type, events);
+                    break;
+
+            }
+
+            break;
+
+    }
+
+};
+
+/**
+ * @description 指定されたイベントタイプについて、
+ *              この EventDispatcher オブジェクトまたはその祖先にイベントリスナーが
+ *              登録されているかどうかを確認します。
+ *              Checks whether an event listener is registered
+ *              with this EventDispatcher object or
+ *              any of its ancestors for the specified event type.
+ *
+ * @param  {string}  type
+ * @return {boolean}
+ * @public
+ */
+EventDispatcher.prototype.willTrigger = function (type)
+{
+    if (this.hasEventListener(type)) {
+        return true;
+    }
+
+    let parent = this.parent;
+    while (parent) {
+
+        if (parent.hasEventListener(type)) {
+            return true;
+        }
+
+        parent = parent.parent;
+    }
+
+    return false;
+};
 /**
  * @class
  * @memberOf next2d.events
@@ -3230,6 +4209,98 @@ class Transform
  * @class
  * @memberOf next2d.display
  */
+class DisplayObject extends EventDispatcher
+{
+    constructor()
+    {
+        super();
+
+    }
+
+    /**
+     * @return {object}
+     * @private
+     */
+    _$getPlaceObject ()
+    {
+
+    }
+
+    /**
+     * @return {object}
+     * @private
+     */
+    _$getBounds ()
+    {
+
+    }
+
+    /**
+     * @return {object}
+     * @private
+     */
+    _$doChanged ()
+    {
+
+    }
+}
+/**
+ * @class
+ * @memberOf next2d.display
+ * @extends  DisplayObject
+ */
+class InteractiveObject extends DisplayObject
+{
+    constructor()
+    {
+        super();
+
+    }
+}
+/**
+ * @class
+ * @memberOf next2d.display
+ * @extends  InteractiveObject
+ */
+class DisplayObjectContainer extends InteractiveObject
+{
+    constructor()
+    {
+        super();
+
+    }
+}
+/**
+ * @class
+ * @memberOf next2d.display
+ * @extends  DisplayObjectContainer
+ */
+class Sprite extends DisplayObjectContainer
+{
+    constructor()
+    {
+        super();
+
+    }
+}
+/**
+ * @class
+ * @memberOf next2d.display
+ * @extends  Sprite
+ */
+class MovieClip extends Sprite
+{
+    constructor()
+    {
+        super();
+
+    }
+
+}
+/**
+ * @class
+ * @memberOf next2d.display
+ */
 class BlendMode
 {
     /**
@@ -3495,98 +4566,6 @@ class BlendMode
     static get SUBTRACT ()
     {
         return "subtract";
-    }
-}
-/**
- * @class
- * @memberOf next2d.display
- */
-class DisplayObject extends EventDispatcher
-{
-    constructor()
-    {
-        super();
-
-    }
-
-    /**
-     * @return {object}
-     * @private
-     */
-    _$getPlaceObject ()
-    {
-
-    }
-
-    /**
-     * @return {object}
-     * @private
-     */
-    _$getBounds ()
-    {
-
-    }
-
-    /**
-     * @return {object}
-     * @private
-     */
-    _$doChanged ()
-    {
-
-    }
-}
-/**
- * @class
- * @memberOf next2d.display
- * @extends  InteractiveObject
- */
-class DisplayObjectContainer extends InteractiveObject
-{
-    constructor()
-    {
-        super();
-
-    }
-}
-/**
- * @class
- * @memberOf next2d.display
- * @extends  DisplayObject
- */
-class InteractiveObject extends DisplayObject
-{
-    constructor()
-    {
-        super();
-
-    }
-}
-/**
- * @class
- * @memberOf next2d.display
- * @extends  Sprite
- */
-class MovieClip extends Sprite
-{
-    constructor()
-    {
-        super();
-
-    }
-
-}
-/**
- * @class
- * @memberOf next2d.display
- * @extends  DisplayObjectContainer
- */
-class Sprite extends DisplayObjectContainer
-{
-    constructor()
-    {
-        super();
-
     }
 }
 /**
@@ -3953,10 +4932,23 @@ class Player
 {
     /**
      * @constructor
+     * @public
      */
     constructor()
     {
+        this._$broadcastEvents = Util.$getMap();
+    }
 
+    /**
+     * @description
+     *
+     * @return   {Map}
+     * @readonly
+     * @public
+     */
+    get broadcastEvents ()
+    {
+        return this._$broadcastEvents;
     }
 
     /**
@@ -3987,7 +4979,10 @@ class Next2D
     /**
      * @constructor
      */
-    constructor () {}
+    constructor ()
+    {
+
+    }
 
     /**
      * @param  {string} url
@@ -4024,10 +5019,11 @@ class Next2D
 }
 
 window.next2d = new Next2D();
+Util.$packages(window.next2d);
 
 
         // output build version
-        console.log("%c next2d.js %c 1.1614173220 %c https://next2d.app",
+        console.log("%c next2d.js %c 1.1614212172 %c https://next2d.app",
         "color: #fff; background: #5f5f5f",
         "color: #fff; background: #4bc729",
         "");

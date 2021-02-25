@@ -1,13 +1,13 @@
-const gulp        = require('gulp');
+const gulp        = require("gulp");
 const concat      = require("gulp-concat");
 const uglify      = require("gulp-uglify-es").default;
-const browserSync = require('browser-sync').create();
+const browserSync = require("browser-sync").create();
 const TestServer  = require("karma").Server;
 const jsdoc       = require("gulp-jsdoc3");
 const preprocess  = require("gulp-preprocess");
-const minimist    = require('minimist');
-const replace     = require('gulp-replace');
-const rename      = require('gulp-rename');
+const minimist    = require("minimist");
+const replace     = require("gulp-replace");
+const rename      = require("gulp-rename");
 
 
 const options = minimist(process.argv.slice(2), {
@@ -19,18 +19,33 @@ const options = minimist(process.argv.slice(2), {
     }
 });
 
+const date = new Date();
+const time = Math.round(date.getTime() / 1000);
+
 /**
  * @description 書き出した時間でバージョンを書き出す
  * @public
  */
-function buildVersion()
+function buildFooterVersion()
 {
     return gulp.src("src/Footer.file")
-        .pipe(replace("###BUILD_VERSION###", Math.round((new Date()).getTime() / 1000)))
+        .pipe(replace("###BUILD_VERSION###", time))
         .pipe(rename("src/Footer.build.file"))
         .pipe(gulp.dest("."));
 }
 
+/**
+ * @description 書き出した時間でバージョンを書き出す
+ * @public
+ */
+function buildHeaderVersion()
+{
+    return gulp.src("src/Header.file")
+        .pipe(replace("###BUILD_VERSION###", time))
+        .pipe(replace("###BUILD_YEAR###", date.getFullYear()))
+        .pipe(rename("src/Header.build.file"))
+        .pipe(gulp.dest("."));
+}
 
 /**
  * @description JavaScriptをまとめてminifyして出力
@@ -44,10 +59,8 @@ function buildJavaScript()
     }
 
     const build = gulp.src([
-            "src/Copyright.file",
-            "src/Header.file",
+            "src/Header.build.file",
             "src/util/Util.js",
-            "src/next2d/events/Event.js",
             "src/next2d/events/*.js",
             "src/next2d/geom/*.js",
             "src/next2d/display/DisplayObject.js",
@@ -179,7 +192,8 @@ function test (done)
 
 
 exports.default = gulp.series(
-    buildVersion,
+    buildHeaderVersion,
+    buildFooterVersion,
     buildJavaScript,
     browser,
     watchFiles

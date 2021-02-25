@@ -6,7 +6,10 @@ class Next2D
     /**
      * @constructor
      */
-    constructor () {}
+    constructor ()
+    {
+
+    }
 
     /**
      * @param  {string} url
@@ -43,3 +46,4 @@ class Next2D
 }
 
 window.next2d = new Next2D();
+Util.$packages(window.next2d);

@@ -5,3 +5,4 @@ Thumbs.db
 package-lock.json
 node_modules
 Footer.build.file
+Header.build.file
