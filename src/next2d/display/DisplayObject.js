@@ -1018,6 +1018,16 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$isUpdated ()
+    {
+        return this._$updated;
+    }
+
+    /**
      * @return {object}
      * @private
      */

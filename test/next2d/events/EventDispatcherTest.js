@@ -22,7 +22,7 @@ describe("EventDispatcher.js static toString test", function()
 });
 
 
-describe("EventDispatcher.js getQualifiedClassName test", function()
+describe("EventDispatcher.js namespace test", function()
 {
 
     it("namespace test public", function()

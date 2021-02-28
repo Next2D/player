@@ -26,7 +26,7 @@ describe("Matrix.js static toString test", function()
 });
 
 
-describe("Matrix.js getQualifiedClassName test", function()
+describe("Matrix.js namespace test", function()
 {
 
     it("namespace test public", function()

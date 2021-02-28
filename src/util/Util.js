@@ -226,6 +226,14 @@ Util.$atan2 = Math.atan2;
  * @const
  * @static
  */
+Util.$SQRT2 = Math.SQRT2;
+
+/**
+ * @shortcut
+ * @type {number}
+ * @const
+ * @static
+ */
 Util.$PI = Math.PI;
 
 /**
@@ -534,7 +542,11 @@ Util.$isArray = function (source)
  */
 Util.$getArray = function ()
 {
-    return Util.$arrays.pop() || [];
+    const array = Util.$arrays.pop() || [];
+    if (arguments.length) {
+        array.push.apply(array, arguments);
+    }
+    return array;
 }
 
 /**
@@ -934,8 +946,32 @@ Util.$uintToRGBA = function (uint)
 };
 
 
+/**
+ * @param   {number} color
+ * @param   {number} [alpha=1]
+ * @returns {{R: number, G: number, B: number, A: number}}
+ * @method
+ * @static
+ */
+Util.$intToRGBA = function (color, alpha = 1)
+{
+    return {
+        "R": (color & 0xff0000) >> 16,
+        "G": (color & 0x00ff00) >> 8,
+        "B": (color & 0x0000ff),
+        "A": (alpha * 255)
+    };
+};
 
-
+/**
+ * @return {CacheStore}
+ * @method
+ * @static
+ */
+Util.$cacheStore = function ()
+{
+    return Util.$currentPlayer()._$cacheStore;
+};
 
 
 

@@ -26,7 +26,7 @@ describe("Rectangle.js static toString test", function()
 });
 
 
-describe("Rectangle.js getQualifiedClassName test", function()
+describe("Rectangle.js namespace test", function()
 {
 
     it("namespace test public", function()

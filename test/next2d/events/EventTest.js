@@ -20,7 +20,7 @@ describe("Event.js static toString test", function()
 
 });
 
-describe("Event.js getQualifiedClassName test", function()
+describe("Event.js namespace test", function()
 {
 
     it("namespace test public", function()
