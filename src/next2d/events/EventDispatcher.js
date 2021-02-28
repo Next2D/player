@@ -23,7 +23,6 @@ class EventDispatcher
     constructor()
     {
         this._$events = Util.$getMap();
-        this._$target = null;
     }
 
     /**
@@ -102,6 +101,7 @@ class EventDispatcher
             player,
             isBroadcast = false;
 
+        type = `${type}`;
         switch (type) {
 
             // broadcast event
@@ -115,7 +115,6 @@ class EventDispatcher
             case "keyUp":
 
                 player = Util.$currentPlayer();
-
                 if (!player.broadcastEvents.size
                     || !player.broadcastEvents.has(type)
                 ) {
@@ -245,27 +244,27 @@ class EventDispatcher
 
                             // event execute
                             event._$currentTarget = obj.target;
-                            obj.listener.call(Util.$window, event);
 
-                            if (Util.$error) {
+                            try {
 
-                                Util.$currentPlayer()
-                                    .stage
-                                    .loaderInfo
-                                    .uncaughtErrorEvents
-                                    .dispatchEvent(
-                                        new UncaughtErrorEvent(
-                                            UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
-                                        )
-                                    );
+                                obj.listener.call(Util.$window, event);
 
-                                // reset
-                                Util.$error       = false;
-                                Util.$errorObject = null;
+                            } catch (e) {
+
+                                // TODO
+                                // player
+                                //     .stage
+                                //     .loaderInfo
+                                //     .uncaughtErrorEvents
+                                //     .dispatchEvent(
+                                //         new UncaughtErrorEvent(
+                                //             UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
+                                //         )
+                                //     );
 
                                 return false;
-                            }
 
+                            }
                         }
 
                         return true;
@@ -328,10 +327,24 @@ class EventDispatcher
 
                                             // event execute
                                             event._$currentTarget = obj.target;
-                                            if ("__$$original" in obj.listener) {
-                                                obj.listener(event);
-                                            } else {
+
+                                            try {
+
                                                 obj.listener.call(Util.$window, event);
+
+                                            } catch (e) {
+
+                                                // TODO
+                                                // player
+                                                //     .stage
+                                                //     .loaderInfo
+                                                //     .uncaughtErrorEvents
+                                                //     .dispatchEvent(
+                                                //         new UncaughtErrorEvent(
+                                                //             UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
+                                                //         )
+                                                //     );
+                                                return false;
                                             }
 
                                             if (event._$stopImmediatePropagation) {
@@ -373,10 +386,24 @@ class EventDispatcher
 
                                     // event execute
                                     event._$currentTarget = obj.target;
-                                    if ("__$$original" in obj.listener) {
-                                        obj.listener(event);
-                                    } else {
+
+                                    try {
+
                                         obj.listener.call(Util.$window, event);
+
+                                    } catch (e) {
+
+                                        // TODO
+                                        // player
+                                        //     .stage
+                                        //     .loaderInfo
+                                        //     .uncaughtErrorEvents
+                                        //     .dispatchEvent(
+                                        //         new UncaughtErrorEvent(
+                                        //             UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
+                                        //         )
+                                        //     );
+                                        return false;
                                     }
 
                                     if (event._$stopImmediatePropagation) {
@@ -414,10 +441,25 @@ class EventDispatcher
 
                                         // event execute
                                         event._$currentTarget = obj.target;
-                                        if ("__$$original" in obj.listener) {
-                                            obj.listener(event);
-                                        } else {
+
+                                        try {
+
                                             obj.listener.call(Util.$window, event);
+
+                                        } catch (e) {
+
+                                            // TODO
+                                            // player
+                                            //     .stage
+                                            //     .loaderInfo
+                                            //     .uncaughtErrorEvents
+                                            //     .dispatchEvent(
+                                            //         new UncaughtErrorEvent(
+                                            //             UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
+                                            //         )
+                                            //     );
+
+                                            return false;
                                         }
 
                                         if (event._$stopImmediatePropagation) {
@@ -438,25 +480,6 @@ class EventDispatcher
                         Util.$poolArray(events);
                         Util.$poolArray(parentEvents);
 
-                        if (Util.$error) {
-
-                            Util.$currentPlayer()
-                                .stage
-                                .loaderInfo
-                                .uncaughtErrorEvents
-                                .dispatchEvent(
-                                    new UncaughtErrorEvent(
-                                        UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
-                                    )
-                                );
-
-                            // reset
-                            Util.$error       = false;
-                            Util.$errorObject = null;
-
-                            return false;
-                        }
-
                         return true;
 
                     }
@@ -471,506 +494,192 @@ class EventDispatcher
         return false;
     }
 
+    /**
+     * @description EventDispatcher オブジェクトに、特定のイベントタイプに対して登録されたリスナーがあるかどうかを確認します。
+     *              Checks whether the EventDispatcher object has any listeners registered for a specific type of event.
+     *
+     * @param  {string}  type
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    hasEventListener (type)
+    {
+        type = `${type}`;
+        switch (type) {
 
-}
+            case Event.ENTER_FRAME:
+            case Event.EXIT_FRAME:
+            case Event.FRAME_CONSTRUCTED:
+            case Event.RENDER:
+            case Event.ACTIVATE:
+            case Event.DEACTIVATE:
+            case "keyDown":
+            case "keyUp":
 
+                const stage  = this.stage;
+                const player = (stage)
+                    ? stage._$player
+                    : Util.$currentPlayer();
 
+                if (player && player.broadcastEvents.size
+                    && player.broadcastEvents.has(type)
+                ) {
+                    const events = player.broadcastEvents.get(type);
 
-
-
-
-
-
-/**
- * @description イベントをイベントフローに送出します。
- *              Dispatches an event into the event flow.
- *
- * @param  {Event}   event
- * @return {boolean}
- * @public
- */
-EventDispatcher.prototype.dispatchEvent = function (event)
-{
-
-    switch (event.type) {
-
-        case "enterFrame":
-        case "exitFrame":
-        case "frameConstructed":
-        case "render":
-        case "activate":
-        case "deactivate":
-        case "context3DCreate":
-        case "keyDown":
-        case "keyUp":
-        {
-            const stage = this.stage;
-
-            const player = (stage)
-                ? stage._$player
-                : Util.$currentPlayer();
-
-            if (player && player.broadcastEvents.size
-                && player.broadcastEvents.has(event.type)
-            ) {
-
-                const events = player.broadcastEvents.get(event.type);
-
-                const length = events.length;
-                for (let idx = 0; idx < length; ++idx) {
-
-                    const obj = events[idx];
-                    if (obj.target !== this) {
-                        continue;
-                    }
-
-                    // start target
-                    event._$eventPhase = EventPhase.AT_TARGET;
-
-                    // event execute
-                    event._$currentTarget = obj.target;
-                    obj.listener.call(Util.$window, event);
-
-                    if (Util.$error) {
-
-                        Util.$currentPlayer()
-                            .stage
-                            .loaderInfo
-                            .uncaughtErrorEvents
-                            .dispatchEvent(
-                                new UncaughtErrorEvent(
-                                    UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
-                                )
-                            );
-
-                        // reset
-                        Util.$error       = false;
-                        Util.$errorObject = null;
-
-                        return false;
-                    }
-
-                }
-
-                return true;
-            }
-        }
-            break;
-
-        default:
-        {
-
-            let events = Util.$getArray();
-            if (this._$events.size && this._$events.has(event.type)) {
-                events = this._$events.get(event.type).slice(0);
-            }
-
-            // parent
-            const parentEvents = Util.$getArray();
-            if (this instanceof DisplayObject) {
-
-                let parent = this._$parent;
-                while (parent) {
-
-                    if (parent.hasEventListener(event.type)) {
-                        parentEvents[parentEvents.length] = parent._$events.get(event.type);
-                    }
-
-                    parent = parent._$parent;
-
-                }
-
-            }
-
-            event._$target = this;
-            if (events.length || parentEvents.length) {
-
-                // start capture
-                event._$eventPhase = EventPhase.CAPTURING_PHASE;
-
-                // stage => parent... end
-                if (parentEvents.length) {
-
-                    switch (true) {
-
-                        case event._$stopImmediatePropagation:
-                        case event._$stopPropagation:
-                            break;
-
-                        default:
-
-                            parentEvents.reverse();
-                            for (let idx = 0; idx < parentEvents.length; ++idx) {
-
-                                const targets = parentEvents[idx];
-                                for (let idx = 0; idx < targets.length; ++idx) {
-
-                                    const obj = targets[idx];
-                                    if (!obj.useCapture) {
-                                        continue;
-                                    }
-
-                                    // event execute
-                                    event._$currentTarget = obj.target;
-                                    if ("__$$original" in obj.listener) {
-                                        obj.listener(event);
-                                    } else {
-                                        obj.listener.call(Util.$window, event);
-                                    }
-
-                                    if (event._$stopImmediatePropagation) {
-                                        break;
-                                    }
-
-                                }
-
-                                if (event._$stopImmediatePropagation) {
-                                    break;
-                                }
-
-                            }
-                            parentEvents.reverse();
-
-                            break;
-                    }
-
-                }
-
-
-                // start target
-                event._$eventPhase = EventPhase.AT_TARGET;
-                switch (true) {
-
-                    case event._$stopImmediatePropagation:
-                    case event._$stopPropagation:
-                        break;
-
-                    default:
-
-                        const length = events.length;
-                        for (let idx = 0; idx < length; ++idx) {
-
-                            const obj = events[idx];
-                            if (obj.useCapture) {
-                                continue;
-                            }
-
-                            // event execute
-                            event._$currentTarget = obj.target;
-                            if ("__$$original" in obj.listener) {
-                                obj.listener(event);
-                            } else {
-                                obj.listener.call(Util.$window, event);
-                            }
-
-                            if (event._$stopImmediatePropagation) {
-                                break;
-                            }
-
+                    for (let idx = 0; idx < events.length; idx++) {
+                        if (events[idx].target === this) {
+                            return true;
                         }
-
-                        break;
-
-                }
-
-
-                // start bubbling
-                event._$eventPhase = EventPhase.BUBBLING_PHASE;
-                switch (true) {
-
-                    case event._$stopImmediatePropagation:
-                    case event._$stopPropagation:
-                    case !event.bubbles:
-                        break;
-
-                    default:
-
-                        // this => parent... => stage end
-                        for (let idx = 0; idx < parentEvents.length; ++idx) {
-
-                            const targets = parentEvents[idx];
-                            for (let idx = 0; idx < targets.length; ++idx) {
-
-                                const obj = targets[idx];
-                                if (obj.useCapture) {
-                                    continue;
-                                }
-
-                                // event execute
-                                event._$currentTarget = obj.target;
-                                if ("__$$original" in obj.listener) {
-                                    obj.listener(event);
-                                } else {
-                                    obj.listener.call(Util.$window, event);
-                                }
-
-                                if (event._$stopImmediatePropagation) {
-                                    break;
-                                }
-                            }
-
-                            if (event._$stopImmediatePropagation) {
-                                break;
-                            }
-
-                        }
-
-                        break;
-
-                }
-
-                Util.$poolArray(events);
-                Util.$poolArray(parentEvents);
-
-                if (Util.$error) {
-
-                    Util.$currentPlayer()
-                        .stage
-                        .loaderInfo
-                        .uncaughtErrorEvents
-                        .dispatchEvent(
-                            new UncaughtErrorEvent(
-                                UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
-                            )
-                        );
-
-                    // reset
-                    Util.$error       = false;
-                    Util.$errorObject = null;
-
-                    return false;
-                }
-
-                return true;
-
-            }
-
-            Util.$poolArray(events);
-            Util.$poolArray(parentEvents);
-        }
-            break;
-
-    }
-
-    // pool
-    Util.$poolInstance(event);
-
-    return false;
-};
-
-/**
- * @description EventDispatcher オブジェクトに、特定のイベントタイプに対して登録されたリスナーがあるかどうかを確認します。
- *              Checks whether the EventDispatcher object has any listeners registered for a specific type of event.
- *
- * @param   {string}  type
- * @returns {boolean}
- * @public
- */
-EventDispatcher.prototype.hasEventListener = function (type)
-{
-    switch (type) {
-
-        case "enterFrame":
-        case "exitFrame":
-        case "frameConstructed":
-        case "render":
-        case "activate":
-        case "deactivate":
-        case "context3DCreate":
-        case "keyDown":
-        case "keyUp":
-
-            const stage  = this.stage;
-            const player = (stage)
-                ? stage._$player
-                : Util.$currentPlayer();
-
-            if (player && player.broadcastEvents.size
-                && player.broadcastEvents.has(type)
-            ) {
-                const events = player.broadcastEvents.get(type);
-
-                for (let idx = 0; idx < events.length; idx++) {
-                    if (events[idx].target === this) {
-                        return true;
                     }
                 }
-            }
-            return false;
+                return false;
 
-        default:
-            return this._$events.size && this._$events.has(type);
+            default:
+                return this._$events.size && this._$events.has(type);
 
-    }
-};
-
-/**
- * @description EventDispatcher オブジェクトからリスナーを削除します。
- *              Removes a listener from
- * the EventDispatcher object.
- *
- * @param   {string}   type
- * @param   {function} listener
- * @param   {boolean}  [use_capture=false]
- * @returns void
- * @public
- */
-EventDispatcher.prototype.removeEventListener = function (type, listener, use_capture = false)
-{
-
-    if (!this.hasEventListener(type) || typeof listener !== "function") {
-        return;
+        }
     }
 
+    /**
+     * @description EventDispatcher オブジェクトからリスナーを削除します。
+     *              Removes a listener from the EventDispatcher object.
+     *
+     * @param  {string}   type
+     * @param  {function} listener
+     * @param  {boolean}  [use_capture=false]
+     * @return {void}
+     * @method
+     * @public
+     */
+    removeEventListener (type, listener, use_capture = false)
+    {
+        type = `${type}`;
+        if (!this.hasEventListener(type)) {
+            return;
+        }
 
-    const useCapture = Util.$toBoolean(use_capture);
-    let isBroadcast  = false;
+        let
+            events,
+            player,
+            isBroadcast = false;
 
-    let events, player;
-    switch (type) {
+        switch (type) {
 
-        case "enterFrame":
-        case "exitFrame":
-        case "frameConstructed":
-        case "render":
-        case "activate":
-        case "deactivate":
-        case "context3DCreate":
-        case "keyDown":
-        case "keyUp":
+            case Event.ENTER_FRAME:
+            case Event.EXIT_FRAME:
+            case Event.FRAME_CONSTRUCTED:
+            case Event.RENDER:
+            case Event.ACTIVATE:
+            case Event.DEACTIVATE:
+            case "keyDown":
+            case "keyUp":
 
-            isBroadcast = true;
+                isBroadcast = true;
 
-            player = Util.$currentPlayer();
-            if (player) {
-                events = player.broadcastEvents.get(type);
-            }
+                player = Util.$currentPlayer();
+                if (player) {
+                    events = player.broadcastEvents.get(type);
+                }
 
-            break;
+                break;
 
-        default:
-            events = this._$events.get(type);
-            break;
+            default:
+                events = this._$events.get(type);
+                break;
 
-    }
+        }
 
 
-    // remove listener
-    let method = listener;
-    let caller = null;
-    if ("__$$original" in listener) {
-        method = listener.__$$original;
-        caller = listener.__$$caller;
-    }
+        // remove listener
+        const length = events.length;
+        for (let idx = 0; idx < length; ++idx) {
 
-    const length = events.length;
-    for (let idx = 0; idx < length; ++idx) {
-
-        // event object
-        const obj = events[idx];
-
-        if (useCapture === obj.useCapture) {
-
-            let original = obj.listener;
-            let target   = null;
-            if ("__$$original" in obj.listener) {
-                original = obj.listener.__$$original;
-                target   = obj.listener.__$$caller;
-            }
-
-            if (original === method && caller === target) {
+            // event object
+            const obj = events[idx];
+            if (use_capture === obj.useCapture
+                && obj.listener === listener
+            ) {
                 events.splice(idx, 1);
                 break;
             }
 
         }
 
-    }
 
-    // set new event
-    switch (true) {
+        if (!events.length) {
 
-        case events.length === 0:
+            if (isBroadcast) {
 
-            switch (true) {
+                player.broadcastEvents.delete(type);
 
-                case isBroadcast:
-                    player.broadcastEvents.delete(type);
-                    break;
+            } else {
 
-                default:
-                    this._$events.delete(type);
-                    break;
+                this._$events.delete(type);
 
             }
 
-            break;
+            return ;
+        }
 
-        default:
 
-            switch (true) {
+        if (isBroadcast) {
 
-                case isBroadcast:
-                    player.broadcastEvents.set(type, events);
-                    break;
+            player.broadcastEvents.set(type, events);
 
-                default:
+        } else {
 
-                    // event sort
-                    events.sort(function (a, b)
-                    {
-                        switch (true) {
+            // event sort
+            events.sort(function (a, b)
+            {
+                switch (true) {
 
-                            case a.priority > b.priority:
-                                return -1;
+                    case a.priority > b.priority:
+                        return -1;
 
-                            case a.priority < b.priority:
-                                return 1;
+                    case a.priority < b.priority:
+                        return 1;
 
-                            default:
-                                return 0;
+                    default:
+                        return 0;
 
-                        }
-                    });
+                }
+            });
 
-                    this._$events.set(type, events);
-                    break;
+            this._$events.set(type, events);
 
-            }
-
-            break;
-
+        }
     }
 
-};
-
-/**
- * @description 指定されたイベントタイプについて、
- *              この EventDispatcher オブジェクトまたはその祖先にイベントリスナーが
- *              登録されているかどうかを確認します。
- *              Checks whether an event listener is registered
- *              with this EventDispatcher object or
- *              any of its ancestors for the specified event type.
- *
- * @param  {string}  type
- * @return {boolean}
- * @public
- */
-EventDispatcher.prototype.willTrigger = function (type)
-{
-    if (this.hasEventListener(type)) {
-        return true;
-    }
-
-    let parent = this.parent;
-    while (parent) {
-
-        if (parent.hasEventListener(type)) {
+    /**
+     * @description 指定されたイベントタイプについて、
+     *              この EventDispatcher オブジェクトまたはその祖先にイベントリスナーが
+     *              登録されているかどうかを確認します。
+     *              Checks whether an event listener is registered
+     *              with this EventDispatcher object or
+     *              any of its ancestors for the specified event type.
+     *
+     * @param  {string}  type
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    willTrigger (type)
+    {
+        if (this.hasEventListener(type)) {
             return true;
         }
 
-        parent = parent.parent;
-    }
+        let parent = this._$parent;
+        while (parent) {
 
-    return false;
-};
+            if (parent.hasEventListener(type)) {
+                return true;
+            }
+
+            parent = parent._$parent;
+        }
+
+        return false;
+    }
+}

@@ -57,33 +57,34 @@ class CacheStore
             return ;
         }
 
-        switch (true) {
+        switch (object.constructor) {
 
-            case (object.constructor === Util.$WebGLTexture):
+            case Util.$WebGLTexture:
                 const player = Util.$players[this._$playerId];
                 if (player) {
 
-                    // cache to buffer
-                    if (object._$bitmapData) {
-                        object._$bitmapData._$buffer = object._$bitmapData._$getPixels(
-                            0, 0, object._$bitmapData.width, object._$bitmapData.height, "RGBA", size => new Util.$Uint8Array(size));
-                        delete object._$bitmapData;
-                    }
+                    // // cache to buffer
+                    // if (object._$bitmapData) {
+                    //     object._$bitmapData._$buffer = object._$bitmapData._$getPixels(
+                    //         0, 0, object._$bitmapData.width, object._$bitmapData.height, "RGBA", size => new Util.$Uint8Array(size));
+                    //     delete object._$bitmapData;
+                    // }
+                    //
+                    // if (player._$context) {
+                    //     player
+                    //         ._$context
+                    //         .frameBuffer
+                    //         .releaseTexture(object);
+                    // }
 
-                    if (player._$context) {
-                        player
-                            ._$context
-                            .frameBuffer
-                            .releaseTexture(object);
-                    }
                 }
                 break;
 
-            case (object.constructor === Util.$CanvasRenderingContext2D):
+            case Util.$CanvasRenderingContext2D:
 
                 const canvas = object.canvas;
-                const width  = canvas.width|0;
-                const height = canvas.height|0;
+                const width  = canvas.width;
+                const height = canvas.height;
 
                 object.clearRect(0, 0, width + 1, height + 1);
 
@@ -92,10 +93,6 @@ class CacheStore
 
                 // pool
                 this._$pool[this._$pool.length] = canvas;
-                break;
-
-            case (typeof object === "object"):
-                Util.$poolInstance(object);
                 break;
 
             default:
@@ -120,7 +117,7 @@ class CacheStore
      */
     removeCache (id)
     {
-        id += "";
+        id = `${id}`;
         if (this._$store.has(id)) {
 
             const data = this._$store.get(id);
@@ -146,7 +143,7 @@ class CacheStore
      */
     generateLifeKey (id, type)
     {
-        return id + ":" + type;
+        return `${id}:${type}`;
     }
 
     /**
@@ -156,8 +153,8 @@ class CacheStore
      */
     get (keys)
     {
-        const id   = keys[0] + "";
-        const type = keys[1] + "";
+        const id   = `${keys[0]}`;
+        const type = `${keys[1]}`;
 
         if (this._$store.has(id)) {
 
@@ -187,8 +184,8 @@ class CacheStore
      */
     set (keys, value)
     {
-        const id   = keys[0] + "";
-        const type = keys[1] + "";
+        const id   = `${keys[0]}`;
+        const type = `${keys[1]}`;
 
         // init
         if (!this._$store.has(id)) {
@@ -229,33 +226,19 @@ class CacheStore
 
     /**
      * @param   {string|number} unique_key
-     * @param   {array} matrix
-     * @param   {array} [color=null]
+     * @param   {Float64Array} matrix
+     * @param   {Float64Array} [color=null]
      * @returns {array}
      * @public
      */
     generateShapeKeys (unique_key, matrix, color = null)
     {
-        // to string
-        unique_key = unique_key + "";
+        const str = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}${this.colorToString(color)}`;
 
         const keys = Util.$getArray();
-        keys[0] = unique_key;
 
-        let str = "";
-        str += matrix[0] + "_" + matrix[1] + "_" + matrix[2] + "_" + matrix[3];
-
-        // color
-        if (color && color.length === 8 && (
-            color[0] !== 1 || color[1] !== 1 || color[2] !== 1 ||
-            color[4] !== 0 || color[5] !== 0 || color[6] !== 0 || color[7] !== 0
-        )) {
-            str += color[0] +"_"+ color[1] +"_"+ color[2]
-                +"_"+ color[4] +"_"+ color[5]
-                +"_"+ color[6] +"_"+ color[7];
-        }
-
-        keys[1] = (str) ? this.generateHash(str) : "_0";
+        keys[0] = `${unique_key}`;
+        keys[1] = this.generateHash(str);
 
         return keys;
 
@@ -263,36 +246,53 @@ class CacheStore
 
     /**
      * @param   {string|number} unique_key
-     * @param   {array} [matrix=null]
-     * @param   {array} [color=null]
+     * @param   {Float64Array} [matrix=null]
+     * @param   {Float64Array} [color=null]
      * @returns {array}
      * @public
      */
     generateKeys (unique_key, matrix = null, color = null)
     {
-        // to string
-        unique_key = unique_key + "";
-
-        const keys = Util.$getArray();
-        keys[0] = unique_key;
 
         let str = "";
         if (matrix) {
-            str += matrix[0] + "_" + matrix[1];
+            str += `${matrix[0]}_${matrix[1]}`;
         }
 
         // color
-        if (color && color.length === 8 && (
-            color[0] !== 1 || color[1] !== 1 || color[2] !== 1 ||
-            color[4] !== 0 || color[5] !== 0 || color[6] !== 0 || color[7] !== 0
-        )) {
-            str += "_"+ color[0] +"_"+ color[1] +"_"+ color[2]
-                +"_"+ color[4] +"_"+ color[5] +"_"+ color[6] +"_"+ color[7];
-        }
+        str += this.colorToString(color);
 
+        const keys = Util.$getArray();
         keys[1] = (str) ? this.generateHash(str) : "_0";
+        keys[0] = `${unique_key}`;
 
         return keys;
+    }
+
+    /**
+     * @param  {Float64Array} [c=null]
+     * @return {string}
+     */
+    colorToString (c = null)
+    {
+        if (!c) {
+            return "";
+        }
+
+        switch (true) {
+
+            case c[0] !== 1:
+            case c[1] !== 1:
+            case c[2] !== 1:
+            case c[4] !== 0:
+            case c[5] !== 0:
+            case c[6] !== 0:
+            case c[7] !== 0:
+                return `_${c[0]}_${c[1]}_${c[2]}_${c[4]}_${c[5]}_${c[6]}_${c[7]}`;
+
+            default:
+                return "";
+        }
     }
 
     /**
@@ -309,7 +309,7 @@ class CacheStore
             hash  = ((hash << 5) - hash) + chr;
             hash |= 0;
         }
-        return "_" + hash;
+        return `_${hash}`;
     }
 
     /**

@@ -115,4 +115,8 @@ describe("Event.js property test", function()
         expect(Event.FRAME_CONSTRUCTED).toBe("frameConstructed");
     });
 
+    it("FRAME_LABEL test", function ()
+    {
+        expect(Event.FRAME_LABEL).toBe("frameLabel");
+    });
 });

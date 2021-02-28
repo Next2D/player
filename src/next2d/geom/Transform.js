@@ -36,7 +36,7 @@ class Transform
      */
     constructor(src)
     {
-        if (src instanceof DisplayObject) {
+        if (!(src instanceof DisplayObject)) {
             throw new Error("Transform params is DisplayObject only.");
         }
 
@@ -169,9 +169,11 @@ class Transform
             parent = parent._$parent;
         }
 
-        return new ColorTransform(
-            colorTransform[0], colorTransform[1], colorTransform[2], colorTransform[3],
-            colorTransform[4], colorTransform[5], colorTransform[6], colorTransform[7]
+        return Util.$getColorTransform(
+            colorTransform[0], colorTransform[1],
+            colorTransform[2], colorTransform[3],
+            colorTransform[4], colorTransform[5],
+            colorTransform[6], colorTransform[7]
         );
     }
 
@@ -200,9 +202,9 @@ class Transform
             parent = parent._$parent;
         }
 
-        return new Matrix(
+        return Util.$getMatrix(
             matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4] / 20, matrix[5] / 20
+            matrix[3], matrix[4], matrix[5]
         );
     }
 
@@ -226,15 +228,11 @@ class Transform
             ._$getPlaceObject();
 
         if (object) {
-
-            const buffer = object.colorTransform;
-            const matrix = new Matrix();
-            matrix._$matrix = Util.$getColorArray(
+            const buffer = object.matrix;
+            return Util.$getMatrix(
                 buffer[0], buffer[1], buffer[2],
                 buffer[3], buffer[4], buffer[5]
             );
-
-            return matrix;
         }
 
         this._$transform();
@@ -358,7 +356,7 @@ class Transform
     {
         // Matrix
         if (!this._$matrix) {
-            this._$matrix = new Matrix();
+            this._$matrix = Util.$getMatrix();
         }
 
         if (matrix) {

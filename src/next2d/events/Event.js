@@ -33,7 +33,7 @@ class Event
      */
     constructor (type, bubbles = false, cancelable = false)
     {
-        this._$type                     = `${type}`.toLowerCase();
+        this._$type                     = `${type}`;
         this._$bubbles                  = bubbles;
         this._$cancelable               = cancelable;
 
@@ -234,6 +234,21 @@ class Event
     static get FRAME_CONSTRUCTED ()
     {
         return "frameConstructed";
+    }
+
+    /**
+     * @description Event.FRAME_LABEL 定数は、frameLabel イベントオブジェクトの type プロパティの値を定義します。
+     *              The Event.FRAME_LABEL constant defines the value
+     *              of the type property of an frameLabel event object.
+     *
+     * @return  {string}
+     * @default frameLabel
+     * @const
+     * @static
+     */
+    static get FRAME_LABEL ()
+    {
+        return "frameLabel";
     }
 
     /**

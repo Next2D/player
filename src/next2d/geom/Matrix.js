@@ -223,16 +223,11 @@ class Matrix
      */
     clone ()
     {
-        const matrix = new Matrix(
+        return Util.$getMatrix(
             this._$matrix[0], this._$matrix[1],
             this._$matrix[2], this._$matrix[3],
-            0, 0
+            this._$matrix[4], this._$matrix[5]
         );
-
-        matrix._$matrix[4] = this._$matrix[4];
-        matrix._$matrix[5] = this._$matrix[5];
-
-        return matrix;
     }
 
     /**
