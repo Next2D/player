@@ -17,18 +17,44 @@ class Stage extends DisplayObjectContainer
         super();
 
         /**
-         *
          * @type {number|null}
          * @default null
          * @private
          */
         this._$playerId   = null;
 
+        /**
+         * @type {Stage}
+         * @private
+         */
         this._$root       = this;
+
+        /**
+         * @type {Stage}
+         * @private
+         */
         this._$stage      = this;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
         this._$invalidate = true;
-        this._$color      = 0xffffffff;
-        this._$frameRate  = 60;
+
+        /**
+         * @type {number}
+         * @default 0xffffffff
+         * @private
+         */
+        this._$color = 0xffffffff;
+
+        /**
+         * @type {number}
+         * @default 60
+         * @private
+         */
+        this._$frameRate = 60;
     }
 
     /**

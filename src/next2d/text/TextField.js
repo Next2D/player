@@ -1,17 +1,20 @@
 /**
  * @class
- * @memberOf next2d.display
- * @extends  DisplayObject
+ * @memberOf next2d.text
+ * @extends  InteractiveObject
  */
-class Shape extends DisplayObject
+class TextField extends InteractiveObject
 {
     /**
+     *
+     *
      * @constructor
      * @public
      */
     constructor()
     {
         super();
+
     }
 
 }

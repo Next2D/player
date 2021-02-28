@@ -9,75 +9,281 @@ class Player
      */
     constructor()
     {
+        /**
+         * @type {number}
+         * @private
+         */
         this._$id = Util.$players.length;
         Util.$players.push(this);
 
+        /**
+         * @type {Stage}
+         * @private
+         */
         this._$stage = new Stage();
         this._$stage._$playerId = this._$id;
 
-        // cache store
+        /**
+         * @type {CacheStore}
+         * @private
+         */
         this._$cacheStore = new CacheStore();
         this._$cacheStore._$playerId = this._$id;
 
-
-        // set div name
+        /**
+         * @type {string}
+         * @private
+         */
         this._$name = `${Util.$PREFIX}${this._$id}`;
 
-        // pool action script
+        /**
+         * @type {number}
+         * @private
+         */
         this._$actionOffset = 0;
-        this._$actions      = [];
-        this._$loaders      = [];
-        this._$sounds       = [];
 
-        // events
-        this._$rollOverObject   = null;
-        this._$mouseOverTarget  = null;
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$actions = Util.$getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$loaders  = Util.$getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$sounds  = Util.$getArray();
+
+        /**
+         * @type {DisplayObject|null}
+         * @default null
+         * @private
+         */
+        this._$rollOverObject = null;
+
+        /**
+         * @type {DisplayObject|null}
+         * @default null
+         * @private
+         */
+        this._$mouseOverTarget = null;
+
+        /**
+         * @type {DisplayObject|null}
+         * @default null
+         * @private
+         */
         this._$mouseWheelEvent  = null;
 
+        /**
+         * @type {number}
+         * @private
+         */
+        this._$ratio = Util.$devicePixelRatio;
 
-        // params
-        this._$ratio            = Util.$devicePixelRatio;
-        this._$intervalId       = 0;
-        this._$stopFlag         = true;
-        this._$startTime        = 0;
-        this._$fps              = 0;
-        this._$isLoad           = false;
-        this._$loadStatus       = 0;
-        this._$width            = 0;
-        this._$height           = 0;
-        this._$baseWidth        = 0;
-        this._$baseHeight       = 0;
-        this._$scale            = 1;
-        this._$matrix           = Util.$getMatrixArray(1, 0, 0, 1, 0, 0);
-        this._$colorTransform   = Util.$getColorArray(1, 1, 1, 1, 0, 0, 0, 0);
-        this._$backgroundColor  = "transparent";
-        this._$state            = "up";
-        this._$hitTest          = false;
-        this._$stageX           = -1;
-        this._$stageY           = -1;
-        this._$textarea         = null;
-        this._$broadcastEvents  = Util.$getMap();
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$intervalId = -1;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$stopFlag = true;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$startTime = 0;
+
+        /**
+         * @type {number}
+         * @default 60
+         * @private
+         */
+        this._$fps = 60;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$isLoad = false;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$loadStatus = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$width = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$height = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$baseWidth = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$baseHeight = 0;
+
+        /**
+         * @type {number}
+         * @default 1
+         * @private
+         */
+        this._$scale = 1;
+
+        /**
+         * @type {Float64Array}
+         * @private
+         */
+        this._$matrix = Util.$getMatrixArray(1, 0, 0, 1, 0, 0);
+
+        /**
+         * @type {string|number}
+         * @default transparent
+         * @private
+         */
+        this._$backgroundColor = "transparent";
+
+        /**
+         * @type {string}
+         * @default up
+         * @private
+         */
+        this._$state = "up";
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$hitTest = false;
+
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$stageX = -1;
+
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$stageY = -1;
+
+        /**
+         * @type {TextField|null}
+         * @default null
+         * @private
+         */
+        this._$textarea = null;
+
+        /**
+         * @type {Map}
+         * @private
+         */
+        this._$broadcastEvents = Util.$getMap();
 
 
-        // canvas
-        this._$context          = null;
-        this._$canvas           = null;
-        this._$buffer           = null;
+        /**
+         * TODO
+         * @type {null}
+         * @default null
+         * @private
+         */
+        this._$context = null;
 
+        /**
+         * TODO
+         * @type {null}
+         * @default null
+         * @private
+         */
+        this._$canvas = null;
 
-        // options
-        this._$optionWidth      = 0;
-        this._$optionHeight     = 0;
-        this._$tagId            = null;
-        this._$bgcolor          = "";
-        this._$base             = "";
+        /**
+         * TODO
+         * @type {null}
+         * @default null
+         * @private
+         */
+        this._$buffer = null;
 
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$optionWidth = 0;
 
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$optionHeight = 0;
+
+        /**
+         * @type {string|null}
+         * @default null
+         * @private
+         */
+        this._$tagId = null;
+
+        /**
+         * @type {string}
+         * @default ""
+         * @private
+         */
+        this._$bgcolor = "";
+
+        /**
+         * @type {string}
+         * @default ""
+         * @private
+         */
+        this._$base = "";
+
+        // TODO
         // delay
-        // this._$delayRun         = this.run.bind(this);
-        // this._$loadEvent        = this.loadEvent.bind(this);
-        // this._$timerId          = -1;
-        // this._$loadId           = -1;
+        // this._$delayRun  = this.run.bind(this);
+        // this._$loadEvent = this.loadEvent.bind(this);
+        // this._$timerId = -1;
+        // this._$loadId = -1;
 
     }
 

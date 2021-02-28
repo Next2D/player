@@ -36,7 +36,16 @@ class FrameLabel extends EventDispatcher
     {
         super();
 
-        this._$name  = `${name}`;
+        /**
+         * @type {string}
+         * @private
+         */
+        this._$name = `${name}`;
+
+        /**
+         * @type {number}
+         * @private
+         */
         this._$frame = frame|0;
     }
 

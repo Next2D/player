@@ -5,5 +5,13 @@
  */
 class LoaderInfo extends EventDispatcher
 {
+    /**
+     * @constructor
+     * @public
+     */
+    constructor()
+    {
+        super();
 
+    }
 }

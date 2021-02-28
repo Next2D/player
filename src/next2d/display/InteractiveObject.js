@@ -20,9 +20,26 @@ class InteractiveObject extends DisplayObject
     {
         super();
 
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
         this._$mouseEnabled = true;
-        this._$isFocus      = false;
-        this._$isComposing  = false;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$isFocus = false;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$isComposing = false;
     }
 
     /**

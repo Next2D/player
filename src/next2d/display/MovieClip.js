@@ -24,26 +24,112 @@ class MovieClip extends Sprite
     {
         super();
 
-        // origin flag
-        this._$stopFlag      = false;
-        this._$canAction     = true;
-        this._$childRemove   = false;
-        this._$canSound      = true;
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$stopFlag = false;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$canAction = true;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$childRemove = false;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$canSound = true;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
         this._$actionProcess = false;
-        this._$actions       = Util.$getMap();
-        this._$frameCache    = Util.$getMap();
-        this._$frameLabels   = Util.$getArray();
-        this._$sounds        = Util.$getMap();
-        this._$channels      = Util.$getMap();
-        this._$actionOffset  = 0;
-        this._$actionLimit   = 0;
 
+        /**
+         * @type {Map}
+         * @private
+         */
+        this._$actions = Util.$getMap();
 
-        // property
+        /**
+         * @type {Map}
+         * @private
+         */
+        this._$frameCache = Util.$getMap();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$frameLabels = Util.$getArray();
+
+        /**
+         * @type {Map}
+         * @private
+         */
+        this._$sounds = Util.$getMap();
+
+        /**
+         * @type {Map}
+         * @private
+         */
+        this._$channels = Util.$getMap();
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$actionOffset = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$actionLimit = 0;
+
+        /**
+         * @type {number}
+         * @default 1
+         * @private
+         */
         this._$currentFrame = 1;
-        this._$totalFrames  = 1;
-        this._$isPlaying    = false;
-        this._$enabled      = true;
+
+        /**
+         * @type {number}
+         * @default 1
+         * @private
+         */
+        this._$totalFrames = 1;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$isPlaying = false;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$enabled = true;
     }
 
     /**

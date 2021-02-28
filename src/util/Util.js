@@ -22,91 +22,499 @@ let programId  = 0;
 const Util = {};
 
 
-// const
-Util.$TWIPS     = 20;
-Util.$PREFIX    = "__next2d__";
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$TWIPS = 20;
+
+/**
+ * @type {string}
+ * @const
+ * @static
+ */
+Util.$PREFIX = "__next2d__";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
 Util.$MAX_VALUE = window.Number.MAX_VALUE;
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
 Util.$MIN_VALUE = window.Number.MIN_VALUE;
 
 
-// matrix array constants
-Util.$MATRIX_ARRAY_IDENTITY                    = new Float64Array([1, 0, 0, 1, 0, 0]);
-Util.$MATRIX_ARRAY_20_0_0_20_0_0               = new Float64Array([20, 0, 0, 20, 0, 0]);
-Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE       = new Float64Array([0.05, 0, 0, 0.05, 0, 0]);
-Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0         = new Float64Array([20 / Util.$devicePixelRatio, 0, 0, 20 / Util.$devicePixelRatio, 0, 0]);
-Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE = new Float64Array([1 / 20 * Util.$devicePixelRatio, 0, 0, 1 / 20 * Util.$devicePixelRatio, 0, 0]);
+/**
+ * @type {Float64Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_IDENTITY = new Float64Array([1, 0, 0, 1, 0, 0]);
 
-// color array constant
+/**
+ * @type {Float64Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_20_0_0_20_0_0 = new Float64Array([Util.$TWIPS, 0, 0, Util.$TWIPS, 0, 0]);
+
+/**
+ * @type {Float64Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE = new Float64Array([0.05, 0, 0, 0.05, 0, 0]);
+
+/**
+ * @type {Float64Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0 = new Float64Array([
+    Util.$TWIPS / Util.$devicePixelRatio, 0, 0,
+    Util.$TWIPS / Util.$devicePixelRatio, 0, 0
+]);
+
+/**
+ * @type {Float64Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE = new Float64Array([
+    1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0,
+    1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0
+]);
+
+/**
+ * @type {Float64Array}
+ * @const
+ * @static
+ */
 Util.$COLOR_ARRAY_IDENTITY = new Float64Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 
-// shortcut
-Util.$window       = window;
-Util.$document     = window.document;
-Util.$navigator    = window.navigator;
-Util.$userAgent    = window.navigator.userAgent;
-Util.$location     = window.location;
-Util.$isNaN        = window.isNaN;
-Util.$min          = Math.min;
-Util.$max          = Math.max;
-Util.$sin          = Math.sin;
-Util.$cos          = Math.cos;
-Util.$tan          = Math.tan;
-Util.$sqrt         = Math.sqrt;
-Util.$pow          = Math.pow;
-Util.$abs          = Math.abs;
-Util.$atan2        = Math.atan2;
-Util.$PI           = Math.PI;
-Util.$Deg2Rad      = Util.$PI / 180;
-Util.$Rad2Deg      = 180 / Util.$PI;
-Util.$Array        = window.Array;
-Util.$Map          = window.Map;
-Util.$setTimeout   = window.setTimeout;
-Util.$Infinity     = window.Infinity;
+/**
+ * @shortcut
+ * @type {Window}
+ * @const
+ * @static
+ */
+Util.$window = window;
+
+/**
+ * @shortcut
+ * @type {Document}
+ * @const
+ * @static
+ */
+Util.$document = window.document;
+
+/**
+ * @shortcut
+ * @type {Navigator}
+ * @const
+ * @static
+ */
+Util.$navigator = window.navigator;
+
+/**
+ * @shortcut
+ * @type {string}
+ * @const
+ * @static
+ */
+Util.$userAgent = window.navigator.userAgent;
+
+/**
+ * @shortcut
+ * @type {Location}
+ * @const
+ * @static
+ */
+Util.$location = window.location;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$isNaN = window.isNaN;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$min = Math.min;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$max = Math.max;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$sin = Math.sin;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$cos = Math.cos;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$tan = Math.tan;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$sqrt = Math.sqrt;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$pow = Math.pow;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$abs = Math.abs;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$atan2 = Math.atan2;
+
+/**
+ * @shortcut
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$PI = Math.PI;
+
+/**
+ * @shortcut
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$Deg2Rad = Util.$PI / 180;
+
+/**
+ * @shortcut
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$Rad2Deg = 180 / Util.$PI;
+
+/**
+ * @shortcut
+ * @type {ArrayConstructor}
+ * @const
+ * @static
+ */
+Util.$Array = window.Array;
+
+/**
+ * @shortcut
+ * @type {MapConstructor}
+ * @const
+ * @static
+ */
+Util.$Map = window.Map;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$setTimeout = window.setTimeout;
+
+/**
+ * @shortcut
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$Infinity = window.Infinity;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
 Util.$WebGLTexture = window.WebGLTexture;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
 Util.$CanvasRenderingContext2D = window.CanvasRenderingContext2D;
 
 
-// params
+/**
+ * 現在稼働中のPlayer ID
+ * Currently running Player ID
+ *
+ * @type {number}
+ * @default 0
+ * @static
+ */
 Util.$currentPlayerId  = 0;
-Util.$isUpdated        = false;
-Util.$event            = null;
-Util.$dropTarget       = null;
-Util.$dragRules        = { "lock": false, "position": { "x": 0, "y": 0 }, "bounds": null };
+
+/**
+ * @type {boolean}
+ * @default false
+ * @static
+ */
+Util.$isUpdated = false;
+
+/**
+ * @type {window.Event|null}
+ * @default null
+ * @static
+ */
+Util.$event = null;
+
+/**
+ * @type {DisplayObject|null}
+ * @default null
+ * @static
+ */
+Util.$dropTarget = null;
+
+/**
+ * @type {{bounds: null, lock: boolean, position: {x: number, y: number}}}
+ * @const
+ * @static
+ */
+Util.$dragRules = {
+    "lock": false,
+    "position": {
+        "x": 0,
+        "y": 0
+    },
+    "bounds": null
+};
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
 Util.$devicePixelRatio = Util.$min(2, window.devicePixelRatio);
-Util.$players          = [];
-Util.$colorArray       = [];
-Util.$matrixArray      = [];
-Util.$bounds           = [];
-Util.$arrays           = [];
-Util.$maps             = [];
-Util.$loaderInfos      = [];
-Util.$matrices         = [];
-Util.$colors           = [];
 
-// OS
-Util.$isAndroid         = (Util.$userAgent.indexOf("Android") > -1);
-Util.isiOS              = (Util.$userAgent.indexOf("iPhone") > -1 || Util.$userAgent.indexOf("iPod") > -1);
-Util.$isTouch           = (Util.$isAndroid || Util.isiOS);
-Util.$isChrome          = (Util.$userAgent.indexOf("Chrome") > -1);
-Util.$isFireFox         = (Util.$userAgent.indexOf("Firefox") > -1);
-Util.$isSafari          = (Util.$userAgent.indexOf("Safari") > -1);
-Util.$isIE              = (Util.$userAgent.indexOf("Trident") > -1);
-Util.$isEdge            = (Util.$userAgent.indexOf("Edge") > -1);
-Util.$isMac             = (Util.$userAgent.indexOf("Mac") > -1);
-Util.$isWindows         = (Util.$isMac === false);
+/**
+ * Player Object を格納
+ * Stores the Player Object
+ *
+ * @type {Player[]}
+ * @const
+ * @static
+ */
+Util.$players = [];
+
+/**
+ * LoaderInfo Object を格納
+ * Stores the LoaderInfo Object.
+ *
+ * @type {LoaderInfo[]}
+ * @const
+ * @static
+ */
+Util.$loaderInfos = [];
+
+/**
+ * 使用済みになったColorTransformのFloat64Arrayをプール
+ * Pool the Float64Array of ColorTransform that is no longer in use.
+ *
+ * @type {Float64Array[]}
+ * @const
+ * @static
+ */
+Util.$colorArray = [];
+
+/**
+ * 使用済みになったMatrixのFloat64Arrayをプール
+ * Pool the Float64Array of Matrix that is no longer in use.
+ *
+ * @type {Float64Array[]}
+ * @const
+ * @static
+ */
+Util.$matrixArray = [];
+
+/**
+ * 使用済みになったbounds Objectをプール
+ * Pool bounds objects that are no longer in use.
+ *
+ * @type {object[]}
+ * @const
+ * @static
+ */
+Util.$bounds = [];
+
+/**
+ * 使用済みになったArray Objectをプール
+ * Pool Array objects that are no longer in use.
+ *
+ * @type {array[]}
+ * @const
+ * @static
+ */
+Util.$arrays = [];
+
+/**
+ * 使用済みになったMap Objectをプール
+ * Pool Map objects that are no longer in use.
+ *
+ * @type {Map[]}
+ * @const
+ * @static
+ */
+Util.$maps = [];
+
+/**
+ * 使用済みになったMatrix Objectをプール
+ * Pool Matrix objects that are no longer in use.
+ *
+ * @type {Matrix[]}
+ * @const
+ * @static
+ */
+Util.$matrices = [];
+
+/**
+ * 使用済みになったColorTransform Objectをプール
+ * Pool ColorTransform objects that are no longer in use.
+ *
+ * @type {ColorTransform[]}
+ * @const
+ * @static
+ */
+Util.$colors = [];
+
+/**
+ * @type {boolean}
+ * @const
+ * @static
+ */
+Util.$isAndroid = (Util.$userAgent.indexOf("Android") > -1);
+
+/**
+ * @type {boolean}
+ * @const
+ * @static
+ */
+Util.isiOS = (Util.$userAgent.indexOf("iPhone") > -1 || Util.$userAgent.indexOf("iPod") > -1);
+
+/**
+ * @type {boolean}
+ * @const
+ * @static
+ */
+Util.$isTouch = (Util.$isAndroid || Util.isiOS);
+
+/**
+ * @type {boolean}
+ * @const
+ * @static
+ */
+Util.$isChrome = (Util.$userAgent.indexOf("Chrome") > -1);
+
+/**
+ * @type {boolean}
+ * @const
+ * @static
+ */
+Util.$isFireFox = (Util.$userAgent.indexOf("Firefox") > -1);
+
+/**
+ * @type {boolean}
+ * @const
+ * @static
+ */
+Util.$isSafari = (Util.$userAgent.indexOf("Safari") > -1);
+
+/**
+ * @type {boolean}
+ * @const
+ * @static
+ */
+Util.$isEdge = (Util.$userAgent.indexOf("Edge") > -1);
+
+/**
+ * @type {boolean}
+ * @const
+ * @static
+ */
+Util.$isMac = (Util.$userAgent.indexOf("Mac") > -1);
+
+/**
+ * @type {boolean}
+ * @const
+ * @static
+ */
+Util.$isWindows = (Util.$isMac === false);
 
 
-// hit test canvas
-const hitCanvas              = window.document.createElement("canvas");
-hitCanvas.width              = 1;
-hitCanvas.height             = 1;
-Util.$hitContext             = hitCanvas.getContext("2d");
+/**
+ * @type {HTMLCanvasElement}
+ * @const
+ */
+const hitCanvas  = window.document.createElement("canvas");
+hitCanvas.width  = 1;
+hitCanvas.height = 1;
+
+/**
+ * @type {CanvasRenderingContext2D}
+ * @const
+ * @static
+ */
+Util.$hitContext = hitCanvas.getContext("2d");
 Util.$hitContext.globalAlpha = 0;
 Util.$hitContext.imageSmoothingEnabled = false;
-
-
-
 
 /**
  * @param  {*} source

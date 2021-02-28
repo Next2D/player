@@ -40,11 +40,39 @@ class Transform
             throw new Error("Transform params is DisplayObject only.");
         }
 
-        this._$displayObject  = src;
-        this._$matrix         = null;
+        /**
+         * @type {DisplayObject}
+         * @private
+         */
+        this._$displayObject = src;
+
+        /**
+         * @type {Matrix|null}
+         * @default null
+         * @private
+         */
+        this._$matrix = null;
+
+        /**
+         * @type {ColorTransform|null}
+         * @default null
+         * @private
+         */
         this._$colorTransform = null;
-        this._$blendMode      = null;
-        this._$filters        = null;
+
+        /**
+         * @type {string|null}
+         * @default null
+         * @private
+         */
+        this._$blendMode = null;
+
+        /**
+         * @type {array|null}
+         * @default null
+         * @private
+         */
+        this._$filters = null;
     }
 
     /**

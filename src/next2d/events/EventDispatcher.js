@@ -22,6 +22,10 @@ class EventDispatcher
      */
     constructor()
     {
+        /**
+         * @type {Map}
+         * @private
+         */
         this._$events = Util.$getMap();
     }
 

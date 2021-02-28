@@ -19,11 +19,40 @@ class Sprite extends DisplayObjectContainer
     {
         super();
 
-        this._$buttonMode     = false;
-        this._$hitArea        = null;
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$buttonMode = false;
+
+        /**
+         * @type {Sprite|null}
+         * @default null
+         * @private
+         */
+        this._$hitArea = null;
+
+        /**
+         * @type {SoundTransform}
+         * @default null
+         * @private
+         */
         this._$soundTransform = null;
-        this._$useHandCursor  = true;
-        this._$graphics       = null;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$useHandCursor = true;
+
+        /**
+         * @type {Graphics|null}
+         * @default null
+         * @private
+         */
+        this._$graphics = null;
     }
 
     /**

@@ -24,37 +24,197 @@ class DisplayObject extends EventDispatcher
     {
         super();
 
-        this._$id              = null;
-        this._$instanceId      = instanceId++;
-        this._$dictionaryId    = null;
-        this._$characterId     = null;
-        this._$active          = false;
-        this._$isMask          = false;
-        this._$buffer          = null;
-        this._$updated         = true;
-        this._$added           = false;
-        this._$addedStage      = false;
-        this._$filters         = null;
-        this._$blendMode       = null;
-        this._$hitObject       = null;
-        this._$isNext          = true;
-        this._$clipDepth       = 0;
-        this._$name            = "";
-        this._$visible         = true;
-        this._$mask            = null;
-        this._$scale9Grid      = null;
-        this._$parent          = null;
-        this._$stage           = null;
-        this._$root            = null;
-        this._$loaderInfoId    = null;
+        /**
+         * @type {number}
+         * @private
+         */
+        this._$id = 0;
+
+        /**
+         * @type {number}
+         * @private
+         */
+        this._$instanceId = instanceId++;
+
+        /**
+         * @type {number}
+         * @private
+         */
+        this._$dictionaryId = 0;
+
+        /**
+         * @type {number}
+         * @private
+         */
+        this._$characterId = 0;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$active = false;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$isMask = false;
+
+        /**
+         * TODO
+         * @type {null}
+         * @default null
+         * @private
+         */
+        this._$buffer = null;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$updated = true;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$added = false;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$addedStage = false;
+
+        /**
+         * @type {array|null}
+         * @default null
+         * @private
+         */
+        this._$filters = null;
+
+        /**
+         * @type {string|null}
+         * @default null
+         * @private
+         */
+        this._$blendMode = null;
+
+        /**
+         * @type {Sprite|null}
+         * @default null
+         * @private
+         */
+        this._$hitObject = null;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$isNext = true;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$clipDepth = 0;
+
+        /**
+         * @type {string}
+         * @default ""
+         * @private
+         */
+        this._$name = "";
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$visible = true;
+
+        /**
+         * @type {DisplayObject|null}
+         * @default null
+         * @private
+         */
+        this._$mask = null;
+
+        /**
+         * @type {Rectangle|null}
+         * @default null
+         * @private
+         */
+        this._$scale9Grid = null;
+
+        /**
+         * @type {DisplayObjectContainer|null}
+         * @default null
+         * @private
+         */
+        this._$parent = null;
+
+        /**
+         * @type {Stage|null}
+         * @default null
+         * @private
+         */
+        this._$stage = null;
+
+        /**
+         * @type {Sprite|null}
+         * @default null
+         * @private
+         */
+        this._$root = null;
+
+        /**
+         * @type {number|null}
+         * @default null
+         * @private
+         */
+        this._$loaderInfoId = null;
+
+        /**
+         * @type {number|null}
+         * @default null
+         * @private
+         */
         this._$fixLoaderInfoId = null;
 
+        /**
+         * @type {number|null}
+         * @default null
+         * @private
+         */
+        this._$placeId = null;
 
-        // controller
-        this._$placeId      = null;
-        this._$startFrame   = 1;
-        this._$endFrame     = 0;
-        this._$transform    = new Transform(this);
+        /**
+         * @type {number}
+         * @default null
+         * @private
+         */
+        this._$startFrame = 1;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$endFrame = 0;
+
+        /**
+         * @type {Transform}
+         * @private
+         */
+        this._$transform = new Transform(this);
     }
 
     /**

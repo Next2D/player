@@ -19,9 +19,9 @@ class Event
      * You can also make the current event listener the last one to process
      * an event by calling the stopPropagation() or stopImmediatePropagation() method.
      *
-     * @param   {string}  type
-     * @param   {boolean} [bubbles=false]
-     * @param   {boolean} [cancelable=false]
+     * @param {string}  type
+     * @param {boolean} [bubbles=false]
+     * @param {boolean} [cancelable=false]
      *
      * @example <caption>Example usage of Event.</caption>
      * // new Event
@@ -33,17 +33,60 @@ class Event
      */
     constructor (type, bubbles = false, cancelable = false)
     {
-        this._$type                     = `${type}`;
-        this._$bubbles                  = bubbles;
-        this._$cancelable               = cancelable;
+        /**
+         * @type {string}
+         * @private
+         */
+        this._$type = `${type}`;
 
-        this._$target                   = null;
-        this._$currentTarget            = null;
-        this._$eventPhase               = EventPhase.AT_TARGET;
+        /**
+         * @type {boolean}
+         * @private
+         */
+        this._$bubbles = bubbles;
 
+        /**
+         * @type {boolean}
+         * @private
+         */
+        this._$cancelable = cancelable;
+
+        /**
+         * @type {object|null}
+         * @private
+         */
+        this._$target = null;
+
+        /**
+         * @type {object|null}
+         * @private
+         */
+        this._$currentTarget = null;
+
+        /**
+         * @type    {number}
+         * @default EventPhase.AT_TARGET
+         * @private
+         */
+        this._$eventPhase = EventPhase.AT_TARGET;
+
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._$stopImmediatePropagation = false;
-        this._$stopPropagation          = false;
-        this._$preventDefault           = false;
+
+        /**
+         * @type {boolean}
+         * @private
+         */
+        this._$stopPropagation = false;
+
+        /**
+         * @type {boolean}
+         * @private
+         */
+        this._$preventDefault = false;
     }
 
     /**
@@ -316,7 +359,7 @@ class Event
      *              The Event.REMOVED constant defines the value
      *              of the type property of a render event object.
      *
-     * @return  {string}
+     * @return {string}
      * @default render
      * @const
      * @static
@@ -331,7 +374,7 @@ class Event
      *              The Event.SOUND_COMPLETE constant defines the value
      *              of the type property of a soundComplete event object.
      *
-     * @return  {string}
+     * @return {string}
      * @default render
      * @const
      * @static
@@ -373,7 +416,7 @@ class Event
      *              The object that is actively processing the Event object
      *              with an event listener.
      *
-     * @member   {object}
+     * @member {object}
      * @readonly
      * @public
      */
@@ -386,7 +429,7 @@ class Event
      * @description イベントフローの現在の段階です。
      *              The current phase in the event flow.
      *
-     * @member   {number}
+     * @member {number}
      * @readonly
      * @public
      */
@@ -399,7 +442,7 @@ class Event
      * @description イベントターゲットです。
      *              The event target.
      *
-     * @member   {object}
+     * @member {object}
      * @readonly
      * @public
      */
@@ -412,7 +455,7 @@ class Event
      * @description イベントのタイプです。
      *              The type of event.
      *
-     * @member   {string}
+     * @member {string}
      * @readonly
      * @public
      */

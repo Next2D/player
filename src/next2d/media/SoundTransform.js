@@ -13,6 +13,11 @@ class SoundTransform
      */
     constructor (volume = 1)
     {
+        /**
+         * @type {number}
+         * @default 1
+         * @private
+         */
         this._$volume = volume;
     }
 

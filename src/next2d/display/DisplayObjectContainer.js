@@ -25,16 +25,69 @@ class DisplayObjectContainer extends InteractiveObject
     {
         super();
 
+        /**
+         * @type {array}
+         * @private
+         */
         this._$placeController = Util.$getArray();
-        this._$placeObjects    = Util.$getArray();
-        this._$controller      = Util.$getArray();
-        this._$dictionary      = Util.$getArray();
-        this._$instances       = Util.$getArray();
-        this._$children        = Util.$getArray();
-        this._$needsChildren   = true;
-        this._$mouseChildren   = true;
-        this._$names           = Util.$getMap();
-        this._$wait            = true;
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$placeObjects = Util.$getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$controller = Util.$getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$dictionary = Util.$getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$instances = Util.$getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$children = Util.$getArray();
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$needsChildren = true;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$mouseChildren = true;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$wait = true;
+
+        /**
+         * @type {Map}
+         * @private
+         */
+        this._$names = Util.$getMap();
+
 
         return new Proxy(this, {
             "get": function(object, name)

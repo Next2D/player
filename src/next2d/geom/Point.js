@@ -24,7 +24,18 @@ class Point
      */
     constructor(x = 0, y = 0)
     {
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
         this._$x = +x * Util.$TWIPS;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
         this._$y = +y * Util.$TWIPS;
     }
 

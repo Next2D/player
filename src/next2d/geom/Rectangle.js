@@ -35,6 +35,35 @@ class Rectangle
      */
     constructor (x = 0, y = 0, width = 0, height = 0)
     {
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$x = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$y = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$width = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$height = 0;
+
+        // init
         this.setTo(x, y, width, height);
     }
 

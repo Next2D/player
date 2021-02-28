@@ -1,9 +1,9 @@
 /**
  * @class
  * @memberOf next2d.display
- * @extends  DisplayObject
+ * @extends  DisplayObjectContainer
  */
-class Shape extends DisplayObject
+class Loader extends DisplayObjectContainer
 {
     /**
      * @constructor
@@ -13,5 +13,4 @@ class Shape extends DisplayObject
     {
         super();
     }
-
 }

@@ -8,15 +8,42 @@ class CacheStore
      */
     constructor ()
     {
-        // params
-        this._$pool  = [];
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$pool  = Util.$getArray();
+
+        /**
+         * @type {Map}
+         * @private
+         */
         this._$store = Util.$getMap();
+
+        /**
+         * @type {Map}
+         * @private
+         */
         this._$lives = Util.$getMap();
 
-        // cache
-        this._$lifeCount      = 2;
+        /**
+         * @type {number}
+         * @default 2
+         * @private
+         */
+        this._$lifeCount = 2;
+
+        /**
+         * @type {function}
+         * @private
+         */
         this._$delayLifeCheck = this.lifeCheck.bind(this);
 
+        /**
+         * @type {number|null}
+         * @default null
+         * @private
+         */
         this._$playerId = null;
 
         const timer = Util.$setTimeout;
@@ -63,6 +90,7 @@ class CacheStore
                 const player = Util.$players[this._$playerId];
                 if (player) {
 
+                    // TODO
                     // // cache to buffer
                     // if (object._$bitmapData) {
                     //     object._$bitmapData._$buffer = object._$bitmapData._$getPixels(

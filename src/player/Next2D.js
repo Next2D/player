@@ -5,11 +5,9 @@ class Next2D
 {
     /**
      * @constructor
+     * @public
      */
-    constructor ()
-    {
-
-    }
+    constructor () {}
 
     /**
      * @param  {string} url
@@ -18,23 +16,60 @@ class Next2D
      * @method
      * @public
      */
-    load (url, options)
+    load (url, options = null)
     {
+        // @ifdef DEBUG
+        if (url === "develop") {
+            url = Util.$location.search.substr(1).split("&")[0];
+        }
+        // @endif
+
+        if (!url) {
+            return ;
+        }
+
+        const player = new Player();
+        Util.$currentPlayerId = player._$id;
+
+
+        // base set
+        if (!options || !("base" in options)) {
+
+            if (url.indexOf("//") === -1) {
+
+                const urls = url.split("/");
+                if (urls[0] === "" || urls[0] === ".") {
+                    urls.shift();
+                }
+                url = urls.pop();
+
+                let base = Util.$location.origin + "/";
+                if (urls.length) {
+                    base += urls.join("/") + "/";
+                }
+
+                player.base = base;
+
+            } else {
+
+                player.base = url
+                    .split("?")[0]
+                    .split("/")
+                    .pop()
+                    .join("/");
+
+            }
+
+        }
+
+
+
     }
 
     /**
-     * @return {void}
-     * @method
-     * @public
-     */
-    reset ()
-    {
-    }
-
-    /**
-     * @param  {uint}   [width=240]
-     * @param  {uint}   [height=240]
-     * @param  {uint}   [fps=60]
+     * @param  {number} [width=240]
+     * @param  {number} [height=240]
+     * @param  {number} [fps=60]
      * @param  {object} [options=null]
      * @return {MovieClip}
      * @method
@@ -42,8 +77,14 @@ class Next2D
      */
     createRootMovieClip (width = 240, height = 240, fps = 60, options = null)
     {
+        const player = new Player();
+        Util.$currentPlayerId = player._$id;
+
+        const stage = player.stage;
+
+        return stage.addChild(new MovieClip());
     }
 }
 
-window.next2d = new Next2D();
-Util.$packages(window.next2d);
+Util.$window.next2d = new Next2D();
+Util.$packages(Util.$window.next2d);

@@ -53,6 +53,10 @@ class ColorTransform
         red_multiplier = 1, green_multiplier = 1, blue_multiplier = 1, alpha_multiplier = 1,
         red_offset = 0, green_offset = 0, blue_offset = 0, alpha_offset = 0
     ) {
+        /**
+         * @type {Float64Array}
+         * @private
+         */
         this._$colorTransform = Util.$getColorArray(
             red_multiplier, green_multiplier, blue_multiplier, alpha_multiplier,
             red_offset, green_offset, blue_offset, alpha_offset
