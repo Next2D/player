@@ -1,9 +1,9 @@
 /**
  * @class
  * @memberOf next2d.text
- * @extends  InteractiveObject
+ * @extends  DisplayObject
  */
-class TextField extends InteractiveObject
+class StaticText extends DisplayObject
 {
     /**
      * @constructor
@@ -13,5 +13,4 @@ class TextField extends InteractiveObject
     {
         super();
     }
-
 }
