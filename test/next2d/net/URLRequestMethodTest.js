@@ -21,7 +21,7 @@ describe("URLRequestMethod.js static toString test", function()
 });
 
 
-describe("BlendMode.js namespace test", function()
+describe("URLRequestMethod.js namespace test", function()
 {
 
     it("namespace test public", function()

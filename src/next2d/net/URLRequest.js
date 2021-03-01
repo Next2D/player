@@ -22,10 +22,17 @@ class URLRequest
 
         /**
          * @type {string}
-         * @default application/x-www-form-urlencoded
+         * @default application/json
          * @private
          */
-        this._$contentType = "application/x-www-form-urlencoded";
+        this._$contentType = "application/json";
+
+        /**
+         * @type {object|null}
+         * @default null
+         * @private
+         */
+        this._$data = null;
 
         /**
          * @type {string}
@@ -104,6 +111,138 @@ class URLRequest
         return "next2d.net:URLRequest";
     }
 
+    /**
+     * @description data プロパティのコンテンツの MIME コンテンツタイプです。
+     *              The MIME content type of the content in the the data property.
+     *
+     * @member {string}
+     * @default application/json
+     * @public
+     */
+    get contentType ()
+    {
+        return this._$contentType;
+    }
+    set contentType (content_type)
+    {
+        this._$contentType = `${content_type}`;
+    }
 
+    /**
+     * @description URL リクエストで送信されるデータを含むオブジェクトです。
+     *              An object containing data to be transmitted with the URL request.
+     *
+     * @member {string|object}
+     * @public
+     */
+    get data ()
+    {
+        return this._$data;
+    }
+    set data (data)
+    {
+        this._$data = data;
+    }
 
+    /**
+     * @description HTTP フォーム送信メソッドを制御します。
+     *              Controls the HTTP form submission method.
+     *
+     * @member  {string}
+     * @default URLRequestMethod.GET
+     * @public
+     */
+    get method ()
+    {
+        return this._$method;
+    }
+    set method (method)
+    {
+        this._$method = method;
+    }
+
+    /**
+     * @description HTTP リクエストヘッダーの配列が HTTP リクエストに追加されます。
+     *              The array of HTTP request headers to be appended to the HTTP request.
+     *
+     * @member {URLRequestHeader[]}
+     * @public
+     */
+    get requestHeaders ()
+    {
+        return this._$requestHeaders;
+    }
+    set requestHeaders (request_headers)
+    {
+        this._$requestHeaders = request_headers;
+    }
+
+    /**
+     * @description リクエストされる URL です。
+     *              The URL to be requested.
+     *
+     * @member {string}
+     * @public
+     */
+    get url ()
+    {
+        if (this._$url && this._$url.indexOf("//") === -1) {
+
+            const urls = this._$url.split("/");
+            if (urls[0] === "" || urls[0] === ".") {
+                urls.shift();
+            }
+
+            const player = Util.$currentPlayer();
+            if (player) {
+                return `${player.base}${urls.join("/")}`;
+            }
+        }
+
+        return this._$url;
+    }
+    set url (url)
+    {
+        this._$url = `${url}`;
+    }
+
+    /**
+     * @description HTTP 要求で使用されるユーザーエージェントストリングを指定します。
+     *              Specifies the user-agent string to be used in the HTTP request.
+     *
+     * @member {string}
+     * @readonly
+     * @public
+     */
+    get userAgent ()
+    {
+        return this._$userAgent;
+    }
+
+    /**
+     * @description リクエストされる Header Object
+     *              Header Object to be requested.
+     *
+     * @member {object}
+     * @readonly
+     * @public
+     */
+    get headers ()
+    {
+        const headers = {
+            "Content-Type": `${this._$contentType}`
+        };
+
+        const length = this._$requestHeaders.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const urlRequestHeader = this._$requestHeaders[idx];
+
+            if (urlRequestHeader instanceof URLRequestHeader) {
+                headers[urlRequestHeader.name] = urlRequestHeader.value;
+            }
+        }
+
+        return headers;
+    }
 }

@@ -5,6 +5,11 @@
 class URLRequestMethod
 {
     /**
+     * URLRequestMethod クラスは、URLRequest オブジェクトがデータをサーバーに送信するときに
+     * POST または GET のどちらのメソッドを使用するかを指定する値を提供します。
+     *
+     * The URLRequestMethod class provides values that specify whether the URLRequest object should use the
+     * POST method or the GET method when sending data to a server.
      *
      * @constructor
      * @public

@@ -278,6 +278,14 @@ Util.$setTimeout = window.setTimeout;
 
 /**
  * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$encodeURIComponent = window.encodeURIComponent;
+
+/**
+ * @shortcut
  * @type {number}
  * @const
  * @static

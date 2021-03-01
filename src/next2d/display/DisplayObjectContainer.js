@@ -90,7 +90,7 @@ class DisplayObjectContainer extends InteractiveObject
 
 
         return new Proxy(this, {
-            "get": function(object, name)
+            "get": function (object, name)
             {
                 if (object._$names.size
                     && object._$names.has(name)
