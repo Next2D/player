@@ -153,7 +153,7 @@ class Transform
 
             const buffer = object.colorTransform;
             const colorTransform = new ColorTransform();
-            colorTransform._$colorTransform = Util.$getColorArray(
+            colorTransform._$colorTransform = Util.$getFloat32Array(
                 buffer[0], buffer[1], buffer[2], buffer[3],
                 buffer[4], buffer[5], buffer[6], buffer[7]
             );
@@ -304,9 +304,9 @@ class Transform
 
     /**
      * matrix プロパティから取得される Matrix の Matrix._$matrix と同じ値を返しますが、matrix プロパティと異なり Matrix を複製しません。
-     * 返される値は一時的に使用することのみできます。返される値の要素を直接更新してはいけません。返される値をプール（Util.$poolMatrixArray）してはいけません。
+     * 返される値は一時的に使用することのみできます。返される値の要素を直接更新してはいけません。返される値をプール（Util.$poolFloat32Array）してはいけません。
      *
-     * @return {Float64Array}
+     * @return {Float32Array}
      * @private
      */
     _$rawMatrix ()
@@ -325,9 +325,9 @@ class Transform
 
     /**
      * colorTransform プロパティから取得される ColorTransform の colorTransform._$colorTransform と同じ値を返しますが、colorTransform プロパティと異なり ColorTransform を複製しません。
-     * 返される値は一時的に使用することのみできます。返される値の要素を直接更新してはいけません。返される値をプール（Util.$poolColorArray）してはいけません。
+     * 返される値は一時的に使用することのみできます。返される値の要素を直接更新してはいけません。返される値をプール（Util.$poolFloat32Array）してはいけません。
      *
-     * @return {Float64Array}
+     * @return {Float32Array}
      * @private
      */
     _$rawColorTransform ()
@@ -345,8 +345,8 @@ class Transform
     }
 
     /**
-     * @param  {Float64Array} [matrix=null]
-     * @param  {Float64Array} [color_transform=null]
+     * @param  {Float32Array} [matrix=null]
+     * @param  {Float32Array} [color_transform=null]
      * @param  {array}        [filters=null]
      * @param  {string}       [blend_mode=""]
      * @return {void}
@@ -375,7 +375,7 @@ class Transform
     }
 
     /**
-     * @param {Float64Array} [matrix=null]
+     * @param {Float32Array} [matrix=null]
      * @param {object} [object=null]
      * @method
      * @private
@@ -389,11 +389,11 @@ class Transform
 
         if (matrix) {
 
-            Util.$poolMatrixArray(this._$matrix._$matrix);
+            Util.$poolFloat32Array(this._$matrix._$matrix);
 
             this
                 ._$matrix
-                ._$matrix = Util.$getMatrixArray(
+                ._$matrix = Util.$getFloat32Array(
                 matrix[0], matrix[1], matrix[2],
                 matrix[3], matrix[4], matrix[5]
             );
@@ -407,13 +407,13 @@ class Transform
 
         if (object) {
 
-            Util.$poolMatrixArray(this._$matrix._$matrix);
+            Util.$poolFloat32Array(this._$matrix._$matrix);
 
             const matrix = object.matrix;
 
             this
                 ._$matrix
-                ._$matrix = Util.$getMatrixArray(
+                ._$matrix = Util.$getFloat32Array(
                 matrix[0], matrix[1], matrix[2],
                 matrix[3], matrix[4], matrix[5]
             );
@@ -422,7 +422,7 @@ class Transform
     }
 
     /**
-     * @param {Float64Array} [color_transform=null]
+     * @param {Float32Array} [color_transform=null]
      * @param {object} [object=null]
      * @method
      * @private
@@ -436,11 +436,11 @@ class Transform
 
         if (color_transform) {
 
-            Util.$poolColorArray(this._$colorTransform._$colorTransform);
+            Util.$poolFloat32Array(this._$colorTransform._$colorTransform);
 
             this
                 ._$colorTransform
-                ._$colorTransform = Util.$getColorArray(
+                ._$colorTransform = Util.$getFloat32Array(
                     color_transform[0], color_transform[1],
                     color_transform[2], color_transform[3],
                     color_transform[4], color_transform[5],
@@ -455,13 +455,13 @@ class Transform
 
         if (object) {
 
-            Util.$poolColorArray(this._$colorTransform._$colorTransform);
+            Util.$poolFloat32Array(this._$colorTransform._$colorTransform);
 
             const colorTransform = object.colorTransform;
 
             this
                 ._$colorTransform
-                ._$colorTransform = Util.$getColorArray(
+                ._$colorTransform = Util.$getFloat32Array(
                     colorTransform[0], colorTransform[1],
                     colorTransform[2], colorTransform[3],
                     colorTransform[4], colorTransform[5],

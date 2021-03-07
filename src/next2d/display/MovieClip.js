@@ -497,7 +497,9 @@ class MovieClip extends Sprite
             // frame label event
             if (this._$frameLabels.length) {
                 const frameLabel = this.currentFrameLabel();
-                frameLabel.dispatchEvent(new Event(Event.FRAME_LABEL));
+                if (frameLabel && frameLabel.willTrigger(Event.FRAME_LABEL)) {
+                    frameLabel.dispatchEvent(new Event(Event.FRAME_LABEL));
+                }
             }
 
             // add action queue
@@ -716,10 +718,30 @@ class MovieClip extends Sprite
         }
     }
 
-    _$build ()
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$prepareActions ()
+    {
+        // draw flag
+        this._$wait = false;
+
+        const children = (this._$needsChildren)
+            ? this._$getChildren()
+            : this._$children;
+
+        for (let idx = children.length - 1; idx > -1; --idx) {
+            children[idx]._$prepareActions();
+        }
+
+        this._$setAction();
+    }
+
+    _$nextFrame ()
     {
 
     }
-
 
 }

@@ -11,11 +11,14 @@ const rename      = require("gulp-rename");
 
 
 const options = minimist(process.argv.slice(2), {
-    "string": "title",
-    "boolean": [ "debugBuild", "prodBuild" ],
+    "string": ["distPath"],
+    "boolean": ["debugBuild", "prodBuild", "glErrorCheck", "glTrace"],
     "default": {
         "debugBuild": true,
-        "prodBuild":  false
+        "prodBuild": false,
+        "glErrorCheck": false,
+        "glTrace": false,
+        "distPath": "."
     }
 });
 
@@ -57,6 +60,14 @@ function buildJavaScript()
     if (options.debugBuild) {
         preprocessContext.DEBUG = true;
     }
+    if (options.glErrorCheck) {
+        preprocessContext.GL_ERROR_CHECK = true;
+    }
+    if (options.glTrace) {
+        preprocessContext.TRACE_GL = true;
+    }
+
+
 
     const build = gulp.src([
             "src/Header.build.file",
@@ -71,6 +82,7 @@ function buildJavaScript()
             "src/next2d/display/*.js",
             "src/next2d/**/*.js",
             "src/util/CacheStore.js",
+            "src/webgl/**/*.js",
             "src/player/Player.js",
             "src/player/Next2D.js",
             "src/Footer.build.file"
@@ -84,7 +96,7 @@ function buildJavaScript()
     }
 
     return build
-        .pipe(gulp.dest("."));
+        .pipe(gulp.dest(options.distPath));
 }
 
 /**
@@ -132,8 +144,10 @@ function createHTML (done)
 {
     return gulp
         .src([
-            "src/**/*.js",
+            "src/next2d/**/*.js",
+            "src/player/**/*.js",
             "!src/util/*.js",
+            "!src/webgl/**/*.js",
             "README.md"
         ], { "read": false })
         .pipe(jsdoc({

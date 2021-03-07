@@ -968,23 +968,229 @@ class DisplayObject extends EventDispatcher
         Util.$poolMatrix(matrix);
     }
 
+    /**
+     * @description targetCoordinateSpace オブジェクトの座標系を基準にして、
+     *              表示オブジェクトの領域を定義する矩形を返します。
+     *              Returns a rectangle that defines the area
+     *              of the display object relative to the coordinate system
+     *              of the targetCoordinateSpace object.
+     *
+     * @param  {DisplayObject} target
+     * @return {Rectangle}
+     */
+    getBounds (target)
+    {
+        const baseBounds = this._$getBounds(null);
+
+        const matrix = this._$transform.concatenatedMatrix();
+
+        // to global
+        const bounds = Util.$boundsMatrix(baseBounds, matrix._$matrix);
+
+        // pool
+        Util.$poolMatrix(matrix);
+        Util.$poolBoundsObject(baseBounds);
+
+        // create bounds object
+        const targetBaseBounds = Util.$getBoundsObject(
+            bounds.xMin,
+            bounds.xMax,
+            bounds.yMin,
+            bounds.yMax
+        );
+
+        // pool
+        Util.$poolBoundsObject(bounds);
 
 
+        if (!target) {
+            target = this;
+        }
+
+        const targetMatrix = target._$transform.concatenatedMatrix();
+        targetMatrix.invert();
+
+        const resultBounds = Util.$boundsMatrix(
+            targetBaseBounds, targetMatrix._$matrix
+        );
+
+        const xMin = resultBounds.xMin / Util.$TWIPS;
+        const yMin = resultBounds.yMin / Util.$TWIPS;
+        const xMax = resultBounds.xMax / Util.$TWIPS;
+        const yMax = resultBounds.yMax / Util.$TWIPS;
+
+        // pool
+        Util.$poolBoundsObject(targetBaseBounds);
+        Util.$poolBoundsObject(resultBounds);
+        Util.$poolMatrix(targetMatrix);
+
+        return new Rectangle(
+            xMin, yMin,
+            Util.$abs(xMax - xMin),
+            Util.$abs(yMax - yMin)
+        );
+    }
+
+    /**
+     * @description point オブジェクトをステージ（グローバル）座標から
+     *              表示オブジェクトの（ローカル）座標に変換します。
+     *              Converts the point object from the Stage (global) coordinates
+     *              to the display object's (local) coordinates.
+     *
+     * @param   {Point} point
+     * @returns {Point}
+     * @public
+     */
+    globalToLocal (point)
+    {
+        const matrix = this._$transform.concatenatedMatrix();
+        matrix.invert();
+
+        const newPoint =  new Point(
+            point.x * matrix.a + point.y * matrix.c + matrix.tx,
+            point.x * matrix.b + point.y * matrix.d + matrix.ty
+        );
+
+        Util.$poolMatrix(matrix);
+
+        return newPoint;
+    }
+
+    /**
+     * @description 表示オブジェクトの境界ボックスを評価して、
+     *              obj 表示オブジェクトの境界ボックスと重複または交差するかどうかを調べます。
+     *              Evaluates the bounding box of the display object to see
+     *              if it overlaps or intersects with the bounding box of the obj display object.
+     *
+     * @param   {DisplayObject} object
+     * @returns {boolean}
+     * @public
+     */
+    hitTestObject (object)
+    {
+        const baseBounds1 = this._$getBounds(null);
+        const matrix1 = this._$transform.concatenatedMatrix();
+        const bounds1 = Util.$boundsMatrix(baseBounds1, matrix1._$matrix);
+
+        // pool
+        Util.$poolMatrix(matrix1);
+        Util.$poolBoundsObject(baseBounds1);
+
+        const baseBounds2 = object._$getBounds(null);
+        const matrix2 = object._$transform.concatenatedMatrix();
+        const bounds2 = Util.$boundsMatrix(baseBounds2, matrix2._$matrix);
+
+        // pool
+        Util.$poolMatrix(matrix2);
+        Util.$poolBoundsObject(baseBounds2);
+
+        // calc
+        const sx = Util.$max(bounds1.xMin, bounds2.xMin);
+        const sy = Util.$max(bounds1.yMin, bounds2.yMin);
+        const ex = Util.$min(bounds1.xMax, bounds2.xMax);
+        const ey = Util.$min(bounds1.yMax, bounds2.yMax);
+
+        // pool
+        Util.$poolBoundsObject(bounds1);
+        Util.$poolBoundsObject(bounds2);
+
+        return ((ex - sx) >= 0 && (ey - sy) >= 0);
+    }
+
+    /**
+     * @description 表示オブジェクトを評価して、x および y パラメーターで指定された
+     *              ポイントと重複または交差するかどうかを調べます。
+     *              Evaluates the display object to see if it overlaps
+     *              or intersects with the point specified by the x and y parameters.
+     *
+     * @param   {number}  x
+     * @param   {number}  y
+     * @param   {boolean} [shape_flag=false]
+     * @returns {boolean}
+     * @public
+     */
+    hitTestPoint (x, y, shape_flag = false)
+    {
+        if (shape_flag) {
+
+            let matrix = Util.$MATRIX_ARRAY_IDENTITY;
+            let parent = this._$parent;
+
+            while (parent) {
+
+                matrix = Util.$multiplicationMatrix(
+                    parent._$transform._$rawMatrix(),
+                    matrix
+                );
+
+                parent = parent._$parent;
+            }
+
+            // 1 / 20 matrix
+            matrix = Util.$multiplicationMatrix(
+                Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE,
+                matrix
+            );
+
+            Util.$hitContext.setTransform(1, 0, 0, 1, 0, 0);
+            Util.$hitContext.beginPath();
+            const result = this._$hit(Util.$hitContext, matrix, { "x": x, "y": y }, true);
+
+            Util.$poolFloat32Array(matrix);
+
+            return result;
+        }
 
 
+        const baseBounds = this._$getBounds(null);
+        const bounds = Util.$boundsMatrix(baseBounds, this._$transform._$rawMatrix());
 
+        const rectX = bounds.xMin / Util.$TWIPS;
+        const rectY = bounds.yMin / Util.$TWIPS;
+        const rectW = (bounds.xMax - bounds.xMin) / Util.$TWIPS;
+        const rectH = (bounds.yMax - bounds.yMin) / Util.$TWIPS;
 
+        const point = (this._$parent)
+            ? this._$parent.globalToLocal(new Point(x, y))
+            : new Point(x, y);
 
+        // pool
+        Util.$poolBoundsObject(bounds);
+        Util.$poolBoundsObject(baseBounds);
 
+        return (new Rectangle(rectX, rectY, rectW, rectH)).containsPoint(point);
+    }
 
+    /**
+     * @description point オブジェクトを表示オブジェクトの（ローカル）座標から
+     *              ステージ（グローバル）座標に変換します。
+     *              Converts the point object from the display object's (local) coordinates
+     *              to the Stage (global) coordinates.
+     *
+     *
+     * @param   {Point} point
+     * @returns {Point}
+     * @public
+     */
+    localToGlobal (point)
+    {
+        const matrix = this
+            ._$transform
+            .concatenatedMatrix();
 
+        const newPoint = new Point(
+            point.x * matrix.a + point.y * matrix.c + matrix.tx,
+            point.x * matrix.b + point.y * matrix.d + matrix.ty
+        );
 
+        Util.$poolMatrix(matrix);
 
-
-
+        return newPoint;
+    }
 
     /**
      * @return {object}
+     * @method
      * @private
      */
     _$getPlaceObject ()
@@ -1009,15 +1215,6 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @return {object}
-     * @private
-     */
-    _$getBounds ()
-    {
-
-    }
-
-    /**
      * @return {boolean}
      * @method
      * @private
@@ -1028,16 +1225,53 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @return {object}
+     * @return {void}
+     * @method
      * @private
      */
-    _$doChanged ()
+    _$updateState ()
     {
+        this._$isNext = true;
 
+        let parent = this._$parent;
+        if (parent) {
+            parent._$updateState();
+        }
+    }
+
+    /**
+     * @param  {boolean} [flag=true]
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$doChanged (flag = true)
+    {
+        this._$updateState();
+
+        if (!this._$updated) {
+
+            this._$updated = flag;
+
+            let parent = this._$parent;
+            if (parent) {
+
+                // check
+                const filters   = parent._$filters   || parent.filters;
+                const blendMode = parent._$blendMode || parent.blendMode;
+                if (filters.length > 0 || blendMode !== BlendMode.NORMAL) {
+                    parent._$doChanged();
+                } else {
+                    parent._$doChanged(false);
+                }
+            }
+
+        }
     }
 
     /**
      * @return {void}
+     * @method
      * @private
      */
     _$executeAddedEvent ()
@@ -1050,7 +1284,9 @@ class DisplayObject extends EventDispatcher
         if (!this._$added) {
 
             // added event
-            this.dispatchEvent(new Event(Event.ADDED, true));
+            if (this.willTrigger(Event.ADDED)) {
+                this.dispatchEvent(new Event(Event.ADDED, true));
+            }
 
             // update
             this._$added = true;
@@ -1059,14 +1295,39 @@ class DisplayObject extends EventDispatcher
 
         if (!this._$addedStage && this._$stage !== null) {
 
-            this.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
+            if (this.willTrigger(Event.ADDED_TO_STAGE)) {
+                this.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
+            }
 
             // update
             this._$addedStage = true;
         }
     }
 
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$prepareActions ()
+    {
+        this._$nextFrame();
+    }
 
+    /**
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$nextFrame ()
+    {
+        // added event
+        this._$executeAddedEvent();
+
+        this._$isNext = false;
+
+        return false;
+    }
 
 
 }

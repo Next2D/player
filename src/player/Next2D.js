@@ -34,33 +34,10 @@ class Next2D
 
         // base set
         if (!options || !("base" in options)) {
-
-            if (url.indexOf("//") === -1) {
-
-                const urls = url.split("/");
-                if (urls[0] === "" || urls[0] === ".") {
-                    urls.shift();
-                }
-                url = urls.pop();
-
-                let base = Util.$location.origin + "/";
-                if (urls.length) {
-                    base += urls.join("/") + "/";
-                }
-
-                player.base = base;
-
-            } else {
-
-                player.base = url
-                    .split("?")[0]
-                    .split("/")
-                    .pop()
-                    .join("/");
-
-            }
-
+            player.base = url;
         }
+
+        player.setOptions(options);
 
 
 
@@ -80,9 +57,15 @@ class Next2D
         const player = new Player();
         Util.$currentPlayerId = player._$id;
 
-        const stage = player.stage;
+        player._$mode = "create";
+        player._$stage.frameRate = fps|0;
 
-        return stage.addChild(new MovieClip());
+        // setup
+        player.width  = width;
+        player.height = height;
+        player.setOptions(options);
+
+        return player._$stage.addChild(new MovieClip());
     }
 }
 

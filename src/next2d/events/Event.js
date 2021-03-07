@@ -465,21 +465,6 @@ class Event
     }
 
     /**
-     * @description Event サブクラスのインスタンスを複製します。
-     *              Duplicates an instance of an Event subclass.
-     *
-     * @return {Event}
-     * @method
-     * @public
-     */
-    clone ()
-    {
-        const event = new Event(this.type, this.bubbles, this.cancelable);
-        event._$currentTarget = this._$currentTarget;
-        return event;
-    }
-
-    /**
      * @description カスタム ActionScript 3.0 Event クラスに
      *              toString() メソッドを実装するためのユーティリティ関数です。
      *              A utility function for implementing the toString() method

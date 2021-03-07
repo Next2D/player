@@ -74,4 +74,8 @@ class Bitmap extends DisplayObject
     {
         return "next2d.display:Bitmap";
     }
+
+
+
+
 }

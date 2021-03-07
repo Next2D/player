@@ -254,8 +254,8 @@ class CacheStore
 
     /**
      * @param   {string|number} unique_key
-     * @param   {Float64Array} matrix
-     * @param   {Float64Array} [color=null]
+     * @param   {Float32Array} matrix
+     * @param   {Float32Array} [color=null]
      * @returns {array}
      * @public
      */
@@ -274,8 +274,8 @@ class CacheStore
 
     /**
      * @param   {string|number} unique_key
-     * @param   {Float64Array} [matrix=null]
-     * @param   {Float64Array} [color=null]
+     * @param   {Float32Array} [matrix=null]
+     * @param   {Float32Array} [color=null]
      * @returns {array}
      * @public
      */
@@ -298,7 +298,7 @@ class CacheStore
     }
 
     /**
-     * @param  {Float64Array} [c=null]
+     * @param  {Float32Array} [c=null]
      * @return {string}
      */
     colorToString (c = null)

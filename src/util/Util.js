@@ -50,54 +50,179 @@ Util.$MAX_VALUE = window.Number.MAX_VALUE;
  */
 Util.$MIN_VALUE = window.Number.MIN_VALUE;
 
-
 /**
- * @type {Float64Array}
+ * @type {number}
  * @const
  * @static
  */
-Util.$MATRIX_ARRAY_IDENTITY = new Float64Array([1, 0, 0, 1, 0, 0]);
+Util.$HIGH_SAMPLES = 4;
 
 /**
- * @type {Float64Array}
+ * @type {number}
  * @const
  * @static
  */
-Util.$MATRIX_ARRAY_20_0_0_20_0_0 = new Float64Array([Util.$TWIPS, 0, 0, Util.$TWIPS, 0, 0]);
+Util.$MEDIUM_SAMPLES = 2;
 
 /**
- * @type {Float64Array}
+ * @type {number}
  * @const
  * @static
  */
-Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE = new Float64Array([0.05, 0, 0, 0.05, 0, 0]);
+Util.$LOW_SAMPLES = 0;
 
 /**
- * @type {Float64Array}
+ * @type {number}
  * @const
  * @static
  */
-Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0 = new Float64Array([
+Util.$LOAD_START = "loadstart";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$PROGRESS = "progress";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$LOADEND = "loadend";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$TOUCH_START = "touchstart";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$TOUCH_MOVE = "touchmove";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$TOUCH_END = "touchend";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$MOUSE_DOWN = "mousedown";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$MOUSE_MOVE = "mousemove";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$MOUSE_UP = "mouseup";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$MOUSE_WHEEL = "wheel";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$DOUBLE_CLICK = "dblclick";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$MOUSE_LEAVE = "mouseleave";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$KEY_DOWN = "keydown";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$KEY_UP = "keyup";
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$SCROLL = "scroll";
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_IDENTITY = new Float32Array([1, 0, 0, 1, 0, 0]);
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_20_0_0_20_0_0 = new Float32Array([Util.$TWIPS, 0, 0, Util.$TWIPS, 0, 0]);
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE = new Float32Array([0.05, 0, 0, 0.05, 0, 0]);
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0 = new Float32Array([
     Util.$TWIPS / Util.$devicePixelRatio, 0, 0,
     Util.$TWIPS / Util.$devicePixelRatio, 0, 0
 ]);
 
 /**
- * @type {Float64Array}
+ * @type {Float32Array}
  * @const
  * @static
  */
-Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE = new Float64Array([
+Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE = new Float32Array([
     1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0,
     1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0
 ]);
 
 /**
- * @type {Float64Array}
+ * @type {Float32Array}
  * @const
  * @static
  */
-Util.$COLOR_ARRAY_IDENTITY = new Float64Array([1, 1, 1, 1, 0, 0, 0, 0]);
+Util.$COLOR_ARRAY_IDENTITY = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 
 /**
@@ -222,6 +347,14 @@ Util.$atan2 = Math.atan2;
 
 /**
  * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$floor = Math.floor;
+
+/**
+ * @shortcut
  * @type {number}
  * @const
  * @static
@@ -306,7 +439,53 @@ Util.$WebGLTexture = window.WebGLTexture;
  * @const
  * @static
  */
+Util.$clearTimeout = window.clearTimeout;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$setTimeout = window.setTimeout;
+
+/**
+ * @type {AudioContext}
+ * @static
+ */
+Util.$audioContext = null;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
 Util.$CanvasRenderingContext2D = window.CanvasRenderingContext2D;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$requestAnimationFrame = window.requestAnimationFrame;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$cancelAnimationFrame = window.cancelAnimationFrame;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$performance = window.performance;
 
 
 /**
@@ -382,26 +561,6 @@ Util.$players = [];
 Util.$loaderInfos = [];
 
 /**
- * 使用済みになったColorTransformのFloat64Arrayをプール
- * Pool the Float64Array of ColorTransform that is no longer in use.
- *
- * @type {Float64Array[]}
- * @const
- * @static
- */
-Util.$colorArray = [];
-
-/**
- * 使用済みになったMatrixのFloat64Arrayをプール
- * Pool the Float64Array of Matrix that is no longer in use.
- *
- * @type {Float64Array[]}
- * @const
- * @static
- */
-Util.$matrixArray = [];
-
-/**
  * 使用済みになったbounds Objectをプール
  * Pool bounds objects that are no longer in use.
  *
@@ -420,6 +579,13 @@ Util.$bounds = [];
  * @static
  */
 Util.$arrays = [];
+
+/**
+ * @type {Sound[]}
+ * @const
+ * @static
+ */
+Util.$audios = [];
 
 /**
  * 使用済みになったMap Objectをプール
@@ -450,6 +616,16 @@ Util.$matrices = [];
  * @static
  */
 Util.$colors = [];
+
+/**
+ * 使用済みになったFloat32Arrayをプール
+ * Pool used Float32Array.
+ *
+ * @type {Map}
+ * @const
+ * @static
+ */
+Util.$float32Array = new Map();
 
 /**
  * @type {boolean}
@@ -591,50 +767,21 @@ Util.$clamp = function (min, max, value, default_value)
 }
 
 /**
- * @return {Float64Array}
- * @method
- * @static
- */
-Util.$getColorArray = function (
-    a = 1, b = 1, c = 1, d = 1,
-    e = 0, f = 0, g = 0, h = 0
-) {
-
-    const color = Util.$colorArray.pop() || new Float64Array(8);
-
-    color[0] = a;
-    color[1] = b;
-    color[2] = c;
-    color[3] = d;
-    color[4] = e;
-    color[5] = f;
-    color[6] = g;
-    color[7] = h;
-
-    return color;
-};
-
-/**
- * @param  {Float64Array} array
- * @return {void}
- * @method
- * @static
- */
-Util.$poolColorArray = function (array)
-{
-    Util.$colorArray.push(array);
-}
-
-/**
- * @param   {Float64Array} a
- * @param   {Float64Array} b
- * @returns {Float64Array}
+ * @param   {Float32Array} a
+ * @param   {Float32Array} b
+ * @returns {Float32Array}
  * @method
  * @static
  */
 Util.$multiplicationColor = function (a, b)
 {
-    return Util.$getColorArray(
+    if (a === Util.$COLOR_ARRAY_IDENTITY
+        && b === Util.$COLOR_ARRAY_IDENTITY
+    ) {
+        return Util.$COLOR_ARRAY_IDENTITY;
+    }
+
+    return Util.$getFloat32Array(
         a[0] * b[0],
         a[1] * b[1],
         a[2] * b[2],
@@ -647,49 +794,20 @@ Util.$multiplicationColor = function (a, b)
 }
 
 /**
- * @param  {number} [a=1]
- * @param  {number} [b=0]
- * @param  {number} [c=0]
- * @param  {number} [d=1]
- * @param  {number} [tx=0]
- * @param  {number} [ty=0]
- * @return {Float64Array}
- * @method
- * @static
- */
-Util.$getMatrixArray = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
-{
-    const matrix = Util.$matrixArray.pop() || new Float64Array(6);
-
-    matrix[0] = a;
-    matrix[1] = b;
-    matrix[2] = c;
-    matrix[3] = d;
-    matrix[4] = tx * Util.$TWIPS;
-    matrix[5] = ty * Util.$TWIPS;
-
-    return matrix;
-};
-
-/**
- * @return {Float64Array}
- * @method
- * @static
- */
-Util.$poolMatrixArray = function (array)
-{
-    Util.$matrixArray.push(array);
-}
-
-/**
- * @param   {Float64Array} a
- * @param   {Float64Array} b
- * @returns {Float64Array}
+ * @param   {Float32Array} a
+ * @param   {Float32Array} b
+ * @returns {Float32Array}
  * @static
  */
 Util.$multiplicationMatrix = function(a, b)
 {
-    return Util.$getMatrixArray(
+    if (a === Util.$MATRIX_ARRAY_IDENTITY
+        && b === Util.$MATRIX_ARRAY_IDENTITY
+    ) {
+        return Util.$MATRIX_ARRAY_IDENTITY;
+    }
+
+    return Util.$getFloat32Array(
         a[0] * b[0] + a[2] * b[1],
         a[1] * b[0] + a[3] * b[1],
         a[0] * b[2] + a[2] * b[3],
@@ -755,6 +873,50 @@ Util.$getMap = function ()
 };
 
 /**
+ * @return {Float32Array}
+ * @method
+ * @static
+ */
+Util.$getFloat32Array = function ()
+{
+    const length = arguments.length;
+    if (!Util.$float32Array.has(length)) {
+        Util.$float32Array.set(length, Util.$getArray());
+    }
+
+    let array = Util.$float32Array.get(length).pop();
+    if (!array) {
+        array = new Float32Array(length);
+    }
+
+    for (let idx = 0; idx < length; ++idx) {
+        array[idx] = arguments[idx];
+    }
+
+    return array;
+}
+
+/**
+ * @param  {Float32Array} array
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$poolFloat32Array = function (array)
+{
+    const length = array.length;
+    if (!length) {
+        return ;
+    }
+
+    if (!Util.$float32Array.has(length)) {
+        Util.$float32Array.set(length, Util.$getArray());
+    }
+
+    Util.$float32Array.get(length).push(array);
+}
+
+/**
  * @return {Player}
  * @method
  * @static
@@ -810,7 +972,7 @@ Util.$currentMousePoint = function ()
 
 /**
  * @param  {object} bounds
- * @param  {Float64Array} matrix
+ * @param  {Float32Array} matrix
  * @return {object}
  * @method
  * @static
@@ -848,7 +1010,7 @@ Util.$getMatrix = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
 {
     if (Util.$matrices.length) {
         const matrix = Util.$matrices.pop();
-        matrix._$matrix = Util.$getMatrixArray(a, b, c, d, tx, ty);
+        matrix._$matrix = Util.$getFloat32Array(a, b, c, d, tx, ty);
     }
     return new Matrix(a, b, c, d, tx / Util.$TWIPS, ty / Util.$TWIPS);
 }
@@ -861,7 +1023,7 @@ Util.$getMatrix = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
  */
 Util.$poolMatrix = function (matrix)
 {
-    Util.$poolMatrixArray(matrix._$matrix);
+    Util.$poolFloat32Array(matrix._$matrix);
     matrix._$matrix = null;
     Util.$matrices.push(matrix);
 }
@@ -880,11 +1042,11 @@ Util.$poolMatrix = function (matrix)
 Util.$getColorTransform = function (
     red_multiplier = 1, green_multiplier = 1, blue_multiplier = 1, alpha_multiplier = 1,
     red_offset = 0, green_offset = 0, blue_offset = 0, alpha_offset = 0
-)
-{
+) {
+
     if (Util.$colors.length) {
         const colorTransform = Util.$colors.pop();
-        colorTransform._$colorTransform = Util.$getColorArray(
+        colorTransform._$colorTransform = Util.$getFloat32Array(
             red_multiplier, green_multiplier, blue_multiplier, alpha_multiplier,
             red_offset, green_offset, blue_offset, alpha_offset
         );
@@ -904,7 +1066,7 @@ Util.$getColorTransform = function (
  */
 Util.$poolColorTransform = function (color_transform)
 {
-    Util.$poolColorArray(color_transform._$colorTransform);
+    Util.$poolFloat32Array(color_transform._$colorTransform);
     color_transform._$colorTransform = null;
     Util.$colors.push(color_transform);
 }
@@ -981,6 +1143,186 @@ Util.$cacheStore = function ()
     return Util.$currentPlayer()._$cacheStore;
 };
 
+/**
+ * @param   {Float32Array} m
+ * @returns {Float32Array}
+ * @method
+ * @static
+ */
+Util.$inverseMatrix = function(m)
+{
+    const rdet = 1 / (m[0] * m[4] - m[3] * m[1]);
+    const tx  = m[3] * m[7] - m[4] * m[6];
+    const ty  = m[1] * m[6] - m[0] * m[7];
+
+    return Util.$getFloat32Array(
+        m[4] * rdet,  -m[1] * rdet, 0,
+        -m[3] * rdet,  m[0] * rdet, 0,
+        tx * rdet, ty * rdet, 1
+    );
+};
+
+/**
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$decodeAudioFailed = function ()
+{
+    const buffer = new Util.$Uint8Array(this._$data);
+
+    let idx = 0;
+    while (true) {
+
+        idx = buffer.indexOf(0xff, idx);
+
+        if (idx === -1 || ((buffer[idx + 1] & 0xe0) === 0xe0)) {
+            break;
+        }
+
+        ++idx;
+
+    }
+
+    if (idx > -1) {
+
+        Util
+            .$audioContext
+            .decodeAudioData(
+                buffer.buffer.slice(idx),
+                Util.$decodeAudioSuccess.bind(this)
+            );
+
+    }
+}
+
+/**
+ * @param  {Uint8Array} data
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$decodeAudioSuccess = function (data)
+{
+    this._$buffer = data;
+    this._$data   = null;
+}
+
+/**
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$loadAudioData = function ()
+{
+
+    // create AudioContext
+    if (!Util.$audioContext) {
+
+        Util.$audioContext = new Util.$window.AudioContext();
+        Util.$audioContext.resume();
+
+    }
+
+    if (Util.$audioContext) {
+
+        const length = Util.$audios.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const sound = Util.$audios[idx];
+
+            if (!sound._$data.length) {
+                return ;
+            }
+
+            // const buffer = new Util.$Uint8Array(sound._$data);
+
+            Util
+                .$audioContext
+                .decodeAudioData(
+                    sound._$data.buffer,
+                    Util.$decodeAudioSuccess.bind(sound),
+                    Util.$decodeAudioFailed.bind(sound)
+                );
+
+        }
+
+        // reset
+        Util.$audios.length = 0;
+    }
+
+};
+
+/**
+ * @type {number}
+ * @static
+ */
+Util.$resizeTimerId = 0;
+
+/**
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$resize = function ()
+{
+    const clearTimer = Util.$clearTimeout;
+    clearTimer(Util.$resizeTimerId);
+
+    const timer = Util.$setTimeout;
+    Util.$resizeTimerId = timer(Util.$resizeExecute, 300);
+};
+
+/**
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$resizeExecute = function ()
+{
+    const length = Util.$players.length;
+    for (let idx = 0; idx < length; ++idx) {
+
+        const player = Util.$players[idx];
+        if (!player) {
+            continue;
+        }
+
+        if (player._$loadStatus === 4) {
+            player._$resize();
+        }
+
+    }
+};
+
+/**
+ * @param  {CanvasToWebGLContext} context
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$resetContext = function (context)
+{
+    // reset color
+    context._$contextStyle._$fillStyle[0] = 1;
+    context._$contextStyle._$fillStyle[1] = 1;
+    context._$contextStyle._$fillStyle[2] = 1;
+    context._$contextStyle._$fillStyle[3] = 1;
+
+    context._$contextStyle._$strokeStyle[0] = 1;
+    context._$contextStyle._$strokeStyle[1] = 1;
+    context._$contextStyle._$strokeStyle[2] = 1;
+    context._$contextStyle._$strokeStyle[3] = 1;
+
+    // reset
+    context._$style                    = context._$contextStyle;
+    context._$globalAlpha              = 1;
+    context._$globalCompositeOperation = BlendMode.NORMAL;
+    context._$imageSmoothingEnabled    = false;
+}
+
+
+
 
 
 
@@ -996,14 +1338,24 @@ Util.$packages = function (object)
 {
     object["display"] = {
         "Bitmap": Bitmap,
+        "BitmapData": BitmapData,
+        "BitmapDataChannel": BitmapDataChannel,
         "BlendMode": BlendMode,
+        "CapsStyle": CapsStyle,
         "DisplayObject": DisplayObject,
         "DisplayObjectContainer": DisplayObjectContainer,
         "FrameLabel": FrameLabel,
+        "GradientType": GradientType,
         "Graphics": Graphics,
         "InteractiveObject": InteractiveObject,
+        "InterpolationMethod": InterpolationMethod,
+        "JointStyle": JointStyle,
+        "Loader": Loader,
+        "LoaderInfo": LoaderInfo,
         "MovieClip": MovieClip,
         "Shape": Shape,
+        "SimpleButton": SimpleButton,
+        "SpreadMethod": SpreadMethod,
         "Sprite": Sprite,
         "Stage": Stage
     };
@@ -1026,12 +1378,18 @@ Util.$packages = function (object)
     };
 
     object["media"] = {
+        "Sound": Sound,
         "SoundTransform": SoundTransform
     };
 
     object["net"] = {
+        "URLRequest": URLRequest,
+        "URLRequestHeader": URLRequestHeader,
+        "URLRequestMethod": URLRequestMethod,
     };
 
     object["text"] = {
+        "TextField": TextField,
+        "TextFormat": TextFormat
     };
 }

@@ -38,10 +38,10 @@ class Matrix
     constructor(a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
     {
         /**
-         * @type {Float64Array}
+         * @type {Float32Array}
          * @private
          */
-        this._$matrix = Util.$getMatrixArray(a, b, c, d, tx, ty);
+        this._$matrix = Util.$getFloat32Array(a, b, c, d, tx, ty);
     }
 
     /**

@@ -830,7 +830,340 @@ class Graphics
         return this;
     }
 
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array}  matrix
+     * @param  {Float32Array}  color_transform
+     * @param  {string} [blend_mode=BlendMode.NORMAL]
+     * @param  {array}  [filters=null]
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$draw (
+        context, matrix, color_transform,
+        blend_mode = BlendMode.NORMAL, filters = null
+    ) {
 
+        if (!this._$maxAlpha) {
+            return ;
+        }
+
+        const boundsBase = this._$getBounds();
+        if (!boundsBase) {
+            return ;
+        }
+
+        const displayObject = this._$displayObject;
+
+        // set grid data
+        let hasGrid = displayObject._$scale9Grid !== null;
+
+        // 9スライスを有効にしたオブジェクトが回転・傾斜成分を含む場合は、9スライスは無効になる
+        let parentMatrix = null;
+        if (hasGrid) {
+            parentMatrix = displayObject._$transform._$rawMatrix();
+            hasGrid = hasGrid
+                && (Util.$abs(parentMatrix[1]) < 0.001)
+                && (Util.$abs(parentMatrix[2]) < 0.0001);
+        }
+
+        // size
+        const bounds = Util.$boundsMatrix(boundsBase, matrix);
+        const xMax   = +bounds.xMax;
+        const xMin   = +bounds.xMin;
+        const yMax   = +bounds.yMax;
+        const yMin   = +bounds.yMin;
+        Util.$poolBoundsObject(bounds);
+
+
+        let width  = Util.$ceil(Util.$abs(xMax - xMin));
+        let height = Util.$ceil(Util.$abs(yMax - yMin));
+        if (!width || !height) {
+            return;
+        }
+
+        if (0 > (xMin + width) || 0 > (yMin + height)) {
+            return;
+        }
+
+        // cache current buffer
+        const currentBuffer = context.frameBuffer.currentAttachment;
+        if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
+            return;
+        }
+
+
+        // resize
+        const textureScale = context._$textureScale(width, height);
+        if (textureScale < 1) {
+            width  *= textureScale;
+            height *= textureScale;
+        }
+
+        const cacheColor   = color_transform[3];
+        color_transform[3] = 1;
+
+        // get cache
+        const id        = displayObject._$instanceId;
+        const cacheKeys = Util
+            .$cacheStore()
+            .generateShapeKeys(id, matrix, color_transform);
+
+        // cache
+        let texture = Util.$cacheStore().get(cacheKeys);
+        if (!texture) {
+
+            // create cache buffer
+            const buffer = context
+                .frameBuffer
+                .createCacheAttachment(width, height, true);
+            context._$bind(buffer);
+
+
+            // reset
+            Util.$resetContext(context);
+            context.setTransform(
+                matrix[0], matrix[1], matrix[2], matrix[3],
+                matrix[4] - xMin,
+                matrix[5] - yMin
+            );
+
+            if (hasGrid) {
+                const player = Util.$currentPlayer();
+                const mScale = player._$scale * player._$ratio / 20;
+                const baseMatrix = Util.$getFloat32Array(mScale, 0, 0, mScale, 0, 0);
+
+                const pMatrix = Util.$multiplicationMatrix(
+                    baseMatrix, parentMatrix
+                );
+
+                Util.$poolFloat32Array(baseMatrix);
+
+                const aMatrixBase = displayObject
+                    ._$parent
+                    ._$transform
+                    ._$calculateConcatenatedMatrix()
+                    ._$matrix;
+
+                const aMatrix = Util.$getFloat32Array(
+                    aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
+                    aMatrixBase[4] * mScale - xMin,
+                    aMatrixBase[5] * mScale - yMin
+                );
+
+                const apMatrix = Util.$multiplicationMatrix(aMatrix, pMatrix);
+                const aOffsetX = apMatrix[4] - (matrix[4] - xMin);
+                const aOffsetY = apMatrix[5] - (matrix[5] - yMin);
+                Util.$poolFloat32Array(apMatrix);
+
+                const parentBounds = Util.$boundsMatrix(boundsBase, pMatrix);
+                const parentXMax   = +parentBounds.xMax;
+                const parentXMin   = +parentBounds.xMin;
+                const parentYMax   = +parentBounds.yMax;
+                const parentYMin   = +parentBounds.yMin;
+                const parentWidth  = Util.$ceil(Util.$abs(parentXMax - parentXMin));
+                const parentHeight = Util.$ceil(Util.$abs(parentYMax - parentYMin));
+
+                Util.$poolBoundsObject(parentBounds);
+
+                context.grid.enable(
+                    parentXMin, parentYMin, parentWidth, parentHeight,
+                    boundsBase, displayObject._$scale9Grid,
+                    pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
+                    aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
+                );
+
+                Util.$poolFloat32Array(pMatrix);
+                Util.$poolFloat32Array(aMatrix);
+            }
+
+            this._$doDraw(context, color_transform, false);
+
+            if (hasGrid) {
+                context.grid.disable();
+            }
+
+            texture = context
+                .frameBuffer
+                .getTextureFromCurrentAttachment();
+
+            // set cache
+            Util.$cacheStore().set(cacheKeys, texture);
+
+            // release buffer
+            context.frameBuffer.releaseAttachment(buffer, false);
+
+            // end draw and reset current buffer
+            context._$bind(currentBuffer);
+
+        }
+        color_transform[3] = cacheColor;
+
+        let isFilter = false;
+        let offsetX  = 0;
+        let offsetY  = 0;
+        if (filters) {
+
+            const canApply = displayObject._$canApply(filters);
+            if (canApply) {
+
+                isFilter = true;
+
+                const cacheKeys = [displayObject._$instanceId, "f"];
+                let cache = Util.$cacheStore().get(cacheKeys);
+
+                const updated = displayObject._$isFilterUpdated(
+                    width, height, matrix, color_transform, filters, canApply
+                );
+
+                if (!cache || updated) {
+
+                    // cache clear
+                    if (cache) {
+
+                        Util.$cacheStore().set(cacheKeys, null);
+                        cache.layerWidth     = 0;
+                        cache.layerHeight    = 0;
+                        cache._$offsetX      = 0;
+                        cache._$offsetY      = 0;
+                        cache.matrix         = null;
+                        cache.colorTransform = null;
+                        context.frameBuffer.releaseTexture(cache);
+
+                        cache = null;
+                    }
+
+
+                    const currentAttachment = context.frameBuffer.currentAttachment;
+
+                    const buffer = context
+                        .frameBuffer
+                        .createCacheAttachment(width, height, false);
+                    context._$bind(buffer);
+
+                    const mat = Util.$autopoolMatrixArray(Util.$multiplicationMatrix(
+                        matrix, Util.$MATRIX_ARRAY_20_0_0_20_0_0
+                    ));
+
+
+                    Util.$resetContext(context);
+                    context.setTransform(mat[0], mat[1], mat[2], mat[3], mat[4] - xMin, mat[5] - yMin);
+                    context.drawImage(texture, 0, 0, texture.width, texture.height, color_transform);
+
+                    const targetTexture = context
+                        .frameBuffer
+                        .getTextureFromCurrentAttachment()
+
+                    context._$bind(currentAttachment);
+
+                    texture = displayObject._$getFilterTexture(
+                        context, filters, targetTexture, matrix, color_transform
+                    );
+
+                    context
+                        .frameBuffer
+                        .releaseAttachment(buffer, true);
+
+                    Util.$cacheStore().set(cacheKeys, texture);
+
+                }
+
+                if (cache) {
+                    texture = cache;
+                }
+
+                Util.$poolArray(cacheKeys);
+
+                offsetX = texture._$offsetX;
+                offsetY = texture._$offsetY;
+            }
+
+        }
+
+        // reset
+        Util.$resetContext(context);
+
+        // draw
+        context._$globalAlpha = alpha;
+        context._$imageSmoothingEnabled = true;
+        context._$globalCompositeOperation = blend_mode;
+
+        if (isFilter) {
+            context.setTransform(1, 0, 0, 1, matrix[4], matrix[5]);
+            context.drawImage(texture,
+                -offsetX - (matrix[4] - xMin), -offsetY - (matrix[5] - yMin),
+                texture.width, texture.height, color_transform
+            );
+        } else {
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.drawImage(texture, xMin, yMin, width, height, color_transform);
+        }
+
+        // pool
+        Util.$poolArray(cacheKeys);
+        if (parentMatrix) {
+            Util.$poolMatrix(parentMatrix);
+        }
+        Util.$poolBoundsObject(boundsBase);
+
+    }
+
+    /**
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$getBounds ()
+    {
+        const displayObject = this._$displayObject;
+        if (displayObject && displayObject._$bounds) {
+            return Util.$getBoundsObject(
+                displayObject._$bounds.xMin, displayObject._$bounds.xMax,
+                displayObject._$bounds.yMin, displayObject._$bounds.yMax
+            );
+        }
+
+        // size zero
+        if (!this._$fillBounds && !this._$lineBounds) {
+            return null;
+        }
+
+        // build bounds
+        if (!this._$bounds) {
+
+            // init
+            const no = Util.$MAX_VALUE;
+
+            this._$bounds = Util.$getBoundsObject(no, -no, no, -no);
+
+            // fill bounds
+            if (this._$fillBounds) {
+
+                this._$bounds.xMin = Util.$min(this._$bounds.xMin, this._$fillBounds.xMin);
+                this._$bounds.xMax = Util.$max(this._$bounds.xMax, this._$fillBounds.xMax);
+                this._$bounds.yMin = Util.$min(this._$bounds.yMin, this._$fillBounds.yMin);
+                this._$bounds.yMax = Util.$max(this._$bounds.yMax, this._$fillBounds.yMax);
+
+            }
+
+            // line bounds
+            if (this._$lineBounds) {
+
+                this._$bounds.xMin = Util.$min(this._$bounds.xMin, this._$lineBounds.xMin);
+                this._$bounds.xMax = Util.$max(this._$bounds.xMax, this._$lineBounds.xMax);
+                this._$bounds.yMin = Util.$min(this._$bounds.yMin, this._$lineBounds.yMin);
+                this._$bounds.yMax = Util.$max(this._$bounds.yMax, this._$lineBounds.yMax);
+
+            }
+
+        }
+
+        return Util.$getBoundsObject(
+            this._$bounds.xMin, this._$bounds.xMax,
+            this._$bounds.yMin, this._$bounds.yMax
+        );
+    }
 
 
 
@@ -923,5 +1256,11 @@ class Graphics
         }
 
         Util.$poolArray(data);
+    }
+
+
+    _$buildCommand ()
+    {
+
     }
 }

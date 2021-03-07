@@ -27,13 +27,13 @@ class Stage extends DisplayObjectContainer
          * @type {Stage}
          * @private
          */
-        this._$root       = this;
+        this._$root = this;
 
         /**
          * @type {Stage}
          * @private
          */
-        this._$stage      = this;
+        this._$stage = this;
 
         /**
          * @type {boolean}
@@ -130,14 +130,14 @@ class Stage extends DisplayObjectContainer
         const player = this._$player;
         if (player) {
             const rgba = Util.$uintToRGBA(this._$color);
-            // player
-            //     ._$context
-            //     ._$setColor(
-            //         rgba.R / 255,
-            //         rgba.G / 255,
-            //         rgba.B / 255,
-            //         rgba.A / 255
-            //     );
+            player
+                ._$context
+                ._$setColor(
+                    rgba.R / 255,
+                    rgba.G / 255,
+                    rgba.B / 255,
+                    rgba.A / 255
+                );
         }
     }
 
