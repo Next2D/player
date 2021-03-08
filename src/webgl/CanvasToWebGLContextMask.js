@@ -163,7 +163,7 @@ class CanvasToWebGLContextMask
         this._$context.drawImage(texture, -x, -y, texture.width, texture.height);
 
 
-        return Util.$getMatrixArray(
+        return Util.$getFloat32Array6(
             matrix[0], matrix[1], matrix[2], matrix[3],
             matrix[4] - x,
             matrix[5] - y

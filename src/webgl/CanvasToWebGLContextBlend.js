@@ -232,7 +232,7 @@ class CanvasToWebGLContextBlend
                         const y2 = +(left  * b + bottom * d + ty);
                         const y3 = +(left  * b + top    * d + ty);
 
-                        const no = Util.MAX_VALUE;
+                        const no = Util.$MAX_VALUE;
                         const xMin = +Util.$min(Util.$min(Util.$min(Util.$min( no, x0), x1), x2), x3);
                         const xMax = +Util.$max(Util.$max(Util.$max(Util.$max(-no, x0), x1), x2), x3);
                         const yMin = +Util.$min(Util.$min(Util.$min(Util.$min( no, y0), y1), y2), y3);

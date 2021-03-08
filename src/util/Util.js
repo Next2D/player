@@ -343,6 +343,14 @@ Util.$abs = Math.abs;
  * @const
  * @static
  */
+Util.$ceil = Math.ceil;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
 Util.$atan2 = Math.atan2;
 
 /**
@@ -618,14 +626,34 @@ Util.$matrices = [];
 Util.$colors = [];
 
 /**
- * 使用済みになったFloat32Arrayをプール
- * Pool used Float32Array.
+ * 使用済みになったFloat32Arrayをプール、サイズは6固定
+ * Pool used Float32Array, size fixed at 6.
  *
- * @type {Map}
+ * @type {Float32Array[]}
  * @const
  * @static
  */
-Util.$float32Array = new Map();
+Util.$float32Array6 = [];
+
+/**
+ * 使用済みになったFloat32Arrayをプール、サイズは8固定
+ * Pool used Float32Array, size fixed at 8.
+ *
+ * @type {Float32Array[]}
+ * @const
+ * @static
+ */
+Util.$float32Array8 = [];
+
+/**
+ * 使用済みになったFloat32Arrayをプール、サイズは9固定
+ * Pool used Float32Array, size fixed at 9.
+ *
+ * @type {Float32Array[]}
+ * @const
+ * @static
+ */
+Util.$float32Array9 = [];
 
 /**
  * @type {boolean}
@@ -775,13 +803,7 @@ Util.$clamp = function (min, max, value, default_value)
  */
 Util.$multiplicationColor = function (a, b)
 {
-    if (a === Util.$COLOR_ARRAY_IDENTITY
-        && b === Util.$COLOR_ARRAY_IDENTITY
-    ) {
-        return Util.$COLOR_ARRAY_IDENTITY;
-    }
-
-    return Util.$getFloat32Array(
+    return Util.$getFloat32Array8(
         a[0] * b[0],
         a[1] * b[1],
         a[2] * b[2],
@@ -801,13 +823,7 @@ Util.$multiplicationColor = function (a, b)
  */
 Util.$multiplicationMatrix = function(a, b)
 {
-    if (a === Util.$MATRIX_ARRAY_IDENTITY
-        && b === Util.$MATRIX_ARRAY_IDENTITY
-    ) {
-        return Util.$MATRIX_ARRAY_IDENTITY;
-    }
-
-    return Util.$getFloat32Array(
+    return Util.$getFloat32Array6(
         a[0] * b[0] + a[2] * b[1],
         a[1] * b[0] + a[3] * b[1],
         a[0] * b[2] + a[2] * b[3],
@@ -873,25 +889,28 @@ Util.$getMap = function ()
 };
 
 /**
+ * @param  {number} [f0=0]
+ * @param  {number} [f1=0]
+ * @param  {number} [f2=0]
+ * @param  {number} [f3=0]
+ * @param  {number} [f4=0]
+ * @param  {number} [f5=0]
  * @return {Float32Array}
  * @method
  * @static
  */
-Util.$getFloat32Array = function ()
-{
-    const length = arguments.length;
-    if (!Util.$float32Array.has(length)) {
-        Util.$float32Array.set(length, Util.$getArray());
-    }
+Util.$getFloat32Array6 = function (
+    f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0
+) {
+    const array = Util.$float32Array6.pop()
+        || new Util.$window.Float32Array(6);
 
-    let array = Util.$float32Array.get(length).pop();
-    if (!array) {
-        array = new Float32Array(length);
-    }
-
-    for (let idx = 0; idx < length; ++idx) {
-        array[idx] = arguments[idx];
-    }
+    array[0] = f0;
+    array[1] = f1;
+    array[2] = f2;
+    array[3] = f3;
+    array[4] = f4;
+    array[5] = f5;
 
     return array;
 }
@@ -902,18 +921,95 @@ Util.$getFloat32Array = function ()
  * @method
  * @static
  */
-Util.$poolFloat32Array = function (array)
+Util.$poolFloat32Array6 = function (array)
 {
-    const length = array.length;
-    if (!length) {
-        return ;
-    }
+    Util.$float32Array6.push(array);
+}
 
-    if (!Util.$float32Array.has(length)) {
-        Util.$float32Array.set(length, Util.$getArray());
-    }
+/**
+ * @param  {number} [f0=0]
+ * @param  {number} [f1=0]
+ * @param  {number} [f2=0]
+ * @param  {number} [f3=0]
+ * @param  {number} [f4=0]
+ * @param  {number} [f5=0]
+ * @param  {number} [f6=0]
+ * @param  {number} [f7=0]
+ * @return {Float32Array}
+ * @method
+ * @static
+ */
+Util.$getFloat32Array8 = function (
+    f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0, f6 = 0, f7 = 0
+) {
+    const array = Util.$float32Array8.pop()
+        || new Util.$window.Float32Array(8);
 
-    Util.$float32Array.get(length).push(array);
+    array[0] = f0;
+    array[1] = f1;
+    array[2] = f2;
+    array[3] = f3;
+    array[4] = f4;
+    array[5] = f5;
+    array[6] = f6;
+    array[7] = f7;
+
+    return array;
+}
+
+/**
+ * @param  {Float32Array} array
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$poolFloat32Array8 = function (array)
+{
+    Util.$float32Array8.push(array);
+}
+
+/**
+ * @param  {number} [f0=0]
+ * @param  {number} [f1=0]
+ * @param  {number} [f2=0]
+ * @param  {number} [f3=0]
+ * @param  {number} [f4=0]
+ * @param  {number} [f5=0]
+ * @param  {number} [f6=0]
+ * @param  {number} [f7=0]
+ * @param  {number} [f8=0]
+ * @return {Float32Array}
+ * @method
+ * @static
+ */
+Util.$getFloat32Array9 = function (
+    f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0, f6 = 0, f7 = 0, f8 = 0
+) {
+    const array = Util.$float32Array9.pop()
+        || new Util.$window.Float32Array(9);
+
+    array[0] = f0;
+    array[1] = f1;
+    array[2] = f2;
+    array[3] = f3;
+    array[4] = f4;
+    array[5] = f5;
+    array[6] = f6;
+    array[7] = f7;
+    array[8] = f8;
+
+    return array;
+}
+
+/**
+ * @param  {Float32Array} array
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$poolFloat32Array9 = function (array)
+{
+    Util.$float32Array9.push(array);
 }
 
 /**
@@ -1010,7 +1106,7 @@ Util.$getMatrix = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
 {
     if (Util.$matrices.length) {
         const matrix = Util.$matrices.pop();
-        matrix._$matrix = Util.$getFloat32Array(a, b, c, d, tx, ty);
+        matrix._$matrix = Util.$getFloat32Array6(a, b, c, d, tx, ty);
     }
     return new Matrix(a, b, c, d, tx / Util.$TWIPS, ty / Util.$TWIPS);
 }
@@ -1023,7 +1119,7 @@ Util.$getMatrix = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
  */
 Util.$poolMatrix = function (matrix)
 {
-    Util.$poolFloat32Array(matrix._$matrix);
+    Util.$poolFloat32Array6(matrix._$matrix);
     matrix._$matrix = null;
     Util.$matrices.push(matrix);
 }
@@ -1046,7 +1142,7 @@ Util.$getColorTransform = function (
 
     if (Util.$colors.length) {
         const colorTransform = Util.$colors.pop();
-        colorTransform._$colorTransform = Util.$getFloat32Array(
+        colorTransform._$colorTransform = Util.$getFloat32Array8(
             red_multiplier, green_multiplier, blue_multiplier, alpha_multiplier,
             red_offset, green_offset, blue_offset, alpha_offset
         );
@@ -1066,7 +1162,7 @@ Util.$getColorTransform = function (
  */
 Util.$poolColorTransform = function (color_transform)
 {
-    Util.$poolFloat32Array(color_transform._$colorTransform);
+    Util.$poolFloat32Array8(color_transform._$colorTransform);
     color_transform._$colorTransform = null;
     Util.$colors.push(color_transform);
 }
@@ -1155,7 +1251,7 @@ Util.$inverseMatrix = function(m)
     const tx  = m[3] * m[7] - m[4] * m[6];
     const ty  = m[1] * m[6] - m[0] * m[7];
 
-    return Util.$getFloat32Array(
+    return Util.$getFloat32Array9(
         m[4] * rdet,  -m[1] * rdet, 0,
         -m[3] * rdet,  m[0] * rdet, 0,
         tx * rdet, ty * rdet, 1

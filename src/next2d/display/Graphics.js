@@ -932,13 +932,13 @@ class Graphics
             if (hasGrid) {
                 const player = Util.$currentPlayer();
                 const mScale = player._$scale * player._$ratio / 20;
-                const baseMatrix = Util.$getFloat32Array(mScale, 0, 0, mScale, 0, 0);
+                const baseMatrix = Util.$getFloat32Array6(mScale, 0, 0, mScale, 0, 0);
 
                 const pMatrix = Util.$multiplicationMatrix(
                     baseMatrix, parentMatrix
                 );
 
-                Util.$poolFloat32Array(baseMatrix);
+                Util.$poolFloat32Array6(baseMatrix);
 
                 const aMatrixBase = displayObject
                     ._$parent
@@ -946,7 +946,7 @@ class Graphics
                     ._$calculateConcatenatedMatrix()
                     ._$matrix;
 
-                const aMatrix = Util.$getFloat32Array(
+                const aMatrix = Util.$getFloat32Array6(
                     aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
                     aMatrixBase[4] * mScale - xMin,
                     aMatrixBase[5] * mScale - yMin
@@ -955,7 +955,7 @@ class Graphics
                 const apMatrix = Util.$multiplicationMatrix(aMatrix, pMatrix);
                 const aOffsetX = apMatrix[4] - (matrix[4] - xMin);
                 const aOffsetY = apMatrix[5] - (matrix[5] - yMin);
-                Util.$poolFloat32Array(apMatrix);
+                Util.$poolFloat32Array6(apMatrix);
 
                 const parentBounds = Util.$boundsMatrix(boundsBase, pMatrix);
                 const parentXMax   = +parentBounds.xMax;
@@ -974,8 +974,8 @@ class Graphics
                     aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
                 );
 
-                Util.$poolFloat32Array(pMatrix);
-                Util.$poolFloat32Array(aMatrix);
+                Util.$poolFloat32Array6(pMatrix);
+                Util.$poolFloat32Array6(aMatrix);
             }
 
             this._$doDraw(context, color_transform, false);

@@ -56,9 +56,9 @@ describe("Matrix.js property valid test and clone test", function()
         m.tx  = 10;
         m.ty  = -10;
 
-        expect(m.a).toBe(1.2);
-        expect(m.b).toBe(0.765);
-        expect(m.c).toBe(-0.872);
+        expect(m.a).toBe(1.2000000476837158);
+        expect(m.b).toBe(0.7649999856948853);
+        expect(m.c).toBe(-0.871999979019165);
         expect(m.d).toBe(-1.5);
         expect(m.tx).toBe(10);
         expect(m.ty).toBe(-10);
@@ -74,9 +74,9 @@ describe("Matrix.js property valid test and clone test", function()
         m.tx  = "10";
         m.ty  = "-10";
 
-        expect(m.a).toBe(1.2);
-        expect(m.b).toBe(0.765);
-        expect(m.c).toBe(-0.872);
+        expect(m.a).toBe(1.2000000476837158);
+        expect(m.b).toBe(0.7649999856948853);
+        expect(m.c).toBe(-0.871999979019165);
         expect(m.d).toBe(-1.5);
         expect(m.tx).toBe(10);
         expect(m.ty).toBe(-10);
@@ -107,13 +107,13 @@ describe("Matrix.js property valid test and clone test", function()
         expect(isNaN(m1.b)).toBe(true);
         expect(isNaN(m1.c)).toBe(true);
         expect(isNaN(m1.d)).toBe(true);
-        // expect(isNaN(m1.tx)).toBe(true);
-        // expect(isNaN(m1.ty)).toBe(true);
+        expect(isNaN(m1.tx)).toBe(true);
+        expect(isNaN(m1.ty)).toBe(true);
 
         // clone
-        expect(m2.a).toBe(1.2);
-        expect(m2.b).toBe(0.765);
-        expect(m2.c).toBe(-0.872);
+        expect(m2.a).toBe(1.2000000476837158);
+        expect(m2.b).toBe(0.7649999856948853);
+        expect(m2.c).toBe(-0.871999979019165);
         expect(m2.d).toBe(-1.5);
         expect(m2.tx).toBe(10);
         expect(m2.ty).toBe(-10);
@@ -129,7 +129,7 @@ describe("Matrix.js concat test", function()
         var m2 = new Matrix(1.3, 0.75, 0, -1.5, 10, -10);
         m1.concat(m2);
         expect(m1.toString()).toBe(
-            "(a=2.6, b=0, c=-1.3, d=-2.25, tx=10, ty=-17.5)"
+            "(a=2.5999999046325684, b=0, c=-1.2999999523162842, d=-2.25, tx=10, ty=-17.5)"
         );
     });
 
@@ -149,7 +149,7 @@ describe("Matrix.js concat test", function()
         var m2 = new Matrix(1.3, 0, 0, -1.5, 10, -10);
         m1.concat(m2);
         expect(m1.toString()).toBe(
-            "(a=2.6, b=-1.5, c=-1.3, d=-1.5, tx=10, ty=-17.5)"
+            "(a=2.5999999046325684, b=-1.5, c=-1.2999999523162842, d=-1.5, tx=10, ty=-17.5)"
         );
     });
 
@@ -159,7 +159,7 @@ describe("Matrix.js concat test", function()
         var m2 = new Matrix(1.3, 0.75, 0, 0, 10, -10);
         m1.concat(m2);
         expect(m1.toString()).toBe(
-            "(a=2.6, b=1.5, c=-1.3, d=-0.75, tx=10, ty=-10)"
+            "(a=2.5999999046325684, b=1.5, c=-1.2999999523162842, d=-0.75, tx=10, ty=-10)"
         );
     });
 
@@ -169,7 +169,7 @@ describe("Matrix.js concat test", function()
         var m2 = new Matrix(1.3, 0.75, 0, -1.5, 0, -10);
         m1.concat(m2);
         expect(m1.toString()).toBe(
-            "(a=2.6, b=0, c=-1.3, d=-2.25, tx=0, ty=-17.5)"
+            "(a=2.5999999046325684, b=0, c=-1.2999999523162842, d=-2.25, tx=0, ty=-17.5)"
         );
     });
 
@@ -179,7 +179,7 @@ describe("Matrix.js concat test", function()
         var m2 = new Matrix(1.3, 0.75, 0, -1.5, 10, 0);
         m1.concat(m2);
         expect(m1.toString()).toBe(
-            "(a=2.6, b=0, c=-1.3, d=-2.25, tx=10, ty=-7.5)"
+            "(a=2.5999999046325684, b=0, c=-1.2999999523162842, d=-2.25, tx=10, ty=-7.5)"
         );
     });
 
@@ -189,7 +189,7 @@ describe("Matrix.js concat test", function()
         var m2 = new Matrix(1.3, 0.75, 0, -1.5, 10, -10);
         m1.concat(m2);
         expect(m1.toString()).toBe(
-            "(a=1.3, b=0.75, c=0, d=-1.5, tx=10, ty=-10)"
+            "(a=1.2999999523162842, b=0.75, c=0, d=-1.5, tx=10, ty=-10)"
         );
     });
 
@@ -199,7 +199,7 @@ describe("Matrix.js concat test", function()
         var m2 = new Matrix(1.3, 0.75, 0, -1.5, 10, -10);
         m1.concat(m2);
         expect(m1.toString()).toBe(
-            "(a=1.3, b=0.75, c=0, d=-1.5, tx=23, ty=-17.5)"
+            "(a=1.2999999523162842, b=0.75, c=0, d=-1.5, tx=23, ty=-17.5)"
         );
     });
 });
@@ -212,7 +212,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(1, 0, 0, 1, 100, 110);
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=0.7071067811865476, b=0.7071067811865475, c=-0.7071067811865475, d=0.7071067811865476, tx=-7.071067811865464, ty=148.49242404917499)"
+            "(a=0.7071067690849304, b=0.7071067690849304, c=-0.7071067690849304, d=0.7071067690849304, tx=-7.071067810058594, ty=148.49241943359374)"
         );
     });
 
@@ -221,7 +221,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(1, 0, 0, -1, 100, 110);
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=0.7071067811865476, b=0.7071067811865475, c=0.7071067811865475, d=-0.7071067811865476, tx=-7.071067811865464, ty=148.49242404917499)"
+            "(a=0.7071067690849304, b=0.7071067690849304, c=0.7071067690849304, d=-0.7071067690849304, tx=-7.071067810058594, ty=148.49241943359374)"
         );
     });
 
@@ -230,7 +230,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, 0, 0, 1, 100, 110);
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=-0.7071067811865476, b=-0.7071067811865475, c=-0.7071067811865475, d=0.7071067811865476, tx=-7.071067811865464, ty=148.49242404917499)"
+            "(a=-0.7071067690849304, b=-0.7071067690849304, c=-0.7071067690849304, d=0.7071067690849304, tx=-7.071067810058594, ty=148.49241943359374)"
         );
     });
 
@@ -239,7 +239,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, 0, 0, -1, 100, 110);
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=-0.7071067811865476, b=-0.7071067811865475, c=0.7071067811865475, d=-0.7071067811865476, tx=-7.071067811865464, ty=148.49242404917499)"
+            "(a=-0.7071067690849304, b=-0.7071067690849304, c=0.7071067690849304, d=-0.7071067690849304, tx=-7.071067810058594, ty=148.49241943359374)"
         );
     });
 
@@ -248,7 +248,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(1, 10, 10, 1, 100, 110);
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=-6.363961030678927, b=7.778174593052023, c=6.363961030678928, d=7.7781745930520225, tx=-7.071067811865464, ty=148.49242404917499)"
+            "(a=-6.363961219787598, b=7.77817440032959, c=6.363961219787598, d=7.77817440032959, tx=-7.071067810058594, ty=148.49241943359374)"
         );
     });
 
@@ -257,7 +257,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(1, -10, 10, 1, 100, 110);
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=7.7781745930520225, b=-6.363961030678928, c=6.363961030678928, d=7.7781745930520225, tx=-7.071067811865464, ty=148.49242404917499)"
+            "(a=7.77817440032959, b=-6.363961219787598, c=6.363961219787598, d=7.77817440032959, tx=-7.071067810058594, ty=148.49241943359374)"
         );
     });
 
@@ -266,7 +266,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(1, 10, -10, 1, 100, 110);
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=-6.363961030678927, b=7.778174593052023, c=-7.778174593052023, d=-6.363961030678927, tx=-7.071067811865464, ty=148.49242404917499)"
+            "(a=-6.363961219787598, b=7.77817440032959, c=-7.77817440032959, d=-6.363961219787598, tx=-7.071067810058594, ty=148.49241943359374)"
         );
     });
 
@@ -275,7 +275,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(1, 10, 10, 1, -100, 110);
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=-6.363961030678927, b=7.778174593052023, c=6.363961030678928, d=7.7781745930520225, tx=-148.49242404917499, ty=7.071067811865487)"
+            "(a=-6.363961219787598, b=7.77817440032959, c=6.363961219787598, d=7.77817440032959, tx=-148.49241943359374, ty=7.071067810058594)"
         );
     });
 
@@ -284,7 +284,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(1, 10, 10, 1, 100, -110);
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=-6.363961030678927, b=7.778174593052023, c=6.363961030678928, d=7.7781745930520225, tx=148.49242404917499, ty=-7.071067811865487)"
+            "(a=-6.363961219787598, b=7.77817440032959, c=6.363961219787598, d=7.77817440032959, tx=148.49241943359374, ty=-7.071067810058594)"
         );
     });
 
@@ -293,7 +293,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, -10, -10, -1, -100, -110);
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=6.363961030678927, b=-7.778174593052023, c=-6.363961030678928, d=-7.7781745930520225, tx=7.071067811865464, ty=-148.49242404917499)"
+            "(a=6.363961219787598, b=-7.77817440032959, c=-6.363961219787598, d=-7.77817440032959, tx=7.071067810058594, ty=-148.49241943359374)"
         );
     });
 
@@ -302,7 +302,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, -10, -10, -1, -100, -110);
         m.rotate(0.5);
         expect(m.toString()).toBe(
-            "(a=3.9166728241516573, b=-9.255251157507931, c=-8.296400080299524, d=-5.671837947932403, tx=-35.02144694257495, ty=-144.47663566836133)"
+            "(a=3.916672706604004, b=-9.255250930786133, c=-8.29640007019043, d=-5.67183780670166, tx=-35.02144775390625, ty=-144.4766357421875)"
         );
     });
 
@@ -311,7 +311,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, -10, -10, -1, -100, -110);
         m.rotate(-0.5);
         expect(m.toString()).toBe(
-            "(a=-5.671837947932403, b=-8.296400080299524, c=-9.255251157507931, d=3.9166728241516573, tx=-140.4950654354996, ty=-48.5915279475207)"
+            "(a=-5.67183780670166, b=-8.29640007019043, c=-9.255250930786133, d=3.916672706604004, tx=-140.495068359375, ty=-48.5915283203125)"
         );
     });
 
@@ -320,7 +320,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, -10, -10, -1, -100, -110);
         m.rotate(90 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=10, b=-1.0000000000000007, c=0.9999999999999993, d=-10, tx=110, ty=-100.00000000000001)"
+            "(a=10, b=-1, c=1, d=-10, tx=110, ty=-100)"
         );
     });
 
@@ -329,7 +329,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, -10, -10, -1, -100, -110);
         m.rotate(135 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=7.778174593052023, b=6.363961030678927, c=7.7781745930520225, d=-6.363961030678928, tx=148.49242404917499, ty=7.071067811865464)"
+            "(a=7.77817440032959, b=6.363961219787598, c=7.77817440032959, d=-6.363961219787598, tx=148.49241943359374, ty=7.071067810058594)"
         );
     });
 
@@ -338,7 +338,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, -10, -10, -1, -100, -110);
         m.rotate(Math.PI);
         expect(m.toString()).toBe(
-            "(a=1.0000000000000013, b=10, c=10, d=0.9999999999999988, tx=100.00000000000001, ty=109.99999999999997)"
+            "(a=1, b=10, c=10, d=1, tx=100, ty=110)"
         );
     });
 
@@ -347,7 +347,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, -10, -10, -1, -100, -110);
         m.rotate(-45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=-7.7781745930520225, b=-6.363961030678928, c=-7.778174593052023, d=6.363961030678927, tx=-148.49242404917499, ty=-7.071067811865487)"
+            "(a=-7.77817440032959, b=-6.363961219787598, c=-7.77817440032959, d=6.363961219787598, tx=-148.49241943359374, ty=-7.071067810058594)"
         );
     });
 
@@ -356,7 +356,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, -10, -10, -1, -100, -110);
         m.rotate(-90 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=-10, b=0.9999999999999993, c=-1.0000000000000007, d=10, tx=-110, ty=99.99999999999999)"
+            "(a=-10, b=1, c=-1, d=10, tx=-110, ty=100)"
         );
     });
 
@@ -365,7 +365,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, -10, -10, -1, -100, -110);
         m.rotate(-135 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=-6.363961030678928, b=7.7781745930520225, c=6.363961030678927, d=7.778174593052023, tx=-7.071067811865487, ty=148.49242404917499)"
+            "(a=-6.363961219787598, b=7.77817440032959, c=6.363961219787598, d=7.77817440032959, tx=-7.071067810058594, ty=148.49241943359374)"
         );
     });
 
@@ -374,7 +374,7 @@ describe("Matrix.js rotate test", function()
         var m = new Matrix(-1, -10, -10, -1, -100, -110);
         m.rotate(-1 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=0.9999999999999988, b=10, c=10, d=1.0000000000000013, tx=99.99999999999999, ty=110.00000000000003)"
+            "(a=1, b=10, c=10, d=1, tx=100, ty=110)"
         );
     });
 
@@ -393,7 +393,7 @@ describe("Matrix.js rotate test", function()
         m.a = "a";
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=NaN, b=NaN, c=-6.363961030678928, d=-7.7781745930520225, tx=7.071067811865464, ty=-148.49242404917499)"
+            "(a=NaN, b=NaN, c=-6.363961219787598, d=-7.77817440032959, tx=7.071067810058594, ty=-148.49241943359374)"
         );
     });
 
@@ -403,7 +403,7 @@ describe("Matrix.js rotate test", function()
         m.c = "a";
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=6.363961030678927, b=-7.778174593052023, c=NaN, d=NaN, tx=7.071067811865464, ty=-148.49242404917499)"
+            "(a=6.363961219787598, b=-7.77817440032959, c=NaN, d=NaN, tx=7.071067810058594, ty=-148.49241943359374)"
         );
     });
 
@@ -413,7 +413,7 @@ describe("Matrix.js rotate test", function()
         m.tx = "a";
         m.rotate(45 / 180 * Math.PI);
         expect(m.toString()).toBe(
-            "(a=6.363961030678927, b=-7.778174593052023, c=-6.363961030678928, d=-7.7781745930520225, tx=NaN, ty=NaN)"
+            "(a=6.363961219787598, b=-7.77817440032959, c=-6.363961219787598, d=-7.77817440032959, tx=NaN, ty=NaN)"
         );
     });
 });
@@ -426,7 +426,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 0, 9, 0, 0);
         expect(m.toString()).toBe(
-            "(a=-0.0005561097789823468, b=0, c=-0.00025153716140243935, d=0, tx=0.5, ty=0)"
+            "(a=-0.0005561097641475499, b=0, c=-0.0002515371597837657, d=0, tx=0.5, ty=0)"
         );
     });
 
@@ -435,7 +435,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 1, 9, 0, 0);
         expect(m.toString()).toBe(
-            "(a=-0.0005561097789823468, b=0.00025153716140243935, c=-0.00025153716140243935, d=-0.0005561097789823468, tx=0.5, ty=0.5)"
+            "(a=-0.0005561097641475499, b=0.0002515371597837657, c=-0.0002515371597837657, d=-0.0005561097641475499, tx=0.5, ty=0.5)"
         );
     });
 
@@ -444,7 +444,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 0, 9, 1, 0);
         expect(m.toString()).toBe(
-            "(a=-0.0005561097789823468, b=0, c=-0.00025153716140243935, d=0, tx=1.5, ty=0)"
+            "(a=-0.0005561097641475499, b=0, c=-0.0002515371597837657, d=0, tx=1.5, ty=0)"
         );
     });
 
@@ -453,7 +453,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 0, 9, 0, 1);
         expect(m.toString()).toBe(
-            "(a=-0.0005561097789823468, b=0, c=-0.00025153716140243935, d=0, tx=0.5, ty=1)"
+            "(a=-0.0005561097641475499, b=0, c=-0.0002515371597837657, d=0, tx=0.5, ty=1)"
         );
     });
 
@@ -462,7 +462,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 1, 9, 1, 1);
         expect(m.toString()).toBe(
-            "(a=-0.0005561097789823468, b=0.00025153716140243935, c=-0.00025153716140243935, d=-0.0005561097789823468, tx=1.5, ty=1.5)"
+            "(a=-0.0005561097641475499, b=0.0002515371597837657, c=-0.0002515371597837657, d=-0.0005561097641475499, tx=1.5, ty=1.5)"
         );
     });
 
@@ -471,7 +471,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(-1, -1, -9, -1, -1);
         expect(m.toString()).toBe(
-            "(a=0.0005561097789823468, b=0.00025153716140243935, c=-0.00025153716140243935, d=0.0005561097789823468, tx=-1.5, ty=-1.5)"
+            "(a=0.0005561097641475499, b=0.0002515371597837657, c=-0.0002515371597837657, d=0.0005561097641475499, tx=-1.5, ty=-1.5)"
         );
     });
 
@@ -480,7 +480,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox("a", -1, -9, -1, -1);
         expect(m.toString()).toBe(
-            "(a=NaN, b=0.00025153716140243935, c=NaN, d=0.0005561097789823468, tx=NaN, ty=-1.5)"
+            "(a=NaN, b=0.0002515371597837657, c=NaN, d=0.0005561097641475499, tx=NaN, ty=-1.5)"
         );
     });
 
@@ -489,7 +489,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(-1, "a", -9, -1, -1);
         expect(m.toString()).toBe(
-            "(a=0.0005561097789823468, b=NaN, c=-0.00025153716140243935, d=NaN, tx=-1.5, ty=NaN)"
+            "(a=0.0005561097641475499, b=NaN, c=-0.0002515371597837657, d=NaN, tx=-1.5, ty=NaN)"
         );
     });
 
@@ -507,7 +507,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(-1, -1, -9, "a", -1);
         expect(m.toString()).toBe(
-            "(a=0.0005561097789823468, b=0.00025153716140243935, c=-0.00025153716140243935, d=0.0005561097789823468, tx=NaN, ty=-1.5)"
+            "(a=0.0005561097641475499, b=0.0002515371597837657, c=-0.0002515371597837657, d=0.0005561097641475499, tx=NaN, ty=-1.5)"
         );
     });
 
@@ -516,7 +516,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(-1, -1, -9, -1, "a");
         expect(m.toString()).toBe(
-            "(a=0.0005561097789823468, b=0.00025153716140243935, c=-0.00025153716140243935, d=0.0005561097789823468, tx=-1.5, ty=NaN)"
+            "(a=0.0005561097641475499, b=0.0002515371597837657, c=-0.0002515371597837657, d=0.0005561097641475499, tx=-1.5, ty=NaN)"
         );
     });
 
@@ -525,7 +525,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 1, 45 / 180 * Math.PI, 1, 1);
         expect(m.toString()).toBe(
-            "(a=0.0004315837287515549, b=0.00043158372875155485, c=-0.00043158372875155485, d=0.0004315837287515549, tx=1.5, ty=1.5)"
+            "(a=0.0004315837286412716, b=0.0004315837286412716, c=-0.0004315837286412716, d=0.0004315837286412716, tx=1.5, ty=1.5)"
         );
     });
 
@@ -534,7 +534,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 1, 90 / 180 * Math.PI, 1, 1);
         expect(m.toString()).toBe(
-            "(a=3.7373254368510536e-20, b=0.0006103515625, c=-0.0006103515625, d=3.7373254368510536e-20, tx=1.5, ty=1.5)"
+            "(a=3.7373254383716084e-20, b=0.0006103515625, c=-0.0006103515625, d=3.7373254383716084e-20, tx=1.5, ty=1.5)"
         );
     });
 
@@ -543,7 +543,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 1, 135 / 180 * Math.PI, 1, 1);
         expect(m.toString()).toBe(
-            "(a=-0.00043158372875155485, b=0.0004315837287515549, c=-0.0004315837287515549, d=-0.00043158372875155485, tx=1.5, ty=1.5)"
+            "(a=-0.0004315837286412716, b=0.0004315837286412716, c=-0.0004315837286412716, d=-0.0004315837286412716, tx=1.5, ty=1.5)"
         );
     });
 
@@ -552,7 +552,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 1, 180 / 180 * Math.PI, 1, 1);
         expect(m.toString()).toBe(
-            "(a=-0.0006103515625, b=7.474650873702107e-20, c=-7.474650873702107e-20, d=-0.0006103515625, tx=1.5, ty=1.5)"
+            "(a=-0.0006103515625, b=7.474650876743217e-20, c=-7.474650876743217e-20, d=-0.0006103515625, tx=1.5, ty=1.5)"
         );
     });
 
@@ -561,7 +561,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 1, -45 / 180 * Math.PI, 1, 1);
         expect(m.toString()).toBe(
-            "(a=0.0004315837287515549, b=-0.00043158372875155485, c=0.00043158372875155485, d=0.0004315837287515549, tx=1.5, ty=1.5)"
+            "(a=0.0004315837286412716, b=-0.0004315837286412716, c=0.0004315837286412716, d=0.0004315837286412716, tx=1.5, ty=1.5)"
         );
     });
 
@@ -570,7 +570,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 1, -90 / 180 * Math.PI, 1, 1);
         expect(m.toString()).toBe(
-            "(a=3.7373254368510536e-20, b=-0.0006103515625, c=0.0006103515625, d=3.7373254368510536e-20, tx=1.5, ty=1.5)"
+            "(a=3.7373254383716084e-20, b=-0.0006103515625, c=0.0006103515625, d=3.7373254383716084e-20, tx=1.5, ty=1.5)"
         );
     });
 
@@ -579,7 +579,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 1, -135 / 180 * Math.PI, 1, 1);
         expect(m.toString()).toBe(
-            "(a=-0.00043158372875155485, b=-0.0004315837287515549, c=0.0004315837287515549, d=-0.00043158372875155485, tx=1.5, ty=1.5)"
+            "(a=-0.0004315837286412716, b=-0.0004315837286412716, c=0.0004315837286412716, d=-0.0004315837286412716, tx=1.5, ty=1.5)"
         );
     });
 
@@ -588,7 +588,7 @@ describe("Matrix.js createGradientBox test", function()
         var m = new Matrix();
         m.createGradientBox(1, 1, -180 / 180 * Math.PI, 1, 1);
         expect(m.toString()).toBe(
-            "(a=-0.0006103515625, b=-7.474650873702107e-20, c=7.474650873702107e-20, d=-0.0006103515625, tx=1.5, ty=1.5)"
+            "(a=-0.0006103515625, b=-7.474650876743217e-20, c=7.474650876743217e-20, d=-0.0006103515625, tx=1.5, ty=1.5)"
         );
     });
 });
@@ -606,7 +606,7 @@ describe("Matrix.js createBox test", function()
         var ty = 20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=1.4142135623730951, b=2.1213203435596424, c=-1.414213562373095, d=2.121320343559643, tx=10, ty=20)"
+            "(a=1.4142135381698608, b=2.1213202476501465, c=-1.4142135381698608, d=2.1213202476501465, tx=10, ty=20)"
         );
     });
 
@@ -620,7 +620,7 @@ describe("Matrix.js createBox test", function()
         var ty = 20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=1.4142135623730951, b=2.1213203435596424, c=-1.414213562373095, d=2.121320343559643, tx=10, ty=20)"
+            "(a=1.4142135381698608, b=2.1213202476501465, c=-1.4142135381698608, d=2.1213202476501465, tx=10, ty=20)"
         );
     });
 
@@ -634,7 +634,7 @@ describe("Matrix.js createBox test", function()
         var ty = 20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=1.4142135623730951, b=2.1213203435596424, c=-1.414213562373095, d=2.121320343559643, tx=10, ty=20)"
+            "(a=1.4142135381698608, b=2.1213202476501465, c=-1.4142135381698608, d=2.1213202476501465, tx=10, ty=20)"
         );
     });
 
@@ -648,7 +648,7 @@ describe("Matrix.js createBox test", function()
         var ty = 20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=1.4142135623730951, b=-2.1213203435596424, c=1.414213562373095, d=2.121320343559643, tx=10, ty=20)"
+            "(a=1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=2.1213202476501465, tx=10, ty=20)"
         );
     });
 
@@ -662,7 +662,7 @@ describe("Matrix.js createBox test", function()
         var ty = 20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.4142135623730951, b=-2.1213203435596424, c=1.414213562373095, d=-2.121320343559643, tx=10, ty=20)"
+            "(a=-1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=-2.1213202476501465, tx=10, ty=20)"
         );
     });
 
@@ -676,7 +676,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=1.4142135623730951, b=2.1213203435596424, c=-1.414213562373095, d=2.121320343559643, tx=-10, ty=-20)"
+            "(a=1.4142135381698608, b=2.1213202476501465, c=-1.4142135381698608, d=2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -690,7 +690,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.4142135623730951, b=2.1213203435596424, c=-1.414213562373095, d=-2.121320343559643, tx=-10, ty=-20)"
+            "(a=-1.4142135381698608, b=2.1213202476501465, c=-1.4142135381698608, d=-2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -704,7 +704,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.2246467991473532e-16, b=3, c=-2, d=-1.8369701987210297e-16, tx=-10, ty=-20)"
+            "(a=-1.2246468525851679e-16, b=3, c=-2, d=-1.8369702788777518e-16, tx=-10, ty=-20)"
         );
     });
 
@@ -718,7 +718,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=1.414213562373095, b=2.121320343559643, c=-1.4142135623730951, d=2.1213203435596424, tx=-10, ty=-20)"
+            "(a=1.4142135381698608, b=2.1213202476501465, c=-1.4142135381698608, d=2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -732,7 +732,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=2, b=3.6739403974420594e-16, c=-2.4492935982947064e-16, d=3, tx=-10, ty=-20)"
+            "(a=2, b=3.6739405577555036e-16, c=-2.4492937051703357e-16, d=3, tx=-10, ty=-20)"
         );
     });
 
@@ -746,7 +746,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=1.4142135623730954, b=-2.1213203435596424, c=1.414213562373095, d=2.121320343559643, tx=-10, ty=-20)"
+            "(a=1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -760,7 +760,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=3.6739403974420594e-16, b=-3, c=2, d=5.51091059616309e-16, tx=-10, ty=-20)"
+            "(a=3.6739402930577075e-16, b=-3, c=2, d=5.510910704284357e-16, tx=-10, ty=-20)"
         );
     });
 
@@ -774,18 +774,10 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
 
-        if(m.a > -1.414213562373095) {
-            expect(m.a).toBe(-1.4142135623730947);
-        } else {
-            expect(m.a).toBe(-1.414213562373095);
-        }
-        expect(m.b).toBe(-2.121320343559643);
-        expect(m.c).toBe(1.4142135623730954);
-        if(m.d > -2.1213203435596424) {
-            expect(m.d).toBe(-2.121320343559642);
-        } else {
-            expect(m.d).toBe(-2.1213203435596424);
-        }
+        expect(m.a).toBe(-1.4142135381698608);
+        expect(m.b).toBe(-2.1213202476501465);
+        expect(m.c).toBe(1.4142135381698608);
+        expect(m.d).toBe(-2.1213202476501465);
         expect(m.tx).toBe(-10);
         expect(m.ty).toBe(-20);
     });
@@ -800,7 +792,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-2, b=-7.347880794884119e-16, c=4.898587196589413e-16, d=-3, tx=-10, ty=-20)"
+            "(a=-2, b=-7.347881115511007e-16, c=4.898587410340671e-16, d=-3, tx=-10, ty=-20)"
         );
     });
 
@@ -828,7 +820,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=NaN, b=-2.1213203435596424, c=NaN, d=-2.121320343559643, tx=NaN, ty=-20)"
+            "(a=NaN, b=-2.1213202476501465, c=NaN, d=-2.1213202476501465, tx=NaN, ty=-20)"
         );
     });
 
@@ -842,7 +834,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.4142135623730951, b=-2.1213203435596424, c=1.414213562373095, d=-2.121320343559643, tx=NaN, ty=-20)"
+            "(a=-1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=-2.1213202476501465, tx=NaN, ty=-20)"
         );
     });
 
@@ -857,7 +849,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.4142135623730951, b=-2.1213203435596424, c=1.414213562373095, d=-2.121320343559643, tx=-10, ty=-20)"
+            "(a=-1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=-2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -872,7 +864,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.4142135623730951, b=-2.1213203435596424, c=1.414213562373095, d=-2.121320343559643, tx=-10, ty=-20)"
+            "(a=-1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=-2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -887,7 +879,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.4142135623730951, b=-2.1213203435596424, c=1.414213562373095, d=-2.121320343559643, tx=-10, ty=-20)"
+            "(a=-1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=-2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -915,7 +907,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.4142135623730951, b=-2.1213203435596424, c=1.414213562373095, d=-2.121320343559643, tx=-10, ty=-20)"
+            "(a=-1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=-2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -929,7 +921,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.2246467991473532e-16, b=-3, c=2, d=-1.8369701987210297e-16, tx=-10, ty=-20)"
+            "(a=-1.2246468525851679e-16, b=-3, c=2, d=-1.8369702788777518e-16, tx=-10, ty=-20)"
         );
     });
 
@@ -943,7 +935,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=1.414213562373095, b=-2.121320343559643, c=1.4142135623730951, d=2.1213203435596424, tx=-10, ty=-20)"
+            "(a=1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -957,7 +949,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=2, b=-3.6739403974420594e-16, c=2.4492935982947064e-16, d=3, tx=-10, ty=-20)"
+            "(a=2, b=-3.6739405577555036e-16, c=2.4492937051703357e-16, d=3, tx=-10, ty=-20)"
         );
     });
 
@@ -971,7 +963,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=1.4142135623730954, b=2.1213203435596424, c=-1.414213562373095, d=2.121320343559643, tx=-10, ty=-20)"
+            "(a=1.4142135381698608, b=2.1213202476501465, c=-1.4142135381698608, d=2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -985,7 +977,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=3.6739403974420594e-16, b=3, c=-2, d=5.51091059616309e-16, tx=-10, ty=-20)"
+            "(a=3.6739402930577075e-16, b=3, c=-2, d=5.510910704284357e-16, tx=-10, ty=-20)"
         );
     });
 
@@ -999,18 +991,10 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
 
-        if(m.a > -1.414213562373095) {
-            expect(m.a).toBe(-1.4142135623730947);
-        } else {
-            expect(m.a).toBe(-1.414213562373095);
-        }
-        expect(m.b).toBe(2.121320343559643);
-        expect(m.c).toBe(-1.4142135623730954);
-        if(m.d > -2.1213203435596424) {
-            expect(m.d).toBe(-2.121320343559642);
-        } else {
-            expect(m.d).toBe(-2.1213203435596424);
-        }
+        expect(m.a).toBe(-1.4142135381698608);
+        expect(m.b).toBe(2.1213202476501465);
+        expect(m.c).toBe(-1.4142135381698608);
+        expect(m.d).toBe(-2.1213202476501465);
         expect(m.tx).toBe(-10);
         expect(m.ty).toBe(-20);
     });
@@ -1025,7 +1009,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-2, b=7.347880794884119e-16, c=-4.898587196589413e-16, d=-3, tx=-10, ty=-20)"
+            "(a=-2, b=7.347881115511007e-16, c=-4.898587410340671e-16, d=-3, tx=-10, ty=-20)"
         );
     });
 
@@ -1039,7 +1023,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.8477590650225735, b=-1.1480502970952693, c=0.7653668647301796, d=-2.77163859753386, tx=-10, ty=-20)"
+            "(a=-1.8477590084075928, b=-1.148050308227539, c=0.7653668522834778, d=-2.7716383934020996, tx=-10, ty=-20)"
         );
     });
 
@@ -1053,7 +1037,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.4142135623730951, b=-2.1213203435596424, c=1.414213562373095, d=-2.121320343559643, tx=-10, ty=-20)"
+            "(a=-1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=-2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -1067,7 +1051,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-0.7653668647301797, b=-2.77163859753386, c=1.8477590650225735, d=-1.1480502970952695, tx=-10, ty=-20)"
+            "(a=-0.7653668522834778, b=-2.7716383934020996, c=1.8477590084075928, d=-1.148050308227539, tx=-10, ty=-20)"
         );
     });
 
@@ -1081,7 +1065,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=-1.2246467991473532e-16, b=-3, c=2, d=-1.8369701987210297e-16, tx=-10, ty=-20)"
+            "(a=-1.2246468525851679e-16, b=-3, c=2, d=-1.8369702788777518e-16, tx=-10, ty=-20)"
         );
     });
 
@@ -1095,7 +1079,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=0.7653668647301795, b=-2.77163859753386, c=1.8477590650225735, d=1.1480502970952693, tx=-10, ty=-20)"
+            "(a=0.7653668522834778, b=-2.7716383934020996, c=1.8477590084075928, d=1.148050308227539, tx=-10, ty=-20)"
         );
     });
 
@@ -1109,7 +1093,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=1.414213562373095, b=-2.121320343559643, c=1.4142135623730951, d=2.1213203435596424, tx=-10, ty=-20)"
+            "(a=1.4142135381698608, b=-2.1213202476501465, c=1.4142135381698608, d=2.1213202476501465, tx=-10, ty=-20)"
         );
     });
 
@@ -1123,18 +1107,10 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
 
-        expect(m.a).toBe(1.8477590650225735);
-        if(m.b < -1.1480502970952695) {
-            expect(m.b).toBe(-1.1480502970952697);
-        } else {
-            expect(m.b).toBe(-1.1480502970952695);
-        }
-        if(m.c > 0.7653668647301797) {
-            expect(m.c).toBe(0.7653668647301798);
-        } else {
-            expect(m.c).toBe(0.7653668647301797);
-        }
-        expect(m.d).toBe(2.77163859753386);
+        expect(m.a).toBe(1.8477590084075928);
+        expect(m.b).toBe(-1.148050308227539);
+        expect(m.c).toBe(0.7653668522834778);
+        expect(m.d).toBe(2.7716383934020996);
         expect(m.tx).toBe(-10);
         expect(m.ty).toBe(-20);
     });
@@ -1149,7 +1125,7 @@ describe("Matrix.js createBox test", function()
         var ty = -20;
         m.createBox(sx, sy, r, tx, ty);
         expect(m.toString()).toBe(
-            "(a=2, b=-3.6739403974420594e-16, c=2.4492935982947064e-16, d=3, tx=-10, ty=-20)"
+            "(a=2, b=-3.6739405577555036e-16, c=2.4492937051703357e-16, d=3, tx=-10, ty=-20)"
         );
     });
 });
@@ -1162,7 +1138,7 @@ describe("Matrix.js invert test", function()
         var m = new Matrix(2, 1, 1, 2, -200, -200);
         m.invert();
         expect(m.toString()).toBe(
-            "(a=0.6666666666666666, b=-0.3333333333333333, c=-0.3333333333333333, d=0.6666666666666666, tx=66.66666666666666, ty=66.66666666666666)"
+            "(a=0.6666666865348816, b=-0.3333333432674408, c=-0.3333333432674408, d=0.6666666865348816, tx=66.66666870117187, ty=66.66666870117187)"
         );
     });
 
@@ -1172,7 +1148,7 @@ describe("Matrix.js invert test", function()
         m.invert();
         m.invert();
         expect(m.toString()).toBe(
-            "(a=2, b=1, c=1, d=2, tx=-199.99999999999997, ty=-199.99999999999997)"
+            "(a=2, b=1, c=1, d=2, tx=-200, ty=-200)"
         );
     });
 
@@ -1181,7 +1157,7 @@ describe("Matrix.js invert test", function()
         var m = new Matrix(-2, 1, 1, 2, -200, -200);
         m.invert();
         expect(m.toString()).toBe(
-            "(a=-0.4, b=0.2, c=0.2, d=0.4, tx=-40, ty=120)"
+            "(a=-0.4000000059604645, b=0.20000000298023224, c=0.20000000298023224, d=0.4000000059604645, tx=-40, ty=120)"
         );
     });
 
@@ -1190,7 +1166,7 @@ describe("Matrix.js invert test", function()
         var m = new Matrix(2, -1, 1, 2, -200, -200);
         m.invert();
         expect(m.toString()).toBe(
-            "(a=0.4, b=0.2, c=-0.2, d=0.4, tx=40, ty=120)"
+            "(a=0.4000000059604645, b=0.20000000298023224, c=-0.20000000298023224, d=0.4000000059604645, tx=40, ty=120)"
         );
     });
 
@@ -1199,7 +1175,7 @@ describe("Matrix.js invert test", function()
         var m = new Matrix(2, 1, -1, 2, -200, -200);
         m.invert();
         expect(m.toString()).toBe(
-            "(a=0.4, b=-0.2, c=0.2, d=0.4, tx=120, ty=40)"
+            "(a=0.4000000059604645, b=-0.20000000298023224, c=0.20000000298023224, d=0.4000000059604645, tx=120, ty=40)"
         );
     });
 
@@ -1208,7 +1184,7 @@ describe("Matrix.js invert test", function()
         var m = new Matrix(2, 1, 1, -2, -200, -200);
         m.invert();
         expect(m.toString()).toBe(
-            "(a=0.4, b=0.2, c=0.2, d=-0.4, tx=120, ty=-40)"
+            "(a=0.4000000059604645, b=0.20000000298023224, c=0.20000000298023224, d=-0.4000000059604645, tx=120, ty=-40)"
         );
     });
 
@@ -1217,11 +1193,11 @@ describe("Matrix.js invert test", function()
         var m = new Matrix(-2, -1, -1, -2, -200, -200);
         m.invert();
         expect(m.toString()).toBe(
-            "(a=-0.6666666666666666, b=0.3333333333333333, c=0.3333333333333333, d=-0.6666666666666666, tx=-66.66666666666666, ty=-66.66666666666666)"
+            "(a=-0.6666666865348816, b=0.3333333432674408, c=0.3333333432674408, d=-0.6666666865348816, tx=-66.66666870117187, ty=-66.66666870117187)"
         );
     });
 
-    it("invert test7", function()
+    it("invert test8", function()
     {
         var m = new Matrix("a", -1, -1, -2, -200, -200);
         m.invert();
@@ -1243,7 +1219,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-19.798989873223316, y=164.04877323527904)"
+            "(x=-19.79898965358734, y=164.0487683534622)"
         );
     });
 
@@ -1256,7 +1232,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-21.213203435596412, y=165.46298679765212)"
+            "(x=-21.213203191757202, y=165.46298189163207)"
         );
     });
 
@@ -1269,7 +1245,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-5.656854249492366, y=178.19090885901)"
+            "(x=-5.656854271888731, y=178.19090373516082)"
         );
     });
 
@@ -1282,7 +1258,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-7.071067811865461, y=179.60512242138307)"
+            "(x=-7.071067810058591, y=179.60511727333068)"
         );
     });
 
@@ -1295,7 +1271,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-7.071067811865467, y=117.3797256769669)"
+            "(x=-7.071067810058596, y=117.37972159385681)"
         );
     });
 
@@ -1377,7 +1353,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-7.071067811865467, y=117.3797256769669)"
+            "(x=-7.071067810058596, y=117.37972159385681)"
         );
     });
 
@@ -1390,7 +1366,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-88, y=78.00000000000001)"
+            "(x=-88, y=78)"
         );
     });
 
@@ -1403,7 +1379,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-117.3797256769669, y=-7.071067811865467)"
+            "(x=-117.37972159385681, y=-7.071067810058596)"
         );
     });
 
@@ -1416,7 +1392,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-78.00000000000001, y=-87.99999999999997)"
+            "(x=-78, y=-88)"
         );
     });
 
@@ -1429,7 +1405,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=117.3797256769669, y=7.071067811865484)"
+            "(x=117.37972159385681, y=7.071067810058591)"
         );
     });
 
@@ -1442,7 +1418,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=88, y=-77.99999999999999)"
+            "(x=88, y=-78)"
         );
     });
 
@@ -1455,7 +1431,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=7.071067811865484, y=-117.3797256769669)"
+            "(x=7.071067810058591, y=-117.37972159385681)"
         );
     });
 
@@ -1468,7 +1444,7 @@ describe("Matrix.js transformPoint test", function()
         var p2 = m.transformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-77.99999999999999, y=-88.00000000000003)"
+            "(x=-78, y=-88)"
         );
     });
 });
@@ -1486,7 +1462,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-12.727922061357853, y=15.556349186104047)"
+            "(x=-12.727921843528748, y=15.55634891986847)"
         );
     });
 
@@ -1500,7 +1476,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=1.7763568394002505e-15, y=28.284271247461902)"
+            "(x=2.384185791015625e-7, y=28.284271001815796)"
         );
     });
 
@@ -1514,7 +1490,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-26.870057685088803, y=29.698484809834998)"
+            "(x=-26.870057821273804, y=29.698484182357788)"
         );
     });
 
@@ -1528,7 +1504,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=128.69343417595167, y=156.97770542341357)"
+            "(x=128.6934379339218, y=156.97770154476166)"
         );
     });
 
@@ -1542,7 +1518,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-140.00714267493638, y=142.83556979968262)"
+            "(x=-140.007142663002, y=142.83556973934174)"
         );
     });
 
@@ -1556,7 +1532,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-15.556349186104047, y=12.727922061357855)"
+            "(x=-15.55634891986847, y=12.727921843528748)"
         );
     });
 
@@ -1570,7 +1546,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=15.556349186104047, y=-12.727922061357855)"
+            "(x=15.55634891986847, y=-12.727921843528748)"
         );
     });
 
@@ -1584,7 +1560,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=12.727922061357853, y=-15.556349186104047)"
+            "(x=12.727921843528748, y=-15.55634891986847)"
         );
     });
 
@@ -1598,7 +1574,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=14.142135623730947, y=-16.970562748477143)"
+            "(x=14.142135381698608, y=-16.97056245803833)"
         );
     });
 
@@ -1612,7 +1588,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-1.4142135623730974, y=-29.698484809834998)"
+            "(x=-1.414213538169863, y=-29.698484301567078)"
         );
     });
 
@@ -1626,7 +1602,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-2.4424906541753444e-15, y=-31.112698372208087)"
+            "(x=-2.4424906541753444e-15, y=-31.11269783973694)"
         );
     });
 
@@ -1654,7 +1630,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=2.4424906541753444e-15, y=31.112698372208087)"
+            "(x=2.4424906541753444e-15, y=31.11269783973694)"
         );
     });
 
@@ -1668,7 +1644,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=2.4424906541753444e-15, y=31.112698372208087)"
+            "(x=2.4424906541753444e-15, y=31.11269783973694)"
         );
     });
 
@@ -1724,7 +1700,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-21.999999999999996, y=22)"
+            "(x=-22, y=22)"
         );
     });
 
@@ -1738,7 +1714,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-31.112698372208087, y=2.4424906541753444e-15)"
+            "(x=-31.11269783973694, y=2.4424906541753444e-15)"
         );
     });
 
@@ -1752,7 +1728,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-22.000000000000004, y=-21.999999999999996)"
+            "(x=-22, y=-22)"
         );
     });
 
@@ -1766,7 +1742,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=31.112698372208087, y=2.4424906541753444e-15)"
+            "(x=31.11269783973694, y=2.4424906541753444e-15)"
         );
     });
 
@@ -1780,7 +1756,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=22, y=-21.999999999999996)"
+            "(x=22, y=-22)"
         );
     });
 
@@ -1794,7 +1770,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=2.4424906541753444e-15, y=-31.112698372208087)"
+            "(x=2.4424906541753444e-15, y=-31.11269783973694)"
         );
     });
 
@@ -1808,7 +1784,7 @@ describe("Matrix.js deltaTransformPoint test", function()
         var p2 = m.deltaTransformPoint(p1);
 
         expect(p2.toString()).toBe(
-            "(x=-21.999999999999996, y=-22.000000000000004)"
+            "(x=-22, y=-22)"
         );
     });
 });
@@ -1883,6 +1859,7 @@ describe("Matrix.js scale test", function()
 
 });
 
+
 describe("Matrix.js a test", function()
 {
 
@@ -1952,7 +1929,7 @@ describe("Matrix.js a test", function()
     {
         var m = new Matrix();
         m.a = 50000000000000000;
-        expect(m.a).toBe(50000000000000000);
+        expect(m.a).toBe(49999999215337470);
     });
 
     it("default test case11", function()
@@ -1973,7 +1950,7 @@ describe("Matrix.js a test", function()
     {
         var m = new Matrix();
         m.a = -50000000000000000;
-        expect(m.a).toBe(-50000000000000000);
+        expect(m.a).toBe(-49999999215337470);
     });
 
     it("default test case14", function()
@@ -2104,7 +2081,7 @@ describe("Matrix.js b test", function()
     {
         var m = new Matrix();
         m.b = 50000000000000000;
-        expect(m.b).toBe(50000000000000000);
+        expect(m.b).toBe(49999999215337470);
     });
 
     it("default test case11", function()
@@ -2125,7 +2102,7 @@ describe("Matrix.js b test", function()
     {
         var m = new Matrix();
         m.b = -50000000000000000;
-        expect(m.b).toBe(-50000000000000000);
+        expect(m.b).toBe(-49999999215337470);
     });
 
     it("default test case14", function()
@@ -2256,7 +2233,7 @@ describe("Matrix.js c test", function()
     {
         var m = new Matrix();
         m.c = 50000000000000000;
-        expect(m.c).toBe(50000000000000000);
+        expect(m.c).toBe(49999999215337470);
     });
 
     it("default test case11", function()
@@ -2277,7 +2254,7 @@ describe("Matrix.js c test", function()
     {
         var m = new Matrix();
         m.c = -50000000000000000;
-        expect(m.c).toBe(-50000000000000000);
+        expect(m.c).toBe(-49999999215337470);
     });
 
     it("default test case14", function()
@@ -2408,7 +2385,7 @@ describe("Matrix.js d test", function()
     {
         var m = new Matrix();
         m.d = 50000000000000000;
-        expect(m.d).toBe(50000000000000000);
+        expect(m.d).toBe(49999999215337470);
     });
 
     it("default test case11", function()
@@ -2429,7 +2406,7 @@ describe("Matrix.js d test", function()
     {
         var m = new Matrix();
         m.d = -50000000000000000;
-        expect(m.d).toBe(-50000000000000000);
+        expect(m.d).toBe(-49999999215337470);
     });
 
     it("default test case14", function()
@@ -2560,7 +2537,7 @@ describe("Matrix.js tx test", function()
     {
         var m = new Matrix();
         m.tx = 50000000000000000;
-        expect(m.tx).toBe(50000000000000000);
+        expect(m.tx).toBe(49999999215337470);
     });
 
     it("default test case11", function()
@@ -2581,7 +2558,7 @@ describe("Matrix.js tx test", function()
     {
         var m = new Matrix();
         m.tx = -50000000000000000;
-        expect(m.tx).toBe(-50000000000000000);
+        expect(m.tx).toBe(-49999999215337470);
     });
 
     it("default test case14", function()
@@ -2712,7 +2689,7 @@ describe("Matrix.js ty test", function()
     {
         var m = new Matrix();
         m.ty = 50000000000000000;
-        expect(m.ty).toBe(50000000000000000);
+        expect(m.ty).toBe(49999999215337470);
     });
 
     it("default test case11", function()
@@ -2733,7 +2710,7 @@ describe("Matrix.js ty test", function()
     {
         var m = new Matrix();
         m.ty = -50000000000000000;
-        expect(m.ty).toBe(-50000000000000000);
+        expect(m.ty).toBe(-49999999215337470);
     });
 
     it("default test case14", function()

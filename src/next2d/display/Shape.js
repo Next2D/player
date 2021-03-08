@@ -183,7 +183,7 @@ class Shape extends DisplayObject
         const alpha = Util.$clamp(multiColor[3] + (multiColor[7] / 255), 0, 1);
         if (!alpha) {
             if (multiColor !== color_transform) {
-                Util.$poolFloat32Array(multiColor);
+                Util.$poolFloat32Array8(multiColor);
             }
             return ;
         }
@@ -208,11 +208,11 @@ class Shape extends DisplayObject
         }
 
         if (multiColor !== color_transform) {
-            Util.$poolFloat32Array(multiColor);
+            Util.$poolFloat32Array8(multiColor);
         }
 
         if (multiMatrix !== matrix) {
-            Util.$poolFloat32Array(multiMatrix);
+            Util.$poolFloat32Array6(multiMatrix);
         }
     }
 

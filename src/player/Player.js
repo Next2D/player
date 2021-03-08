@@ -172,7 +172,7 @@ class Player
          * @type {Float32Array}
          * @private
          */
-        this._$matrix = Util.$getFloat32Array(1, 0, 0, 1, 0, 0);
+        this._$matrix = new Util.$window.Float32Array([1, 0, 0, 1, 0, 0]); // fixed size 6
 
         /**
          * @type {string|number}

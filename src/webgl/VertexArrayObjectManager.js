@@ -24,6 +24,7 @@ class VertexArrayObjectManager
         this._$strokeAttrib_option1 = 1;
         this._$strokeAttrib_option2 = 2;
         this._$strokeAttrib_type    = 3;
+        this._$vertexBufferData     = new Util.$window.Float32Array([0, 0, 0, 1, 1, 0, 1, 1]);
 
         this._$commonVertexArray = this._$getCommonVertexArray();
     }
@@ -47,14 +48,12 @@ class VertexArrayObjectManager
      */
     _$getCommonVertexArray ()
     {
-        const vertexBufferData = Util.$getFloat32Array(0, 0, 0, 1, 1, 0, 1, 1);
-
         const vertexArray = this._$createVertexArray();
         this.bind(vertexArray);
 
         const vertexBuffer = this._$gl.createBuffer();
         this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, vertexBuffer);
-        this._$gl.bufferData(this._$gl.ARRAY_BUFFER, vertexBufferData, this._$gl.STATIC_DRAW);
+        this._$gl.bufferData(this._$gl.ARRAY_BUFFER, this._$vertexBufferData, this._$gl.STATIC_DRAW);
         
         this._$gl.enableVertexAttribArray(0);
         this._$gl.vertexAttribPointer(0, 2, this._$gl.FLOAT, false, 0, 0);

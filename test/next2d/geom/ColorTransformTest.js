@@ -51,10 +51,10 @@ describe("ColorTransform.js property test", function()
 
         const ct = new ColorTransform(0.1, 0.2, 0.3, 0.4, 1, 2, 3, 4);
 
-        expect(ct.redMultiplier).toBe(0.1);
-        expect(ct.greenMultiplier).toBe(0.2);
-        expect(ct.blueMultiplier).toBe(0.3);
-        expect(ct.alphaMultiplier).toBe(0.4);
+        expect(ct.redMultiplier).toBe(0.10000000149011612);
+        expect(ct.greenMultiplier).toBe(0.20000000298023224);
+        expect(ct.blueMultiplier).toBe(0.30000001192092896);
+        expect(ct.alphaMultiplier).toBe(0.4000000059604645);
         expect(ct.redOffset).toBe(1);
         expect(ct.greenOffset).toBe(2);
         expect(ct.blueOffset).toBe(3);
@@ -77,10 +77,10 @@ describe("ColorTransform.js property test", function()
         ct.blueOffset      = 3;
         ct.alphaOffset     = 4;
 
-        expect(ct.redMultiplier).toBe(0.1);
-        expect(ct.greenMultiplier).toBe(0.2);
-        expect(ct.blueMultiplier).toBe(0.3);
-        expect(ct.alphaMultiplier).toBe(0.4);
+        expect(ct.redMultiplier).toBe(0.10000000149011612);
+        expect(ct.greenMultiplier).toBe(0.20000000298023224);
+        expect(ct.blueMultiplier).toBe(0.30000001192092896);
+        expect(ct.alphaMultiplier).toBe(0.4000000059604645);
         expect(ct.redOffset).toBe(1);
         expect(ct.greenOffset).toBe(2);
         expect(ct.blueOffset).toBe(3);
@@ -105,10 +105,10 @@ describe("ColorTransform.js property test", function()
             256, 256, 256, 256
         );
 
-        expect(ct.redMultiplier).toBe(1.1);
-        expect(ct.greenMultiplier).toBe(1.1);
-        expect(ct.blueMultiplier).toBe(1.1);
-        expect(ct.alphaMultiplier).toBe(1.1);
+        expect(ct.redMultiplier).toBe(1.100000023841858);
+        expect(ct.greenMultiplier).toBe(1.100000023841858);
+        expect(ct.blueMultiplier).toBe(1.100000023841858);
+        expect(ct.alphaMultiplier).toBe(1.100000023841858);
         expect(ct.redOffset).toBe(256);
         expect(ct.greenOffset).toBe(256);
         expect(ct.blueOffset).toBe(256);
@@ -124,10 +124,10 @@ describe("ColorTransform.js property test", function()
             -256, -256, -256, -256
         );
 
-        expect(ct.redMultiplier).toBe(-1.1);
-        expect(ct.greenMultiplier).toBe(-1.1);
-        expect(ct.blueMultiplier).toBe(-1.1);
-        expect(ct.alphaMultiplier).toBe(-1.1);
+        expect(ct.redMultiplier).toBe(-1.100000023841858);
+        expect(ct.greenMultiplier).toBe(-1.100000023841858);
+        expect(ct.blueMultiplier).toBe(-1.100000023841858);
+        expect(ct.alphaMultiplier).toBe(-1.100000023841858);
         expect(ct.redOffset).toBe(-256);
         expect(ct.greenOffset).toBe(-256);
         expect(ct.blueOffset).toBe(-256);
@@ -147,14 +147,15 @@ describe("ColorTransform.js property test", function()
         expect(ct.greenMultiplier).toBe(10);
         expect(ct.blueMultiplier).toBe(10);
         expect(ct.alphaMultiplier).toBe(10);
-        expect(ct.redOffset).toBe(1.1);
-        expect(ct.greenOffset).toBe(1.1);
-        expect(ct.blueOffset).toBe(1.1);
-        expect(ct.alphaOffset).toBe(1.1);
+        expect(ct.redOffset).toBe(1.100000023841858);
+        expect(ct.greenOffset).toBe(1.100000023841858);
+        expect(ct.blueOffset).toBe(1.100000023841858);
+        expect(ct.alphaOffset).toBe(1.100000023841858);
 
     });
 
 });
+
 
 describe("ColorTransform.js concat test", function()
 {
@@ -166,7 +167,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=24.5, greenOffset=60, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=60, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -179,7 +180,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=90, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=-25450, greenOffset=60, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=90, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=-25450, greenOffset=60, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -192,10 +193,11 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=4974.5, greenOffset=60, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=4974.5, greenOffset=60, blueOffset=105, alphaOffset=150)"
         );
 
     });
+
     it("concat test4", function()
     {
 
@@ -204,7 +206,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0, greenMultiplier=-7.2, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=50, greenOffset=1900, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0, greenMultiplier=-7.200000286102295, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=50, greenOffset=1900, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -1493,20 +1495,22 @@ describe("ColorTransform.js alphaMultiplier test", function()
 
         var ct = new ColorTransform(-1.1111, -1.1111, -1.1111, -1.1111, -1.1111, -1.1111, -1.1111, -1.1111);
 
-        expect(ct.redMultiplier).toBe(-1.1111);
-        expect(ct.greenMultiplier).toBe(-1.1111);
-        expect(ct.blueMultiplier).toBe(-1.1111);
-        expect(ct.alphaMultiplier).toBe(-1.1111);
-        expect(ct.redOffset).toBe(-1.1111);
-        expect(ct.greenOffset).toBe(-1.1111);
-        expect(ct.blueOffset).toBe(-1.1111);
-        expect(ct.alphaOffset).toBe(-1.1111);
+        expect(ct.redMultiplier).toBe(-1.1110999584197998);
+        expect(ct.greenMultiplier).toBe(-1.1110999584197998);
+        expect(ct.blueMultiplier).toBe(-1.1110999584197998);
+        expect(ct.alphaMultiplier).toBe(-1.1110999584197998);
+        expect(ct.redOffset).toBe(-1.1110999584197998);
+        expect(ct.greenOffset).toBe(-1.1110999584197998);
+        expect(ct.blueOffset).toBe(-1.1110999584197998);
+        expect(ct.alphaOffset).toBe(-1.1110999584197998);
 
     });
 });
 
+
 describe("ColorTransform.js concat test", function()
 {
+
     it("concat valid test1", function()
     {
 
@@ -1516,7 +1520,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=50, greenOffset=60, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=50, greenOffset=60, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -1530,7 +1534,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=-25.5, greenOffset=60, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=-25.5, greenOffset=60, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -1544,7 +1548,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=24.5, greenOffset=100, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=100, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -1558,7 +1562,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=24.5, greenOffset=-40, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=-40, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -1572,7 +1576,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0, alphaMultiplier=0.3, redOffset=24.5, greenOffset=60, blueOffset=150, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=60, blueOffset=150, alphaOffset=150)"
         );
 
     });
@@ -1586,7 +1590,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=24.5, greenOffset=60, blueOffset=-45, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=60, blueOffset=-45, alphaOffset=150)"
         );
 
     });
@@ -1600,7 +1604,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0, redOffset=24.5, greenOffset=60, blueOffset=105, alphaOffset=200)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0, redOffset=24.5, greenOffset=60, blueOffset=105, alphaOffset=200)"
         );
 
     });
@@ -1614,7 +1618,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=24.5, greenOffset=60, blueOffset=105, alphaOffset=-50)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=60, blueOffset=105, alphaOffset=-50)"
         );
 
     });
@@ -1628,7 +1632,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=50, greenOffset=60, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=50, greenOffset=60, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -1642,7 +1646,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=-25.5, greenOffset=60, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=-25.5, greenOffset=60, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -1656,7 +1660,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=24.5, greenOffset=100, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=100, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -1670,7 +1674,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=24.5, greenOffset=-40, blueOffset=105, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=-40, blueOffset=105, alphaOffset=150)"
         );
 
     });
@@ -1684,7 +1688,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0, alphaMultiplier=0.3, redOffset=24.5, greenOffset=60, blueOffset=150, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=60, blueOffset=150, alphaOffset=150)"
         );
 
     });
@@ -1698,7 +1702,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=24.5, greenOffset=60, blueOffset=-45, alphaOffset=150)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=60, blueOffset=-45, alphaOffset=150)"
         );
 
     });
@@ -1712,7 +1716,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0, redOffset=24.5, greenOffset=60, blueOffset=105, alphaOffset=200)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0, redOffset=24.5, greenOffset=60, blueOffset=105, alphaOffset=200)"
         );
 
     });
@@ -1726,7 +1730,7 @@ describe("ColorTransform.js concat test", function()
         ct1.concat(ct2);
 
         expect(ct1.toString()).toBe(
-            "(redMultiplier=0.09000000000000001, greenMultiplier=0.16000000000000003, blueMultiplier=0.21, alphaMultiplier=0.3, redOffset=24.5, greenOffset=60, blueOffset=105, alphaOffset=-50)"
+            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=24.5, greenOffset=60, blueOffset=105, alphaOffset=-50)"
         );
 
     });

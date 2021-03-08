@@ -41,7 +41,9 @@ class Matrix
          * @type {Float32Array}
          * @private
          */
-        this._$matrix = Util.$getFloat32Array(a, b, c, d, tx, ty);
+        this._$matrix = Util.$getFloat32Array6(
+            a, b, c, d, tx * Util.$TWIPS, ty * Util.$TWIPS
+        );
     }
 
     /**

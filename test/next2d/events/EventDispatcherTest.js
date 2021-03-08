@@ -11,6 +11,7 @@ describe("EventDispatcher.js toString test", function()
 
 });
 
+
 describe("EventDispatcher.js static toString test", function()
 {
 

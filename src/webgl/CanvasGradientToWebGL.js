@@ -12,91 +12,84 @@ class CanvasGradientToWebGL
         this._$rgb             = InterpolationMethod.RGB;
         this._$mode            = SpreadMethod.PAD;
         this._$focalPointRatio = 0;
-        this._$points          = Util.$getFloat32Array(0,0,0,0,0,0);
+        this._$points          = new Util.$window.Float32Array(6); // fixed size 6
         this._$stops           = Util.$getArray();
         this._$type            = null;
     }
 
     /**
+     * @param  {number} x0
+     * @param  {number} y0
+     * @param  {number} x1
+     * @param  {number} y1
+     * @param  {string} [rgb=InterpolationMethod.RGB]
+     * @param  {string} [mode=SpreadMethod.PAD]
      * @return {CanvasGradientToWebGL}
      * @method
-     * @private
+     * @public
      */
-    _$initialization ()
-    {
-        // reset
-        this._$type  = null;
+    linear (
+        x0, y0, x1, y1,
+        rgb = InterpolationMethod.RGB, mode = SpreadMethod.PAD
+    ) {
+
+        this._$type      = GradientType.LINEAR;
+        this._$points[0] = x0;
+        this._$points[1] = y0;
+        this._$points[2] = x1;
+        this._$points[3] = y1;
+        this._$rgb       = rgb;
+        this._$mode      = mode;
+
         if (this._$stops.length) {
             this._$stops.length = 0;
         }
-
-        const length = arguments.length;
-        if (!length) {
-
-            // reset
-            this._$rgb             = InterpolationMethod.RGB;
-            this._$mode            = SpreadMethod.PAD;
-            this._$focalPointRatio = 0;
-            this._$points.fill(0);
-
-            return this;
-        }
-
-
-        if (length === 6) {
-
-            this._$type = GradientType.LINEAR;
-
-            if (this._$points && this._$points.length === 4) {
-
-                this._$points[0] = arguments[0];
-                this._$points[1] = arguments[1];
-                this._$points[2] = arguments[2];
-                this._$points[3] = arguments[3];
-
-            } else {
-
-                this._$points = Util.$getFloat32Array(
-                    arguments[0], arguments[1], arguments[2], arguments[3]
-                );
-
-            }
-
-            this._$rgb  = arguments[4] || InterpolationMethod.RGB;
-            this._$mode = arguments[5] || SpreadMethod.PAD;
-
-            return this;
-        }
-
-        this._$type = GradientType.RADIAL;
-        if (this._$points && this._$points.length === 6) {
-
-            this._$points[0] = arguments[0];
-            this._$points[1] = arguments[1];
-            this._$points[2] = arguments[2];
-            this._$points[3] = arguments[3];
-            this._$points[4] = arguments[4];
-            this._$points[5] = arguments[5];
-
-        } else {
-
-            this._$points = Util.$getFloat32Array(
-                arguments[0], arguments[1], arguments[2],
-                arguments[3], arguments[4], arguments[5]
-            );
-
-        }
-
-        this._$rgb             = arguments[6] || InterpolationMethod.RGB;
-        this._$mode            = arguments[7] || SpreadMethod.PAD;
-        this._$focalPointRatio = Util.$clamp(arguments[8], -0.975, 0.975, 0);
 
         return this;
     }
 
     /**
-     * @param {number} offset
-     * @param {array}  color
+     * @param  {number} x0
+     * @param  {number} y0
+     * @param  {number} r0
+     * @param  {number} x1
+     * @param  {number} y1
+     * @param  {number} r1
+     * @param  {string} [rgb=InterpolationMethod.RGB]
+     * @param  {string} [mode=SpreadMethod.PAD]
+     * @param  {number} [focal_point_ratio=0]
+     * @return {CanvasGradientToWebGL}
+     * @method
+     * @public
+     */
+    radial (
+        x0, y0, r0, x1, y1, r1,
+        rgb = InterpolationMethod.RGB, mode = SpreadMethod.PAD,
+        focal_point_ratio = 0
+    ) {
+
+        this._$type            = GradientType.RADIAL;
+        this._$points[0]       = x0;
+        this._$points[1]       = y0;
+        this._$points[2]       = r0;
+        this._$points[3]       = x1;
+        this._$points[4]       = y1;
+        this._$points[5]       = r1;
+        this._$rgb             = rgb;
+        this._$mode            = mode;
+        this._$focalPointRatio = Util.$clamp(focal_point_ratio, -0.975, 0.975, 0);
+
+        if (this._$stops.length) {
+            this._$stops.length = 0;
+        }
+
+        return this;
+    }
+
+    /**
+     * @param  {number} offset
+     * @param  {array}  color
+     * @return {void}
      * @method
      * @public
      */

@@ -57,7 +57,7 @@ class ColorTransform
          * @type {Float32Array}
          * @private
          */
-        this._$colorTransform = Util.$getFloat32Array(
+        this._$colorTransform = Util.$getFloat32Array8(
             red_multiplier, green_multiplier, blue_multiplier, alpha_multiplier,
             red_offset, green_offset, blue_offset, alpha_offset
         );
@@ -300,7 +300,7 @@ class ColorTransform
         this._$colorTransform[6] = multiColor[6];
         this._$colorTransform[7] = multiColor[7];
 
-        Util.$poolFloat32Array(multiColor);
+        Util.$poolFloat32Array8(multiColor);
     }
 
     /**
@@ -312,7 +312,7 @@ class ColorTransform
     {
         const colorTransform = new ColorTransform();
 
-        colorTransform._$colorTransform = Util.$getFloat32Array(
+        colorTransform._$colorTransform = Util.$getFloat32Array8(
             this._$colorTransform[0], this._$colorTransform[1],
             this._$colorTransform[2], this._$colorTransform[3],
             this._$colorTransform[4], this._$colorTransform[5],

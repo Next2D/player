@@ -1136,7 +1136,7 @@ class DisplayObject extends EventDispatcher
             Util.$hitContext.beginPath();
             const result = this._$hit(Util.$hitContext, matrix, { "x": x, "y": y }, true);
 
-            Util.$poolFloat32Array(matrix);
+            Util.$poolFloat32Array6(matrix);
 
             return result;
         }

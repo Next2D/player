@@ -153,7 +153,7 @@ class Transform
 
             const buffer = object.colorTransform;
             const colorTransform = new ColorTransform();
-            colorTransform._$colorTransform = Util.$getFloat32Array(
+            colorTransform._$colorTransform = Util.$getFloat32Array8(
                 buffer[0], buffer[1], buffer[2], buffer[3],
                 buffer[4], buffer[5], buffer[6], buffer[7]
             );
@@ -384,16 +384,16 @@ class Transform
     {
         // Matrix
         if (!this._$matrix) {
-            this._$matrix = Util.$getMatrix();
+            this._$matrix = Util.$getMatrix(1, 0, 0, 1, 0, 0);
         }
 
         if (matrix) {
 
-            Util.$poolFloat32Array(this._$matrix._$matrix);
+            Util.$poolFloat32Array6(this._$matrix._$matrix);
 
             this
                 ._$matrix
-                ._$matrix = Util.$getFloat32Array(
+                ._$matrix = Util.$getFloat32Array6(
                 matrix[0], matrix[1], matrix[2],
                 matrix[3], matrix[4], matrix[5]
             );
@@ -407,13 +407,13 @@ class Transform
 
         if (object) {
 
-            Util.$poolFloat32Array(this._$matrix._$matrix);
+            Util.$poolFloat32Array6(this._$matrix._$matrix);
 
             const matrix = object.matrix;
 
             this
                 ._$matrix
-                ._$matrix = Util.$getFloat32Array(
+                ._$matrix = Util.$getFloat32Array6(
                 matrix[0], matrix[1], matrix[2],
                 matrix[3], matrix[4], matrix[5]
             );
@@ -436,11 +436,11 @@ class Transform
 
         if (color_transform) {
 
-            Util.$poolFloat32Array(this._$colorTransform._$colorTransform);
+            Util.$poolFloat32Array6(this._$colorTransform._$colorTransform);
 
             this
                 ._$colorTransform
-                ._$colorTransform = Util.$getFloat32Array(
+                ._$colorTransform = Util.$getFloat32Array8(
                     color_transform[0], color_transform[1],
                     color_transform[2], color_transform[3],
                     color_transform[4], color_transform[5],
@@ -455,13 +455,13 @@ class Transform
 
         if (object) {
 
-            Util.$poolFloat32Array(this._$colorTransform._$colorTransform);
+            Util.$poolFloat32Array8(this._$colorTransform._$colorTransform);
 
             const colorTransform = object.colorTransform;
 
             this
                 ._$colorTransform
-                ._$colorTransform = Util.$getFloat32Array(
+                ._$colorTransform = Util.$getFloat32Array8(
                     colorTransform[0], colorTransform[1],
                     colorTransform[2], colorTransform[3],
                     colorTransform[4], colorTransform[5],

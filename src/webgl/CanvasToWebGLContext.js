@@ -31,10 +31,10 @@ class CanvasToWebGLContext
         this._$globalAlpha              = 1;
         this._$imageSmoothingEnabled    = false;
         this._$globalCompositeOperation = BlendMode.NORMAL;
-        this._$matrix                   = Util.$getFloat32Array(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        this._$matrix                   = Util.$getFloat32Array9(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
-        this._$clearColor = Util.$getFloat32Array(1, 1, 1, 1);
-        this._$viewport   = Util.$getFloat32Array(0, 0);
+        this._$clearColor = new Util.$window.Float32Array([1, 1, 1, 1]); // fixed size 4
+        this._$viewport   = new Util.$window.Float32Array(2); // fixed size 2
 
         this._$frameBufferManager = new FrameBufferManager(gl, isWebGL2Context, samples);
         this._$path = new CanvasToWebGLContextPath();
@@ -1175,7 +1175,9 @@ class CanvasToWebGLContext
 
         // matrix
         const m = this._$matrix;
-        this._$stack[this._$stack.length] = Util.$getFloat32Array(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]);
+        this._$stack.push(Util.$getFloat32Array9(
+            m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]
+        ));
 
         // mask
         this._$mask._$onSave();
@@ -1189,7 +1191,7 @@ class CanvasToWebGLContext
     {
         //matrix
         if (this._$stack.length) {
-            Util.$poolFloat32Array(this._$matrix);
+            Util.$poolFloat32Array9(this._$matrix);
             this._$matrix = this._$stack.pop();
         }
 
@@ -1216,16 +1218,18 @@ class CanvasToWebGLContext
      * @param  {number} y0
      * @param  {number} x1
      * @param  {number} y1
-     * @param  {string} [rgb=SpreadMethod.RGB]
+     * @param  {string} [rgb=InterpolationMethod.RGB]
      * @param  {string} [mode=SpreadMethod.PAD]
      * @return {CanvasGradientToWebGL}
      * @public
      */
-    createLinearGradient (x0, y0, x1, y1, rgb, mode)
-    {
+    createLinearGradient (
+        x0, y0, x1, y1,
+        rgb = InterpolationMethod.RGB, mode = SpreadMethod.PAD
+    ) {
         return this
             ._$canvasGradientToWebGL
-            ._$initialization(x0, y0, x1, y1, rgb, mode);
+            .linear(x0, y0, x1, y1, rgb, mode);
     }
 
     /**
@@ -1235,17 +1239,20 @@ class CanvasToWebGLContext
      * @param  {number} x1
      * @param  {number} y1
      * @param  {number} r1
-     * @param  {string} [rgb=SpreadMethod.RGB]
+     * @param  {string} [rgb=InterpolationMethod.RGB]
      * @param  {string} [mode=SpreadMethod.PAD]
-     * @param  {number} [focalPointRatio=0]
+     * @param  {number} [focal_point_ratio=0]
      * @return {CanvasGradientToWebGL}
      * @public
      */
-    createRadialGradient (x0, y0, r0, x1, y1, r1, rgb, mode, focalPointRatio)
-    {
+    createRadialGradient (
+        x0, y0, r0, x1, y1, r1,
+        rgb = InterpolationMethod.RGB, mode = SpreadMethod.PAD,
+        focal_point_ratio = 0
+    ) {
         return this
             ._$canvasGradientToWebGL
-            ._$initialization(x0, y0, r0, x1, y1, r1, rgb, mode, focalPointRatio);
+            .radial(x0, y0, r0, x1, y1, r1, rgb, mode, focal_point_ratio);
     }
 
     /**
