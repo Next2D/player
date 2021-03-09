@@ -3,19 +3,34 @@
 
 <head>
     <meta charset="UTF-8"/>
-    <title>Next2D Develop</title>
+    <title>Next2D Player</title>
     <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0" />
     <script src="next2d.js"></script>
 </head>
 
 <body style="margin: 0; padding: 0; background-color: #fff;">
 
-<script type="text/javascript">
-    // next2d.load("develop");
-    const root = next2d.createRootMovieClip(240, 240, 60);
-    console.log(root, next2d);
+    <script type="text/javascript">
 
-</script>
+        const root = next2d.createRootMovieClip(240, 240, 60);
+
+        const {Shape} = next2d.display;
+        const shape = root.addChild(new Shape());
+
+        shape
+            .graphics
+            .beginFill(0, 1)
+            .moveTo(0, 0)
+            .lineTo(0, 100)
+            .lineTo(100, 100)
+            .lineTo(100, 0)
+            .lineTo(0, 0)
+            .endFill();
+
+        console.log(shape);
+
+    </script>
+
 </body>
 
 </html>

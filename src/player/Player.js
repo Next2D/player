@@ -690,7 +690,7 @@ class Player
                     : parent.offsetHeight;
 
             // set center
-            if (width && height) {
+            if (this._$mode === "loader" && width && height) {
                 this._$baseWidth  = width;
                 this._$baseHeight = height;
                 this._$resize();
@@ -988,12 +988,14 @@ class Player
             const parent  = div.parentNode;
 
             const innerWidth = this._$optionWidth
-                ? this._$optionWidth : (parent.tagName === "BODY")
+                ? this._$optionWidth
+                : (parent.tagName === "BODY")
                     ? Util.$window.innerWidth
                     : parent.offsetWidth;
 
             const innerHeight = this._$optionHeight
-                ? this._$optionHeight : (parent.tagName === "BODY")
+                ? this._$optionHeight
+                : (parent.tagName === "BODY")
                     ? Util.$window.innerHeight
                     : parent.offsetHeight;
 
@@ -1003,7 +1005,7 @@ class Player
 
 
             const scale = Util.$min(
-                (innerWidth / this._$baseWidth),
+                (innerWidth  / this._$baseWidth),
                 (innerHeight / this._$baseHeight)
             );
 
@@ -1541,22 +1543,29 @@ class Player
             return ;
         }
 
-        // move frame and construct action
-        const loaders = this._$loaders.slice(0);
+        let loaders = null;
 
-        // array reset
-        this._$loaders.length = 0;
+        const length = this._$loaders.length;
+        if (length) {
 
-        let length = loaders.length;
-        for (let idx = 0; idx < length; ++idx) {
+            // clone
+            loaders = this._$loaders.slice(0);
 
-            const loader = loaders[idx];
+            // array reset
+            this._$loaders.length = 0;
 
-            // first action
-            if ("content" in loader) {
-                loader.content._$prepareActions();
+            for (let idx = 0; idx < length; ++idx) {
+
+                const loader = loaders[idx];
+
+                // first action
+                if ("content" in loader) {
+                    loader.content._$prepareActions();
+                }
             }
         }
+
+        // next frame
         this._$stage._$nextFrame();
 
 
@@ -1593,31 +1602,34 @@ class Player
 
 
         // loader events
-        length = loaders.length;
-        for (let idx = 0; idx < length; ++idx) {
+        if (length) {
 
-            const loader = loaders[idx];
+            for (let idx = 0; idx < length; ++idx) {
 
-            // unlock
-            if (loader instanceof LoaderInfo) {
-                loader._$lock = false;
+                const loader = loaders[idx];
+
+                // unlock
+                if (loader instanceof LoaderInfo) {
+                    loader._$lock = false;
+                }
+
+                // init event
+                if (loader.hasEventListener(Event.INIT)) {
+                    loader.dispatchEvent(new Event(Event.INIT));
+                }
+
+                // complete event
+                if (loader.hasEventListener(Event.COMPLETE)) {
+                    loader.dispatchEvent(new Event(Event.COMPLETE));
+                }
+
+                // remove scope player
+                loader._$player = null;
             }
 
-            // init event
-            if (loader.hasEventListener(Event.INIT)) {
-                loader.dispatchEvent(new Event(Event.INIT));
-            }
-
-            // complete event
-            if (loader.hasEventListener(Event.COMPLETE)) {
-                loader.dispatchEvent(new Event(Event.COMPLETE));
-            }
-
-            // remove scope player
-            loader._$player = null;
+            // pool
+            Util.$poolArray(loaders);
         }
-
-        Util.$poolArray(loaders);
 
         // execute frame action
         this._$doAction();

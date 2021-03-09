@@ -606,6 +606,16 @@ Util.$audios = [];
 Util.$maps = [];
 
 /**
+ * フィルター・ブレンドモードで使用済みになったPre Objectをプール
+ * Pools Pre Objects that are no longer used in Filter Blend mode.
+ *
+ * @type {Object[]}
+ * @const
+ * @static
+ */
+Util.$preObjects = [];
+
+/**
  * 使用済みになったMatrix Objectをプール
  * Pool Matrix objects that are no longer in use.
  *
@@ -748,15 +758,16 @@ Util.$isArray = function (source)
 };
 
 /**
+ * @param  {array} args
  * @return {array}
  * @method
  * @static
  */
-Util.$getArray = function ()
+Util.$getArray = function (...args)
 {
     const array = Util.$arrays.pop() || [];
-    if (arguments.length) {
-        array.push.apply(array, arguments);
+    if (args.length) {
+        array.push.apply(array, args);
     }
     return array;
 }
@@ -786,7 +797,6 @@ Util.$poolArray = function (array)
  */
 Util.$clamp = function (min, max, value, default_value)
 {
-
     const number = +value;
     if (Util.$isNaN(number) && default_value !== null) {
         return default_value;
@@ -1392,6 +1402,11 @@ Util.$resizeExecute = function ()
 };
 
 /**
+ * added resize event
+ */
+Util.$window.addEventListener("resize", Util.$resize);
+
+/**
  * @param  {CanvasToWebGLContext} context
  * @return {void}
  * @method
@@ -1418,6 +1433,59 @@ Util.$resetContext = function (context)
 }
 
 
+/**
+ * @return {object}
+ * @static
+ */
+Util.$getPreObject = function ()
+{
+    return Util.$preObjects.pop() ||
+        {
+            "isFilter":           false,
+            "isUpdated":          null,
+            "canApply":           null,
+            "matrix":             null,
+            "color":              null,
+            "basePosition":       { "x": 0, "y": 0 },
+            "position":           { "dx": 0, "dy": 0 },
+            "baseMatrix":         null,
+            "baseColor":          null,
+            "currentBuffer":      null,
+            "currentMaskBuffer":  null,
+            "cacheCurrentBounds": null,
+            "blendMode":          null,
+            "filters":            null,
+            "layerWidth":         null,
+            "layerHeight":        null
+        };
+};
+
+/**
+ * @param {object} object
+ * @return void
+ * @static
+ */
+Util.$poolPreObject = function (object)
+{
+    // reset
+    object.isFilter           = false;
+    object.isUpdated          = null;
+    object.canApply           = null;
+    object.matrix             = null;
+    object.color              = null;
+    object.baseMatrix         = null;
+    object.baseColor          = null;
+    object.currentBuffer      = null;
+    object.currentMaskBuffer  = null;
+    object.cacheCurrentBounds = null;
+    object.blendMode          = null;
+    object.filters            = null;
+    object.layerWidth         = null;
+    object.layerHeight        = null;
+
+    // pool
+    Util.$preObjects.push(object);
+};
 
 
 

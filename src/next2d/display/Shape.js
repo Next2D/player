@@ -133,7 +133,7 @@ class Shape extends DisplayObject
             return Util.$getBoundsObject(0, 0, 0, 0);
         }
 
-        const bounds = this._$graphics._$getBounds();
+        const bounds = this._$graphics._$getBounds(matrix);
         if (!bounds) {
             Util.$poolBoundsObject(bounds);
             return Util.$getBoundsObject(0, 0, 0, 0);

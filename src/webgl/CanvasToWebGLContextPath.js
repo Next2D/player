@@ -126,10 +126,16 @@ class CanvasToWebGLContextPath
 
         const fromX = this._$currentPath[this._$currentPath.length - 3];
         const fromY = this._$currentPath[this._$currentPath.length - 2];
-        const quads = BezierConverter.cubicToQuad(fromX, fromY, cx1, cy1, cx2, cy2, x, y);
-        for (let i = 0; i < quads.length; i++) {
-            const quad = quads[i];
-            this.quadTo(quad[2], quad[3], quad[4], quad[5]);
+        BezierConverter.cubicToQuad(fromX, fromY, cx1, cy1, cx2, cy2, x, y);
+
+        const length = BezierConverter.buffer.length;
+        for (let i = 0; i < length; i += 4) {
+            this.quadTo(
+                BezierConverter.buffer[i],
+                BezierConverter.buffer[i + 1],
+                BezierConverter.buffer[i + 2],
+                BezierConverter.buffer[i + 3]
+            )
         }
     }
 

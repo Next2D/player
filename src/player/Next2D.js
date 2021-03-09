@@ -61,8 +61,8 @@ class Next2D
         player._$stage.frameRate = fps|0;
 
         // setup
-        player.width  = width;
-        player.height = height;
+        player.width  = width|0;
+        player.height = height|0;
         player.setOptions(options);
 
         return player._$stage.addChild(new MovieClip());
@@ -71,3 +71,5 @@ class Next2D
 
 Util.$window.next2d = new Next2D();
 Util.$packages(Util.$window.next2d);
+
+console.log(Util);

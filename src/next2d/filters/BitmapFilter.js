@@ -96,12 +96,11 @@ class BitmapFilter
     }
 
     /**
-     * @param {boolean} flag
      * @method
      * @private
      */
-    _$doChanged (flag)
+    _$doChanged ()
     {
-        this._$updated = flag;
+        this._$updated = true;
     }
 }

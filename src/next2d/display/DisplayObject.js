@@ -1240,32 +1240,18 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @param  {boolean} [flag=true]
      * @return {object}
      * @method
      * @private
      */
-    _$doChanged (flag = true)
+    _$doChanged ()
     {
-        this._$updateState();
+        this._$isNext  = true;
+        this._$updated = true;
 
-        if (!this._$updated) {
-
-            this._$updated = flag;
-
-            let parent = this._$parent;
-            if (parent) {
-
-                // check
-                const filters   = parent._$filters   || parent.filters;
-                const blendMode = parent._$blendMode || parent.blendMode;
-                if (filters.length > 0 || blendMode !== BlendMode.NORMAL) {
-                    parent._$doChanged();
-                } else {
-                    parent._$doChanged(false);
-                }
-            }
-
+        let parent = this._$parent;
+        if (parent) {
+            parent._$doChanged();
         }
     }
 
@@ -1329,5 +1315,203 @@ class DisplayObject extends EventDispatcher
         return false;
     }
 
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {array} matrix
+     * @param  {array} color_transform
+     * @return {object}
+     * @private
+     */
+    _$preDraw (context, matrix, color_transform)
+    {
+
+        const originMatrix = this._$transform._$rawMatrix();
+        const tMatrix = Util.$multiplicationMatrix(matrix, originMatrix);
+
+
+        // size zero
+        if ((!tMatrix[0] && !tMatrix[1]) || (!tMatrix[2] && !tMatrix[3])) {
+            return false;
+        }
+
+        // return object
+        const object = Util.$getPreObject();
+
+        // setup
+        object.matrix = tMatrix;
+
+        // check
+        const filters   = this._$filters   || this.filters;
+        const blendMode = this._$blendMode || this.blendMode;
+        if (filters.length > 0 || blendMode !== BlendMode.NORMAL) {
+
+            // check size
+            const baseBounds = this._$getBounds(null);
+            const bounds = Util.$boundsMatrix(baseBounds, tMatrix);
+            const xMax   = +bounds.xMax;
+            const xMin   = +bounds.xMin;
+            const yMax   = +bounds.yMax;
+            const yMin   = +bounds.yMin;
+
+            // pool
+            Util.$poolBoundsObject(baseBounds);
+            Util.$poolBoundsObject(bounds);
+
+            const width  = Util.$abs(xMax - xMin);
+            const height = Util.$abs(yMax - yMin);
+            if (0 >= width || 0 >= height) {
+                return false;
+            }
+
+            if (0 > (xMin + width) || 0 > (yMin + height)) {
+                return false;
+            }
+
+            const currentBuffer = context.frameBuffer.currentAttachment;
+            if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
+                return false;
+            }
+
+
+            // set origin position
+            object.basePosition.x = originMatrix[4];
+            object.basePosition.y = originMatrix[5];
+
+
+            // check after size
+            let baseLayerBounds = this._$getLayerBounds(null);
+            const layerBounds = Util.$boundsMatrix(baseLayerBounds, tMatrix);
+
+
+            // filter size
+            let layerWidth  = Util.$abs(layerBounds.xMax - layerBounds.xMin);
+            let layerHeight = Util.$abs(layerBounds.yMax - layerBounds.yMin);
+            Util.$poolBoundsObject(layerBounds);
+
+
+            if (layerWidth === width && layerHeight === height) {
+                Util.$poolBoundsObject(baseLayerBounds);
+                baseLayerBounds = null;
+            }
+
+
+            // move size
+            let tx = tMatrix[4] - Util.$floor(xMin);
+            let ty = tMatrix[5] - Util.$floor(yMin);
+
+            let moveBounds = null;
+            if (baseLayerBounds) {
+
+                const layerMatrix = Util.$getMatrixArray(
+                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], 0, 0
+                );
+                moveBounds = Util.$boundsMatrix(baseLayerBounds, layerMatrix);
+
+                // pool
+                Util.$poolBoundsObject(baseLayerBounds);
+                Util.$poolMatrixArray(layerMatrix);
+
+                tx += -Util.$floor(moveBounds.xMin) - tx;
+                ty += -Util.$floor(moveBounds.yMin) - ty;
+            }
+
+
+            let dx = Util.$floor(xMin);
+            let dy = Util.$floor(yMin);
+            let originX = xMin;
+            let originY = yMin;
+
+            if (moveBounds) {
+                dx -= -Util.$floor(moveBounds.xMin) - (tMatrix[4] - dx);
+                dy -= -Util.$floor(moveBounds.yMin) - (tMatrix[5] - dy);
+
+                originX -= -moveBounds.xMin - (tMatrix[4] - originX);
+                originY -= -moveBounds.yMin - (tMatrix[5] - originY);
+
+                Util.$poolBoundsObject(moveBounds);
+            }
+
+
+            // set position
+            object.position.dx = (dx > 0) ? dx : 0;
+            object.position.dy = (dy > 0) ? dy : 0;
+
+            // resize
+            if ((layerWidth + originX) > currentBuffer.texture.width) {
+                layerWidth -= layerWidth - currentBuffer.texture.width + originX;
+            }
+
+            if ((layerHeight + originY) > currentBuffer.texture.height) {
+                layerHeight -= layerHeight - currentBuffer.texture.height + originY;
+            }
+
+            if (0 > dx) {
+                tx += dx;
+                layerWidth += originX;
+            }
+
+            if (0 > dy) {
+                ty += dy;
+                layerHeight += originY;
+            }
+
+
+            if (0 >= layerWidth || 0 >= layerHeight // size (-)
+                || !layerWidth || !layerHeight // NaN or Infinity
+            ) {
+                Util.$poolPreObject(object);
+                return false;
+            }
+
+
+            // start layer
+            context._$startLayer(Util.$getBoundsObject(originX, 0, originY, 0));
+
+
+            // check cache
+            object.canApply = this._$canApply(filters);
+            let updated = this._$isFilterUpdated(
+                layerWidth, layerHeight, tMatrix, color_transform, filters,
+                object.canApply, object.basePosition.x, object.basePosition.y
+            );
+
+
+            // cache
+            const currentMaskBuffer = context._$cacheCurrentBuffer;
+            context._$cacheCurrentBuffer = null;
+
+            const rect = context._$cacheCurrentBounds;
+            const currentMaskBounds = Util.$getBoundsObject(rect.x, rect.w, rect.y, rect.h);
+
+            if (updated) {
+                this._$buffer = context
+                    .frameBuffer
+                    .createCacheAttachment(
+                        Util.$ceil(layerWidth), Util.$ceil(layerHeight), false
+                    );
+                context._$bind(this._$buffer);
+            }
+
+            // setup
+            object.isFilter          = true;
+            object.isUpdated         = updated;
+            object.color             = Util.$getColorArray();
+            object.baseMatrix        = tMatrix;
+            object.baseColor         = color_transform;
+            object.currentBuffer     = currentBuffer;
+            object.currentMaskBuffer = currentMaskBuffer;
+            object.currentMaskBounds = currentMaskBounds;
+            object.filters           = filters;
+            object.blendMode         = blendMode;
+            object.layerWidth        = layerWidth;
+            object.layerHeight       = layerHeight;
+            object.matrix            = Util.$getMatrixArray(
+                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tx, ty
+            );
+
+        }
+
+        return object;
+    }
 
 }

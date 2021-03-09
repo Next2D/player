@@ -27,8 +27,8 @@ class Graphics
         this._$data          = Util.$getArray();
         this._$fills         = Util.$getArray();
         this._$lines         = Util.$getArray();
-        this._$fillStyle     = null;
-        this._$lineStyle     = null;
+        this._$fillStyle     = Util.$getArray();
+        this._$lineStyle     = Util.$getArray();
         this._$lineStack     = Util.$getArray();
         this._$pixels        = Util.$getMap();
         this._$lineWidth     = 0;
@@ -261,10 +261,11 @@ class Graphics
      * @description 描画領域をビットマップイメージで塗りつぶします。
      *              Fills a drawing area with a bitmap image.
      *
-     * @param {BitmapData} bitmap_data
-     * @param {Matrix}     [matrix=null]
-     * @param {boolean}    [repeat=true]
-     * @param {boolean}    [smooth=false]
+     * @param  {BitmapData} bitmap_data
+     * @param  {Matrix}     [matrix=null]
+     * @param  {boolean}    [repeat=true]
+     * @param  {boolean}    [smooth=false]
+     * @return {Graphics}
      * @method
      * @public
      */
@@ -275,8 +276,16 @@ class Graphics
         // init fill style
         this.endFill();
 
+        // start
+        this._$doFill  = true;
+        this._$canDraw = true;
+
         // beginPath
-        this._$fills.push(Util.$getArray(Graphics.BEGIN_PATH));
+        this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
+
+        // TODO
+
+        return this;
     }
 
     /**
@@ -285,35 +294,38 @@ class Graphics
      *              Specifies a simple one-color fill that subsequent calls
      *              to other Graphics methods (such as lineTo() or drawCircle()) use when drawing.
      *
-     * @param  {string|number} color
+     * @param  {string|number} [color=0]
      * @param  {number} [alpha=1.0]
      * @return {Graphics}
      * @method
      * @public
      */
-    beginFill (color, alpha = 1)
+    beginFill (color = 0, alpha = 1)
     {
         // valid
-        color = Util.$clamp(Util.$toColorInt(color), 0, 0xffffff, 0);
-        alpha = Util.$clamp(alpha, 0, 1, 1);
+        color = Util.$clamp(0, 0xffffff, Util.$toColorInt(color), 0);
+        alpha = Util.$clamp(0, 1, alpha, 1);
 
         this._$maxAlpha = Util.$max(this._$maxAlpha, alpha);
 
         // end fill
         this.endFill();
 
+        // start
+        this._$doFill  = true;
+        this._$canDraw = true;
+
         // beginPath
-        this._$fills.push(Util.$getArray(Graphics.BEGIN_PATH));
+        this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
 
         // add Fill Style
         const object = Util.$intToRGBA(color, alpha);
-        this._$fillStyle = Util.$getArray(
-            Graphics.FILL_STYLE,
-            object.R, object.G, object.B, object.A
-        );
 
-        // start
-        this._$doFill = true;
+        this._$fillStyle[0] = Graphics.FILL_STYLE;
+        this._$fillStyle[1] = object.R;
+        this._$fillStyle[2] = object.G;
+        this._$fillStyle[3] = object.B;
+        this._$fillStyle[4] = object.A;
 
         return this;
     }
@@ -369,10 +381,14 @@ class Graphics
         this._$lineStart.x  = 0;
         this._$lineStart.y  = 0;
         this._$canDraw      = false;
-        this._$fillStyle    = null;
-        this._$lineStyle    = null;
 
         // reset array
+        if (this._$fillStyle.length) {
+            this._$fillStyle.length = 0;
+        }
+        if (this._$lineStyle.length) {
+            this._$lineStyle.length = 0;
+        }
         if (this._$data.length) {
             this._$data.length = 0;
         }
@@ -436,11 +452,9 @@ class Graphics
         control_y2 = +control_y2 * Util.$TWIPS || 0;
 
         // set bounds
-        this._$setBounds(
-            control_x1, control_y1,
-            control_x2, control_y2,
-            anchor_x,   anchor_y
-        );
+        this._$setBounds(control_x1, control_y1);
+        this._$setBounds(control_x2, control_y2);
+        this._$setBounds(anchor_x, anchor_y);
 
         this._$margePath(Util.$getArray(
             Graphics.CUBIC,
@@ -486,10 +500,8 @@ class Graphics
         control_x = +control_x * Util.$TWIPS || 0;
         control_y = +control_y * Util.$TWIPS || 0;
 
-        this._$setBounds(
-            control_x, control_y,
-            anchor_x,  anchor_y
-        );
+        this._$setBounds(control_x, control_y);
+        this._$setBounds(anchor_x,  anchor_y);
 
         this._$margePath(Util.$getArray(
             Graphics.CURVE_TO,
@@ -523,10 +535,8 @@ class Graphics
         y      = +y * Util.$TWIPS || 0;
         radius = +radius * Util.$TWIPS || 0;
 
-        this._$setBounds(
-            x - radius, y - radius,
-            x + radius, y + radius
-        );
+        this._$setBounds(x - radius, y - radius);
+        this._$setBounds(x + radius, y + radius);
 
         this._$margePath(Util.$getArray(
             Graphics.ARC,
@@ -683,16 +693,15 @@ class Graphics
     {
         if (this._$doFill) {
 
-            if (this._$fillStyle) {
+            if (this._$fillStyle.length) {
 
                 this._$fills.push.apply(this._$fills, this._$fillStyle);
 
                 if (this._$fillStyle[0] === Graphics.FILL_STYLE) {
-                    this._$fills.push(Util.$getArray(Graphics.END_FILL));
+                    this._$margePath(Util.$getArray(Graphics.END_FILL));
                 }
 
-                Util.$poolArray(this._$fillStyle);
-                this._$fillStyle = null;
+                this._$fillStyle.length = 0;
             }
 
             if (this._$fills.length) {
@@ -707,8 +716,7 @@ class Graphics
 
         }
 
-        this._$doFill  = false;
-        this._$canDraw = true;
+        this._$doFill = false;
 
         // restart
         this._$restart();
@@ -1110,11 +1118,12 @@ class Graphics
     }
 
     /**
+     * @param  {Float32Array} [matrix=null]
      * @return {object}
      * @method
      * @private
      */
-    _$getBounds ()
+    _$getBounds (matrix = null)
     {
         const displayObject = this._$displayObject;
         if (displayObject && displayObject._$bounds) {
@@ -1165,9 +1174,6 @@ class Graphics
         );
     }
 
-
-
-
     /**
      * @return {void}
      * @method
@@ -1182,38 +1188,36 @@ class Graphics
             this._$bounds = null;
         }
 
-        if (!this._$displayObject._$isUpdated()) {
-            Util.$isUpdated = true;
+        if (this._$displayObject
+            && !this._$displayObject._$isUpdated()
+        ) {
+
             this._$displayObject._$doChanged();
+            Util.$isUpdated = true;
+
             Util
                 .$cacheStore()
                 .removeCache(
                     this._$displayObject._$characterId
                     || this._$displayObject._$instanceId
                 );
+
         }
     }
 
     /**
+     * @param  {number} [x=0]
+     * @param  {number} [y=0]
      * @return {void}
      * @method
      * @private
      */
-    _$setBounds ()
+    _$setBounds (x = 0, y = 0)
     {
-        const length = arguments.length;
-        for (let idx = 0; idx < length; idx += 2) {
-
-            const x = arguments[idx];
-            const y = arguments[idx + 1];
-
-            this._$setFillBounds(x, y);
-            if (this._$doLine) {
-                this._$setLineBounds(x, y);
-            }
-
+        this._$setFillBounds(x, y);
+        if (this._$doLine) {
+            this._$setLineBounds(x, y);
         }
-
     }
 
     /**

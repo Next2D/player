@@ -789,14 +789,19 @@ class DisplayObjectContainer extends InteractiveObject
 
         // added event
         if (!child._$added) {
-            child.dispatchEvent(new Event(Event.ADDED, true));
+            if (child.willTrigger(Event.ADDED)) {
+                child.dispatchEvent(new Event(Event.ADDED, true));
+            }
             child._$added = true;
         }
 
 
         if (this._$stage !== null && !child._$addedStage) {
 
-            child.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
+            if (child.willTrigger(Event.ADDED_TO_STAGE)) {
+                child.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
+            }
+
             child._$addedStage = true;
 
             // set params
@@ -858,7 +863,9 @@ class DisplayObjectContainer extends InteractiveObject
             }
 
             if (!instance._$addedStage) {
-                instance.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
+                if (instance.willTrigger(Event.ADDED_TO_STAGE)) {
+                    instance.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
+                }
                 instance._$addedStage = true;
             }
 
@@ -908,12 +915,16 @@ class DisplayObjectContainer extends InteractiveObject
         if (do_event) {
 
             // event
-            child.dispatchEvent(new Event(Event.REMOVED, true));
+            if (child.willTrigger(Event.REMOVED)) {
+                child.dispatchEvent(new Event(Event.REMOVED, true));
+            }
 
             // remove stage event
             if (this._$stage !== null) {
 
-                child.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE));
+                if (child.willTrigger(Event.REMOVED_FROM_STAGE)) {
+                    child.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE));
+                }
 
                 if (child instanceof DisplayObjectContainer) {
                     child._$executeRemovedFromStage();
@@ -958,7 +969,9 @@ class DisplayObjectContainer extends InteractiveObject
             }
 
             if (instance._$addedStage) {
-                instance.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE));
+                if (instance.willTrigger(Event.REMOVED_FROM_STAGE)) {
+                    instance.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE));
+                }
                 instance._$addedStage = false;
             }
 
@@ -1056,10 +1069,59 @@ class DisplayObjectContainer extends InteractiveObject
         return this._$isNext;
     }
 
-    _$draw ()
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {array} matrix
+     * @param  {array} color_transform
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$draw (context, matrix, color_transform)
     {
+        // not draw
+        if (!this._$visible) {
+            return ;
+        }
+
+        // ColorTransform
+        const colorTransform = Util.$multiplicationColor(
+            color_transform,
+            this._$transform._$rawColorTransform()
+        );
+
+
+        // not draw
+        const alpha = Util.$clamp(0, 1,
+            colorTransform[3] + (colorTransform[7] / 255), 0
+        );
+        if (!alpha) {
+            return ;
+        }
+
+
+        // not draw
+        const children = (this._$needsChildren)
+            ? this._$getChildren()
+            : this._$children;
+
+        const length = children.length;
+        if (!length && (!this._$graphics || !this._$graphics._$canDraw)) {
+            return ;
+        }
+
+
+        // pre data
+        const preData = this._$preDraw(context, matrix, color_transform);
+        if (!preData) {
+            return ;
+        }
+
+
 
     }
+
+
 
     _$mouseHit ()
     {
