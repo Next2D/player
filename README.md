@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Next2D/Player.svg?branch=develop)](https://travis-ci.org/Next2D/Player)
+[![Build Status](https://api.travis-ci.com/Next2D/Player.svg?branch=develop)](https://travis-ci.org/Next2D/Player)
 [![license](https://img.shields.io/github/license/liyasthomas/banner.svg)](https://github.com/Next2D/Player/blob/main/LICENSE)
 
 # Description
