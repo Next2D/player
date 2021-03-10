@@ -23,6 +23,7 @@ module.exports = function(config) {
       "src/next2d/display/DisplayObjectContainer.js",
       "src/next2d/display/Sprite.js",
       "src/next2d/display/MovieClip.js",
+      "src/next2d/display/GraphicsPathCommand.js",
       "src/next2d/display/*.js",
       "src/next2d/**/*.js",
       "src/util/CacheStore.js",
