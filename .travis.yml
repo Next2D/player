@@ -6,6 +6,7 @@ install:
 cache: npm
 addons:
   firefox: latest
+  chrome: stable
 branches:
   only:
     - develop
