@@ -70,4 +70,8 @@ class Next2D
 }
 
 Util.$window.next2d = new Next2D();
-Util.$packages(Util.$window.next2d);
+try {
+    Util.$packages(Util.$window.next2d);
+} catch (e) {
+    
+}
