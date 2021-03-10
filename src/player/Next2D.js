@@ -71,5 +71,3 @@ class Next2D
 
 Util.$window.next2d = new Next2D();
 Util.$packages(Util.$window.next2d);
-
-console.log(Util);

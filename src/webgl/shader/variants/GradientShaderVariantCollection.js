@@ -112,7 +112,8 @@ class GradientShaderVariantCollection
      * @param {boolean} hasGrid
      * @param {array}   matrix
      * @param {array}   inverseMatrix
-     * @param {array}   viewport
+     * @param {number}  viewportWidth
+     * @param {number}  viewportHeight
      * @param {CanvasToWebGLContextGrid} grid
      * @param {boolean} isRadial
      * @param {array}   points
@@ -127,7 +128,8 @@ class GradientShaderVariantCollection
     setGradientUniform (
         uniform,
         isStroke, halfWidth, face, miterLimit,
-        hasGrid, matrix, inverseMatrix, viewport, grid,
+        hasGrid, matrix, inverseMatrix,
+        viewportWidth, viewportHeight, grid,
         isRadial, points, hasFocalPoint, focalPointRatio, stops, stopsLength, isLinearSpace
     ) {
         let i = 0;
@@ -160,8 +162,8 @@ class GradientShaderVariantCollection
         highp[19] = inverseMatrix[8];
 
         // vertex: u_viewport
-        highp[3] = viewport[0];
-        highp[7] = viewport[1];
+        highp[3] = viewportWidth;
+        highp[7] = viewportHeight;
 
         i = 20;
 

@@ -88,18 +88,18 @@ class DisplayObjectContainer extends InteractiveObject
          */
         this._$names = Util.$getMap();
 
-        return new Proxy(this, {
-            "get": function (object, name)
-            {
-                if (object._$names.size
-                    && object._$names.has(name)
-                ) {
-                    return object._$names.get(name);
-                }
-
-                return object[name];
-            }
-        });
+        // return new Proxy(this, {
+        //     "get": function (object, name)
+        //     {
+        //         if (object._$names.size
+        //             && object._$names.has(name)
+        //         ) {
+        //             return object._$names.get(name);
+        //         }
+        //
+        //         return object[name];
+        //     }
+        // });
     }
 
     /**
@@ -1092,9 +1092,7 @@ class DisplayObjectContainer extends InteractiveObject
 
 
         // not draw
-        const alpha = Util.$clamp(0, 1,
-            colorTransform[3] + (colorTransform[7] / 255), 0
-        );
+        const alpha = Util.$clamp(colorTransform[3] + (colorTransform[7] / 255), 0, 1, 0);
         if (!alpha) {
             return ;
         }
@@ -1118,6 +1116,238 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
 
+        // use cache
+        if (preData.isFilter && !preData.isUpdated) {
+            this._$postDraw(context, matrix, colorTransform, preData);
+            return ;
+        }
+
+
+        let preMatrix = preData.matrix;
+        const preColorTransform = (preData.isFilter) ? preData.color : colorTransform;
+
+        // if graphics draw
+        if (this._$graphics && this._$graphics._$canDraw) {
+            this._$graphics._$draw(context, preMatrix, preColorTransform);
+        }
+
+
+        // init clip params
+        let shouldClip        = true;
+        let clipDepth         = null;
+        const clipMatrix      = Util.$getArray();
+        const instanceMatrix  = Util.$getArray();
+        const clipStack       = Util.$getArray();
+        const shouldClips     = Util.$getArray();
+
+
+        // draw children
+        const isLayer = context._$isLayer;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const instance = children[idx];
+
+            // mask instance
+            if (instance._$isMask) {
+                continue;
+            }
+
+
+            // not layer mode
+            const blendMode = instance._$blendMode || instance.blendMode;
+            if ((blendMode === BlendMode.ALPHA || blendMode === BlendMode.ERASE)
+                && !isLayer
+            ) {
+                continue;
+            }
+
+
+            // mask end
+            if (clipDepth
+                && (instance._$placeId > clipDepth || instance._$clipDepth > 0)
+            ) {
+
+                context.restore();
+
+                if (shouldClip) {
+                    context._$leaveClip();
+
+                    if (clipMatrix.length) {
+                        Util.$poolFloat32Array6(preMatrix);
+                        preMatrix = clipMatrix.pop();
+                    }
+
+                }
+
+                // clear
+                clipDepth  = (clipStack.length) ? clipStack.pop() : null;
+                shouldClip = shouldClips.pop();
+            }
+
+
+            // mask size 0
+            if (!shouldClip) {
+                continue;
+            }
+
+
+            // mask start
+            if (instance._$clipDepth > 0) {
+
+                context.save();
+
+                if (clipDepth) {
+                    clipStack.push(clipDepth);
+                }
+
+                shouldClips.push(shouldClip);
+
+                clipDepth  = instance._$clipDepth;
+                shouldClip = instance._$shouldClip(preMatrix);
+                if (shouldClip) {
+
+                    const adjMatrix = instance._$startClip(context, preMatrix);
+                    if (adjMatrix === false) { // fixed
+                        shouldClip = false;
+                        continue;
+                    }
+
+                    if (adjMatrix) {
+                        clipMatrix.push(preMatrix);
+                        preMatrix = adjMatrix;
+                    }
+
+                }
+
+                continue;
+            }
+
+
+            // mask start
+            const maskInstance = instance._$mask;
+            if (maskInstance) {
+
+                maskInstance._$updated = false;
+
+                let maskMatrix;
+
+                if (this === maskInstance._$parent) {
+
+                    maskMatrix = preMatrix;
+
+                } else {
+
+                    maskMatrix = Util.$MATRIX_ARRAY_IDENTITY;
+
+                    let parent = maskInstance._$parent;
+                    while (parent) {
+
+                        maskMatrix = Util.$multiplicationMatrix(
+                            parent._$transform._$rawMatrix(),
+                            maskMatrix
+                        );
+
+                        parent = parent._$parent;
+                    }
+
+                    const player = this.stage._$player;
+                    const mScale = player._$scale * player._$ratio / 20;
+                    const playerMatrix = Util.$getFloat32Array6(mScale, 0, 0, mScale, 0, 0);
+
+                    maskMatrix = Util.$multiplicationMatrix(playerMatrix, maskMatrix);
+
+                    if (context._$isLayer) {
+                        const currentPosition = context._$getCurrentPosition();
+                        maskMatrix[4] -= currentPosition.xMin;
+                        maskMatrix[5] -= currentPosition.yMin;
+                    }
+
+                    if (context._$cacheCurrentBuffer) {
+                        maskMatrix[4] -= context._$cacheCurrentBounds.x;
+                        maskMatrix[5] -= context._$cacheCurrentBounds.y;
+                    }
+
+                }
+
+
+                if (!maskInstance._$shouldClip(maskMatrix)) {
+                    continue;
+                }
+
+                let adjMatrix = maskInstance._$startClip(context, maskMatrix);
+
+                context.save();
+
+                if (adjMatrix === false) { // fixed
+                    context.restore();
+                    continue;
+                }
+
+                if (adjMatrix) {
+
+                    instanceMatrix.push(preMatrix);
+
+                    if (this !== maskInstance._$parent) {
+                        const maskTargetParentMatrix = this._$transform._$rawMatrix();
+                        adjMatrix[0] = Util.$abs(preMatrix[0]) * Util.$sign(maskTargetParentMatrix[0]);
+                        adjMatrix[1] = Util.$abs(preMatrix[1]) * Util.$sign(maskTargetParentMatrix[1]);
+                        adjMatrix[2] = Util.$abs(preMatrix[2]) * Util.$sign(maskTargetParentMatrix[2]);
+                        adjMatrix[3] = Util.$abs(preMatrix[3]) * Util.$sign(maskTargetParentMatrix[3]);
+                        adjMatrix[4] = preMatrix[4] - context._$cacheCurrentBounds.x;
+                        adjMatrix[5] = preMatrix[5] - context._$cacheCurrentBounds.y;
+                    }
+
+                    preMatrix = adjMatrix;
+                }
+
+            }
+
+
+            instance._$draw(context, preMatrix, preColorTransform);
+            instance._$updated = false;
+
+
+            // mask end
+            if (maskInstance) {
+
+                context.restore();
+
+                context._$leaveClip();
+
+                if (instanceMatrix.length) {
+                    Util.$poolFloat32Array6(preMatrix);
+                    preMatrix = instanceMatrix.pop();
+                }
+
+            }
+
+        }
+
+        // end mask
+        if (clipDepth) {
+
+            context.restore();
+
+            if (shouldClips.pop()) {
+                context._$leaveClip();
+            }
+
+        }
+
+        // object pool
+        Util.$poolArray(clipMatrix);
+        Util.$poolArray(instanceMatrix);
+        Util.$poolArray(clipStack);
+        Util.$poolArray(shouldClips);
+
+
+        // filter and blend
+        if (preData.isFilter) {
+            return this._$postDraw(context, matrix, colorTransform, preData);
+        }
+
+        Util.$poolFloat32Array6(preMatrix);
+        Util.$poolPreObject(preData);
 
     }
 

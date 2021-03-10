@@ -213,8 +213,16 @@ class FilterShaderVariantCollection
      * @param {boolean} isGlow
      * @param {number}  strength
      * @param {array}   ratios
-     * @param {array}   colors1
-     * @param {array}   colors2
+     * @param {array}   colors
+     * @param {array}   alphas
+     * @param {number}  colorR1
+     * @param {number}  colorG1
+     * @param {number}  colorB1
+     * @param {number}  colorA1
+     * @param {number}  colorR2
+     * @param {number}  colorG2
+     * @param {number}  colorB2
+     * @param {number}  colorA2
      * @param {boolean} transformsBase
      * @param {boolean} transformsBlur
      * @param {boolean} appliesStrength
@@ -226,7 +234,10 @@ class FilterShaderVariantCollection
         uniform, width, height,
         baseWidth, baseHeight, baseOffsetX, baseOffsetY,
         blurWidth, blurHeight, blurOffsetX, blurOffsetY,
-        isGlow, strength, ratios, colors1, colors2,
+        isGlow, strength,
+        ratios, colors, alphas,
+        colorR1, colorG1, colorB1, colorA1,
+        colorR2, colorG2, colorB2, colorA2,
         transformsBase, transformsBlur, appliesStrength, gradientStopsLength
     ) {
         if (transformsBase) {
@@ -262,11 +273,11 @@ class FilterShaderVariantCollection
         if (gradientStopsLength > 0) {
             // fragment: u_gradient_color
             for (let j = 0; j < gradientStopsLength; j++) {
-                const color1 = colors1[j];
-                mediump[i]     = ((color1 >> 16)       ) / 255;
-                mediump[i + 1] = ((color1 >>  8) & 0xFF) / 255;
-                mediump[i + 2] = ( color1        & 0xFF) / 255;
-                mediump[i + 3] = colors2[j];
+                const color = colors[j];
+                mediump[i]     = ((color >> 16)       ) / 255;
+                mediump[i + 1] = ((color >>  8) & 0xFF) / 255;
+                mediump[i + 2] = ( color        & 0xFF) / 255;
+                mediump[i + 3] = alphas[j];
                 i += 4;
             }
             // fragment: u_gradient_t
@@ -275,22 +286,22 @@ class FilterShaderVariantCollection
             }
         } else if (isGlow) {
             // fragment: u_color
-            mediump[i]     = colors1[0];
-            mediump[i + 1] = colors1[1];
-            mediump[i + 2] = colors1[2];
-            mediump[i + 3] = colors1[3];
+            mediump[i]     = colorR1;
+            mediump[i + 1] = colorG1;
+            mediump[i + 2] = colorB1;
+            mediump[i + 3] = colorA1;
             i += 4;
         } else {
             // fragment: u_highlight_color
-            mediump[i]     = colors1[0];
-            mediump[i + 1] = colors1[1];
-            mediump[i + 2] = colors1[2];
-            mediump[i + 3] = colors1[3];
+            mediump[i]     = colorR1;
+            mediump[i + 1] = colorG1;
+            mediump[i + 2] = colorB1;
+            mediump[i + 3] = colorA1;
             // fragment: u_shadow_color
-            mediump[i + 4] = colors2[0];
-            mediump[i + 5] = colors2[1];
-            mediump[i + 6] = colors2[2];
-            mediump[i + 7] = colors2[3];
+            mediump[i + 4] = colorR2;
+            mediump[i + 5] = colorG2;
+            mediump[i + 6] = colorB2;
+            mediump[i + 7] = colorA2;
             i+= 8;
         }
 
@@ -346,12 +357,18 @@ class FilterShaderVariantCollection
      * @param {number}  divisor
      * @param {number}  bias
      * @param {boolean} clamp
-     * @param {array}   color
+     * @param {number}  colorR
+     * @param {number}  colorG
+     * @param {number}  colorB
+     * @param {number}  colorA
      * @method
      * @public
      */
-    setConvolutionFilterUniform (uniform, width, height, matrix, divisor, bias, clamp, color)
-    {
+    setConvolutionFilterUniform (
+        uniform,
+        width, height, matrix, divisor, bias, clamp,
+        colorR, colorG, colorB, colorA
+    ) {
         const mediump = uniform.mediump;
 
         // fragment: u_rcp_size
@@ -368,10 +385,10 @@ class FilterShaderVariantCollection
 
         if (!clamp) {
             // fragment: u_substitute_color
-            mediump[i]     = color[0];
-            mediump[i + 1] = color[1];
-            mediump[i + 2] = color[2];
-            mediump[i + 3] = color[3];
+            mediump[i]     = colorR;
+            mediump[i + 1] = colorG;
+            mediump[i + 2] = colorB;
+            mediump[i + 3] = colorA;
             i += 4;
         }
 
@@ -393,13 +410,17 @@ class FilterShaderVariantCollection
      * @param {number} scaleX
      * @param {number} scaleY
      * @param {string} mode
-     * @param {array}  color
+     * @param {number} colorR
+     * @param {number} colorG
+     * @param {number} colorB
+     * @param {number} colorA
      * @method
      * @public
      */
     setDisplacementMapFilterUniform (
         uniform, mapWidth, mapHeight, baseWidth, baseHeight,
-        pointX, pointY, scaleX, scaleY, mode, color
+        pointX, pointY, scaleX, scaleY, mode,
+        colorR, colorG, colorB, colorA
     ) {
         const textures = uniform.textures;
         textures[0] = 0;
@@ -420,10 +441,10 @@ class FilterShaderVariantCollection
 
         if (mode === DisplacementMapFilterMode.COLOR) {
             // fragment: u_substitute_color
-            mediump[8]  = color[0];
-            mediump[9]  = color[1];
-            mediump[10] = color[2];
-            mediump[11] = color[3];
+            mediump[8]  = colorR;
+            mediump[9]  = colorG;
+            mediump[10] = colorB;
+            mediump[11] = colorA;
         }
     }
 }

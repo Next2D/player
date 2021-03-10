@@ -33,8 +33,13 @@ class CanvasToWebGLContext
         this._$globalCompositeOperation = BlendMode.NORMAL;
         this._$matrix                   = Util.$getFloat32Array9(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
-        this._$clearColor = new Util.$window.Float32Array([1, 1, 1, 1]); // fixed size 4
-        this._$viewport   = new Util.$window.Float32Array(2); // fixed size 2
+        this._$clearColorR = 1;
+        this._$clearColorG = 1;
+        this._$clearColorB = 1;
+        this._$clearColorA = 1;
+
+        this._$viewportWidth  = 0;
+        this._$viewportHeight = 0;
 
         this._$frameBufferManager = new FrameBufferManager(gl, isWebGL2Context, samples);
         this._$path = new CanvasToWebGLContextPath();
@@ -390,9 +395,9 @@ class CanvasToWebGLContext
         const width         = attachment.width;
         const height        = attachment.height;
 
-        if (this._$viewport[0] !== width || this._$viewport[1] !== height) {
-            this._$viewport[0] = width;
-            this._$viewport[1] = height;
+        if (this._$viewportWidth !== width || this._$viewportHeight !== height) {
+            this._$viewportWidth  = width;
+            this._$viewportHeight = height;
             this._$gl.viewport(0, 0, width, height);
         }
 
@@ -404,13 +409,8 @@ class CanvasToWebGLContext
             }
 
             this._$gl.clearColor(0, 0, 0, 0);
-            this.clearRect(0, 0, this._$viewport[0], this._$viewport[1]);
-            this._$gl.clearColor(
-                this._$clearColor[0],
-                this._$clearColor[1],
-                this._$clearColor[2],
-                this._$clearColor[3]
-            );
+            this.clearRect(0, 0, this._$viewportWidth, this._$viewportHeight);
+            this._$gl.clearColor(this._$clearColorR, this._$clearColorG, this._$clearColorB, this._$clearColorA);
 
             this._$mask._$onClear(attachment.mask);
         }
@@ -433,8 +433,8 @@ class CanvasToWebGLContext
         }
 
         // set size
-        this._$viewport[0]  = w;
-        this._$viewport[1]  = h;
+        this._$viewportWidth  = w;
+        this._$viewportHeight = h;
 
         // create buffer
         let removed = false;
@@ -456,7 +456,8 @@ class CanvasToWebGLContext
         const uniform = shader.uniform;
         variants.setSolidColorShapeUniform(
             uniform, false, 0, 0, 0,
-            hasGrid, this._$matrix, this._$viewport, this._$grid,
+            hasGrid, this._$matrix,
+            this._$viewportWidth, this._$viewportHeight, this._$grid,
             this.fillStyle, this._$globalAlpha
         );
 
@@ -545,7 +546,7 @@ class CanvasToWebGLContext
             image, x, y, w, h,
             ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
             this._$globalCompositeOperation,
-            this._$viewport[0], this._$viewport[1],
+            this._$viewportWidth, this._$viewportHeight,
             this._$matrix,
             this._$imageSmoothingEnabled
         );
@@ -561,7 +562,10 @@ class CanvasToWebGLContext
      */
     _$setColor (r = 0, g = 0, b = 0, a = 0)
     {
-        this._$clearColor = [r, g, b, a];
+        this._$clearColorR = r;
+        this._$clearColorG = g;
+        this._$clearColorB = b;
+        this._$clearColorA = a;
         this._$gl.clearColor(r, g, b, a);
     }
 
@@ -744,7 +748,8 @@ class CanvasToWebGLContext
                     );
                     variants.setGradientUniform(
                         shader.uniform, false, 0, 0, 0,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix), this._$viewport, this._$grid,
+                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                        this._$viewportWidth, this._$viewportHeight, this._$grid,
                         false, gradient._$points,
                         false, 0,
                         stops, stopsLength, isLinearSpace
@@ -757,7 +762,8 @@ class CanvasToWebGLContext
                     );
                     variants.setGradientUniform(
                         shader.uniform, false, 0, 0, 0,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix), this._$viewport, this._$grid,
+                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                        this._$viewportWidth, this._$viewportHeight, this._$grid,
                         true, gradient._$points,
                         hasFocalPoint, gradient._$focalPointRatio,
                         stops, stopsLength, isLinearSpace
@@ -780,7 +786,8 @@ class CanvasToWebGLContext
                 if (pct) {
                     variants.setBitmapShapeUniform(
                         shader.uniform, false, 0, 0, 0,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix), this._$viewport, this._$grid,
+                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                        this._$viewportWidth, this._$viewportHeight, this._$grid,
                         texture.width, texture.height,
                         pct[0], pct[1], pct[2], this._$globalAlpha,
                         pct[4] / 255, pct[5] / 255, pct[6] / 255, 0
@@ -788,7 +795,8 @@ class CanvasToWebGLContext
                 } else {
                     variants.setBitmapShapeUniform(
                         shader.uniform, false, 0, 0, 0,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix), this._$viewport, this._$grid,
+                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                        this._$viewportWidth, this._$viewportHeight, this._$grid,
                         texture.width, texture.height,
                         1, 1, 1, this._$globalAlpha,
                         0, 0, 0, 0
@@ -804,7 +812,8 @@ class CanvasToWebGLContext
                 shader = variants.getSolidColorShapeShader(false, this._$grid.enabled);
                 variants.setSolidColorShapeUniform(
                     shader.uniform, false, 0, 0, 0,
-                    hasGrid, matrix, this._$viewport, this._$grid,
+                    hasGrid, matrix,
+                    this._$viewportWidth, this._$viewportHeight, this._$grid,
                     this.fillStyle, this._$globalAlpha
                 );
 
@@ -814,7 +823,13 @@ class CanvasToWebGLContext
 
         const coverageVariants = this._$shaderList.shapeShaderVariants;
         const coverageShader = coverageVariants.getMaskShapeShader(false, hasGrid);
-        coverageVariants.setMaskShapeUniform(coverageShader.uniform, hasGrid, matrix, this._$viewport, this._$grid);
+        coverageVariants.setMaskShapeUniform(
+            coverageShader.uniform, hasGrid,
+            matrix[0], matrix[1], matrix[2],
+            matrix[3], matrix[4], matrix[5],
+            matrix[6], matrix[7], matrix[8],
+            this._$viewportWidth, this._$viewportHeight, this._$grid
+        );
 
         // to triangle
         if (!this._$fillBuffer) {
@@ -1037,7 +1052,8 @@ class CanvasToWebGLContext
                     );
                     variants.setGradientUniform(
                         shader.uniform, true, lineWidth, face, this.miterLimit,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix), this._$viewport, this._$grid,
+                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                        this._$viewportWidth, this._$viewportHeight, this._$grid,
                         false, gradient._$points,
                         false, 0,
                         stops, stopsLength, isLinearSpace
@@ -1050,7 +1066,8 @@ class CanvasToWebGLContext
                     );
                     variants.setGradientUniform(
                         shader.uniform, true, lineWidth, face, this.miterLimit,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix), this._$viewport, this._$grid,
+                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                        this._$viewportWidth, this._$viewportHeight, this._$grid,
                         true, gradient._$points,
                         hasFocalPoint, gradient._$focalPointRatio,
                         stops, stopsLength, isLinearSpace
@@ -1073,7 +1090,8 @@ class CanvasToWebGLContext
                 if (pct) {
                     variants.setBitmapShapeUniform(
                         shader.uniform, true, lineWidth, face, this.miterLimit,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix), this._$viewport, this._$grid,
+                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                        this._$viewportWidth, this._$viewportHeight, this._$grid,
                         texture.width, texture.height,
                         pct[0], pct[1], pct[2], this._$globalAlpha,
                         pct[4] / 255, pct[5] / 255, pct[6] / 255, 0
@@ -1081,7 +1099,8 @@ class CanvasToWebGLContext
                 } else {
                     variants.setBitmapShapeUniform(
                         shader.uniform, true, lineWidth, face, this.miterLimit,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix), this._$viewport, this._$grid,
+                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                        this._$viewportWidth, this._$viewportHeight, this._$grid,
                         texture.width, texture.height,
                         1, 1, 1, this._$globalAlpha,
                         0, 0, 0, 0
@@ -1096,7 +1115,8 @@ class CanvasToWebGLContext
                 shader = variants.getSolidColorShapeShader(true, this._$grid.enabled);
                 variants.setSolidColorShapeUniform(
                     shader.uniform, true, lineWidth, face, this.miterLimit,
-                    hasGrid, matrix, this._$viewport, this._$grid,
+                    hasGrid, matrix,
+                    this._$viewportWidth, this._$viewportHeight, this._$grid,
                     this.strokeStyle, this._$globalAlpha
                 );
 
@@ -1128,7 +1148,13 @@ class CanvasToWebGLContext
         const variants = this._$shaderList.shapeShaderVariants;
         const shader = variants.getMaskShapeShader(false, false);
         const uniform = shader.uniform;
-        variants.setMaskShapeUniform(uniform, false, this._$matrix, this._$viewport, null);
+        variants.setMaskShapeUniform(
+            uniform, false,
+            this._$matrix[0], this._$matrix[1], this._$matrix[2],
+            this._$matrix[3], this._$matrix[4], this._$matrix[5],
+            this._$matrix[6], this._$matrix[7], this._$matrix[8],
+            this._$viewportWidth, this._$viewportHeight, null
+        );
 
         // to triangle
         if (!this._$fillBuffer) {
@@ -1143,7 +1169,7 @@ class CanvasToWebGLContext
             Util.$poolArray(vertices);
         }
 
-        if (this._$mask._$onClip(this._$matrix, this._$viewport)) {
+        if (this._$mask._$onClip(this._$matrix, this._$viewportWidth, this._$viewportHeight)) {
             return;
         }
 
@@ -1281,26 +1307,34 @@ class CanvasToWebGLContext
     }
 
     /**
-     * @param  {WebGLTexture}       blurTexture
-     * @param  {number}             width
-     * @param  {number}             height
-     * @param  {number}             baseWidth
-     * @param  {number}             baseHeight
-     * @param  {number}             baseOffsetX
-     * @param  {number}             baseOffsetY
-     * @param  {number}             blurWidth
-     * @param  {number}             blurHeight
-     * @param  {number}             blurOffsetX
-     * @param  {number}             blurOffsetY
-     * @param  {boolean}            isGlow
-     * @param  {string}             type
-     * @param  {boolean}            knockout
-     * @param  {number}             strength
-     * @param  {number}             blurX
-     * @param  {number}             blurY
-     * @param  {array}              ratios
-     * @param  {array|Float32Array} colors1
-     * @param  {array|Float32Array} colors2
+     * @param  {WebGLTexture} blurTexture
+     * @param  {number}  width
+     * @param  {number}  height
+     * @param  {number}  baseWidth
+     * @param  {number}  baseHeight
+     * @param  {number}  baseOffsetX
+     * @param  {number}  baseOffsetY
+     * @param  {number}  blurWidth
+     * @param  {number}  blurHeight
+     * @param  {number}  blurOffsetX
+     * @param  {number}  blurOffsetY
+     * @param  {boolean} isGlow
+     * @param  {string}  type
+     * @param  {boolean} knockout
+     * @param  {number}  strength
+     * @param  {number}  blurX
+     * @param  {number}  blurY
+     * @param  {array}   ratios
+     * @param  {array}   colors
+     * @param  {array}   alphas
+     * @param  {number}  colorR1
+     * @param  {number}  colorG1
+     * @param  {number}  colorB1
+     * @param  {number}  colorA1
+     * @param  {number}  colorR2
+     * @param  {number}  colorG2
+     * @param  {number}  colorB2
+     * @param  {number}  colorA2
      * @return {void}
      * @public
      */
@@ -1310,7 +1344,9 @@ class CanvasToWebGLContext
         blurWidth, blurHeight, blurOffsetX, blurOffsetY,
         isGlow, type, knockout,
         strength, blurX, blurY,
-        ratios, colors1, colors2
+        ratios, colors, alphas,
+        colorR1, colorG1, colorB1, colorA1,
+        colorR2, colorG2, colorB2, colorA2
     ) {
         const isInner = (type === BitmapFilterType.INNER);
         
@@ -1347,7 +1383,10 @@ class CanvasToWebGLContext
             shader.uniform, width, height,
             baseWidth, baseHeight, baseOffsetX, baseOffsetY,
             blurWidth, blurHeight, blurOffsetX, blurOffsetY,
-            isGlow, strength, ratios, colors1, colors2,
+            isGlow, strength,
+            ratios, colors, alphas,
+            colorR1, colorG1, colorB1, colorA1,
+            colorR2, colorG2, colorB2, colorA2,
             transformsBase, transformsBlur, appliesStrength, gradientStopsLength
         );
       
@@ -1386,20 +1425,24 @@ class CanvasToWebGLContext
 
     /**
      * @param  {WebGLTexture} texture
-     * @param  {number}       matrix_x
-     * @param  {number}       matrix_y
-     * @param  {array}        matrix
-     * @param  {number}       divisor
-     * @param  {number}       bias
-     * @param  {boolean}      preserve_alpha
-     * @param  {boolean}      clamp
-     * @param  {Float32Array} color
+     * @param  {number}  matrix_x
+     * @param  {number}  matrix_y
+     * @param  {array}   matrix
+     * @param  {number}  divisor
+     * @param  {number}  bias
+     * @param  {boolean} preserve_alpha
+     * @param  {boolean} clamp
+     * @param  {number}  colorR
+     * @param  {number}  colorG
+     * @param  {number}  colorB
+     * @param  {number}  colorA
      * @return void
      * @public
      */
     _$applyConvolutionFilter (
         texture, matrix_x, matrix_y, matrix,
-        divisor, bias, preserve_alpha, clamp, color
+        divisor, bias, preserve_alpha, clamp,
+        colorR, colorG, colorB, colorA
     ) {
         const width  = texture.width;
         const height = texture.height;
@@ -1411,7 +1454,11 @@ class CanvasToWebGLContext
 
         const variants = this._$shaderList.filterShaderVariants;
         const shader = variants.getConvolutionFilterShader(matrix_x, matrix_y, preserve_alpha, clamp);
-        variants.setConvolutionFilterUniform(shader.uniform, width, height, matrix, divisor, bias, clamp, color);
+        variants.setConvolutionFilterUniform(
+            shader.uniform,
+            width, height, matrix, divisor, bias, clamp,
+            colorR, colorG, colorB, colorA
+        );
 
         this.blend.reset();
         shader._$drawImage();
@@ -1420,21 +1467,25 @@ class CanvasToWebGLContext
     /**
      * @param  {WebGLTexture} source
      * @param  {WebGLTexture} map
-     * @param  {number}       base_width
-     * @param  {number}       base_height
-     * @param  {Point}        [point=null]
-     * @param  {number}       component_x
-     * @param  {number}       component_y
-     * @param  {number}       scale_x
-     * @param  {number}       scale_y
-     * @param  {string}       mode
-     * @param  {Float32Array} color
+     * @param  {number} base_width
+     * @param  {number} base_height
+     * @param  {Point}  [point=null]
+     * @param  {number} component_x
+     * @param  {number} component_y
+     * @param  {number} scale_x
+     * @param  {number} scale_y
+     * @param  {string} mode
+     * @param  {number} colorR
+     * @param  {number} colorG
+     * @param  {number} colorB
+     * @param  {number} colorA
      * @return void
      * @private
      */
     _$applyDisplacementMapFilter (
         source, map, base_width, base_height, point,
-        component_x, component_y, scale_x, scale_y, mode, color
+        component_x, component_y, scale_x, scale_y, mode,
+        colorR, colorG, colorB, colorA
     ) {
         const width  = source.width;
         const height = source.height;
@@ -1452,7 +1503,8 @@ class CanvasToWebGLContext
         const shader = variants.getDisplacementMapFilterShader(component_x, component_y, mode);
         variants.setDisplacementMapFilterUniform(
             shader.uniform, map.width, map.height, base_width, base_height,
-            point.x, point.y, scale_x, scale_y, mode, color
+            point.x, point.y, scale_x, scale_y, mode,
+            colorR, colorG, colorB, colorA
         );
 
         this.blend.reset();

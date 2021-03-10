@@ -154,7 +154,7 @@ class Stage extends DisplayObjectContainer
     }
     set frameRate (frame_rate)
     {
-        this._$frameRate = Util.$clamp(1, 60, frame_rate, 60)
+        this._$frameRate = Util.$clamp(frame_rate, 1, 60, 60);
         if (this._$player && !this._$player._$stopFlag) {
             this._$player.stop();
             this._$player.play();

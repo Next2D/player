@@ -24,26 +24,31 @@ class Graphics
     {
         this._$maxAlpha      = 0;
         this._$displayObject = null;
-        this._$data          = Util.$getArray();
+        this._$recode        = Util.$getArray();
         this._$fills         = Util.$getArray();
         this._$lines         = Util.$getArray();
-        this._$fillStyle     = Util.$getArray();
-        this._$lineStyle     = Util.$getArray();
-        this._$lineStack     = Util.$getArray();
-        this._$pixels        = Util.$getMap();
-        this._$lineWidth     = 0;
-        this._$miterLimit    = 0;
+        this._$fillType      = 0;
+        this._$fillStyleR    = 0;
+        this._$fillStyleG    = 0;
+        this._$fillStyleB    = 0;
+        this._$fillStyleA    = 0;
         this._$caps          = null;
-        this._$bounds        = null;
-        this._$edgeBounds    = null;
-        this._$fillBounds    = null;
-        this._$lineBounds    = null;
+        this._$miterLimit    = 0;
+        this._$lineWidth     = 0;
+        this._$lineType      = 0;
+        this._$lineStyleR    = 0;
+        this._$lineStyleG    = 0;
+        this._$lineStyleB    = 0;
+        this._$lineStyleA    = 0;
         this._$doFill        = false;
         this._$doLine        = false;
-        this._$pointer       = { "x": 0, "y": 0 };
-        this._$lineStart     = { "x": 0, "y": 0 };
+        this._$xMin          = Util.$MAX_VALUE;
+        this._$xMax          = -Util.$MAX_VALUE;
+        this._$yMin          = Util.$MAX_VALUE;
+        this._$yMax          = -Util.$MAX_VALUE;
+        this._$pointerX      = 0;
+        this._$pointerY      = 0;
         this._$canDraw       = false;
-
     }
 
     /**
@@ -303,13 +308,15 @@ class Graphics
     beginFill (color = 0, alpha = 1)
     {
         // valid
-        color = Util.$clamp(0, 0xffffff, Util.$toColorInt(color), 0);
-        alpha = Util.$clamp(0, 1, alpha, 1);
+        color = Util.$clamp(Util.$toColorInt(color), 0, 0xffffff, 0);
+        alpha = Util.$clamp(alpha, 0, 1, 1);
 
         this._$maxAlpha = Util.$max(this._$maxAlpha, alpha);
 
         // end fill
-        this.endFill();
+        if (this._$doFill) {
+            this.endFill();
+        }
 
         // start
         this._$doFill  = true;
@@ -321,11 +328,11 @@ class Graphics
         // add Fill Style
         const object = Util.$intToRGBA(color, alpha);
 
-        this._$fillStyle[0] = Graphics.FILL_STYLE;
-        this._$fillStyle[1] = object.R;
-        this._$fillStyle[2] = object.G;
-        this._$fillStyle[3] = object.B;
-        this._$fillStyle[4] = object.A;
+        this._$fillType   = Graphics.FILL_STYLE;
+        this._$fillStyleR = object.R;
+        this._$fillStyleG = object.G;
+        this._$fillStyleB = object.B;
+        this._$fillStyleA = object.A;
 
         return this;
     }
@@ -372,34 +379,27 @@ class Graphics
         this._$maxAlpha     = 0;
         this._$lineWidth    = 0;
         this._$caps         = null;
-        this._$fillBounds   = null;
-        this._$lineBounds   = null;
         this._$doFill       = false;
         this._$doLine       = false;
-        this._$pointer.x    = 0;
-        this._$pointer.y    = 0;
-        this._$lineStart.x  = 0;
-        this._$lineStart.y  = 0;
+        this._$pointerX     = 0;
+        this._$pointerY     = 0;
         this._$canDraw      = false;
 
+        // bounds size
+        this._$xMin         = Util.$MAX_VALUE;
+        this._$xMax         = -Util.$MAX_VALUE;
+        this._$yMin         = Util.$MAX_VALUE;
+        this._$yMax         = -Util.$MAX_VALUE;
+
         // reset array
-        if (this._$fillStyle.length) {
-            this._$fillStyle.length = 0;
-        }
-        if (this._$lineStyle.length) {
-            this._$lineStyle.length = 0;
-        }
-        if (this._$data.length) {
-            this._$data.length = 0;
+        if (this._$recode.length) {
+            this._$recode.length = 0;
         }
         if (this._$fills.length) {
             this._$fills.length = 0;
         }
         if (this._$lines.length) {
             this._$lines.length = 0;
-        }
-        if (this._$pixels.size) {
-            this._$pixels.clear();
         }
 
         // restart
@@ -442,7 +442,7 @@ class Graphics
         anchor_x = +anchor_x * Util.$TWIPS || 0;
         anchor_y = +anchor_y * Util.$TWIPS || 0;
 
-        if (this._$pointer.x === anchor_x && this._$pointer.y === anchor_y) {
+        if (this._$pointerX === anchor_x && this._$pointerY === anchor_y) {
             return this;
         }
 
@@ -463,8 +463,8 @@ class Graphics
             anchor_x, anchor_y
         ));
 
-        this._$pointer.x = anchor_x;
-        this._$pointer.y = anchor_y;
+        this._$pointerX = anchor_x;
+        this._$pointerY = anchor_y;
 
         // restart
         this._$restart();
@@ -493,7 +493,7 @@ class Graphics
         anchor_x = +anchor_x * Util.$TWIPS || 0;
         anchor_y = +anchor_y * Util.$TWIPS || 0;
 
-        if (this._$pointer.x === anchor_x && this._$pointer.y === anchor_y) {
+        if (this._$pointerX === anchor_x && this._$pointerY === anchor_y) {
             return this;
         }
 
@@ -509,8 +509,8 @@ class Graphics
             anchor_x, anchor_y
         ));
 
-        this._$pointer.x = anchor_x;
-        this._$pointer.y = anchor_y;
+        this._$pointerX = anchor_x;
+        this._$pointerY = anchor_y;
 
         // restart
         this._$restart();
@@ -543,8 +543,8 @@ class Graphics
             x, y, radius
         ));
 
-        this._$pointer.x = x;
-        this._$pointer.y = y;
+        this._$pointerX = x;
+        this._$pointerY = y;
 
         // restart
         this._$restart();
@@ -577,7 +577,7 @@ class Graphics
         const y0 = y + hh;
         const x1 = x + width;
         const y1 = y + height;
-        const c  = 1.3333333333333333 * (Util.$SQRT2 - 1); // 4 / 3
+        const c  = 4 / 3 * (Util.$SQRT2 - 1);
         const cw = c * hw;
         const ch = c * hh;
 
@@ -693,30 +693,75 @@ class Graphics
     {
         if (this._$doFill) {
 
-            if (this._$fillStyle.length) {
+            this._$recode.push.apply(this._$recode, this._$fills);
 
-                this._$fills.push.apply(this._$fills, this._$fillStyle);
+            // clear
+            this._$fills.length = 0;
 
-                if (this._$fillStyle[0] === Graphics.FILL_STYLE) {
-                    this._$margePath(Util.$getArray(Graphics.END_FILL));
-                }
+            // fill
+            if (this._$fillType === Graphics.FILL_STYLE) {
 
-                this._$fillStyle.length = 0;
-            }
+                this._$recode.push(this._$fillType);
+                this._$recode.push(this._$fillStyleR);
+                this._$recode.push(this._$fillStyleG);
+                this._$recode.push(this._$fillStyleB);
+                this._$recode.push(this._$fillStyleA);
+                this._$recode.push(Graphics.END_FILL);
 
-            if (this._$fills.length) {
-
-                // marge
-                this._$data.push.apply(this._$data, this._$fills);
-
-                // clear
-                this._$fills.length = 0;
-
+                // reset
+                this._$fillType   = 0;
+                this._$fillStyleR = 0;
+                this._$fillStyleG = 0;
+                this._$fillStyleB = 0;
+                this._$fillStyleA = 0;
             }
 
         }
 
         this._$doFill = false;
+
+        // restart
+        this._$restart();
+
+        return this;
+    }
+
+    /**
+     * TODO
+     *
+     * @return {Graphics}
+     * @method
+     * @public
+     */
+    endLine ()
+    {
+        if (this._$doLine) {
+
+            this._$recode.push.apply(this._$recode, this._$lines);
+
+            // clear
+            this._$lines.length = 0;
+
+            // fill
+            if (this._$lineType === Graphics.STROKE_STYLE) {
+
+                this._$recode.push(this._$lineType);
+                this._$recode.push(this._$lineStyleR);
+                this._$recode.push(this._$lineStyleG);
+                this._$recode.push(this._$lineStyleB);
+                this._$recode.push(this._$lineStyleA);
+                this._$recode.push(Graphics.END_STROKE);
+
+                // reset
+                this._$lineType   = 0;
+                this._$lineStyleR = 0;
+                this._$lineStyleG = 0;
+                this._$lineStyleB = 0;
+                this._$lineStyleA = 0;
+            }
+        }
+
+        this._$doLine = false;
 
         // restart
         this._$restart();
@@ -793,7 +838,7 @@ class Graphics
         x = +x * Util.$TWIPS || 0;
         y = +y * Util.$TWIPS || 0;
 
-        if (this._$pointer.x === x && this._$pointer.y === y) {
+        if (this._$pointerX === x && this._$pointerY === y) {
             return this;
         }
 
@@ -801,8 +846,8 @@ class Graphics
 
         this._$margePath(Util.$getArray(Graphics.LINE_TO, x, y));
 
-        this._$pointer.x = x;
-        this._$pointer.y = y;
+        this._$pointerX = x;
+        this._$pointerY = y;
 
         // restart
         this._$restart();
@@ -825,8 +870,8 @@ class Graphics
         x = +x * Util.$TWIPS || 0;
         y = +y * Util.$TWIPS || 0;
 
-        this._$pointer.x = x;
-        this._$pointer.y = y;
+        this._$pointerX = x;
+        this._$pointerY = y;
 
         this._$setBounds(x, y);
 
@@ -862,6 +907,10 @@ class Graphics
             return ;
         }
 
+        const alpha = Util.$clamp(
+            color_transform[3] + (color_transform[7] / 255), 0, 1
+        );
+
         const displayObject = this._$displayObject;
 
         // set grid data
@@ -878,12 +927,11 @@ class Graphics
 
         // size
         const bounds = Util.$boundsMatrix(boundsBase, matrix);
-        const xMax   = +bounds.xMax;
-        const xMin   = +bounds.xMin;
-        const yMax   = +bounds.yMax;
-        const yMin   = +bounds.yMin;
+        const xMax   = bounds.xMax;
+        const xMin   = bounds.xMin;
+        const yMax   = bounds.yMax;
+        const yMin   = bounds.yMin;
         Util.$poolBoundsObject(bounds);
-
 
         let width  = Util.$ceil(Util.$abs(xMax - xMin));
         let height = Util.$ceil(Util.$abs(yMax - yMin));
@@ -909,10 +957,9 @@ class Graphics
             height *= textureScale;
         }
 
-        const cacheColor   = color_transform[3];
-        color_transform[3] = 1;
 
         // get cache
+        color_transform[3] = 1; // plain alpha
         const id        = displayObject._$instanceId;
         const cacheKeys = Util
             .$cacheStore()
@@ -938,6 +985,7 @@ class Graphics
             );
 
             if (hasGrid) {
+
                 const player = Util.$currentPlayer();
                 const mScale = player._$scale * player._$ratio / 20;
                 const baseMatrix = Util.$getFloat32Array6(mScale, 0, 0, mScale, 0, 0);
@@ -1006,12 +1054,12 @@ class Graphics
             context._$bind(currentBuffer);
 
         }
-        color_transform[3] = cacheColor;
+
 
         let isFilter = false;
         let offsetX  = 0;
         let offsetY  = 0;
-        if (filters) {
+        if (filters && filters.length) {
 
             const canApply = displayObject._$canApply(filters);
             if (canApply) {
@@ -1050,14 +1098,20 @@ class Graphics
                         .createCacheAttachment(width, height, false);
                     context._$bind(buffer);
 
-                    const mat = Util.$autopoolMatrixArray(Util.$multiplicationMatrix(
+                    const mat = Util.$multiplicationMatrix(
                         matrix, Util.$MATRIX_ARRAY_20_0_0_20_0_0
-                    ));
+                    );
 
 
                     Util.$resetContext(context);
-                    context.setTransform(mat[0], mat[1], mat[2], mat[3], mat[4] - xMin, mat[5] - yMin);
-                    context.drawImage(texture, 0, 0, texture.width, texture.height, color_transform);
+                    context.setTransform(
+                        mat[0], mat[1], mat[2],
+                        mat[3], mat[4] - xMin, mat[5] - yMin
+                    );
+                    context.drawImage(texture,
+                        0, 0, texture.width, texture.height,
+                        color_transform
+                    );
 
                     const targetTexture = context
                         .frameBuffer
@@ -1118,6 +1172,31 @@ class Graphics
     }
 
     /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array}         color_transform
+     * @param  {boolean}              [is_clip=false]
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$doDraw (context, color_transform, is_clip = false)
+    {
+
+        if (!this._$command) {
+            this._$command = this._$buildCommand();
+        }
+
+        // draw
+        context.beginPath();
+        this._$command(context, color_transform, is_clip);
+
+        // clip or filter and blend
+        if (is_clip) {
+            context.clip();
+        }
+    }
+
+    /**
      * @param  {Float32Array} [matrix=null]
      * @return {object}
      * @method
@@ -1133,44 +1212,9 @@ class Graphics
             );
         }
 
-        // size zero
-        if (!this._$fillBounds && !this._$lineBounds) {
-            return null;
-        }
-
-        // build bounds
-        if (!this._$bounds) {
-
-            // init
-            const no = Util.$MAX_VALUE;
-
-            this._$bounds = Util.$getBoundsObject(no, -no, no, -no);
-
-            // fill bounds
-            if (this._$fillBounds) {
-
-                this._$bounds.xMin = Util.$min(this._$bounds.xMin, this._$fillBounds.xMin);
-                this._$bounds.xMax = Util.$max(this._$bounds.xMax, this._$fillBounds.xMax);
-                this._$bounds.yMin = Util.$min(this._$bounds.yMin, this._$fillBounds.yMin);
-                this._$bounds.yMax = Util.$max(this._$bounds.yMax, this._$fillBounds.yMax);
-
-            }
-
-            // line bounds
-            if (this._$lineBounds) {
-
-                this._$bounds.xMin = Util.$min(this._$bounds.xMin, this._$lineBounds.xMin);
-                this._$bounds.xMax = Util.$max(this._$bounds.xMax, this._$lineBounds.xMax);
-                this._$bounds.yMin = Util.$min(this._$bounds.yMin, this._$lineBounds.yMin);
-                this._$bounds.yMax = Util.$max(this._$bounds.yMax, this._$lineBounds.yMax);
-
-            }
-
-        }
-
         return Util.$getBoundsObject(
-            this._$bounds.xMin, this._$bounds.xMax,
-            this._$bounds.yMin, this._$bounds.yMax
+            this._$xMin, this._$xMax,
+            this._$yMin, this._$yMax
         );
     }
 
@@ -1181,27 +1225,25 @@ class Graphics
      */
     _$restart ()
     {
-        this._$command = null;
+        if (this._$command) {
 
-        if (this._$bounds) {
-            Util.$poolBoundsObject(this._$bounds);
-            this._$bounds = null;
-        }
+            this._$command = null;
 
-        if (this._$displayObject
-            && !this._$displayObject._$isUpdated()
-        ) {
+            if (this._$displayObject
+                && !this._$displayObject._$isUpdated()
+            ) {
 
-            this._$displayObject._$doChanged();
-            Util.$isUpdated = true;
+                this._$displayObject._$doChanged();
+                Util.$isUpdated = true;
 
-            Util
-                .$cacheStore()
-                .removeCache(
-                    this._$displayObject._$characterId
-                    || this._$displayObject._$instanceId
-                );
+                Util
+                    .$cacheStore()
+                    .removeCache(
+                        this._$displayObject._$characterId
+                        || this._$displayObject._$instanceId
+                    );
 
+            }
         }
     }
 
@@ -1229,7 +1271,10 @@ class Graphics
      */
     _$setFillBounds (x, y)
     {
-
+        this._$xMin = Util.$min(this._$xMin, x);
+        this._$xMax = Util.$max(this._$xMax, x);
+        this._$yMin = Util.$min(this._$yMin, y);
+        this._$yMax = Util.$max(this._$yMax, y);
     }
 
     /**
@@ -1241,7 +1286,10 @@ class Graphics
      */
     _$setLineBounds (x, y)
     {
-
+        this._$xMin = Util.$min(this._$xMin, x);
+        this._$xMax = Util.$max(this._$xMax, x);
+        this._$yMin = Util.$min(this._$yMin, y);
+        this._$yMax = Util.$max(this._$yMax, y);
     }
 
     /**
@@ -1263,8 +1311,89 @@ class Graphics
     }
 
 
+    /**
+     * @return {Function}
+     * @method
+     * @private
+     */
     _$buildCommand ()
     {
+        if (this._$doFill) {
+            this.endFill();
+        }
 
+        if (this._$doLine) {
+            this.endLine();
+        }
+
+        let command = "";
+
+        const recode = this._$recode;
+        const length = recode.length;
+        for (let idx = 0; idx < length; ) {
+
+            switch (recode[idx++]) {
+
+                case Graphics.BEGIN_PATH:
+                    command += GraphicsPathCommand.BEGIN_PATH();
+                    break;
+
+                case Graphics.MOVE_TO:
+                    command += GraphicsPathCommand.MOVE_TO(recode[idx++], recode[idx++]);
+                    break;
+
+                case Graphics.LINE_TO:
+                    command += GraphicsPathCommand.LINE_TO(recode[idx++], recode[idx++]);
+                    break;
+
+                case Graphics.CURVE_TO:
+                    command += GraphicsPathCommand.CURVE_TO(
+                        recode[idx++], recode[idx++], recode[idx++], recode[idx++]
+                    );
+                    break;
+
+                case Graphics.FILL_STYLE:
+                    command += GraphicsPathCommand.FILL_STYLE(
+                        recode[idx++], recode[idx++],
+                        recode[idx++], recode[idx++]
+                    );
+                    break;
+
+                case Graphics.END_FILL:
+                    command += GraphicsPathCommand.END_FILL();
+                    break;
+
+                case Graphics.STROKE_STYLE:
+                    break;
+
+                case Graphics.END_STROKE:
+                    break;
+
+                case Graphics.CLOSE_PATH:
+                    break;
+
+                case Graphics.CUBIC:
+                    command += GraphicsPathCommand.CUBIC(
+                        recode[idx++], recode[idx++],
+                        recode[idx++], recode[idx++],
+                        recode[idx++], recode[idx++]
+                    );
+                    break;
+
+                case Graphics.ARC:
+                    break;
+
+                case Graphics.GRADIENT_FILL:
+                case Graphics.GRADIENT_STROKE:
+                    break;
+
+                case Graphics.BITMAP_FILL:
+                    break;
+
+            }
+
+        }
+
+        return Function("ctx", "ct", "is_clip", "options", command);
     }
 }

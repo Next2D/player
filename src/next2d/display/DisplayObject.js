@@ -294,7 +294,7 @@ class DisplayObject extends EventDispatcher
     }
     set alpha (alpha)
     {
-        alpha = Util.$clamp(0, 1, alpha, 0);
+        alpha = Util.$clamp(alpha, 0, 1, 0);
 
         // clone
         const colorTransform = this._$transform.colorTransform;
@@ -1367,8 +1367,12 @@ class DisplayObject extends EventDispatcher
                 return false;
             }
 
-            const currentBuffer = context.frameBuffer.currentAttachment;
-            if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
+            const currentAttachment = context
+                .frameBuffer
+                .currentAttachment;
+            if (xMin > currentAttachment.width
+                || yMin > currentAttachment.height
+            ) {
                 return false;
             }
 
@@ -1437,12 +1441,12 @@ class DisplayObject extends EventDispatcher
             object.position.dy = (dy > 0) ? dy : 0;
 
             // resize
-            if ((layerWidth + originX) > currentBuffer.texture.width) {
-                layerWidth -= layerWidth - currentBuffer.texture.width + originX;
+            if ((layerWidth + originX) > currentAttachment.texture.width) {
+                layerWidth -= layerWidth - currentAttachment.texture.width + originX;
             }
 
-            if ((layerHeight + originY) > currentBuffer.texture.height) {
-                layerHeight -= layerHeight - currentBuffer.texture.height + originY;
+            if ((layerHeight + originY) > currentAttachment.texture.height) {
+                layerHeight -= layerHeight - currentAttachment.texture.height + originY;
             }
 
             if (0 > dx) {
@@ -1498,7 +1502,7 @@ class DisplayObject extends EventDispatcher
             object.color             = Util.$getColorArray();
             object.baseMatrix        = tMatrix;
             object.baseColor         = color_transform;
-            object.currentBuffer     = currentBuffer;
+            object.currentAttachment = currentAttachment;
             object.currentMaskBuffer = currentMaskBuffer;
             object.currentMaskBounds = currentMaskBounds;
             object.filters           = filters;
@@ -1513,5 +1517,178 @@ class DisplayObject extends EventDispatcher
 
         return object;
     }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {object} object
+     * @return void
+     * @private
+     */
+    _$postDraw (context, matrix, color_transform, object)
+    {
+
+        // cache
+        const cacheKeys = [this._$instanceId, "f"];
+
+        // cache or new texture
+        let texture = null;
+        if (this._$buffer) {
+
+            texture = context
+                .frameBuffer
+                .getTextureFromCurrentAttachment();
+
+            const cacheTexture = Util.$cacheStore().get(cacheKeys);
+            if (cacheTexture) {
+                Util.$cacheStore().set(cacheKeys, null);
+                context
+                    .frameBuffer
+                    .releaseTexture(cacheTexture);
+            }
+
+        } else {
+            texture = Util.$cacheStore().get(cacheKeys);
+        }
+
+        // blend only
+        if (!object.canApply) {
+            texture._$offsetX = 0;
+            texture._$offsetY = 0;
+        }
+
+        // set cache offset
+        let offsetX = texture._$offsetX;
+        let offsetY = texture._$offsetY;
+
+
+        // execute filter
+        if (object.isUpdated && object.canApply) {
+
+            // cache clear
+            let cache = Util.$cacheStore().get(cacheKeys);
+            if (cache) {
+
+                // reset cache params
+                Util.$cacheStore().set(cacheKeys, null);
+                cache.layerWidth     = 0;
+                cache.layerHeight    = 0;
+                cache._$offsetX      = 0;
+                cache._$offsetY      = 0;
+                cache.matrix         = null;
+                cache.colorTransform = null;
+                context.frameBuffer.releaseTexture(cache);
+
+                cache  = null;
+            }
+
+            // apply filter
+            const length = object.filters.length;
+            if (length) {
+
+                // init
+                context._$offsetX = 0;
+                context._$offsetY = 0;
+
+                for (let idx = 0; idx < length; ++idx) {
+                    texture = object.filters[idx]._$applyFilter(context, matrix);
+                }
+
+                offsetX = context._$offsetX;
+                offsetY = context._$offsetY;
+
+                // reset
+                context._$offsetX = 0;
+                context._$offsetY = 0;
+
+                // set offset
+                texture._$offsetX = offsetX;
+                texture._$offsetY = offsetY;
+
+            }
+        }
+
+
+        // update cache params
+        if (object.isUpdated) {
+
+            texture.filterState = object.canApply;
+
+            // cache texture
+            const mat = object.baseMatrix;
+            texture.matrix = mat[0] +"_"+ mat[1] +"_"+ mat[2] +"_"+ mat[3]
+                +"_"+ object.basePosition.x +"_"+ object.basePosition.y;
+
+            const col = object.baseColor;
+            texture.colorTransform =
+                col[0] +"_"+ col[1] +"_"+ col[2] +"_"+ col[3] +"_"+
+                col[4] +"_"+ col[5] +"_"+ col[6] +"_"+ col[7];
+
+            texture.layerWidth  = object.layerWidth;
+            texture.layerHeight = object.layerHeight;
+        }
+
+
+        // cache texture
+        Util.$cacheStore().set(cacheKeys, texture);
+        Util.$poolArray(cacheKeys);
+
+
+        // set current buffer
+        context._$bind(object.currentAttachment);
+
+
+        // setup
+        const width  = texture.width;
+        const height = texture.height;
+
+
+        // set
+        Util.$resetContext(context);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context._$globalAlpha = Util.$clamp(color_transform[3] + (color_transform[7] / 255), 0, 1);
+        context._$globalCompositeOperation = object.blendMode;
+
+        context.drawImage(texture,
+            -offsetX + object.position.dx,
+            -offsetY + object.position.dy,
+            width, height,
+            color_transform
+        );
+
+
+        // end blend
+        context._$endLayer();
+
+
+        // pool buffer
+        if (this._$buffer) {
+
+            context
+                .frameBuffer
+                .releaseAttachment(this._$buffer, false);
+
+            this._$buffer = null;
+        }
+
+
+        // reset
+        context._$cacheCurrentBuffer   = object.currentMaskBuffer;
+        context._$cacheCurrentBounds.x = object.currentMaskBounds.xMin;
+        context._$cacheCurrentBounds.y = object.currentMaskBounds.yMin;
+        context._$cacheCurrentBounds.w = object.currentMaskBounds.xMax;
+        context._$cacheCurrentBounds.h = object.currentMaskBounds.yMax;
+
+        // object pool
+        Util.$poolFloat32Array8(object.color);
+        Util.$poolFloat32Array6(object.matrix);
+        Util.$poolFloat32Array6(object.baseMatrix);
+        Util.$poolBoundsObject(object.currentMaskBounds);
+        Util.$poolPreObject(object);
+    }
+
+
+
 
 }

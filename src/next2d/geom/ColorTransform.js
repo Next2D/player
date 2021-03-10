@@ -139,7 +139,7 @@ class ColorTransform
     }
     set alphaMultiplier (alpha_multiplier)
     {
-        this._$colorTransform[3] = Util.$clamp(0, 1, alpha_multiplier, 0);
+        this._$colorTransform[3] = Util.$clamp(alpha_multiplier, 0, 1, 0);
     }
 
     /**
@@ -158,7 +158,7 @@ class ColorTransform
     }
     set alphaOffset (alpha_offset)
     {
-        this._$colorTransform[7] = Util.$clamp(-255, 255, alpha_offset|0);
+        this._$colorTransform[7] = Util.$clamp(alpha_offset|0, -255, 255);
     }
 
     /**
@@ -175,7 +175,7 @@ class ColorTransform
     }
     set blueMultiplier (blue_multiplier)
     {
-        this._$colorTransform[2] = Util.$clamp(0, 1, blue_multiplier, 0);
+        this._$colorTransform[2] = Util.$clamp(blue_multiplier, 0, 1, 0);
     }
 
     /**
@@ -194,7 +194,7 @@ class ColorTransform
     }
     set blueOffset (blue_offset)
     {
-        this._$colorTransform[6] = Util.$clamp(-255, 255, blue_offset|0);
+        this._$colorTransform[6] = Util.$clamp(blue_offset|0, -255, 255);
     }
 
     /**
@@ -211,7 +211,7 @@ class ColorTransform
     }
     set greenMultiplier (green_multiplier)
     {
-        this._$colorTransform[1] = Util.$clamp(0, 1, green_multiplier, 0);
+        this._$colorTransform[1] = Util.$clamp(green_multiplier, 0, 1, 0);
     }
 
     /**
@@ -230,7 +230,7 @@ class ColorTransform
     }
     set greenOffset (green_offset)
     {
-        this._$colorTransform[5] = Util.$clamp(-255, 255, green_offset|0);
+        this._$colorTransform[5] = Util.$clamp(green_offset|0, -255, 255);
     }
 
     /**
@@ -247,7 +247,7 @@ class ColorTransform
     }
     set redMultiplier (red_multiplier)
     {
-        this._$colorTransform[0] = Util.$clamp(0, 1, red_multiplier, 0);
+        this._$colorTransform[0] = Util.$clamp(red_multiplier, 0, 1, 0);
     }
 
     /**
@@ -266,7 +266,7 @@ class ColorTransform
     }
     set redOffset (red_offset)
     {
-        this._$colorTransform[4] = Util.$clamp(-255, 255, red_offset|0);
+        this._$colorTransform[4] = Util.$clamp(red_offset|0, -255, 255);
     }
 
     /**

@@ -24,9 +24,10 @@ class EventDispatcher
     {
         /**
          * @type {Map}
+         * @default null
          * @private
          */
-        this._$events = Util.$getMap();
+        this._$events = null;
     }
 
     /**
@@ -135,6 +136,9 @@ class EventDispatcher
             default:
 
                 // init
+                if (this._$events) {
+                    this._$events = Util.$getMap();
+                }
                 if (!this._$events.size || !this._$events.has(type)) {
                     this._$events.set(type, Util.$getArray());
                 }
@@ -280,7 +284,10 @@ class EventDispatcher
                 {
 
                     let events = Util.$getArray();
-                    if (this._$events.size && this._$events.has(event.type)) {
+                    if (this._$events
+                        && this._$events.size
+                        && this._$events.has(event.type)
+                    ) {
                         events = this._$events.get(event.type).slice(0);
                     }
 
@@ -540,7 +547,9 @@ class EventDispatcher
                 return false;
 
             default:
-                return this._$events.size && this._$events.has(type);
+                return this._$events
+                    && this._$events.size
+                    && this._$events.has(type);
 
         }
     }
@@ -620,6 +629,11 @@ class EventDispatcher
             } else {
 
                 this._$events.delete(type);
+
+                if (!this._$events.size) {
+                    Util.$poolMap(this._$events);
+                    this._$events = null;
+                }
 
             }
 

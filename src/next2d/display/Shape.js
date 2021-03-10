@@ -174,13 +174,18 @@ class Shape extends DisplayObject
             return ;
         }
 
+
+        if (!this._$graphics || !this._$graphics._$canDraw) {
+            return ;
+        }
+
         let multiColor = color_transform;
         const rawColor = this._$transform._$rawColorTransform();
         if (rawColor !== Util.$COLOR_ARRAY_IDENTITY) {
             multiColor = Util.$multiplicationColor(color_transform, rawColor);
         }
 
-        const alpha = Util.$clamp(multiColor[3] + (multiColor[7] / 255), 0, 1);
+        const alpha = Util.$clamp(multiColor[3] + (multiColor[7] / 255), 0, 1, 0);
         if (!alpha) {
             if (multiColor !== color_transform) {
                 Util.$poolFloat32Array8(multiColor);
@@ -195,17 +200,13 @@ class Shape extends DisplayObject
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
+        const filters   = this._$filters   || this.filters;
+        const blendMode = this._$blendMode || this.blendMode;
 
-        if (this._$graphics && this._$graphics._$canDraw) {
+        this
+            ._$graphics
+            ._$draw(context, multiMatrix, multiColor, blendMode, filters);
 
-            const filters   = this._$filters   || this.filters;
-            const blendMode = this._$blendMode || this.blendMode;
-
-            this
-                ._$graphics
-                ._$draw(context, multiMatrix, multiColor, blendMode, filters);
-
-        }
 
         if (multiColor !== color_transform) {
             Util.$poolFloat32Array8(multiColor);

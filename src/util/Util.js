@@ -181,49 +181,7 @@ Util.$SCROLL = "scroll";
  * @const
  * @static
  */
-Util.$MATRIX_ARRAY_IDENTITY = new Float32Array([1, 0, 0, 1, 0, 0]);
-
-/**
- * @type {Float32Array}
- * @const
- * @static
- */
-Util.$MATRIX_ARRAY_20_0_0_20_0_0 = new Float32Array([Util.$TWIPS, 0, 0, Util.$TWIPS, 0, 0]);
-
-/**
- * @type {Float32Array}
- * @const
- * @static
- */
-Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE = new Float32Array([0.05, 0, 0, 0.05, 0, 0]);
-
-/**
- * @type {Float32Array}
- * @const
- * @static
- */
-Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0 = new Float32Array([
-    Util.$TWIPS / Util.$devicePixelRatio, 0, 0,
-    Util.$TWIPS / Util.$devicePixelRatio, 0, 0
-]);
-
-/**
- * @type {Float32Array}
- * @const
- * @static
- */
-Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE = new Float32Array([
-    1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0,
-    1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0
-]);
-
-/**
- * @type {Float32Array}
- * @const
- * @static
- */
 Util.$COLOR_ARRAY_IDENTITY = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
-
 
 /**
  * @shortcut
@@ -336,6 +294,14 @@ Util.$pow = Math.pow;
  * @static
  */
 Util.$abs = Math.abs;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$sign = Math.sign;
 
 /**
  * @shortcut
@@ -495,6 +461,13 @@ Util.$cancelAnimationFrame = window.cancelAnimationFrame;
  */
 Util.$performance = window.performance;
 
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$Float32Array = window.Float32Array;
 
 /**
  * 現在稼働中のPlayer ID
@@ -547,6 +520,47 @@ Util.$dragRules = {
  * @static
  */
 Util.$devicePixelRatio = Util.$min(2, window.devicePixelRatio);
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_IDENTITY = new Float32Array([1, 0, 0, 1, 0, 0]);
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_20_0_0_20_0_0 = new Float32Array([Util.$TWIPS, 0, 0, Util.$TWIPS, 0, 0]);
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE = new Float32Array([0.05, 0, 0, 0.05, 0, 0]);
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0 = new Float32Array([
+    Util.$TWIPS / Util.$devicePixelRatio, 0, 0,
+    Util.$TWIPS / Util.$devicePixelRatio, 0, 0
+]);
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE = new Float32Array([
+    1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0,
+    1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0
+]);
 
 /**
  * Player Object を格納
@@ -787,15 +801,15 @@ Util.$poolArray = function (array)
 }
 
 /**
+ * @param  {number} value
  * @param  {number} min
  * @param  {number} max
- * @param  {number} value
  * @param  {number} [default_value=null]
  * @return {number}
  * @method
  * @static
  */
-Util.$clamp = function (min, max, value, default_value)
+Util.$clamp = function (value, min, max, default_value)
 {
     const number = +value;
     if (Util.$isNaN(number) && default_value !== null) {
@@ -1094,13 +1108,30 @@ Util.$boundsMatrix = function (bounds, matrix)
     const y2 = bounds.xMin * matrix[1] + bounds.yMax * matrix[3] + matrix[5];
     const y3 = bounds.xMin * matrix[1] + bounds.yMin * matrix[3] + matrix[5];
 
-    const no   = Util.$MAX_VALUE;
-    const xMin = Util.$min(Util.$min(Util.$min(Util.$min( no, x0), x1), x2), x3);
-    const xMax = Util.$max(Util.$max(Util.$max(Util.$max(-no, x0), x1), x2), x3);
-    const yMin = Util.$min(Util.$min(Util.$min(Util.$min( no, y0), y1), y2), y3);
-    const yMax = Util.$max(Util.$max(Util.$max(Util.$max(-no, y0), y1), y2), y3);
+    const xMin = Util.$min(Util.$min(Util.$min(Util.$min( Util.$MAX_VALUE, x0), x1), x2), x3);
+    const xMax = Util.$max(Util.$max(Util.$max(Util.$max(-Util.$MAX_VALUE, x0), x1), x2), x3);
+    const yMin = Util.$min(Util.$min(Util.$min(Util.$min( Util.$MAX_VALUE, y0), y1), y2), y3);
+    const yMax = Util.$max(Util.$max(Util.$max(Util.$max(-Util.$MAX_VALUE, y0), y1), y2), y3);
 
     return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+};
+
+/**
+ * @param  {number} v
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$upperPowerOfTwo = function (v)
+{
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v++;
+    return v;
 };
 
 /**
@@ -1450,8 +1481,9 @@ Util.$getPreObject = function ()
             "position":           { "dx": 0, "dy": 0 },
             "baseMatrix":         null,
             "baseColor":          null,
-            "currentBuffer":      null,
+            "currentAttachment":  null,
             "currentMaskBuffer":  null,
+            "currentMaskBounds":  null,
             "cacheCurrentBounds": null,
             "blendMode":          null,
             "filters":            null,
@@ -1475,8 +1507,9 @@ Util.$poolPreObject = function (object)
     object.color              = null;
     object.baseMatrix         = null;
     object.baseColor          = null;
-    object.currentBuffer      = null;
+    object.currentAttachment  = null;
     object.currentMaskBuffer  = null;
+    object.currentMaskBounds  = null;
     object.cacheCurrentBounds = null;
     object.blendMode          = null;
     object.filters            = null;

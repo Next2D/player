@@ -9,11 +9,11 @@ class CanvasToWebGLContextGrid
     constructor ()
     {
         this._$enabled        = false;
-        this._$parentMatrix   = new Util.$window.Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
-        this._$ancestorMatrix = new Util.$window.Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
-        this._$parentViewport = new Util.$window.Float32Array(4);
-        this._$gridMin        = new Util.$window.Float32Array([0.00001, 0.00001, 0.00001, 0.00001]);
-        this._$gridMax        = new Util.$window.Float32Array([0.99999, 0.99999, 0.99999, 0.99999]);
+        this._$parentMatrix   = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+        this._$ancestorMatrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+        this._$parentViewport = [0, 0, 0, 0];
+        this._$gridMin        = [0.00001, 0.00001, 0.00001, 0.00001];
+        this._$gridMax        = [0.99999, 0.99999, 0.99999, 0.99999];
     }
 
     /**

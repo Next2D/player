@@ -122,7 +122,7 @@ class BezierConverter
         const mx = (p0 + 3 * (p2 + p4) + p6) * 0.125;
         const my = (p1 + 3 * (p3 + p5) + p7) * 0.125;
 
-        // 2次ベジェの始点の値は不要なので、結果配列に含めない
+        // 2次ベジェの始点の値は不要なので含めない
 
         // this.result[offset - 2] = p0;
         // this.result[offset - 1] = p1;

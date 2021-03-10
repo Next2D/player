@@ -1647,7 +1647,9 @@ class Player
         const height  = canvas.height;
         const context = this._$context;
 
-        if (context && width > 0 && height > 0) {
+        if (this._$stage._$updated
+            && context && width > 0 && height > 0
+        ) {
 
             context._$bind(this._$buffer);
 

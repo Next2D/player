@@ -139,23 +139,25 @@ class ShapeShaderVariantCollection
 
     /**
      * @param {WebGLShaderUniform} uniform
-     * @param isStroke
-     * @param halfWidth
-     * @param face
-     * @param miterLimit
-     * @param hasGrid
-     * @param matrix
-     * @param viewport
-     * @param grid
-     * @param color
-     * @param alpha
+     * @param {boolean} isStroke
+     * @param {number}  halfWidth
+     * @param {number}  face
+     * @param {number}  miterLimit
+     * @param {boolean} hasGrid
+     * @param {array}   matrix
+     * @param {number}  viewportWidth
+     * @param {number}  viewportHeight
+     * @param {CanvasToWebGLContextGrid} grid
+     * @param {array}   color
+     * @param {number}  alpha
      * @method
      * @public
      */
     setSolidColorShapeUniform (
         uniform,
         isStroke, halfWidth, face, miterLimit,
-        hasGrid, matrix, viewport, grid,
+        hasGrid, matrix,
+        viewportWidth, viewportHeight, grid,
         color, alpha
     ) {
         const highp = uniform.highp;
@@ -195,8 +197,8 @@ class ShapeShaderVariantCollection
             highp[22] = ancestorMatrix[8];
 
             // vertex: u_viewport
-            highp[3] = viewport[0];
-            highp[7] = viewport[1];
+            highp[3] = viewportWidth;
+            highp[7] = viewportHeight;
 
             // vertex: u_parent_viewport
             highp[11] = parentViewport[0];
@@ -231,8 +233,8 @@ class ShapeShaderVariantCollection
             highp[10] = matrix[8];
 
             // vertex: u_viewport
-            highp[3] = viewport[0];
-            highp[7] = viewport[1];
+            highp[3] = viewportWidth;
+            highp[7] = viewportHeight;
 
             i = 12;
         }
@@ -257,32 +259,34 @@ class ShapeShaderVariantCollection
 
     /**
      * @param {WebGLShaderUniform} uniform
-     * @param isStroke
-     * @param halfWidth
-     * @param face
-     * @param miterLimit
-     * @param hasGrid
-     * @param matrix
-     * @param inverseMatrix
-     * @param viewport
-     * @param grid
-     * @param textureWidth
-     * @param textureHeight
-     * @param mul1
-     * @param mul2
-     * @param mul3
-     * @param mul4
-     * @param add1
-     * @param add2
-     * @param add3
-     * @param add4
+     * @param {boolean} isStroke
+     * @param {number}  halfWidth
+     * @param {number}  face
+     * @param {number}  miterLimit
+     * @param {boolean} hasGrid
+     * @param {array}   matrix
+     * @param {array}   inverseMatrix
+     * @param {number}  viewportWidth
+     * @param {number}  viewportHeight
+     * @param {CanvasToWebGLContextGrid} grid
+     * @param {number}  textureWidth
+     * @param {number}  textureHeight
+     * @param {number}  mul1
+     * @param {number}  mul2
+     * @param {number}  mul3
+     * @param {number}  mul4
+     * @param {number}  add1
+     * @param {number}  add2
+     * @param {number}  add3
+     * @param {number}  add4
      * @method
      * @public
      */
     setBitmapShapeUniform (
         uniform,
         isStroke, halfWidth, face, miterLimit,
-        hasGrid, matrix, inverseMatrix, viewport, grid,
+        hasGrid, matrix, inverseMatrix,
+        viewportWidth, viewportHeight, grid,
         textureWidth, textureHeight,
         mul1, mul2, mul3, mul4,
         add1, add2, add3, add4
@@ -317,8 +321,8 @@ class ShapeShaderVariantCollection
         highp[19] = inverseMatrix[8];
 
         // vertex: u_viewport
-        highp[3] = viewport[0];
-        highp[7] = viewport[1];
+        highp[3] = viewportWidth;
+        highp[7] = viewportHeight;
 
         i = 20;
 
@@ -404,15 +408,29 @@ class ShapeShaderVariantCollection
 
     /**
      * @param {WebGLShaderUniform} uniform
-     * @param hasGrid
-     * @param matrix
-     * @param viewport
-     * @param grid
+     * @param {boolean} hasGrid
+     * @param {number}  matrixA
+     * @param {number}  matrixB
+     * @param {number}  matrixC
+     * @param {number}  matrixD
+     * @param {number}  matrixE
+     * @param {number}  matrixF
+     * @param {number}  matrixG
+     * @param {number}  matrixH
+     * @param {number}  matrixI
+     * @param {number}  viewportWidth
+     * @param {number}  viewportHeight
+     * @param {CanvasToWebGLContextGrid} grid
      * @method
      * @public
      */
-    setMaskShapeUniform (uniform, hasGrid, matrix, viewport, grid)
-    {
+    setMaskShapeUniform (
+        uniform, hasGrid,
+        matrixA, matrixB, matrixC,
+        matrixD, matrixE, matrixF,
+        matrixG, matrixH, matrixI,
+        viewportWidth, viewportHeight, grid
+    ) {
         const highp = uniform.highp;
 
         if (hasGrid) {
@@ -449,8 +467,8 @@ class ShapeShaderVariantCollection
             highp[22] = ancestorMatrix[8];
 
             // vertex: u_viewport
-            highp[3] = viewport[0];
-            highp[7] = viewport[1];
+            highp[3] = viewportWidth;
+            highp[7] = viewportHeight;
 
             // vertex: u_parent_viewport
             highp[11] = parentViewport[0];
@@ -470,21 +488,21 @@ class ShapeShaderVariantCollection
             highp[31] = gridMax[3];
         } else {
             // vertex: u_matrix
-            highp[0]  = matrix[0];
-            highp[1]  = matrix[1];
-            highp[2]  = matrix[2];
+            highp[0]  = matrixA;
+            highp[1]  = matrixB;
+            highp[2]  = matrixC;
 
-            highp[4]  = matrix[3];
-            highp[5]  = matrix[4];
-            highp[6]  = matrix[5];
+            highp[4]  = matrixD;
+            highp[5]  = matrixE;
+            highp[6]  = matrixF;
 
-            highp[8]  = matrix[6];
-            highp[9]  = matrix[7];
-            highp[10] = matrix[8];
+            highp[8]  = matrixG;
+            highp[9]  = matrixH;
+            highp[10] = matrixI;
 
             // vertex: u_viewport
-            highp[3] = viewport[0];
-            highp[7] = viewport[1];
+            highp[3] = viewportWidth;
+            highp[7] = viewportHeight;
         }
     }
 

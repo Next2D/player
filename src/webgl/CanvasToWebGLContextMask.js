@@ -309,7 +309,13 @@ class CanvasToWebGLContextMask
 
             const object = this._$poolClip.shift(); // fixed
 
-            variants.setMaskShapeUniform(uniform, false, object.matrix, object.viewport, null);
+            variants.setMaskShapeUniform(
+                uniform, false,
+                object.matrixA, object.matrixB, object.matrixC,
+                object.matrixD, object.matrixE, object.matrixF,
+                object.matrixG, object.matrixH, object.matrixI,
+                object.viewportWidth, object.viewportHeight, null
+            );
 
             const oLen = object.fillBuffer.indexRanges.length;
             for (let idx = 0; idx < oLen; ++idx) {
@@ -408,7 +414,7 @@ class CanvasToWebGLContextMask
     /**
      * @return {boolean}
      */
-    _$onClip (matrix, viewport)
+    _$onClip (matrix, viewportWidth, viewportHeight)
     {
         this._$clipStatus = true;
 
@@ -416,8 +422,17 @@ class CanvasToWebGLContextMask
 
             this._$poolClip[this._$poolClip.length] = {
                 "fillBuffer": this._$context._$fillBuffer,
-                "matrix":     [matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5], matrix[6], matrix[7], matrix[8]],
-                "viewport":   [viewport[0], viewport[1]]
+                "matrixA": matrix[0],
+                "matrixB": matrix[1],
+                "matrixC": matrix[2],
+                "matrixD": matrix[3],
+                "matrixE": matrix[4],
+                "matrixF": matrix[5],
+                "matrixG": matrix[6],
+                "matrixH": matrix[7],
+                "matrixI": matrix[8],
+                "viewportWidth": viewportWidth,
+                "viewportHeight": viewportHeight
             };
 
             return true;
