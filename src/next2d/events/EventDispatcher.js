@@ -136,7 +136,7 @@ class EventDispatcher
             default:
 
                 // init
-                if (this._$events) {
+                if (!this._$events) {
                     this._$events = Util.$getMap();
                 }
                 if (!this._$events.size || !this._$events.has(type)) {
