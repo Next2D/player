@@ -101,9 +101,7 @@ class Shape extends DisplayObject
     get graphics ()
     {
         if (!this._$graphics) {
-            this._$graphics = new Graphics();
-            this._$graphics
-                ._$displayObject = this;
+            this._$graphics = new Graphics(this);
         }
         return this._$graphics;
     }

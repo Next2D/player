@@ -1,70 +1,14 @@
 /**
  * @class
- * @memberOf next2d.display
+ * @private
  */
 class GraphicsPathCommand
 {
     /**
      * @constructor
-     * @public
+     * @private
      */
     constructor () {}
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class GraphicsPathCommand]
-     * @method
-     * @static
-     */
-    static toString()
-    {
-        return "[class GraphicsPathCommand]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default next2d.display:Bitmap
-     * @const
-     * @static
-     */
-    static get namespace ()
-    {
-        return "next2d.display:GraphicsPathCommand";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object GraphicsPathCommand]
-     * @method
-     * @public
-     */
-    toString ()
-    {
-        return "[object GraphicsPathCommand]";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default next2d.display:GraphicsPathCommand
-     * @const
-     * @static
-     */
-    get namespace ()
-    {
-        return "next2d.display:GraphicsPathCommand";
-    }
 
     /**
      * @param  {number} x
@@ -147,13 +91,13 @@ if (!is_clip && !options) {
     }
 
     /**
-     * @return  {string}
+     * @return {string}
      * @method
      * @static
      */
     static BEGIN_PATH ()
     {
-        return `ctx.beginPath();`;
+        return "ctx.beginPath();";
     }
 
     /**
@@ -172,6 +116,232 @@ if (!is_clip && !options) {
         return `ctx.bezierCurveTo(${cp1x},${cp1y},${cp2x},${cp2y},${x},${y});`;
     }
 
+    /**
+     * @return {string}
+     * @method
+     * @static
+     */
+    static CLOSE_PATH ()
+    {
+        return "ctx.closePath();";
+    }
 
+    /**
+     * @param  {number} thickness
+     * @param  {string} caps
+     * @param  {string} joints
+     * @param  {number} miter_limit
+     * @param  {number} r
+     * @param  {number} g
+     * @param  {number} b
+     * @param  {number} a
+     * @return {string}
+     * @method
+     * @static
+     */
+    static STROKE_STYLE (thickness, caps, joints, miter_limit, r, g, b, a)
+    {
+        return `
+if (!is_clip && !options) {
+    ctx._$style = ctx._$contextStyle;
+    ctx._$style._$strokeStyle[0] = Math.max(0, Math.min((${r} * ct[0]) + ct[4], 255)) / 255;
+    ctx._$style._$strokeStyle[1] = Math.max(0, Math.min((${g} * ct[1]) + ct[5], 255)) / 255;
+    ctx._$style._$strokeStyle[2] = Math.max(0, Math.min((${b} * ct[2]) + ct[6], 255)) / 255;
+    ctx._$style._$strokeStyle[3] = Math.max(0, Math.min((${a} * ct[3]) + ct[7], 255)) / 255;
+    ctx.lineWidth = ${thickness};
+    ctx.lineCap = "${caps}";
+    ctx.lineJoin = "${joints}";
+    ctx.miterLimit = ${miter_limit};
+}`;
+    }
 
+    /**
+     * @return {string}
+     * @method
+     * @static
+     */
+    static END_STROKE ()
+    {
+        return `
+if (options) {
+    if ("isPointInStroke" in ctx && ctx.isPointInStroke(options.x, options.y)) {
+        return true; 
+    }
+}
+if (!is_clip && !options) {
+    ctx.stroke();
+}`;
+    }
+
+    /**
+     * @param  {number} x
+     * @param  {number} y
+     * @param  {number} radius
+     * @return {string}
+     * @method
+     * @static
+     */
+    static ARC (x, y, radius)
+    {
+        return `
+ctx.moveTo((${x} + ${radius}),${y});
+ctx.arc(${x},${y},${radius},0,2 * Math.PI);`;
+    }
+
+    /**
+     * @param  {string} type
+     * @param  {array}  colors
+     * @param  {Float32Array} matrix
+     * @param  {string} spread_method
+     * @param  {string} interpolation_method
+     * @param  {number} focal_point_ratio
+     * @return {string}
+     * @method
+     * @static
+     */
+    static GRADIENT (
+        type, colors, matrix,
+        spread_method, interpolation_method, focal_point_ratio
+    ) {
+
+        let gradient = "";
+        switch (type) {
+
+            case GradientType.LINEAR:
+                const xy = Util.$linearGradientXY(matrix);
+                gradient += `const css = ctx.createLinearGradient(
+${xy[0]},${xy[1]},${xy[2]},${xy[3]},"${interpolation_method}","${spread_method}");`;
+                break;
+
+            case GradientType.RADIAL:
+                gradient += `ctx.save();
+ctx.transform(${matrix[0]},${matrix[1]},${matrix[2]},${matrix[3]},${matrix[4]},${matrix[5]});
+const css = ctx.createRadialGradient(0,0,0,0,0,16384,"${interpolation_method}","${spread_method}",${focal_point_ratio});`;
+                break;
+
+        }
+
+        const length = colors.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const color = colors[idx];
+
+            gradient += `css.addColorStop(${color.ratio}, new Float32Array([
+Math.max(0,Math.min(${color.R}*ct[0]+ct[4],255))|0,
+Math.max(0,Math.min(${color.G}*ct[1]+ct[5],255))|0,
+Math.max(0,Math.min(${color.B}*ct[2]+ct[6],255))|0,
+Math.max(0,Math.min(${color.A}*ct[3]+ct[7],255))|0
+]));`;
+
+        }
+
+        return gradient;
+    }
+
+    /**
+     * @param  {string} type
+     * @param  {array}  colors
+     * @param  {Float32Array} matrix
+     * @param  {string} spread_method
+     * @param  {string} interpolation_method
+     * @param  {number} focal_point_ratio
+     * @return {string}
+     * @method
+     * @static
+     */
+    static GRADIENT_FILL (
+        type, colors, matrix,
+        spread_method, interpolation_method, focal_point_ratio
+    ) {
+        return `
+if (options) {
+    if (ctx.isPointInPath(options.x, options.y)) {
+        return true;
+    }
+    if ("isPointInStroke" in ctx && ctx.isPointInStroke(options.x, options.y)) {
+        return true;
+    }
+}
+if (!is_clip && !options) {
+    ${GraphicsPathCommand.GRADIENT(
+        type, colors, matrix, spread_method, 
+        interpolation_method, focal_point_ratio
+    )}
+    ctx.fillStyle = css;
+    ctx.fill();
+}`;
+    }
+
+    /**
+     * @param  {number} thickness
+     * @param  {string} caps
+     * @param  {string} joints
+     * @param  {number} miter_limit
+     * @param  {string} type
+     * @param  {array}  colors
+     * @param  {Float32Array} matrix
+     * @param  {string} spread_method
+     * @param  {string} interpolation_method
+     * @param  {number} focal_point_ratio
+     * @return {string}
+     * @method
+     * @static
+     */
+    static GRADIENT_STROKE (
+        thickness, caps, joints, miter_limit, type, colors, matrix,
+        spread_method, interpolation_method, focal_point_ratio
+    ) {
+        return `
+if (options) {
+    if (ctx.isPointInPath(options.x, options.y)) {
+        return true;
+    }
+    if ("isPointInStroke" in ctx && ctx.isPointInStroke(options.x, options.y)) {
+        return true;
+    }
+}
+if (!is_clip && !options) {
+    ${GraphicsPathCommand.GRADIENT(
+        type, colors, matrix, spread_method, 
+        interpolation_method, focal_point_ratio
+    )}
+    ctx.strokeStyle = css;
+    ctx.lineWidth = ${thickness};
+    ctx.lineCap = "${caps}";
+    ctx.lineJoin = "${joints}";
+    ctx.miterLimit = ${miter_limit};
+    ctx.stroke();
+}`;
+    }
+
+    /**
+     * @param {BitmapData} bitmap_data
+     * @param {Float32Array} matrix
+     * @param {string} repeat
+     * @param {boolean} smooth
+     * @constructor
+     */
+    static BITMAP_FILL (bitmap_data, matrix, repeat, smooth)
+    {
+        return `
+if (options) {
+    if (ctx.isPointInPath(options.x, options.y)) {
+        return true;
+    }
+    if ("isPointInStroke" in ctx && ctx.isPointInStroke(options.x, options.y)) {
+        return true;
+    }
+}
+if (!is_clip && !options) {
+    ctx.save();
+    const texture = ctx.frameBuffer.createTextureFromPixels(${bitmap_data.width}, ${bitmap_data.height}, new Uint8Array([${bitmap_data.toArray()}]));
+    ctx.fillStyle = ctx.createPattern(texture, "${repeat}", ct);
+    ctx.transform(${matrix[0]},${matrix[1]},${matrix[2]},${matrix[3]},${matrix[4]},${matrix[5]});
+    ctx.imageSmoothingEnabled = ${smooth};
+    ctx.fill();
+    ctx.restore();
+    ctx.imageSmoothingEnabled = false;
+    ctx.frameBuffer.releaseTexture(texture);
+}`;
+    }
 }

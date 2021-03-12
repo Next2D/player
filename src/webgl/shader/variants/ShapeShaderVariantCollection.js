@@ -164,58 +164,52 @@ class ShapeShaderVariantCollection
         let i;
 
         if (hasGrid) {
-            const parentMatrix = grid._$parentMatrix;
-            const ancestorMatrix = grid._$ancestorMatrix;
-            const parentViewport = grid._$parentViewport;
-            const gridMin = grid._$gridMin;
-            const gridMax = grid._$gridMax;
-
             // vertex: u_parent_matrix
-            highp[0]  = parentMatrix[0];
-            highp[1]  = parentMatrix[1];
-            highp[2]  = parentMatrix[2];
+            highp[0]  = grid.parentMatrixA;
+            highp[1]  = grid.parentMatrixB;
+            highp[2]  = grid.parentMatrixC;
 
-            highp[4]  = parentMatrix[3];
-            highp[5]  = parentMatrix[4];
-            highp[6]  = parentMatrix[5];
+            highp[4]  = grid.parentMatrixD;
+            highp[5]  = grid.parentMatrixE;
+            highp[6]  = grid.parentMatrixF;
 
-            highp[8]  = parentMatrix[6];
-            highp[9]  = parentMatrix[7];
-            highp[10] = parentMatrix[8];
+            highp[8]  = grid.parentMatrixG;
+            highp[9]  = grid.parentMatrixH;
+            highp[10] = grid.parentMatrixI;
 
             // vertex: u_ancestor_matrix
-            highp[12] = ancestorMatrix[0];
-            highp[13] = ancestorMatrix[1];
-            highp[14] = ancestorMatrix[2];
+            highp[12] = grid.ancestorMatrixA;
+            highp[13] = grid.ancestorMatrixB;
+            highp[14] = grid.ancestorMatrixC;
 
-            highp[16] = ancestorMatrix[3];
-            highp[17] = ancestorMatrix[4];
-            highp[18] = ancestorMatrix[5];
+            highp[16] = grid.ancestorMatrixD;
+            highp[17] = grid.ancestorMatrixE;
+            highp[18] = grid.ancestorMatrixF;
 
-            highp[20] = ancestorMatrix[6];
-            highp[21] = ancestorMatrix[7];
-            highp[22] = ancestorMatrix[8];
+            highp[20] = grid.ancestorMatrixG;
+            highp[21] = grid.ancestorMatrixH;
+            highp[22] = grid.ancestorMatrixI;
 
             // vertex: u_viewport
-            highp[3] = viewportWidth;
-            highp[7] = viewportHeight;
+            highp[3]  = viewportWidth;
+            highp[7]  = viewportHeight;
 
             // vertex: u_parent_viewport
-            highp[11] = parentViewport[0];
-            highp[15] = parentViewport[1];
-            highp[19] = parentViewport[2];
-            highp[23] = parentViewport[3];
+            highp[11] = grid.parentViewportX;
+            highp[15] = grid.parentViewportY;
+            highp[19] = grid.parentViewportW;
+            highp[23] = grid.parentViewportH;
 
             // vertex: u_grid_min
-            highp[24] = gridMin[0];
-            highp[25] = gridMin[1];
-            highp[26] = gridMin[2];
-            highp[27] = gridMin[3];
+            highp[24] = grid.minXST;
+            highp[25] = grid.minYST;
+            highp[26] = grid.minXPQ;
+            highp[27] = grid.minYPQ;
             // vertex: u_grid_max
-            highp[28] = gridMax[0];
-            highp[29] = gridMax[1];
-            highp[30] = gridMax[2];
-            highp[31] = gridMax[3];
+            highp[28] = grid.maxXST;
+            highp[29] = grid.maxYST;
+            highp[30] = grid.maxXPQ;
+            highp[31] = grid.maxYPQ;
 
             i = 32;
         } else {
@@ -327,54 +321,48 @@ class ShapeShaderVariantCollection
         i = 20;
 
         if (hasGrid) {
-            const parentMatrix = grid._$parentMatrix;
-            const ancestorMatrix = grid._$ancestorMatrix;
-            const parentViewport = grid._$parentViewport;
-            const gridMin = grid._$gridMin;
-            const gridMax = grid._$gridMax;
-
             // vertex: u_parent_matrix
-            highp[i]      = parentMatrix[0];
-            highp[i + 1]  = parentMatrix[1];
-            highp[i + 2]  = parentMatrix[2];
+            highp[i]      = grid.parentMatrixA;
+            highp[i + 1]  = grid.parentMatrixB;
+            highp[i + 2]  = grid.parentMatrixC;
 
-            highp[i + 4]  = parentMatrix[3];
-            highp[i + 5]  = parentMatrix[4];
-            highp[i + 6]  = parentMatrix[5];
+            highp[i + 4]  = grid.parentMatrixD;
+            highp[i + 5]  = grid.parentMatrixE;
+            highp[i + 6]  = grid.parentMatrixF;
 
-            highp[i + 8]  = parentMatrix[6];
-            highp[i + 9]  = parentMatrix[7];
-            highp[i + 10] = parentMatrix[8];
+            highp[i + 8]  = grid.parentMatrixG;
+            highp[i + 9]  = grid.parentMatrixH;
+            highp[i + 10] = grid.parentMatrixI;
 
             // vertex: u_ancestor_matrix
-            highp[i + 12] = ancestorMatrix[0];
-            highp[i + 13] = ancestorMatrix[1];
-            highp[i + 14] = ancestorMatrix[2];
+            highp[i + 12] = grid.ancestorMatrixA;
+            highp[i + 13] = grid.ancestorMatrixB;
+            highp[i + 14] = grid.ancestorMatrixC;
 
-            highp[i + 16] = ancestorMatrix[3];
-            highp[i + 17] = ancestorMatrix[4];
-            highp[i + 18] = ancestorMatrix[5];
+            highp[i + 16] = grid.ancestorMatrixD;
+            highp[i + 17] = grid.ancestorMatrixE;
+            highp[i + 18] = grid.ancestorMatrixF;
 
-            highp[i + 20] = ancestorMatrix[6];
-            highp[i + 21] = ancestorMatrix[7];
-            highp[i + 22] = ancestorMatrix[8];
+            highp[i + 20] = grid.ancestorMatrixG;
+            highp[i + 21] = grid.ancestorMatrixH;
+            highp[i + 22] = grid.ancestorMatrixI;
 
             // vertex: u_parent_viewport
-            highp[i + 11] = parentViewport[0];
-            highp[i + 15] = parentViewport[1];
-            highp[i + 19] = parentViewport[2];
-            highp[i + 23] = parentViewport[3];
+            highp[i + 11] = grid.parentViewportX;
+            highp[i + 15] = grid.parentViewportY;
+            highp[i + 19] = grid.parentViewportW;
+            highp[i + 23] = grid.parentViewportH;
 
             // vertex: u_grid_min
-            highp[i + 24] = gridMin[0];
-            highp[i + 25] = gridMin[1];
-            highp[i + 26] = gridMin[2];
-            highp[i + 27] = gridMin[3];
+            highp[i + 24] = grid.minXST;
+            highp[i + 25] = grid.minYST;
+            highp[i + 26] = grid.minXPQ;
+            highp[i + 27] = grid.minYPQ;
             // vertex: u_grid_max
-            highp[i + 28] = gridMax[0];
-            highp[i + 29] = gridMax[1];
-            highp[i + 30] = gridMax[2];
-            highp[i + 31] = gridMax[3];
+            highp[i + 28] = grid.maxXST;
+            highp[i + 29] = grid.maxYST;
+            highp[i + 30] = grid.maxXPQ;
+            highp[i + 31] = grid.maxYPQ;
 
             i = 52;
         }
@@ -434,58 +422,52 @@ class ShapeShaderVariantCollection
         const highp = uniform.highp;
 
         if (hasGrid) {
-            const parentMatrix = grid._$parentMatrix;
-            const ancestorMatrix = grid._$ancestorMatrix;
-            const parentViewport = grid._$parentViewport;
-            const gridMin = grid._$gridMin;
-            const gridMax = grid._$gridMax;
-
             // vertex: u_parent_matrix
-            highp[0]  = parentMatrix[0];
-            highp[1]  = parentMatrix[1];
-            highp[2]  = parentMatrix[2];
+            highp[0]  = grid.parentMatrixA;
+            highp[1]  = grid.parentMatrixB;
+            highp[2]  = grid.parentMatrixC;
 
-            highp[4]  = parentMatrix[3];
-            highp[5]  = parentMatrix[4];
-            highp[6]  = parentMatrix[5];
+            highp[4]  = grid.parentMatrixD;
+            highp[5]  = grid.parentMatrixE;
+            highp[6]  = grid.parentMatrixF;
 
-            highp[8]  = parentMatrix[6];
-            highp[9]  = parentMatrix[7];
-            highp[10] = parentMatrix[8];
+            highp[8]  = grid.parentMatrixG;
+            highp[9]  = grid.parentMatrixH;
+            highp[10] = grid.parentMatrixI;
 
             // vertex: u_ancestor_matrix
-            highp[12] = ancestorMatrix[0];
-            highp[13] = ancestorMatrix[1];
-            highp[14] = ancestorMatrix[2];
+            highp[12] = grid.ancestorMatrixA;
+            highp[13] = grid.ancestorMatrixB;
+            highp[14] = grid.ancestorMatrixC;
 
-            highp[16] = ancestorMatrix[3];
-            highp[17] = ancestorMatrix[4];
-            highp[18] = ancestorMatrix[5];
+            highp[16] = grid.ancestorMatrixD;
+            highp[17] = grid.ancestorMatrixE;
+            highp[18] = grid.ancestorMatrixF;
 
-            highp[20] = ancestorMatrix[6];
-            highp[21] = ancestorMatrix[7];
-            highp[22] = ancestorMatrix[8];
+            highp[20] = grid.ancestorMatrixG;
+            highp[21] = grid.ancestorMatrixH;
+            highp[22] = grid.ancestorMatrixI;
 
             // vertex: u_viewport
-            highp[3] = viewportWidth;
-            highp[7] = viewportHeight;
+            highp[3]  = viewportWidth;
+            highp[7]  = viewportHeight;
 
             // vertex: u_parent_viewport
-            highp[11] = parentViewport[0];
-            highp[15] = parentViewport[1];
-            highp[19] = parentViewport[2];
-            highp[23] = parentViewport[3];
+            highp[11] = grid.parentViewportX;
+            highp[15] = grid.parentViewportY;
+            highp[19] = grid.parentViewportW;
+            highp[23] = grid.parentViewportH;
 
             // vertex: u_grid_min
-            highp[24] = gridMin[0];
-            highp[25] = gridMin[1];
-            highp[26] = gridMin[2];
-            highp[27] = gridMin[3];
+            highp[24] = grid.minXST;
+            highp[25] = grid.minYST;
+            highp[26] = grid.minXPQ;
+            highp[27] = grid.minYPQ;
             // vertex: u_grid_max
-            highp[28] = gridMax[0];
-            highp[29] = gridMax[1];
-            highp[30] = gridMax[2];
-            highp[31] = gridMax[3];
+            highp[28] = grid.maxXST;
+            highp[29] = grid.maxYST;
+            highp[30] = grid.maxXPQ;
+            highp[31] = grid.maxYPQ;
         } else {
             // vertex: u_matrix
             highp[0]  = matrixA;

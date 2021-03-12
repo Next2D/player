@@ -17,25 +17,31 @@ class Graphics
      * The following are among those helper functions provided for ease of use:
      * drawRect(), drawRoundRect(), drawCircle(), and drawEllipse().
      *
+     * @param {DisplayObject} src
+     *
      * @constructor
      * @public
      */
-    constructor ()
+    constructor (src = null)
     {
         this._$maxAlpha      = 0;
-        this._$displayObject = null;
+        this._$displayObject = src;
         this._$recode        = Util.$getArray();
         this._$fills         = Util.$getArray();
         this._$lines         = Util.$getArray();
         this._$fillType      = 0;
+        this._$fillGradient  = null;
+        this._$fillBitmap    = null;
         this._$fillStyleR    = 0;
         this._$fillStyleG    = 0;
         this._$fillStyleB    = 0;
         this._$fillStyleA    = 0;
-        this._$caps          = null;
-        this._$miterLimit    = 0;
-        this._$lineWidth     = 0;
         this._$lineType      = 0;
+        this._$lineGradient  = 0;
+        this._$caps          = CapsStyle.NONE;
+        this._$joints        = JointStyle.ROUND;
+        this._$miterLimit    = 0;
+        this._$lineWidth     = 1;
         this._$lineStyleR    = 0;
         this._$lineStyleG    = 0;
         this._$lineStyleB    = 0;
@@ -276,19 +282,23 @@ class Graphics
      */
     beginBitmapFill (bitmap_data, matrix = null, repeat = true, smooth = false)
     {
-        this._$maxAlpha = 1;
-
-        // init fill style
-        this.endFill();
+        // end fill
+        if (this._$doFill) {
+            this.endFill();
+        }
 
         // start
-        this._$doFill  = true;
-        this._$canDraw = true;
+        this._$maxAlpha = 1;
+        this._$doFill   = true;
+        this._$canDraw  = true;
 
         // beginPath
         this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
 
-        // TODO
+        this._$fillType   = Graphics.BITMAP_FILL;
+        this._$fillBitmap = new GraphicsBitmapFill(
+            bitmap_data, matrix, repeat, smooth
+        );
 
         return this;
     }
@@ -307,23 +317,23 @@ class Graphics
      */
     beginFill (color = 0, alpha = 1)
     {
-        // valid
-        color = Util.$clamp(Util.$toColorInt(color), 0, 0xffffff, 0);
-        alpha = Util.$clamp(alpha, 0, 1, 1);
-
-        this._$maxAlpha = Util.$max(this._$maxAlpha, alpha);
-
         // end fill
         if (this._$doFill) {
             this.endFill();
         }
 
-        // start
-        this._$doFill  = true;
-        this._$canDraw = true;
+        // valid
+        color = Util.$clamp(Util.$toColorInt(color), 0, 0xffffff, 0);
+        alpha = Util.$clamp(alpha, 0, 1, 1);
+
+        // setup
+        this._$maxAlpha = Util.$max(this._$maxAlpha, alpha);
+        this._$doFill   = true;
+        this._$canDraw  = true;
 
         // beginPath
         this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
+
 
         // add Fill Style
         const object = Util.$intToRGBA(color, alpha);
@@ -338,7 +348,6 @@ class Graphics
     }
 
     /**
-     * TODO
      * @description Graphics の他のメソッド（lineTo()、drawCircle() など）に対する、
      *              オブジェクトの後続の呼び出しに使用するグラデーション塗りを指定します。
      *              Specifies a gradient fill used by subsequent calls
@@ -349,8 +358,8 @@ class Graphics
      * @param  {array}  alphas
      * @param  {array}  ratios
      * @param  {Matrix} [matrix=null]
-     * @param  {string} [spread_method=pad]
-     * @param  {string} [interpolation_method=rgb]
+     * @param  {string} [spread_method=SpreadMethod.PAD]
+     * @param  {string} [interpolation_method=InterpolationMethod.RGB]
      * @param  {number} [focal_point_ratio=0]
      * @return {Graphics}
      * @method
@@ -358,9 +367,35 @@ class Graphics
      */
     beginGradientFill (
         type, colors, alphas, ratios, matrix = null,
-        spread_method = "pad", interpolation_method = "rgb", focal_point_ratio = 0
+        spread_method = SpreadMethod.PAD,
+        interpolation_method = InterpolationMethod.RGB,
+        focal_point_ratio = 0
     ) {
 
+        if (this._$doFill) {
+            this.endFill();
+        }
+
+        // setup
+        const length = alphas.length;
+        for (let idx = 0; idx < length; ++idx) {
+            this._$maxAlpha = Util.$max(this._$maxAlpha, alphas[idx]);
+        }
+        this._$doFill  = true;
+        this._$canDraw = true;
+
+
+        // beginPath
+        this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
+
+        this._$fillType     = Graphics.GRADIENT_FILL;
+        this._$fillGradient = new GraphicsGradientFill(
+            type, colors, alphas, ratios, matrix,
+            spread_method, interpolation_method,
+            focal_point_ratio
+        );
+
+        return this;
     }
 
     /**
@@ -384,6 +419,8 @@ class Graphics
         this._$pointerX     = 0;
         this._$pointerY     = 0;
         this._$canDraw      = false;
+        this._$fillType     = 0;
+        this._$lineType     = 0;
 
         // bounds size
         this._$xMin         = Util.$MAX_VALUE;
@@ -407,7 +444,6 @@ class Graphics
     }
 
     /**
-     * TODO
      * @description すべての描画コマンドをソース Graphics オブジェクトから、呼び出し Graphics オブジェクトにコピーします。
      *              Copies all of drawing commands from the source Graphics object into the calling Graphics object.
      *
@@ -417,7 +453,59 @@ class Graphics
      */
     clone ()
     {
+        const graphics = new Graphics();
 
+        // fill
+        if (this._$fillGradient) {
+            graphics._$fillGradient = this._$fillGradient.clone();
+        }
+        if (this._$fillBitmap) {
+            graphics._$fillBitmap = this._$fillBitmap.clone();
+        }
+        graphics._$doFill       = this._$doFill;
+        graphics._$fillType     = this._$fillType;
+        graphics._$fillStyleR   = this._$fillStyleR;
+        graphics._$fillStyleG   = this._$fillStyleG;
+        graphics._$fillStyleB   = this._$fillStyleB;
+        graphics._$fillStyleA   = this._$fillStyleA;
+
+        // stroke
+        if (this._$lineGradient) {
+            graphics._$lineGradient = this._$lineGradient.clone();
+        }
+        graphics._$doLine       = this._$doLine;
+        graphics._$lineType     = this._$lineType;
+        graphics._$caps         = this._$caps;
+        graphics._$joints       = this._$caps;
+        graphics._$miterLimit   = this._$miterLimit;
+        graphics._$lineWidth    = this._$lineWidth;
+        graphics._$lineStyleR   = this._$lineStyleR;
+        graphics._$lineStyleG   = this._$lineStyleG;
+        graphics._$lineStyleB   = this._$lineStyleB;
+        graphics._$lineStyleA   = this._$lineStyleA;
+
+        // bounds
+        graphics._$xMin         = this._$xMin;
+        graphics._$xMax         = this._$xMax;
+        graphics._$yMin         = this._$yMin;
+        graphics._$yMax         = this._$yMax;
+
+        // params
+        graphics._$maxAlpha     = this._$maxAlpha;
+        graphics._$pointerX     = this._$pointerX;
+        graphics._$pointerY     = this._$pointerY;
+        graphics._$canDraw      = this._$canDraw;
+
+        // path params
+        if (this._$fills.length) {
+            graphics._$fills = this._$fills.slice(0);
+        }
+        if (this._$lines.length) {
+            graphics._$lines  = this._$lines.slice(0);
+        }
+        if (this._$recode.length) {
+            graphics._$recode = this._$recode.slice(0);
+        }
     }
 
     /**
@@ -699,26 +787,44 @@ class Graphics
             this._$fills.length = 0;
 
             // fill
-            if (this._$fillType === Graphics.FILL_STYLE) {
+            switch (this._$fillType) {
 
-                this._$recode.push(this._$fillType);
-                this._$recode.push(this._$fillStyleR);
-                this._$recode.push(this._$fillStyleG);
-                this._$recode.push(this._$fillStyleB);
-                this._$recode.push(this._$fillStyleA);
-                this._$recode.push(Graphics.END_FILL);
+                case Graphics.FILL_STYLE:
+                    this._$recode.push(this._$fillType);
+                    this._$recode.push(this._$fillStyleR);
+                    this._$recode.push(this._$fillStyleG);
+                    this._$recode.push(this._$fillStyleB);
+                    this._$recode.push(this._$fillStyleA);
+                    this._$recode.push(Graphics.END_FILL);
+                    break;
 
-                // reset
-                this._$fillType   = 0;
-                this._$fillStyleR = 0;
-                this._$fillStyleG = 0;
-                this._$fillStyleB = 0;
-                this._$fillStyleA = 0;
+                case Graphics.GRADIENT_FILL:
+                    this._$recode.push(this._$fillType);
+                    this._$recode.push.apply(
+                        this._$recode, this._$fillGradient.toArray()
+                    );
+                    break;
+
+                case Graphics.BITMAP_FILL:
+                    this._$recode.push(this._$fillType);
+                    this._$recode.push.apply(
+                        this._$recode, this._$fillBitmap.toArray()
+                    );
+                    break;
+
             }
 
         }
 
-        this._$doFill = false;
+        // reset
+        this._$fillType     = 0;
+        this._$fillGradient = null;
+        this._$fillBitmap   = null;
+        this._$fillStyleR   = 0;
+        this._$fillStyleG   = 0;
+        this._$fillStyleB   = 0;
+        this._$fillStyleA   = 0;
+        this._$doFill       = false;
 
         // restart
         this._$restart();
@@ -727,7 +833,10 @@ class Graphics
     }
 
     /**
-     * TODO
+     * @description lineStyle()、または lineGradientStyle() メソッドへの
+     *              最後の呼び出し以降に追加された線と曲線に塗りを適用します。
+     *              Applies a fill to the lines and curves that were added since
+     *              the last call to the beginFill() or beginGradientFill() method.
      *
      * @return {Graphics}
      * @method
@@ -743,25 +852,47 @@ class Graphics
             this._$lines.length = 0;
 
             // fill
-            if (this._$lineType === Graphics.STROKE_STYLE) {
+            switch (this._$lineType) {
 
-                this._$recode.push(this._$lineType);
-                this._$recode.push(this._$lineStyleR);
-                this._$recode.push(this._$lineStyleG);
-                this._$recode.push(this._$lineStyleB);
-                this._$recode.push(this._$lineStyleA);
-                this._$recode.push(Graphics.END_STROKE);
+                case Graphics.STROKE_STYLE:
+                    this._$recode.push(this._$lineType);
+                    this._$recode.push(this._$lineWidth);
+                    this._$recode.push(this._$caps);
+                    this._$recode.push(this._$joints);
+                    this._$recode.push(this._$miterLimit);
+                    this._$recode.push(this._$lineStyleR);
+                    this._$recode.push(this._$lineStyleG);
+                    this._$recode.push(this._$lineStyleB);
+                    this._$recode.push(this._$lineStyleA);
+                    this._$recode.push(Graphics.END_STROKE);
+                    break;
 
-                // reset
-                this._$lineType   = 0;
-                this._$lineStyleR = 0;
-                this._$lineStyleG = 0;
-                this._$lineStyleB = 0;
-                this._$lineStyleA = 0;
+                case Graphics.GRADIENT_STROKE:
+                    this._$recode.push(this._$lineType);
+                    this._$recode.push(this._$lineWidth);
+                    this._$recode.push(this._$caps);
+                    this._$recode.push(this._$joints);
+                    this._$recode.push(this._$miterLimit);
+                    this._$recode.push.apply(
+                        this._$recode, this._$lineGradient.toArray()
+                    );
+                    this._$recode.push(Graphics.END_STROKE);
+                    break;
+
             }
         }
 
-        this._$doLine = false;
+        // reset
+        this._$lineType     = 0;
+        this._$lineGradient = null
+        this._$lineStyleR   = 0;
+        this._$lineStyleG   = 0;
+        this._$lineStyleB   = 0;
+        this._$lineStyleA   = 0;
+        this._$caps         = CapsStyle.NONE;
+        this._$joints       = JointStyle.ROUND;
+        this._$miterLimit   = 0;
+        this._$doLine       = false;
 
         // restart
         this._$restart();
@@ -788,13 +919,35 @@ class Graphics
      */
     lineGradientStyle (
         type, colors, alphas, ratios, matrix = null,
-        spread_method = "pad", interpolation_method = "rgb", focal_point_ratio = 0
+        spread_method = SpreadMethod.PAD,
+        interpolation_method = InterpolationMethod.RGB,
+        focal_point_ratio = 0
     ) {
 
+        if (!this._$doLine) {
+            return this;
+        }
+
+        // setup
+        const length = alphas.length;
+        for (let idx = 0; idx < length; ++idx) {
+            this._$maxAlpha = Util.$max(this._$maxAlpha, alphas[idx]);
+        }
+
+        // beginPath
+        this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
+
+        this._$lineType     = Graphics.GRADIENT_STROKE;
+        this._$lineGradient = new GraphicsGradientFill(
+            type, colors, alphas, ratios, matrix,
+            spread_method, interpolation_method,
+            focal_point_ratio
+        );
+
+        return this;
     }
 
     /**
-     * TODO
      * @description lineTo() メソッドや drawCircle() メソッドなど、
      *              Graphics のメソッドの後続の呼び出しに使用する線スタイルを指定します。
      *              Specifies a line style used for subsequent calls
@@ -802,23 +955,56 @@ class Graphics
      *              or the drawCircle() method.
      *
      * @param  {number}  [thickness=NaN]
-     * @param  {number}  [color=0]
+     * @param  {number|string} [color=0]
      * @param  {number}  [alpha=1]
-     * @param  {boolean} [pixel_hinting=false]
-     * @param  {string}  [scale_mode=LineScaleMode.NORMAL]
-     * @param  {string}  [caps=null]
-     * @param  {string}  [joints=null]
+     * @param  {string}  [caps=CapsStyle.NONE]
+     * @param  {string}  [joints=JointStyle.ROUND]
      * @param  {number}  [miter_limit=3]
      * @return {Graphics}
      * @method
      * @public
      */
     lineStyle (
-        thickness = NaN, color = 0, alpha = 1, pixel_hinting = false,
-        scale_mode = "normal", caps = null, joints = null, miter_limit = 3
+        thickness = 1, color = 0, alpha = 1,
+        caps = CapsStyle.NONE, joints = JointStyle.ROUND, miter_limit = 3
     ) {
 
+        if (this._$doLine) {
+            this.endLine();
+        }
 
+        color = Util.$clamp(Util.$toColorInt(color), 0, 0xffffff, 0);
+        alpha = Util.$clamp(alpha, 0, 1, 1);
+
+        // setup
+        this._$maxAlpha = Util.$max(this._$maxAlpha, alpha);
+        this._$doLine   = true;
+        this._$canDraw  = true;
+
+        // beginPath
+        this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
+
+        // add Fill Style
+        const object = Util.$intToRGBA(color, alpha);
+
+        // color
+        this._$lineType   = Graphics.STROKE_STYLE;
+        this._$lineStyleR = object.R;
+        this._$lineStyleG = object.G;
+        this._$lineStyleB = object.B;
+        this._$lineStyleA = object.A;
+
+        // param
+        this._$lineWidth  = thickness * 20;
+        this._$caps       = `${caps}`;
+        this._$joints     = `${joints}`;
+
+        // set miter limit
+        if (this._$joints === JointStyle.MITER) {
+            this._$miterLimit = miter_limit;
+        }
+
+        return this;
     }
 
     /**
@@ -1297,7 +1483,7 @@ class Graphics
      * @method
      * @private
      */
-    _$margePath = function (data)
+    _$margePath (data)
     {
         if (this._$doFill) {
             this._$fills.push.apply(this._$fills, data);
@@ -1309,7 +1495,6 @@ class Graphics
 
         Util.$poolArray(data);
     }
-
 
     /**
      * @return {Function}
@@ -1364,12 +1549,20 @@ class Graphics
                     break;
 
                 case Graphics.STROKE_STYLE:
+                    command += GraphicsPathCommand.STROKE_STYLE(
+                        recode[idx++], recode[idx++],
+                        recode[idx++], recode[idx++],
+                        recode[idx++], recode[idx++],
+                        recode[idx++], recode[idx++]
+                    );
                     break;
 
                 case Graphics.END_STROKE:
+                    command += GraphicsPathCommand.END_STROKE();
                     break;
 
                 case Graphics.CLOSE_PATH:
+                    command += GraphicsPathCommand.CLOSE_PATH();
                     break;
 
                 case Graphics.CUBIC:
@@ -1381,17 +1574,34 @@ class Graphics
                     break;
 
                 case Graphics.ARC:
+                    command += GraphicsPathCommand.ARC(
+                        recode[idx++], recode[idx++], recode[idx++]
+                    );
                     break;
 
                 case Graphics.GRADIENT_FILL:
+                    command += GraphicsPathCommand.GRADIENT_FILL(
+                        recode[idx++], recode[idx++], recode[idx++],
+                        recode[idx++], recode[idx++], recode[idx++]
+                    );
+                    break;
+
                 case Graphics.GRADIENT_STROKE:
+                    command += GraphicsPathCommand.GRADIENT_STROKE(
+                        recode[idx++], recode[idx++], recode[idx++], recode[idx++],
+                        recode[idx++], recode[idx++], recode[idx++],
+                        recode[idx++], recode[idx++], recode[idx++]
+                    );
                     break;
 
                 case Graphics.BITMAP_FILL:
+                    command += GraphicsPathCommand.BITMAP_FILL();
+                    break;
+
+                default:
                     break;
 
             }
-
         }
 
         return Function("ctx", "ct", "is_clip", "options", command);

@@ -470,6 +470,14 @@ Util.$performance = window.performance;
 Util.$Float32Array = window.Float32Array;
 
 /**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$Int16Array = window.Int16Array;
+
+/**
  * 現在稼働中のPlayer ID
  * Currently running Player ID
  *
@@ -513,6 +521,26 @@ Util.$dragRules = {
     },
     "bounds": null
 };
+
+/**
+ * @description RGB to Linear Table
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$rgbToLinearTable = new Util.$Float32Array(256);
+
+/**
+ * @description RGB to Linear Table
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$rgbIdentityTable = new Util.$Float32Array(256);
+for (let idx = 0; idx < 256; ++idx) {
+    Util.$rgbToLinearTable[idx] = Util.$pow(idx / 255, 2.23333333);
+    Util.$rgbIdentityTable[idx] = idx / 255;
+}
 
 /**
  * @type {number}
@@ -1521,6 +1549,50 @@ Util.$poolPreObject = function (object)
 };
 
 
+/**
+ * @param  {number} x1
+ * @param  {number} y1
+ * @param  {number} x2
+ * @param  {number} y2
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$cross = function (x1, y1, x2, y2)
+{
+    return (x1 * y2) - (x2 * y1);
+};
+
+/**
+ * @param   {Float32Array} matrix
+ * @returns {Float32Array}
+ */
+Util.$linearGradientXY = function (matrix)
+{
+    const x0  = -16384 * matrix[0] - 16384 * matrix[2] + matrix[4];
+    const x1  =  16384 * matrix[0] - 16384 * matrix[2] + matrix[4];
+    const x2  = -16384 * matrix[0] + 16384 * matrix[2] + matrix[4];
+    const y0  = -16384 * matrix[1] - 16384 * matrix[3] + matrix[5];
+    const y1  =  16384 * matrix[1] - 16384 * matrix[3] + matrix[5];
+    const y2  = -16384 * matrix[1] + 16384 * matrix[3] + matrix[5];
+
+    let vx2 = x2 - x0;
+    let vy2 = y2 - y0;
+
+    const r1 = Util.$sqrt(vx2 * vx2 + vy2 * vy2);
+    if (r1) {
+        vx2 = vx2 / r1;
+        vy2 = vy2 / r1;
+    } else {
+        vx2 = 0;
+        vy2 = 0;
+    }
+
+    const r2 = (x1 - x0) * vx2 + (y1 - y0) * vy2;
+
+    return Util.$getArray(x0 + r2 * vx2, y0 + r2 * vy2, x1, y1);
+};
+
 
 
 
@@ -1564,6 +1636,7 @@ Util.$packages = function (object)
     };
 
     object["filters"] = {
+        "BitmapFilterType": BitmapFilterType
     };
 
     object["geom"] = {

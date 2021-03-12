@@ -1016,15 +1016,15 @@ class CanvasToWebGLContext
         }
 
         let lineWidth = this.lineWidth * 0.5;
-        let scaleMatrix;
+        let scaleX, scaleY;
         if (this._$grid.enabled) {
             lineWidth *= Util.$getSameScaleBase();
-            scaleMatrix = this._$grid._$ancestorMatrix;
+            scaleX = Util.$abs(this._$grid.ancestorMatrixA + this._$grid.ancestorMatrixD);
+            scaleY = Util.$abs(this._$grid.ancestorMatrixB + this._$grid.ancestorMatrixE);
         } else {
-            scaleMatrix = matrix;
+            scaleX = Util.$abs(matrix[0] + matrix[3]);
+            scaleY = Util.$abs(matrix[1] + matrix[4]);
         }
-        const scaleX   = Util.$abs(scaleMatrix[0] + scaleMatrix[3]);
-        const scaleY   = Util.$abs(scaleMatrix[1] + scaleMatrix[4]);
         const scaleMin = Util.$min(scaleX, scaleY);
         const scaleMax = Util.$max(scaleX, scaleY);
         lineWidth *= scaleMax * (1 - 0.3 * Util.$cos(Util.$PI * 0.5 * (scaleMin / scaleMax)));
