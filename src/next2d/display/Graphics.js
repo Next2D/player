@@ -24,37 +24,14 @@ class Graphics
      */
     constructor (src = null)
     {
-        this._$maxAlpha      = 0;
+        /**
+         * @type {DisplayObject}
+         * @default null
+         * @private
+         */
         this._$displayObject = src;
-        this._$recode        = Util.$getArray();
-        this._$fills         = Util.$getArray();
-        this._$lines         = Util.$getArray();
-        this._$fillType      = 0;
-        this._$fillGradient  = null;
-        this._$fillBitmap    = null;
-        this._$fillStyleR    = 0;
-        this._$fillStyleG    = 0;
-        this._$fillStyleB    = 0;
-        this._$fillStyleA    = 0;
-        this._$lineType      = 0;
-        this._$lineGradient  = 0;
-        this._$caps          = CapsStyle.NONE;
-        this._$joints        = JointStyle.ROUND;
-        this._$miterLimit    = 0;
-        this._$lineWidth     = 1;
-        this._$lineStyleR    = 0;
-        this._$lineStyleG    = 0;
-        this._$lineStyleB    = 0;
-        this._$lineStyleA    = 0;
-        this._$doFill        = false;
-        this._$doLine        = false;
-        this._$xMin          = Util.$MAX_VALUE;
-        this._$xMax          = -Util.$MAX_VALUE;
-        this._$yMin          = Util.$MAX_VALUE;
-        this._$yMax          = -Util.$MAX_VALUE;
-        this._$pointerX      = 0;
-        this._$pointerY      = 0;
-        this._$canDraw       = false;
+
+        this.clear();
     }
 
     /**
@@ -410,23 +387,51 @@ class Graphics
      */
     clear ()
     {
-        // origin param clear
-        this._$maxAlpha     = 0;
-        this._$lineWidth    = 0;
-        this._$caps         = null;
-        this._$doFill       = false;
-        this._$doLine       = false;
-        this._$pointerX     = 0;
-        this._$pointerY     = 0;
-        this._$canDraw      = false;
-        this._$fillType     = 0;
-        this._$lineType     = 0;
+        // param clear
+        this._$maxAlpha      = 0;
+        this._$pointerX      = 0;
+        this._$pointerY      = 0;
+        this._$canDraw       = false;
+
+        // fill
+        this._$fillType      = 0;
+        this._$fillGradient  = null;
+        this._$fillBitmap    = null;
+        this._$fillStyleR    = 0;
+        this._$fillStyleG    = 0;
+        this._$fillStyleB    = 0;
+        this._$fillStyleA    = 0;
+        this._$doFill        = false;
+
+        // stroke
+        this._$lineType      = 0;
+        this._$lineGradient  = 0;
+        this._$caps          = CapsStyle.NONE;
+        this._$joints        = JointStyle.ROUND;
+        this._$miterLimit    = 0;
+        this._$lineWidth     = 1;
+        this._$lineStyleR    = 0;
+        this._$lineStyleG    = 0;
+        this._$lineStyleB    = 0;
+        this._$lineStyleA    = 0;
+        this._$doLine        = false;
 
         // bounds size
-        this._$xMin         = Util.$MAX_VALUE;
-        this._$xMax         = -Util.$MAX_VALUE;
-        this._$yMin         = Util.$MAX_VALUE;
-        this._$yMax         = -Util.$MAX_VALUE;
+        this._$xMin          = Util.$MAX_VALUE;
+        this._$xMax          = -Util.$MAX_VALUE;
+        this._$yMin          = Util.$MAX_VALUE;
+        this._$yMax          = -Util.$MAX_VALUE;
+
+        // init array
+        if (!this._$recode) {
+            this._$recode = Util.$getArray();
+        }
+        if (!this._$fills) {
+            this._$fills = Util.$getArray();
+        }
+        if (!this._$lines) {
+            this._$lines = Util.$getArray();
+        }
 
         // reset array
         if (this._$recode.length) {
@@ -669,13 +674,13 @@ class Graphics
         const cw = c * hw;
         const ch = c * hh;
 
-        this.moveTo(x0, y);
-        this.cubicCurveTo(x0 + cw, y,       x1,      y0 - ch, x1, y0);
-        this.cubicCurveTo(x1,      y0 + ch, x0 + cw, y1,      x0, y1);
-        this.cubicCurveTo(x0 - cw, y1,      x,       y0 + ch, x,  y0);
-        this.cubicCurveTo(x,       y0 - ch, x0 - cw, y,       x0, y );
 
-        return this;
+        return this
+            .moveTo(x0, y)
+            .cubicCurveTo(x0 + cw, y,       x1,      y0 - ch, x1, y0)
+            .cubicCurveTo(x1,      y0 + ch, x0 + cw, y1,      x0, y1)
+            .cubicCurveTo(x0 - cw, y1,      x,       y0 + ch, x,  y0)
+            .cubicCurveTo(x,       y0 - ch, x0 - cw, y,       x0, y );
     }
 
     /**
@@ -702,14 +707,12 @@ class Graphics
         const xMax = x + width;
         const yMax = y + height;
 
-        this
+        return this
             .moveTo(x,    y)
-            .lineTo(xMax, y)
-            .lineTo(xMax, yMax)
             .lineTo(x,    yMax)
+            .lineTo(xMax, yMax)
+            .lineTo(xMax, y)
             .lineTo(x,    y);
-
-        return this;
     }
 
     /**
@@ -753,17 +756,16 @@ class Graphics
         const dy1 = y   + height;
         const dy2 = dy1 - heh;
 
-        this.moveTo(dx0, y);
-        this.lineTo(dx2, y);
-        this.cubicCurveTo(dx2 + cw, y, dx1, dy0 - ch, dx1, dy0);
-        this.lineTo(dx1, dy2);
-        this.cubicCurveTo(dx1, dy2 + ch, dx2 + cw, dy1, dx2, dy1);
-        this.lineTo(dx0, dy1);
-        this.cubicCurveTo(dx0 - cw, dy1, x, dy2 + ch, x, dy2);
-        this.lineTo(x, dy0);
-        this.cubicCurveTo(x, dy0 - ch, dx0 - cw, y, dx0, y);
-
-        return this;
+        return this
+            .moveTo(dx0, y)
+            .lineTo(dx2, y)
+            .cubicCurveTo(dx2 + cw, y, dx1, dy0 - ch, dx1, dy0)
+            .lineTo(dx1, dy2)
+            .cubicCurveTo(dx1, dy2 + ch, dx2 + cw, dy1, dx2, dy1)
+            .lineTo(dx0, dy1)
+            .cubicCurveTo(dx0 - cw, dy1, x, dy2 + ch, x, dy2)
+            .lineTo(x, dy0)
+            .cubicCurveTo(x, dy0 - ch, dx0 - cw, y, dx0, y);
     }
 
     /**
@@ -901,7 +903,6 @@ class Graphics
     }
 
     /**
-     * TODO
      * @description 線の描画で使用するグラデーションを指定します。
      *              Specifies a gradient to use for the stroke when drawing lines.
      *
@@ -966,7 +967,7 @@ class Graphics
      */
     lineStyle (
         thickness = 1, color = 0, alpha = 1,
-        caps = CapsStyle.NONE, joints = JointStyle.ROUND, miter_limit = 3
+        caps = CapsStyle.ROUND, joints = JointStyle.ROUND, miter_limit = 3
     ) {
 
         if (this._$doLine) {
@@ -1071,6 +1072,35 @@ class Graphics
 
     /**
      * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @return void
+     * @private
+     */
+    _$clip (context, matrix)
+    {
+        // size
+        const boundsBase = this._$getBounds();
+
+        const bounds = Util.$boundsMatrix(boundsBase, matrix);
+        let width    = Util.$ceil(Util.$abs(bounds.xMax - bounds.xMin));
+        let height   = Util.$ceil(Util.$abs(bounds.yMax - bounds.yMin));
+        Util.$poolBoundsObject(boundsBase);
+        Util.$poolBoundsObject(bounds);
+
+        if (!width || !height) {
+            return ;
+        }
+
+        Util.$resetContext(context);
+        context.setTransform(
+            matrix[0], matrix[1], matrix[2],
+            matrix[3], matrix[4], matrix[5]
+        );
+        this._$doDraw(context, Util.$COLOR_ARRAY_IDENTITY, true);
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array}  matrix
      * @param  {Float32Array}  color_transform
      * @param  {string} [blend_mode=BlendMode.NORMAL]
@@ -1085,11 +1115,6 @@ class Graphics
     ) {
 
         if (!this._$maxAlpha) {
-            return ;
-        }
-
-        const boundsBase = this._$getBounds();
-        if (!boundsBase) {
             return ;
         }
 
@@ -1112,6 +1137,7 @@ class Graphics
         }
 
         // size
+        const boundsBase = this._$getBounds();
         const bounds = Util.$boundsMatrix(boundsBase, matrix);
         const xMax   = bounds.xMax;
         const xMin   = bounds.xMin;
@@ -1472,10 +1498,147 @@ class Graphics
      */
     _$setLineBounds (x, y)
     {
-        this._$xMin = Util.$min(this._$xMin, x);
-        this._$xMax = Util.$max(this._$xMax, x);
-        this._$yMin = Util.$min(this._$yMin, y);
-        this._$yMax = Util.$max(this._$yMax, y);
+
+
+
+        this._$xMin = Util.$min(this._$xMin, Util.$min(x, this._$pointerX));
+        this._$xMax = Util.$max(this._$xMax, Util.$max(x, this._$pointerX));
+        this._$yMin = Util.$min(this._$yMin, Util.$min(y, this._$pointerY));
+        this._$yMax = Util.$max(this._$yMax, Util.$max(y, this._$pointerY));
+
+        // correction
+        const half     = this._$lineWidth / 2;
+        const radian90 = 0.5 * Util.$PI;
+        const radian1  = Util.$atan2(y - this._$pointerY, x - this._$pointerX); // to end point
+        const radian2  = Util.$atan2(this._$pointerY - y, this._$pointerX - x); // to start point
+        const radian3  = radian1 + radian90;
+        const radian4  = radian1 - radian90;
+        const radian5  = radian2 + radian90;
+        const radian6  = radian2 - radian90;
+
+        // init
+        let x1 = x + half;
+        let x2 = -half + x;
+        let x3 = this._$pointerX + half;
+        let x4 = -half + this._$pointerX;
+        let y1 = y + half;
+        let y2 = -half + y;
+        let y3 = this._$pointerY + half;
+        let y4 = -half + this._$pointerY;
+
+        // pointer x
+        if (Util.$abs(radian3) % radian90 !== 0) {
+            x1 = x + Util.$cos(radian3) * half;
+        }
+
+        if (Util.$abs(radian4) % radian90 !== 0) {
+            x2 = x + Util.$cos(radian4) * half;
+        }
+
+        if (Util.$abs(radian5) % radian90 !== 0) {
+            x3 = this._$pointerX + Util.$cos(radian5) * half;
+        }
+
+        if (Util.$abs(radian6) % radian90 !== 0) {
+            x4 = this._$pointerX + Util.$cos(radian6) * half;
+        }
+
+
+        // pointer y
+        if (radian3 && Util.$abs(radian3) % Util.$PI !== 0) {
+            y1 = y + Util.$sin(radian3) * half;
+        }
+
+        if (radian4 && Util.$abs(radian4) % Util.$PI !== 0) {
+            y2 = y + Util.$sin(radian4) * half;
+        }
+
+        if (radian5 && Util.$abs(radian5) % Util.$PI !== 0) {
+            y3 = this._$pointerY + Util.$sin(radian5) * half;
+        }
+
+        if (radian6 && Util.$abs(radian6) % Util.$PI !== 0) {
+            y4 = this._$pointerY + Util.$sin(radian6) * half;
+        }
+
+        this._$xMin = Util.$min(this._$xMin, Util.$min(x1, Util.$min(x2, Util.$min(x3, x4))));
+        this._$xMax = Util.$max(this._$xMax, Util.$max(x1, Util.$max(x2, Util.$max(x3, x4))));
+        this._$yMin = Util.$min(this._$yMin, Util.$min(y1, Util.$min(y2, Util.$min(y3, y4))));
+        this._$yMax = Util.$max(this._$yMax, Util.$max(y1, Util.$max(y2, Util.$max(y3, y4))));
+
+        // case
+        let rx1 = 0;
+        let ry1 = 0;
+        let rx2 = 0;
+        let ry2 = 0;
+        let rx3 = 0;
+        let ry3 = 0;
+        let rx4 = 0;
+        let ry4 = 0;
+        switch (this._$caps) {
+
+            case CapsStyle.ROUND:
+
+                if (Util.$abs(radian1) % radian90 !== 0) {
+                    rx1 = x + Util.$cos(radian1) * half;
+                }
+
+                if (radian1 && Util.$abs(radian1) % Util.$PI !== 0) {
+                    ry1 = y + Util.$sin(radian1) * half;
+                }
+
+                if (Util.$abs(radian2) % radian90 !== 0) {
+                    rx2 = this._$pointerX + Util.$cos(radian2) * half;
+                }
+
+                if (radian2 && Util.$abs(radian2) % Util.$PI !== 0) {
+                    ry2 = this._$pointerY + Util.$sin(radian2) * half;
+                }
+
+                this._$xMin = Util.$min(this._$xMin, Util.$min(rx1, rx2));
+                this._$xMax = Util.$max(this._$xMax, Util.$max(rx1, rx2));
+                this._$yMin = Util.$min(this._$yMin, Util.$min(ry1, ry2));
+                this._$yMax = Util.$max(this._$yMax, Util.$max(ry1, ry2));
+
+                break;
+
+            case CapsStyle.SQUARE:
+
+                if (Util.$abs(radian1) % radian90 !== 0) {
+                    const r1cos = Util.$cos(radian1) * half;
+                    rx1 = x1 + r1cos;
+                    rx2 = x2 + r1cos;
+                }
+
+                if (Util.$abs(radian2) % radian90 !== 0) {
+                    const r2cos = Util.$cos(radian2) * half;
+                    rx3 = x3 + r2cos;
+                    rx4 = x4 + r2cos;
+                }
+
+                if (radian1 && Util.$abs(radian1) % Util.$PI !== 0) {
+                    const r1sin = Util.$sin(radian1) * half;
+                    ry1 = y1 + r1sin;
+                    ry2 = y2 + r1sin;
+                }
+
+                if (radian2 && Util.$abs(radian2) % Util.$PI !== 0) {
+                    const r2sin = Util.$sin(radian2) * half;
+                    ry3 = y3 + r2sin;
+                    ry4 = y4 + r2sin;
+                }
+
+                this._$xMin = Util.$min(this._$xMin, Util.$min(rx1, Util.$min(rx2, Util.$min(rx3, rx4))));
+                this._$xMax = Util.$max(this._$xMax, Util.$max(rx1, Util.$max(rx2, Util.$max(rx3, rx4))));
+                this._$yMin = Util.$min(this._$yMin, Util.$min(ry1, Util.$min(ry2, Util.$min(ry3, ry4))));
+                this._$yMax = Util.$max(this._$yMax, Util.$max(ry1, Util.$max(ry2, Util.$max(ry3, ry4))));
+
+                break;
+
+            default:
+                break;
+
+        }
     }
 
     /**
