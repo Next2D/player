@@ -72,10 +72,11 @@ class MovieClip extends Sprite
         this._$frameCache = Util.$getMap();
 
         /**
-         * @type {array}
+         * @type {Map}
+         * @default null
          * @private
          */
-        this._$frameLabels = Util.$getArray();
+        this._$labels = null;
 
         /**
          * @type {Map}
@@ -213,33 +214,29 @@ class MovieClip extends Sprite
      */
     get currentFrameLabel ()
     {
-        const frame = this._$currentFrame;
-
-        const frameLabels = this._$frameLabels;
-
-        const length = frameLabels.length;
-        for (let idx = 0; idx < length; ++idx) {
-
-            const frameLabel = frameLabels[idx];
-            if (frameLabel.frame === frame) {
-                return frameLabel;
-            }
+        if (!this._$labels) {
+            return null;
         }
 
-        return null;
+        const frame = this._$currentFrame;
+        if (!this._$labels.has(frame)) {
+            return null;
+        }
+
+        return this._$labels.get(frame);
     }
 
     /**
      * @description 現在のシーンの FrameLabel オブジェクトの配列を返します。
      *              Returns an array of FrameLabel objects from the current scene.
      *
-     * @member  {array}
+     * @member  {array|null}
      * @readonly
      * @public
      */
     get currentLabels ()
     {
-        return this._$frameLabels;
+        return (!this._$labels) ? null : Util.$Array.from(this._$labels);
     }
 
     /**
@@ -379,8 +376,12 @@ class MovieClip extends Sprite
      */
     addFrameLabel (frame_label)
     {
+        if (!this._$labels) {
+            this._$labels = Util.$getMap();
+        }
+
         if (frame_label instanceof FrameLabel) {
-            this._$frameLabels.push(frame_label);
+            this._$labels.set(frame_label.frame, frame_label);
         }
     }
 
@@ -455,14 +456,10 @@ class MovieClip extends Sprite
      */
     _$getFrameForLabel (name)
     {
-        const length = this._$frameLabels.length;
-        for (let idx = 0; idx < length; ++idx) {
-
-            const frameLabel = this._$frameLabels[idx];
+        for (let [frame, frameLabel] of this._$labels) {
             if (frameLabel.name === name) {
-                return frameLabel.frame;
+                return frame|0;
             }
-
         }
         return 0;
     }
@@ -494,16 +491,17 @@ class MovieClip extends Sprite
 
         if (this._$canAction) {
 
+            const frame = this._$currentFrame;
+
             // frame label event
-            if (this._$frameLabels.length) {
-                const frameLabel = this.currentFrameLabel();
-                if (frameLabel && frameLabel.willTrigger(Event.FRAME_LABEL)) {
+            if (this._$labels && this._$labels.has(frame)) {
+                const frameLabel = this._$labels.get(frame);
+                if (frameLabel.willTrigger(Event.FRAME_LABEL)) {
                     frameLabel.dispatchEvent(new Event(Event.FRAME_LABEL));
                 }
             }
 
             // add action queue
-            const frame = this._$currentFrame;
             if (this._$actions.size && this._$actions.has(frame)) {
 
                 const player = Util.$currentPlayer();

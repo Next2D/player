@@ -1209,9 +1209,9 @@ class DisplayObject extends EventDispatcher
             return null;
         }
 
-        const frame = parent._$currentFrame || 1;
-        const id = parent._$placeController[frame][placeId];
-        return parent._$placeObjects[id];
+        return parent._$placeObjects[
+            parent._$placeController[parent._$currentFrame || 1][placeId]
+        ];
     }
 
     /**
