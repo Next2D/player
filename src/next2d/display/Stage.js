@@ -17,11 +17,11 @@ class Stage extends DisplayObjectContainer
         super();
 
         /**
-         * @type {number|null}
+         * @type {Player}
          * @default null
          * @private
          */
-        this._$playerId   = null;
+        this._$player = null;
 
         /**
          * @type {Stage}
@@ -207,14 +207,5 @@ class Stage extends DisplayObjectContainer
     invalidate ()
     {
         this._$invalidate = true;
-    }
-
-    /**
-     * @return {Player}
-     * @private
-     */
-    get _$player ()
-    {
-        return Util.$players[this._$playerId];
     }
 }

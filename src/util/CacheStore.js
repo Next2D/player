@@ -39,13 +39,6 @@ class CacheStore
          */
         this._$delayLifeCheck = this.lifeCheck.bind(this);
 
-        /**
-         * @type {number|null}
-         * @default null
-         * @private
-         */
-        this._$playerId = null;
-
         const timer = Util.$setTimeout;
         timer(this._$delayLifeCheck, 5000);
     }
@@ -87,25 +80,27 @@ class CacheStore
         switch (object.constructor) {
 
             case Util.$WebGLTexture:
-                const player = Util.$players[this._$playerId];
-                if (player) {
 
-                    // TODO
-                    // // cache to buffer
-                    // if (object._$bitmapData) {
-                    //     object._$bitmapData._$buffer = object._$bitmapData._$getPixels(
-                    //         0, 0, object._$bitmapData.width, object._$bitmapData.height, "RGBA", size => new Util.$Uint8Array(size));
-                    //     delete object._$bitmapData;
-                    // }
-                    //
-                    // if (player._$context) {
-                    //     player
-                    //         ._$context
-                    //         .frameBuffer
-                    //         .releaseTexture(object);
-                    // }
+                const player = Util.$currentPlayer();
 
+                // cache to buffer
+                const bitmapData = object._$bitmapData;
+                if (bitmapData) {
+
+                    bitmapData._$buffer = bitmapData._$getPixels(
+                        0, 0, bitmapData.width, bitmapData.height, "RGBA"
+                    );
+
+                    delete object._$bitmapData;
                 }
+
+                if (player._$context) {
+                    player
+                        ._$context
+                        .frameBuffer
+                        .releaseTexture(object);
+                }
+
                 break;
 
             case Util.$CanvasRenderingContext2D:

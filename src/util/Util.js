@@ -27,7 +27,7 @@ const Util = {};
  * @const
  * @static
  */
-Util.$TWIPS = 20;
+Util.$TWIPS = 1;
 
 /**
  * @type {string}
@@ -478,16 +478,6 @@ Util.$Float32Array = window.Float32Array;
 Util.$Int16Array = window.Int16Array;
 
 /**
- * 現在稼働中のPlayer ID
- * Currently running Player ID
- *
- * @type {number}
- * @default 0
- * @static
- */
-Util.$currentPlayerId  = 0;
-
-/**
  * @type {boolean}
  * @default false
  * @static
@@ -589,16 +579,6 @@ Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE = new Float32Array([
     1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0,
     1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0
 ]);
-
-/**
- * Player Object を格納
- * Stores the Player Object
- *
- * @type {Player[]}
- * @const
- * @static
- */
-Util.$players = [];
 
 /**
  * LoaderInfo Object を格納
@@ -1071,7 +1051,7 @@ Util.$poolFloat32Array9 = function (array)
  */
 Util.$currentPlayer = function ()
 {
-    return Util.$players[Util.$currentPlayerId];
+    return window.next2d._$player;
 }
 
 /**
@@ -1445,18 +1425,9 @@ Util.$resize = function ()
  */
 Util.$resizeExecute = function ()
 {
-    const length = Util.$players.length;
-    for (let idx = 0; idx < length; ++idx) {
-
-        const player = Util.$players[idx];
-        if (!player) {
-            continue;
-        }
-
-        if (player._$loadStatus === 4) {
-            player._$resize();
-        }
-
+    const player = Util.$currentPlayer();
+    if (player._$loadStatus === 4) {
+        player._$resize();
     }
 };
 

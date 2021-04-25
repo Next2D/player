@@ -996,7 +996,7 @@ class Graphics
         this._$lineStyleA = object.A;
 
         // param
-        this._$lineWidth  = thickness * 20;
+        this._$lineWidth  = thickness * Util.$TWIPS;
         this._$caps       = `${caps}`;
         this._$joints     = `${joints}`;
 
@@ -1199,7 +1199,7 @@ class Graphics
             if (hasGrid) {
 
                 const player = Util.$currentPlayer();
-                const mScale = player._$scale * player._$ratio / 20;
+                const mScale = player._$scale * player._$ratio / Util.$TWIPS;
                 const baseMatrix = Util.$getFloat32Array6(mScale, 0, 0, mScale, 0, 0);
 
                 const pMatrix = Util.$multiplicationMatrix(
@@ -1498,9 +1498,6 @@ class Graphics
      */
     _$setLineBounds (x, y)
     {
-
-
-
         this._$xMin = Util.$min(this._$xMin, Util.$min(x, this._$pointerX));
         this._$xMax = Util.$max(this._$xMax, Util.$max(x, this._$pointerX));
         this._$yMin = Util.$min(this._$yMin, Util.$min(y, this._$pointerY));

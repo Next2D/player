@@ -10,25 +10,17 @@ class Player
     constructor()
     {
         /**
-         * @type {number}
-         * @private
-         */
-        this._$id = Util.$players.length;
-        Util.$players.push(this);
-
-        /**
          * @type {Stage}
          * @private
          */
         this._$stage = new Stage();
-        this._$stage._$playerId = this._$id;
+        this._$stage._$player = this;
 
         /**
          * @type {CacheStore}
          * @private
          */
         this._$cacheStore = new CacheStore();
-        this._$cacheStore._$playerId = this._$id;
 
         /**
          * @type {string}
@@ -52,13 +44,13 @@ class Player
          * @type {array}
          * @private
          */
-        this._$loaders  = Util.$getArray();
+        this._$loaders = Util.$getArray();
 
         /**
          * @type {array}
          * @private
          */
-        this._$sounds  = Util.$getArray();
+        this._$sounds = Util.$getArray();
 
         /**
          * @type {object}
@@ -72,25 +64,25 @@ class Player
         };
 
         /**
-         * @type {DisplayObject|null}
+         * @type {DisplayObject}
          * @default null
          * @private
          */
         this._$rollOverObject = null;
 
         /**
-         * @type {DisplayObject|null}
+         * @type {DisplayObject}
          * @default null
          * @private
          */
         this._$mouseOverTarget = null;
 
         /**
-         * @type {DisplayObject|null}
+         * @type {DisplayObject}
          * @default null
          * @private
          */
-        this._$mouseWheelEvent  = null;
+        this._$mouseWheelEvent = null;
 
         /**
          * @type {number}

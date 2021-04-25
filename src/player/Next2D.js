@@ -7,7 +7,14 @@ class Next2D
      * @constructor
      * @public
      */
-    constructor () {}
+    constructor ()
+    {
+        /**
+         * @type {Player}
+         * @private
+         */
+        this._$player = new Player();
+    }
 
     /**
      * @param  {string} url
@@ -28,18 +35,12 @@ class Next2D
             return ;
         }
 
-        const player = new Player();
-        Util.$currentPlayerId = player._$id;
-
-
         // base set
         if (!options || !("base" in options)) {
-            player.base = url;
+            this._$player.base = url;
         }
 
-        player.setOptions(options);
-
-
+        this._$player.setOptions(options);
 
     }
 
@@ -54,8 +55,7 @@ class Next2D
      */
     createRootMovieClip (width = 240, height = 240, fps = 60, options = null)
     {
-        const player = new Player();
-        Util.$currentPlayerId = player._$id;
+        const player = this._$player;
 
         player._$mode = "create";
         player._$stage.frameRate = fps|0;
