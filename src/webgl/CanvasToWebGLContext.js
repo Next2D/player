@@ -1217,7 +1217,7 @@ class CanvasToWebGLContext
     {
         //matrix
         if (this._$stack.length) {
-            Util.$poolFloat32Array(this._$matrix);
+            Util.$poolFloat32Array6(this._$matrix);
             this._$matrix = this._$stack.pop();
         }
 

@@ -321,7 +321,7 @@ if (!is_clip && !options) {
      * @param {boolean} smooth
      * @constructor
      */
-    static BITMAP_FILL (bitmap_data, matrix, repeat, smooth)
+    static BITMAP_FILL (bitmap_data, matrix = null, repeat = "repeat", smooth = false)
     {
         return `
 if (options) {
@@ -337,10 +337,10 @@ if (!is_clip && !options) {
     const texture = ctx.frameBuffer.createTextureFromPixels(${bitmap_data.width}, ${bitmap_data.height}, new Uint8Array([${bitmap_data.toArray()}]));
     ctx.fillStyle = ctx.createPattern(texture, "${repeat}", ct);
     ctx.transform(${matrix[0]},${matrix[1]},${matrix[2]},${matrix[3]},${matrix[4]},${matrix[5]});
-    ctx.imageSmoothingEnabled = ${smooth};
+    ctx._$imageSmoothingEnabled = ${smooth};
     ctx.fill();
     ctx.restore();
-    ctx.imageSmoothingEnabled = false;
+    ctx._$imageSmoothingEnabled = false;
     ctx.frameBuffer.releaseTexture(texture);
 }`;
     }

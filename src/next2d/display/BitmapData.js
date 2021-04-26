@@ -184,7 +184,6 @@ class BitmapData
                         width, height, this._$buffer, true
                     );
 
-                Util.$poolTypedArrayBuffer(this._$buffer);
                 this._$buffer = null;
 
             } else {
@@ -584,4 +583,12 @@ class BitmapData
         return image;
     }
 
+    /**
+     * @return {array}
+     * @public
+     */
+    toArray ()
+    {
+        return Array.from(this._$getPixels(0, 0, this.width, this.height, "RGBA"));
+    }
 }

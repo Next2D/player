@@ -6,7 +6,8 @@
 class Bitmap extends DisplayObject
 {
     /**
-     *
+     * Bitmap クラスはビットマップイメージを表す表示オブジェクトを表します。
+     * The Bitmap class represents display objects that represent bitmap images.
      *
      * @param {BitmapData} [bitmap_data=null]
      * @param {boolean}    [smoothing=false]
@@ -74,8 +75,4 @@ class Bitmap extends DisplayObject
     {
         return "next2d.display:Bitmap";
     }
-
-
-
-
 }

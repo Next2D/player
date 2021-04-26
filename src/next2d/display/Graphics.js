@@ -1161,7 +1161,6 @@ class Graphics
             return;
         }
 
-
         // resize
         const textureScale = context._$textureScale(width, height);
         if (textureScale < 1) {
@@ -1260,7 +1259,9 @@ class Graphics
             Util.$cacheStore().set(cacheKeys, texture);
 
             // release buffer
-            context.frameBuffer.releaseAttachment(buffer, false);
+            context
+                .frameBuffer
+                .releaseAttachment(buffer, false);
 
             // end draw and reset current buffer
             context._$bind(currentBuffer);
@@ -1303,7 +1304,9 @@ class Graphics
                     }
 
 
-                    const currentAttachment = context.frameBuffer.currentAttachment;
+                    const currentAttachment = context
+                        .frameBuffer
+                        .currentAttachment;
 
                     const buffer = context
                         .frameBuffer
@@ -1399,6 +1402,7 @@ class Graphics
         }
 
         // draw
+        Util.$resetContext(context);
         context.beginPath();
         this._$command(context, color_transform, is_clip);
 
@@ -1755,7 +1759,9 @@ class Graphics
                     break;
 
                 case Graphics.BITMAP_FILL:
-                    command += GraphicsPathCommand.BITMAP_FILL();
+                    command += GraphicsPathCommand.BITMAP_FILL(
+                        recode[idx++], recode[idx++], recode[idx++], recode[idx++]
+                    );
                     break;
 
                 default:

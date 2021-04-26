@@ -1174,6 +1174,32 @@ Util.$poolMatrix = function (matrix)
 }
 
 /**
+ * @description ECMA-262 section 9.2
+ * @param  {*} value
+ * @return {boolean}
+ */
+Util.$toBoolean = function (value = false)
+{
+    switch (typeof value) {
+
+        case "boolean":
+            return value;
+
+        case "function":
+            return true;
+
+        case "object":
+        case "string":
+        case "number":
+            return (value) ? true : false;
+
+        default:
+            return false;
+
+    }
+};
+
+/**
  * @param  {number} [red_multiplier=1]
  * @param  {number} [green_multiplier=1]
  * @param  {number} [blue_multiplier=1]
@@ -1445,18 +1471,30 @@ Util.$window.addEventListener("resize", Util.$resize);
 Util.$resetContext = function (context)
 {
     // reset color
-    context._$contextStyle._$fillStyle[0] = 1;
-    context._$contextStyle._$fillStyle[1] = 1;
-    context._$contextStyle._$fillStyle[2] = 1;
-    context._$contextStyle._$fillStyle[3] = 1;
+    const style = context._$contextStyle;
+    switch (style._$fillStyle.constructor) {
 
-    context._$contextStyle._$strokeStyle[0] = 1;
-    context._$contextStyle._$strokeStyle[1] = 1;
-    context._$contextStyle._$strokeStyle[2] = 1;
-    context._$contextStyle._$strokeStyle[3] = 1;
+        case CanvasGradientToWebGL:
+        case CanvasPatternToWebGL:
+            style._$fillStyle   = new Float32Array([1, 1, 1, 1]); // fixed size 4
+            style._$strokeStyle = new Float32Array([1, 1, 1, 1]); // fixed size 4
+            break;
+
+        default:
+            style._$fillStyle[0]   = 1;
+            style._$fillStyle[1]   = 1;
+            style._$fillStyle[2]   = 1;
+            style._$fillStyle[3]   = 1;
+
+            style._$strokeStyle[0] = 1;
+            style._$strokeStyle[1] = 1;
+            style._$strokeStyle[2] = 1;
+            style._$strokeStyle[3] = 1;
+            break;
+    }
 
     // reset
-    context._$style                    = context._$contextStyle;
+    context._$style                    = style;
     context._$globalAlpha              = 1;
     context._$globalCompositeOperation = BlendMode.NORMAL;
     context._$imageSmoothingEnabled    = false;
