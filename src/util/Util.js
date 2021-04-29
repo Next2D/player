@@ -1615,7 +1615,6 @@ Util.$linearGradientXY = function (matrix)
 Util.$packages = function (object)
 {
     object["display"] = {
-        "Bitmap": Bitmap,
         "BitmapData": BitmapData,
         "BitmapDataChannel": BitmapDataChannel,
         "BlendMode": BlendMode,
