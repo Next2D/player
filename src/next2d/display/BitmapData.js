@@ -349,6 +349,7 @@ class BitmapData
             ? matrix._$matrix
             : Util.$MATRIX_ARRAY_IDENTITY;
 
+
         let colorTransform = (color_transform)
             ? color_transform._$colorTransform
             : Util.$COLOR_ARRAY_IDENTITY;

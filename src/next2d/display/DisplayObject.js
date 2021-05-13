@@ -630,26 +630,13 @@ class DisplayObject extends EventDispatcher
     }
     set rotation (rotation)
     {
-        const sign = (rotation < 0) ? -1 : 1;
-
-        // clamp
-        let value = Util.$abs(rotation);
-        if (value >= 360) {
-
-            while (value >= 360) {
-                value = value - 360;
-            }
-
-            rotation = value * sign;
-
-        }
+        rotation %= 360;
 
         const transform = this._$transform;
         const matrix    = transform.matrix;
 
         const scaleX = Util.$sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
         const scaleY = Util.$sqrt(matrix.c * matrix.c + matrix.d * matrix.d);
-
         if (rotation === 0) {
 
             matrix.a = scaleX;
@@ -666,18 +653,18 @@ class DisplayObject extends EventDispatcher
             radianY      = radianY + radian - radianX;
             radianX      = radian;
 
-            matrix.b = scaleX  * Util.$sin(radianX);
+            matrix.b = scaleX * Util.$sin(radianX);
             if (matrix.b === 1 || matrix.b === -1) {
                 matrix.a = 0;
             } else {
-                matrix.a = scaleX  * Util.$cos(radianX);
+                matrix.a = scaleX * Util.$cos(radianX);
             }
 
             matrix.c = -scaleY * Util.$sin(radianY);
             if (matrix.c === 1 || matrix.c === -1) {
                 matrix.d = 0;
             } else {
-                matrix.d = scaleY  * Util.$cos(radianY);
+                matrix.d = scaleY * Util.$cos(radianY);
             }
         }
 
@@ -1406,14 +1393,14 @@ class DisplayObject extends EventDispatcher
             let moveBounds = null;
             if (baseLayerBounds) {
 
-                const layerMatrix = Util.$getMatrixArray(
+                const layerMatrix = Util.$getFloat32Array6(
                     tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], 0, 0
                 );
                 moveBounds = Util.$boundsMatrix(baseLayerBounds, layerMatrix);
 
                 // pool
                 Util.$poolBoundsObject(baseLayerBounds);
-                Util.$poolMatrixArray(layerMatrix);
+                Util.$poolFloat32Array6(layerMatrix);
 
                 tx += -Util.$floor(moveBounds.xMin) - tx;
                 ty += -Util.$floor(moveBounds.yMin) - ty;
@@ -1499,7 +1486,7 @@ class DisplayObject extends EventDispatcher
             // setup
             object.isFilter          = true;
             object.isUpdated         = updated;
-            object.color             = Util.$getColorArray();
+            object.color             = Util.$getFloat32Array8();
             object.baseMatrix        = tMatrix;
             object.baseColor         = color_transform;
             object.currentAttachment = currentAttachment;
@@ -1509,7 +1496,7 @@ class DisplayObject extends EventDispatcher
             object.blendMode         = blendMode;
             object.layerWidth        = layerWidth;
             object.layerHeight       = layerHeight;
-            object.matrix            = Util.$getMatrixArray(
+            object.matrix            = Util.$getFloat32Array6(
                 tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tx, ty
             );
 

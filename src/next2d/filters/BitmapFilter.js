@@ -96,6 +96,7 @@ class BitmapFilter
     }
 
     /**
+     * @return {void}
      * @method
      * @private
      */

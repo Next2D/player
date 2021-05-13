@@ -184,6 +184,18 @@ Util.$SCROLL = "scroll";
 Util.$COLOR_ARRAY_IDENTITY = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 /**
+ * @type {Uint8Array}
+ * @const
+ * @static
+ */
+Util.$COLOR_MATRIX_FILTER = new Uint8Array([
+    1, 0, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 1, 0
+]);
+
+/**
  * @shortcut
  * @type {Window}
  * @const
@@ -326,6 +338,14 @@ Util.$atan2 = Math.atan2;
  * @static
  */
 Util.$floor = Math.floor;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$round = Math.round;
 
 /**
  * @shortcut
@@ -1116,10 +1136,10 @@ Util.$boundsMatrix = function (bounds, matrix)
     const y2 = bounds.xMin * matrix[1] + bounds.yMax * matrix[3] + matrix[5];
     const y3 = bounds.xMin * matrix[1] + bounds.yMin * matrix[3] + matrix[5];
 
-    const xMin = Util.$min(Util.$min(Util.$min(Util.$min( Util.$MAX_VALUE, x0), x1), x2), x3);
-    const xMax = Util.$max(Util.$max(Util.$max(Util.$max(-Util.$MAX_VALUE, x0), x1), x2), x3);
-    const yMin = Util.$min(Util.$min(Util.$min(Util.$min( Util.$MAX_VALUE, y0), y1), y2), y3);
-    const yMax = Util.$max(Util.$max(Util.$max(Util.$max(-Util.$MAX_VALUE, y0), y1), y2), y3);
+    const xMin = Util.$min( Util.$MAX_VALUE, x0, x1, x2, x3);
+    const xMax = Util.$max(-Util.$MAX_VALUE, x0, x1, x2, x3);
+    const yMin = Util.$min( Util.$MAX_VALUE, y0, y1, y2, y3);
+    const yMax = Util.$max(-Util.$MAX_VALUE, y0, y1, y2, y3);
 
     return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
 };
@@ -1269,6 +1289,42 @@ Util.$colorStringToInt = function(str)
 
     return `0x${color}`|0;
 };
+
+/**
+ * @param  {number}  int
+ * @param  {number}  alpha
+ * @param  {boolean} premultiplied
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$intToR = function (int, alpha, premultiplied) {
+    return (int >> 16) * ((premultiplied) ? alpha : 1) / 255;
+}
+
+/**
+ * @param  {number}  int
+ * @param  {number}  alpha
+ * @param  {boolean} premultiplied
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$intToG = function (int, alpha, premultiplied) {
+    return ((int >> 8) & 0xFF) * ((premultiplied) ? alpha : 1) / 255;
+}
+
+/**
+ * @param  {number}  int
+ * @param  {number}  alpha
+ * @param  {boolean} premultiplied
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$intToB = function (int, alpha, premultiplied) {
+    return (int & 0xFF) * ((premultiplied) ? alpha : 1) / 255;
+}
 
 /**
  * @param  {number} uint
@@ -1644,7 +1700,18 @@ Util.$packages = function (object)
     };
 
     object["filters"] = {
-        "BitmapFilterType": BitmapFilterType
+        "BevelFilter": BevelFilter,
+        "BitmapFilterQuality": BitmapFilterQuality,
+        "BitmapFilterType": BitmapFilterType,
+        "BlurFilter": BlurFilter,
+        "ColorMatrixFilter": ColorMatrixFilter,
+        "ConvolutionFilter": ConvolutionFilter,
+        "DisplacementMapFilter": DisplacementMapFilter,
+        "DisplacementMapFilterMode": DisplacementMapFilterMode,
+        "DropShadowFilter": DropShadowFilter,
+        "GlowFilter": GlowFilter,
+        "GradientBevelFilter": GradientBevelFilter,
+        "GradientGlowFilter": GradientGlowFilter
     };
 
     object["geom"] = {
