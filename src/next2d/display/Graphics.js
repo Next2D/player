@@ -1303,44 +1303,9 @@ class Graphics
                         cache = null;
                     }
 
-
-                    const currentAttachment = context
-                        .frameBuffer
-                        .currentAttachment;
-
-                    const buffer = context
-                        .frameBuffer
-                        .createCacheAttachment(width, height, false);
-                    context._$bind(buffer);
-
-                    const mat = Util.$multiplicationMatrix(
-                        matrix, Util.$MATRIX_ARRAY_20_0_0_20_0_0
-                    );
-
-
-                    Util.$resetContext(context);
-                    context.setTransform(
-                        mat[0], mat[1], mat[2],
-                        mat[3], mat[4] - xMin, mat[5] - yMin
-                    );
-                    context.drawImage(texture,
-                        0, 0, texture.width, texture.height,
-                        color_transform
-                    );
-
-                    const targetTexture = context
-                        .frameBuffer
-                        .getTextureFromCurrentAttachment()
-
-                    context._$bind(currentAttachment);
-
                     texture = displayObject._$getFilterTexture(
-                        context, filters, targetTexture, matrix, color_transform
+                        context, filters, texture, matrix, color_transform
                     );
-
-                    context
-                        .frameBuffer
-                        .releaseAttachment(buffer, true);
 
                     Util.$cacheStore().set(cacheKeys, texture);
 
@@ -1366,15 +1331,16 @@ class Graphics
         context._$imageSmoothingEnabled = true;
         context._$globalCompositeOperation = blend_mode;
 
+        context.setTransform(1, 0, 0, 1, 0, 0);
         if (isFilter) {
-            context.setTransform(1, 0, 0, 1, matrix[4], matrix[5]);
             context.drawImage(texture,
-                -offsetX - (matrix[4] - xMin), -offsetY - (matrix[5] - yMin),
+                -offsetX -xMin, -offsetY - yMin,
                 texture.width, texture.height, color_transform
             );
         } else {
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context.drawImage(texture, xMin, yMin, width, height, color_transform);
+            context.drawImage(texture,
+                xMin, yMin, width, height, color_transform
+            );
         }
 
         // pool

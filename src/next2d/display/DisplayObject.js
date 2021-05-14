@@ -1303,6 +1303,163 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
+     * @param  {array} [filters=null]
+     * @return {boolean}
+     * @private
+     */
+    _$canApply (filters = null)
+    {
+        if (filters) {
+            for (let idx = 0; idx < filters.length; ++idx) {
+                if (filters[idx]._$canApply()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param  {number}       width
+     * @param  {number}       height
+     * @param  {Float64Array} matrix
+     * @param  {Float64Array} color_transform
+     * @param  {array}        [filters=null]
+     * @param  {boolean}      [can_apply=false]
+     * @param  {number}       [position_x=0]
+     * @param  {number}       [position_y=0]
+     * @return {boolean}
+     * @private
+     */
+    _$isFilterUpdated (
+        width, height, matrix, color_transform,
+        filters = null, can_apply = false, position_x = 0, position_y = 0
+    ) {
+
+        // cache flag
+        let updated = this._$isUpdated();
+        if (updated) {
+            return true;
+        }
+
+
+        // check filter data
+        if (can_apply) {
+
+            for (let idx = 0; idx < filters.length; ++idx) {
+
+                if (filters[idx]._$isUpdated()) {
+                    return true;
+                }
+
+            }
+
+        }
+
+
+        // check status
+        const cache = Util.$cacheStore().get([this._$instanceId, "f"]);
+        switch (true) {
+
+            case cache === null:
+            case cache.filterState !== can_apply:
+            case cache.layerWidth  !== Util.$ceil(width):
+            case cache.layerHeight !== Util.$ceil(height):
+            case cache.matrix !==
+            matrix[0] +"_"+ matrix[1] +"_"+ matrix[2] +"_"+ matrix[3] +"_"+
+            position_x +"_"+ position_y:
+            case cache.colorTransform !==
+            color_transform[0] +"_"+ color_transform[1] +"_"+ color_transform[2] +"_"+ color_transform[3] +"_"+
+            color_transform[4] +"_"+ color_transform[5] +"_"+ color_transform[6] +"_"+ color_transform[7]:
+                return true;
+
+            default:
+                break
+
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {array} filters
+     * @param  {WebGLTexture} target_texture
+     * @param  {Float64Array} matrix
+     * @param  {Float64Array} color_transform
+     * @param  {number} width
+     * @param  {number} height
+     * @return {WebGLTexture}
+     * @private
+     */
+    _$getFilterTexture (
+        context, filters, target_texture, matrix, color_transform, width, height
+    ) {
+
+        const currentAttachment = context
+            .frameBuffer
+            .currentAttachment;
+
+        const buffer = context
+            .frameBuffer
+            .createCacheAttachment(
+                target_texture.width,
+                target_texture.height
+            );
+
+        context._$bind(buffer);
+
+
+        Util.$resetContext(context);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.drawImage(target_texture,
+            0, 0, target_texture.width, target_texture.height
+        );
+
+
+        // init
+        context._$offsetX = 0;
+        context._$offsetY = 0;
+
+        let texture = null;
+        for (let idx = 0; idx < filters.length; ++idx) {
+            texture = filters[idx]._$applyFilter(context, matrix);
+        }
+
+
+        let offsetX = context._$offsetX;
+        let offsetY = context._$offsetY;
+
+        // reset
+        context._$offsetX = 0;
+        context._$offsetY = 0;
+
+        // set offset
+        texture._$offsetX = offsetX;
+        texture._$offsetY = offsetY;
+
+        // cache texture
+        texture.matrix =
+            matrix[0] +"_"+ matrix[1] +"_"+ matrix[2] +"_"+ matrix[3]
+            +"_0_0";
+
+        texture.colorTransform =
+            color_transform[0] +"_"+ color_transform[1] +"_"+ color_transform[2] +"_"+ color_transform[3] +"_"+
+            color_transform[4] +"_"+ color_transform[5] +"_"+ color_transform[6] +"_"+ color_transform[7];
+
+        texture.filterState = true;
+        texture.layerWidth  = target_texture.width;
+        texture.layerHeight = target_texture.height;
+
+        context._$bind(currentAttachment);
+        context
+            .frameBuffer
+            .releaseAttachment(buffer, false);
+
+        return texture;
+    }
+
+    /**
      * @param  {CanvasToWebGLContext} context
      * @param  {array} matrix
      * @param  {array} color_transform
@@ -1311,7 +1468,6 @@ class DisplayObject extends EventDispatcher
      */
     _$preDraw (context, matrix, color_transform)
     {
-
         const originMatrix = this._$transform._$rawMatrix();
         const tMatrix = Util.$multiplicationMatrix(matrix, originMatrix);
 

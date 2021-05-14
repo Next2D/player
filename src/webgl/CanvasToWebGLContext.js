@@ -1363,10 +1363,10 @@ class CanvasToWebGLContext
             this._$frameBufferManager._$textureManager.bind(blurTexture, baseTexture);
         }
 
-        if (blurX < 2 && blurY < 2 && (blurX > 0 || blurY > 0)) {
-            // ぼかし幅が2より小さい場合は、強さを調整して見た目を合わせる
-            strength *= (Util.$max(1, blurX, blurY) - 1) * 0.4 + 0.2;
-        }
+        // if (blurX < 2 && blurY < 2 && (blurX > 0 || blurY > 0)) {
+        //     // ぼかし幅が2より小さい場合は、強さを調整して見た目を合わせる
+        //     strength *= (Util.$max(1, blurX, blurY) - 1) * 0.4 + 0.2;
+        // }
 
         const transformsBase = !(isInner || (type === BitmapFilterType.FULL && knockout));
         const transformsBlur = !(width === blurWidth && height === blurHeight && blurOffsetX === 0 && blurOffsetY === 0);

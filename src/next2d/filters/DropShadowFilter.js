@@ -565,13 +565,13 @@ class DropShadowFilter extends BitmapFilter
         const offsetDiffY = blurOffsetY - baseOffsetY;
 
         // matrix to scale
-        const xScale = +(Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]) * Util.$TWIPS);
-        const yScale = +(Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]) * Util.$TWIPS);
+        // const xScale = +(Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]) * Util.$TWIPS);
+        // const yScale = +(Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]) * Util.$TWIPS);
 
         // shadow point
         const radian = +(this._$angle * Util.$Deg2Rad);
-        const x = +(Util.$cos(radian) * this._$distance * xScale);
-        const y = +(Util.$sin(radian) * this._$distance * yScale);
+        const x = +(Util.$cos(radian) * this._$distance * Util.$devicePixelRatio);
+        const y = +(Util.$sin(radian) * this._$distance * Util.$devicePixelRatio);
 
         // dropShadow canvas
         const w = (this._$inner) ? baseWidth  : blurWidth  + Util.$max(0, Util.$abs(x) - offsetDiffX);
