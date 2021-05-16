@@ -992,7 +992,7 @@ Util.$poolFloat32Array6 = function (array)
  * @static
  */
 Util.$getFloat32Array8 = function (
-    f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0, f6 = 0, f7 = 0
+    f0 = 1, f1 = 1, f2 = 1, f3 = 1, f4 = 0, f5 = 0, f6 = 0, f7 = 0
 ) {
     const array = Util.$float32Array8.pop()
         || new Util.$window.Float32Array(8);

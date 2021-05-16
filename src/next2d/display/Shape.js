@@ -168,7 +168,6 @@ class Shape extends DisplayObject
      */
     _$draw (context, matrix, color_transform)
     {
-
         if (!this._$visible) {
             return ;
         }

@@ -1243,6 +1243,46 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
+     * @param   {array}  [matrix=null]
+     * @returns {object}
+     * @private
+     */
+    _$getLayerBounds (matrix = null)
+    {
+        const baseBounds = this._$getBounds(matrix);
+        if (!matrix) {
+            return baseBounds;
+        }
+
+        const filters = this._$filters || this.filters;
+        const length = filters.length;
+        if (!length) {
+            return baseBounds;
+        }
+
+
+        let rect = new Rectangle(
+            baseBounds.xMin / Util.$TWIPS,
+            baseBounds.yMin / Util.$TWIPS,
+            (baseBounds.xMax - baseBounds.xMin) / Util.$TWIPS,
+            (baseBounds.yMax - baseBounds.yMin) / Util.$TWIPS
+        );
+        Util.$poolBoundsObject(baseBounds);
+
+
+        for (let idx = 0; idx < length; ++idx) {
+            rect = filters[idx]._$generateFilterRect(rect, null, null, true);
+        }
+
+        const xMin = rect._$x;
+        const xMax = rect._$x + rect._$width;
+        const yMin = rect._$y;
+        const yMax = rect._$y + rect._$height;
+
+        return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+    }
+
+    /**
      * @return {void}
      * @method
      * @private
@@ -1612,7 +1652,9 @@ class DisplayObject extends EventDispatcher
 
 
             // start layer
-            context._$startLayer(Util.$getBoundsObject(originX, 0, originY, 0));
+            context._$startLayer(
+                Util.$getBoundsObject(originX, 0, originY, 0)
+            );
 
 
             // check cache
@@ -1634,7 +1676,9 @@ class DisplayObject extends EventDispatcher
                 this._$buffer = context
                     .frameBuffer
                     .createCacheAttachment(
-                        Util.$ceil(layerWidth), Util.$ceil(layerHeight), false
+                        Util.$ceil(layerWidth),
+                        Util.$ceil(layerHeight),
+                        false
                     );
                 context._$bind(this._$buffer);
             }
@@ -1655,7 +1699,6 @@ class DisplayObject extends EventDispatcher
             object.matrix            = Util.$getFloat32Array6(
                 tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tx, ty
             );
-
         }
 
         return object;
@@ -1792,7 +1835,6 @@ class DisplayObject extends EventDispatcher
         context.setTransform(1, 0, 0, 1, 0, 0);
         context._$globalAlpha = Util.$clamp(color_transform[3] + (color_transform[7] / 255), 0, 1);
         context._$globalCompositeOperation = object.blendMode;
-
         context.drawImage(texture,
             -offsetX + object.position.dx,
             -offsetY + object.position.dy,

@@ -537,6 +537,150 @@ class DisplayObjectContainer extends InteractiveObject
     }
 
     /**
+     * @param  {array} [matrix=null]
+     * @return {object}
+     * @private
+     */
+    _$getBounds (matrix = null)
+    {
+
+        const isGraphics = (this._$graphics && this._$graphics._$getBounds());
+        const children = this._$getChildren();
+        const length   = children.length;
+
+        // size zero
+        if (!length && !isGraphics) {
+            return Util.$getBoundsObject(0, 0, 0, 0);
+        }
+
+
+        const tMatrix = (matrix)
+            ? Util.$multiplicationMatrix(matrix, this._$transform._$rawMatrix())
+            : Util.$MATRIX_ARRAY_IDENTITY;
+
+        // data init
+        const no = Util.$MAX_VALUE;
+        let xMin = no;
+        let xMax = -no;
+        let yMin = no;
+        let yMax = -no;
+
+
+        if (isGraphics) {
+            const bounds = Util.$boundsMatrix(this._$graphics._$getBounds(), tMatrix);
+            xMin   = bounds.xMin;
+            xMax   = bounds.xMax;
+            yMin   = bounds.yMin;
+            yMax   = bounds.yMax;
+            Util.$poolBoundsObject(bounds);
+        }
+
+
+        for (let idx = 0; idx < length; ++idx) {
+
+            const bounds = children[idx]._$getBounds(tMatrix);
+
+            xMin = Util.$min(xMin, bounds.xMin);
+            xMax = Util.$max(xMax, bounds.xMax);
+            yMin = Util.$min(yMin, bounds.yMin);
+            yMax = Util.$max(yMax, bounds.yMax);
+
+            Util.$poolBoundsObject(bounds);
+
+        }
+
+        // end
+        return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+    }
+
+    /**
+     * @param  {array} [matrix=null]
+     * @return {object}
+     * @private
+     */
+    _$getLayerBounds (matrix = null)
+    {
+
+        const isGraphics = (this._$graphics && this._$graphics._$getBounds());
+        const children = this._$getChildren();
+        const length   = children.length;
+
+        // size zero
+        if (!length && !isGraphics) {
+            return Util.$getBoundsObject(0, 0, 0, 0);
+        }
+
+
+        const tMatrix = matrix
+            ? Util.$multiplicationMatrix(matrix, this._$transform._$rawMatrix())
+            : Util.$MATRIX_ARRAY_IDENTITY;
+
+        // data init
+        const no   = Util.$MAX_VALUE;
+        let xMin = no;
+        let xMax = -no;
+        let yMin = no;
+        let yMax = -no;
+
+
+        if (isGraphics) {
+            const bounds = Util.$boundsMatrix(this._$graphics._$getBounds(), tMatrix);
+            xMin   = +bounds.xMin;
+            xMax   = +bounds.xMax;
+            yMin   = +bounds.yMin;
+            yMax   = +bounds.yMax;
+            Util.$poolBoundsObject(bounds);
+        }
+
+
+        for (let idx = 0; idx < length; ++idx) {
+
+            const bounds = children[idx]._$getLayerBounds(tMatrix);
+
+            xMin = Util.$min(xMin, bounds.xMin);
+            xMax = Util.$max(xMax, bounds.xMax);
+            yMin = Util.$min(yMin, bounds.yMin);
+            yMax = Util.$max(yMax, bounds.yMax);
+
+            Util.$poolBoundsObject(bounds);
+
+        }
+
+        // end
+        if (!matrix) {
+            return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+        }
+
+
+        const filters = this._$filters || this.filters;
+        const fLength = filters.length;
+        if (!fLength) {
+            return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+        }
+
+
+        let rect = Util.$getInstance(Rectangle,
+            Util.$getArray(null,
+                xMin / 20, yMin / 20,
+                (xMax - xMin) / 20,
+                (yMax - yMin) / 20
+            ), true
+        );
+
+        for (let idx = 0; idx < fLength; ++idx) {
+            rect = filters[idx]._$generateFilterRect(rect, null, null, true);
+        }
+
+        xMin = rect._$x;
+        xMax = rect._$x + rect._$width;
+        yMin = rect._$y;
+        yMax = rect._$y + rect._$height;
+        Util.$poolInstance(rect);
+
+        return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+    }
+
+    /**
      * @return {array}
      * @private
      */
@@ -1090,7 +1234,6 @@ class DisplayObjectContainer extends InteractiveObject
             this._$transform._$rawColorTransform()
         );
 
-
         // not draw
         const alpha = Util.$clamp(colorTransform[3] + (colorTransform[7] / 255), 0, 1, 0);
         if (!alpha) {
@@ -1301,7 +1444,6 @@ class DisplayObjectContainer extends InteractiveObject
                 }
 
             }
-
 
             instance._$draw(context, preMatrix, preColorTransform);
             instance._$updated = false;
