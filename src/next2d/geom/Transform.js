@@ -206,37 +206,6 @@ class Transform
     }
 
     /**
-     * @description この表示オブジェクトおよびルートレベルまでのそのすべての親オブジェクトの結合された
-     *              変換マトリックスを表す Matrix オブジェクトです。
-     *              A Matrix object representing the combined transformation matrixes
-     *              of the display object and all of its parent objects, back to the root level.
-     *
-     * @member {Matrix}
-     * @readonly
-     * @public
-     */
-    concatenatedMatrix ()
-    {
-        let matrix = this._$rawMatrix();
-
-        let parent = this._$displayObject._$parent;
-        while (parent) {
-
-            matrix = Util.$multiplicationMatrix(
-                parent._$transform._$rawMatrix(),
-                matrix
-            );
-
-            parent = parent._$parent;
-        }
-
-        return Util.$getMatrix(
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4], matrix[5]
-        );
-    }
-
-    /**
      * @description 表示オブジェクトの拡大 / 縮小、回転、および移動を変更する値を格納している
      *              Matrix オブジェクトです。
      *              A Matrix object containing values that alter the scaling,
@@ -274,12 +243,45 @@ class Transform
     }
 
     /**
+     * @description この表示オブジェクトおよびルートレベルまでのそのすべての親オブジェクトの結合された
+     *              変換マトリックスを表す Matrix オブジェクトです。
+     *              A Matrix object representing the combined transformation matrixes
+     *              of the display object and all of its parent objects, back to the root level.
+     *
+     * @member {Matrix}
+     * @readonly
+     * @method
+     * @public
+     */
+    concatenatedMatrix ()
+    {
+        let matrix = this._$rawMatrix();
+
+        let parent = this._$displayObject._$parent;
+        while (parent) {
+
+            matrix = Util.$multiplicationMatrix(
+                parent._$transform._$rawMatrix(),
+                matrix
+            );
+
+            parent = parent._$parent;
+        }
+
+        return Util.$getMatrix(
+            matrix[0], matrix[1], matrix[2],
+            matrix[3], matrix[4], matrix[5]
+        );
+    }
+
+    /**
      * @description ステージ上の表示オブジェクトの境界を示す矩形を定義する Transform オブジェクトです。
      *              A Transform object that defines the bounding rectangle of
      *              the display object on the stage.
      *
      * @member {Transform}
      * @readonly
+     * @method
      * @public
      */
     pixelBounds ()
@@ -307,6 +309,7 @@ class Transform
      * 返される値は一時的に使用することのみできます。返される値の要素を直接更新してはいけません。返される値をプール（Util.$poolFloat32Array）してはいけません。
      *
      * @return {Float32Array}
+     * @method
      * @private
      */
     _$rawMatrix ()
@@ -328,6 +331,7 @@ class Transform
      * 返される値は一時的に使用することのみできます。返される値の要素を直接更新してはいけません。返される値をプール（Util.$poolFloat32Array）してはいけません。
      *
      * @return {Float32Array}
+     * @method
      * @private
      */
     _$rawColorTransform ()

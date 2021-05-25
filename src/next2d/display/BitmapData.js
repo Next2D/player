@@ -154,8 +154,6 @@ class BitmapData
     }
 
     /**
-     * @description
-     *
      * @member {WebGLTexture}
      * @private
      */

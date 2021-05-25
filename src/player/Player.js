@@ -1052,11 +1052,12 @@ class Player
                     manager._$textureManager._$maxHeight    = height;
                 }
 
-                const mScale = this._$scale * this._$ratio / 20;
+                const mScale = this._$scale * this._$ratio / Util.$TWIPS;
                 this._$matrix[0] = mScale;
                 this._$matrix[3] = mScale;
 
                 // cache reset
+                this._$stage._$doChanged();
                 this._$cacheStore.reset();
             }
         }

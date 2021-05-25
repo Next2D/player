@@ -177,6 +177,13 @@ Util.$KEY_UP = "keyup";
 Util.$SCROLL = "scroll";
 
 /**
+ * @type {HTMLParagraphElement}
+ * @const
+ * @static
+ */
+Util.$P_TAG = window.document.createElement("p");
+
+/**
  * @type {Float32Array}
  * @const
  * @static
@@ -788,6 +795,33 @@ Util.$hitContext = hitCanvas.getContext("2d");
 Util.$hitContext.globalAlpha = 0;
 Util.$hitContext.imageSmoothingEnabled = false;
 
+
+/**
+ * @type {HTMLCanvasElement}
+ * @const
+ */
+const textCanvas  = window.document.createElement("canvas");
+textCanvas.width  = 1;
+textCanvas.height = 1;
+
+/**
+ * @type {CanvasRenderingContext2D}
+ * @const
+ * @static
+ */
+Util.$textContext = textCanvas.getContext("2d");
+Util.$hitContext.globalAlpha = 0;
+Util.$hitContext.imageSmoothingEnabled = false;
+
+
+/**
+ * @type {HTMLDivElement}
+ * @default null
+ * @static
+ */
+Util.$DIV = null;
+
+
 /**
  * @param  {*} source
  * @return {boolean}
@@ -1342,7 +1376,6 @@ Util.$uintToRGBA = function (uint)
     };
 };
 
-
 /**
  * @param   {number} color
  * @param   {number} [alpha=1]
@@ -1357,6 +1390,23 @@ Util.$intToRGBA = function (color, alpha = 1)
         "G": (color & 0x00ff00) >> 8,
         "B": (color & 0x0000ff),
         "A": (alpha * 255)
+    };
+};
+
+/**
+ * @param  {object} object
+ * @param  {Float32Array} color
+ * @return {object}
+ * @method
+ * @static
+ */
+Util.$generateColorTransform = function (object, color)
+{
+    return {
+        "R": Util.$max(0, Util.$min((object.R * color[0]) + color[4], 255)),
+        "G": Util.$max(0, Util.$min((object.G * color[1]) + color[5], 255)),
+        "B": Util.$max(0, Util.$min((object.B * color[2]) + color[6], 255)),
+        "A": Util.$max(0, Util.$min((object.A * 255 * color[3]) + color[7], 255)) / 255
     };
 };
 

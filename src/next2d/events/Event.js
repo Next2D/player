@@ -370,6 +370,22 @@ class Event
     }
 
     /**
+     * @description Event.SCROLL 定数は、render イベントオブジェクトの
+     *              type プロパティの値を定義します。
+     *              The Event.SCROLL constant defines the value
+     *              of the type property of a render event object.
+     *
+     * @return {string}
+     * @default scroll
+     * @const
+     * @static
+     */
+    static get SCROLL ()
+    {
+        return "scroll";
+    }
+
+    /**
      * @description Event.SOUND_COMPLETE 定数は、soundComplete イベントオブジェクトの type プロパティの値を定義します。
      *              The Event.SOUND_COMPLETE constant defines the value
      *              of the type property of a soundComplete event object.

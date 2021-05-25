@@ -15,73 +15,21 @@
         // next2d.load("develop");
 
         const {next2d} = window;
+        const {TextField} = next2d.text;
 
-        const root = next2d.createRootMovieClip(760, 600, 1);
+        const root = next2d.createRootMovieClip(200, 200, 1);
 
-        const {Shape,GradientType,SpreadMethod,InterpolationMethod}  = next2d.display;
-        const {Matrix} = next2d.geom;
-        const shape = root.addChild(new Shape());
+        const textField = new TextField();
+        textField.border = true;
 
-        // ------------------------------------------------------------
-        // 面のグラデーション塗り設定
-        // ------------------------------------------------------------
-        // グラデーションの種類
-        var gradient_type = GradientType.RADIAL;
-        // グラデーション
-        var gradient_colors = [ 0xff0000 , 0x00ff00 , 0x0000ff ];	// RGB カラーリスト
-        var gradient_alphas = [      1.0 ,      1.0 ,      1.0 ];	// 透明度リスト
-        var gradient_ratios = [        0 ,    127.5 ,      255 ];	// 配分リスト
-        // グラデーションの行列
-        var gradient_mtx = new Matrix();
-        // スプレッドの種類
-        var spread_method = SpreadMethod.PAD;
-        // 補間の種類
-        var interpolation_method = InterpolationMethod.LINEAR_RGB;
-        // 焦点位置 (-1.0 ～ 1.0)
-        var focal_point_ratio = 0;
+        textField.defaultTextFormat.size = 40;
+        textField.defaultTextFormat.underline = true;
 
-        // ------------------------------------------------------------
-        // グラデーションの行列
-        // ------------------------------------------------------------
-        // 単位行列化
-        gradient_mtx.identity();
-        // 拡大縮小成分を乗算
-        gradient_mtx.scale( 256/1638.4 , 256/1638.4 );
-        // 角度成分を乗算
-        gradient_mtx.rotate( 0.0 * (Math.PI / 180) );
-        // 移動成分を乗算
-        gradient_mtx.translate( 128.0 , 128.0 );
+        textField.text = "abc";
+        textField.x = 50;
+        textField.y = 50;
+        root.addChild(textField);
 
-        shape
-            .graphics
-            .beginGradientFill(
-                gradient_type , gradient_colors , gradient_alphas , gradient_ratios ,
-                gradient_mtx , spread_method , interpolation_method , focal_point_ratio
-            );
-
-        for(var i=0;i < 8;i++){
-
-            var pos_y = i * 32.0;
-
-            // 矩形を描画
-            shape
-                .graphics
-                .drawRect( 0.0 , pos_y , 256.0 , 30.0 );
-        }
-
-        shape
-            .graphics
-        //     .beginGradientFill(
-        //         gradient_type , gradient_colors , gradient_alphas , gradient_ratios ,
-        //         gradient_mtx , spread_method , interpolation_method , focal_point_ratio
-        //     )
-        //     .drawRect(0, 0, 256, 256)
-            .endFill();
-
-        console.log(shape);
-
-        // shape.x = 20;
-        // shape.y = 20;
 
     </script>
 
