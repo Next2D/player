@@ -1265,7 +1265,9 @@ class TextField extends InteractiveObject
 
                     let tf = this.defaultTextFormat;
 
-                    const yIndex = (this._$wordWrap) ? this._$heightTable.length : 0;
+                    const yIndex = (this._$wordWrap || this._$multiline)
+                        ? this._$heightTable.length
+                        : 0;
 
                     this._$heightTable[yIndex]     = 0;
                     this._$textHeightTable[yIndex] = 0;
@@ -1588,7 +1590,7 @@ class TextField extends InteractiveObject
                 breakCode = (obj.text === "\n" || obj.text === "\r" || obj.text === "\n\r");
             }
 
-            let leading    = tf._$leading + 2;
+            let leading    = (yIndex) ? tf._$leading : 0;
             let actWidth   = 0;
             let width      = 0;
             let height     = 0;
@@ -1907,7 +1909,9 @@ class TextField extends InteractiveObject
     _$getAlignOffset (obj)
     {
         const matrix = this._$transform.concatenatedMatrix();
-        const width  = Util.$ceil(Util.$abs((this._$bounds.xMax - this._$bounds.xMin) / matrix.d * matrix.a));
+        const width  = Util.$ceil(Util.$abs(
+            (this._$bounds.xMax - this._$bounds.xMin)
+                / matrix.d * matrix.a));
         Util.$poolMatrix(matrix);
 
         // default
@@ -1932,13 +1936,13 @@ class TextField extends InteractiveObject
 
             case textFormat._$align === TextFormatAlign.RIGHT: // format RIGHT
             case this._$autoSize === TextFieldAutoSize.RIGHT: // autoSize RIGHT
-                xOffset = width - indent - totalWidth - textFormat._$rightMargin - 2;
+                xOffset = width - indent - totalWidth - textFormat._$rightMargin - 4;
                 break;
 
             // autoSize LEFT
             // format LEFT
             default:
-                xOffset = indent + 2;
+                xOffset = indent;
                 break;
 
         }
@@ -2171,7 +2175,7 @@ class TextField extends InteractiveObject
             ctx.lineTo(xPoint, yPoint);
             ctx.clip();
 
-            ctx.setTransform(yScale, 0, 0, yScale, 0, 2 * yScale);
+            ctx.setTransform(yScale, 0, 0, yScale, 2 * yScale, 2 * yScale);
             this._$doDraw(ctx, multiMatrix, multiColor, false);
 
             // mask end

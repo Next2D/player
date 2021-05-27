@@ -348,7 +348,7 @@ class Player
      */
     get contentElementId ()
     {
-        return `${Util.$PREFIX}${this._$id}`;
+        return `${Util.$PREFIX}`;
     }
 
     /**
@@ -474,9 +474,6 @@ class Player
     _$loaded ()
     {
         this._$loadStatus = 4;
-
-        // set current player id
-        Util.$currentPlayerId = this._$id;
 
         const element = Util.$document.getElementById(this.contentElementId);
         if (element) {
@@ -1177,10 +1174,6 @@ class Player
         }
         // @endif
 
-
-        // set current player id
-        Util.$currentPlayerId = this._$id;
-
         this._$wheelEvent();
 
         // delay action
@@ -1753,10 +1746,6 @@ class Player
 
         // setup
         const event = Util.$event;
-
-        // set current player id
-        const cachePlayerId   = Util.$currentPlayerId;
-        Util.$currentPlayerId = this._$id;
 
         // params
         let instance  = null;
@@ -2372,9 +2361,6 @@ class Player
         }
 
         this._$hitTestStart = false;
-
-        // reload
-        Util.$currentPlayerId = cachePlayerId;
     }
 
 
