@@ -37,13 +37,13 @@ class EventPhase
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events:EventPhase
+     * @default next2d.events.EventPhase
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.events:EventPhase";
+        return "next2d.events.EventPhase";
     }
 
     /**
@@ -65,13 +65,13 @@ class EventPhase
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events:EventPhase
+     * @default next2d.events.EventPhase
      * @const
      * @public
      */
     get namespace ()
     {
-        return "next2d.events:EventPhase";
+        return "next2d.events.EventPhase";
     }
 
     /**

@@ -35,13 +35,13 @@ class CapsStyle
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:CapsStyle
+     * @default next2d.display.CapsStyle
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:CapsStyle";
+        return "next2d.display.CapsStyle";
     }
 
     /**
@@ -63,13 +63,13 @@ class CapsStyle
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:CapsStyle
+     * @default next2d.display.CapsStyle
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:CapsStyle";
+        return "next2d.display.CapsStyle";
     }
 
     /**

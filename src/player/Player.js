@@ -616,40 +616,35 @@ class Player
         }
 
         const contentElementId = this.contentElementId;
-        switch (true) {
+        if (this._$tagId === null) {
 
-            case this._$tagId === null:
-                doc
-                    .body
-                    .insertAdjacentHTML(
-                        "beforeend", `<div id="${contentElementId}"></div>`
-                    );
-                break;
+            doc
+                .body
+                .insertAdjacentHTML(
+                    "beforeend", `<div id="${contentElementId}"></div>`
+                );
 
-            default:
+        } else {
 
-                const container = doc.getElementById(this._$tagId);
-                if (!container) {
-                    alert("Not Found Tag ID:" + this._$tagId);
-                    return ;
-                }
+            const container = doc.getElementById(this._$tagId);
+            if (!container) {
+                alert("Not Found Tag ID:" + this._$tagId);
+                return ;
+            }
 
-                const div = doc.getElementById(contentElementId);
-                switch (true) {
+            const div = doc.getElementById(contentElementId);
+            if (!div) {
 
-                    case (div === null):
-                        const element    = doc.createElement("div");
-                        element.id       = contentElementId;
-                        element.tabIndex = -1;
-                        container.appendChild(element);
-                        break;
+                const element    = doc.createElement("div");
+                element.id       = contentElementId;
+                element.tabIndex = -1;
+                container.appendChild(element);
 
-                    default:
-                        this._$deleteNode();
-                        break;
+            } else {
 
-                }
-                break;
+                this._$deleteNode();
+
+            }
 
         }
 
@@ -980,13 +975,17 @@ class Player
                 ? this._$optionWidth
                 : (parent.tagName === "BODY")
                     ? Util.$window.innerWidth
-                    : parent.offsetWidth;
+                    : parent.offsetWidth
+                        ? parent.offsetWidth
+                        : Util.$parseFloat(parent.style.width);
 
             const innerHeight = this._$optionHeight
                 ? this._$optionHeight
                 : (parent.tagName === "BODY")
                     ? Util.$window.innerHeight
-                    : parent.offsetHeight;
+                    : parent.offsetHeight
+                        ? parent.offsetHeight
+                        : Util.$parseFloat(parent.style.height);
 
             const screenWidth = (parent.tagName === "BODY")
                 ? Util.$window.innerWidth

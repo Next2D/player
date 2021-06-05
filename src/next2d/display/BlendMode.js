@@ -38,13 +38,13 @@ class BlendMode
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:BlendMode
+     * @default next2d.display.BlendMode
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:BlendMode";
+        return "next2d.display.BlendMode";
     }
 
     /**
@@ -66,13 +66,13 @@ class BlendMode
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:BlendMode
+     * @default next2d.display.BlendMode
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:BlendMode";
+        return "next2d.display.BlendMode";
     }
 
     /**

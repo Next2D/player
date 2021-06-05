@@ -121,13 +121,13 @@ class DropShadowFilter extends BitmapFilter
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.filters:DropShadowFilter
+     * @default next2d.filters.DropShadowFilter
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.filters:DropShadowFilter";
+        return "next2d.filters.DropShadowFilter";
     }
 
     /**
@@ -149,13 +149,13 @@ class DropShadowFilter extends BitmapFilter
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.filters:DropShadowFilter
+     * @default next2d.filters.DropShadowFilter
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.filters:DropShadowFilter";
+        return "next2d.filters.DropShadowFilter";
     }
 
     /**

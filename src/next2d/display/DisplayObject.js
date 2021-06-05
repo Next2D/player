@@ -237,13 +237,13 @@ class DisplayObject extends EventDispatcher
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:DisplayObject
+     * @default next2d.display.DisplayObject
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:DisplayObject";
+        return "next2d.display.DisplayObject";
     }
 
     /**
@@ -265,13 +265,13 @@ class DisplayObject extends EventDispatcher
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:DisplayObject
+     * @default next2d.display.DisplayObject
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:DisplayObject";
+        return "next2d.display.DisplayObject";
     }
 
     /**

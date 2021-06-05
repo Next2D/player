@@ -49,13 +49,13 @@ class EventDispatcher
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events:EventDispatcher
+     * @default next2d.events.EventDispatcher
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.events:EventDispatcher";
+        return "next2d.events.EventDispatcher";
     }
 
     /**
@@ -76,13 +76,13 @@ class EventDispatcher
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events:EventDispatcher
+     * @default next2d.events.EventDispatcher
      * @const
      * @public
      */
     get namespace ()
     {
-        return "next2d.events:EventDispatcher";
+        return "next2d.events.EventDispatcher";
     }
 
     /**

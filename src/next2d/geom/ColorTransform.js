@@ -82,13 +82,13 @@ class ColorTransform
      *              Returns the space name of the specified class.
      *
      * @member {string}
-     * @default next2d.geom:ColorTransform
+     * @default next2d.geom.ColorTransform
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.geom:ColorTransform";
+        return "next2d.geom.ColorTransform";
     }
 
     /**
@@ -116,13 +116,13 @@ class ColorTransform
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.geom:ColorTransform
+     * @default next2d.geom.ColorTransform
      * @public
      * @const
      */
     get namespace ()
     {
-        return "next2d.geom:ColorTransform";
+        return "next2d.geom.ColorTransform";
     }
 
     /**

@@ -108,13 +108,13 @@ class Event
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events:Event
+     * @default next2d.events.Event
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.events:Event";
+        return "next2d.events.Event";
     }
 
     /**
@@ -135,13 +135,13 @@ class Event
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events:Event
+     * @default next2d.events.Event
      * @const
      * @public
      */
     get namespace ()
     {
-        return "next2d.events:Event";
+        return "next2d.events.Event";
     }
 
     /**

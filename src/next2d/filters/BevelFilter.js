@@ -131,13 +131,13 @@ class BevelFilter extends BitmapFilter
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.filters:BevelFilter
+     * @default next2d.filters.BevelFilter
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.filters:BevelFilter";
+        return "next2d.filters.BevelFilter";
     }
 
     /**
@@ -159,13 +159,13 @@ class BevelFilter extends BitmapFilter
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.filters:BevelFilter
+     * @default next2d.filters.BevelFilter
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.filters:BevelFilter";
+        return "next2d.filters.BevelFilter";
     }
 
     /**

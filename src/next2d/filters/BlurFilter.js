@@ -71,13 +71,13 @@ class BlurFilter extends BitmapFilter
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.filters:BlurFilter
+     * @default next2d.filters.BlurFilter
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.filters:BlurFilter";
+        return "next2d.filters.BlurFilter";
     }
 
     /**
@@ -99,13 +99,13 @@ class BlurFilter extends BitmapFilter
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.filters:BlurFilter
+     * @default next2d.filters.BlurFilter
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.filters:BlurFilter";
+        return "next2d.filters.BlurFilter";
     }
 
     /**

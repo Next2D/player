@@ -94,13 +94,13 @@ class Transform
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.geom:Transform
+     * @default next2d.geom.Transform
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.geom:Transform";
+        return "next2d.geom.Transform";
     }
 
     /**
@@ -121,13 +121,13 @@ class Transform
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.geom:Transform
+     * @default next2d.geom.Transform
      * @public
      * @const
      */
     get namespace ()
     {
-        return "next2d.geom:Transform";
+        return "next2d.geom.Transform";
     }
 
     /**

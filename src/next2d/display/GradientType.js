@@ -35,13 +35,13 @@ class GradientType
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:GradientType
+     * @default next2d.display.GradientType
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:GradientType";
+        return "next2d.display.GradientType";
     }
 
     /**
@@ -63,13 +63,13 @@ class GradientType
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:GradientType
+     * @default next2d.display.GradientType
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:GradientType";
+        return "next2d.display.GradientType";
     }
 
     /**

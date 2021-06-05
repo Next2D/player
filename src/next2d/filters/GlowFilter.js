@@ -96,13 +96,13 @@ class GlowFilter extends BitmapFilter
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.filters:GlowFilter
+     * @default next2d.filters.GlowFilter
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.filters:GlowFilter";
+        return "next2d.filters.GlowFilter";
     }
 
     /**
@@ -124,13 +124,13 @@ class GlowFilter extends BitmapFilter
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.filters:GlowFilter
+     * @default next2d.filters.GlowFilter
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.filters:GlowFilter";
+        return "next2d.filters.GlowFilter";
     }
 
     /**

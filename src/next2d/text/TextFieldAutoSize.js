@@ -32,13 +32,13 @@ class TextFieldAutoSize
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.text:TextFieldAutoSize
+     * @default next2d.text.TextFieldAutoSize
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.text:TextFieldAutoSize";
+        return "next2d.text.TextFieldAutoSize";
     }
 
     /**
@@ -60,13 +60,13 @@ class TextFieldAutoSize
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.text:TextFieldAutoSize
+     * @default next2d.text.TextFieldAutoSize
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.text:TextFieldAutoSize";
+        return "next2d.text.TextFieldAutoSize";
     }
 
     /**

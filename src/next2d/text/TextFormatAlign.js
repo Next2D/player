@@ -32,13 +32,13 @@ class TextFormatAlign
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.text:TextFormatAlign
+     * @default next2d.text.TextFormatAlign
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.text:TextFormatAlign";
+        return "next2d.text.TextFormatAlign";
     }
 
     /**
@@ -60,13 +60,13 @@ class TextFormatAlign
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.text:TextFormatAlign
+     * @default next2d.text.TextFormatAlign
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.text:TextFormatAlign";
+        return "next2d.text.TextFormatAlign";
     }
 
     /**

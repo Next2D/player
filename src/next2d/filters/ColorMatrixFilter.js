@@ -67,13 +67,13 @@ class ColorMatrixFilter extends BitmapFilter
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.filters:ColorMatrixFilter
+     * @default next2d.filters.ColorMatrixFilter
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.filters:ColorMatrixFilter";
+        return "next2d.filters.ColorMatrixFilter";
     }
 
     /**
@@ -95,13 +95,13 @@ class ColorMatrixFilter extends BitmapFilter
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.filters:ColorMatrixFilter
+     * @default next2d.filters.ColorMatrixFilter
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.filters:ColorMatrixFilter";
+        return "next2d.filters.ColorMatrixFilter";
     }
 
     /**

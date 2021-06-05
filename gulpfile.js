@@ -196,7 +196,7 @@ function createHTML (done)
                 "recurse": true,
                 "private": false,
                 "lenient": true,
-                "destination": "../next2d/doc/player/",
+                "destination": "../next2d/docs/player/",
                 "template": "node_modules/@pixi/jsdoc-template"
             }
         }, done));

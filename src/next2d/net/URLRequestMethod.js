@@ -35,13 +35,13 @@ class URLRequestMethod
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.net:URLRequestMethod
+     * @default next2d.net.URLRequestMethod
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.net:URLRequestMethod";
+        return "next2d.net.URLRequestMethod";
     }
 
     /**
@@ -63,13 +63,13 @@ class URLRequestMethod
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.net:URLRequestMethod
+     * @default next2d.net.URLRequestMethod
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.net:URLRequestMethod";
+        return "next2d.net.URLRequestMethod";
     }
 
     /**

@@ -152,13 +152,13 @@ class MovieClip extends Sprite
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:MovieClip
+     * @default next2d.display.MovieClip
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:MovieClip";
+        return "next2d.display.MovieClip";
     }
 
     /**
@@ -180,13 +180,13 @@ class MovieClip extends Sprite
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:MovieClip
+     * @default next2d.display.MovieClip
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:MovieClip";
+        return "next2d.display.MovieClip";
     }
 
     /**

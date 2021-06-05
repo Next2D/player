@@ -86,13 +86,13 @@ class Rectangle
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.geom:Rectangle
+     * @default next2d.geom.Rectangle
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.geom:Rectangle";
+        return "next2d.geom.Rectangle";
     }
 
     /**
@@ -113,13 +113,13 @@ class Rectangle
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.geom:Rectangle
+     * @default next2d.geom.Rectangle
      * @public
      * @const
      */
     get namespace ()
     {
-        return "next2d.geom:Rectangle";
+        return "next2d.geom.Rectangle";
     }
 
     /**

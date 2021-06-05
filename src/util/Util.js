@@ -402,6 +402,15 @@ Util.$Array = window.Array;
  */
 Util.$Map = window.Map;
 
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+Util.$parseFloat = window.parseFloat;
+
 /**
  * @shortcut
  * @type {function}

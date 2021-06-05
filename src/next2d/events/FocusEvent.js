@@ -51,13 +51,13 @@ class FocusEvent extends Event
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events:FocusEvent
+     * @default next2d.events.FocusEvent
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.events:FocusEvent";
+        return "next2d.events.FocusEvent";
     }
 
     /**
@@ -80,13 +80,13 @@ class FocusEvent extends Event
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events:FocusEvent
+     * @default next2d.events.FocusEvent
      * @const
      * @public
      */
     get namespace ()
     {
-        return "next2d.events:FocusEvent";
+        return "next2d.events.FocusEvent";
     }
 
     /**

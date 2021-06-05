@@ -118,13 +118,13 @@ class ConvolutionFilter extends BitmapFilter
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.filters:ConvolutionFilter
+     * @default next2d.filters.ConvolutionFilter
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.filters:ConvolutionFilter";
+        return "next2d.filters.ConvolutionFilter";
     }
 
     /**
@@ -146,13 +146,13 @@ class ConvolutionFilter extends BitmapFilter
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.filters:ConvolutionFilter
+     * @default next2d.filters.ConvolutionFilter
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.filters:ConvolutionFilter";
+        return "next2d.filters.ConvolutionFilter";
     }
 
     /**

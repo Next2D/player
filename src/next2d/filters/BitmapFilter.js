@@ -48,13 +48,13 @@ class BitmapFilter
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.filters:BitmapFilter
+     * @default next2d.filters.BitmapFilter
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.filters:BitmapFilter";
+        return "next2d.filters.BitmapFilter";
     }
 
     /**
@@ -76,13 +76,13 @@ class BitmapFilter
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.filters:BitmapFilter
+     * @default next2d.filters.BitmapFilter
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.filters:BitmapFilter";
+        return "next2d.filters.BitmapFilter";
     }
 
     /**

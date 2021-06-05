@@ -35,13 +35,13 @@ class SpreadMethod
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:SpreadMethod
+     * @default next2d.display.SpreadMethod
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:SpreadMethod";
+        return "next2d.display.SpreadMethod";
     }
 
     /**
@@ -63,13 +63,13 @@ class SpreadMethod
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:SpreadMethod
+     * @default next2d.display.SpreadMethod
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:SpreadMethod";
+        return "next2d.display.SpreadMethod";
     }
 
     /**

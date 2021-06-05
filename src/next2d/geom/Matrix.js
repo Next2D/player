@@ -65,13 +65,13 @@ class Matrix
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.geom:Matrix
+     * @default next2d.geom.Matrix
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.geom:Matrix";
+        return "next2d.geom.Matrix";
     }
 
     /**
@@ -92,13 +92,13 @@ class Matrix
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.geom:Matrix
+     * @default next2d.geom.Matrix
      * @public
      * @const
      */
     get namespace ()
     {
-        return "next2d.geom:Matrix";
+        return "next2d.geom.Matrix";
     }
 
     /**

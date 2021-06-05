@@ -121,13 +121,13 @@ class DisplayObjectContainer extends InteractiveObject
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:DisplayObjectContainer
+     * @default next2d.display.DisplayObjectContainer
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:DisplayObjectContainer";
+        return "next2d.display.DisplayObjectContainer";
     }
 
     /**
@@ -149,13 +149,13 @@ class DisplayObjectContainer extends InteractiveObject
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:DisplayObjectContainer
+     * @default next2d.display.DisplayObjectContainer
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:DisplayObjectContainer";
+        return "next2d.display.DisplayObjectContainer";
     }
 
     /**

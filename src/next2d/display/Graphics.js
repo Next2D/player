@@ -53,13 +53,13 @@ class Graphics
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:Bitmap
+     * @default next2d.display.Bitmap
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:Graphics";
+        return "next2d.display.Graphics";
     }
 
     /**
@@ -81,13 +81,13 @@ class Graphics
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:Graphics
+     * @default next2d.display.Graphics
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:Graphics";
+        return "next2d.display.Graphics";
     }
 
     /**
@@ -1151,9 +1151,31 @@ class Graphics
             return;
         }
 
+
         if (0 > (xMin + width) || 0 > (yMin + height)) {
-            return;
+
+            if (filters && filters.length
+                && displayObject._$canApply(filters)
+            ) {
+
+                let xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+                let yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+
+                let rect = new Rectangle(0, 0, width, height);
+                for (let idx = 0; idx < filters.length ; ++idx) {
+                    rect = filters[idx]._$generateFilterRect(rect, xScale, yScale);
+                }
+
+                if (0 > (rect.x + rect.width) || 0 > (rect.y + rect.height)) {
+                    return;
+                }
+
+            } else {
+                return;
+            }
+
         }
+
 
         // cache current buffer
         const currentBuffer = context.frameBuffer.currentAttachment;

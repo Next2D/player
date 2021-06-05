@@ -311,13 +311,13 @@ class TextField extends InteractiveObject
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.text:TextField
+     * @default next2d.text.TextField
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.text:TextField";
+        return "next2d.text.TextField";
     }
 
     /**
@@ -339,13 +339,13 @@ class TextField extends InteractiveObject
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.text:TextField
+     * @default next2d.text.TextField
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.text:TextField";
+        return "next2d.text.TextField";
     }
 
     /**

@@ -74,13 +74,13 @@ class URLRequest
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.net:URLRequest
+     * @default next2d.net.URLRequest
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.net:URLRequest";
+        return "next2d.net.URLRequest";
     }
 
     /**
@@ -102,13 +102,13 @@ class URLRequest
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.net:URLRequest
+     * @default next2d.net.URLRequest
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.net:URLRequest";
+        return "next2d.net.URLRequest";
     }
 
     /**

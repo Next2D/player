@@ -151,13 +151,13 @@ class TextFormat
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.text:TextFormat
+     * @default next2d.text.TextFormat
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.text:TextFormat";
+        return "next2d.text.TextFormat";
     }
 
     /**
@@ -179,13 +179,13 @@ class TextFormat
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.text:TextFormat
+     * @default next2d.text.TextFormat
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.text:TextFormat";
+        return "next2d.text.TextFormat";
     }
 
     /**

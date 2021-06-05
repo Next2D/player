@@ -58,13 +58,13 @@ class Point
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.geom:Point
+     * @default next2d.geom.Point
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.geom:Point";
+        return "next2d.geom.Point";
     }
 
     /**
@@ -85,13 +85,13 @@ class Point
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.geom:Point
+     * @default next2d.geom.Point
      * @public
      * @const
      */
     get namespace ()
     {
-        return "next2d.geom:Point";
+        return "next2d.geom.Point";
     }
 
     /**

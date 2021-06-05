@@ -29,13 +29,13 @@ class StageQuality
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:StageQuality
+     * @default next2d.display.StageQuality
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:StageQuality";
+        return "next2d.display.StageQuality";
     }
 
     /**
@@ -57,13 +57,13 @@ class StageQuality
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:StageQuality
+     * @default next2d.display.StageQuality
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:StageQuality";
+        return "next2d.display.StageQuality";
     }
     
     /**

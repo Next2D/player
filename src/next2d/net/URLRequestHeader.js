@@ -49,13 +49,13 @@ class URLRequestHeader
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.net:URLRequestHeader
+     * @default next2d.net.URLRequestHeader
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.net:URLRequestHeader";
+        return "next2d.net.URLRequestHeader";
     }
 
     /**
@@ -77,13 +77,13 @@ class URLRequestHeader
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.net:URLRequestHeader
+     * @default next2d.net.URLRequestHeader
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.net:URLRequestHeader";
+        return "next2d.net.URLRequestHeader";
     }
 
     /**

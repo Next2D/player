@@ -39,13 +39,13 @@ class BitmapDataChannel
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:BitmapDataChannel
+     * @default next2d.display.BitmapDataChannel
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:BitmapDataChannel";
+        return "next2d.display.BitmapDataChannel";
     }
 
     /**
@@ -67,13 +67,13 @@ class BitmapDataChannel
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:BitmapDataChannel
+     * @default next2d.display.BitmapDataChannel
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:BitmapDataChannel";
+        return "next2d.display.BitmapDataChannel";
     }
 
     /**

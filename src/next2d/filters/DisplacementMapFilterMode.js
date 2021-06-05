@@ -32,13 +32,13 @@ class DisplacementMapFilterMode
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.filters:DisplacementMapFilterMode
+     * @default next2d.filters.DisplacementMapFilterMode
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.filters:DisplacementMapFilterMode";
+        return "next2d.filters.DisplacementMapFilterMode";
     }
 
     /**
@@ -60,13 +60,13 @@ class DisplacementMapFilterMode
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.filters:DisplacementMapFilterMode
+     * @default next2d.filters.DisplacementMapFilterMode
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.filters:DisplacementMapFilterMode";
+        return "next2d.filters.DisplacementMapFilterMode";
     }
 
     /**

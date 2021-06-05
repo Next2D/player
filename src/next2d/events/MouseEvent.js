@@ -66,13 +66,13 @@ class MouseEvent extends Event
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events:MouseEvent
+     * @default next2d.events.MouseEvent
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.events:MouseEvent";
+        return "next2d.events.MouseEvent";
     }
 
     /**
@@ -99,13 +99,13 @@ class MouseEvent extends Event
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events:MouseEvent
+     * @default next2d.events.MouseEvent
      * @const
      * @public
      */
     get namespace ()
     {
-        return "next2d.events:MouseEvent";
+        return "next2d.events.MouseEvent";
     }
 
     /**

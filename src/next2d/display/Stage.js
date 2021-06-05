@@ -76,13 +76,13 @@ class Stage extends DisplayObjectContainer
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:Stage
+     * @default next2d.display.Stage
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:Stage";
+        return "next2d.display.Stage";
     }
 
     /**
@@ -104,13 +104,13 @@ class Stage extends DisplayObjectContainer
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:Stage
+     * @default next2d.display.Stage
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:Stage";
+        return "next2d.display.Stage";
     }
 
     /**

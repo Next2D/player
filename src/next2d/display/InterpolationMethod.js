@@ -37,13 +37,13 @@ class InterpolationMethod
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:InterpolationMethod
+     * @default next2d.display.InterpolationMethod
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:InterpolationMethod";
+        return "next2d.display.InterpolationMethod";
     }
 
     /**
@@ -65,13 +65,13 @@ class InterpolationMethod
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:InterpolationMethod
+     * @default next2d.display.InterpolationMethod
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:InterpolationMethod";
+        return "next2d.display.InterpolationMethod";
     }
 
     /**

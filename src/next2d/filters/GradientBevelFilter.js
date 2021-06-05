@@ -121,13 +121,13 @@ class GradientBevelFilter  extends BitmapFilter
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.filters:GradientBevelFilter
+     * @default next2d.filters.GradientBevelFilter
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.filters:GradientBevelFilter";
+        return "next2d.filters.GradientBevelFilter";
     }
 
     /**
@@ -149,13 +149,13 @@ class GradientBevelFilter  extends BitmapFilter
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.filters:GradientBevelFilter
+     * @default next2d.filters.GradientBevelFilter
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.filters:GradientBevelFilter";
+        return "next2d.filters.GradientBevelFilter";
     }
 
     /**

@@ -120,13 +120,13 @@ class GradientGlowFilter  extends BitmapFilter
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.filters:GradientGlowFilter
+     * @default next2d.filters.GradientGlowFilter
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.filters:GradientGlowFilter";
+        return "next2d.filters.GradientGlowFilter";
     }
 
     /**
@@ -148,13 +148,13 @@ class GradientGlowFilter  extends BitmapFilter
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.filters:GradientGlowFilter
+     * @default next2d.filters.GradientGlowFilter
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.filters:GradientGlowFilter";
+        return "next2d.filters.GradientGlowFilter";
     }
 
     /**

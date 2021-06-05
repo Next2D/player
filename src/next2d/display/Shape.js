@@ -52,13 +52,13 @@ class Shape extends DisplayObject
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:Shape
+     * @default next2d.display.Shape
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:Shape";
+        return "next2d.display.Shape";
     }
 
     /**
@@ -80,13 +80,13 @@ class Shape extends DisplayObject
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:Shape
+     * @default next2d.display.Shape
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:Shape";
+        return "next2d.display.Shape";
     }
 
     /**

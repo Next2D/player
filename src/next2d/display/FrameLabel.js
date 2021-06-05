@@ -68,13 +68,13 @@ class FrameLabel extends EventDispatcher
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display:FrameLabel
+     * @default next2d.display.FrameLabel
      * @const
      * @static
      */
     static get namespace ()
     {
-        return "next2d.display:FrameLabel";
+        return "next2d.display.FrameLabel";
     }
 
     /**
@@ -96,13 +96,13 @@ class FrameLabel extends EventDispatcher
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display:FrameLabel
+     * @default next2d.display.FrameLabel
      * @const
      * @static
      */
     get namespace ()
     {
-        return "next2d.display:FrameLabel";
+        return "next2d.display.FrameLabel";
     }
 
     /**
