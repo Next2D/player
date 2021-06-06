@@ -275,13 +275,22 @@ class Sprite extends DisplayObjectContainer
 
 
     /**
-     * @return {void}
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
      * @method
      * @private
      */
-    _$build ()
+    _$build (tag, parent)
     {
+        const character = super._$build(tag, parent);
 
+        this._$controller   = character.controller;
+        this._$dictionary   = character.dictionary;
+        this._$placeMap     = character.placeMap;
+        this._$placeObjects = character.placeObjects;
+
+        return character;
     }
 
     /**

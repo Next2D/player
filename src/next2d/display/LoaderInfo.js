@@ -51,18 +51,11 @@ class LoaderInfo extends EventDispatcher
         this._$content = null;
 
         /**
-         * @type {array}
+         * @type {object}
          * @default null
          * @private
          */
-        this._$characters = null;
-
-        /**
-         * @type {Map}
-         * @default null
-         * @private
-         */
-        this._$symbols = null;
+        this._$data = null;
 
         /**
          * @type {string}

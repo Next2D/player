@@ -107,16 +107,28 @@ class Shape extends DisplayObject
     }
 
     /**
-     * @param  {object}    tag
-     * @param  {object}    character
-     * @param  {MovieClip} parent
-     * @return {Shape}
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
      * @method
      * @private
      */
-    _$build (tag, character, parent)
+    _$build (tag, parent)
     {
+        const character = super._$build(tag, parent);
 
+        const graphics = this.graphics;
+
+        graphics._$recode   = character.recodes;
+        graphics._$maxAlpha = 1;
+        graphics._$canDraw  = true;
+
+        graphics._$xMin = character.bounds.xMin;
+        graphics._$xMax = character.bounds.xMax;
+        graphics._$yMin = character.bounds.yMin;
+        graphics._$yMax = character.bounds.yMax;
+
+        return character;
     }
 
     /**

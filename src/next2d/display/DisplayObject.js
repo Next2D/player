@@ -181,14 +181,7 @@ class DisplayObject extends EventDispatcher
          * @default null
          * @private
          */
-        this._$loaderInfoId = null;
-
-        /**
-         * @type {number|null}
-         * @default null
-         * @private
-         */
-        this._$fixLoaderInfoId = null;
+        this._$loaderInfo = null;
 
         /**
          * @type {number|null}
@@ -477,15 +470,7 @@ class DisplayObject extends EventDispatcher
      */
     get loaderInfo ()
     {
-        if (this._$fixLoaderInfoId === null) {
-
-            return (this._$loaderInfoId !== null)
-                ? Util.$loaderInfos[this._$loaderInfoId]
-                : null;
-
-        }
-
-        return Util.$loaderInfos[this._$fixLoaderInfoId];
+        return this._$loaderInfo;
     }
 
     /**
@@ -1193,13 +1178,40 @@ class DisplayObject extends EventDispatcher
             return null;
         }
 
-        if (!parent._$placeController.length) {
+        const placeMap = parent._$placeMap;
+        if (!placeMap || !placeMap.length) {
             return null;
         }
 
         return parent._$placeObjects[
-            parent._$placeController[parent._$currentFrame || 1][placeId]
+            placeMap[parent._$currentFrame || 1][placeId]
         ];
+    }
+
+    /**
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$build (tag, parent)
+    {
+        const loaderInfo = parent._$loaderInfo;
+
+        // setup
+        this._$parent     = parent;
+        this._$root       = parent._$root;
+        this._$loaderInfo = loaderInfo;
+
+        // bind tag data
+        this._$characterId = tag.characterId|0;
+        this._$clipDepth   = tag.clipDepth|0;
+        this._$startFrame  = tag.startFrame|0;
+        this._$endFrame    = tag.endFrame|0;
+        this._$placeId     = tag.depth|0;
+
+        return loaderInfo._$data.characters[tag.characterId];
     }
 
     /**

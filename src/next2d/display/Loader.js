@@ -231,25 +231,30 @@ class Loader extends DisplayObjectContainer
 
                             case URLLoaderDataFormat.STRING:
 
-                                const object = JSON.parse(event.target.responseText);
-                                console.log(object);
+                                loaderInfo._$data = JSON.parse(event.target.responseText);
 
                                 // setup
-                                loaderInfo._$characters = object.characters;
-                                loaderInfo._$symbols    = object.symbols;
-
                                 loaderInfo._$content = new MovieClip();
-                                loaderInfo._$content._$loaderInfo = loaderInfo;
-                                loaderInfo._$content._$build(object.characters[0]);
+                                this.addChild(loaderInfo._$content);
+
+                                // build root
+                                loaderInfo._$content._$build({
+                                    "characterId": 0,
+                                    "clipDepth": 0,
+                                    "depth": 0,
+                                    "endFrame": 2,
+                                    "startFrame": 1
+                                }, this);
+
 
                                 const player = Util.$currentPlayer();
                                 if (loaderInfo._$mainInfo) {
 
-                                    player.width  = object.stage.width;
-                                    player.height = object.stage.height;
+                                    const stage = loaderInfo._$data.stage;
 
-                                    const stage = player.stage;
-                                    stage.frameRate = object.stage.fps;
+                                    player.width  = stage.width;
+                                    player.height = stage.height;
+                                    player.stage.frameRate = stage.fps;
 
                                     // TODO
                                     player._$context._$setColor(1, 1, 1, 1);

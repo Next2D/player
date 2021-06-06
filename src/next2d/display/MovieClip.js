@@ -743,28 +743,30 @@ class MovieClip extends Sprite
     }
 
     /**
-     * @param {object} object
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
+     * @method
      * @private
      */
-    _$build (object)
+    _$build (tag, parent)
     {
-        this._$controller.concat(object.controller);
-        this._$dictionary.concat(object.dictionary);
-        this._$placeController.concat(object.placeController);
-        this._$placeObjects.concat(object.placeObjects);
+        const character = super._$build(tag, parent);
 
-        for (let idx = 0; idx < object.labels.length; ++idx) {
+        // TODO object.actions
+        // TODO object.sounds
 
-            const label = object.labels[idx];
+        for (let idx = 0; idx < character.labels.length; ++idx) {
+
+            const label = character.labels[idx];
 
             this.addFrameLabel(new FrameLabel(label.name, label.frame))
 
         }
 
-        console.log(this);
+        this._$totalFrames = character.controller.length;
 
-        // TODO object.actions
-        // TODO object.sounds
+        return character;
     }
 
 }

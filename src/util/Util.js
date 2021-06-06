@@ -1840,6 +1840,30 @@ Util.$headerToArray = function (header)
     return results;
 };
 
+/**
+ * @param {string} symbol
+ * @return {function}
+ * @method
+ * @static
+ */
+Util.$getClass = function (symbol)
+{
+    const names = symbol.split(".");
+
+    let object = Util.$window;
+    for (let idx = 0; idx < names.length; ++idx) {
+
+        const name = names[idx];
+        if (!(name in object)) {
+            return null;
+        }
+
+        object = object[name];
+    }
+
+    return object;
+}
+
 
 /**
  * @param  {Next2D} object

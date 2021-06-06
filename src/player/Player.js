@@ -1592,11 +1592,6 @@ class Player
 
                 const loader = loaders[idx];
 
-                // unlock
-                if (loader instanceof LoaderInfo) {
-                    loader._$lock = false;
-                }
-
                 // init event
                 if (loader.hasEventListener(Event.INIT)) {
                     loader.dispatchEvent(new Event(Event.INIT));
@@ -1607,8 +1602,6 @@ class Player
                     loader.dispatchEvent(new Event(Event.COMPLETE));
                 }
 
-                // remove scope player
-                loader._$player = null;
             }
 
             // pool
