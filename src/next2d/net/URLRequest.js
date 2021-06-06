@@ -28,7 +28,7 @@ class URLRequest
         this._$contentType = "application/json";
 
         /**
-         * @type {object|null}
+         * @type {object}
          * @default null
          * @private
          */
@@ -53,6 +53,20 @@ class URLRequest
          * @private
          */
         this._$userAgent = Util.$navigator.userAgent;
+
+        /**
+         * @type {string}
+         * @default URLLoaderDataFormat.STRING
+         * @private
+         */
+        this._$responseDataFormat = URLLoaderDataFormat.STRING;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$withCredentials = false;
     }
 
     /**
@@ -217,6 +231,32 @@ class URLRequest
     get userAgent ()
     {
         return this._$userAgent;
+    }
+
+    /**
+     * @description レスポンスのデータフォーマットを指定します。
+     *              Specifies the data format of the response.
+     *
+     * @member {string}
+     * @readonly
+     * @public
+     */
+    get responseDataFormat ()
+    {
+        return this._$responseDataFormat;
+    }
+
+    /**
+     * @description HTTP 要求で使用されるユーザーエージェントストリングを指定します。
+     *              Specifies the user-agent string to be used in the HTTP request.
+     *
+     * @member {boolean}
+     * @readonly
+     * @public
+     */
+    get withCredentials ()
+    {
+        return this._$withCredentials;
     }
 
     /**

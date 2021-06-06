@@ -742,4 +742,29 @@ class MovieClip extends Sprite
 
     }
 
+    /**
+     * @param {object} object
+     * @private
+     */
+    _$build (object)
+    {
+        this._$controller.concat(object.controller);
+        this._$dictionary.concat(object.dictionary);
+        this._$placeController.concat(object.placeController);
+        this._$placeObjects.concat(object.placeObjects);
+
+        for (let idx = 0; idx < object.labels.length; ++idx) {
+
+            const label = object.labels[idx];
+
+            this.addFrameLabel(new FrameLabel(label.name, label.frame))
+
+        }
+
+        console.log(this);
+
+        // TODO object.actions
+        // TODO object.sounds
+    }
+
 }

@@ -1717,8 +1717,128 @@ Util.$linearGradientXY = function (matrix)
     return Util.$getArray(x0 + r2 * vx2, y0 + r2 * vy2, x1, y1);
 };
 
+/**
+ * @param  {object} [option = null]
+ * @return void
+ */
+Util.$ajax = function (option = null)
+{
+
+    if (!option) {
+        option = {
+            "method": "GET"
+        };
+    }
+
+    if (!("method" in option)) {
+        option.method = "GET";
+    }
 
 
+    // get or post
+    let postData = null;
+    switch (option.method.toUpperCase()) {
+
+        case URLRequestMethod.GET:
+
+            if (option.data) {
+                const urls = option.url.split("?");
+
+                urls[1] = (urls.length === 1)
+                    ? option.data.toString()
+                    : urls[1] +"&"+ option.data.toString();
+
+                option.url = urls.join("?");
+            }
+            break;
+
+        case URLRequestMethod.PUT:
+        case URLRequestMethod.POST:
+            postData = (option.data) ? option.data.toString() : null;
+            break;
+
+    }
+
+
+    // start
+    const xmlHttpRequest = new XMLHttpRequest();
+
+    xmlHttpRequest.open(option.method, option.url, true);
+
+    // use cookie
+    if (option.withCredentials) {
+        xmlHttpRequest.withCredentials = true;
+    }
+
+
+
+    // add event
+    if (option.event) {
+
+        const keys = Object.keys(option.event);
+
+        const length = keys.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const name = keys[idx];
+
+            xmlHttpRequest.addEventListener(name, option.event[name]);
+        }
+
+        Util.$poolArray(keys);
+    }
+
+
+    // set mimeType
+    if (option.format === URLLoaderDataFormat.ARRAY_BUFFER) {
+        xmlHttpRequest.responseType = URLLoaderDataFormat.ARRAY_BUFFER;
+    }
+
+
+    // set request header
+    if (option.headers) {
+
+        const headers = option.headers;
+
+        const names = Object.keys(headers);
+
+        const length = names.length;
+        for (let idx = 0; idx < length; ++idx) {
+            const name = names[idx];
+            xmlHttpRequest.setRequestHeader(name, headers[name]);
+        }
+
+        Util.$poolArray(names);
+    }
+
+    xmlHttpRequest.send(postData);
+};
+
+/**
+ * @param  {string} header
+ * @return {array}
+ */
+Util.$headerToArray = function (header)
+{
+    const results = Util.$getArray();
+    if (header) {
+
+        const headers = header.trim().split("\n");
+
+        const length = headers.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const values = headers[idx].split(":");
+            results.push({
+                "name":  values[0],
+                "value": values[1].trim()
+            });
+
+        }
+
+    }
+    return results;
+};
 
 
 /**
@@ -1755,7 +1875,12 @@ Util.$packages = function (object)
     object["events"] = {
         "Event": Event,
         "EventDispatcher": EventDispatcher,
-        "EventPhase": EventPhase
+        "EventPhase": EventPhase,
+        "FocusEvent": FocusEvent,
+        "HTTPStatusEvent": HTTPStatusEvent,
+        "IOErrorEvent": IOErrorEvent,
+        "MouseEvent": MouseEvent,
+        "ProgressEvent": ProgressEvent
     };
 
     object["filters"] = {
@@ -1787,6 +1912,7 @@ Util.$packages = function (object)
     };
 
     object["net"] = {
+        "URLLoaderDataFormat": URLLoaderDataFormat,
         "URLRequest": URLRequest,
         "URLRequestHeader": URLRequestHeader,
         "URLRequestMethod": URLRequestMethod,
@@ -1794,6 +1920,8 @@ Util.$packages = function (object)
 
     object["text"] = {
         "TextField": TextField,
-        "TextFormat": TextFormat
+        "TextFieldAutoSize": TextFieldAutoSize,
+        "TextFormat": TextFormat,
+        "TextFormatAlign": TextFormatAlign
     };
 }

@@ -5,7 +5,6 @@
  */
 class MouseEvent extends Event
 {
-
     /**
      * MouseEvent オブジェクトは、マウスイベントが発生するたびにイベントフローに送出されます。
      * 通常、マウスイベントは、マウスやトラックボールなど、ポインターを使用したユーザー入力デバイスによって生成されます。
@@ -17,16 +16,12 @@ class MouseEvent extends Event
      * @param {string}  type
      * @param {boolean} [bubbles=true]
      * @param {boolean} [cancelable=false]
-     * @param {number}  [local_x=NaN]
-     * @param {number}  [local_y=NaN]
      *
      * @constructor
      * @public
      */
-    constructor (
-        type, bubbles = true, cancelable = false,
-        local_x = NaN, local_y = NaN
-    ) {
+    constructor (type, bubbles = true, cancelable = false)
+    {
 
         super(type, bubbles, cancelable);
 

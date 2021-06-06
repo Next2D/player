@@ -8,11 +8,6 @@ class EventPhase
      * EventPhase クラスは、Event クラスの eventPhase プロパティの値を提供します。
      * The EventPhase class provides values for the eventPhase property of the Event class.
      *
-     * @example <caption>Example usage of EventPhase.</caption>
-     * // static EventPhase
-     * const {EventPhase} = next2d.events;
-     * EventPhase.AT_TARGET
-     *
      * @constructor
      * @public
      */

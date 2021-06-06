@@ -214,7 +214,6 @@ class Player
          */
         this._$broadcastEvents = Util.$getMap();
 
-
         /**
          * @type {null}
          * @default null
