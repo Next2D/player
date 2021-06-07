@@ -1909,9 +1909,7 @@ class TextField extends InteractiveObject
     _$getAlignOffset (obj)
     {
         const matrix = this._$transform.concatenatedMatrix();
-        const width  = Util.$ceil(Util.$abs(
-            (this._$bounds.xMax - this._$bounds.xMin)
-                / matrix.d * matrix.a));
+        const width  = Util.$ceil(Util.$abs(this._$bounds.xMax - this._$bounds.xMin));
         Util.$poolMatrix(matrix);
 
         // default
@@ -2016,13 +2014,50 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * TODO
-     * @return {void}
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
      * @method
      * @private
      */
-    _$build ()
+    _$build (tag, parent)
     {
+        const character = super._$build(tag, parent);
+
+        const textFormat = this.defaultTextFormat;
+
+        textFormat.font          = character.font;
+        textFormat.size          = character.size;
+        textFormat.align         = character.align;
+        textFormat.color         = character.color;
+        textFormat.leading       = character.leading;
+        textFormat.letterSpacing = character.letterSpacing;
+        textFormat.leftMargin    = character.leftMargin;
+        textFormat.rightMargin   = character.rightMargin;
+
+        switch (character.fontType) {
+
+            case 1:
+                textFormat.bold = true;
+                break;
+
+            case 2:
+                textFormat.italic = true;
+                break;
+
+            case 3:
+                textFormat.bold   = true;
+                textFormat.italic = true;
+                break;
+
+        }
+
+        this._$multiline    = character.multiline;
+        this._$wordWrap     = character.wordWrap;
+        this._$border       = character.border
+        this._$bounds       = character.bounds;
+        this._$originBounds = character.bounds;
+        this.text = character.text;
 
     }
 
@@ -2175,7 +2210,7 @@ class TextField extends InteractiveObject
             ctx.lineTo(xPoint, yPoint);
             ctx.clip();
 
-            ctx.setTransform(yScale, 0, 0, yScale, 2 * yScale, 2 * yScale);
+            ctx.setTransform(matrix[0], 0, 0, matrix[3], 2 * yScale, 2 * yScale);
             this._$doDraw(ctx, multiMatrix, multiColor, false);
 
             // mask end
@@ -2287,9 +2322,9 @@ class TextField extends InteractiveObject
         // init
         const textData = this._$getTextData();
 
-        let boundsWidth  =
-            (this._$originBounds.xMax - this._$originBounds.xMin)
-            * (matrix[0] / matrix[3]);
+        let boundsWidth = Util.$ceil(Util.$abs(
+            this._$originBounds.xMax - this._$originBounds.xMin
+        ));
 
         const limitWidth  = (is_clip) ? 0 : boundsWidth - 2;
         const limitHeight = (is_clip) ? 0 : this._$originBounds.yMax - this._$originBounds.yMin - 4;

@@ -1864,7 +1864,6 @@ Util.$getClass = function (symbol)
     return object;
 }
 
-
 /**
  * @param  {Next2D} object
  * @return {void}

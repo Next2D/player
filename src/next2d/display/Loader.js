@@ -231,7 +231,9 @@ class Loader extends DisplayObjectContainer
 
                             case URLLoaderDataFormat.STRING:
 
-                                loaderInfo._$data = JSON.parse(event.target.responseText);
+                                loaderInfo._$data = JSON.parse(
+                                    event.target.responseText
+                                );
 
                                 // setup
                                 loaderInfo._$content = new MovieClip();
@@ -256,14 +258,23 @@ class Loader extends DisplayObjectContainer
                                     player.height = stage.height;
                                     player.stage.frameRate = stage.fps;
 
-                                    // TODO
-                                    player._$context._$setColor(1, 1, 1, 1);
+                                    const color = Util.$intToRGBA(
+                                        `0x${stage.bgColor.substr(1)}`|0
+                                    );
 
-                                    // background color
-                                    // const color = loaderInfo._$backgroundColor;
-                                    // if (color) {
-                                    //     this._$player.setBackgroundColor(color.R, color.G, color.B);
-                                    // }
+                                    player._$context._$setColor(
+                                        color.R / 255,
+                                        color.G / 255,
+                                        color.B / 255,
+                                        1
+                                    );
+
+                                    player._$backgroundColor = [
+                                        color.R / 255,
+                                        color.G / 255,
+                                        color.B / 255,
+                                        1
+                                    ];
                                 }
 
                                 player._$loaders.push(loaderInfo);

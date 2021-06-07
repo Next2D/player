@@ -119,7 +119,25 @@ class Shape extends DisplayObject
 
         const graphics = this.graphics;
 
-        graphics._$recode   = character.recodes;
+        if (character.recodes) {
+
+            graphics._$recode = character.recodes;
+
+        } else {
+
+            const width  = Util.$abs(character.bounds.xMax - character.bounds.xMin);
+            const height = Util.$abs(character.bounds.yMax - character.bounds.yMin);
+
+            const bitmapData = new BitmapData(width, height, true, 0);
+            bitmapData._$buffer = new Uint8Array(character.buffer);
+
+            graphics
+                .beginBitmapFill(bitmapData, null, false)
+                .drawRect(0, 0, width, height)
+                .endFill();
+
+        }
+
         graphics._$maxAlpha = 1;
         graphics._$canDraw  = true;
 

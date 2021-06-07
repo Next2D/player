@@ -1356,7 +1356,7 @@ class Graphics
         context.setTransform(1, 0, 0, 1, 0, 0);
         if (isFilter) {
             context.drawImage(texture,
-                -offsetX -xMin, -offsetY - yMin,
+                xMin - offsetX, yMin - offsetY,
                 texture.width, texture.height, color_transform
             );
         } else {
@@ -1758,6 +1758,7 @@ class Graphics
             }
         }
 
+        this._$recode.length = 0;
         return Function("ctx", "ct", "is_clip", "options", command);
     }
 }
