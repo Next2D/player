@@ -737,9 +737,90 @@ class MovieClip extends Sprite
         this._$setAction();
     }
 
+    /**
+     * @return {boolean}
+     * @method
+     * @private
+     */
     _$nextFrame ()
     {
 
+        let isNext = this._$needsChildren;
+        switch (true) {
+
+            case this._$wait:
+                isNext = true;
+                this._$wait = false;
+                break;
+
+            case this._$stopFlag:
+            case this._$totalFrames === 1:
+                break;
+
+            default:
+
+                isNext = true;
+
+                // action on
+                this._$canAction = true;
+
+                // sound on
+                this._$canSound = true;
+
+                // next frame point
+                ++this._$currentFrame;
+                if (this._$currentFrame > this._$totalFrames) {
+                    this._$currentFrame = 1;
+                }
+
+                // clear
+                this._$clearChildren();
+
+                break;
+
+        }
+
+        const children = (this._$needsChildren)
+            ? this._$getChildren()
+            : this._$children;
+
+        for (let idx = children.length - 1; idx > -1; --idx) {
+
+            const child = children[idx];
+
+            if (!child._$isNext) {
+                continue;
+            }
+
+
+            if (isNext) {
+
+                child._$nextFrame();
+
+            } else {
+
+                isNext = child._$nextFrame();
+
+            }
+
+        }
+
+        // frame action
+        this._$setAction();
+
+        // set sound
+        const player = Util.$currentPlayer();
+        if (this._$canSound
+            && this._$sounds.size
+            && this._$sounds.has(this._$currentFrame)
+            && player._$sounds.indexOf(this) === -1
+        ) {
+            player._$sounds.push(this);
+        }
+
+        this._$isNext = isNext;
+
+        return this._$isNext;
     }
 
     /**
@@ -764,7 +845,7 @@ class MovieClip extends Sprite
 
         }
 
-        this._$totalFrames = character.controller.length;
+        this._$totalFrames = character.controller.length - 1;
 
         return character;
     }

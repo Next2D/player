@@ -2298,7 +2298,7 @@ class TextField extends InteractiveObject
         context.setTransform(1, 0, 0, 1, 0, 0);
         if (isFilter) {
             context.drawImage(texture,
-                -offsetX -xMin, -offsetY - yMin,
+                xMin - offsetX, yMin - offsetY,
                 texture.width, texture.height, multiColor
             );
         } else {

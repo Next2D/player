@@ -384,11 +384,14 @@ class DisplayObject extends EventDispatcher
 
                 }
 
-                this._$filters      = filters;
                 placeObject.filters = filters;
             }
 
-            return this._$filters.slice(0);
+            if (!this._$filters) {
+                this._$filters = placeObject.filters ;
+            }
+
+            return placeObject.filters.slice(0);
         }
 
         transform._$transform();

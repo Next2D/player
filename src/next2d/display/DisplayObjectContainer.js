@@ -761,14 +761,13 @@ class DisplayObjectContainer extends InteractiveObject
 
                 const instance = this._$children[idx];
 
-                if (!instance._$parent
-                    || instance._$parent._$instanceId !== this._$instanceId
-                ) {
+                const parent = instance._$parent;
+                if (!parent || parent._$instanceId !== this._$instanceId) {
                     continue;
                 }
 
                 if (instance._$startFrame <= frame
-                    && (instance._$endFrame === 0 || instance._$endFrame > frame)
+                    && instance._$endFrame > frame
                 ) {
 
                     instance._$filters   = null;
@@ -1530,7 +1529,49 @@ class DisplayObjectContainer extends InteractiveObject
 
         const instance = new character.class();
         instance._$build(tag, this);
+        instance._$id = index;
 
         return instance;
+    }
+
+    /**
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$nextFrame ()
+    {
+        let isNext = false;
+
+        const children = (this._$needsChildren)
+            ? this._$getChildren()
+            : this._$children;
+
+        for (let idx = children.length - 1; idx > -1; --idx) {
+
+            const child = children[idx];
+
+            if (!child._$isNext) {
+                continue;
+            }
+
+
+            if (isNext) {
+
+                child._$nextFrame();
+
+            } else {
+
+                isNext = child._$nextFrame();
+
+            }
+        }
+
+        // added event
+        this._$executeAddedEvent();
+
+        this._$isNext = isNext;
+
+        return this._$isNext;
     }
 }
