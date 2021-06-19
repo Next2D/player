@@ -244,4 +244,25 @@ class Shape extends DisplayObject
         }
     }
 
+    /**
+     * @param   {CanvasToWebGLContext} context
+     * @param   {Float32Array} matrix
+     * @returns {void}
+     * @method
+     * @private
+     */
+    _$clip (context, matrix)
+    {
+        let multiMatrix = matrix;
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
+
+        this._$graphics._$clip(context, multiMatrix);
+
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+    }
 }

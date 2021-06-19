@@ -245,7 +245,6 @@ class Graphics
     }
 
     /**
-     * TODO
      * @description 描画領域をビットマップイメージで塗りつぶします。
      *              Fills a drawing area with a bitmap image.
      *

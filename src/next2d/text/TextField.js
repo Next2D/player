@@ -2062,6 +2062,18 @@ class TextField extends InteractiveObject
     }
 
     /**
+     * @param   {CanvasToWebGLContext} context
+     * @param   {Float32Array} matrix
+     * @returns {void}
+     * @method
+     * @private
+     */
+    _$clip (context, matrix)
+    {
+        // TODO
+    }
+
+    /**
      * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform

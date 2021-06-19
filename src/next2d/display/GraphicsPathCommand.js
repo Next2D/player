@@ -84,8 +84,9 @@ if (options) {
     if ("isPointInStroke" in ctx && ctx.isPointInStroke(options.x, options.y)) {
         return true; 
     }
+    return false;
 }
-if (!is_clip && !options) {
+if (!is_clip) {
     ctx.fill();
 }`;
     }
@@ -167,8 +168,9 @@ if (options) {
     if ("isPointInStroke" in ctx && ctx.isPointInStroke(options.x, options.y)) {
         return true; 
     }
+    return false;
 }
-if (!is_clip && !options) {
+if (!is_clip) {
     ctx.stroke();
 }`;
     }
@@ -261,8 +263,9 @@ if (options) {
     if ("isPointInStroke" in ctx && ctx.isPointInStroke(options.x, options.y)) {
         return true;
     }
+    return false;
 }
-if (!is_clip && !options) {
+if (!is_clip) {
     ${GraphicsPathCommand.GRADIENT(
         type, colors, matrix, spread_method, 
         interpolation_method, focal_point_ratio
@@ -299,8 +302,9 @@ if (options) {
     if ("isPointInStroke" in ctx && ctx.isPointInStroke(options.x, options.y)) {
         return true;
     }
+    return false;
 }
-if (!is_clip && !options) {
+if (!is_clip) {
     ${GraphicsPathCommand.GRADIENT(
         type, colors, matrix, spread_method, 
         interpolation_method, focal_point_ratio
@@ -331,8 +335,9 @@ if (options) {
     if ("isPointInStroke" in ctx && ctx.isPointInStroke(options.x, options.y)) {
         return true;
     }
+    return false;
 }
-if (!is_clip && !options) {
+if (!is_clip) {
     ctx.save();
     const texture = ctx.frameBuffer.createTextureFromPixels(${bitmap_data.width}, ${bitmap_data.height}, new Uint8Array([${bitmap_data.toArray()}]));
     ctx.fillStyle = ctx.createPattern(texture, "${repeat}", ct);

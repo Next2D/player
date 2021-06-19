@@ -1212,7 +1212,7 @@ class DisplayObject extends EventDispatcher
         this._$clipDepth   = tag.clipDepth|0;
         this._$startFrame  = tag.startFrame|0;
         this._$endFrame    = tag.endFrame|0;
-        this._$placeId     = tag.depth|0;
+        this._$placeId     = tag.placeId|0;
 
         return loaderInfo._$data.characters[tag.characterId];
     }
@@ -1725,7 +1725,8 @@ class DisplayObject extends EventDispatcher
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @param  {object} object
-     * @return void
+     * @return {void}
+     * @method
      * @private
      */
     _$postDraw (context, matrix, color_transform, object)
@@ -1889,7 +1890,84 @@ class DisplayObject extends EventDispatcher
         Util.$poolPreObject(object);
     }
 
+    /**
+     * @param  {Float32Array} matrix
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$shouldClip (matrix)
+    {
+        if (this instanceof TextField) {
+            if (!this.textWidth || !this.textHeight) {
+                return false;
+            }
+            return true;
+        }
+
+        const bounds = this._$getBounds(matrix);
+        const width  = Util.$abs(bounds.xMax - bounds.xMin);
+        const height = Util.$abs(bounds.yMax - bounds.yMin);
+        Util.$poolBoundsObject(bounds);
+
+        // size 0
+        if (!width || !height) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @return {Float32Array|boolean|null}
+     * @method
+     * @private
+     */
+    _$startClip (context, matrix)
+    {
+        let clipMatrix = null;
+
+        // ネストしてない初回のマスクだけ実行
+        // ネストしてる場合は初回に作られたbufferを流用
+        if (!context._$cacheCurrentBuffer) {
+
+            clipMatrix = context._$startClip(this, matrix);
+            if (!clipMatrix) {
+                return false;
+            }
+
+        }
+
+        // start clip
+        context._$enterClip();
+
+        // mask start
+        context._$beginClipDef();
+
+        if (this instanceof DisplayObjectContainer) {
+            context._$mask._$containerClip = true;
+        }
+
+        this._$clip(context, clipMatrix || matrix);
+        this._$updated = false;
 
 
+        // container clip
+        if (context._$mask._$containerClip) {
+
+            // update flag
+            context._$mask._$containerClip = false;
+
+            // execute clip
+            context._$drawContainerClip();
+        }
+
+
+        // mask end
+        context._$endClipDef();
+
+        return clipMatrix;
+    }
 
 }

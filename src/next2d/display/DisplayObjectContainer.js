@@ -1146,6 +1146,46 @@ class DisplayObjectContainer extends InteractiveObject
 
     /**
      * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$clip (context, matrix)
+    {
+        let multiMatrix = matrix;
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
+
+        if (this._$graphics && this._$graphics._$getBounds()) {
+            this._$graphics._$clip(context, multiMatrix);
+        }
+
+        const children = this._$getChildren();
+        const length   = children.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const instance = children[idx];
+
+            // mask instance
+            if (instance._$isMask) {
+                continue;
+            }
+
+            instance._$clip(context, multiMatrix);
+            instance._$updated = false;
+
+        }
+
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
      * @param  {array} matrix
      * @param  {array} color_transform
      * @return {void}
