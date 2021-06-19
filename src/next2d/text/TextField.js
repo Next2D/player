@@ -285,11 +285,26 @@ class TextField extends InteractiveObject
          */
         this._$imageData = null;
 
+        /**
+         * @type {string}
+         * @default null
+         * @private
+         */
+        this._$type = TextFieldType.STATIC;
 
+        /**
+         * @type {array}
+         * @default null
+         * @private
+         */
         this._$textHeightTable = null;
-        this._$actTotalWidth   = null;
-        this._$span            = null;
-        this._$textSetting     = null;
+
+        /**
+         * @type {number}
+         * @default null
+         * @private
+         */
+        this._$actTotalWidth = null;
     }
 
     /**
@@ -2052,6 +2067,7 @@ class TextField extends InteractiveObject
 
         }
 
+        this._$type         = character.inputType;
         this._$multiline    = character.multiline;
         this._$wordWrap     = character.wordWrap;
         this._$border       = character.border

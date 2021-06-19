@@ -1944,6 +1944,7 @@ Util.$packages = function (object)
     object["text"] = {
         "TextField": TextField,
         "TextFieldAutoSize": TextFieldAutoSize,
+        "TextFieldType": TextFieldType,
         "TextFormat": TextFormat,
         "TextFormatAlign": TextFormatAlign
     };
