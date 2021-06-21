@@ -834,8 +834,25 @@ class MovieClip extends Sprite
     {
         const character = super._$build(tag, parent);
 
-        // TODO object.actions
         // TODO object.sounds
+        for (let idx = 0; idx < character.sounds.length; ++idx) {
+            const object = character.sounds[idx];
+            if (!this._$sounds.has(object.frame)) {
+                this._$sounds.set(object.frame, Util.$getArray());
+            }
+
+            this._$sounds.get(object.frame).push(new Sound());
+        }
+
+        for (let idx = 0; idx < character.actions.length; ++idx) {
+
+            const object = character.actions[idx];
+            if (!object.script) {
+                object.script = Function(object.action);
+            }
+
+            this._$addAction(object.frame, object.script);
+        }
 
         for (let idx = 0; idx < character.labels.length; ++idx) {
 

@@ -92,18 +92,20 @@ class DisplayObjectContainer extends InteractiveObject
          */
         this._$names = Util.$getMap();
 
-        // return new Proxy(this, {
-        //     "get": function (object, name)
-        //     {
-        //         if (object._$names.size
-        //             && object._$names.has(name)
-        //         ) {
-        //             return object._$names.get(name);
-        //         }
-        //
-        //         return object[name];
-        //     }
-        // });
+        return new Proxy(this, {
+            "get": function (object, name)
+            {
+                if (name in object) {
+                    return object[name];
+                }
+
+                if (object._$names.size
+                    && object._$names.has(name)
+                ) {
+                    return object._$names.get(name);
+                }
+            }
+        });
     }
 
     /**

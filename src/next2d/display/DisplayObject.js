@@ -1213,6 +1213,7 @@ class DisplayObject extends EventDispatcher
         this._$startFrame  = tag.startFrame|0;
         this._$endFrame    = tag.endFrame|0;
         this._$placeId     = tag.placeId|0;
+        this._$name        = tag.name || "";
 
         return loaderInfo._$data.characters[tag.characterId];
     }
