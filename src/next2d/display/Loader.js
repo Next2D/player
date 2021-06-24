@@ -235,49 +235,37 @@ class Loader extends DisplayObjectContainer
                                     event.target.responseText
                                 );
 
+                                const root = loaderInfo._$data.characters[0]
+
                                 // setup
                                 loaderInfo._$content = new MovieClip();
-                                this.addChild(loaderInfo._$content);
 
                                 // build root
                                 loaderInfo._$content._$build({
                                     "characterId": 0,
                                     "clipDepth": 0,
                                     "depth": 0,
-                                    "endFrame": 2,
+                                    "endFrame": root.controller.length,
                                     "startFrame": 1
                                 }, this);
 
+                                // fixed logic
+                                loaderInfo._$content._$parent = null;
+                                this.addChild(loaderInfo._$content);
+
+                                loaderInfo._$content._$added      = false;
+                                loaderInfo._$content._$addedStage = false;
 
                                 const player = Util.$currentPlayer();
-                                if (loaderInfo._$mainInfo) {
 
-                                    const stage = loaderInfo._$data.stage;
+                                // to event
+                                player._$loaders.push(loaderInfo);
 
-                                    player.width  = stage.width;
-                                    player.height = stage.height;
-                                    player.stage.frameRate = stage.fps;
-
-                                    const color = Util.$intToRGBA(
-                                        `0x${stage.bgColor.substr(1)}`|0
-                                    );
-
-                                    player._$context._$setColor(
-                                        color.R / 255,
-                                        color.G / 255,
-                                        color.B / 255,
-                                        1
-                                    );
-
-                                    player._$backgroundColor = [
-                                        color.R / 255,
-                                        color.G / 255,
-                                        color.B / 255,
-                                        1
-                                    ];
+                                // next
+                                if (player._$loadStatus === 1) {
+                                    player._$loadStatus = 2;
                                 }
 
-                                player._$loaders.push(loaderInfo);
                                 break;
 
                         }

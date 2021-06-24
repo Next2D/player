@@ -57,12 +57,6 @@ class DisplayObjectContainer extends InteractiveObject
          * @type {array}
          * @private
          */
-        this._$instances = Util.$getArray();
-
-        /**
-         * @type {array}
-         * @private
-         */
         this._$children = Util.$getArray();
 
         /**
@@ -711,6 +705,7 @@ class DisplayObjectContainer extends InteractiveObject
                 for (let idx = 0; idx < length; ++idx) {
 
                     const instance = this._$createInstance(controller[idx]);
+                    instance._$placeId = idx;
 
                     this._$children.push(instance);
                     if (instance._$name) {
@@ -754,6 +749,7 @@ class DisplayObjectContainer extends InteractiveObject
                     const id = controller[depth];
                     if (instance._$id === id) {
 
+                        instance._$placeId = depth;
                         children.push(instance);
 
                         if (instance._$name) {
@@ -793,27 +789,22 @@ class DisplayObjectContainer extends InteractiveObject
 
             }
 
+            for (let idx = 0; idx < controller.length; ++idx) {
 
-            if (poolInstances.size) {
-
-                const length = controller.length;
-                for (let idx = 0; idx < length; ++idx) {
-
-                    const id = controller[idx];
-                    if (skipIds.has(id)) {
-                        continue;
-                    }
-
-                    const instance = (poolInstances.has(id))
-                        ? poolInstances.get(id)
-                        : this._$createInstance(id);
-
-                    children.push(instance);
-                    if (instance._$name) {
-                        this._$names.set(instance._$name, instance);
-                    }
+                const id = controller[idx];
+                if (skipIds.has(id)) {
+                    continue;
                 }
 
+                const instance = (poolInstances.has(id))
+                    ? poolInstances.get(id)
+                    : this._$createInstance(id);
+
+                instance._$placeId = idx;
+                children.push(instance);
+                if (instance._$name) {
+                    this._$names.set(instance._$name, instance);
+                }
             }
 
             // object pool
@@ -867,10 +858,6 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
 
-        // add
-        this._$instances.push(child);
-
-
         // added event
         if (!child._$added) {
             if (child.willTrigger(Event.ADDED)) {
@@ -909,16 +896,16 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$setParentAndStage ()
     {
-        const length = this._$instances.length;
+        const children = this._$getChildren();
+
+        const length = children.length;
         for (let idx = 0; idx < length; ++idx) {
 
-            const instance = this._$instances[idx];
-            if (!instance) {
-                continue;
-            }
+            const instance = children[idx];
 
-            instance._$stage = this._$stage;
             instance._$root  = this._$root;
+            instance._$stage = this._$stage;
+
             if (instance instanceof DisplayObjectContainer) {
                 instance._$setParentAndStage();
                 instance._$wait = true;
@@ -972,25 +959,6 @@ class DisplayObjectContainer extends InteractiveObject
         children.splice(depth, 1);
 
         this._$names.delete(child.name);
-        const index = this._$instances.indexOf(child);
-        if (child._$id === null) {
-
-            if ((this._$instances.length - 1) === index) {
-
-                this._$instances.pop();
-
-            } else {
-
-                this._$instances.splice(index, 1);
-
-            }
-
-        } else {
-
-            this._$instances[index] = null;
-
-        }
-
         if (do_event) {
 
             // event
@@ -1066,15 +1034,12 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$removeParentAndStage ()
     {
-        const length = this._$instances.length;
+        const children = this._$getChildren();
+
+        const length = children.length;
         for (let idx = 0; idx < length; ++idx) {
 
-            const instance = this._$instances[idx];
-
-            if (!instance) {
-                continue;
-            }
-
+            const instance = children[idx];
             if (instance instanceof DisplayObjectContainer) {
                 instance._$removeParentAndStage();
             }

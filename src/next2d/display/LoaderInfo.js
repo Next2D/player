@@ -63,13 +63,6 @@ class LoaderInfo extends EventDispatcher
          * @private
          */
         this._$format = URLLoaderDataFormat.STRING;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$mainInfo = false;
     }
 
     /**

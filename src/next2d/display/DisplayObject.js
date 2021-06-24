@@ -1205,6 +1205,7 @@ class DisplayObject extends EventDispatcher
         // setup
         this._$parent     = parent;
         this._$root       = parent._$root;
+        this._$stage      = parent._$stage;
         this._$loaderInfo = loaderInfo;
 
         // bind tag data
@@ -1212,7 +1213,6 @@ class DisplayObject extends EventDispatcher
         this._$clipDepth   = tag.clipDepth|0;
         this._$startFrame  = tag.startFrame|0;
         this._$endFrame    = tag.endFrame|0;
-        this._$placeId     = tag.placeId|0;
         this._$name        = tag.name || "";
 
         return loaderInfo._$data.characters[tag.characterId];

@@ -42,6 +42,55 @@ class Next2D
 
         this._$player.setOptions(options);
 
+        const loader = new Loader();
+
+        const loaderInfo = loader.contentLoaderInfo;
+
+        // create event handler
+        const errorHandler = function (event)
+        {
+            event.target.removeEventListener(Event.COMPLETE, completeHandler);
+            event.target.removeEventListener(IOErrorEvent.IO_ERROR, errorHandler);
+            alert("Error: " + event.message);
+        };
+        const completeHandler = function (event)
+        {
+            const loaderInfo = event.target;
+            loaderInfo.removeEventListener(Event.COMPLETE, completeHandler);
+            loaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, errorHandler);
+
+            const player = Util.$currentPlayer();
+            const stage  = player.stage;
+            const data   = loaderInfo._$data.stage;
+
+            player.width  = data.width;
+            player.height = data.height;
+            player.stage.frameRate = data.fps;
+
+            const color = Util.$intToRGBA(
+                `0x${data.bgColor.substr(1)}`|0
+            );
+
+            player._$context._$setColor(
+                color.R / 255,
+                color.G / 255,
+                color.B / 255,
+                1
+            );
+
+            player._$backgroundColor = [
+                color.R / 255,
+                color.G / 255,
+                color.B / 255,
+                1
+            ];
+
+            stage.addChild(loaderInfo.content);
+        };
+
+        loaderInfo.addEventListener(IOErrorEvent.IO_ERROR, errorHandler);
+        loaderInfo.addEventListener(Event.COMPLETE, completeHandler);
+        loader.load(new URLRequest(url));
     }
 
     /**
