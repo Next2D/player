@@ -418,7 +418,7 @@ class DisplayObject extends EventDispatcher
             this._$transform._$rawMatrix()
         );
 
-        const height = Util.$abs(bounds.yMax - bounds.yMin) / Util.$TWIPS;
+        const height = Util.$abs(bounds.yMax - bounds.yMin);
 
         // object pool
         Util.$poolBoundsObject(bounds);
@@ -443,7 +443,7 @@ class DisplayObject extends EventDispatcher
                 ? Util.$boundsMatrix(this._$getBounds(null), this._$transform._$rawMatrix())
                 : this._$getBounds(null);
 
-            const exHeight = Util.$abs(bounds.yMax - bounds.yMin) / Util.$TWIPS;
+            const exHeight = Util.$abs(bounds.yMax - bounds.yMin);
             Util.$poolBoundsObject(bounds);
 
             switch (exHeight) {
@@ -850,7 +850,7 @@ class DisplayObject extends EventDispatcher
             this._$transform._$rawMatrix()
         );
 
-        const width = Util.$abs(bounds.xMax - bounds.xMin) / Util.$TWIPS;
+        const width = Util.$abs(bounds.xMax - bounds.xMin);
         Util.$poolBoundsObject(bounds);
 
         switch (true) {
@@ -873,7 +873,7 @@ class DisplayObject extends EventDispatcher
                 ? Util.$boundsMatrix(this._$getBounds(null), this._$transform._$rawMatrix())
                 : this._$getBounds(null);
 
-            const exWidth = Util.$abs(bounds.xMax - bounds.xMin) / Util.$TWIPS;
+            const exWidth = Util.$abs(bounds.xMax - bounds.xMin);
             Util.$poolBoundsObject(bounds);
 
             switch (true) {
@@ -904,7 +904,7 @@ class DisplayObject extends EventDispatcher
      */
     get x ()
     {
-        return this._$transform._$rawMatrix()[4] / Util.$TWIPS;
+        return this._$transform._$rawMatrix()[4];
     }
     set x (x)
     {
@@ -930,7 +930,7 @@ class DisplayObject extends EventDispatcher
      */
     get y ()
     {
-        return this._$transform._$rawMatrix()[5] / Util.$TWIPS;
+        return this._$transform._$rawMatrix()[5];
     }
     set y (y)
     {
@@ -990,10 +990,10 @@ class DisplayObject extends EventDispatcher
             targetBaseBounds, targetMatrix._$matrix
         );
 
-        const xMin = resultBounds.xMin / Util.$TWIPS;
-        const yMin = resultBounds.yMin / Util.$TWIPS;
-        const xMax = resultBounds.xMax / Util.$TWIPS;
-        const yMax = resultBounds.yMax / Util.$TWIPS;
+        const xMin = resultBounds.xMin;
+        const yMin = resultBounds.yMin;
+        const xMax = resultBounds.xMax;
+        const yMax = resultBounds.yMax;
 
         // pool
         Util.$poolBoundsObject(targetBaseBounds);
@@ -1102,12 +1102,6 @@ class DisplayObject extends EventDispatcher
                 parent = parent._$parent;
             }
 
-            // 1 / 20 matrix
-            matrix = Util.$multiplicationMatrix(
-                Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE,
-                matrix
-            );
-
             Util.$hitContext.setTransform(1, 0, 0, 1, 0, 0);
             Util.$hitContext.beginPath();
             const result = this._$hit(Util.$hitContext, matrix, { "x": x, "y": y }, true);
@@ -1121,10 +1115,10 @@ class DisplayObject extends EventDispatcher
         const baseBounds = this._$getBounds(null);
         const bounds = Util.$boundsMatrix(baseBounds, this._$transform._$rawMatrix());
 
-        const rectX = bounds.xMin / Util.$TWIPS;
-        const rectY = bounds.yMin / Util.$TWIPS;
-        const rectW = (bounds.xMax - bounds.xMin) / Util.$TWIPS;
-        const rectH = (bounds.yMax - bounds.yMin) / Util.$TWIPS;
+        const rectX = bounds.xMin;
+        const rectY = bounds.yMin;
+        const rectW = (bounds.xMax - bounds.xMin);
+        const rectH = (bounds.yMax - bounds.yMin);
 
         const point = (this._$parent)
             ? this._$parent.globalToLocal(new Point(x, y))
@@ -1279,10 +1273,10 @@ class DisplayObject extends EventDispatcher
 
 
         let rect = new Rectangle(
-            baseBounds.xMin / Util.$TWIPS,
-            baseBounds.yMin / Util.$TWIPS,
-            (baseBounds.xMax - baseBounds.xMin) / Util.$TWIPS,
-            (baseBounds.yMax - baseBounds.yMin) / Util.$TWIPS
+            baseBounds.xMin,
+            baseBounds.yMin,
+            (baseBounds.xMax - baseBounds.xMin),
+            (baseBounds.yMax - baseBounds.yMin)
         );
         Util.$poolBoundsObject(baseBounds);
 

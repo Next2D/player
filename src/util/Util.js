@@ -21,14 +21,6 @@ let programId  = 0;
  */
 const Util = {};
 
-
-/**
- * @type {number}
- * @const
- * @static
- */
-Util.$TWIPS = 1;
-
 /**
  * @type {string}
  * @const
@@ -587,44 +579,10 @@ Util.$MATRIX_ARRAY_IDENTITY = new Float32Array([1, 0, 0, 1, 0, 0]);
  * @const
  * @static
  */
-Util.$MATRIX_ARRAY_20_0_0_20_0_0 = new Float32Array([Util.$TWIPS, 0, 0, Util.$TWIPS, 0, 0]);
-
-/**
- * @type {Float32Array}
- * @const
- * @static
- */
-Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE = new Float32Array([0.05, 0, 0, 0.05, 0, 0]);
-
-/**
- * @type {Float32Array}
- * @const
- * @static
- */
 Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0 = new Float32Array([
-    Util.$TWIPS / Util.$devicePixelRatio, 0, 0,
-    Util.$TWIPS / Util.$devicePixelRatio, 0, 0
+    Util.$devicePixelRatio, 0, 0,
+    Util.$devicePixelRatio, 0, 0
 ]);
-
-/**
- * @type {Float32Array}
- * @const
- * @static
- */
-Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE = new Float32Array([
-    1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0,
-    1 / Util.$TWIPS * Util.$devicePixelRatio, 0, 0
-]);
-
-/**
- * LoaderInfo Object を格納
- * Stores the LoaderInfo Object.
- *
- * @type {LoaderInfo[]}
- * @const
- * @static
- */
-Util.$loaderInfos = [];
 
 /**
  * 使用済みになったbounds Objectをプール
@@ -1220,7 +1178,7 @@ Util.$getMatrix = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
         const matrix = Util.$matrices.pop();
         matrix._$matrix = Util.$getFloat32Array6(a, b, c, d, tx, ty);
     }
-    return new Matrix(a, b, c, d, tx / Util.$TWIPS, ty / Util.$TWIPS);
+    return new Matrix(a, b, c, d, tx, ty);
 }
 
 /**

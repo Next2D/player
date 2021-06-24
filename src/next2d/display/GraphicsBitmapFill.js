@@ -154,9 +154,9 @@ class GraphicsBitmapFill
      */
     toArray ()
     {
-        const matrix = (this._$matrix instanceof Matrix)
-            ? Util.$multiplicationMatrix(this._$matrix._$matrix, Util.$MATRIX_ARRAY_20_0_0_20_0_0)
-            : Util.$MATRIX_ARRAY_20_0_0_20_0_0;
+        const matrix = (this._$matrix)
+            ? this._$matrix._$matrix
+            : Util.$MATRIX_ARRAY_IDENTITY;
 
         return Util.$getArray(
             this._$bitmapData,

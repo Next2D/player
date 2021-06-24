@@ -1559,7 +1559,7 @@ class TextField extends InteractiveObject
         // new format
         let tf = text_format._$clone();
 
-        let playerMatrix = Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE;
+        let playerMatrix = Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0;
 
         const player = Util.$currentPlayer();
         if (player) {
@@ -2343,6 +2343,7 @@ class TextField extends InteractiveObject
      * @param   {Float32Array} color_transform
      * @param   {boolean} is_clip
      * @returns void
+     * @method
      * @private
      */
     _$doDraw (context, matrix, color_transform, is_clip)
@@ -2458,5 +2459,67 @@ class TextField extends InteractiveObject
 
             }
         }
+    }
+
+    /**
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object}  options
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$mouseHit (context, matrix, options)
+    {
+        if (!this._$visible) {
+            return false;
+        }
+
+        return this._$hit(context, matrix, options);
+    }
+
+    /**
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object} options
+     * @param  {boolean} [is_clip=false]
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$hit (context, matrix, options, is_clip)
+    {
+        let multiMatrix = matrix;
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
+
+        const baseBounds = this._$getBounds(null);
+
+        const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
+        const xMax   = +bounds.xMax;
+        const xMin   = +bounds.xMin;
+        const yMax   = +bounds.yMax;
+        const yMin   = +bounds.yMin;
+        Util.$poolBoundsObject(bounds);
+        Util.$poolBoundsObject(baseBounds);
+
+        const width  = Util.$ceil(Util.$abs(xMax - xMin));
+        const height = Util.$ceil(Util.$abs(yMax - yMin));
+
+        context.setTransform(1, 0, 0, 1, xMin, yMin);
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(width, 0);
+        context.lineTo(width, height);
+        context.lineTo(0, height);
+        context.lineTo(0, 0);
+
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+
+        return context.isPointInPath(options.x, options.y);
     }
 }

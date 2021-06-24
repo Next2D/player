@@ -41,9 +41,7 @@ class Matrix
          * @type {Float32Array}
          * @private
          */
-        this._$matrix = Util.$getFloat32Array6(
-            a, b, c, d, tx * Util.$TWIPS, ty * Util.$TWIPS
-        );
+        this._$matrix = Util.$getFloat32Array6(a, b, c, d, tx, ty);
     }
 
     /**
@@ -183,11 +181,11 @@ class Matrix
      */
     get tx ()
     {
-        return this._$matrix[4] / Util.$TWIPS;
+        return this._$matrix[4];
     }
     set tx (tx)
     {
-        this._$matrix[4] = +tx * Util.$TWIPS;
+        this._$matrix[4] = +tx;
     }
 
     /**
@@ -200,11 +198,11 @@ class Matrix
      */
     get ty ()
     {
-        return this._$matrix[5] / Util.$TWIPS;
+        return this._$matrix[5];
     }
     set ty (ty)
     {
-        this._$matrix[5] = +ty * Util.$TWIPS;
+        this._$matrix[5] = +ty;
     }
 
     /**
@@ -396,8 +394,8 @@ class Matrix
         let b  = this._$matrix[1];
         let c  = this._$matrix[2];
         let d  = this._$matrix[3];
-        let tx = this._$matrix[4] / Util.$TWIPS;
-        let ty = this._$matrix[5] / Util.$TWIPS;
+        let tx = this._$matrix[4];
+        let ty = this._$matrix[5];
 
         if (b === 0 && c === 0) {
 
@@ -516,8 +514,8 @@ class Matrix
     transformPoint (point)
     {
         return new Point(
-            point.x * this._$matrix[0] + point.y * this._$matrix[2] + this._$matrix[4] / Util.$TWIPS,
-            point.x * this._$matrix[1] + point.y * this._$matrix[3] + this._$matrix[5] / Util.$TWIPS
+            point.x * this._$matrix[0] + point.y * this._$matrix[2] + this._$matrix[4],
+            point.x * this._$matrix[1] + point.y * this._$matrix[3] + this._$matrix[5]
         );
     }
 

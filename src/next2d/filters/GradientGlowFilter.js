@@ -620,8 +620,8 @@ class GradientGlowFilter  extends BitmapFilter
         const offsetDiffY = blurOffsetY - baseOffsetY;
 
         // matrix to scale
-        const xScale = +(Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]) * Util.$TWIPS);
-        const yScale = +(Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]) * Util.$TWIPS);
+        const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
         // shadow point
         const radian = +(this._$angle * Util.$Deg2Rad);

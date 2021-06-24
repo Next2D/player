@@ -1047,7 +1047,7 @@ class Player
                     manager._$textureManager._$maxHeight    = height;
                 }
 
-                const mScale = this._$scale * this._$ratio / Util.$TWIPS;
+                const mScale = this._$scale * this._$ratio;
                 this._$matrix[0] = mScale;
                 this._$matrix[3] = mScale;
 
@@ -1244,7 +1244,7 @@ class Player
 
         // hit test
         this._$stage._$mouseHit(
-            Util.$hitContext, Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE,
+            Util.$hitContext, Util.$MATRIX_ARRAY_IDENTITY,
             this._$hitObject, true
         );
 
@@ -1789,7 +1789,7 @@ class Player
 
         // hit test
         this._$stage._$mouseHit(
-            Util.$hitContext, Util.$MATRIX_ARRAY_20_0_0_20_0_0_INVERSE,
+            Util.$hitContext, Util.$MATRIX_ARRAY_IDENTITY,
             this._$hitObject, true
         );
 

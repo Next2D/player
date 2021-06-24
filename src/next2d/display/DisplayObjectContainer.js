@@ -550,7 +550,7 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
 
-        const tMatrix = (matrix)
+        const multiMatrix = (matrix)
             ? Util.$multiplicationMatrix(matrix, this._$transform._$rawMatrix())
             : Util.$MATRIX_ARRAY_IDENTITY;
 
@@ -563,7 +563,7 @@ class DisplayObjectContainer extends InteractiveObject
 
 
         if (isGraphics) {
-            const bounds = Util.$boundsMatrix(this._$graphics._$getBounds(), tMatrix);
+            const bounds = Util.$boundsMatrix(this._$graphics._$getBounds(), multiMatrix);
             xMin   = bounds.xMin;
             xMax   = bounds.xMax;
             yMin   = bounds.yMin;
@@ -574,7 +574,7 @@ class DisplayObjectContainer extends InteractiveObject
 
         for (let idx = 0; idx < length; ++idx) {
 
-            const bounds = children[idx]._$getBounds(tMatrix);
+            const bounds = children[idx]._$getBounds(multiMatrix);
 
             xMin = Util.$min(xMin, bounds.xMin);
             xMax = Util.$max(xMax, bounds.xMax);
@@ -1121,6 +1121,7 @@ class DisplayObjectContainer extends InteractiveObject
     _$clip (context, matrix)
     {
         let multiMatrix = matrix;
+
         const rawMatrix = this._$transform._$rawMatrix();
         if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
@@ -1431,9 +1432,255 @@ class DisplayObjectContainer extends InteractiveObject
 
     }
 
-    _$mouseHit ()
+    /**
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object} options
+     * @param  {boolean} [mouse_children=true]
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$mouseHit (context, matrix, options, mouse_children = true)
+    {
+        let multiMatrix = matrix;
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
+
+        const children = this._$getChildren();
+
+        // mask set
+        const clips       = Util.$getArray();
+        const targets     = Util.$getArray();
+        const clipIndexes = Util.$getMap();
+
+        let length        = children.length;
+        let clipDepth     = null;
+        let clipIdx       = null;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const instance = children[idx];
+
+            if (!instance.visible && !instance._$hitObject) {
+                continue;
+            }
+
+            if (instance._$clipDepth) {
+                clipIdx   = clips.length;
+                clipDepth = instance._$clipDepth;
+                clips.push(instance);
+                continue;
+            }
+
+            // clip end
+            if (clipDepth && instance._$placeId > clipDepth) {
+                clipIdx   = null;
+                clipDepth = null;
+            }
+
+            // clip check on
+            if (clipIdx !== null) {
+                clipIndexes.set(instance._$instanceId, clipIdx);
+            }
+
+            targets.push(instance);
+
+        }
+
+
+        // setup
+        const mouseChildren = Util.$min(this._$mouseChildren, mouse_children);
+
+        let hit      = false;
+        const isRoot = (this._$root === this);
+
+        length = targets.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const instance = targets.pop();
+
+            if (instance._$isMask) {
+                continue;
+            }
+
+            if (isRoot && !(instance instanceof InteractiveObject)) {
+                continue;
+            }
+
+            // mask target
+            if (clipIndexes.has(instance._$instanceId)) {
+
+                const clip = clips[clipIndexes.get(instance._$instanceId)];
+
+                if (!clip._$hit(context, multiMatrix, options, true)) {
+                    continue;
+                }
+
+            }
+
+
+            // mask hit test
+            const maskInstance = instance._$mask;
+            if (maskInstance) {
+
+                if (this === maskInstance._$parent) {
+
+                    if (!maskInstance._$hit(context, multiMatrix, options, true)) {
+                        continue;
+                    }
+
+                } else {
+
+                    let maskMatrix = Util.$MATRIX_ARRAY_IDENTITY;
+
+                    let parent = maskInstance._$parent;
+                    while (parent) {
+
+                        maskMatrix = Util.$multiplicationMatrix(
+                            parent._$transform._$rawMatrix(),
+                            maskMatrix
+                        );
+
+                        parent = parent._$parent;
+                    }
+
+                    if (!maskInstance._$hit(context, maskMatrix, options, true)) {
+                        continue;
+                    }
+
+                }
+
+            }
+
+
+            if (instance._$mouseHit(context, multiMatrix, options, mouseChildren)
+                || (instance._$hitArea
+                    && instance
+                        ._$hitArea
+                        ._$mouseHit(context, multiMatrix, options, mouseChildren))
+            ) {
+
+                if (instance._$root === instance) {
+                    return true;
+                }
+
+                if (!mouseChildren) {
+                    return true;
+                }
+
+                hit = true;
+                if (instance instanceof InteractiveObject) {
+
+                    if (!instance._$mouseEnabled && !instance._$hitObject) {
+                        continue;
+                    }
+
+                    if (!Util.$isTouch && !options.pointer) {
+
+                        switch (true) {
+
+                            case instance instanceof TextField:
+                                if (instance._$type === TextFieldType.INPUT
+                                    && instance._$selectable
+                                ) {
+                                    options.pointer = "text";
+                                }
+                                break;
+
+                            case instance instanceof SimpleButton:
+                            case instance.buttonMode && instance.useHandCursor:
+                                options.pointer = "pointer";
+                                break;
+
+                        }
+
+                    }
+
+                    if (!options.hit) {
+
+                        options.hit = (!instance._$mouseEnabled && instance._$hitObject)
+                            ? instance._$hitObject
+                            : instance;
+
+                    }
+
+                    return true;
+                }
+
+            }
+
+        }
+
+        // pool
+        Util.$poolArray(clips);
+        Util.$poolArray(targets);
+        Util.$poolMap(clipIndexes);
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+
+        // end
+        if (hit) {
+            return true;
+        }
+
+        // graphics
+        if (this._$graphics && this._$graphics._$hit(context, multiMatrix, options)) {
+            return true;
+        }
+
+        // not found
+        return false;
+    }
+
+    /**
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object}  options
+     * @param  {boolean} [is_clip=false]
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$hit (context, matrix, options, is_clip)
     {
 
+        let multiMatrix = matrix;
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
+
+        if (!options.skipChildren) {
+            const children = this._$getChildren();
+
+            const length = children.length - 1;
+            for (let idx = length; idx > -1; --idx) {
+
+                const instance = children[idx];
+                if (instance._$isMask) {
+                    continue;
+                }
+
+                if (instance._$hit(context, multiMatrix, options, is_clip)) {
+                    return true;
+                }
+
+            }
+        }
+
+        let hit = false;
+        if (this._$graphics) {
+            hit = this._$graphics._$hit(context, multiMatrix, options);
+        }
+
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+
+        return hit;
     }
 
     /**

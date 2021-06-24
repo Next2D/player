@@ -265,4 +265,58 @@ class Shape extends DisplayObject
             Util.$poolFloat32Array6(multiMatrix);
         }
     }
+
+    /**
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object}  options
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$mouseHit (context, matrix, options)
+    {
+        if (!this._$visible) {
+            return false;
+        }
+
+        return this._$hit(context, matrix, options);
+    }
+
+    /**
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object}  options
+     * @param  {boolean} [is_clip=false]
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$hit (context, matrix, options, is_clip)
+    {
+        let hit = false;
+
+        if (this._$graphics
+            && this._$graphics._$canDraw
+            && this._$graphics._$getBounds()
+        ) {
+
+            let multiMatrix = matrix;
+            const rawMatrix = this._$transform._$rawMatrix();
+            if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            }
+
+            hit = this
+                ._$graphics
+                ._$hit(context, multiMatrix, options, is_clip);
+
+            if (multiMatrix !== matrix) {
+                Util.$poolFloat32Array6(multiMatrix);
+            }
+
+        }
+
+        return hit;
+    }
 }

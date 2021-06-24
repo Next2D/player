@@ -166,11 +166,11 @@ class Rectangle
      */
     get height ()
     {
-        return this._$height / Util.$TWIPS;
+        return this._$height;
     }
     set height (height)
     {
-        this._$height = +height * Util.$TWIPS;
+        this._$height = +height;
     }
 
     /**
@@ -270,11 +270,11 @@ class Rectangle
      */
     get width ()
     {
-        return this._$width / Util.$TWIPS;
+        return this._$width;
     }
     set width (width)
     {
-        this._$width = +width * Util.$TWIPS;
+        this._$width = +width;
     }
 
     /**
@@ -286,11 +286,11 @@ class Rectangle
      */
     get x ()
     {
-        return this._$x / Util.$TWIPS;
+        return this._$x;
     }
     set x (x)
     {
-        this._$x = +x * Util.$TWIPS;
+        this._$x = +x;
     }
 
     /**
@@ -302,11 +302,11 @@ class Rectangle
      */
     get y ()
     {
-        return this._$y / Util.$TWIPS;
+        return this._$y;
     }
     set y (y)
     {
-        this._$y = +y * Util.$TWIPS;
+        this._$y = +y;
     }
 
     /**

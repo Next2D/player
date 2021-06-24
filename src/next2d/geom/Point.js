@@ -29,14 +29,14 @@ class Point
          * @default 0
          * @private
          */
-        this._$x = +x * Util.$TWIPS;
+        this._$x = +x;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$y = +y * Util.$TWIPS;
+        this._$y = +y;
     }
 
     /**
@@ -118,11 +118,11 @@ class Point
      */
     get x ()
     {
-        return this._$x / Util.$TWIPS;
+        return this._$x;
     }
     set x (x)
     {
-        this._$x = +x * Util.$TWIPS;
+        this._$x = +x;
     }
 
     /**
@@ -135,11 +135,11 @@ class Point
      */
     get y ()
     {
-        return this._$y / Util.$TWIPS;
+        return this._$y;
     }
     set y (y)
     {
-        this._$y = +y * Util.$TWIPS;
+        this._$y = +y;
     }
 
     /**
@@ -199,8 +199,8 @@ class Point
     static distance (pt1, pt2)
     {
         return Util.$sqrt(
-              Util.$pow((pt1._$x - pt2._$x) / Util.$TWIPS, 2)
-            + Util.$pow((pt1._$y - pt2._$y) / Util.$TWIPS, 2)
+              Util.$pow(pt1._$x - pt2._$x, 2)
+            + Util.$pow(pt1._$y - pt2._$y, 2)
         );
     }
 

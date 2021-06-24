@@ -531,17 +531,17 @@ class Graphics
         anchor_x, anchor_y
     ) {
 
-        anchor_x = +anchor_x * Util.$TWIPS || 0;
-        anchor_y = +anchor_y * Util.$TWIPS || 0;
+        anchor_x = +anchor_x || 0;
+        anchor_y = +anchor_y || 0;
 
         if (this._$pointerX === anchor_x && this._$pointerY === anchor_y) {
             return this;
         }
 
-        control_x1 = +control_x1 * Util.$TWIPS || 0;
-        control_y1 = +control_y1 * Util.$TWIPS || 0;
-        control_x2 = +control_x2 * Util.$TWIPS || 0;
-        control_y2 = +control_y2 * Util.$TWIPS || 0;
+        control_x1 = +control_x1 || 0;
+        control_y1 = +control_y1 || 0;
+        control_x2 = +control_x2 || 0;
+        control_y2 = +control_y2 || 0;
 
         // set bounds
         this._$setBounds(control_x1, control_y1);
@@ -582,15 +582,15 @@ class Graphics
     curveTo (control_x, control_y, anchor_x, anchor_y)
     {
 
-        anchor_x = +anchor_x * Util.$TWIPS || 0;
-        anchor_y = +anchor_y * Util.$TWIPS || 0;
+        anchor_x = +anchor_x || 0;
+        anchor_y = +anchor_y || 0;
 
         if (this._$pointerX === anchor_x && this._$pointerY === anchor_y) {
             return this;
         }
 
-        control_x = +control_x * Util.$TWIPS || 0;
-        control_y = +control_y * Util.$TWIPS || 0;
+        control_x = +control_x || 0;
+        control_y = +control_y || 0;
 
         this._$setBounds(control_x, control_y);
         this._$setBounds(anchor_x,  anchor_y);
@@ -623,9 +623,9 @@ class Graphics
      */
     drawCircle (x, y, radius)
     {
-        x      = +x * Util.$TWIPS || 0;
-        y      = +y * Util.$TWIPS || 0;
-        radius = +radius * Util.$TWIPS || 0;
+        x      = +x || 0;
+        y      = +y || 0;
+        radius = +radius || 0;
 
         this._$setBounds(x - radius, y - radius);
         this._$setBounds(x + radius, y + radius);
@@ -995,7 +995,7 @@ class Graphics
         this._$lineStyleA = object.A;
 
         // param
-        this._$lineWidth  = thickness * Util.$TWIPS;
+        this._$lineWidth  = thickness;
         this._$caps       = `${caps}`;
         this._$joints     = `${joints}`;
 
@@ -1021,8 +1021,8 @@ class Graphics
      */
     lineTo (x, y)
     {
-        x = +x * Util.$TWIPS || 0;
-        y = +y * Util.$TWIPS || 0;
+        x = +x || 0;
+        y = +y || 0;
 
         if (this._$pointerX === x && this._$pointerY === y) {
             return this;
@@ -1053,8 +1053,8 @@ class Graphics
      */
     moveTo (x, y)
     {
-        x = +x * Util.$TWIPS || 0;
-        y = +y * Util.$TWIPS || 0;
+        x = +x || 0;
+        y = +y || 0;
 
         this._$pointerX = x;
         this._$pointerY = y;
@@ -1219,7 +1219,7 @@ class Graphics
             if (hasGrid) {
 
                 const player = Util.$currentPlayer();
-                const mScale = player._$scale * player._$ratio / Util.$TWIPS;
+                const mScale = player._$scale * player._$ratio;
                 const baseMatrix = Util.$getFloat32Array6(mScale, 0, 0, mScale, 0, 0);
 
                 const pMatrix = Util.$multiplicationMatrix(
@@ -1397,6 +1397,30 @@ class Graphics
         if (is_clip) {
             context.clip();
         }
+    }
+
+    /**
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object}  options
+     * @param  {boolean} [is_clip=false]
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$hit (context, matrix, options, is_clip)
+    {
+        context.setTransform(
+            matrix[0], matrix[1], matrix[2],
+            matrix[3], matrix[4], matrix[5]
+        );
+
+        // build command
+        if (!this._$command ) {
+            this._$command = this._$buildCommand();
+        }
+
+        return this._$command(context, Util.$COLOR_ARRAY_IDENTITY, true, null, options);
     }
 
     /**

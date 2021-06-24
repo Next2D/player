@@ -350,7 +350,7 @@ class GraphicsGradientFill
     {
         const matrix = (this._$matrix)
             ? this._$matrix._$matrix
-            : Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0_INVERSE;
+            : Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0;
 
         return Util.$getArray(
             this._$type, this.colorStops, matrix,
