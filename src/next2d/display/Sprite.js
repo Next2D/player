@@ -273,7 +273,6 @@ class Sprite extends DisplayObjectContainer
         Util.$dragRules.bounds     = null;
     }
 
-
     /**
      * @param  {object} tag
      * @param  {DisplayObjectContainer} parent

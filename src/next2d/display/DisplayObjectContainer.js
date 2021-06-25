@@ -1554,7 +1554,6 @@ class DisplayObjectContainer extends InteractiveObject
 
             }
 
-
             if (instance._$mouseHit(context, multiMatrix, options, mouseChildren)
                 || (instance._$hitArea
                     && instance
@@ -1617,22 +1616,18 @@ class DisplayObjectContainer extends InteractiveObject
         Util.$poolArray(clips);
         Util.$poolArray(targets);
         Util.$poolMap(clipIndexes);
+
+        // graphics
+        if (!hit && this._$graphics) {
+            hit = this._$graphics._$hit(context, multiMatrix, options);
+        }
+
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
         }
 
-        // end
-        if (hit) {
-            return true;
-        }
-
-        // graphics
-        if (this._$graphics && this._$graphics._$hit(context, multiMatrix, options)) {
-            return true;
-        }
-
         // not found
-        return false;
+        return hit;
     }
 
     /**
@@ -1644,7 +1639,7 @@ class DisplayObjectContainer extends InteractiveObject
      * @method
      * @private
      */
-    _$hit (context, matrix, options, is_clip)
+    _$hit (context, matrix, options, is_clip = false)
     {
 
         let multiMatrix = matrix;
@@ -1653,22 +1648,20 @@ class DisplayObjectContainer extends InteractiveObject
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
-        if (!options.skipChildren) {
-            const children = this._$getChildren();
+        const children = this._$getChildren();
 
-            const length = children.length - 1;
-            for (let idx = length; idx > -1; --idx) {
+        const length = children.length - 1;
+        for (let idx = length; idx > -1; --idx) {
 
-                const instance = children[idx];
-                if (instance._$isMask) {
-                    continue;
-                }
-
-                if (instance._$hit(context, multiMatrix, options, is_clip)) {
-                    return true;
-                }
-
+            const instance = children[idx];
+            if (instance._$isMask) {
+                continue;
             }
+
+            if (instance._$hit(context, multiMatrix, options, is_clip)) {
+                return true;
+            }
+
         }
 
         let hit = false;

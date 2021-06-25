@@ -2487,7 +2487,7 @@ class TextField extends InteractiveObject
      * @method
      * @private
      */
-    _$hit (context, matrix, options, is_clip)
+    _$hit (context, matrix, options, is_clip = false)
     {
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();

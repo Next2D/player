@@ -1408,7 +1408,7 @@ class Graphics
      * @method
      * @private
      */
-    _$hit (context, matrix, options, is_clip)
+    _$hit (context, matrix, options, is_clip = false)
     {
         context.setTransform(
             matrix[0], matrix[1], matrix[2],
@@ -1416,11 +1416,11 @@ class Graphics
         );
 
         // build command
-        if (!this._$command ) {
+        if (!this._$command) {
             this._$command = this._$buildCommand();
         }
 
-        return this._$command(context, Util.$COLOR_ARRAY_IDENTITY, true, null, options);
+        return this._$command(context, Util.$COLOR_ARRAY_IDENTITY, is_clip, options);
     }
 
     /**

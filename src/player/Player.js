@@ -1991,7 +1991,7 @@ class Player
 
             default:
 
-                instance = options.hit;
+                instance = this._$hitObject.hit;
 
                 switch (Util.$eventType) {
 

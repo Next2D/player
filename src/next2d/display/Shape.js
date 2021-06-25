@@ -311,6 +311,7 @@ class Shape extends DisplayObject
                 ._$graphics
                 ._$hit(context, multiMatrix, options, is_clip);
 
+
             if (multiMatrix !== matrix) {
                 Util.$poolFloat32Array6(multiMatrix);
             }
