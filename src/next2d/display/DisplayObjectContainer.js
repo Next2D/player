@@ -111,7 +111,7 @@ class DisplayObjectContainer extends InteractiveObject
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class DisplayObjectContainer]";
     }
@@ -1178,7 +1178,6 @@ class DisplayObjectContainer extends InteractiveObject
         if (!alpha) {
             return ;
         }
-
 
         // not draw
         const children = (this._$needsChildren)

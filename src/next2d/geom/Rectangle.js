@@ -76,7 +76,7 @@ class Rectangle
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class Rectangle]";
     }

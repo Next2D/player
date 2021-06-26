@@ -22,7 +22,7 @@ class TextFormatAlign
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class TextFormatAlign]";
     }

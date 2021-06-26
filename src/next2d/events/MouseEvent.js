@@ -51,7 +51,7 @@ class MouseEvent extends Event
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class MouseEvent]";
     }

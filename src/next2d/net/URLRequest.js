@@ -78,7 +78,7 @@ class URLRequest
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class URLRequest]";
     }

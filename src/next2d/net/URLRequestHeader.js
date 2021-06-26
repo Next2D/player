@@ -39,7 +39,7 @@ class URLRequestHeader
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class URLRequestHeader]";
     }

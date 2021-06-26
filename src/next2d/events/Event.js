@@ -98,7 +98,7 @@ class Event
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class Event]";
     }

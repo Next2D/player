@@ -84,7 +84,7 @@ class Transform
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class Transform]";
     }

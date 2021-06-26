@@ -29,7 +29,7 @@ class BitmapDataChannel
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class BitmapDataChannel]";
     }

@@ -52,7 +52,7 @@ class ProgressEvent extends Event
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class ProgressEvent]";
     }

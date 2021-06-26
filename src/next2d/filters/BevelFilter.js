@@ -121,7 +121,7 @@ class BevelFilter extends BitmapFilter
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class BevelFilter]";
     }

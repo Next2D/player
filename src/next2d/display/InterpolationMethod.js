@@ -27,7 +27,7 @@ class InterpolationMethod
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class InterpolationMethod]";
     }

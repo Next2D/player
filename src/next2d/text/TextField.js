@@ -316,7 +316,7 @@ class TextField extends InteractiveObject
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class TextField]";
     }
@@ -919,7 +919,6 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @override    DisplayObject.width
      * @description 表示オブジェクトの幅を示します（ピクセル単位）。
      *              Indicates the width of the display object, in pixels.
      *
@@ -947,7 +946,6 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @override    DisplayObject.height
      * @description 表示オブジェクトの高さを示します（ピクセル単位）。
      *              Indicates the height of the display object, in pixels.
      *
@@ -973,7 +971,6 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @override    DisplayObject.x
      * @description 親 DisplayObjectContainer のローカル座標を基準にした
      *              DisplayObject インスタンスの x 座標を示します。
      *              Indicates the x coordinate
@@ -996,7 +993,6 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @override    DisplayObject.y
      * @description 親 DisplayObjectContainer のローカル座標を基準にした
      *              DisplayObject インスタンスの y 座標を示します。
      *              Indicates the y coordinate
@@ -1970,16 +1966,13 @@ class TextField extends InteractiveObject
      */
     _$getBounds (matrix = null)
     {
-        // default setup
-        // this._$initBounds();
-
         if (matrix) {
 
-            const boundsMatrix = Util.$multiplicationMatrix(
+            const multiMatrix = Util.$multiplicationMatrix(
                 matrix, this._$correctMatrix(this._$transform._$rawMatrix())
             );
 
-            return Util.$boundsMatrix(this._$bounds, boundsMatrix);
+            return Util.$boundsMatrix(this._$bounds, multiMatrix);
         }
 
         return Util.$boundsMatrix(
@@ -2086,7 +2079,42 @@ class TextField extends InteractiveObject
      */
     _$clip (context, matrix)
     {
-        // TODO
+        // size
+        const bounds = this._$getBounds();
+        const xMax   = bounds.xMax;
+        const xMin   = bounds.xMin;
+        const yMax   = bounds.yMax;
+        const yMin   = bounds.yMin;
+        Util.$poolBoundsObject(bounds);
+
+        let width  = Util.$ceil(Util.$abs(xMax - xMin));
+        let height = Util.$ceil(Util.$abs(yMax - yMin));
+        if (!width || !height) {
+            return;
+        }
+
+        let multiMatrix = matrix;
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
+
+        Util.$resetContext(context);
+        context.setTransform(
+            multiMatrix[0], multiMatrix[1], multiMatrix[2],
+            multiMatrix[3], multiMatrix[4], multiMatrix[5]
+        );
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(width, 0);
+        context.lineTo(width, height);
+        context.lineTo(0, height);
+        context.lineTo(0, 0);
+        context.clip(true);
+
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
     }
 
     /**

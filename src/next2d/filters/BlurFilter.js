@@ -61,7 +61,7 @@ class BlurFilter extends BitmapFilter
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class BlurFilter]";
     }

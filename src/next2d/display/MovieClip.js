@@ -142,7 +142,7 @@ class MovieClip extends Sprite
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class MovieClip]";
     }

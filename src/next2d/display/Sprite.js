@@ -64,7 +64,7 @@ class Sprite extends DisplayObjectContainer
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class Sprite]";
     }

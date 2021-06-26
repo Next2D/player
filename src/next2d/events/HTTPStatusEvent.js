@@ -53,7 +53,7 @@ class HTTPStatusEvent extends Event
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class HTTPStatusEvent]";
     }

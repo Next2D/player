@@ -43,7 +43,7 @@ class Graphics
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class Graphics]";
     }
@@ -95,6 +95,7 @@ class Graphics
      * @default 0
      * @const
      * @static
+     * @private
      */
     static get MOVE_TO ()
     {
@@ -117,6 +118,7 @@ class Graphics
      * @default 2
      * @const
      * @static
+     * @private
      */
     static get LINE_TO ()
     {
@@ -128,6 +130,7 @@ class Graphics
      * @default 3
      * @const
      * @static
+     * @private
      */
     static get CUBIC ()
     {
@@ -139,6 +142,7 @@ class Graphics
      * @default 4
      * @const
      * @static
+     * @private
      */
     static get ARC ()
     {
@@ -150,6 +154,7 @@ class Graphics
      * @default 5
      * @const
      * @static
+     * @private
      */
     static get FILL_STYLE ()
     {
@@ -161,6 +166,7 @@ class Graphics
      * @default 6
      * @const
      * @static
+     * @private
      */
     static get STROKE_STYLE ()
     {
@@ -172,6 +178,7 @@ class Graphics
      * @default 7
      * @const
      * @static
+     * @private
      */
     static get END_FILL ()
     {
@@ -183,6 +190,7 @@ class Graphics
      * @default 8
      * @const
      * @static
+     * @private
      */
     static get END_STROKE ()
     {
@@ -194,6 +202,7 @@ class Graphics
      * @default 9
      * @const
      * @static
+     * @private
      */
     static get BEGIN_PATH ()
     {
@@ -205,6 +214,7 @@ class Graphics
      * @default 10
      * @const
      * @static
+     * @private
      */
     static get GRADIENT_FILL ()
     {
@@ -216,6 +226,7 @@ class Graphics
      * @default 11
      * @const
      * @static
+     * @private
      */
     static get GRADIENT_STROKE ()
     {
@@ -227,6 +238,7 @@ class Graphics
      * @default 12
      * @const
      * @static
+     * @private
      */
     static get CLOSE_PATH ()
     {
@@ -238,6 +250,7 @@ class Graphics
      * @default 13
      * @const
      * @static
+     * @private
      */
     static get BITMAP_FILL ()
     {

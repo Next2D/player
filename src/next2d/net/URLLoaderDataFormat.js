@@ -23,7 +23,7 @@ class URLLoaderDataFormat
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class URLLoaderDataFormat]";
     }

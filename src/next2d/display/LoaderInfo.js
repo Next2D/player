@@ -74,7 +74,7 @@ class LoaderInfo extends EventDispatcher
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class LoaderInfo]";
     }

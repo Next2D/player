@@ -39,7 +39,7 @@ class IOErrorEvent extends Event
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class IOErrorEvent]";
     }

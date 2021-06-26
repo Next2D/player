@@ -41,7 +41,7 @@ class FocusEvent extends Event
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class FocusEvent]";
     }

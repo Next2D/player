@@ -48,7 +48,7 @@ class Point
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class Point]";
     }

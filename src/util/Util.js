@@ -1861,7 +1861,8 @@ Util.$packages = function (object)
         "HTTPStatusEvent": HTTPStatusEvent,
         "IOErrorEvent": IOErrorEvent,
         "MouseEvent": MouseEvent,
-        "ProgressEvent": ProgressEvent
+        "ProgressEvent": ProgressEvent,
+        "VideoEvent": VideoEvent
     };
 
     object["filters"] = {
@@ -1889,7 +1890,8 @@ Util.$packages = function (object)
 
     object["media"] = {
         "Sound": Sound,
-        "SoundTransform": SoundTransform
+        "SoundTransform": SoundTransform,
+        "Video": Video
     };
 
     object["net"] = {

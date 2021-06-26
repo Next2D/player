@@ -23,7 +23,7 @@ class TextFieldType
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class TextFieldType]";
     }

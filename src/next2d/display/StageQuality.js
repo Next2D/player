@@ -19,7 +19,7 @@ class StageQuality
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class StageQuality]";
     }

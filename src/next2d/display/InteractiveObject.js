@@ -51,7 +51,7 @@ class InteractiveObject extends DisplayObject
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class InteractiveObject]";
     }

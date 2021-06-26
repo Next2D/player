@@ -22,7 +22,7 @@ class DisplacementMapFilterMode
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class DisplacementMapFilterMode]";
     }

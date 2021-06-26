@@ -22,7 +22,7 @@ class BitmapFilterQuality
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class BitmapFilterQuality]";
     }

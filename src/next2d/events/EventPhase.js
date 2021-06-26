@@ -22,7 +22,7 @@ class EventPhase
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class EventPhase]";
     }

@@ -28,7 +28,7 @@ class BlendMode
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class BlendMode]";
     }

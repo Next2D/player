@@ -108,7 +108,7 @@ class ConvolutionFilter extends BitmapFilter
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class ConvolutionFilter]";
     }

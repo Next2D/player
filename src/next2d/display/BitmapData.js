@@ -67,7 +67,7 @@ class BitmapData
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class BitmapData]";
     }

@@ -111,7 +111,7 @@ class GradientBevelFilter  extends BitmapFilter
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class GradientBevelFilter]";
     }

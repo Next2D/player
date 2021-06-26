@@ -25,39 +25,11 @@ class Video extends DisplayObject
         super();
 
         /**
-         * @type {number}
-         * @default 320
-         * @private
-         */
-        this._$videoWidth = width;
-
-        /**
-         * @type {number}
-         * @default 240
-         * @private
-         */
-        this._$videoHeight = height;
-
-        /**
          * @type {boolean}
-         * @default false
+         * @default true
          * @private
          */
-        this._$smoothing = false;
-
-        /**
-         * @type {NetStream}
-         * @default null
-         * @private
-         */
-        this._$netStream = null;
-
-        /**
-         * @type {Uint8Array}
-         * @default null
-         * @private
-         */
-        this._$buffer = null;
+        this._$smoothing = true;
 
         /**
          * @type {object}
@@ -67,31 +39,24 @@ class Video extends DisplayObject
 
         /**
          * @type {number}
-         * @default -1
+         * @default 0
          * @private
          */
-        this._$timerId = -1;
+        this._$bytesLoaded = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$bytesTotal = 0;
 
         /**
          * @type {number}
          * @default -1
          * @private
          */
-        this._$currentFrame = -1;
-
-        /**
-         * @type {function}
-         * @default null
-         * @private
-         */
-        this._$play = null;
-
-        /**
-         * @type {function}
-         * @default null
-         * @private
-         */
-        this._$pause = null;
+        this._$timerId = -1;
 
         /**
          * @type {function}
@@ -113,6 +78,13 @@ class Video extends DisplayObject
          * @private
          */
         this._$sound = null;
+
+        /**
+         * @type {SoundTransform}
+         * @default null
+         * @private
+         */
+        this._$soundTransform = null;
 
         /**
          * @type {HTMLVideoElement}
@@ -138,7 +110,7 @@ class Video extends DisplayObject
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class Video]";
     }
@@ -186,12 +158,67 @@ class Video extends DisplayObject
     }
 
     /**
+     * @description 既にアプリケーションにロードされているデータのバイト数です。
+     *              The number of bytes of data that have been loaded into the application.
+     *
+     * @member {number}
+     * @default 0
+     * @readonly
+     * @public
+     */
+    get bytesLoaded ()
+    {
+        return this._$bytesLoaded;
+    }
+
+    /**
+     * @description アプリケーションにロードされるファイルの総バイト数。
+     *              The total size in bytes of the file being loaded into the application.
+     *
+     * @member {number}
+     * @default 0
+     * @readonly
+     * @public
+     */
+    get bytesTotal ()
+    {
+        return this._$bytesTotal;
+    }
+
+    /**
+     * @description 現在のキーフレーム
+     *              Current keyframe
+     *
+     *
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get currentTime ()
+    {
+        return (this._$video) ? this._$video.currentTime : 0;
+    }
+
+    /**
+     * @description キーフレーム総数
+     *              Total number of keyframes
+     *
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get duration ()
+    {
+        return (this._$video) ? this._$video.duration : 0;
+    }
+
+    /**
      * @description ビデオを拡大 / 縮小する際にスムージング（補間）するかどうかを指定します。
      *              Specifies whether the video should be smoothed (interpolated)
      *              when it is scaled.
      *
      * @member {boolean}
-     * @default false
+     * @default true
      * @public
      */
     get smoothing ()
@@ -201,6 +228,45 @@ class Video extends DisplayObject
     set smoothing (smoothing)
     {
         this._$smoothing = smoothing;
+    }
+
+    /**
+     * @description オブジェクトのサウンドを制御します。
+     *              Controls sound in this object.
+     *
+     * @member {SoundTransform}
+     * @public
+     */
+    get soundTransform ()
+    {
+        if (!this._$soundTransform) {
+            this._$soundTransform = new SoundTransform();
+        }
+        return this._$soundTransform;
+    }
+    set soundTransform (sound_transform)
+    {
+        this._$soundTransform = sound_transform;
+    }
+
+    /**
+     * @description 映像コンテンツへの URL を指定します。
+     *              Specifies the URL to the video content.
+     *
+     * @member {string}
+     * @default ""
+     * @public
+     */
+    get src ()
+    {
+        return this._$video ? this._$video.src : "";
+    }
+    set src (src)
+    {
+        if (this._$video) {
+            this._$video = document.createElement("video");
+        }
+        this._$video.src = src;
     }
 
     /**
@@ -214,7 +280,7 @@ class Video extends DisplayObject
      */
     get videoHeight ()
     {
-        return (this._$video) ? this._$video.videoHeight : this._$bounds.xMax;
+        return this._$bounds.yMax;
     }
 
     /**
@@ -228,54 +294,434 @@ class Video extends DisplayObject
      */
     get videoWidth ()
     {
-        return (this._$video) ? this._$video.videoWidth : this._$bounds.yMax;
+        return this._$bounds.xMax;
     }
 
     /**
-     * @description アプリケーション内の Video オブジェクトの境界内に表示するビデオストリームを指定します。
-     *              Specifies a video stream to be displayed
-     *              within the boundaries of the Video object in the application.
-     *
-     * @param   {NetStream} net_stream
-     * @returns {void}
-     * @method
-     * @public
-     */
-    attachNetStream (net_stream)
-    {
-        this._$netStream = net_stream;
-        this._$netStream._$video = this;
-
-        // reset
-        this._$play    = null;
-        this._$pause   = null;
-        this._$update  = null;
-        this._$start   = null;
-        this._$sound   = null;
-        this._$video   = null;
-        this._$texture = null;
-    }
-
-    /**
-     * TODO
      * @description Video オブジェクトに現在表示されているイメージ（ビデオストリームではない）をクリアします。
      *              Clears the image currently displayed
      *              in the Video object (not the video stream).
      *
-     * @returns {void}
+     * @return {void}
      * @method
      * @public
      */
     clear ()
     {
-        this._$buffer = null;
         if (this._$texture) {
+            Util.$currentPlayer()
+                ._$context
+                .frameBuffer
+                .releaseTexture(this._$texture);
+        }
 
+        if (this._$video) {
+            this._$video.pause();
+        }
+
+        // reset
+        this._$update      = null;
+        this._$start       = null;
+        this._$sound       = null;
+        this._$video       = null;
+        this._$texture     = null;
+        this._$bounds.xMax = 0;
+        this._$bounds.yMax = 0;
+    }
+
+    /**
+     * @description ビデオストリームの再生を一時停止します。
+     *              Pauses playback of a video stream.
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    pause ()
+    {
+        if (this._$video) {
+            this._$video.pause();
+
+            const cancelTimer = Util.$cancelAnimationFrame;
+            cancelTimer(this._$timerId);
+
+            this.dispatchEvent(
+                new VideoEvent(VideoEvent.PAUSE), false, false,
+                this._$bytesLoaded, this._$bytesTotal
+            );
         }
     }
 
+    /**
+     * @description ローカルディレクトリまたは Web サーバーからメディアファイルを再生します。
+     *              Plays a media file from a local directory or a web server;
+     *
+     * @returns {void}
+     * @method
+     * @public
+     */
+    play ()
+    {
+        if (this._$video) {
+
+            this._$video.play();
+
+            const timer = Util.$requestAnimationFrame;
+            this._$timerId = timer(this._$update);
+
+            this.dispatchEvent(
+                new VideoEvent(VideoEvent.PLAY), false, false,
+                this._$bytesLoaded, this._$bytesTotal
+            );
+        }
+    }
+
+    /**
+     * @description 指定された位置に最も近いキーフレームをシークします。
+     *              Seeks the keyframe closest to the specified location.
+     *
+     * @param  {number} offset
+     * @return {void}
+     * @method
+     * @public
+     */
+    seek (offset)
+    {
+        if (this._$video) {
+            this._$video.currentTime = offset;
+
+            this.dispatchEvent(
+                new VideoEvent(VideoEvent.SEEK), false, false,
+                this._$bytesLoaded, this._$bytesTotal
+            );
+        }
+    }
+
+    /**
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$build (tag, parent)
+    {
+        const character = super._$build(tag, parent);
+
+        if (!this._$video) {
+            this._$video = Util.$document.createElement("video");
+        }
+
+        if (!this._$update) {
+
+            this._$update = function ()
+            {
+                const player = Util.$currentPlayer();
+                player._$draw(0);
+
+                // update
+                this._$bytesLoaded = this._$video.currentTime;
+
+                if (this._$video.currentTime) {
+
+                    this._$texture = player._$context
+                        .frameBuffer
+                        .createTextureFromVideo(
+                            this._$video, this._$smoothing, this._$texture
+                        );
+
+                    this.dispatchEvent(
+                        new VideoEvent(VideoEvent.PAUSE), false, false,
+                        this._$bytesLoaded, this._$bytesTotal
+                    );
+
+                    this._$doChanged();
+                }
+
+                // end
+                if (this._$video.currentTime >= this._$video.duration) {
+
+                    const cancelTimer = Util.$cancelAnimationFrame;
+                    cancelTimer(this._$timerId);
+                    this._$timerId = -1;
+
+                    this.dispatchEvent(
+                        new VideoEvent(VideoEvent.PLAY_END), false, false,
+                        this._$bytesLoaded, this._$bytesTotal
+                    );
+
+                    return ;
+                }
+
+                const timer = Util.$requestAnimationFrame;
+                this._$timerId = timer(this._$update);
+
+            }.bind(this);
+
+        }
+
+        // add sound event
+        if (!this._$sound) {
+            this._$sound = function ()
+            {
+                const name = (Util.$isTouch) ? Util.$TOUCH_END : Util.$MOUSE_UP;
+                Util.$currentPlayer()
+                    ._$canvas
+                    .removeEventListener(name, this._$sound);
+                this._$video.muted = false;
+            }.bind(this);
+        }
 
 
+        if (!this._$start) {
 
-    
+            // start event
+            this._$start = function ()
+            {
+                this._$video.removeEventListener("canplaythrough", this._$start);
+                this._$video.play();
+
+                this._$bounds.xMax = this._$video.videoWidth;
+                this._$bounds.yMax = this._$video.videoHeight;
+
+                // set total
+                this._$bytesTotal = this._$video.duration;
+
+                const timer = Util.$requestAnimationFrame;
+                this._$timerId = timer(this._$update);
+
+                const name = (Util.$isTouch) ? Util.$TOUCH_END : Util.$MOUSE_UP;
+                Util
+                    .$currentPlayer()
+                    ._$canvas
+                    .addEventListener(name, this._$sound);
+
+                this.dispatchEvent(
+                    new VideoEvent(VideoEvent.PLAY_START), false, false,
+                    this._$bytesLoaded, this._$bytesTotal
+                );
+
+            }.bind(this);
+
+        }
+        this._$video.addEventListener("canplaythrough", this._$start);
+
+
+        // auto play setup
+        this._$video.muted    = true;
+        this._$video.autoplay = false;
+        if (Util.$isTouch) {
+            this._$video.setAttribute("playsinline", "");
+        }
+
+        // load start
+        this._$video.crossOrigin = "anonymous";
+        this._$video.type = "video/mp4";
+
+        this._$video.src = URL.createObjectURL(new Blob(
+            [new Uint8Array(character.buffer)],
+            { "type": "video/mp4" }
+        ));
+
+        this._$video.load();
+    };
+
+    /**
+     * @param   {CanvasToWebGLContext} context
+     * @param   {Float32Array} matrix
+     * @returns {void}
+     * @method
+     * @private
+     */
+    _$clip (context, matrix)
+    {
+        let width  = this._$bounds.xMax;
+        let height = this._$bounds.yMax;
+        if (!width || !height) {
+            return;
+        }
+
+        let multiMatrix = matrix;
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
+
+        Util.$resetContext(context);
+        context.setTransform(
+            multiMatrix[0], multiMatrix[1], multiMatrix[2],
+            multiMatrix[3], multiMatrix[4], multiMatrix[5]
+        );
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(width, 0);
+        context.lineTo(width, height);
+        context.lineTo(0, height);
+        context.lineTo(0, 0);
+        context.clip(true);
+
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @return void
+     * @method
+     * @private
+     */
+    _$draw (context, matrix, color_transform)
+    {
+        if (!this._$visible) {
+            return ;
+        }
+
+        if (!this._$texture) {
+            return ;
+        }
+
+        let multiColor = color_transform;
+        const rawColor = this._$transform._$rawColorTransform();
+        if (rawColor !== Util.$COLOR_ARRAY_IDENTITY) {
+            multiColor = Util.$multiplicationColor(color_transform, rawColor);
+        }
+
+        const alpha = Util.$clamp(multiColor[3] + (multiColor[7] / 255), 0, 1, 0);
+        if (!alpha) {
+            if (multiColor !== color_transform) {
+                Util.$poolFloat32Array8(multiColor);
+            }
+            return ;
+        }
+
+        let multiMatrix = matrix;
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
+
+        // default bounds
+        const bounds = Util.$boundsMatrix(this._$bounds, multiMatrix);
+        const xMax   = +bounds.xMax;
+        const xMin   = +bounds.xMin;
+        const yMax   = +bounds.yMax;
+        const yMin   = +bounds.yMin;
+        Util.$poolBoundsObject(bounds);
+
+        let width  = Util.$ceil(Util.$abs(xMax - xMin));
+        let height = Util.$ceil(Util.$abs(yMax - yMin));
+        if (!width || !height) {
+            return;
+        }
+
+        // draw
+        Util.$resetContext(context);
+        context._$globalAlpha = alpha;
+        context._$imageSmoothingEnabled = this._$smoothing;
+
+        context.setTransform(
+            multiMatrix[0], multiMatrix[1], multiMatrix[2],
+            multiMatrix[3], multiMatrix[4], multiMatrix[5]
+        );
+        context.drawImage(this._$texture,
+            0, 0, this._$texture.width, this._$texture.height, multiColor
+        );
+
+    }
+
+    /**
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object} options
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$mouseHit (context, matrix, options)
+    {
+        if (!this._$visible) {
+            return false;
+        }
+
+        return this._$hit(context, matrix, options);
+    }
+
+    /**
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {array}   matrix
+     * @param  {object}  options
+     * @param  {boolean} [is_clip=false]
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$hit (context, matrix, options, is_clip)
+    {
+        let multiMatrix = matrix;
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
+
+        const baseBounds = this._$getBounds(null);
+
+        const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
+        const xMax   = +bounds.xMax;
+        const xMin   = +bounds.xMin;
+        const yMax   = +bounds.yMax;
+        const yMin   = +bounds.yMin;
+        Util.$poolBoundsObject(bounds);
+        Util.$poolBoundsObject(baseBounds);
+
+        const width  = Util.$ceil(Util.$abs(xMax - xMin));
+        const height = Util.$ceil(Util.$abs(yMax - yMin));
+
+        context.setTransform(1, 0, 0, 1, xMin, yMin);
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(width, 0);
+        context.lineTo(width, height);
+        context.lineTo(0, height);
+        context.lineTo(0, 0);
+
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+
+        return context.isPointInPath(options.x, options.y);
+    }
+
+    /**
+     * @param  {Float32Array} [matrix=null]
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$getBounds (matrix = null)
+    {
+        if (matrix) {
+
+            let multiMatrix = matrix;
+            const rawMatrix = this._$transform._$rawMatrix();
+            if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            }
+
+            const bounds = Util.$boundsMatrix(this._$bounds, multiMatrix);
+
+            if (multiMatrix !== matrix) {
+                Util.$poolFloat32Array6(multiMatrix);
+            }
+
+            return bounds;
+        }
+
+        return Util.$getBoundsObject(
+            this._$bounds.xMin, this._$bounds.xMax,
+            this._$bounds.yMin, this._$bounds.yMax
+        );
+    }
 }

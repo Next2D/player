@@ -86,7 +86,7 @@ class GlowFilter extends BitmapFilter
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class GlowFilter]";
     }

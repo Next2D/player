@@ -25,7 +25,7 @@ class CapsStyle
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class CapsStyle]";
     }

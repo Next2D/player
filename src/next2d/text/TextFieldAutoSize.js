@@ -22,7 +22,7 @@ class TextFieldAutoSize
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class TextFieldAutoSize]";
     }

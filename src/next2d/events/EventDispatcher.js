@@ -39,7 +39,7 @@ class EventDispatcher
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class EventDispatcher]";
     }

@@ -141,7 +141,7 @@ class TextFormat
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class TextFormat]";
     }

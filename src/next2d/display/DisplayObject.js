@@ -220,7 +220,7 @@ class DisplayObject extends EventDispatcher
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class DisplayObject]";
     }
@@ -1964,5 +1964,4 @@ class DisplayObject extends EventDispatcher
 
         return clipMatrix;
     }
-
 }

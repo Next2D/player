@@ -57,7 +57,7 @@ class ColorMatrixFilter extends BitmapFilter
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class ColorMatrixFilter]";
     }

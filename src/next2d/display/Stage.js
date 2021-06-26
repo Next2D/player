@@ -66,7 +66,7 @@ class Stage extends DisplayObjectContainer
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class Stage]";
     }

@@ -72,7 +72,7 @@ class ColorTransform
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class ColorTransform]";
     }

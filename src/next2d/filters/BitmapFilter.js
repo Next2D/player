@@ -38,7 +38,7 @@ class BitmapFilter
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class BitmapFilter]";
     }

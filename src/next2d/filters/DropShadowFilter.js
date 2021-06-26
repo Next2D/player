@@ -111,7 +111,7 @@ class DropShadowFilter extends BitmapFilter
      * @method
      * @static
      */
-    static toString()
+    static toString ()
     {
         return "[class DropShadowFilter]";
     }
