@@ -32,6 +32,20 @@ class Video extends DisplayObject
         this._$smoothing = true;
 
         /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$loop = false;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$autoPlay = true;
+
+        /**
          * @type {object}
          * @private
          */
@@ -64,13 +78,6 @@ class Video extends DisplayObject
          * @private
          */
         this._$update = null;
-
-        /**
-         * @type {function}
-         * @default null
-         * @private
-         */
-        this._$start = null;
 
         /**
          * @type {function}
@@ -213,6 +220,40 @@ class Video extends DisplayObject
     }
 
     /**
+     * @description ビデオをループ生成するかどうかを指定します。
+     *              Specifies whether or not to generate a video loop.
+     *
+     * @member {boolean}
+     * @default false
+     * @public
+     */
+    get loop ()
+    {
+        return this._$loop;
+    }
+    set loop (loop)
+    {
+        this._$loop = loop;
+    }
+
+    /**
+     * @description ビデオを自動再生するかどうかを指定します。
+     *              Specifies whether or not to auto-play the video.
+     *
+     * @member {boolean}
+     * @default true
+     * @public
+     */
+    get autoPlay ()
+    {
+        return this._$autoPlay;
+    }
+    set autoPlay (auto_play)
+    {
+        this._$autoPlay = auto_play;
+    }
+
+    /**
      * @description ビデオを拡大 / 縮小する際にスムージング（補間）するかどうかを指定します。
      *              Specifies whether the video should be smoothed (interpolated)
      *              when it is scaled.
@@ -259,14 +300,15 @@ class Video extends DisplayObject
      */
     get src ()
     {
-        return this._$video ? this._$video.src : "";
+        return (this._$video) ? this._$video.src : "";
     }
     set src (src)
     {
-        if (this._$video) {
-            this._$video = document.createElement("video");
+        if (!this._$video) {
+            this._$initializeVideo();
         }
         this._$video.src = src;
+        this._$video.load();
     }
 
     /**
@@ -321,12 +363,13 @@ class Video extends DisplayObject
 
         // reset
         this._$update      = null;
-        this._$start       = null;
         this._$sound       = null;
         this._$video       = null;
         this._$texture     = null;
         this._$bounds.xMax = 0;
         this._$bounds.yMax = 0;
+
+        this._$doChanged();
     }
 
     /**
@@ -349,6 +392,15 @@ class Video extends DisplayObject
                 new VideoEvent(VideoEvent.PAUSE), false, false,
                 this._$bytesLoaded, this._$bytesTotal
             );
+
+            if (this._$texture) {
+                Util.$currentPlayer()
+                    ._$context
+                    .frameBuffer
+                    .releaseTexture(this._$texture);
+
+                this._$texture = null;
+            }
         }
     }
 
@@ -398,6 +450,132 @@ class Video extends DisplayObject
     }
 
     /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$initializeVideo ()
+    {
+        this._$video = Util.$document.createElement("video");
+
+        this._$update = function ()
+        {
+            const player = Util.$currentPlayer();
+            if (!this._$stage) {
+
+                this._$video.pause();
+
+                const cancelTimer = Util.$cancelAnimationFrame;
+                cancelTimer(this._$timerId);
+
+                this._$timerId = -1;
+
+                if (this._$texture) {
+                    player._$context
+                        .frameBuffer
+                        .releaseTexture(this._$texture);
+
+                    this._$texture = null;
+                }
+
+                return ;
+            }
+
+
+            // update
+            player._$draw(0);
+            this._$bytesLoaded = this._$video.currentTime;
+
+            if (this._$video.currentTime) {
+
+                this._$texture = player._$context
+                    .frameBuffer
+                    .createTextureFromVideo(
+                        this._$video, this._$smoothing, this._$texture
+                    );
+
+                this.dispatchEvent(
+                    new VideoEvent(VideoEvent.PROGRESS), false, false,
+                    this._$bytesLoaded, this._$bytesTotal
+                );
+
+                this._$doChanged();
+            }
+
+            const timer = Util.$requestAnimationFrame;
+            this._$timerId = timer(this._$update);
+
+        }.bind(this);
+
+        this._$sound = function ()
+        {
+            const name = (Util.$isTouch) ? Util.$TOUCH_END : Util.$MOUSE_UP;
+            Util.$currentPlayer()
+                ._$canvas
+                .removeEventListener(name, this._$sound);
+
+            this._$video.muted = false;
+
+        }.bind(this);
+
+        this._$video.muted       = true;
+        this._$video.autoplay    = false;
+        this._$video.crossOrigin = "anonymous";
+        this._$video.type        = "video/mp4";
+
+        if (Util.$isTouch) {
+            this._$video.setAttribute("playsinline", "");
+        }
+
+        this._$video.addEventListener("canplaythrough", function ()
+        {
+
+            this._$bounds.xMax = this._$video.videoWidth;
+            this._$bounds.yMax = this._$video.videoHeight;
+            this._$bytesTotal  = this._$video.duration;
+
+            const name = (Util.$isTouch) ? Util.$TOUCH_END : Util.$MOUSE_UP;
+            Util
+                .$currentPlayer()
+                ._$canvas
+                .addEventListener(name, this._$sound);
+
+            if (this._$autoPlay) {
+
+                this._$video.play();
+
+                this.dispatchEvent(
+                    new VideoEvent(VideoEvent.PLAY_START), false, false,
+                    this._$bytesLoaded, this._$bytesTotal
+                );
+
+                const timer = Util.$requestAnimationFrame;
+                this._$timerId = timer(this._$update);
+            }
+
+        }.bind(this));
+
+        this._$video.addEventListener("ended", function ()
+        {
+            if (this._$loop) {
+                this._$video.currentTime = 0;
+                return ;
+            }
+
+            this.dispatchEvent(
+                new VideoEvent(VideoEvent.PLAY_END), false, false,
+                this._$bytesLoaded, this._$bytesTotal
+            );
+
+            const cancelTimer = Util.$cancelAnimationFrame;
+            cancelTimer(this._$timerId);
+
+            this._$timerId = -1;
+
+        }.bind(this));
+    }
+
+    /**
      * @param  {object} tag
      * @param  {DisplayObjectContainer} parent
      * @return {object}
@@ -408,121 +586,21 @@ class Video extends DisplayObject
     {
         const character = super._$build(tag, parent);
 
+        this._$loop     = character.loop;
+        this._$autoPlay = character.autoPlay;
+        this._$bounds   = character.bounds;
+
         if (!this._$video) {
-            this._$video = Util.$document.createElement("video");
+            this._$initializeVideo();
         }
-
-        if (!this._$update) {
-
-            this._$update = function ()
-            {
-                const player = Util.$currentPlayer();
-                player._$draw(0);
-
-                // update
-                this._$bytesLoaded = this._$video.currentTime;
-
-                if (this._$video.currentTime) {
-
-                    this._$texture = player._$context
-                        .frameBuffer
-                        .createTextureFromVideo(
-                            this._$video, this._$smoothing, this._$texture
-                        );
-
-                    this.dispatchEvent(
-                        new VideoEvent(VideoEvent.PAUSE), false, false,
-                        this._$bytesLoaded, this._$bytesTotal
-                    );
-
-                    this._$doChanged();
-                }
-
-                // end
-                if (this._$video.currentTime >= this._$video.duration) {
-
-                    const cancelTimer = Util.$cancelAnimationFrame;
-                    cancelTimer(this._$timerId);
-                    this._$timerId = -1;
-
-                    this.dispatchEvent(
-                        new VideoEvent(VideoEvent.PLAY_END), false, false,
-                        this._$bytesLoaded, this._$bytesTotal
-                    );
-
-                    return ;
-                }
-
-                const timer = Util.$requestAnimationFrame;
-                this._$timerId = timer(this._$update);
-
-            }.bind(this);
-
-        }
-
-        // add sound event
-        if (!this._$sound) {
-            this._$sound = function ()
-            {
-                const name = (Util.$isTouch) ? Util.$TOUCH_END : Util.$MOUSE_UP;
-                Util.$currentPlayer()
-                    ._$canvas
-                    .removeEventListener(name, this._$sound);
-                this._$video.muted = false;
-            }.bind(this);
-        }
-
-
-        if (!this._$start) {
-
-            // start event
-            this._$start = function ()
-            {
-                this._$video.removeEventListener("canplaythrough", this._$start);
-                this._$video.play();
-
-                this._$bounds.xMax = this._$video.videoWidth;
-                this._$bounds.yMax = this._$video.videoHeight;
-
-                // set total
-                this._$bytesTotal = this._$video.duration;
-
-                const timer = Util.$requestAnimationFrame;
-                this._$timerId = timer(this._$update);
-
-                const name = (Util.$isTouch) ? Util.$TOUCH_END : Util.$MOUSE_UP;
-                Util
-                    .$currentPlayer()
-                    ._$canvas
-                    .addEventListener(name, this._$sound);
-
-                this.dispatchEvent(
-                    new VideoEvent(VideoEvent.PLAY_START), false, false,
-                    this._$bytesLoaded, this._$bytesTotal
-                );
-
-            }.bind(this);
-
-        }
-        this._$video.addEventListener("canplaythrough", this._$start);
-
-
-        // auto play setup
-        this._$video.muted    = true;
-        this._$video.autoplay = false;
-        if (Util.$isTouch) {
-            this._$video.setAttribute("playsinline", "");
-        }
-
-        // load start
-        this._$video.crossOrigin = "anonymous";
-        this._$video.type = "video/mp4";
 
         this._$video.src = URL.createObjectURL(new Blob(
             [new Uint8Array(character.buffer)],
             { "type": "video/mp4" }
         ));
 
+        // setup
+        this._$video.volume = character.volume;
         this._$video.load();
     };
 
@@ -617,17 +695,74 @@ class Video extends DisplayObject
             return;
         }
 
+        let texture  = this._$texture;
+        let offsetX  = 0;
+        let offsetY  = 0;
+
+        const filters = this._$filters   || this.filters;
+        if (filters && filters.length) {
+
+            const canApply = this._$canApply(filters);
+            if (canApply) {
+
+                const cacheKeys = [this._$instanceId, "f"];
+                let cache = Util.$cacheStore().get(cacheKeys);
+
+                const updated = this._$isFilterUpdated(
+                    width, height, matrix, color_transform, filters, canApply
+                );
+
+                if (!cache || updated) {
+
+                    // cache clear
+                    if (cache) {
+
+                        Util.$cacheStore().set(cacheKeys, null);
+                        cache.layerWidth     = 0;
+                        cache.layerHeight    = 0;
+                        cache._$offsetX      = 0;
+                        cache._$offsetY      = 0;
+                        cache.matrix         = null;
+                        cache.colorTransform = null;
+                        context.frameBuffer.releaseTexture(cache);
+
+                        cache = null;
+                    }
+
+                    texture = this._$getFilterTexture(
+                        context, filters, this._$texture, matrix, color_transform
+                    );
+
+                    Util.$cacheStore().set(cacheKeys, texture);
+
+                }
+
+                if (cache) {
+                    texture = cache;
+                }
+
+                Util.$poolArray(cacheKeys);
+
+                offsetX = texture._$offsetX;
+                offsetY = texture._$offsetY;
+            }
+
+        }
+
         // draw
         Util.$resetContext(context);
         context._$globalAlpha = alpha;
         context._$imageSmoothingEnabled = this._$smoothing;
+        context._$globalCompositeOperation = this._$blendMode || this.blendMode;
 
         context.setTransform(
             multiMatrix[0], multiMatrix[1], multiMatrix[2],
             multiMatrix[3], multiMatrix[4], multiMatrix[5]
         );
-        context.drawImage(this._$texture,
-            0, 0, this._$texture.width, this._$texture.height, multiColor
+
+        context.drawImage(texture, -offsetX, -offsetY,
+            texture.width, texture.height,
+            multiColor
         );
 
     }
