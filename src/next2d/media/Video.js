@@ -77,6 +77,13 @@ class Video extends DisplayObject
          * @default null
          * @private
          */
+        this._$start = null;
+
+        /**
+         * @type {function}
+         * @default null
+         * @private
+         */
         this._$update = null;
 
         /**
@@ -305,8 +312,16 @@ class Video extends DisplayObject
     set src (src)
     {
         if (!this._$video) {
+
             this._$initializeVideo();
+
+        } else {
+
+            this._$video.removeEventListener("canplaythrough", this._$start);
+            this._$video.addEventListener("canplaythrough", this._$start);
+            
         }
+
         this._$video.src = src;
         this._$video.load();
     }
@@ -362,6 +377,7 @@ class Video extends DisplayObject
         }
 
         // reset
+        this._$start       = null;
         this._$update      = null;
         this._$sound       = null;
         this._$video       = null;
@@ -527,9 +543,8 @@ class Video extends DisplayObject
             this._$video.setAttribute("playsinline", "");
         }
 
-        this._$video.addEventListener("canplaythrough", function ()
+        this._$start = function ()
         {
-
             this._$bounds.xMax = this._$video.videoWidth;
             this._$bounds.yMax = this._$video.videoHeight;
             this._$bytesTotal  = this._$video.duration;
@@ -553,7 +568,9 @@ class Video extends DisplayObject
                 this._$timerId = timer(this._$update);
             }
 
-        }.bind(this));
+        }.bind(this);
+        this._$video.addEventListener("canplaythrough", this._$start);
+
 
         this._$video.addEventListener("ended", function ()
         {
