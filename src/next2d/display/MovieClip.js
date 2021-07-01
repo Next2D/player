@@ -919,10 +919,11 @@ class MovieClip extends Sprite
             for (let idx = 0; idx < length; ++idx) {
 
                 const sound = sounds[idx];
-                if (soundTransform) {
-                    sound.soundTransform = soundTransform;
-                }
 
+                if (soundTransform) {
+                    sound.loop   = soundTransform.loop;
+                    sound.volume = soundTransform.volume;
+                }
                 sound.play();
             }
         }

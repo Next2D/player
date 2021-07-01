@@ -277,6 +277,18 @@ class Player
          */
         this._$quality = StageQuality.HIGH;
 
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$sources = Util.$getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$videos = Util.$getArray();
+
         // delay
         this._$bindRun = this._$run.bind(this);
         this._$timerId = -1;

@@ -59,13 +59,6 @@ class Sound extends EventDispatcher
         this._$character = null;
 
         /**
-         * @type {SoundTransform}
-         * @default null
-         * @private
-         */
-        this._$soundTransform = null;
-
-        /**
          * @type {array}
          * @private
          */
@@ -201,34 +194,44 @@ class Sound extends EventDispatcher
     }
     set volume (volume)
     {
-        this._$volume = volume;
+        this._$volume = Util.$min(
+            SoundMixer.volume,
+            Util.$clamp(volume, 0, 1, 1)
+        );
 
         const length = this._$sources.length;
         if (length && Util.$audioContext) {
             for (let idx = 0; idx < length; ++idx) {
+
                 const source = this._$sources[idx];
-                source._$gainNode.gain.value = volume;
+
+                source._$gainNode.gain.value = this._$volume;
+                source._$volume = this._$volume;
             }
         }
     }
 
     /**
-     * @description サウンドに割り当てられた SoundTransform オブジェクトです。
-     *              The Sound class contains properties for volume and panning.
+     * @description Sound クラスを複製します。
+     *              Duplicate the Sound class.
      *
-     * @member {SoundTransform}
+     * @return {Sound}
+     * @method
      * @public
      */
-    get soundTransform ()
+    clone ()
     {
-        if (!this._$soundTransform) {
-            this._$soundTransform = new SoundTransform();
+        const sound  = new Sound();
+        sound.volume = this.volume;
+        sound.loop   = this.loop;
+
+        if (this._$character) {
+            sound._$character = this._$character;
+        } else {
+            sound._$audioBuffer = this._$audioBuffer;
         }
-        return this._$soundTransform;
-    }
-    set soundTransform (sound_transform)
-    {
-        this._$soundTransform = sound_transform;
+
+        return sound;
     }
 
     /**
@@ -324,20 +327,14 @@ class Sound extends EventDispatcher
      * @description サウンドを再生します。
      *              Play a sound.
      *
-     * @param   {number}         [start_time=0]
-     * @param   {boolean}        [loops=false]
-     * @param   {SoundTransform} [sound_transform=null]
+     * @param   {number}  [start_time=0]
+     * @param   {boolean} [loops=false]
      * @return  {void}
      * @method
      * @public
      */
-    play (start_time = 0, loops = false, sound_transform = null)
+    play (start_time = 0, loops = false)
     {
-        // setup
-        if (sound_transform) {
-            this._$soundTransform = sound_transform;
-        }
-
         const buffer = (this._$character)
             ? this._$character.audioBuffer
             : this._$audioBuffer;
@@ -390,6 +387,8 @@ class Sound extends EventDispatcher
         if (length) {
 
             if (Util.$audioContext) {
+
+                const player = Util.$currentPlayer();
                 for (let idx = 0; idx < length; ++idx) {
 
                     const source = this._$sources[idx];
@@ -403,6 +402,9 @@ class Sound extends EventDispatcher
                     source.onended = null;
                     source.disconnect();
 
+                    player._$sources.splice(
+                        player._$sources.indexOf(source), 1
+                    );
                 }
             }
 
@@ -435,8 +437,8 @@ class Sound extends EventDispatcher
             }
         }
 
-        this._$loop     = tag.loop;
-        this._$volume   = tag.volume;
+        this._$loop   = tag.loop;
+        this._$volume = Util.$min(SoundMixer.volume, tag.volume);
     }
 
     /**
@@ -462,10 +464,17 @@ class Sound extends EventDispatcher
 
         source._$gainNode = Util.$audioContext.createGain();
         source._$gainNode.connect(Util.$audioContext.destination);
-        source._$gainNode.gain.value = this._$volume;
+
+        const volume = Util.$min(SoundMixer.volume, this._$volume);
+
+        source._$gainNode.gain.value = volume;
+        source._$volume = volume;
 
         source.connect(source._$gainNode);
         source.start(start_time|0, offset);
+
+        const player = Util.$currentPlayer();
+        player._$sources.push(source);
 
         this._$sources.push(source);
     }
@@ -478,8 +487,15 @@ class Sound extends EventDispatcher
      */
     _$endEventHandler (event)
     {
+        const source = event.target;
+
         this._$sources.splice(
-            this._$sources.indexOf(event.target), 1
+            this._$sources.indexOf(source), 1
+        );
+
+        const player = Util.$currentPlayer();
+        player._$sources.splice(
+            player._$sources.indexOf(source), 1
         );
 
         if (this._$loop) {
@@ -489,8 +505,6 @@ class Sound extends EventDispatcher
         } else {
 
             if (Util.$audioContext) {
-
-                const source = event.target;
 
                 if (source._$gainNode) {
                     source._$gainNode.gain.value = 0;

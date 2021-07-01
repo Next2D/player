@@ -94,13 +94,6 @@ class Video extends DisplayObject
         this._$sound = null;
 
         /**
-         * @type {SoundTransform}
-         * @default null
-         * @private
-         */
-        this._$soundTransform = null;
-
-        /**
          * @type {HTMLVideoElement}
          * @default null
          * @private
@@ -127,6 +120,13 @@ class Video extends DisplayObject
          * @private
          */
         this._$wait = false;
+
+        /**
+         * @type {number}
+         * @default 1
+         * @private
+         */
+        this._$volume = 1;
     }
 
     /**
@@ -293,25 +293,6 @@ class Video extends DisplayObject
     }
 
     /**
-     * @description オブジェクトのサウンドを制御します。
-     *              Controls sound in this object.
-     *
-     * @member {SoundTransform}
-     * @public
-     */
-    get soundTransform ()
-    {
-        if (!this._$soundTransform) {
-            this._$soundTransform = new SoundTransform();
-        }
-        return this._$soundTransform;
-    }
-    set soundTransform (sound_transform)
-    {
-        this._$soundTransform = sound_transform;
-    }
-
-    /**
      * @description 映像コンテンツへの URL を指定します。
      *              Specifies the URL to the video content.
      *
@@ -366,6 +347,30 @@ class Video extends DisplayObject
     get videoWidth ()
     {
         return this._$bounds.xMax;
+    }
+
+    /**
+     * @description ボリュームです。範囲は 0（無音）～ 1（フルボリューム）です。
+     *              The volume, ranging from 0 (silent) to 1 (full volume).
+     *
+     * @member {number}
+     * @default 1
+     * @public
+     */
+    get volume ()
+    {
+        return this._$volume;
+    }
+    set volume (volume)
+    {
+        this._$volume = Util.$min(
+            SoundMixer.volume,
+            Util.$clamp(volume, 0, 1, 1)
+        );
+
+        if (this._$video) {
+            this._$video.volume = this._$volume;
+        }
     }
 
     /**
@@ -434,6 +439,11 @@ class Video extends DisplayObject
                 new VideoEvent(VideoEvent.PAUSE), false, false,
                 this._$bytesLoaded, this._$bytesTotal
             );
+
+            const player = Util.$currentPlayer();
+            player._$videos.splice(
+                player._$videos.indexOf(this), 1
+            );
         }
     }
 
@@ -450,6 +460,8 @@ class Video extends DisplayObject
         if (this._$video && this._$stop) {
 
             this._$stop = false;
+
+            this._$video.volume = Util.$min(this._$volume, SoundMixer.volume);
             this._$video.play();
 
             const timer = Util.$requestAnimationFrame;
@@ -459,6 +471,11 @@ class Video extends DisplayObject
                 new VideoEvent(VideoEvent.PLAY), false, false,
                 this._$bytesLoaded, this._$bytesTotal
             );
+
+            const player = Util.$currentPlayer();
+            if (player._$videos.indexOf(this) === -1) {
+                player._$videos.push(this);
+            }
         }
     }
 
@@ -510,6 +527,10 @@ class Video extends DisplayObject
 
                     this._$texture = null;
                 }
+
+                player._$videos.splice(
+                    player._$videos.indexOf(this), 1
+                );
 
                 return ;
             }
@@ -566,13 +587,27 @@ class Video extends DisplayObject
             this._$bounds.yMax = this._$video.videoHeight;
             this._$bytesTotal  = this._$video.duration;
 
-            const name = (Util.$isTouch) ? Util.$TOUCH_END : Util.$MOUSE_UP;
-            Util
-                .$currentPlayer()
-                ._$canvas
-                .addEventListener(name, this._$sound);
+            if (!Util.$audioContext) {
+
+                const name = (Util.$isTouch) ? Util.$TOUCH_END : Util.$MOUSE_UP;
+                Util
+                    .$currentPlayer()
+                    ._$canvas
+                    .addEventListener(name, this._$sound);
+
+            } else {
+
+                this._$video.muted = false;
+
+            }
 
             if (this._$autoPlay) {
+
+                const player = Util.$currentPlayer();
+                if (player._$videos.indexOf(this) === -1) {
+                    player._$videos.push(this);
+                }
+
                 this._$wait = true;
                 this._$doChanged();
             }
@@ -626,7 +661,7 @@ class Video extends DisplayObject
         ));
 
         // setup
-        this._$video.volume = character.volume;
+        this._$video.volume = Util.$min(character.volume, SoundMixer.volume);
         this._$video.load();
     };
 

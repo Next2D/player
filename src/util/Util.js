@@ -1921,6 +1921,7 @@ Util.$packages = function (object)
 
     object["media"] = {
         "Sound": Sound,
+        "SoundMixer": SoundMixer,
         "SoundTransform": SoundTransform,
         "Video": Video
     };
