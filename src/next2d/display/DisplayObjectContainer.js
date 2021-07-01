@@ -205,7 +205,9 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         if (child._$parent) {
-            child._$parent._$remove(child);
+            child._$parent._$remove(child,
+                !(child._$parent._$instanceId === this._$instanceId)
+            );
         }
 
         const children = this._$getChildren();
@@ -772,8 +774,12 @@ class DisplayObjectContainer extends InteractiveObject
                 }
 
                 // remove event
-                instance.dispatchEvent(new Event(Event.REMOVED, true));
-                instance.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE, true));
+                if (instance.willTrigger(Event.REMOVED)) {
+                    instance.dispatchEvent(new Event(Event.REMOVED, true));
+                }
+                if (instance.willTrigger(Event.REMOVED_FROM_STAGE)) {
+                    instance.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE, true));
+                }
 
                 instance._$added      = false;
                 instance._$addedStage = false;
@@ -782,6 +788,7 @@ class DisplayObjectContainer extends InteractiveObject
                 instance._$filters    = null;
                 instance._$blendMode  = null;
                 instance._$isNext     = true;
+
                 if (instance instanceof DisplayObjectContainer) {
                     instance._$executeRemovedFromStage();
                     instance._$removeParentAndStage();
@@ -1047,6 +1054,15 @@ class DisplayObjectContainer extends InteractiveObject
             instance._$stage      = null;
             instance._$root       = null;
             instance._$addedStage = false;
+        }
+
+        if (this._$sounds) {
+            for (let [frame, sounds] of this._$sounds) {
+                for (let idx = 0; idx < sounds.length; ++idx) {
+                    const sound = sounds[idx];
+                    sound.stop();
+                }
+            }
         }
     }
 

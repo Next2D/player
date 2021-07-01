@@ -113,6 +113,20 @@ class Video extends DisplayObject
          * @private
          */
         this._$texture = null;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$stop = true;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$wait = false;
     }
 
     /**
@@ -319,7 +333,7 @@ class Video extends DisplayObject
 
             this._$video.removeEventListener("canplaythrough", this._$start);
             this._$video.addEventListener("canplaythrough", this._$start);
-            
+
         }
 
         this._$video.src = src;
@@ -398,16 +412,14 @@ class Video extends DisplayObject
      */
     pause ()
     {
-        if (this._$video) {
+        if (this._$video && !this._$stop) {
+
+            this._$stop = true;
             this._$video.pause();
 
             const cancelTimer = Util.$cancelAnimationFrame;
             cancelTimer(this._$timerId);
-
-            this.dispatchEvent(
-                new VideoEvent(VideoEvent.PAUSE), false, false,
-                this._$bytesLoaded, this._$bytesTotal
-            );
+            this._$timerId = -1;
 
             if (this._$texture) {
                 Util.$currentPlayer()
@@ -417,6 +429,11 @@ class Video extends DisplayObject
 
                 this._$texture = null;
             }
+
+            this.dispatchEvent(
+                new VideoEvent(VideoEvent.PAUSE), false, false,
+                this._$bytesLoaded, this._$bytesTotal
+            );
         }
     }
 
@@ -430,8 +447,9 @@ class Video extends DisplayObject
      */
     play ()
     {
-        if (this._$video) {
+        if (this._$video && this._$stop) {
 
+            this._$stop = false;
             this._$video.play();
 
             const timer = Util.$requestAnimationFrame;
@@ -483,7 +501,6 @@ class Video extends DisplayObject
 
                 const cancelTimer = Util.$cancelAnimationFrame;
                 cancelTimer(this._$timerId);
-
                 this._$timerId = -1;
 
                 if (this._$texture) {
@@ -556,16 +573,8 @@ class Video extends DisplayObject
                 .addEventListener(name, this._$sound);
 
             if (this._$autoPlay) {
-
-                this._$video.play();
-
-                this.dispatchEvent(
-                    new VideoEvent(VideoEvent.PLAY_START), false, false,
-                    this._$bytesLoaded, this._$bytesTotal
-                );
-
-                const timer = Util.$requestAnimationFrame;
-                this._$timerId = timer(this._$update);
+                this._$wait = true;
+                this._$doChanged();
             }
 
         }.bind(this);
@@ -672,6 +681,22 @@ class Video extends DisplayObject
     {
         if (!this._$visible) {
             return ;
+        }
+
+        if (this._$wait) {
+
+            this._$stop = false;
+            this._$video.play();
+
+            this.dispatchEvent(
+                new VideoEvent(VideoEvent.PLAY_START), false, false,
+                this._$bytesLoaded, this._$bytesTotal
+            );
+
+            const timer = Util.$requestAnimationFrame;
+            this._$timerId = timer(this._$update);
+
+            this._$wait = false;
         }
 
         if (!this._$texture) {

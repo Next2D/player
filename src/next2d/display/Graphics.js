@@ -276,6 +276,10 @@ class Graphics
             this.endFill();
         }
 
+        if (!this._$fills) {
+            this._$fills = Util.$getArray();
+        }
+
         // start
         this._$maxAlpha = 1;
         this._$doFill   = true;
@@ -309,6 +313,10 @@ class Graphics
         // end fill
         if (this._$doFill) {
             this.endFill();
+        }
+
+        if (!this._$fills) {
+            this._$fills = Util.$getArray();
         }
 
         // valid
@@ -363,6 +371,10 @@ class Graphics
 
         if (this._$doFill) {
             this.endFill();
+        }
+
+        if (!this._$fills) {
+            this._$fills = Util.$getArray();
         }
 
         // setup
@@ -435,25 +447,17 @@ class Graphics
         this._$yMax          = -Util.$MAX_VALUE;
 
         // init array
-        if (!this._$recode) {
-            this._$recode = Util.$getArray();
+        if (this._$recode) {
+            Util.$poolArray(this._$recode);
+            this._$recode = null;
         }
-        if (!this._$fills) {
-            this._$fills = Util.$getArray();
+        if (this._$fills) {
+            Util.$poolArray(this._$fills);
+            this._$fills = null;
         }
-        if (!this._$lines) {
-            this._$lines = Util.$getArray();
-        }
-
-        // reset array
-        if (this._$recode.length) {
-            this._$recode.length = 0;
-        }
-        if (this._$fills.length) {
-            this._$fills.length = 0;
-        }
-        if (this._$lines.length) {
-            this._$lines.length = 0;
+        if (this._$lines) {
+            Util.$poolArray(this._$lines);
+            this._$lines = null;
         }
 
         // restart
@@ -795,10 +799,15 @@ class Graphics
     {
         if (this._$doFill) {
 
+            if (!this._$recode) {
+                this._$recode = Util.$getArray();
+            }
+
             this._$recode.push.apply(this._$recode, this._$fills);
 
             // clear
-            this._$fills.length = 0;
+            Util.$poolArray(this._$fills);
+            this._$fills = null;
 
             // fill
             switch (this._$fillType) {
@@ -860,10 +869,15 @@ class Graphics
     {
         if (this._$doLine) {
 
+            if (!this._$recode) {
+                this._$recode = Util.$getArray();
+            }
+
             this._$recode.push.apply(this._$recode, this._$lines);
 
             // clear
-            this._$lines.length = 0;
+            Util.$poolArray(this._$lines);
+            this._$lines = null;
 
             // fill
             switch (this._$lineType) {
@@ -941,6 +955,10 @@ class Graphics
             return this;
         }
 
+        if (!this._$lines) {
+            this._$lines = Util.$getArray();
+        }
+
         // setup
         const length = alphas.length;
         for (let idx = 0; idx < length; ++idx) {
@@ -984,6 +1002,10 @@ class Graphics
 
         if (this._$doLine) {
             this.endLine();
+        }
+
+        if (!this._$lines) {
+            this._$lines = Util.$getArray();
         }
 
         color = Util.$clamp(Util.$toColorInt(color), 0, 0xffffff, 0);
@@ -1163,7 +1185,6 @@ class Graphics
             return;
         }
 
-
         if (0 > (xMin + width) || 0 > (yMin + height)) {
 
             if (filters && filters.length
@@ -1205,7 +1226,11 @@ class Graphics
 
         // get cache
         color_transform[3] = 1; // plain alpha
-        const id        = displayObject._$instanceId;
+
+        const id = (displayObject._$characterId)
+            ? `c_${displayObject._$characterId}`
+            : `i_${displayObject._$instanceId}`;
+
         const cacheKeys = Util
             .$cacheStore()
             .generateShapeKeys(id, matrix, color_transform);

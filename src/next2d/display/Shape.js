@@ -121,7 +121,8 @@ class Shape extends DisplayObject
 
         if (character.recodes) {
 
-            graphics._$recode = character.recodes;
+            // clone
+            graphics._$recode = character.recodes.slice(0);
 
         } else {
 
@@ -229,6 +230,7 @@ class Shape extends DisplayObject
 
         const filters   = this._$filters   || this.filters;
         const blendMode = this._$blendMode || this.blendMode;
+
 
         this
             ._$graphics

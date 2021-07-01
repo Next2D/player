@@ -1413,8 +1413,11 @@ Util.$inverseMatrix = function(m)
  */
 Util.$decodeAudioFailed = function ()
 {
-    const buffer = new Util.$Uint8Array(this._$data);
+    const buffer = (this._$character)
+        ? this._$character.buffer
+        : this._$buffer;
 
+    console.log(buffer);
     let idx = 0;
     while (true) {
 
@@ -1433,7 +1436,7 @@ Util.$decodeAudioFailed = function ()
         Util
             .$audioContext
             .decodeAudioData(
-                buffer.buffer.slice(idx),
+                buffer.buffer.subarray(idx),
                 Util.$decodeAudioSuccess.bind(this)
             );
 
@@ -1441,16 +1444,50 @@ Util.$decodeAudioFailed = function ()
 }
 
 /**
- * @param  {Uint8Array} data
+ * @param  {Uint8Array} buffer
  * @return {void}
  * @method
  * @static
  */
-Util.$decodeAudioSuccess = function (data)
+Util.$decodeAudioSuccess = function (buffer)
 {
-    this._$buffer = data;
-    this._$data   = null;
+    if (this._$character) {
+
+        this._$character.buffer      = null;
+        this._$character.audioBuffer = buffer;
+
+    } else {
+
+        this._$buffer      = null;
+        this._$audioBuffer = buffer;
+
+    }
 }
+
+/**
+ * @param  {Sound} sound
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$decodeAudioData = function (sound)
+{
+    const buffer = (sound._$character)
+        ? sound._$character.buffer
+        : sound._$buffer;
+
+    if (!buffer) {
+        return ;
+    }
+
+    Util
+        .$audioContext
+        .decodeAudioData(
+            buffer.buffer,
+            Util.$decodeAudioSuccess.bind(sound),
+            Util.$decodeAudioFailed.bind(sound)
+        );
+};
 
 /**
  * @return {void}
@@ -1459,7 +1496,6 @@ Util.$decodeAudioSuccess = function (data)
  */
 Util.$loadAudioData = function ()
 {
-
     // create AudioContext
     if (!Util.$audioContext) {
 
@@ -1475,20 +1511,15 @@ Util.$loadAudioData = function ()
 
             const sound = Util.$audios[idx];
 
-            if (!sound._$data.length) {
+            if (sound._$character && sound._$character.audioBuffer) {
                 return ;
             }
 
-            // const buffer = new Util.$Uint8Array(sound._$data);
+            if (sound._$audioBuffer) {
+                return ;
+            }
 
-            Util
-                .$audioContext
-                .decodeAudioData(
-                    sound._$data.buffer,
-                    Util.$decodeAudioSuccess.bind(sound),
-                    Util.$decodeAudioFailed.bind(sound)
-                );
-
+            Util.$decodeAudioData(sound);
         }
 
         // reset
@@ -1525,7 +1556,7 @@ Util.$resize = function ()
 Util.$resizeExecute = function ()
 {
     const player = Util.$currentPlayer();
-    if (player._$loadStatus === 4) {
+    if (player._$loadStatus === 2) {
         player._$resize();
     }
 };

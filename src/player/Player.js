@@ -50,7 +50,7 @@ class Player
          * @type {array}
          * @private
          */
-        this._$sounds = Util.$getArray();
+        this._$sounds = Util.$getMap();
 
         /**
          * @type {object}
@@ -413,6 +413,8 @@ class Player
 
         this._$stopFlag = true;
         this._$timerId  = -1;
+
+        Util.$cacheStore().reset();
     }
 
     /**
@@ -440,29 +442,13 @@ class Player
      */
     _$updateLoadStatus ()
     {
-        switch (this._$loadStatus) {
-
-            case 2: // end load
-                {
-                    this._$resize();
-                    this._$loadStatus = 3;
-                    const timer = Util.$requestAnimationFrame;
-                    this._$loadId = timer(this._$updateLoadStatus.bind(this));
-                }
-                break;
-
-            case 3: // end parse
-                this._$loaded();
-                break;
-
-            default:
-                {
-                    const timer = Util.$requestAnimationFrame;
-                    this._$loadId = timer(this._$updateLoadStatus.bind(this));
-                }
-                break;
-
+        if (this._$loadStatus === 2) {
+            this._$loaded();
+            return ;
         }
+
+        const timer = Util.$requestAnimationFrame;
+        this._$loadId = timer(this._$updateLoadStatus.bind(this));
     }
 
     /**
@@ -472,8 +458,6 @@ class Player
      */
     _$loaded ()
     {
-        this._$loadStatus = 4;
-
         const element = Util.$document.getElementById(this.contentElementId);
         if (element) {
 
@@ -507,7 +491,6 @@ class Player
 
             // append canvas
             element.appendChild(this._$canvas);
-
 
             // start
             this.play();
@@ -839,12 +822,12 @@ class Player
 
                 const loadSpAudio = function ()
                 {
-                    this.removeEventListener(Util.$TOUCH_END, loadSpAudio);
+                    this.removeEventListener(Util.$TOUCH_START, loadSpAudio);
                     Util.$loadAudioData();
                 };
 
                 // audio context load event
-                canvas.addEventListener(Util.$TOUCH_END, loadSpAudio);
+                canvas.addEventListener(Util.$TOUCH_START, loadSpAudio);
 
                 // touch event
                 canvas.addEventListener(Util.$TOUCH_START, function (event)
@@ -876,12 +859,12 @@ class Player
 
                 const loadWebAudio = function (event)
                 {
-                    event.target.removeEventListener(Util.$MOUSE_UP, loadWebAudio);
+                    event.target.removeEventListener(Util.$MOUSE_DOWN, loadWebAudio);
                     Util.$loadAudioData();
                 };
 
                 // audio context load event
-                canvas.addEventListener(Util.$MOUSE_UP, loadWebAudio);
+                canvas.addEventListener(Util.$MOUSE_DOWN, loadWebAudio);
 
                 // mouse event
                 canvas.addEventListener(Util.$MOUSE_DOWN, function (event)
@@ -1650,10 +1633,12 @@ class Player
             // stage end
             this._$stage._$updated = false;
 
-
             // start sound
-            while (this._$sounds.length) {
-                this._$sounds.pop()._$soundPlay();
+            if (this._$sounds.size) {
+                for (let [id, movieClip] of this._$sounds) {
+                    movieClip._$soundPlay();
+                }
+                this._$sounds.clear();
             }
 
             const bufferTexture = context

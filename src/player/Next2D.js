@@ -86,6 +86,8 @@ class Next2D
             ];
 
             stage.addChild(loaderInfo.content);
+
+            player._$resize();
         };
 
         loaderInfo.addEventListener(IOErrorEvent.IO_ERROR, errorHandler);

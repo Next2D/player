@@ -149,11 +149,15 @@ class Loader extends DisplayObjectContainer
                     loaderInfo._$bytesLoaded = event.loaded;
                     loaderInfo._$bytesTotal  = event.total;
 
-                    loaderInfo.dispatchEvent(new Event(Event.OPEN));
-                    loaderInfo.dispatchEvent(new ProgressEvent(
-                        ProgressEvent.PROGRESS,
-                        false, false, event.loaded, event.total
-                    ));
+                    if (loaderInfo.willTrigger(Event.OPEN)) {
+                        loaderInfo.dispatchEvent(new Event(Event.OPEN));
+                    }
+                    if (loaderInfo.willTrigger(ProgressEvent.PROGRESS)) {
+                        loaderInfo.dispatchEvent(new ProgressEvent(
+                            ProgressEvent.PROGRESS,
+                            false, false, event.loaded, event.total
+                        ));
+                    }
 
                 }.bind(this),
                 "progress": function (event)
@@ -165,10 +169,12 @@ class Loader extends DisplayObjectContainer
                     loaderInfo._$bytesTotal  = event.total;
 
                     // progress event
-                    loaderInfo.dispatchEvent(new ProgressEvent(
-                        ProgressEvent.PROGRESS,
-                        false, false, event.loaded, event.total
-                    ));
+                    if (loaderInfo.willTrigger(ProgressEvent.PROGRESS)) {
+                        loaderInfo.dispatchEvent(new ProgressEvent(
+                            ProgressEvent.PROGRESS,
+                            false, false, event.loaded, event.total
+                        ));
+                    }
 
                 }.bind(this),
                 "loadend": function (event)
@@ -180,10 +186,12 @@ class Loader extends DisplayObjectContainer
                     loaderInfo._$bytesTotal  = event.total;
 
                     // progress event
-                    loaderInfo.dispatchEvent(new ProgressEvent(
-                        ProgressEvent.PROGRESS,
-                        false, false, event.loaded, event.total
-                    ));
+                    if (loaderInfo.willTrigger(ProgressEvent.PROGRESS)) {
+                        loaderInfo.dispatchEvent(new ProgressEvent(
+                            ProgressEvent.PROGRESS,
+                            false, false, event.loaded, event.total
+                        ));
+                    }
 
                     // http status event
                     const responseHeaders = Util.$getArray();
@@ -206,15 +214,17 @@ class Loader extends DisplayObjectContainer
 
                     }
 
-                    const httpStatusEvent = new HTTPStatusEvent(
-                        HTTPStatusEvent.HTTP_STATUS, false, false,
-                        event.target.status
-                    );
+                    if (loaderInfo.willTrigger(HTTPStatusEvent.HTTP_STATUS)) {
+                        const httpStatusEvent = new HTTPStatusEvent(
+                            HTTPStatusEvent.HTTP_STATUS, false, false,
+                            event.target.status
+                        );
 
-                    httpStatusEvent.responseURL     = event.target.responseURL;
-                    httpStatusEvent.responseHeaders = responseHeaders;
+                        httpStatusEvent.responseURL     = event.target.responseURL;
+                        httpStatusEvent.responseHeaders = responseHeaders;
 
-                    loaderInfo.dispatchEvent(httpStatusEvent);
+                        loaderInfo.dispatchEvent(httpStatusEvent);
+                    }
 
                     if (199 < event.target.status && 400 > event.target.status) {
 
@@ -272,9 +282,12 @@ class Loader extends DisplayObjectContainer
 
                     } else {
 
-                        loaderInfo.dispatchEvent(
-                            new IOErrorEvent(IOErrorEvent.IO_ERROR, false, false, event.target.statusText)
-                        );
+                        if (loaderInfo.willTrigger(IOErrorEvent.IO_ERROR)) {
+                            loaderInfo.dispatchEvent(new IOErrorEvent(
+                                IOErrorEvent.IO_ERROR, false, false,
+                                event.target.statusText
+                            ));
+                        }
 
                     }
 

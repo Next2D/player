@@ -717,7 +717,9 @@ class TextField extends InteractiveObject
 
             this._$reset();
 
-            this.dispatchEvent(new Event(Event.SCROLL, true));
+            if (this.willTrigger(Event.SCROLL)) {
+                this.dispatchEvent(new Event(Event.SCROLL, true));
+            }
         }
     }
 
@@ -742,7 +744,9 @@ class TextField extends InteractiveObject
 
             this._$reset();
 
-            this.dispatchEvent(new Event(Event.SCROLL, true));
+            if (this.willTrigger(Event.SCROLL)) {
+                this.dispatchEvent(new Event(Event.SCROLL, true));
+            }
         }
     }
 
@@ -2190,7 +2194,12 @@ class TextField extends InteractiveObject
         keys[1] = yScale;
 
         const cacheStore = Util.$cacheStore();
-        const cacheKeys = cacheStore.generateKeys(this._$instanceId, keys, multiColor);
+
+        const id = (this._$characterId)
+            ? `c_${this._$characterId}`
+            : `i_${this._$instanceId}`;
+
+        const cacheKeys = cacheStore.generateKeys(id, keys, multiColor);
         let texture     = cacheStore.get(cacheKeys);
 
         // texture is small or renew

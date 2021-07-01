@@ -707,12 +707,11 @@ class MovieClip extends Sprite
         }
 
         // set sound
-        if (this._$canSound
-            && this._$sounds.size
+        if (this._$canSound && this._$sounds.size
             && this._$sounds.has(this._$currentFrame)
-            && player._$sounds.indexOf(this) === -1
+            && !player._$sounds.has(this._$instanceId)
         ) {
-            player._$sounds.push(this);
+            player._$sounds.set(this._$instanceId, this);
         }
     }
 
@@ -735,6 +734,29 @@ class MovieClip extends Sprite
         }
 
         this._$setAction();
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {array} matrix
+     * @param  {array} color_transform
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$draw (context, matrix, color_transform)
+    {
+        super._$draw(context, matrix, color_transform);
+
+        // set sound
+        const player = Util.$currentPlayer();
+
+        if (this._$canSound && this._$sounds.size
+            && this._$sounds.has(this._$currentFrame)
+            && !player._$sounds.has(this._$instanceId)
+        ) {
+            player._$sounds.set(this._$instanceId, this);
+        }
     }
 
     /**
@@ -808,16 +830,6 @@ class MovieClip extends Sprite
         // frame action
         this._$setAction();
 
-        // set sound
-        const player = Util.$currentPlayer();
-        if (this._$canSound
-            && this._$sounds.size
-            && this._$sounds.has(this._$currentFrame)
-            && player._$sounds.indexOf(this) === -1
-        ) {
-            player._$sounds.push(this);
-        }
-
         this._$isNext = isNext;
 
         return this._$isNext;
@@ -834,14 +846,20 @@ class MovieClip extends Sprite
     {
         const character = super._$build(tag, parent);
 
-        // TODO object.sounds
         for (let idx = 0; idx < character.sounds.length; ++idx) {
+
             const object = character.sounds[idx];
-            if (!this._$sounds.has(object.frame)) {
-                this._$sounds.set(object.frame, Util.$getArray());
+
+            const sounds = Util.$getArray();
+            for (let idx = 0; idx < object.sound.length; ++idx) {
+
+                const sound = new Sound();
+                sound._$build(object.sound[idx], this);
+
+                sounds.push(sound);
             }
 
-            this._$sounds.get(object.frame).push(new Sound());
+            this._$sounds.set(object.frame, sounds);
         }
 
         for (let idx = 0; idx < character.actions.length; ++idx) {
@@ -862,9 +880,53 @@ class MovieClip extends Sprite
 
         }
 
-        this._$totalFrames = character.controller.length - 1;
+        if (character.controller.length) {
+            this._$totalFrames = character.controller.length - 1;
+        }
 
         return character;
     }
 
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$soundPlay ()
+    {
+        const sounds = this._$sounds.get(this._$currentFrame);
+        if (!sounds) {
+            return;
+        }
+
+        const length = sounds.length;
+        if (length) {
+
+            // set SoundTransform
+            let soundTransform = this._$soundTransform;
+
+            let parent = this._$parent;
+            while (parent) {
+
+                if (parent._$soundTransform) {
+                    soundTransform = parent._$soundTransform;
+                }
+
+                parent = parent._$parent;
+            }
+
+            // play sound
+            for (let idx = 0; idx < length; ++idx) {
+
+                const sound = sounds[idx];
+                if (soundTransform) {
+                    sound.soundTransform = soundTransform;
+                }
+
+                sound.play();
+            }
+        }
+
+        this._$canSound = false;
+    }
 }
