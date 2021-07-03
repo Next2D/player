@@ -1180,9 +1180,12 @@ class DisplayObject extends EventDispatcher
             return null;
         }
 
-        return parent._$placeObjects[
-            placeMap[parent._$currentFrame || 1][placeId]
-        ];
+        const map = placeMap[parent._$currentFrame || 1];
+        if (!map) {
+            return null;
+        }
+
+        return parent._$placeObjects[map[placeId]];
     }
 
     /**

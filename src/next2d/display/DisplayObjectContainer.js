@@ -690,28 +690,27 @@ class DisplayObjectContainer extends InteractiveObject
             this._$needsChildren = false;
 
             const frame = this._$currentFrame || 1;
-
-            let controller = (this._$controller)
-                ? this._$controller[frame]
-                : null;
-
-            if (!controller) {
+            if (!this._$controller) {
                 return this._$children;
             }
+
+            let controller = this._$controller[frame];
 
             // first build
             const length = this._$children.length;
             if (!length) {
 
-                const length = controller.length;
-                for (let idx = 0; idx < length; ++idx) {
+                if (controller) {
+                    const length = controller.length;
+                    for (let idx = 0; idx < length; ++idx) {
 
-                    const instance = this._$createInstance(controller[idx]);
-                    instance._$placeId = idx;
+                        const instance = this._$createInstance(controller[idx]);
+                        instance._$placeId = idx;
 
-                    this._$children.push(instance);
-                    if (instance._$name) {
-                        this._$names.set(instance._$name, instance);
+                        this._$children.push(instance);
+                        if (instance._$name) {
+                            this._$names.set(instance._$name, instance);
+                        }
                     }
                 }
 
@@ -796,21 +795,23 @@ class DisplayObjectContainer extends InteractiveObject
 
             }
 
-            for (let idx = 0; idx < controller.length; ++idx) {
+            if (controller) {
+                for (let idx = 0; idx < controller.length; ++idx) {
 
-                const id = controller[idx];
-                if (skipIds.has(id)) {
-                    continue;
-                }
+                    const id = controller[idx];
+                    if (skipIds.has(id)) {
+                        continue;
+                    }
 
-                const instance = (poolInstances.has(id))
-                    ? poolInstances.get(id)
-                    : this._$createInstance(id);
+                    const instance = (poolInstances.has(id))
+                        ? poolInstances.get(id)
+                        : this._$createInstance(id);
 
-                instance._$placeId = idx;
-                children.push(instance);
-                if (instance._$name) {
-                    this._$names.set(instance._$name, instance);
+                    instance._$placeId = idx;
+                    children.push(instance);
+                    if (instance._$name) {
+                        this._$names.set(instance._$name, instance);
+                    }
                 }
             }
 
@@ -1183,14 +1184,14 @@ class DisplayObjectContainer extends InteractiveObject
             return ;
         }
 
-        // ColorTransform
-        const colorTransform = Util.$multiplicationColor(
-            color_transform,
-            this._$transform._$rawColorTransform()
-        );
+        let multiColor = color_transform;
+        const rawColor = this._$transform._$rawColorTransform();
+        if (rawColor !== Util.$COLOR_ARRAY_IDENTITY) {
+            multiColor = Util.$multiplicationColor(color_transform, rawColor);
+        }
 
         // not draw
-        const alpha = Util.$clamp(colorTransform[3] + (colorTransform[7] / 255), 0, 1, 0);
+        const alpha = Util.$clamp(multiColor[3] + (multiColor[7] / 255), 0, 1, 0);
         if (!alpha) {
             return ;
         }
@@ -1205,7 +1206,6 @@ class DisplayObjectContainer extends InteractiveObject
             return ;
         }
 
-
         // pre data
         const preData = this._$preDraw(context, matrix, color_transform);
         if (!preData) {
@@ -1215,13 +1215,13 @@ class DisplayObjectContainer extends InteractiveObject
 
         // use cache
         if (preData.isFilter && !preData.isUpdated) {
-            this._$postDraw(context, matrix, colorTransform, preData);
+            this._$postDraw(context, matrix, multiColor, preData);
             return ;
         }
 
 
         let preMatrix = preData.matrix;
-        const preColorTransform = (preData.isFilter) ? preData.color : colorTransform;
+        const preColorTransform = (preData.isFilter) ? preData.color : multiColor;
 
         // if graphics draw
         if (this._$graphics && this._$graphics._$canDraw) {
@@ -1439,7 +1439,7 @@ class DisplayObjectContainer extends InteractiveObject
 
         // filter and blend
         if (preData.isFilter) {
-            return this._$postDraw(context, matrix, colorTransform, preData);
+            return this._$postDraw(context, matrix, multiColor, preData);
         }
 
         Util.$poolFloat32Array6(preMatrix);
@@ -1763,5 +1763,32 @@ class DisplayObjectContainer extends InteractiveObject
         this._$isNext = isNext;
 
         return this._$isNext;
+    }
+
+    /**
+     * @param  {number} x
+     * @param  {number} y
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$outCheck (x, y)
+    {
+        let matrix = Util.$MATRIX_ARRAY_IDENTITY;
+        let parent = this._$parent;
+        while (parent) {
+
+            matrix = Util.$multiplicationMatrix(
+                parent._$transform._$rawMatrix(),
+                matrix
+            );
+
+            parent = parent._$parent;
+        }
+
+        Util.$hitContext.setTransform(1, 0, 0, 1, 0, 0);
+        Util.$hitContext.beginPath();
+
+        return this._$mouseHit(Util.$hitContext, matrix, { "x": x, "y": y });
     }
 }
