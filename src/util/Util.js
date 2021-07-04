@@ -1682,12 +1682,12 @@ Util.$cross = function (x1, y1, x2, y2)
  */
 Util.$linearGradientXY = function (matrix)
 {
-    const x0  = -16384 * matrix[0] - 16384 * matrix[2] + matrix[4];
-    const x1  =  16384 * matrix[0] - 16384 * matrix[2] + matrix[4];
-    const x2  = -16384 * matrix[0] + 16384 * matrix[2] + matrix[4];
-    const y0  = -16384 * matrix[1] - 16384 * matrix[3] + matrix[5];
-    const y1  =  16384 * matrix[1] - 16384 * matrix[3] + matrix[5];
-    const y2  = -16384 * matrix[1] + 16384 * matrix[3] + matrix[5];
+    const x0  = -819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
+    const x1  =  819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
+    const x2  = -819.2 * matrix[0] + 819.2 * matrix[2] + matrix[4];
+    const y0  = -819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
+    const y1  =  819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
+    const y2  = -819.2 * matrix[1] + 819.2 * matrix[3] + matrix[5];
 
     let vx2 = x2 - x0;
     let vy2 = y2 - y0;

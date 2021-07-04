@@ -27,7 +27,7 @@ class Next2D
     {
         // @ifdef DEBUG
         if (url === "develop") {
-            url = Util.$location.search.substr(1).split("&")[0];
+            url = `${Util.$location.origin}/${Util.$location.search.substr(1).split("&")[0]}`;
         }
         // @endif
 

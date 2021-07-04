@@ -541,20 +541,38 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$getBounds (matrix = null)
     {
+        let multiMatrix = Util.$MATRIX_ARRAY_IDENTITY;
+        if (matrix) {
+
+            multiMatrix = matrix;
+
+            const rawMatrix = this._$transform._$rawMatrix();
+            if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            }
+        }
 
         const isGraphics = (this._$graphics && this._$graphics._$getBounds());
-        const children = this._$getChildren();
-        const length   = children.length;
+
+        const children = (this._$needsChildren)
+            ? this._$getChildren()
+            : this._$children;
+
+        const length = children.length;
+
 
         // size zero
         if (!length && !isGraphics) {
-            return Util.$getBoundsObject(0, 0, 0, 0);
+            const bounds = Util.$getBoundsObject(
+                multiMatrix[4], -multiMatrix[4],
+                multiMatrix[5], -multiMatrix[5]
+            );
+            if (matrix && multiMatrix !== matrix) {
+                Util.$poolFloat32Array6(multiMatrix);
+            }
+            return bounds;
         }
 
-
-        const multiMatrix = (matrix)
-            ? Util.$multiplicationMatrix(matrix, this._$transform._$rawMatrix())
-            : Util.$MATRIX_ARRAY_IDENTITY;
 
         // data init
         const no = Util.$MAX_VALUE;
@@ -562,7 +580,6 @@ class DisplayObjectContainer extends InteractiveObject
         let xMax = -no;
         let yMin = no;
         let yMax = -no;
-
 
         if (isGraphics) {
             const bounds = Util.$boundsMatrix(this._$graphics._$getBounds(), multiMatrix);
@@ -587,6 +604,10 @@ class DisplayObjectContainer extends InteractiveObject
 
         }
 
+        if (matrix && multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+
         // end
         return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
     }
@@ -599,19 +620,37 @@ class DisplayObjectContainer extends InteractiveObject
     _$getLayerBounds (matrix = null)
     {
 
+        let multiMatrix = Util.$MATRIX_ARRAY_IDENTITY;
+        if (matrix) {
+
+            multiMatrix = matrix;
+
+            const rawMatrix = this._$transform._$rawMatrix();
+            if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            }
+        }
+
         const isGraphics = (this._$graphics && this._$graphics._$getBounds());
-        const children = this._$getChildren();
-        const length   = children.length;
+
+        const children = (this._$needsChildren)
+            ? this._$getChildren()
+            : this._$children;
+
+        const length = children.length;
 
         // size zero
         if (!length && !isGraphics) {
-            return Util.$getBoundsObject(0, 0, 0, 0);
+            const bounds = Util.$getBoundsObject(
+                multiMatrix[4], -multiMatrix[4],
+                multiMatrix[5], -multiMatrix[5]
+            );
+            if (matrix && multiMatrix !== matrix) {
+                Util.$poolFloat32Array6(multiMatrix);
+            }
+            return bounds;
         }
 
-
-        const tMatrix = matrix
-            ? Util.$multiplicationMatrix(matrix, this._$transform._$rawMatrix())
-            : Util.$MATRIX_ARRAY_IDENTITY;
 
         // data init
         const no   = Util.$MAX_VALUE;
@@ -622,7 +661,7 @@ class DisplayObjectContainer extends InteractiveObject
 
 
         if (isGraphics) {
-            const bounds = Util.$boundsMatrix(this._$graphics._$getBounds(), tMatrix);
+            const bounds = Util.$boundsMatrix(this._$graphics._$getBounds(), multiMatrix);
             xMin   = +bounds.xMin;
             xMax   = +bounds.xMax;
             yMin   = +bounds.yMin;
@@ -633,7 +672,7 @@ class DisplayObjectContainer extends InteractiveObject
 
         for (let idx = 0; idx < length; ++idx) {
 
-            const bounds = children[idx]._$getLayerBounds(tMatrix);
+            const bounds = children[idx]._$getLayerBounds(multiMatrix);
 
             xMin = Util.$min(xMin, bounds.xMin);
             xMax = Util.$max(xMax, bounds.xMax);
@@ -642,6 +681,10 @@ class DisplayObjectContainer extends InteractiveObject
 
             Util.$poolBoundsObject(bounds);
 
+        }
+
+        if (matrix && multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
         }
 
         // end
@@ -657,14 +700,7 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
 
-        let rect = Util.$getInstance(Rectangle,
-            Util.$getArray(null,
-                xMin / 20, yMin / 20,
-                (xMax - xMin) / 20,
-                (yMax - yMin) / 20
-            ), true
-        );
-
+        let rect = new Rectangle(xMin, yMin, (xMax - xMin), (yMax - yMin));
         for (let idx = 0; idx < fLength; ++idx) {
             rect = filters[idx]._$generateFilterRect(rect, null, null, true);
         }
@@ -673,7 +709,6 @@ class DisplayObjectContainer extends InteractiveObject
         xMax = rect._$x + rect._$width;
         yMin = rect._$y;
         yMax = rect._$y + rect._$height;
-        Util.$poolInstance(rect);
 
         return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
     }
@@ -718,7 +753,7 @@ class DisplayObjectContainer extends InteractiveObject
             }
 
 
-            const skipIds = Util.$getMap();
+            const skipIds       = Util.$getMap();
             const poolInstances = Util.$getMap();
 
             let depth = 0;
@@ -904,7 +939,9 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$setParentAndStage ()
     {
-        const children = this._$getChildren();
+        const children = (this._$needsChildren)
+            ? this._$getChildren()
+            : this._$children;
 
         const length = children.length;
         for (let idx = 0; idx < length; ++idx) {
@@ -928,8 +965,11 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$executeAddedToStage ()
     {
-        const children = this._$getChildren();
-        const length   = children.length;
+        const children = (this._$needsChildren)
+            ? this._$getChildren()
+            : this._$children;
+
+        const length = children.length;
         for (let idx = 0; idx < length; ++idx) {
 
             const instance = children[idx];
@@ -962,7 +1002,10 @@ class DisplayObjectContainer extends InteractiveObject
         child._$transform._$transform();
 
         // remove
-        const children = this._$getChildren();
+        const children = (this._$needsChildren)
+            ? this._$getChildren()
+            : this._$children;
+
         const depth = this.getChildIndex(child);
         children.splice(depth, 1);
 
@@ -1042,7 +1085,9 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$removeParentAndStage ()
     {
-        const children = this._$getChildren();
+        const children = (this._$needsChildren)
+            ? this._$getChildren()
+            : this._$children;
 
         const length = children.length;
         for (let idx = 0; idx < length; ++idx) {

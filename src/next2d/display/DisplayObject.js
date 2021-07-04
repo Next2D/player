@@ -951,10 +951,10 @@ class DisplayObject extends EventDispatcher
      *              of the display object relative to the coordinate system
      *              of the targetCoordinateSpace object.
      *
-     * @param  {DisplayObject} target
+     * @param  {DisplayObject} [target=null]
      * @return {Rectangle}
      */
-    getBounds (target)
+    getBounds (target = null)
     {
         const baseBounds = this._$getBounds(null);
 

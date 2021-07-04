@@ -196,14 +196,14 @@ ctx.arc(${x},${y},${radius},0,2 * Math.PI);`;
      * @param  {Float32Array} matrix
      * @param  {string} spread_method
      * @param  {string} interpolation_method
-     * @param  {number} focal_point_ratio
+     * @param  {number} [focal_point_ratio=0]
      * @return {string}
      * @method
      * @static
      */
     static GRADIENT (
         type, colors, matrix,
-        spread_method, interpolation_method, focal_point_ratio
+        spread_method, interpolation_method, focal_point_ratio = 0
     ) {
 
         let gradient = "";
@@ -218,7 +218,7 @@ ${xy[0]},${xy[1]},${xy[2]},${xy[3]},"${interpolation_method}","${spread_method}"
             case GradientType.RADIAL:
                 gradient += `ctx.save();
 ctx.transform(${matrix[0]},${matrix[1]},${matrix[2]},${matrix[3]},${matrix[4]},${matrix[5]});
-const css = ctx.createRadialGradient(0,0,0,0,0,16384,"${interpolation_method}","${spread_method}",${focal_point_ratio});`;
+const css = ctx.createRadialGradient(0,0,0,0,0,819.2,"${interpolation_method}","${spread_method}",${focal_point_ratio});`;
                 break;
 
         }

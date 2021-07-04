@@ -880,9 +880,7 @@ class MovieClip extends Sprite
 
         }
 
-        if (character.controller.length) {
-            this._$totalFrames = character.controller.length - 1;
-        }
+        this._$totalFrames = character.totalFrame || 1;
 
         return character;
     }
