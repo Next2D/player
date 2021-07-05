@@ -813,12 +813,14 @@ class Graphics
             switch (this._$fillType) {
 
                 case Graphics.FILL_STYLE:
-                    this._$recode.push(this._$fillType);
-                    this._$recode.push(this._$fillStyleR);
-                    this._$recode.push(this._$fillStyleG);
-                    this._$recode.push(this._$fillStyleB);
-                    this._$recode.push(this._$fillStyleA);
-                    this._$recode.push(Graphics.END_FILL);
+                    this._$recode.push(
+                        this._$fillType,
+                        this._$fillStyleR,
+                        this._$fillStyleG,
+                        this._$fillStyleB,
+                        this._$fillStyleA,
+                        Graphics.END_FILL
+                    );
                     break;
 
                 case Graphics.GRADIENT_FILL:
@@ -830,9 +832,10 @@ class Graphics
 
                 case Graphics.BITMAP_FILL:
                     this._$recode.push(this._$fillType);
-                    this._$recode.push.apply(
-                        this._$recode, this._$fillBitmap.toArray()
-                    );
+                    const array = this._$fillBitmap.toArray();
+                    for (let idx = 0; idx < array.length; ++idx) {
+                        this._$recode.push(array[idx]);
+                    }
                     break;
 
             }
@@ -1793,10 +1796,20 @@ class Graphics
                     break;
 
                 case Graphics.GRADIENT_FILL:
-                    command += GraphicsPathCommand.GRADIENT_FILL(
-                        recode[idx++], recode[idx++], recode[idx++],
-                        recode[idx++], recode[idx++], recode[idx++]
-                    );
+                    {
+                        const type  = recode[idx++];
+                        const stops = recode[idx++];
+
+                        const matrix = recode.slice(idx, idx + 6);
+                        idx += 6;
+
+                        command += GraphicsPathCommand.GRADIENT_FILL(
+                            type, stops, matrix,
+                            recode[idx++], recode[idx++], recode[idx++]
+                        );
+
+                        Util.$poolArray(matrix);
+                    }
                     break;
 
                 case Graphics.GRADIENT_STROKE:
@@ -1808,9 +1821,25 @@ class Graphics
                     break;
 
                 case Graphics.BITMAP_FILL:
-                    command += GraphicsPathCommand.BITMAP_FILL(
-                        recode[idx++], recode[idx++], recode[idx++], recode[idx++]
-                    );
+                    {
+                        const width  = recode[idx++];
+                        const height = recode[idx++];
+                        const length = recode[idx++];
+
+                        const buffer = recode.slice(idx, idx + length);
+                        idx += length;
+
+                        const matrix = recode.slice(idx, idx + 6);
+                        idx += 6;
+
+                        command += GraphicsPathCommand.BITMAP_FILL(
+                            width, height, buffer, matrix,
+                            recode[idx++], recode[idx++]
+                        );
+
+                        Util.$poolArray(buffer);
+                        Util.$poolArray(matrix);
+                    }
                     break;
 
                 default:

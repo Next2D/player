@@ -319,14 +319,18 @@ if (!is_clip) {
     }
 
     /**
-     * @param {BitmapData} bitmap_data
-     * @param {Float32Array} matrix
-     * @param {string} repeat
-     * @param {boolean} smooth
+     * @param {BitmapData} width
+     * @param {BitmapData} height
+     * @param {array}      buffer
+     * @param {array}      matrix
+     * @param {string}     [repeat="repeat"]
+     * @param {boolean}    [smooth=false]
      * @constructor
      */
-    static BITMAP_FILL (bitmap_data, matrix = null, repeat = "repeat", smooth = false)
-    {
+    static BITMAP_FILL (
+        width, height, buffer, matrix,
+        repeat = "repeat", smooth = false
+    ) {
         return `
 if (options) {
     if (ctx.isPointInPath(options.x, options.y)) {
@@ -339,7 +343,7 @@ if (options) {
 }
 if (!is_clip) {
     ctx.save();
-    const texture = ctx.frameBuffer.createTextureFromPixels(${bitmap_data.width}, ${bitmap_data.height}, new Uint8Array([${bitmap_data.toArray()}]));
+    const texture = ctx.frameBuffer.createTextureFromPixels(${width}, ${height}, new Uint8Array([${buffer}]));
     ctx.fillStyle = ctx.createPattern(texture, "${repeat}", ct);
     ctx.transform(${matrix[0]},${matrix[1]},${matrix[2]},${matrix[3]},${matrix[4]},${matrix[5]});
     ctx._$imageSmoothingEnabled = ${smooth};
