@@ -1813,11 +1813,24 @@ class Graphics
                     break;
 
                 case Graphics.GRADIENT_STROKE:
-                    command += GraphicsPathCommand.GRADIENT_STROKE(
-                        recode[idx++], recode[idx++], recode[idx++], recode[idx++],
-                        recode[idx++], recode[idx++], recode[idx++],
-                        recode[idx++], recode[idx++], recode[idx++]
-                    );
+                    {
+                        const lineWidth  = recode[idx++];
+                        const caps       = recode[idx++];
+                        const joints     = recode[idx++];
+                        const miterLimit = recode[idx++];
+                        const type       = recode[idx++];
+                        const stops      = recode[idx++];
+                        const matrix     = recode.slice(idx, idx + 6);
+                        idx += 6;
+
+                        command += GraphicsPathCommand.GRADIENT_STROKE(
+                            lineWidth, caps, joints, miterLimit,
+                            type, stops, matrix,
+                            recode[idx++], recode[idx++], recode[idx++]
+                        );
+
+                        Util.$poolArray(matrix);
+                    }
                     break;
 
                 case Graphics.BITMAP_FILL:

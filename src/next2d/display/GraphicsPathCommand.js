@@ -193,7 +193,7 @@ ctx.arc(${x},${y},${radius},0,2 * Math.PI);`;
     /**
      * @param  {string} type
      * @param  {array}  colors
-     * @param  {Float32Array} matrix
+     * @param  {array}  matrix
      * @param  {string} spread_method
      * @param  {string} interpolation_method
      * @param  {number} [focal_point_ratio=0]
@@ -243,7 +243,7 @@ Math.max(0,Math.min(${color.A}*ct[3]+ct[7],255))|0
     /**
      * @param  {string} type
      * @param  {array}  colors
-     * @param  {Float32Array} matrix
+     * @param  {array}  matrix
      * @param  {string} spread_method
      * @param  {string} interpolation_method
      * @param  {number} focal_point_ratio
@@ -282,7 +282,7 @@ if (!is_clip) {
      * @param  {number} miter_limit
      * @param  {string} type
      * @param  {array}  colors
-     * @param  {Float32Array} matrix
+     * @param  {array}  matrix
      * @param  {string} spread_method
      * @param  {string} interpolation_method
      * @param  {number} focal_point_ratio

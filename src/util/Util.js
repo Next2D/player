@@ -1580,22 +1580,34 @@ Util.$resetContext = function (context)
 
         case CanvasGradientToWebGL:
         case CanvasPatternToWebGL:
-            style._$fillStyle   = new Float32Array([1, 1, 1, 1]); // fixed size 4
+            style._$fillStyle = new Float32Array([1, 1, 1, 1]); // fixed size 4
+            break;
+
+        default:
+            style._$fillStyle[0] = 1;
+            style._$fillStyle[1] = 1;
+            style._$fillStyle[2] = 1;
+            style._$fillStyle[3] = 1;
+            break;
+
+    }
+
+    switch (style._$strokeStyle.constructor) {
+
+        case CanvasGradientToWebGL:
+        case CanvasPatternToWebGL:
             style._$strokeStyle = new Float32Array([1, 1, 1, 1]); // fixed size 4
             break;
 
         default:
-            style._$fillStyle[0]   = 1;
-            style._$fillStyle[1]   = 1;
-            style._$fillStyle[2]   = 1;
-            style._$fillStyle[3]   = 1;
-
             style._$strokeStyle[0] = 1;
             style._$strokeStyle[1] = 1;
             style._$strokeStyle[2] = 1;
             style._$strokeStyle[3] = 1;
             break;
+
     }
+
 
     // reset
     context._$style                    = style;
