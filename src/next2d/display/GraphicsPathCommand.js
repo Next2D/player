@@ -343,7 +343,7 @@ if (options) {
 }
 if (!is_clip) {
     ctx.save();
-    const texture = ctx.frameBuffer.createTextureFromPixels(${width}, ${height}, new Uint8Array([${buffer}]));
+    const texture = ctx.frameBuffer.createTextureFromPixels(${width}, ${height}, new Uint8Array([${buffer.toString()}]));
     ctx.fillStyle = ctx.createPattern(texture, "${repeat}", ct);
     ctx.transform(${matrix[0]},${matrix[1]},${matrix[2]},${matrix[3]},${matrix[4]},${matrix[5]});
     ctx._$imageSmoothingEnabled = ${smooth};

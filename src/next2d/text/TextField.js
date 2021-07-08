@@ -2070,8 +2070,8 @@ class TextField extends InteractiveObject
         this._$border       = character.border
         this._$bounds       = character.bounds;
         this._$originBounds = character.bounds;
-        this.text = character.text;
 
+        this.text = character.text;
     }
 
     /**
