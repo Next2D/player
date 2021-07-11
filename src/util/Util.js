@@ -1954,6 +1954,7 @@ Util.$packages = function (object)
     };
 
     object["ui"] = {
+        "Easing": Easing,
         "Tween": Tween
     }
 }
