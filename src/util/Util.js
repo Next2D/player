@@ -1952,4 +1952,8 @@ Util.$packages = function (object)
         "TextFormat": TextFormat,
         "TextFormatAlign": TextFormatAlign
     };
+
+    object["ui"] = {
+        "Tween": Tween
+    }
 }
