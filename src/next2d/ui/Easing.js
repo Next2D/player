@@ -80,7 +80,7 @@ class Easing
      */
     static linear = function (t, b, c, d)
     {
-        return c * t / d + b;
+        return t / d * c + b;
     }
 
     /**
@@ -94,8 +94,7 @@ class Easing
      */
     static inQuad = function (t, b, c, d)
     {
-        t /= d
-        return c * t * t + b;
+        return (t / d) ** 2 * c + b;
     }
 
     /**
@@ -109,8 +108,7 @@ class Easing
      */
     static outQuad = function (t, b, c, d)
     {
-        t /= d
-        return -c * t * (t - 2) + b;
+        return -(t /= d) * (t - 2) * c + b;
     }
 
     /**
@@ -124,13 +122,9 @@ class Easing
      */
     static inOutQuad = function (t, b, c, d)
     {
-        t /= d / 2;
-        if (t < 1) {
-            return c / 2 * t * t + b;
-        }
-
-        t = t - 1
-        return -c / 2.0 * (t * (t - 2) - 1) + b;
+        return ((t /= (d / 2)) < 1)
+            ? t ** 2 * c / 2 + b
+            : -((t -= 1) * (t - 2) - 1) * c / 2 + b;
     }
 
     /**
@@ -144,8 +138,7 @@ class Easing
      */
     static inCubic = function (t, b, c, d)
     {
-        t /= d;
-        return c * t * t * t + b;
+        return (t /= d) ** 3 * c + b;
     }
 
     /**
@@ -159,9 +152,7 @@ class Easing
      */
     static outCubic = function (t, b, c, d)
     {
-        t /= d;
-        t--;
-        return c * (t * t * t + 1) + b;
+        return (((t /= d) - 1) ** 3 + 1) * c + b;
     }
 
     /**
@@ -175,13 +166,9 @@ class Easing
      */
     static inOutCubic = function (t, b, c, d)
     {
-        t /= d / 2;
-        if (t < 1) {
-            return c / 2 * t * t * t + b;
-        }
-
-        t -= 2;
-        return c / 2 * (t * t * t + 2) + b;
+        return ((t /= (d / 2)) < 1)
+            ? t ** 3 * c / 2 + b
+            : ((t -= 2) ** 3 + 2) * c / 2 + b;
     }
 
     /**
@@ -195,8 +182,7 @@ class Easing
      */
     static inQuart = function (t, b, c, d)
     {
-        t /= d;
-        return c * t * t * t * t + b;
+        return (t /= d) ** 4 * c + b;
     }
 
     /**
@@ -210,9 +196,7 @@ class Easing
      */
     static outQuart = function (t, b, c, d)
     {
-        t /= d;
-        t--;
-        return -c * (t * t * t * t - 1) + b;
+        return (((t /= d) - 1) ** 4 - 1) * -c + b;
     }
 
     /**
@@ -226,13 +210,9 @@ class Easing
      */
     static inOutQuart = function (t, b, c, d)
     {
-        t /= d / 2;
-        if (t < 1) {
-            return c / 2 * t * t * t * t + b;
-        }
-
-        t -= 2;
-        return -c / 2 * (t * t * t * t - 2) + b;
+        return ((t /= (d / 2)) < 1)
+            ? t ** 4 * c / 2 + b
+            : ((t -= 2) ** 4 - 2) * -c / 2 + b;
     }
 
     /**
@@ -246,8 +226,7 @@ class Easing
      */
     static inQuint = function (t, b, c, d)
     {
-        t /= d;
-        return c * t * t * t * t * t + b;
+        return (t /= d) ** 5 * c + b;
     }
 
     /**
@@ -261,9 +240,7 @@ class Easing
      */
     static outQuint = function (t, b, c, d)
     {
-        t /= d;
-        t--;
-        return c * (t * t * t * t * t + 1) + b;
+        return (((t /= d) - 1) ** 5 + 1) * c + b;
     }
 
     /**
@@ -277,13 +254,9 @@ class Easing
      */
     static inOutQuint = function (t, b, c, d)
     {
-        t /= d/2;
-        if (t < 1) {
-            return c / 2 * t * t * t * t * t + b;
-        }
-
-        t -= 2;
-        return c / 2 * (t * t * t * t * t + 2) + b;
+        return ((t /= (d / 2)) < 1)
+            ? t ** 5 * c / 2 + b
+            : ((t -= 2) ** 5 + 2) * c / 2 + b;
     }
 
     /**
@@ -367,13 +340,9 @@ class Easing
      */
     static inOutExpo = function (t, b, c, d)
     {
-        t /= d / 2;
-        if (t < 1) {
-            return c / 2 * Math.pow(2, 10 * (t - 1)) + b;
-        }
-
-        t--;
-        return c / 2 * (-Math.pow(2, -10 * t) + 2) + b;
+        return ((t /= (d / 2)) < 1)
+            ? c / 2 * Math.pow(2, 10 * (t - 1)) + b
+            : c / 2 * (-Math.pow(2, -10 * (t -= 1)) + 2) + b;
     }
 
     /**
@@ -387,8 +356,7 @@ class Easing
      */
     static inCirc = function (t, b, c, d)
     {
-        t /= d;
-        return -c * (Math.sqrt(1 - t * t) - 1) + b;
+        return (1 - Math.sqrt(1 - (t /= d) ** 2)) * c + b;
     }
 
     /**
@@ -402,9 +370,7 @@ class Easing
      */
     static outCirc = function (t, b, c, d)
     {
-        t /= d;
-        t--;
-        return c * Math.sqrt(1 - t * t) + b;
+        return Math.sqrt(1 - ((t /= d) - 1) ** 2) * c + b;
     }
 
     /**
@@ -418,13 +384,9 @@ class Easing
      */
     static inOutCirc = function (t, b, c, d)
     {
-        t /= d / 2;
-        if (t < 1) {
-            return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
-        }
-
-        t -= 2;
-        return c / 2 * (Math.sqrt(1 - t * t) + 1) + b;
+        return ((t /= (d / 2)) < 1)
+            ? (1 - Math.sqrt(1 - t * t)) * c / 2 + b
+            : (Math.sqrt(1 - (t -= 2) ** 2) + 1) * c / 2 + b;
     }
 
     /**
@@ -438,7 +400,7 @@ class Easing
      */
     static inBack = function (t, b, c, d)
     {
-        return c * (t /= d) * t * ((1.70158 + 1) * t - 1.70158) + b;
+        return (2.70158 * (t /= d) ** 3 - 1.70158 * t * t) * c + b;
     }
 
     /**
@@ -452,7 +414,7 @@ class Easing
      */
     static outBack = function (t, b, c, d)
     {
-        return c * ((t = t / d - 1) * t * ((1.70158 + 1) * t + 1.70158) + 1) + b;
+        return (1 + 2.70158 * Math.pow((t /= d) - 1, 3) + 1.70158 * Math.pow(t - 1, 2)) * c + b;
     }
 
     /**
@@ -467,16 +429,10 @@ class Easing
     static inOutBack = function (t, b, c, d)
     {
         let s = 1.70158;
-        if ((t /= d / 2) < 1) {
-            return c / 2 *
-                (t * t * (((s *= (1.525)) + 1)
-                    * t - s)) + b;
+        if ((t /= (d / 2)) < 1) {
+            return (t ** 2 * (((s *= 1.525) + 1) * t - s)) * c / 2 + b;
         }
-
-        return c / 2 *
-            ((t -= 2) * t *
-                (((s *= (1.525)) + 1) * t
-                    + s) + 2) + b;
+        return ((t -= 2) ** 2 * (((s *= 1.525) + 1) * t + s) + 2) * c / 2 + b;
     }
 
     /**
@@ -490,30 +446,12 @@ class Easing
      */
     static inElastic = function (t, b, c, d)
     {
-        if (t === 0) {
-            return b;
-        }
-
-        if ((t /= d) === 1) {
-            return b + c;
-        }
-
-        let s = 1.70158;
-        let p = d * 0.3;
-        let a = c;
-
-        if (a < Math.abs(c)) {
-            a = c;
-            s = p / 4;
-        } else {
-            if (c && a) {
-                s = p / (2 * Math.PI) * Math.asin(c / a);
-            }
-        }
-
-        t -= 1;
-        return -(a * Math.pow(2, 10 * t)
-            * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+        // const c4 = (2 * Math.PI) / 3;
+        return ((t /= d) === 0)
+            ? b
+            : (t === 1)
+                ? c + b
+                : -Math.pow(2, (t *= 10) - 10) * Math.sin((t - 10.75) * ((2 * Math.PI) / 3)) * c + b;
     }
 
     /**
@@ -527,28 +465,11 @@ class Easing
      */
     static outElastic = function (t, b, c, d)
     {
-        if (t === 0) {
-            return b;
-        }
-
-        if ((t /= d) === 1) {
-            return b + c;
-        }
-
-        let s = 1.70158;
-        let p = d * 0.3;
-        let a = c;
-        if (a < Math.abs(c)) {
-            a = c;
-            s = p / 4;
-        } else {
-            if (c && a) {
-                s = p / (2 * Math.PI) * Math.asin(c / a);
-            }
-        }
-
-        return a * Math.pow(2, -10 * t)
-            * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b;
+        return ((t /= d) === 0)
+            ? b
+            : (t === 1)
+                ? c + b
+                : (Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * ((2 * Math.PI) / 3)) + 1) * c + b;
     }
 
     /**
@@ -562,35 +483,13 @@ class Easing
      */
     static inOutElastic = function (t, b, c, d)
     {
-        if (t === 0) {
-            return b;
-        }
-
-        t /= (d / 2);
-        if (t === 2) {
-            return b + c;
-        }
-
-        let s = 1.70158;
-        let p = d * (0.3 * 1.5);
-        let a = c;
-        if (a < Math.abs(c)) {
-            a = c;
-            s = p / 4;
-        } else {
-            if (c && a) {
-                s = p / (2 * Math.PI) * Math.asin(c / a);
-            }
-        }
-
-        if (t < 1) {
-            return -0.5 * (a *
-                Math.pow(2, 10 * (t -= 1))
-                * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
-        }
-
-        return a * Math.pow(2, -10 * (t -= 1))
-            * Math.sin((t * d - s) * (2 * Math.PI) / p) * 0.5 + c + b;
+        return ((t /= d) === 0)
+            ? b
+            : (t === 1)
+                ? c + b
+                : (t < 0.5)
+                    ? (-(Math.pow(2, (t *= 20) - 10) * Math.sin((t - 11.125) * ((2 * Math.PI) / 4.5))) / 2) * c + b
+                    : ((Math.pow(2, -20 * t + 10) * Math.sin((20 * t - 11.125) * ((2 * Math.PI) / 4.5))) / 2 + 1) * c + b;
     }
 
     /**
@@ -605,15 +504,15 @@ class Easing
     static outBounce = function (t, b, c, d)
     {
         if ((t /= d) < (1 / 2.75)) {
-            return c * (7.5625 * t * t) + b;
+            return 7.5625 * t * t * c + b;
         }
         if (t < (2 / 2.75)) {
-            return c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + b;
+            return (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) * c + b;
         }
         if (t < (2.5 / 2.75)) {
-            return c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
+            return (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) * c + b;
         }
-        return c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
+        return (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) * c + b;
     }
 
     /**
@@ -627,7 +526,7 @@ class Easing
      */
     static inBounce = function (t, b, c, d)
     {
-        return c - Util.$easeOutBounce(d - t, 0, c, d) + b;
+        return c - Easing.outBounce(d - t, 0, c, d) + b;
     }
 
     /**
@@ -641,10 +540,8 @@ class Easing
      */
     static inOutBounce = function (t, b, c, d)
     {
-        if (t < d / 2) {
-            return Easing.inBounce(t * 2, 0, c, d) * 0.5 + b;
-        }
-        return Easing.outBounce(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
+        return (t < d / 2)
+            ? Easing.inBounce(t * 2, b, c / 2, d)
+            : Easing.outBounce(t * 2 - d, b + c / 2, c / 2, d);
     }
-
 }
