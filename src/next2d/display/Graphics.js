@@ -886,28 +886,29 @@ class Graphics
             switch (this._$lineType) {
 
                 case Graphics.STROKE_STYLE:
-                    this._$recode.push(this._$lineType);
-                    this._$recode.push(this._$lineWidth);
-                    this._$recode.push(this._$caps);
-                    this._$recode.push(this._$joints);
-                    this._$recode.push(this._$miterLimit);
-                    this._$recode.push(this._$lineStyleR);
-                    this._$recode.push(this._$lineStyleG);
-                    this._$recode.push(this._$lineStyleB);
-                    this._$recode.push(this._$lineStyleA);
-                    this._$recode.push(Graphics.END_STROKE);
+                    this._$recode.push(
+                        this._$lineType,
+                        this._$caps,
+                        this._$joints,
+                        this._$miterLimit,
+                        this._$lineStyleR,
+                        this._$lineStyleG,
+                        this._$lineStyleB,
+                        this._$lineStyleA,
+                        Graphics.END_STROKE
+                    );
                     break;
 
                 case Graphics.GRADIENT_STROKE:
-                    this._$recode.push(this._$lineType);
-                    this._$recode.push(this._$lineWidth);
-                    this._$recode.push(this._$caps);
-                    this._$recode.push(this._$joints);
-                    this._$recode.push(this._$miterLimit);
+                    this._$recode.push(
+                        this._$lineType,
+                        this._$lineWidth,
+                        this._$caps,
+                        this._$miterLimit
+                    );
                     this._$recode.push.apply(
                         this._$recode, this._$lineGradient.toArray()
                     );
-                    this._$recode.push(Graphics.END_STROKE);
                     break;
 
             }

@@ -202,7 +202,7 @@ class CanvasToWebGLContextBlend
             case BlendMode.ERASE:
             case "copy":
                 {
-                    this._$context._$frameBufferManager._$textureManager.bindAndSmoothing(imageSmoothingEnabled, image);
+                    this._$context._$frameBufferManager._$textureManager.bind0(image, imageSmoothingEnabled);
 
                     const shader = variants.getNormalBlendShader(withCT);
                     variants.setNormalBlendUniform(
@@ -285,7 +285,7 @@ class CanvasToWebGLContextBlend
 
                     const backTextureAttachment = this._$context._$frameBufferManager.createTextureAttachment(w, h);
                     this._$context._$bind(backTextureAttachment);
-                    this._$context._$frameBufferManager._$textureManager.bindAndSmoothing(false, texture);
+                    this._$context._$frameBufferManager._$textureManager.bind0(texture);
 
                     const clipShader = variants.getClipShader();
                     const clipUniform = clipShader.uniform;
@@ -297,7 +297,7 @@ class CanvasToWebGLContextBlend
 
                     this._$context._$bind(currentBuffer);
                     
-                    this._$context._$frameBufferManager._$textureManager.bindAndSmoothing(imageSmoothingEnabled, backTexture, image);
+                    this._$context._$frameBufferManager._$textureManager.bind01(backTexture, image, imageSmoothingEnabled);
 
                     const shader = variants.getBlendShader(operation, withCT);
                     variants.setBlendUniform(

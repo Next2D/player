@@ -14,8 +14,8 @@ class TextureManager
         this._$isWebGL2Context = isWebGL2Context;
         this._$objectPool      = [];
         this._$objectPoolArea  = 0;
-        this._$boundTexture0   = null;
-        this._$boundTexture1   = null;
+        this._$activeTexture   = -1;
+        this._$boundTextures   = [null, null, null];
         this._$maxWidth        = 0;
         this._$maxHeight       = 0;
 
@@ -41,7 +41,7 @@ class TextureManager
         texture._$offsetX = 0;
         texture._$offsetY = 0;
 
-        this.bindAndSmoothing(false, texture);
+        this.bind0(texture, false);
 
         this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_WRAP_S, this._$gl.CLAMP_TO_EDGE);
         this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_WRAP_T, this._$gl.CLAMP_TO_EDGE);
@@ -78,7 +78,7 @@ class TextureManager
                 this._$objectPool.splice(i, 1);
                 this._$objectPoolArea -= texture.area;
 
-                this.bindAndSmoothing(false, texture);
+                this.bind0(texture, false);
 
                 return texture;
             }
@@ -99,14 +99,14 @@ class TextureManager
         if (!this._$alphaTexture) {
             this._$alphaTexture = this._$gl.createTexture();
 
-            this.bind(this._$alphaTexture);
+            this.bind0(this._$alphaTexture);
             this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_WRAP_S, this._$gl.CLAMP_TO_EDGE);
             this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_WRAP_T, this._$gl.CLAMP_TO_EDGE);
             this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MIN_FILTER, this._$gl.NEAREST);
             this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MAG_FILTER, this._$gl.NEAREST);
         } else {
 
-            this.bind(this._$alphaTexture);
+            this.bind0(this._$alphaTexture);
 
         }
 
@@ -222,7 +222,7 @@ class TextureManager
         const texture = target_texture || this._$getTexture(width, height);
 
         texture.dirty = false;
-        this.bindAndSmoothing(smoothing, texture);
+        this.bind0(texture, smoothing);
 
         this._$gl.pixelStorei(this._$gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
 
@@ -279,86 +279,86 @@ class TextureManager
 
     /**
      * @param  {WebGLTexture} texture0
-     * @param  {WebGLTexture} [texture1=null]
+     * @param  {boolean}      [smoothing0=null]
      * @return void
      */
-    bind (texture0, texture1 = null)
+    bind0 (texture0, smoothing0 = null)
     {
-        if (texture0 !== this._$boundTexture0) {
-            this._$boundTexture0 = texture0;
-            this._$gl.bindTexture(this._$gl.TEXTURE_2D, texture0);
-        }
-
-        if (texture1) {
-            if (texture1 !== this._$boundTexture1) {
-                this._$boundTexture1 = texture1;
-                this._$gl.activeTexture(this._$gl.TEXTURE1);
-                this._$gl.bindTexture(this._$gl.TEXTURE_2D, texture1);
-                this._$gl.activeTexture(this._$gl.TEXTURE0);
-            }
-        } else if (this._$boundTexture1) {
-            this._$boundTexture1 = null;
-            this._$gl.activeTexture(this._$gl.TEXTURE1);
-            this._$gl.bindTexture(this._$gl.TEXTURE_2D, null);
-            this._$gl.activeTexture(this._$gl.TEXTURE0);
-        }
+        this._$bindTexture(2, this._$gl.TEXTURE2, null, null);
+        this._$bindTexture(1, this._$gl.TEXTURE1, null, null);
+        this._$bindTexture(0, this._$gl.TEXTURE0, texture0, smoothing0);
     }
 
     /**
-     * @param  {boolean}      smoothing
      * @param  {WebGLTexture} texture0
-     * @param  {WebGLTexture} [texture1=null]
+     * @param  {WebGLTexture} texture1
+     * @param  {boolean}      [smoothing01=null]
      * @return void
      */
-    bindAndSmoothing (smoothing, texture0, texture1 = null)
+    bind01 (texture0, texture1, smoothing01 = null)
     {
-        const filter = (smoothing && Util.$currentPlayer()._$quality !== StageQuality.LOW)
-            ? this._$gl.LINEAR
-            : this._$gl.NEAREST;
-        
-        if (texture0 !== this._$boundTexture0) {
-            this._$boundTexture0 = texture0;
-            this._$gl.bindTexture(this._$gl.TEXTURE_2D, texture0);
+        this._$bindTexture(2, this._$gl.TEXTURE2, null, null);
+        this._$bindTexture(1, this._$gl.TEXTURE1, texture1, smoothing01);
+        this._$bindTexture(0, this._$gl.TEXTURE0, texture0, smoothing01);
+    }
+
+    /**
+     * @param  {WebGLTexture} texture0
+     * @param  {WebGLTexture} texture1
+     * @param  {WebGLTexture} texture2
+     * @param  {boolean}      [smoothing2=null]
+     * @return void
+     */
+    bind012 (texture0, texture1, texture2, smoothing2 = null)
+    {
+        this._$bindTexture(2, this._$gl.TEXTURE2, texture2, smoothing2);
+        this._$bindTexture(1, this._$gl.TEXTURE1, texture1, null);
+        this._$bindTexture(0, this._$gl.TEXTURE0, texture0, null);
+    }
+
+    /**
+     * @param  {WebGLTexture} texture0
+     * @param  {WebGLTexture} texture2
+     * @param  {boolean}      [smoothing2=null]
+     * @return void
+     */
+    bind02 (texture0, texture2, smoothing2 = null)
+    {
+        this._$bindTexture(2, this._$gl.TEXTURE2, texture2, smoothing2);
+        this._$bindTexture(1, this._$gl.TEXTURE1, null, null);
+        this._$bindTexture(0, this._$gl.TEXTURE0, texture0, null);
+    }
+
+    /**
+     * @param  {number}       index
+     * @param  {number}       target
+     * @param  {WebGLTexture} texture
+     * @param  {boolean}      smoothing
+     * @return void
+     */
+    _$bindTexture (index, target, texture, smoothing)
+    {
+        const shouldBind   = (texture !== this._$boundTextures[index]);
+        const shouldSmooth = (smoothing !== null) && (smoothing !== texture.smoothing);
+        const shouldActive = (shouldBind || shouldSmooth) && (target !== this._$activeTexture);
+
+        if (shouldActive) {
+            this._$activeTexture = target;
+            this._$gl.activeTexture(target);
         }
 
-        if (smoothing !== this._$boundTexture0.smoothing) {
-            this._$boundTexture0.smoothing = smoothing;
+        if (shouldBind) {
+            this._$boundTextures[index] = texture;
+            this._$gl.bindTexture(this._$gl.TEXTURE_2D, texture);
+        }
+
+        if (shouldSmooth) {
+            texture.smoothing = smoothing;
+            const filter = (smoothing && Util.$currentPlayer()._$quality !== StageQuality.LOW)
+                ? this._$gl.LINEAR
+                : this._$gl.NEAREST;
             this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MIN_FILTER, filter);
             this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MAG_FILTER, filter);
-        }
-
-        if (texture1) {
-            let active1 = false;
-
-            if (texture1 !== this._$boundTexture1) {
-                this._$boundTexture1 = texture1;
-
-                active1 = true;
-                this._$gl.activeTexture(this._$gl.TEXTURE1);
-
-                this._$gl.bindTexture(this._$gl.TEXTURE_2D, texture1);
-            }
-
-            if (smoothing !== this._$boundTexture1.smoothing) {
-                this._$boundTexture1.smoothing = smoothing;
-
-                if (!active1) {
-                    active1 = true;
-                    this._$gl.activeTexture(this._$gl.TEXTURE1);
-                }
-
-                this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MIN_FILTER, filter);
-                this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MAG_FILTER, filter);  
-            }
-
-            if (active1) {
-                this._$gl.activeTexture(this._$gl.TEXTURE0);
-            }
-        } else if (this._$boundTexture1) {
-            this._$boundTexture1 = null;
-            this._$gl.activeTexture(this._$gl.TEXTURE1);
-            this._$gl.bindTexture(this._$gl.TEXTURE_2D, null);
-            this._$gl.activeTexture(this._$gl.TEXTURE0);
         }
     }
 }

@@ -272,6 +272,7 @@ if (!is_clip) {
     )}
     ctx.fillStyle = css;
     ctx.fill();
+    ${type === GradientType.RADIAL ? "ctx.restore();" : ""}
 }`;
     }
 

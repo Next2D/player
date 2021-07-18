@@ -529,7 +529,7 @@ class BitmapData
         context
             ._$frameBufferManager
             ._$textureManager
-            .bindAndSmoothing(false, this._$texture);
+            .bind0(this._$texture, false);
 
 
         context.blend.disable();

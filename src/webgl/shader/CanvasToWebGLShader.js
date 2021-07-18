@@ -133,6 +133,26 @@ class CanvasToWebGLShader
     }
 
     /**
+     * @param  {number} begin
+     * @param  {number} end
+     * @return void
+     * @public
+     */
+    _$drawGradient (begin, end)
+    {
+        // @ifdef DEBUG
+        if (window.glstats) {
+            glstats.ondraw();
+        }
+        // @endif
+
+        this._$attachProgram();
+        this._$uniform.bindUniforms();
+        this._$context.vao.bindGradientVertexArray(begin, end);
+        this._$gl.drawArrays(this._$gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    /**
      * @param  {object} object
      * @return void
      * @public

@@ -10,19 +10,16 @@ class FragmentShaderSourceGradient
      * @param  {boolean} isRadial
      * @param  {boolean} hasFocalPoint
      * @param  {string}  spreadMethod
-     * @param  {number}  stopsLength
-     * @param  {boolean} isLinearSpace
      * @return {string}
      * @method
      * @static
      */
-    static TEMPLATE (k, highpLength, fragmentIndex, isRadial, hasFocalPoint, spreadMethod, stopsLength, isLinearSpace)
+    static TEMPLATE (k, highpLength, fragmentIndex, isRadial, hasFocalPoint, spreadMethod)
     {
         const gradientTypeStatement = (isRadial)
-            ? this.STATEMENT_GRADIENT_TYPE_RADIAL(fragmentIndex * 4 + stopsLength * 5, hasFocalPoint)
+            ? this.STATEMENT_GRADIENT_TYPE_RADIAL(fragmentIndex, hasFocalPoint)
             : this.STATEMENT_GRADIENT_TYPE_LINEAR(fragmentIndex);
-        const gradientColorIndex = fragmentIndex + ((isRadial) ? 0 : 1);
-        
+
         let spreadMethodExpression;
         switch (spreadMethod) {
             case "reflect":
@@ -36,28 +33,20 @@ class FragmentShaderSourceGradient
                 break;
         }
 
-        const colorSpaceStatement = (isLinearSpace)
-            ? "color = pow(color, vec4(0.45454545));"
-            : "";
-
         return `${k.version()}
 precision highp float;
 
+uniform sampler2D u_texture;
 uniform vec4 u_highp[${highpLength}];
 
 ${k.varyingIn()} vec2 v_uv;
 ${k.outColor()}
 
-${FragmentShaderLibrary.FUNCTION_GRADIENT_COLOR(stopsLength, gradientColorIndex, true)}
-
 void main() {
     vec2 p = v_uv;
     ${gradientTypeStatement}
     t = ${spreadMethodExpression};
-    vec4 color = getGradientColor(t);
-    ${colorSpaceStatement}
-    color.rgb *= color.a;
-    ${k.fragColor()} = color;
+    ${k.fragColor()} = ${k.texture2D()}(u_texture, vec2(t, 0.5));
 }
 
 `;
@@ -83,21 +72,19 @@ void main() {
     }
 
     /**
-     * @param  {number} offset
+     * @param  {number}  index
      * @param  {boolean} hasFocalPoint
      * @return {string}
      * @method
      * @static
      */
-    static STATEMENT_GRADIENT_TYPE_RADIAL (offset, hasFocalPoint)
+    static STATEMENT_GRADIENT_TYPE_RADIAL (index, hasFocalPoint)
     {
-        const index     = Util.$floor(offset / 4);
-        const component = offset % 4;
         const focalPointStatement = (hasFocalPoint)
-            ? this.STATEMENT_FOCAL_POINT_ON(offset + 1)
+            ? this.STATEMENT_FOCAL_POINT_ON(index)
             : this.STATEMENT_FOCAL_POINT_OFF();
         return `
-    float radius = u_highp[${index}][${component}];
+    float radius = u_highp[${index}][0];
 
     vec2 coord = p / radius;
     ${focalPointStatement}
@@ -117,17 +104,15 @@ void main() {
     }
 
     /**
-     * @param  {number} offset
+     * @param  {number} index
      * @return {string}
      * @method
      * @static
      */
-    static STATEMENT_FOCAL_POINT_ON (offset)
+    static STATEMENT_FOCAL_POINT_ON (index)
     {
-        const index     = Util.$floor(offset / 4);
-        const component = offset % 4;
         return `
-    vec2 focal = vec2(u_highp[${index}][${component}], 0.0);
+    vec2 focal = vec2(u_highp[${index}][1], 0.0);
 
     vec2 dir = normalize(coord - focal);
 

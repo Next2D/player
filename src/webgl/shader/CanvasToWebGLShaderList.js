@@ -14,11 +14,12 @@ class CanvasToWebGLShaderList
         const keyword = new WebGLShaderKeyword(gl, context._$isWebGL2Context);
         this._$currentProgramId = -1;
 
-        this._$shapeShaderVariants    = new ShapeShaderVariantCollection(context, gl, keyword);
-        this._$bitmapShaderVariants   = new BitmapShaderVariantCollection(context, gl, keyword);
-        this._$gradientShaderVariants = new GradientShaderVariantCollection(context, gl, keyword);
-        this._$filterShaderVariants   = new FilterShaderVariantCollection(context, gl, keyword);
-        this._$blendShaderVariants    = new BlendShaderVariantCollection(context, gl, keyword);
+        this._$shapeShaderVariants         = new ShapeShaderVariantCollection(context, gl, keyword);
+        this._$bitmapShaderVariants        = new BitmapShaderVariantCollection(context, gl, keyword);
+        this._$gradientShapeShaderVariants = new GradientShapeShaderVariantCollection(context, gl, keyword);
+        this._$gradientLUTShaderVariants   = new GradientLUTShaderVariantCollection(context, gl, keyword);
+        this._$filterShaderVariants        = new FilterShaderVariantCollection(context, gl, keyword);
+        this._$blendShaderVariants         = new BlendShaderVariantCollection(context, gl, keyword);
 
         // BitmapData
         const colorTransform = {
@@ -136,14 +137,26 @@ class CanvasToWebGLShaderList
 
     /**
      * @memberof CanvasToWebGLShaderList#
-     * @property {GradientShaderVariantCollection} gradientShaderVariants
-     * @return {GradientShaderVariantCollection}
+     * @property {GradientShapeShaderVariantCollection} gradientShapeShaderVariants
+     * @return {GradientShapeShaderVariantCollection}
      * @readonly
      * @public
      */
-    get gradientShaderVariants ()
+    get gradientShapeShaderVariants ()
     {
-        return this._$gradientShaderVariants;
+        return this._$gradientShapeShaderVariants;
+    }
+
+    /**
+     * @memberof CanvasToWebGLShaderList#
+     * @property {GradientLUTShaderVariantCollection} gradientLUTShaderVariants
+     * @return {GradientLUTShaderVariantCollection}
+     * @readonly
+     * @public
+     */
+    get gradientLUTShaderVariants ()
+    {
+        return this._$gradientLUTShaderVariants;
     }
 
     /**

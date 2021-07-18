@@ -178,7 +178,7 @@ class FrameBufferManager
                 this._$gl.RENDERBUFFER, attachment.color
             );
         } else {
-            this._$textureManager.bind(attachment.color);
+            this._$textureManager.bind0(attachment.color);
 
             this._$gl.framebufferTexture2D(
                 this._$gl.FRAMEBUFFER, this._$gl.COLOR_ATTACHMENT0,
@@ -223,7 +223,7 @@ class FrameBufferManager
 
         this._$gl.bindFramebuffer(this._$gl.DRAW_FRAMEBUFFER, this._$frameBufferTexture);
 
-        this._$textureManager.bind(texture);
+        this._$textureManager.bind0(texture);
 
         this._$gl.framebufferTexture2D(
             this._$gl.FRAMEBUFFER, this._$gl.COLOR_ATTACHMENT0,
@@ -310,7 +310,7 @@ class FrameBufferManager
         const height  = this._$currentAttachment.height;
         const texture = this._$textureManager.create(width, height);
 
-        this._$textureManager.bind(texture);
+        this._$textureManager.bind0(texture);
 
         this._$gl.copyTexSubImage2D(
             this._$gl.TEXTURE_2D, 0,

@@ -1,14 +1,10 @@
+const BezierConverterBuffer = new Array(32);
+
 /**
  * @class
  */
 class BezierConverter
 {
-    /**
-     * @static
-     * @public
-     */
-    static buffer = Array(32);
-
     /**
      * @param  {number} fromX
      * @param  {number} fromY
@@ -27,33 +23,33 @@ class BezierConverter
     {
         this._$split2Cubic(fromX, fromY, cx1, cy1, cx2, cy2, x, y, 0, 16);
         this._$split2Cubic(
-            this.buffer[0], this.buffer[1], this.buffer[2], this.buffer[3],
-            this.buffer[4], this.buffer[5], this.buffer[6], this.buffer[7],
+            BezierConverterBuffer[0], BezierConverterBuffer[1], BezierConverterBuffer[2], BezierConverterBuffer[3],
+            BezierConverterBuffer[4], BezierConverterBuffer[5], BezierConverterBuffer[6], BezierConverterBuffer[7],
             0, 8
         );
         this._$split2Cubic(
-            this.buffer[16], this.buffer[17], this.buffer[18], this.buffer[19],
-            this.buffer[20], this.buffer[21], this.buffer[22], this.buffer[23],
+            BezierConverterBuffer[16], BezierConverterBuffer[17], BezierConverterBuffer[18], BezierConverterBuffer[19],
+            BezierConverterBuffer[20], BezierConverterBuffer[21], BezierConverterBuffer[22], BezierConverterBuffer[23],
             16, 24
         );
         this._$split2Quad(
-            this.buffer[0], this.buffer[1], this.buffer[2], this.buffer[3],
-            this.buffer[4], this.buffer[5], this.buffer[6], this.buffer[7],
+            BezierConverterBuffer[0], BezierConverterBuffer[1], BezierConverterBuffer[2], BezierConverterBuffer[3],
+            BezierConverterBuffer[4], BezierConverterBuffer[5], BezierConverterBuffer[6], BezierConverterBuffer[7],
             0
         );
         this._$split2Quad(
-            this.buffer[8], this.buffer[9], this.buffer[10], this.buffer[11],
-            this.buffer[12], this.buffer[13], this.buffer[14], this.buffer[15],
+            BezierConverterBuffer[8], BezierConverterBuffer[9], BezierConverterBuffer[10], BezierConverterBuffer[11],
+            BezierConverterBuffer[12], BezierConverterBuffer[13], BezierConverterBuffer[14], BezierConverterBuffer[15],
             8
         );
         this._$split2Quad(
-            this.buffer[16], this.buffer[17], this.buffer[18], this.buffer[19],
-            this.buffer[20], this.buffer[21], this.buffer[22], this.buffer[23],
+            BezierConverterBuffer[16], BezierConverterBuffer[17], BezierConverterBuffer[18], BezierConverterBuffer[19],
+            BezierConverterBuffer[20], BezierConverterBuffer[21], BezierConverterBuffer[22], BezierConverterBuffer[23],
             16
         );
         this._$split2Quad(
-            this.buffer[24], this.buffer[25], this.buffer[26], this.buffer[27],
-            this.buffer[28], this.buffer[29], this.buffer[30], this.buffer[31],
+            BezierConverterBuffer[24], BezierConverterBuffer[25], BezierConverterBuffer[26], BezierConverterBuffer[27],
+            BezierConverterBuffer[28], BezierConverterBuffer[29], BezierConverterBuffer[30], BezierConverterBuffer[31],
             24
         );
     }
@@ -82,23 +78,23 @@ class BezierConverter
         const dx = (p6 + p4 - p2 - p0) * 0.125;
         const dy = (p7 + p5 - p3 - p1) * 0.125;
 
-        this.buffer[offset1    ] = p0;
-        this.buffer[offset1 + 1] = p1;
-        this.buffer[offset1 + 2] = (p0 + p2) * 0.5;
-        this.buffer[offset1 + 3] = (p1 + p3) * 0.5;
-        this.buffer[offset1 + 4] = mx - dx;
-        this.buffer[offset1 + 5] = my - dy;
-        this.buffer[offset1 + 6] = mx;
-        this.buffer[offset1 + 7] = my;
+        BezierConverterBuffer[offset1    ] = p0;
+        BezierConverterBuffer[offset1 + 1] = p1;
+        BezierConverterBuffer[offset1 + 2] = (p0 + p2) * 0.5;
+        BezierConverterBuffer[offset1 + 3] = (p1 + p3) * 0.5;
+        BezierConverterBuffer[offset1 + 4] = mx - dx;
+        BezierConverterBuffer[offset1 + 5] = my - dy;
+        BezierConverterBuffer[offset1 + 6] = mx;
+        BezierConverterBuffer[offset1 + 7] = my;
 
-        this.buffer[offset2    ] = mx;
-        this.buffer[offset2 + 1] = my;
-        this.buffer[offset2 + 2] = mx + dx;
-        this.buffer[offset2 + 3] = my + dy;
-        this.buffer[offset2 + 4] = (p4 + p6) * 0.5;
-        this.buffer[offset2 + 5] = (p5 + p7) * 0.5;
-        this.buffer[offset2 + 6] = p6;
-        this.buffer[offset2 + 7] = p7;
+        BezierConverterBuffer[offset2    ] = mx;
+        BezierConverterBuffer[offset2 + 1] = my;
+        BezierConverterBuffer[offset2 + 2] = mx + dx;
+        BezierConverterBuffer[offset2 + 3] = my + dy;
+        BezierConverterBuffer[offset2 + 4] = (p4 + p6) * 0.5;
+        BezierConverterBuffer[offset2 + 5] = (p5 + p7) * 0.5;
+        BezierConverterBuffer[offset2 + 6] = p6;
+        BezierConverterBuffer[offset2 + 7] = p7;
     }
 
     /**
@@ -126,16 +122,16 @@ class BezierConverter
 
         // this.result[offset - 2] = p0;
         // this.result[offset - 1] = p1;
-        this.buffer[offset    ] = p0 * 0.25 + p2 * 0.75;
-        this.buffer[offset + 1] = p1 * 0.25 + p3 * 0.75;
-        this.buffer[offset + 2] = mx;
-        this.buffer[offset + 3] = my;
+        BezierConverterBuffer[offset    ] = p0 * 0.25 + p2 * 0.75;
+        BezierConverterBuffer[offset + 1] = p1 * 0.25 + p3 * 0.75;
+        BezierConverterBuffer[offset + 2] = mx;
+        BezierConverterBuffer[offset + 3] = my;
 
         // this.result[offset + 2] = mx;
         // this.result[offset + 3] = my;
-        this.buffer[offset + 4] = p4 * 0.75 + p6 * 0.25;
-        this.buffer[offset + 5] = p5 * 0.75 + p7 * 0.25;
-        this.buffer[offset + 6] = p6;
-        this.buffer[offset + 7] = p7;
+        BezierConverterBuffer[offset + 4] = p4 * 0.75 + p6 * 0.25;
+        BezierConverterBuffer[offset + 5] = p5 * 0.75 + p7 * 0.25;
+        BezierConverterBuffer[offset + 6] = p6;
+        BezierConverterBuffer[offset + 7] = p7;
     }
 }

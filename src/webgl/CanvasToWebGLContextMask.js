@@ -80,8 +80,8 @@ class CanvasToWebGLContextMask
 
     /**
      * @param  {DisplayObject} display_object
-     * @param  {Float64Array} matrix
-     * @return {Float64Array}
+     * @param  {Float32Array} matrix
+     * @return {Float32Array}
      * @public
      */
     _$startClip (display_object, matrix)
@@ -95,7 +95,7 @@ class CanvasToWebGLContextMask
 
         const baseBounds = display_object._$getBounds(null);
         const bounds = Util.$boundsMatrix(baseBounds, tMatrix);
-        Util.$poolFloat32Array6(tMatrix);
+        Util.$poolFloat32Array9(tMatrix);
         Util.$poolBoundsObject(baseBounds);
 
         // size
@@ -163,7 +163,7 @@ class CanvasToWebGLContextMask
         this._$context.drawImage(texture, -x, -y, texture.width, texture.height);
 
 
-        return Util.$getFloat32Array6(
+        return Util.$getFloat32Array9(
             matrix[0], matrix[1], matrix[2], matrix[3],
             matrix[4] - x,
             matrix[5] - y

@@ -26,7 +26,7 @@ class VertexArrayObjectManager
         this._$strokeAttrib_type    = 3;
         this._$vertexBufferData     = new Util.$window.Float32Array([0, 0, 0, 1, 1, 0, 1, 1]);
 
-        this._$commonVertexArray = this._$getCommonVertexArray();
+        this._$commonVertexArray = this._$getVertexArray(0, 1);
     }
 
     /**
@@ -42,17 +42,24 @@ class VertexArrayObjectManager
     }
 
     /**
+     * @param  {number} begin
+     * @param  {number} end
      * @return {WebGLVertexArrayObject}
      * @method
      * @private
      */
-    _$getCommonVertexArray ()
+    _$getVertexArray (begin, end)
     {
         const vertexArray = this._$createVertexArray();
         this.bind(vertexArray);
 
         const vertexBuffer = this._$gl.createBuffer();
         this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, vertexBuffer);
+
+        this._$vertexBufferData[0] = begin;
+        this._$vertexBufferData[2] = begin;
+        this._$vertexBufferData[4] = end;
+        this._$vertexBufferData[6] = end;
         this._$gl.bufferData(this._$gl.ARRAY_BUFFER, this._$vertexBufferData, this._$gl.STATIC_DRAW);
         
         this._$gl.enableVertexAttribArray(0);
@@ -234,5 +241,18 @@ class VertexArrayObjectManager
     bindCommonVertexArray ()
     {
         this.bind(this._$commonVertexArray);
-    }    
+    }
+
+    /**
+     * @param  {number} begin
+     * @param  {number} end
+     * @return {void}
+     * @method
+     * @public
+     */
+    bindGradientVertexArray (begin, end)
+    {
+        const vertexArray = this._$getVertexArray(begin, end);
+        this.bind(vertexArray);
+    }
 }

@@ -46,27 +46,30 @@ class FilterShaderVariantCollection
      * @param  {string}  type
      * @param  {boolean} knockout
      * @param  {boolean} appliesStrength
-     * @param  {number}  gradientStopsLength
+     * @param  {boolean} isGradient
      * @return {CanvasToWebGLShader}
      * @method
      * @public
      */
-    getBitmapFilterShader (transformsBase, transformsBlur, isGlow, type, knockout, appliesStrength, gradientStopsLength)
+    getBitmapFilterShader (transformsBase, transformsBlur, isGlow, type, knockout, appliesStrength, isGradient)
     {
         const key1 = (transformsBase) ? "y" : "n";
         const key2 = (transformsBlur) ? "y" : "n";
         const key3 = (isGlow) ? "y" : "n";
         const key4 = (knockout) ? "y" : "n";
         const key5 = (appliesStrength) ? "y" : "n";
-        const key = `f${key1}${key2}${key3}${type}${key4}${key5}${gradientStopsLength}`;
+        const key = `f${key1}${key2}${key3}${type}${key4}${key5}`;
 
         if (!this._$collection.has(key)) {
-            const texturesLength = (transformsBase) ? 2 : 1;
+            let texturesLength = 1;
+            if (transformsBase) { texturesLength++; }
+            if (isGradient) { texturesLength++; }
+
             let mediumpLength = ((transformsBase) ? 4 : 0)
                 + ((transformsBlur) ? 4 : 0)
                 + ((appliesStrength) ? 1 : 0);
-            if (gradientStopsLength > 0) {
-                mediumpLength += gradientStopsLength * 5;
+            if (isGradient) {
+                // do nothing
             } else {
                 mediumpLength += (isGlow) ? 4 : 8;
             }
@@ -79,7 +82,7 @@ class FilterShaderVariantCollection
                     this._$keyword, texturesLength, mediumpLength,
                     transformsBase, transformsBlur,
                     isGlow, type, knockout,
-                    appliesStrength, gradientStopsLength
+                    appliesStrength, isGradient
                 )
             ));
         }
@@ -212,9 +215,6 @@ class FilterShaderVariantCollection
      * @param {number}  blurOffsetY
      * @param {boolean} isGlow
      * @param {number}  strength
-     * @param {array}   ratios
-     * @param {array}   colors
-     * @param {array}   alphas
      * @param {number}  colorR1
      * @param {number}  colorG1
      * @param {number}  colorB1
@@ -226,7 +226,7 @@ class FilterShaderVariantCollection
      * @param {boolean} transformsBase
      * @param {boolean} transformsBlur
      * @param {boolean} appliesStrength
-     * @param {number}  gradientStopsLength
+     * @param {boolean} isGradient
      * @method
      * @public
      */
@@ -235,16 +235,23 @@ class FilterShaderVariantCollection
         baseWidth, baseHeight, baseOffsetX, baseOffsetY,
         blurWidth, blurHeight, blurOffsetX, blurOffsetY,
         isGlow, strength,
-        ratios, colors, alphas,
         colorR1, colorG1, colorB1, colorA1,
         colorR2, colorG2, colorB2, colorA2,
-        transformsBase, transformsBlur, appliesStrength, gradientStopsLength
+        transformsBase, transformsBlur, appliesStrength, isGradient
     ) {
+        let textures;
+        // fragment: u_textures
         if (transformsBase) {
-            // fragment: u_textures
-            const textures = uniform.textures;
+            textures = uniform.textures;
             textures[0] = 0;
             textures[1] = 1;
+            if (isGradient) {
+                textures[2] = 2;
+            }
+        } else if (isGradient) {
+            textures = uniform.textures;
+            textures[0] = 0;
+            textures[1] = 2;
         }
 
         const mediump = uniform.mediump;
@@ -270,20 +277,8 @@ class FilterShaderVariantCollection
             i += 4;
         }
 
-        if (gradientStopsLength > 0) {
-            // fragment: u_gradient_color
-            for (let j = 0; j < gradientStopsLength; j++) {
-                const color = colors[j];
-                mediump[i]     = ((color >> 16)       ) / 255;
-                mediump[i + 1] = ((color >>  8) & 0xFF) / 255;
-                mediump[i + 2] = ( color        & 0xFF) / 255;
-                mediump[i + 3] = alphas[j];
-                i += 4;
-            }
-            // fragment: u_gradient_t
-            for (let j = 0; j < gradientStopsLength; j++) {
-                mediump[i++] = ratios[j];
-            }
+        if (isGradient) {
+            // do nothing
         } else if (isGlow) {
             // fragment: u_color
             mediump[i]     = colorR1;

@@ -56,6 +56,7 @@ class CanvasToWebGLContext
 
         // shader
         this._$shaderList = new CanvasToWebGLShaderList(this, gl);
+        this._$gradientLUT = new GradientLUTGenerator(this, gl);
 
         // vertex array object
         this._$vao = new VertexArrayObjectManager(gl, isWebGL2Context);
@@ -525,7 +526,7 @@ class CanvasToWebGLContext
      * @param  {number} y
      * @param  {number} w
      * @param  {number} h
-     * @param  {Float64Array} [color_transform=null]
+     * @param  {Float32Array} [color_transform=null]
      * @return void
      * @public
      */
@@ -606,8 +607,8 @@ class CanvasToWebGLContext
 
     /**
      * @param  {DisplayObject} display_object
-     * @param  {Float64Array} matrix
-     * @return {Float64Array}
+     * @param  {Float32Array} matrix
+     * @return {Float32Array}
      * @public
      */
     _$startClip (display_object, matrix)
@@ -726,7 +727,7 @@ class CanvasToWebGLContext
                 break;
         }
 
-        let variants, shader;
+        let texture, variants, shader;
 
         const hasGrid = this._$grid.enabled;
 
@@ -737,36 +738,28 @@ class CanvasToWebGLContext
 
                 const gradient = this.fillStyle;
                 const stops = gradient._$stops;
-                const stopsLength = Util.$clamp(stops.length, 0, 16);
                 const isLinearSpace = (gradient._$rgb === "linearRGB");
+
+                texture = this._$gradientLUT.generateForShape(stops, isLinearSpace);
+                this._$frameBufferManager._$textureManager.bind0(texture, true);
                
-                variants = this._$shaderList.gradientShaderVariants;
+                variants = this._$shaderList.gradientShapeShaderVariants;
                 if (gradient._$type === GradientType.LINEAR) {
-                    shader = variants.getGradientShader(
-                        false, hasGrid, false, false,
-                        gradient._$mode, stopsLength, isLinearSpace
-                    );
-                    variants.setGradientUniform(
+                    shader = variants.getGradientShapeShader(false, hasGrid, false, false, gradient._$mode);
+                    variants.setGradientShapeUniform(
                         shader.uniform, false, 0, 0, 0,
                         hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
                         this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        false, gradient._$points,
-                        false, 0,
-                        stops, stopsLength, isLinearSpace
+                        false, gradient._$points, 0
                     );
                 } else {
                     const hasFocalPoint = (gradient._$focalPointRatio !== 0);
-                    shader = variants.getGradientShader(
-                        false, hasGrid, true, hasFocalPoint,
-                        gradient._$mode, stopsLength, isLinearSpace
-                    );
-                    variants.setGradientUniform(
+                    shader = variants.getGradientShapeShader(false, hasGrid, true, hasFocalPoint, gradient._$mode);
+                    variants.setGradientShapeUniform(
                         shader.uniform, false, 0, 0, 0,
                         hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
                         this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        true, gradient._$points,
-                        hasFocalPoint, gradient._$focalPointRatio,
-                        stops, stopsLength, isLinearSpace
+                        true, gradient._$points, gradient._$focalPointRatio
                     );
                 }
 
@@ -777,8 +770,8 @@ class CanvasToWebGLContext
                 const pattern = this.fillStyle;
                 const pct = pattern.colorTransform;
 
-                const texture = pattern.texture;
-                this._$frameBufferManager._$textureManager.bindAndSmoothing(this._$imageSmoothingEnabled, texture);
+                texture = pattern.texture;
+                this._$frameBufferManager._$textureManager.bind0(texture, this._$imageSmoothingEnabled);
                
                 variants = this._$shaderList.shapeShaderVariants;
                 shader = variants.getBitmapShapeShader(false, (pattern.repeat !== ""), hasGrid);
@@ -1030,7 +1023,7 @@ class CanvasToWebGLContext
         lineWidth *= scaleMax * (1 - 0.3 * Util.$cos(Util.$PI * 0.5 * (scaleMin / scaleMax)));
         lineWidth = Util.$max(1, lineWidth);
 
-        let variants, shader;
+        let texture, variants, shader;
         
         const hasGrid = this._$grid.enabled;
 
@@ -1041,36 +1034,28 @@ class CanvasToWebGLContext
 
                 const gradient = this.strokeStyle;
                 const stops = gradient._$stops;
-                const stopsLength = Util.$clamp(stops.length, 0, 16);
                 const isLinearSpace = (gradient._$rgb === "linearRGB");
 
-                variants = this._$shaderList.gradientShaderVariants;
+                texture = this._$gradientLUT.generateForShape(stops, isLinearSpace);
+                this._$frameBufferManager._$textureManager.bind0(texture, true);
+
+                variants = this._$shaderList.gradientShapeShaderVariants;
                 if (gradient._$type === GradientType.LINEAR) {
-                    shader = variants.getGradientShader(
-                        true, hasGrid, false, false,
-                        gradient._$mode, stopsLength, isLinearSpace
-                    );
-                    variants.setGradientUniform(
+                    shader = variants.getGradientShapeShader(true, hasGrid, false, false, gradient._$mode);
+                    variants.setGradientShapeUniform(
                         shader.uniform, true, lineWidth, face, this.miterLimit,
                         hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
                         this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        false, gradient._$points,
-                        false, 0,
-                        stops, stopsLength, isLinearSpace
+                        false, gradient._$points, 0
                     );
                 } else {
                     const hasFocalPoint = (gradient._$focalPointRatio !== 0);
-                    shader = variants.getGradientShader(
-                        true, hasGrid, true, hasFocalPoint,
-                        gradient._$mode, stopsLength, isLinearSpace
-                    );
-                    variants.setGradientUniform(
+                    shader = variants.getGradientShapeShader(true, hasGrid, true, hasFocalPoint, gradient._$mode);
+                    variants.setGradientShapeUniform(
                         shader.uniform, true, lineWidth, face, this.miterLimit,
                         hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
                         this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        true, gradient._$points,
-                        hasFocalPoint, gradient._$focalPointRatio,
-                        stops, stopsLength, isLinearSpace
+                        true, gradient._$points, gradient._$focalPointRatio
                     );
                 }
                 
@@ -1081,8 +1066,8 @@ class CanvasToWebGLContext
                 const pattern = this.strokeStyle;
                 const pct = pattern.colorTransform;
 
-                const texture = pattern.texture;
-                this._$frameBufferManager._$textureManager.bind(texture);
+                texture = pattern.texture;
+                this._$frameBufferManager._$textureManager.bind0(texture);
                 
                 variants = this._$shaderList.shapeShaderVariants;
                 shader = variants.getBitmapShapeShader(true, (pattern.repeat !== ""), this._$grid.enabled);
@@ -1217,7 +1202,7 @@ class CanvasToWebGLContext
     {
         //matrix
         if (this._$stack.length) {
-            Util.$poolFloat32Array6(this._$matrix);
+            Util.$poolFloat32Array9(this._$matrix);
             this._$matrix = this._$stack.pop();
         }
 
@@ -1294,7 +1279,7 @@ class CanvasToWebGLContext
         const width  = currentBuffer.width;
         const height = currentBuffer.height;
 
-        this._$frameBufferManager._$textureManager.bindAndSmoothing(true, texture);
+        this._$frameBufferManager._$textureManager.bind0(texture, true);
 
         const halfBlur = Util.$ceil(blur * 0.5);
         const fraction = 1 - (halfBlur - blur * 0.5);
@@ -1353,41 +1338,53 @@ class CanvasToWebGLContext
         const baseAttachment = this._$frameBufferManager.currentAttachment;
         const baseTexture = this._$frameBufferManager.getTextureFromCurrentAttachment();
 
+        let lut;
+        const isGradient = (ratios !== null);
+        if (isGradient) {
+            lut = this._$gradientLUT.generateForFilter(ratios, colors, alphas);
+        }
+
         let targetTextureAttachment;
         if (isInner) {
-            this._$frameBufferManager._$textureManager.bind(blurTexture);
+            if (isGradient) {
+                this._$frameBufferManager._$textureManager.bind02(blurTexture, lut, true);
+            } else {
+                this._$frameBufferManager._$textureManager.bind0(blurTexture);
+            }
         } else {
             targetTextureAttachment = this._$frameBufferManager.createTextureAttachment(width, height);
             this._$bind(targetTextureAttachment);
 
-            this._$frameBufferManager._$textureManager.bind(blurTexture, baseTexture);
+            if (isGradient) {
+                this._$frameBufferManager._$textureManager.bind012(blurTexture, baseTexture, lut, true);
+            } else {
+                this._$frameBufferManager._$textureManager.bind01(blurTexture, baseTexture);
+            }
         }
 
         // if (blurX < 2 && blurY < 2 && (blurX > 0 || blurY > 0)) {
-        //     // ぼかし幅が2より小さい場合は、強さを調整して見た目を合わせる
-        //     strength *= (Util.$max(1, blurX, blurY) - 1) * 0.4 + 0.2;
+        //    // ぼかし幅が2より小さい場合は、強さを調整して見た目を合わせる
+        //    strength *= (Util.$max(1, blurX, blurY) - 1) * 0.4 + 0.2;
         // }
 
         const transformsBase = !(isInner || (type === BitmapFilterType.FULL && knockout));
         const transformsBlur = !(width === blurWidth && height === blurHeight && blurOffsetX === 0 && blurOffsetY === 0);
         const appliesStrength = !(strength === 1);
-        const gradientStopsLength = (ratios !== null) ? Util.$clamp(ratios.length, 0, 16) : 0;
 
         const variants = this._$shaderList.filterShaderVariants;
         const shader = variants.getBitmapFilterShader(
             transformsBase, transformsBlur,
             isGlow, type, knockout,
-            appliesStrength, gradientStopsLength
+            appliesStrength, isGradient
         );
         variants.setBitmapFilterUniform(
             shader.uniform, width, height,
             baseWidth, baseHeight, baseOffsetX, baseOffsetY,
             blurWidth, blurHeight, blurOffsetX, blurOffsetY,
             isGlow, strength,
-            ratios, colors, alphas,
             colorR1, colorG1, colorB1, colorA1,
             colorR2, colorG2, colorB2, colorA2,
-            transformsBase, transformsBlur, appliesStrength, gradientStopsLength
+            transformsBase, transformsBlur, appliesStrength, isGradient
         );
       
         if (!isInner) {
@@ -1413,7 +1410,7 @@ class CanvasToWebGLContext
      */
     _$applyColorMatrixFilter (texture, matrix)
     {
-        this._$frameBufferManager._$textureManager.bindAndSmoothing(true, texture);
+        this._$frameBufferManager._$textureManager.bind0(texture, true);
 
         const variants = this._$shaderList.filterShaderVariants;
         const shader = variants.getColorMatrixFilterShader();
@@ -1450,7 +1447,7 @@ class CanvasToWebGLContext
         const targetTextureAttachment = this._$frameBufferManager.createTextureAttachment(width, height);
         this._$bind(targetTextureAttachment);
 
-        this._$frameBufferManager._$textureManager.bindAndSmoothing(true, texture);
+        this._$frameBufferManager._$textureManager.bind0(texture, true);
 
         const variants = this._$shaderList.filterShaderVariants;
         const shader = variants.getConvolutionFilterShader(matrix_x, matrix_y, preserve_alpha, clamp);
@@ -1497,7 +1494,7 @@ class CanvasToWebGLContext
             point = { "x": 0, "y": 0 };
         }
 
-        this._$frameBufferManager._$textureManager.bind(source, map);
+        this._$frameBufferManager._$textureManager.bind01(source, map);
 
         const variants = this._$shaderList.filterShaderVariants;
         const shader = variants.getDisplacementMapFilterShader(component_x, component_y, mode);
