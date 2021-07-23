@@ -1918,14 +1918,12 @@ class TextField extends InteractiveObject
 
     /**
      * @param  {object} obj
+     * @param  {number} width
      * @return {number}
      * @private
      */
-    _$getAlignOffset (obj)
+    _$getAlignOffset (obj, width)
     {
-        const matrix = this._$transform.concatenatedMatrix();
-        const width  = Util.$ceil(Util.$abs(this._$bounds.xMax - this._$bounds.xMin));
-        Util.$poolMatrix(matrix);
 
         // default
         const totalWidth = this._$widthTable[obj.yIndex];
@@ -1934,33 +1932,26 @@ class TextField extends InteractiveObject
             ? textFormat._$blockIndent + textFormat._$leftMargin
             : 0;
 
-        let xOffset = 0;
         switch (true) {
 
             // wordWrap case
             case this._$wordWrap === false && totalWidth > width:
-                xOffset = indent;
-                break;
+                return Util.$max(0, indent);
 
             case textFormat._$align === TextFormatAlign.CENTER: // format CENTER
             case this._$autoSize === TextFieldAutoSize.CENTER: // autoSize CENTER
-                xOffset = (width / 2) - indent - textFormat._$rightMargin - (totalWidth / 2);
-                break;
+                return Util.$max(0, (width / 2) - indent - textFormat._$rightMargin - (totalWidth / 2));
 
             case textFormat._$align === TextFormatAlign.RIGHT: // format RIGHT
             case this._$autoSize === TextFieldAutoSize.RIGHT: // autoSize RIGHT
-                xOffset = width - indent - totalWidth - textFormat._$rightMargin - 4;
-                break;
+                return Util.$max(0, width - indent - totalWidth - textFormat._$rightMargin);
 
             // autoSize LEFT
             // format LEFT
             default:
-                xOffset = indent;
-                break;
+                return Util.$max(0, indent + 2);
 
         }
-
-        return Util.$max(0, xOffset);
     }
 
     /**
@@ -2156,9 +2147,6 @@ class TextField extends InteractiveObject
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
-        const xScale = +(Util.$sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]));
-        const yScale = +(Util.$sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]));
-
         const baseBounds = this._$getBounds(null);
         const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
         const xMax   = +bounds.xMax;
@@ -2187,6 +2175,8 @@ class TextField extends InteractiveObject
             return;
         }
 
+        const xScale = +(Util.$sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]));
+        const yScale = +(Util.$sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]));
 
         // get cache
         const keys = Util.$getArray();
@@ -2227,6 +2217,8 @@ class TextField extends InteractiveObject
             if (this._$background || this._$border) {
 
                 ctx.beginPath();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.rotate(Util.$atan2(matrix[1], matrix[0]));
                 ctx.moveTo(0, 0);
                 ctx.lineTo(width, 0);
                 ctx.lineTo(width, height);
@@ -2251,35 +2243,33 @@ class TextField extends InteractiveObject
                         multiColor
                     );
 
-                    ctx.lineWidth   = Util.$max(1, yScale);
+                    ctx.lineWidth   = 1;
                     ctx.strokeStyle = `rgba(${rgba.R},${rgba.G},${rgba.B},${rgba.A})`;
                     ctx.stroke();
 
                 }
 
-                // reset
-                ctx.beginPath();
             }
 
-
-            const xPoint = +(2 * yScale);
-            const yPoint = +(2 * yScale);
 
             // mask start
             ctx.save();
             ctx.beginPath();
-            ctx.moveTo(xPoint, yPoint);
-            ctx.lineTo(width - xPoint, yPoint);
-            ctx.lineTo(width - xPoint, height - yPoint);
-            ctx.lineTo(xPoint, height - yPoint);
-            ctx.lineTo(xPoint, yPoint);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.rotate(Util.$atan2(matrix[1], matrix[0]));
+            ctx.moveTo(2, 2);
+            ctx.lineTo(width - 2, 2);
+            ctx.lineTo(width - 2, height - 2);
+            ctx.lineTo(2, height - 2);
+            ctx.lineTo(2, 2);
             ctx.clip();
 
-            ctx.setTransform(matrix[0], 0, 0, matrix[3], 2 * yScale, 2 * yScale);
-            this._$doDraw(ctx, multiMatrix, multiColor, false);
 
-            // mask end
+            ctx.beginPath();
+            ctx.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], 0, 0);
+            this._$doDraw(ctx, matrix, multiColor, false, width / matrix[0]);
             ctx.restore();
+
 
             texture = context
                 .frameBuffer
@@ -2375,25 +2365,29 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @param   {CanvasRenderingContext2D} context
-     * @param   {Float32Array} matrix
-     * @param   {Float32Array} color_transform
-     * @param   {boolean} is_clip
-     * @returns void
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {boolean} is_clip
+     * @param  {number} width
+     * @return {void}
      * @method
      * @private
      */
-    _$doDraw (context, matrix, color_transform, is_clip)
+    _$doDraw (context, matrix, color_transform, is_clip, width)
     {
+
         // init
         const textData = this._$getTextData();
 
-        let boundsWidth = Util.$ceil(Util.$abs(
-            this._$originBounds.xMax - this._$originBounds.xMin
-        ));
+        const limitWidth = (is_clip)
+            ? 0
+            : this.width - 4;
 
-        const limitWidth  = (is_clip) ? 0 : boundsWidth - 2;
-        const limitHeight = (is_clip) ? 0 : this._$originBounds.yMax - this._$originBounds.yMin - 4;
+        const limitHeight = (is_clip)
+            ? 0
+            : this.height - 4;
+
 
         // setup
         let xOffset      = 0;
@@ -2444,11 +2438,11 @@ class TextField extends InteractiveObject
                     }
 
                     offsetHeight += this._$textHeightTable[yIndex];
-                    if (yIndex) {
-                        offsetHeight += 5;
-                    }
+                    // if (yIndex) {
+                        offsetHeight += (2 * matrix[3]);
+                    // }
 
-                    xOffset = this._$getAlignOffset(this._$objectTable[yIndex]);
+                    xOffset = this._$getAlignOffset(this._$objectTable[yIndex], width);
                     if (tf._$underline) {
 
                         const offset = obj.textFormat._$size / 12;

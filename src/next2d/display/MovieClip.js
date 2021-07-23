@@ -522,7 +522,7 @@ class MovieClip extends Sprite
      */
     _$goToFrame (frame)
     {
-        if (Util.$isNaN(frame|0)) {
+        if (Util.$isNaN(+frame)) {
             frame = this._$getFrameForLabel(frame);
         }
 

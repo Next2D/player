@@ -888,10 +888,7 @@ class DisplayObjectContainer extends InteractiveObject
         // init
         child._$stage  = this._$stage;
         child._$parent = this;
-
-        if (this.constructor !== Stage) {
-            child._$root = this._$root;
-        }
+        child._$root   = (this.constructor === Stage) ? child : this._$root;
 
 
         // setup
