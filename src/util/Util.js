@@ -1962,6 +1962,7 @@ Util.$packages = function (object)
 
     object["ui"] = {
         "Easing": Easing,
+        "Job": Job,
         "Tween": Tween
     }
 }

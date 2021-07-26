@@ -8,10 +8,7 @@ class Tween
      * @constructor
      * @public
      */
-    constructor ()
-    {
-
-    }
+    constructor () {}
 
     /**
      * @description 指定されたクラスのストリングを返します。
@@ -69,6 +66,30 @@ class Tween
         return "next2d.ui.Tween";
     }
 
-
-
+    /**
+     * @description 新しいJobクラスを追加します
+     *              Add a new Job class
+     *
+     * @param  {object}   target
+     * @param  {object}   from
+     * @param  {object}   to
+     * @param  {number}   [delay=0]
+     * @param  {number}   [duration=1]
+     * @param  {function} [ease=null]
+     * @return {Job}
+     * @method
+     * @static
+     */
+    static add (
+        target, from = null, to = null,
+        delay = 0, duration = 1, ease = null
+    ) {
+        const job    = new Job(target);
+        job.from     = from;
+        job.to       = to;
+        job.delay    = delay;
+        job.duration = duration;
+        job.ease     = ease;
+        return job;
+    }
 }
