@@ -56,10 +56,10 @@ class URLRequest
 
         /**
          * @type {string}
-         * @default URLLoaderDataFormat.STRING
+         * @default URLLoaderDataFormat.JSON
          * @private
          */
-        this._$responseDataFormat = URLLoaderDataFormat.STRING;
+        this._$responseDataFormat = URLLoaderDataFormat.JSON;
 
         /**
          * @type {boolean}
@@ -238,6 +238,7 @@ class URLRequest
      *              Specifies the data format of the response.
      *
      * @member {string}
+     * @default json
      * @readonly
      * @public
      */
@@ -251,6 +252,7 @@ class URLRequest
      *              Specifies the user-agent string to be used in the HTTP request.
      *
      * @member {boolean}
+     * @default false
      * @readonly
      * @public
      */

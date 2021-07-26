@@ -814,7 +814,7 @@ class TextField extends InteractiveObject
     }
     set text (text)
     {
-        if (!text) {
+        if (text === null) {
             text = "";
         }
 

@@ -75,13 +75,27 @@ class URLLoaderDataFormat
      *              Specifies that downloaded data is received as raw binary data.
      *
      * @return  {string}
-     * @default binary
+     * @default arraybuffer
      * @const
      * @static
      */
     static get ARRAY_BUFFER ()
     {
         return "arraybuffer";
+    }
+
+    /**
+     * @description ダウンロードされるデータをJSONとして受信することを指定します。
+     *              Specifies that downloaded data is received as string.
+     *
+     * @return  {string}
+     * @default json
+     * @const
+     * @static
+     */
+    static get JSON ()
+    {
+        return "json";
     }
 
     /**
@@ -103,7 +117,7 @@ class URLLoaderDataFormat
      *              Specifies that downloaded data is received as URL-encoded variables.
      *
      * @return  {string}
-     * @default string
+     * @default variables
      * @const
      * @static
      */

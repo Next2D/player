@@ -386,42 +386,28 @@ class Transform
      */
     _$setMatrix (matrix = null, object = null)
     {
+        if (matrix) {
+            this._$displayObject._$doChanged();
+            Util.$isUpdated = true;
+        }
+
         // Matrix
         if (!this._$matrix) {
             this._$matrix = Util.$getMatrix(1, 0, 0, 1, 0, 0);
+            if (!matrix && object) {
+                matrix = object.matrix;
+            }
         }
 
+        // update
+        const currentMatrix = this._$matrix._$matrix;
         if (matrix) {
-
-            Util.$poolFloat32Array6(this._$matrix._$matrix);
-
-            this
-                ._$matrix
-                ._$matrix = Util.$getFloat32Array6(
-                matrix[0], matrix[1], matrix[2],
-                matrix[3], matrix[4], matrix[5]
-            );
-
-            this._$displayObject._$doChanged();
-            Util.$isUpdated = true;
-
-            return ;
-        }
-
-
-        if (object) {
-
-            Util.$poolFloat32Array6(this._$matrix._$matrix);
-
-            const matrix = object.matrix;
-
-            this
-                ._$matrix
-                ._$matrix = Util.$getFloat32Array6(
-                matrix[0], matrix[1], matrix[2],
-                matrix[3], matrix[4], matrix[5]
-            );
-
+            currentMatrix[0] = matrix[0];
+            currentMatrix[1] = matrix[1];
+            currentMatrix[2] = matrix[2];
+            currentMatrix[3] = matrix[3];
+            currentMatrix[4] = matrix[4];
+            currentMatrix[5] = matrix[5];
         }
     }
 
@@ -433,45 +419,28 @@ class Transform
      */
     _$setColorTransform (color_transform = null, object = null)
     {
-
-        if (!this._$colorTransform) {
-            this._$colorTransform = new ColorTransform();
-        }
-
         if (color_transform) {
-
-            Util.$poolFloat32Array6(this._$colorTransform._$colorTransform);
-
-            this
-                ._$colorTransform
-                ._$colorTransform = Util.$getFloat32Array8(
-                    color_transform[0], color_transform[1],
-                    color_transform[2], color_transform[3],
-                    color_transform[4], color_transform[5],
-                    color_transform[6], color_transform[7]
-                );
-
             this._$displayObject._$doChanged();
             Util.$isUpdated = true;
-
-            return ;
         }
 
-        if (object) {
+        if (!this._$colorTransform) {
+            this._$colorTransform = Util.$getColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
+            if (!color_transform && object) {
+                color_transform = object.colorTransform;
+            }
+        }
 
-            Util.$poolFloat32Array8(this._$colorTransform._$colorTransform);
-
-            const colorTransform = object.colorTransform;
-
-            this
-                ._$colorTransform
-                ._$colorTransform = Util.$getFloat32Array8(
-                    colorTransform[0], colorTransform[1],
-                    colorTransform[2], colorTransform[3],
-                    colorTransform[4], colorTransform[5],
-                    colorTransform[6], colorTransform[7]
-                );
-
+        const colorTransform = this._$colorTransform._$colorTransform;
+        if (color_transform) {
+            colorTransform[0] = color_transform[0];
+            colorTransform[1] = color_transform[1];
+            colorTransform[2] = color_transform[2];
+            colorTransform[3] = color_transform[3];
+            colorTransform[4] = color_transform[4];
+            colorTransform[5] = color_transform[5];
+            colorTransform[6] = color_transform[6];
+            colorTransform[7] = color_transform[7];
         }
     }
 

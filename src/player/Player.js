@@ -1420,7 +1420,7 @@ class Player
                     switch (true) {
 
                         case (target instanceof TextField):
-                            if (target.type === TextFieldType.INPUT && target.selectable) {
+                            if (target._$type === TextFieldType.DYNAMIC) {
                                 canPointerText = true;
                             }
 
@@ -2280,7 +2280,7 @@ class Player
                             switch (true) {
 
                                 case (target instanceof TextField):
-                                    if (target.type === TextFieldType.INPUT && target.selectable) {
+                                    if (target._$type === TextFieldType.DYNAMIC) {
                                         canPointerText = true;
                                     }
 

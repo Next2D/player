@@ -114,10 +114,10 @@ class Loader extends DisplayObjectContainer
     }
 
     /**
-     * @description JSON、JPEG、プログレッシブ JPEG、非アニメーション GIF
-     *              または PNG ファイルを、この Loader オブジェクトの子であるオブジェクトにロードします。
-     *              Loads a JSON, JPEG, progressive JPEG, unanimated GIF
-     *              or PNG file into an object that is a child of this Loader object.
+     * @description JSON、JPEG、プログレッシブ JPEG、GIFまたは PNG ファイルを、
+     *              この Loader オブジェクトの子であるオブジェクトにロードします。
+     *              Loads a JSON, JPEG, progressive JPEG, GIF or PNG file
+     *              into an object that is a child of this Loader object.
      *
      * @param   {URLRequest} request
      * @returns {void}
@@ -126,11 +126,27 @@ class Loader extends DisplayObjectContainer
      */
     load (request)
     {
-        if (!(request instanceof URLRequest)) {
+        if (!request || !(request instanceof URLRequest)) {
             return ;
         }
 
-        const loaderInfo    = this.contentLoaderInfo;
+        const loaderInfo = this.contentLoaderInfo;
+        switch (request.responseDataFormat) {
+
+            case URLLoaderDataFormat.JSON:
+            case URLLoaderDataFormat.ARRAY_BUFFER:
+                break;
+
+            default:
+                if (loaderInfo.willTrigger(IOErrorEvent.IO_ERROR)) {
+                    loaderInfo.dispatchEvent(new IOErrorEvent(
+                        IOErrorEvent.IO_ERROR, false, false,
+                        "data format is json or arrayBuffer only."
+                    ));
+                }
+                return ;
+        }
+
         loaderInfo._$url    = request.url;
         loaderInfo._$format = request.responseDataFormat;
 
@@ -230,16 +246,7 @@ class Loader extends DisplayObjectContainer
 
                         switch (loaderInfo.format) {
 
-                            case URLLoaderDataFormat.ARRAY_BUFFER:
-                                // TODO
-                                // buffer clone
-                                // this._$byteArray = event.target.response;
-                                // this._$decodeImage({
-                                //     "type": "image/" + reComposition.imageType
-                                // });
-                                break;
-
-                            case URLLoaderDataFormat.STRING:
+                            case URLLoaderDataFormat.JSON:
 
                                 loaderInfo._$data = JSON.parse(
                                     event.target.responseText
@@ -276,6 +283,21 @@ class Loader extends DisplayObjectContainer
                                     player._$loadStatus = 2;
                                 }
 
+                                break;
+
+                            case URLLoaderDataFormat.ARRAY_BUFFER:
+                                // TODO
+                                // buffer clone
+                                // this._$byteArray = event.target.response;
+                                // this._$decodeImage({
+                                //     "type": "image/" + reComposition.imageType
+                                // });
+                                break;
+
+                            case URLLoaderDataFormat.STRING:
+                                break;
+
+                            case URLLoaderDataFormat.VARIABLES:
                                 break;
 
                         }

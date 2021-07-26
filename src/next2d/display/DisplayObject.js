@@ -1159,6 +1159,38 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
+     * @description グローバル変数空間から値を取得
+     *              Get a value from the global variable space
+     *
+     * @param  {*} key
+     * @return {*}
+     * @method
+     * @public
+     */
+    getVariable (key)
+    {
+        if (Util.$variables.has(key)) {
+            return Util.$variables.get(key);
+        }
+        return null;
+    }
+
+    /**
+     * @description グローバル変数空間へ値を保存
+     *              Save values to global variable space
+     *
+     * @param  {*} key
+     * @param  {*} value
+     * @return {void}
+     * @method
+     * @public
+     */
+    setVariable (key, value)
+    {
+        Util.$variables.set(key, value);
+    }
+
+    /**
      * @return {object}
      * @method
      * @private

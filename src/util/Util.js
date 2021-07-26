@@ -506,6 +506,13 @@ Util.$Float32Array = window.Float32Array;
 Util.$Int16Array = window.Int16Array;
 
 /**
+ * @type {Map}
+ * @const
+ * @static
+ */
+Util.$variables = new Map();
+
+/**
  * @type {boolean}
  * @default false
  * @static
