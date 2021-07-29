@@ -847,6 +847,7 @@ class TextField extends InteractiveObject
     set textColor (text_color)
     {
         this._$defaultTextFormat.color = text_color;
+        this._$reload();
     }
 
     /**
@@ -2184,13 +2185,8 @@ class TextField extends InteractiveObject
         keys[1] = yScale;
 
         const cacheStore = Util.$cacheStore();
-
-        const id = (this._$characterId)
-            ? `c_${this._$characterId}`
-            : `i_${this._$instanceId}`;
-
-        const cacheKeys = cacheStore.generateKeys(id, keys, multiColor);
-        let texture     = cacheStore.get(cacheKeys);
+        const cacheKeys  = cacheStore.generateKeys(this._$instanceId, keys, multiColor);
+        let texture      = cacheStore.get(cacheKeys);
 
         // texture is small or renew
         if (texture && (this._$renew || this._$isUpdated())) {

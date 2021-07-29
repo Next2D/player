@@ -1413,7 +1413,6 @@ class Player
             // PC
             if (!Util.$isTouch && this._$state === "up") {
 
-                let done = false;
                 target = instance;
                 while (target && target.root !== target) {
 
@@ -1423,8 +1422,6 @@ class Player
                             if (target._$type === TextFieldType.DYNAMIC) {
                                 canPointerText = true;
                             }
-
-                            done = true;
                             break;
 
                         case target instanceof SimpleButton:
@@ -1434,7 +1431,7 @@ class Player
 
                     }
 
-                    if (done || canPointerText || canPointer) {
+                    if (canPointerText || canPointer) {
                         break;
                     }
 
@@ -2273,7 +2270,6 @@ class Player
 
                     if (!Util.$isTouch && this._$state === "up") {
 
-                        let done = false;
                         target = instance;
                         while (target && target.root !== target) {
 
@@ -2283,18 +2279,16 @@ class Player
                                     if (target._$type === TextFieldType.DYNAMIC) {
                                         canPointerText = true;
                                     }
-
-                                    done = true;
                                     break;
 
                                 case target instanceof SimpleButton:
-                                case target.buttonMode:
+                                case target._$buttonMode:
                                     canPointer = true;
                                     break;
 
                             }
 
-                            if (done || canPointerText || canPointer) {
+                            if (canPointerText || canPointer) {
                                 break;
                             }
 

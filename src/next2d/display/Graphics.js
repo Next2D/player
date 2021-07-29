@@ -1229,15 +1229,9 @@ class Graphics
 
 
         // get cache
-        color_transform[3] = 1; // plain alpha
-
-        const id = (displayObject._$characterId)
-            ? `c_${displayObject._$characterId}`
-            : `i_${displayObject._$instanceId}`;
-
         const cacheKeys = Util
             .$cacheStore()
-            .generateShapeKeys(id, matrix, color_transform);
+            .generateShapeKeys(displayObject._$instanceId, matrix, color_transform);
 
         // cache
         let texture = Util.$cacheStore().get(cacheKeys);
@@ -1308,6 +1302,8 @@ class Graphics
                 Util.$poolFloat32Array6(aMatrix);
             }
 
+            // plain alpha
+            color_transform[3] = 1;
             this._$doDraw(context, color_transform, false);
 
             if (hasGrid) {

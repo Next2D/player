@@ -1520,7 +1520,7 @@ class DisplayObjectContainer extends InteractiveObject
 
             const instance = children[idx];
 
-            if (!instance.visible && !instance._$hitObject) {
+            if (!instance._$visible && !instance._$hitObject) {
                 continue;
             }
 
