@@ -78,7 +78,7 @@ class Easing
      * @method
      * @static
      */
-    static linear = function (t, b, c, d)
+    static linear (t, b, c, d)
     {
         return t / d * c + b;
     }
@@ -92,7 +92,7 @@ class Easing
      * @method
      * @static
      */
-    static inQuad = function (t, b, c, d)
+    static inQuad (t, b, c, d)
     {
         return (t / d) ** 2 * c + b;
     }
@@ -106,7 +106,7 @@ class Easing
      * @method
      * @static
      */
-    static outQuad = function (t, b, c, d)
+    static outQuad (t, b, c, d)
     {
         return -(t /= d) * (t - 2) * c + b;
     }
@@ -120,7 +120,7 @@ class Easing
      * @method
      * @static
      */
-    static inOutQuad = function (t, b, c, d)
+    static inOutQuad (t, b, c, d)
     {
         return ((t /= (d / 2)) < 1)
             ? t ** 2 * c / 2 + b
@@ -136,7 +136,7 @@ class Easing
      * @method
      * @static
      */
-    static inCubic = function (t, b, c, d)
+    static inCubic (t, b, c, d)
     {
         return (t /= d) ** 3 * c + b;
     }
@@ -150,7 +150,7 @@ class Easing
      * @method
      * @static
      */
-    static outCubic = function (t, b, c, d)
+    static outCubic (t, b, c, d)
     {
         return (((t /= d) - 1) ** 3 + 1) * c + b;
     }
@@ -164,7 +164,7 @@ class Easing
      * @method
      * @static
      */
-    static inOutCubic = function (t, b, c, d)
+    static inOutCubic (t, b, c, d)
     {
         return ((t /= (d / 2)) < 1)
             ? t ** 3 * c / 2 + b
@@ -180,7 +180,7 @@ class Easing
      * @method
      * @static
      */
-    static inQuart = function (t, b, c, d)
+    static inQuart (t, b, c, d)
     {
         return (t /= d) ** 4 * c + b;
     }
@@ -194,7 +194,7 @@ class Easing
      * @method
      * @static
      */
-    static outQuart = function (t, b, c, d)
+    static outQuart (t, b, c, d)
     {
         return (((t /= d) - 1) ** 4 - 1) * -c + b;
     }
@@ -208,7 +208,7 @@ class Easing
      * @method
      * @static
      */
-    static inOutQuart = function (t, b, c, d)
+    static inOutQuart (t, b, c, d)
     {
         return ((t /= (d / 2)) < 1)
             ? t ** 4 * c / 2 + b
@@ -224,7 +224,7 @@ class Easing
      * @method
      * @static
      */
-    static inQuint = function (t, b, c, d)
+    static inQuint (t, b, c, d)
     {
         return (t /= d) ** 5 * c + b;
     }
@@ -238,7 +238,7 @@ class Easing
      * @method
      * @static
      */
-    static outQuint = function (t, b, c, d)
+    static outQuint (t, b, c, d)
     {
         return (((t /= d) - 1) ** 5 + 1) * c + b;
     }
@@ -252,7 +252,7 @@ class Easing
      * @method
      * @static
      */
-    static inOutQuint = function (t, b, c, d)
+    static inOutQuint (t, b, c, d)
     {
         return ((t /= (d / 2)) < 1)
             ? t ** 5 * c / 2 + b
@@ -268,7 +268,7 @@ class Easing
      * @method
      * @static
      */
-    static inSine = function (t, b, c, d)
+    static inSine (t, b, c, d)
     {
         return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
     }
@@ -282,7 +282,7 @@ class Easing
      * @method
      * @static
      */
-    static outSine = function (t, b, c, d)
+    static outSine (t, b, c, d)
     {
         return c * Math.sin(t / d * (Math.PI / 2)) + b;
     }
@@ -296,7 +296,7 @@ class Easing
      * @method
      * @static
      */
-    static inOutSine = function (t, b, c, d)
+    static inOutSine (t, b, c, d)
     {
         return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
     }
@@ -310,7 +310,7 @@ class Easing
      * @method
      * @static
      */
-    static inExpo = function (t, b, c, d)
+    static inExpo (t, b, c, d)
     {
         return c * Math.pow(2, 10 * (t / d - 1) ) + b;
     }
@@ -324,7 +324,7 @@ class Easing
      * @method
      * @static
      */
-    static outExpo = function (t, b, c, d)
+    static outExpo (t, b, c, d)
     {
         return c * (-Math.pow(2, -10 * t / d) + 1) + b;
     }
@@ -338,7 +338,7 @@ class Easing
      * @method
      * @static
      */
-    static inOutExpo = function (t, b, c, d)
+    static inOutExpo (t, b, c, d)
     {
         return ((t /= (d / 2)) < 1)
             ? c / 2 * Math.pow(2, 10 * (t - 1)) + b
@@ -354,7 +354,7 @@ class Easing
      * @method
      * @static
      */
-    static inCirc = function (t, b, c, d)
+    static inCirc (t, b, c, d)
     {
         return (1 - Math.sqrt(1 - (t /= d) ** 2)) * c + b;
     }
@@ -368,7 +368,7 @@ class Easing
      * @method
      * @static
      */
-    static outCirc = function (t, b, c, d)
+    static outCirc (t, b, c, d)
     {
         return Math.sqrt(1 - ((t /= d) - 1) ** 2) * c + b;
     }
@@ -382,7 +382,7 @@ class Easing
      * @method
      * @static
      */
-    static inOutCirc = function (t, b, c, d)
+    static inOutCirc (t, b, c, d)
     {
         return ((t /= (d / 2)) < 1)
             ? (1 - Math.sqrt(1 - t * t)) * c / 2 + b
@@ -398,7 +398,7 @@ class Easing
      * @method
      * @static
      */
-    static inBack = function (t, b, c, d)
+    static inBack (t, b, c, d)
     {
         return (2.70158 * (t /= d) ** 3 - 1.70158 * t * t) * c + b;
     }
@@ -412,7 +412,7 @@ class Easing
      * @method
      * @static
      */
-    static outBack = function (t, b, c, d)
+    static outBack (t, b, c, d)
     {
         return (1 + 2.70158 * Math.pow((t /= d) - 1, 3) + 1.70158 * Math.pow(t - 1, 2)) * c + b;
     }
@@ -426,7 +426,7 @@ class Easing
      * @method
      * @static
      */
-    static inOutBack = function (t, b, c, d)
+    static inOutBack (t, b, c, d)
     {
         let s = 1.70158;
         if ((t /= (d / 2)) < 1) {
@@ -444,7 +444,7 @@ class Easing
      * @method
      * @static
      */
-    static inElastic = function (t, b, c, d)
+    static inElastic (t, b, c, d)
     {
         // const c4 = (2 * Math.PI) / 3;
         return ((t /= d) === 0)
@@ -463,7 +463,7 @@ class Easing
      * @method
      * @static
      */
-    static outElastic = function (t, b, c, d)
+    static outElastic (t, b, c, d)
     {
         return ((t /= d) === 0)
             ? b
@@ -481,7 +481,7 @@ class Easing
      * @method
      * @static
      */
-    static inOutElastic = function (t, b, c, d)
+    static inOutElastic (t, b, c, d)
     {
         return ((t /= d) === 0)
             ? b
@@ -501,7 +501,7 @@ class Easing
      * @method
      * @static
      */
-    static outBounce = function (t, b, c, d)
+    static outBounce (t, b, c, d)
     {
         if ((t /= d) < (1 / 2.75)) {
             return 7.5625 * t * t * c + b;
@@ -524,7 +524,7 @@ class Easing
      * @method
      * @static
      */
-    static inBounce = function (t, b, c, d)
+    static inBounce (t, b, c, d)
     {
         return c - Easing.outBounce(d - t, 0, c, d) + b;
     }
@@ -538,7 +538,7 @@ class Easing
      * @method
      * @static
      */
-    static inOutBounce = function (t, b, c, d)
+    static inOutBounce (t, b, c, d)
     {
         return (t < d / 2)
             ? Easing.inBounce(t * 2, b, c / 2, d)

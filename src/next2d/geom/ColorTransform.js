@@ -310,15 +310,11 @@ class ColorTransform
      */
     _$clone ()
     {
-        const colorTransform = new ColorTransform();
-
-        colorTransform._$colorTransform = Util.$getFloat32Array8(
+        return Util.$getColorTransform(
             this._$colorTransform[0], this._$colorTransform[1],
             this._$colorTransform[2], this._$colorTransform[3],
             this._$colorTransform[4], this._$colorTransform[5],
             this._$colorTransform[6], this._$colorTransform[7]
         );
-
-        return colorTransform;
     }
 }

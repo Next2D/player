@@ -71,6 +71,13 @@ class Event
         this._$eventPhase = EventPhase.AT_TARGET;
 
         /**
+         * @type {function}
+         * @default null
+         * @private
+         */
+        this._$listener = null;
+
+        /**
          * @type {boolean}
          * @private
          */
@@ -452,6 +459,19 @@ class Event
     get eventPhase ()
     {
         return this._$eventPhase;
+    }
+
+    /**
+     * @description 現在コールされている関数
+     *              Function currently being called.
+     *
+     * @member {function}
+     * @readonly
+     * @public
+     */
+    get listener ()
+    {
+        return this._$listener;
     }
 
     /**

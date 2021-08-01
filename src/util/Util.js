@@ -1181,11 +1181,12 @@ Util.$upperPowerOfTwo = function (v)
  */
 Util.$getMatrix = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
 {
-    if (Util.$matrices.length) {
-        const matrix = Util.$matrices.pop();
-        matrix._$matrix = Util.$getFloat32Array6(a, b, c, d, tx, ty);
+    if (!Util.$matrices.length) {
+        return new Matrix(a, b, c, d, tx, ty);
     }
-    return new Matrix(a, b, c, d, tx, ty);
+    const matrix = Util.$matrices.pop();
+    matrix._$matrix = Util.$getFloat32Array6(a, b, c, d, tx, ty);
+    return matrix;
 }
 
 /**
@@ -1243,18 +1244,21 @@ Util.$getColorTransform = function (
     red_offset = 0, green_offset = 0, blue_offset = 0, alpha_offset = 0
 ) {
 
-    if (Util.$colors.length) {
-        const colorTransform = Util.$colors.pop();
-        colorTransform._$colorTransform = Util.$getFloat32Array8(
+    if (!Util.$colors.length) {
+        return new ColorTransform(
             red_multiplier, green_multiplier, blue_multiplier, alpha_multiplier,
             red_offset, green_offset, blue_offset, alpha_offset
         );
     }
 
-    return new ColorTransform(
+    const colorTransform = Util.$colors.pop();
+    colorTransform._$colorTransform = Util.$getFloat32Array8(
         red_multiplier, green_multiplier, blue_multiplier, alpha_multiplier,
         red_offset, green_offset, blue_offset, alpha_offset
     );
+
+    return colorTransform;
+
 }
 
 /**

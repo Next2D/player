@@ -209,6 +209,13 @@ class DisplayObject extends EventDispatcher
          * @private
          */
         this._$transform = new Transform(this);
+
+        /**
+         * @type {Map}
+         * @default null
+         * @private
+         */
+        this._$variables = null;
     }
 
     /**
@@ -1159,6 +1166,80 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
+     * @description クラスのローカル変数空間から値を取得
+     *              Get a value from the local variable space of the class
+     *
+     * @param  {*} key
+     * @return {*}
+     * @method
+     * @public
+     */
+    getLocalVariable (key)
+    {
+        if (!this._$variables) {
+            return null;
+        }
+
+        if (this._$variables.has(key)) {
+            return this._$variables.get(key);
+        }
+    }
+
+    /**
+     * @description クラスのローカル変数空間へ値を保存
+     *              Store values in the local variable space of the class
+     *
+     * @param  {*} key
+     * @param  {*} value
+     * @return {void}
+     * @method
+     * @public
+     */
+    setLocalVariable (key, value)
+    {
+        if (!this._$variables) {
+            this._$variables = Util.$getMap();
+        }
+        Util.$variables.set(key, value);
+    }
+
+    /**
+     * @description クラスのローカル変数空間に値があるかどうかを判断します。
+     *              Determines if there is a value in the local variable space of the class.
+     *
+     * @param  {*} key
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    hasLocalVariable (key)
+    {
+        return (this._$variables)
+            ? this._$variables.has(key)
+            : false;
+    }
+
+    /**
+     * @description クラスのローカル変数空間の値を削除
+     *              Remove values from the local variable space of a class
+     *
+     * @param  {*} key
+     * @return {void}
+     * @method
+     * @public
+     */
+    deleteLocalVariable (key)
+    {
+        if (this._$variables && this._$variables.has(key)) {
+            this._$variables.delete(key);
+            if (!this._$variables.size) {
+                Util.$poolMap(this._$variables);
+                this._$variables = null;
+            }
+        }
+    }
+
+    /**
      * @description グローバル変数空間から値を取得
      *              Get a value from the global variable space
      *
@@ -1167,7 +1248,7 @@ class DisplayObject extends EventDispatcher
      * @method
      * @public
      */
-    getVariable (key)
+    getGlobalVariable (key)
     {
         if (Util.$variables.has(key)) {
             return Util.$variables.get(key);
@@ -1185,9 +1266,39 @@ class DisplayObject extends EventDispatcher
      * @method
      * @public
      */
-    setVariable (key, value)
+    setGlobalVariable (key, value)
     {
         Util.$variables.set(key, value);
+    }
+
+    /**
+     * @description グローバル変数空間に値があるかどうかを判断します。
+     *              Determines if there is a value in the global variable space.
+     *
+     * @param  {*} key
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    hasGlobalVariable (key)
+    {
+        return Util.$variables.has(key);
+    }
+
+    /**
+     * @description グローバル変数空間の値を削除
+     *              Remove values from global variable space.
+     *
+     * @param  {*} key
+     * @return {void}
+     * @method
+     * @public
+     */
+    deleteGlobalVariable (key)
+    {
+        if (Util.$variables.has(key)) {
+            Util.$variables.delete(key);
+        }
     }
 
     /**

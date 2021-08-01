@@ -6,3 +6,4 @@
  */
 if (!("next2d" in window)) {
     (function(window) {
+        "use strict";

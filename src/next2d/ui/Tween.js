@@ -80,16 +80,8 @@ class Tween
      * @method
      * @static
      */
-    static add (
-        target, from = null, to = null,
-        delay = 0, duration = 1, ease = null
-    ) {
-        const job    = new Job(target);
-        job.from     = from;
-        job.to       = to;
-        job.delay    = delay;
-        job.duration = duration;
-        job.ease     = ease;
-        return job;
+    static add (target, from, to, delay = 0, duration = 1, ease = null)
+    {
+        return new Job(target, from, to, delay, duration, ease);
     }
 }

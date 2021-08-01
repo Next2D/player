@@ -6,12 +6,17 @@
 class Job extends EventDispatcher
 {
     /**
-     * @param {object} target
+     * @param {object}   target
+     * @param {object}   [from=null]
+     * @param {object}   [to=null]
+     * @param {number}   [delay=0]
+     * @param {number}   [duration=1]
+     * @param {function} [ease=null]
      *
      * @constructor
      * @public
      */
-    constructor (target)
+    constructor (target, from = null, to = null, delay = 0, duration = 1, ease = null)
     {
         super();
 
@@ -26,28 +31,28 @@ class Job extends EventDispatcher
          * @default 0
          * @private
          */
-        this._$delay = 0;
+        this._$delay = delay;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$duration = 1;
+        this._$duration = duration;
 
         /**
          * @type {function}
          * @default Easing.linear
          * @private
          */
-        this._$ease = Easing.linear;
+        this._$ease = ease || Easing.linear;
 
         /**
          * @type {object}
          * @default null
          * @private
          */
-        this._$from = null;
+        this._$from = from;
 
         /**
          * @type {array}
@@ -68,7 +73,7 @@ class Job extends EventDispatcher
          * @default null
          * @private
          */
-        this._$to = null;
+        this._$to = to;
 
         /**
          * @type {function}

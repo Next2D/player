@@ -2378,11 +2378,11 @@ class TextField extends InteractiveObject
 
         const limitWidth = (is_clip)
             ? 0
-            : this.width - 4;
+            : this.width;
 
         const limitHeight = (is_clip)
             ? 0
-            : this.height - 4;
+            : this.height;
 
 
         // setup
@@ -2434,9 +2434,7 @@ class TextField extends InteractiveObject
                     }
 
                     offsetHeight += this._$textHeightTable[yIndex];
-                    // if (yIndex) {
-                        offsetHeight += (2 * matrix[3]);
-                    // }
+                    offsetHeight += (2 * matrix[3]);
 
                     xOffset = this._$getAlignOffset(this._$objectTable[yIndex], width);
                     if (tf._$underline) {

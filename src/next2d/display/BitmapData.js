@@ -21,7 +21,7 @@ class BitmapData
      * @constructor
      * @public
      */
-    constructor(width = 0, height = 0, transparent = true, color = 0xffffffff)
+    constructor (width = 0, height = 0, transparent = true, color = 0xffffffff)
     {
         /**
          * @type {number}
