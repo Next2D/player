@@ -1228,10 +1228,13 @@ class Graphics
         }
 
 
+        const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+
         // get cache
         const cacheKeys = Util
             .$cacheStore()
-            .generateShapeKeys(displayObject._$instanceId, matrix, color_transform);
+            .generateKeys(displayObject._$instanceId, [xScale, yScale], color_transform);
 
         // cache
         let texture = Util.$cacheStore().get(cacheKeys);
@@ -1421,15 +1424,10 @@ class Graphics
      */
     _$doDraw (context, color_transform, is_clip = false)
     {
-
-        if (!this._$command) {
-            this._$command = this._$buildCommand();
-        }
-
         // draw
         Util.$resetContext(context);
         context.beginPath();
-        this._$command(context, color_transform, is_clip);
+        this._$runCommand(context, color_transform, is_clip);
 
         // clip or filter and blend
         if (is_clip) {
@@ -1448,17 +1446,12 @@ class Graphics
      */
     _$hit (context, matrix, options, is_clip = false)
     {
+        context.beginPath();
         context.setTransform(
             matrix[0], matrix[1], matrix[2],
             matrix[3], matrix[4], matrix[5]
         );
-
-        // build command
-        if (!this._$command) {
-            this._$command = this._$buildCommand();
-        }
-
-        return this._$command(context, Util.$COLOR_ARRAY_IDENTITY, is_clip, options);
+        return this._$runCommand(context, null, is_clip, options);
     }
 
     /**
@@ -1710,11 +1703,15 @@ class Graphics
     }
 
     /**
-     * @return {Function}
+     * @param  {CanvasToWebGLContext|CanvasRenderingContext2D} context
+     * @param  {Float32Array} [color_transform=null]
+     * @param  {boolean}      [is_clip=false]
+     * @param  {object}       [options=null]
+     * @return {boolean}
      * @method
      * @private
      */
-    _$buildCommand ()
+    _$runCommand (context, color_transform = null, is_clip = false, options = null)
     {
         if (this._$doFill) {
             this.endFill();
@@ -1724,8 +1721,6 @@ class Graphics
             this.endLine();
         }
 
-        let command = "";
-
         const recode = this._$recode;
         const length = recode.length;
         for (let idx = 0; idx < length; ) {
@@ -1733,53 +1728,125 @@ class Graphics
             switch (recode[idx++]) {
 
                 case Graphics.BEGIN_PATH:
-                    command += GraphicsPathCommand.BEGIN_PATH();
+                    context.beginPath();
                     break;
 
                 case Graphics.MOVE_TO:
-                    command += GraphicsPathCommand.MOVE_TO(recode[idx++], recode[idx++]);
+                    context.moveTo(recode[idx++], recode[idx++]);
                     break;
 
                 case Graphics.LINE_TO:
-                    command += GraphicsPathCommand.LINE_TO(recode[idx++], recode[idx++]);
+                    context.lineTo(recode[idx++], recode[idx++]);
                     break;
 
                 case Graphics.CURVE_TO:
-                    command += GraphicsPathCommand.CURVE_TO(
-                        recode[idx++], recode[idx++], recode[idx++], recode[idx++]
+                    context.quadraticCurveTo(
+                        recode[idx++], recode[idx++],
+                        recode[idx++], recode[idx++]
                     );
                     break;
 
                 case Graphics.FILL_STYLE:
-                    command += GraphicsPathCommand.FILL_STYLE(
-                        recode[idx++], recode[idx++],
-                        recode[idx++], recode[idx++]
-                    );
+
+                    if (is_clip || options) {
+                        idx += 4;
+                        continue;
+                    }
+
+                    const fillStyle = context._$contextStyle;
+
+                    fillStyle._$fillStyle[0] = (color_transform[0] !== 1 || color_transform[4] !== 0)
+                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[0]) + color_transform[4], 255)) / 255
+                        : recode[idx++] / 255;
+
+                    fillStyle._$fillStyle[1] = (color_transform[1] !== 1 || color_transform[5] !== 0)
+                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[1]) + color_transform[5], 255)) / 255
+                        : recode[idx++] / 255;
+
+                    fillStyle._$fillStyle[2] = (color_transform[2] !== 1 || color_transform[6] !== 0)
+                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[2]) + color_transform[6], 255)) / 255
+                        : recode[idx++] / 255;
+
+                    fillStyle._$fillStyle[3] = (color_transform[3] !== 1 || color_transform[7] !== 0)
+                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[3]) + color_transform[7], 255)) / 255
+                        : recode[idx++] / 255;
+
+                    context._$style = fillStyle;
+
                     break;
 
                 case Graphics.END_FILL:
-                    command += GraphicsPathCommand.END_FILL();
+
+                    if (options) {
+
+                        if (context.isPointInPath(options.x, options.y)) {
+                            return true;
+                        }
+
+                        continue;
+                    }
+
+                    if (!is_clip) {
+                        context.fill();
+                    }
+
                     break;
 
                 case Graphics.STROKE_STYLE:
-                    command += GraphicsPathCommand.STROKE_STYLE(
-                        recode[idx++], recode[idx++],
-                        recode[idx++], recode[idx++],
-                        recode[idx++], recode[idx++],
-                        recode[idx++], recode[idx++]
-                    );
+
+                    if (is_clip || options) {
+                        idx += 8;
+                        continue;
+                    }
+
+                    context.lineWidth  = recode[idx++];
+                    context.lineCap    = recode[idx++];
+                    context.lineJoin   = recode[idx++];
+                    context.miterLimit = recode[idx++];
+
+                    const strokeStyle = context._$contextStyle;
+
+                    strokeStyle._$strokeStyle[0] = (color_transform[0] !== 1 || color_transform[4] !== 0)
+                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[0]) + color_transform[4], 255)) / 255
+                        : recode[idx++] / 255;
+
+                    strokeStyle._$strokeStyle[1] = (color_transform[1] !== 1 || color_transform[5] !== 0)
+                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[1]) + color_transform[5], 255)) / 255
+                        : recode[idx++] / 255;
+
+                    strokeStyle._$strokeStyle[2] = (color_transform[2] !== 1 || color_transform[6] !== 0)
+                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[2]) + color_transform[6], 255)) / 255
+                        : recode[idx++] / 255;
+
+                    strokeStyle._$strokeStyle[3] = (color_transform[3] !== 1 || color_transform[7] !== 0)
+                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[3]) + color_transform[7], 255)) / 255
+                        : recode[idx++] / 255;
+
+                    context._$style = strokeStyle;
                     break;
 
                 case Graphics.END_STROKE:
-                    command += GraphicsPathCommand.END_STROKE();
+
+                    if (options) {
+
+                        if (context.isPointInStroke(options.x, options.y)) {
+                            return true;
+                        }
+
+                        continue;
+                    }
+
+                    if (!is_clip) {
+                        context.stroke();
+                    }
                     break;
 
                 case Graphics.CLOSE_PATH:
-                    command += GraphicsPathCommand.CLOSE_PATH();
+                    context.closePath();
                     break;
 
                 case Graphics.CUBIC:
-                    command += GraphicsPathCommand.CUBIC(
+                    context.bezierCurveTo(
                         recode[idx++], recode[idx++],
                         recode[idx++], recode[idx++],
                         recode[idx++], recode[idx++]
@@ -1787,68 +1854,211 @@ class Graphics
                     break;
 
                 case Graphics.ARC:
-                    command += GraphicsPathCommand.ARC(
-                        recode[idx++], recode[idx++], recode[idx++]
-                    );
+                    const arcX   = recode[idx++];
+                    const arcY   = recode[idx++];
+                    const radius = recode[idx++];
+                    context.moveTo((arcX + radius), arcY);
+                    context.arc(arcX, arcY, radius, 0, 2 * Util.$PI);
                     break;
 
                 case Graphics.GRADIENT_FILL:
                     {
-                        const type  = recode[idx++];
-                        const stops = recode[idx++];
+                        if (options) {
 
-                        const matrix = recode.slice(idx, idx + 6);
-                        idx += 6;
+                            if (context.isPointInPath(options.x, options.y)) {
+                                return true;
+                            }
 
-                        command += GraphicsPathCommand.GRADIENT_FILL(
-                            type, stops, matrix,
-                            recode[idx++], recode[idx++], recode[idx++]
-                        );
+                            idx += 6;
+                            continue;
+                        }
 
-                        Util.$poolArray(matrix);
+                        if (is_clip) {
+                            idx += 6;
+                            continue;
+                        }
+
+                        const type          = recode[idx++];
+                        const stops         = recode[idx++];
+                        const matrix        = recode[idx++];
+                        const spread        = recode[idx++];
+                        const interpolation = recode[idx++];
+                        const focal         = recode[idx++];
+
+                        let css = null;
+                        if (type === GradientType.LINEAR) {
+
+                            const xy = Util.$linearGradientXY(matrix);
+                            css = context.createLinearGradient(
+                                xy[0], xy[1], xy[2], xy[3],
+                                interpolation, spread
+                            );
+
+                        } else {
+
+                            context.save();
+                            context.transform(
+                                matrix[0], matrix[1], matrix[2],
+                                matrix[3], matrix[4], matrix[5]
+                            );
+
+                            css = context.createRadialGradient(
+                                0, 0, 0, 0, 0, 819.2,
+                                interpolation, spread, focal
+                            );
+
+                        }
+
+                        const length = stops.length;
+                        for (let idx = 0; idx < length; ++idx) {
+
+                            const color = stops[idx];
+
+                            css.addColorStop(color.ratio, Util.$getFloat32Array4(
+                                Util.$max(0, Util.$min(color.R * color_transform[0] + color_transform[4], 255))|0,
+                                Util.$max(0, Util.$min(color.G * color_transform[1] + color_transform[5], 255))|0,
+                                Util.$max(0, Util.$min(color.B * color_transform[2] + color_transform[6], 255))|0,
+                                Util.$max(0, Util.$min(color.A * color_transform[3] + color_transform[7], 255))|0
+                            ));
+
+                        }
+
+                        context.fillStyle = css;
+                        context.fill();
+
+                        if (type === GradientType.RADIAL) {
+                            context.restore();
+                        }
                     }
                     break;
 
                 case Graphics.GRADIENT_STROKE:
                     {
-                        const lineWidth  = recode[idx++];
-                        const caps       = recode[idx++];
-                        const joints     = recode[idx++];
-                        const miterLimit = recode[idx++];
-                        const type       = recode[idx++];
-                        const stops      = recode[idx++];
-                        const matrix     = recode.slice(idx, idx + 6);
-                        idx += 6;
+                        if (options) {
 
-                        command += GraphicsPathCommand.GRADIENT_STROKE(
-                            lineWidth, caps, joints, miterLimit,
-                            type, stops, matrix,
-                            recode[idx++], recode[idx++], recode[idx++]
-                        );
+                            if (context.isPointInStroke(options.x, options.y)) {
+                                return true;
+                            }
 
-                        Util.$poolArray(matrix);
+                            idx += 12;
+                            continue;
+                        }
+
+                        if (is_clip) {
+                            idx += 12;
+                            continue;
+                        }
+
+                        const lineWidth     = recode[idx++];
+                        const caps          = recode[idx++];
+                        const joints        = recode[idx++];
+                        const miterLimit    = recode[idx++];
+                        const type          = recode[idx++];
+                        const stops         = recode[idx++];
+                        const matrix        = recode[idx++];
+                        const spread        = recode[idx++];
+                        const interpolation = recode[idx++];
+                        const focal         = recode[idx++];
+
+                        let css = null;
+                        if (type === GradientType.LINEAR) {
+
+                            const xy = Util.$linearGradientXY(matrix);
+                            css = context.createLinearGradient(
+                                xy[0], xy[1], xy[2], xy[3],
+                                interpolation, spread
+                            );
+
+                        } else {
+
+                            context.save();
+                            context.transform(
+                                matrix[0], matrix[1], matrix[2],
+                                matrix[3], matrix[4], matrix[5]
+                            );
+
+                            css = context.createRadialGradient(
+                                0, 0, 0, 0, 0, 819.2,
+                                interpolation, spread, focal
+                            );
+
+                        }
+
+                        const length = stops.length;
+                        for (let idx = 0; idx < length; ++idx) {
+
+                            const color = stops[idx];
+
+                            css.addColorStop(color.ratio, Util.$getFloat32Array4(
+                                Util.$max(0, Util.$min(color.R * color_transform[0] + color_transform[4], 255))|0,
+                                Util.$max(0, Util.$min(color.G * color_transform[1] + color_transform[5], 255))|0,
+                                Util.$max(0, Util.$min(color.B * color_transform[2] + color_transform[6], 255))|0,
+                                Util.$max(0, Util.$min(color.A * color_transform[3] + color_transform[7], 255))|0
+                            ));
+
+                        }
+
+                        context.strokeStyle = css;
+                        context.lineWidth   = lineWidth;
+                        context.lineCap     = caps;
+                        context.lineJoin    = joints;
+                        context.miterLimit  = miterLimit;
+                        context.stroke();
+
+                        if (type === GradientType.RADIAL) {
+                            context.restore();
+                        }
+
                     }
                     break;
 
                 case Graphics.BITMAP_FILL:
                     {
-                        const width  = recode[idx++];
-                        const height = recode[idx++];
-                        const length = recode[idx++];
+                        if (options) {
 
-                        const buffer = recode.slice(idx, idx + length);
-                        idx += length;
+                            if (context.isPointInPath(options.x, options.y)) {
+                                return true;
+                            }
 
-                        const matrix = recode.slice(idx, idx + 6);
-                        idx += 6;
+                            idx += 6;
+                            continue;
+                        }
 
-                        command += GraphicsPathCommand.BITMAP_FILL(
-                            width, height, buffer, matrix,
-                            recode[idx++], recode[idx++]
+                        if (is_clip) {
+                            idx += 6;
+                            continue;
+                        }
+
+                        context.save();
+                        const texture = context
+                            .frameBuffer
+                            .createTextureFromPixels(
+                                recode[idx++], recode[idx++], recode[idx++]
+                            );
+
+                        const matrix = recode[idx++];
+                        const repeat = recode[idx++];
+                        const smooth = recode[idx++];
+
+                        context.fillStyle = context
+                            .createPattern(texture, repeat, color_transform);
+
+                        context.transform(
+                            matrix[0], matrix[1], matrix[2],
+                            matrix[3], matrix[4], matrix[5]
                         );
 
-                        Util.$poolArray(buffer);
-                        Util.$poolArray(matrix);
+                        context._$imageSmoothingEnabled = smooth;
+                        context.fill();
+
+                        // restore
+                        context.restore();
+                        context._$imageSmoothingEnabled = false;
+
+                        context
+                            .frameBuffer
+                            .releaseTexture(texture);
+
                     }
                     break;
 
@@ -1856,9 +2066,9 @@ class Graphics
                     break;
 
             }
+
         }
 
-        this._$recode.length = 0;
-        return Function("ctx", "ct", "is_clip", "options", command);
+        return false;
     }
 }

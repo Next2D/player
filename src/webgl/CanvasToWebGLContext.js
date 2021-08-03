@@ -83,8 +83,8 @@ class CanvasToWebGLContext
 
     /**
      * @memberof CanvasToWebGLContext#
-     * @property {array|CanvasGradientToWebGL}
-     * @return   {array|CanvasGradientToWebGL}
+     * @property {Float32Array|CanvasGradientToWebGL}
+     * @return   {Float32Array|CanvasGradientToWebGL}
      * @public
      */
     get fillStyle ()
@@ -94,20 +94,23 @@ class CanvasToWebGLContext
 
     /**
      * @memberof CanvasToWebGLContext#
-     * @property {array|CanvasGradientToWebGL}
-     * @param    {*} fill_style
+     * @property {Float32Array|CanvasGradientToWebGL}
+     * @param    {Float32Array|CanvasGradientToWebGL} fill_style
      * @return   void
      * @public
      */
     set fillStyle (fill_style)
     {
+        if (this._$style._$fillStyle.constructor === Float32Array) {
+            Util.$poolFloat32Array4(this._$style._$fillStyle);
+        }
         this._$style._$fillStyle = fill_style;
     }
 
     /**
      * @memberof CanvasToWebGLContext#
-     * @property {array}
-     * @return {array|CanvasGradientToWebGL}
+     * @property {Float32Array}
+     * @return {Float32Array|CanvasGradientToWebGL}
      * @public
      */
     get strokeStyle ()
@@ -124,6 +127,9 @@ class CanvasToWebGLContext
      */
     set strokeStyle (stroke_style)
     {
+        if (this._$style._$strokeStyle.constructor === Float32Array) {
+            Util.$poolFloat32Array4(this._$style._$strokeStyle);
+        }
         this._$style._$strokeStyle = stroke_style;
     }
 

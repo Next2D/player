@@ -121,37 +121,28 @@ class Shape extends DisplayObject
 
         if (character.recodes) {
 
-            // clone
-            if (!character._$command) {
-                graphics._$recode   = character.recodes;
-                character._$command = graphics._$buildCommand();
-            }
+            graphics._$recode = character.recodes.slice(0);
 
         } else {
 
             const width  = Util.$abs(character.bounds.xMax - character.bounds.xMin);
             const height = Util.$abs(character.bounds.yMax - character.bounds.yMin);
 
-            if (!character._$command) {
-
-                const bitmapData = new BitmapData(width, height, true, 0);
-                bitmapData._$buffer = new Uint8Array(character.buffer);
-
-                graphics
-                    .beginBitmapFill(bitmapData, null, false)
-                    .drawRect(0, 0, width, height)
-                    .endFill();
-
-                character._$command = graphics._$buildCommand();
-
-                // gc
+            const bitmapData = new BitmapData(width, height, true, 0);
+            if (!character._$buffer) {
+                character._$buffer = new Uint8Array(character.buffer);
                 Util.$poolArray(character.buffer);
                 character.buffer = null;
             }
+            bitmapData._$buffer = character._$buffer;
+
+            graphics
+                .beginBitmapFill(bitmapData, null, false)
+                .drawRect(0, 0, width, height)
+                .endFill();
 
         }
 
-        graphics._$command  = character._$command;
         graphics._$maxAlpha = 1;
         graphics._$canDraw  = true;
 

@@ -89,15 +89,10 @@ class DisplayObjectContainer extends InteractiveObject
         return new Proxy(this, {
             "get": function (object, name)
             {
-                if (name in object) {
-                    return object[name];
-                }
-
-                if (object._$names.size
-                    && object._$names.has(name)
-                ) {
+                if (object._$names.size && object._$names.has(name)) {
                     return object._$names.get(name);
                 }
+                return object[name];
             }
         });
     }
@@ -1281,10 +1276,15 @@ class DisplayObjectContainer extends InteractiveObject
 
 
         // draw children
-        const isLayer = context._$isLayer;
+        const isLayer  = context._$isLayer;
+        const isUpdate = this._$isUpdated();
         for (let idx = 0; idx < length; ++idx) {
 
             const instance = children[idx];
+
+            if (isUpdate) {
+                instance._$placeObject = null;
+            }
 
             // mask instance
             if (instance._$isMask) {

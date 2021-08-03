@@ -21,12 +21,6 @@ class CacheStore
         this._$store = Util.$getMap();
 
         /**
-         * @type {Map}
-         * @private
-         */
-        this._$lives = Util.$getMap();
-
-        /**
          * @type {number}
          * @default 2
          * @private
@@ -52,12 +46,7 @@ class CacheStore
         for (const [id, data] of this._$store) {
 
             for (const [type, value] of data) {
-
                 this.destroy(value);
-
-                this._$lives.delete(
-                    this.generateLifeKey(id, type)
-                );
             }
 
             Util.$poolMap(data);
@@ -115,7 +104,7 @@ class CacheStore
                 canvas.width = canvas.height = 1;
 
                 // pool
-                this._$pool[this._$pool.length] = canvas;
+                this._$pool.push(canvas);
                 break;
 
             default:
@@ -149,9 +138,6 @@ class CacheStore
 
                 this.destroy(value);
 
-                this._$lives.delete(
-                    this.generateLifeKey(id, type)
-                );
             }
 
             Util.$poolMap(data);
@@ -185,11 +171,11 @@ class CacheStore
 
             if (data.has(type)) {
 
-                const key = this.generateLifeKey(id, type);
-                const lifeCount = this._$lives.get(key);
+                const key = `life_${type}`;
 
-                if (lifeCount === 1) {
-                    this._$lives.set(key, this._$lifeCount);
+                // reset
+                if (data.has(key) === 1) {
+                    data.set(key, this._$lifeCount);
                 }
 
                 return data.get(type);
@@ -223,7 +209,7 @@ class CacheStore
         if (!value) {
 
             data.delete(type);
-            this._$lives.delete(key);
+            data.delete(`life_${type}`);
 
             if (!data.size) {
                 Util.$poolMap(data);
@@ -242,9 +228,7 @@ class CacheStore
 
         // set cache
         data.set(type, value);
-
-        // set life count
-        this._$lives.set(key, this._$lifeCount);
+        data.set(`life_${type}`, this._$lifeCount);
     }
 
     /**
@@ -256,12 +240,29 @@ class CacheStore
      */
     generateShapeKeys (unique_key, matrix, color = null)
     {
-        const str = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}${this.colorToString(color)}`;
+        let str = "";
+        switch (true) {
+
+            case matrix[0] !== 1:
+            case matrix[1] !== 0:
+            case matrix[2] !== 0:
+            case matrix[3] !== 1:
+                str = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}`;
+                break;
+
+            default:
+                break;
+
+        }
+
+        if (color) {
+            str += this.colorToString(color);
+        }
 
         const keys = Util.$getArray();
 
         keys[0] = `${unique_key}`;
-        keys[1] = this.generateHash(str);
+        keys[1] = (str) ? this.generateHash(str) : "_0";
 
         return keys;
 
@@ -269,8 +270,8 @@ class CacheStore
 
     /**
      * @param   {string|number} unique_key
-     * @param   {Float32Array} [matrix=null]
-     * @param   {Float32Array} [color=null]
+     * @param   {array}         [matrix=null]
+     * @param   {Float32Array}  [color=null]
      * @returns {array}
      * @public
      */
@@ -283,7 +284,9 @@ class CacheStore
         }
 
         // color
-        str += this.colorToString(color);
+        if (color) {
+            str += this.colorToString(color);
+        }
 
         const keys = Util.$getArray();
         keys[1] = (str) ? this.generateHash(str) : "_0";
@@ -298,10 +301,6 @@ class CacheStore
      */
     colorToString (c = null)
     {
-        if (!c) {
-            return "";
-        }
-
         switch (true) {
 
             case c[0] !== 1:
@@ -315,6 +314,7 @@ class CacheStore
 
             default:
                 return "";
+
         }
     }
 
@@ -327,6 +327,7 @@ class CacheStore
         let hash = 0;
         const length = str.length;
         for (let idx = 0; idx < length; idx++) {
+
             const chr = str.charCodeAt(idx);
 
             hash  = ((hash << 5) - hash) + chr;
@@ -345,8 +346,8 @@ class CacheStore
 
             for (const [type, value] of data) {
 
-                const key = this.generateLifeKey(id, type);
-                const lifeCount = this._$lives.get(key) - 1;
+                const key = `life_${type}`;
+                const lifeCount = data.get(key) - 1;
                 if (!lifeCount) {
 
                     // destroy
@@ -354,15 +355,13 @@ class CacheStore
 
                     // delete key
                     data.delete(type);
-
-                    this._$lives.delete(key);
+                    data.delete(`life_${type}`);
 
                     continue;
                 }
 
                 // update life count
-                this._$lives.set(key, lifeCount);
-
+                data.set(key, lifeCount);
             }
 
             // delete id

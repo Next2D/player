@@ -659,6 +659,16 @@ Util.$matrices = [];
 Util.$colors = [];
 
 /**
+ * 使用済みになったFloat32Arrayをプール、サイズは4固定
+ * Pool used Float32Array, size fixed at 4.
+ *
+ * @type {Float32Array[]}
+ * @const
+ * @static
+ */
+Util.$float32Array4 = [];
+
+/**
  * 使用済みになったFloat32Arrayをプール、サイズは6固定
  * Pool used Float32Array, size fixed at 6.
  *
@@ -947,6 +957,39 @@ Util.$getMap = function ()
 {
     return Util.$maps.pop() || new Util.$Map();
 };
+
+/**
+ * @param  {number} [f0=0]
+ * @param  {number} [f1=0]
+ * @param  {number} [f2=0]
+ * @param  {number} [f3=0]
+ * @return {Float32Array}
+ * @method
+ * @static
+ */
+Util.$getFloat32Array4 = function (f0 = 0, f1 = 0, f2 = 0, f3 = 0)
+{
+    const array = Util.$float32Array4.pop()
+        || new Util.$window.Float32Array(4);
+
+    array[0] = f0;
+    array[1] = f1;
+    array[2] = f2;
+    array[3] = f3;
+
+    return array;
+}
+
+/**
+ * @param  {Float32Array} array
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$poolFloat32Array4 = function (array)
+{
+    Util.$float32Array4.push(array);
+}
 
 /**
  * @param  {number} [f0=0]
@@ -1591,7 +1634,7 @@ Util.$resetContext = function (context)
 
         case CanvasGradientToWebGL:
         case CanvasPatternToWebGL:
-            style._$fillStyle = new Float32Array([1, 1, 1, 1]); // fixed size 4
+            style._$fillStyle = Util.$getFloat32Array4(1, 1, 1, 1); // fixed size 4
             break;
 
         default:
@@ -1607,7 +1650,7 @@ Util.$resetContext = function (context)
 
         case CanvasGradientToWebGL:
         case CanvasPatternToWebGL:
-            style._$strokeStyle = new Float32Array([1, 1, 1, 1]); // fixed size 4
+            style._$strokeStyle = Util.$getFloat32Array4(1, 1, 1, 1); // fixed size 4
             break;
 
         default:

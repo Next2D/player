@@ -79,7 +79,6 @@ function buildJavaScript()
             "src/next2d/display/DisplayObjectContainer.js",
             "src/next2d/display/Sprite.js",
             "src/next2d/display/MovieClip.js",
-            "src/next2d/display/GraphicsPathCommand.js",
             "src/next2d/display/*.js",
             "src/next2d/filters/BitmapFilter.js",
             "src/next2d/filters/BitmapFilterType.js",

@@ -216,6 +216,13 @@ class DisplayObject extends EventDispatcher
          * @private
          */
         this._$variables = null;
+
+        /**
+         * @type {object}
+         * @default null
+         * @private
+         */
+        this._$placeObject = null;
     }
 
     /**
@@ -1308,27 +1315,32 @@ class DisplayObject extends EventDispatcher
      */
     _$getPlaceObject ()
     {
-        const placeId = this._$placeId;
-        if (placeId === null) {
-            return null;
-        }
+        if (!this._$placeObject) {
 
-        const parent = this._$parent;
-        if (!parent) {
-            return null;
-        }
+            const placeId = this._$placeId;
+            if (placeId === null) {
+                return null;
+            }
 
-        const placeMap = parent._$placeMap;
-        if (!placeMap || !placeMap.length) {
-            return null;
-        }
+            const parent = this._$parent;
+            if (!parent) {
+                return null;
+            }
 
-        const map = placeMap[parent._$currentFrame || 1];
-        if (!map) {
-            return null;
-        }
+            const placeMap = parent._$placeMap;
+            if (!placeMap || !placeMap.length) {
+                return null;
+            }
 
-        return parent._$placeObjects[map[placeId]];
+            const map = placeMap[parent._$currentFrame || 1];
+            if (!map) {
+                return null;
+            }
+
+            this._$placeObject = parent._$placeObjects[map[placeId]];
+
+        }
+        return this._$placeObject;
     }
 
     /**

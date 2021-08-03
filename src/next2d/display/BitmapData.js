@@ -268,7 +268,7 @@ class BitmapData
         }
 
         if (this._$buffer) {
-            Util.$poolTypedArrayBuffer(this._$buffer);
+            // Util.$poolTypedArrayBuffer(this._$buffer);
             this._$buffer = null;
         }
 
@@ -281,12 +281,12 @@ class BitmapData
     }
 
     /**
-     * @param  {DisplayObject} source
-     * @param  {Matrix} [matrix=null]
+     * @param  {DisplayObject}  source
+     * @param  {Matrix}         [matrix=null]
      * @param  {ColorTransform} [color_transform=null]
-     * @param  {string} [blend_mode=BlendMode.NORMAL]
-     * @param  {Rectangle} [clip_rect=null]
-     * @param  {boolean} [smoothing=false]
+     * @param  {string}         [blend_mode=BlendMode.NORMAL]
+     * @param  {Rectangle}      [clip_rect=null]
+     * @param  {boolean}        [smoothing=false]
      * @return {void}
      * @public
      */
@@ -426,11 +426,6 @@ class BitmapData
         context.frameBuffer.releaseTexture(sourceTexture);
         context.frameBuffer.releaseAttachment(attachment, false);
 
-        // data update
-        // this._$updateData();
-
-
-
     }
 
     /**
@@ -553,6 +548,7 @@ class BitmapData
 
     /**
      * @return {HTMLImageElement}
+     * @method
      * @public
      */
     toImage ()
@@ -583,11 +579,14 @@ class BitmapData
     }
 
     /**
-     * @return {array}
+     * @return {Uint8Array}
+     * @method
      * @public
      */
-    toArray ()
+    toUint8Array ()
     {
-        return Array.from(this._$getPixels(0, 0, this.width, this.height, "RGBA"));
+        return (this._$buffer)
+            ? this._$buffer
+            : this._$getPixels(0, 0, this.width, this.height, "RGBA");
     }
 }

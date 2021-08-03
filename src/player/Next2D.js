@@ -27,7 +27,11 @@ class Next2D
     {
         // @ifdef DEBUG
         if (url === "develop") {
-            url = `${Util.$location.origin}/${Util.$location.search.substr(1).split("&")[0]}`;
+            const path = Util.$location.search.substr(1).split("&")[0];
+            if (!path) {
+                return ;
+            }
+            url = `${Util.$location.origin}/${path}`;
         }
         // @endif
 

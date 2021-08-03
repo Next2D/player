@@ -353,10 +353,11 @@ class GraphicsGradientFill
             : Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0;
 
         return Util.$getArray(
-            this._$type, this.colorStops,
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4], matrix[5],
-            this._$spreadMethod, this._$interpolationMethod,
+            this._$type,
+            this.colorStops,
+            matrix,
+            this._$spreadMethod,
+            this._$interpolationMethod,
             this._$focalPointRatio
         );
     }

@@ -154,33 +154,21 @@ class GraphicsBitmapFill
      */
     toArray ()
     {
-        const buffer = this._$bitmapData.toArray();
-
-        const recode = Util.$getArray(
-            this._$bitmapData.width,
-            this._$bitmapData.height,
-            buffer.length,
-        );
-
-        for (let idx = 0; idx < buffer.length; ++idx) {
-            recode.push(buffer[idx]);
-        }
+        const buffer = this._$bitmapData._$buffer
+            ? this._$bitmapData._$buffer
+            : this._$bitmapData.toUint8Array();
 
         const matrix = (this._$matrix)
             ? this._$matrix._$matrix
             : Util.$MATRIX_ARRAY_IDENTITY;
 
-        recode.push(
-            matrix[0],
-            matrix[1],
-            matrix[2],
-            matrix[3],
-            matrix[4],
-            matrix[5],
+        return Util.$getArray(
+            this._$bitmapData.width,
+            this._$bitmapData.height,
+            buffer,
+            matrix,
             (this._$repeat) ? "repeat" : "no-repeat",
             this._$smooth
         );
-
-        return recode;
     }
 }
