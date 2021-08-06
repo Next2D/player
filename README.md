@@ -5,12 +5,16 @@
 developブランチは開発専用のブランチです。  
 The develop branch is a development-only branch.
 
-## NodeJS Version
+## Version
+開発に必要なミドルウェアと対応バージョン  
+Middleware required for development and supported versions
 ```
 node >= v14.x
+gulp >= 4.x
+karma >= 6.x
 ```
 
-## Initiation Procedure
+## Initial Settings
 ```
 git clone -b develop git@github.com:Next2D/Player.git
 cd Player

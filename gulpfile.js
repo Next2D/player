@@ -9,21 +9,18 @@ const minimist    = require("minimist");
 const replace     = require("gulp-replace");
 const rename      = require("gulp-rename");
 
-
 const options = minimist(process.argv.slice(2), {
     "string": ["distPath"],
-    "boolean": ["debugBuild", "prodBuild", "glErrorCheck", "glTrace"],
+    "boolean": ["debugBuild", "prodBuild", "glErrorCheck", "glTrace", "version"],
     "default": {
         "debugBuild": true,
         "prodBuild": false,
         "glErrorCheck": false,
         "glTrace": false,
+        "version": "1.0.0",
         "distPath": "."
     }
 });
-
-const date = new Date();
-const time = Math.round(date.getTime() / 1000);
 
 /**
  * @description 書き出した時間でバージョンを書き出す
@@ -32,7 +29,7 @@ const time = Math.round(date.getTime() / 1000);
 function buildFooterVersion()
 {
     return gulp.src("src/Footer.file")
-        .pipe(replace("###BUILD_VERSION###", time))
+        .pipe(replace("###BUILD_VERSION###", options.version))
         .pipe(rename("src/Footer.build.file"))
         .pipe(gulp.dest("."));
 }
@@ -44,8 +41,8 @@ function buildFooterVersion()
 function buildHeaderVersion()
 {
     return gulp.src("src/Header.file")
-        .pipe(replace("###BUILD_VERSION###", time))
-        .pipe(replace("###BUILD_YEAR###", date.getFullYear()))
+        .pipe(replace("###BUILD_VERSION###", options.version))
+        .pipe(replace("###BUILD_YEAR###", (new Date()).getFullYear()))
         .pipe(rename("src/Header.build.file"))
         .pipe(gulp.dest("."));
 }
