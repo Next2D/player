@@ -57,17 +57,18 @@ function buildHeaderVersion()
 function buildJavaScript()
 {
     const preprocessContext = {};
+
     if (options.debugBuild) {
         preprocessContext.DEBUG = true;
     }
+
     if (options.glErrorCheck) {
         preprocessContext.GL_ERROR_CHECK = true;
     }
+
     if (options.glTrace) {
         preprocessContext.TRACE_GL = true;
     }
-
-
 
     const build = gulp.src([
             "src/Header.build.file",

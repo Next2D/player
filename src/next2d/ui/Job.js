@@ -69,6 +69,13 @@ class Job extends EventDispatcher
         this._$startTime = 0;
 
         /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$stopFlag = false;
+
+        /**
          * @type {object}
          * @default null
          * @private
@@ -229,6 +236,7 @@ class Job extends EventDispatcher
     initialize ()
     {
         // setup
+        this._$stopFlag  = false;
         this._$startTime = Util.$performance.now();
         this._$update    = this.update.bind(this);
 
@@ -287,13 +295,38 @@ class Job extends EventDispatcher
      * @method
      * @public
      */
+    stop ()
+    {
+        this._$stopFlag = true;
+
+        this.removeEventListener(Event.ENTER_FRAME, this._$update);
+
+        if (this.hasEventListener(Event.STOP)) {
+            this.dispatchEvent(new Event(Event.STOP));
+        }
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
     update ()
     {
+        if (this._$stopFlag) {
+            this.removeEventListener(Event.ENTER_FRAME, this._$update);
+            return ;
+        }
+
         this._$currentTime = (Util.$performance.now() - this._$startTime) * 0.001;
 
         this.updateProperty(
             this._$target, this._$from, this._$to, this._$names
         );
+
+        if (this.hasEventListener(Event.UPDATE)) {
+            this.dispatchEvent(new Event(Event.UPDATE));
+        }
 
         if (this._$currentTime >= this._$duration) {
 

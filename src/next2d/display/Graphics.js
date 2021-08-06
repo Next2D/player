@@ -405,7 +405,7 @@ class Graphics
      *              Clears the graphics that were drawn to this Graphics object,
      *              and resets fill and line style settings.
      *
-     * @return {void}
+     * @return {Graphics}
      * @method
      * @public
      */
@@ -462,6 +462,8 @@ class Graphics
 
         // restart
         this._$restart();
+
+        return this;
     }
 
     /**
@@ -803,6 +805,15 @@ class Graphics
                 this._$recode = Util.$getArray();
             }
 
+            if (this._$fills[2] !== this._$fills[this._$fills.length - 2]
+                || this._$fills[3] !== this._$fills[this._$fills.length - 1]
+            ) {
+                this._$fills.push(
+                    Graphics.LINE_TO,
+                    this._$fills[2],
+                    this._$fills[3]
+                );
+            }
             this._$recode.push.apply(this._$recode, this._$fills);
 
             // clear
@@ -1125,8 +1136,19 @@ class Graphics
         Util.$poolBoundsObject(boundsBase);
         Util.$poolBoundsObject(bounds);
 
-        if (!width || !height) {
-            return ;
+        switch (true) {
+
+            case width === 0:
+            case height === 0:
+            case width === -Util.$Infinity:
+            case height === -Util.$Infinity:
+            case width === Util.$Infinity:
+            case height === Util.$Infinity:
+                return;
+
+            default:
+                break;
+
         }
 
         Util.$resetContext(context);
@@ -1185,8 +1207,20 @@ class Graphics
 
         let width  = Util.$ceil(Util.$abs(xMax - xMin));
         let height = Util.$ceil(Util.$abs(yMax - yMin));
-        if (!width || !height) {
-            return;
+
+        switch (true) {
+
+            case width === 0:
+            case height === 0:
+            case width === -Util.$Infinity:
+            case height === -Util.$Infinity:
+            case width === Util.$Infinity:
+            case height === Util.$Infinity:
+                return;
+
+            default:
+                break;
+
         }
 
         if (0 > (xMin + width) || 0 > (yMin + height)) {
@@ -1483,25 +1517,17 @@ class Graphics
      */
     _$restart ()
     {
-        if (this._$command) {
+        if (this._$displayObject
+            && !this._$displayObject._$isUpdated()
+        ) {
 
-            this._$command = null;
+            this._$displayObject._$doChanged();
+            Util.$isUpdated = true;
 
-            if (this._$displayObject
-                && !this._$displayObject._$isUpdated()
-            ) {
+            Util
+                .$cacheStore()
+                .removeCache(this._$displayObject._$instanceId);
 
-                this._$displayObject._$doChanged();
-                Util.$isUpdated = true;
-
-                Util
-                    .$cacheStore()
-                    .removeCache(
-                        this._$displayObject._$characterId
-                        || this._$displayObject._$instanceId
-                    );
-
-            }
         }
     }
 
@@ -1719,6 +1745,10 @@ class Graphics
 
         if (this._$doLine) {
             this.endLine();
+        }
+
+        if (!this._$recode) {
+            return false;
         }
 
         const recode = this._$recode;

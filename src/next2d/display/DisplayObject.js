@@ -1309,6 +1309,19 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
+     * @description グローバル変数空間に値を全てクリアします。
+     *              Clear all values in the global variable space.
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    clearGlobalVariable ()
+    {
+        return Util.$variables.clear();
+    }
+
+    /**
      * @return {object}
      * @method
      * @private

@@ -1102,6 +1102,8 @@ class Player
 
                 // event execute
                 event._$currentTarget = obj.target;
+
+                event._$listener = obj.listener;
                 obj.listener.call(Util.$window, event);
 
                 if (event._$stopImmediatePropagation) {

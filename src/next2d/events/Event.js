@@ -362,7 +362,8 @@ class Event
     }
 
     /**
-     * @description Event.REMOVED 定数は、render イベントオブジェクトの type プロパティの値を定義します。
+     * @description Event.REMOVED 定数は、render イベントオブジェクトの
+     *              type プロパティの値を定義します。
      *              The Event.REMOVED constant defines the value
      *              of the type property of a render event object.
      *
@@ -393,6 +394,22 @@ class Event
     }
 
     /**
+     * @description Event.STOP 定数は、render イベントオブジェクトの
+     *              type プロパティの値を定義します。
+     *              The Event.STOP constant defines the value
+     *              of the type property of a render event object.
+     *
+     * @return {string}
+     * @default stop
+     * @const
+     * @static
+     */
+    static get STOP ()
+    {
+        return "stop";
+    }
+
+    /**
      * @description Event.SOUND_COMPLETE 定数は、soundComplete イベントオブジェクトの type プロパティの値を定義します。
      *              The Event.SOUND_COMPLETE constant defines the value
      *              of the type property of a soundComplete event object.
@@ -405,6 +422,22 @@ class Event
     static get SOUND_COMPLETE ()
     {
         return "soundComplete";
+    }
+
+    /**
+     * @description Event.UPDATE 定数は、render イベントオブジェクトの
+     *              type プロパティの値を定義します。
+     *              The Event.STOP constant defines the value
+     *              of the type property of a render event object.
+     *
+     * @return {string}
+     * @default update
+     * @const
+     * @static
+     */
+    static get UPDATE ()
+    {
+        return "update";
     }
 
     /**

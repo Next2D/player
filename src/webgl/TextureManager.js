@@ -260,7 +260,7 @@ class TextureManager
     release (texture)
     {
         // テクスチャのサイズが非常に大きい場合はプールしない
-        if (texture.area > (this._$maxWidth * this._$maxHeight * 1.2)|0) {
+        if (texture.area > (this._$maxWidth * this._$maxHeight * 2)|0) {
             this._$gl.deleteTexture(texture);
             return;
         }
