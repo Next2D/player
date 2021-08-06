@@ -27,12 +27,12 @@ describe("JointStyle.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new JointStyle();
-        expect(object.namespace).toBe("next2d.display:JointStyle");
+        expect(object.namespace).toBe("next2d.display.JointStyle");
     });
 
     it("namespace test static", function()
     {
-        expect(JointStyle.namespace).toBe("next2d.display:JointStyle");
+        expect(JointStyle.namespace).toBe("next2d.display.JointStyle");
     });
 
 });

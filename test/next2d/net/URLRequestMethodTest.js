@@ -27,12 +27,12 @@ describe("URLRequestMethod.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new URLRequestMethod();
-        expect(object.namespace).toBe("next2d.net:URLRequestMethod");
+        expect(object.namespace).toBe("next2d.net.URLRequestMethod");
     });
 
     it("namespace test static", function()
     {
-        expect(URLRequestMethod.namespace).toBe("next2d.net:URLRequestMethod");
+        expect(URLRequestMethod.namespace).toBe("next2d.net.URLRequestMethod");
     });
 
 });

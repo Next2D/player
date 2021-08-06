@@ -26,12 +26,12 @@ describe("Event.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new Event("test");
-        expect(object.namespace).toBe("next2d.events:Event");
+        expect(object.namespace).toBe("next2d.events.Event");
     });
 
     it("namespace test static", function()
     {
-        expect(Event.namespace).toBe("next2d.events:Event");
+        expect(Event.namespace).toBe("next2d.events.Event");
     });
 
 });

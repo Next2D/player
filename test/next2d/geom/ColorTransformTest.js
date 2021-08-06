@@ -33,12 +33,12 @@ describe("ColorTransform.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new ColorTransform();
-        expect(object.namespace).toBe("next2d.geom:ColorTransform");
+        expect(object.namespace).toBe("next2d.geom.ColorTransform");
     });
 
     it("namespace test static", function()
     {
-        expect(ColorTransform.namespace).toBe("next2d.geom:ColorTransform");
+        expect(ColorTransform.namespace).toBe("next2d.geom.ColorTransform");
     });
 
 });

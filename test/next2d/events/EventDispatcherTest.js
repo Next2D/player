@@ -29,12 +29,12 @@ describe("EventDispatcher.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new EventDispatcher();
-        expect(object.namespace).toBe("next2d.events:EventDispatcher");
+        expect(object.namespace).toBe("next2d.events.EventDispatcher");
     });
 
     it("namespace test static", function()
     {
-        expect(EventDispatcher.namespace).toBe("next2d.events:EventDispatcher");
+        expect(EventDispatcher.namespace).toBe("next2d.events.EventDispatcher");
     });
 
 });
@@ -158,7 +158,7 @@ describe("EventDispatcher.js addEventListener test", function()
         mc2.name = "mc2";
 
         const player = new Player();
-        Util.$currentPlayerId = player._$id;
+        window.next2d._$player = player;
 
         const a = function (e) { return e.currentTarget.name; };
 
@@ -208,7 +208,7 @@ describe("EventDispatcher.js hasEventListener test", function()
     it("hasEventListener test success case2", function ()
     {
         const player = new Player();
-        Util.$currentPlayerId = player._$id;
+        window.next2d._$player = player;
 
         const doc1 = new MovieClip();
         const doc2 = new MovieClip();
@@ -324,7 +324,7 @@ describe("EventDispatcher.js removeEventListener test", function()
     it("removeEventListener test success case5", function ()
     {
         const player = new Player();
-        Util.$currentPlayerId = player._$id;
+        window.next2d._$player = player;
 
         const mc1 = new MovieClip();
         const mc2 = new MovieClip();
@@ -632,7 +632,7 @@ describe("EventDispatcher.js dispatchEvent test", function()
     it("dispatchEvent test single dispatchEvent", function ()
     {
         const player = new Player();
-        Util.$currentPlayerId = player._$id;
+        window.next2d._$player = player;
 
         const stage = player.stage;
 

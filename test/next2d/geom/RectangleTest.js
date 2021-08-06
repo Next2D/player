@@ -32,12 +32,12 @@ describe("Rectangle.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new Rectangle();
-        expect(object.namespace).toBe("next2d.geom:Rectangle");
+        expect(object.namespace).toBe("next2d.geom.Rectangle");
     });
 
     it("namespace test static", function()
     {
-        expect(Rectangle.namespace).toBe("next2d.geom:Rectangle");
+        expect(Rectangle.namespace).toBe("next2d.geom.Rectangle");
     });
 
 });

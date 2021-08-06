@@ -27,12 +27,12 @@ describe("CapsStyle.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new CapsStyle();
-        expect(object.namespace).toBe("next2d.display:CapsStyle");
+        expect(object.namespace).toBe("next2d.display.CapsStyle");
     });
 
     it("namespace test static", function()
     {
-        expect(CapsStyle.namespace).toBe("next2d.display:CapsStyle");
+        expect(CapsStyle.namespace).toBe("next2d.display.CapsStyle");
     });
 
 });

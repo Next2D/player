@@ -27,12 +27,12 @@ describe("FrameLabel.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new FrameLabel();
-        expect(object.namespace).toBe("next2d.display:FrameLabel");
+        expect(object.namespace).toBe("next2d.display.FrameLabel");
     });
 
     it("namespace test static", function()
     {
-        expect(FrameLabel.namespace).toBe("next2d.display:FrameLabel");
+        expect(FrameLabel.namespace).toBe("next2d.display.FrameLabel");
     });
 
 });

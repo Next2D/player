@@ -26,12 +26,12 @@ describe("URLRequestHeader.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new URLRequestHeader();
-        expect(object.namespace).toBe("next2d.net:URLRequestHeader");
+        expect(object.namespace).toBe("next2d.net.URLRequestHeader");
     });
 
     it("namespace test static", function()
     {
-        expect(URLRequestHeader.namespace).toBe("next2d.net:URLRequestHeader");
+        expect(URLRequestHeader.namespace).toBe("next2d.net.URLRequestHeader");
     });
 
 });

@@ -27,12 +27,12 @@ describe("GradientType.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new GradientType();
-        expect(object.namespace).toBe("next2d.display:GradientType");
+        expect(object.namespace).toBe("next2d.display.GradientType");
     });
 
     it("namespace test static", function()
     {
-        expect(GradientType.namespace).toBe("next2d.display:GradientType");
+        expect(GradientType.namespace).toBe("next2d.display.GradientType");
     });
 
 });

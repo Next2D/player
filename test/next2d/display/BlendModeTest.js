@@ -27,12 +27,12 @@ describe("BlendMode.js namespace test", function()
     it("namespace test public", function()
     {
         const object = new BlendMode();
-        expect(object.namespace).toBe("next2d.display:BlendMode");
+        expect(object.namespace).toBe("next2d.display.BlendMode");
     });
 
     it("namespace test static", function()
     {
-        expect(BlendMode.namespace).toBe("next2d.display:BlendMode");
+        expect(BlendMode.namespace).toBe("next2d.display.BlendMode");
     });
 
 });
