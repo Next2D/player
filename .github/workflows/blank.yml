@@ -1,10 +1,12 @@
 name: Player Test
+
 on:
   push:
     branches:
       - develop
+      -
 jobs:
-  browsers-test:
+  macos-browser-test:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,5 +18,17 @@ jobs:
       - run: |
           sudo safaridriver --enable
           safaridriver -p 0 &
+      - run: npm install
+      - run: npm test
+
+  windows-browser-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - uses: browser-actions/setup-chromium@latest
+      - uses: browser-actions/setup-firefox@latest
       - run: npm install
       - run: npm test
