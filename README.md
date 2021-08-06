@@ -7,7 +7,7 @@ The develop branch is a development-only branch.
 
 ## NodeJS Version
 ```
-v14.x
+node >= v14.x
 ```
 
 ## Initiation Procedure
@@ -21,6 +21,11 @@ npm install
 ## Start Development
 ```
 gulp
+```
+
+## Unit Test
+```
+gulp test
 ```
 
 ## Export minify
