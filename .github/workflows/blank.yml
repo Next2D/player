@@ -29,6 +29,6 @@ jobs:
         with:
           node-version: 14
       - uses: browser-actions/setup-chromium@latest
-      - uses: browser-actions/setup-firefox@latest
+      - uses: ueokande/setup-firefox@latest
       - run: npm install
       - run: npm test
