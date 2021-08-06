@@ -4,38 +4,15 @@ on:
     branches:
       - develop
 jobs:
-  chrome:
-    name: Chrome Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 14
-      - uses: browser-actions/setup-chromium@latest
-      - run: npm install
-      - run: npm test
-
-  firefox:
-    name: FireFox Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 14
-      - uses: browser-actions/setup-firefox@latest
-      - run: npm install
-      - run: npm test
-
-  safari:
-    name: Safari Test
+  browsers-test:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: 14
+      - uses: browser-actions/setup-chromium@latest
+      - uses: browser-actions/setup-firefox@latest
       - run: |
           sudo safaridriver --enable
           safaridriver -p 0 &
