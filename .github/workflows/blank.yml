@@ -27,3 +27,17 @@ jobs:
       - uses: browser-actions/setup-firefox@latest
       - run: npm install
       - run: npm test
+
+  safari:
+    name: Safari Test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - run: |
+          sudo safaridriver --enable
+          safaridriver -p 0 &
+      - run: npm install
+      - run: npm test
