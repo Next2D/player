@@ -1,3 +1,4 @@
+[![Discord](https://img.shields.io/discord/812136803506716713?label=Discord&logo=discord)](https://discord.gg/6c9rv5Uns5)
 [![Build Status](https://github.com/Next2D/Player/actions/workflows/main.yml/badge.svg)](https://github.com/Next2D/Player/actions)
 [![license](https://img.shields.io/github/license/Next2D/Player)](https://github.com/Next2D/Player/blob/main/LICENSE)
 
@@ -29,22 +30,32 @@ Next2D Tool is a web service that does not require installation or membership re
 
 
 # Use Simple Sample
-```html
-<script src="next2d.js"></script>
+```javascript
 next2d.load("JSON Path...");
 ```
 
-# Use Program Sample(TODO)
+# Use Program Sample
 ```javascript
 const {Loader}     = next2d.display;
 const {URLRequest} = next2d.net;
-const {URLRequest} = next2d.events;
+const {Event}      = next2d.events;
 
+// create root MovieClip
 const root = next2d.createRootMovieClip();
 
 const request = new URLRequest("JSON or Image");
 const loader  = new Loader(request);
 
+loader
+    .contentLoaderInfo
+    .addEventListener(Event.COMPLETE, function (event)
+    {
+        const loaderInfo = event.currentTarget;
+        
+        root.addChild(loaderInfo.content);
+    });
+
+loader.load(request);
 ```
 @see [API Documentation](https://next2d.app/docs/player/index.html)
 
@@ -53,6 +64,7 @@ const loader  = new Loader(request);
 * Next2D Tool(α version to be released in December 2021.)
 * Next2D Framework(β version to be released in December 2021.)
 * Demo
+* Tips
 * Examples
 * Tutorial
 * [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)
