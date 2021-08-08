@@ -7,18 +7,18 @@ class WebGLShaderProxy
      * @param {CanvasToWebGLContext}  context
      * @param {WebGLRenderingContext} gl
      * @param {WebGLShaderKeyword}    keyword
-     * @param {function} vertexSource
-     * @param {function} fragmentSource
+     * @param {function} vertex_source
+     * @param {function} fragment_source
      * @constructor
      * @public
      */
-    constructor (context, gl, keyword, vertexSource, fragmentSource)
+    constructor (context, gl, keyword, vertex_source, fragment_source)
     {
         this._$context        = context;
         this._$gl             = gl;
         this._$keyword        = keyword;
-        this._$vertexSource   = vertexSource;
-        this._$fragmentSource = fragmentSource;
+        this._$vertexSource   = vertex_source;
+        this._$fragmentSource = fragment_source;
         this._$instance       = null;
     }
 

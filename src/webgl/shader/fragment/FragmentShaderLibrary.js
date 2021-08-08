@@ -24,11 +24,11 @@ float isInside(in vec2 uv) {
      * @method
      * @static
      */
-    static STATEMENT_COLOR_TRANSFORM_ON (mediumpIndex)
+    static STATEMENT_COLOR_TRANSFORM_ON (mediump_index)
     {
         return `
-    vec4 mul = u_mediump[${mediumpIndex}];
-    vec4 add = u_mediump[${mediumpIndex + 1}];
+    vec4 mul = u_mediump[${mediump_index}];
+    vec4 add = u_mediump[${mediump_index + 1}];
 
     src.rgb /= max(0.0001, src.a);
     src = clamp(src * mul + add, 0.0, 1.0);

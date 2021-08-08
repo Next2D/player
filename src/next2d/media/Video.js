@@ -1,4 +1,12 @@
 /**
+ * サーバーまたはローカルに保存された録画済みビデオファイルを再生する Video オブジェクトです。
+ * ビデオストリームを再生するには、attachNetStream() を使用して、ビデオを Video オブジェクトに関連付けます。
+ * 次に、addChild() を使用して、Video オブジェクトを表示リストに追加します。
+ *
+ * A Video object that plays a recorded video file stored on a server or locally.
+ * To play a video stream, use attachNetStream() to attach the video to the Video object.
+ * Then, add the Video object to the display list using addChild().
+ *
  * @class
  * @memberOf next2d.media
  * @extends  DisplayObject
@@ -6,14 +14,6 @@
 class Video extends DisplayObject
 {
     /**
-     * サーバーまたはローカルに保存された録画済みビデオファイルを再生する Video オブジェクトです。
-     * ビデオストリームを再生するには、attachNetStream() を使用して、ビデオを Video オブジェクトに関連付けます。
-     * 次に、addChild() を使用して、Video オブジェクトを表示リストに追加します。
-     *
-     * A Video object that plays a recorded video file stored on a server or locally.
-     * To play a video stream, use attachNetStream() to attach the video to the Video object.
-     * Then, add the Video object to the display list using addChild().
-     *
      * @param {number} [width = 320]
      * @param {number} [height = 240]
      *
@@ -224,7 +224,7 @@ class Video extends DisplayObject
      */
     get currentTime ()
     {
-        return (this._$video) ? this._$video.currentTime : 0;
+        return this._$video ? this._$video.currentTime : 0;
     }
 
     /**
@@ -237,7 +237,7 @@ class Video extends DisplayObject
      */
     get duration ()
     {
-        return (this._$video) ? this._$video.duration : 0;
+        return this._$video ? this._$video.duration : 0;
     }
 
     /**
@@ -302,7 +302,7 @@ class Video extends DisplayObject
      */
     get src ()
     {
-        return (this._$video) ? this._$video.src : "";
+        return this._$video ? this._$video.src : "";
     }
     set src (src)
     {
@@ -535,7 +535,6 @@ class Video extends DisplayObject
                 return ;
             }
 
-
             // update
             player._$draw(0);
             this._$bytesLoaded = this._$video.currentTime;
@@ -563,7 +562,7 @@ class Video extends DisplayObject
 
         this._$sound = function ()
         {
-            const name = (Util.$isTouch) ? Util.$TOUCH_END : Util.$MOUSE_UP;
+            const name = Util.$isTouch ? Util.$TOUCH_END : Util.$MOUSE_UP;
             Util.$currentPlayer()
                 ._$canvas
                 .removeEventListener(name, this._$sound);
@@ -589,7 +588,7 @@ class Video extends DisplayObject
 
             if (!Util.$audioContext) {
 
-                const name = (Util.$isTouch) ? Util.$TOUCH_END : Util.$MOUSE_UP;
+                const name = Util.$isTouch ? Util.$TOUCH_END : Util.$MOUSE_UP;
                 Util
                     .$currentPlayer()
                     ._$canvas
@@ -614,7 +613,6 @@ class Video extends DisplayObject
 
         }.bind(this);
         this._$video.addEventListener("canplaythrough", this._$start);
-
 
         this._$video.addEventListener("ended", function ()
         {
@@ -663,7 +661,7 @@ class Video extends DisplayObject
         // setup
         this._$video.volume = Util.$min(character.volume, SoundMixer.volume);
         this._$video.load();
-    };
+    }
 
     /**
      * @param   {CanvasToWebGLContext} context
@@ -744,7 +742,7 @@ class Video extends DisplayObject
             multiColor = Util.$multiplicationColor(color_transform, rawColor);
         }
 
-        const alpha = Util.$clamp(multiColor[3] + (multiColor[7] / 255), 0, 1, 0);
+        const alpha = Util.$clamp(multiColor[3] + multiColor[7] / 255, 0, 1, 0);
         if (!alpha) {
             if (multiColor !== color_transform) {
                 Util.$poolFloat32Array8(multiColor);
@@ -865,12 +863,11 @@ class Video extends DisplayObject
      * @param  {CanvasRenderingContext2D} context
      * @param  {array}   matrix
      * @param  {object}  options
-     * @param  {boolean} [is_clip=false]
      * @return {boolean}
      * @method
      * @private
      */
-    _$hit (context, matrix, options, is_clip)
+    _$hit (context, matrix, options)
     {
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();

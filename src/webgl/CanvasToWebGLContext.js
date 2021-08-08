@@ -12,7 +12,7 @@ class CanvasToWebGLContext
     {
         this._$gl = gl;
 
-        const samples = (isWebGL2Context)
+        const samples = isWebGL2Context
             ? Util.$min(Util.$currentPlayer().getSamples(), gl.getParameter(gl.MAX_SAMPLES))
             : 0;
 
@@ -409,7 +409,7 @@ class CanvasToWebGLContext
         }
 
         // カラーバッファorステンシルバッファが、未初期化の場合はクリアする
-        if (colorBuffer.dirty || (stencilBuffer && stencilBuffer.dirty)) {
+        if (colorBuffer.dirty || stencilBuffer && stencilBuffer.dirty) {
             colorBuffer.dirty = false;
             if (stencilBuffer) {
                 stencilBuffer.dirty = false;
@@ -586,7 +586,7 @@ class CanvasToWebGLContext
      */
     clearRect (x, y, w, h)
     {
-        
+
         this._$mask._$onClearRect();
         this._$gl.enable(this._$gl.SCISSOR_TEST);
         this._$gl.scissor(x, y, w, h);
@@ -741,67 +741,67 @@ class CanvasToWebGLContext
 
             // Gradient
             case this.fillStyle.constructor === CanvasGradientToWebGL:
+                {
+                    const gradient = this.fillStyle;
+                    const stops = gradient._$stops;
+                    const isLinearSpace = gradient._$rgb === "linearRGB";
 
-                const gradient = this.fillStyle;
-                const stops = gradient._$stops;
-                const isLinearSpace = (gradient._$rgb === "linearRGB");
+                    texture = this._$gradientLUT.generateForShape(stops, isLinearSpace);
+                    this._$frameBufferManager._$textureManager.bind0(texture, true);
 
-                texture = this._$gradientLUT.generateForShape(stops, isLinearSpace);
-                this._$frameBufferManager._$textureManager.bind0(texture, true);
-               
-                variants = this._$shaderList.gradientShapeShaderVariants;
-                if (gradient._$type === GradientType.LINEAR) {
-                    shader = variants.getGradientShapeShader(false, hasGrid, false, false, gradient._$mode);
-                    variants.setGradientShapeUniform(
-                        shader.uniform, false, 0, 0, 0,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
-                        this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        false, gradient._$points, 0
-                    );
-                } else {
-                    const hasFocalPoint = (gradient._$focalPointRatio !== 0);
-                    shader = variants.getGradientShapeShader(false, hasGrid, true, hasFocalPoint, gradient._$mode);
-                    variants.setGradientShapeUniform(
-                        shader.uniform, false, 0, 0, 0,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
-                        this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        true, gradient._$points, gradient._$focalPointRatio
-                    );
+                    variants = this._$shaderList.gradientShapeShaderVariants;
+                    if (gradient._$type === GradientType.LINEAR) {
+                        shader = variants.getGradientShapeShader(false, hasGrid, false, false, gradient._$mode);
+                        variants.setGradientShapeUniform(
+                            shader.uniform, false, 0, 0, 0,
+                            hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                            this._$viewportWidth, this._$viewportHeight, this._$grid,
+                            false, gradient._$points, 0
+                        );
+                    } else {
+                        const hasFocalPoint = gradient._$focalPointRatio !== 0;
+                        shader = variants.getGradientShapeShader(false, hasGrid, true, hasFocalPoint, gradient._$mode);
+                        variants.setGradientShapeUniform(
+                            shader.uniform, false, 0, 0, 0,
+                            hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                            this._$viewportWidth, this._$viewportHeight, this._$grid,
+                            true, gradient._$points, gradient._$focalPointRatio
+                        );
+                    }
                 }
-
                 break;
 
             case this.fillStyle.constructor === CanvasPatternToWebGL:
- 
-                const pattern = this.fillStyle;
-                const pct = pattern.colorTransform;
+                {
+                    const pattern = this.fillStyle;
+                    const pct = pattern.colorTransform;
 
-                texture = pattern.texture;
-                this._$frameBufferManager._$textureManager.bind0(texture, this._$imageSmoothingEnabled);
-               
-                variants = this._$shaderList.shapeShaderVariants;
-                shader = variants.getBitmapShapeShader(false, (pattern.repeat !== ""), hasGrid);
+                    texture = pattern.texture;
+                    this._$frameBufferManager._$textureManager.bind0(texture, this._$imageSmoothingEnabled);
 
-                if (pct) {
-                    variants.setBitmapShapeUniform(
-                        shader.uniform, false, 0, 0, 0,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
-                        this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        texture.width, texture.height,
-                        pct[0], pct[1], pct[2], this._$globalAlpha,
-                        pct[4] / 255, pct[5] / 255, pct[6] / 255, 0
-                    );
-                } else {
-                    variants.setBitmapShapeUniform(
-                        shader.uniform, false, 0, 0, 0,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
-                        this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        texture.width, texture.height,
-                        1, 1, 1, this._$globalAlpha,
-                        0, 0, 0, 0
-                    );
+                    variants = this._$shaderList.shapeShaderVariants;
+                    shader = variants.getBitmapShapeShader(false, pattern.repeat !== "", hasGrid);
+
+                    if (pct) {
+                        variants.setBitmapShapeUniform(
+                            shader.uniform, false, 0, 0, 0,
+                            hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                            this._$viewportWidth, this._$viewportHeight, this._$grid,
+                            texture.width, texture.height,
+                            pct[0], pct[1], pct[2], this._$globalAlpha,
+                            pct[4] / 255, pct[5] / 255, pct[6] / 255, 0
+                        );
+                    } else {
+                        variants.setBitmapShapeUniform(
+                            shader.uniform, false, 0, 0, 0,
+                            hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                            this._$viewportWidth, this._$viewportHeight, this._$grid,
+                            texture.width, texture.height,
+                            1, 1, 1, this._$globalAlpha,
+                            0, 0, 0, 0
+                        );
+                    }
                 }
-
                 break;
 
             // Shape
@@ -930,7 +930,7 @@ class CanvasToWebGLContext
     _$drawContainerClip ()
     {
         this._$mask._$drawContainerClip();
-    };
+    }
 
     /**
      * @param  {uint} level
@@ -1030,74 +1030,74 @@ class CanvasToWebGLContext
         lineWidth = Util.$max(1, lineWidth);
 
         let texture, variants, shader;
-        
+
         const hasGrid = this._$grid.enabled;
 
         switch (true) {
 
             // Gradient
             case this.strokeStyle.constructor === CanvasGradientToWebGL:
+                {
+                    const gradient = this.strokeStyle;
+                    const stops = gradient._$stops;
+                    const isLinearSpace = gradient._$rgb === "linearRGB";
 
-                const gradient = this.strokeStyle;
-                const stops = gradient._$stops;
-                const isLinearSpace = (gradient._$rgb === "linearRGB");
+                    texture = this._$gradientLUT.generateForShape(stops, isLinearSpace);
+                    this._$frameBufferManager._$textureManager.bind0(texture, true);
 
-                texture = this._$gradientLUT.generateForShape(stops, isLinearSpace);
-                this._$frameBufferManager._$textureManager.bind0(texture, true);
-
-                variants = this._$shaderList.gradientShapeShaderVariants;
-                if (gradient._$type === GradientType.LINEAR) {
-                    shader = variants.getGradientShapeShader(true, hasGrid, false, false, gradient._$mode);
-                    variants.setGradientShapeUniform(
-                        shader.uniform, true, lineWidth, face, this.miterLimit,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
-                        this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        false, gradient._$points, 0
-                    );
-                } else {
-                    const hasFocalPoint = (gradient._$focalPointRatio !== 0);
-                    shader = variants.getGradientShapeShader(true, hasGrid, true, hasFocalPoint, gradient._$mode);
-                    variants.setGradientShapeUniform(
-                        shader.uniform, true, lineWidth, face, this.miterLimit,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
-                        this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        true, gradient._$points, gradient._$focalPointRatio
-                    );
+                    variants = this._$shaderList.gradientShapeShaderVariants;
+                    if (gradient._$type === GradientType.LINEAR) {
+                        shader = variants.getGradientShapeShader(true, hasGrid, false, false, gradient._$mode);
+                        variants.setGradientShapeUniform(
+                            shader.uniform, true, lineWidth, face, this.miterLimit,
+                            hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                            this._$viewportWidth, this._$viewportHeight, this._$grid,
+                            false, gradient._$points, 0
+                        );
+                    } else {
+                        const hasFocalPoint = gradient._$focalPointRatio !== 0;
+                        shader = variants.getGradientShapeShader(true, hasGrid, true, hasFocalPoint, gradient._$mode);
+                        variants.setGradientShapeUniform(
+                            shader.uniform, true, lineWidth, face, this.miterLimit,
+                            hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                            this._$viewportWidth, this._$viewportHeight, this._$grid,
+                            true, gradient._$points, gradient._$focalPointRatio
+                        );
+                    }
                 }
-                
                 break;
 
             case this.strokeStyle.constructor === CanvasPatternToWebGL:
+                {
+                    const pattern = this.strokeStyle;
+                    const pct = pattern.colorTransform;
 
-                const pattern = this.strokeStyle;
-                const pct = pattern.colorTransform;
+                    texture = pattern.texture;
+                    this._$frameBufferManager._$textureManager.bind0(texture);
 
-                texture = pattern.texture;
-                this._$frameBufferManager._$textureManager.bind0(texture);
-                
-                variants = this._$shaderList.shapeShaderVariants;
-                shader = variants.getBitmapShapeShader(true, (pattern.repeat !== ""), this._$grid.enabled);
+                    variants = this._$shaderList.shapeShaderVariants;
+                    shader = variants.getBitmapShapeShader(true, pattern.repeat !== "", this._$grid.enabled);
 
-                if (pct) {
-                    variants.setBitmapShapeUniform(
-                        shader.uniform, true, lineWidth, face, this.miterLimit,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
-                        this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        texture.width, texture.height,
-                        pct[0], pct[1], pct[2], this._$globalAlpha,
-                        pct[4] / 255, pct[5] / 255, pct[6] / 255, 0
-                    );
-                } else {
-                    variants.setBitmapShapeUniform(
-                        shader.uniform, true, lineWidth, face, this.miterLimit,
-                        hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
-                        this._$viewportWidth, this._$viewportHeight, this._$grid,
-                        texture.width, texture.height,
-                        1, 1, 1, this._$globalAlpha,
-                        0, 0, 0, 0
-                    );
+                    if (pct) {
+                        variants.setBitmapShapeUniform(
+                            shader.uniform, true, lineWidth, face, this.miterLimit,
+                            hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                            this._$viewportWidth, this._$viewportHeight, this._$grid,
+                            texture.width, texture.height,
+                            pct[0], pct[1], pct[2], this._$globalAlpha,
+                            pct[4] / 255, pct[5] / 255, pct[6] / 255, 0
+                        );
+                    } else {
+                        variants.setBitmapShapeUniform(
+                            shader.uniform, true, lineWidth, face, this.miterLimit,
+                            hasGrid, matrix, Util.$inverseMatrix(this._$matrix),
+                            this._$viewportWidth, this._$viewportHeight, this._$grid,
+                            texture.width, texture.height,
+                            1, 1, 1, this._$globalAlpha,
+                            0, 0, 0, 0
+                        );
+                    }
                 }
-
                 break;
 
             default:
@@ -1334,18 +1334,17 @@ class CanvasToWebGLContext
         baseWidth, baseHeight, baseOffsetX, baseOffsetY,
         blurWidth, blurHeight, blurOffsetX, blurOffsetY,
         isGlow, type, knockout,
-        strength, blurX, blurY,
-        ratios, colors, alphas,
+        strength, ratios, colors, alphas,
         colorR1, colorG1, colorB1, colorA1,
         colorR2, colorG2, colorB2, colorA2
     ) {
-        const isInner = (type === BitmapFilterType.INNER);
-        
+        const isInner = type === BitmapFilterType.INNER;
+
         const baseAttachment = this._$frameBufferManager.currentAttachment;
         const baseTexture = this._$frameBufferManager.getTextureFromCurrentAttachment();
 
         let lut;
-        const isGradient = (ratios !== null);
+        const isGradient = ratios !== null;
         if (isGradient) {
             lut = this._$gradientLUT.generateForFilter(ratios, colors, alphas);
         }
@@ -1373,7 +1372,7 @@ class CanvasToWebGLContext
         //    strength *= (Util.$max(1, blurX, blurY) - 1) * 0.4 + 0.2;
         // }
 
-        const transformsBase = !(isInner || (type === BitmapFilterType.FULL && knockout));
+        const transformsBase = !(isInner || type === BitmapFilterType.FULL && knockout);
         const transformsBlur = !(width === blurWidth && height === blurHeight && blurOffsetX === 0 && blurOffsetY === 0);
         const appliesStrength = !(strength === 1);
 
@@ -1392,7 +1391,7 @@ class CanvasToWebGLContext
             colorR2, colorG2, colorB2, colorA2,
             transformsBase, transformsBlur, appliesStrength, isGradient
         );
-      
+
         if (!isInner) {
             this.blend.toOneZero();
         } else if (knockout) {
@@ -1528,7 +1527,7 @@ class CanvasToWebGLContext
         const data = Util.$getUint8Array(length);
 
         this._$gl.readPixels(
-            x, (h - (h - y)), w, h,
+            x, h - (h - y), w, h,
             this._$gl.RGBA, this._$gl.UNSIGNED_BYTE,
             data
         );
@@ -1590,93 +1589,6 @@ class CanvasToWebGLContext
             return this._$maxTextureSize / maxSize;
         }
         return 1;
-    }
-
-    /**
-     * @param  {object} character
-     * @return {WebGLTexture}
-     * @public
-     */
-    characterToTexture (character)
-    {
-        if (!character.state) {
-
-            if (character.jpegData) {
-                if (character.image.complete) {
-                    character.width = character.image.width;
-                    character.height = character.image.height;
-                } else {
-                    Util.$jpegDecoder.parse(character.jpegData);
-
-                    character.width  = Util.$jpegDecoder.width;
-                    character.height = Util.$jpegDecoder.height;
-                    character.pixels = Util.$getUint8Array(
-                        Util.$jpegDecoder.width * Util.$jpegDecoder.height * 4
-                    );
-
-                    Util.$jpegDecoder.copyToImageData(character);
-                    character.image = null;
-                }
-            }
-
-            if (!character.alphaData
-                && character.alpha && character.alpha.length
-            ) {
-
-                const pixels = new Zlib.Inflate(character.alpha, {
-                    "bufferSize": character.width * character.height
-                }).decompress();
-
-                Util.$poolUint8Array(character.alpha);
-                character.alpha     = null;
-                character.alphaData = pixels;
-
-            }
-
-            character.state = 1;
-        }
-
-
-        const manager = this._$frameBufferManager;
-
-        // saved current attachment
-        const currentAttachment = manager.currentAttachment;
-
-        const texture = character.image
-            ? manager.createTextureFromImage(character.image)
-            : manager.createTextureFromPixels(
-                character.width, character.height, character.pixels, true);
-
-
-        if (character.alphaData) {
-
-            const textureAttachment = manager.createTextureAttachmentFrom(texture);
-            this._$bind(textureAttachment);
-
-            const alphaTexture = manager
-                .createAlphaTextureFromPixels(
-                    character.width, character.height, character.alphaData
-                );
-
-            const variants = this._$shaderList.bitmapShaderVariants;
-            const shader = variants.getBitmapShader();
-
-            // uniform設定不要のため、以下のコードは実行しなくてよい
-            // const uniform = shader.uniform;
-            // variants.setBitmapUniform(uniform);
-
-            this.blend.toZeroOne();
-            shader._$drawImage();
-
-            // pool
-            manager.releaseAttachment(textureAttachment, false);
-            // this._$gl.deleteTexture(alphaTexture);
-
-        }
-
-        this._$bind(currentAttachment);
-
-        return texture;
     }
 
     /**

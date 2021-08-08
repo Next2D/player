@@ -5,14 +5,14 @@ class FragmentShaderSourceBlurFilter
 {
     /**
      * @param  {WebGLShaderKeyword} k
-     * @param  {number} halfBlur
+     * @param  {number} half_blur
      * @return {string}
      * @method
      * @static
      */
-    static TEMPLATE (k, halfBlur)
+    static TEMPLATE (k, half_blur)
     {
-        const halfBlurFixed = halfBlur.toFixed(1);
+        const halfBlurFixed = half_blur.toFixed(1);
 
         return `${k.version()}
 precision mediump float;

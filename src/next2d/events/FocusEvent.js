@@ -1,4 +1,17 @@
 /**
+ * FocusEvent オブジェクトは、ユーザーが表示リストの1つのオブジェクトから
+ * 別のオブジェクトにフォーカスを変更したときにオブジェクトによって送出されます。
+ * 次の2種類のフォーカスイベントがあります。
+ *
+ * An object dispatches a FocusEvent object when the user changes
+ * the focus from one object in the display list to another.
+ * There are two types of focus events:
+ *
+ * <ul>
+ *     <li>FocusEvent.FOCUS_IN</li>
+ *     <li>FocusEvent.FOCUS_OUT</li>
+ * </ul>
+ *
  * @class
  * @memberOf next2d.events
  * @extends  Event
@@ -6,19 +19,6 @@
 class FocusEvent extends Event
 {
     /**
-     * FocusEvent オブジェクトは、ユーザーが表示リストの1つのオブジェクトから
-     * 別のオブジェクトにフォーカスを変更したときにオブジェクトによって送出されます。
-     * 次の2種類のフォーカスイベントがあります。
-     *
-     * An object dispatches a FocusEvent object when the user changes
-     * the focus from one object in the display list to another.
-     * There are two types of focus events:
-     *
-     * <ul>
-     *     <li>FocusEvent.FOCUS_IN</li>
-     *     <li>FocusEvent.FOCUS_OUT</li>
-     * </ul>
-     *
      * @param {string}  type
      * @param {boolean} [bubbles=true]
      * @param {boolean} [cancelable=false]

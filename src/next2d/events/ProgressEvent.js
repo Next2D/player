@@ -1,4 +1,10 @@
 /**
+ * ProgressEvent オブジェクトは、ロード処理が開始されたとき、またはソケットがデータを受信したときに送出されます。
+ * これらのイベントは通常、JSON ファイル、イメージまたはデータがアプリケーションにロードされるときに生成されます。
+ *
+ * A ProgressEvent object is dispatched when a load operation has begun or a socket has received data.
+ * These events are usually generated when JSON files, images or data are loaded into an application.
+ *
  * @class
  * @memberOf next2d.events
  * @extends  Event
@@ -6,12 +12,6 @@
 class ProgressEvent extends Event
 {
     /**
-     * ProgressEvent オブジェクトは、ロード処理が開始されたとき、またはソケットがデータを受信したときに送出されます。
-     * これらのイベントは通常、JSON ファイル、イメージまたはデータがアプリケーションにロードされるときに生成されます。
-     *
-     * A ProgressEvent object is dispatched when a load operation has begun or a socket has received data.
-     * These events are usually generated when JSON files, images or data are loaded into an application.
-     *
      * @param {string}  type
      * @param {boolean} [bubbles=true]
      * @param {boolean} [cancelable=false]
@@ -33,14 +33,14 @@ class ProgressEvent extends Event
          * @default 0
          * @private
          */
-        this._$bytesLoaded = bytes_loaded|0;
+        this._$bytesLoaded = bytes_loaded | 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$bytesTotal  = bytes_total|0;
+        this._$bytesTotal  = bytes_total | 0;
     }
 
     /**

@@ -1,4 +1,16 @@
 /**
+ * DisplayObjectContainer クラスは、表示リストで表示オブジェクトコンテナとして機能するすべてのオブジェクトの基本クラスです。
+ * このクラス自体は、画面上でのコンテンツの描画のための API を含みません。
+ * そのため、DisplayObject クラスのカスタムサブクラスを作成する場合は、
+ * Sprite、または MovieClip など、画面上にコンテンツを描画する API を持つサブクラスの 1 つを拡張する必要があります。
+ *
+ * The DisplayObjectContainer class is the base class for all objects that can serve
+ * as display object containers on the display list.
+ * This class itself does not contain any API for drawing content on the screen.
+ * Therefore, if you want to create a custom subclass of the DisplayObject class,
+ * you need to extend one of its subclasses that has an API for drawing content on the screen,
+ * such as Sprite or MovieClip.
+ *
  * @class
  * @memberOf next2d.display
  * @extends  InteractiveObject
@@ -6,18 +18,6 @@
 class DisplayObjectContainer extends InteractiveObject
 {
     /**
-     * DisplayObjectContainer クラスは、表示リストで表示オブジェクトコンテナとして機能するすべてのオブジェクトの基本クラスです。
-     * このクラス自体は、画面上でのコンテンツの描画のための API を含みません。
-     * そのため、DisplayObject クラスのカスタムサブクラスを作成する場合は、
-     * Sprite、または MovieClip など、画面上にコンテンツを描画する API を持つサブクラスの 1 つを拡張する必要があります。
-     *
-     * The DisplayObjectContainer class is the base class for all objects that can serve
-     * as display object containers on the display list.
-     * This class itself does not contain any API for drawing content on the screen.
-     * Therefore, if you want to create a custom subclass of the DisplayObject class,
-     * you need to extend one of its subclasses that has an API for drawing content on the screen,
-     * such as Sprite or MovieClip.
-     *
      * @constructor
      * @public
      */
@@ -179,7 +179,7 @@ class DisplayObjectContainer extends InteractiveObject
      */
     get numChildren ()
     {
-        return (this._$needsChildren)
+        return this._$needsChildren
             ? this._$getChildren().length
             : this._$children.length;
     }
@@ -328,7 +328,7 @@ class DisplayObjectContainer extends InteractiveObject
             throw new RangeError(`RangeError: getChildAt: index error: ${index}`);
         }
 
-        return (index in children) ? children[index] : null;
+        return index in children ? children[index] : null;
     }
 
     /**
@@ -378,7 +378,7 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         if (child._$parent !== this) {
-            throw new ArgumentError(`ArgumentError: getChildIndex: index error: ${index}`);
+            throw new ArgumentError("ArgumentError: getChildIndex: not child");
         }
 
         const children = this._$getChildren();
@@ -389,7 +389,6 @@ class DisplayObjectContainer extends InteractiveObject
 
         return index;
     }
-
 
     /**
      * @description DisplayObjectContainer インスタンスの子リストから指定の
@@ -547,14 +546,13 @@ class DisplayObjectContainer extends InteractiveObject
             }
         }
 
-        const isGraphics = (this._$graphics && this._$graphics._$getBounds());
+        const isGraphics = this._$graphics && this._$graphics._$getBounds();
 
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
         const length = children.length;
-
 
         // size zero
         if (!length && !isGraphics) {
@@ -567,7 +565,6 @@ class DisplayObjectContainer extends InteractiveObject
             }
             return bounds;
         }
-
 
         // data init
         const no = Util.$MAX_VALUE;
@@ -584,7 +581,6 @@ class DisplayObjectContainer extends InteractiveObject
             yMax   = bounds.yMax;
             Util.$poolBoundsObject(bounds);
         }
-
 
         for (let idx = 0; idx < length; ++idx) {
 
@@ -626,9 +622,9 @@ class DisplayObjectContainer extends InteractiveObject
             }
         }
 
-        const isGraphics = (this._$graphics && this._$graphics._$getBounds());
+        const isGraphics = this._$graphics && this._$graphics._$getBounds();
 
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
@@ -646,14 +642,12 @@ class DisplayObjectContainer extends InteractiveObject
             return bounds;
         }
 
-
         // data init
         const no   = Util.$MAX_VALUE;
         let xMin = no;
         let xMax = -no;
         let yMin = no;
         let yMax = -no;
-
 
         if (isGraphics) {
             const bounds = Util.$boundsMatrix(this._$graphics._$getBounds(), multiMatrix);
@@ -663,7 +657,6 @@ class DisplayObjectContainer extends InteractiveObject
             yMax   = +bounds.yMax;
             Util.$poolBoundsObject(bounds);
         }
-
 
         for (let idx = 0; idx < length; ++idx) {
 
@@ -687,15 +680,13 @@ class DisplayObjectContainer extends InteractiveObject
             return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
         }
 
-
         const filters = this._$filters || this.filters;
         const fLength = filters.length;
         if (!fLength) {
             return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
         }
 
-
-        let rect = new Rectangle(xMin, yMin, (xMax - xMin), (yMax - yMin));
+        let rect = new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
         for (let idx = 0; idx < fLength; ++idx) {
             rect = filters[idx]._$generateFilterRect(rect, null, null, true);
         }
@@ -746,7 +737,6 @@ class DisplayObjectContainer extends InteractiveObject
 
                 return this._$children;
             }
-
 
             const skipIds       = Util.$getMap();
             const poolInstances = Util.$getMap();
@@ -833,7 +823,7 @@ class DisplayObjectContainer extends InteractiveObject
                         continue;
                     }
 
-                    const instance = (poolInstances.has(id))
+                    const instance = poolInstances.has(id)
                         ? poolInstances.get(id)
                         : this._$createInstance(id);
 
@@ -883,15 +873,13 @@ class DisplayObjectContainer extends InteractiveObject
         // init
         child._$stage  = this._$stage;
         child._$parent = this;
-        child._$root   = (this.constructor === Stage) ? child : this._$root;
-
+        child._$root   = this.constructor === Stage ? child : this._$root;
 
         // setup
         if (child instanceof DisplayObjectContainer) {
             child._$setParentAndStage();
             child._$wait = true;
         }
-
 
         // added event
         if (!child._$added) {
@@ -900,7 +888,6 @@ class DisplayObjectContainer extends InteractiveObject
             }
             child._$added = true;
         }
-
 
         if (this._$stage !== null && !child._$addedStage) {
 
@@ -916,7 +903,6 @@ class DisplayObjectContainer extends InteractiveObject
             }
         }
 
-
         this._$doChanged();
         child._$active  = true;
         child._$updated = true;
@@ -931,7 +917,7 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$setParentAndStage ()
     {
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
@@ -957,7 +943,7 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$executeAddedToStage ()
     {
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
@@ -994,7 +980,7 @@ class DisplayObjectContainer extends InteractiveObject
         child._$transform._$transform();
 
         // remove
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
@@ -1077,7 +1063,7 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$removeParentAndStage ()
     {
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
@@ -1095,7 +1081,8 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         if (this._$sounds) {
-            for (let [frame, sounds] of this._$sounds) {
+            const values = this._$sounds.values();
+            for (const sounds of values) {
                 for (let idx = 0; idx < sounds.length; ++idx) {
                     const sound = sounds[idx];
                     sound.stop();
@@ -1111,7 +1098,7 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$prepareActions ()
     {
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
@@ -1132,7 +1119,7 @@ class DisplayObjectContainer extends InteractiveObject
     {
         let isNext = false;
 
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
@@ -1144,7 +1131,6 @@ class DisplayObjectContainer extends InteractiveObject
                 continue;
             }
 
-
             if (isNext) {
 
                 child._$nextFrame();
@@ -1155,7 +1141,6 @@ class DisplayObjectContainer extends InteractiveObject
 
             }
         }
-
 
         // added event
         this._$executeAddedEvent();
@@ -1228,13 +1213,13 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         // not draw
-        const alpha = Util.$clamp(multiColor[3] + (multiColor[7] / 255), 0, 1, 0);
+        const alpha = Util.$clamp(multiColor[3] + multiColor[7] / 255, 0, 1, 0);
         if (!alpha) {
             return ;
         }
 
         // not draw
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
@@ -1249,22 +1234,19 @@ class DisplayObjectContainer extends InteractiveObject
             return ;
         }
 
-
         // use cache
         if (preData.isFilter && !preData.isUpdated) {
             this._$postDraw(context, matrix, multiColor, preData);
             return ;
         }
 
-
         let preMatrix = preData.matrix;
-        const preColorTransform = (preData.isFilter) ? preData.color : multiColor;
+        const preColorTransform = preData.isFilter ? preData.color : multiColor;
 
         // if graphics draw
         if (this._$graphics && this._$graphics._$canDraw) {
             this._$graphics._$draw(context, preMatrix, preColorTransform);
         }
-
 
         // init clip params
         let shouldClip        = true;
@@ -1273,7 +1255,6 @@ class DisplayObjectContainer extends InteractiveObject
         const instanceMatrix  = Util.$getArray();
         const clipStack       = Util.$getArray();
         const shouldClips     = Util.$getArray();
-
 
         // draw children
         const isLayer  = context._$isLayer;
@@ -1291,7 +1272,6 @@ class DisplayObjectContainer extends InteractiveObject
                 continue;
             }
 
-
             // not layer mode
             const blendMode = instance._$blendMode || instance.blendMode;
             if ((blendMode === BlendMode.ALPHA || blendMode === BlendMode.ERASE)
@@ -1299,7 +1279,6 @@ class DisplayObjectContainer extends InteractiveObject
             ) {
                 continue;
             }
-
 
             // mask end
             if (clipDepth
@@ -1319,16 +1298,14 @@ class DisplayObjectContainer extends InteractiveObject
                 }
 
                 // clear
-                clipDepth  = (clipStack.length) ? clipStack.pop() : null;
+                clipDepth  = clipStack.length ? clipStack.pop() : null;
                 shouldClip = shouldClips.pop();
             }
-
 
             // mask size 0
             if (!shouldClip) {
                 continue;
             }
-
 
             // mask start
             if (instance._$clipDepth > 0) {
@@ -1360,7 +1337,6 @@ class DisplayObjectContainer extends InteractiveObject
 
                 continue;
             }
-
 
             // mask start
             const maskInstance = instance._$mask;
@@ -1408,7 +1384,6 @@ class DisplayObjectContainer extends InteractiveObject
 
                 }
 
-
                 if (!maskInstance._$shouldClip(maskMatrix)) {
                     continue;
                 }
@@ -1444,7 +1419,6 @@ class DisplayObjectContainer extends InteractiveObject
             instance._$draw(context, preMatrix, preColorTransform);
             instance._$updated = false;
 
-
             // mask end
             if (maskInstance) {
 
@@ -1477,7 +1451,6 @@ class DisplayObjectContainer extends InteractiveObject
         Util.$poolArray(instanceMatrix);
         Util.$poolArray(clipStack);
         Util.$poolArray(shouldClips);
-
 
         // filter and blend
         if (preData.isFilter) {
@@ -1546,12 +1519,11 @@ class DisplayObjectContainer extends InteractiveObject
 
         }
 
-
         // setup
         const mouseChildren = Util.$min(this._$mouseChildren, mouse_children);
 
         let hit      = false;
-        const isRoot = (this._$root === this);
+        const isRoot = this._$root === this;
 
         length = targets.length;
         for (let idx = 0; idx < length; ++idx) {
@@ -1576,7 +1548,6 @@ class DisplayObjectContainer extends InteractiveObject
                 }
 
             }
-
 
             // mask hit test
             const maskInstance = instance._$mask;
@@ -1612,10 +1583,10 @@ class DisplayObjectContainer extends InteractiveObject
             }
 
             if (instance._$mouseHit(context, multiMatrix, options, mouseChildren)
-                || (instance._$hitArea
+                || instance._$hitArea
                     && instance
                         ._$hitArea
-                        ._$mouseHit(context, multiMatrix, options, mouseChildren))
+                        ._$mouseHit(context, multiMatrix, options, mouseChildren)
             ) {
 
                 if (instance._$root === instance) {
@@ -1654,7 +1625,7 @@ class DisplayObjectContainer extends InteractiveObject
 
                     if (!options.hit) {
 
-                        options.hit = (!instance._$mouseEnabled && instance._$hitObject)
+                        options.hit = !instance._$mouseEnabled && instance._$hitObject
                             ? instance._$hitObject
                             : instance;
 
@@ -1762,47 +1733,6 @@ class DisplayObjectContainer extends InteractiveObject
         instance._$id = index;
 
         return instance;
-    }
-
-    /**
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$nextFrame ()
-    {
-        let isNext = false;
-
-        const children = (this._$needsChildren)
-            ? this._$getChildren()
-            : this._$children;
-
-        for (let idx = children.length - 1; idx > -1; --idx) {
-
-            const child = children[idx];
-
-            if (!child._$isNext) {
-                continue;
-            }
-
-
-            if (isNext) {
-
-                child._$nextFrame();
-
-            } else {
-
-                isNext = child._$nextFrame();
-
-            }
-        }
-
-        // added event
-        this._$executeAddedEvent();
-
-        this._$isNext = isNext;
-
-        return this._$isNext;
     }
 
     /**

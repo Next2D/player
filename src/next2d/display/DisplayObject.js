@@ -1,4 +1,16 @@
 /**
+ * DisplayObject クラスは、表示リストに含めることのできるすべてのオブジェクトに関する基本クラスです。
+ * DisplayObject クラス自体は、画面上でのコンテンツの描画のための API を含みません。
+ * そのため、DisplayObject クラスのカスタムサブクラスを作成する場合は、
+ * Shape、Sprite、Bitmap、SimpleButton、TextField または MovieClip など、
+ * 画面上にコンテンツを描画する API を持つサブクラスの 1 つを拡張する必要があります。
+ *
+ * The DisplayObject class is the base class for all objects that can be placed on the display list.
+ * The DisplayObject class itself does not include any APIs for rendering content onscreen.
+ * For that reason, if you want create a custom subclass of the DisplayObject class,
+ * you will want to extend one of its subclasses that do have APIs for rendering content onscreen,
+ * such as the Shape, Sprite, Bitmap, SimpleButton, TextField, or MovieClip class.
+ *
  * @class
  * @memberOf next2d.display
  * @extends  EventDispatcher
@@ -6,18 +18,6 @@
 class DisplayObject extends EventDispatcher
 {
     /**
-     * DisplayObject クラスは、表示リストに含めることのできるすべてのオブジェクトに関する基本クラスです。
-     * DisplayObject クラス自体は、画面上でのコンテンツの描画のための API を含みません。
-     * そのため、DisplayObject クラスのカスタムサブクラスを作成する場合は、
-     * Shape、Sprite、Bitmap、SimpleButton、TextField または MovieClip など、
-     * 画面上にコンテンツを描画する API を持つサブクラスの 1 つを拡張する必要があります。
-     *
-     * The DisplayObject class is the base class for all objects that can be placed on the display list.
-     * The DisplayObject class itself does not include any APIs for rendering content onscreen.
-     * For that reason, if you want create a custom subclass of the DisplayObject class,
-     * you will want to extend one of its subclasses that do have APIs for rendering content onscreen,
-     * such as the Shape, Sprite, Bitmap, SimpleButton, TextField, or MovieClip class.
-     *
      * @constructor
      * @public
      */
@@ -453,7 +453,7 @@ class DisplayObject extends EventDispatcher
     {
         if (height > -1) {
 
-            const bounds = (this.rotation)
+            const bounds = this.rotation
                 ? Util.$boundsMatrix(this._$getBounds(null), this._$transform._$rawMatrix())
                 : this._$getBounds(null);
 
@@ -705,32 +705,25 @@ class DisplayObject extends EventDispatcher
     get scaleX ()
     {
         const matrix = this._$transform._$rawMatrix();
-        let xScale   = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        if (0 > matrix.a) {
-            xScale *= -1;
-        }
-        return xScale;
+        const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        return 0 > matrix.a ? xScale * -1 : xScale;
     }
     set scaleX (scale_x)
     {
         const transform = this._$transform;
         const matrix    = transform.matrix;
-        switch (true) {
+        if (Util.$isNaN(matrix.b) || matrix.b === 0) {
 
-            case Util.$isNaN(matrix.b):
-            case (matrix.b === 0):
-                matrix.a = scale_x;
-                break;
+            matrix.a = scale_x;
 
-            default:
-                const radianX = Util.$atan2(matrix.b, matrix.a);
-                matrix.b = scale_x * Util.$sin(radianX);
-                if (matrix.b === 1 || matrix.b === -1) {
-                    matrix.a = 0;
-                } else {
-                    matrix.a = scale_x * Util.$cos(radianX);
-                }
-                break;
+        } else {
+
+            const radianX = Util.$atan2(matrix.b, matrix.a);
+
+            matrix.b = scale_x * Util.$sin(radianX);
+            matrix.a = matrix.b === 1 || matrix.b === -1
+                ? 0
+                : scale_x * Util.$cos(radianX);
 
         }
 
@@ -749,32 +742,25 @@ class DisplayObject extends EventDispatcher
     get scaleY ()
     {
         const matrix = this._$transform._$rawMatrix();
-        let yScale   = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
-        if (0 > matrix.d) {
-            yScale *= -1;
-        }
-        return yScale;
+        const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        return 0 > matrix.d ? yScale * -1 : yScale;
     }
     set scaleY (scale_y)
     {
         const transform = this._$transform;
         const matrix    = transform.matrix;
-        switch (true) {
 
-            case Util.$isNaN(matrix.c):
-            case (matrix.c === 0):
-                matrix.d = scale_y;
-                break;
+        if (Util.$isNaN(matrix.c) || matrix.c === 0) {
 
-            default:
-                const radianY = Util.$atan2(-matrix.c, matrix.d);
-                matrix.c = -scale_y * Util.$sin(radianY);
-                if (matrix.c === 1 || matrix.c === -1) {
-                    matrix.d = 0;
-                } else {
-                    matrix.d = scale_y  * Util.$cos(radianY);
-                }
-                break;
+            matrix.d = scale_y;
+
+        } else {
+
+            const radianY = Util.$atan2(-matrix.c, matrix.d);
+            matrix.c = -scale_y * Util.$sin(radianY);
+            matrix.d = matrix.c === 1 || matrix.c === -1
+                ? 0
+                : scale_y  * Util.$cos(radianY);
 
         }
 
@@ -883,7 +869,7 @@ class DisplayObject extends EventDispatcher
     {
         if (width > -1) {
 
-            const bounds = (this.rotation)
+            const bounds = this.rotation
                 ? Util.$boundsMatrix(this._$getBounds(null), this._$transform._$rawMatrix())
                 : this._$getBounds(null);
 
@@ -992,7 +978,6 @@ class DisplayObject extends EventDispatcher
         // pool
         Util.$poolBoundsObject(bounds);
 
-
         if (!target) {
             target = this;
         }
@@ -1084,7 +1069,7 @@ class DisplayObject extends EventDispatcher
         Util.$poolBoundsObject(bounds1);
         Util.$poolBoundsObject(bounds2);
 
-        return ((ex - sx) >= 0 && (ey - sy) >= 0);
+        return ex - sx >= 0 && ey - sy >= 0;
     }
 
     /**
@@ -1125,16 +1110,15 @@ class DisplayObject extends EventDispatcher
             return result;
         }
 
-
         const baseBounds = this._$getBounds(null);
         const bounds = Util.$boundsMatrix(baseBounds, this._$transform._$rawMatrix());
 
         const rectX = bounds.xMin;
         const rectY = bounds.yMin;
-        const rectW = (bounds.xMax - bounds.xMin);
-        const rectH = (bounds.yMax - bounds.yMin);
+        const rectW = bounds.xMax - bounds.xMin;
+        const rectH = bounds.yMax - bounds.yMin;
 
-        const point = (this._$parent)
+        const point = this._$parent
             ? this._$parent.globalToLocal(new Point(x, y))
             : new Point(x, y);
 
@@ -1142,7 +1126,7 @@ class DisplayObject extends EventDispatcher
         Util.$poolBoundsObject(bounds);
         Util.$poolBoundsObject(baseBounds);
 
-        return (new Rectangle(rectX, rectY, rectW, rectH)).containsPoint(point);
+        return new Rectangle(rectX, rectY, rectW, rectH).containsPoint(point);
     }
 
     /**
@@ -1221,7 +1205,7 @@ class DisplayObject extends EventDispatcher
      */
     hasLocalVariable (key)
     {
-        return (this._$variables)
+        return this._$variables
             ? this._$variables.has(key)
             : false;
     }
@@ -1374,10 +1358,10 @@ class DisplayObject extends EventDispatcher
         this._$loaderInfo = loaderInfo;
 
         // bind tag data
-        this._$characterId = tag.characterId|0;
-        this._$clipDepth   = tag.clipDepth|0;
-        this._$startFrame  = tag.startFrame|0;
-        this._$endFrame    = tag.endFrame|0;
+        this._$characterId = tag.characterId | 0;
+        this._$clipDepth   = tag.clipDepth | 0;
+        this._$startFrame  = tag.startFrame | 0;
+        this._$endFrame    = tag.endFrame | 0;
         this._$name        = tag.name || "";
 
         return loaderInfo._$data.characters[tag.characterId];
@@ -1442,15 +1426,13 @@ class DisplayObject extends EventDispatcher
             return baseBounds;
         }
 
-
         let rect = new Rectangle(
             baseBounds.xMin,
             baseBounds.yMin,
-            (baseBounds.xMax - baseBounds.xMin),
-            (baseBounds.yMax - baseBounds.yMin)
+            baseBounds.xMax - baseBounds.xMin,
+            baseBounds.yMax - baseBounds.yMin
         );
         Util.$poolBoundsObject(baseBounds);
-
 
         for (let idx = 0; idx < length; ++idx) {
             rect = filters[idx]._$generateFilterRect(rect, null, null, true);
@@ -1486,7 +1468,6 @@ class DisplayObject extends EventDispatcher
             // update
             this._$added = true;
         }
-
 
         if (!this._$addedStage && this._$stage !== null) {
 
@@ -1564,7 +1545,6 @@ class DisplayObject extends EventDispatcher
             return true;
         }
 
-
         // check filter data
         if (can_apply) {
 
@@ -1578,7 +1558,6 @@ class DisplayObject extends EventDispatcher
 
         }
 
-
         // check status
         const cache = Util.$cacheStore().get([this._$instanceId, "f"]);
         switch (true) {
@@ -1588,15 +1567,15 @@ class DisplayObject extends EventDispatcher
             case cache.layerWidth  !== Util.$ceil(width):
             case cache.layerHeight !== Util.$ceil(height):
             case cache.matrix !==
-            matrix[0] +"_"+ matrix[1] +"_"+ matrix[2] +"_"+ matrix[3] +"_"+
-            position_x +"_"+ position_y:
+            matrix[0] + "_" + matrix[1] + "_" + matrix[2] + "_" + matrix[3] + "_" +
+            position_x + "_" + position_y:
             case cache.colorTransform !==
-            color_transform[0] +"_"+ color_transform[1] +"_"+ color_transform[2] +"_"+ color_transform[3] +"_"+
-            color_transform[4] +"_"+ color_transform[5] +"_"+ color_transform[6] +"_"+ color_transform[7]:
+            color_transform[0] + "_" + color_transform[1] + "_" + color_transform[2] + "_" + color_transform[3] + "_" +
+            color_transform[4] + "_" + color_transform[5] + "_" + color_transform[6] + "_" + color_transform[7]:
                 return true;
 
             default:
-                break
+                break;
 
         }
 
@@ -1609,13 +1588,11 @@ class DisplayObject extends EventDispatcher
      * @param  {WebGLTexture} target_texture
      * @param  {Float64Array} matrix
      * @param  {Float64Array} color_transform
-     * @param  {number} width
-     * @param  {number} height
      * @return {WebGLTexture}
      * @private
      */
     _$getFilterTexture (
-        context, filters, target_texture, matrix, color_transform, width, height
+        context, filters, target_texture, matrix, color_transform
     ) {
 
         const currentAttachment = context
@@ -1631,13 +1608,11 @@ class DisplayObject extends EventDispatcher
 
         context._$bind(buffer);
 
-
         Util.$resetContext(context);
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.drawImage(target_texture,
             0, 0, target_texture.width, target_texture.height
         );
-
 
         // init
         context._$offsetX = 0;
@@ -1647,7 +1622,6 @@ class DisplayObject extends EventDispatcher
         for (let idx = 0; idx < filters.length; ++idx) {
             texture = filters[idx]._$applyFilter(context, matrix);
         }
-
 
         let offsetX = context._$offsetX;
         let offsetY = context._$offsetY;
@@ -1662,12 +1636,12 @@ class DisplayObject extends EventDispatcher
 
         // cache texture
         texture.matrix =
-            matrix[0] +"_"+ matrix[1] +"_"+ matrix[2] +"_"+ matrix[3]
-            +"_0_0";
+            matrix[0] + "_" + matrix[1] + "_" + matrix[2] + "_" + matrix[3]
+            + "_0_0";
 
         texture.colorTransform =
-            color_transform[0] +"_"+ color_transform[1] +"_"+ color_transform[2] +"_"+ color_transform[3] +"_"+
-            color_transform[4] +"_"+ color_transform[5] +"_"+ color_transform[6] +"_"+ color_transform[7];
+            color_transform[0] + "_" + color_transform[1] + "_" + color_transform[2] + "_" + color_transform[3] + "_" +
+            color_transform[4] + "_" + color_transform[5] + "_" + color_transform[6] + "_" + color_transform[7];
 
         texture.filterState = true;
         texture.layerWidth  = target_texture.width;
@@ -1693,9 +1667,8 @@ class DisplayObject extends EventDispatcher
         const originMatrix = this._$transform._$rawMatrix();
         const tMatrix = Util.$multiplicationMatrix(matrix, originMatrix);
 
-
         // size zero
-        if ((!tMatrix[0] && !tMatrix[1]) || (!tMatrix[2] && !tMatrix[3])) {
+        if (!tMatrix[0] && !tMatrix[1] || !tMatrix[2] && !tMatrix[3]) {
             return false;
         }
 
@@ -1728,7 +1701,7 @@ class DisplayObject extends EventDispatcher
                 return false;
             }
 
-            if (0 > (xMin + width) || 0 > (yMin + height)) {
+            if (0 > xMin + width || 0 > yMin + height) {
                 return false;
             }
 
@@ -1741,28 +1714,23 @@ class DisplayObject extends EventDispatcher
                 return false;
             }
 
-
             // set origin position
             object.basePosition.x = originMatrix[4];
             object.basePosition.y = originMatrix[5];
 
-
             // check after size
             let baseLayerBounds = this._$getLayerBounds(null);
             const layerBounds = Util.$boundsMatrix(baseLayerBounds, tMatrix);
-
 
             // filter size
             let layerWidth  = Util.$abs(layerBounds.xMax - layerBounds.xMin);
             let layerHeight = Util.$abs(layerBounds.yMax - layerBounds.yMin);
             Util.$poolBoundsObject(layerBounds);
 
-
             if (layerWidth === width && layerHeight === height) {
                 Util.$poolBoundsObject(baseLayerBounds);
                 baseLayerBounds = null;
             }
-
 
             // move size
             let tx = tMatrix[4] - Util.$floor(xMin);
@@ -1784,7 +1752,6 @@ class DisplayObject extends EventDispatcher
                 ty += -Util.$floor(moveBounds.yMin) - ty;
             }
 
-
             let dx = Util.$floor(xMin);
             let dy = Util.$floor(yMin);
             let originX = xMin;
@@ -1800,17 +1767,16 @@ class DisplayObject extends EventDispatcher
                 Util.$poolBoundsObject(moveBounds);
             }
 
-
             // set position
-            object.position.dx = (dx > 0) ? dx : 0;
-            object.position.dy = (dy > 0) ? dy : 0;
+            object.position.dx = dx > 0 ? dx : 0;
+            object.position.dy = dy > 0 ? dy : 0;
 
             // resize
-            if ((layerWidth + originX) > currentAttachment.texture.width) {
+            if (layerWidth + originX > currentAttachment.texture.width) {
                 layerWidth -= layerWidth - currentAttachment.texture.width + originX;
             }
 
-            if ((layerHeight + originY) > currentAttachment.texture.height) {
+            if (layerHeight + originY > currentAttachment.texture.height) {
                 layerHeight -= layerHeight - currentAttachment.texture.height + originY;
             }
 
@@ -1824,7 +1790,6 @@ class DisplayObject extends EventDispatcher
                 layerHeight += originY;
             }
 
-
             if (0 >= layerWidth || 0 >= layerHeight // size (-)
                 || !layerWidth || !layerHeight // NaN or Infinity
             ) {
@@ -1832,12 +1797,10 @@ class DisplayObject extends EventDispatcher
                 return false;
             }
 
-
             // start layer
             context._$startLayer(
                 Util.$getBoundsObject(originX, 0, originY, 0)
             );
-
 
             // check cache
             object.canApply = this._$canApply(filters);
@@ -1845,7 +1808,6 @@ class DisplayObject extends EventDispatcher
                 layerWidth, layerHeight, tMatrix, color_transform, filters,
                 object.canApply, object.basePosition.x, object.basePosition.y
             );
-
 
             // cache
             const currentMaskBuffer = context._$cacheCurrentBuffer;
@@ -1931,7 +1893,6 @@ class DisplayObject extends EventDispatcher
         let offsetX = texture._$offsetX;
         let offsetY = texture._$offsetY;
 
-
         // execute filter
         if (object.isUpdated && object.canApply) {
 
@@ -1978,7 +1939,6 @@ class DisplayObject extends EventDispatcher
             }
         }
 
-
         // update cache params
         if (object.isUpdated) {
 
@@ -1986,37 +1946,33 @@ class DisplayObject extends EventDispatcher
 
             // cache texture
             const mat = object.baseMatrix;
-            texture.matrix = mat[0] +"_"+ mat[1] +"_"+ mat[2] +"_"+ mat[3]
-                +"_"+ object.basePosition.x +"_"+ object.basePosition.y;
+            texture.matrix = mat[0] + "_" + mat[1] + "_" + mat[2] + "_" + mat[3]
+                + "_" + object.basePosition.x + "_" + object.basePosition.y;
 
             const col = object.baseColor;
             texture.colorTransform =
-                col[0] +"_"+ col[1] +"_"+ col[2] +"_"+ col[3] +"_"+
-                col[4] +"_"+ col[5] +"_"+ col[6] +"_"+ col[7];
+                col[0] + "_" + col[1] + "_" + col[2] + "_" + col[3] + "_" +
+                col[4] + "_" + col[5] + "_" + col[6] + "_" + col[7];
 
             texture.layerWidth  = object.layerWidth;
             texture.layerHeight = object.layerHeight;
         }
 
-
         // cache texture
         Util.$cacheStore().set(cacheKeys, texture);
         Util.$poolArray(cacheKeys);
 
-
         // set current buffer
         context._$bind(object.currentAttachment);
-
 
         // setup
         const width  = texture.width;
         const height = texture.height;
 
-
         // set
         Util.$resetContext(context);
         context.setTransform(1, 0, 0, 1, 0, 0);
-        context._$globalAlpha = Util.$clamp(color_transform[3] + (color_transform[7] / 255), 0, 1);
+        context._$globalAlpha = Util.$clamp(color_transform[3] + color_transform[7] / 255, 0, 1);
         context._$globalCompositeOperation = object.blendMode;
         context.drawImage(texture,
             -offsetX + object.position.dx,
@@ -2025,10 +1981,8 @@ class DisplayObject extends EventDispatcher
             color_transform
         );
 
-
         // end blend
         context._$endLayer();
-
 
         // pool buffer
         if (this._$buffer) {
@@ -2039,7 +1993,6 @@ class DisplayObject extends EventDispatcher
 
             this._$buffer = null;
         }
-
 
         // reset
         context._$cacheCurrentBuffer   = object.currentMaskBuffer;
@@ -2118,7 +2071,6 @@ class DisplayObject extends EventDispatcher
         this._$clip(context, clipMatrix || matrix);
         this._$updated = false;
 
-
         // container clip
         if (context._$mask._$containerClip) {
 
@@ -2128,7 +2080,6 @@ class DisplayObject extends EventDispatcher
             // execute clip
             context._$drawContainerClip();
         }
-
 
         // mask end
         context._$endClipDef();

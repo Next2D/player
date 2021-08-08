@@ -1,4 +1,11 @@
 /**
+ * Sound クラスを使用すると、アプリケーション内のサウンドを処理することができます。
+ * Sound クラスを使用すると、Sound オブジェクトの作成や、外部 MP3 ファイルのオブジェクトへのロードと再生ができます。
+ *
+ * The Sound class lets you work with sound in an application.
+ * The Sound class lets you create a Sound object,
+ * load and play an external MP3 file into that object.
+ *
  * @class
  * @memberOf next2d.media
  * @extends  EventDispatcher
@@ -6,19 +13,10 @@
 class Sound extends EventDispatcher
 {
     /**
-     * Sound クラスを使用すると、アプリケーション内のサウンドを処理することができます。
-     * Sound クラスを使用すると、Sound オブジェクトの作成や、外部 MP3 ファイルのオブジェクトへのロードと再生ができます。
-     *
-     * The Sound class lets you work with sound in an application.
-     * The Sound class lets you create a Sound object,
-     * load and play an external MP3 file into that object.
-     *
-     * @param {URLRequest} [request=null]
-     *
      * @constructor
      * @public
      */
-    constructor(request = null)
+    constructor()
     {
 
         super();
@@ -327,49 +325,40 @@ class Sound extends EventDispatcher
      * @description サウンドを再生します。
      *              Play a sound.
      *
-     * @param   {number}  [start_time=0]
-     * @param   {boolean} [loops=false]
+     * @param   {number} [start_time=0]
      * @return  {void}
      * @method
      * @public
      */
-    play (start_time = 0, loops = false)
+    play (start_time = 0)
     {
-        const buffer = (this._$character)
+        const buffer = this._$character
             ? this._$character.audioBuffer
             : this._$audioBuffer;
 
         // execute
-        switch (true) {
+        if (!Util.$audioContext || !buffer) {
+            const wait = function (now, start_time = 0)
+            {
+                const buffer = this._$character
+                    ? this._$character.audioBuffer
+                    : this._$audioBuffer;
 
-            case (Util.$audioContext === null):
-            case (buffer === null):
-                const wait = function (now, start_time = 0, loops = false)
-                {
-                    const buffer = (this._$character)
-                        ? this._$character.audioBuffer
-                        : this._$audioBuffer;
-
-                    if (buffer !== null && Util.$audioContext !== null) {
-                        const offset = (Util.$performance.now() - now) / 1000;
-                        this._$createBufferSource(start_time, loops, offset);
-                        return ;
-                    }
-
-                    const timer = Util.$requestAnimationFrame;
-                    timer(wait);
-
-                }.bind(this, Util.$performance.now(), start_time, loops);
+                if (buffer !== null && Util.$audioContext !== null) {
+                    const offset = (Util.$performance.now() - now) / 1000;
+                    this._$createBufferSource(start_time, offset);
+                    return ;
+                }
 
                 const timer = Util.$requestAnimationFrame;
                 timer(wait);
 
-                break;
+            }.bind(this, Util.$performance.now(), start_time);
 
-            default:
-                this._$createBufferSource(start_time, loops);
-                break;
-
+            const timer = Util.$requestAnimationFrame;
+            timer(wait);
+        } else {
+            this._$createBufferSource(start_time);
         }
     }
 
@@ -443,13 +432,12 @@ class Sound extends EventDispatcher
 
     /**
      * @param  {number}  [start_time=0]
-     * @param  {boolean} [loops=false]
      * @param  {number}  [offset=0]
      * @return {void}
      * @method
      * @private
      */
-    _$createBufferSource (start_time = 0, loops = false, offset = 0)
+    _$createBufferSource (start_time = 0, offset = 0)
     {
         // setup
         const source = Util.$audioContext.createBufferSource();
@@ -458,7 +446,7 @@ class Sound extends EventDispatcher
         source.onended = this._$endEventHandler.bind(this);
 
         // main
-        source.buffer = (this._$character)
+        source.buffer = this._$character
             ? this._$character.audioBuffer
             : this._$audioBuffer;
 
@@ -471,7 +459,7 @@ class Sound extends EventDispatcher
         source._$volume = volume;
 
         source.connect(source._$gainNode);
-        source.start(start_time|0, offset);
+        source.start(start_time | 0, offset);
 
         const player = Util.$currentPlayer();
         player._$sources.push(source);
@@ -509,7 +497,7 @@ class Sound extends EventDispatcher
                 if (source._$gainNode) {
                     source._$gainNode.gain.value = 0;
                     source._$gainNode.disconnect();
-                    source._$gainNode = null
+                    source._$gainNode = null;
                 }
 
                 // Firefoxにて、disconnectした時にonendedが呼び出されるのを回避

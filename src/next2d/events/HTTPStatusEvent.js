@@ -1,4 +1,8 @@
 /**
+ * ネットワーク要求が HTTP ステータスコードを返すと、アプリケーションによって HTTPStatusEvent オブジェクトが送出されます。
+ *
+ * The application dispatches HTTPStatusEvent objects when a network request returns an HTTP status code.
+ *
  * @class
  * @memberOf next2d.events
  * @extends  Event
@@ -6,10 +10,6 @@
 class HTTPStatusEvent extends Event
 {
     /**
-     * ネットワーク要求が HTTP ステータスコードを返すと、アプリケーションによって HTTPStatusEvent オブジェクトが送出されます。
-     *
-     * The application dispatches HTTPStatusEvent objects when a network request returns an HTTP status code.
-     *
      * @param {string}  type
      * @param {boolean} [bubbles=false]
      * @param {boolean} [cancelable=false]
@@ -27,7 +27,7 @@ class HTTPStatusEvent extends Event
          * @default 0
          * @private
          */
-        this._$status = status|0;
+        this._$status = status | 0;
 
         /**
          * @type {array}
@@ -133,7 +133,7 @@ class HTTPStatusEvent extends Event
     }
     set responseHeaders (response_headers)
     {
-        return this._$responseHeaders = response_headers;
+        this._$responseHeaders = response_headers;
     }
 
     /**

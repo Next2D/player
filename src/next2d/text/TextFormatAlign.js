@@ -1,18 +1,12 @@
 /**
+ * TextFormatAlign クラスは、TextFormat クラスのテキストの行揃えの値を提供します。
+ * The TextFormatAlign class provides values for text alignment in the TextFormat class.
+ *
  * @class
  * @memberOf next2d.text
  */
 class TextFormatAlign
 {
-    /**
-     * TextFormatAlign クラスは、TextFormat クラスのテキストの行揃えの値を提供します。
-     * The TextFormatAlign class provides values for text alignment in the TextFormat class.
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
-
     /**
      * @description 指定されたクラスのストリングを返します。
      *              Returns the string representation of the specified class.

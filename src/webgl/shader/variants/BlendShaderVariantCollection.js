@@ -19,20 +19,20 @@ class BlendShaderVariantCollection
     }
 
     /**
-     * @param  {boolean} withColorTransform
+     * @param  {boolean} with_color_transform
      * @return {CanvasToWebGLShader}
      * @method
      * @public
      */
-    getNormalBlendShader (withColorTransform)
+    getNormalBlendShader (with_color_transform)
     {
-        const key = `n${(withColorTransform) ? "y" : "n"}`;
+        const key = `n${with_color_transform ? "y" : "n"}`;
 
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
                 VertexShaderSource.BLEND(this._$keyword),
-                FragmentShaderSourceTexture.TEMPLATE(this._$keyword, withColorTransform)
+                FragmentShaderSourceTexture.TEMPLATE(this._$keyword, with_color_transform)
             ));
         }
 
@@ -46,7 +46,7 @@ class BlendShaderVariantCollection
      */
     getClipShader ()
     {
-        const key = `c`;
+        const key = "c";
 
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
@@ -60,21 +60,21 @@ class BlendShaderVariantCollection
     }
 
     /**
-     * @param  {string} operation
-     * @param  {boolean} withColorTransform
+     * @param  {string}  operation
+     * @param  {boolean} with_color_transform
      * @return {CanvasToWebGLShader}
      * @method
      * @public
      */
-    getBlendShader (operation, withColorTransform)
+    getBlendShader (operation, with_color_transform)
     {
-        const key = `${operation}${(withColorTransform) ? "y" : "n"}`;
+        const key = `${operation}${with_color_transform ? "y" : "n"}`;
 
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
                 VertexShaderSource.BLEND(this._$keyword),
-                FragmentShaderSourceBlend.TEMPLATE(this._$keyword, operation, withColorTransform)
+                FragmentShaderSourceBlend.TEMPLATE(this._$keyword, operation, with_color_transform)
             ));
         }
 
@@ -88,9 +88,9 @@ class BlendShaderVariantCollection
      * @param {number}  w
      * @param {number}  h
      * @param {array}   matrix
-     * @param {number}  renderWidth
-     * @param {number}  renderHeight
-     * @param {boolean} withCT
+     * @param {number}  render_width
+     * @param {number}  render_height
+     * @param {boolean} with_color_transform
      * @param {number}  ct0
      * @param {number}  ct1
      * @param {number}  ct2
@@ -103,8 +103,8 @@ class BlendShaderVariantCollection
      * @public
      */
     setNormalBlendUniform (
-        uniform, x, y, w, h, matrix, renderWidth, renderHeight,
-        withCT, ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7)
+        uniform, x, y, w, h, matrix, render_width, render_height,
+        with_color_transform, ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7)
     {
         const highp = uniform.highp;
 
@@ -129,10 +129,10 @@ class BlendShaderVariantCollection
         highp[14] = matrix[8];
 
         // vertex: u_viewport
-        highp[7]  = renderWidth;
-        highp[11] = renderHeight;
+        highp[7]  = render_width;
+        highp[11] = render_height;
 
-        if (withCT) {
+        if (with_color_transform) {
             const mediump = uniform.mediump;
 
             // fragment: u_color_transform_mul
@@ -154,14 +154,16 @@ class BlendShaderVariantCollection
      * @param {number}  y
      * @param {number}  w
      * @param {number}  h
-     * @param {array}   inverseMatrix
-     * @param {number}  renderWidth
-     * @param {number}  renderHeight
+     * @param {array}   inverse_matrix
+     * @param {number}  render_width
+     * @param {number}  render_height
      * @method
      * @public
      */
-    setClipUniform (uniform, x, y, w, h, inverseMatrix, renderWidth, renderHeight)
-    {
+    setClipUniform (
+        uniform, x, y, w, h, inverse_matrix, render_width, render_height
+    ) {
+
         const highp = uniform.highp;
 
         // vertex: u_offset
@@ -172,21 +174,21 @@ class BlendShaderVariantCollection
         highp[3] = h;
 
         // vertex: u_inverse_matrix
-        highp[4]  = inverseMatrix[0];
-        highp[5]  = inverseMatrix[1];
-        highp[6]  = inverseMatrix[2];
+        highp[4]  = inverse_matrix[0];
+        highp[5]  = inverse_matrix[1];
+        highp[6]  = inverse_matrix[2];
 
-        highp[8]  = inverseMatrix[3];
-        highp[9]  = inverseMatrix[4];
-        highp[10] = inverseMatrix[5];
+        highp[8]  = inverse_matrix[3];
+        highp[9]  = inverse_matrix[4];
+        highp[10] = inverse_matrix[5];
 
-        highp[12] = inverseMatrix[6];
-        highp[13] = inverseMatrix[7];
-        highp[14] = inverseMatrix[8];
+        highp[12] = inverse_matrix[6];
+        highp[13] = inverse_matrix[7];
+        highp[14] = inverse_matrix[8];
 
         // vertex: u_viewport
-        highp[7]  = renderWidth;
-        highp[11] = renderHeight;
+        highp[7]  = render_width;
+        highp[11] = render_height;
     }
 
     /**
@@ -196,9 +198,9 @@ class BlendShaderVariantCollection
      * @param {number}  w
      * @param {number}  h
      * @param {array}   matrix
-     * @param {number}  renderWidth
-     * @param {number}  renderHeight
-     * @param {boolean} withCT
+     * @param {number}  render_width
+     * @param {number}  render_height
+     * @param {boolean} with_color_transform
      * @param {number}  ct0
      * @param {number}  ct1
      * @param {number}  ct2
@@ -211,8 +213,8 @@ class BlendShaderVariantCollection
      * @public
      */
     setBlendUniform (
-        uniform, x, y, w, h, matrix, renderWidth, renderHeight,
-        withCT, ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
+        uniform, x, y, w, h, matrix, render_width, render_height,
+        with_color_transform, ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
     ) {
         const textures = uniform.textures;
         textures[0] = 0;
@@ -241,10 +243,10 @@ class BlendShaderVariantCollection
         highp[14] = matrix[8];
 
         // vertex: u_viewport
-        highp[7]  = renderWidth;
-        highp[11] = renderHeight;
+        highp[7]  = render_width;
+        highp[11] = render_height;
 
-        if (withCT) {
+        if (with_color_transform) {
             const mediump = uniform.mediump;
 
             // fragment: u_color_transform_mul

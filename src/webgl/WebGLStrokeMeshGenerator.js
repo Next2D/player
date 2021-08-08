@@ -160,7 +160,6 @@ class WebGLStrokeMeshGenerator
 
         this._$indexBufferPos = ibp;
 
-
         this._$expandVertexBufferIfNeeded(28);
         const vbd = this._$vertexBufferData;
         let vbp = this._$vertexBufferPos;
@@ -248,7 +247,7 @@ class WebGLStrokeMeshGenerator
         const bx = x3 - x2;
         const by = y3 - y2;
         const det = Util.$cross(ax, ay, bx, by);
-        if (Util.$abs(det) < 0.0001) { return; }
+        if (Util.$abs(det) < 0.0001) { return }
 
         // 分割したベジェ曲線はベベルで結合する
         if (type === 2) {
@@ -297,7 +296,6 @@ class WebGLStrokeMeshGenerator
         ibd[ibp++] = index0 + 1;
 
         this._$indexBufferPos = ibp;
-
 
         this._$expandVertexBufferIfNeeded(133);
         const vbd = this._$vertexBufferData;
@@ -378,7 +376,6 @@ class WebGLStrokeMeshGenerator
 
         this._$indexBufferPos = ibp;
 
-
         this._$expandVertexBufferIfNeeded(35);
         const vbd = this._$vertexBufferData;
         let vbp = this._$vertexBufferPos;
@@ -429,10 +426,10 @@ class WebGLStrokeMeshGenerator
     /**
      * @param  {number} x      結合点のx座標
      * @param  {number} y      結合点のy座標
-     * @param  {number} index1 
-     * @param  {number} index2 
-     * @param  {number} index3 
-     * @param  {number} index4 
+     * @param  {number} index1
+     * @param  {number} index2
+     * @param  {number} index3
+     * @param  {number} index4
      * @return {void}
      * @method
      * @static
@@ -455,7 +452,6 @@ class WebGLStrokeMeshGenerator
         ibd[ibp++] = index4;
 
         this._$indexBufferPos = ibp;
-
 
         this._$expandVertexBufferIfNeeded(7);
         const vbd = this._$vertexBufferData;
@@ -567,7 +563,6 @@ class WebGLStrokeMeshGenerator
         ibd[ibp++] = index1;
 
         this._$indexBufferPos = ibp;
-
 
         this._$expandVertexBufferIfNeeded(14);
         const vbd = this._$vertexBufferData;

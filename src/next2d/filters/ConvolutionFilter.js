@@ -1,4 +1,13 @@
 /**
+ * ConvolutionFilter クラスを使用すると、マトリックス畳み込みフィルター効果を適用できます。
+ * 畳み込みでは、入力イメージ内のピクセルを、隣接するピクセルと組み合わせて、イメージを作成します。
+ * 畳み込みを使用すると、ぼかし、エッジ検出、シャープ、エンボス、ベベルなど、幅広いイメージ効果を実現できます。
+ *
+ * The ConvolutionFilter class applies a matrix convolution filter effect.
+ * A convolution combines pixels in the input image with neighboring pixels to produce an image.
+ * A wide variety of image effects can be achieved through convolutions, including blurring,
+ * edge detection, sharpening, embossing, and beveling.
+ *
  * @class
  * @memberOf next2d.filters
  * @extends  BitmapFilter
@@ -6,15 +15,6 @@
 class ConvolutionFilter extends BitmapFilter
 {
     /**
-     * ConvolutionFilter クラスを使用すると、マトリックス畳み込みフィルター効果を適用できます。
-     * 畳み込みでは、入力イメージ内のピクセルを、隣接するピクセルと組み合わせて、イメージを作成します。
-     * 畳み込みを使用すると、ぼかし、エッジ検出、シャープ、エンボス、ベベルなど、幅広いイメージ効果を実現できます。
-     *
-     * The ConvolutionFilter class applies a matrix convolution filter effect.
-     * A convolution combines pixels in the input image with neighboring pixels to produce an image.
-     * A wide variety of image effects can be achieved through convolutions, including blurring,
-     * edge detection, sharpening, embossing, and beveling.
-     *
      * @param {number}  [matrix_x=0]
      * @param {number}  [matrix_y=0]
      * @param {array}   [matrix=null]
@@ -308,7 +308,7 @@ class ConvolutionFilter extends BitmapFilter
     }
     set matrixX (matrix_x)
     {
-        matrix_x = Util.$clamp(matrix_x|0, 0, 15, 0)|0;
+        matrix_x = Util.$clamp(matrix_x | 0, 0, 15, 0) | 0;
         if (matrix_x !== this._$matrixX) {
             this._$doChanged(true);
         }
@@ -329,7 +329,7 @@ class ConvolutionFilter extends BitmapFilter
     }
     set matrixY (matrix_y)
     {
-        matrix_y = Util.$clamp(matrix_y|0, 0, 15, 0)|0;
+        matrix_y = Util.$clamp(matrix_y | 0, 0, 15, 0) | 0;
         if (matrix_y !== this._$matrixY) {
             this._$doChanged(true);
         }
@@ -377,13 +377,11 @@ class ConvolutionFilter extends BitmapFilter
 
     /**
      * @param  {Rectangle} rect
-     * @param  {number}    [x_scale=null]
-     * @param  {number}    [y_scale=null]
      * @return {Rectangle}
      * @method
      * @private
      */
-    _$generateFilterRect (rect, x_scale = null, y_scale = null)
+    _$generateFilterRect (rect)
     {
         return rect;
     }
@@ -453,12 +451,11 @@ class ConvolutionFilter extends BitmapFilter
 
     /**
      * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
      * @return {WebGLTexture}
      * @method
      * @private
      */
-    _$applyFilter (context, matrix)
+    _$applyFilter (context)
     {
         this._$doChanged(false);
 

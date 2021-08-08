@@ -11,7 +11,6 @@ class CanvasToWebGLContextPath
         this._$currentPath = [];
         this._$vertices    = [];
         this._$bounds      = { "xMin": 0, "xMax": 0, "yMin": 0, "yMax": 0 };
-
         this._$resetBounds();
     }
 
@@ -135,7 +134,7 @@ class CanvasToWebGLContextPath
                 BezierConverterBuffer[i + 1],
                 BezierConverterBuffer[i + 2],
                 BezierConverterBuffer[i + 3]
-            )
+            );
         }
     }
 
@@ -186,7 +185,7 @@ class CanvasToWebGLContextPath
     {
         const lastX = this._$currentPath[this._$currentPath.length - 3];
         const lastY = this._$currentPath[this._$currentPath.length - 2];
-        return (x === lastX && y === lastY);
+        return x === lastX && y === lastY;
     }
 
     /**

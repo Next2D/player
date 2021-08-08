@@ -5,35 +5,35 @@ class FragmentShaderSourceConvolutionFilter
 {
     /**
      * @param  {WebGLShaderKeyword} k
-     * @param  {number}  mediumpLength
+     * @param  {number}  mediump_length
      * @param  {number}  x
      * @param  {number}  y
-     * @param  {boolean} preserveAlpha
+     * @param  {boolean} preserve_alpha
      * @param  {boolean} clamp
      * @return {string}
      * @method
      * @static
      */
-    static TEMPLATE (k, mediumpLength, x, y, preserveAlpha, clamp)
+    static TEMPLATE (k, mediump_length, x, y, preserve_alpha, clamp)
     {
         const halfX = Util.$floor(x * 0.5);
         const halfY = Util.$floor(y * 0.5);
         const size = x * y;
 
         let matrixStatement = "";
-        const matrixIndex = (clamp) ? 1 : 2;
-        for (let i = 0; i < size; i++) {
-            const index     = matrixIndex + Util.$floor(i / 4);
-            const component = i % 4;
+        const matrixIndex = clamp ? 1 : 2;
+        for (let idx = 0; idx < size; ++idx) {
+            const index     = matrixIndex + Util.$floor(idx / 4);
+            const component = idx % 4;
             matrixStatement += `
-    result += getWeightedColor(${i}, u_mediump[${index}][${component}]);
+    result += getWeightedColor(${idx}, u_mediump[${index}][${component}]);
 `;
-        }      
+        }
 
-        const preserveAlphaStatement = (preserveAlpha)
+        const preserve_alphaStatement = preserve_alpha
             ? `result.a = ${k.texture2D()}(u_texture, v_coord).a;`
             : "";
-        const clampStatement = (clamp)
+        const clampStatement = clamp
             ? ""
             : `
     vec4 substitute_color = u_mediump[1];
@@ -44,7 +44,7 @@ class FragmentShaderSourceConvolutionFilter
 precision mediump float;
 
 uniform sampler2D u_texture;
-uniform vec4 u_mediump[${mediumpLength}];
+uniform vec4 u_mediump[${mediump_length}];
 
 ${k.varyingIn()} vec2 v_coord;
 ${k.outColor()}
@@ -73,7 +73,7 @@ void main() {
     vec4 result = vec4(0.0);
     ${matrixStatement}
     result = clamp(result * rcp_divisor + bias, 0.0, 1.0);
-    ${preserveAlphaStatement}
+    ${preserve_alphaStatement}
 
     result.rgb *= result.a;
     ${k.fragColor()} = result;

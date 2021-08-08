@@ -5,29 +5,29 @@ class VertexShaderSourceFill
 {
     /**
      * @param  {WebGLShaderKeyword} k
-     * @param  {number}  highpLength
-     * @param  {boolean} withUV
-     * @param  {boolean} forMask
-     * @param  {boolean} hasGrid
+     * @param  {number}  highp_length
+     * @param  {boolean} with_uv
+     * @param  {boolean} for_mask
+     * @param  {boolean} has_grid
      * @return {string}
      * @method
      * @static
      */
-    static TEMPLATE (k, highpLength, withUV, forMask, hasGrid)
+    static TEMPLATE (k, highp_length, with_uv, for_mask, has_grid)
     {
-        const bezierAttribute = (forMask)
+        const bezierAttribute = for_mask
             ? this.ATTRIBUTE_BEZIER_ON(k)
             : "";
         const uvVarying =
-              (forMask) ? this.VARYING_BEZIER_ON(k)
-            : (withUV)  ? this.VARYING_UV_ON(k)
-            : "";
-        const uvStatement = 
-              (forMask) ? this.STATEMENT_BEZIER_ON()
-            : (withUV)  ? this.STATEMENT_UV_ON()
-            : "";
-        const gridFunction = (hasGrid)
-            ? VertexShaderLibrary.FUNCTION_GRID_ON((withUV) ? 5 : 0)
+              for_mask ? this.VARYING_BEZIER_ON(k)
+                  : with_uv  ? this.VARYING_UV_ON(k)
+                      : "";
+        const uvStatement =
+              for_mask ? this.STATEMENT_BEZIER_ON()
+                  : with_uv  ? this.STATEMENT_UV_ON()
+                      : "";
+        const gridFunction = has_grid
+            ? VertexShaderLibrary.FUNCTION_GRID_ON(with_uv ? 5 : 0)
             : VertexShaderLibrary.FUNCTION_GRID_OFF();
 
         return `${k.version()}
@@ -35,7 +35,7 @@ class VertexShaderSourceFill
 ${k.attribute(0)} vec2 a_vertex;
 ${bezierAttribute}
 
-uniform vec4 u_highp[${highpLength}];
+uniform vec4 u_highp[${highp_length}];
 
 ${uvVarying}
 

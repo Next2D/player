@@ -5,21 +5,21 @@ class FragmentShaderSourceGradientLUT
 {
     /**
      * @param  {WebGLShaderKeyword} k
-     * @param  {number}  mediumpLength
-     * @param  {number}  stopsLength
-     * @param  {boolean} isLinearSpace
+     * @param  {number}  mediump_length
+     * @param  {number}  stops_length
+     * @param  {boolean} is_linear_space
      * @return {string}
      * @method
      * @static
      */
-    static TEMPLATE (k, mediumpLength, stopsLength, isLinearSpace)
+    static TEMPLATE (k, mediump_length, stops_length, is_linear_space)
     {
         let loopStatement = "";
-        for (let i = 1; i < stopsLength; i++) {
+        for (let i = 1; i < stops_length; i++) {
             const i0 = i - 1;
             const i1 = i;
-            const t0 = `u_mediump[${stopsLength + Util.$floor(i0 / 4)}][${i0 % 4}]`;
-            const t1 = `u_mediump[${stopsLength + Util.$floor(i1 / 4)}][${i1 % 4}]`;
+            const t0 = `u_mediump[${stops_length + Util.$floor(i0 / 4)}][${i0 % 4}]`;
+            const t1 = `u_mediump[${stops_length + Util.$floor(i1 / 4)}][${i1 % 4}]`;
             const c0 = `u_mediump[${i0}]`;
             const c1 = `u_mediump[${i1}]`;
             loopStatement += `
@@ -29,24 +29,24 @@ class FragmentShaderSourceGradientLUT
 `;
         }
 
-        const colorSpaceStatement = (isLinearSpace)
+        const colorSpaceStatement = is_linear_space
             ? "color = pow(color, vec4(0.45454545));"
             : "";
 
         return `${k.version()}
 precision mediump float;
 
-uniform vec4 u_mediump[${mediumpLength}];
+uniform vec4 u_mediump[${mediump_length}];
 
 ${k.varyingIn()} vec2 v_coord;
 ${k.outColor()}
 
 vec4 getGradientColor(in float t) {
-    if (t <= u_mediump[${stopsLength}][0]) {
+    if (t <= u_mediump[${stops_length}][0]) {
         return u_mediump[0];
     }
     ${loopStatement}
-    return u_mediump[${stopsLength - 1}];
+    return u_mediump[${stops_length - 1}];
 }
 
 void main() {

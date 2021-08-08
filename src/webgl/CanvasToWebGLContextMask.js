@@ -10,7 +10,6 @@ class CanvasToWebGLContextMask
     {
         this._$context       = context;
         this._$gl            = gl;
-
         this._$clips         = [];
         this._$clipStatus    = false;
         this._$containerClip = false;
@@ -67,7 +66,6 @@ class CanvasToWebGLContextMask
         const w = this._$context._$cacheCurrentBounds.w;
         const h = this._$context._$cacheCurrentBounds.h;
 
-
         Util.$resetContext(this._$context);
         this._$context.setTransform(1, 0, 0, 1, 0, 0);
         this._$context.drawImage(texture, x, y, w, h);
@@ -92,7 +90,6 @@ class CanvasToWebGLContextMask
             display_object._$transform._$rawMatrix()
         );
 
-
         const baseBounds = display_object._$getBounds(null);
         const bounds = Util.$boundsMatrix(baseBounds, tMatrix);
         Util.$poolFloat32Array9(tMatrix);
@@ -108,11 +105,11 @@ class CanvasToWebGLContextMask
         // resize
         const manager = this._$context._$frameBufferManager;
         const currentBuffer = manager.currentAttachment;
-        if ((width + x) > currentBuffer.texture.width) {
+        if (width + x > currentBuffer.texture.width) {
             width -= width - currentBuffer.texture.width + x;
         }
 
-        if ((height + y) > currentBuffer.texture.height) {
+        if (height + y > currentBuffer.texture.height) {
             height -= height - currentBuffer.texture.height + y;
         }
 
@@ -139,7 +136,6 @@ class CanvasToWebGLContextMask
         this._$context._$cacheCurrentBounds.w = width;
         this._$context._$cacheCurrentBounds.h = height;
 
-
         // cache
         const texture = manager.getTextureFromCurrentAttachment();
 
@@ -147,8 +143,8 @@ class CanvasToWebGLContextMask
 
         const player = Util.$currentPlayer();
 
-        const samples = (this._$context._$isWebGL2Context
-            && (player._$quality === StageQuality.LOW || player._$quality === StageQuality.MIDDLE))
+        const samples = this._$context._$isWebGL2Context
+            && (player._$quality === StageQuality.LOW || player._$quality === StageQuality.MIDDLE)
             ? Util.$min(Util.$HIGH_SAMPLES, this._$gl.getParameter(this._$gl.MAX_SAMPLES))
             : 0;
 
@@ -161,7 +157,6 @@ class CanvasToWebGLContextMask
         Util.$resetContext(this._$context);
         this._$context.setTransform(1, 0, 0, 1, 0, 0);
         this._$context.drawImage(texture, -x, -y, texture.width, texture.height);
-
 
         return Util.$getFloat32Array9(
             matrix[0], matrix[1], matrix[2], matrix[3],
@@ -198,7 +193,7 @@ class CanvasToWebGLContextMask
         this._$gl.enable(this._$gl.SAMPLE_ALPHA_TO_COVERAGE);
         this._$gl.stencilFunc(this._$gl.ALWAYS, 0, 0xff);
         this._$gl.stencilOp(this._$gl.KEEP, this._$gl.INVERT, this._$gl.INVERT);
-        this._$gl.stencilMask(1 << (currentBuffer.clipLevel - 1));
+        this._$gl.stencilMask(1 << currentBuffer.clipLevel - 1);
         this._$gl.colorMask(false, false, false, false);
     }
 
@@ -213,7 +208,7 @@ class CanvasToWebGLContextMask
 
         let mask = 0;
         for (let idx = 0; idx < clipLevel; ++idx) {
-            mask |= ((1 << (clipLevel - idx)) - 1);
+            mask |= (1 << clipLevel - idx) - 1;
         }
 
         this._$gl.disable(this._$gl.SAMPLE_ALPHA_TO_COVERAGE);
@@ -241,7 +236,6 @@ class CanvasToWebGLContextMask
             }
             return;
         }
-
 
         // replace
         const w = currentBuffer.width;
@@ -322,7 +316,7 @@ class CanvasToWebGLContextMask
 
                 const range = object.fillBuffer.indexRanges[idx];
 
-                this._$gl.stencilMask(1 << (useLevel - 1));
+                this._$gl.stencilMask(1 << useLevel - 1);
                 shader._$containerClip(object.fillBuffer, range.first, range.count);
 
             }
@@ -343,10 +337,10 @@ class CanvasToWebGLContextMask
         }
 
         // last union
-        if (useLevel > (currentClipLevel + 1)) {
+        if (useLevel > currentClipLevel + 1) {
             this._$context._$unionStencilMask(currentClipLevel, w, h);
         }
-    };
+    }
 
     /**
      * @param  {uint} level
@@ -370,7 +364,6 @@ class CanvasToWebGLContextMask
 
         const range = object.indexRanges[0];
 
-
         // 例として level=4 の場合
         //
         // ステンシルバッファの4ビット目以上を4ビット目に統合する。
@@ -393,9 +386,9 @@ class CanvasToWebGLContextMask
         // 比較して 00001000 以上であれば 00001*** で更新し、そうでなければ 00000*** で更新する。
         // 下位3ビットは元の値を保持する必要があるので 11111000 でマスクする。
 
-        this._$gl.stencilFunc(this._$gl.LEQUAL, 1 << (level - 1), 0xff);
+        this._$gl.stencilFunc(this._$gl.LEQUAL, 1 << level - 1, 0xff);
         this._$gl.stencilOp(this._$gl.ZERO, this._$gl.REPLACE, this._$gl.REPLACE);
-        this._$gl.stencilMask(~((1 << (level - 1)) - 1));
+        this._$gl.stencilMask(~((1 << level - 1) - 1));
 
         shader._$containerClip(object, range.first, range.count);
 

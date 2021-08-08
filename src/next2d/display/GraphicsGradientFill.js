@@ -1,5 +1,10 @@
 /**
+ * グラデーション塗りを定義します。
+ *
+ * Defines a gradient fill.
+ *
  * @class
+ * @memberOf next2d.display
  * @private
  */
 class GraphicsGradientFill
@@ -77,7 +82,7 @@ class GraphicsGradientFill
          * @default null
          * @private
          */
-        this._$focalPointRatio = focal_point_ratio|0;
+        this._$focalPointRatio = focal_point_ratio | 0;
 
         /**
          * @type {array}
@@ -221,7 +226,7 @@ class GraphicsGradientFill
     }
     set interpolationMethod (interpolation_method)
     {
-        this._$interpolationMethod = (InterpolationMethod.LINEAR_RGB === interpolation_method)
+        this._$interpolationMethod = InterpolationMethod.LINEAR_RGB === interpolation_method
             ? interpolation_method
             : InterpolationMethod.RGB;
     }
@@ -240,7 +245,7 @@ class GraphicsGradientFill
     }
     set matrix (matrix)
     {
-        this._$matrix = (matrix instanceof Matrix) ? matrix : null;
+        this._$matrix = matrix instanceof Matrix ? matrix : null;
     }
 
     /**
@@ -311,7 +316,7 @@ class GraphicsGradientFill
     }
     set type (type)
     {
-        this._$type = (GradientType.RADIAL === type)
+        this._$type = GradientType.RADIAL === type
             ? type
             : GradientType.LINEAR;
     }
@@ -331,7 +336,7 @@ class GraphicsGradientFill
             this.colors.slice(0),
             this.alphas.slice(0),
             this.ratios.slice(0),
-            (this._$matrix) ? this._$matrix.clone() : null,
+            this._$matrix ? this._$matrix.clone() : null,
             this._$spreadMethod,
             this._$interpolationMethod,
             this._$focalPointRatio
@@ -348,7 +353,7 @@ class GraphicsGradientFill
      */
     toArray ()
     {
-        const matrix = (this._$matrix)
+        const matrix = this._$matrix
             ? this._$matrix._$matrix
             : Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0;
 

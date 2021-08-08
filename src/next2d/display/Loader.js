@@ -1,4 +1,12 @@
 /**
+ * Loader クラスは、JSON ファイルまたはイメージ（JPEG、PNG、または GIF）ファイルを読み込むために使用します。
+ * 読み込みを開始するには load() メソッドを使用します。
+ * 読み込まれた表示オブジェクトは Loader オブジェクトの子として追加されます。
+ *
+ * The Loader class is used to load JSON files or image (JPEG, PNG, or GIF) files.
+ * Use the load() method to initiate loading.
+ * The loaded display object is added as a child of the Loader object.
+ *
  * @class
  * @memberOf next2d.display
  * @extends  DisplayObjectContainer
@@ -6,14 +14,6 @@
 class Loader extends DisplayObjectContainer
 {
     /**
-     * Loader クラスは、JSON ファイルまたはイメージ（JPEG、PNG、または GIF）ファイルを読み込むために使用します。
-     * 読み込みを開始するには load() メソッドを使用します。
-     * 読み込まれた表示オブジェクトは Loader オブジェクトの子として追加されます。
-     *
-     * The Loader class is used to load JSON files or image (JPEG, PNG, or GIF) files.
-     * Use the load() method to initiate loading.
-     * The loaded display object is added as a child of the Loader object.
-     *
      * @constructor
      * @public
      */
@@ -216,15 +216,10 @@ class Loader extends DisplayObjectContainer
                         event.target.getAllResponseHeaders()
                     );
 
-                    let contentType = "";
                     const length  = headers.length;
                     for (let idx = 0; idx < length; ++idx) {
 
                         const obj = headers[idx];
-
-                        if (obj.name === "content-type") {
-                            contentType = obj.value;
-                        }
 
                         responseHeaders.push(new URLRequestHeader(obj.name, obj.value));
 
@@ -247,42 +242,42 @@ class Loader extends DisplayObjectContainer
                         switch (loaderInfo.format) {
 
                             case URLLoaderDataFormat.JSON:
+                                {
+                                    loaderInfo._$data = JSON.parse(
+                                        event.target.responseText
+                                    );
 
-                                loaderInfo._$data = JSON.parse(
-                                    event.target.responseText
-                                );
+                                    const root = loaderInfo._$data.characters[0];
 
-                                const root = loaderInfo._$data.characters[0]
+                                    // setup
+                                    loaderInfo._$content = new MovieClip();
 
-                                // setup
-                                loaderInfo._$content = new MovieClip();
+                                    // build root
+                                    loaderInfo._$content._$build({
+                                        "characterId": 0,
+                                        "clipDepth": 0,
+                                        "depth": 0,
+                                        "endFrame": root.controller.length,
+                                        "startFrame": 1
+                                    }, this);
 
-                                // build root
-                                loaderInfo._$content._$build({
-                                    "characterId": 0,
-                                    "clipDepth": 0,
-                                    "depth": 0,
-                                    "endFrame": root.controller.length,
-                                    "startFrame": 1
-                                }, this);
+                                    // fixed logic
+                                    loaderInfo._$content._$parent = null;
+                                    this.addChild(loaderInfo._$content);
 
-                                // fixed logic
-                                loaderInfo._$content._$parent = null;
-                                this.addChild(loaderInfo._$content);
+                                    loaderInfo._$content._$added      = false;
+                                    loaderInfo._$content._$addedStage = false;
 
-                                loaderInfo._$content._$added      = false;
-                                loaderInfo._$content._$addedStage = false;
+                                    const player = Util.$currentPlayer();
 
-                                const player = Util.$currentPlayer();
+                                    // to event
+                                    player._$loaders.push(loaderInfo);
 
-                                // to event
-                                player._$loaders.push(loaderInfo);
-
-                                // next
-                                if (player._$loadStatus === 1) {
-                                    player._$loadStatus = 2;
+                                    // next
+                                    if (player._$loadStatus === 1) {
+                                        player._$loadStatus = 2;
+                                    }
                                 }
-
                                 break;
 
                             case URLLoaderDataFormat.ARRAY_BUFFER:
@@ -317,8 +312,4 @@ class Loader extends DisplayObjectContainer
             }
         });
     }
-
-
-
-
 }

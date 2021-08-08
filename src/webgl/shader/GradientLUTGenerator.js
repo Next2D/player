@@ -1,8 +1,8 @@
 /**
  * @class
  */
- class GradientLUTGenerator
- {
+class GradientLUTGenerator
+{
     /**
      * @param {WebGLRenderingContext} gl
      * @param {CanvasToWebGLContext}  context
@@ -27,33 +27,33 @@
 
     /**
      * @param  {array}   stops
-     * @param  {boolean} isLinearSpace
+     * @param  {boolean} is_linear_space
      * @return {WebGLTexture}
      * @method
      * @public
      */
-    generateForShape (stops, isLinearSpace)
+    generateForShape (stops, is_linear_space)
     {
         const currentAttachment = this._$context.frameBuffer.currentAttachment;
 
         this._$context._$bind(this._$attachment);
-        
+
         const stopsLength = stops.length;
         const variants = this._$context._$shaderList.gradientLUTShaderVariants;
-        const table = (isLinearSpace) ? this._$rgbToLinearTable : this._$rgbIdentityTable;
+        const table = is_linear_space ? this._$rgbToLinearTable : this._$rgbIdentityTable;
 
         this._$context.blend.toOneZero();
 
         for (let begin = 0; begin < stopsLength; begin += this._$maxLength - 1) {
             const end = Util.$min(begin + this._$maxLength, stopsLength);
 
-            const shader = variants.getGradientLUTShader(end - begin, isLinearSpace);
+            const shader = variants.getGradientLUTShader(end - begin, is_linear_space);
             const uniform = shader.uniform;
             variants.setGradientLUTUniformForShape(uniform, stops, begin, end, table);
 
             shader._$drawGradient(
-                (begin === 0) ? 0 :stops[begin][0],
-                (end === stopsLength) ? 1 : stops[end - 1][0]
+                begin === 0 ? 0 : stops[begin][0],
+                end === stopsLength ? 1 : stops[end - 1][0]
             );
         }
 
@@ -89,8 +89,8 @@
             variants.setGradientLUTUniformForFilter(uniform, ratios, colors, alphas, begin, end);
 
             shader._$drawGradient(
-                (begin === 0) ? 0 :ratios[begin],
-                (end === stopsLength) ? 1 : ratios[end - 1]
+                begin === 0 ? 0 : ratios[begin],
+                end === stopsLength ? 1 : ratios[end - 1]
             );
         }
 
@@ -98,4 +98,4 @@
 
         return this._$attachment.texture;
     }
- }
+}

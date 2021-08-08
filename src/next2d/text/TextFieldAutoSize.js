@@ -1,17 +1,12 @@
 /**
+ * TextFieldAutoSize クラスは、TextField クラスの autoSize プロパティの設定で使用される定数値の列挙です。
+ * TThe TextFieldAutoSize class is an enumeration of constant values used in setting the autoSize property of the TextField class.
+ *
  * @class
  * @memberOf next2d.text
  */
 class TextFieldAutoSize
 {
-    /**
-     * TextFieldAutoSize クラスは、TextField クラスの autoSize プロパティの設定で使用される定数値の列挙です。
-     * TThe TextFieldAutoSize class is an enumeration of constant values used in setting the autoSize property of the TextField class.
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
 
     /**
      * @description 指定されたクラスのストリングを返します。

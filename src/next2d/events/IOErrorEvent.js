@@ -1,4 +1,8 @@
 /**
+ * IOErrorEvent オブジェクトは、エラーが発生して入力操作または出力操作が失敗したときに送出されます。
+ *
+ * An IOErrorEvent object is dispatched when an error causes input or output operations to fail.
+ *
  * @class
  * @memberOf next2d.events
  * @extends  Event
@@ -6,10 +10,6 @@
 class IOErrorEvent extends Event
 {
     /**
-     * IOErrorEvent オブジェクトは、エラーが発生して入力操作または出力操作が失敗したときに送出されます。
-     *
-     * An IOErrorEvent object is dispatched when an error causes input or output operations to fail.
-     *
      * @param {string}  type
      * @param {boolean} [bubbles=true]
      * @param {boolean} [cancelable=false]

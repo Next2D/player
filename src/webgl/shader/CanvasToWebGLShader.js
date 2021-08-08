@@ -213,12 +213,12 @@ class CanvasToWebGLShader
     }
 
     /**
-     * @param {WebGLVertexArrayObjectOES} vertexArray
+     * @param {WebGLVertexArrayObjectOES} vertex_array
      * @param {uint} first
      * @param {uint} count
      * @public
      */
-    _$containerClip (vertexArray, first, count)
+    _$containerClip (vertex_array, first, count)
     {
         // @ifdef DEBUG
         if (window.glstats) {
@@ -236,19 +236,19 @@ class CanvasToWebGLShader
         this._$uniform.bindUniforms();
 
         // bind vertex array
-        this._$context.vao.bind(vertexArray);
+        this._$context.vao.bind(vertex_array);
 
         // draw fill
         this._$gl.drawArrays(this._$gl.TRIANGLES, first, count);
     }
 
     /**
-     * @param {WebGLVertexArrayObjectOES} vertexArray
+     * @param {WebGLVertexArrayObjectOES} vertex_array
      * @param {uint} first
      * @param {uint} count
      * @public
      */
-    _$drawPoints (vertexArray, first, count)
+    _$drawPoints (vertex_array, first, count)
     {
         // @ifdef DEBUG
         if (window.glstats) {
@@ -266,7 +266,7 @@ class CanvasToWebGLShader
         this._$uniform.bindUniforms();
 
         // bind vertex array
-        this._$context.vao.bind(vertexArray);
+        this._$context.vao.bind(vertex_array);
 
         // draw fill
         this._$gl.drawArrays(this._$gl.POINTS, first, count);

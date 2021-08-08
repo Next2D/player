@@ -63,5 +63,4 @@ class CanvasPatternToWebGL
     {
         return this._$color_transform;
     }
-
 }

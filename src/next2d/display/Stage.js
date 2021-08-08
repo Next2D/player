@@ -1,4 +1,7 @@
 /**
+ * Stage クラスはメイン描画領域を表します。
+ * The Stage class represents the main drawing area.
+ *
  * @class
  * @memberOf next2d.display
  * @extends  DisplayObjectContainer
@@ -6,9 +9,6 @@
 class Stage extends DisplayObjectContainer
 {
     /**
-     * Stage クラスはメイン描画領域を表します。
-     * The Stage class represents the main drawing area.
-     *
      * @constructor
      * @public
      */
@@ -171,7 +171,7 @@ class Stage extends DisplayObjectContainer
      */
     get stageHeight ()
     {
-        return (this._$player)
+        return this._$player
             ? this._$player._$height / this._$player._$scale / this._$player._$ratio
             : 0;
     }
@@ -186,7 +186,7 @@ class Stage extends DisplayObjectContainer
      */
     get stageWidth ()
     {
-        return (this._$player)
+        return this._$player
             ? this._$player._$width / this._$player._$scale / this._$player._$ratio
             : 0;
     }

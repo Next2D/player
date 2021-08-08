@@ -1,4 +1,12 @@
 /**
+ * TextField クラスは、テキストの表示と入力用の表示オブジェクトを作成するために使用されます。
+ * プロパティインスペクターを使用して、テキストフィールドにインスタンス名を付けることができます。
+ * また、TextField クラスのメソッドとプロパティを使用して、JavaScript でテキストフィールドを操作できます。
+ *
+ * The TextField class is used to create display objects for text display and input.
+ * You can give a text field an instance name in the Property inspector
+ * and use the methods and properties of the TextField class to manipulate it with JavaScript.
+ *
  * @class
  * @memberOf next2d.text
  * @extends  InteractiveObject
@@ -6,14 +14,6 @@
 class TextField extends InteractiveObject
 {
     /**
-     * TextField クラスは、テキストの表示と入力用の表示オブジェクトを作成するために使用されます。
-     * プロパティインスペクターを使用して、テキストフィールドにインスタンス名を付けることができます。
-     * また、TextField クラスのメソッドとプロパティを使用して、JavaScript でテキストフィールドを操作できます。
-     *
-     * The TextField class is used to create display objects for text display and input.
-     * You can give a text field an instance name in the Property inspector
-     * and use the methods and properties of the TextField class to manipulate it with JavaScript.
-     *
      * @constructor
      * @public
      */
@@ -126,7 +126,6 @@ class TextField extends InteractiveObject
          */
         this._$textColor = null;
 
-
         // TextFormat
         const textFormat = new TextFormat();
         textFormat._$setDefault(this);
@@ -142,7 +141,6 @@ class TextField extends InteractiveObject
          * @private
          */
         this._$decisionTextFormat = textFormat;
-
 
         /**
          * @type {string}
@@ -160,7 +158,7 @@ class TextField extends InteractiveObject
             "xMax": 100,
             "yMin": 0 ,
             "yMax": 100
-        }
+        };
 
         /**
          * @type {object}
@@ -234,7 +232,7 @@ class TextField extends InteractiveObject
          * @default TextFieldAutoSize.NONE
          * @private
          */
-        this._$autoSize = TextFieldAutoSize.NONE
+        this._$autoSize = TextFieldAutoSize.NONE;
 
         /**
          * @type {boolean}
@@ -470,7 +468,7 @@ class TextField extends InteractiveObject
     }
     set backgroundColor (background_color)
     {
-        this._$backgroundColor = background_color|0;
+        this._$backgroundColor = background_color | 0;
         this._$reset();
     }
 
@@ -506,7 +504,7 @@ class TextField extends InteractiveObject
     }
     set borderColor (border_color)
     {
-        this._$borderColor = border_color|0;
+        this._$borderColor = border_color | 0;
         this._$reset();
     }
 
@@ -584,7 +582,7 @@ class TextField extends InteractiveObject
     }
     set maxChars (max_chars)
     {
-        this._$maxChars = max_chars|0;
+        this._$maxChars = max_chars | 0;
     }
 
     /**
@@ -709,7 +707,7 @@ class TextField extends InteractiveObject
     }
     set scrollH (scroll_h)
     {
-        scroll_h = Util.$clamp(scroll_h|0, 0, this.maxScrollH);
+        scroll_h = Util.$clamp(scroll_h | 0, 0, this.maxScrollH);
 
         if (this._$scrollH !== scroll_h) {
 
@@ -736,7 +734,7 @@ class TextField extends InteractiveObject
     }
     set scrollV (scroll_v)
     {
-        scroll_v = Util.$clamp(scroll_v|0, 1, this.maxScrollV);
+        scroll_v = Util.$clamp(scroll_v | 0, 1, this.maxScrollV);
 
         if (this._$scrollV !== scroll_v) {
 
@@ -787,7 +785,7 @@ class TextField extends InteractiveObject
 
         let text = "";
         const textData = this._$getTextData();
-        const length   = textData.length|0;
+        const length   = textData.length | 0;
         for (let idx = 1; idx < length; ++idx) {
 
             const object = textData[idx];
@@ -866,7 +864,7 @@ class TextField extends InteractiveObject
             this._$textHeight = 2;
             this._$getTextData();
 
-            let leading  = this._$decisionTextFormat._$leading|0;
+            let leading  = this._$decisionTextFormat._$leading | 0;
             const length = this._$textHeightTable.length;
             if (length === 1) {
                 this._$textHeight += leading;
@@ -989,7 +987,7 @@ class TextField extends InteractiveObject
     {
         const matrix = this._$transform.matrix;
         const bounds = this._$getBounds(null);
-        return (matrix._$matrix[4] + bounds.xMin);
+        return matrix._$matrix[4] + bounds.xMin;
     }
     set x (x)
     {
@@ -1011,7 +1009,7 @@ class TextField extends InteractiveObject
     {
         const matrix = this._$transform.matrix;
         const bounds = this._$getBounds(null);
-        return (matrix._$matrix[5] + bounds.yMin);
+        return matrix._$matrix[5] + bounds.yMin;
     }
     set y (y)
     {
@@ -1056,11 +1054,11 @@ class TextField extends InteractiveObject
         end_index   |= 0;
 
         const data   = this._$getTextData();
-        const length = (end_index > -1) ? end_index : data.length;
+        const length = end_index > -1 ? end_index : data.length;
 
         let init = false;
         let textFormat = new TextFormat();
-        let idx = (begin_index > -1) ? begin_index : 0;
+        let idx = begin_index > -1 ? begin_index : 0;
         for ( ; idx < length; ++idx) {
 
             if (data[idx].mode === TextField.BREAK) {
@@ -1074,19 +1072,19 @@ class TextField extends InteractiveObject
                 continue;
             }
 
-            textFormat._$align         = (textFormat._$align         !== tf._$align)         ? null : tf._$align;
-            textFormat._$blockIndent   = (textFormat._$blockIndent   !== tf._$blockIndent)   ? null : tf._$blockIndent;
-            textFormat._$bold          = (textFormat._$bold          !== tf._$bold)          ? null : tf._$bold;
-            textFormat._$color         = (textFormat._$color         !== tf._$color)         ? null : tf._$color;
-            textFormat._$font          = (textFormat._$font          !== tf._$font)          ? null : tf._$font;
-            textFormat._$indent        = (textFormat._$indent        !== tf._$indent)        ? null : tf._$indent;
-            textFormat._$italic        = (textFormat._$italic        !== tf._$italic)        ? null : tf._$italic;
-            textFormat._$leading       = (textFormat._$leading       !== tf._$leading)       ? null : tf._$leading;
-            textFormat._$leftMargin    = (textFormat._$leftMargin    !== tf._$leftMargin)    ? null : tf._$leftMargin;
-            textFormat._$letterSpacing = (textFormat._$letterSpacing !== tf._$letterSpacing) ? null : tf._$letterSpacing;
-            textFormat._$rightMargin   = (textFormat._$rightMargin   !== tf._$rightMargin)   ? null : tf._$rightMargin;
-            textFormat._$size          = (textFormat._$size          !== tf._$size)          ? null : tf._$size;
-            textFormat._$underline     = (textFormat._$underline     !== tf._$underline)     ? null : tf._$underline;
+            textFormat._$align         = textFormat._$align         !== tf._$align         ? null : tf._$align;
+            textFormat._$blockIndent   = textFormat._$blockIndent   !== tf._$blockIndent   ? null : tf._$blockIndent;
+            textFormat._$bold          = textFormat._$bold          !== tf._$bold          ? null : tf._$bold;
+            textFormat._$color         = textFormat._$color         !== tf._$color         ? null : tf._$color;
+            textFormat._$font          = textFormat._$font          !== tf._$font          ? null : tf._$font;
+            textFormat._$indent        = textFormat._$indent        !== tf._$indent        ? null : tf._$indent;
+            textFormat._$italic        = textFormat._$italic        !== tf._$italic        ? null : tf._$italic;
+            textFormat._$leading       = textFormat._$leading       !== tf._$leading       ? null : tf._$leading;
+            textFormat._$leftMargin    = textFormat._$leftMargin    !== tf._$leftMargin    ? null : tf._$leftMargin;
+            textFormat._$letterSpacing = textFormat._$letterSpacing !== tf._$letterSpacing ? null : tf._$letterSpacing;
+            textFormat._$rightMargin   = textFormat._$rightMargin   !== tf._$rightMargin   ? null : tf._$rightMargin;
+            textFormat._$size          = textFormat._$size          !== tf._$size          ? null : tf._$size;
+            textFormat._$underline     = textFormat._$underline     !== tf._$underline     ? null : tf._$underline;
 
         }
 
@@ -1189,7 +1187,7 @@ class TextField extends InteractiveObject
                             || obj.mode === TextField.BREAK
                         ) {
                             ++end_index;
-                            --offset
+                            --offset;
                             continue;
                         }
 
@@ -1268,7 +1266,7 @@ class TextField extends InteractiveObject
             } else {
 
                 // plain text
-                const texts = (this._$multiline)
+                const texts = this._$multiline
                     ? this._$text.split("\n")
                     : [this._$text.replace("\n", "")];
 
@@ -1281,7 +1279,7 @@ class TextField extends InteractiveObject
 
                     let tf = this.defaultTextFormat;
 
-                    const yIndex = (this._$wordWrap || this._$multiline)
+                    const yIndex = this._$wordWrap || this._$multiline
                         ? this._$heightTable.length
                         : 0;
 
@@ -1420,7 +1418,7 @@ class TextField extends InteractiveObject
                     }
 
                     if (node.hasAttribute("size")) {
-                        tf._$size = node.getAttribute("size")|0;
+                        tf._$size = node.getAttribute("size") | 0;
                     }
 
                     if (node.hasAttribute("color")) {
@@ -1428,7 +1426,7 @@ class TextField extends InteractiveObject
                     }
 
                     if (node.hasAttribute("letterSpacing")) {
-                        tf.letterSpacing = node.getAttribute("letterSpacing")|0;
+                        tf.letterSpacing = node.getAttribute("letterSpacing") | 0;
                     }
 
                     this._$parseTag(node, tf, tf_copy_offset);
@@ -1437,23 +1435,23 @@ class TextField extends InteractiveObject
                 case "TEXTFORMAT": // TEXTFORMAT
 
                     if (node.hasAttribute("blockindent")) {
-                        tf._$blockIndent = node.getAttribute("blockindent")|0;
+                        tf._$blockIndent = node.getAttribute("blockindent") | 0;
                     }
 
                     if (node.hasAttribute("indent")) {
-                        tf._$indent = node.getAttribute("indent")|0;
+                        tf._$indent = node.getAttribute("indent") | 0;
                     }
 
                     if (node.hasAttribute("leading")) {
-                        tf._$leading = node.getAttribute("leading")|0;
+                        tf._$leading = node.getAttribute("leading") | 0;
                     }
 
                     if (node.hasAttribute("leftmargin")) {
-                        tf._$leftMargin = node.getAttribute("leftmargin")|0;
+                        tf._$leftMargin = node.getAttribute("leftmargin") | 0;
                     }
 
                     if (node.hasAttribute("rightmargin")) {
-                        tf._$rightMargin = node.getAttribute("rightmargin")|0;
+                        tf._$rightMargin = node.getAttribute("rightmargin") | 0;
                     }
 
                     this._$parseTag(node, tf, tf_copy_offset);
@@ -1524,7 +1522,7 @@ class TextField extends InteractiveObject
                         if (this._$imageData.length > 0) {
 
                             const prevImage   = this._$imageData[this._$imageData.length - 1];
-                            const imageBottom = prevImage.y + prevImage.height + (prevImage.vspace * 2);
+                            const imageBottom = prevImage.y + prevImage.height + prevImage.vspace * 2;
 
                             obj.y = Util.$max(totalTextHeight, imageBottom);
                         }
@@ -1555,7 +1553,7 @@ class TextField extends InteractiveObject
     _$parseText (text, text_format, tf_copy_offset)
     {
 
-        let yIndex = (this._$heightTable.length - 1)|0;
+        let yIndex = this._$heightTable.length - 1 | 0;
 
         // new format
         let tf = text_format._$clone();
@@ -1578,7 +1576,6 @@ class TextField extends InteractiveObject
 
         Util.$poolFloat32Array6(playerMatrix);
         Util.$poolFloat32Array6(matrix);
-
 
         const maxWidth = boundsWidth - tf._$widthMargin() - 4;
         for (let idx = 0; idx < text.length; ++idx) {
@@ -1603,10 +1600,10 @@ class TextField extends InteractiveObject
 
             let breakCode = null;
             if (this._$multiline) {
-                breakCode = (obj.text === "\n" || obj.text === "\r" || obj.text === "\n\r");
+                breakCode = obj.text === "\n" || obj.text === "\r" || obj.text === "\n\r";
             }
 
-            let leading    = (yIndex) ? tf._$leading : 0;
+            let leading    = yIndex ? tf._$leading : 0;
             let actWidth   = 0;
             let width      = 0;
             let height     = 0;
@@ -1617,14 +1614,12 @@ class TextField extends InteractiveObject
             width    = Util.$textContext.measureText(obj.text).width + tf._$letterSpacing;
             actWidth = width;
 
-
             height     = this._$getTextHeight(tf);
             textHeight = height + leading;
             obj.height = height;
 
-
             if (breakCode ||
-                (this._$wordWrap && (this._$actTotalWidth + actWidth) > maxWidth)
+                this._$wordWrap && this._$actTotalWidth + actWidth > maxWidth
             ) {
 
                 // add y index
@@ -1634,7 +1629,6 @@ class TextField extends InteractiveObject
 
                 this._$heightTable[yIndex]     = this._$heightTable[yIndex - 1];
                 this._$textHeightTable[yIndex] = this._$textHeightTable[yIndex - 1];
-
 
                 // reset
                 const offsetX = this._$getImageOffsetX();
@@ -1708,7 +1702,6 @@ class TextField extends InteractiveObject
                         targetObj = this._$textData[insertIdx - offset];
                     }
 
-
                     // new line
                     offset = 1;
                     while (this._$textData.length > insertIdx + offset) {
@@ -1733,7 +1726,6 @@ class TextField extends InteractiveObject
                 }
             }
 
-
             if (!breakCode) {
 
                 // width data
@@ -1741,10 +1733,8 @@ class TextField extends InteractiveObject
                 obj.x             = this._$totalWidth;
                 this._$totalWidth = this._$totalWidth + width;
 
-
                 this._$actTotalWidth     += actWidth;
                 this._$widthTable[yIndex] = Util.$max(this._$widthTable[yIndex], this._$actTotalWidth);
-
 
                 // height data
                 this._$heightTable[yIndex]     = Util.$max(this._$heightTable[yIndex], height);
@@ -1791,7 +1781,7 @@ class TextField extends InteractiveObject
         const style = Util.$DIV.style;
         style.fontSize   = `${text_format._$size}px`;
         style.fontFamily = text_format._$font;
-        style.fontWeight = (text_format._$bold) ? "bold" : "normal";
+        style.fontWeight = text_format._$bold ? "bold" : "normal";
 
         return Util.$DIV.clientHeight;
     }
@@ -1815,12 +1805,12 @@ class TextField extends InteractiveObject
 
             const image = this._$imageData[idx];
 
-            const imageHeight = image.height + (image.vspace * 2);
+            const imageHeight = image.height + image.vspace * 2;
 
             if (image.y <= totalTextHeight
                 && totalTextHeight < image.y + imageHeight
             ) {
-                return image.width + (image.hspace * 2);
+                return image.width + image.hspace * 2;
             }
         }
 
@@ -1847,7 +1837,6 @@ class TextField extends InteractiveObject
         this._$actTotalWidth   = null;
         this._$maxScrollH      = null;
         this._$maxScrollV      = null;
-
 
         this._$doChanged();
         Util.$isUpdated = true;
@@ -1901,7 +1890,7 @@ class TextField extends InteractiveObject
 
                     case TextFieldAutoSize.RIGHT:
                         this._$bounds.xMax = this._$originBounds.xMax
-                            - ((this._$originBounds.xMax - this._$originBounds.xMin)
+                            - (this._$originBounds.xMax - this._$originBounds.xMin
                                 - (width - this._$originBounds.xMin));
                         break;
 
@@ -1913,7 +1902,7 @@ class TextField extends InteractiveObject
             }
 
             // set height
-            this._$bounds.yMax = (this.textHeight + 4) + this._$originBounds.yMin;
+            this._$bounds.yMax = this.textHeight + 4 + this._$originBounds.yMin;
         }
     }
 
@@ -1929,7 +1918,7 @@ class TextField extends InteractiveObject
         // default
         const totalWidth = this._$widthTable[obj.yIndex];
         const textFormat = obj.textFormat;
-        const indent     = ((textFormat._$blockIndent + textFormat._$leftMargin) > 0)
+        const indent     = textFormat._$blockIndent + textFormat._$leftMargin > 0
             ? textFormat._$blockIndent + textFormat._$leftMargin
             : 0;
 
@@ -1941,7 +1930,7 @@ class TextField extends InteractiveObject
 
             case textFormat._$align === TextFormatAlign.CENTER: // format CENTER
             case this._$autoSize === TextFieldAutoSize.CENTER: // autoSize CENTER
-                return Util.$max(0, (width / 2) - indent - textFormat._$rightMargin - (totalWidth / 2));
+                return Util.$max(0, width / 2 - indent - textFormat._$rightMargin - totalWidth / 2);
 
             case textFormat._$align === TextFormatAlign.RIGHT: // format RIGHT
             case this._$autoSize === TextFieldAutoSize.RIGHT: // autoSize RIGHT
@@ -1986,30 +1975,30 @@ class TextField extends InteractiveObject
         switch (this._$autoSize) {
 
             case TextFieldAutoSize.CENTER:
-                {
-                    const textWidth = this.textWidth + 4;
+            {
+                const textWidth = this.textWidth + 4;
 
-                    const xOffset = ((this._$originBounds.xMax - this._$originBounds.xMin) / 2)
-                        - (textWidth / 2);
+                const xOffset = (this._$originBounds.xMax - this._$originBounds.xMin) / 2
+                        - textWidth / 2;
 
-                    return Util.$getFloat32Array6(
-                        matrix[0], matrix[1], matrix[2],
-                        matrix[3], matrix[4] + xOffset, matrix[5]
-                    );
-                }
+                return Util.$getFloat32Array6(
+                    matrix[0], matrix[1], matrix[2],
+                    matrix[3], matrix[4] + xOffset, matrix[5]
+                );
+            }
 
             case TextFieldAutoSize.RIGHT:
-                {
-                    const textWidth = this.textWidth + 4;
+            {
+                const textWidth = this.textWidth + 4;
 
-                    const xOffset = (this._$originBounds.xMax - this._$originBounds.xMin)
+                const xOffset = this._$originBounds.xMax - this._$originBounds.xMin
                         - (textWidth - this._$originBounds.xMin);
 
-                    return Util.$getFloat32Array6(
-                        matrix[0], matrix[1], matrix[2],
-                        matrix[3], matrix[4] + xOffset, matrix[5]
-                    );
-                }
+                return Util.$getFloat32Array6(
+                    matrix[0], matrix[1], matrix[2],
+                    matrix[3], matrix[4] + xOffset, matrix[5]
+                );
+            }
 
             default:
                 return matrix;
@@ -2059,7 +2048,7 @@ class TextField extends InteractiveObject
         this._$type         = character.inputType;
         this._$multiline    = character.multiline;
         this._$wordWrap     = character.wordWrap;
-        this._$border       = character.border
+        this._$border       = character.border;
         this._$bounds       = character.bounds;
         this._$originBounds = character.bounds;
 
@@ -2137,7 +2126,7 @@ class TextField extends InteractiveObject
             multiColor = Util.$multiplicationColor(color_transform, rawColor);
         }
 
-        const alpha = Util.$clamp(multiColor[3] + (multiColor[7] / 255), 0 ,1);
+        const alpha = Util.$clamp(multiColor[3] + multiColor[7] / 255, 0 ,1);
         if (!alpha) {
             return ;
         }
@@ -2163,7 +2152,7 @@ class TextField extends InteractiveObject
             return;
         }
 
-        if (0 > (xMin + width) || 0 > (yMin + height)) {
+        if (0 > xMin + width || 0 > yMin + height) {
             return;
         }
 
@@ -2176,8 +2165,8 @@ class TextField extends InteractiveObject
             return;
         }
 
-        const xScale = +(Util.$sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]));
-        const yScale = +(Util.$sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]));
+        const xScale = +Util.$sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]);
+        const yScale = +Util.$sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]);
 
         // get cache
         const keys = Util.$getArray();
@@ -2207,7 +2196,6 @@ class TextField extends InteractiveObject
             canvas.width  = width;
             canvas.height = height;
             const ctx     = canvas.getContext("2d");
-
 
             // border and background
             if (this._$background || this._$border) {
@@ -2247,7 +2235,6 @@ class TextField extends InteractiveObject
 
             }
 
-
             // mask start
             ctx.save();
             ctx.beginPath();
@@ -2260,12 +2247,10 @@ class TextField extends InteractiveObject
             ctx.lineTo(2, 2);
             ctx.clip();
 
-
             ctx.beginPath();
             ctx.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], 0, 0);
             this._$doDraw(ctx, matrix, multiColor, false, width / matrix[0]);
             ctx.restore();
-
 
             texture = context
                 .frameBuffer
@@ -2281,7 +2266,6 @@ class TextField extends InteractiveObject
 
         Util.$poolArray(cacheKeys);
         Util.$poolArray(keys);
-
 
         let isFilter  = false;
         let offsetX   = 0;
@@ -2338,7 +2322,6 @@ class TextField extends InteractiveObject
 
         }
 
-
         // reset
         Util.$resetContext(context);
 
@@ -2376,14 +2359,13 @@ class TextField extends InteractiveObject
         // init
         const textData = this._$getTextData();
 
-        const limitWidth = (is_clip)
+        const limitWidth = is_clip
             ? 0
             : this.width;
 
-        const limitHeight = (is_clip)
+        const limitHeight = is_clip
             ? 0
             : this.height;
-
 
         // setup
         let xOffset      = 0;
@@ -2407,7 +2389,6 @@ class TextField extends InteractiveObject
                 continue;
             }
 
-
             let tf = obj.textFormat;
 
             // color
@@ -2421,7 +2402,7 @@ class TextField extends InteractiveObject
 
             }
 
-            const yIndex = obj.yIndex|0;
+            const yIndex = obj.yIndex | 0;
             switch (obj.mode) {
 
                 case TextField.BREAK:
@@ -2434,7 +2415,7 @@ class TextField extends InteractiveObject
                     }
 
                     offsetHeight += this._$textHeightTable[yIndex];
-                    offsetHeight += (2 * matrix[3]);
+                    offsetHeight += 2 * matrix[3];
 
                     xOffset = this._$getAlignOffset(this._$objectTable[yIndex], width);
                     if (tf._$underline) {
@@ -2507,12 +2488,11 @@ class TextField extends InteractiveObject
      * @param  {CanvasRenderingContext2D} context
      * @param  {Float32Array} matrix
      * @param  {object} options
-     * @param  {boolean} [is_clip=false]
      * @return {boolean}
      * @method
      * @private
      */
-    _$hit (context, matrix, options, is_clip = false)
+    _$hit (context, matrix, options)
     {
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();

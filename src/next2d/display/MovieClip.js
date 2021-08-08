@@ -1,4 +1,15 @@
 /**
+ * MovieClip クラスは、Sprite、DisplayObjectContainer、InteractiveObject、DisplayObject
+ * および EventDispatcher クラスを継承します。
+ * MovieClip オブジェクトには、Sprite オブジェクトとは違ってタイムラインがあります。
+ * タイムラインの再生ヘッドが停止されても、その MovieClip オブジェクトの子 MovieClip オブジェクトの再生ヘッドは停止しません。
+ *
+ * The MovieClip class inherits from the following classes: Sprite, DisplayObjectContainer,
+ * InteractiveObject, DisplayObject, and EventDispatcher.
+ * Unlike the Sprite object, a MovieClip object has a timeline.
+ * When the playback head of the timeline is stopped,
+ * the playback head of the child MovieClip object of that MovieClip object will not be stopped.
+ *
  * @class
  * @memberOf next2d.display
  * @extends  Sprite
@@ -6,17 +17,6 @@
 class MovieClip extends Sprite
 {
     /**
-     * MovieClip クラスは、Sprite、DisplayObjectContainer、InteractiveObject、DisplayObject
-     * および EventDispatcher クラスを継承します。
-     * MovieClip オブジェクトには、Sprite オブジェクトとは違ってタイムラインがあります。
-     * タイムラインの再生ヘッドが停止されても、その MovieClip オブジェクトの子 MovieClip オブジェクトの再生ヘッドは停止しません。
-     *
-     * The MovieClip class inherits from the following classes: Sprite, DisplayObjectContainer,
-     * InteractiveObject, DisplayObject, and EventDispatcher.
-     * Unlike the Sprite object, a MovieClip object has a timeline.
-     * When the playback head of the timeline is stopped,
-     * the playback head of the child MovieClip object of that MovieClip object will not be stopped.
-     *
      * @constructor
      * @public
      */
@@ -236,7 +236,7 @@ class MovieClip extends Sprite
      */
     get currentLabels ()
     {
-        return (!this._$labels) ? null : Util.$Array.from(this._$labels);
+        return !this._$labels ? null : Util.$Array.from(this._$labels);
     }
 
     /**
@@ -414,7 +414,7 @@ class MovieClip extends Sprite
         for (let idx = 0; idx < length; idx += 2) {
 
             let frame = arguments[idx];
-            if (Util.$isNaN(frame|0)) {
+            if (Util.$isNaN(frame | 0)) {
                 frame = this._$getFrameForLabel(frame);
             }
 
@@ -458,7 +458,7 @@ class MovieClip extends Sprite
     {
         for (let [frame, frameLabel] of this._$labels) {
             if (frameLabel.name === name) {
-                return frame|0;
+                return frame | 0;
             }
         }
         return 0;
@@ -542,7 +542,6 @@ class MovieClip extends Sprite
             return ;
         }
 
-
         const player = Util.$currentPlayer();
         switch (true) {
 
@@ -563,17 +562,14 @@ class MovieClip extends Sprite
                     this._$currentFrame = frame;
                     this._$clearChildren();
 
-
                     // set action position
                     player._$actionOffset = player._$actions.length;
-                    const position = (player._$actionOffset)
+                    const position = player._$actionOffset
                         ? player._$actions.indexOf(this)
                         : -1;
 
-
                     this._$canAction = true;
                     this._$prepareActions();
-
 
                     // adjustment
                     if (player._$actionOffset && player._$actionOffset !== player._$actions.length) {
@@ -585,7 +581,6 @@ class MovieClip extends Sprite
                         // reset
                         player._$actionOffset = 0;
                     }
-
 
                     if (!this._$actionProcess && (position > -1 || !player._$actionOffset)) {
 
@@ -695,7 +690,6 @@ class MovieClip extends Sprite
 
                         }
 
-
                     }
 
                 }
@@ -725,7 +719,7 @@ class MovieClip extends Sprite
         // draw flag
         this._$wait = false;
 
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
@@ -802,7 +796,7 @@ class MovieClip extends Sprite
 
         }
 
-        const children = (this._$needsChildren)
+        const children = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
@@ -813,7 +807,6 @@ class MovieClip extends Sprite
             if (!child._$isNext) {
                 continue;
             }
-
 
             if (isNext) {
 
@@ -876,7 +869,7 @@ class MovieClip extends Sprite
 
             const label = character.labels[idx];
 
-            this.addFrameLabel(new FrameLabel(label.name, label.frame))
+            this.addFrameLabel(new FrameLabel(label.name, label.frame));
 
         }
 

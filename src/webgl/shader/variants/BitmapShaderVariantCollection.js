@@ -23,7 +23,7 @@ class BitmapShaderVariantCollection
      */
     getBitmapShader ()
     {
-        const key = `b`;
+        const key = "b";
 
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
@@ -37,10 +37,9 @@ class BitmapShaderVariantCollection
     }
 
     /**
-     * @param {WebGLShaderUniform} uniform
      * @public
      */
-    setBitmapUniform (uniform)
+    setBitmapUniform ()
     {
         // uniform設定不要
     }
@@ -128,6 +127,7 @@ class BitmapShaderVariantCollection
     }
 
     /**
+     * @param {WebGLShaderUniform} uniform
      * @param {array} colorTransform
      * @public
      */
@@ -150,14 +150,17 @@ class BitmapShaderVariantCollection
     /**
      * @param {WebGLShaderUniform} uniform
      * @param {array}      matrix
-     * @param {boolean}    useSourceTexture
-     * @param {array}      srcTexMat
-     * @param {BitmapData} alphaBitmapData
-     * @param {array}      alphaTexMat
+     * @param {boolean}    use_source_texture
+     * @param {array}      src_tex_mat
+     * @param {BitmapData} alpha_bitmap_data
+     * @param {array}      alpha_tex_mat
      * @public
      */
-    setManipulatePixelsUniform (uniform, matrix, useSourceTexture, srcTexMat, alphaBitmapData, alphaTexMat)
-    {
+    setManipulatePixelsUniform (
+        uniform, matrix, use_source_texture,
+        src_tex_mat, alpha_bitmap_data, alpha_tex_mat
+    ) {
+
         const highp = uniform.highp;
 
         // vertex: u_matrix
@@ -173,55 +176,55 @@ class BitmapShaderVariantCollection
         highp[9]  = matrix[7];
         highp[10] = matrix[8];
 
-        if (alphaBitmapData) {
+        if (alpha_bitmap_data) {
             // vertex: u_src_tex_matrix
-            highp[12] = srcTexMat[0];
-            highp[13] = srcTexMat[1];
-            highp[14] = srcTexMat[2];
+            highp[12] = src_tex_mat[0];
+            highp[13] = src_tex_mat[1];
+            highp[14] = src_tex_mat[2];
 
-            highp[16] = srcTexMat[3];
-            highp[17] = srcTexMat[4];
-            highp[18] = srcTexMat[5];
+            highp[16] = src_tex_mat[3];
+            highp[17] = src_tex_mat[4];
+            highp[18] = src_tex_mat[5];
 
-            highp[20] = srcTexMat[6];
-            highp[21] = srcTexMat[7];
-            highp[22] = srcTexMat[8];
+            highp[20] = src_tex_mat[6];
+            highp[21] = src_tex_mat[7];
+            highp[22] = src_tex_mat[8];
 
             // vertex: u_alpha_tex_matrix
-            highp[24] = alphaTexMat[0];
-            highp[25] = alphaTexMat[1];
-            highp[26] = alphaTexMat[2];
+            highp[24] = alpha_tex_mat[0];
+            highp[25] = alpha_tex_mat[1];
+            highp[26] = alpha_tex_mat[2];
 
-            highp[3]  = alphaTexMat[3];
-            highp[7]  = alphaTexMat[4];
-            highp[11] = alphaTexMat[5];
+            highp[3]  = alpha_tex_mat[3];
+            highp[7]  = alpha_tex_mat[4];
+            highp[11] = alpha_tex_mat[5];
 
-            highp[15] = alphaTexMat[6];
-            highp[19] = alphaTexMat[7];
-            highp[23] = alphaTexMat[8];
-        } else if (useSourceTexture) {
+            highp[15] = alpha_tex_mat[6];
+            highp[19] = alpha_tex_mat[7];
+            highp[23] = alpha_tex_mat[8];
+        } else if (use_source_texture) {
             // vertex: u_src_tex_matrix
-            highp[12] = srcTexMat[0];
-            highp[13] = srcTexMat[1];
-            highp[14] = srcTexMat[2];
+            highp[12] = src_tex_mat[0];
+            highp[13] = src_tex_mat[1];
+            highp[14] = src_tex_mat[2];
 
-            highp[16] = srcTexMat[3];
-            highp[17] = srcTexMat[4];
-            highp[18] = srcTexMat[5];
+            highp[16] = src_tex_mat[3];
+            highp[17] = src_tex_mat[4];
+            highp[18] = src_tex_mat[5];
 
-            highp[3]  = srcTexMat[6];
-            highp[7]  = srcTexMat[7];
-            highp[11] = srcTexMat[8];
+            highp[3]  = src_tex_mat[6];
+            highp[7]  = src_tex_mat[7];
+            highp[11] = src_tex_mat[8];
         }
     }
 
     /**
      * @param {WebGLShaderUniform} uniform
-     * @param {number} sourceChannel
-     * @param {number} destChannel
+     * @param {number} source_channel
+     * @param {number} dest_channel
      * @public
      */
-    setCopyChannelUniform (uniform, sourceChannel, destChannel)
+    setCopyChannelUniform (uniform, source_channel, dest_channel)
     {
         const textures = uniform.textures;
         textures[0] = 0;
@@ -230,25 +233,25 @@ class BitmapShaderVariantCollection
         const mediump = uniform.mediump;
 
         // fragment: u_src_ch
-        mediump[0] =  sourceChannel       & 0x01;
-        mediump[1] = (sourceChannel >> 1) & 0x01;
-        mediump[2] = (sourceChannel >> 2) & 0x01;
-        mediump[3] = (sourceChannel >> 3) & 0x01;
+        mediump[0] = source_channel      & 0x01;
+        mediump[1] = source_channel >> 1 & 0x01;
+        mediump[2] = source_channel >> 2 & 0x01;
+        mediump[3] = source_channel >> 3 & 0x01;
         // fragment: u_dst_ch
-        mediump[4] =  destChannel       & 0x01;
-        mediump[5] = (destChannel >> 1) & 0x01;
-        mediump[6] = (destChannel >> 2) & 0x01;
-        mediump[7] = (destChannel >> 3) & 0x01;
+        mediump[4] = dest_channel      & 0x01;
+        mediump[5] = dest_channel >> 1 & 0x01;
+        mediump[6] = dest_channel >> 2 & 0x01;
+        mediump[7] = dest_channel >> 3 & 0x01;
     }
 
     /**
      * @param {WebGLShaderUniform} uniform
-     * @param {WebGLTexture} alphaTex
+     * @param {WebGLTexture} alpha_tex
      * @public
      */
-    setCopyPixelsUniform (uniform, alphaTex)
+    setCopyPixelsUniform (uniform, alpha_tex)
     {
-        if (alphaTex) {
+        if (alpha_tex) {
             const textures = uniform.textures;
             textures[0] = 0;
             textures[1] = 1;
@@ -276,15 +279,17 @@ class BitmapShaderVariantCollection
 
     /**
      * @param {WebGLShaderUniform} uniform
-     * @param {array}  texMatrix
-     * @param {array}  texStep
-     * @param {number} scanLoop
+     * @param {array}  tex_matrix
+     * @param {array}  tex_step
+     * @param {number} scan_loop
      * @param {array}  mask
      * @param {array}  color
      * @public
      */
-    setGetColorBoundsRectUniform (uniform, texMatrix, texStep, scanLoop, mask, color)
-    {
+    setGetColorBoundsRectUniform (
+        uniform, tex_matrix, tex_step, scan_loop, mask, color
+    ) {
+
         const highp = uniform.highp;
 
         // vertex: u_matrix
@@ -301,26 +306,26 @@ class BitmapShaderVariantCollection
         highp[10] = 1;
 
         // vertex: u_tex_matrix
-        highp[12] = texMatrix[0];
-        highp[13] = texMatrix[1];
-        highp[14] = texMatrix[2];
+        highp[12] = tex_matrix[0];
+        highp[13] = tex_matrix[1];
+        highp[14] = tex_matrix[2];
 
-        highp[16] = texMatrix[3];
-        highp[17] = texMatrix[4];
-        highp[18] = texMatrix[5];
+        highp[16] = tex_matrix[3];
+        highp[17] = tex_matrix[4];
+        highp[18] = tex_matrix[5];
 
-        highp[3]  = texMatrix[6];
-        highp[7]  = texMatrix[7];
-        highp[11] = texMatrix[8];
+        highp[3]  = tex_matrix[6];
+        highp[7]  = tex_matrix[7];
+        highp[11] = tex_matrix[8];
 
         const mediump = uniform.mediump;
 
         // fragment: u_src_tex_step
-        mediump[0] = texStep[0];
-        mediump[1] = texStep[1];
+        mediump[0] = tex_step[0];
+        mediump[1] = tex_step[1];
 
         // fragment: u_scan_loop
-        mediump[2] = scanLoop;
+        mediump[2] = scan_loop;
 
         const integer = uniform.integer;
 
@@ -352,7 +357,7 @@ class BitmapShaderVariantCollection
         textures[1] = 1;
 
         const mediump = uniform.mediump;
-        
+
         // fragment: u_multipliers
         mediump[0] = r;
         mediump[1] = g;
@@ -362,45 +367,45 @@ class BitmapShaderVariantCollection
 
     /**
      * @param {WebGLShaderUniform} uniform
-     * @param {number} seedR
-     * @param {number} seedG
-     * @param {number} seedB
-     * @param {number} seedA
-     * @param {number} ampR
-     * @param {number} ampG
-     * @param {number} ampB
-     * @param {number} ampA
-     * @param {number} lowR
-     * @param {number} lowG
-     * @param {number} lowB
-     * @param {number} lowA
+     * @param {number} seed_r
+     * @param {number} seed_g
+     * @param {number} seed_b
+     * @param {number} seed_a
+     * @param {number} amp_r
+     * @param {number} amp_g
+     * @param {number} amp_b
+     * @param {number} amp_a
+     * @param {number} low_r
+     * @param {number} low_g
+     * @param {number} low_b
+     * @param {number} low_a
      * @public
      */
     setNoiseUniform (
         uniform,
-        seedR, seedG, seedB, seedA,
-        ampR, ampG, ampB, ampA,
-        lowR, lowG, lowB, lowA
+        seed_r, seed_g, seed_b, seed_a,
+        amp_r, amp_g, amp_b, amp_a,
+        low_r, low_g, low_b, low_a
     ) {
         const mediump = uniform.mediump;
 
         // fragment: u_seed
-        mediump[0]  = seedR;
-        mediump[1]  = seedG;
-        mediump[2]  = seedB;
-        mediump[3]  = seedA;
+        mediump[0]  = seed_r;
+        mediump[1]  = seed_g;
+        mediump[2]  = seed_b;
+        mediump[3]  = seed_a;
 
         // fragment: u_amp
-        mediump[4]  = ampR;
-        mediump[5]  = ampG;
-        mediump[6]  = ampB;
-        mediump[7]  = ampA;
+        mediump[4]  = amp_r;
+        mediump[5]  = amp_g;
+        mediump[6]  = amp_b;
+        mediump[7]  = amp_a;
 
         // fragment: u_low
-        mediump[8]  = lowR;
-        mediump[9]  = lowG;
-        mediump[10] = lowB;
-        mediump[11] = lowA;
+        mediump[8]  = low_r;
+        mediump[9]  = low_g;
+        mediump[10] = low_b;
+        mediump[11] = low_a;
     }
 
     /**
@@ -471,8 +476,10 @@ class BitmapShaderVariantCollection
      * @param {number} ma
      * @public
      */
-    setThresholdUniform (uniform, tr, tg, tb, ta, cr, cg, cb, ca, mr, mg, mb, ma)
-    {
+    setThresholdUniform (
+        uniform, tr, tg, tb, ta, cr, cg, cb, ca, mr, mg, mb, ma
+    ) {
+
         const mediump = uniform.mediump;
 
         // fragment: u_threshold

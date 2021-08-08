@@ -1,4 +1,17 @@
 /**
+ * ColorMatrixFilter クラスを使用すると、表示オブジェクトにぼかし効果を適用できます。
+ * ぼかし効果は、イメージの細部をぼかします。ソフトフォーカスがかかっているように見えるぼかしから、
+ * 半透明ガラスを通してイメージを見るようにかすんで見えるガウスぼかしまで作成できます。
+ * このフィルターの quality プロパティを低く設定すると、ソフトフォーカスがかかっているように見えるぼかしになります。
+ * quality プロパティを高く設定すると、ガウスぼかしフィルターに似たものになります。
+ *
+ * The ColorMatrixFilter class lets you apply a blur visual effect to display objects.
+ * A blur effect softens the details of an image.
+ * You can produce blurs that range from a softly unfocused look to a Gaussian blur,
+ * a hazy appearance like viewing an image through semi-opaque glass.
+ * When the quality property of this filter is set to low, the result is a softly unfocused look.
+ * When the quality property is set to high, it approximates a Gaussian blur filter.
+ *
  * @class
  * @memberOf next2d.filters
  * @extends  BitmapFilter
@@ -6,19 +19,6 @@
 class ColorMatrixFilter extends BitmapFilter
 {
     /**
-     * ColorMatrixFilter クラスを使用すると、表示オブジェクトにぼかし効果を適用できます。
-     * ぼかし効果は、イメージの細部をぼかします。ソフトフォーカスがかかっているように見えるぼかしから、
-     * 半透明ガラスを通してイメージを見るようにかすんで見えるガウスぼかしまで作成できます。
-     * このフィルターの quality プロパティを低く設定すると、ソフトフォーカスがかかっているように見えるぼかしになります。
-     * quality プロパティを高く設定すると、ガウスぼかしフィルターに似たものになります。
-     *
-     * The ColorMatrixFilter class lets you apply a blur visual effect to display objects.
-     * A blur effect softens the details of an image.
-     * You can produce blurs that range from a softly unfocused look to a Gaussian blur,
-     * a hazy appearance like viewing an image through semi-opaque glass.
-     * When the quality property of this filter is set to low, the result is a softly unfocused look.
-     * When the quality property is set to high, it approximates a Gaussian blur filter.
-     *
      * @param {array} [matrix=null]
      *
      * @constructor
@@ -33,7 +33,7 @@ class ColorMatrixFilter extends BitmapFilter
          * @default null
          * @private
          */
-        this._$matrix = (matrix) ? matrix : [
+        this._$matrix = matrix ? matrix : [
             1, 0, 0, 0, 0,
             0, 1, 0, 0, 0,
             0, 0, 1, 0, 0,
@@ -152,13 +152,11 @@ class ColorMatrixFilter extends BitmapFilter
 
     /**
      * @param  {Rectangle} rect
-     * @param  {number}    [x_scale=null]
-     * @param  {number}    [y_scale=null]
      * @return {Rectangle}
      * @method
      * @private
      */
-    _$generateFilterRect (rect, x_scale = null, y_scale = null)
+    _$generateFilterRect (rect)
     {
         return rect;
     }
@@ -192,12 +190,11 @@ class ColorMatrixFilter extends BitmapFilter
 
     /**
      * @param  {CanvasToWebGLContext} context
-     * @param  {array} matrix
      * @return {WebGLTexture}
      * @method
      * @private
      */
-    _$applyFilter (context, matrix)
+    _$applyFilter (context)
     {
         this._$doChanged(false);
 

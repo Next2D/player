@@ -1,33 +1,33 @@
 /**
+ * ColorTransform クラスを使用すると、表示オブジェクトのカラー値を調整することができます。
+ * カラー調整、つまり "カラー変換" は、赤、緑、青、アルファ透明度の 4 つのチャンネルすべてに適用できます。
+ * <ul>
+ *     <li>新しい red 値 = (古い red 値 * redMultiplier ) + redOffset</li>
+ *     <li>新しい green 値 = (古い green 値 * greenMultiplier ) + greenOffset</li>
+ *     <li>新しい blue 値 = (古い blue 値 * blueMultiplier ) + blueOffset</li>
+ *     <li>新しい alpha 値 = (古い alpha 値 * alphaMultiplier ) + alphaOffset</li>
+ * </ul>
+ * 算出後、カラーチャンネル値が 255 よりも大きい場合は 255 に設定されます。
+ * 0 より小さい場合は 0 に設定されます。
+ *
+ * The ColorTransform class lets you adjust the color values in a display object.
+ * The color adjustment or color transformation can be applied
+ * to all four channels: red, green, blue, and alpha transparency.
+ * <ul>
+ *     <li>New red value = (old red value * redMultiplier) + redOffset</li>
+ *     <li>New green value = (old green value * greenMultiplier) + greenOffset</li>
+ *     <li>New blue value = (old blue value * blueMultiplier) + blueOffset</li>
+ *     <li>New alpha value = (old alpha value * alphaMultiplier) + alphaOffset</li>
+ * </ul>
+ * If any of the color channel values is greater than 255 after the calculation,
+ * it is set to 255. If it is less than 0, it is set to 0.
+ *
  * @class
  * @memberOf next2d.geom
  */
 class ColorTransform
 {
     /**
-     * ColorTransform クラスを使用すると、表示オブジェクトのカラー値を調整することができます。
-     * カラー調整、つまり "カラー変換" は、赤、緑、青、アルファ透明度の 4 つのチャンネルすべてに適用できます。
-     * <ul>
-     *     <li>新しい red 値 = (古い red 値 * redMultiplier ) + redOffset</li>
-     *     <li>新しい green 値 = (古い green 値 * greenMultiplier ) + greenOffset</li>
-     *     <li>新しい blue 値 = (古い blue 値 * blueMultiplier ) + blueOffset</li>
-     *     <li>新しい alpha 値 = (古い alpha 値 * alphaMultiplier ) + alphaOffset</li>
-     * </ul>
-     * 算出後、カラーチャンネル値が 255 よりも大きい場合は 255 に設定されます。
-     * 0 より小さい場合は 0 に設定されます。
-     *
-     * The ColorTransform class lets you adjust the color values in a display object.
-     * The color adjustment or color transformation can be applied
-     * to all four channels: red, green, blue, and alpha transparency.
-     * <ul>
-     *     <li>New red value = (old red value * redMultiplier) + redOffset</li>
-     *     <li>New green value = (old green value * greenMultiplier) + greenOffset</li>
-     *     <li>New blue value = (old blue value * blueMultiplier) + blueOffset</li>
-     *     <li>New alpha value = (old alpha value * alphaMultiplier) + alphaOffset</li>
-     * </ul>
-     * If any of the color channel values is greater than 255 after the calculation,
-     * it is set to 255. If it is less than 0, it is set to 0.
-     *
      * @param {number} [red_multiplier=1]
      * @param {number} [green_multiplier=1]
      * @param {number} [blue_multiplier=1]
@@ -158,7 +158,7 @@ class ColorTransform
     }
     set alphaOffset (alpha_offset)
     {
-        this._$colorTransform[7] = Util.$clamp(alpha_offset|0, -255, 255);
+        this._$colorTransform[7] = Util.$clamp(alpha_offset | 0, -255, 255);
     }
 
     /**
@@ -194,7 +194,7 @@ class ColorTransform
     }
     set blueOffset (blue_offset)
     {
-        this._$colorTransform[6] = Util.$clamp(blue_offset|0, -255, 255);
+        this._$colorTransform[6] = Util.$clamp(blue_offset | 0, -255, 255);
     }
 
     /**
@@ -230,7 +230,7 @@ class ColorTransform
     }
     set greenOffset (green_offset)
     {
-        this._$colorTransform[5] = Util.$clamp(green_offset|0, -255, 255);
+        this._$colorTransform[5] = Util.$clamp(green_offset | 0, -255, 255);
     }
 
     /**
@@ -266,7 +266,7 @@ class ColorTransform
     }
     set redOffset (red_offset)
     {
-        this._$colorTransform[4] = Util.$clamp(red_offset|0, -255, 255);
+        this._$colorTransform[4] = Util.$clamp(red_offset | 0, -255, 255);
     }
 
     /**

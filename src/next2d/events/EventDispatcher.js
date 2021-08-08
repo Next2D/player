@@ -1,22 +1,23 @@
 /**
+ * EventDispatcher クラスは、イベントを送出するすべてのクラスの基本クラスです。
+ *
+ * The EventDispatcher class is the base class for all classes that dispatch events.
+ *
+ * @example <caption>Example usage of EventDispatcher.</caption>
+ * // new ColorTransform
+ * const {EventDispatcher} = next2d.events;
+ * const eventDispatcher   = new EventDispatcher();
+ * eventDispatcher.addEventListener(Event.ENTER_FRAME, function (event)
+ * {
+ *     // more...
+ * });
+ *
  * @class
  * @memberOf next2d.events
  */
 class EventDispatcher
 {
     /**
-     * EventDispatcher クラスは、イベントを送出するすべてのクラスの基本クラスです。
-     * The EventDispatcher class is the base class for all classes that dispatch events.
-     *
-     * @example <caption>Example usage of EventDispatcher.</caption>
-     * // new ColorTransform
-     * const {EventDispatcher} = next2d.events;
-     * const eventDispatcher   = new EventDispatcher();
-     * eventDispatcher.addEventListener(Event.ENTER_FRAME, function (event)
-     * {
-     *     // more...
-     * });
-     *
      * @constructor
      * @public
      */
@@ -149,7 +150,6 @@ class EventDispatcher
 
         }
 
-
         // duplicate check
         let length = events.length;
         for (let idx = 0; idx < length; ++idx) {
@@ -189,10 +189,10 @@ class EventDispatcher
             {
                 switch (true) {
 
-                    case (a.priority > b.priority):
+                    case a.priority > b.priority:
                         return -1;
 
-                    case (a.priority < b.priority):
+                    case a.priority < b.priority:
                         return 1;
 
                     default:
@@ -229,7 +229,7 @@ class EventDispatcher
                 {
                     const stage = this.stage;
 
-                    const player = (stage)
+                    const player = stage
                         ? stage._$player
                         : Util.$currentPlayer();
 
@@ -378,58 +378,46 @@ class EventDispatcher
 
                         }
 
-
                         // start target
                         event._$eventPhase = EventPhase.AT_TARGET;
-                        switch (true) {
+                        if (!event._$stopImmediatePropagation && !event._$stopPropagation) {
+                            const length = events.length;
+                            for (let idx = 0; idx < length; ++idx) {
 
-                            case event._$stopImmediatePropagation:
-                            case event._$stopPropagation:
-                                break;
-
-                            default:
-
-                                const length = events.length;
-                                for (let idx = 0; idx < length; ++idx) {
-
-                                    const obj = events[idx];
-                                    if (obj.useCapture) {
-                                        continue;
-                                    }
-
-                                    // event execute
-                                    event._$currentTarget = obj.target;
-
-                                    try {
-
-                                        event._$listener = obj.listener;
-                                        obj.listener.call(Util.$window, event);
-
-                                    } catch (e) {
-
-                                        // TODO
-                                        // player
-                                        //     .stage
-                                        //     .loaderInfo
-                                        //     .uncaughtErrorEvents
-                                        //     .dispatchEvent(
-                                        //         new UncaughtErrorEvent(
-                                        //             UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
-                                        //         )
-                                        //     );
-                                        return false;
-                                    }
-
-                                    if (event._$stopImmediatePropagation) {
-                                        break;
-                                    }
-
+                                const obj = events[idx];
+                                if (obj.useCapture) {
+                                    continue;
                                 }
 
-                                break;
+                                // event execute
+                                event._$currentTarget = obj.target;
 
+                                try {
+
+                                    event._$listener = obj.listener;
+                                    obj.listener.call(Util.$window, event);
+
+                                } catch (e) {
+
+                                    // TODO
+                                    // player
+                                    //     .stage
+                                    //     .loaderInfo
+                                    //     .uncaughtErrorEvents
+                                    //     .dispatchEvent(
+                                    //         new UncaughtErrorEvent(
+                                    //             UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, Util.$errorObject
+                                    //         )
+                                    //     );
+                                    return false;
+                                }
+
+                                if (event._$stopImmediatePropagation) {
+                                    break;
+                                }
+
+                            }
                         }
-
 
                         // start bubbling
                         event._$eventPhase = EventPhase.BUBBLING_PHASE;
@@ -531,14 +519,14 @@ class EventDispatcher
             case Event.DEACTIVATE:
             case "keyDown":
             case "keyUp":
-
+            {
                 const stage  = this.stage;
-                const player = (stage)
+                const player = stage
                     ? stage._$player
                     : Util.$currentPlayer();
 
                 if (player && player.broadcastEvents.size
-                    && player.broadcastEvents.has(type)
+                        && player.broadcastEvents.has(type)
                 ) {
                     const events = player.broadcastEvents.get(type);
 
@@ -549,6 +537,7 @@ class EventDispatcher
                     }
                 }
                 return false;
+            }
 
             default:
                 return this._$events
@@ -607,7 +596,6 @@ class EventDispatcher
 
         }
 
-
         // remove listener
         const length = events.length;
         for (let idx = 0; idx < length; ++idx) {
@@ -622,7 +610,6 @@ class EventDispatcher
             }
 
         }
-
 
         if (!events.length) {
 
@@ -643,7 +630,6 @@ class EventDispatcher
 
             return ;
         }
-
 
         if (isBroadcast) {
 

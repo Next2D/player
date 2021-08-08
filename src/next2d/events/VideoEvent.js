@@ -1,4 +1,8 @@
 /**
+ * ビデオを再生または停止すると、VideoEvent オブジェクトを送出します。
+ *
+ * When a video is played or stopped, it sends out a VideoEvent object.
+ *
  * @class
  * @memberOf next2d.events
  * @extends  Event
@@ -6,10 +10,6 @@
 class VideoEvent extends Event
 {
     /**
-     * ビデオを再生または停止すると、VideoEvent オブジェクトを送出します。
-     *
-     * When a video is played or stopped, it sends out a VideoEvent object.
-     *
      * @param {string}  type
      * @param {boolean} [bubbles=true]
      * @param {boolean} [cancelable=false]
@@ -31,14 +31,14 @@ class VideoEvent extends Event
          * @default 0
          * @private
          */
-        this._$bytesLoaded = bytes_loaded|0;
+        this._$bytesLoaded = bytes_loaded | 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$bytesTotal  = bytes_total|0;
+        this._$bytesTotal  = bytes_total | 0;
     }
 
     /**

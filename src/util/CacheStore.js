@@ -43,9 +43,11 @@ class CacheStore
      */
     reset ()
     {
-        for (const [id, data] of this._$store) {
+        const store = this._$store.values();
+        for (const data of store) {
 
-            for (const [type, value] of data) {
+            const values = data.values();
+            for (const value of values) {
                 this.destroy(value);
             }
 
@@ -69,42 +71,43 @@ class CacheStore
         switch (object.constructor) {
 
             case Util.$WebGLTexture:
+                {
+                    const player = Util.$currentPlayer();
 
-                const player = Util.$currentPlayer();
+                    // cache to buffer
+                    const bitmapData = object._$bitmapData;
+                    if (bitmapData) {
 
-                // cache to buffer
-                const bitmapData = object._$bitmapData;
-                if (bitmapData) {
+                        bitmapData._$buffer = bitmapData._$getPixels(
+                            0, 0, bitmapData.width, bitmapData.height, "RGBA"
+                        );
 
-                    bitmapData._$buffer = bitmapData._$getPixels(
-                        0, 0, bitmapData.width, bitmapData.height, "RGBA"
-                    );
+                        delete object._$bitmapData;
+                    }
 
-                    delete object._$bitmapData;
+                    if (player._$context) {
+                        player
+                            ._$context
+                            .frameBuffer
+                            .releaseTexture(object);
+                    }
                 }
-
-                if (player._$context) {
-                    player
-                        ._$context
-                        .frameBuffer
-                        .releaseTexture(object);
-                }
-
                 break;
 
             case Util.$CanvasRenderingContext2D:
+                {
+                    const canvas = object.canvas;
+                    const width  = canvas.width;
+                    const height = canvas.height;
 
-                const canvas = object.canvas;
-                const width  = canvas.width;
-                const height = canvas.height;
+                    object.clearRect(0, 0, width + 1, height + 1);
 
-                object.clearRect(0, 0, width + 1, height + 1);
+                    // canvas reset
+                    canvas.width = canvas.height = 1;
 
-                // canvas reset
-                canvas.width = canvas.height = 1;
-
-                // pool
-                this._$pool.push(canvas);
+                    // pool
+                    this._$pool.push(canvas);
+                }
                 break;
 
             default:
@@ -134,10 +137,9 @@ class CacheStore
 
             const data = this._$store.get(id);
 
-            for (const [type, value] of data) {
-
+            const values = data.values();
+            for (const value of values) {
                 this.destroy(value);
-
             }
 
             Util.$poolMap(data);
@@ -201,11 +203,7 @@ class CacheStore
             this._$store.set(id, Util.$getMap());
         }
 
-        // life key
-        const key = this.generateLifeKey(id, type);
-
         const data = this._$store.get(id);
-
         if (!value) {
 
             data.delete(type);
@@ -218,12 +216,10 @@ class CacheStore
 
             return ;
 
-        } else {
-            const oldValue = data.get(type);
-            if (oldValue && oldValue !== value) {
-                console.log("TODO delete cache");
-                //this.destroy(oldValue);
-            }
+        }
+        const oldValue = data.get(type);
+        if (oldValue && oldValue !== value) {
+            this.destroy(oldValue);
         }
 
         // set cache
@@ -262,7 +258,7 @@ class CacheStore
         const keys = Util.$getArray();
 
         keys[0] = `${unique_key}`;
-        keys[1] = (str) ? this.generateHash(str) : "_0";
+        keys[1] = str ? this.generateHash(str) : "_0";
 
         return keys;
 
@@ -289,7 +285,7 @@ class CacheStore
         }
 
         const keys = Util.$getArray();
-        keys[1] = (str) ? this.generateHash(str) : "_0";
+        keys[1] = str ? this.generateHash(str) : "_0";
         keys[0] = `${unique_key}`;
 
         return keys;
@@ -330,7 +326,7 @@ class CacheStore
 
             const chr = str.charCodeAt(idx);
 
-            hash  = ((hash << 5) - hash) + chr;
+            hash  = (hash << 5) - hash + chr;
             hash |= 0;
         }
         return `_${hash}`;

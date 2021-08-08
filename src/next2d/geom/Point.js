@@ -1,23 +1,23 @@
 /**
+ * Point オブジェクトは 2 次元の座標系の位置を表します。
+ * x は水平方向の軸を表し、y は垂直方向の軸を表します。
+ *
+ * The Point object represents a location in a two-dimensional coordinate system,
+ * where x represents the horizontal axis and y represents the vertical axis.
+ *
+ * @example <caption>Example usage of Point.</caption>
+ * // new Point
+ * const {Point} = next2d.geom;
+ * const point   = new Point();
+ *
  * @class
  * @memberOf next2d.geom
  */
 class Point
 {
     /**
-     * Point オブジェクトは 2 次元の座標系の位置を表します。
-     * x は水平方向の軸を表し、y は垂直方向の軸を表します。
-     *
-     * The Point object represents a location in a two-dimensional coordinate system,
-     * where x represents the horizontal axis and y represents the vertical axis.
-     *
      * @param {number} [x=0]
      * @param {number} [y=0]
-     *
-     * @example <caption>Example usage of Point.</caption>
-     * // new Point
-     * const {Point} = next2d.geom;
-     * const point   = new Point();
      *
      * @constructor
      * @public
@@ -78,7 +78,7 @@ class Point
     toString ()
     {
         return `(x=${this.x}, y=${this.y})`;
-    };
+    }
 
     /**
      * @description 指定されたオブジェクトの空間名を返します。
@@ -187,20 +187,20 @@ class Point
     }
 
     /**
-     * @description pt1 と pt2 との距離を返します。
-     *              Returns the distance between pt1 and pt2.
+     * @description point1 と point2 との距離を返します。
+     *              Returns the distance between point1 and point2.
      *
-     * @param  {Point} pt1
-     * @param  {Point} pt2
+     * @param  {Point} point1
+     * @param  {Point} point2
      * @return {number}
      * @method
      * @static
      */
-    static distance (pt1, pt2)
+    static distance (point1, point2)
     {
         return Util.$sqrt(
-              Util.$pow(pt1._$x - pt2._$x, 2)
-            + Util.$pow(pt1._$y - pt2._$y, 2)
+            Util.$pow(point1._$x - point2._$x, 2)
+            + Util.$pow(point1._$y - point2._$y, 2)
         );
     }
 
@@ -215,24 +215,24 @@ class Point
      */
     equals (to_compare)
     {
-        return (this._$x === to_compare._$x && this._$y === to_compare._$y);
+        return this._$x === to_compare._$x && this._$y === to_compare._$y;
     }
 
     /**
      * @description 2 つの指定されたポイント間にあるポイントを判別します。
      *              Determines a point between two specified points.
      *
-     * @param  {Point}  pt1
-     * @param  {Point}  pt2
+     * @param  {Point}  point1
+     * @param  {Point}  point2
      * @param  {number} f
      * @return {Point}
      * @static
      */
-    static interpolate (pt1, pt2, f)
+    static interpolate (point1, point2, f)
     {
         return new Point(
-            pt1.x + (pt2.x - pt1.x) * (1 - f),
-            pt1.y + (pt2.y - pt1.y) * (1 - f)
+            point1.x + (point2.x - point1.x) * (1 - f),
+            point1.y + (point2.y - point1.y) * (1 - f)
         );
     }
 
@@ -282,7 +282,6 @@ class Point
     {
         return new Point(len * Util.$cos(angle), len * Util.$sin(angle));
     }
-
 
     /**
      * @description Point のメンバーを指定の値に設定します。

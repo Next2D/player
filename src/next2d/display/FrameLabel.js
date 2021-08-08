@@ -1,4 +1,24 @@
 /**
+ * FrameLabel オブジェクトには、フレーム番号および対応するラベル名を指定するプロパティがあります。
+ * MovieClip クラスには、currentLabels プロパティがあります。
+ * これは、現在のシーンの FrameLabel オブジェクトの配列です。
+ * MovieClip インスタンスがシーンを使用していない場合、配列には MovieClip インスタンス全体のすべてのフレームラベルが含まれます。
+ *
+ * The FrameLabel object contains properties that specify a frame number and the corresponding label name.
+ * The MovieClip class includes a currentLabels property,
+ * which is an Array of FrameLabel objects for the current scene.
+ * If the MovieClip instance does not use scenes,
+ * the Array includes all frame labels from the entire MovieClip instance.
+ *
+ * @example <caption>Example usage of FrameLabel.</caption>
+ * // static BlendMode
+ * const {FrameLabel} = next2d.display;
+ * const frameLabel = new FrameLabel();
+ * frameLabel.addEventListener(Event.FRAME_LABEL, function (event)
+ * {
+ *     // more...
+ * }
+ *
  * @class
  * @memberOf next2d.display
  * @extends  EventDispatcher
@@ -6,26 +26,6 @@
 class FrameLabel extends EventDispatcher
 {
     /**
-     * FrameLabel オブジェクトには、フレーム番号および対応するラベル名を指定するプロパティがあります。
-     * MovieClip クラスには、currentLabels プロパティがあります。
-     * これは、現在のシーンの FrameLabel オブジェクトの配列です。
-     * MovieClip インスタンスがシーンを使用していない場合、配列には MovieClip インスタンス全体のすべてのフレームラベルが含まれます。
-     *
-     * The FrameLabel object contains properties that specify a frame number and the corresponding label name.
-     * The MovieClip class includes a currentLabels property,
-     * which is an Array of FrameLabel objects for the current scene.
-     * If the MovieClip instance does not use scenes,
-     * the Array includes all frame labels from the entire MovieClip instance.
-     *
-     * @example <caption>Example usage of FrameLabel.</caption>
-     * // static BlendMode
-     * const {FrameLabel} = next2d.display;
-     * const frameLabel = new FrameLabel();
-     * frameLabel.addEventListener(Event.FRAME_LABEL, function (event)
-     * {
-     *     // more...
-     * }
-     *
      * @param {string} name
      * @param {number} frame
      *
@@ -46,7 +46,7 @@ class FrameLabel extends EventDispatcher
          * @type {number}
          * @private
          */
-        this._$frame = frame|0;
+        this._$frame = frame | 0;
     }
 
     /**

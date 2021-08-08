@@ -1,18 +1,12 @@
 /**
+ * BitmapFilterQuality クラスには、BitmapFilter オブジェクトのレンダリング品質を設定する値が含まれます。
+ * The BitmapFilterQuality class contains values to set the rendering quality of a BitmapFilter object.
+ *
  * @class
  * @memberOf next2d.filters
  */
 class BitmapFilterQuality
 {
-    /**
-     * BitmapFilterQuality クラスには、BitmapFilter オブジェクトのレンダリング品質を設定する値が含まれます。
-     * The BitmapFilterQuality class contains values to set the rendering quality of a BitmapFilter object.
-     *
-     * @constructor
-     * @public
-     */
-    constructor() {}
-
     /**
      * @description 指定されたクラスのストリングを返します。
      *              Returns the string representation of the specified class.

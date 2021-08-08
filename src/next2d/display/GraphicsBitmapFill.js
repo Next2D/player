@@ -1,5 +1,12 @@
 /**
+ * ビットマップ塗りを定義します。ビットマップは、スムージング、繰り返し、
+ * またはタイリング表示して領域を塗りつぶしたり、変換マトリックスを使用して操作できます。
+ *
+ * Defines a bitmap fill. The bitmap can be smoothed,
+ * repeated or tiled to fill the area; or manipulated using a transformation matrix.
+ *
  * @class
+ * @memberOf next2d.display
  * @private
  */
 class GraphicsBitmapFill
@@ -138,7 +145,7 @@ class GraphicsBitmapFill
     {
         return new GraphicsBitmapFill(
             this._$bitmapData,
-            (this._$matrix) ? this._$matrix.clone() : null,
+            this._$matrix ? this._$matrix.clone() : null,
             this._$repeat,
             this._$smooth
         );
@@ -158,7 +165,7 @@ class GraphicsBitmapFill
             ? this._$bitmapData._$buffer
             : this._$bitmapData.toUint8Array();
 
-        const matrix = (this._$matrix)
+        const matrix = this._$matrix
             ? this._$matrix._$matrix
             : Util.$MATRIX_ARRAY_IDENTITY;
 
@@ -167,7 +174,7 @@ class GraphicsBitmapFill
             this._$bitmapData.height,
             buffer,
             matrix,
-            (this._$repeat) ? "repeat" : "no-repeat",
+            this._$repeat ? "repeat" : "no-repeat",
             this._$smooth
         );
     }

@@ -53,15 +53,13 @@ class Next2D
         // create event handler
         const errorHandler = function (event)
         {
-            event.target.removeEventListener(Event.COMPLETE, completeHandler);
-            event.target.removeEventListener(IOErrorEvent.IO_ERROR, errorHandler);
+            event.target.removeEventListener(IOErrorEvent.IO_ERROR, event.listener);
             alert("Error: " + event.message);
         };
         const completeHandler = function (event)
         {
             const loaderInfo = event.target;
-            loaderInfo.removeEventListener(Event.COMPLETE, completeHandler);
-            loaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, errorHandler);
+            loaderInfo.removeEventListener(Event.COMPLETE, event.listener);
 
             const player = Util.$currentPlayer();
             const stage  = player.stage;
@@ -72,7 +70,7 @@ class Next2D
             player.stage.frameRate = data.fps;
 
             const color = Util.$intToRGBA(
-                `0x${data.bgColor.substr(1)}`|0
+                `0x${data.bgColor.substr(1)}` | 0
             );
 
             player._$context._$setColor(
@@ -113,11 +111,11 @@ class Next2D
         const player = this._$player;
 
         player._$mode = "create";
-        player._$stage.frameRate = fps|0;
+        player._$stage.frameRate = fps | 0;
 
         // setup
-        player.width  = width|0;
-        player.height = height|0;
+        player.width  = width | 0;
+        player.height = height | 0;
         player.setOptions(options);
 
         return player._$stage.addChild(new MovieClip());

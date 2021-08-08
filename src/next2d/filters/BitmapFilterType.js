@@ -1,17 +1,12 @@
 /**
+ * BitmapFilterType クラスには、BitmapFilter の型を設定する値が含まれます。
+ * The BitmapFilterType class contains values to set the type of a BitmapFilter.
+ *
  * @class
  * @memberOf next2d.filters
  */
 class BitmapFilterType
 {
-    /**
-     * BitmapFilterType クラスには、BitmapFilter の型を設定する値が含まれます。
-     * The BitmapFilterType class contains values to set the type of a BitmapFilter.
-     *
-     * @constructor
-     * @public
-     */
-    constructor() {}
 
     /**
      * @description 指定されたクラスのストリングを返します。

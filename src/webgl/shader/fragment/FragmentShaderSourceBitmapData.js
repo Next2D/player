@@ -567,23 +567,23 @@ void main() {
     }
 
     /**
-     * @param  {string} byteOrder
+     * @param  {string} byte_order
      * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static GET_PIXELS (byteOrder, k)
+    static GET_PIXELS (byte_order, k)
     {
-        switch (byteOrder) {
+        switch (byte_order) {
             case "RGBA":
-                byteOrder = 1;
+                byte_order = 1;
                 break;
             case "BGRA":
-                byteOrder = 2;
+                byte_order = 2;
                 break;
             default: // ARGB
-                byteOrder = 0;
+                byte_order = 0;
                 break;
         }
 
@@ -598,9 +598,9 @@ ${k.outColor()}
 void main() {
     vec4 color = ${k.texture2D()}(u_src_tex, v_src_tex_coord);
 
-#if ${byteOrder} == 1  // RGBA
+#if ${byte_order} == 1  // RGBA
     ${k.fragColor()} = vec4(color.rgb / max(0.0001, color.a), color.a);
-#elif ${byteOrder} == 2  // BGRA
+#elif ${byte_order} == 2  // BGRA
     ${k.fragColor()} = vec4(color.bgr / max(0.0001, color.a), color.a);
 #else  // ARGB
     ${k.fragColor()} = vec4(color.a, color.rgb / max(0.0001, color.a));
@@ -611,23 +611,23 @@ void main() {
     }
 
     /**
-     * @param  {string} byteOrder
+     * @param  {string} byte_order
      * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static SET_PIXELS (byteOrder, k)
+    static SET_PIXELS (byte_order, k)
     {
-        switch (byteOrder) {
+        switch (byte_order) {
             case "RGBA":
-                byteOrder = 1;
+                byte_order = 1;
                 break;
             case "BGRA":
-                byteOrder = 2;
+                byte_order = 2;
                 break;
             default: // ARGB
-                byteOrder = 0;
+                byte_order = 0;
                 break;
         }
 
@@ -642,9 +642,9 @@ ${k.outColor()}
 void main() {
     vec4 color = ${k.texture2D()}(u_src_tex, v_src_tex_coord);
 
-#if ${byteOrder} == 1  // RGBA
+#if ${byte_order} == 1  // RGBA
     ${k.fragColor()} = vec4(color.rgb * color.a, color.a);
-#elif ${byteOrder} == 2  // BGRA
+#elif ${byte_order} == 2  // BGRA
     ${k.fragColor()} = vec4(color.bgr * color.a, color.a);
 #else  // ARGB
     ${k.fragColor()} = vec4(color.gba * color.r, color.r);

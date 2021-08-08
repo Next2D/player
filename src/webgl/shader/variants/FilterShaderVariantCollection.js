@@ -19,20 +19,20 @@ class FilterShaderVariantCollection
     }
 
     /**
-     * @param  {number}  halfBlur
+     * @param  {number}  half_blur
      * @return {CanvasToWebGLShader}
      * @method
      * @public
      */
-    getBlurFilterShader (halfBlur)
+    getBlurFilterShader (half_blur)
     {
-        const key = `b${halfBlur}`;
+        const key = `b${half_blur}`;
 
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
                 VertexShaderSource.TEXTURE(this._$keyword),
-                FragmentShaderSourceBlurFilter.TEMPLATE(this._$keyword, halfBlur)
+                FragmentShaderSourceBlurFilter.TEMPLATE(this._$keyword, half_blur)
             ));
         }
 
@@ -40,38 +40,41 @@ class FilterShaderVariantCollection
     }
 
     /**
-     * @param  {boolean} transformsBase
-     * @param  {boolean} transformsBlur
-     * @param  {boolean} isGlow
+     * @param  {boolean} transforms_base
+     * @param  {boolean} transforms_blur
+     * @param  {boolean} is_glow
      * @param  {string}  type
      * @param  {boolean} knockout
-     * @param  {boolean} appliesStrength
-     * @param  {boolean} isGradient
+     * @param  {boolean} applies_strength
+     * @param  {boolean} is_gradient
      * @return {CanvasToWebGLShader}
      * @method
      * @public
      */
-    getBitmapFilterShader (transformsBase, transformsBlur, isGlow, type, knockout, appliesStrength, isGradient)
-    {
-        const key1 = (transformsBase) ? "y" : "n";
-        const key2 = (transformsBlur) ? "y" : "n";
-        const key3 = (isGlow) ? "y" : "n";
-        const key4 = (knockout) ? "y" : "n";
-        const key5 = (appliesStrength) ? "y" : "n";
+    getBitmapFilterShader (
+        transforms_base, transforms_blur, is_glow,
+        type, knockout, applies_strength, is_gradient
+    ) {
+
+        const key1 = transforms_base ? "y" : "n";
+        const key2 = transforms_blur ? "y" : "n";
+        const key3 = is_glow ? "y" : "n";
+        const key4 = knockout ? "y" : "n";
+        const key5 = applies_strength ? "y" : "n";
         const key = `f${key1}${key2}${key3}${type}${key4}${key5}`;
 
         if (!this._$collection.has(key)) {
             let texturesLength = 1;
-            if (transformsBase) { texturesLength++; }
-            if (isGradient) { texturesLength++; }
+            if (transforms_base) { texturesLength++ }
+            if (is_gradient) { texturesLength++ }
 
-            let mediumpLength = ((transformsBase) ? 4 : 0)
-                + ((transformsBlur) ? 4 : 0)
-                + ((appliesStrength) ? 1 : 0);
-            if (isGradient) {
+            let mediumpLength = (transforms_base ? 4 : 0)
+                + (transforms_blur ? 4 : 0)
+                + (applies_strength ? 1 : 0);
+            if (is_gradient) {
                 // do nothing
             } else {
-                mediumpLength += (isGlow) ? 4 : 8;
+                mediumpLength += is_glow ? 4 : 8;
             }
             mediumpLength = Util.$ceil(mediumpLength / 4);
 
@@ -80,9 +83,9 @@ class FilterShaderVariantCollection
                 VertexShaderSource.TEXTURE(this._$keyword),
                 FragmentShaderSourceFilter.TEMPLATE(
                     this._$keyword, texturesLength, mediumpLength,
-                    transformsBase, transformsBlur,
-                    isGlow, type, knockout,
-                    appliesStrength, isGradient
+                    transforms_base, transforms_blur,
+                    is_glow, type, knockout,
+                    applies_strength, is_gradient
                 )
             ));
         }
@@ -97,7 +100,7 @@ class FilterShaderVariantCollection
      */
     getColorMatrixFilterShader ()
     {
-        const key = `m`;
+        const key = "m";
 
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
@@ -113,29 +116,29 @@ class FilterShaderVariantCollection
     /**
      * @param  {number}  x
      * @param  {number}  y
-     * @param  {boolean} preserveAlpha
+     * @param  {boolean} preserve_alpha
      * @param  {boolean} clamp
      * @return {CanvasToWebGLShader}
      * @method
      * @public
      */
-    getConvolutionFilterShader (x, y, preserveAlpha, clamp)
+    getConvolutionFilterShader (x, y, preserve_alpha, clamp)
     {
         const key1 = ("0" + x).slice(-2);
         const key2 = ("0" + y).slice(-2);
-        const key3 = (preserveAlpha) ? "y" : "n";
-        const key4 = (clamp) ? "y" : "n";
+        const key3 = preserve_alpha ? "y" : "n";
+        const key4 = clamp ? "y" : "n";
         const key = `c${key1}${key2}${key3}${key4}`;
 
         if (!this._$collection.has(key)) {
-            const mediumpLength = ((clamp) ? 1 : 2) + Util.$ceil((x * y) / 4);
+            const mediumpLength = (clamp ? 1 : 2) + Util.$ceil(x * y / 4);
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
                 VertexShaderSource.TEXTURE(this._$keyword),
                 FragmentShaderSourceConvolutionFilter.TEMPLATE(
                     this._$keyword, mediumpLength,
-                    x, y, preserveAlpha, clamp
+                    x, y, preserve_alpha, clamp
                 )
             ));
         }
@@ -144,26 +147,26 @@ class FilterShaderVariantCollection
     }
 
     /**
-     * @param  {number} componentX
-     * @param  {number} componentY
+     * @param  {number} component_x
+     * @param  {number} component_y
      * @param  {string} mode
      * @return {CanvasToWebGLShader}
      * @method
      * @public
      */
-    getDisplacementMapFilterShader (componentX, componentY, mode)
+    getDisplacementMapFilterShader (component_x, component_y, mode)
     {
-        const key = `d${componentX}${componentY}${mode}`;
+        const key = `d${component_x}${component_y}${mode}`;
 
         if (!this._$collection.has(key)) {
-            const mediumpLength = (mode === DisplacementMapFilterMode.COLOR) ? 3 : 2;
+            const mediumpLength = mode === DisplacementMapFilterMode.COLOR ? 3 : 2;
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
                 VertexShaderSource.TEXTURE(this._$keyword),
                 FragmentShaderSourceDisplacementMapFilter.TEMPLATE(
                     this._$keyword, mediumpLength,
-                    componentX, componentY, mode
+                    component_x, component_y, mode
                 )
             ));
         }
@@ -175,18 +178,18 @@ class FilterShaderVariantCollection
      * @param {WebGLShaderUniform} uniform
      * @param {number}  width
      * @param {number}  height
-     * @param {boolean} isHorizontal
+     * @param {boolean} is_horizontal
      * @param {number}  fraction
      * @param {number}  samples
      * @method
      * @public
      */
-    setBlurFilterUniform (uniform, width, height, isHorizontal, fraction, samples)
+    setBlurFilterUniform (uniform, width, height, is_horizontal, fraction, samples)
     {
         const mediump = uniform.mediump;
 
         // fragment: u_offset
-        if (isHorizontal) {
+        if (is_horizontal) {
             mediump[0] = 1 / width;
             mediump[1] = 0;
         } else {
@@ -205,50 +208,50 @@ class FilterShaderVariantCollection
      * @param {WebGLShaderUniform} uniform
      * @param {number}  width
      * @param {number}  height
-     * @param {number}  baseWidth
-     * @param {number}  baseHeight
-     * @param {number}  baseOffsetX
-     * @param {number}  baseOffsetY
-     * @param {number}  blurWidth
-     * @param {number}  blurHeight
-     * @param {number}  blurOffsetX
-     * @param {number}  blurOffsetY
-     * @param {boolean} isGlow
+     * @param {number}  base_width
+     * @param {number}  base_height
+     * @param {number}  base_offset_x
+     * @param {number}  base_offset_y
+     * @param {number}  blur_width
+     * @param {number}  blur_height
+     * @param {number}  blur_offset_x
+     * @param {number}  blur_offset_y
+     * @param {boolean} is_glow
      * @param {number}  strength
-     * @param {number}  colorR1
-     * @param {number}  colorG1
-     * @param {number}  colorB1
-     * @param {number}  colorA1
-     * @param {number}  colorR2
-     * @param {number}  colorG2
-     * @param {number}  colorB2
-     * @param {number}  colorA2
-     * @param {boolean} transformsBase
-     * @param {boolean} transformsBlur
-     * @param {boolean} appliesStrength
-     * @param {boolean} isGradient
+     * @param {number}  color_r1
+     * @param {number}  color_g1
+     * @param {number}  color_b1
+     * @param {number}  color_a1
+     * @param {number}  color_r2
+     * @param {number}  color_g2
+     * @param {number}  color_b2
+     * @param {number}  color_a2
+     * @param {boolean} transforms_base
+     * @param {boolean} transforms_blur
+     * @param {boolean} applies_strength
+     * @param {boolean} is_gradient
      * @method
      * @public
      */
     setBitmapFilterUniform (
         uniform, width, height,
-        baseWidth, baseHeight, baseOffsetX, baseOffsetY,
-        blurWidth, blurHeight, blurOffsetX, blurOffsetY,
-        isGlow, strength,
-        colorR1, colorG1, colorB1, colorA1,
-        colorR2, colorG2, colorB2, colorA2,
-        transformsBase, transformsBlur, appliesStrength, isGradient
+        base_width, base_height, base_offset_x, base_offset_y,
+        blur_width, blur_height, blur_offset_x, blur_offset_y,
+        is_glow, strength,
+        color_r1, color_g1, color_b1, color_a1,
+        color_r2, color_g2, color_b2, color_a2,
+        transforms_base, transforms_blur, applies_strength, is_gradient
     ) {
         let textures;
         // fragment: u_textures
-        if (transformsBase) {
+        if (transforms_base) {
             textures = uniform.textures;
             textures[0] = 0;
             textures[1] = 1;
-            if (isGradient) {
+            if (is_gradient) {
                 textures[2] = 2;
             }
-        } else if (isGradient) {
+        } else if (is_gradient) {
             textures = uniform.textures;
             textures[0] = 0;
             textures[1] = 2;
@@ -257,50 +260,50 @@ class FilterShaderVariantCollection
         const mediump = uniform.mediump;
         let i = 0;
 
-        if (transformsBase) {
+        if (transforms_base) {
             // fragment: u_uv_scale
-            mediump[i]     = width / baseWidth;
-            mediump[i + 1] = height / baseHeight;
+            mediump[i]     = width / base_width;
+            mediump[i + 1] = height / base_height;
             // fragment: u_uv_offset
-            mediump[i + 2] = baseOffsetX / baseWidth;
-            mediump[i + 3] = (height - baseHeight - baseOffsetY) / baseHeight;
+            mediump[i + 2] = base_offset_x / base_width;
+            mediump[i + 3] = (height - base_height - base_offset_y) / base_height;
             i += 4;
         }
 
-        if (transformsBlur) {
+        if (transforms_blur) {
             // fragment: u_st_scale
-            mediump[i]     = width / blurWidth;
-            mediump[i + 1] = height / blurHeight;
+            mediump[i]     = width / blur_width;
+            mediump[i + 1] = height / blur_height;
             // fragment: u_st_offset
-            mediump[i + 2] = blurOffsetX / blurWidth;
-            mediump[i + 3] = (height - blurHeight - blurOffsetY) / blurHeight;
+            mediump[i + 2] = blur_offset_x / blur_width;
+            mediump[i + 3] = (height - blur_height - blur_offset_y) / blur_height;
             i += 4;
         }
 
-        if (isGradient) {
+        if (is_gradient) {
             // do nothing
-        } else if (isGlow) {
+        } else if (is_glow) {
             // fragment: u_color
-            mediump[i]     = colorR1;
-            mediump[i + 1] = colorG1;
-            mediump[i + 2] = colorB1;
-            mediump[i + 3] = colorA1;
+            mediump[i]     = color_r1;
+            mediump[i + 1] = color_g1;
+            mediump[i + 2] = color_b1;
+            mediump[i + 3] = color_a1;
             i += 4;
         } else {
             // fragment: u_highlight_color
-            mediump[i]     = colorR1;
-            mediump[i + 1] = colorG1;
-            mediump[i + 2] = colorB1;
-            mediump[i + 3] = colorA1;
+            mediump[i]     = color_r1;
+            mediump[i + 1] = color_g1;
+            mediump[i + 2] = color_b1;
+            mediump[i + 3] = color_a1;
             // fragment: u_shadow_color
-            mediump[i + 4] = colorR2;
-            mediump[i + 5] = colorG2;
-            mediump[i + 6] = colorB2;
-            mediump[i + 7] = colorA2;
-            i+= 8;
+            mediump[i + 4] = color_r2;
+            mediump[i + 5] = color_g2;
+            mediump[i + 6] = color_b2;
+            mediump[i + 7] = color_a2;
+            i += 8;
         }
 
-        if (appliesStrength) {
+        if (applies_strength) {
             // fragment: u_strength
             mediump[i++] = strength;
         }
@@ -352,17 +355,17 @@ class FilterShaderVariantCollection
      * @param {number}  divisor
      * @param {number}  bias
      * @param {boolean} clamp
-     * @param {number}  colorR
-     * @param {number}  colorG
-     * @param {number}  colorB
-     * @param {number}  colorA
+     * @param {number}  color_r
+     * @param {number}  color_g
+     * @param {number}  color_b
+     * @param {number}  color_a
      * @method
      * @public
      */
     setConvolutionFilterUniform (
         uniform,
         width, height, matrix, divisor, bias, clamp,
-        colorR, colorG, colorB, colorA
+        color_r, color_g, color_b, color_a
     ) {
         const mediump = uniform.mediump;
 
@@ -380,10 +383,10 @@ class FilterShaderVariantCollection
 
         if (!clamp) {
             // fragment: u_substitute_color
-            mediump[i]     = colorR;
-            mediump[i + 1] = colorG;
-            mediump[i + 2] = colorB;
-            mediump[i + 3] = colorA;
+            mediump[i]     = color_r;
+            mediump[i + 1] = color_g;
+            mediump[i + 2] = color_b;
+            mediump[i + 3] = color_a;
             i += 4;
         }
 
@@ -396,26 +399,26 @@ class FilterShaderVariantCollection
 
     /**
      * @param {WebGLShaderUniform} uniform
-     * @param {number} mapWidth
-     * @param {number} mapHeight
-     * @param {number} baseWidth
-     * @param {number} baseHeight
-     * @param {number} pointX
-     * @param {number} pointY
-     * @param {number} scaleX
-     * @param {number} scaleY
+     * @param {number} map_width
+     * @param {number} map_height
+     * @param {number} base_width
+     * @param {number} base_height
+     * @param {number} point_x
+     * @param {number} point_y
+     * @param {number} scale_x
+     * @param {number} scale_y
      * @param {string} mode
-     * @param {number} colorR
-     * @param {number} colorG
-     * @param {number} colorB
-     * @param {number} colorA
+     * @param {number} color_r
+     * @param {number} color_g
+     * @param {number} color_b
+     * @param {number} color_a
      * @method
      * @public
      */
     setDisplacementMapFilterUniform (
-        uniform, mapWidth, mapHeight, baseWidth, baseHeight,
-        pointX, pointY, scaleX, scaleY, mode,
-        colorR, colorG, colorB, colorA
+        uniform, map_width, map_height, base_width, base_height,
+        point_x, point_y, scale_x, scale_y, mode,
+        color_r, color_g, color_b, color_a
     ) {
         const textures = uniform.textures;
         textures[0] = 0;
@@ -424,22 +427,22 @@ class FilterShaderVariantCollection
         const mediump = uniform.mediump;
 
         // fragment: u_uv_to_st_scale
-        mediump[0] = baseWidth  / mapWidth;
-        mediump[1] = baseHeight / mapHeight;
+        mediump[0] = base_width  / map_width;
+        mediump[1] = base_height / map_height;
         // fragment: u_uv_to_st_offset
-        mediump[2] = pointX / mapWidth;
-        mediump[3] = (baseHeight - mapHeight - pointY) / mapHeight;
+        mediump[2] = point_x / map_width;
+        mediump[3] = (base_height - map_height - point_y) / map_height;
 
         // fragment: u_scale
-        mediump[4] =  scaleX / baseWidth;
-        mediump[5] = -scaleY / baseHeight;
+        mediump[4] =  scale_x / base_width;
+        mediump[5] = -scale_y / base_height;
 
         if (mode === DisplacementMapFilterMode.COLOR) {
             // fragment: u_substitute_color
-            mediump[8]  = colorR;
-            mediump[9]  = colorG;
-            mediump[10] = colorB;
-            mediump[11] = colorA;
+            mediump[8]  = color_r;
+            mediump[9]  = color_g;
+            mediump[10] = color_b;
+            mediump[11] = color_a;
         }
     }
 }

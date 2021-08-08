@@ -1,16 +1,16 @@
 /**
+ * TextFormat クラスは、文字フォーマット情報を表します。
+ * TextFormat クラスを使用して、テキストフィールドに特定のテキストフォーマットを作成します。
+ *
+ * The TextFormat class represents character formatting information.
+ * Use the TextFormat class to create specific text formatting for text fields.
+ *
  * @class
  * @memberOf next2d.text
  */
 class TextFormat
 {
     /**
-     * TextFormat クラスは、文字フォーマット情報を表します。
-     * TextFormat クラスを使用して、テキストフィールドに特定のテキストフォーマットを作成します。
-     *
-     * The TextFormat class represents character formatting information.
-     * Use the TextFormat class to create specific text formatting for text fields.
-     *
      * @param {string}  [font=null]
      * @param {number}  [size=null]
      * @param {number}  [color=null]

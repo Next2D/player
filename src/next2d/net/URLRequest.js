@@ -1,11 +1,14 @@
 /**
+ * URLRequest クラスは、すべての情報を 1 つの HTTP 要求にキャプチャします
+ *
+ * The URLRequest class captures all of the information in a single HTTP request.
+ *
  * @class
  * @memberOf next2d.net
  */
 class URLRequest
 {
     /**
-     *
      * @param {string} [url=""]
      *
      * @constructor
@@ -18,7 +21,7 @@ class URLRequest
          * @default ""
          * @private
          */
-        this._$url = url
+        this._$url = url;
 
         /**
          * @type {string}

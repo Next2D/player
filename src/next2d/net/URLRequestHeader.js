@@ -1,12 +1,16 @@
 /**
+ * URLRequestHeader オブジェクトは 1 つの HTTP のリクエストヘッダーをカプセル化し、名前と値のペアを構成します。
+ * URLRequestHeader オブジェクトは URLRequest クラスの requestHeaders プロパティで使用されます。
+ *
+ * A URLRequestHeader object encapsulates a single HTTP request header and consists of a name/value pair.
+ * URLRequestHeader objects are used in the requestHeaders property of the URLRequest class.
+ *
  * @class
  * @memberOf next2d.net
  */
 class URLRequestHeader
 {
     /**
-     *
-     *
      * @param {string} [name=""]
      * @param {string} [value=""]
      *

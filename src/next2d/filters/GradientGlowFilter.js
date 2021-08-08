@@ -1,4 +1,12 @@
 /**
+ * GradientGlowFilter クラスを使用すると、表示オブジェクトにグラデーショングロー効果を適用できます。
+ * グラデーショングローとは、制御可能なカラーグラデーションによるリアルな輝きです。
+ * グラデーショングローは、オブジェクトの内側エッジや外側エッジの周囲、またはオブジェクトの上に適用できます。
+ *
+ * The GradientGlowFilter class lets you apply a gradient glow effect to display objects.
+ * A gradient glow is a realistic-looking glow with a color gradient that you can control.
+ * You can apply a gradient glow around the inner or outer edge of an object or on top of an object.
+ *
  * @class
  * @memberOf next2d.filters
  * @extends  BitmapFilter
@@ -6,14 +14,6 @@
 class GradientGlowFilter  extends BitmapFilter
 {
     /**
-     * GradientGlowFilter クラスを使用すると、表示オブジェクトにグラデーショングロー効果を適用できます。
-     * グラデーショングローとは、制御可能なカラーグラデーションによるリアルな輝きです。
-     * グラデーショングローは、オブジェクトの内側エッジや外側エッジの周囲、またはオブジェクトの上に適用できます。
-     *
-     * The GradientGlowFilter class lets you apply a gradient glow effect to display objects.
-     * A gradient glow is a realistic-looking glow with a color gradient that you can control.
-     * You can apply a gradient glow around the inner or outer edge of an object or on top of an object.
-     *
      * @param {number}  [distance=4.0]
      * @param {number}  [angle=45]
      * @param {array}   [colors=null]
@@ -168,7 +168,7 @@ class GradientGlowFilter  extends BitmapFilter
      */
     get alphas ()
     {
-        return (!this._$colors || !this._$ratios) ? null : this._$alphas;
+        return !this._$colors || !this._$ratios ? null : this._$alphas;
     }
     set alphas (alphas)
     {
@@ -252,7 +252,7 @@ class GradientGlowFilter  extends BitmapFilter
      */
     get colors ()
     {
-        return (!this._$alphas || !this._$ratios) ? null : this._$colors;
+        return !this._$alphas || !this._$ratios ? null : this._$colors;
     }
     set colors (colors)
     {
@@ -264,10 +264,10 @@ class GradientGlowFilter  extends BitmapFilter
             const length = colors.length;
             for (let idx = 0; idx < length; ++idx) {
 
-                let color = colors[idx]|0;
+                let color = colors[idx] | 0;
 
                 if (color < 0) {
-                    color = 0x1000000 - (Util.$abs(color) % 0x1000000);
+                    color = 0x1000000 - Util.$abs(color) % 0x1000000;
                 }
 
                 if (color > 0xffffff) {
@@ -350,7 +350,7 @@ class GradientGlowFilter  extends BitmapFilter
      */
     get ratios ()
     {
-        return (!this._$alphas || !this._$colors) ? null : this._$ratios;
+        return !this._$alphas || !this._$colors ? null : this._$ratios;
     }
     set ratios (ratios)
     {
@@ -383,7 +383,7 @@ class GradientGlowFilter  extends BitmapFilter
     }
     set strength (strength)
     {
-        strength = Util.$clamp(strength|0, 0, 255, 0);
+        strength = Util.$clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
             this._$doChanged(true);
         }
@@ -481,13 +481,13 @@ class GradientGlowFilter  extends BitmapFilter
         switch (x < 0) {
 
             case true:
-                dx = Util.$floor(x)|0;
-                dw = -Util.$round(x / 2)|0;
+                dx = Util.$floor(x) | 0;
+                dw = -Util.$round(x / 2) | 0;
                 break;
 
             default:
-                dx = Util.$round(x / 2)|0;
-                dw = (x / 2)|0;
+                dx = Util.$round(x / 2) | 0;
+                dw = x / 2 | 0;
                 break;
 
         }
@@ -495,13 +495,13 @@ class GradientGlowFilter  extends BitmapFilter
         switch (y < 0) {
 
             case true:
-                dy = Util.$floor(y)|0;
-                dh = -Util.$round(y / 2)|0;
+                dy = Util.$floor(y) | 0;
+                dh = -Util.$round(y / 2) | 0;
                 break;
 
             default:
-                dy = Util.$round(y / 2)|0;
-                dh = (y / 2)|0;
+                dy = Util.$round(y / 2) | 0;
+                dh = y / 2 | 0;
                 break;
 
         }
@@ -628,9 +628,9 @@ class GradientGlowFilter  extends BitmapFilter
         const x = +(Util.$cos(radian) * this._$distance * xScale);
         const y = +(Util.$sin(radian) * this._$distance * yScale);
 
-        const isInner = (this.type === BitmapFilterType.INNER);
-        const w = (isInner) ? baseWidth  : blurWidth  + Util.$max(0, Util.$abs(x) - offsetDiffX);
-        const h = (isInner) ? baseHeight : blurHeight + Util.$max(0, Util.$abs(y) - offsetDiffY);
+        const isInner = this.type === BitmapFilterType.INNER;
+        const w = isInner ? baseWidth  : blurWidth  + Util.$max(0, Util.$abs(x) - offsetDiffX);
+        const h = isInner ? baseHeight : blurHeight + Util.$max(0, Util.$abs(y) - offsetDiffY);
         const width  = Util.$ceil(w);
         const height = Util.$ceil(h);
         const fractionX = (width  - w) / 2;
@@ -645,8 +645,8 @@ class GradientGlowFilter  extends BitmapFilter
         } else {
             baseTextureX = Util.$max(0, offsetDiffX - x) + fractionX;
             baseTextureY = Util.$max(0, offsetDiffY - y) + fractionY;
-            blurTextureX = ((x > 0) ? Util.$max(0, x - offsetDiffX) : 0) + fractionX;
-            blurTextureY = ((y > 0) ? Util.$max(0, y - offsetDiffY) : 0) + fractionY;
+            blurTextureX = (x > 0 ? Util.$max(0, x - offsetDiffX) : 0) + fractionX;
+            blurTextureY = (y > 0 ? Util.$max(0, y - offsetDiffY) : 0) + fractionY;
         }
 
         context._$bind(currentAttachment);
@@ -655,8 +655,7 @@ class GradientGlowFilter  extends BitmapFilter
             baseWidth, baseHeight, baseTextureX, baseTextureY,
             blurWidth, blurHeight, blurTextureX, blurTextureY,
             true, this.type, this.knockout,
-            this._$strength, this.blurX, this.blurY,
-            this.ratios, this.colors, this.alphas,
+            this._$strength, this.ratios, this.colors, this.alphas,
             0, 0, 0, 0, 0, 0, 0, 0
         );
 

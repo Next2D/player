@@ -19,28 +19,28 @@ class GradientLUTShaderVariantCollection
     }
 
     /**
-     * @param  {number}  stopsLength
-     * @param  {boolean} isLinearSpace
+     * @param  {number}  stops_length
+     * @param  {boolean} is_linear_space
      * @return {CanvasToWebGLShader}
      * @method
      * @public
      */
-    getGradientLUTShader (stopsLength, isLinearSpace)
+    getGradientLUTShader (stops_length, is_linear_space)
     {
-        const key1 = ("00" + stopsLength).slice(-3);
-        const key2 = (isLinearSpace) ? "y" : "n";
+        const key1 = ("00" + stops_length).slice(-3);
+        const key2 = is_linear_space ? "y" : "n";
         const key = `l${key1}${key2}`;
 
         if (!this._$collection.has(key)) {
-            const mediumpLength = Util.$ceil((stopsLength * 5) / 4);
+            const mediumpLength = Util.$ceil(stops_length * 5 / 4);
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
                 VertexShaderSource.TEXTURE(this._$keyword),
-                FragmentShaderSourceGradientLUT.TEMPLATE(this._$keyword, mediumpLength, stopsLength, isLinearSpace)
+                FragmentShaderSourceGradientLUT.TEMPLATE(this._$keyword, mediumpLength, stops_length, is_linear_space)
             ));
         }
-        
+
         return this._$collection.get(key);
     }
 
@@ -61,11 +61,10 @@ class GradientLUTShaderVariantCollection
         // fragment: u_gradient_color
         for (let j = begin; j < end; j++) {
             const color = stops[j][1];
-            mediump[i]     = table[color[0]];
-            mediump[i + 1] = table[color[1]];
-            mediump[i + 2] = table[color[2]];
-            mediump[i + 3] = table[color[3]];
-            i += 4;
+            mediump[i++] = table[color[0]];
+            mediump[i++] = table[color[1]];
+            mediump[i++] = table[color[2]];
+            mediump[i++] = table[color[3]];
         }
 
         // fragment: u_gradient_t
@@ -92,11 +91,10 @@ class GradientLUTShaderVariantCollection
         // fragment: u_gradient_color
         for (let j = begin; j < end; j++) {
             const color = colors[j];
-            mediump[i]     = ((color >> 16)       ) / 255;
-            mediump[i + 1] = ((color >>  8) & 0xFF) / 255;
-            mediump[i + 2] = ( color        & 0xFF) / 255;
-            mediump[i + 3] = alphas[j];
-            i += 4;
+            mediump[i++] = ((color >> 16)       ) / 255;
+            mediump[i++] = (color  >>   8 & 0xFF) / 255;
+            mediump[i++] = (color         & 0xFF) / 255;
+            mediump[i++] = alphas[j];
         }
 
         // fragment: u_gradient_t

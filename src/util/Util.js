@@ -3,17 +3,14 @@
 /**
  * @type {number}
  */
+// eslint-disable-next-line no-unused-vars
 let instanceId = 0;
 
 /**
  * @type {number}
  */
-let packageId  = 0;
-
-/**
- * @type {number}
- */
-let programId  = 0;
+// eslint-disable-next-line no-unused-vars
+let programId = 0;
 
 /**
  * @description Global Object
@@ -394,7 +391,6 @@ Util.$Array = window.Array;
  */
 Util.$Map = window.Map;
 
-
 /**
  * @shortcut
  * @type {function}
@@ -703,64 +699,63 @@ Util.$float32Array9 = [];
  * @const
  * @static
  */
-Util.$isAndroid = (Util.$userAgent.indexOf("Android") > -1);
+Util.$isAndroid = Util.$userAgent.indexOf("Android") > -1;
 
 /**
  * @type {boolean}
  * @const
  * @static
  */
-Util.isiOS = (Util.$userAgent.indexOf("iPhone") > -1 || Util.$userAgent.indexOf("iPod") > -1);
+Util.isiOS = Util.$userAgent.indexOf("iPhone") > -1 || Util.$userAgent.indexOf("iPod") > -1;
 
 /**
  * @type {boolean}
  * @const
  * @static
  */
-Util.$isTouch = (Util.$isAndroid || Util.isiOS);
+Util.$isTouch = Util.$isAndroid || Util.isiOS;
 
 /**
  * @type {boolean}
  * @const
  * @static
  */
-Util.$isChrome = (Util.$userAgent.indexOf("Chrome") > -1);
+Util.$isChrome = Util.$userAgent.indexOf("Chrome") > -1;
 
 /**
  * @type {boolean}
  * @const
  * @static
  */
-Util.$isFireFox = (Util.$userAgent.indexOf("Firefox") > -1);
+Util.$isFireFox = Util.$userAgent.indexOf("Firefox") > -1;
 
 /**
  * @type {boolean}
  * @const
  * @static
  */
-Util.$isSafari = (Util.$userAgent.indexOf("Safari") > -1);
+Util.$isSafari = Util.$userAgent.indexOf("Safari") > -1;
 
 /**
  * @type {boolean}
  * @const
  * @static
  */
-Util.$isEdge = (Util.$userAgent.indexOf("Edge") > -1);
+Util.$isEdge = Util.$userAgent.indexOf("Edge") > -1;
 
 /**
  * @type {boolean}
  * @const
  * @static
  */
-Util.$isMac = (Util.$userAgent.indexOf("Mac") > -1);
+Util.$isMac = Util.$userAgent.indexOf("Mac") > -1;
 
 /**
  * @type {boolean}
  * @const
  * @static
  */
-Util.$isWindows = (Util.$isMac === false);
-
+Util.$isWindows = Util.$isMac === false;
 
 /**
  * @type {HTMLCanvasElement}
@@ -779,7 +774,6 @@ Util.$hitContext = hitCanvas.getContext("2d");
 Util.$hitContext.globalAlpha = 0;
 Util.$hitContext.imageSmoothingEnabled = false;
 
-
 /**
  * @type {HTMLCanvasElement}
  * @const
@@ -797,14 +791,12 @@ Util.$textContext = textCanvas.getContext("2d");
 Util.$hitContext.globalAlpha = 0;
 Util.$hitContext.imageSmoothingEnabled = false;
 
-
 /**
  * @type {HTMLDivElement}
  * @default null
  * @static
  */
 Util.$DIV = null;
-
 
 /**
  * @param  {*} source
@@ -830,7 +822,7 @@ Util.$getArray = function (...args)
         array.push.apply(array, args);
     }
     return array;
-}
+};
 
 /**
  * @param  {array} array
@@ -844,7 +836,7 @@ Util.$poolArray = function (array)
         array.length = 0;
     }
     Util.$arrays.push(array);
-}
+};
 
 /**
  * @param  {number} value
@@ -855,14 +847,13 @@ Util.$poolArray = function (array)
  * @method
  * @static
  */
-Util.$clamp = function (value, min, max, default_value)
+Util.$clamp = function (value, min, max, default_value = null)
 {
     const number = +value;
-    if (Util.$isNaN(number) && default_value !== null) {
-        return default_value;
-    }
-    return Util.$min(Util.$max(min, Util.$isNaN(number) ? 0 : number), max);
-}
+    return Util.$isNaN(number) && default_value !== null
+        ? default_value
+        : Util.$min(Util.$max(min, Util.$isNaN(number) ? 0 : number), max);
+};
 
 /**
  * @param   {Float32Array} a
@@ -883,7 +874,7 @@ Util.$multiplicationColor = function (a, b)
         a[2] * b[6] + a[6],
         a[3] * b[7] + a[7]
     );
-}
+};
 
 /**
  * @param   {Float32Array} a
@@ -914,7 +905,7 @@ Util.$multiplicationMatrix = function(a, b)
  */
 Util.$getBoundsObject = function (x_min = 0, x_max = 0, y_min = 0, y_max = 0)
 {
-    const object = Util.$bounds.pop() || { "xMin": 0, "xMax": 0, "yMin": 0, "yMax": 0, };
+    const object = Util.$bounds.pop() || { "xMin": 0, "xMax": 0, "yMin": 0, "yMax": 0 };
 
     object.xMin = x_min;
     object.xMax = x_max;
@@ -978,7 +969,7 @@ Util.$getFloat32Array4 = function (f0 = 0, f1 = 0, f2 = 0, f3 = 0)
     array[3] = f3;
 
     return array;
-}
+};
 
 /**
  * @param  {Float32Array} array
@@ -989,7 +980,7 @@ Util.$getFloat32Array4 = function (f0 = 0, f1 = 0, f2 = 0, f3 = 0)
 Util.$poolFloat32Array4 = function (array)
 {
     Util.$float32Array4.push(array);
-}
+};
 
 /**
  * @param  {number} [f0=0]
@@ -1016,7 +1007,7 @@ Util.$getFloat32Array6 = function (
     array[5] = f5;
 
     return array;
-}
+};
 
 /**
  * @param  {Float32Array} array
@@ -1027,7 +1018,7 @@ Util.$getFloat32Array6 = function (
 Util.$poolFloat32Array6 = function (array)
 {
     Util.$float32Array6.push(array);
-}
+};
 
 /**
  * @param  {number} [f0=0]
@@ -1058,7 +1049,7 @@ Util.$getFloat32Array8 = function (
     array[7] = f7;
 
     return array;
-}
+};
 
 /**
  * @param  {Float32Array} array
@@ -1069,7 +1060,7 @@ Util.$getFloat32Array8 = function (
 Util.$poolFloat32Array8 = function (array)
 {
     Util.$float32Array8.push(array);
-}
+};
 
 /**
  * @param  {number} [f0=0]
@@ -1102,7 +1093,7 @@ Util.$getFloat32Array9 = function (
     array[8] = f8;
 
     return array;
-}
+};
 
 /**
  * @param  {Float32Array} array
@@ -1113,7 +1104,7 @@ Util.$getFloat32Array9 = function (
 Util.$poolFloat32Array9 = function (array)
 {
     Util.$float32Array9.push(array);
-}
+};
 
 /**
  * @return {Player}
@@ -1123,7 +1114,7 @@ Util.$poolFloat32Array9 = function (array)
 Util.$currentPlayer = function ()
 {
     return window.next2d._$player;
-}
+};
 
 /**
  * @return {Point}
@@ -1145,26 +1136,16 @@ Util.$currentMousePoint = function ()
         y += rect.top;
     }
 
-    let touchX = 0;
-    let touchY = 0;
-
-    switch (true) {
-
-        case (Util.$isTouch):
-            const changedTouche = Util.$event.changedTouches[0];
-            touchX = changedTouche.pageX;
-            touchY = changedTouche.pageY;
-            break;
-
-        default:
-            touchX = Util.$event.pageX;
-            touchY = Util.$event.pageY;
-            break;
-
+    let touchX = Util.$event.pageX;
+    let touchY = Util.$event.pageY;
+    if (Util.$isTouch) {
+        const changedTouche = Util.$event.changedTouches[0];
+        touchX = changedTouche.pageX;
+        touchY = changedTouche.pageY;
     }
 
-    const pointX = ((touchX - x) / player._$scale)|0;
-    const pointY = ((touchY - y) / player._$scale)|0;
+    const pointX = (touchX - x) / player._$scale | 0;
+    const pointY = (touchY - y) / player._$scale | 0;
 
     return new Point(pointX, pointY);
 };
@@ -1230,7 +1211,7 @@ Util.$getMatrix = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
     const matrix = Util.$matrices.pop();
     matrix._$matrix = Util.$getFloat32Array6(a, b, c, d, tx, ty);
     return matrix;
-}
+};
 
 /**
  * @param  {Matrix} matrix
@@ -1243,7 +1224,7 @@ Util.$poolMatrix = function (matrix)
     Util.$poolFloat32Array6(matrix._$matrix);
     matrix._$matrix = null;
     Util.$matrices.push(matrix);
-}
+};
 
 /**
  * @description ECMA-262 section 9.2
@@ -1263,7 +1244,7 @@ Util.$toBoolean = function (value = false)
         case "object":
         case "string":
         case "number":
-            return (value) ? true : false;
+            return value ? true : false;
 
         default:
             return false;
@@ -1302,7 +1283,7 @@ Util.$getColorTransform = function (
 
     return colorTransform;
 
-}
+};
 
 /**
  * @param  {ColorTransform} color_transform
@@ -1315,7 +1296,7 @@ Util.$poolColorTransform = function (color_transform)
     Util.$poolFloat32Array8(color_transform._$colorTransform);
     color_transform._$colorTransform = null;
     Util.$colors.push(color_transform);
-}
+};
 
 /**
  * @param   {number|string} rgb
@@ -1325,7 +1306,7 @@ Util.$poolColorTransform = function (color_transform)
  */
 Util.$toColorInt = function (rgb)
 {
-    return (typeof rgb === "number") ? rgb : this.$colorStringToInt(rgb);
+    return typeof rgb === "number" ? rgb : this.$colorStringToInt(rgb);
 };
 
 /**
@@ -1342,7 +1323,7 @@ Util.$colorStringToInt = function(str)
     // reset
     Util.$hitContext.fillStyle = "rgba(0, 0, 0, 1)";
 
-    return `0x${color}`|0;
+    return `0x${color}` | 0;
 };
 
 /**
@@ -1354,8 +1335,8 @@ Util.$colorStringToInt = function(str)
  * @static
  */
 Util.$intToR = function (int, alpha, premultiplied) {
-    return (int >> 16) * ((premultiplied) ? alpha : 1) / 255;
-}
+    return (int >> 16) * (premultiplied ? alpha : 1) / 255;
+};
 
 /**
  * @param  {number}  int
@@ -1366,8 +1347,8 @@ Util.$intToR = function (int, alpha, premultiplied) {
  * @static
  */
 Util.$intToG = function (int, alpha, premultiplied) {
-    return ((int >> 8) & 0xFF) * ((premultiplied) ? alpha : 1) / 255;
-}
+    return (int >> 8 & 0xFF) * (premultiplied ? alpha : 1) / 255;
+};
 
 /**
  * @param  {number}  int
@@ -1378,8 +1359,8 @@ Util.$intToG = function (int, alpha, premultiplied) {
  * @static
  */
 Util.$intToB = function (int, alpha, premultiplied) {
-    return (int & 0xFF) * ((premultiplied) ? alpha : 1) / 255;
-}
+    return (int & 0xFF) * (premultiplied ? alpha : 1) / 255;
+};
 
 /**
  * @param  {number} uint
@@ -1393,7 +1374,7 @@ Util.$uintToRGBA = function (uint)
         "A": uint >>> 24,
         "R": (uint & 0x00ff0000) >> 16,
         "G": (uint & 0x0000ff00) >> 8,
-        "B": (uint & 0x000000ff)
+        "B": uint & 0x000000ff
     };
 };
 
@@ -1409,8 +1390,8 @@ Util.$intToRGBA = function (color, alpha = 1)
     return {
         "R": (color & 0xff0000) >> 16,
         "G": (color & 0x00ff00) >> 8,
-        "B": (color & 0x0000ff),
-        "A": (alpha * 255)
+        "B": color & 0x0000ff,
+        "A": alpha * 255
     };
 };
 
@@ -1424,10 +1405,10 @@ Util.$intToRGBA = function (color, alpha = 1)
 Util.$generateColorTransform = function (object, color)
 {
     return {
-        "R": Util.$max(0, Util.$min((object.R * color[0]) + color[4], 255)),
-        "G": Util.$max(0, Util.$min((object.G * color[1]) + color[5], 255)),
-        "B": Util.$max(0, Util.$min((object.B * color[2]) + color[6], 255)),
-        "A": Util.$max(0, Util.$min((object.A * 255 * color[3]) + color[7], 255)) / 255
+        "R": Util.$max(0, Util.$min(object.R * color[0] + color[4], 255)),
+        "G": Util.$max(0, Util.$min(object.G * color[1] + color[5], 255)),
+        "B": Util.$max(0, Util.$min(object.B * color[2] + color[6], 255)),
+        "A": Util.$max(0, Util.$min(object.A * 255 * color[3] + color[7], 255)) / 255
     };
 };
 
@@ -1467,17 +1448,16 @@ Util.$inverseMatrix = function(m)
  */
 Util.$decodeAudioFailed = function ()
 {
-    const buffer = (this._$character)
+    const buffer = this._$character
         ? this._$character.buffer
         : this._$buffer;
 
-    console.log(buffer);
     let idx = 0;
-    while (true) {
+    for(;;) {
 
         idx = buffer.indexOf(0xff, idx);
 
-        if (idx === -1 || ((buffer[idx + 1] & 0xe0) === 0xe0)) {
+        if (idx === -1 || (buffer[idx + 1] & 0xe0) === 0xe0) {
             break;
         }
 
@@ -1495,7 +1475,7 @@ Util.$decodeAudioFailed = function ()
             );
 
     }
-}
+};
 
 /**
  * @param  {Uint8Array} buffer
@@ -1516,7 +1496,7 @@ Util.$decodeAudioSuccess = function (buffer)
         this._$audioBuffer = buffer;
 
     }
-}
+};
 
 /**
  * @param  {Sound} sound
@@ -1526,7 +1506,7 @@ Util.$decodeAudioSuccess = function (buffer)
  */
 Util.$decodeAudioData = function (sound)
 {
-    const buffer = (sound._$character)
+    const buffer = sound._$character
         ? sound._$character.buffer
         : sound._$buffer;
 
@@ -1662,14 +1642,12 @@ Util.$resetContext = function (context)
 
     }
 
-
     // reset
     context._$style                    = style;
     context._$globalAlpha              = 1;
     context._$globalCompositeOperation = BlendMode.NORMAL;
     context._$imageSmoothingEnabled    = false;
-}
-
+};
 
 /**
  * @return {object}
@@ -1727,7 +1705,6 @@ Util.$poolPreObject = function (object)
     Util.$preObjects.push(object);
 };
 
-
 /**
  * @param  {number} x1
  * @param  {number} y1
@@ -1739,7 +1716,7 @@ Util.$poolPreObject = function (object)
  */
 Util.$cross = function (x1, y1, x2, y2)
 {
-    return (x1 * y2) - (x2 * y1);
+    return x1 * y2 - x2 * y1;
 };
 
 /**
@@ -1789,19 +1766,17 @@ Util.$ajax = function (option = null)
         option.method = "GET";
     }
 
-
     // get or post
     let postData = null;
     switch (option.method.toUpperCase()) {
 
         case URLRequestMethod.GET:
-
             if (option.data) {
                 const urls = option.url.split("?");
 
-                urls[1] = (urls.length === 1)
+                urls[1] = urls.length === 1
                     ? option.data.toString()
-                    : urls[1] +"&"+ option.data.toString();
+                    : urls[1] + "&" + option.data.toString();
 
                 option.url = urls.join("?");
             }
@@ -1809,11 +1784,13 @@ Util.$ajax = function (option = null)
 
         case URLRequestMethod.PUT:
         case URLRequestMethod.POST:
-            postData = (option.data) ? option.data.toString() : null;
+            postData = option.data ? option.data.toString() : null;
+            break;
+
+        default:
             break;
 
     }
-
 
     // start
     const xmlHttpRequest = new XMLHttpRequest();
@@ -1824,8 +1801,6 @@ Util.$ajax = function (option = null)
     if (option.withCredentials) {
         xmlHttpRequest.withCredentials = true;
     }
-
-
 
     // add event
     if (option.event) {
@@ -1843,12 +1818,10 @@ Util.$ajax = function (option = null)
         Util.$poolArray(keys);
     }
 
-
     // set mimeType
     if (option.format === URLLoaderDataFormat.ARRAY_BUFFER) {
         xmlHttpRequest.responseType = URLLoaderDataFormat.ARRAY_BUFFER;
     }
-
 
     // set request header
     if (option.headers) {
@@ -1917,7 +1890,7 @@ Util.$getClass = function (symbol)
     }
 
     return object;
-}
+};
 
 /**
  * @param  {Next2D} object
@@ -1927,7 +1900,7 @@ Util.$getClass = function (symbol)
  */
 Util.$packages = function (object)
 {
-    object["display"] = {
+    object.display = {
         "BitmapData": BitmapData,
         "BitmapDataChannel": BitmapDataChannel,
         "BlendMode": BlendMode,
@@ -1950,7 +1923,7 @@ Util.$packages = function (object)
         "Stage": Stage
     };
 
-    object["events"] = {
+    object.events = {
         "Event": Event,
         "EventDispatcher": EventDispatcher,
         "EventPhase": EventPhase,
@@ -1962,7 +1935,7 @@ Util.$packages = function (object)
         "VideoEvent": VideoEvent
     };
 
-    object["filters"] = {
+    object.filters = {
         "BevelFilter": BevelFilter,
         "BitmapFilterQuality": BitmapFilterQuality,
         "BitmapFilterType": BitmapFilterType,
@@ -1977,7 +1950,7 @@ Util.$packages = function (object)
         "GradientGlowFilter": GradientGlowFilter
     };
 
-    object["geom"] = {
+    object.geom = {
         "ColorTransform": ColorTransform,
         "Matrix": Matrix,
         "Point": Point,
@@ -1985,21 +1958,21 @@ Util.$packages = function (object)
         "Transform": Transform
     };
 
-    object["media"] = {
+    object.media = {
         "Sound": Sound,
         "SoundMixer": SoundMixer,
         "SoundTransform": SoundTransform,
         "Video": Video
     };
 
-    object["net"] = {
+    object.net = {
         "URLLoaderDataFormat": URLLoaderDataFormat,
         "URLRequest": URLRequest,
         "URLRequestHeader": URLRequestHeader,
-        "URLRequestMethod": URLRequestMethod,
+        "URLRequestMethod": URLRequestMethod
     };
 
-    object["text"] = {
+    object.text = {
         "TextField": TextField,
         "TextFieldAutoSize": TextFieldAutoSize,
         "TextFieldType": TextFieldType,
@@ -2007,9 +1980,9 @@ Util.$packages = function (object)
         "TextFormatAlign": TextFormatAlign
     };
 
-    object["ui"] = {
+    object.ui = {
         "Easing": Easing,
         "Job": Job,
         "Tween": Tween
-    }
-}
+    };
+};

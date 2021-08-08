@@ -19,33 +19,37 @@ class GradientShapeShaderVariantCollection
     }
 
     /**
-     * @param  {boolean} isStroke
-     * @param  {boolean} hasGrid
-     * @param  {boolean} isRadial
-     * @param  {boolean} hasFocalPoint
-     * @param  {string}  spreadMethod
+     * @param  {boolean} is_stroke
+     * @param  {boolean} has_grid
+     * @param  {boolean} is_radial
+     * @param  {boolean} has_focal_point
+     * @param  {string}  spread_method
      * @return {CanvasToWebGLShader}
      * @method
      * @public
      */
-    getGradientShapeShader (isStroke, hasGrid, isRadial, hasFocalPoint, spreadMethod)
-    {
-        const key = this.createCollectionKey(isStroke, hasGrid, isRadial, hasFocalPoint, spreadMethod);
+    getGradientShapeShader (
+        is_stroke, has_grid, is_radial, has_focal_point, spread_method
+    ) {
+
+        const key = this.createCollectionKey(
+            is_stroke, has_grid, is_radial, has_focal_point, spread_method
+        );
 
         if (!this._$collection.has(key)) {
-            let highpLength = ((hasGrid) ? 13 : 5) + ((isStroke) ? 1 : 0) + 1;
+            let highpLength = (has_grid ? 13 : 5) + (is_stroke ? 1 : 0) + 1;
             const fragmentIndex = highpLength - 1;
- 
+
             let vertexShaderSource;
-            if (isStroke) {
+            if (is_stroke) {
                 vertexShaderSource = VertexShaderSourceStroke.TEMPLATE(
                     this._$keyword, highpLength, fragmentIndex,
-                    true, false, hasGrid
+                    true, has_grid
                 );
             } else {
                 vertexShaderSource = VertexShaderSourceFill.TEMPLATE(
                     this._$keyword, highpLength,
-                    true, false, hasGrid
+                    true, false, has_grid
                 );
             }
 
@@ -54,32 +58,32 @@ class GradientShapeShaderVariantCollection
                 vertexShaderSource,
                 FragmentShaderSourceGradient.TEMPLATE(
                     this._$keyword, highpLength, fragmentIndex,
-                    isRadial, hasFocalPoint, spreadMethod
+                    is_radial, has_focal_point, spread_method
                 )
             ));
         }
-        
+
         return this._$collection.get(key);
     }
- 
+
     /**
-     * @param  {boolean} isStroke
-     * @param  {boolean} hasGrid
-     * @param  {boolean} isRadial
-     * @param  {boolean} hasFocalPoint
-     * @param  {string}  spreadMethod
+     * @param  {boolean} is_stroke
+     * @param  {boolean} has_grid
+     * @param  {boolean} is_radial
+     * @param  {boolean} has_focal_point
+     * @param  {string}  spread_method
      * @return {string}
      * @method
      * @private
      */
-    createCollectionKey (isStroke, hasGrid, isRadial, hasFocalPoint, spreadMethod)
+    createCollectionKey (is_stroke, has_grid, is_radial, has_focal_point, spread_method)
     {
-        const key1 = (isStroke) ? "y" : "n";
-        const key2 = (hasGrid) ? "y" : "n";
-        const key3 = (isRadial) ? "y" : "n";
-        const key4 = (isRadial && hasFocalPoint) ? "y" : "n";
+        const key1 = is_stroke ? "y" : "n";
+        const key2 = has_grid  ? "y" : "n";
+        const key3 = is_radial ? "y" : "n";
+        const key4 = is_radial && has_focal_point ? "y" : "n";
         let key5 = 0;
-        switch (spreadMethod) {
+        switch (spread_method) {
             case "reflect":
                 key5 = 1;
                 break;
@@ -90,33 +94,32 @@ class GradientShapeShaderVariantCollection
 
         return `${key1}${key2}${key3}${key4}${key5}`;
     }
- 
+
     /**
      * @param {WebGLShaderUniform} uniform
-     * @param {boolean} isStroke
-     * @param {number}  halfWidth
+     * @param {boolean} is_stroke
+     * @param {number}  half_width
      * @param {number}  face
-     * @param {number}  miterLimit
-     * @param {boolean} hasGrid
+     * @param {number}  miter_limit
+     * @param {boolean} has_grid
      * @param {array}   matrix
-     * @param {array}   inverseMatrix
-     * @param {number}  viewportWidth
-     * @param {number}  viewportHeight
+     * @param {array}   inverse_matrix
+     * @param {number}  viewport_width
+     * @param {number}  viewport_height
      * @param {CanvasToWebGLContextGrid} grid
-     * @param {boolean} isRadial
+     * @param {boolean} is_radial
      * @param {array}   points
-     * @param {number}  focalPointRatio
+     * @param {number}  focal_point_ratio
      * @method
      * @public
      */
     setGradientShapeUniform (
         uniform,
-        isStroke, halfWidth, face, miterLimit,
-        hasGrid, matrix, inverseMatrix,
-        viewportWidth, viewportHeight, grid,
-        isRadial, points, focalPointRatio
+        is_stroke, half_width, face, miter_limit,
+        has_grid, matrix, inverse_matrix,
+        viewport_width, viewport_height, grid,
+        is_radial, points, focal_point_ratio
     ) {
-        let i = 0;
         const highp = uniform.highp;
 
         // vertex: u_matrix
@@ -133,25 +136,24 @@ class GradientShapeShaderVariantCollection
         highp[10] = matrix[8];
 
         // vertex: u_inverse_matrix
-        highp[12] = inverseMatrix[0];
-        highp[13] = inverseMatrix[1];
-        highp[14] = inverseMatrix[2];
+        highp[12] = inverse_matrix[0];
+        highp[13] = inverse_matrix[1];
+        highp[14] = inverse_matrix[2];
 
-        highp[16] = inverseMatrix[3];
-        highp[17] = inverseMatrix[4];
-        highp[18] = inverseMatrix[5];
+        highp[16] = inverse_matrix[3];
+        highp[17] = inverse_matrix[4];
+        highp[18] = inverse_matrix[5];
 
-        highp[11] = inverseMatrix[6];
-        highp[15] = inverseMatrix[7];
-        highp[19] = inverseMatrix[8];
+        highp[11] = inverse_matrix[6];
+        highp[15] = inverse_matrix[7];
+        highp[19] = inverse_matrix[8];
 
         // vertex: u_viewport
-        highp[3] = viewportWidth;
-        highp[7] = viewportHeight;
+        highp[3] = viewport_width;
+        highp[7] = viewport_height;
 
-        i = 20;
-
-        if (hasGrid) {
+        let i = 20;
+        if (has_grid) {
             // vertex: u_parent_matrix
             highp[i]      = grid.parentMatrixA;
             highp[i + 1]  = grid.parentMatrixB;
@@ -198,22 +200,22 @@ class GradientShapeShaderVariantCollection
             i = 52;
         }
 
-        if (isStroke) {
+        if (is_stroke) {
             // vertex: u_half_width
-            highp[i]     = halfWidth;
+            highp[i]     = half_width;
             // vertex: u_face
             highp[i + 1] = face;
             // vertex: u_miter_limit
-            highp[i + 2] = miterLimit;
+            highp[i + 2] = miter_limit;
 
             i += 4;
         }
 
-        if (isRadial) {
+        if (is_radial) {
             // fragment: u_radial_point
             highp[i]     = points[5];
             // fragment: u_focal_point_ratio
-            highp[i + 1] = focalPointRatio;
+            highp[i + 1] = focal_point_ratio;
         } else {
             // fragment: u_linear_points
             highp[i]     = points[0];

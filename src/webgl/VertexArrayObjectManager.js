@@ -36,7 +36,7 @@ class VertexArrayObjectManager
      */
     _$createVertexArray ()
     {
-        return (this._$isWebGL2Context)
+        return this._$isWebGL2Context
             ? this._$gl.createVertexArray()
             : this._$extension.createVertexArrayOES();
     }
@@ -61,7 +61,7 @@ class VertexArrayObjectManager
         this._$vertexBufferData[4] = end;
         this._$vertexBufferData[6] = end;
         this._$gl.bufferData(this._$gl.ARRAY_BUFFER, this._$vertexBufferData, this._$gl.STATIC_DRAW);
-        
+
         this._$gl.enableVertexAttribArray(0);
         this._$gl.vertexAttribPointer(0, 2, this._$gl.FLOAT, false, 0, 0);
 
@@ -81,7 +81,7 @@ class VertexArrayObjectManager
 
         const vertexArray = this._$createVertexArray();
         this.bind(vertexArray);
-        
+
         const vertexBuffer = this._$gl.createBuffer();
         vertexArray.vertexBuffer = vertexBuffer;
         vertexArray.vertexLength = 0;
@@ -108,12 +108,12 @@ class VertexArrayObjectManager
 
         const vertexArray = this._$createVertexArray();
         this.bind(vertexArray);
-        
+
         const vertexBuffer = this._$gl.createBuffer();
         vertexArray.vertexBuffer = vertexBuffer;
         vertexArray.vertexLength = 0;
         this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, vertexBuffer);
-        
+
         const indexBuffer = this._$gl.createBuffer();
         vertexArray.indexBuffer = indexBuffer;
         vertexArray.indexLength  = 0;

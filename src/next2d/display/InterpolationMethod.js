@@ -1,22 +1,17 @@
 /**
+ * InterpolationMethod クラスは、interpolationMethod パラメーター（Graphics.beginGradientFill()
+ * および Graphics.lineGradientStyle() メソッドのパラメーター）の値を提供します。
+ * このパラメーターは、グラデーションをレンダリングするときに使用する RGB スペースを決定します。
+ *
+ * The InterpolationMethod class provides values for the interpolationMethod parameter
+ * in the Graphics.beginGradientFill() and Graphics.lineGradientStyle() methods.
+ * This parameter determines the RGB space to use when rendering the gradient.
+ *
  * @class
  * @memberOf next2d.display
  */
 class InterpolationMethod
 {
-    /**
-     * InterpolationMethod クラスは、interpolationMethod パラメーター（Graphics.beginGradientFill()
-     * および Graphics.lineGradientStyle() メソッドのパラメーター）の値を提供します。
-     * このパラメーターは、グラデーションをレンダリングするときに使用する RGB スペースを決定します。
-     *
-     * The InterpolationMethod class provides values for the interpolationMethod parameter 
-     * in the Graphics.beginGradientFill() and Graphics.lineGradientStyle() methods. 
-     * This parameter determines the RGB space to use when rendering the gradient.
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
 
     /**
      * @description 指定されたクラスのストリングを返します。

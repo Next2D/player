@@ -1,35 +1,35 @@
 /**
+ * Transform クラスは、表示オブジェクトに適用されるカラー調整プロパティと 2 次元の変換オブジェクトへのアクセスを提供します。
+ * 変換時に、表示オブジェクトのカラーまたは方向と位置が、現在の値または座標から新しい値または座標に調整（オフセット）されます。
+ * Transform クラスは、表示オブジェクトおよびすべての親オブジェクトに適用されるカラー変換と 2 次元マトリックス変換に関するデータも収集します。
+ * concatenatedColorTransform プロパティと concatenatedMatrix プロパティを使用して、これらの結合された変換にアクセスできます。
+ * カラー変換を適用するには、ColorTransform オブジェクトを作成し、オブジェクトのメソッドとプロパティを使用してカラー調整を設定した後、
+ * colorTransformation プロパティ（表示オブジェクトの transform プロパティの）を新しい ColorTransformation オブジェクトに割り当てます。
+ * 2 次元変換を適用するには、Matrix オブジェクトを作成し、マトリックスの 2 次元変換を設定した後、表示オブジェクトの transform.matrix プロパティを新しい Matrix オブジェクトに割り当てます。
+ *
+ * The Transform class provides access to color adjustment properties and two--dimensional transformation objects that can be applied to a display object.
+ * During the transformation, the color or the orientation and position of a display object is adjusted (offset) from the current values or coordinates to new values or coordinates.
+ * The Transform class also collects data about color and two-dimensional matrix transformations that are applied to a display object and all of its parent objects.
+ * You can access these combined transformations through the concatenatedColorTransform and concatenatedMatrix properties.
+ * To apply color transformations: create a ColorTransform object,
+ * set the color adjustments using the object's methods and properties,
+ * and then assign the colorTransformation property of the transform property of the display object to the new ColorTransformation object.
+ * To apply two-dimensional transformations: create a Matrix object,
+ * set the matrix's two-dimensional transformation,
+ * and then assign the transform.matrix property of the display object to the new Matrix object.
+ *
+ * @example <caption>Example usage of Transform.</caption>
+ * // new Transform
+ * const {Transform} = next2d.geom;
+ * const transform   = new Transform(displayObject);
+ *
  * @class
  * @memberOf next2d.geom
  */
 class Transform
 {
     /**
-     * Transform クラスは、表示オブジェクトに適用されるカラー調整プロパティと 2 次元の変換オブジェクトへのアクセスを提供します。
-     * 変換時に、表示オブジェクトのカラーまたは方向と位置が、現在の値または座標から新しい値または座標に調整（オフセット）されます。
-     * Transform クラスは、表示オブジェクトおよびすべての親オブジェクトに適用されるカラー変換と 2 次元マトリックス変換に関するデータも収集します。
-     * concatenatedColorTransform プロパティと concatenatedMatrix プロパティを使用して、これらの結合された変換にアクセスできます。
-     * カラー変換を適用するには、ColorTransform オブジェクトを作成し、オブジェクトのメソッドとプロパティを使用してカラー調整を設定した後、
-     * colorTransformation プロパティ（表示オブジェクトの transform プロパティの）を新しい ColorTransformation オブジェクトに割り当てます。
-     * 2 次元変換を適用するには、Matrix オブジェクトを作成し、マトリックスの 2 次元変換を設定した後、表示オブジェクトの transform.matrix プロパティを新しい Matrix オブジェクトに割り当てます。
-     *
-     * The Transform class provides access to color adjustment properties and two--dimensional transformation objects that can be applied to a display object.
-     * During the transformation, the color or the orientation and position of a display object is adjusted (offset) from the current values or coordinates to new values or coordinates.
-     * The Transform class also collects data about color and two-dimensional matrix transformations that are applied to a display object and all of its parent objects.
-     * You can access these combined transformations through the concatenatedColorTransform and concatenatedMatrix properties.
-     * To apply color transformations: create a ColorTransform object,
-     * set the color adjustments using the object's methods and properties,
-     * and then assign the colorTransformation property of the transform property of the display object to the new ColorTransformation object.
-     * To apply two-dimensional transformations: create a Matrix object,
-     * set the matrix's two-dimensional transformation,
-     * and then assign the transform.matrix property of the display object to the new Matrix object.
-     *
      * @param {DisplayObject} src
-     *
-     * @example <caption>Example usage of Transform.</caption>
-     * // new Transform
-     * const {Transform} = next2d.geom;
-     * const transform   = new Transform(displayObject);
      *
      * @constructor
      * @public
@@ -114,7 +114,7 @@ class Transform
     toString ()
     {
         return "[object Transform]";
-    };
+    }
 
     /**
      * @description 指定されたオブジェクトの空間名を返します。
@@ -526,7 +526,7 @@ class Transform
             return ;
         }
 
-        this._$blendMode = (object)
+        this._$blendMode = object
             ? object.blendMode
             : BlendMode.NORMAL;
 

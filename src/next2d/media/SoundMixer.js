@@ -1,18 +1,12 @@
 /**
+ * SoundMixer クラスには、静的プロパティやアプリケーションのグローバルサウンドコントロールのメソッドが含まれます。
+ * SoundMixer クラスは、アプリケーションの埋め込みおよびストリーミングサウンド、及び、Video クラスの音声を制御します。
+ *
  * @class
  * @memberOf next2d.media
  */
 class SoundMixer
 {
-    /**
-     * SoundMixer クラスには、静的プロパティやアプリケーションのグローバルサウンドコントロールのメソッドが含まれます。
-     * SoundMixer クラスは、アプリケーションの埋め込みおよびストリーミングサウンド、及び、Video クラスの音声を制御します。
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
-
     /**
      * @description 指定されたクラスのストリングを返します。
      *              Returns the string representation of the specified class.
@@ -70,13 +64,6 @@ class SoundMixer
     }
 
     /**
-     * @type {number}
-     * @default 1
-     * @private
-     */
-    static _$volume = 1;
-    
-    /**
      * @description ボリュームです。範囲は 0（無音）～ 1（フルボリューム）です。
      *              The volume, ranging from 0 (silent) to 1 (full volume).
      *
@@ -130,3 +117,10 @@ class SoundMixer
         }
     }
 }
+
+/**
+ * @type {number}
+ * @default 1
+ * @private
+ */
+SoundMixer._$volume = 1;

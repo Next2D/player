@@ -103,10 +103,10 @@ class CanvasGradientToWebGL
         {
             switch (true) {
 
-                case (a[0] > b[0]):
+                case a[0] > b[0]:
                     return 1;
 
-                case (b[0] > a[0]):
+                case b[0] > a[0]:
                     return -1;
 
                 default:

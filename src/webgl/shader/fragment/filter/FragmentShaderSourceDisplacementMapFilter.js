@@ -5,19 +5,19 @@ class FragmentShaderSourceDisplacementMapFilter
 {
     /**
      * @param  {WebGLShaderKeyword} k
-     * @param  {number} mediumpLength
-     * @param  {number} componentX
-     * @param  {number} componentY
+     * @param  {number} mediump_length
+     * @param  {number} component_x
+     * @param  {number} component_y
      * @param  {string} mode
      * @return {string}
      * @method
      * @static
      */
-    static TEMPLATE (k, mediumpLength, componentX, componentY, mode)
+    static TEMPLATE (k, mediump_length, component_x, component_y, mode)
     {
         let cx, cy, modeStatement;
 
-        switch (componentX) {
+        switch (component_x) {
             case BitmapDataChannel.RED:
                 cx = "map_color.r";
                 break;
@@ -35,7 +35,7 @@ class FragmentShaderSourceDisplacementMapFilter
                 break;
         }
 
-        switch (componentY) {
+        switch (component_y) {
             case BitmapDataChannel.RED:
                 cy = "map_color.r";
                 break;
@@ -83,7 +83,7 @@ class FragmentShaderSourceDisplacementMapFilter
 precision mediump float;
 
 uniform sampler2D u_textures[2];
-uniform vec4 u_mediump[${mediumpLength}];
+uniform vec4 u_mediump[${mediump_length}];
 
 ${k.varyingIn()} vec2 v_coord;
 ${k.outColor()}

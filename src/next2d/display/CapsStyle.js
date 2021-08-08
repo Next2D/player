@@ -1,20 +1,15 @@
 /**
+ * CapsStyle クラスは、線の描画で使用されるキャップのスタイルを指定する定数値の列挙です。
+ * この定数は、caps パラメーター（next2d.display.Graphics.lineStyle() メソッドのパラメーター）の値として使用されます。
+ *
+ * he CapsStyle class is an enumeration of constant values that specify the caps style to use in drawing lines.
+ * The constants are provided for use as values in the caps parameter of the next2d.display.Graphics.lineStyle() method.
+ *
  * @class
  * @memberOf next2d.display
  */
 class CapsStyle
 {
-    /**
-     * CapsStyle クラスは、線の描画で使用されるキャップのスタイルを指定する定数値の列挙です。
-     * この定数は、caps パラメーター（next2d.display.Graphics.lineStyle() メソッドのパラメーター）の値として使用されます。
-     *
-     * he CapsStyle class is an enumeration of constant values that specify the caps style to use in drawing lines.
-     * The constants are provided for use as values in the caps parameter of the next2d.display.Graphics.lineStyle() method.
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
 
     /**
      * @description 指定されたクラスのストリングを返します。

@@ -13,4 +13,16 @@ class SimpleButton extends InteractiveObject
     {
         super();
     }
+
+    /**
+     * @param {string} state
+     *
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$changeState (state)
+    {
+        console.log("TODO", state);
+    }
 }

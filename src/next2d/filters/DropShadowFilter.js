@@ -1,4 +1,13 @@
 /**
+ * DropShadowFilter クラスは、ドロップシャドウを表示オブジェクトに追加します。
+ * シャドウアルゴリズムは、ぼかしフィルターで使用するのと同じボックスフィルターに基づいています。
+ * ドロップシャドウのスタイルには複数のオプションがあり、内側シャドウ、外側シャドウ、ノックアウトモードなどがあります。
+ *
+ * The DropShadowFilter class lets you add a drop shadow to display objects.
+ * The shadow algorithm is based on the same box filter that the blur filter uses.
+ * You have several options for the style of the drop shadow, including inner
+ * or outer shadow and knockout mode.
+ *
  * @class
  * @memberOf next2d.filters
  * @extends  BitmapFilter
@@ -6,15 +15,6 @@
 class DropShadowFilter extends BitmapFilter
 {
     /**
-     * DropShadowFilter クラスは、ドロップシャドウを表示オブジェクトに追加します。
-     * シャドウアルゴリズムは、ぼかしフィルターで使用するのと同じボックスフィルターに基づいています。
-     * ドロップシャドウのスタイルには複数のオプションがあり、内側シャドウ、外側シャドウ、ノックアウトモードなどがあります。
-     *
-     * The DropShadowFilter class lets you add a drop shadow to display objects.
-     * The shadow algorithm is based on the same box filter that the blur filter uses.
-     * You have several options for the style of the drop shadow, including inner
-     * or outer shadow and knockout mode.
-     *
      * @param   {number}  [distance=4]
      * @param   {number}  [angle=45]
      * @param   {number}  [color=0]
@@ -100,7 +100,6 @@ class DropShadowFilter extends BitmapFilter
          */
         this._$hideObject = hide_object;
     }
-
 
     /**
      * @description 指定されたクラスのストリングを返します。
@@ -369,7 +368,7 @@ class DropShadowFilter extends BitmapFilter
     }
     set strength (strength)
     {
-        strength = Util.$clamp(strength|0, 0, 255, 0);
+        strength = Util.$clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
             this._$doChanged(true);
         }
@@ -434,13 +433,13 @@ class DropShadowFilter extends BitmapFilter
         switch (x < 0) {
 
             case true:
-                dx = Util.$floor(x)|0;
-                dw = -Util.$round(x / 2)|0;
+                dx = Util.$floor(x) | 0;
+                dw = -Util.$round(x / 2) | 0;
                 break;
 
             default:
-                dx = Util.$round(x / 2)|0;
-                dw = (x / 2)|0;
+                dx = Util.$round(x / 2) | 0;
+                dw = x / 2 | 0;
                 break;
 
         }
@@ -448,13 +447,13 @@ class DropShadowFilter extends BitmapFilter
         switch (y < 0) {
 
             case true:
-                dy = Util.$floor(y)|0;
-                dh = -Util.$round(y / 2)|0;
+                dy = Util.$floor(y) | 0;
+                dh = -Util.$round(y / 2) | 0;
                 break;
 
             default:
-                dy = Util.$round(y / 2)|0;
-                dh = (y / 2)|0;
+                dy = Util.$round(y / 2) | 0;
+                dh = y / 2 | 0;
                 break;
 
         }
@@ -570,8 +569,8 @@ class DropShadowFilter extends BitmapFilter
         const y = +(Util.$sin(radian) * this._$distance * Util.$devicePixelRatio);
 
         // dropShadow canvas
-        const w = (this._$inner) ? baseWidth  : blurWidth  + Util.$max(0, Util.$abs(x) - offsetDiffX);
-        const h = (this._$inner) ? baseHeight : blurHeight + Util.$max(0, Util.$abs(y) - offsetDiffY);
+        const w = this._$inner ? baseWidth  : blurWidth  + Util.$max(0, Util.$abs(x) - offsetDiffX);
+        const h = this._$inner ? baseHeight : blurHeight + Util.$max(0, Util.$abs(y) - offsetDiffY);
         const width  = Util.$ceil(w);
         const height = Util.$ceil(h);
         const fractionX = (width  - w) / 2;
@@ -586,8 +585,8 @@ class DropShadowFilter extends BitmapFilter
         } else {
             baseTextureX = Util.$max(0, offsetDiffX - x) + fractionX;
             baseTextureY = Util.$max(0, offsetDiffY - y) + fractionY;
-            blurTextureX = ((x > 0) ? Util.$max(0, x - offsetDiffX) : 0) + fractionX;
-            blurTextureY = ((y > 0) ? Util.$max(0, y - offsetDiffY) : 0) + fractionY;
+            blurTextureX = (x > 0 ? Util.$max(0, x - offsetDiffX) : 0) + fractionX;
+            blurTextureY = (y > 0 ? Util.$max(0, y - offsetDiffY) : 0) + fractionY;
         }
 
         let type, knockout;
@@ -608,8 +607,7 @@ class DropShadowFilter extends BitmapFilter
             baseWidth, baseHeight, baseTextureX, baseTextureY,
             blurWidth, blurHeight, blurTextureX, blurTextureY,
             true, type, knockout,
-            this._$strength, this.blurX, this.blurY,
-            null, null, null,
+            this._$strength, null, null, null,
             Util.$intToR(this._$color, this._$alpha, true),
             Util.$intToG(this._$color, this._$alpha, true),
             Util.$intToB(this._$color, this._$alpha, true),

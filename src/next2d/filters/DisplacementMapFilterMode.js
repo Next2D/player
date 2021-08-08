@@ -1,17 +1,12 @@
 /**
+ * DisplacementMapFilterMode クラスは DisplacementMapFilter クラスの mode プロパティの値を提供します。
+ * The DisplacementMapFilterMode class provides values for the mode property of the DisplacementMapFilter class.
+ *
  * @class
  * @memberOf next2d.filters
  */
 class DisplacementMapFilterMode
 {
-    /**
-     * DisplacementMapFilterMode クラスは DisplacementMapFilter クラスの mode プロパティの値を提供します。
-     * The DisplacementMapFilterMode class provides values for the mode property of the DisplacementMapFilter class.
-     *
-     * @constructor
-     * @public
-     */
-    constructor() {}
 
     /**
      * @description 指定されたクラスのストリングを返します。

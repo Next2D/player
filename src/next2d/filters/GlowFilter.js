@@ -1,4 +1,13 @@
 /**
+ * GlowFilter クラスを使用すると、表示オブジェクトにグロー効果を適用できます。
+ * グローのスタイルには複数のオプションがあり、内側グロー、外側グロー、ノックアウトモードなどがあります。
+ * グローフィルターは、distance プロパティと angle プロパティを 0 に設定したドロップシャドウフィルターによく似ています。
+ *
+ * The GlowFilter class lets you apply a glow effect to display objects.
+ * You have several options for the style of the glow, including inner or outer glow and knockout mode.
+ * The glow filter is similar to the drop shadow filter with the distance
+ * and angle properties of the drop shadow filter set to 0.
+ *
  * @class
  * @memberOf next2d.filters
  * @extends  BitmapFilter
@@ -6,15 +15,6 @@
 class GlowFilter extends BitmapFilter
 {
     /**
-     * GlowFilter クラスを使用すると、表示オブジェクトにグロー効果を適用できます。
-     * グローのスタイルには複数のオプションがあり、内側グロー、外側グロー、ノックアウトモードなどがあります。
-     * グローフィルターは、distance プロパティと angle プロパティを 0 に設定したドロップシャドウフィルターによく似ています。
-     *
-     * The GlowFilter class lets you apply a glow effect to display objects.
-     * You have several options for the style of the glow, including inner or outer glow and knockout mode.
-     * The glow filter is similar to the drop shadow filter with the distance
-     * and angle properties of the drop shadow filter set to 0.
-     *
      * @param   {number}  [color=0xFF0000]
      * @param   {number}  [alpha=1]
      * @param   {number}  [blur_x=6]
@@ -282,13 +282,12 @@ class GlowFilter extends BitmapFilter
     }
     set strength (strength)
     {
-        strength = Util.$clamp(strength|0, 0, 255, 0);
+        strength = Util.$clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
             this._$doChanged(true);
         }
         this._$strength = strength;
     }
-
 
     /**
      * @description オブジェクトのコピーを返します。
@@ -418,8 +417,8 @@ class GlowFilter extends BitmapFilter
         const blurOffsetX = context._$offsetX;
         const blurOffsetY = context._$offsetY;
 
-        const width  = (this._$inner) ? baseWidth  : blurWidth;
-        const height = (this._$inner) ? baseHeight : blurHeight;
+        const width  = this._$inner ? baseWidth  : blurWidth;
+        const height = this._$inner ? baseHeight : blurHeight;
 
         let baseTextureX, baseTextureY, blurTextureX, blurTextureY;
         if (this._$inner) {
@@ -434,7 +433,7 @@ class GlowFilter extends BitmapFilter
             blurTextureY = 0;
         }
 
-        const type = (this._$inner)
+        const type = this._$inner
             ? BitmapFilterType.INNER
             : BitmapFilterType.OUTER;
 
@@ -444,8 +443,7 @@ class GlowFilter extends BitmapFilter
             baseWidth, baseHeight, baseTextureX, baseTextureY,
             blurWidth, blurHeight, blurTextureX, blurTextureY,
             true, type, this._$knockout,
-            this._$strength, this.blurX, this.blurY,
-            null, null, null,
+            this._$strength, null, null, null,
             Util.$intToR(this._$color, this._$alpha, true),
             Util.$intToG(this._$color, this._$alpha, true),
             Util.$intToB(this._$color, this._$alpha, true),

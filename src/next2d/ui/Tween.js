@@ -5,12 +5,6 @@
 class Tween
 {
     /**
-     * @constructor
-     * @public
-     */
-    constructor () {}
-
-    /**
      * @description 指定されたクラスのストリングを返します。
      *              Returns the string representation of the specified class.
      *

@@ -1,21 +1,15 @@
 /**
+ * GradientType クラスは、type パラメーター（next2d.display.Graphics クラスの beginGradientFill() メソッドおよび
+ * lineGradientStyle() メソッド内のパラメーター）に値を提供します。
+ *
+ * The GradientType class provides values for the type parameter in the beginGradientFill()
+ * and lineGradientStyle() methods of the flash.display.Graphics class.
+ *
  * @class
  * @memberOf next2d.display
  */
 class GradientType
 {
-    /**
-     * GradientType クラスは、type パラメーター（next2d.display.Graphics クラスの beginGradientFill() メソッドおよび
-     * lineGradientStyle() メソッド内のパラメーター）に値を提供します。
-     *
-     * The GradientType class provides values for the type parameter in the beginGradientFill()
-     * and lineGradientStyle() methods of the flash.display.Graphics class.
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
-
     /**
      * @description 指定されたクラスのストリングを返します。
      *              Returns the string representation of the specified class.

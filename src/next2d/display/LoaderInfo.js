@@ -1,4 +1,13 @@
 /**
+ * LoaderInfo クラスは、読み込まれる JSON ファイルやイメージファイル（JPEG、GIF、PNG ファイルなど）に関する情報を提供します。
+ * LoaderInfo オブジェクトは、すべての表示オブジェクトで使用できます。
+ * 提供される情報には、読み込みの進行状況、読み込む側と読み込まれたコンテンツの URL、メディアの総バイト数、メディアの規格高さと幅などが含まれます。
+ *
+ * The LoaderInfo class provides information about a loaded JSON file or a loaded image file (JPEG, GIF, or PNG).
+ * LoaderInfo objects are available for any display object.
+ * The information provided includes load progress, the URLs of the loader and loaded content,
+ * the number of bytes total for the media, and the nominal height and width of the media.
+ *
  * @class
  * @memberOf next2d.display
  * @extends  EventDispatcher
@@ -6,15 +15,6 @@
 class LoaderInfo extends EventDispatcher
 {
     /**
-     * LoaderInfo クラスは、読み込まれる JSON ファイルやイメージファイル（JPEG、GIF、PNG ファイルなど）に関する情報を提供します。
-     * LoaderInfo オブジェクトは、すべての表示オブジェクトで使用できます。
-     * 提供される情報には、読み込みの進行状況、読み込む側と読み込まれたコンテンツの URL、メディアの総バイト数、メディアの規格高さと幅などが含まれます。
-     *
-     * The LoaderInfo class provides information about a loaded JSON file or a loaded image file (JPEG, GIF, or PNG).
-     * LoaderInfo objects are available for any display object.
-     * The information provided includes load progress, the URLs of the loader and loaded content,
-     * the number of bytes total for the media, and the nominal height and width of the media.
-     *
      * @constructor
      * @public
      */

@@ -183,13 +183,13 @@ class CanvasToWebGLContextBlend
         image, x, y, w, h,
         ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
         operation, renderWidth, renderHeight, matrix, imageSmoothingEnabled
-    )　{
+    ) {
         const currentBuffer = this._$context._$frameBufferManager.currentAttachment;
 
-        const withCT = (
+        const withCT =
             ct0 !== 1 || ct1 !== 1 || ct2 !== 1 || ct3 !== 1 ||
             ct4 !== 0 || ct5 !== 0 || ct6 !== 0 || ct7 !== 0
-        );
+        ;
 
         const variants = this._$context._$shaderList.blendShaderVariants;
 
@@ -238,8 +238,8 @@ class CanvasToWebGLContextBlend
                         const yMin = +Util.$min(Util.$min(Util.$min(Util.$min( no, y0), y1), y2), y3);
                         const yMax = +Util.$max(Util.$max(Util.$max(Util.$max(-no, y0), y1), y2), y3);
 
-                        const sx = Util.$max(0, xMin|0);
-                        const sy = Util.$max(0, yMin|0);
+                        const sx = Util.$max(0, xMin | 0);
+                        const sy = Util.$max(0, yMin | 0);
                         const sw = Util.$min(Util.$max(0, renderWidth  - sx), Util.$ceil(Util.$abs(xMax - xMin)));
                         const sh = Util.$min(Util.$max(0, renderHeight - sy), Util.$ceil(Util.$abs(yMax - yMin)));
 
@@ -248,10 +248,10 @@ class CanvasToWebGLContextBlend
                         }
 
                         this._$gl.enable(this._$gl.SCISSOR_TEST);
-                        this._$gl.scissor(sx, Util.$max(0, (renderHeight - (sy + sh))), sw + 1, sh + 1);
+                        this._$gl.scissor(sx, Util.$max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
                     } else {
-                        const sx = Util.$max(0, (x + tx)|0);
-                        const sy = Util.$max(0, (y + ty)|0);
+                        const sx = Util.$max(0, x + tx | 0);
+                        const sy = Util.$max(0, y + ty | 0);
                         const sw = Util.$min(Util.$max(0, renderWidth  - sx), w);
                         const sh = Util.$min(Util.$max(0, renderHeight - sy), h);
 
@@ -260,7 +260,7 @@ class CanvasToWebGLContextBlend
                         }
 
                         this._$gl.enable(this._$gl.SCISSOR_TEST);
-                        this._$gl.scissor(sx, Util.$max(0, (renderHeight - (sy + sh))), sw + 1, sh + 1);
+                        this._$gl.scissor(sx, Util.$max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
                     }
 
                     this.toOperation(operation);
@@ -272,8 +272,8 @@ class CanvasToWebGLContextBlend
 
             default:
                 {
-                    const sx = Util.$max(0, (x + matrix[6])|0);
-                    const sy = Util.$max(0, (y + matrix[7])|0);
+                    const sx = Util.$max(0, x + matrix[6] | 0);
+                    const sy = Util.$max(0, y + matrix[7] | 0);
                     const sw = Util.$min(Util.$max(0, renderWidth  - sx), w);
                     const sh = Util.$min(Util.$max(0, renderHeight - sy), h);
 
@@ -296,7 +296,7 @@ class CanvasToWebGLContextBlend
                     const backTexture = this._$context._$frameBufferManager.getTextureFromCurrentAttachment();
 
                     this._$context._$bind(currentBuffer);
-                    
+
                     this._$context._$frameBufferManager._$textureManager.bind01(backTexture, image, imageSmoothingEnabled);
 
                     const shader = variants.getBlendShader(operation, withCT);
@@ -306,7 +306,7 @@ class CanvasToWebGLContextBlend
                     );
 
                     this._$gl.enable(this._$gl.SCISSOR_TEST);
-                    this._$gl.scissor(sx, Util.$max(0, (renderHeight - (sy + sh))), sw, sh);
+                    this._$gl.scissor(sx, Util.$max(0, renderHeight - (sy + sh)), sw, sh);
 
                     this.toOneZero();
                     shader._$drawImage();

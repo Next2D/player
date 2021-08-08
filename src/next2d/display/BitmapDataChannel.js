@@ -1,24 +1,19 @@
 /**
+ * BitmapDataChannel クラスは、赤、青、緑、またはアルファ透明度の
+ * いずれのチャンネルを使用するかを示す定数値の列挙です。
+ * メソッドを呼び出すとき、ビット単位の OR 演算子（|）を使って
+ * BitmapDataChannel 定数を結合すれば、複数のカラーチャンネルを指定することができます。
+ *
+ * The BitmapDataChannel class is an enumeration of constant values that indicate
+ * which channel to use: red, blue, green, or alpha transparency.
+ * When you call some methods, you can use the bitwise OR operator (|)
+ * to combine BitmapDataChannel constants to indicate multiple color channels.
+ *
  * @class
  * @memberOf next2d.display
  */
 class BitmapDataChannel
 {
-    /**
-     * BitmapDataChannel クラスは、赤、青、緑、またはアルファ透明度の
-     * いずれのチャンネルを使用するかを示す定数値の列挙です。
-     * メソッドを呼び出すとき、ビット単位の OR 演算子（|）を使って
-     * BitmapDataChannel 定数を結合すれば、複数のカラーチャンネルを指定することができます。
-     *
-     * The BitmapDataChannel class is an enumeration of constant values that indicate
-     * which channel to use: red, blue, green, or alpha transparency.
-     * When you call some methods, you can use the bitwise OR operator (|)
-     * to combine BitmapDataChannel constants to indicate multiple color channels.
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
 
     /**
      * @description 指定されたクラスのストリングを返します。

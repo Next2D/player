@@ -51,7 +51,7 @@ class FrameBufferManager
      */
     createCacheAttachment (width, height, multisample = false, samples = 0)
     {
-        const attachment = (this._$objectPool.length)
+        const attachment = this._$objectPool.length
             ? this._$objectPool.pop()
             : {};
         const texture = this._$textureManager.create(width, height);
@@ -86,7 +86,7 @@ class FrameBufferManager
      */
     createTextureAttachment (width, height)
     {
-        const attachment = (this._$objectPool.length)
+        const attachment = this._$objectPool.length
             ? this._$objectPool.pop()
             : {};
         const texture = this._$textureManager.create(width, height);
@@ -111,7 +111,7 @@ class FrameBufferManager
      */
     createTextureAttachmentFrom (texture)
     {
-        const attachment = (this._$objectPool.length)
+        const attachment = this._$objectPool.length
             ? this._$objectPool.pop()
             : {};
 

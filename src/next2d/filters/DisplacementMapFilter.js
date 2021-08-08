@@ -1,4 +1,10 @@
 /**
+ * DisplacementMapFilter クラスは、指定された BitmapData オブジェクト（置き換えマップイメージと言います）
+ * のピクセル値を使用して、オブジェクトの置き換え（変位）を実行します。
+ *
+ * The DisplacementMapFilter class uses the pixel values from the specified
+ * BitmapData object (called the displacement map image) to perform a displacement of an object.
+ *
  * @class
  * @memberOf next2d.filters
  * @extends  BitmapFilter
@@ -6,12 +12,6 @@
 class DisplacementMapFilter extends BitmapFilter
 {
     /**
-     * DisplacementMapFilter クラスは、指定された BitmapData オブジェクト（置き換えマップイメージと言います）
-     * のピクセル値を使用して、オブジェクトの置き換え（変位）を実行します。
-     *
-     * The DisplacementMapFilter class uses the pixel values from the specified
-     * BitmapData object (called the displacement map image) to perform a displacement of an object.
-     *
      * @param {BitmapData} [map_bitmap = null]
      * @param {Point}      [map_point = null]
      * @param {number}     [component_x = 0]
@@ -419,13 +419,11 @@ class DisplacementMapFilter extends BitmapFilter
 
     /**
      * @param  {Rectangle} rect
-     * @param  {number}    [x_scale=null]
-     * @param  {number}    [y_scale=null]
      * @return {Rectangle}
      * @method
      * @private
      */
-    _$generateFilterRect (rect, x_scale = null, y_scale = null)
+    _$generateFilterRect (rect)
     {
         return rect;
     }
@@ -489,8 +487,8 @@ class DisplacementMapFilter extends BitmapFilter
     _$canApply ()
     {
         if (this._$mapBitmap === null ||
-            (!this._$componentX && !this._$componentY) ||
-            (!this._$scaleX && !this._$scaleY)
+            !this._$componentX && !this._$componentY ||
+            !this._$scaleX && !this._$scaleY
         ) {
             return false;
         }

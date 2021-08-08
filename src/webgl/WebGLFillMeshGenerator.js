@@ -100,7 +100,7 @@ class WebGLFillMeshGenerator
             }
             currentIndex += 3;
         }
-        
+
         this._$currentIndex = currentIndex;
     }
 }

@@ -1,4 +1,15 @@
 /**
+ * BevelFilter クラスを使用すると、表示オブジェクトにベベル効果を追加できます。
+ * ボタンなどのオブジェクトにベベル効果を適用すると 3 次元的に表現されます。
+ * 異なるハイライトカラー、シャドウカラー、ベベルのぼかし量、ベベルの角度、ベベルの配置、
+ * ノックアウト効果を使用して、ベベルの外観をカスタマイズできます。
+ *
+ * The BevelFilter class lets you add a bevel effect to display objects.
+ * A bevel effect gives objects such as buttons a three-dimensional look.
+ * You can customize the look of the bevel with different highlight and shadow colors,
+ * the amount of blur on the bevel, the angle of the bevel, the placement of the bevel,
+ * and a knockout effect.
+ *
  * @class
  * @memberOf next2d.filters
  * @extends  BitmapFilter
@@ -6,17 +17,6 @@
 class BevelFilter extends BitmapFilter
 {
     /**
-     * BevelFilter クラスを使用すると、表示オブジェクトにベベル効果を追加できます。
-     * ボタンなどのオブジェクトにベベル効果を適用すると 3 次元的に表現されます。
-     * 異なるハイライトカラー、シャドウカラー、ベベルのぼかし量、ベベルの角度、ベベルの配置、
-     * ノックアウト効果を使用して、ベベルの外観をカスタマイズできます。
-     *
-     * The BevelFilter class lets you add a bevel effect to display objects.
-     * A bevel effect gives objects such as buttons a three-dimensional look.
-     * You can customize the look of the bevel with different highlight and shadow colors,
-     * the amount of blur on the bevel, the angle of the bevel, the placement of the bevel,
-     * and a knockout effect.
-     *
      * @param {number}  [distance=4]
      * @param {number}  [angle=45]
      * @param {uint}    [highlight_color=0xffffff]
@@ -393,7 +393,7 @@ class BevelFilter extends BitmapFilter
     }
     set strength (strength)
     {
-        strength = Util.$clamp(strength|0, 0, 255, 0);
+        strength = Util.$clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
             this._$doChanged(true);
         }
@@ -480,8 +480,8 @@ class BevelFilter extends BitmapFilter
         const radian = +(this.angle * Util.$PI / 180);
         const x      = Util.$cos(radian) * this.distance;
         const y      = Util.$sin(radian) * this.distance;
-        let dx       = Util.$abs(x)|0;
-        let dy       = Util.$abs(y)|0;
+        let dx       = Util.$abs(x) | 0;
+        let dy       = Util.$abs(y) | 0;
 
         if (0 > x) {
             dx++;
@@ -500,9 +500,9 @@ class BevelFilter extends BitmapFilter
         }
 
         clone.x      -= dx;
-        clone.width  += (dx * 2);
+        clone.width  += dx * 2;
         clone.y      -= dy;
-        clone.height += (dy * 2);
+        clone.height += dy * 2;
 
         return clone;
     }
@@ -627,9 +627,9 @@ class BevelFilter extends BitmapFilter
         const bevelHeight = Util.$ceil(blurHeight + Util.$abs(y) * 2);
 
         // bevel filter buffer
-        const isInner = (this._$type === BitmapFilterType.INNER);
-        const width   = (isInner) ? baseWidth  : bevelWidth;
-        const height  = (isInner) ? baseHeight : bevelHeight;
+        const isInner = this._$type === BitmapFilterType.INNER;
+        const width   = isInner ? baseWidth  : bevelWidth;
+        const height  = isInner ? baseHeight : bevelHeight;
 
         const absX = Util.$abs(x);
         const absY = Util.$abs(y);
@@ -655,8 +655,7 @@ class BevelFilter extends BitmapFilter
             baseWidth, baseHeight, baseTextureX, baseTextureY,
             blurWidth, blurHeight, blurTextureX, blurTextureY,
             false, this._$type, this._$knockout,
-            this._$strength, this.blurX, this.blurY,
-            null, null, null,
+            this._$strength, null, null, null,
             Util.$intToR(this._$highlightColor, this._$highlightAlpha, true),
             Util.$intToG(this._$highlightColor, this._$highlightAlpha, true),
             Util.$intToB(this._$highlightColor, this._$highlightAlpha, true),

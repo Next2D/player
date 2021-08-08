@@ -92,8 +92,7 @@ class StencilBufferPool
     release (stencilBuffer)
     {
         // ステンシルバッファのサイズが非常に大きい場合はプールしない
-        if (stencilBuffer.area > (this._$maxWidth * this._$maxHeight * 2)|0) {
-            console.log("release: ", stencilBuffer.area, this._$maxWidth, this._$maxHeight);
+        if (stencilBuffer.area > this._$maxWidth * this._$maxHeight * 2 | 0) {
             this._$gl.deleteRenderbuffer(stencilBuffer);
             return;
         }
@@ -102,9 +101,8 @@ class StencilBufferPool
         this._$objectPool.push(stencilBuffer);
         this._$objectPoolArea += stencilBuffer.area;
 
-
         // プール容量が一定を超えたら、古いステンシルバッファから削除していく
-        if (this._$objectPoolArea > (this._$maxWidth * this._$maxHeight * 10)) {
+        if (this._$objectPoolArea > this._$maxWidth * this._$maxHeight * 10) {
             const oldStencilBuffer = this._$objectPool.shift();
             this._$objectPoolArea -= oldStencilBuffer.area;
             this._$gl.deleteRenderbuffer(oldStencilBuffer);

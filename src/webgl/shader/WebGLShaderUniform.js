@@ -18,7 +18,7 @@ class WebGLShaderUniform
         const activeUniforms = this._$gl.getProgramParameter(program, this._$gl.ACTIVE_UNIFORMS);
         for (let i = 0; i < activeUniforms; i++) {
             const info = this._$gl.getActiveUniform(program, i);
-            const name = (info.name.endsWith("[0]")) ? info.name.slice(0, -3) : info.name;
+            const name = info.name.endsWith("[0]") ? info.name.slice(0, -3) : info.name;
 
             // console.log("info:", info.name, info.type, info.size);
 
@@ -44,7 +44,7 @@ class WebGLShaderUniform
                     data.array = new Int32Array(4 * info.size);
                     data.assign = -1;
                     break;
-                // uniformの値の設定は、programに保持されるため、 
+                // uniformの値の設定は、programに保持されるため、
                 // sampler2Dは一度だけ設定するようにする
                 case this._$gl.SAMPLER_2D:
                     data.method = this._$gl.uniform1iv.bind(this._$gl, location);
@@ -121,7 +121,7 @@ class WebGLShaderUniform
     /**
      * @memberof WebGLShaderUniform#
      * @property {Int32Array}
-     * @return {Int32Array}
+     * @return   {Int32Array}
      * @readonly
      * @public
      */
@@ -129,7 +129,7 @@ class WebGLShaderUniform
     {
         return this._$map.get("u_integer").array;
     }
-    
+
     /**
      * @return {void}
      * @method

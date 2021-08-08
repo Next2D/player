@@ -6,12 +6,12 @@ class FragmentShaderSourceBlend
     /**
      * @param  {WebGLShaderKeyword} k
      * @param  {string}  operation
-     * @param  {boolean} withColorTransform
+     * @param  {boolean} with_color_transform
      * @return {string}
      * @method
      * @static
      */
-    static TEMPLATE (k, operation, withColorTransform)
+    static TEMPLATE (k, operation, with_color_transform)
     {
         let blendFunction;
         switch (operation) {
@@ -44,10 +44,10 @@ class FragmentShaderSourceBlend
                 break;
         }
 
-        const colorTransformUniform = (withColorTransform)
-            ? `uniform vec4 u_mediump[2];`
+        const colorTransformUniform = with_color_transform
+            ? "uniform vec4 u_mediump[2];"
             : "";
-        const colorTransformStatement = (withColorTransform)
+        const colorTransformStatement = with_color_transform
             ? FragmentShaderLibrary.STATEMENT_COLOR_TRANSFORM_ON(0)
             : "";
 
@@ -97,7 +97,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     // ・アルファ(a)が0の場合は例外処理をする
     // 前景色 a: src.rgb * (src.a * (1.0 - dst.a))
     // 背景色 b: dst.rgb * (dst.a * (1.0 - src.a))
-    // 合成色 c: mix.rgb * (src.a * dst.a) 
+    // 合成色 c: mix.rgb * (src.a * dst.a)
     // 最終結果: a + b + c
 
     /**

@@ -1,22 +1,22 @@
 /**
+ * Graphics クラスには、ベクターシェイプの作成に使用できる一連のメソッドがあります。
+ * 描画をサポートする表示オブジェクトには、Sprite および Shape オブジェクトがあります。
+ * これらの各クラスには、Graphics オブジェクトである graphics プロパティがあります。
+ * 以下は、簡単に使用できるように用意されているヘルパー関数の一例です。
+ * drawRect()、drawRoundRect()、drawCircle()、および drawEllipse()。
+ *
+ * The Graphics class contains a set of methods that you can use to create a vector shape.
+ * Display objects that support drawing include Sprite and Shape objects.
+ * Each of these classes includes a graphics property that is a Graphics object.
+ * The following are among those helper functions provided for ease of use:
+ * drawRect(), drawRoundRect(), drawCircle(), and drawEllipse().
+ *
  * @class
  * @memberOf next2d.display
  */
 class Graphics
 {
     /**
-     * Graphics クラスには、ベクターシェイプの作成に使用できる一連のメソッドがあります。
-     * 描画をサポートする表示オブジェクトには、Sprite および Shape オブジェクトがあります。
-     * これらの各クラスには、Graphics オブジェクトである graphics プロパティがあります。
-     * 以下は、簡単に使用できるように用意されているヘルパー関数の一例です。
-     * drawRect()、drawRoundRect()、drawCircle()、および drawEllipse()。
-     *
-     * The Graphics class contains a set of methods that you can use to create a vector shape.
-     * Display objects that support drawing include Sprite and Shape objects.
-     * Each of these classes includes a graphics property that is a Graphics object.
-     * The following are among those helper functions provided for ease of use:
-     * drawRect(), drawRoundRect(), drawCircle(), and drawEllipse().
-     *
      * @param {DisplayObject} src
      *
      * @constructor
@@ -331,7 +331,6 @@ class Graphics
         // beginPath
         this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
 
-
         // add Fill Style
         const object = Util.$intToRGBA(color, alpha);
 
@@ -384,7 +383,6 @@ class Graphics
         }
         this._$doFill  = true;
         this._$canDraw = true;
-
 
         // beginPath
         this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
@@ -692,7 +690,6 @@ class Graphics
         const cw = c * hw;
         const ch = c * hh;
 
-
         return this
             .moveTo(x0, y)
             .cubicCurveTo(x0 + cw, y,       x1,      y0 - ch, x1, y0)
@@ -843,10 +840,9 @@ class Graphics
 
                 case Graphics.BITMAP_FILL:
                     this._$recode.push(this._$fillType);
-                    const array = this._$fillBitmap.toArray();
-                    for (let idx = 0; idx < array.length; ++idx) {
-                        this._$recode.push(array[idx]);
-                    }
+                    this._$recode.push.apply(
+                        this._$recode, this._$fillBitmap.toArray()
+                    );
                     break;
 
             }
@@ -927,7 +923,7 @@ class Graphics
 
         // reset
         this._$lineType     = 0;
-        this._$lineGradient = null
+        this._$lineGradient = null;
         this._$lineStyleR   = 0;
         this._$lineStyleG   = 0;
         this._$lineStyleB   = 0;
@@ -1179,7 +1175,7 @@ class Graphics
         }
 
         const alpha = Util.$clamp(
-            color_transform[3] + (color_transform[7] / 255), 0, 1
+            color_transform[3] + color_transform[7] / 255, 0, 1
         );
 
         const displayObject = this._$displayObject;
@@ -1192,8 +1188,8 @@ class Graphics
         if (hasGrid) {
             parentMatrix = displayObject._$transform._$rawMatrix();
             hasGrid = hasGrid
-                && (Util.$abs(parentMatrix[1]) < 0.001)
-                && (Util.$abs(parentMatrix[2]) < 0.0001);
+                && Util.$abs(parentMatrix[1]) < 0.001
+                && Util.$abs(parentMatrix[2]) < 0.0001;
         }
 
         // size
@@ -1223,7 +1219,7 @@ class Graphics
 
         }
 
-        if (0 > (xMin + width) || 0 > (yMin + height)) {
+        if (0 > xMin + width || 0 > yMin + height) {
 
             if (filters && filters.length
                 && displayObject._$canApply(filters)
@@ -1237,7 +1233,7 @@ class Graphics
                     rect = filters[idx]._$generateFilterRect(rect, xScale, yScale);
                 }
 
-                if (0 > (rect.x + rect.width) || 0 > (rect.y + rect.height)) {
+                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
                     return;
                 }
 
@@ -1246,7 +1242,6 @@ class Graphics
             }
 
         }
-
 
         // cache current buffer
         const currentBuffer = context.frameBuffer.currentAttachment;
@@ -1260,7 +1255,6 @@ class Graphics
             width  *= textureScale;
             height *= textureScale;
         }
-
 
         const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
         const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
@@ -1279,7 +1273,6 @@ class Graphics
                 .frameBuffer
                 .createCacheAttachment(width, height, true);
             context._$bind(buffer);
-
 
             // reset
             Util.$resetContext(context);
@@ -1363,7 +1356,6 @@ class Graphics
             context._$bind(currentBuffer);
 
         }
-
 
         let isFilter = false;
         let offsetX  = 0;
@@ -1489,12 +1481,11 @@ class Graphics
     }
 
     /**
-     * @param  {Float32Array} [matrix=null]
      * @return {object}
      * @method
      * @private
      */
-    _$getBounds (matrix = null)
+    _$getBounds ()
     {
         const displayObject = this._$displayObject;
         if (displayObject && displayObject._$bounds) {
@@ -1611,7 +1602,6 @@ class Graphics
         if (Util.$abs(radian6) % radian90 !== 0) {
             x4 = this._$pointerX + Util.$cos(radian6) * half;
         }
-
 
         // pointer y
         if (radian3 && Util.$abs(radian3) % Util.$PI !== 0) {
@@ -1777,32 +1767,32 @@ class Graphics
                     break;
 
                 case Graphics.FILL_STYLE:
+                    {
+                        if (is_clip || options) {
+                            idx += 4;
+                            continue;
+                        }
 
-                    if (is_clip || options) {
-                        idx += 4;
-                        continue;
+                        const fillStyle = context._$contextStyle;
+
+                        fillStyle._$fillStyle[0] = color_transform[0] !== 1 || color_transform[4] !== 0
+                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[0] + color_transform[4], 255)) / 255
+                            : recode[idx++] / 255;
+
+                        fillStyle._$fillStyle[1] = color_transform[1] !== 1 || color_transform[5] !== 0
+                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[1] + color_transform[5], 255)) / 255
+                            : recode[idx++] / 255;
+
+                        fillStyle._$fillStyle[2] = color_transform[2] !== 1 || color_transform[6] !== 0
+                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[2] + color_transform[6], 255)) / 255
+                            : recode[idx++] / 255;
+
+                        fillStyle._$fillStyle[3] = color_transform[3] !== 1 || color_transform[7] !== 0
+                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[3] + color_transform[7], 255)) / 255
+                            : recode[idx++] / 255;
+
+                        context._$style = fillStyle;
                     }
-
-                    const fillStyle = context._$contextStyle;
-
-                    fillStyle._$fillStyle[0] = (color_transform[0] !== 1 || color_transform[4] !== 0)
-                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[0]) + color_transform[4], 255)) / 255
-                        : recode[idx++] / 255;
-
-                    fillStyle._$fillStyle[1] = (color_transform[1] !== 1 || color_transform[5] !== 0)
-                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[1]) + color_transform[5], 255)) / 255
-                        : recode[idx++] / 255;
-
-                    fillStyle._$fillStyle[2] = (color_transform[2] !== 1 || color_transform[6] !== 0)
-                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[2]) + color_transform[6], 255)) / 255
-                        : recode[idx++] / 255;
-
-                    fillStyle._$fillStyle[3] = (color_transform[3] !== 1 || color_transform[7] !== 0)
-                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[3]) + color_transform[7], 255)) / 255
-                        : recode[idx++] / 255;
-
-                    context._$style = fillStyle;
-
                     break;
 
                 case Graphics.END_FILL:
@@ -1823,36 +1813,37 @@ class Graphics
                     break;
 
                 case Graphics.STROKE_STYLE:
+                    {
+                        if (is_clip || options) {
+                            idx += 8;
+                            continue;
+                        }
 
-                    if (is_clip || options) {
-                        idx += 8;
-                        continue;
+                        context.lineWidth  = recode[idx++];
+                        context.lineCap    = recode[idx++];
+                        context.lineJoin   = recode[idx++];
+                        context.miterLimit = recode[idx++];
+
+                        const strokeStyle = context._$contextStyle;
+
+                        strokeStyle._$strokeStyle[0] = color_transform[0] !== 1 || color_transform[4] !== 0
+                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[0] + color_transform[4], 255)) / 255
+                            : recode[idx++] / 255;
+
+                        strokeStyle._$strokeStyle[1] = color_transform[1] !== 1 || color_transform[5] !== 0
+                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[1] + color_transform[5], 255)) / 255
+                            : recode[idx++] / 255;
+
+                        strokeStyle._$strokeStyle[2] = color_transform[2] !== 1 || color_transform[6] !== 0
+                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[2] + color_transform[6], 255)) / 255
+                            : recode[idx++] / 255;
+
+                        strokeStyle._$strokeStyle[3] = color_transform[3] !== 1 || color_transform[7] !== 0
+                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[3] + color_transform[7], 255)) / 255
+                            : recode[idx++] / 255;
+
+                        context._$style = strokeStyle;
                     }
-
-                    context.lineWidth  = recode[idx++];
-                    context.lineCap    = recode[idx++];
-                    context.lineJoin   = recode[idx++];
-                    context.miterLimit = recode[idx++];
-
-                    const strokeStyle = context._$contextStyle;
-
-                    strokeStyle._$strokeStyle[0] = (color_transform[0] !== 1 || color_transform[4] !== 0)
-                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[0]) + color_transform[4], 255)) / 255
-                        : recode[idx++] / 255;
-
-                    strokeStyle._$strokeStyle[1] = (color_transform[1] !== 1 || color_transform[5] !== 0)
-                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[1]) + color_transform[5], 255)) / 255
-                        : recode[idx++] / 255;
-
-                    strokeStyle._$strokeStyle[2] = (color_transform[2] !== 1 || color_transform[6] !== 0)
-                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[2]) + color_transform[6], 255)) / 255
-                        : recode[idx++] / 255;
-
-                    strokeStyle._$strokeStyle[3] = (color_transform[3] !== 1 || color_transform[7] !== 0)
-                        ? Util.$max(0, Util.$min((recode[idx++] * color_transform[3]) + color_transform[7], 255)) / 255
-                        : recode[idx++] / 255;
-
-                    context._$style = strokeStyle;
                     break;
 
                 case Graphics.END_STROKE:
@@ -1884,11 +1875,13 @@ class Graphics
                     break;
 
                 case Graphics.ARC:
-                    const arcX   = recode[idx++];
-                    const arcY   = recode[idx++];
-                    const radius = recode[idx++];
-                    context.moveTo((arcX + radius), arcY);
-                    context.arc(arcX, arcY, radius, 0, 2 * Util.$PI);
+                    {
+                        const arcX   = recode[idx++];
+                        const arcY   = recode[idx++];
+                        const radius = recode[idx++];
+                        context.moveTo(arcX + radius, arcY);
+                        context.arc(arcX, arcY, radius, 0, 2 * Util.$PI);
+                    }
                     break;
 
                 case Graphics.GRADIENT_FILL:
@@ -1945,10 +1938,10 @@ class Graphics
                             const color = stops[idx];
 
                             css.addColorStop(color.ratio, Util.$getFloat32Array4(
-                                Util.$max(0, Util.$min(color.R * color_transform[0] + color_transform[4], 255))|0,
-                                Util.$max(0, Util.$min(color.G * color_transform[1] + color_transform[5], 255))|0,
-                                Util.$max(0, Util.$min(color.B * color_transform[2] + color_transform[6], 255))|0,
-                                Util.$max(0, Util.$min(color.A * color_transform[3] + color_transform[7], 255))|0
+                                Util.$max(0, Util.$min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
+                                Util.$max(0, Util.$min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
+                                Util.$max(0, Util.$min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
+                                Util.$max(0, Util.$min(color.A * color_transform[3] + color_transform[7], 255)) | 0
                             ));
 
                         }
@@ -2020,10 +2013,10 @@ class Graphics
                             const color = stops[idx];
 
                             css.addColorStop(color.ratio, Util.$getFloat32Array4(
-                                Util.$max(0, Util.$min(color.R * color_transform[0] + color_transform[4], 255))|0,
-                                Util.$max(0, Util.$min(color.G * color_transform[1] + color_transform[5], 255))|0,
-                                Util.$max(0, Util.$min(color.B * color_transform[2] + color_transform[6], 255))|0,
-                                Util.$max(0, Util.$min(color.A * color_transform[3] + color_transform[7], 255))|0
+                                Util.$max(0, Util.$min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
+                                Util.$max(0, Util.$min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
+                                Util.$max(0, Util.$min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
+                                Util.$max(0, Util.$min(color.A * color_transform[3] + color_transform[7], 255)) | 0
                             ));
 
                         }

@@ -1,18 +1,13 @@
 /**
+ * EventPhase クラスは、Event クラスの eventPhase プロパティの値を提供します。
+ *
+ * The EventPhase class provides values for the eventPhase property of the Event class.
+ *
  * @class
  * @memberOf next2d.events
  */
 class EventPhase
 {
-    /**
-     * EventPhase クラスは、Event クラスの eventPhase プロパティの値を提供します。
-     * The EventPhase class provides values for the eventPhase property of the Event class.
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
-
     /**
      * 指定されたクラスのストリングを返します。
      * Returns the string representation of the specified class.

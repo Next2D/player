@@ -68,7 +68,7 @@ class ColorBufferPool
 
         if (colorBuffer.width < width
             || colorBuffer.height < height
-            || (samples && colorBuffer.samples !== samples)
+            || samples && colorBuffer.samples !== samples
         ) {
             width  = Util.$max(width,  colorBuffer.width);
             height = Util.$max(height, colorBuffer.height);

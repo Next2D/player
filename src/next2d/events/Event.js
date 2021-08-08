@@ -1,32 +1,32 @@
 /**
+ * Event クラスのメソッドは、イベントリスナー関数で使用してイベントオブジェクトの動作に影響を与えることができます。
+ * 一部のイベントにはデフォルトの動作が関連付けられています。
+ * 例えば、doubleClick イベントには、イベント時にマウスポインター位置の単語がハイライト表示されるというデフォルトの動作が関連付けられています。
+ * イベントリスナーで preventDefault() メソッドを呼び出してこの動作をキャンセルできます。
+ * また、stopPropagation() メソッドまたは stopImmediatePropagation() メソッドを呼び出すと、
+ * 現在のイベントリスナーを、イベントを処理する最後のイベントリスナーにすることができます。
+ *
+ * The methods of the Event class can be used in event listener functions to affect the behavior of the event object.
+ * Some events have an associated default behavior. For example,
+ * the doubleClick event has an associated default behavior that highlights the word under the mouse pointer at the time of the event.
+ * Your event listener can cancel this behavior by calling the preventDefault() method.
+ * You can also make the current event listener the last one to process
+ * an event by calling the stopPropagation() or stopImmediatePropagation() method.
+ *
+ * @example <caption>Example usage of Event.</caption>
+ * // new Event
+ * const {Event} = next2d.events;
+ * displayObject.dispatchEvent(new Event(Event.ENTER_FRAME));
+ *
  * @class
  * @memberOf next2d.events
  */
 class Event
 {
     /**
-     * Event クラスのメソッドは、イベントリスナー関数で使用してイベントオブジェクトの動作に影響を与えることができます。
-     * 一部のイベントにはデフォルトの動作が関連付けられています。
-     * 例えば、doubleClick イベントには、イベント時にマウスポインター位置の単語がハイライト表示されるというデフォルトの動作が関連付けられています。
-     * イベントリスナーで preventDefault() メソッドを呼び出してこの動作をキャンセルできます。
-     * また、stopPropagation() メソッドまたは stopImmediatePropagation() メソッドを呼び出すと、
-     * 現在のイベントリスナーを、イベントを処理する最後のイベントリスナーにすることができます。
-     *
-     * The methods of the Event class can be used in event listener functions to affect the behavior of the event object.
-     * Some events have an associated default behavior. For example,
-     * the doubleClick event has an associated default behavior that highlights the word under the mouse pointer at the time of the event.
-     * Your event listener can cancel this behavior by calling the preventDefault() method.
-     * You can also make the current event listener the last one to process
-     * an event by calling the stopPropagation() or stopImmediatePropagation() method.
-     *
      * @param {string}  type
      * @param {boolean} [bubbles=false]
      * @param {boolean} [cancelable=false]
-     *
-     * @example <caption>Example usage of Event.</caption>
-     * // new Event
-     * const {Event} = next2d.events;
-     * displayObject.dispatchEvent(new Event(Event.ENTER_FRAME));
      *
      * @constructor
      * @public
@@ -517,7 +517,7 @@ class Event
      */
     get target ()
     {
-        return (this._$target) ? this._$target : this._$currentTarget;
+        return this._$target ? this._$target : this._$currentTarget;
     }
 
     /**
@@ -575,7 +575,7 @@ class Event
      */
     isDefaultPrevented ()
     {
-        return (Util.$event) ? Util.$event.defaultPrevented : false;
+        return Util.$event ? Util.$event.defaultPrevented : false;
     }
 
     /**

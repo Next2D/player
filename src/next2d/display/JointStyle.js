@@ -1,22 +1,17 @@
 /**
+ * JointStyle クラスは、線の描画で使用される結合スタイルを指定する定数値の列挙です。
+ * これらの定数は、joints パラメーター（next2d.display.Graphics.lineStyle() メソッドのパラメーター）の値として使用されます。
+ * このメソッドは、マイター、ラウンド、ベベルの 3 種類の結合をサポートします。
+ *
+ * The JointStyle class is an enumeration of constant values that specify the joint style to use in drawing lines.
+ * These constants are provided for use as values in the joints parameter of the next2d.display.Graphics.lineStyle() method.
+ * The method supports three types of joints: miter, round, and bevel, as the following
+ *
  * @class
  * @memberOf next2d.display
  */
 class JointStyle
 {
-    /**
-     * JointStyle クラスは、線の描画で使用される結合スタイルを指定する定数値の列挙です。
-     * これらの定数は、joints パラメーター（next2d.display.Graphics.lineStyle() メソッドのパラメーター）の値として使用されます。
-     * このメソッドは、マイター、ラウンド、ベベルの 3 種類の結合をサポートします。
-     *
-     * The JointStyle class is an enumeration of constant values that specify the joint style to use in drawing lines.
-     * These constants are provided for use as values in the joints parameter of the next2d.display.Graphics.lineStyle() method.
-     * The method supports three types of joints: miter, round, and bevel, as the following
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
 
     /**
      * @description 指定されたクラスのストリングを返します。

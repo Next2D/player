@@ -1,19 +1,13 @@
 /**
+ * URLLoaderDataFormat クラスは、ダウンロードされるデータの受信方法を指定する値を提供します。
+ *
+ * The URLLoaderDataFormat class provides values that specify how downloaded data is received.
+ *
  * @class
  * @memberOf next2d.net
  */
 class URLLoaderDataFormat
 {
-    /**
-     * URLLoaderDataFormat クラスは、ダウンロードされるデータの受信方法を指定する値を提供します。
-     *
-     * The URLLoaderDataFormat class provides values that specify how downloaded data is received.
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
-
     /**
      * @description 指定されたクラスのストリングを返します。
      *              Returns the string representation of the specified class.

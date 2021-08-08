@@ -1,4 +1,13 @@
 /**
+ * GradientBevelFilter クラスを使用すると、オブジェクトにグラデーションベベル効果を適用し、表示できます。
+ * グラデーションベベルは、オブジェクトの外側、内側、または上側が斜めになったエッジであり、グラデーションカラーで強調されます。
+ * 斜めのエッジによってオブジェクトが 3 次元に見えます。
+ *
+ * The GradientBevelFilter class lets you apply a gradient bevel effect to display objects.
+ * A gradient bevel is a beveled edge, enhanced with gradient color,
+ * on the outside, inside, or top of an object.
+ * Beveled edges make objects look three-dimensional.
+ *
  * @class
  * @memberOf next2d.filters
  * @extends  BitmapFilter
@@ -6,15 +15,6 @@
 class GradientBevelFilter  extends BitmapFilter
 {
     /**
-     * GradientBevelFilter クラスを使用すると、オブジェクトにグラデーションベベル効果を適用し、表示できます。
-     * グラデーションベベルは、オブジェクトの外側、内側、または上側が斜めになったエッジであり、グラデーションカラーで強調されます。
-     * 斜めのエッジによってオブジェクトが 3 次元に見えます。
-     *
-     * The GradientBevelFilter class lets you apply a gradient bevel effect to display objects.
-     * A gradient bevel is a beveled edge, enhanced with gradient color,
-     * on the outside, inside, or top of an object.
-     * Beveled edges make objects look three-dimensional.
-     *
      * @param {number}  [distance=4.0]
      * @param {number}  [angle=45]
      * @param {array}   [colors=null]
@@ -169,7 +169,7 @@ class GradientBevelFilter  extends BitmapFilter
      */
     get alphas ()
     {
-        return (!this._$colors || !this._$ratios) ? null : this._$alphas;
+        return !this._$colors || !this._$ratios ? null : this._$alphas;
     }
     set alphas (alphas)
     {
@@ -253,7 +253,7 @@ class GradientBevelFilter  extends BitmapFilter
      */
     get colors ()
     {
-        return (!this._$alphas || !this._$ratios) ? null : this._$colors;
+        return !this._$alphas || !this._$ratios ? null : this._$colors;
     }
     set colors (colors)
     {
@@ -265,10 +265,10 @@ class GradientBevelFilter  extends BitmapFilter
             const length = colors.length;
             for (let idx = 0; idx < length; ++idx) {
 
-                let color = colors[idx]|0;
+                let color = colors[idx] | 0;
 
                 if (color < 0) {
-                    color = 0x1000000 - (Util.$abs(color) % 0x1000000);
+                    color = 0x1000000 - Util.$abs(color) % 0x1000000;
                 }
 
                 if (color > 0xffffff) {
@@ -351,7 +351,7 @@ class GradientBevelFilter  extends BitmapFilter
      */
     get ratios ()
     {
-        return (!this._$alphas || !this._$colors) ? null : this._$ratios;
+        return !this._$alphas || !this._$colors ? null : this._$ratios;
     }
     set ratios (ratios)
     {
@@ -384,7 +384,7 @@ class GradientBevelFilter  extends BitmapFilter
     }
     set strength (strength)
     {
-        strength = Util.$clamp(strength|0, 0, 255, 0);
+        strength = Util.$clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
             this._$doChanged(true);
         }
@@ -452,13 +452,11 @@ class GradientBevelFilter  extends BitmapFilter
     }
     /**
      * @param  {Rectangle} rect
-     * @param  {number}    [x_scale=null]
-     * @param  {number}    [y_scale=null]
      * @return {Rectangle}
      * @method
      * @private
      */
-    _$generateFilterRect (rect, x_scale = null, y_scale = null)
+    _$generateFilterRect (rect)
     {
         let clone = rect.clone();
         if (!this._$canApply()) {
@@ -470,8 +468,8 @@ class GradientBevelFilter  extends BitmapFilter
         const radian = +(this.angle * Util.$PI / 180);
         const x      = Util.$cos(radian) * this._$distance;
         const y      = Util.$sin(radian) * this._$distance;
-        let dx       = Util.$abs(x)|0;
-        let dy       = Util.$abs(y)|0;
+        let dx       = Util.$abs(x) | 0;
+        let dy       = Util.$abs(y) | 0;
 
         if (0 > x) {
             dx++;
@@ -490,9 +488,9 @@ class GradientBevelFilter  extends BitmapFilter
         }
 
         clone.x      -= dx;
-        clone.width  += (dx * 2);
+        clone.width  += dx * 2;
         clone.y      -= dy;
-        clone.height += (dy * 2);
+        clone.height += dy * 2;
 
         return clone;
     }
@@ -625,9 +623,9 @@ class GradientBevelFilter  extends BitmapFilter
         const bevelHeight = Util.$ceil(blurHeight + Util.$abs(y) * 2);
 
         // bevel filter buffer
-        const isInner = (this._$type === BitmapFilterType.INNER);
-        const width   = (isInner) ? baseWidth  : bevelWidth;
-        const height  = (isInner) ? baseHeight : bevelHeight;
+        const isInner = this._$type === BitmapFilterType.INNER;
+        const width   = isInner ? baseWidth  : bevelWidth;
+        const height  = isInner ? baseHeight : bevelHeight;
 
         const absX = Util.$abs(x);
         const absY = Util.$abs(y);
@@ -653,8 +651,7 @@ class GradientBevelFilter  extends BitmapFilter
             baseWidth, baseHeight, baseTextureX, baseTextureY,
             blurWidth, blurHeight, blurTextureX, blurTextureY,
             false, this._$type, this._$knockout,
-            this._$strength, this.blurX, this.blurY,
-            this._$ratios, this._$colors, this._$alphas,
+            this._$strength, this._$ratios, this._$colors, this._$alphas,
             0, 0, 0, 0, 0, 0, 0, 0
         );
 

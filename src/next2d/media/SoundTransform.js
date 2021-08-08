@@ -1,14 +1,14 @@
 /**
+ * SoundTransform クラスにはボリュームとループのプロパティが含まれます。
+ *
+ * The SoundTransform class contains properties for volume and loop.
+ *
  * @class
  * @memberOf next2d.media
  */
 class SoundTransform
 {
     /**
-     * SoundTransform クラスにはボリュームとループのプロパティが含まれます。
-     *
-     * The SoundTransform class contains properties for volume and loop.
-     *
      * @param {number}  [volume=1]
      * @param {boolean} [loop=false]
      *

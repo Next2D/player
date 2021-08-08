@@ -5,15 +5,15 @@ class WebGLShaderKeyword
 {
     /**
      * @param {WebGLRenderingContext} gl
-     * @param {boolean} isWebGL2Context
+     * @param {boolean} is_web_gl2_context
      * @constructor
      * @public
      */
-    constructor (gl, isWebGL2Context)
+    constructor (gl, is_web_gl2_context)
     {
-        this._$isWebGL2Context = isWebGL2Context;
+        this._$isWebGL2Context = is_web_gl2_context;
 
-        if (!isWebGL2Context) {
+        if (!is_web_gl2_context) {
             gl.getExtension("OES_standard_derivatives");
         }
     }
@@ -25,7 +25,7 @@ class WebGLShaderKeyword
      */
     version ()
     {
-        return (this._$isWebGL2Context)
+        return this._$isWebGL2Context
             ? "#version 300 es"
             : "";
     }
@@ -38,7 +38,7 @@ class WebGLShaderKeyword
      */
     attribute (index)
     {
-        return (this._$isWebGL2Context)
+        return this._$isWebGL2Context
             ? `layout (location = ${index}) in`
             : "attribute";
     }
@@ -51,8 +51,8 @@ class WebGLShaderKeyword
      */
     varyingOut (centroid = false)
     {
-        return (this._$isWebGL2Context)
-            ? `${(centroid) ? "centroid " : ""}out`
+        return this._$isWebGL2Context
+            ? `${centroid ? "centroid " : ""}out`
             : "varying";
     }
 
@@ -64,8 +64,8 @@ class WebGLShaderKeyword
      */
     varyingIn (centroid = false)
     {
-        return (this._$isWebGL2Context)
-            ? `${(centroid) ? "centroid " : ""}in`
+        return this._$isWebGL2Context
+            ? `${centroid ? "centroid " : ""}in`
             : "varying";
     }
 
@@ -76,7 +76,7 @@ class WebGLShaderKeyword
      */
     outColor ()
     {
-        return (this._$isWebGL2Context)
+        return this._$isWebGL2Context
             ? "out vec4 o_color;"
             : "";
     }
@@ -88,9 +88,9 @@ class WebGLShaderKeyword
      */
     fragColor ()
     {
-        return (this._$isWebGL2Context)
+        return this._$isWebGL2Context
             ? "o_color"
-            : "gl_FragColor"
+            : "gl_FragColor";
     }
 
     /**
@@ -100,9 +100,9 @@ class WebGLShaderKeyword
      */
     texture2D ()
     {
-        return (this._$isWebGL2Context)
+        return this._$isWebGL2Context
             ? "texture"
-            : "texture2D"
+            : "texture2D";
     }
 
     /**
@@ -112,8 +112,8 @@ class WebGLShaderKeyword
      */
     extensionDerivatives ()
     {
-        return (this._$isWebGL2Context)
+        return this._$isWebGL2Context
             ? ""
-            : "#extension GL_OES_standard_derivatives : enable"
+            : "#extension GL_OES_standard_derivatives : enable";
     }
 }

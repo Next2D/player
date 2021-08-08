@@ -1,4 +1,9 @@
 /**
+ * Shape クラスには、Graphics クラスからメソッドにアクセスできる graphics プロパティがあります。
+ *
+ * The Shape class includes a graphics property,
+ * which lets you access methods from the Graphics class.
+ *
  * @class
  * @memberOf next2d.display
  * @extends  DisplayObject
@@ -6,11 +11,6 @@
 class Shape extends DisplayObject
 {
     /**
-     * Shape クラスには、Graphics クラスからメソッドにアクセスできる graphics プロパティがあります。
-     *
-     * The Shape class includes a graphics property,
-     * which lets you access methods from the Graphics class.
-     *
      * @constructor
      * @public
      */
@@ -166,12 +166,7 @@ class Shape extends DisplayObject
             return Util.$getBoundsObject(0, 0, 0, 0);
         }
 
-        const bounds = this._$graphics._$getBounds(matrix);
-        if (!bounds) {
-            Util.$poolBoundsObject(bounds);
-            return Util.$getBoundsObject(0, 0, 0, 0);
-        }
-
+        const bounds = this._$graphics._$getBounds();
         if (matrix) {
 
             const tMatrix = Util.$multiplicationMatrix(
@@ -184,13 +179,7 @@ class Shape extends DisplayObject
             return result;
         }
 
-        const result = Util.$getBoundsObject(
-            bounds.xMin, bounds.xMax,
-            bounds.yMin, bounds.yMax
-        );
-        Util.$poolBoundsObject(bounds);
-
-        return result;
+        return bounds;
     }
 
     /**
@@ -217,14 +206,13 @@ class Shape extends DisplayObject
             multiColor = Util.$multiplicationColor(color_transform, rawColor);
         }
 
-        const alpha = Util.$clamp(multiColor[3] + (multiColor[7] / 255), 0, 1, 0);
+        const alpha = Util.$clamp(multiColor[3] + multiColor[7] / 255, 0, 1, 0);
         if (!alpha) {
             if (multiColor !== color_transform) {
                 Util.$poolFloat32Array8(multiColor);
             }
             return ;
         }
-
 
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();
@@ -235,11 +223,9 @@ class Shape extends DisplayObject
         const filters   = this._$filters   || this.filters;
         const blendMode = this._$blendMode || this.blendMode;
 
-
         this
             ._$graphics
             ._$draw(context, multiMatrix, multiColor, blendMode, filters);
-
 
         if (multiColor !== color_transform) {
             Util.$poolFloat32Array8(multiColor);
@@ -316,7 +302,6 @@ class Shape extends DisplayObject
             hit = this
                 ._$graphics
                 ._$hit(context, multiMatrix, options, is_clip);
-
 
             if (multiMatrix !== matrix) {
                 Util.$poolFloat32Array6(multiMatrix);

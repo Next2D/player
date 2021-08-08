@@ -1,20 +1,15 @@
 /**
+ * SpreadMethod クラスは、spreadMethod パラメーター（Graphics クラスの beginGradientFill() メソッド
+ * および lineGradientStyle() メソッドのパラメーター）の値を提供します。
+ *
+ * The SpreadMethod class provides values for the spreadMethod parameter
+ * in the beginGradientFill() and lineGradientStyle() methods of the Graphics class.
+ *
  * @class
  * @memberOf next2d.display
  */
 class SpreadMethod
 {
-    /**
-     * SpreadMethod クラスは、spreadMethod パラメーター（Graphics クラスの beginGradientFill() メソッド
-     * および lineGradientStyle() メソッドのパラメーター）の値を提供します。
-     *
-     * The SpreadMethod class provides values for the spreadMethod parameter 
-     * in the beginGradientFill() and lineGradientStyle() methods of the Graphics class.
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
 
     /**
      * @description 指定されたクラスのストリングを返します。

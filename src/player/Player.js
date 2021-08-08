@@ -60,7 +60,7 @@ class Player
             "x": 0,
             "y": 0,
             "pointer": "",
-            "hit": null,
+            "hit": null
         };
 
         /**
@@ -372,7 +372,7 @@ class Player
     }
     set width (width)
     {
-        this._$baseWidth = width|0;
+        this._$baseWidth = width | 0;
     }
 
     /**
@@ -385,7 +385,7 @@ class Player
     }
     set height (height)
     {
-        this._$baseHeight = height|0;
+        this._$baseHeight = height | 0;
     }
 
     /**
@@ -497,7 +497,6 @@ class Player
 
             }
 
-
             // DOM
             this._$deleteNode();
 
@@ -507,29 +506,24 @@ class Player
             // start
             this.play();
 
-
             // stage init action
             this._$stage._$prepareActions();
-
 
             // constructed event
             if (this._$broadcastEvents.has(Event.FRAME_CONSTRUCTED)) {
                 this._$dispatchEvent(new Event(Event.FRAME_CONSTRUCTED));
             }
 
-
             // frame1 action
             this._$doAction();
-
 
             // exit event
             if (this._$broadcastEvents.has(Event.EXIT_FRAME)) {
                 this._$dispatchEvent(new Event(Event.EXIT_FRAME));
             }
 
-
             // loader events
-            const length = this._$loaders.length|0;
+            const length = this._$loaders.length | 0;
             for (let idx = 0; idx < length; ++idx) {
 
                 const loader = this._$loaders.shift();
@@ -553,33 +547,20 @@ class Player
                 loader._$player = null;
             }
 
-
             // activate event
             if (this._$broadcastEvents.has(Event.ACTIVATE)) {
                 this._$dispatchEvent(new Event(Event.ACTIVATE));
             }
 
-
-            // @ifdef TRACE_GL
-            if (window.traceGLEnabled) {
-                console.log("traceGL: [Frame Start]");
-            }
-            // @endif
-
-
             // frame action
             this._$doAction();
-
 
             // render
             this._$draw(0);
 
-
             // @ifdef TRACE_GL
             if (window.traceGLEnabled) {
-                console.log("traceGL: [Frame End]");
                 window.traceGLEnabled = false;
-                debugger;
             }
             // @endif
 
@@ -642,11 +623,9 @@ class Player
 
         }
 
-
         if (!this._$canvas) {
             this._$initializeCanvas();
         }
-
 
         const element = doc.getElementById(contentElementId);
         const parent = element.parentNode;
@@ -657,13 +636,13 @@ class Player
 
             const width  = this._$optionWidth
                 ? this._$optionWidth
-                : (parent.tagName === "BODY")
+                : parent.tagName === "BODY"
                     ? Util.$window.innerWidth
                     : parent.offsetWidth;
 
             const height = this._$optionHeight
                 ? this._$optionHeight
-                : (parent.tagName === "BODY")
+                : parent.tagName === "BODY"
                     ? Util.$window.innerHeight
                     : parent.offsetHeight;
 
@@ -710,13 +689,13 @@ class Player
 
         const parent = element.parentNode;
         if (parent.tagName === "BODY") {
-            style.width  = (width)  ? `${width}px`  : `${window.innerWidth}px`;
-            style.height = (height) ? `${height}px` : `${window.innerHeight}px`;
+            style.width  = width  ? `${width}px`  : `${window.innerWidth}px`;
+            style.height = height ? `${height}px` : `${window.innerHeight}px`;
             return ;
         }
 
-        style.width  = (width)  ? `${width}px`  : `${parent.offsetWidth}px`;
-        style.height = (height) ? `${height}px` : `${parent.offsetHeight}px`;
+        style.width  = width  ? `${width}px`  : `${parent.offsetWidth}px`;
+        style.height = height ? `${height}px` : `${parent.offsetHeight}px`;
     }
 
     /**
@@ -789,7 +768,6 @@ class Player
         canvas.height = 1;
         this._$canvas = canvas;
 
-
         // create gl context
         const option = {
             "stencil": true,
@@ -797,7 +775,6 @@ class Player
             "antialias": false,
             "depth": false
         };
-
 
         let isWebGL2Context = true;
 
@@ -819,123 +796,116 @@ class Player
 
         this._$context = new CanvasToWebGLContext(gl, isWebGL2Context);
 
-
         // @ifdef DEBUG
         if (window.glstats) {
             glstats.init(gl, isWebGL2Context, Util.$isChrome, Util.$isFireFox);
         }
         // @endif
 
-
         // set event
-        switch (true) {
+        if (Util.$isTouch) {
 
-            case Util.$isTouch:
+            const loadSpAudio = function (event)
+            {
+                event.target.removeEventListener(Util.$TOUCH_START, loadSpAudio);
+                Util.$loadAudioData();
+            };
 
-                const loadSpAudio = function ()
-                {
-                    this.removeEventListener(Util.$TOUCH_START, loadSpAudio);
-                    Util.$loadAudioData();
-                };
+            // audio context load event
+            canvas.addEventListener(Util.$TOUCH_START, loadSpAudio);
 
-                // audio context load event
-                canvas.addEventListener(Util.$TOUCH_START, loadSpAudio);
+            // touch event
+            canvas.addEventListener(Util.$TOUCH_START, function (event)
+            {
+                Util.$event     = event;
+                Util.$eventType = Util.$TOUCH_START;
 
-                // touch event
-                canvas.addEventListener(Util.$TOUCH_START, function (event)
-                {
-                    Util.$event     = event;
-                    Util.$eventType = Util.$TOUCH_START;
+                this._$hitTest();
+            }.bind(this));
 
+            canvas.addEventListener(Util.$TOUCH_MOVE, function (event)
+            {
+                Util.$event     = event;
+                Util.$eventType = Util.$TOUCH_MOVE;
+
+                this._$hitTest();
+            }.bind(this));
+
+            canvas.addEventListener(Util.$TOUCH_END, function (event)
+            {
+                Util.$event     = event;
+                Util.$eventType = Util.$TOUCH_END;
+
+                this._$hitTest();
+            }.bind(this));
+
+        } else {
+
+            const loadWebAudio = function (event)
+            {
+                event.target.removeEventListener(Util.$MOUSE_DOWN, loadWebAudio);
+                Util.$loadAudioData();
+            };
+
+            // audio context load event
+            canvas.addEventListener(Util.$MOUSE_DOWN, loadWebAudio);
+
+            // mouse event
+            canvas.addEventListener(Util.$MOUSE_DOWN, function (event)
+            {
+                Util.$event     = event;
+                Util.$eventType = Util.$MOUSE_DOWN;
+
+                if (!event.button) {
                     this._$hitTest();
-                }.bind(this));
+                }
+            }.bind(this));
 
-                canvas.addEventListener(Util.$TOUCH_MOVE, function (event)
-                {
-                    Util.$event     = event;
-                    Util.$eventType = Util.$TOUCH_MOVE;
+            canvas.addEventListener(Util.$DOUBLE_CLICK, function (event)
+            {
+                Util.$event     = event;
+                Util.$eventType = Util.$DOUBLE_CLICK;
 
+                if (!event.button) {
                     this._$hitTest();
-                }.bind(this));
+                }
+            }.bind(this));
 
-                canvas.addEventListener(Util.$TOUCH_END, function (event)
-                {
-                    Util.$event     = event;
-                    Util.$eventType = Util.$TOUCH_END;
+            canvas.addEventListener(Util.$MOUSE_LEAVE, function (event)
+            {
+                Util.$event     = event;
+                Util.$eventType = Util.$MOUSE_LEAVE;
 
+                this._$hitTest();
+
+                Util.$event = null;
+                this._$stageX = -1;
+                this._$stageY = -1;
+            }.bind(this));
+
+            canvas.addEventListener(Util.$MOUSE_UP, function (event)
+            {
+                Util.$event     = event;
+                Util.$eventType = Util.$MOUSE_UP;
+
+                if (!event.button) {
                     this._$hitTest();
-                }.bind(this));
-                break;
+                }
+            }.bind(this));
 
-            default:
+            canvas.addEventListener(Util.$MOUSE_MOVE, function (event)
+            {
+                Util.$event     = event;
+                Util.$eventType = Util.$MOUSE_MOVE;
 
-                const loadWebAudio = function (event)
-                {
-                    event.target.removeEventListener(Util.$MOUSE_DOWN, loadWebAudio);
-                    Util.$loadAudioData();
-                };
+                this._$hitTest();
+            }.bind(this));
 
-                // audio context load event
-                canvas.addEventListener(Util.$MOUSE_DOWN, loadWebAudio);
-
-                // mouse event
-                canvas.addEventListener(Util.$MOUSE_DOWN, function (event)
-                {
-                    Util.$event     = event;
-                    Util.$eventType = Util.$MOUSE_DOWN;
-
-                    if (!event.button) {
-                        this._$hitTest();
-                    }
-                }.bind(this));
-
-                canvas.addEventListener(Util.$DOUBLE_CLICK, function (event)
-                {
-                    Util.$event     = event;
-                    Util.$eventType = Util.$DOUBLE_CLICK;
-
-                    if (!event.button) {
-                        this._$hitTest();
-                    }
-                }.bind(this));
-
-                canvas.addEventListener(Util.$MOUSE_LEAVE, function (event)
-                {
-                    Util.$event     = event;
-                    Util.$eventType = Util.$MOUSE_LEAVE;
-
-                    this._$hitTest();
-
-                    Util.$event = null;
-                    this._$stageX = -1;
-                    this._$stageY = -1;
-                }.bind(this));
-
-                canvas.addEventListener(Util.$MOUSE_UP, function (event)
-                {
-                    Util.$event     = event;
-                    Util.$eventType = Util.$MOUSE_UP;
-
-                    if (!event.button) {
-                        this._$hitTest();
-                    }
-                }.bind(this));
-
-                canvas.addEventListener(Util.$MOUSE_MOVE, function (event)
-                {
-                    Util.$event     = event;
-                    Util.$eventType = Util.$MOUSE_MOVE;
-
-                    this._$hitTest();
-                }.bind(this));
-
-                // mouse wheel
-                canvas.addEventListener(Util.$MOUSE_WHEEL, function (event)
-                {
-                    this._$mouseWheelEvent = event;
-                }.bind(this));
-
-                break;
+            // mouse wheel
+            canvas.addEventListener(Util.$MOUSE_WHEEL, function (event)
+            {
+                this._$mouseWheelEvent = event;
+            }.bind(this));
 
         }
 
@@ -967,7 +937,7 @@ class Player
 
             const innerWidth = this._$optionWidth
                 ? this._$optionWidth
-                : (parent.tagName === "BODY")
+                : parent.tagName === "BODY"
                     ? Util.$window.innerWidth
                     : parent.offsetWidth
                         ? parent.offsetWidth
@@ -975,38 +945,37 @@ class Player
 
             const innerHeight = this._$optionHeight
                 ? this._$optionHeight
-                : (parent.tagName === "BODY")
+                : parent.tagName === "BODY"
                     ? Util.$window.innerHeight
                     : parent.offsetHeight
                         ? parent.offsetHeight
                         : Util.$parseFloat(parent.style.height);
 
-            const screenWidth = (parent.tagName === "BODY")
+            const screenWidth = parent.tagName === "BODY"
                 ? Util.$window.innerWidth
                 : parent.offsetWidth;
 
-
             const scale = Util.$min(
-                (innerWidth  / this._$baseWidth),
-                (innerHeight / this._$baseHeight)
+                innerWidth  / this._$baseWidth,
+                innerHeight / this._$baseHeight
             );
 
-            let width  = (this._$baseWidth  * scale)|0;
-            let height = (this._$baseHeight * scale)|0;
+            let width  = this._$baseWidth  * scale | 0;
+            let height = this._$baseHeight * scale | 0;
 
             // div
             const style  = div.style;
             style.width  = `${width}px`;
             style.height = `${height}px`;
             style.top    = "0";
-            style.left   = `${(screenWidth / 2) - (width / 2)}px`;
+            style.left   = `${screenWidth / 2 - width / 2}px`;
 
-            if (width !== (this._$width / this._$ratio)
-                || height !== (this._$height / this._$ratio)
+            if (width !== this._$width / this._$ratio
+                || height !== this._$height / this._$ratio
             ) {
 
-                width  = (width  * Util.$devicePixelRatio)|0;
-                height = (height * Util.$devicePixelRatio)|0;
+                width  = width  * Util.$devicePixelRatio | 0;
+                height = height * Util.$devicePixelRatio | 0;
 
                 // params
                 this._$scale  = scale;
@@ -1018,7 +987,7 @@ class Player
                 this._$canvas.height = height;
                 this._$context._$gl.viewport(0, 0, width, height);
 
-                this._$canvas.style.transform = (this._$ratio === 1 && Util.$devicePixelRatio === 1)
+                this._$canvas.style.transform = this._$ratio === 1 && Util.$devicePixelRatio === 1
                     ? ""
                     : `scale(${1 / this._$ratio})`;
 
@@ -1030,7 +999,6 @@ class Player
                         manager.unbind();
                         manager.releaseAttachment(this._$buffer, true);
                     }
-
 
                     this._$buffer = manager
                         .createCacheAttachment(width, height, false);
@@ -1162,13 +1130,6 @@ class Player
         }
         // @endif
 
-
-        // @ifdef TRACE_GL
-        if (window.traceGLEnabled) {
-            console.log("traceGL: [Frame Start]");
-        }
-        // @endif
-
         this._$wheelEvent();
 
         // delay action
@@ -1178,14 +1139,14 @@ class Player
         if (delta > this._$fps) {
 
             // update
-            this._$startTime = timestamp - (delta % this._$fps);
+            this._$startTime = timestamp - delta % this._$fps;
 
             // execute
             this._$action();
             this._$draw(0);
 
             // draw event
-            if (!this._$hitTestStart 
+            if (!this._$hitTestStart
                 && this._$state === "up" && Util.$event
                 && this._$stageX > -1 && this._$stageY > -1
             ) {
@@ -1193,15 +1154,11 @@ class Player
             }
         }
 
-
         // @ifdef TRACE_GL
         if (window.traceGLEnabled) {
-            console.log("traceGL: [Frame End]");
             window.traceGLEnabled = false;
-            debugger;
         }
         // @endif
-
 
         // @ifdef DEBUG
         if (window.stats) {
@@ -1212,7 +1169,6 @@ class Player
             glstats.end();
         }
         // @endif
-
 
         // next frame
         const timer = Util.$requestAnimationFrame;
@@ -1245,7 +1201,6 @@ class Player
             this._$hitObject, true
         );
 
-
         // change state
         // params
         let instance       = null;
@@ -1258,7 +1213,6 @@ class Player
 
             instance = this._$hitObject.hit;
 
-
             // (1) mouseOut
             if (this._$mouseOverTarget
                 && this._$mouseOverTarget !== instance
@@ -1269,10 +1223,9 @@ class Player
                 if (outInstance.willTrigger(MouseEvent.MOUSE_OUT)) {
                     outInstance.dispatchEvent(new MouseEvent(
                         MouseEvent.MOUSE_OUT, true, false,
-                        outInstance.mouseX, outInstance.mouseY,
+                        outInstance.mouseX, outInstance.mouseY
                     ));
                 }
-
 
                 if (outInstance instanceof SimpleButton
                     && outInstance._$status === "over"
@@ -1282,7 +1235,6 @@ class Player
                 }
 
             }
-
 
             // rollOut and rollOver
             if (this._$rollOverObject !== instance) {
@@ -1350,10 +1302,9 @@ class Player
                     }
                 }
 
-
                 // (3) current object rollOver
                 target = instance;
-                while (true) {
+                for (;;) {
 
                     if (target.willTrigger(MouseEvent.ROLL_OVER)) {
                         target.dispatchEvent(new MouseEvent(
@@ -1375,7 +1326,6 @@ class Player
 
             this._$rollOverObject = instance;
 
-
             // (4) mouseOver
             switch (true) {
 
@@ -1395,7 +1345,6 @@ class Player
 
             }
 
-
             // (5) over button
             if (instance instanceof SimpleButton
                 && instance._$status !== "over"
@@ -1405,12 +1354,10 @@ class Player
 
             }
 
-
             // click reset
             if (this._$state === "up") {
                 this._$clickTarget = null;
             }
-
 
             // PC
             if (!Util.$isTouch && this._$state === "up") {
@@ -1420,7 +1367,7 @@ class Player
 
                     switch (true) {
 
-                        case (target instanceof TextField):
+                        case target instanceof TextField:
                             if (target._$type === TextFieldType.DYNAMIC) {
                                 canPointerText = true;
                             }
@@ -1458,7 +1405,6 @@ class Player
                 }
             }
 
-
             // (2) rollOut
             if (this._$rollOverObject) {
 
@@ -1485,7 +1431,6 @@ class Player
             this._$mouseOverTarget = null;
         }
 
-
         // change cursor
         switch (true) {
 
@@ -1502,7 +1447,6 @@ class Player
                 break;
 
         }
-
 
         if (this._$actions.length > 1) {
             this._$doAction();
@@ -1546,7 +1490,6 @@ class Player
         // next frame
         this._$stage._$nextFrame();
 
-
         // enter frame event
         if (this._$broadcastEvents.has(Event.ENTER_FRAME)) {
             this._$dispatchEvent(new Event(Event.ENTER_FRAME));
@@ -1557,10 +1500,8 @@ class Player
             this._$dispatchEvent(new Event(Event.FRAME_CONSTRUCTED));
         }
 
-
         // execute frame action
         this._$doAction();
-
 
         // exit event
         if (this._$broadcastEvents.has(Event.EXIT_FRAME)) {
@@ -1577,7 +1518,6 @@ class Player
             this._$dispatchEvent(new Event(Event.RENDER));
 
         }
-
 
         // loader events
         if (length) {
@@ -1604,14 +1544,13 @@ class Player
 
         // execute frame action
         this._$doAction();
-    };
+    }
 
     /**
-     * @param {number} [timestamp=0]
      * @returns void
      * @public
      */
-    _$draw (timestamp = 0)
+    _$draw ()
     {
         const canvas  = this._$canvas;
         const width   = canvas.width;
@@ -1646,7 +1585,8 @@ class Player
 
             // start sound
             if (this._$sounds.size) {
-                for (let [id, movieClip] of this._$sounds) {
+                const values = this._$sounds.values();
+                for (let movieClip of values) {
                     movieClip._$soundPlay();
                 }
                 this._$sounds.clear();
@@ -1699,7 +1639,6 @@ class Player
             }
             mc._$actionProcess = false;
 
-
             // adjustment
             if (mc._$frameCache.size) {
                 mc._$currentFrame = mc._$frameCache.get("nextFrame");
@@ -1730,7 +1669,6 @@ class Player
         this._$hitTestStart = true;
         Util.$isUpdated     = false;
 
-
         // setup
         const event = Util.$event;
 
@@ -1738,7 +1676,6 @@ class Player
         let instance  = null;
         let target    = null;
         let textField = null;
-
 
         let x = Util.$window.pageXOffset;
         let y = Util.$window.pageYOffset;
@@ -1782,13 +1719,11 @@ class Player
         Util.$hitContext.setTransform(1, 0, 0, 1, 0, 0);
         Util.$hitContext.beginPath();
 
-
         // hit test
         this._$stage._$mouseHit(
             Util.$hitContext, Util.$MATRIX_ARRAY_IDENTITY,
             this._$hitObject, true
         );
-
 
         // change state
         let canPointerText = false;
@@ -1830,7 +1765,7 @@ class Player
             case Util.$TOUCH_START:
             case Util.$MOUSE_DOWN:
                 this._$state  = "down";
-                canPointer    = (this._$canvas.style.cursor === "pointer");
+                canPointer    = this._$canvas.style.cursor === "pointer";
                 staticPointer = true;
                 break;
 
@@ -1841,7 +1776,6 @@ class Player
                 break;
 
         }
-
 
         // execute
         switch (true) {
@@ -1868,7 +1802,6 @@ class Player
                     }
                 }
 
-
                 // (2) rollOut
                 if (this._$rollOverObject) {
 
@@ -1890,11 +1823,9 @@ class Player
 
                 }
 
-
                 // reset
                 this._$rollOverObject  = null;
                 this._$mouseOverTarget = null;
-
 
                 // stage event
                 switch (Util.$eventType) {
@@ -2003,7 +1934,6 @@ class Player
                             ));
                         }
 
-
                         // (2) mouseOut
                         if (this._$mouseOverTarget
                             && this._$mouseOverTarget !== instance
@@ -2018,7 +1948,6 @@ class Player
                                 ));
                             }
 
-
                             if (outInstance instanceof SimpleButton
                                 && outInstance._$status === "over"
                             ) {
@@ -2027,7 +1956,6 @@ class Player
                             }
 
                         }
-
 
                         // rollOut and rollOver
                         if (this._$rollOverObject !== instance) {
@@ -2044,7 +1972,6 @@ class Player
                                         target.mouseX, target.mouseY
                                     ));
                                 }
-
 
                                 // rollOver flag instance
                                 hitParent = target._$parent;
@@ -2096,10 +2023,9 @@ class Player
                                 }
                             }
 
-
                             // (4) current object rollOver
                             target = instance;
-                            while (true) {
+                            for (;;) {
 
                                 if (target.willTrigger(MouseEvent.ROLL_OVER)) {
                                     target.dispatchEvent(new MouseEvent(
@@ -2121,7 +2047,6 @@ class Player
 
                         this._$rollOverObject = instance;
 
-
                         // (5) mouseOver
                         switch (true) {
 
@@ -2141,7 +2066,6 @@ class Player
 
                         }
 
-
                         // (6) over button
                         if (instance instanceof SimpleButton
                             && instance._$status !== "over"
@@ -2150,7 +2074,6 @@ class Player
                             instance._$changeState("over");
 
                         }
-
 
                         // click reset
                         if (this._$state === "up") {
@@ -2162,50 +2085,50 @@ class Player
                     // down event
                     case Util.$TOUCH_START:
                     case Util.$MOUSE_DOWN:
+                        {
 
-                        const focus = this.stage._$focus;
-                        if (focus !== instance) {
+                            const focus = this.stage._$focus;
+                            if (focus !== instance) {
 
-                            switch (true) {
+                                switch (true) {
 
-                                case instance instanceof TextField:
-                                    this._$stage.focus = instance;
-                                    break;
+                                    case instance instanceof TextField:
+                                        this._$stage.focus = instance;
+                                        break;
 
-                                case instance instanceof SimpleButton:
-                                    this._$stage.focus = instance;
-                                    break;
+                                    case instance instanceof SimpleButton:
+                                        this._$stage.focus = instance;
+                                        break;
 
-                                default:
-                                    this._$stage.focus = null;
-                                    break;
+                                    default:
+                                        this._$stage.focus = null;
+                                        break;
+
+                                }
+
+                            }
+
+                            // (3) mouseDown
+                            if (instance.willTrigger(MouseEvent.MOUSE_DOWN)) {
+                                instance.dispatchEvent(new MouseEvent(
+                                    MouseEvent.MOUSE_DOWN, true, false,
+                                    instance.mouseX, instance.mouseY
+                                ));
+                            }
+
+                            // (4) click
+                            this._$clickTarget = instance;
+
+                            // (5) button event
+                            if (instance instanceof SimpleButton
+                                && instance._$status !== "down"
+                            ) {
+
+                                instance._$changeState("down");
 
                             }
 
                         }
-
-                        // (3) mouseDown
-                        if (instance.willTrigger(MouseEvent.MOUSE_DOWN)) {
-                            instance.dispatchEvent(new MouseEvent(
-                                MouseEvent.MOUSE_DOWN, true, false,
-                                instance.mouseX, instance.mouseY
-                            ));
-                        }
-
-
-                        // (4) click
-                        this._$clickTarget = instance;
-
-
-                        // (5) button event
-                        if (instance instanceof SimpleButton
-                            && instance._$status !== "down"
-                        ) {
-
-                            instance._$changeState("down");
-
-                        }
-
                         break;
 
                     // up event
@@ -2219,7 +2142,6 @@ class Player
                                 instance.mouseX, instance.mouseY
                             ));
                         }
-
 
                         // (2) click
                         if (this._$clickTarget === instance) {
@@ -2266,7 +2188,6 @@ class Player
 
                 }
 
-
                 // PC
                 if (!staticPointer) {
 
@@ -2277,7 +2198,7 @@ class Player
 
                             switch (true) {
 
-                                case (target instanceof TextField):
+                                case target instanceof TextField:
                                     if (target._$type === TextFieldType.DYNAMIC) {
                                         canPointerText = true;
                                     }
@@ -2306,7 +2227,6 @@ class Player
 
         }
 
-
         // change cursor
         switch (true) {
 
@@ -2324,12 +2244,10 @@ class Player
 
         }
 
-
         // execute action
         if (!Util.$actionProcess && this._$actions.length > 1) {
             this._$doAction();
         }
-
 
         if (Util.$isUpdated) {
 
@@ -2346,6 +2264,5 @@ class Player
 
         this._$hitTestStart = false;
     }
-
 
 }

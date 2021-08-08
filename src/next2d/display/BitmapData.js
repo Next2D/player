@@ -1,18 +1,18 @@
 /**
+ * BitmapData クラスを使用すると、Bitmap オブジェクトのデータ (ピクセル) を処理できます。
+ * BitmapData クラスのメソッドを使用して、任意のサイズの透明または不透明のビットマップイメージを作成し
+ * 実行時に様々な方法で操作できます。
+ *
+ * The BitmapData class lets you work with the data (pixels) of a Bitmap object.
+ * You can use the methods of the BitmapData class to create arbitrarily sized transparent or
+ * opaque bitmap images and manipulate them in various ways at runtime.
+ *
  * @class
  * @memberOf next2d.display
  */
 class BitmapData
 {
     /**
-     * BitmapData クラスを使用すると、Bitmap オブジェクトのデータ (ピクセル) を処理できます。
-     * BitmapData クラスのメソッドを使用して、任意のサイズの透明または不透明のビットマップイメージを作成し
-     * 実行時に様々な方法で操作できます。
-     *
-     * The BitmapData class lets you work with the data (pixels) of a Bitmap object.
-     * You can use the methods of the BitmapData class to create arbitrarily sized transparent or
-     * opaque bitmap images and manipulate them in various ways at runtime.
-     *
      * @param   {number}  [width=0]
      * @param   {number}  [height=0]
      * @param   {boolean} [transparent=true]
@@ -28,14 +28,14 @@ class BitmapData
          * @default 0
          * @private
          */
-        this._$width = width|0;
+        this._$width = width | 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$height = height|0;
+        this._$height = height | 0;
 
         /**
          * @type {boolean}
@@ -159,7 +159,7 @@ class BitmapData
      */
     get _$texture ()
     {
-        const {width, height} = this;
+        const { width, height } = this;
         if (!width || !height) {
             return null;
         }
@@ -309,7 +309,6 @@ class BitmapData
             .frameBuffer
             .currentAttachment;
 
-
         // new buffer
         const sourceAttachment = context
             .frameBuffer
@@ -343,45 +342,35 @@ class BitmapData
 
         }
 
-        let tMatrix = (matrix)
+        let tMatrix = matrix
             ? matrix._$matrix
             : Util.$MATRIX_ARRAY_IDENTITY;
 
-
-        let colorTransform = (color_transform)
+        let colorTransform = color_transform
             ? color_transform._$colorTransform
             : Util.$COLOR_ARRAY_IDENTITY;
 
-        switch (true) {
+        if (source instanceof DisplayObject) {
 
-            case (source instanceof DisplayObject):
+            // matrix invert
+            const clone = source._$transform.matrix;
+            clone.invert();
 
-                // matrix invert
-                const clone = source._$transform.matrix;
-                clone.invert();
+            if (matrix) {
+                tMatrix = Util.$multiplicationMatrix(
+                    tMatrix, clone._$matrix
+                );
+            }
 
-                if (matrix) {
-                    tMatrix = Util.$multiplicationMatrix(
-                        tMatrix, clone._$matrix
-                    );
-                }
+            source._$draw(context, tMatrix, colorTransform);
 
-                source._$draw(context, tMatrix, colorTransform);
+            Util.$poolMatrix(clone);
 
-                Util.$poolMatrix(clone);
+        } else {
 
-                break;
-
-            case (source instanceof BitmapData):
-
-                // clone canvas
-                const bitmap = new Bitmap(source, PixelSnapping.AUTO, smoothing);
-                bitmap._$draw(context, tMatrix, colorTransform);
-
-                break;
-
-            default:
-                break;
+            // clone canvas
+            const bitmap = new Bitmap(source, PixelSnapping.AUTO, smoothing);
+            bitmap._$draw(context, tMatrix, colorTransform);
 
         }
 
@@ -395,7 +384,6 @@ class BitmapData
             .frameBuffer
             .getTextureFromCurrentAttachment();
 
-
         // setup
         const attachment = context
             .frameBuffer
@@ -407,14 +395,12 @@ class BitmapData
             .frameBuffer
             .releaseAttachment(sourceAttachment, false);
 
-
         // draw source
         Util.$resetContext(context);
         context.setTransform(1, 0, 0, 1, 0, 0);
         context._$imageSmoothingEnabled    = smoothing;
         context._$globalCompositeOperation = blend_mode;
         context.drawImage(sourceTexture, 0, 0, width, height);
-
 
         if (currentAttachment) {
             context._$bind(currentAttachment);
@@ -435,7 +421,7 @@ class BitmapData
      */
     load (url_request)
     {
-
+        console.log("TODO: ", url_request);
     }
 
     /**
@@ -445,7 +431,7 @@ class BitmapData
      */
     _$toRGBA (color)
     {
-        return (this._$transparent)
+        return this._$transparent
             ? Util.$uintToRGBA(color)
             : Util.$intToRGBA(color);
     }
@@ -474,7 +460,6 @@ class BitmapData
 
         }
 
-
         x = Math.max(x, 0);
         y = Math.max(y, 0);
         const width  = Util.$min(w, this.width  - x);
@@ -484,7 +469,7 @@ class BitmapData
             return new Uint8Array(0);
         }
 
-        const pixels = (allocator)
+        const pixels = allocator
             ? allocator(width * height * 4)
             : new Uint8Array(width * height * 4);
 
@@ -511,7 +496,6 @@ class BitmapData
                 x / this.width, 1 - y / this.height
             );
 
-
         const currentAttachment = context
             .frameBuffer
             .currentAttachment;
@@ -526,15 +510,12 @@ class BitmapData
             ._$textureManager
             .bind0(this._$texture, false);
 
-
         context.blend.disable();
         shader._$drawImage();
         context.blend.enable();
 
-
         const gl = context._$gl;
         gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-
 
         if (currentAttachment) {
             context._$bind(currentAttachment);
@@ -553,7 +534,7 @@ class BitmapData
      */
     toImage ()
     {
-        const {width, height} = this;
+        const { width, height } = this;
 
         const image = new Image();
         if (width || height) {
@@ -585,7 +566,7 @@ class BitmapData
      */
     toUint8Array ()
     {
-        return (this._$buffer)
+        return this._$buffer
             ? this._$buffer
             : this._$getPixels(0, 0, this.width, this.height, "RGBA");
     }

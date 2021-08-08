@@ -5,31 +5,31 @@ class FragmentShaderSourceGradient
 {
     /**
      * @param  {WebGLShaderKeyword} k
-     * @param  {number}  highpLength
-     * @param  {number}  fragmentIndex
-     * @param  {boolean} isRadial
-     * @param  {boolean} hasFocalPoint
-     * @param  {string}  spreadMethod
+     * @param  {number}  highp_length
+     * @param  {number}  fragment_index
+     * @param  {boolean} is_radial
+     * @param  {boolean} has_focal_point
+     * @param  {string}  spread_method
      * @return {string}
      * @method
      * @static
      */
-    static TEMPLATE (k, highpLength, fragmentIndex, isRadial, hasFocalPoint, spreadMethod)
+    static TEMPLATE (k, highp_length, fragment_index, is_radial, has_focal_point, spread_method)
     {
-        const gradientTypeStatement = (isRadial)
-            ? this.STATEMENT_GRADIENT_TYPE_RADIAL(fragmentIndex, hasFocalPoint)
-            : this.STATEMENT_GRADIENT_TYPE_LINEAR(fragmentIndex);
+        const gradientTypeStatement = is_radial
+            ? this.STATEMENT_GRADIENT_TYPE_RADIAL(fragment_index, has_focal_point)
+            : this.STATEMENT_GRADIENT_TYPE_LINEAR(fragment_index);
 
-        let spreadMethodExpression;
-        switch (spreadMethod) {
+        let spread_methodExpression;
+        switch (spread_method) {
             case "reflect":
-                spreadMethodExpression = "1.0 - abs(fract(t * 0.5) * 2.0 - 1.0)";
+                spread_methodExpression = "1.0 - abs(fract(t * 0.5) * 2.0 - 1.0)";
                 break;
             case "repeat":
-                spreadMethodExpression = "fract(t)";
+                spread_methodExpression = "fract(t)";
                 break;
             default:
-                spreadMethodExpression = "clamp(t, 0.0, 1.0)";
+                spread_methodExpression = "clamp(t, 0.0, 1.0)";
                 break;
         }
 
@@ -37,7 +37,7 @@ class FragmentShaderSourceGradient
 precision highp float;
 
 uniform sampler2D u_texture;
-uniform vec4 u_highp[${highpLength}];
+uniform vec4 u_highp[${highp_length}];
 
 ${k.varyingIn()} vec2 v_uv;
 ${k.outColor()}
@@ -45,7 +45,7 @@ ${k.outColor()}
 void main() {
     vec2 p = v_uv;
     ${gradientTypeStatement}
-    t = ${spreadMethodExpression};
+    t = ${spread_methodExpression};
     ${k.fragColor()} = ${k.texture2D()}(u_texture, vec2(t, 0.5));
 }
 
@@ -73,14 +73,14 @@ void main() {
 
     /**
      * @param  {number}  index
-     * @param  {boolean} hasFocalPoint
+     * @param  {boolean} has_focal_point
      * @return {string}
      * @method
      * @static
      */
-    static STATEMENT_GRADIENT_TYPE_RADIAL (index, hasFocalPoint)
+    static STATEMENT_GRADIENT_TYPE_RADIAL (index, has_focal_point)
     {
-        const focalPointStatement = (hasFocalPoint)
+        const focalPointStatement = has_focal_point
             ? this.STATEMENT_FOCAL_POINT_ON(index)
             : this.STATEMENT_FOCAL_POINT_OFF();
         return `

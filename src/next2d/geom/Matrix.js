@@ -1,36 +1,36 @@
 /**
+ * Matrix クラスは、2 つの座標空間の間におけるポイントのマッピング方法を決定する変換マトリックスを表します。
+ * Matrix オブジェクトのプロパティを設定し、Matrix オブジェクトを Transform オブジェクトの matrix プロパティに適用し、
+ * 次に Transform オブジェクトを表示オブジェクトの transform プロパティとして適用することで、表示オブジェクトに対する各種グラフィック変換を実行できます。
+ * これらの変換機能には、平行移動（x と y の位置変更）、回転、拡大 / 縮小、傾斜などが含まれます。
+ *
+ * The Matrix class represents a transformation matrix that determines how to map points from one coordinate space to another.
+ * You can perform various graphical transformations on a display object by setting the properties of a Matrix object,
+ * applying that Matrix object to the matrix property of a Transform object,
+ * and then applying that Transform object as the transform property of the display object.
+ * These transformation functions include translation (x and y repositioning), rotation, scaling, and skewing.
+ *
+ * @example <caption>Example usage of Matrix.</caption>
+ * // new Matrix
+ * const {Matrix} = next2d.geom;
+ * const matrix   = new Matrix();
+ * // set new Matrix
+ * const {MovieClip} = next2d.display;
+ * const movieClip   = new MovieClip();
+ * movieClip.transform.matrix = matrix;
+ *
  * @class
  * @memberOf next2d.geom
  */
 class Matrix
 {
     /**
-     * Matrix クラスは、2 つの座標空間の間におけるポイントのマッピング方法を決定する変換マトリックスを表します。
-     * Matrix オブジェクトのプロパティを設定し、Matrix オブジェクトを Transform オブジェクトの matrix プロパティに適用し、
-     * 次に Transform オブジェクトを表示オブジェクトの transform プロパティとして適用することで、表示オブジェクトに対する各種グラフィック変換を実行できます。
-     * これらの変換機能には、平行移動（x と y の位置変更）、回転、拡大 / 縮小、傾斜などが含まれます。
-     *
-     * The Matrix class represents a transformation matrix that determines how to map points from one coordinate space to another.
-     * You can perform various graphical transformations on a display object by setting the properties of a Matrix object,
-     * applying that Matrix object to the matrix property of a Transform object,
-     * and then applying that Transform object as the transform property of the display object.
-     * These transformation functions include translation (x and y repositioning), rotation, scaling, and skewing.
-     *
      * @param   {number} [a=1]
      * @param   {number} [b=0]
      * @param   {number} [c=0]
      * @param   {number} [d=1]
      * @param   {number} [tx=0]
      * @param   {number} [ty=0]
-     *
-     * @example <caption>Example usage of Matrix.</caption>
-     * // new Matrix
-     * const {Matrix} = next2d.geom;
-     * const matrix   = new Matrix();
-     * // set new Matrix
-     * const {MovieClip} = next2d.display;
-     * const movieClip   = new MovieClip();
-     * movieClip.transform.matrix = matrix;
      *
      * @constructor
      * @public
@@ -83,7 +83,7 @@ class Matrix
     toString ()
     {
         return `(a=${this.a}, b=${this.b}, c=${this.c}, d=${this.d}, tx=${this.tx}, ty=${this.ty})`;
-    };
+    }
 
     /**
      * @description 指定されたオブジェクトの空間名を返します。
@@ -259,17 +259,17 @@ class Matrix
 
         switch (true) {
 
-            case (matrix[1] !== 0):
-            case (matrix[2] !== 0):
-            case (target[1] !== 0):
-            case (target[2] !== 0):
+            case matrix[1] !== 0:
+            case matrix[2] !== 0:
+            case target[1] !== 0:
+            case target[2] !== 0:
 
-                a  += (matrix[1] * target[2]);
-                d  += (matrix[2] * target[1]);
-                b  += (matrix[0] * target[1] + matrix[1] * target[3]);
-                c  += (matrix[2] * target[0] + matrix[3] * target[2]);
-                tx += (matrix[5] * target[2]);
-                ty += (matrix[4] * target[1]);
+                a  += matrix[1] * target[2];
+                d  += matrix[2] * target[1];
+                b  += matrix[0] * target[1] + matrix[1] * target[3];
+                c  += matrix[2] * target[0] + matrix[3] * target[2];
+                tx += matrix[5] * target[2];
+                ty += matrix[4] * target[1];
 
                 break;
 

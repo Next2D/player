@@ -1,23 +1,18 @@
 /**
+ * ブレンドモードの視覚効果のために定数値を提供するクラスです。
+ * A class that provides constant values for visual blend mode effects.
+ *
+ * @example <caption>Example usage of BlendMode.</caption>
+ * // static BlendMode
+ * const {BlendMode, MovieClip} = next2d.display;
+ * const movieClip = new MovieClip();
+ * movieClip.blendMode = BlendMode.ADD;
+ *
  * @class
  * @memberOf next2d.display
  */
 class BlendMode
 {
-    /**
-     * ブレンドモードの視覚効果のために定数値を提供するクラスです。
-     * A class that provides constant values for visual blend mode effects.
-     *
-     * @example <caption>Example usage of BlendMode.</caption>
-     * // static BlendMode
-     * const {BlendMode, MovieClip} = next2d.display;
-     * const movieClip = new MovieClip();
-     * movieClip.blendMode = BlendMode.ADD;
-     *
-     * @constructor
-     * @public
-     */
-    constructor () {}
 
     /**
      * @description 指定されたクラスのストリングを返します。

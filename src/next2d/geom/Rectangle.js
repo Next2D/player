@@ -1,34 +1,34 @@
 /**
+ * Rectangle オブジェクトは、その位置（左上隅のポイント (x, y) で示される)、および幅と高さで定義される領域です。
+ * Rectangle クラスの x、y、width、および height の各プロパティは、互いに独立しているため、
+ * あるプロパティの値を変更しても、他のプロパティに影響はありません。
+ * ただし、right プロパティと bottom プロパティはこれら 4 つのプロパティと不可分に関連しています。
+ * 例えば、right プロパティの値を変更すると width プロパティの値も変更されます。
+ * bottom プロパティの値を変更すると、height プロパティの値も変更されます。
+ *
+ * A Rectangle object is an area defined by its position,
+ * as indicated by its top-left corner point (x, y) and by its width and its height.
+ * The x, y, width, and height properties of the Rectangle class are independent of each other;
+ * changing the value of one property has no effect on the others. However,
+ * the right and bottom properties are integrally related to those four properties.
+ * For example, if you change the value of the right property, the value of the width property changes;
+ * if you change the bottom property, the value of the height property changes.
+ *
+ * @example <caption>Example usage of Rectangle.</caption>
+ * // new Rectangle
+ * const {Rectangle} = next2d.geom;
+ * const rectangle   = new Rectangle(0, 0, 100, 100);
+ *
  * @class
  * @memberOf next2d.geom
  */
 class Rectangle
 {
     /**
-     * Rectangle オブジェクトは、その位置（左上隅のポイント (x, y) で示される)、および幅と高さで定義される領域です。
-     * Rectangle クラスの x、y、width、および height の各プロパティは、互いに独立しているため、
-     * あるプロパティの値を変更しても、他のプロパティに影響はありません。
-     * ただし、right プロパティと bottom プロパティはこれら 4 つのプロパティと不可分に関連しています。
-     * 例えば、right プロパティの値を変更すると width プロパティの値も変更されます。
-     * bottom プロパティの値を変更すると、height プロパティの値も変更されます。
-     *
-     * A Rectangle object is an area defined by its position,
-     * as indicated by its top-left corner point (x, y) and by its width and its height.
-     * The x, y, width, and height properties of the Rectangle class are independent of each other;
-     * changing the value of one property has no effect on the others. However,
-     * the right and bottom properties are integrally related to those four properties.
-     * For example, if you change the value of the right property, the value of the width property changes;
-     * if you change the bottom property, the value of the height property changes.
-     *
      * @param   {number} [x=0]
      * @param   {number} [y=0]
      * @param   {number} [width=0]
      * @param   {number} [height=0]
-     *
-     * @example <caption>Example usage of Rectangle.</caption>
-     * // new Rectangle
-     * const {Rectangle} = next2d.geom;
-     * const rectangle   = new Rectangle(0, 0, 100, 100);
      *
      * @constructor
      * @public
@@ -106,7 +106,7 @@ class Rectangle
     toString ()
     {
         return `(x=${this.x}, y=${this.y}, w=${this.width}, h=${this.height})`;
-    };
+    }
 
     /**
      * @description 指定されたオブジェクトの空間名を返します。
@@ -337,7 +337,7 @@ class Rectangle
      */
     contains (x, y)
     {
-        return (this.x <= x && this.y <= y && this.right > x && this.bottom > y);
+        return this.x <= x && this.y <= y && this.right > x && this.bottom > y;
     }
 
     /**
@@ -352,8 +352,8 @@ class Rectangle
      */
     containsPoint (point)
     {
-        return (this.x <= point.x && this.y <= point.y &&
-            this.right > point.x && this.bottom > point.y);
+        return this.x <= point.x && this.y <= point.y &&
+            this.right > point.x && this.bottom > point.y;
     }
 
     /**
@@ -368,8 +368,8 @@ class Rectangle
      */
     containsRect (rect)
     {
-        return (this.x <= rect.x && this.y <= rect.y &&
-            this.right >= rect.right && this.bottom >= rect.bottom);
+        return this.x <= rect.x && this.y <= rect.y &&
+            this.right >= rect.right && this.bottom >= rect.bottom;
     }
 
     /**
@@ -404,8 +404,8 @@ class Rectangle
      */
     equals (to_compare)
     {
-        return (this.x === to_compare.x && this.y === to_compare.y &&
-            this.width === to_compare.width && this.height === to_compare.height);
+        return this.x === to_compare.x && this.y === to_compare.y &&
+            this.width === to_compare.width && this.height === to_compare.height;
     }
 
     /**
@@ -465,7 +465,7 @@ class Rectangle
 
         const w = ex - sx;
         const h = ey - sy;
-        return (w > 0 && h > 0) ? new Rectangle(sx, sy, w, h) : new Rectangle(0, 0, 0, 0);
+        return w > 0 && h > 0 ? new Rectangle(sx, sy, w, h) : new Rectangle(0, 0, 0, 0);
     }
 
     /**
@@ -485,7 +485,7 @@ class Rectangle
         const sy = Util.$max(this.y, to_intersect.y);
         const ex = Util.$min(this.right,  to_intersect.right);
         const ey = Util.$min(this.bottom, to_intersect.bottom);
-        return ((ex - sx) > 0 && (ey - sy) > 0);
+        return ex - sx > 0 && ey - sy > 0;
     }
 
     /**
@@ -498,7 +498,7 @@ class Rectangle
      */
     isEmpty ()
     {
-        return (this.width <= 0 || this.height <= 0);
+        return this.width <= 0 || this.height <= 0;
     }
 
     /**

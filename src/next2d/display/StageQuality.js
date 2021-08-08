@@ -1,14 +1,15 @@
 /**
+ * StageQuality クラスでは、Stage.quality パラメーターの値を定義します。
+ * デバイスフォントは quality プロパティの影響を受けません。
+ *
+ * The StageQuality class defines the value of the Stage.quality parameter.
+ * which are therefore unaffected by the quality property.
+ *
  * @class
  * @memberOf next2d.display
  */
 class StageQuality
 {
-    /**
-     * @constructor
-     * @public
-     */
-    constructor() {}
 
     /**
      * @description 指定されたクラスのストリングを返します。
@@ -65,7 +66,7 @@ class StageQuality
     {
         return "next2d.display.StageQuality";
     }
-    
+
     /**
      * @description 高いレンダリング品質を指定します。
      *              Specifies high rendering quality.

@@ -1,4 +1,17 @@
 /**
+ * BlurFilter クラスを使用すると、表示オブジェクトにぼかし効果を適用できます。
+ * ぼかし効果は、イメージの細部をぼかします。ソフトフォーカスがかかっているように見えるぼかしから、
+ * 半透明ガラスを通してイメージを見るようにかすんで見えるガウスぼかしまで作成できます。
+ * このフィルターの quality プロパティを低く設定すると、ソフトフォーカスがかかっているように見えるぼかしになります。
+ * quality プロパティを高く設定すると、ガウスぼかしフィルターに似たものになります。
+ *
+ * The BlurFilter class lets you apply a blur visual effect to display objects.
+ * A blur effect softens the details of an image.
+ * You can produce blurs that range from a softly unfocused look to a Gaussian blur,
+ * a hazy appearance like viewing an image through semi-opaque glass.
+ * When the quality property of this filter is set to low, the result is a softly unfocused look.
+ * When the quality property is set to high, it approximates a Gaussian blur filter.
+ *
  * @class
  * @memberOf next2d.filters
  * @extends  BitmapFilter
@@ -6,19 +19,6 @@
 class BlurFilter extends BitmapFilter
 {
     /**
-     * BlurFilter クラスを使用すると、表示オブジェクトにぼかし効果を適用できます。
-     * ぼかし効果は、イメージの細部をぼかします。ソフトフォーカスがかかっているように見えるぼかしから、
-     * 半透明ガラスを通してイメージを見るようにかすんで見えるガウスぼかしまで作成できます。
-     * このフィルターの quality プロパティを低く設定すると、ソフトフォーカスがかかっているように見えるぼかしになります。
-     * quality プロパティを高く設定すると、ガウスぼかしフィルターに似たものになります。
-     *
-     * The BlurFilter class lets you apply a blur visual effect to display objects.
-     * A blur effect softens the details of an image.
-     * You can produce blurs that range from a softly unfocused look to a Gaussian blur,
-     * a hazy appearance like viewing an image through semi-opaque glass.
-     * When the quality property of this filter is set to low, the result is a softly unfocused look.
-     * When the quality property is set to high, it approximates a Gaussian blur filter.
-     *
      * @param {number}  [blur_x=4]
      * @param {number}  [blur_y=4]
      * @param {int}     [quality=1]
@@ -173,7 +173,7 @@ class BlurFilter extends BitmapFilter
     }
     set quality (quality)
     {
-        quality = Util.$clamp(quality|0, 0, 15, BitmapFilterQuality.LOW);
+        quality = Util.$clamp(quality | 0, 0, 15, BitmapFilterQuality.LOW);
         if (quality !== this._$quality) {
             this._$doChanged(true);
         }
@@ -211,8 +211,8 @@ class BlurFilter extends BitmapFilter
 
         const step = BlurFilter.STEP[this._$quality - 1];
 
-        let dx = (0 >= this._$blurX) ? 1 : this._$blurX * step;
-        let dy = (0 >= this._$blurY) ? 1 : this._$blurY * step;
+        let dx = 0 >= this._$blurX ? 1 : this._$blurX * step;
+        let dy = 0 >= this._$blurY ? 1 : this._$blurY * step;
 
         switch (true) {
 
@@ -230,9 +230,9 @@ class BlurFilter extends BitmapFilter
         }
 
         clone.x      -= dx;
-        clone.width  += (dx * 2);
+        clone.width  += dx * 2;
         clone.y      -= dy;
-        clone.height += (dy * 2);
+        clone.height += dy * 2;
 
         return clone;
     }
@@ -267,7 +267,7 @@ class BlurFilter extends BitmapFilter
      */
     _$canApply ()
     {
-        if (!this._$quality || (!this._$blurX && !this._$blurY)) {
+        if (!this._$quality || !this._$blurX && !this._$blurY) {
             return false;
         }
         return true;
@@ -296,27 +296,25 @@ class BlurFilter extends BitmapFilter
         if (!this._$canApply()) {
             if (removed) {
                 return baseTexture;
-            } else {
-                return context
-                    .frameBuffer
-                    .createTextureFromCurrentAttachment();
             }
+            return context
+                .frameBuffer
+                .createTextureFromCurrentAttachment();
+
         }
 
         // matrix to scale
         const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
         const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
-
         // after size
         const baseRect = new Rectangle(0, 0, baseTexture.width, baseTexture.height);
         const rect = this._$generateFilterRect(baseRect, xScale, yScale);
 
-        const width   = Util.$ceil(rect.width)|0;
-        const height  = Util.$ceil(rect.height)|0;
+        const width   = Util.$ceil(rect.width) | 0;
+        const height  = Util.$ceil(rect.height) | 0;
         const offsetX = Util.$ceil(Util.$abs(rect.x) + Util.$abs(width  - rect.width)  * 0.5);
         const offsetY = Util.$ceil(Util.$abs(rect.y) + Util.$abs(height - rect.height) * 0.5);
-
 
         // set offset xy
         context._$offsetX = +(offsetX + context._$offsetX);

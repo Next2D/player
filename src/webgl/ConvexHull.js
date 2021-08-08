@@ -73,7 +73,7 @@ class ConvexHull
 
             let currentSubhullsIndex = extremeSubhullsIndex;
             let isComplete = false;
-            while (true) {
+            for (;;) {
                 // 基準点を、凸包(hulls)に追加する
                 ConvexHullVars.hulls[ConvexHullVars.t][ConvexHullVars.hullsIndex++] = currentSubhullsIndex;
 
@@ -89,7 +89,7 @@ class ConvexHull
                 // console.log("next",nextSubhullsIndex,ConvexHullVars.vertices[ConvexHullVars.subhulls[nextSubhullsIndex]],ConvexHullVars.vertices[ConvexHullVars.subhulls[nextSubhullsIndex] + 1]);
 
                 // 基準点から最も時計回り側にある点を、次の基準点にする
-                const subhullsLength = ConvexHullVars.extremePointsIndex - 1; 
+                const subhullsLength = ConvexHullVars.extremePointsIndex - 1;
                 for (let i = 0; i < subhullsLength; i++) {
                     const subhullsIndex = this.binarySearch(i, currentSubhullsIndex);
 
@@ -140,13 +140,13 @@ class ConvexHull
             ConvexHullVars.hullsIndex++;
         }
         ConvexHullVars.hulls[ConvexHullVars.t].sort(this.compare);
-       
+
         // 下包を求める
         const lowerIndex = ConvexHullVars.subhullsIndex;
         for (let i = 0; i < ConvexHullVars.hullsIndex; i++) {
             const b = ConvexHullVars.hulls[ConvexHullVars.t][i];
 
-            while ((ConvexHullVars.subhullsIndex - lowerIndex) >= 2) {
+            while (ConvexHullVars.subhullsIndex - lowerIndex >= 2) {
                 const a = ConvexHullVars.subhulls[ConvexHullVars.subhullsIndex - 1];
                 const o = ConvexHullVars.subhulls[ConvexHullVars.subhullsIndex - 2];
                 if (this.clockwise(a, b, o) < 0) {
@@ -156,7 +156,7 @@ class ConvexHull
                 ConvexHullVars.subhullsIndex--;
             }
 
-            if ((ConvexHullVars.subhullsIndex - lowerIndex) > 0) {
+            if (ConvexHullVars.subhullsIndex - lowerIndex > 0) {
                 const a = ConvexHullVars.subhulls[ConvexHullVars.subhullsIndex - 1];
                 if (this.almostEquals(a, b)) {
                     ConvexHullVars.subhullsIndex--;
@@ -174,7 +174,7 @@ class ConvexHull
         for (let i = ConvexHullVars.hullsIndex - 1; i >= 0; i--) {
             const b = ConvexHullVars.hulls[ConvexHullVars.t][i];
 
-            while ((ConvexHullVars.subhullsIndex - upperIndex) >= 2) {
+            while (ConvexHullVars.subhullsIndex - upperIndex >= 2) {
                 const a = ConvexHullVars.subhulls[ConvexHullVars.subhullsIndex - 1];
                 const o = ConvexHullVars.subhulls[ConvexHullVars.subhullsIndex - 2];
                 if (this.clockwise(a, b, o) < 0) {
@@ -184,7 +184,7 @@ class ConvexHull
                 ConvexHullVars.subhullsIndex--;
             }
 
-            if ((ConvexHullVars.subhullsIndex - upperIndex) > 0) {
+            if (ConvexHullVars.subhullsIndex - upperIndex > 0) {
                 const a = ConvexHullVars.subhulls[ConvexHullVars.subhullsIndex - 1];
                 if (this.almostEquals(a, b)) {
                     ConvexHullVars.subhullsIndex--;
@@ -229,7 +229,7 @@ class ConvexHull
         const bx = ConvexHullVars.vertices[b];
         const by = ConvexHullVars.vertices[b + 1];
 
-        return (ax - bx) || (ay - by);
+        return ax - bx || ay - by;
     }
 
     static clockwise (a, b, o)
@@ -255,7 +255,7 @@ class ConvexHull
         // aとbの値がほぼ等しいかどうか
         const absX = Util.$abs(ax - bx);
         const absY = Util.$abs(ay - by);
-        return (absX < 0.001) && (absY < 0.001);
+        return absX < 0.001 && absY < 0.001;
     }
 
     static getExtremeSubhullsIndex()
@@ -263,7 +263,7 @@ class ConvexHull
         let minIndex = 0;
         for (let i = 0; i < ConvexHullVars.extremePoints.length; i++) {
             const subhullsIndex = ConvexHullVars.extremePoints[i];
-            if (subhullsIndex < 0) { break; }
+            if (subhullsIndex < 0) { break }
 
             const ax = ConvexHullVars.vertices[ConvexHullVars.subhulls[subhullsIndex]];
             const bx = ConvexHullVars.vertices[ConvexHullVars.subhulls[minIndex]];
@@ -296,16 +296,15 @@ class ConvexHull
             const nextSubhullsIndex = currentSubhullsIndex + 1;
             if (nextSubhullsIndex < nextExtremeSubhullsIndex) {
                 return nextSubhullsIndex;
-            } else {
-                return extremeSubhullsIndex;
             }
-        } else {
-            if (nextExtremeSubhullsIndex < (ConvexHullVars.extremePointsIndex - 1)) {
-                return nextExtremeSubhullsIndex;
-            } else {
-                return 0;
-            }
+            return extremeSubhullsIndex;
+
         }
+        if (nextExtremeSubhullsIndex < ConvexHullVars.extremePointsIndex - 1) {
+            return nextExtremeSubhullsIndex;
+        }
+        return 0;
+
     }
 
     static binarySearch(extremePointsIndex, currentSubhullsIndex)
@@ -379,10 +378,10 @@ class ConvexHull
                 ConvexHullVars.subhulls[centerIndex],
                 ConvexHullVars.subhulls[currentSubhullsIndex]
             );
-            const pattern1 = (centerSide   < 0 && (beginPrev <= 0 && beginNext <= 0)); // 始点が最も時計回り側にあるパターン
-            const pattern2 = (centerSide   < 0 && (beginPrev  < 0 || beginNext  > 0)); // 中心点が始点より反時計回り側にあるパターン
-            const pattern3 = (centerSide   > 0 && (centerPrev > 0 || centerNext < 0)); // 中心点が始点より時計回り側にあるパターン
-            const pattern4 = (centerSide === 0 && (centerPrev > 0 || centerNext < 0)); // 中心点と始点が平行しているパターン
+            const pattern1 = centerSide   < 0 && (beginPrev <= 0 && beginNext <= 0); // 始点が最も時計回り側にあるパターン
+            const pattern2 = centerSide   < 0 && (beginPrev  < 0 || beginNext  > 0); // 中心点が始点より反時計回り側にあるパターン
+            const pattern3 = centerSide   > 0 && (centerPrev > 0 || centerNext < 0); // 中心点が始点より時計回り側にあるパターン
+            const pattern4 = centerSide === 0 && (centerPrev > 0 || centerNext < 0); // 中心点と始点が平行しているパターン
             if (pattern1 || pattern2 || pattern3 || pattern4) {
                 endIndex = centerIndex;
             } else {
@@ -419,7 +418,7 @@ class ConvexHull
     }
 }
 
-// 
+//
 // /**
 //  * @class
 //  */

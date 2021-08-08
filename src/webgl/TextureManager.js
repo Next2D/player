@@ -247,7 +247,7 @@ class TextureManager
                 this._$gl.RGBA, this._$gl.UNSIGNED_BYTE, element
             );
         }
-        
+
         this._$gl.pixelStorei(this._$gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 
         return texture;
@@ -260,7 +260,7 @@ class TextureManager
     release (texture)
     {
         // テクスチャのサイズが非常に大きい場合はプールしない
-        if (texture.area > (this._$maxWidth * this._$maxHeight * 2)|0) {
+        if (texture.area > this._$maxWidth * this._$maxHeight * 2 | 0) {
             this._$gl.deleteTexture(texture);
             return;
         }
@@ -270,7 +270,7 @@ class TextureManager
         this._$objectPoolArea += texture.area;
 
         // プール容量が一定を超えたら、古いテクスチャから削除していく
-        if (this._$objectPoolArea > (this._$maxWidth * this._$maxHeight * 10)) {
+        if (this._$objectPoolArea > this._$maxWidth * this._$maxHeight * 10) {
             const oldTexture = this._$objectPool.shift();
             this._$objectPoolArea -= oldTexture.area;
             this._$gl.deleteTexture(oldTexture);
@@ -338,9 +338,9 @@ class TextureManager
      */
     _$bindTexture (index, target, texture, smoothing)
     {
-        const shouldBind   = (texture !== this._$boundTextures[index]);
-        const shouldSmooth = (smoothing !== null) && (smoothing !== texture.smoothing);
-        const shouldActive = (shouldBind || shouldSmooth) && (target !== this._$activeTexture);
+        const shouldBind   = texture !== this._$boundTextures[index];
+        const shouldSmooth = smoothing !== null && smoothing !== texture.smoothing;
+        const shouldActive = (shouldBind || shouldSmooth) && target !== this._$activeTexture;
 
         if (shouldActive) {
             this._$activeTexture = target;
@@ -354,7 +354,7 @@ class TextureManager
 
         if (shouldSmooth) {
             texture.smoothing = smoothing;
-            const filter = (smoothing && Util.$currentPlayer()._$quality !== StageQuality.LOW)
+            const filter = smoothing && Util.$currentPlayer()._$quality !== StageQuality.LOW
                 ? this._$gl.LINEAR
                 : this._$gl.NEAREST;
             this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MIN_FILTER, filter);

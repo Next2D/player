@@ -1,4 +1,10 @@
 /**
+ * Sprite クラスは、表示リストの基本的要素です。
+ * グラフィックを表示でき、子を持つこともできる表示リストノードです。
+ *
+ * The Sprite class is a basic display list building block:
+ * a display list node that can display graphics and can also contain children.
+ *
  * @class
  * @memberOf next2d.display
  * @extends  DisplayObjectContainer
@@ -6,12 +12,6 @@
 class Sprite extends DisplayObjectContainer
 {
     /**
-     * Sprite クラスは、表示リストの基本的要素です。
-     * グラフィックを表示でき、子を持つこともできる表示リストノードです。
-     *
-     * The Sprite class is a basic display list building block:
-     * a display list node that can display graphics and can also contain children.
-     *
      * @constructor
      * @public
      */
@@ -196,7 +196,7 @@ class Sprite extends DisplayObjectContainer
     get soundTransform ()
     {
         if (!this._$soundTransform) {
-            this._$soundTransform = new SoundTransform()
+            this._$soundTransform = new SoundTransform();
         }
         return this._$soundTransform;
     }
@@ -299,7 +299,7 @@ class Sprite extends DisplayObjectContainer
      */
     _$dragMousePoint ()
     {
-        return (this._$parent)
+        return this._$parent
             ? this._$parent.globalToLocal(Util.$currentMousePoint())
             : this.globalToLocal(Util.$currentMousePoint());
     }
