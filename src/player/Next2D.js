@@ -110,6 +110,7 @@ class Next2D
     {
         const player = this._$player;
 
+        player._$loadStatus = Player.LOAD_END;
         player._$mode = "create";
         player._$stage.frameRate = fps | 0;
 

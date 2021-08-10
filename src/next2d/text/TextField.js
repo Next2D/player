@@ -1891,7 +1891,7 @@ class TextField extends InteractiveObject
         if (this._$autoSize !== TextFieldAutoSize.NONE) {
 
             const tf = this._$defaultTextFormat;
-            const width = this.textWidth + 2
+            const width = this.textWidth + 4
                 + tf._$leftMargin + tf._$rightMargin;
 
             if (this._$wordWrap) {
@@ -1925,7 +1925,7 @@ class TextField extends InteractiveObject
             }
 
             // set height
-            this._$bounds.yMax = this.textHeight + 4 + this._$originBounds.yMin;
+            this._$bounds.yMax = this.textHeight + 2 + this._$originBounds.yMin;
         }
     }
 
@@ -2169,8 +2169,8 @@ class TextField extends InteractiveObject
         Util.$poolBoundsObject(bounds);
         Util.$poolBoundsObject(baseBounds);
 
-        const width  = Util.$ceil(Util.$abs(xMax - xMin));
-        const height = Util.$ceil(Util.$abs(yMax - yMin));
+        let width  = Util.$ceil(Util.$abs(xMax - xMin));
+        let height = Util.$ceil(Util.$abs(yMax - yMin));
         if (!width || !height) {
             return;
         }
@@ -2207,6 +2207,8 @@ class TextField extends InteractiveObject
             texture = null;
         }
 
+        width  += 4 * Util.$devicePixelRatio;
+        height += 4 * Util.$devicePixelRatio;
         if (!texture) {
 
             this._$renew = false;
@@ -2224,7 +2226,6 @@ class TextField extends InteractiveObject
             if (this._$background || this._$border) {
 
                 ctx.beginPath();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
                 ctx.rotate(Util.$atan2(matrix[1], matrix[0]));
                 ctx.moveTo(0, 0);
                 ctx.lineTo(width, 0);
@@ -2261,8 +2262,10 @@ class TextField extends InteractiveObject
             // mask start
             ctx.save();
             ctx.beginPath();
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.rotate(Util.$atan2(matrix[1], matrix[0]));
+            const rotate = Util.$atan2(matrix[1], matrix[0]);
+            if (rotate) {
+                ctx.rotate(rotate);
+            }
             ctx.moveTo(2, 2);
             ctx.lineTo(width - 2, 2);
             ctx.lineTo(width - 2, height - 2);
@@ -2271,7 +2274,12 @@ class TextField extends InteractiveObject
             ctx.clip();
 
             ctx.beginPath();
-            ctx.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], 0, 0);
+            if (!Util.$isSafari) {
+                const offsetY = 2 * Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+                ctx.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], 0, offsetY);
+            } else {
+                ctx.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], 0, 0);
+            }
             this._$doDraw(ctx, matrix, multiColor, false, width / matrix[0]);
             ctx.restore();
 
@@ -2438,7 +2446,6 @@ class TextField extends InteractiveObject
                     }
 
                     offsetHeight += this._$textHeightTable[yIndex];
-                    offsetHeight += 2;
 
                     xOffset = this._$getAlignOffset(this._$objectTable[yIndex], width);
                     if (tf._$underline) {

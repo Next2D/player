@@ -296,6 +296,28 @@ class Player
     }
 
     /**
+     * @return  {number}
+     * @default 1
+     * @const
+     * @static
+     */
+    static get LOAD_START ()
+    {
+        return 1;
+    }
+
+    /**
+     * @return {number}
+     * @default 2
+     * @const
+     * @static
+     */
+    static get LOAD_END ()
+    {
+        return 2;
+    }
+
+    /**
      * @return {Map}
      * @readonly
      * @public
@@ -454,7 +476,7 @@ class Player
      */
     _$updateLoadStatus ()
     {
-        if (this._$loadStatus === 2) {
+        if (this._$loadStatus === Player.LOAD_END) {
             this._$loaded();
             return ;
         }
@@ -556,13 +578,7 @@ class Player
             this._$doAction();
 
             // render
-            this._$draw(0);
-
-            // @ifdef TRACE_GL
-            if (window.traceGLEnabled) {
-                window.traceGLEnabled = false;
-            }
-            // @endif
+            this._$draw();
 
         }
 
@@ -655,7 +671,7 @@ class Player
         }
 
         if (this._$mode === "loader") {
-            this._$loadStatus++;
+            this._$loadStatus = Player.LOAD_START;
             this._$updateLoadStatus();
         } else {
             this._$resize();
@@ -789,10 +805,6 @@ class Player
             alert("WebGLに関するエラーが発生しました\nブラウザを再起動してください");
             throw new Error("WebGL setting is off. Please turn the setting on.");
         }
-
-        // @ifdef TRACE_GL
-        gl = Util.$traceGL(gl);
-        // @endif
 
         this._$context = new CanvasToWebGLContext(gl, isWebGL2Context);
 
@@ -933,7 +945,7 @@ class Player
         const div = Util.$document.getElementById(this.contentElementId);
         if (div) {
 
-            const parent  = div.parentNode;
+            const parent = div.parentNode;
 
             const innerWidth = this._$optionWidth
                 ? this._$optionWidth
@@ -1153,12 +1165,6 @@ class Player
                 this._$pointerCheck();
             }
         }
-
-        // @ifdef TRACE_GL
-        if (window.traceGLEnabled) {
-            window.traceGLEnabled = false;
-        }
-        // @endif
 
         // @ifdef DEBUG
         if (window.stats) {

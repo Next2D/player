@@ -734,7 +734,7 @@ Util.$isFireFox = Util.$userAgent.indexOf("Firefox") > -1;
  * @const
  * @static
  */
-Util.$isSafari = Util.$userAgent.indexOf("Safari") > -1;
+Util.$isSafari = Util.$userAgent.indexOf("Chrome") === -1 && Util.$userAgent.indexOf("Safari") > -1;
 
 /**
  * @type {boolean}
@@ -1590,7 +1590,7 @@ Util.$resize = function ()
 Util.$resizeExecute = function ()
 {
     const player = Util.$currentPlayer();
-    if (player._$loadStatus === 2) {
+    if (player._$loadStatus === Player.LOAD_END) {
         player._$resize();
     }
 };

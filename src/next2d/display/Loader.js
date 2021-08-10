@@ -274,8 +274,8 @@ class Loader extends DisplayObjectContainer
                                     player._$loaders.push(loaderInfo);
 
                                     // next
-                                    if (player._$loadStatus === 1) {
-                                        player._$loadStatus = 2;
+                                    if (player._$loadStatus === Player.LOAD_START) {
+                                        player._$loadStatus = Player.LOAD_END;
                                     }
                                 }
                                 break;

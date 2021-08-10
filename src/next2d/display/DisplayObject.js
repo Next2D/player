@@ -414,6 +414,10 @@ class DisplayObject extends EventDispatcher
     }
     set filters (filters)
     {
+        if (!filters) {
+            filters = Util.$getArray();
+        }
+
         this._$transform._$transform(null, null, filters, null);
         this._$filters = filters;
     }
@@ -532,10 +536,9 @@ class DisplayObject extends EventDispatcher
      */
     get mouseX ()
     {
-        if (!Util.$event) {
-            return 0;
-        }
-        return this.globalToLocal(Util.$currentMousePoint()).x;
+        return Util.$event
+            ? this.globalToLocal(Util.$currentMousePoint()).x
+            : 0;
     }
 
     /**
@@ -549,10 +552,9 @@ class DisplayObject extends EventDispatcher
      */
     get mouseY ()
     {
-        if (!Util.$event) {
-            return 0;
-        }
-        return this.globalToLocal(Util.$currentMousePoint()).y;
+        return Util.$event
+            ? this.globalToLocal(Util.$currentMousePoint()).y
+            : 0;
     }
 
     /**
@@ -1012,8 +1014,8 @@ class DisplayObject extends EventDispatcher
      *              Converts the point object from the Stage (global) coordinates
      *              to the display object's (local) coordinates.
      *
-     * @param   {Point} point
-     * @returns {Point}
+     * @param  {Point} point
+     * @return {Point}
      * @public
      */
     globalToLocal (point)
@@ -1021,7 +1023,7 @@ class DisplayObject extends EventDispatcher
         const matrix = this._$transform.concatenatedMatrix();
         matrix.invert();
 
-        const newPoint =  new Point(
+        const newPoint = new Point(
             point.x * matrix.a + point.y * matrix.c + matrix.tx,
             point.x * matrix.b + point.y * matrix.d + matrix.ty
         );
