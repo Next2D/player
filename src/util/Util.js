@@ -1917,7 +1917,6 @@ Util.$packages = function (object)
         "LoaderInfo": LoaderInfo,
         "MovieClip": MovieClip,
         "Shape": Shape,
-        "SimpleButton": SimpleButton,
         "SpreadMethod": SpreadMethod,
         "Sprite": Sprite,
         "Stage": Stage

@@ -1,5 +1,4 @@
 
-
 describe("GradientType.js toString test", function()
 {
     it("toString test success", function()
@@ -20,7 +19,6 @@ describe("GradientType.js static toString test", function()
 
 });
 
-
 describe("GradientType.js namespace test", function()
 {
 
@@ -37,16 +35,15 @@ describe("GradientType.js namespace test", function()
 
 });
 
-
 describe("GradientType.js property test", function()
 {
 
-    it("LINEAR test", function () 
+    it("LINEAR test", function ()
     {
         expect(GradientType.LINEAR).toBe("linear");
     });
 
-    it("RADIAL test", function () 
+    it("RADIAL test", function ()
     {
         expect(GradientType.RADIAL).toBe("radial");
     });

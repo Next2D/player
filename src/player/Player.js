@@ -1227,13 +1227,6 @@ class Player
                     ));
                 }
 
-                if (outInstance instanceof SimpleButton
-                    && outInstance._$status === "over"
-                ) {
-
-                    outInstance._$changeState("up");
-                }
-
             }
 
             // rollOut and rollOver
@@ -1345,15 +1338,6 @@ class Player
 
             }
 
-            // (5) over button
-            if (instance instanceof SimpleButton
-                && instance._$status !== "over"
-            ) {
-
-                instance._$changeState("over");
-
-            }
-
             // click reset
             if (this._$state === "up") {
                 this._$clickTarget = null;
@@ -1373,7 +1357,6 @@ class Player
                             }
                             break;
 
-                        case target instanceof SimpleButton:
                         case target.buttonMode:
                             canPointer = true;
                             break;
@@ -1794,12 +1777,6 @@ class Player
                         ));
                     }
 
-                    if (instance instanceof SimpleButton
-                        && instance._$status === "over"
-                    ) {
-
-                        instance._$changeState("up");
-                    }
                 }
 
                 // (2) rollOut
@@ -1948,13 +1925,6 @@ class Player
                                 ));
                             }
 
-                            if (outInstance instanceof SimpleButton
-                                && outInstance._$status === "over"
-                            ) {
-
-                                outInstance._$changeState("up");
-                            }
-
                         }
 
                         // rollOut and rollOver
@@ -2066,15 +2036,6 @@ class Player
 
                         }
 
-                        // (6) over button
-                        if (instance instanceof SimpleButton
-                            && instance._$status !== "over"
-                        ) {
-
-                            instance._$changeState("over");
-
-                        }
-
                         // click reset
                         if (this._$state === "up") {
                             this._$clickTarget = null;
@@ -2090,19 +2051,13 @@ class Player
                             const focus = this.stage._$focus;
                             if (focus !== instance) {
 
-                                switch (true) {
+                                if (instance instanceof TextField) {
 
-                                    case instance instanceof TextField:
-                                        this._$stage.focus = instance;
-                                        break;
+                                    this._$stage.focus = instance;
 
-                                    case instance instanceof SimpleButton:
-                                        this._$stage.focus = instance;
-                                        break;
+                                } else {
 
-                                    default:
-                                        this._$stage.focus = null;
-                                        break;
+                                    this._$stage.focus = null;
 
                                 }
 
@@ -2118,15 +2073,6 @@ class Player
 
                             // (4) click
                             this._$clickTarget = instance;
-
-                            // (5) button event
-                            if (instance instanceof SimpleButton
-                                && instance._$status !== "down"
-                            ) {
-
-                                instance._$changeState("down");
-
-                            }
 
                         }
                         break;
@@ -2151,13 +2097,6 @@ class Player
                                     MouseEvent.CLICK, true, false,
                                     instance.mouseX, instance.mouseY
                                 ));
-                            }
-
-                            // (3) button event
-                            if (instance instanceof SimpleButton) {
-
-                                instance._$changeState("up");
-
                             }
 
                         }
@@ -2196,33 +2135,27 @@ class Player
                         target = instance;
                         while (target && target.root !== target) {
 
-                            switch (true) {
+                            if (target instanceof TextField) {
 
-                                case target instanceof TextField:
-                                    if (target._$type === TextFieldType.DYNAMIC) {
-                                        canPointerText = true;
-                                    }
+                                if (target._$type === TextFieldType.DYNAMIC) {
+                                    canPointerText = true;
                                     break;
+                                }
 
-                                case target instanceof SimpleButton:
-                                case target._$buttonMode:
+                            } else {
+
+                                if (target._$buttonMode) {
                                     canPointer = true;
                                     break;
+                                }
 
-                            }
-
-                            if (canPointerText || canPointer) {
-                                break;
                             }
 
                             target = target._$parent;
 
                         }
-
                     }
-
                 }
-
                 break;
 
         }
@@ -2264,5 +2197,4 @@ class Player
 
         this._$hitTestStart = false;
     }
-
 }

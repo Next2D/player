@@ -905,6 +905,29 @@ class TextField extends InteractiveObject
     }
 
     /**
+     * @description テキストフィールドのタイプです。
+     *              The type of the text field.
+     *
+     * @member {string}
+     * @default TextFieldType.STATIC
+     * @public
+     */
+    get type ()
+    {
+        return this._$type;
+    }
+    set type (type)
+    {
+        type += "";
+        if (type === TextFieldType.STATIC) {
+            this._$type     = type;
+            this._$textarea = null;
+        } else {
+            this._$type = TextFieldType.DYNAMIC;
+        }
+    }
+
+    /**
      * @description テキストフィールドのテキストを折り返すかどうかを示すブール値です。
      *              A Boolean value that indicates whether the text field has word wrap.
      *
@@ -2415,7 +2438,7 @@ class TextField extends InteractiveObject
                     }
 
                     offsetHeight += this._$textHeightTable[yIndex];
-                    offsetHeight += 2 * matrix[3];
+                    offsetHeight += 2;
 
                     xOffset = this._$getAlignOffset(this._$objectTable[yIndex], width);
                     if (tf._$underline) {

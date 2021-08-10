@@ -1614,7 +1614,6 @@ class DisplayObjectContainer extends InteractiveObject
                                 }
                                 break;
 
-                            case instance instanceof SimpleButton:
                             case instance.buttonMode && instance.useHandCursor:
                                 options.pointer = "pointer";
                                 break;

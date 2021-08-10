@@ -268,7 +268,6 @@ class BitmapData
         }
 
         if (this._$buffer) {
-            // Util.$poolTypedArrayBuffer(this._$buffer);
             this._$buffer = null;
         }
 
@@ -411,17 +410,6 @@ class BitmapData
         // pool
         context.frameBuffer.releaseTexture(sourceTexture);
         context.frameBuffer.releaseAttachment(attachment, false);
-
-    }
-
-    /**
-     * @param  {URLRequest} url_request
-     * @return {void}
-     * @public
-     */
-    load (url_request)
-    {
-        console.log("TODO: ", url_request);
     }
 
     /**

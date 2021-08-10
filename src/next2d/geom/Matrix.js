@@ -114,7 +114,7 @@ class Matrix
     }
     set a (a)
     {
-        this._$matrix[0] = +a;
+        this._$matrix[0] = Util.$clamp(+a, -32768, 32767, 0);
     }
 
     /**
@@ -168,7 +168,7 @@ class Matrix
     }
     set d (d)
     {
-        this._$matrix[3] = +d;
+        this._$matrix[3] = Util.$clamp(+d, -32768, 32767, 0);
     }
 
     /**
@@ -185,7 +185,7 @@ class Matrix
     }
     set tx (tx)
     {
-        this._$matrix[4] = +tx;
+        this._$matrix[4] = Util.$clamp(+tx, -32768, 32767, 0);
     }
 
     /**
@@ -202,7 +202,7 @@ class Matrix
     }
     set ty (ty)
     {
-        this._$matrix[5] = +ty;
+        this._$matrix[5] = Util.$clamp(+ty, -32768, 32767, 0);
     }
 
     /**

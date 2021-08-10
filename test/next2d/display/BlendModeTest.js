@@ -1,5 +1,4 @@
 
-
 describe("BlendMode.js toString test", function()
 {
     it("toString test success", function()
@@ -20,7 +19,6 @@ describe("BlendMode.js static toString test", function()
 
 });
 
-
 describe("BlendMode.js namespace test", function()
 {
 
@@ -37,76 +35,75 @@ describe("BlendMode.js namespace test", function()
 
 });
 
-
 describe("BlendMode.js property test", function()
 {
 
-    it("ADD test", function () 
+    it("ADD test", function ()
     {
         expect(BlendMode.ADD).toBe("add");
     });
 
-    it("ALPHA test", function () 
+    it("ALPHA test", function ()
     {
         expect(BlendMode.ALPHA).toBe("alpha");
     });
 
-    it("DARKEN test", function () 
+    it("DARKEN test", function ()
     {
         expect(BlendMode.DARKEN).toBe("darken");
     });
 
-    it("DIFFERENCE test", function () 
+    it("DIFFERENCE test", function ()
     {
         expect(BlendMode.DIFFERENCE).toBe("difference");
     });
 
-    it("ERASE test", function () 
+    it("ERASE test", function ()
     {
         expect(BlendMode.ERASE).toBe("erase");
     });
 
-    it("HARDLIGHT test", function () 
+    it("HARDLIGHT test", function ()
     {
         expect(BlendMode.HARDLIGHT).toBe("hardlight");
     });
 
-    it("INVERT test", function () 
+    it("INVERT test", function ()
     {
         expect(BlendMode.INVERT).toBe("invert");
     });
 
-    it("LAYER test", function () 
+    it("LAYER test", function ()
     {
         expect(BlendMode.LAYER).toBe("layer");
     });
 
-    it("LIGHTEN test", function () 
+    it("LIGHTEN test", function ()
     {
         expect(BlendMode.LIGHTEN).toBe("lighten");
     });
 
-    it("MULTIPLY test", function () 
+    it("MULTIPLY test", function ()
     {
         expect(BlendMode.MULTIPLY).toBe("multiply");
     });
 
-    it("NORMAL test", function () 
+    it("NORMAL test", function ()
     {
         expect(BlendMode.NORMAL).toBe("normal");
     });
 
-    it("OVERLAY test", function () 
+    it("OVERLAY test", function ()
     {
         expect(BlendMode.OVERLAY).toBe("overlay");
     });
 
-    it("SCREEN test", function () 
+    it("SCREEN test", function ()
     {
         expect(BlendMode.SCREEN).toBe("screen");
     });
 
-    it("SUBTRACT test", function () 
+    it("SUBTRACT test", function ()
     {
         expect(BlendMode.SUBTRACT).toBe("subtract");
     });

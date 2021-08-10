@@ -2,14 +2,14 @@
  * DisplayObject クラスは、表示リストに含めることのできるすべてのオブジェクトに関する基本クラスです。
  * DisplayObject クラス自体は、画面上でのコンテンツの描画のための API を含みません。
  * そのため、DisplayObject クラスのカスタムサブクラスを作成する場合は、
- * Shape、Sprite、Bitmap、SimpleButton、TextField または MovieClip など、
+ * Shape、Sprite、Bitmap、TextField または MovieClip など、
  * 画面上にコンテンツを描画する API を持つサブクラスの 1 つを拡張する必要があります。
  *
  * The DisplayObject class is the base class for all objects that can be placed on the display list.
  * The DisplayObject class itself does not include any APIs for rendering content onscreen.
  * For that reason, if you want create a custom subclass of the DisplayObject class,
  * you will want to extend one of its subclasses that do have APIs for rendering content onscreen,
- * such as the Shape, Sprite, Bitmap, SimpleButton, TextField, or MovieClip class.
+ * such as the Shape, Sprite, Bitmap, TextField, or MovieClip class.
  *
  * @class
  * @memberOf next2d.display
@@ -706,13 +706,13 @@ class DisplayObject extends EventDispatcher
     {
         const matrix = this._$transform._$rawMatrix();
         const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        return 0 > matrix.a ? xScale * -1 : xScale;
+        return 0 > matrix[0] ? xScale * -1 : xScale;
     }
     set scaleX (scale_x)
     {
         const transform = this._$transform;
         const matrix    = transform.matrix;
-        if (Util.$isNaN(matrix.b) || matrix.b === 0) {
+        if (matrix.b === 0 || Util.$isNaN(matrix.b)) {
 
             matrix.a = scale_x;
 
@@ -743,14 +743,14 @@ class DisplayObject extends EventDispatcher
     {
         const matrix = this._$transform._$rawMatrix();
         const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
-        return 0 > matrix.d ? yScale * -1 : yScale;
+        return 0 > matrix[3] ? yScale * -1 : yScale;
     }
     set scaleY (scale_y)
     {
         const transform = this._$transform;
         const matrix    = transform.matrix;
 
-        if (Util.$isNaN(matrix.c) || matrix.c === 0) {
+        if (matrix.c === 0 || Util.$isNaN(matrix.c)) {
 
             matrix.d = scale_y;
 
@@ -832,7 +832,7 @@ class DisplayObject extends EventDispatcher
         if (this._$visible !== visible) {
             this._$doChanged();
             Util.$isUpdated = true;
-            this._$visible = visible;
+            this._$visible = !!visible;
         }
     }
 
