@@ -1,10 +1,8 @@
 name: Player Test
-
 on:
   push:
     branches:
       - develop
-      -
 jobs:
   macos-browser-test:
     runs-on: macos-latest
@@ -20,7 +18,6 @@ jobs:
           safaridriver -p 0 &
       - run: npm install
       - run: npm test
-
   windows-browser-test:
     runs-on: windows-latest
     steps:
