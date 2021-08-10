@@ -1,4 +1,4 @@
-name: Player Test
+name: Unit Test
 on:
   push:
     branches:
