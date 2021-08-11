@@ -803,11 +803,10 @@ class Player
         }
 
         if (!gl) {
-            alert("WebGLに関するエラーが発生しました\nブラウザを再起動してください");
-            throw new Error("WebGL setting is off. Please turn the setting on.");
+            alert("WebGL setting is off. Please turn the setting on.");
+        } else {
+            this._$context = new CanvasToWebGLContext(gl, isWebGL2Context);
         }
-
-        this._$context = new CanvasToWebGLContext(gl, isWebGL2Context);
 
         // @ifdef DEBUG
         if (window.glstats) {
