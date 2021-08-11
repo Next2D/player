@@ -2,6 +2,7 @@ describe("Player.js hitTest test", function()
 {
     beforeEach(function() {
         window.next2d = new Next2D();
+        window.next2d._$player._$canvas = document.createElement("canvas");
     });
 
     it("mouse move event case1", function()

@@ -501,21 +501,22 @@ class Player
             }
 
             // background color
-            switch (this._$backgroundColor) {
+            if (this._$context) {
 
-                case "transparent":
-                case false:
+                if (!this._$backgroundColor || this._$backgroundColor === "transparent") {
+
                     this._$context._$setColor(0, 0, 0, 0);
-                    break;
 
-                default:
+                } else {
+
                     this._$context._$setColor(
                         this._$backgroundColor[0],
                         this._$backgroundColor[1],
                         this._$backgroundColor[2],
                         this._$backgroundColor[3]
                     );
-                    break;
+
+                }
 
             }
 
@@ -997,14 +998,14 @@ class Player
                 // main
                 this._$canvas.width  = width;
                 this._$canvas.height = height;
-                this._$context._$gl.viewport(0, 0, width, height);
-
                 this._$canvas.style.transform = this._$ratio === 1 && Util.$devicePixelRatio === 1
                     ? ""
                     : `scale(${1 / this._$ratio})`;
 
                 // stage buffer
                 if (this._$context) { // unit test
+
+                    this._$context._$gl.viewport(0, 0, width, height);
 
                     const manager = this._$context._$frameBufferManager;
                     if (this._$buffer) {
