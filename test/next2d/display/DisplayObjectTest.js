@@ -1362,17 +1362,23 @@ describe("DisplayObject.js mouseX and mouseY test", function()
     it("mouseX and mouseY test success case1", function ()
     {
 
-        const root = new Sprite();
+        const root = next2d.createRootMovieClip(640, 480, 1);
+
+        const player = root.stage._$player;
+        player._$stopFlag = false;
 
         const sprite = root.addChild(new Sprite());
         sprite.x = 50;
         sprite.y = 50;
         sprite.scaleX = 0.5;
 
+        const div = document.getElementById(player.contentElementId);
+        const rect = div.getBoundingClientRect();
+
         // execute
         Util.$event = {
-            "pageX": 0,
-            "pageY": 0,
+            "pageX": rect.left,
+            "pageY": rect.top,
             "preventDefault": function ()
             {
                 return false;
@@ -1384,15 +1390,15 @@ describe("DisplayObject.js mouseX and mouseY test", function()
 
         // execute
         Util.$event = {
-            "pageX": 640,
-            "pageY": 480,
+            "pageX": 640 * player._$scale + rect.left,
+            "pageY": 480 * player._$scale + rect.top,
             "preventDefault": function ()
             {
                 return false;
             }
         };
 
-        expect(sprite.mouseX).toBe(1180);
+        expect(sprite.mouseX <= 1180).toBe(true);
         expect(sprite.mouseY).toBe(430);
 
     });
