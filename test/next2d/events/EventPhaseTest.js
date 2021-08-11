@@ -3,7 +3,7 @@ describe("EventPhase.js toString test", function()
 {
     it("toString test success", function()
     {
-        var object = new EventPhase();
+        let object = new EventPhase();
         expect(object.toString()).toBe("[object EventPhase]");
     });
 
@@ -18,7 +18,6 @@ describe("EventPhase.js static toString test", function()
     });
 
 });
-
 
 describe("EventPhase.js namespace test", function()
 {
@@ -35,7 +34,6 @@ describe("EventPhase.js namespace test", function()
     });
 
 });
-
 
 describe("EventPhase.js property test", function()
 {

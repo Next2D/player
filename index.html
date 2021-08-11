@@ -9,24 +9,26 @@
 <body style="margin: 0; padding: 0; background-color: #fff;">
     <script type="text/javascript">
 
-        const root = next2d.createRootMovieClip();
+        next2d.load("develop");
 
-        const {TextField, TextFieldAutoSize, TextFieldType} = next2d.text;
-
-        const textField = new TextField();
-        textField.defaultTextFormat.font = "Times";
-        textField.autoSize = TextFieldAutoSize.LEFT;
-        textField.x = 20;
-        textField.y = 20;
-        textField.border     = true;
-        textField.background = true;
-        textField.multiline  = true;
-        textField.type = TextFieldType.DYNAMIC;
-        textField.text = "aaa\njpi\naaa\nxyz";
-
-        root.addChild(textField);
-
-        console.log(textField);
+        // const root = next2d.createRootMovieClip();
+        //
+        // const {TextField, TextFieldAutoSize, TextFieldType} = next2d.text;
+        //
+        // const textField = new TextField();
+        // textField.defaultTextFormat.font = "Times";
+        // textField.autoSize = TextFieldAutoSize.LEFT;
+        // textField.x = 20;
+        // textField.y = 20;
+        // textField.border     = true;
+        // textField.background = true;
+        // textField.multiline  = true;
+        // textField.type = TextFieldType.DYNAMIC;
+        // textField.text = "aaa\njpi\naaa\nxyz";
+        //
+        // root.addChild(textField);
+        //
+        // console.log(textField);
 
     </script>
 </body>

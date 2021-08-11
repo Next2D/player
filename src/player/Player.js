@@ -802,10 +802,10 @@ class Player
             isWebGL2Context = false;
         }
 
-        if (!gl) {
-            alert("WebGL setting is off. Please turn the setting on.");
-        } else {
+        if (gl) {
             this._$context = new CanvasToWebGLContext(gl, isWebGL2Context);
+        } else {
+            alert("WebGL setting is off. Please turn the setting on.");
         }
 
         // @ifdef DEBUG

@@ -102,6 +102,7 @@ class BitmapFilter
      */
     _$doChanged ()
     {
-        this._$updated = true;
+        this._$updated  = true;
+        Util.$isUpdated = true;
     }
 }

@@ -37,63 +37,74 @@ class DisplacementMapFilter extends BitmapFilter
          * @default null
          * @private
          */
-        this._$mapBitmap = map_bitmap;
+        this._$mapBitmap = null;
 
         /**
          * @type {Point}
          * @default null
          * @private
          */
-        this._$mapPoint = map_point;
+        this._$mapPoint = null;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$componentX = component_x;
+        this._$componentX = 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$componentY = component_y;
+        this._$componentY = 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$scaleX = scale_x;
+        this._$scaleX = 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$scaleY = scale_y;
+        this._$scaleY = 0;
 
         /**
          * @type {string}
          * @default DisplacementMapFilterMode.WRAP
          * @private
          */
-        this._$mode = mode;
+        this._$mode = DisplacementMapFilterMode.WRAP;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$color = color;
+        this._$color = 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$alpha = alpha;
+        this._$alpha = 0;
+
+        // setup
+        this.mapBitmap  = map_bitmap;
+        this.mapPoint   = map_point;
+        this.componentX = component_x;
+        this.componentY = component_y;
+        this.scaleX     = scale_x;
+        this.scaleY     = scale_y;
+        this.mode       = mode;
+        this.color      = color;
+        this.alpha      = alpha;
     }
 
     /**
@@ -187,13 +198,10 @@ class DisplacementMapFilter extends BitmapFilter
     }
     set color (color)
     {
-        color |= 0;
+        color = Util.$clamp(
+            Util.$toColorInt(color),0 ,0xffffff, 0
+        );
 
-        if (color > 0xffffff) {
-            color = color % 0x1000000;
-        }
-
-        color = Util.$toColorInt(color);
         if (color !== this._$color) {
             this._$doChanged(true);
         }
@@ -255,7 +263,7 @@ class DisplacementMapFilter extends BitmapFilter
             this._$doChanged(true);
         }
 
-        this._$componentX = 0;
+        this._$componentY = 0;
         switch (component_y) {
 
             case BitmapDataChannel.ALPHA:
@@ -291,7 +299,6 @@ class DisplacementMapFilter extends BitmapFilter
 
         // default
         this._$mapBitmap = null;
-
         if (map_bitmap instanceof BitmapData) {
             this._$mapBitmap = map_bitmap;
         }

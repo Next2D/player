@@ -831,11 +831,12 @@ class DisplayObject extends EventDispatcher
     }
     set visible (visible)
     {
+        visible = !!visible;
         if (this._$visible !== visible) {
             this._$doChanged();
             Util.$isUpdated = true;
-            this._$visible = !!visible;
         }
+        this._$visible = !!visible;
     }
 
     /**

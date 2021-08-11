@@ -40,63 +40,74 @@ class ConvolutionFilter extends BitmapFilter
          * @default 0
          * @private
          */
-        this._$matrixX = matrix_x;
+        this._$matrixX = 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$matrixY = matrix_y;
+        this._$matrixY = 0;
 
         /**
          * @type {array}
          * @default null
          * @private
          */
-        this._$matrix = matrix;
+        this._$matrix = null;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$divisor = divisor;
+        this._$divisor = 1;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$bias = bias;
+        this._$bias = 0;
 
         /**
          * @type {boolean}
          * @default true
          * @private
          */
-        this._$preserveAlpha = preserve_alpha;
+        this._$preserveAlpha = true;
 
         /**
          * @type {boolean}
          * @default true
          * @private
          */
-        this._$clamp = clamp;
+        this._$clamp = true;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$color = color;
+        this._$color = 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$alpha = alpha;
+        this._$alpha = 0;
+
+        // setup
+        this.matrixX       = matrix_x;
+        this.matrixY       = matrix_y;
+        this.matrix        = matrix;
+        this.divisor       = divisor;
+        this.bias          = bias;
+        this.preserveAlpha = preserve_alpha;
+        this.clamp         = clamp;
+        this.color         = color;
+        this.alpha         = alpha;
     }
 
     /**
@@ -201,7 +212,7 @@ class ConvolutionFilter extends BitmapFilter
      * @description イメージをクランプする必要があるかどうかを示します。
      *              Indicates whether the image should be clamped.
      *
-     * @member  {number}
+     * @member  {boolean}
      * @default true
      * @public
      */
@@ -211,6 +222,7 @@ class ConvolutionFilter extends BitmapFilter
     }
     set clamp (clamp)
     {
+        clamp = !!clamp;
         if (clamp !== this._$clamp) {
             this._$doChanged(true);
         }
@@ -231,13 +243,10 @@ class ConvolutionFilter extends BitmapFilter
     }
     set color (color)
     {
-        color |= 0;
+        color = Util.$clamp(
+            Util.$toColorInt(color), 0, 0xffffff, 0
+        );
 
-        if (color > 0xffffff) {
-            color = color % 0x1000000;
-        }
-
-        color = Util.$toColorInt(color);
         if (color !== this._$color) {
             this._$doChanged(true);
         }
@@ -352,6 +361,7 @@ class ConvolutionFilter extends BitmapFilter
     }
     set preserveAlpha (preserve_alpha)
     {
+        preserve_alpha = !!preserve_alpha;
         if (preserve_alpha !== this._$preserveAlpha) {
             this._$doChanged(true);
         }

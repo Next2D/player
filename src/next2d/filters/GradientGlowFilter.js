@@ -49,56 +49,66 @@ class GradientGlowFilter  extends BitmapFilter
          * @default 4
          * @private
          */
-        this._$distance = distance;
+        this._$distance = 4;
 
         /**
          * @type {number}
          * @default 45
          * @private
          */
-        this._$angle = angle;
+        this._$angle = 45;
 
         /**
          * @type {array}
          * @default null
          * @private
          */
-        this._$colors = colors;
+        this._$colors = null;
 
         /**
          * @type {array}
          * @default null
          * @private
          */
-        this._$alphas = alphas;
+        this._$alphas = null;
 
         /**
          * @type {array}
          * @default null
          * @private
          */
-        this._$ratios = ratios;
+        this._$ratios = null;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$strength = strength;
+        this._$strength = 1;
 
         /**
          * @type {string}
          * @default BitmapFilterType.INNER
          * @private
          */
-        this._$type = type;
+        this._$type = BitmapFilterType.INNER;
 
         /**
          * @type {boolean}
          * @default false
          * @private
          */
-        this._$knockout = knockout;
+        this._$knockout = false;
+
+        // setup
+        this.distance = distance;
+        this.angle    = angle;
+        this.colors   = colors;
+        this.alphas   = alphas;
+        this.ratios   = ratios;
+        this.strength = strength;
+        this.type     = type;
+        this.knockout = knockout;
     }
 
     /**
@@ -205,7 +215,7 @@ class GradientGlowFilter  extends BitmapFilter
         if (angle !== this._$angle) {
             this._$doChanged(true);
         }
-        this._$angle = angle;
+        this._$angle = Util.$clamp(angle, -360, 360, 45);
     }
 
     /**
@@ -295,7 +305,7 @@ class GradientGlowFilter  extends BitmapFilter
     }
     set distance (distance)
     {
-        distance = +distance;
+        distance = Util.$clamp(+distance, -255, 255, 4);
         if (distance !== this._$distance) {
             this._$doChanged(true);
         }
@@ -316,6 +326,7 @@ class GradientGlowFilter  extends BitmapFilter
     }
     set knockout (knockout)
     {
+        knockout = !!knockout;
         if (knockout !== this._$knockout) {
             this._$doChanged(true);
         }
@@ -412,12 +423,12 @@ class GradientGlowFilter  extends BitmapFilter
         switch (type) {
 
             case BitmapFilterType.OUTER:
-            case BitmapFilterType.INNER:
+            case BitmapFilterType.FULL:
                 this._$type = type;
                 break;
 
             default:
-                this._$type = BitmapFilterType.FULL;
+                this._$type = BitmapFilterType.INNER;
                 break;
 
         }

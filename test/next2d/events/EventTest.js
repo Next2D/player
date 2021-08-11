@@ -5,7 +5,7 @@ describe("Event.js toString test", function()
     {
         const object = new Event("test");
         expect(object.toString())
-            .toBe(`[Event type="test" bubbles=false cancelable=false eventPhase=2]`);
+            .toBe("[Event type=\"test\" bubbles=false cancelable=false eventPhase=2]");
     });
 
 });
@@ -36,21 +36,20 @@ describe("Event.js namespace test", function()
 
 });
 
-
 describe("Event.js property test", function()
 {
 
-    it("ACTIVATE test", function () 
+    it("ACTIVATE test", function ()
     {
         expect(Event.ACTIVATE).toBe("activate");
     });
 
-    it("ADDED test", function () 
+    it("ADDED test", function ()
     {
         expect(Event.ADDED).toBe("added");
     });
 
-    it("ADDED_TO_STAGE test", function () 
+    it("ADDED_TO_STAGE test", function ()
     {
         expect(Event.ADDED_TO_STAGE).toBe("addedToStage");
     });
@@ -60,7 +59,7 @@ describe("Event.js property test", function()
         expect(Event.COMPLETE).toBe("complete");
     });
 
-    it("DEACTIVATE test", function () 
+    it("DEACTIVATE test", function ()
     {
         expect(Event.DEACTIVATE).toBe("deactivate");
     });
@@ -70,22 +69,22 @@ describe("Event.js property test", function()
         expect(Event.ENTER_FRAME).toBe("enterFrame");
     });
 
-    it("EXIT_FRAME test", function () 
+    it("EXIT_FRAME test", function ()
     {
         expect(Event.EXIT_FRAME).toBe("exitFrame");
     });
 
-    it("FRAME_CONSTRUCTED test", function () 
+    it("FRAME_CONSTRUCTED test", function ()
     {
         expect(Event.FRAME_CONSTRUCTED).toBe("frameConstructed");
     });
 
-    it("INIT test", function () 
+    it("INIT test", function ()
     {
         expect(Event.INIT).toBe("init");
     });
 
-    it("MOUSE_LEAVE test", function () 
+    it("MOUSE_LEAVE test", function ()
     {
         expect(Event.MOUSE_LEAVE).toBe("mouseLeave");
     });
@@ -95,22 +94,22 @@ describe("Event.js property test", function()
         expect(Event.REMOVED).toBe("removed");
     });
 
-    it("REMOVED_FROM_STAGE test", function () 
+    it("REMOVED_FROM_STAGE test", function ()
     {
         expect(Event.REMOVED_FROM_STAGE).toBe("removedFromStage");
     });
 
-    it("RENDER test", function () 
+    it("RENDER test", function ()
     {
         expect(Event.RENDER).toBe("render");
     });
 
-    it("SOUND_COMPLETE test", function () 
+    it("SOUND_COMPLETE test", function ()
     {
         expect(Event.SOUND_COMPLETE).toBe("soundComplete");
     });
 
-    it("FRAME_CONSTRUCTED test", function () 
+    it("FRAME_CONSTRUCTED test", function ()
     {
         expect(Event.FRAME_CONSTRUCTED).toBe("frameConstructed");
     });

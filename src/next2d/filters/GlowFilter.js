@@ -46,35 +46,42 @@ class GlowFilter extends BitmapFilter
          * @default 0
          * @private
          */
-        this._$color = color;
+        this._$color = 0;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$alpha = alpha;
+        this._$alpha = 1;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$strength = strength;
+        this._$strength = 1;
 
         /**
          * @type {boolean}
          * @default false
          * @private
          */
-        this._$inner = inner;
+        this._$inner = false;
 
         /**
          * @type {boolean}
          * @default false
          * @private
          */
-        this._$knockout = knockout;
+        this._$knockout = false;
+
+        // setup
+        this.color    = color;
+        this.alpha    = alpha;
+        this.strength = strength;
+        this.inner    = inner;
+        this.knockout = knockout;
     }
 
     /**
@@ -202,13 +209,15 @@ class GlowFilter extends BitmapFilter
     }
     set color (color)
     {
-        color |= 0;
+        color = Util.$clamp(
+            Util.$toColorInt(color), 0, 0xffffff, 4
+        );
 
-        if (color > 0xffffff) {
-            color = color % 0x1000000;
+        if (color !== this._$color) {
+            this._$doChanged(true);
         }
 
-        this._$color = Util.$toColorInt(color);
+        this._$color = color;
     }
 
     /**
@@ -225,6 +234,7 @@ class GlowFilter extends BitmapFilter
     }
     set inner (inner)
     {
+        inner = !!inner;
         if (inner !== this._$inner) {
             this._$doChanged(true);
         }
@@ -245,6 +255,7 @@ class GlowFilter extends BitmapFilter
     }
     set knockout (knockout)
     {
+        knockout = !!knockout;
         if (knockout !== this._$knockout) {
             this._$doChanged(true);
         }

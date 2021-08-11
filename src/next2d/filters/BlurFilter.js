@@ -35,21 +35,26 @@ class BlurFilter extends BitmapFilter
          * @default 4
          * @private
          */
-        this._$blurX = blur_x;
+        this._$blurX = 4;
 
         /**
          * @type {number}
          * @default 4
          * @private
          */
-        this._$blurY = blur_y;
+        this._$blurY = 4;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$quality = quality;
+        this._$quality = 1;
+
+        // setup
+        this.blurX   = blur_x;
+        this.blurY   = blur_y;
+        this.quality = quality;
     }
 
     /**

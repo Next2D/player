@@ -180,16 +180,16 @@ Util.$P_TAG = window.document.createElement("p");
 Util.$COLOR_ARRAY_IDENTITY = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 /**
- * @type {Uint8Array}
+ * @type {array}
  * @const
  * @static
  */
-Util.$COLOR_MATRIX_FILTER = new Uint8Array([
+Util.$COLOR_MATRIX_FILTER = [
     1, 0, 0, 0, 0,
     0, 1, 0, 0, 0,
     0, 0, 1, 0, 0,
     0, 0, 0, 1, 0
-]);
+];
 
 /**
  * @shortcut
@@ -1306,7 +1306,9 @@ Util.$poolColorTransform = function (color_transform)
  */
 Util.$toColorInt = function (rgb)
 {
-    return typeof rgb === "number" ? rgb : this.$colorStringToInt(rgb);
+    return Util.$isNaN(+rgb)
+        ? this.$colorStringToInt(rgb)
+        : +rgb;
 };
 
 /**

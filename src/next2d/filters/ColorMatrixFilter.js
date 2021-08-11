@@ -30,10 +30,10 @@ class ColorMatrixFilter extends BitmapFilter
 
         /**
          * @type {array}
-         * @default null
+         * @default {array}
          * @private
          */
-        this._$matrix = matrix ? matrix : [
+        this._$matrix = [
             1, 0, 0, 0, 0,
             0, 1, 0, 0, 0,
             0, 0, 1, 0, 0,
@@ -46,6 +46,9 @@ class ColorMatrixFilter extends BitmapFilter
          * @private
          */
         this._$doApply = false;
+
+        // setup
+        this.matrix = matrix;
     }
 
     /**
@@ -122,19 +125,23 @@ class ColorMatrixFilter extends BitmapFilter
             return ;
         }
 
-        this._$matrix = matrix;
-        this._$doChanged(true);
+        if (this._$matrix) {
 
-        const length = matrix.length;
-        for (let idx = 0; idx < length; ++idx) {
+            const length = matrix.length;
+            for (let idx = 0; idx < length; ++idx) {
 
-            if (matrix[idx] === Util.$COLOR_MATRIX_FILTER[idx]) {
-                continue;
+                if (matrix[idx] === this._$matrix[idx]) {
+                    continue;
+                }
+
+                this._$doChanged(true);
+                this._$doApply = true;
+                break;
             }
 
-            this._$doApply = true;
-            break;
         }
+
+        this._$matrix = matrix;
     }
 
     /**

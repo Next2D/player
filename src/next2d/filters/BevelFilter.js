@@ -53,63 +53,74 @@ class BevelFilter extends BitmapFilter
          * @default 4
          * @private
          */
-        this._$distance = distance;
+        this._$distance = 4;
 
         /**
          * @type {number}
          * @default 45
          * @private
          */
-        this._$angle = angle;
+        this._$angle = 45;
 
         /**
          * @type {number}
          * @default 0xffffff
          * @private
          */
-        this._$highlightColor = highlight_color;
+        this._$highlightColor = 0xffffff;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$highlightAlpha = highlight_alpha;
+        this._$highlightAlpha = 1;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$shadowColor = shadow_color;
+        this._$shadowColor = 0;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$shadowAlpha = shadow_alpha;
+        this._$shadowAlpha = 1;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$strength = strength;
+        this._$strength = 1;
 
         /**
          * @type {string}
          * @default BitmapFilterType.INNER
          * @private
          */
-        this._$type = type;
+        this._$type = BitmapFilterType.INNER;
 
         /**
          * @type {boolean}
          * @default false
          * @private
          */
-        this._$knockout = knockout;
+        this._$knockout = false;
+
+        // setup
+        this.distance       = distance;
+        this.angle          = angle;
+        this.highlightColor = highlight_color;
+        this.highlightAlpha = highlight_alpha;
+        this.shadowColor    = shadow_color;
+        this.shadowAlpha    = shadow_alpha;
+        this.strength       = strength;
+        this.type           = type;
+        this.knockout       = !!knockout;
     }
 
     /**
@@ -186,7 +197,7 @@ class BevelFilter extends BitmapFilter
         if (angle !== this._$angle) {
             this._$doChanged(true);
         }
-        this._$angle = angle;
+        this._$angle = Util.$clamp(angle, -360, 360, 45);
     }
 
     /**
@@ -237,7 +248,7 @@ class BevelFilter extends BitmapFilter
     }
     set distance (distance)
     {
-        distance = +distance;
+        distance = Util.$clamp(+distance, -255, 255, 4);
         if (distance !== this._$distance) {
             this._$doChanged(true);
         }
@@ -279,13 +290,9 @@ class BevelFilter extends BitmapFilter
     }
     set highlightColor (highlight_color)
     {
-        highlight_color |= 0;
-
-        if (highlight_color > 0xffffff) {
-            highlight_color = highlight_color % 0x1000000;
-        }
-
-        highlight_color = Util.$toColorInt(highlight_color);
+        highlight_color = Util.$clamp(
+            Util.$toColorInt(highlight_color), 0, 0xffffff, 0xffffff
+        );
         if (highlight_color !== this._$highlightColor) {
             this._$doChanged(true);
         }
@@ -307,6 +314,7 @@ class BevelFilter extends BitmapFilter
     }
     set knockout (knockout)
     {
+        knockout = !!knockout;
         if (knockout !== this._$knockout) {
             this._$doChanged(true);
         }
@@ -365,13 +373,10 @@ class BevelFilter extends BitmapFilter
     }
     set shadowColor (shadow_color)
     {
-        shadow_color |= 0;
+        shadow_color = Util.$clamp(
+            Util.$toColorInt(shadow_color), 0, 0xffffff, 0
+        );
 
-        if (shadow_color > 0xffffff) {
-            shadow_color = shadow_color % 0x1000000;
-        }
-
-        shadow_color = Util.$toColorInt(shadow_color);
         if (shadow_color !== this._$shadowColor) {
             this._$doChanged(true);
         }

@@ -49,56 +49,66 @@ class DropShadowFilter extends BitmapFilter
          * @default 4
          * @private
          */
-        this._$distance = distance;
+        this._$distance = 4;
 
         /**
          * @type {number}
          * @default 45
          * @private
          */
-        this._$angle = angle;
+        this._$angle = 45;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$color = color;
+        this._$color = 0;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$alpha = alpha;
+        this._$alpha = 1;
 
         /**
          * @type {number}
          * @default 1
          * @private
          */
-        this._$strength = strength;
+        this._$strength = 1;
 
         /**
          * @type {boolean}
          * @default false
          * @private
          */
-        this._$inner = inner;
+        this._$inner = false;
 
         /**
          * @type {boolean}
          * @default false
          * @private
          */
-        this._$knockout = knockout;
+        this._$knockout = false;
 
         /**
          * @type {boolean}
          * @default false
          * @private
          */
-        this._$hideObject = hide_object;
+        this._$hideObject = false;
+
+        // setup
+        this.distance   = distance;
+        this.angle      = angle;
+        this.color      = color;
+        this.alpha      = alpha;
+        this.strength   = strength;
+        this.inner      = inner;
+        this.knockout   = knockout;
+        this.hideObject = hide_object;
     }
 
     /**
@@ -196,7 +206,7 @@ class DropShadowFilter extends BitmapFilter
         if (angle !== this._$angle) {
             this._$doChanged(true);
         }
-        this._$angle = angle;
+        this._$angle = Util.$clamp(angle, -360, 360, 45);
     }
 
     /**
@@ -247,13 +257,15 @@ class DropShadowFilter extends BitmapFilter
     }
     set color (color)
     {
-        color |= 0;
+        color = Util.$clamp(
+            Util.$toColorInt(color), 0, 0xffffff, 0
+        );
 
-        if (color > 0xffffff) {
-            color = color % 0x1000000;
+        if (color !== this._$color) {
+            this._$doChanged(true);
         }
 
-        this._$color = Util.$toColorInt(color);
+        this._$color = color;
     }
 
     /**
@@ -270,7 +282,7 @@ class DropShadowFilter extends BitmapFilter
     }
     set distance (distance)
     {
-        distance = +distance;
+        distance = Util.$clamp(+distance, -255, 255, 4);
         if (distance !== this._$distance) {
             this._$doChanged(true);
         }
@@ -291,6 +303,7 @@ class DropShadowFilter extends BitmapFilter
     }
     set hideObject (hide_object)
     {
+        hide_object = !!hide_object;
         if (hide_object !== this._$hideObject) {
             this._$doChanged(true);
         }
@@ -311,6 +324,7 @@ class DropShadowFilter extends BitmapFilter
     }
     set inner (inner)
     {
+        inner = !!inner;
         if (inner !== this._$inner) {
             this._$doChanged(true);
         }
@@ -331,6 +345,7 @@ class DropShadowFilter extends BitmapFilter
     }
     set knockout (knockout)
     {
+        knockout = !!knockout;
         if (knockout !== this._$knockout) {
             this._$doChanged(true);
         }

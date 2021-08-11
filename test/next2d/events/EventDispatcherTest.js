@@ -11,7 +11,6 @@ describe("EventDispatcher.js toString test", function()
 
 });
 
-
 describe("EventDispatcher.js static toString test", function()
 {
 
@@ -21,7 +20,6 @@ describe("EventDispatcher.js static toString test", function()
     });
 
 });
-
 
 describe("EventDispatcher.js namespace test", function()
 {
@@ -39,17 +37,22 @@ describe("EventDispatcher.js namespace test", function()
 
 });
 
-
 describe("EventDispatcher.js addEventListener test", function()
 {
+    beforeEach(function() {
+        window.next2d = new Next2D();
+        const player = next2d._$player;
+        player.stop();
+        player._$broadcastEvents = new Map();
+    });
 
     // addEventListener
     it("addEventListener test success case1", function ()
     {
         const di = new EventDispatcher();
 
-        di.addEventListener("test", function () { return "OK"; });
-        di.addEventListener("test", function () { return "NG"; });
+        di.addEventListener("test", function () { return "OK" });
+        di.addEventListener("test", function () { return "NG" });
 
         expect(di._$events.get("test").length).toBe(2);
         expect(di._$events.get("test")[0].listener()).toBe("OK");
@@ -60,8 +63,8 @@ describe("EventDispatcher.js addEventListener test", function()
     {
         const di = new EventDispatcher();
 
-        di.addEventListener("test", function () { return "NG"; }, false, 50);
-        di.addEventListener("test", function () { return "OK"; }, false, 100);
+        di.addEventListener("test", function () { return "NG" }, false, 50);
+        di.addEventListener("test", function () { return "OK" }, false, 100);
 
         expect(di._$events.get("test").length).toBe(2);
         expect(di._$events.get("test")[0].listener()).toBe("OK");
@@ -72,14 +75,13 @@ describe("EventDispatcher.js addEventListener test", function()
     {
         const di = new EventDispatcher();
 
-        di.addEventListener(123, function () { return "NG"; }, false, 50);
-        di.addEventListener(123, function () { return "OK"; }, false, 100);
+        di.addEventListener(123, function () { return "NG" }, false, 50);
+        di.addEventListener(123, function () { return "OK" }, false, 100);
 
         expect(di._$events.get("123").length).toBe(2);
         expect(di._$events.get("123")[0].listener()).toBe("OK");
         expect(di._$events.get("123")[1].listener()).toBe("NG");
     });
-
 
     it("addEventListener test valid case1", function ()
     {
@@ -87,18 +89,17 @@ describe("EventDispatcher.js addEventListener test", function()
 
         di.addEventListener("test", {});
         di.addEventListener("test", []);
-        di.addEventListener("test", function () { return "OK"; });
+        di.addEventListener("test", function () { return "OK" });
 
         expect(di._$events.get("test").length).toBe(3);
         expect(di._$events.get("test")[2].listener()).toBe("OK");
     });
 
-
     it("addEventListener test duplicate case1", function ()
     {
         const di = new EventDispatcher();
 
-        const a = function () { return "OK"; };
+        const a = function () { return "OK" };
 
         di.addEventListener("test", a);
         di.addEventListener("test", a);
@@ -111,13 +112,13 @@ describe("EventDispatcher.js addEventListener test", function()
     {
         const di = new EventDispatcher();
 
-        const a = function () { return this; };
+        const a = function () { return this };
 
         const x = a.bind("ok");
-        x.toString = function () { return a.toString(); };
+        x.toString = function () { return a.toString() };
 
         const y = a.bind("no");
-        y.toString = function () { return a.toString(); };
+        y.toString = function () { return a.toString() };
 
         di.addEventListener("test", x);
         di.addEventListener("test", y);
@@ -127,18 +128,17 @@ describe("EventDispatcher.js addEventListener test", function()
         expect(di._$events.get("test")[1].listener().toString()).toBe("no");
     });
 
-
     it("addEventListener test duplicate case3", function ()
     {
         const di = new EventDispatcher();
 
-        const a = function () { return this; };
+        const a = function () { return this };
 
         const x = a.bind("ok");
-        x.toString = function () { return a.toString(); };
+        x.toString = function () { return a.toString() };
 
         const y = a.bind("no");
-        y.toString = function () { return a.toString(); };
+        y.toString = function () { return a.toString() };
 
         di.addEventListener("test", x, true);
         di.addEventListener("test", y, false);
@@ -148,7 +148,6 @@ describe("EventDispatcher.js addEventListener test", function()
         expect(di._$events.get("test")[1].listener().toString()).toBe("no");
     });
 
-
     it("addEventListener test duplicate case4", function ()
     {
         const mc1 = new MovieClip();
@@ -157,15 +156,13 @@ describe("EventDispatcher.js addEventListener test", function()
         const mc2 = new MovieClip();
         mc2.name = "mc2";
 
-        const player = new Player();
-        window.next2d._$player = player;
+        const player = next2d._$player;
 
-        const a = function (e) { return e.currentTarget.name; };
+        const a = function (e) { return e.currentTarget.name };
 
         mc1.addEventListener(Event.ENTER_FRAME, a);
         mc2.addEventListener(Event.ENTER_FRAME, a);
         expect(player.broadcastEvents.get(Event.ENTER_FRAME).length).toBe(2);
-
 
         const event1 = new Event(Event.ENTER_FRAME);
         event1._$target = player.broadcastEvents.get(Event.ENTER_FRAME)[0].target;
@@ -185,17 +182,23 @@ describe("EventDispatcher.js addEventListener test", function()
 
 });
 
-
 describe("EventDispatcher.js hasEventListener test", function()
 {
+
+    beforeEach(function() {
+        window.next2d = new Next2D();
+        const player = next2d._$player;
+        player.stop();
+        player._$broadcastEvents = new Map();
+    });
 
     // hasEventListener
     it("hasEventListener test success", function ()
     {
         const di = new EventDispatcher();
 
-        di.addEventListener("test1", function () { return "OK"; });
-        di.addEventListener("test3", function () { return "NG"; });
+        di.addEventListener("test1", function () { return "OK" });
+        di.addEventListener("test3", function () { return "NG" });
 
         expect(di.hasEventListener("test1")).toBe(true);
         expect(di.hasEventListener("test2")).toBe(false);
@@ -207,16 +210,13 @@ describe("EventDispatcher.js hasEventListener test", function()
     // メソッドが所属する EventDispatcher インスタンスについてのみリスナーが登録されているか
     it("hasEventListener test success case2", function ()
     {
-        const player = new Player();
-        window.next2d._$player = player;
-
         const doc1 = new MovieClip();
         const doc2 = new MovieClip();
         const doc3 = new MovieClip();
         doc1.addChild(doc2);
         doc2.addChild(doc3);
 
-        doc2.addEventListener(Event.ENTER_FRAME, function () { return "OK"; });
+        doc2.addEventListener(Event.ENTER_FRAME, function () { return "OK" });
 
         expect(doc1.hasEventListener(Event.ENTER_FRAME)).toBe(false);
         expect(doc2.hasEventListener(Event.ENTER_FRAME)).toBe(true);
@@ -225,18 +225,24 @@ describe("EventDispatcher.js hasEventListener test", function()
     });
 });
 
-
 describe("EventDispatcher.js removeEventListener test", function()
 {
+
+    beforeEach(function() {
+        window.next2d = new Next2D();
+        const player = next2d._$player;
+        player.stop();
+        player._$broadcastEvents = new Map();
+    });
 
     // removeEventListener
     it("removeEventListener test success case1", function ()
     {
         const di = new EventDispatcher();
 
-        const test1 = function () { return "OK1"; };
-        const test2 = function () { return "OK2"; };
-        const test3 = function () { return "OK3"; };
+        const test1 = function () { return "OK1" };
+        const test2 = function () { return "OK2" };
+        const test3 = function () { return "OK3" };
 
         di.addEventListener("test", test1, false, 10);
         di.addEventListener("test", test2, false, 20);
@@ -249,19 +255,18 @@ describe("EventDispatcher.js removeEventListener test", function()
         expect(di._$events.get("test")[1].listener()).toBe("OK1");
     });
 
-
     it("removeEventListener test success case2", function ()
     {
         const di = new EventDispatcher();
 
-        const a = function () { return this; };
-        const b = function () { return this; };
+        const a = function () { return this };
+        const b = function () { return this };
 
         const x = a.bind("ok");
-        x.toString = function () { return a.toString(); };
+        x.toString = function () { return a.toString() };
 
         const y = b.bind("no");
-        y.toString = function () { return b.toString(); };
+        y.toString = function () { return b.toString() };
 
         di.addEventListener("test", x);
         di.addEventListener("test", y);
@@ -273,18 +278,17 @@ describe("EventDispatcher.js removeEventListener test", function()
         expect(di._$events.get("test").length).toBe(1);
     });
 
-
     it("removeEventListener test success case3", function ()
     {
         const di = new EventDispatcher();
 
-        const a = function () { return this; };
+        const a = function () { return this };
 
         const x = a.bind("ok");
-        x.toString = function () { return a.toString(); };
+        x.toString = function () { return a.toString() };
 
         const y = a.bind("no");
-        y.toString = function () { return b.toString(); };
+        y.toString = function () { return b.toString() };
 
         di.addEventListener("test", x, true);
         di.addEventListener("test", y, false);
@@ -296,18 +300,17 @@ describe("EventDispatcher.js removeEventListener test", function()
         expect(di._$events.get("test")[0].listener().toString()).toBe("no");
     });
 
-
     it("removeEventListener test success case4", function ()
     {
         const di = new EventDispatcher();
 
-        const a = function () { return this; };
+        const a = function () { return this };
 
         const x = a.bind("ok");
-        x.toString = function () { return a.toString(); };
+        x.toString = function () { return a.toString() };
 
         const y = a.bind("no");
-        y.toString = function () { return b.toString(); };
+        y.toString = function () { return b.toString() };
 
         di.addEventListener("test", x, true);
         di.addEventListener("test", y, false);
@@ -320,16 +323,14 @@ describe("EventDispatcher.js removeEventListener test", function()
         expect(di._$events.get("test")[1].listener().toString()).toBe("no");
     });
 
-
     it("removeEventListener test success case5", function ()
     {
-        const player = new Player();
-        window.next2d._$player = player;
+        const player = next2d._$player;
 
         const mc1 = new MovieClip();
         const mc2 = new MovieClip();
 
-        const a = function () { return this; };
+        const a = function () { return this };
 
         mc1.addEventListener(Event.ENTER_FRAME, a);
         mc2.addEventListener(Event.ENTER_FRAME, a);
@@ -344,9 +345,15 @@ describe("EventDispatcher.js removeEventListener test", function()
 
 });
 
-
 describe("EventDispatcher.js dispatchEvent test", function()
 {
+
+    beforeEach(function() {
+        window.next2d = new Next2D();
+        const player = next2d._$player;
+        player.stop();
+        player._$broadcastEvents = new Map();
+    });
 
     // dispatchEvent
     it("dispatchEvent test success case1", function ()
@@ -354,20 +361,18 @@ describe("EventDispatcher.js dispatchEvent test", function()
         const di = new EventDispatcher();
 
         let s = "";
-        const test1 = function () { s += "O"; };
-        const test2 = function () { s += "K"; };
-        const test3 = function () { s += "!"; };
+        const test1 = function () { s += "O" };
+        const test2 = function () { s += "K" };
+        const test3 = function () { s += "!" };
 
         di.addEventListener("test", test1);
         di.addEventListener("test", test2);
         di.addEventListener("test", test3);
 
-
         di.dispatchEvent(new Event("test"));
 
         expect(s).toBe("OK!");
     });
-
 
     it("dispatchEvent test success case2", function ()
     {
@@ -375,27 +380,25 @@ describe("EventDispatcher.js dispatchEvent test", function()
         const di = new EventDispatcher();
 
         let s = "";
-        const test1 = function () { return s += "!"; };
-        const test2 = function () { return s += "K"; };
-        const test3 = function () { return s += "O"; };
+        const test1 = function () { return s += "!" };
+        const test2 = function () { return s += "K" };
+        const test3 = function () { return s += "O" };
 
         di.addEventListener("test", test2, false, 20);
         di.addEventListener("test", test1, false, 10);
         di.addEventListener("test", test3, false, 30);
-
 
         di.dispatchEvent(new Event("test"));
 
         expect(s).toBe("OK!");
     });
 
-
     it("dispatchEvent test success capture case1", function ()
     {
         const mc = new MovieClip();
 
         let s = "";
-        const test = function () { return s = "capture"; };
+        const test = function () { return s = "capture" };
 
         mc.addEventListener("test", test, true);
         expect(s).toBe("");
@@ -407,13 +410,12 @@ describe("EventDispatcher.js dispatchEvent test", function()
         expect(s).toBe("capture");
     });
 
-
     it("dispatchEvent test success capture case2", function ()
     {
         const mc = new MovieClip();
 
         let s = "";
-        const test = function () { return s = "capture"; };
+        const test = function () { return s = "capture" };
 
         mc.addEventListener("test", test);
 
@@ -424,14 +426,13 @@ describe("EventDispatcher.js dispatchEvent test", function()
         expect(s).toBe("");
     });
 
-
     it("dispatchEvent test success capture case2", function ()
     {
         const mc = new MovieClip();
 
         let s = "";
-        const test1 = function () { return s += "cap"; };
-        const test2 = function () { return s += "ture"; };
+        const test1 = function () { return s += "cap" };
+        const test2 = function () { return s += "ture" };
 
         mc.addEventListener("test", test1, true);
 
@@ -443,15 +444,14 @@ describe("EventDispatcher.js dispatchEvent test", function()
         expect(s).toBe("capture");
     });
 
-
     it("dispatchEvent test success capture and bubble case1", function ()
     {
         const mc = new MovieClip();
 
         let s = "";
-        const test1 = function () { return s += "cap"; };
-        const test2 = function () { return s += "ture"; };
-        const test3 = function () { return s += " and bubble"; };
+        const test1 = function () { return s += "cap" };
+        const test2 = function () { return s += "ture" };
+        const test3 = function () { return s += " and bubble" };
 
         mc.addEventListener("test", test1, true);
         mc.addEventListener("test", test3);
@@ -464,7 +464,6 @@ describe("EventDispatcher.js dispatchEvent test", function()
 
         expect(s).toBe("capture and bubble");
     });
-
 
     // stopImmediatePropagation
     it("dispatchEvent stopImmediatePropagation test case1", function ()
@@ -479,7 +478,6 @@ describe("EventDispatcher.js dispatchEvent test", function()
         sprite_a.name = "A";
         stage.addChild(sprite_a);
 
-
         const sprite_b = new Sprite();
         sprite_b.name = "B";
         sprite_a.addChild(sprite_b);
@@ -487,7 +485,6 @@ describe("EventDispatcher.js dispatchEvent test", function()
         const sprite_c = new Sprite();
         sprite_c.name = "C";
         sprite_b.addChild(sprite_c);
-
 
         let str = "";
         function EventRemovedFunc(e)
@@ -515,7 +512,6 @@ describe("EventDispatcher.js dispatchEvent test", function()
         expect(str).toBe("stageABC");
     });
 
-
     // stopPropagation
     it("dispatchEvent stopImmediatePropagation test case2", function ()
     {
@@ -525,21 +521,17 @@ describe("EventDispatcher.js dispatchEvent test", function()
         const root = new MovieClip();
         stage.addChild(root);
 
-
         const sprite_a = new Sprite();
         sprite_a.name = "A";
         stage.addChild(sprite_a);
-
 
         const sprite_b = new Sprite();
         sprite_b.name = "B";
         sprite_a.addChild(sprite_b);
 
-
         const sprite_c = new Sprite();
         sprite_c.name = "C";
         sprite_b.addChild(sprite_c);
-
 
         let strA = "";
         function EventRemovedFuncA(e)
@@ -554,13 +546,11 @@ describe("EventDispatcher.js dispatchEvent test", function()
             }
         }
 
-
         let strB = "";
         function EventRemovedFuncB(e)
         {
             strB += e.currentTarget.name;
         }
-
 
         // A
         stage.addEventListener(Event.REMOVED, EventRemovedFuncA, true);
@@ -590,7 +580,6 @@ describe("EventDispatcher.js dispatchEvent test", function()
 
     });
 
-
     // stopPropagation
     it("dispatchEvent stopImmediatePropagation test case3", function ()
     {
@@ -615,7 +604,6 @@ describe("EventDispatcher.js dispatchEvent test", function()
         expect(strA).toBe("");
         expect(strB).toBe("");
 
-
         const player = new Player();
         const root = new MovieClip();
         player.stage.addChild(root);
@@ -631,14 +619,11 @@ describe("EventDispatcher.js dispatchEvent test", function()
 
     it("dispatchEvent test single dispatchEvent", function ()
     {
-        const player = new Player();
-        window.next2d._$player = player;
-
+        const player = next2d._$player;
         const stage = player.stage;
 
         const mc = new MovieClip();
         stage.addChild(mc);
-
 
         let log = "";
         mc.addEventListener(Event.ENTER_FRAME, function (e)
@@ -657,9 +642,15 @@ describe("EventDispatcher.js dispatchEvent test", function()
 
 });
 
-
 describe("EventDispatcher.js willTrigger test", function()
 {
+
+    beforeEach(function() {
+        window.next2d = new Next2D();
+        const player = next2d._$player;
+        player.stop();
+        player._$broadcastEvents = new Map();
+    });
 
     // hasEventListener
     it("willTrigger test success case1", function ()
@@ -677,7 +668,6 @@ describe("EventDispatcher.js willTrigger test", function()
         expect(s3.willTrigger("test")).toBe(true);
 
     });
-
 
     // hasEventListener
     it("willTrigger test success case2", function ()
