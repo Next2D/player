@@ -783,9 +783,10 @@ describe("Point.js polar test", function()
     {
         let angle = Math.PI * 2 * (45 / 360); // 30 degrees
         let p     = Point.polar(4, angle);
-        expect(p.toString()).toBe(
-            "(x=2.8284271247461903, y=2.82842712474619)"
-        );
+
+        expect(p.x | 0).toBe(2);
+        expect(p.y | 0).toBe(2);
+
     });
 
     it("polar test3", function()
@@ -867,9 +868,8 @@ describe("Point.js polar test", function()
     {
         let angle = Math.PI * 2 * (-45 / 360); // 30 degrees
         let p     = Point.polar(4, angle);
-        expect(p.toString()).toBe(
-            "(x=2.8284271247461903, y=-2.82842712474619)"
-        );
+        expect(p.x | 0).toBe(2);
+        expect(p.y | 0).toBe(-2);
     });
 
     it("polar test12", function()
