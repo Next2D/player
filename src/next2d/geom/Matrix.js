@@ -489,24 +489,24 @@ class Matrix
      * @description Matrix のメンバーを指定の値に設定します。
      *              Sets the members of Matrix to the specified values
      *
-     * @param  {number} aa
-     * @param  {number} ba
-     * @param  {number} ca
-     * @param  {number} da
-     * @param  {number} txa
-     * @param  {number} tya
+     * @param  {number} a
+     * @param  {number} b
+     * @param  {number} c
+     * @param  {number} d
+     * @param  {number} tx
+     * @param  {number} ty
      * @return {void}
      * @method
      * @public
      */
-    setTo (aa, ba, ca, da, txa, tya)
+    setTo (a, b, c, d, tx, ty)
     {
-        this.a  = aa;
-        this.b  = ba;
-        this.c  = ca;
-        this.d  = da;
-        this.tx = txa;
-        this.ty = tya;
+        this.a  = a;
+        this.b  = b;
+        this.c  = c;
+        this.d  = d;
+        this.tx = tx;
+        this.ty = ty;
     }
 
     /**

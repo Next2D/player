@@ -81,7 +81,8 @@ class VideoEvent extends Event
     {
         return this.formatToString(
             "VideoEvent",
-            "type", "bubbles", "cancelable", "bytes_loaded", "bytes_total"
+            "type", "bubbles", "cancelable",
+            "eventPhase", "bytesLoaded", "bytesTotal"
         );
     }
 

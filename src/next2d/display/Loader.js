@@ -231,8 +231,8 @@ class Loader extends DisplayObjectContainer
                             event.target.status
                         );
 
-                        httpStatusEvent.responseURL     = event.target.responseURL;
-                        httpStatusEvent.responseHeaders = responseHeaders;
+                        httpStatusEvent._$responseURL     = event.target.responseURL;
+                        httpStatusEvent._$responseHeaders = responseHeaders;
 
                         loaderInfo.dispatchEvent(httpStatusEvent);
                     }

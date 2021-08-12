@@ -84,7 +84,8 @@ class HTTPStatusEvent extends Event
     {
         return this.formatToString(
             "HTTPStatusEvent",
-            "type", "bubbles", "cancelable", "bytes_loaded", "bytes_total"
+            "type", "bubbles", "cancelable",
+            "eventPhase", "status", "responseURL"
         );
     }
 
@@ -124,16 +125,12 @@ class HTTPStatusEvent extends Event
      *              as an array of URLRequestHeader objects.
      *
      * @return {array}
-     * @default {array}
+     * @readonly
      * @public
      */
     get responseHeaders ()
     {
         return this._$responseHeaders;
-    }
-    set responseHeaders (response_headers)
-    {
-        this._$responseHeaders = response_headers;
     }
 
     /**
@@ -141,15 +138,24 @@ class HTTPStatusEvent extends Event
      *              The URL that the response was returned from.
      *
      * @return {string}
-     * @default ""
+     * @readonly
      * @public
      */
     get responseURL ()
     {
         return this._$responseURL;
     }
-    set responseURL (url)
+
+    /**
+     * @description サーバーから返された HTTP ステータスコードです。
+     *              The HTTP status code returned by the server.
+     *
+     * @return {number}
+     * @readonly
+     * @public
+     */
+    get status ()
     {
-        this._$responseURL = url;
+        return this._$status;
     }
 }

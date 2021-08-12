@@ -83,7 +83,8 @@ class ProgressEvent extends Event
     {
         return this.formatToString(
             "ProgressEvent",
-            "type", "bubbles", "cancelable", "bytes_loaded", "bytes_total"
+            "type", "bubbles", "cancelable",
+            "eventPhase", "bytesLoaded", "bytesTotal"
         );
     }
 

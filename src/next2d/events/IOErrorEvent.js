@@ -18,7 +18,7 @@ class IOErrorEvent extends Event
      * @constructor
      * @public
      */
-    constructor (type, bubbles = true, cancelable = false, text = "")
+    constructor (type, bubbles = false, cancelable = false, text = "")
     {
         super(type, bubbles, cancelable);
 
@@ -27,7 +27,7 @@ class IOErrorEvent extends Event
          * @default ""
          * @private
          */
-        this._$text = text;
+        this._$text = `${text}`;
     }
 
     /**
@@ -70,7 +70,8 @@ class IOErrorEvent extends Event
     {
         return this.formatToString(
             "IOErrorEvent",
-            "type", "bubbles", "cancelable", "eventPhase", "text"
+            "type", "bubbles", "cancelable",
+            "eventPhase", "text"
         );
     }
 
@@ -100,5 +101,19 @@ class IOErrorEvent extends Event
     static get IO_ERROR ()
     {
         return "ioError";
+    }
+
+    /**
+     * @description エラーテキストです。
+     *              error text.
+     *
+     * @return {string}
+     * @default ""
+     * @readonly
+     * @public
+     */
+    get text ()
+    {
+        return this._$text;
     }
 }

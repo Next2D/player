@@ -29,7 +29,6 @@ class FocusEvent extends Event
     constructor (type, bubbles = true, cancelable = false)
     {
         super(type, bubbles, cancelable);
-
     }
 
     /**

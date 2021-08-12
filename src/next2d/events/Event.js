@@ -43,13 +43,13 @@ class Event
          * @type {boolean}
          * @private
          */
-        this._$bubbles = bubbles;
+        this._$bubbles = !!bubbles;
 
         /**
          * @type {boolean}
          * @private
          */
-        this._$cancelable = cancelable;
+        this._$cancelable = !!cancelable;
 
         /**
          * @type {object|null}

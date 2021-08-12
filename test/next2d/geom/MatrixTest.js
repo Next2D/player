@@ -2768,3 +2768,73 @@ describe("Matrix.js BugFix", function()
 
     });
 });
+
+describe("Matrix.js copyFrom", function()
+{
+    it("copy test case1", function()
+    {
+
+        const defaultMatrix = new Matrix();
+        expect(defaultMatrix.toString()).toBe(
+            "(a=1, b=0, c=0, d=1, tx=0, ty=0)"
+        );
+
+        const matrix = new Matrix(1, 2, 3, 4, 5, 6);
+        defaultMatrix.copyFrom(matrix);
+        expect(defaultMatrix.toString()).toBe(
+            "(a=1, b=2, c=3, d=4, tx=5, ty=6)"
+        );
+
+        defaultMatrix.a  = 1;
+        defaultMatrix.b  = 0;
+        defaultMatrix.c  = 0;
+        defaultMatrix.d  = 1;
+        defaultMatrix.tx = 100;
+        defaultMatrix.ty = 200;
+        expect(defaultMatrix.toString()).toBe(
+            "(a=1, b=0, c=0, d=1, tx=100, ty=200)"
+        );
+
+        expect(matrix.toString()).toBe(
+            "(a=1, b=2, c=3, d=4, tx=5, ty=6)"
+        );
+
+    });
+
+});
+
+describe("Matrix.js setTo", function()
+{
+    it("copy test case1", function()
+    {
+
+        const matrix = new Matrix();
+        expect(matrix.toString()).toBe(
+            "(a=1, b=0, c=0, d=1, tx=0, ty=0)"
+        );
+
+        matrix.setTo(1, 2, 3, 4, 5, 6);
+        expect(matrix.toString()).toBe(
+            "(a=1, b=2, c=3, d=4, tx=5, ty=6)"
+        );
+
+    });
+});
+
+describe("Matrix.js identity", function()
+{
+    it("clear test case1", function()
+    {
+
+        const matrix = new Matrix(1, 2, 3, 4, 5, 6);
+        expect(matrix.toString()).toBe(
+            "(a=1, b=2, c=3, d=4, tx=5, ty=6)"
+        );
+
+        matrix.identity(1, 2, 3, 4, 5, 6);
+        expect(matrix.toString()).toBe(
+            "(a=1, b=0, c=0, d=1, tx=0, ty=0)"
+        );
+
+    });
+});
