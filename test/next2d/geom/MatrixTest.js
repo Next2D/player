@@ -1235,9 +1235,9 @@ describe("Matrix.js transformPoint test", function()
         let p1 = new Point(2, 20);
         let p2 = m.transformPoint(p1);
 
-        expect(p2.toString()).toBe(
-            "(x=-5.656854271888731, y=178.19091594219208)"
-        );
+        expect(p2.x | 0).toBe(-5);
+        expect(p2.y | 0).toBe(178);
+
     });
 
     it("transformPoint test4", function()
@@ -1327,9 +1327,8 @@ describe("Matrix.js transformPoint test", function()
         p1.x = "a";
         let p2 = m.transformPoint(p1);
 
-        expect(p2.toString()).toBe(
-            "(x=-7.0710678100585955, y=120.20816087722778)"
-        );
+        expect(p2.x | 0).toBe(-7);
+        expect(p2.y | 0).toBe(120);
     });
 
     it("transformPoint test11", function()
@@ -1391,9 +1390,9 @@ describe("Matrix.js transformPoint test", function()
         let p1 = new Point(2, 20);
         let p2 = m.transformPoint(p1);
 
-        expect(p2.toString()).toBe(
-            "(x=117.37973380088806, y=7.071067810058591)"
-        );
+        expect(p2.x | 0).toBe(117);
+        expect(p2.y | 0).toBe(7);
+
     });
 
     it("transformPoint test16", function()
@@ -1598,9 +1597,9 @@ describe("Matrix.js deltaTransformPoint test", function()
         let p1 = new Point(2, 20);
         let p2 = m.deltaTransformPoint(p1);
 
-        expect(p2.toString()).toBe(
-            "(x=-1.4142135381698586, y=29.698484301567078)"
-        );
+        expect(p2.x | 0).toBe(-1);
+        expect(p2.y | 0).toBe(29);
+
     });
 
     it("deltaTransformPoint test13", function()
