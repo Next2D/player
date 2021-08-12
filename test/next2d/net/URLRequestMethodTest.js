@@ -1,11 +1,9 @@
 
-
 describe("URLRequestMethod.js toString test", function()
 {
     it("toString test success", function()
     {
-        const object = new URLRequestMethod();
-        expect(object.toString()).toBe("[object URLRequestMethod]");
+        expect(new URLRequestMethod().toString()).toBe("[object URLRequestMethod]");
     });
 
 });
@@ -20,14 +18,12 @@ describe("URLRequestMethod.js static toString test", function()
 
 });
 
-
 describe("URLRequestMethod.js namespace test", function()
 {
 
     it("namespace test public", function()
     {
-        const object = new URLRequestMethod();
-        expect(object.namespace).toBe("next2d.net.URLRequestMethod");
+        expect(new URLRequestMethod().namespace).toBe("next2d.net.URLRequestMethod");
     });
 
     it("namespace test static", function()
@@ -37,36 +33,35 @@ describe("URLRequestMethod.js namespace test", function()
 
 });
 
-
 describe("URLRequestMethod.js property test", function()
 {
 
-    it("GET test", function () 
+    it("GET test", function ()
     {
         expect(URLRequestMethod.GET).toBe("GET");
     });
 
-    it("DELETE test", function () 
+    it("DELETE test", function ()
     {
         expect(URLRequestMethod.DELETE).toBe("DELETE");
     });
 
-    it("HEAD test", function () 
+    it("HEAD test", function ()
     {
         expect(URLRequestMethod.HEAD).toBe("HEAD");
     });
 
-    it("OPTIONS test", function () 
+    it("OPTIONS test", function ()
     {
         expect(URLRequestMethod.OPTIONS).toBe("OPTIONS");
     });
 
-    it("POST test", function () 
+    it("POST test", function ()
     {
         expect(URLRequestMethod.POST).toBe("POST");
     });
 
-    it("PUT test", function () 
+    it("PUT test", function ()
     {
         expect(URLRequestMethod.PUT).toBe("PUT");
     });

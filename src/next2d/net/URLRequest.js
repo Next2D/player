@@ -175,7 +175,21 @@ class URLRequest
     }
     set method (method)
     {
-        this._$method = method;
+        method += "";
+        switch (method.toUpperCase()) {
+
+            case URLRequestMethod.DELETE:
+            case URLRequestMethod.HEAD:
+            case URLRequestMethod.OPTIONS:
+            case URLRequestMethod.POST:
+            case URLRequestMethod.PUT:
+                this._$method = method;
+                break;
+
+            default:
+                this._$method = URLRequestMethod.GET;
+                break;
+        }
     }
 
     /**
@@ -191,7 +205,9 @@ class URLRequest
     }
     set requestHeaders (request_headers)
     {
-        this._$requestHeaders = request_headers;
+        if (Util.$isArray(request_headers)) {
+            this._$requestHeaders = request_headers;
+        }
     }
 
     /**

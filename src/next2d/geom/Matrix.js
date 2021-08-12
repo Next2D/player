@@ -265,25 +265,13 @@ class Matrix
         let tx = matrix[4] * target[0] + target[4];
         let ty = matrix[5] * target[3] + target[5];
 
-        switch (true) {
-
-            case matrix[1] !== 0:
-            case matrix[2] !== 0:
-            case target[1] !== 0:
-            case target[2] !== 0:
-
-                a  += matrix[1] * target[2];
-                d  += matrix[2] * target[1];
-                b  += matrix[0] * target[1] + matrix[1] * target[3];
-                c  += matrix[2] * target[0] + matrix[3] * target[2];
-                tx += matrix[5] * target[2];
-                ty += matrix[4] * target[1];
-
-                break;
-
-            default:
-                break;
-
+        if (matrix[1] || matrix[2] || target[1] || target[2]) {
+            a  += matrix[1] * target[2];
+            d  += matrix[2] * target[1];
+            b  += matrix[0] * target[1] + matrix[1] * target[3];
+            c  += matrix[2] * target[0] + matrix[3] * target[2];
+            tx += matrix[5] * target[2];
+            ty += matrix[4] * target[1];
         }
 
         this.a  = a;
@@ -418,11 +406,7 @@ class Matrix
 
             const det = a * d - b * c;
 
-            if (det === 0) {
-
-                this.identity();
-
-            } else {
+            if (det) {
 
                 const rdet = 1 / det;
 

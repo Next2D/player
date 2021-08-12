@@ -96,15 +96,12 @@ class URLRequestHeader
      *
      * @member {string}
      * @default ""
+     * @readonly
      * @public
      */
     get name ()
     {
         return this._$name;
-    }
-    set name (name)
-    {
-        this._$name = `${name}`;
     }
 
     /**
@@ -113,14 +110,11 @@ class URLRequestHeader
      *
      * @member {string}
      * @default ""
+     * @readonly
      * @public
      */
     get value ()
     {
         return this._$value;
-    }
-    set value (value)
-    {
-        this._$value = `${value}`;
     }
 }
