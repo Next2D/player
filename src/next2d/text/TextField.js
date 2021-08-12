@@ -1590,7 +1590,7 @@ class TextField extends InteractiveObject
         }
 
         const matrix = Util.$multiplicationMatrix(
-            this._$transform.concatenatedMatrix()._$matrix,
+            this._$transform.concatenatedMatrix._$matrix,
             playerMatrix
         );
 

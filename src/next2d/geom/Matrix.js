@@ -41,7 +41,15 @@ class Matrix
          * @type {Float32Array}
          * @private
          */
-        this._$matrix = Util.$getFloat32Array6(a, b, c, d, tx, ty);
+        this._$matrix = Util.$getFloat32Array6(1, 0, 0, 1, 0, 0);
+
+        // setup
+        this.a  = a;
+        this.b  = b;
+        this.c  = c;
+        this.d  = d;
+        this.tx = tx;
+        this.ty = ty;
     }
 
     /**
@@ -114,7 +122,7 @@ class Matrix
     }
     set a (a)
     {
-        this._$matrix[0] = Util.$clamp(+a, -32768, 32767, 0);
+        this._$matrix[0] = Util.$clamp(+a, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**
@@ -132,7 +140,7 @@ class Matrix
     }
     set b (b)
     {
-        this._$matrix[1] = +b;
+        this._$matrix[1] = Util.$clamp(+b, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**
@@ -150,7 +158,7 @@ class Matrix
     }
     set c (c)
     {
-        this._$matrix[2] = +c;
+        this._$matrix[2] = Util.$clamp(+c, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**
@@ -168,7 +176,7 @@ class Matrix
     }
     set d (d)
     {
-        this._$matrix[3] = Util.$clamp(+d, -32768, 32767, 0);
+        this._$matrix[3] = Util.$clamp(+d, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**
@@ -185,7 +193,7 @@ class Matrix
     }
     set tx (tx)
     {
-        this._$matrix[4] = Util.$clamp(+tx, -32768, 32767, 0);
+        this._$matrix[4] = Util.$clamp(+tx, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**
@@ -202,7 +210,7 @@ class Matrix
     }
     set ty (ty)
     {
-        this._$matrix[5] = Util.$clamp(+ty, -32768, 32767, 0);
+        this._$matrix[5] = Util.$clamp(+ty, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**
@@ -278,12 +286,12 @@ class Matrix
 
         }
 
-        this._$matrix[0] = a;
-        this._$matrix[1] = b;
-        this._$matrix[2] = c;
-        this._$matrix[3] = d;
-        this._$matrix[4] = tx;
-        this._$matrix[5] = ty;
+        this.a  = a;
+        this.b  = b;
+        this.c  = c;
+        this.d  = d;
+        this.tx = tx;
+        this.ty = ty;
     }
 
     /**
@@ -448,12 +456,12 @@ class Matrix
         const tx = this._$matrix[4];
         const ty = this._$matrix[5];
 
-        this._$matrix[0] = a  * Util.$cos(rotation) - b  * Util.$sin(rotation);
-        this._$matrix[1] = a  * Util.$sin(rotation) + b  * Util.$cos(rotation);
-        this._$matrix[2] = c  * Util.$cos(rotation) - d  * Util.$sin(rotation);
-        this._$matrix[3] = c  * Util.$sin(rotation) + d  * Util.$cos(rotation);
-        this._$matrix[4] = tx * Util.$cos(rotation) - ty * Util.$sin(rotation);
-        this._$matrix[5] = tx * Util.$sin(rotation) + ty * Util.$cos(rotation);
+        this.a  = a  * Util.$cos(rotation) - b  * Util.$sin(rotation);
+        this.b  = a  * Util.$sin(rotation) + b  * Util.$cos(rotation);
+        this.c  = c  * Util.$cos(rotation) - d  * Util.$sin(rotation);
+        this.d  = c  * Util.$sin(rotation) + d  * Util.$cos(rotation);
+        this.tx = tx * Util.$cos(rotation) - ty * Util.$sin(rotation);
+        this.ty = tx * Util.$sin(rotation) + ty * Util.$cos(rotation);
     }
 
     /**
@@ -468,13 +476,13 @@ class Matrix
      */
     scale (sx, sy)
     {
-        this._$matrix[0] *= sx;
-        this._$matrix[2] *= sx;
-        this._$matrix[4] *= sx;
+        this.a  *= sx;
+        this.c  *= sx;
+        this.tx *= sx;
 
-        this._$matrix[1] *= sy;
-        this._$matrix[3] *= sy;
-        this._$matrix[5] *= sy;
+        this.b  *= sy;
+        this.d  *= sy;
+        this.ty *= sy;
     }
 
     /**

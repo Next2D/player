@@ -635,7 +635,7 @@ class DisplayObject extends EventDispatcher
     }
     set rotation (rotation)
     {
-        rotation %= 360;
+        rotation = Util.$clamp(rotation % 360, -360, 360, 0);
 
         const transform = this._$transform;
         const matrix    = transform.matrix;
@@ -961,7 +961,7 @@ class DisplayObject extends EventDispatcher
     {
         const baseBounds = this._$getBounds(null);
 
-        const matrix = this._$transform.concatenatedMatrix();
+        const matrix = this._$transform.concatenatedMatrix;
 
         // to global
         const bounds = Util.$boundsMatrix(baseBounds, matrix._$matrix);
@@ -985,7 +985,7 @@ class DisplayObject extends EventDispatcher
             target = this;
         }
 
-        const targetMatrix = target._$transform.concatenatedMatrix();
+        const targetMatrix = target._$transform.concatenatedMatrix;
         targetMatrix.invert();
 
         const resultBounds = Util.$boundsMatrix(
@@ -1021,7 +1021,7 @@ class DisplayObject extends EventDispatcher
      */
     globalToLocal (point)
     {
-        const matrix = this._$transform.concatenatedMatrix();
+        const matrix = this._$transform.concatenatedMatrix;
         matrix.invert();
 
         const newPoint = new Point(
@@ -1047,7 +1047,7 @@ class DisplayObject extends EventDispatcher
     hitTestObject (object)
     {
         const baseBounds1 = this._$getBounds(null);
-        const matrix1 = this._$transform.concatenatedMatrix();
+        const matrix1 = this._$transform.concatenatedMatrix;
         const bounds1 = Util.$boundsMatrix(baseBounds1, matrix1._$matrix);
 
         // pool
@@ -1055,7 +1055,7 @@ class DisplayObject extends EventDispatcher
         Util.$poolBoundsObject(baseBounds1);
 
         const baseBounds2 = object._$getBounds(null);
-        const matrix2 = object._$transform.concatenatedMatrix();
+        const matrix2 = object._$transform.concatenatedMatrix;
         const bounds2 = Util.$boundsMatrix(baseBounds2, matrix2._$matrix);
 
         // pool
@@ -1147,7 +1147,7 @@ class DisplayObject extends EventDispatcher
     {
         const matrix = this
             ._$transform
-            .concatenatedMatrix();
+            .concatenatedMatrix;
 
         const newPoint = new Point(
             point.x * matrix.a + point.y * matrix.c + matrix.tx,

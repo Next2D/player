@@ -170,7 +170,7 @@ class Rectangle
     }
     set height (height)
     {
-        this._$height = +height;
+        this._$height = Util.$clamp(+height, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**
@@ -274,7 +274,7 @@ class Rectangle
     }
     set width (width)
     {
-        this._$width = +width;
+        this._$width = Util.$clamp(+width, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**
@@ -290,7 +290,7 @@ class Rectangle
     }
     set x (x)
     {
-        this._$x = +x;
+        this._$x = Util.$clamp(+x, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**
@@ -306,7 +306,7 @@ class Rectangle
     }
     set y (y)
     {
-        this._$y = +y;
+        this._$y = Util.$clamp(+y, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**

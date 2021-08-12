@@ -127,13 +127,13 @@ class CanvasToWebGLContextPath
         const fromY = this._$currentPath[this._$currentPath.length - 2];
         BezierConverter.cubicToQuad(fromX, fromY, cx1, cy1, cx2, cy2, x, y);
 
-        const length = BezierConverterBuffer.length;
-        for (let i = 0; i < length; i += 4) {
+        const length = Util.$bezierConverterBuffer.length;
+        for (let i = 0; i < length; ) {
             this.quadTo(
-                BezierConverterBuffer[i],
-                BezierConverterBuffer[i + 1],
-                BezierConverterBuffer[i + 2],
-                BezierConverterBuffer[i + 3]
+                Util.$bezierConverterBuffer[i++],
+                Util.$bezierConverterBuffer[i++],
+                Util.$bezierConverterBuffer[i++],
+                Util.$bezierConverterBuffer[i++]
             );
         }
     }

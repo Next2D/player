@@ -1,5 +1,3 @@
-const BezierConverterBuffer = new Array(32);
-
 /**
  * @class
  */
@@ -23,33 +21,33 @@ class BezierConverter
     {
         this._$split2Cubic(fromX, fromY, cx1, cy1, cx2, cy2, x, y, 0, 16);
         this._$split2Cubic(
-            BezierConverterBuffer[0], BezierConverterBuffer[1], BezierConverterBuffer[2], BezierConverterBuffer[3],
-            BezierConverterBuffer[4], BezierConverterBuffer[5], BezierConverterBuffer[6], BezierConverterBuffer[7],
+            Util.$bezierConverterBuffer[0], Util.$bezierConverterBuffer[1], Util.$bezierConverterBuffer[2], Util.$bezierConverterBuffer[3],
+            Util.$bezierConverterBuffer[4], Util.$bezierConverterBuffer[5], Util.$bezierConverterBuffer[6], Util.$bezierConverterBuffer[7],
             0, 8
         );
         this._$split2Cubic(
-            BezierConverterBuffer[16], BezierConverterBuffer[17], BezierConverterBuffer[18], BezierConverterBuffer[19],
-            BezierConverterBuffer[20], BezierConverterBuffer[21], BezierConverterBuffer[22], BezierConverterBuffer[23],
+            Util.$bezierConverterBuffer[16], Util.$bezierConverterBuffer[17], Util.$bezierConverterBuffer[18], Util.$bezierConverterBuffer[19],
+            Util.$bezierConverterBuffer[20], Util.$bezierConverterBuffer[21], Util.$bezierConverterBuffer[22], Util.$bezierConverterBuffer[23],
             16, 24
         );
         this._$split2Quad(
-            BezierConverterBuffer[0], BezierConverterBuffer[1], BezierConverterBuffer[2], BezierConverterBuffer[3],
-            BezierConverterBuffer[4], BezierConverterBuffer[5], BezierConverterBuffer[6], BezierConverterBuffer[7],
+            Util.$bezierConverterBuffer[0], Util.$bezierConverterBuffer[1], Util.$bezierConverterBuffer[2], Util.$bezierConverterBuffer[3],
+            Util.$bezierConverterBuffer[4], Util.$bezierConverterBuffer[5], Util.$bezierConverterBuffer[6], Util.$bezierConverterBuffer[7],
             0
         );
         this._$split2Quad(
-            BezierConverterBuffer[8], BezierConverterBuffer[9], BezierConverterBuffer[10], BezierConverterBuffer[11],
-            BezierConverterBuffer[12], BezierConverterBuffer[13], BezierConverterBuffer[14], BezierConverterBuffer[15],
+            Util.$bezierConverterBuffer[8], Util.$bezierConverterBuffer[9], Util.$bezierConverterBuffer[10], Util.$bezierConverterBuffer[11],
+            Util.$bezierConverterBuffer[12], Util.$bezierConverterBuffer[13], Util.$bezierConverterBuffer[14], Util.$bezierConverterBuffer[15],
             8
         );
         this._$split2Quad(
-            BezierConverterBuffer[16], BezierConverterBuffer[17], BezierConverterBuffer[18], BezierConverterBuffer[19],
-            BezierConverterBuffer[20], BezierConverterBuffer[21], BezierConverterBuffer[22], BezierConverterBuffer[23],
+            Util.$bezierConverterBuffer[16], Util.$bezierConverterBuffer[17], Util.$bezierConverterBuffer[18], Util.$bezierConverterBuffer[19],
+            Util.$bezierConverterBuffer[20], Util.$bezierConverterBuffer[21], Util.$bezierConverterBuffer[22], Util.$bezierConverterBuffer[23],
             16
         );
         this._$split2Quad(
-            BezierConverterBuffer[24], BezierConverterBuffer[25], BezierConverterBuffer[26], BezierConverterBuffer[27],
-            BezierConverterBuffer[28], BezierConverterBuffer[29], BezierConverterBuffer[30], BezierConverterBuffer[31],
+            Util.$bezierConverterBuffer[24], Util.$bezierConverterBuffer[25], Util.$bezierConverterBuffer[26], Util.$bezierConverterBuffer[27],
+            Util.$bezierConverterBuffer[28], Util.$bezierConverterBuffer[29], Util.$bezierConverterBuffer[30], Util.$bezierConverterBuffer[31],
             24
         );
     }
@@ -78,23 +76,23 @@ class BezierConverter
         const dx = (p6 + p4 - p2 - p0) * 0.125;
         const dy = (p7 + p5 - p3 - p1) * 0.125;
 
-        BezierConverterBuffer[offset1    ] = p0;
-        BezierConverterBuffer[offset1 + 1] = p1;
-        BezierConverterBuffer[offset1 + 2] = (p0 + p2) * 0.5;
-        BezierConverterBuffer[offset1 + 3] = (p1 + p3) * 0.5;
-        BezierConverterBuffer[offset1 + 4] = mx - dx;
-        BezierConverterBuffer[offset1 + 5] = my - dy;
-        BezierConverterBuffer[offset1 + 6] = mx;
-        BezierConverterBuffer[offset1 + 7] = my;
+        Util.$bezierConverterBuffer[offset1    ] = p0;
+        Util.$bezierConverterBuffer[offset1 + 1] = p1;
+        Util.$bezierConverterBuffer[offset1 + 2] = (p0 + p2) * 0.5;
+        Util.$bezierConverterBuffer[offset1 + 3] = (p1 + p3) * 0.5;
+        Util.$bezierConverterBuffer[offset1 + 4] = mx - dx;
+        Util.$bezierConverterBuffer[offset1 + 5] = my - dy;
+        Util.$bezierConverterBuffer[offset1 + 6] = mx;
+        Util.$bezierConverterBuffer[offset1 + 7] = my;
 
-        BezierConverterBuffer[offset2    ] = mx;
-        BezierConverterBuffer[offset2 + 1] = my;
-        BezierConverterBuffer[offset2 + 2] = mx + dx;
-        BezierConverterBuffer[offset2 + 3] = my + dy;
-        BezierConverterBuffer[offset2 + 4] = (p4 + p6) * 0.5;
-        BezierConverterBuffer[offset2 + 5] = (p5 + p7) * 0.5;
-        BezierConverterBuffer[offset2 + 6] = p6;
-        BezierConverterBuffer[offset2 + 7] = p7;
+        Util.$bezierConverterBuffer[offset2    ] = mx;
+        Util.$bezierConverterBuffer[offset2 + 1] = my;
+        Util.$bezierConverterBuffer[offset2 + 2] = mx + dx;
+        Util.$bezierConverterBuffer[offset2 + 3] = my + dy;
+        Util.$bezierConverterBuffer[offset2 + 4] = (p4 + p6) * 0.5;
+        Util.$bezierConverterBuffer[offset2 + 5] = (p5 + p7) * 0.5;
+        Util.$bezierConverterBuffer[offset2 + 6] = p6;
+        Util.$bezierConverterBuffer[offset2 + 7] = p7;
     }
 
     /**
@@ -122,16 +120,16 @@ class BezierConverter
 
         // this.result[offset - 2] = p0;
         // this.result[offset - 1] = p1;
-        BezierConverterBuffer[offset    ] = p0 * 0.25 + p2 * 0.75;
-        BezierConverterBuffer[offset + 1] = p1 * 0.25 + p3 * 0.75;
-        BezierConverterBuffer[offset + 2] = mx;
-        BezierConverterBuffer[offset + 3] = my;
+        Util.$bezierConverterBuffer[offset    ] = p0 * 0.25 + p2 * 0.75;
+        Util.$bezierConverterBuffer[offset + 1] = p1 * 0.25 + p3 * 0.75;
+        Util.$bezierConverterBuffer[offset + 2] = mx;
+        Util.$bezierConverterBuffer[offset + 3] = my;
 
         // this.result[offset + 2] = mx;
         // this.result[offset + 3] = my;
-        BezierConverterBuffer[offset + 4] = p4 * 0.75 + p6 * 0.25;
-        BezierConverterBuffer[offset + 5] = p5 * 0.75 + p7 * 0.25;
-        BezierConverterBuffer[offset + 6] = p6;
-        BezierConverterBuffer[offset + 7] = p7;
+        Util.$bezierConverterBuffer[offset + 4] = p4 * 0.75 + p6 * 0.25;
+        Util.$bezierConverterBuffer[offset + 5] = p5 * 0.75 + p7 * 0.25;
+        Util.$bezierConverterBuffer[offset + 6] = p6;
+        Util.$bezierConverterBuffer[offset + 7] = p7;
     }
 }

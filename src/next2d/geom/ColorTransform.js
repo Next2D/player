@@ -53,14 +53,24 @@ class ColorTransform
         red_multiplier = 1, green_multiplier = 1, blue_multiplier = 1, alpha_multiplier = 1,
         red_offset = 0, green_offset = 0, blue_offset = 0, alpha_offset = 0
     ) {
+
         /**
          * @type {Float32Array}
          * @private
          */
         this._$colorTransform = Util.$getFloat32Array8(
-            red_multiplier, green_multiplier, blue_multiplier, alpha_multiplier,
-            red_offset, green_offset, blue_offset, alpha_offset
+            1, 1, 1, 1, 0, 0, 0, 0
         );
+
+        // setup
+        this.redMultiplier   = red_multiplier;
+        this.greenMultiplier = green_multiplier;
+        this.blueMultiplier  = blue_multiplier;
+        this.alphaMultiplier = alpha_multiplier;
+        this.redOffset       = red_offset;
+        this.greenOffset     = green_offset;
+        this.blueOffset      = blue_offset;
+        this.alphaOffset     = alpha_offset;
     }
 
     /**
@@ -139,7 +149,7 @@ class ColorTransform
     }
     set alphaMultiplier (alpha_multiplier)
     {
-        this._$colorTransform[3] = Util.$clamp(alpha_multiplier, 0, 1, 0);
+        this._$colorTransform[3] = Util.$clamp(+alpha_multiplier, 0, 1, 0);
     }
 
     /**
@@ -158,7 +168,7 @@ class ColorTransform
     }
     set alphaOffset (alpha_offset)
     {
-        this._$colorTransform[7] = Util.$clamp(alpha_offset | 0, -255, 255);
+        this._$colorTransform[7] = Util.$clamp(alpha_offset | 0, -255, 255, 0);
     }
 
     /**
@@ -175,7 +185,7 @@ class ColorTransform
     }
     set blueMultiplier (blue_multiplier)
     {
-        this._$colorTransform[2] = Util.$clamp(blue_multiplier, 0, 1, 0);
+        this._$colorTransform[2] = Util.$clamp(+blue_multiplier, 0, 1, 0);
     }
 
     /**
@@ -194,7 +204,7 @@ class ColorTransform
     }
     set blueOffset (blue_offset)
     {
-        this._$colorTransform[6] = Util.$clamp(blue_offset | 0, -255, 255);
+        this._$colorTransform[6] = Util.$clamp(blue_offset | 0, -255, 255, 0);
     }
 
     /**
@@ -211,7 +221,7 @@ class ColorTransform
     }
     set greenMultiplier (green_multiplier)
     {
-        this._$colorTransform[1] = Util.$clamp(green_multiplier, 0, 1, 0);
+        this._$colorTransform[1] = Util.$clamp(+green_multiplier, 0, 1, 0);
     }
 
     /**
@@ -230,7 +240,7 @@ class ColorTransform
     }
     set greenOffset (green_offset)
     {
-        this._$colorTransform[5] = Util.$clamp(green_offset | 0, -255, 255);
+        this._$colorTransform[5] = Util.$clamp(green_offset | 0, -255, 255, 0);
     }
 
     /**
@@ -247,7 +257,7 @@ class ColorTransform
     }
     set redMultiplier (red_multiplier)
     {
-        this._$colorTransform[0] = Util.$clamp(red_multiplier, 0, 1, 0);
+        this._$colorTransform[0] = Util.$clamp(+red_multiplier, 0, 1, 0);
     }
 
     /**
@@ -266,7 +276,7 @@ class ColorTransform
     }
     set redOffset (red_offset)
     {
-        this._$colorTransform[4] = Util.$clamp(red_offset | 0, -255, 255);
+        this._$colorTransform[4] = Util.$clamp(red_offset | 0, -255, 255, 0);
     }
 
     /**
@@ -291,14 +301,14 @@ class ColorTransform
         );
 
         // update
-        this._$colorTransform[0] = multiColor[0];
-        this._$colorTransform[1] = multiColor[1];
-        this._$colorTransform[2] = multiColor[2];
-        this._$colorTransform[3] = multiColor[3];
-        this._$colorTransform[4] = multiColor[4];
-        this._$colorTransform[5] = multiColor[5];
-        this._$colorTransform[6] = multiColor[6];
-        this._$colorTransform[7] = multiColor[7];
+        this.redMultiplier   = multiColor[0];
+        this.greenMultiplier = multiColor[1];
+        this.blueMultiplier  = multiColor[2];
+        this.alphaMultiplier = multiColor[3];
+        this.redOffset       = multiColor[4];
+        this.greenOffset     = multiColor[5];
+        this.blueOffset      = multiColor[6];
+        this.alphaOffset     = multiColor[7];
 
         Util.$poolFloat32Array8(multiColor);
     }

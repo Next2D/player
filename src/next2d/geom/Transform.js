@@ -253,7 +253,7 @@ class Transform
      * @method
      * @public
      */
-    concatenatedMatrix ()
+    get concatenatedMatrix ()
     {
         let matrix = this._$rawMatrix();
 

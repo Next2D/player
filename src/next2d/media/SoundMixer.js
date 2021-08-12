@@ -73,17 +73,17 @@ class SoundMixer
      */
     static get volume ()
     {
-        return SoundMixer._$volume;
+        return Util.$soundMixerVolume;
     }
     static set volume (volume)
     {
-        SoundMixer._$volume = Util.$clamp(volume, 0, 1, 1);
+        Util.$soundMixerVolume = Util.$clamp(volume, 0, 1, 1);
 
         const sources = Util.$currentPlayer()._$sources;
         for (let idx = 0; idx < sources.length; ++idx) {
             const source = sources[idx];
             source._$gainNode.gain.value = Util.$min(
-                SoundMixer._$volume,
+                Util.$soundMixerVolume,
                 source._$volume
             );
         }
@@ -91,7 +91,7 @@ class SoundMixer
         const videos = Util.$currentPlayer()._$videos;
         for (let idx = 0; idx < videos.length; ++idx) {
             const video  = videos[idx];
-            video._$video.volume = Util.$min(video.volume, SoundMixer._$volume);
+            video._$video.volume = Util.$min(video.volume, Util.$soundMixerVolume);
         }
 
     }
@@ -117,10 +117,3 @@ class SoundMixer
         }
     }
 }
-
-/**
- * @type {number}
- * @default 1
- * @private
- */
-SoundMixer._$volume = 1;

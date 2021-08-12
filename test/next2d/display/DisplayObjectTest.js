@@ -1894,7 +1894,7 @@ describe("DisplayObject.js rotation test", function()
     {
         const obj = new DisplayObject();
         obj.rotation = undefined;
-        expect(isNaN(obj.rotation)).toBe(true);
+        expect(obj.rotation).toBe(0);
     });
 
     it("default test case4", function()
@@ -1915,7 +1915,7 @@ describe("DisplayObject.js rotation test", function()
     {
         const obj = new DisplayObject();
         obj.rotation = "abc";
-        expect(isNaN(obj.rotation)).toBe(true);
+        expect(obj.rotation).toBe(0);
     });
 
     it("default test case7", function()
@@ -1957,14 +1957,14 @@ describe("DisplayObject.js rotation test", function()
     {
         const obj = new DisplayObject();
         obj.rotation = { "a":0 };
-        expect(isNaN(obj.rotation)).toBe(true);
+        expect(obj.rotation).toBe(0);
     });
 
     it("default test case13", function()
     {
         const obj = new DisplayObject();
         obj.rotation = function a() {};
-        expect(isNaN(obj.rotation)).toBe(true);
+        expect(obj.rotation).toBe(0);
     });
 
     it("default test case14", function()
@@ -1978,14 +1978,14 @@ describe("DisplayObject.js rotation test", function()
     {
         const obj = new DisplayObject();
         obj.rotation = [1,2];
-        expect(isNaN(obj.rotation)).toBe(true);
+        expect(obj.rotation).toBe(0);
     });
 
     it("default test case16", function()
     {
         const obj = new DisplayObject();
         obj.rotation = {};
-        expect(isNaN(obj.rotation)).toBe(true);
+        expect(obj.rotation).toBe(0);
     });
 
     it("default test case17", function()
@@ -2006,7 +2006,7 @@ describe("DisplayObject.js rotation test", function()
     {
         const obj = new DisplayObject();
         obj.rotation = { "toString":function () { return "1a" } };
-        expect(isNaN(obj.rotation)).toBe(true);
+        expect(obj.rotation).toBe(0);
     });
 
 });

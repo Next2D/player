@@ -29,14 +29,18 @@ class Point
          * @default 0
          * @private
          */
-        this._$x = +x;
+        this._$x = 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$y = +y;
+        this._$y = 0;
+
+        // setup
+        this.x = x;
+        this.y = y;
     }
 
     /**
@@ -122,7 +126,7 @@ class Point
     }
     set x (x)
     {
-        this._$x = +x;
+        this._$x = Util.$clamp(+x, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**
@@ -139,7 +143,7 @@ class Point
     }
     set y (y)
     {
-        this._$y = +y;
+        this._$y = Util.$clamp(+y, Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX, 0);
     }
 
     /**

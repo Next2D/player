@@ -20,7 +20,7 @@ describe("BezierConverter.js test", function()
             2648.4375, 8531.25, 1886.71875, 9078.125,
             1125, 9625, 0, 10000
         ];
-        expect(BezierConverterBuffer).toEqual(actual);
+        expect(Util.$bezierConverterBuffer).toEqual(actual);
     });
 
     it("cubicToQuad case 1-2", function()
@@ -42,7 +42,7 @@ describe("BezierConverter.js test", function()
             4687.5, 9140.625, 3281.25, 9570.3125,
             1875, 10000, 0, 10000
         ];
-        expect(BezierConverterBuffer).toEqual(actual);
+        expect(Util.$bezierConverterBuffer).toEqual(actual);
     });
 
     it("cubicToQuad case 1-3", function()
@@ -64,7 +64,7 @@ describe("BezierConverter.js test", function()
             2343.75, 4570.3125, 1640.625, 5878.90625,
             937.5, 7187.5, 0, 10000
         ];
-        expect(BezierConverterBuffer).toEqual(actual);
+        expect(Util.$bezierConverterBuffer).toEqual(actual);
     });
 
     // 全て0
@@ -87,7 +87,7 @@ describe("BezierConverter.js test", function()
             0, 0, 0, 0,
             0, 0, 0, 0
         ];
-        expect(BezierConverterBuffer).toEqual(actual);
+        expect(Util.$bezierConverterBuffer).toEqual(actual);
     });
 
     // 直線
@@ -110,7 +110,7 @@ describe("BezierConverter.js test", function()
             4875, 4875, 5250, 5250,
             5625, 5625, 6000, 6000
         ];
-        expect(BezierConverterBuffer).toEqual(actual);
+        expect(Util.$bezierConverterBuffer).toEqual(actual);
     });
 
     // 始点と制御点1が同じ、かつ、終点と制御点2が同じ
@@ -133,7 +133,7 @@ describe("BezierConverter.js test", function()
             9140.625, 9140.625, 9570.3125, 9570.3125,
             10000, 10000, 10000, 10000
         ];
-        expect(BezierConverterBuffer).toEqual(actual);
+        expect(Util.$bezierConverterBuffer).toEqual(actual);
     });
 
     // 制御点1と制御点2が同じ
@@ -156,6 +156,6 @@ describe("BezierConverter.js test", function()
             7617.1875, 2343.75, 8339.84375, 1640.625,
             9062.5, 937.5, 10000, 0
         ];
-        expect(BezierConverterBuffer).toEqual(actual);
+        expect(Util.$bezierConverterBuffer).toEqual(actual);
     });
 });

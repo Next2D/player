@@ -192,6 +192,18 @@ Util.$COLOR_MATRIX_FILTER = [
 ];
 
 /**
+ * @type {number}
+ * @static
+ */
+Util.$soundMixerVolume = 1;
+
+/**
+ * @type {array}
+ * @static
+ */
+Util.$bezierConverterBuffer = new Array(32);
+
+/**
  * @shortcut
  * @type {Window}
  * @const
@@ -562,6 +574,20 @@ for (let idx = 0; idx < 256; ++idx) {
     Util.$rgbToLinearTable[idx] = Util.$pow(idx / 255, 2.23333333);
     Util.$rgbIdentityTable[idx] = idx / 255;
 }
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$SHORT_INT_MIN = -32768;
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$SHORT_INT_MAX = 32767;
 
 /**
  * @type {number}
