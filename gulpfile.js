@@ -43,7 +43,6 @@ function buildFooterVersion()
  */
 function buildHeaderVersion()
 {
-    console.log(options.version);
     return gulp.src("src/Header.file")
         .pipe(replace("###BUILD_VERSION###", options.version))
         .pipe(replace("###BUILD_YEAR###", new Date().getFullYear()))
@@ -51,7 +50,7 @@ function buildHeaderVersion()
         .pipe(gulp.dest("."));
 }
 
-function eslint ()
+function lint ()
 {
     return gulp.src([
         "src/util/Util.js",
@@ -177,7 +176,7 @@ function reload (done)
 function watchFiles ()
 {
     return gulp.watch("src/**/*.js")
-        .on("change", gulp.series(buildJavaScript, eslint, reload));
+        .on("change", gulp.series(buildJavaScript, lint, reload));
 }
 
 /**
@@ -256,4 +255,4 @@ exports.default = gulp.series(
 );
 exports.test   = gulp.series(test);
 exports.jsdoc  = gulp.series(createHTML);
-exports.eslint = gulp.series(eslint);
+exports.eslint = gulp.series(lint);
