@@ -255,7 +255,7 @@ class TextFormat
     }
     set bold (bold)
     {
-        this._$bold = bold;
+        this._$bold = !!bold;
         if (this._$textField) {
             this._$textField._$renew = true;
         }
@@ -295,7 +295,7 @@ class TextFormat
     }
     set font (font)
     {
-        this._$font = font;
+        this._$font = `${font}`;
         if (this._$textField) {
             this._$textField._$renew = true;
         }
@@ -336,7 +336,7 @@ class TextFormat
     }
     set italic (italic)
     {
-        this._$italic = italic;
+        this._$italic = !!italic;
         if (this._$textField) {
             this._$textField._$renew = true;
         }
@@ -460,7 +460,7 @@ class TextFormat
     }
     set underline (underline)
     {
-        this._$underline = underline;
+        this._$underline = !!underline;
         if (this._$textField) {
             this._$textField._$renew = true;
         }
