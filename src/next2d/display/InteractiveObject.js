@@ -113,6 +113,6 @@ class InteractiveObject extends DisplayObject
     }
     set mouseEnabled (mouse_enabled)
     {
-        this._$mouseEnabled = mouse_enabled;
+        this._$mouseEnabled = !!mouse_enabled;
     }
 }

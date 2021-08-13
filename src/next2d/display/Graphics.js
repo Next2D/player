@@ -286,7 +286,7 @@ class Graphics
         this._$canDraw  = true;
 
         // beginPath
-        this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
+        this._$fills.push(Graphics.BEGIN_PATH);
 
         this._$fillType   = Graphics.BITMAP_FILL;
         this._$fillBitmap = new GraphicsBitmapFill(
@@ -329,7 +329,7 @@ class Graphics
         this._$canDraw  = true;
 
         // beginPath
-        this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
+        this._$fills.push(Graphics.BEGIN_PATH);
 
         // add Fill Style
         const object = Util.$intToRGBA(color, alpha);
@@ -385,7 +385,7 @@ class Graphics
         this._$canDraw = true;
 
         // beginPath
-        this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
+        this._$fills.push(Graphics.BEGIN_PATH);
 
         this._$fillType     = Graphics.GRADIENT_FILL;
         this._$fillGradient = new GraphicsGradientFill(
@@ -447,16 +447,17 @@ class Graphics
         // init array
         if (this._$recode) {
             Util.$poolArray(this._$recode);
-            this._$recode = null;
         }
         if (this._$fills) {
             Util.$poolArray(this._$fills);
-            this._$fills = null;
         }
         if (this._$lines) {
             Util.$poolArray(this._$lines);
-            this._$lines = null;
         }
+
+        this._$recode = null;
+        this._$fills  = null;
+        this._$lines  = null;
 
         // restart
         this._$restart();
@@ -475,57 +476,78 @@ class Graphics
     clone ()
     {
         const graphics = new Graphics();
+        graphics.copyFrom(this);
+        return graphics;
+    }
+
+    /**
+     * @description すべての描画コマンドをソース Graphics オブジェクトから、呼び出し Graphics オブジェクトにコピーします。
+     *              Copies all of drawing commands from the source Graphics object into the calling Graphics object.
+     *
+     * @param  {Graphics} graphics
+     * @return {void}
+     * @method
+     * @public
+     */
+    copyFrom (graphics)
+    {
+        if (!(graphics instanceof Graphics)) {
+            return ;
+        }
+
+        if (graphics._$fillGradient) {
+            this._$fillGradient = graphics._$fillGradient.clone();
+        }
+
+        if (graphics._$fillBitmap) {
+            this._$fillBitmap = graphics._$fillBitmap.clone();
+        }
 
         // fill
-        if (this._$fillGradient) {
-            graphics._$fillGradient = this._$fillGradient.clone();
+        this._$doFill       = graphics._$doFill;
+        this._$fillType     = graphics._$fillType;
+        this._$fillStyleR   = graphics._$fillStyleR;
+        this._$fillStyleG   = graphics._$fillStyleG;
+        this._$fillStyleB   = graphics._$fillStyleB;
+        this._$fillStyleA   = graphics._$fillStyleA;
+
+        if (graphics._$lineGradient) {
+            this._$lineGradient = graphics._$lineGradient.clone();
         }
-        if (this._$fillBitmap) {
-            graphics._$fillBitmap = this._$fillBitmap.clone();
-        }
-        graphics._$doFill       = this._$doFill;
-        graphics._$fillType     = this._$fillType;
-        graphics._$fillStyleR   = this._$fillStyleR;
-        graphics._$fillStyleG   = this._$fillStyleG;
-        graphics._$fillStyleB   = this._$fillStyleB;
-        graphics._$fillStyleA   = this._$fillStyleA;
 
         // stroke
-        if (this._$lineGradient) {
-            graphics._$lineGradient = this._$lineGradient.clone();
-        }
-        graphics._$doLine       = this._$doLine;
-        graphics._$lineType     = this._$lineType;
-        graphics._$caps         = this._$caps;
-        graphics._$joints       = this._$caps;
-        graphics._$miterLimit   = this._$miterLimit;
-        graphics._$lineWidth    = this._$lineWidth;
-        graphics._$lineStyleR   = this._$lineStyleR;
-        graphics._$lineStyleG   = this._$lineStyleG;
-        graphics._$lineStyleB   = this._$lineStyleB;
-        graphics._$lineStyleA   = this._$lineStyleA;
+        this._$doLine       = graphics._$doLine;
+        this._$lineType     = graphics._$lineType;
+        this._$caps         = graphics._$caps;
+        this._$joints       = graphics._$caps;
+        this._$miterLimit   = graphics._$miterLimit;
+        this._$lineWidth    = graphics._$lineWidth;
+        this._$lineStyleR   = graphics._$lineStyleR;
+        this._$lineStyleG   = graphics._$lineStyleG;
+        this._$lineStyleB   = graphics._$lineStyleB;
+        this._$lineStyleA   = graphics._$lineStyleA;
 
         // bounds
-        graphics._$xMin         = this._$xMin;
-        graphics._$xMax         = this._$xMax;
-        graphics._$yMin         = this._$yMin;
-        graphics._$yMax         = this._$yMax;
+        this._$xMin         = graphics._$xMin;
+        this._$xMax         = graphics._$xMax;
+        this._$yMin         = graphics._$yMin;
+        this._$yMax         = graphics._$yMax;
 
         // params
-        graphics._$maxAlpha     = this._$maxAlpha;
-        graphics._$pointerX     = this._$pointerX;
-        graphics._$pointerY     = this._$pointerY;
-        graphics._$canDraw      = this._$canDraw;
+        this._$maxAlpha     = graphics._$maxAlpha;
+        this._$pointerX     = graphics._$pointerX;
+        this._$pointerY     = graphics._$pointerY;
+        this._$canDraw      = graphics._$canDraw;
 
         // path params
-        if (this._$fills.length) {
-            graphics._$fills = this._$fills.slice(0);
+        if (graphics._$fills) {
+            this._$fills = graphics._$fills.slice(0);
         }
-        if (this._$lines.length) {
-            graphics._$lines  = this._$lines.slice(0);
+        if (graphics._$lines) {
+            this._$lines = graphics._$lines.slice(0);
         }
-        if (this._$recode.length) {
-            graphics._$recode = this._$recode.slice(0);
+        if (graphics._$recode) {
+            this._$recode = graphics._$recode.slice(0);
         }
     }
 
@@ -648,8 +670,8 @@ class Graphics
         this._$setBounds(x + radius, y + radius);
 
         this._$margePath(Util.$getArray(
-            Graphics.ARC,
-            x, y, radius
+            Graphics.MOVE_TO, x + radius, y,
+            Graphics.ARC, x, y, radius
         ));
 
         this._$pointerX = x;
@@ -796,7 +818,7 @@ class Graphics
      */
     endFill ()
     {
-        if (this._$doFill) {
+        if (this._$doFill && this._$fills.length > 6) {
 
             if (!this._$recode) {
                 this._$recode = Util.$getArray();
@@ -812,10 +834,6 @@ class Graphics
                 );
             }
             this._$recode.push.apply(this._$recode, this._$fills);
-
-            // clear
-            Util.$poolArray(this._$fills);
-            this._$fills = null;
 
             // fill
             switch (this._$fillType) {
@@ -847,6 +865,11 @@ class Graphics
 
             }
 
+        }
+
+        if (this._$fills) {
+            Util.$poolArray(this._$fills);
+            this._$fills = null;
         }
 
         // reset
@@ -895,6 +918,7 @@ class Graphics
                 case Graphics.STROKE_STYLE:
                     this._$recode.push(
                         this._$lineType,
+                        this._$lineWidth,
                         this._$caps,
                         this._$joints,
                         this._$miterLimit,
@@ -923,6 +947,7 @@ class Graphics
 
         // reset
         this._$lineType     = 0;
+        this._$lineWidth    = 0;
         this._$lineGradient = null;
         this._$lineStyleR   = 0;
         this._$lineStyleG   = 0;
@@ -977,7 +1002,7 @@ class Graphics
         }
 
         // beginPath
-        this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
+        this._$lines.push(Graphics.BEGIN_PATH);
 
         this._$lineType     = Graphics.GRADIENT_STROKE;
         this._$lineGradient = new GraphicsGradientFill(
@@ -1020,7 +1045,7 @@ class Graphics
         }
 
         color = Util.$clamp(Util.$toColorInt(color), 0, 0xffffff, 0);
-        alpha = Util.$clamp(alpha, 0, 1, 1);
+        alpha = Util.$clamp(+alpha, 0, 1, 1);
 
         // setup
         this._$maxAlpha = Util.$max(this._$maxAlpha, alpha);
@@ -1028,7 +1053,12 @@ class Graphics
         this._$canDraw  = true;
 
         // beginPath
-        this._$margePath(Util.$getArray(Graphics.BEGIN_PATH));
+        this._$lines.push(
+            Graphics.BEGIN_PATH,
+            Graphics.MOVE_TO,
+            this._$pointerX,
+            this._$pointerY
+        );
 
         // add Fill Style
         const object = Util.$intToRGBA(color, alpha);
@@ -1729,12 +1759,14 @@ class Graphics
      */
     _$runCommand (context, color_transform = null, is_clip = false, options = null)
     {
-        if (this._$doFill) {
-            this.endFill();
-        }
-
+        // fixed logic
         if (this._$doLine) {
             this.endLine();
+        }
+
+        // fixed logic
+        if (this._$doFill) {
+            this.endFill();
         }
 
         if (!this._$recode) {
@@ -1879,7 +1911,6 @@ class Graphics
                         const arcX   = recode[idx++];
                         const arcY   = recode[idx++];
                         const radius = recode[idx++];
-                        context.moveTo(arcX + radius, arcY);
                         context.arc(arcX, arcY, radius, 0, 2 * Util.$PI);
                     }
                     break;

@@ -22,6 +22,7 @@ jobs:
           sudo safaridriver --enable
           safaridriver -p 0 &
       - run: npm install
+      - run: npm eslint
       - run: npm test
 
   windows-browser-test:
@@ -36,4 +37,5 @@ jobs:
         with:
           firefox-version: "84.0"
       - run: npm install
+      - run: npm eslint
       - run: npm test

@@ -166,7 +166,7 @@ class DisplayObjectContainer extends InteractiveObject
     }
     set mouseChildren (mouse_children)
     {
-        this._$mouseChildren = mouse_children;
+        this._$mouseChildren = !!mouse_children;
     }
 
     /**

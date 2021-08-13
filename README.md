@@ -1,4 +1,5 @@
-[![Build Status](https://github.com/Next2D/Player/actions/workflows/main.yml/badge.svg)](https://github.com/Next2D/Player/actions)
+[![UnitTest](https://github.com/Next2D/Player/actions/workflows/main.yml/badge.svg?branch=develop)](https://github.com/Next2D/Player/actions/workflows/main.yml)
+[![CodeQL](https://github.com/Next2D/Player/actions/workflows/codeql-analysis.yml/badge.svg?branch=develop)](https://github.com/Next2D/Player/actions/workflows/codeql-analysis.yml)
 [![license](https://img.shields.io/github/license/Next2D/Player)](https://github.com/Next2D/Player/blob/main/LICENSE)
 [![Docs](https://img.shields.io/badge/docs-online-blue.svg)](https://next2d.app/docs/player/index.html)
 
