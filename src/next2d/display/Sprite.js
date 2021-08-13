@@ -115,7 +115,7 @@ class Sprite extends DisplayObjectContainer
      * @description このスプライトのボタンモードを指定します。
      *              Specifies the button mode of this sprite.
      *
-     * @member  {string}
+     * @member  {boolean}
      * @default false
      * @public
      */
@@ -125,7 +125,7 @@ class Sprite extends DisplayObjectContainer
     }
     set buttonMode (button_mode)
     {
-        this._$buttonMode = button_mode;
+        this._$buttonMode = !!button_mode;
     }
 
     /**
@@ -224,7 +224,7 @@ class Sprite extends DisplayObjectContainer
     }
     set useHandCursor (use_hand_cursor)
     {
-        this._$useHandCursor = use_hand_cursor;
+        this._$useHandCursor = !!use_hand_cursor;
     }
 
     /**

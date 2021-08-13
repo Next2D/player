@@ -126,7 +126,7 @@ class Stage extends DisplayObjectContainer
     }
     set color (color)
     {
-        this._$color = Util.$toColorInt(color);
+        this._$color = Util.$clamp(Util.$toColorInt(color), 0, 0xffffff, 0xffffff);
         const player = this._$player;
         if (player) {
             const rgba = Util.$uintToRGBA(this._$color);

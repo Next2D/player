@@ -202,7 +202,6 @@ class TextFormat
     }
     set align (align)
     {
-        this._$align = null;
         switch (align) {
 
             case TextFormatAlign.CENTER:
@@ -212,6 +211,7 @@ class TextFormat
                 break;
 
             default:
+                this._$align = null;
                 break;
 
         }

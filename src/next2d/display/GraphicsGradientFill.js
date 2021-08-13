@@ -10,10 +10,10 @@
 class GraphicsGradientFill
 {
     /**
-     * @param  {string} type
-     * @param  {array}  colors
-     * @param  {array}  alphas
-     * @param  {array}  ratios
+     * @param  {string} [type=GradientType.LINEAR]
+     * @param  {array}  [colors=null]
+     * @param  {array}  [alphas=null]
+     * @param  {array}  [ratios=null]
      * @param  {Matrix} [matrix=null]
      * @param  {string} [spread_method=SpreadMethod.PAD]
      * @param  {string} [interpolation_method=InterpolationMethod.RGB]
@@ -23,66 +23,116 @@ class GraphicsGradientFill
      * @private
      */
     constructor(
-        type, colors, alphas, ratios, matrix = null,
-        spread_method = SpreadMethod.PAD,
+        type = GradientType.LINEAR, colors = null, alphas = null, ratios = null,
+        matrix = null, spread_method = SpreadMethod.PAD,
         interpolation_method = InterpolationMethod.RGB,
         focal_point_ratio = 0
     ) {
 
         /**
+         * @description 使用するグラデーションのタイプを指定する GradientType クラスの値です。
+         *              A value from the GradientType class that specifies which gradient type to use.
+         *
          * @type {string}
+         * @default GradientType.LINEAR
          * @private
          */
-        this._$type = `${type}`;
+        this._$type = GradientType.RADIAL === type
+            ? type
+            : GradientType.LINEAR;
 
         /**
+         * @description グラデーションで使用する RGB 16 進数カラー値の配列です。
+         *              An array of RGB hexadecimal color values to use in the gradient.
+         *
          * @type {array}
          * @default null
          * @private
          */
-        this._$colors = null;
+        this._$colors =  Util.$isArray(colors)
+            ? this._$toColorInt(colors)
+            : null;
 
         /**
+         * @description colors 配列内の各色に対応するアルファ値の配列です。
+         *              An array of alpha values for the corresponding colors in the colors array.
+         *
          * @type {array}
          * @default null
          * @private
          */
-        this._$alphas = null;
+        this._$alphas = Util.$isArray(alphas)
+            ? this._$toColorInt(alphas)
+            : null;
 
         /**
+         * @description 色分布の比率の配列です。
+         *              An array of color distribution ratios.
+         *
          * @type {array}
          * @default null
          * @private
          */
         this._$ratios = null;
+        if (Util.$isArray(ratios)) {
+            for (let idx = 0; idx < ratios.length; ++idx) {
+                ratios[idx] = Util.$clamp(ratios[idx], 0, 255, 0);
+            }
+            this._$ratios = ratios;
+        }
 
         /**
+         * @description Matrix クラスで定義される変換マトリックスです。
+         *              A transformation matrix as defined by the Matrix class.
+         *
          * @type {Matrix}
          * @default null
          * @private
          */
-        this._$matrix = null;
+        this._$matrix = matrix;
 
         /**
+         * @description 使用する spread メソッドを指定する SpreadMethod クラスの値です。
+         *              A value from the SpreadMethod class that specifies which spread method to use.
+         *
          * @type {string}
          * @default SpreadMethod.PAD
          * @private
          */
-        this._$spreadMethod = SpreadMethod.PAD;
+        switch (spread_method) {
+
+            case SpreadMethod.REFLECT:
+            case SpreadMethod.REPEAT:
+                this._$spreadMethod = spread_method;
+                break;
+
+            default:
+                this._$spreadMethod = SpreadMethod.PAD;
+                break;
+        }
 
         /**
+         * @description 使用する値を指定する InterpolationMethod クラスの値です。
+         *              A value from the InterpolationMethod class that specifies which value to use.
+         *
          * @type {string}
          * @default InterpolationMethod.RGB
          * @private
          */
-        this._$interpolationMethod = InterpolationMethod.RGB;
+        this._$interpolationMethod = interpolation_method === InterpolationMethod.LINEAR_RGB
+            ? interpolation_method
+            : InterpolationMethod.RGB;
 
         /**
+         * @description グラデーションの焦点の位置を制御する数値です。
+         *              A number that controls the location
+         *              of the focal point of the gradient.
+         *
          * @type {number}
          * @default null
          * @private
          */
-        this._$focalPointRatio = focal_point_ratio | 0;
+        this._$focalPointRatio = +focal_point_ratio || 0;
 
         /**
          * @type {array}
@@ -90,68 +140,6 @@ class GraphicsGradientFill
          * @private
          */
         this._$colorStops = null;
-
-        // set params
-        this.colors              = colors;
-        this.alphas              = alphas;
-        this.ratios              = ratios;
-        this.matrix              = matrix;
-        this.spreadMethod        = spread_method;
-        this.interpolationMethod = interpolation_method;
-    }
-
-    /**
-     * @description colors 配列内の各色に対応するアルファ値の配列です。
-     *              An array of alpha values for the corresponding colors in the colors array.
-     *
-     * @member  {array}
-     * @default null
-     * @public
-     */
-    get alphas ()
-    {
-        return this._$alphas;
-    }
-    set alphas (alphas)
-    {
-        this._$alphas = null;
-        if (Util.$isArray(alphas)) {
-
-            this._$alphas = Util.$getArray();
-
-            const length = alphas.length;
-            for (let idx = 0; idx < length; ++idx) {
-                this._$alphas[idx] = Util.$clamp(alphas[idx], 0, 1, 0);
-            }
-        }
-    }
-
-    /**
-     * @description グラデーションで使用する RGB 16 進数カラー値の配列です。
-     *              An array of RGB hexadecimal color values to use in the gradient.
-     *
-     * @member  {array}
-     * @default null
-     * @public
-     */
-    get colors ()
-    {
-        return this._$colors;
-    }
-    set colors (colors)
-    {
-        this._$colors = null;
-        if (Util.$isArray(colors)) {
-
-            this._$colors = Util.$getArray();
-
-            const length = colors.length;
-            for (let idx = 0; idx < length; ++idx) {
-                this._$colors[idx] = Util.$clamp(
-                    Util.$toColorInt(colors[idx]), 0, 0xffffff, 0xffffff
-                );
-            }
-        }
     }
 
     /**
@@ -195,152 +183,22 @@ class GraphicsGradientFill
     }
 
     /**
-     * @description グラデーションの焦点の位置を制御する数値です。
-     *              A number that controls the location
-     *              of the focal point of the gradient.
+     * @description カラー設定値をINTに変換
+     *              Convert color setting value to INT.
      *
-     * @member  {number}
-     * @default 0
-     * @public
-     */
-    get focalPointRatio ()
-    {
-        return this._$focalPointRatio;
-    }
-    set focalPointRatio (focal_point_ratio)
-    {
-        this._$focalPointRatio = focal_point_ratio;
-    }
-
-    /**
-     * @description 使用する値を指定する InterpolationMethod クラスの値です。
-     *              A value from the InterpolationMethod class that specifies which value to use.
-     *
-     * @member  {string}
-     * @default InterpolationMethod.RGB
-     * @public
-     */
-    get interpolationMethod ()
-    {
-        return this._$interpolationMethod;
-    }
-    set interpolationMethod (interpolation_method)
-    {
-        this._$interpolationMethod = InterpolationMethod.LINEAR_RGB === interpolation_method
-            ? interpolation_method
-            : InterpolationMethod.RGB;
-    }
-
-    /**
-     * @description Matrix クラスで定義される変換マトリックスです。
-     *              A transformation matrix as defined by the Matrix class.
-     *
-     * @member  {Matrix}
-     * @default null
-     * @public
-     */
-    get matrix ()
-    {
-        return this._$matrix;
-    }
-    set matrix (matrix)
-    {
-        this._$matrix = matrix instanceof Matrix ? matrix : null;
-    }
-
-    /**
-     * @description 色分布の比率の配列です。
-     *              An array of color distribution ratios.
-     *
-     * @member  {array}
-     * @default null
-     * @public
-     */
-    get ratios ()
-    {
-        return this._$ratios;
-    }
-    set ratios (ratios)
-    {
-        this._$ratios = null;
-
-        if (Util.$isArray(ratios)) {
-
-            this._$ratios = Util.$getArray();
-
-            const length = ratios.length;
-            for (let idx = 0; idx < length; ++idx) {
-                this._$ratios[idx] = Util.$clamp(ratios[idx], 0, 255, 0);
-            }
-        }
-    }
-
-    /**
-     * @description 使用する spread メソッドを指定する SpreadMethod クラスの値です。
-     *              A value from the SpreadMethod class that specifies which spread method to use.
-     *
-     * @member  {string}
-     * @default SpreadMethod.PAD
-     * @public
-     */
-    get spreadMethod ()
-    {
-        return this._$spreadMethod;
-    }
-    set spreadMethod (spread_method)
-    {
-        switch (spread_method) {
-
-            case SpreadMethod.REFLECT:
-            case SpreadMethod.REPEAT:
-                this._$spreadMethod = spread_method;
-                break;
-
-            default:
-                this._$spreadMethod = SpreadMethod.PAD;
-                break;
-        }
-    }
-
-    /**
-     * @description 使用するグラデーションのタイプを指定する GradientType クラスの値です。
-     *              A value from the GradientType class that specifies which gradient type to use.
-     *
-     * @member  {string}
-     * @default GradientType.LINEAR
-     * @public
-     */
-    get type ()
-    {
-        return this._$type;
-    }
-    set type (type)
-    {
-        this._$type = GradientType.RADIAL === type
-            ? type
-            : GradientType.LINEAR;
-    }
-
-    /**
-     * @description このクラスのもつパラメーターを全てコピーする
-     *              Copy all the parameters of this class
-     *
-     * @return {GraphicsGradientFill}
+     * @return {array}
      * @method
-     * @public
+     * @private
      */
-    clone ()
+    _$toColorInt (colors)
     {
-        return new GraphicsGradientFill(
-            this._$type,
-            this.colors.slice(0),
-            this.alphas.slice(0),
-            this.ratios.slice(0),
-            this._$matrix ? this._$matrix.clone() : null,
-            this._$spreadMethod,
-            this._$interpolationMethod,
-            this._$focalPointRatio
-        );
+        const length = colors.length;
+        for (let idx = 0; idx < length; ++idx) {
+            colors[idx] = Util.$clamp(
+                Util.$toColorInt(colors[idx]), 0, 0xffffff, 0xffffff
+            );
+        }
+        return colors;
     }
 
     /**
@@ -353,14 +211,12 @@ class GraphicsGradientFill
      */
     toArray ()
     {
-        const matrix = this._$matrix
-            ? this._$matrix._$matrix
-            : Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0;
-
         return Util.$getArray(
             this._$type,
             this.colorStops,
-            matrix,
+            this._$matrix
+                ? this._$matrix._$matrix
+                : Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0,
             this._$spreadMethod,
             this._$interpolationMethod,
             this._$focalPointRatio
