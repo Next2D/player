@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "test": "gulp test",
-    "eslint": "gulp eslint"
+    "lint": "gulp lint"
   },
   "directories": {
     "source": "./src/",
