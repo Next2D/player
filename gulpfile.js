@@ -50,6 +50,10 @@ function buildHeaderVersion()
         .pipe(gulp.dest("."));
 }
 
+/**
+ * @description ESLintを実行
+ * @public
+ */
 function lint ()
 {
     return gulp.src([
@@ -253,6 +257,6 @@ exports.default = gulp.series(
     browser,
     watchFiles
 );
-exports.test   = gulp.series(test);
-exports.jsdoc  = gulp.series(createHTML);
-exports.eslint = gulp.series(lint);
+exports.test  = gulp.series(test);
+exports.jsdoc = gulp.series(createHTML);
+exports.lint  = gulp.series(lint);
