@@ -51,7 +51,7 @@ function buildHeaderVersion()
         .pipe(gulp.dest("."));
 }
 
-function lint ()
+function eslint ()
 {
     return gulp.src([
         "src/util/Util.js",
@@ -177,7 +177,7 @@ function reload (done)
 function watchFiles ()
 {
     return gulp.watch("src/**/*.js")
-        .on("change", gulp.series(buildJavaScript, lint, reload));
+        .on("change", gulp.series(buildJavaScript, eslint, reload));
 }
 
 /**
@@ -254,6 +254,6 @@ exports.default = gulp.series(
     browser,
     watchFiles
 );
-exports.test  = gulp.series(test);
-exports.jsdoc = gulp.series(createHTML);
-exports.lint  = gulp.series(lint);
+exports.test   = gulp.series(test);
+exports.jsdoc  = gulp.series(createHTML);
+exports.eslint = gulp.series(eslint);
