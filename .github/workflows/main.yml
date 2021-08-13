@@ -22,8 +22,8 @@ jobs:
           sudo safaridriver --enable
           safaridriver -p 0 &
       - run: npm install
-      - run: npm eslint
-      - run: npm test
+      - run: npm run eslint
+      - run: npm run test
 
   windows-browser-test:
     runs-on: windows-latest
