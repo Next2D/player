@@ -26,7 +26,6 @@
     "no-const-assign": "error",
     "space-before-blocks": "error",
     "no-unexpected-multiline": "error",
-    "linebreak-style": ["error", "unix"],
     "object-curly-spacing": ["error", "always"],
     "quote-props": ["error", "always"],
     "max-len": ["error", {
