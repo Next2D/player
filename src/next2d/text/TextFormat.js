@@ -438,7 +438,7 @@ class TextFormat
     }
     set size (size)
     {
-        this._$size = size;
+        this._$size = size | 0;
         if (this._$textField) {
             this._$textField._$renew = true;
         }

@@ -45,20 +45,15 @@ describe("TextFormat.js property test", function()
         expect(textFormat.align).toBe(null);
         expect(textFormat.blockIndent).toBe(null);
         expect(textFormat.bold).toBe(null);
-        expect(textFormat.bullet).toBe(null);
         expect(textFormat.color).toBe(null);
         expect(textFormat.font).toBe(null);
         expect(textFormat.indent).toBe(null);
         expect(textFormat.italic).toBe(null);
-        expect(textFormat.kerning).toBe(null);
         expect(textFormat.leading).toBe(null);
         expect(textFormat.leftMargin).toBe(null);
-        expect(textFormat.letterSpacing).toBe(null);
+        expect(textFormat.letterSpacing).toBe(0);
         expect(textFormat.rightMargin).toBe(null);
-        expect(textFormat.tabStops).toBe(null);
-        expect(textFormat.target).toBe(null);
         expect(textFormat.underline).toBe(null);
-        expect(textFormat.url).toBe(null);
         expect(textFormat.size).toBe(null);
     });
 
@@ -66,8 +61,8 @@ describe("TextFormat.js property test", function()
     it("align test success case1", function ()
     {
         let textFormat = new TextFormat();
-        textFormat.align = TextFormat.CENTER;
-        expect(textFormat.align).toBe(TextFormat.CENTER);
+        textFormat.align = TextFormatAlign.CENTER;
+        expect(textFormat.align).toBe(TextFormatAlign.CENTER);
     });
 
     it("align test valid case1", function ()
@@ -104,7 +99,7 @@ describe("TextFormat.js property test", function()
     {
         let textFormat = new TextFormat();
         textFormat.bold = null;
-        expect(textFormat.bold).toBe(null);
+        expect(textFormat.bold).toBe(false);
     });
 
     // bullet
@@ -195,7 +190,7 @@ describe("TextFormat.js property test", function()
     {
         let textFormat = new TextFormat();
         textFormat.italic = null;
-        expect(textFormat.italic).toBe(null);
+        expect(textFormat.italic).toBe(false);
     });
 
     // kerning
@@ -315,7 +310,7 @@ describe("TextFormat.js property test", function()
     {
         let textFormat = new TextFormat();
         textFormat.underline = null;
-        expect(textFormat.underline).toBe(null);
+        expect(textFormat.underline).toBe(false);
     });
 
     // url
@@ -352,7 +347,7 @@ describe("TextFormat.js property test", function()
     {
         let textFormat = new TextFormat();
         textFormat.size = null;
-        expect(textFormat.size).toBe(null);
+        expect(textFormat.size).toBe(0);
     });
 
     it("size test valid case1", function ()
