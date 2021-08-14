@@ -138,12 +138,12 @@ describe("Easing.js method test", function()
 
     it("outCirc method test", function()
     {
-        expect(Easing.outCirc(0.1, 0.5, 0.5, 1)).toBe(1.0220153254455275);
+        expect(Easing.outCirc(0.1, 0.5, 0.5, 1)).toBe(0.7179449471770336);
     });
 
     it("inOutCirc method test", function()
     {
-        expect(Easing.inOutCirc(0.1, 0.5, 0.5, 1)).toBe(0.5050510257216823);
+        expect(Easing.inOutCirc(0.1, 0.5, 0.5, 1)).toBe(0.5003126955570227);
     });
 
     it("inBack method test", function()

@@ -367,7 +367,8 @@ class Easing
      */
     static outCirc (t, b, c, d)
     {
-        return Math.sqrt(1 - ((t /= d) - 1) * t) * c + b;
+        t /= d;
+        return Math.sqrt(1 - --t * t) * c + b;
     }
 
     /**
@@ -381,9 +382,9 @@ class Easing
      */
     static inOutCirc (t, b, c, d)
     {
-        return (t /= d / 2) < 1
-            ? (1 - Math.sqrt(1 - t * t)) * c / 2 + b
-            : (Math.sqrt(1 - (t -= 2) * t) + 1) * c / 2 + b;
+        return (t /= d * 2) < 1
+            ? (Math.sqrt(1 - t * t) - 1) / -2 * c + b
+            : (Math.sqrt(1 - (t -= 2) * t) + 1) / 2 * c + b;
     }
 
     /**
@@ -443,7 +444,6 @@ class Easing
      */
     static inElastic (t, b, c, d)
     {
-        // const c4 = (2 * Math.PI) / 3;
         return (t /= d) === 0
             ? b
             : t === 1
@@ -485,7 +485,7 @@ class Easing
             : t === 1
                 ? c + b
                 : t < 0.5
-                    ? -(Math.pow(2, (t *= 20) - 10) * Math.sin((t - 11.125) * (2 * Math.PI / 4.5))) / 2 * c + b
+                    ? -(Math.pow(2, 20  * t - 10) * Math.sin((20 * t - 11.125) * (2 * Math.PI / 4.5))) / 2    * c + b
                     : (Math.pow(2, -20 * t + 10) * Math.sin((20 * t - 11.125) * (2 * Math.PI / 4.5)) / 2 + 1) * c + b;
     }
 
@@ -504,7 +504,7 @@ class Easing
             return 7.5625 * t * t * c + b;
         }
         if (t < 2 / 2.75) {
-            return (7.5625 * (t -= 1.5 / 2.75) * t + 0.75) * c + b;
+            return (7.5625 * (t -= 1.5 / 2.75)   * t + 0.75) * c + b;
         }
         if (t < 2.5 / 2.75) {
             return (7.5625 * (t -= 2.25 / 2.75) * t + 0.9375) * c + b;
