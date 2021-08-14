@@ -394,17 +394,21 @@ class Transform
         // Matrix
         if (!this._$matrix) {
             this._$matrix = Util.$getMatrix(1, 0, 0, 1, 0, 0);
-        }
-
-        if (!matrix && object) {
-            matrix = object.matrix;
+            if (!matrix && object) {
+                matrix = object.matrix;
+            }
         }
 
         // update
-        this._$matrix.setTo(
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4], matrix[5]
-        );
+        if (matrix) {
+            const currentMatrix = this._$matrix._$matrix;
+            currentMatrix[0] = matrix[0];
+            currentMatrix[1] = matrix[1];
+            currentMatrix[2] = matrix[2];
+            currentMatrix[3] = matrix[3];
+            currentMatrix[4] = matrix[4];
+            currentMatrix[5] = matrix[5];
+        }
     }
 
     /**
@@ -422,21 +426,22 @@ class Transform
 
         if (!this._$colorTransform) {
             this._$colorTransform = Util.$getColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
+            if (!color_transform && object) {
+                color_transform = object.colorTransform;
+            }
         }
 
-        if (!color_transform && object) {
-            color_transform = object.colorTransform;
+        if (color_transform) {
+            const colorTransform = this._$colorTransform._$colorTransform;
+            colorTransform[0] = color_transform[0];
+            colorTransform[1] = color_transform[1];
+            colorTransform[2] = color_transform[2];
+            colorTransform[3] = color_transform[3];
+            colorTransform[4] = color_transform[4];
+            colorTransform[5] = color_transform[5];
+            colorTransform[6] = color_transform[6];
+            colorTransform[7] = color_transform[7];
         }
-
-        const colorTransform = this._$colorTransform._$colorTransform;
-        colorTransform[0] = color_transform[0];
-        colorTransform[1] = color_transform[1];
-        colorTransform[2] = color_transform[2];
-        colorTransform[3] = color_transform[3];
-        colorTransform[4] = color_transform[4];
-        colorTransform[5] = color_transform[5];
-        colorTransform[6] = color_transform[6];
-        colorTransform[7] = color_transform[7];
     }
 
     /**
@@ -508,10 +513,12 @@ class Transform
     _$setBlendMode (blend_mode = "", object = null)
     {
         if (blend_mode) {
+
+            this._$blendMode = blend_mode;
+
             this._$displayObject._$doChanged();
             Util.$isUpdated = true;
 
-            this._$blendMode = blend_mode;
             return ;
         }
 
