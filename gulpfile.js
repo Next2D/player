@@ -92,6 +92,7 @@ function lint ()
  */
 function buildJavaScript()
 {
+    // setup
     const preprocessContext = {};
 
     if (options.debugBuild) {
@@ -104,6 +105,12 @@ function buildJavaScript()
 
     if (options.glTrace) {
         preprocessContext.TRACE_GL = true;
+    }
+
+    if (options.prodBuild) {
+        preprocessContext.DEBUG          = false;
+        preprocessContext.GL_ERROR_CHECK = false;
+        preprocessContext.TRACE_GL       = false;
     }
 
     const build = gulp.src([

@@ -36,9 +36,14 @@ gulp
 gulp test
 ```
 
+## ESLint
+```
+gulp lint
+```
+
 ## Export minify
 ```
-gulp --debugBuild=true --prodBuild=true
+gulp --prodBuild=true
 ```
 
 ## License

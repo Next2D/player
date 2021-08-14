@@ -22,14 +22,18 @@ class SoundTransform
          * @default 1
          * @private
          */
-        this._$volume = volume;
+        this._$volume = 1;
 
         /**
          * @type {boolean}
          * @default false
          * @private
          */
-        this._$loop = loop;
+        this._$loop = false;
+
+        // setup
+        this.volume = volume;
+        this.loop   = loop;
     }
 
     /**
@@ -102,7 +106,7 @@ class SoundTransform
     }
     set loop (loop)
     {
-        this._$loop = loop;
+        this._$loop = !!loop;
     }
 
     /**
@@ -119,6 +123,6 @@ class SoundTransform
     }
     set volume (volume)
     {
-        this._$volume = volume;
+        this._$volume = Util.$clamp(+volume, 0, 1, 0);
     }
 }

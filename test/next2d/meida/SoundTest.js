@@ -1,41 +1,35 @@
-//
-//
-// describe("Sound.js getQualifiedClassName test", function()
-// {
-//
-//     it("getQualifiedClassName test public", function()
-//     {
-//         var swf2js = new Swf2js();
-//         var str = swf2js.flash.utils.getQualifiedClassName(new Sound());
-//         expect(str).toBe("flash.media::Sound");
-//     });
-//
-//     it("getQualifiedClassName test static", function()
-//     {
-//         var swf2js = new Swf2js();
-//         var str = swf2js.flash.utils.getQualifiedClassName(Sound);
-//         expect(str).toBe("flash.media::Sound");
-//     });
-//
-// });
-//
-//
-// describe("Sound.js toString test", function()
-// {
-//     it("toString test success", function()
-//     {
-//         var filter = new Sound();
-//         expect(filter.toString()).toBe("[object Sound]");
-//     });
-//
-// });
-//
-// describe("Sound.js static toString test", function()
-// {
-//
-//     it("static toString test", function()
-//     {
-//         expect(Util.$toString(Sound)).toBe("[class Sound]");
-//     });
-//
-// });
+
+describe("Sound.js namespace test", function()
+{
+
+    it("namespace test public", function()
+    {
+        const object = new Sound();
+        expect(object.namespace).toBe("next2d.media.Sound");
+    });
+
+    it("namespace test static", function()
+    {
+        expect(Sound.namespace).toBe("next2d.media.Sound");
+    });
+
+});
+
+describe("Sound.js toString test", function()
+{
+    it("toString test success", function()
+    {
+        expect(new Sound().toString()).toBe("[object Sound]");
+    });
+
+});
+
+describe("Sound.js static toString test", function()
+{
+
+    it("static toString test", function()
+    {
+        expect(Sound.toString()).toBe("[class Sound]");
+    });
+
+});

@@ -289,7 +289,7 @@ class Video extends DisplayObject
     }
     set smoothing (smoothing)
     {
-        this._$smoothing = smoothing;
+        this._$smoothing = !!smoothing;
     }
 
     /**
