@@ -236,7 +236,7 @@ class MovieClip extends Sprite
      */
     get currentLabels ()
     {
-        return !this._$labels ? null : Util.$Array.from(this._$labels);
+        return !this._$labels ? null : Util.$Array.from(this._$labels.values());
     }
 
     /**
@@ -372,7 +372,7 @@ class MovieClip extends Sprite
      *
      * @param  {FrameLabel} frame_label
      * @return {void}
-     * @private
+     * @public
      */
     addFrameLabel (frame_label)
     {
@@ -417,6 +417,8 @@ class MovieClip extends Sprite
             if (Util.$isNaN(frame | 0)) {
                 frame = this._$getFrameForLabel(frame);
             }
+
+            frame |= 0;
 
             const script = arguments[idx + 1];
             if (script && frame && this._$totalFrames >= frame) {

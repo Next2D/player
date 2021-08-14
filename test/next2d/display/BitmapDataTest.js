@@ -20,27 +20,18 @@
 //
 // });
 //
-// describe("BitmapData.js getQualifiedClassName test", function()
+// describe("BitmapData.js namespace test", function()
 // {
 //
-//     it("getQualifiedClassName test public", function()
+//     it("namespace test public", function()
 //     {
-//         Util.$stages  = [];
-//         Util.$players = [];
-//
-//         let player = new Player();
-//         Util.$currentPlayerId = player._$id;
-//
-//         let swf2js = new Swf2js();
-//         let str = swf2js.flash.utils.getQualifiedClassName(new BitmapData());
-//         expect(str).toBe("flash.display::BitmapData");
+//         const object = new BitmapData();
+//         expect(object.namespace).toBe("next2d.display.BitmapData");
 //     });
 //
-//     it("getQualifiedClassName test static", function()
+//     it("namespace test static", function()
 //     {
-//         let swf2js = new Swf2js();
-//         let str = swf2js.flash.utils.getQualifiedClassName(BitmapData);
-//         expect(str).toBe("flash.display::BitmapData");
+//         expect(BitmapData.namespace).toBe("next2d.display.BitmapData");
 //     });
 //
 // });

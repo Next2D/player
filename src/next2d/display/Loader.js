@@ -265,6 +265,7 @@ class Loader extends DisplayObjectContainer
                                     loaderInfo._$content._$parent = null;
                                     this.addChild(loaderInfo._$content);
 
+                                    // fixed logic
                                     loaderInfo._$content._$added      = false;
                                     loaderInfo._$content._$addedStage = false;
 
@@ -289,10 +290,7 @@ class Loader extends DisplayObjectContainer
                                 // });
                                 break;
 
-                            case URLLoaderDataFormat.STRING:
-                                break;
-
-                            case URLLoaderDataFormat.VARIABLES:
+                            default:
                                 break;
 
                         }
