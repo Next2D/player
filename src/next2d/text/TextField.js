@@ -239,6 +239,13 @@ class TextField extends InteractiveObject
          * @default false
          * @private
          */
+        this._$autoFontSize = false;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
         this._$textAppending = false;
 
         /**
@@ -282,6 +289,13 @@ class TextField extends InteractiveObject
          * @private
          */
         this._$imageData = null;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$scroll = false;
 
         /**
          * @type {string}
@@ -396,6 +410,24 @@ class TextField extends InteractiveObject
     static get IMAGE ()
     {
         return "image";
+    }
+
+    /**
+     * TODO
+     * @description テキストサイズの自動的な拡大 / 縮小および整列を制御します。
+     *              Controls automatic sizing and alignment of text size.
+     *
+     * @member {boolean}
+     * @default false
+     * @public
+     */
+    get autoFontSize ()
+    {
+        return this._$autoFontSize;
+    }
+    set autoFontSize (auto_font_size)
+    {
+        this._$autoFontSize = !!auto_font_size;
     }
 
     /**
@@ -688,6 +720,24 @@ class TextField extends InteractiveObject
     set restrict (restrict)
     {
         this._$restrict = `${restrict}`;
+    }
+
+    /**
+     * TODO
+     * @description スクロール機能のON/OFFの制御。
+     *              Control ON/OFF of the scroll function.
+     *
+     * @member {boolean}
+     * @default false
+     * @public
+     */
+    get scroll ()
+    {
+        return this._$scroll;
+    }
+    set scroll (scroll)
+    {
+        this._$scroll = !!scroll;
     }
 
     /**
@@ -1954,7 +2004,8 @@ class TextField extends InteractiveObject
             }
 
             // set height
-            this._$bounds.yMax = this.textHeight + 4 + this._$originBounds.yMin;
+            this._$bounds.yMax = this.textHeight
+                + 4 + this._$originBounds.yMin;
         }
     }
 
@@ -2101,8 +2152,21 @@ class TextField extends InteractiveObject
         this._$multiline    = character.multiline;
         this._$wordWrap     = character.wordWrap;
         this._$border       = character.border;
+        this._$scroll       = character.scroll;
         this._$bounds       = character.bounds;
-        this._$originBounds = character.bounds;
+        this._$originBounds = character.originBounds;
+
+        switch (character.autoSize) {
+
+            case 1:
+                this.autoSize = character.align;
+                break;
+
+            case 2:
+                this.autoFontSize = true;
+                break;
+
+        }
 
         this.text = character.text;
     }
@@ -2303,12 +2367,7 @@ class TextField extends InteractiveObject
             ctx.clip();
 
             ctx.beginPath();
-            if (!Util.$isSafari) {
-                const offsetY = 2 * Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-                ctx.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], 0, offsetY);
-            } else {
-                ctx.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], 0, 0);
-            }
+            ctx.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], 0, 0);
             this._$doDraw(ctx, matrix, multiColor, false, width / matrix[0]);
             ctx.restore();
 
@@ -2415,7 +2474,6 @@ class TextField extends InteractiveObject
      */
     _$doDraw (context, matrix, color_transform, is_clip, width)
     {
-
         // init
         const textData = this._$getTextData();
 
@@ -2499,16 +2557,21 @@ class TextField extends InteractiveObject
                     break;
 
                 case TextField.TEXT:
+                    {
+                        if (this.scrollV > currentV) {
+                            continue;
+                        }
 
-                    if (this.scrollV > currentV) {
-                        continue;
+                        let offsetY = offsetHeight - this._$heightTable[0];
+                        if (!Util.$isSafari) {
+                            offsetY += 2 * (obj.textFormat._$size / 12);
+                        }
+
+                        context.beginPath();
+                        context.textBaseline = "top";
+                        context.font = tf._$generateFontStyle();
+                        context.fillText(obj.text, offsetWidth, offsetY);
                     }
-
-                    context.beginPath();
-                    context.textBaseline = "top";
-                    context.font = tf._$generateFontStyle();
-                    context.fillText(obj.text, offsetWidth, offsetHeight - this._$heightTable[0]);
-
                     break;
 
                 case TextField.IMAGE:
