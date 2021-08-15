@@ -53,7 +53,7 @@ describe("TextField.js autoSize test", function()
         tf.text = "abcdefg";
 
         const x = tf.x | 0;
-        expect(x === 23 || x === 24).toBe(true);
+        expect(x >= 20 || 25 > x).toBe(true);
         expect(tf.y).toBe(0);
     });
 
