@@ -66,17 +66,17 @@ class TextFieldType
     }
 
     /**
-     * @description ダイナミックな TextField を指定するために使用されます。
-     *              Used to specify a dynamic TextField.
+     * @description input TextField を指定するために使用されます。
+     *              Used to specify an input TextField.
      *
      * @return  {string}
-     * @default dynamic
+     * @default input
      * @const
      * @static
      */
-    static get DYNAMIC ()
+    static get INPUT ()
     {
-        return "dynamic";
+        return "input";
     }
 
     /**

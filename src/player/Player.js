@@ -1358,7 +1358,7 @@ class Player
                     switch (true) {
 
                         case target instanceof TextField:
-                            if (target._$type === TextFieldType.DYNAMIC) {
+                            if (target._$type === TextFieldType.INPUT) {
                                 canPointerText = true;
                             }
                             break;
@@ -2143,7 +2143,7 @@ class Player
 
                             if (target instanceof TextField) {
 
-                                if (target._$type === TextFieldType.DYNAMIC) {
+                                if (target._$type === TextFieldType.INPUT) {
                                     canPointerText = true;
                                     break;
                                 }

@@ -1609,7 +1609,7 @@ class DisplayObjectContainer extends InteractiveObject
                         switch (true) {
 
                             case instance instanceof TextField:
-                                if (instance._$type === TextFieldType.DYNAMIC) {
+                                if (instance._$type === TextFieldType.INPUT) {
                                     options.pointer = "text";
                                 }
                                 break;

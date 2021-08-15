@@ -455,7 +455,8 @@ class DisplayObject extends EventDispatcher
     }
     set height (height)
     {
-        if (height > -1) {
+        height = +height;
+        if (!Util.$isNaN(height) && height > -1) {
 
             const bounds = this.rotation
                 ? Util.$boundsMatrix(this._$getBounds(null), this._$transform._$rawMatrix())
@@ -870,7 +871,8 @@ class DisplayObject extends EventDispatcher
     }
     set width (width)
     {
-        if (width > -1) {
+        width = +width;
+        if (!Util.$isNaN(width) && width > -1) {
 
             const bounds = this.rotation
                 ? Util.$boundsMatrix(this._$getBounds(null), this._$transform._$rawMatrix())

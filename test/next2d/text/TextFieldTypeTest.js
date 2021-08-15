@@ -40,7 +40,7 @@ describe("TextFieldType.js property test", function()
 
     it("DYNAMIC test", function ()
     {
-        expect(TextFieldType.DYNAMIC).toBe("dynamic");
+        expect(TextFieldType.INPUT).toBe("input");
     });
 
     it("INPUT test", function ()

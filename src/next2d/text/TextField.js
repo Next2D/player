@@ -296,13 +296,6 @@ class TextField extends InteractiveObject
          * @private
          */
         this._$textHeightTable = null;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$actTotalWidth = null;
     }
 
     /**
@@ -450,7 +443,7 @@ class TextField extends InteractiveObject
     }
     set background (background)
     {
-        this._$background = background;
+        this._$background = !!background;
         this._$reset();
     }
 
@@ -468,7 +461,9 @@ class TextField extends InteractiveObject
     }
     set backgroundColor (background_color)
     {
-        this._$backgroundColor = background_color | 0;
+        this._$backgroundColor = Util.$clamp(
+            Util.$toColorInt(background_color), 0, 0xffffff, 0xffffff
+        );
         this._$reset();
     }
 
@@ -486,7 +481,7 @@ class TextField extends InteractiveObject
     }
     set border (border)
     {
-        this._$border = border;
+        this._$border = !!border;
         this._$reset();
     }
 
@@ -504,7 +499,9 @@ class TextField extends InteractiveObject
     }
     set borderColor (border_color)
     {
-        this._$borderColor = border_color | 0;
+        this._$borderColor = Util.$clamp(
+            Util.$toColorInt(border_color), 0, 0xffffff, 0
+        );
         this._$reset();
     }
 
@@ -545,7 +542,7 @@ class TextField extends InteractiveObject
     set htmlText (html_text)
     {
         if (this._$htmlText !== html_text) {
-            this._$htmlText        = html_text;
+            this._$htmlText        = `${html_text}`;
             this._$rawHtmlText     = "";
             this._$text            = "";
             this._$isHTML          = true;
@@ -626,7 +623,7 @@ class TextField extends InteractiveObject
                 return this._$maxScrollV;
             }
 
-            let textHeight = this._$textHeightTable[length - 1] * 2;
+            let textHeight = 0;
 
             let idx = 0;
             while (length > idx) {
@@ -656,7 +653,7 @@ class TextField extends InteractiveObject
     }
     set multiline (multiline)
     {
-        this._$multiline = multiline;
+        this._$multiline = !!multiline;
         this._$reset();
     }
 
@@ -690,7 +687,7 @@ class TextField extends InteractiveObject
     }
     set restrict (restrict)
     {
-        this._$restrict = restrict;
+        this._$restrict = `${restrict}`;
     }
 
     /**
@@ -762,7 +759,7 @@ class TextField extends InteractiveObject
     }
     set selectable (selectable)
     {
-        this._$selectable = selectable;
+        this._$selectable = !!selectable;
     }
 
     /**
@@ -858,6 +855,10 @@ class TextField extends InteractiveObject
      */
     get textHeight ()
     {
+        if (this.text === "") {
+            return 0;
+        }
+
         if (this._$textHeight === null) {
 
             // setup
@@ -923,7 +924,7 @@ class TextField extends InteractiveObject
             this._$type     = type;
             this._$textarea = null;
         } else {
-            this._$type = TextFieldType.DYNAMIC;
+            this._$type = TextFieldType.INPUT;
         }
     }
 
@@ -941,7 +942,7 @@ class TextField extends InteractiveObject
     }
     set wordWrap (word_wrap)
     {
-        this._$wordWrap = word_wrap;
+        this._$wordWrap = !!word_wrap;
     }
 
     /**
@@ -953,22 +954,24 @@ class TextField extends InteractiveObject
      */
     get width ()
     {
-        // this._$initBounds();
         return super.width;
     }
     set width (width)
     {
-        const bounds = this._$getBounds(null);
+        width = +width;
+        if (!Util.$isNaN(width) && width > -1) {
+            const bounds = this._$getBounds(null);
 
-        const xMin = Util.$abs(bounds.xMin);
-        this._$originBounds.xMax = width + xMin;
-        this._$originBounds.xMin = xMin;
-        this._$bounds.xMax = this._$originBounds.xMax;
-        this._$bounds.xMin = this._$originBounds.xMin;
+            const xMin = Util.$abs(bounds.xMin);
+            this._$originBounds.xMax = width + xMin;
+            this._$originBounds.xMin = xMin;
+            this._$bounds.xMax = this._$originBounds.xMax;
+            this._$bounds.xMin = this._$originBounds.xMin;
 
-        super.width = width;
+            super.width = width;
 
-        this._$reload();
+            this._$reload();
+        }
     }
 
     /**
@@ -980,20 +983,22 @@ class TextField extends InteractiveObject
      */
     get height ()
     {
-        // this._$initBounds();
         return super.height;
     }
     set height (height)
     {
-        const bounds = this._$getBounds(null);
+        height = +height;
+        if (!Util.$isNaN(height) && height > -1) {
+            const bounds = this._$getBounds(null);
 
-        const yMin = Util.$abs(bounds.yMin);
-        this._$originBounds.yMax = height + yMin;
-        this._$bounds.yMax = this._$originBounds.yMax;
-        this._$bounds.yMin = this._$originBounds.yMin;
-        super.height = height;
+            const yMin = Util.$abs(bounds.yMin);
+            this._$originBounds.yMax = height + yMin;
+            this._$bounds.yMax = this._$originBounds.yMax;
+            this._$bounds.yMin = this._$originBounds.yMin;
+            super.height = height;
 
-        this._$reload();
+            this._$reload();
+        }
     }
 
     /**
@@ -1015,7 +1020,7 @@ class TextField extends InteractiveObject
     set x (x)
     {
         const bounds = this._$getBounds(null);
-        super.x = x - bounds.xMin / 20;
+        super.x = x - bounds.xMin;
     }
 
     /**
@@ -1112,6 +1117,45 @@ class TextField extends InteractiveObject
         }
 
         return textFormat;
+    }
+
+    /**
+     * @description lineIndex パラメーターで指定された行のテキストを返します。
+     *              Returns the text of the line specified by the lineIndex parameter.
+     *
+     * @param  {number} line_index
+     * @return {string}
+     * @public
+     */
+    getLineText (line_index)
+    {
+        if (!this._$text && !this._$htmlText) {
+            return "";
+        }
+
+        line_index |= 0;
+        let lineText = "";
+        const textData = this._$getTextData();
+        for (let idx = 0; idx < textData.length; idx++) {
+
+            const obj = textData[idx];
+
+            if (obj.yIndex > line_index) {
+                break;
+            }
+
+            if (obj.yIndex !== line_index) {
+                continue;
+            }
+
+            if (obj.mode !== TextField.TEXT) {
+                continue;
+            }
+
+            lineText += obj.text;
+        }
+
+        return lineText;
     }
 
     /**
@@ -1260,19 +1304,19 @@ class TextField extends InteractiveObject
                     Util.$P_TAG.insertAdjacentHTML("afterbegin", htmlText);
                 }
 
-                // init
-                this._$totalWidth         = 0;
-                this._$actTotalWidth      = 0;
-                this._$heightTable[0]     = 0;
-                this._$textHeightTable[0] = 0;
-                this._$widthTable[0]      = 0;
-
+                // setup
                 let tf = this._$decisionTextFormat;
                 if (this._$textData.length in this._$textFormatTable) {
                     const tft = this._$textFormatTable[this._$textData.length]._$clone();
                     tft._$merge(tf);
                     tf = tft;
                 }
+
+                // init
+                this._$totalWidth         = 0;
+                this._$heightTable[0]     = 0;
+                this._$textHeightTable[0] = this._$getTextHeight(tf);
+                this._$widthTable[0]      = 0;
 
                 const obj = {
                     "mode"      : TextField.BREAK,
@@ -1297,8 +1341,7 @@ class TextField extends InteractiveObject
                 for (let idx = 0; idx < length; ++idx) {
 
                     // reset
-                    this._$totalWidth    = 0;
-                    this._$actTotalWidth = 0;
+                    this._$totalWidth = 0;
 
                     let tf = this.defaultTextFormat;
 
@@ -1307,7 +1350,7 @@ class TextField extends InteractiveObject
                         : 0;
 
                     this._$heightTable[yIndex]     = 0;
-                    this._$textHeightTable[yIndex] = 0;
+                    this._$textHeightTable[yIndex] = this._$getTextHeight(tf);
                     this._$widthTable[yIndex]      = 0;
 
                     if (yIndex) {
@@ -1386,10 +1429,7 @@ class TextField extends InteractiveObject
                         }
 
                         // reset
-                        const offsetX = this._$getImageOffsetX();
-
-                        this._$totalWidth    = offsetX;
-                        this._$actTotalWidth = offsetX;
+                        this._$totalWidth = this._$getImageOffsetX();
 
                         const yIndex = this._$heightTable.length;
 
@@ -1494,10 +1534,7 @@ class TextField extends InteractiveObject
                         this._$widthTable[yIndex]      = 0;
 
                         // reset
-                        const offsetX = this._$getImageOffsetX();
-
-                        this._$totalWidth    = offsetX;
-                        this._$actTotalWidth = offsetX;
+                        this._$totalWidth = this._$getImageOffsetX();
 
                         // new clone
                         tf._$indent = 0;
@@ -1627,22 +1664,20 @@ class TextField extends InteractiveObject
             }
 
             let leading    = yIndex ? tf._$leading : 0;
-            let actWidth   = 0;
             let width      = 0;
             let height     = 0;
             let textHeight = 0;
             let wrapObj    = null;
 
             Util.$textContext.font = tf._$generateFontStyle();
-            width    = Util.$textContext.measureText(obj.text).width + tf._$letterSpacing;
-            actWidth = width;
+            width = Util.$textContext.measureText(obj.text).width + tf._$letterSpacing;
 
             height     = this._$getTextHeight(tf);
             textHeight = height + leading;
             obj.height = height;
 
             if (breakCode ||
-                this._$wordWrap && this._$actTotalWidth + actWidth > maxWidth
+                this._$wordWrap && this._$totalWidth + width > maxWidth
             ) {
 
                 // add y index
@@ -1654,10 +1689,7 @@ class TextField extends InteractiveObject
                 this._$textHeightTable[yIndex] = this._$textHeightTable[yIndex - 1];
 
                 // reset
-                const offsetX = this._$getImageOffsetX();
-
-                this._$totalWidth    = offsetX;
-                this._$actTotalWidth = offsetX;
+                this._$totalWidth = this._$getImageOffsetX();
 
                 // new clone
                 tf = tf._$clone();
@@ -1740,8 +1772,7 @@ class TextField extends InteractiveObject
                         targetObj.x      = this._$totalWidth;
                         targetObj.yIndex = yIndex;
 
-                        this._$totalWidth    += targetObj.width;
-                        this._$actTotalWidth += targetObj.width;
+                        this._$totalWidth += targetObj.width;
                     }
 
                 } else {
@@ -1752,12 +1783,11 @@ class TextField extends InteractiveObject
             if (!breakCode) {
 
                 // width data
-                obj.width         = width;
-                obj.x             = this._$totalWidth;
-                this._$totalWidth = this._$totalWidth + width;
+                obj.width          = width;
+                obj.x              = this._$totalWidth;
+                this._$totalWidth += width;
 
-                this._$actTotalWidth     += actWidth;
-                this._$widthTable[yIndex] = Util.$max(this._$widthTable[yIndex], this._$actTotalWidth);
+                this._$widthTable[yIndex] = Util.$max(this._$widthTable[yIndex], this._$totalWidth);
 
                 // height data
                 this._$heightTable[yIndex]     = Util.$max(this._$heightTable[yIndex], height);
@@ -1857,7 +1887,6 @@ class TextField extends InteractiveObject
         this._$widthTable      = null;
         this._$objectTable     = null;
         this._$totalWidth      = null;
-        this._$actTotalWidth   = null;
         this._$maxScrollH      = null;
         this._$maxScrollV      = null;
 
@@ -1925,7 +1954,7 @@ class TextField extends InteractiveObject
             }
 
             // set height
-            this._$bounds.yMax = this.textHeight + 2 + this._$originBounds.yMin;
+            this._$bounds.yMax = this.textHeight + 4 + this._$originBounds.yMin;
         }
     }
 

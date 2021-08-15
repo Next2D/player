@@ -275,7 +275,9 @@ class TextFormat
     }
     set color (color)
     {
-        this._$color = Util.$clamp(color, 0, 0xffffffff, 0);
+        this._$color = Util.$clamp(
+            Util.$toColorInt(color), 0, 0xffffff, 0
+        );
         if (this._$textField) {
             this._$textField._$renew = true;
         }
@@ -496,7 +498,7 @@ class TextFormat
         this._$blockIndent   = 0;
         this._$bold          = false;
         this._$color         = 0;
-        this._$font          = "sans-serif";
+        this._$font          = "Times New Roman";
         this._$indent        = 0;
         this._$italic        = false;
         this._$leading       = 0;

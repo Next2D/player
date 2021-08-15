@@ -997,7 +997,7 @@ describe("DisplayObject.js getBounds test", function()
         // TODO pipeline
         const width = bounds.width | 0;
         expect(width >= 17 && width <= 20).toBe(true);
-        expect(bounds.height | 0).toBe(52);
+        expect(bounds.height | 0).toBe(54);
     });
 
     it("TextField none text and autoSize case3", function ()
