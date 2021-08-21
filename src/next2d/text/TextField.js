@@ -1970,7 +1970,7 @@ class TextField extends InteractiveObject
         if (this._$autoSize !== TextFieldAutoSize.NONE) {
 
             const tf = this._$defaultTextFormat;
-            const width = this.textWidth + 4
+            const width = this.textWidth + 2
                 + tf._$leftMargin + tf._$rightMargin;
 
             if (this._$wordWrap) {
@@ -2037,7 +2037,7 @@ class TextField extends InteractiveObject
 
             case textFormat._$align === TextFormatAlign.RIGHT: // format RIGHT
             case this._$autoSize === TextFieldAutoSize.RIGHT: // autoSize RIGHT
-                return Util.$max(0, width - indent - totalWidth - textFormat._$rightMargin);
+                return Util.$max(0, width - indent - totalWidth - textFormat._$rightMargin - 2);
 
             // autoSize LEFT
             // format LEFT
@@ -2148,13 +2148,21 @@ class TextField extends InteractiveObject
 
         }
 
-        this._$type         = character.inputType;
-        this._$multiline    = character.multiline;
-        this._$wordWrap     = character.wordWrap;
-        this._$border       = character.border;
-        this._$scroll       = character.scroll;
-        this._$bounds       = character.bounds;
-        this._$originBounds = character.originBounds;
+        this._$type      = character.inputType;
+        this._$multiline = character.multiline;
+        this._$wordWrap  = character.wordWrap;
+        this._$border    = character.border;
+        this._$scroll    = character.scroll;
+
+        // bounds
+        this._$bounds.xMin       = character.originBounds.xMin;
+        this._$bounds.xMax       = character.originBounds.xMax;
+        this._$bounds.yMin       = character.originBounds.yMin;
+        this._$bounds.yMax       = character.originBounds.yMax;
+        this._$originBounds.xMin = character.originBounds.xMin;
+        this._$originBounds.xMax = character.originBounds.xMax;
+        this._$originBounds.yMin = character.originBounds.yMin;
+        this._$originBounds.yMax = character.originBounds.yMax;
 
         switch (character.autoSize) {
 
