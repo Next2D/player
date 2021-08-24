@@ -1970,7 +1970,7 @@ class TextField extends InteractiveObject
         if (this._$autoSize !== TextFieldAutoSize.NONE) {
 
             const tf = this._$defaultTextFormat;
-            const width = this.textWidth + 2
+            const width = this.textWidth + 4
                 + tf._$leftMargin + tf._$rightMargin;
 
             if (this._$wordWrap) {
