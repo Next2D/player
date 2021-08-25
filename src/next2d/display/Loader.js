@@ -243,41 +243,38 @@ class Loader extends DisplayObjectContainer
 
                             case URLLoaderDataFormat.JSON:
                                 {
-                                    loaderInfo._$data = JSON.parse(
+                                    const json = JSON.parse(
                                         event.target.responseText
                                     );
 
-                                    const root = loaderInfo._$data.characters[0];
+                                    if (json.type === "zlib") {
 
-                                    // setup
-                                    loaderInfo._$content = new MovieClip();
+                                        if (Util.$unzipWorkerActive) {
 
-                                    // build root
-                                    loaderInfo._$content._$build({
-                                        "characterId": 0,
-                                        "clipDepth": 0,
-                                        "depth": 0,
-                                        "endFrame": root.controller.length,
-                                        "startFrame": 1
-                                    }, this);
+                                            Util.$unzipQueues.push({
+                                                "json": json,
+                                                "scope": this
+                                            });
 
-                                    // fixed logic
-                                    loaderInfo._$content._$parent = null;
-                                    this.addChild(loaderInfo._$content);
+                                            return ;
+                                        }
 
-                                    // fixed logic
-                                    loaderInfo._$content._$added      = false;
-                                    loaderInfo._$content._$addedStage = false;
+                                        Util.$unzipWorkerActive = true;
 
-                                    const player = Util.$currentPlayer();
+                                        if (!Util.$unzipWorker) {
+                                            Util.$unzipWorker = new Worker(Util.$unzipURL);
+                                        }
 
-                                    // to event
-                                    player._$loaders.push(loaderInfo);
+                                        const buffer = new Uint8Array(json.buffer);
+                                        Util.$unzipWorker.onmessage = Util.$unzipHandler.bind(this);
+                                        Util.$unzipWorker.postMessage(buffer, [buffer.buffer]);
 
-                                    // next
-                                    if (player._$loadStatus === Player.LOAD_START) {
-                                        player._$loadStatus = Player.LOAD_END;
+                                    } else {
+
+                                        this._$build(json);
+
                                     }
+
                                 }
                                 break;
 
@@ -309,5 +306,48 @@ class Loader extends DisplayObjectContainer
                 }.bind(this)
             }
         });
+    }
+
+    /**
+     * @param  {object} object
+     * @private
+     */
+    _$build (object)
+    {
+        const loaderInfo = this.contentLoaderInfo;
+
+        loaderInfo._$data = object;
+
+        const root = object.characters[0];
+
+        // setup
+        loaderInfo._$content = new MovieClip();
+
+        // build root
+        loaderInfo._$content._$build({
+            "characterId": 0,
+            "clipDepth": 0,
+            "depth": 0,
+            "endFrame": root.controller.length,
+            "startFrame": 1
+        }, this);
+
+        // fixed logic
+        loaderInfo._$content._$parent = null;
+        this.addChild(loaderInfo._$content);
+
+        // fixed logic
+        loaderInfo._$content._$added      = false;
+        loaderInfo._$content._$addedStage = false;
+
+        const player = Util.$currentPlayer();
+
+        // to event
+        player._$loaders.push(loaderInfo);
+
+        // next
+        if (player._$loadStatus === Player.LOAD_START) {
+            player._$loadStatus = Player.LOAD_END;
+        }
     }
 }

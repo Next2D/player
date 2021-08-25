@@ -11,10 +11,11 @@ const minimist    = require("minimist");
 const replace     = require("gulp-replace");
 const rename      = require("gulp-rename");
 const eslint      = require("gulp-eslint");
+const fs = require("fs");
 
 const options = minimist(process.argv.slice(2), {
-    "string": ["distPath", "version"],
     "boolean": ["debugBuild", "prodBuild", "glErrorCheck", "glTrace"],
+    "string": ["distPath", "version"],
     "default": {
         "debugBuild": true,
         "prodBuild": false,
@@ -26,7 +27,7 @@ const options = minimist(process.argv.slice(2), {
 });
 
 /**
- * @description 書き出した時間でバージョンを書き出す
+ * @description フッターの書き出し
  * @public
  */
 function buildFooterVersion()
@@ -38,7 +39,7 @@ function buildFooterVersion()
 }
 
 /**
- * @description 書き出した時間でバージョンを書き出す
+ * @description ヘッダーの書き出し
  * @public
  */
 function buildHeaderVersion()
@@ -47,6 +48,38 @@ function buildHeaderVersion()
         .pipe(replace("###BUILD_VERSION###", options.version))
         .pipe(replace("###BUILD_YEAR###", new Date().getFullYear()))
         .pipe(rename("src/Header.build.file"))
+        .pipe(gulp.dest("."));
+}
+
+/**
+ * @description Workerファイルをminifyにして書き出し
+ * @public
+ */
+function buildWorkerFile ()
+{
+    return gulp.src([
+        "src/worker/*.js",
+        "!src/worker/*.min.js"
+    ])
+        .pipe(uglify())
+        .pipe(rename({ "extname": ".min.js" }))
+        .pipe(gulp.dest("src/worker"));
+}
+
+/**
+ * @description Util.jsの書き出し
+ * @public
+ */
+function buildUtilFile ()
+{
+    return gulp.src("src/util/Util.js")
+        .pipe(replace("###UNZIP_WORKER###",
+            fs.readFileSync("src/worker/UnzipWorker.min.js", "utf8")
+                .replace(/\\/g, "\\\\")
+                .replace(/"/g, "\\\"")
+                .replace(/\n/g, ""))
+        )
+        .pipe(rename("src/util/Util.replaced.js"))
         .pipe(gulp.dest("."));
 }
 
@@ -115,7 +148,7 @@ function buildJavaScript()
 
     const build = gulp.src([
         "src/Header.build.file",
-        "src/util/Util.js",
+        "src/util/Util.replaced.js",
         "src/next2d/events/*.js",
         "src/next2d/geom/*.js",
         "src/next2d/display/DisplayObject.js",
@@ -186,8 +219,12 @@ function reload (done)
  */
 function watchFiles ()
 {
-    return gulp.watch("src/**/*.js")
-        .on("change", gulp.series(buildJavaScript, lint, reload));
+    return gulp.watch([
+        "src/**/*.js",
+        "!src/worker/**/*min.js",
+        "!src/util/Util.replaced.js"
+    ])
+        .on("change", gulp.series(lint, buildWorkerFile, buildUtilFile, buildJavaScript, reload));
 }
 
 /**
@@ -201,6 +238,7 @@ function createHTML (done)
             "src/player/**/*.js",
             "!src/util/*.js",
             "!src/webgl/**/*.js",
+            "!src/worker/**/*.js",
             "README.md"
         ], { "read": false })
         .pipe(jsdoc({
@@ -260,6 +298,8 @@ function test (done)
 exports.default = gulp.series(
     buildHeaderVersion,
     buildFooterVersion,
+    buildWorkerFile,
+    buildUtilFile,
     buildJavaScript,
     browser,
     watchFiles

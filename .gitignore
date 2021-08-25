@@ -8,3 +8,5 @@ Header.build.file
 next2d.js
 json
 coverage
+src/util/Util.replaced.js
+src/worker/*.min.js

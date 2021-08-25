@@ -1921,6 +1921,53 @@ Util.$getClass = function (symbol)
 };
 
 /**
+ * @type {string}
+ * @static
+ */
+Util.$unzipURL = URL.createObjectURL(
+    new Blob(["###UNZIP_WORKER###"], { "type": "text/javascript" })
+);
+
+/**
+ * @default null
+ * @type {Worker}
+ * @static
+ */
+Util.$unzipWorker = null;
+
+/**
+ * @type {array}
+ * @static
+ */
+Util.$unzipQueues = [];
+
+/**
+ * @type {boolean}
+ * @static
+ */
+Util.$unzipWorkerActive = false;
+
+/**
+ *
+ * @param  {MessageEvent} event
+ * @method
+ * @static
+ */
+Util.$unzipHandler = function (event)
+{
+    this._$build(event.data);
+
+    if (Util.$unzipQueues.length) {
+
+        const object = Util.$unlzmaQueues.pop();
+
+        const buffer = new Uint8Array(object.json.buffer);
+        Util.$unzipWorker.onmessage = Util.$unzipHandler.bind(object.scope);
+        Util.$unzipWorker.postMessage(buffer, [buffer.buffer]);
+    }
+};
+
+/**
  * @param  {Next2D} object
  * @return {void}
  * @method
