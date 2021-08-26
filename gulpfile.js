@@ -292,7 +292,11 @@ function test (done)
     new TestServer({
         "configFile": __dirname + "/karma.conf.js",
         "singleRun": true
-    }, done).start();
+    }, function (error)
+    {
+        console.log(error);
+        done();
+    }).start();
 }
 
 exports.default = gulp.series(

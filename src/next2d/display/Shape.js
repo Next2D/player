@@ -121,6 +121,36 @@ class Shape extends DisplayObject
 
         if (character.recodes) {
 
+            if (character.bitmapId) {
+
+                const loaderInfo = parent._$loaderInfo;
+                const bitmap = loaderInfo._$data.characters[character.bitmapId];
+
+                const width  = Util.$abs(bitmap.bounds.xMax - bitmap.bounds.xMin);
+                const height = Util.$abs(bitmap.bounds.yMax - bitmap.bounds.yMin);
+
+                const bitmapData = new BitmapData(width, height, true, 0);
+                if (!bitmap._$buffer) {
+                    bitmap._$buffer = new Uint8Array(bitmap.buffer);
+                    Util.$poolArray(bitmap.buffer);
+                    bitmap.buffer = null;
+                }
+                bitmapData._$buffer = bitmap._$buffer;
+
+                graphics
+                    .beginBitmapFill(bitmapData, null, false);
+
+            } else {
+
+                graphics._$recode = Util.$getArray();
+
+            }
+
+            const recodes = character.recodes;
+            for (let idx = 0; idx < recodes.length; ++idx) {
+                graphics._$recode.push(recodes[idx]);
+            }
+
             graphics._$recode = character.recodes.slice(0);
 
         } else {
