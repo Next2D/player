@@ -14,13 +14,13 @@ class GraphicsBitmapFill
     /**
      * @param {BitmapData} bitmap_data
      * @param {Matrix}     [matrix=null]
-     * @param {boolean}    [repeat=false]
+     * @param {boolean}    [repeat=true]
      * @param {boolean}    [smooth=false]
      *
      * @constructor
      * @private
      */
-    constructor (bitmap_data, matrix = null, repeat = false, smooth = false)
+    constructor (bitmap_data, matrix = null, repeat = true, smooth = false)
     {
         /**
          * @description 透明または不透明なビットマップイメージです。
@@ -48,7 +48,7 @@ class GraphicsBitmapFill
          *              Specifies whether to repeat the bitmap image in a tiled pattern.
          *
          * @type {boolean}
-         * @default false
+         * @default true
          * @private
          */
         this._$repeat = !!repeat;

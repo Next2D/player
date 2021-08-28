@@ -5,7 +5,7 @@ describe("GraphicsBitmapFill.js repeat test", function()
     it("default test case1", function()
     {
         let gbf = new GraphicsBitmapFill();
-        expect(gbf._$repeat).toBe(false);
+        expect(gbf._$repeat).toBe(true);
     });
 
     it("default test case2", function()
@@ -17,7 +17,7 @@ describe("GraphicsBitmapFill.js repeat test", function()
     it("default test case3", function()
     {
         let gbf = new GraphicsBitmapFill(null, null, undefined);
-        expect(gbf._$repeat).toBe(false);
+        expect(gbf._$repeat).toBe(true);
     });
 
     it("default test case4", function()

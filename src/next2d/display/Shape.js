@@ -19,18 +19,25 @@ class Shape extends DisplayObject
         super();
 
         /**
-         * @type {Graphics|null}
+         * @type {Graphics}
          * @default null
          * @private
          */
         this._$graphics = null;
 
         /**
-         * @type {object|null}
+         * @type {object}
          * @default null
          * @private
          */
         this._$bounds = null;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$bitmapId = 0;
     }
 
     /**
@@ -123,6 +130,8 @@ class Shape extends DisplayObject
 
             if (character.bitmapId) {
 
+                this._$bitmapId = character.bitmapId;
+
                 const loaderInfo = parent._$loaderInfo;
                 const bitmap = loaderInfo._$data.characters[character.bitmapId];
 
@@ -137,21 +146,27 @@ class Shape extends DisplayObject
                 }
                 bitmapData._$buffer = bitmap._$buffer;
 
-                graphics
-                    .beginBitmapFill(bitmapData, null, false);
+                // setup
+                graphics._$recode = Util.$getArray();
+
+                // clone
+                const recodes = character.recodes;
+                const length  = recodes.length - 6;
+                for (let idx = 0; idx < length; ++idx) {
+                    graphics._$recode.push(recodes[idx]);
+                }
+
+                // add Bitmap Fill
+                graphics._$recode.push(Graphics.BITMAP_FILL);
+                graphics._$recode.push.apply(
+                    graphics._$recode, new GraphicsBitmapFill(bitmapData).toArray()
+                );
 
             } else {
 
-                graphics._$recode = Util.$getArray();
+                graphics._$recode = character.recodes.slice(0);
 
             }
-
-            const recodes = character.recodes;
-            for (let idx = 0; idx < recodes.length; ++idx) {
-                graphics._$recode.push(recodes[idx]);
-            }
-
-            graphics._$recode = character.recodes.slice(0);
 
         } else {
 
@@ -244,26 +259,36 @@ class Shape extends DisplayObject
             return ;
         }
 
-        let multiMatrix = matrix;
-        const rawMatrix = this._$transform._$rawMatrix();
-        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
-            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
-        }
-
         const filters   = this._$filters   || this.filters;
         const blendMode = this._$blendMode || this.blendMode;
+        if (!this._$bitmapId) {
 
-        this
-            ._$graphics
-            ._$draw(context, multiMatrix, multiColor, blendMode, filters);
+            let multiMatrix = matrix;
+            const rawMatrix = this._$transform._$rawMatrix();
+            if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            }
+
+            this
+                ._$graphics
+                ._$draw(context, multiMatrix, multiColor, blendMode, filters);
+
+            if (multiMatrix !== matrix) {
+                Util.$poolFloat32Array6(multiMatrix);
+            }
+
+        } else {
+
+            this
+                ._$graphics
+                ._$drawBitmap(context, matrix, multiColor, blendMode, filters);
+
+        }
 
         if (multiColor !== color_transform) {
             Util.$poolFloat32Array8(multiColor);
         }
 
-        if (multiMatrix !== matrix) {
-            Util.$poolFloat32Array6(multiMatrix);
-        }
     }
 
     /**

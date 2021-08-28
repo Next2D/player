@@ -1183,12 +1183,302 @@ class Graphics
             matrix[3], matrix[4], matrix[5]
         );
         this._$doDraw(context, Util.$COLOR_ARRAY_IDENTITY, true);
+
+        context.clip();
     }
 
     /**
      * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array}  matrix
-     * @param  {Float32Array}  color_transform
+     * @param  {WebGLTexture} texture
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {array} filters
+     * @param  {number} width
+     * @param  {number} height
+     * @return {WebGLTexture}
+     * @method
+     * @private
+     */
+    _$drawFilter (context, texture, matrix, color_transform, filters, width, height)
+    {
+        const displayObject = this._$displayObject;
+
+        const cacheKeys = [displayObject._$instanceId, "f"];
+        let cache = Util.$cacheStore().get(cacheKeys);
+
+        const updated = displayObject._$isFilterUpdated(
+            width, height, matrix, color_transform, filters, true
+        );
+
+        if (!cache || updated) {
+
+            // cache clear
+            if (cache) {
+
+                Util.$cacheStore().set(cacheKeys, null);
+                cache.layerWidth     = 0;
+                cache.layerHeight    = 0;
+                cache._$offsetX      = 0;
+                cache._$offsetY      = 0;
+                cache.matrix         = null;
+                cache.colorTransform = null;
+                context.frameBuffer.releaseTexture(cache);
+
+                cache = null;
+            }
+
+            texture = displayObject._$getFilterTexture(
+                context, filters, texture, matrix, color_transform
+            );
+
+            Util.$cacheStore().set(cacheKeys, texture);
+
+        }
+
+        if (cache) {
+            texture = cache;
+        }
+
+        Util.$poolArray(cacheKeys);
+
+        return texture;
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {string} [blend_mode=BlendMode.NORMAL]
+     * @param  {array}  [filters=null]
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$drawBitmap (
+        context, matrix, color_transform,
+        blend_mode = BlendMode.NORMAL, filters = null
+    ) {
+
+        if (!this._$maxAlpha) {
+            return ;
+        }
+
+        const alpha = Util.$clamp(
+            color_transform[3] + color_transform[7] / 255, 0, 1
+        );
+
+        const displayObject = this._$displayObject;
+
+        let multiMatrix = matrix;
+        const rawMatrix = displayObject._$transform._$rawMatrix();
+        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
+
+        // size
+        const boundsBase = this._$getBounds();
+        const bounds = Util.$boundsMatrix(boundsBase, multiMatrix);
+        const xMax   = bounds.xMax;
+        const xMin   = bounds.xMin;
+        const yMax   = bounds.yMax;
+        const yMin   = bounds.yMin;
+        Util.$poolBoundsObject(bounds);
+
+        let width  = Util.$ceil(Util.$abs(xMax - xMin));
+        let height = Util.$ceil(Util.$abs(yMax - yMin));
+
+        switch (true) {
+
+            case width === 0:
+            case height === 0:
+            case width === -Util.$Infinity:
+            case height === -Util.$Infinity:
+            case width === Util.$Infinity:
+            case height === Util.$Infinity:
+                return;
+
+            default:
+                break;
+
+        }
+
+        const xScale = Math.sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]);
+        const yScale = Math.sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]);
+        if (0 > xMin + width || 0 > yMin + height) {
+
+            if (filters && filters.length
+                && displayObject._$canApply(filters)
+            ) {
+
+                let rect = new Rectangle(0, 0, width, height);
+                for (let idx = 0; idx < filters.length ; ++idx) {
+                    rect = filters[idx]._$generateFilterRect(rect, xScale, yScale);
+                }
+
+                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
+                    return;
+                }
+
+            } else {
+                return;
+            }
+
+        }
+
+        // cache current buffer
+        const currentBuffer = context.frameBuffer.currentAttachment;
+        if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
+            return;
+        }
+
+        // resize
+        const textureScale = context._$textureScale(width, height);
+        if (textureScale < 1) {
+            width  *= textureScale;
+            height *= textureScale;
+        }
+
+        // get cache
+        const cacheKeys = Util
+            .$cacheStore()
+            .generateKeys(displayObject._$instanceId, [xScale, yScale], color_transform);
+
+        // cache
+        let texture = Util.$cacheStore().get(cacheKeys);
+        if (!texture) {
+
+            // create cache buffer
+            const buffer = context
+                .frameBuffer
+                .createCacheAttachment(width, height, true);
+            context._$bind(buffer);
+
+            // reset
+            Util.$resetContext(context);
+
+            // plain alpha
+            color_transform[3] = 1;
+
+            switch (true) {
+
+                case rawMatrix[0] !== 1:
+                case rawMatrix[1] !== 0:
+                case rawMatrix[2] !== 0:
+                case rawMatrix[3] !== 1:
+                    {
+                        const rotate = Math.atan2(matrix[1], matrix[0]);
+
+                        let tx = 0;
+                        let ty = 0;
+                        if (rotate) {
+
+                            // TODO
+                            const matrix2 = new Matrix();
+                            matrix2.translate(-width / 2, -height / 2);
+                            matrix2.rotate(rotate);
+                            matrix2.translate(width / 2, height / 2);
+
+                            const topLeft     = matrix2.transformPoint(new Point(0, 0));
+                            const topRight    = matrix2.transformPoint(new Point(width, 0));
+                            const bottomLeft  = matrix2.transformPoint(new Point(0, height));
+                            const bottomRight = matrix2.transformPoint(new Point(width, height));
+
+                            tx = Util.$min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+                            ty = Util.$min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+                        }
+
+                        Util.$resetContext(context);
+                        context.setTransform(
+                            matrix[0], matrix[1], matrix[2], matrix[3],
+                            -tx, -ty
+                        );
+
+                        context.beginPath();
+                        this._$runTransformCommand(context, rawMatrix, color_transform);
+                    }
+                    break;
+
+                default:
+
+                    context.setTransform(
+                        multiMatrix[0], multiMatrix[1], multiMatrix[2], multiMatrix[3],
+                        multiMatrix[4] - xMin,
+                        multiMatrix[5] - yMin
+                    );
+
+                    this._$doDraw(context, color_transform);
+
+                    break;
+
+            }
+
+            texture = context
+                .frameBuffer
+                .getTextureFromCurrentAttachment();
+
+            // set cache
+            Util.$cacheStore().set(cacheKeys, texture);
+
+            // release buffer
+            context
+                .frameBuffer
+                .releaseAttachment(buffer, false);
+
+            // end draw and reset current buffer
+            context._$bind(currentBuffer);
+
+        }
+
+        let isFilter = false;
+        let offsetX  = 0;
+        let offsetY  = 0;
+        if (filters && filters.length) {
+
+            const canApply = displayObject._$canApply(filters);
+            if (canApply) {
+
+                isFilter = true;
+
+                texture = this._$drawFilter(
+                    context, texture, matrix,
+                    color_transform, filters, width, height
+                );
+
+                offsetX = texture._$offsetX;
+                offsetY = texture._$offsetY;
+            }
+
+        }
+
+        // reset
+        Util.$resetContext(context);
+
+        // draw
+        context._$globalAlpha = alpha;
+        context._$imageSmoothingEnabled = true;
+        context._$globalCompositeOperation = blend_mode;
+
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        if (isFilter) {
+            context.drawImage(texture,
+                xMin - offsetX, yMin - offsetY,
+                texture.width, texture.height, color_transform
+            );
+        } else {
+            context.drawImage(texture,
+                xMin, yMin, width, height, color_transform
+            );
+        }
+
+        // pool
+        Util.$poolArray(cacheKeys);
+        Util.$poolBoundsObject(boundsBase);
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
      * @param  {string} [blend_mode=BlendMode.NORMAL]
      * @param  {array}  [filters=null]
      * @return {void}
@@ -1249,14 +1539,13 @@ class Graphics
 
         }
 
+        const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
         if (0 > xMin + width || 0 > yMin + height) {
 
             if (filters && filters.length
                 && displayObject._$canApply(filters)
             ) {
-
-                let xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-                let yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
                 let rect = new Rectangle(0, 0, width, height);
                 for (let idx = 0; idx < filters.length ; ++idx) {
@@ -1285,9 +1574,6 @@ class Graphics
             width  *= textureScale;
             height *= textureScale;
         }
-
-        const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
         // get cache
         const cacheKeys = Util
@@ -1397,43 +1683,10 @@ class Graphics
 
                 isFilter = true;
 
-                const cacheKeys = [displayObject._$instanceId, "f"];
-                let cache = Util.$cacheStore().get(cacheKeys);
-
-                const updated = displayObject._$isFilterUpdated(
-                    width, height, matrix, color_transform, filters, canApply
+                texture = this._$drawFilter(
+                    context, texture, matrix,
+                    color_transform, filters, width, height
                 );
-
-                if (!cache || updated) {
-
-                    // cache clear
-                    if (cache) {
-
-                        Util.$cacheStore().set(cacheKeys, null);
-                        cache.layerWidth     = 0;
-                        cache.layerHeight    = 0;
-                        cache._$offsetX      = 0;
-                        cache._$offsetY      = 0;
-                        cache.matrix         = null;
-                        cache.colorTransform = null;
-                        context.frameBuffer.releaseTexture(cache);
-
-                        cache = null;
-                    }
-
-                    texture = displayObject._$getFilterTexture(
-                        context, filters, texture, matrix, color_transform
-                    );
-
-                    Util.$cacheStore().set(cacheKeys, texture);
-
-                }
-
-                if (cache) {
-                    texture = cache;
-                }
-
-                Util.$poolArray(cacheKeys);
 
                 offsetX = texture._$offsetX;
                 offsetY = texture._$offsetY;
@@ -1482,13 +1735,9 @@ class Graphics
     {
         // draw
         Util.$resetContext(context);
+
         context.beginPath();
         this._$runCommand(context, color_transform, is_clip);
-
-        // clip or filter and blend
-        if (is_clip) {
-            context.clip();
-        }
     }
 
     /**
@@ -1746,6 +1995,212 @@ class Graphics
         }
 
         Util.$poolArray(data);
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext|CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} [color_transform=null]
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$runTransformCommand (context, matrix, color_transform = null)
+    {
+        // fixed logic
+        if (this._$doLine) {
+            this.endLine();
+        }
+
+        // fixed logic
+        if (this._$doFill) {
+            this.endFill();
+        }
+
+        if (!this._$recode) {
+            return false;
+        }
+
+        let xMin =  Number.MAX_VALUE;
+        let xMax = -Number.MAX_VALUE;
+        let yMin =  Number.MAX_VALUE;
+        let yMax = -Number.MAX_VALUE;
+
+        const recode = this._$recode;
+        const length = recode.length;
+        for (let idx = 0; idx < length; ) {
+
+            switch (recode[idx++]) {
+
+                case Graphics.BEGIN_PATH:
+                    context.beginPath();
+                    break;
+
+                case Graphics.MOVE_TO:
+                    {
+                        const x = recode[idx++];
+                        const y = recode[idx++];
+
+                        const tx = x * matrix[0] + y * matrix[2];
+                        const ty = x * matrix[1] + y * matrix[3];
+
+                        xMin = Util.$min(tx, xMin);
+                        xMax = Util.$max(tx, xMax);
+                        yMin = Util.$min(ty, yMin);
+                        yMax = Util.$max(ty, yMax);
+
+                        context.moveTo(tx, ty);
+                    }
+                    break;
+
+                case Graphics.LINE_TO:
+                    {
+                        const x = recode[idx++];
+                        const y = recode[idx++];
+
+                        const tx = x * matrix[0] + y * matrix[2];
+                        const ty = x * matrix[1] + y * matrix[3];
+
+                        xMin = Util.$min(tx, xMin);
+                        xMax = Util.$max(tx, xMax);
+                        yMin = Util.$min(ty, yMin);
+                        yMax = Util.$max(ty, yMax);
+
+                        context.lineTo(tx, ty);
+                    }
+                    break;
+
+                case Graphics.CURVE_TO:
+                    {
+                        const cx = recode[idx++];
+                        const cy = recode[idx++];
+                        const x  = recode[idx++];
+                        const y  = recode[idx++];
+
+                        const ctx = cx * matrix[0] + cy * matrix[2];
+                        const cty = cx * matrix[1] + cy * matrix[3];
+                        const tx  = x  * matrix[0] + y  * matrix[2];
+                        const ty  = x  * matrix[1] + y  * matrix[3];
+
+                        xMin = Util.$min(ctx, xMin);
+                        xMax = Util.$max(ctx, xMax);
+                        yMin = Util.$min(cty, yMin);
+                        yMax = Util.$max(cty, yMax);
+
+                        xMin = Util.$min(tx, xMin);
+                        xMax = Util.$max(tx, xMax);
+                        yMin = Util.$min(ty, yMin);
+                        yMax = Util.$max(ty, yMax);
+
+                        context.quadraticCurveTo(ctx, cty, tx, ty);
+                    }
+                    break;
+
+                case Graphics.CLOSE_PATH:
+                    context.closePath();
+                    break;
+
+                case Graphics.CUBIC:
+                    {
+                        const cp1x = recode[idx++];
+                        const cp1y = recode[idx++];
+                        const cp2x = recode[idx++];
+                        const cp2y = recode[idx++];
+                        const x    = recode[idx++];
+                        const y    = recode[idx++];
+
+                        const cp1tx = cp1x * matrix[0] + cp1y * matrix[2];
+                        const cp1ty = cp1x * matrix[1] + cp1y * matrix[3];
+                        const cp2tx = cp2x * matrix[0] + cp2y * matrix[2];
+                        const cp2ty = cp2x * matrix[1] + cp2y * matrix[3];
+                        const tx    = x * matrix[0] + y * matrix[2];
+                        const ty    = x * matrix[1] + y * matrix[3];
+
+                        xMin = Util.$min(cp1tx, xMin);
+                        xMax = Util.$max(cp1tx, xMax);
+                        yMin = Util.$min(cp1ty, yMin);
+                        yMax = Util.$max(cp1ty, yMax);
+
+                        xMin = Util.$min(cp2tx, xMin);
+                        xMax = Util.$max(cp2tx, xMax);
+                        yMin = Util.$min(cp2ty, yMin);
+                        yMax = Util.$max(cp2ty, yMax);
+
+                        xMin = Util.$min(tx, xMin);
+                        xMax = Util.$max(tx, xMax);
+                        yMin = Util.$min(ty, yMin);
+                        yMax = Util.$max(ty, yMax);
+
+                        context.bezierCurveTo(cp1tx, cp1ty, cp2tx, cp2ty, tx, ty);
+                    }
+                    break;
+
+                case Graphics.ARC:
+                    {
+                        const x = recode[idx++];
+                        const y = recode[idx++];
+                        const radius = recode[idx++];
+
+                        const tx = x * matrix[0] + y * matrix[2];
+                        const ty = x * matrix[1] + y * matrix[3];
+
+                        xMin = Util.$min(tx, xMin);
+                        xMax = Util.$max(tx, xMax);
+                        yMin = Util.$min(ty, yMin);
+                        yMax = Util.$max(ty, yMax);
+
+                        context.arc(tx, ty, radius, 0, 2 * Util.$PI);
+                    }
+                    break;
+
+                case Graphics.BITMAP_FILL:
+                    {
+
+                        context._$matrix[6] -= xMin * context._$matrix[0] + yMin * context._$matrix[3];
+                        context._$matrix[7] -= xMin * context._$matrix[1] + yMin * context._$matrix[4];
+
+                        context.save();
+
+                        const texture = context
+                            .frameBuffer
+                            .createTextureFromPixels(
+                                recode[idx++], recode[idx++], recode[idx++]
+                            );
+
+                        const matrix = recode[idx++];
+                        const repeat = recode[idx++];
+                        const smooth = recode[idx++];
+
+                        context.fillStyle = context
+                            .createPattern(texture, repeat, color_transform);
+
+                        context.transform(
+                            matrix[0], matrix[1], matrix[2],
+                            matrix[3], matrix[4], matrix[5]
+                        );
+
+                        context._$imageSmoothingEnabled = smooth;
+                        context.fill();
+
+                        // restore
+                        context.restore();
+                        context._$imageSmoothingEnabled = false;
+
+                        context
+                            .frameBuffer
+                            .releaseTexture(texture);
+
+                    }
+                    break;
+
+                default:
+                    break;
+
+            }
+
+        }
+
+        return false;
     }
 
     /**

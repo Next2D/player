@@ -14,7 +14,7 @@
  * // static BlendMode
  * const {FrameLabel} = next2d.display;
  * const frameLabel = new FrameLabel();
- * frameLabel.addEventListener(Event.FRAME_LABEL, function (event)
+ * frameLabel.addEventListener(Event.FRAME_LABEL, (event) =>
  * {
  *     // more...
  * }
