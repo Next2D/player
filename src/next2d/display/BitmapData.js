@@ -56,6 +56,20 @@ class BitmapData
          * @private
          */
         this._$instanceId = instanceId++;
+
+        /**
+         * @type {Uint8Array}
+         * @default null
+         * @private
+         */
+        this._$buffer = null;
+
+        /**
+         * @type {HTMLImageElement}
+         * @default null
+         * @private
+         */
+        this._$image = null;
     }
 
     /**
