@@ -257,13 +257,16 @@ class URLRequest
      *              Specifies the data format of the response.
      *
      * @member {string}
-     * @default json
-     * @readonly
+     * @default URLLoaderDataFormat.JSON
      * @public
      */
     get responseDataFormat ()
     {
         return this._$responseDataFormat;
+    }
+    set responseDataFormat (format)
+    {
+        this._$responseDataFormat = `${format}`;
     }
 
     /**

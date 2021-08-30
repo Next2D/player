@@ -65,6 +65,26 @@ class GraphicsBitmapFill
     }
 
     /**
+     * @description 新しいオブジェクトとして、このクラスのクローンを返します。
+     *              含まれるオブジェクトはまったく同じコピーになります。
+     *              Returns a clone of this class as a new object,
+     *              with an exact copy of the contained object.
+     *
+     * @return {GraphicsBitmapFill}
+     * @method
+     * @public
+     */
+    clone ()
+    {
+        return new GraphicsBitmapFill(
+            this._$bitmapData.clone(),
+            this._$matrix ? this._$matrix.clone() : null,
+            this._$repeat,
+            this._$smooth
+        );
+    }
+
+    /**
      * @description このクラスのもつパラメーターをArrayで返却する
      *              Return the parameters of this class as an Array.
      *
@@ -74,19 +94,9 @@ class GraphicsBitmapFill
      */
     toArray ()
     {
-        const buffer = this._$bitmapData._$buffer
-            ? this._$bitmapData._$buffer
-            : this._$bitmapData.toUint8Array();
-
-        const matrix = this._$matrix
-            ? this._$matrix._$matrix
-            : Util.$MATRIX_ARRAY_IDENTITY;
-
         return Util.$getArray(
-            this._$bitmapData.width,
-            this._$bitmapData.height,
-            buffer,
-            matrix,
+            this._$bitmapData,
+            this._$matrix,
             this._$repeat ? "repeat" : "no-repeat",
             this._$smooth
         );

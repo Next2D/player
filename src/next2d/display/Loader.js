@@ -114,10 +114,11 @@ class Loader extends DisplayObjectContainer
     }
 
     /**
-     * @description JSON、JPEG、プログレッシブ JPEG、GIFまたは PNG ファイルを、
-     *              この Loader オブジェクトの子であるオブジェクトにロードします。
-     *              Loads a JSON, JPEG, progressive JPEG, GIF or PNG file
-     *              into an object that is a child of this Loader object.
+     * @description JSONファイルを、この Loader オブジェクトの子であるcontentプロパティにロードします。
+     *              JPEG、GIF、PNGなどの画像データは loadImage で同様にcontentプロパティにロードします。
+     *              Load the JSON file into the content property, which is a child of this Loader object.
+     *              Image data such as JPEG, GIF, PNG, etc.
+     *              are loaded into the content property in the same way with loadImage.
      *
      * @param   {URLRequest} request
      * @returns {void}
@@ -279,12 +280,9 @@ class Loader extends DisplayObjectContainer
                                 break;
 
                             case URLLoaderDataFormat.ARRAY_BUFFER:
-                                // TODO
-                                // buffer clone
-                                // this._$byteArray = event.target.response;
-                                // this._$decodeImage({
-                                //     "type": "image/" + reComposition.imageType
-                                // });
+                                this._$imageDecode(
+                                    new Uint8Array(event.target.response)
+                                );
                                 break;
 
                             default:
@@ -306,6 +304,57 @@ class Loader extends DisplayObjectContainer
                 }.bind(this)
             }
         });
+    }
+
+    /**
+     * @description JPEG、GIFファイルを、この Loader オブジェクトの子であるcontentプロパティにロードします。
+     *              Load a JPEG or GIF file into the content property, which is a child of this Loader object.
+     *
+     * @param   {URLRequest} request
+     * @returns {void}
+     * @method
+     * @public
+     */
+    loadImage (request)
+    {
+        request.responseDataFormat = URLLoaderDataFormat.ARRAY_BUFFER;
+        this.load(request);
+    }
+
+    /**
+     * @param   {Uint8Array} buffer
+     * @return  {void}
+     * @method
+     * @private
+     */
+    _$imageDecode (buffer)
+    {
+        const target = {
+            "image": new Util.$Image(),
+            "scope": this
+        };
+
+        target.image.decoding = "async";
+        target.image.src = Util.$URL.createObjectURL(
+            new Util.$Blob([buffer], {
+                "type": `image/${Util.$getImageType(buffer)}`
+            })
+        );
+
+        if (Util.$imageWorkerActive) {
+            Util.$imageQueues.push(target);
+            return ;
+        }
+
+        Util.$imageWorkerActive = true;
+
+        target.image.decode()
+            .then(Util.$decodeImage.bind(target))
+            .catch(() =>
+            {
+                throw new Error("image encoding error");
+            });
+
     }
 
     /**

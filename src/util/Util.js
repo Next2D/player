@@ -405,6 +405,30 @@ Util.$Map = window.Map;
 
 /**
  * @shortcut
+ * @type {Image}
+ * @const
+ * @static
+ */
+Util.$Image = window.Image;
+
+/**
+ * @shortcut
+ * @type {URL}
+ * @const
+ * @static
+ */
+Util.$URL = window.URL;
+
+/**
+ * @shortcut
+ * @type {Blob}
+ * @const
+ * @static
+ */
+Util.$Blob = window.Blob;
+
+/**
+ * @shortcut
  * @type {function}
  * @const
  * @static
@@ -1591,6 +1615,37 @@ Util.$loadAudioData = function ()
 };
 
 /**
+ * @param  {Uint8Array} buffer
+ * @return {string|null}
+ * @method
+ * @static
+ */
+Util.$getImageType = function (buffer)
+{
+    if (buffer[0] === 0xff && buffer[1] === 0xd8) {
+        return "jpeg";
+    }
+
+    if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
+        return "gif";
+    }
+
+    if (buffer[0] === 0x89 && buffer[1] === 0x50 &&
+        buffer[2] === 0x4E && buffer[3] === 0x47 &&
+        buffer[4] === 0x0D && buffer[5] === 0x0A &&
+        buffer[6] === 0x1A && buffer[7] === 0x0A
+    ) {
+        return "png";
+    }
+
+    if (buffer[0] === 0x42 && buffer[1] === 0x4d) {
+        return "bmp";
+    }
+
+    return null;
+};
+
+/**
  * @type {number}
  * @static
  */
@@ -1918,6 +1973,78 @@ Util.$getClass = function (symbol)
     }
 
     return object;
+};
+
+/**
+ * @type {boolean}
+ * @static
+ */
+Util.$imageWorkerActive = false;
+
+/**
+ * @type {array}
+ * @static
+ */
+Util.$imageQueues = [];
+
+/**
+ * @return void
+ * @static
+ */
+Util.$decodeImage = function ()
+{
+    const player = Util.$currentPlayer();
+
+    // size
+    const width  = this.image.width;
+    const height = this.image.height;
+
+    const bitmapData = new BitmapData(width, height, true, 0xff000000);
+
+    const context = player._$context;
+
+    const currentAttachment = context
+        .frameBuffer
+        .currentAttachment;
+
+    bitmapData._$texture = context
+        .frameBuffer
+        .createTextureFromImage(this.image);
+
+    const shape = new Shape();
+
+    shape
+        .graphics
+        .beginBitmapFill(bitmapData, null, false)
+        .drawRect(0, 0, width, height);
+
+    const loaderInfo = this.scope.contentLoaderInfo;
+    loaderInfo._$content = shape;
+    player._$loaders.push(loaderInfo);
+
+    if (currentAttachment) {
+        context._$bind(currentAttachment);
+    } else {
+        context.frameBuffer.unbind();
+    }
+
+    // next
+    if (Util.$imageQueues.length) {
+
+        const object = Util.$imageQueues.shift();
+
+        object.image.decode()
+            .then(Util.$decodeImage.bind(object))
+            .catch(() =>
+            {
+                throw new Error("image encoding error");
+            });
+
+    } else {
+
+        Util.$imageWorkerActive = false;
+
+    }
 };
 
 /**

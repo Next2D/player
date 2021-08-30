@@ -47,16 +47,6 @@ describe("URLLoaderDataFormat.js property test", function()
         expect(URLLoaderDataFormat.JSON).toBe("json");
     });
 
-    it("STRING test", function ()
-    {
-        expect(URLLoaderDataFormat.STRING).toBe("string");
-    });
-
-    it("VARIABLES test", function ()
-    {
-        expect(URLLoaderDataFormat.VARIABLES).toBe("variables");
-    });
-
     it("instance test", function ()
     {
         expect(new URLLoaderDataFormat() instanceof URLLoaderDataFormat).toBe(true);

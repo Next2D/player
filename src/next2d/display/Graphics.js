@@ -2007,6 +2007,7 @@ class Graphics
      */
     _$runTransformCommand (context, matrix, color_transform = null)
     {
+
         // fixed logic
         if (this._$doLine) {
             this.endLine();
@@ -2161,23 +2162,20 @@ class Graphics
 
                         context.save();
 
-                        const texture = context
-                            .frameBuffer
-                            .createTextureFromPixels(
-                                recode[idx++], recode[idx++], recode[idx++]
-                            );
-
-                        const matrix = recode[idx++];
-                        const repeat = recode[idx++];
-                        const smooth = recode[idx++];
+                        const bitmapData = recode[idx++];
+                        const matrix     = recode[idx++];
+                        const repeat     = recode[idx++];
+                        const smooth     = recode[idx++];
 
                         context.fillStyle = context
-                            .createPattern(texture, repeat, color_transform);
+                            .createPattern(bitmapData._$texture, repeat, color_transform);
 
-                        context.transform(
-                            matrix[0], matrix[1], matrix[2],
-                            matrix[3], matrix[4], matrix[5]
-                        );
+                        if (matrix) {
+                            context.transform(
+                                matrix[0], matrix[1], matrix[2],
+                                matrix[3], matrix[4], matrix[5]
+                            );
+                        }
 
                         context._$imageSmoothingEnabled = smooth;
                         context.fill();
@@ -2185,10 +2183,6 @@ class Graphics
                         // restore
                         context.restore();
                         context._$imageSmoothingEnabled = false;
-
-                        context
-                            .frameBuffer
-                            .releaseTexture(texture);
 
                     }
                     break;
@@ -2539,23 +2533,21 @@ class Graphics
                         }
 
                         context.save();
-                        const texture = context
-                            .frameBuffer
-                            .createTextureFromPixels(
-                                recode[idx++], recode[idx++], recode[idx++]
-                            );
 
-                        const matrix = recode[idx++];
-                        const repeat = recode[idx++];
-                        const smooth = recode[idx++];
+                        const bitmapData = recode[idx++];
+                        const matrix     = recode[idx++];
+                        const repeat     = recode[idx++];
+                        const smooth     = recode[idx++];
 
                         context.fillStyle = context
-                            .createPattern(texture, repeat, color_transform);
+                            .createPattern(bitmapData._$texture, repeat, color_transform);
 
-                        context.transform(
-                            matrix[0], matrix[1], matrix[2],
-                            matrix[3], matrix[4], matrix[5]
-                        );
+                        if (matrix) {
+                            context.transform(
+                                matrix[0], matrix[1], matrix[2],
+                                matrix[3], matrix[4], matrix[5]
+                            );
+                        }
 
                         context._$imageSmoothingEnabled = smooth;
                         context.fill();
@@ -2563,10 +2555,6 @@ class Graphics
                         // restore
                         context.restore();
                         context._$imageSmoothingEnabled = false;
-
-                        context
-                            .frameBuffer
-                            .releaseTexture(texture);
 
                     }
                     break;

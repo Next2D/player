@@ -91,32 +91,4 @@ class URLLoaderDataFormat
     {
         return "json";
     }
-
-    /**
-     * @description ダウンロードされるデータを文字列として受信することを指定します。
-     *              Specifies that downloaded data is received as string.
-     *
-     * @return  {string}
-     * @default string
-     * @const
-     * @static
-     */
-    static get STRING ()
-    {
-        return "string";
-    }
-
-    /**
-     * @description ダウンロードされるデータを URL エンコード形式の変数として受信することを指定します。
-     *              Specifies that downloaded data is received as URL-encoded variables.
-     *
-     * @return  {string}
-     * @default variables
-     * @const
-     * @static
-     */
-    static get VARIABLES ()
-    {
-        return "variables";
-    }
 }

@@ -128,6 +128,19 @@ class BitmapData
     }
 
     /**
+     * @description Imageクラスをこのクラスにセットします。
+     *
+     * @param  {Image} image
+     * @return {void}
+     * @writeonly
+     * @public
+     */
+    set image (image)
+    {
+        this._$image = image;
+    }
+
+    /**
      * @description ビットマップイメージがピクセル単位の透明度をサポートするかどうかを定義します。
      *              Defines whether the bitmap image supports per-pixel transparency.
      *
@@ -173,52 +186,69 @@ class BitmapData
         if (!texture) {
 
             const context = player._$context;
+            switch (true) {
 
-            if (this._$buffer) {
+                case this._$image !== null:
 
-                texture = context
-                    .frameBuffer
-                    .createTextureFromPixels(
-                        width, height, this._$buffer, true
-                    );
+                    texture = context
+                        .frameBuffer
+                        .createTextureFromImage(this._$image);
 
-                this._$buffer = null;
+                    this._$image = null;
 
-            } else {
+                    break;
 
-                const currentAttachment = context
-                    .frameBuffer
-                    .currentAttachment;
+                case this._$buffer !== null:
 
-                // new attachment
-                const attachment = context
-                    .frameBuffer
-                    .createCacheAttachment(width, height, false);
-                context._$bind(attachment);
+                    texture = context
+                        .frameBuffer
+                        .createTextureFromPixels(
+                            width, height, this._$buffer, true
+                        );
 
-                Util.$resetContext(context);
-                context.fillStyle = [
-                    this._$color.R / 255, this._$color.G / 255,
-                    this._$color.B / 255, this._$color.A / 255
-                ];
-                context.setTransform(1, 0, 0, 1, 0, 0);
-                context.beginPath();
-                context.fillRect(0, 0, width, height);
+                    this._$buffer = null;
 
-                texture = context
-                    .frameBuffer
-                    .getTextureFromCurrentAttachment();
+                    break;
 
-                // reset
-                if (currentAttachment) {
-                    context._$bind(currentAttachment);
-                } else {
-                    context.frameBuffer.unbind();
-                }
+                default:
+                    {
+                        const currentAttachment = context
+                            .frameBuffer
+                            .currentAttachment;
 
-                context
-                    .frameBuffer
-                    .releaseAttachment(attachment, false);
+                        // new attachment
+                        const attachment = context
+                            .frameBuffer
+                            .createCacheAttachment(width, height, false);
+                        context._$bind(attachment);
+
+                        Util.$resetContext(context);
+                        context.fillStyle = [
+                            this._$color.R / 255, this._$color.G / 255,
+                            this._$color.B / 255, this._$color.A / 255
+                        ];
+                        context.setTransform(1, 0, 0, 1, 0, 0);
+                        context.beginPath();
+                        context.fillRect(0, 0, width, height);
+
+                        texture = context
+                            .frameBuffer
+                            .getTextureFromCurrentAttachment();
+
+                        // reset
+                        if (currentAttachment) {
+                            context._$bind(currentAttachment);
+                        } else {
+                            context.frameBuffer.unbind();
+                        }
+
+                        context
+                            .frameBuffer
+                            .releaseAttachment(attachment, false);
+
+                    }
+                    break;
+
             }
 
             cacheStore.set(cacheKeys, texture);

@@ -144,7 +144,7 @@ class Shape extends DisplayObject
                     Util.$poolArray(bitmap.buffer);
                     bitmap.buffer = null;
                 }
-                bitmapData._$buffer = bitmap._$buffer;
+                bitmapData._$buffer = bitmap._$buffer.slice();
 
                 // setup
                 graphics._$recode = Util.$getArray();
@@ -157,9 +157,12 @@ class Shape extends DisplayObject
                 }
 
                 // add Bitmap Fill
-                graphics._$recode.push(Graphics.BITMAP_FILL);
-                graphics._$recode.push.apply(
-                    graphics._$recode, new GraphicsBitmapFill(bitmapData).toArray()
+                graphics._$recode.push(
+                    Graphics.BITMAP_FILL,
+                    bitmapData,
+                    null,
+                    "repeat",
+                    false
                 );
 
             } else {
@@ -179,12 +182,11 @@ class Shape extends DisplayObject
                 Util.$poolArray(character.buffer);
                 character.buffer = null;
             }
-            bitmapData._$buffer = character._$buffer;
+            bitmapData._$buffer = character._$buffer.slice(0);
 
             graphics
                 .beginBitmapFill(bitmapData, null, false)
-                .drawRect(0, 0, width, height)
-                .endFill();
+                .drawRect(0, 0, width, height);
 
         }
 
