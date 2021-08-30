@@ -128,13 +128,16 @@ class BitmapData
     }
 
     /**
-     * @description Imageクラスをこのクラスにセットします。
+     * @description Imageクラスを利用して BitmapData を生成します。
+     *              Use the Image class to generate BitmapData.
      *
-     * @param  {Image} image
-     * @return {void}
-     * @writeonly
+     * @return {HTMLImageElement}
      * @public
      */
+    get image ()
+    {
+        return this._$image;
+    }
     set image (image)
     {
         this._$image = image;
