@@ -119,13 +119,6 @@ class TextField extends InteractiveObject
          */
         this._$maxChars = 0;
 
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$textColor = null;
-
         // TextFormat
         const textFormat = new TextFormat();
         textFormat._$setDefault(this);
@@ -310,6 +303,20 @@ class TextField extends InteractiveObject
          * @private
          */
         this._$textHeightTable = null;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$focus = false;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$isComposing = false;
     }
 
     /**
@@ -556,6 +563,91 @@ class TextField extends InteractiveObject
             text_format._$textField = this;
 
             this._$defaultTextFormat = text_format;
+        }
+    }
+
+    /**
+     * @description このオブジェクトでマウスまたはその他のユーザー入力メッセージを
+     *
+     * @member {boolean}
+     * @default false
+     * @public
+     */
+    get focus ()
+    {
+        return this._$focus;
+    }
+    set focus (focus)
+    {
+        if (this._$focus === !!focus) {
+            return ;
+        }
+
+        this._$focus = !!focus;
+        if (this._$focus) {
+
+            if (this._$type === TextFieldType.INPUT
+                && this._$selectable
+            ) {
+
+                const player = Util.$currentPlayer();
+
+                const div = Util.$document.getElementById(player.contentElementId);
+                if (!div) {
+                    return;
+                }
+
+                this._$createTextAreaElement(player._$scale);
+
+                // setup
+                const element = this._$textarea;
+                const matrix  = this._$transform.concatenatedMatrix;
+                const bounds  = this._$getBounds(null);
+
+                const color = Util.$intToRGBA(
+                    this._$defaultTextFormat._$color, 100
+                );
+
+                element.style.color  = `rgb(${color.R},${color.G},${color.B})`;
+                element.style.left   = `${Util.$floor(matrix.tx * player._$scale + bounds.xMin)}px`;
+                element.style.top    = `${Util.$floor(matrix.ty * player._$scale + bounds.yMin)}px`;
+                element.style.width  = `${Util.$ceil((this.width  - 1) * player._$scale)}px`;
+                element.style.height = `${Util.$ceil((this.height - 1) * player._$scale)}px`;
+
+                // set text
+                element.value = this.text;
+
+                div.appendChild(element);
+
+                const timer = Util.$requestAnimationFrame;
+                timer(() => { element.focus() });
+
+                this._$textAreaActive = true;
+
+                // focus in event
+                if (this.willTrigger(FocusEvent.FOCUS_IN)) {
+                    this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_IN));
+                }
+
+                this._$doChanged();
+                Util.$isUpdated = true;
+            }
+
+        } else {
+
+            // execute
+            this._$textarea.dispatchEvent(
+                new Util.$window.Event(`${Util.$PREFIX}_blur`)
+            );
+
+            if (this.willTrigger(FocusEvent.FOCUS_OUT)) {
+                this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_OUT));
+            }
+
+            this._$textarea.remove();
+
+            this._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -2656,5 +2748,276 @@ class TextField extends InteractiveObject
         }
 
         return context.isPointInPath(options.x, options.y);
+    }
+
+    /**
+     * @param  {number} scale
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$createTextAreaElement (scale)
+    {
+        // new text area
+        if (!this._$textarea) {
+
+            this._$textarea       = Util.$document.createElement("textarea");
+            this._$textarea.value = this.text;
+            this._$textarea.id    = `${Util.$PREFIX}_TextField_${this._$instanceId}`;
+
+            if (!this._$wordWrap) {
+                this._$textarea.wrap = "off";
+            }
+
+            const textFormat = this.defaultTextFormat;
+
+            // setup
+            this._$textarea.style.position         = "absolute";
+            this._$textarea.style.outline          = "0";
+            this._$textarea.style.padding          = `2px 2px 2px ${Util.$max(3, textFormat.leftMargin | 0)}px`;
+            this._$textarea.style.margin           = "0";
+            this._$textarea.style.appearance       = "none";
+            this._$textarea.style.resize           = "none";
+            this._$textarea.style.border           = this._$border ? `solid 1px #${this.borderColor.toString(16)}` : "none";
+            this._$textarea.style.overflow         = "hidden";
+            this._$textarea.style.zIndex           = 0x7fffffff;
+            this._$textarea.style.verticalAlign    = "top";
+            this._$textarea.style.backgroundColor  = this._$border || this._$background
+                ? `#${this.backgroundColor.toString(16)}`
+                : "transparent";
+
+            // add blur event
+            this._$textarea.addEventListener(`${Util.$PREFIX}_blur`, function (event)
+            {
+                // set new text
+                let value = event.target.value ? event.target.value : "";
+                if (value && this._$restrict) {
+
+                    let pattern = this._$restrict;
+
+                    if (pattern[0] !== "[") {
+                        pattern = "[" + pattern;
+                    }
+
+                    if (pattern[pattern.length - 1] !== "]") {
+                        pattern += "]";
+                    }
+
+                    const found = value.match(new Util.$RegExp(pattern, "gm"));
+                    value = found ? found.join("") : "";
+                }
+
+                this.text = value;
+
+                const div = Util
+                    .$document
+                    .getElementById(Util.$currentPlayer().contentElementId);
+
+                if (div) {
+
+                    const element = Util
+                        .$document
+                        .getElementById(`${Util.$PREFIX}_TextField_${this._$instanceId}`);
+                    if (element) {
+                        element.remove();
+                        this._$textAreaActive = false;
+                        this._$doChanged();
+                    }
+                }
+
+            }.bind(this));
+
+            // input event
+            this._$textarea.addEventListener("input", function (event)
+            {
+                // set new text
+                let value = event.target.value ? event.target.value : "";
+
+                // SafariではInputEvent.isComposingがundefined
+                if (this._$restrict && !this._$isComposing && value) {
+                    let pattern = this._$restrict;
+
+                    if (pattern[0] !== "[") {
+                        pattern = "[" + pattern;
+                    }
+
+                    if (pattern[pattern.length - 1] !== "]") {
+                        pattern += "]";
+                    }
+
+                    const found = value.match(new Util.$RegExp(pattern, "gm"));
+                    value = found ? found.join("") : "";
+                }
+
+                if (this.text !== value) {
+
+                    // update
+                    this.text = value;
+                    event.target.value = value;
+
+                    if (this.willTrigger(Event.CHANGE)) {
+                        this.dispatchEvent(new Event(Event.CHANGE, true));
+                    }
+
+                }
+
+            }.bind(this));
+
+            // IME入力開始時のevent
+            this._$textarea.addEventListener("compositionstart", function ()
+            {
+                this._$isComposing = true;
+            }.bind(this));
+
+            // IME入力確定時のevent
+            this._$textarea.addEventListener("compositionend", function (event)
+            {
+                this._$isComposing = false;
+                let value = event.target.value ? event.target.value : "";
+
+                if (!this._$restrict || !value) {
+                    return;
+                }
+
+                let pattern = this._$restrict;
+
+                if (pattern[0] !== "[") {
+                    pattern = "[" + pattern;
+                }
+
+                if (pattern[pattern.length - 1] !== "]") {
+                    pattern += "]";
+                }
+
+                const found = value.match(new Util.$RegExp(pattern, "gm"));
+                value = found ? found.join("") : "";
+
+                // update
+                this.text = value;
+                event.target.value = value;
+            }.bind(this));
+
+            // add click event
+            this._$textarea.addEventListener("click", function ()
+            {
+                if (this.willTrigger(MouseEvent.CLICK)) {
+                    this.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+                }
+            }.bind(this));
+
+            // add mousewheel event
+            this._$textarea.addEventListener(Util.$MOUSE_WHEEL, function (event)
+            {
+                this.scrollV += event.deltaY;
+            }.bind(this));
+
+            // add scroll event
+            this._$textarea.addEventListener(Util.$SCROLL, function ()
+            {
+                if (this._$scrollEventLock) {
+                    this._$scrollEventLock = false;
+                    return;
+                }
+
+                const height = parseFloat(this._$textarea.style.height);
+                this.scrollV = this._$textarea.scrollTop / (this._$textarea.scrollHeight - height) * this.maxScrollV + 1;
+            }.bind(this));
+
+            switch (true) {
+
+                case Util.$isTouch:
+                    // down event
+                    this._$textarea.addEventListener(Util.$TOUCH_START, function ()
+                    {
+                        const player = Util.$currentPlayer();
+                        if (player) {
+                            player._$state  = "down";
+                        }
+                    });
+
+                    // up event
+                    this._$textarea.addEventListener(Util.$TOUCH_END, function ()
+                    {
+                        const player = Util.$currentPlayer();
+                        if (player) {
+                            player._$state  = "up";
+                        }
+                    });
+                    break;
+
+                default:
+                    // down event
+                    this._$textarea.addEventListener(Util.$MOUSE_DOWN, function ()
+                    {
+                        const player = Util.$currentPlayer();
+                        if (player) {
+                            player._$state  = "down";
+                        }
+                    });
+
+                    // up event
+                    this._$textarea.addEventListener(Util.$MOUSE_UP, function ()
+                    {
+                        const player = Util.$currentPlayer();
+                        if (player) {
+                            player._$state  = "up";
+                        }
+                    });
+
+                    break;
+
+            }
+
+        }
+
+        // change style
+        const tf = this.defaultTextFormat;
+        const fontSize = Util.$ceil(tf.size * scale * this._$transform.concatenatedMatrix.d);
+        this._$textarea.style.fontSize   = `${fontSize}px`;
+        this._$textarea.style.textAlign  = tf.align;
+        this._$textarea.style.fontFamily = tf.font;
+        this._$textarea.style.lineHeight = `${(fontSize + Util.$max(0, tf.leading | 0)) / fontSize}em`;
+
+        if (!this._$textarea.onkeydown) {
+            this._$textarea.onkeydown = function (event)
+            {
+
+                // set new text
+                let value = event.target.value ? event.target.value : "";
+
+                // SafariではInputEvent.isComposingがundefined
+                if (this._$restrict && !this._$isComposing && value) {
+                    let pattern = this._$restrict;
+
+                    if (pattern[0] !== "[") {
+                        pattern = "[" + pattern;
+                    }
+
+                    if (pattern[pattern.length - 1] !== "]") {
+                        pattern += "]";
+                    }
+
+                    const found = value.match(new Util.$RegExp(pattern, "gm"));
+                    value = found ? found.join("") : "";
+                }
+
+                // update
+                this.text = value;
+                event.target.value = value;
+
+                // enter off
+                if (event.keyCode === 13 && !this._$multiline) {
+                    return false;
+                }
+
+            }.bind(this);
+        }
+
+        //reset
+        this._$textarea.maxLength = 0x7fffffff;
+        if (this._$maxChars) {
+            this._$textarea.maxLength = this._$maxChars;
+        }
+
     }
 }

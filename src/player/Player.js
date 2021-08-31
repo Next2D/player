@@ -202,13 +202,6 @@ class Player
         this._$stageY = -1;
 
         /**
-         * @type {TextField|null}
-         * @default null
-         * @private
-         */
-        this._$textarea = null;
-
-        /**
          * @type {Map}
          * @private
          */
@@ -288,6 +281,13 @@ class Player
          * @private
          */
         this._$videos = Util.$getArray();
+
+        /**
+         * @type {TextField}
+         * @default null
+         * @private
+         */
+        this._$textField = null;
 
         // delay
         this._$bindRun = this._$run.bind(this);
@@ -1662,9 +1662,8 @@ class Player
         const event = Util.$event;
 
         // params
-        let instance  = null;
-        let target    = null;
-        let textField = null;
+        let instance = null;
+        let target   = null;
 
         let x = Util.$window.pageXOffset;
         let y = Util.$window.pageYOffset;
@@ -1832,32 +1831,22 @@ class Player
                                 this._$stage.mouseX, this._$stage.mouseY
                             ));
                         }
+
+                        if (this._$textField && this._$textField instanceof TextField) {
+                            this._$textField.focus = false;
+                            this._$textField = null;
+                        }
                         break;
 
                     case Util.$TOUCH_END:
                     case Util.$MOUSE_UP:
 
-                        // active textarea
-                        if (this._$textarea) {
-
-                            textField = this._$textarea._$instance;
-
-                            // execute
-                            this._$textarea.dispatchEvent(
-                                new Util.$window.Event("swf2js_blur")
-                            );
-
-                            // focus out event
-                            if (textField.willTrigger(FocusEvent.FOCUS_OUT)) {
-                                textField.dispatchEvent(new FocusEvent(
-                                    FocusEvent.FOCUS_OUT, true
-                                ));
-                            }
-
-                            // clear
-                            this._$textarea  = null;
-                            this.stage.focus = null;
-
+                        // focus out
+                        if (this._$textField
+                            && this._$textField instanceof TextField
+                        ) {
+                            this._$textField.focus = false;
+                            this._$textField = null;
                         }
 
                         if (this._$stage.hasEventListener(MouseEvent.CLICK)) {
@@ -2052,35 +2041,23 @@ class Player
                     // down event
                     case Util.$TOUCH_START:
                     case Util.$MOUSE_DOWN:
-                        {
 
-                            const focus = this.stage._$focus;
-                            if (focus !== instance) {
-
-                                if (instance instanceof TextField) {
-
-                                    this._$stage.focus = instance;
-
-                                } else {
-
-                                    this._$stage.focus = null;
-
-                                }
-
-                            }
-
-                            // (3) mouseDown
-                            if (instance.willTrigger(MouseEvent.MOUSE_DOWN)) {
-                                instance.dispatchEvent(new MouseEvent(
-                                    MouseEvent.MOUSE_DOWN, true, false,
-                                    instance.mouseX, instance.mouseY
-                                ));
-                            }
-
-                            // (4) click
-                            this._$clickTarget = instance;
-
+                        if (instance instanceof TextField) {
+                            instance.focus   = true;
+                            this._$textField = instance;
                         }
+
+                        // (3) mouseDown
+                        if (instance.willTrigger(MouseEvent.MOUSE_DOWN)) {
+                            instance.dispatchEvent(new MouseEvent(
+                                MouseEvent.MOUSE_DOWN, true, false,
+                                instance.mouseX, instance.mouseY
+                            ));
+                        }
+
+                        // (4) click
+                        this._$clickTarget = instance;
+
                         break;
 
                     // up event

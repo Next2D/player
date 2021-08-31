@@ -91,6 +91,7 @@ class InteractiveObject extends DisplayObject
      *              or other user input, messages.
      *
      * @member {boolean}
+     * @default true
      * @public
      */
     get mouseEnabled ()

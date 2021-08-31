@@ -245,6 +245,14 @@ Util.$location = window.location;
 
 /**
  * @shortcut
+ * @type {RegExp}
+ * @const
+ * @static
+ */
+Util.$RegExp = window.RegExp;
+
+/**
+ * @shortcut
  * @type {function}
  * @const
  * @static
