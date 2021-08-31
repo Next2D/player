@@ -1724,7 +1724,7 @@ class DisplayObjectContainer extends InteractiveObject
                 symbol = symbols[character._$characterId];
             }
 
-            character.class = Util.$getClass(symbol);
+            character.class = Util.$getClass(symbol) || Util.$getClass(character.extends);
         }
 
         const instance = new character.class();
