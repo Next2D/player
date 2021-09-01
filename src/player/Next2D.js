@@ -39,8 +39,12 @@ class Next2D
             return ;
         }
 
+        if (url.charAt(1) === "/") {
+            url = url.slice(1);
+        }
+
         // base set
-        if (!options || !("base" in options)) {
+        if ((!options || !("base" in options)) && url.indexOf("//") > -1) {
             this._$player.base = url;
         }
 
