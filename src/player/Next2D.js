@@ -73,23 +73,27 @@ class Next2D
             player.height = data.height;
             player.stage.frameRate = data.fps;
 
-            const color = Util.$intToRGBA(
-                `0x${data.bgColor.substr(1)}` | 0
-            );
+            if (player._$bgColor === null) {
 
-            player._$context._$setColor(
-                color.R / 255,
-                color.G / 255,
-                color.B / 255,
-                1
-            );
+                const color = Util.$intToRGBA(
+                    `0x${data.bgColor.substr(1)}` | 0
+                );
 
-            player._$backgroundColor = [
-                color.R / 255,
-                color.G / 255,
-                color.B / 255,
-                1
-            ];
+                player._$context._$setColor(
+                    color.R / 255,
+                    color.G / 255,
+                    color.B / 255,
+                    1
+                );
+
+                player._$backgroundColor = [
+                    color.R / 255,
+                    color.G / 255,
+                    color.B / 255,
+                    1
+                ];
+
+            }
 
             stage.addChild(loaderInfo.content);
 

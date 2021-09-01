@@ -11,7 +11,7 @@ const minimist    = require("minimist");
 const replace     = require("gulp-replace");
 const rename      = require("gulp-rename");
 const eslint      = require("gulp-eslint");
-const fs = require("fs");
+const fs          = require("fs");
 
 const options = minimist(process.argv.slice(2), {
     "boolean": ["debugBuild", "prodBuild", "glErrorCheck", "glTrace"],
@@ -21,7 +21,7 @@ const options = minimist(process.argv.slice(2), {
         "prodBuild": false,
         "glErrorCheck": false,
         "glTrace": false,
-        "version": "1.0.0",
+        "version": "1.1.4",
         "distPath": "."
     }
 });

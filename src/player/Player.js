@@ -168,10 +168,10 @@ class Player
 
         /**
          * @type {string|number}
-         * @default transparent
+         * @default null
          * @private
          */
-        this._$backgroundColor = "transparent";
+        this._$backgroundColor = null;
 
         /**
          * @type {string}
@@ -250,11 +250,11 @@ class Player
         this._$tagId = null;
 
         /**
-         * @type {string}
-         * @default ""
+         * @type {string|boolean}
+         * @default null
          * @private
          */
-        this._$bgcolor = "";
+        this._$bgColor = null;
 
         /**
          * @type {string}
@@ -459,11 +459,14 @@ class Player
     setOptions (options = null)
     {
         if (options) {
-            this._$optionWidth  = options.width   || this._$optionWidth;
-            this._$optionHeight = options.height  || this._$optionHeight;
-            this._$tagId        = options.tagId   || this._$tagId;
-            this._$bgcolor      = options.bgcolor || this._$bgcolor;
-            this.base           = options.base    || this._$base;
+            this._$optionWidth  = options.width  || this._$optionWidth;
+            this._$optionHeight = options.height || this._$optionHeight;
+            this._$tagId        = options.tagId  || this._$tagId;
+            this.base           = options.base   || this._$base;
+
+            if ("bgColor" in options) {
+                this._$bgColor = options.bgColor;
+            }
         }
 
         this._$initialize();
@@ -496,8 +499,8 @@ class Player
         if (element) {
 
             // set backgroundColor
-            if (this._$bgcolor) {
-                this._$backgroundColor = this._$bgcolor;
+            if (this._$bgColor !== null) {
+                this._$backgroundColor = this._$bgColor;
             }
 
             // background color
