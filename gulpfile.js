@@ -32,7 +32,8 @@ const options = minimist(process.argv.slice(2), {
  */
 function buildFooterVersion()
 {
-    return gulp.src("src/Footer.file")
+    return gulp
+        .src("src/Footer.file")
         .pipe(replace("###BUILD_VERSION###", options.version))
         .pipe(rename("src/Footer.build.file"))
         .pipe(gulp.dest("."));
@@ -44,7 +45,8 @@ function buildFooterVersion()
  */
 function buildHeaderVersion()
 {
-    return gulp.src("src/Header.file")
+    return gulp
+        .src("src/Header.file")
         .pipe(replace("###BUILD_VERSION###", options.version))
         .pipe(replace("###BUILD_YEAR###", new Date().getFullYear()))
         .pipe(rename("src/Header.build.file"))
@@ -57,10 +59,11 @@ function buildHeaderVersion()
  */
 function buildWorkerFile ()
 {
-    return gulp.src([
-        "src/worker/*.js",
-        "!src/worker/*.min.js"
-    ])
+    return gulp
+        .src([
+            "src/worker/*.js",
+            "!src/worker/*.min.js"
+        ])
         .pipe(uglify())
         .pipe(rename({ "extname": ".min.js" }))
         .pipe(gulp.dest("src/worker"));
@@ -72,7 +75,8 @@ function buildWorkerFile ()
  */
 function buildUtilFile ()
 {
-    return gulp.src("src/util/Util.js")
+    return gulp
+        .src("src/util/Util.js")
         .pipe(replace("###UNZIP_WORKER###",
             fs.readFileSync("src/worker/UnzipWorker.min.js", "utf8")
                 .replace(/\\/g, "\\\\")
@@ -89,31 +93,32 @@ function buildUtilFile ()
  */
 function lint ()
 {
-    return gulp.src([
-        "src/util/Util.js",
-        "src/next2d/events/*.js",
-        "src/next2d/geom/*.js",
-        "src/next2d/display/DisplayObject.js",
-        "src/next2d/display/InteractiveObject.js",
-        "src/next2d/display/DisplayObjectContainer.js",
-        "src/next2d/display/Sprite.js",
-        "src/next2d/display/MovieClip.js",
-        "src/next2d/display/*.js",
-        "src/next2d/filters/BitmapFilter.js",
-        "src/next2d/filters/BitmapFilterType.js",
-        "src/next2d/filters/BitmapFilterQuality.js",
-        "src/next2d/filters/DisplacementMapFilterMode.js",
-        "src/next2d/filters/BlurFilter.js",
-        "src/next2d/filters/*.js",
-        "src/next2d/text/TextFormatAlign.js",
-        "src/next2d/text/TextFieldAutoSize.js",
-        "src/next2d/text/*.js",
-        "src/next2d/**/*.js",
-        "src/util/CacheStore.js",
-        "src/webgl/**/*.js",
-        "src/player/Player.js",
-        "src/player/Next2D.js"
-    ])
+    return gulp
+        .src([
+            "src/util/Util.js",
+            "src/next2d/events/*.js",
+            "src/next2d/geom/*.js",
+            "src/next2d/display/DisplayObject.js",
+            "src/next2d/display/InteractiveObject.js",
+            "src/next2d/display/DisplayObjectContainer.js",
+            "src/next2d/display/Sprite.js",
+            "src/next2d/display/MovieClip.js",
+            "src/next2d/display/*.js",
+            "src/next2d/filters/BitmapFilter.js",
+            "src/next2d/filters/BitmapFilterType.js",
+            "src/next2d/filters/BitmapFilterQuality.js",
+            "src/next2d/filters/DisplacementMapFilterMode.js",
+            "src/next2d/filters/BlurFilter.js",
+            "src/next2d/filters/*.js",
+            "src/next2d/text/TextFormatAlign.js",
+            "src/next2d/text/TextFieldAutoSize.js",
+            "src/next2d/text/*.js",
+            "src/next2d/**/*.js",
+            "src/util/CacheStore.js",
+            "src/webgl/**/*.js",
+            "src/player/Player.js",
+            "src/player/Next2D.js"
+        ])
         .pipe(eslint({ "useEslintrc": true }))
         .pipe(eslint.format())
         .pipe(eslint.failOnError());
@@ -146,33 +151,34 @@ function buildJavaScript()
         preprocessContext.TRACE_GL       = false;
     }
 
-    const build = gulp.src([
-        "src/Header.build.file",
-        "src/util/Util.replaced.js",
-        "src/next2d/events/*.js",
-        "src/next2d/geom/*.js",
-        "src/next2d/display/DisplayObject.js",
-        "src/next2d/display/InteractiveObject.js",
-        "src/next2d/display/DisplayObjectContainer.js",
-        "src/next2d/display/Sprite.js",
-        "src/next2d/display/MovieClip.js",
-        "src/next2d/display/*.js",
-        "src/next2d/filters/BitmapFilter.js",
-        "src/next2d/filters/BitmapFilterType.js",
-        "src/next2d/filters/BitmapFilterQuality.js",
-        "src/next2d/filters/DisplacementMapFilterMode.js",
-        "src/next2d/filters/BlurFilter.js",
-        "src/next2d/filters/*.js",
-        "src/next2d/text/TextFormatAlign.js",
-        "src/next2d/text/TextFieldAutoSize.js",
-        "src/next2d/text/*.js",
-        "src/next2d/**/*.js",
-        "src/util/CacheStore.js",
-        "src/webgl/**/*.js",
-        "src/player/Player.js",
-        "src/player/Next2D.js",
-        "src/Footer.build.file"
-    ])
+    const build = gulp
+        .src([
+            "src/Header.build.file",
+            "src/util/Util.replaced.js",
+            "src/next2d/events/*.js",
+            "src/next2d/geom/*.js",
+            "src/next2d/display/DisplayObject.js",
+            "src/next2d/display/InteractiveObject.js",
+            "src/next2d/display/DisplayObjectContainer.js",
+            "src/next2d/display/Sprite.js",
+            "src/next2d/display/MovieClip.js",
+            "src/next2d/display/*.js",
+            "src/next2d/filters/BitmapFilter.js",
+            "src/next2d/filters/BitmapFilterType.js",
+            "src/next2d/filters/BitmapFilterQuality.js",
+            "src/next2d/filters/DisplacementMapFilterMode.js",
+            "src/next2d/filters/BlurFilter.js",
+            "src/next2d/filters/*.js",
+            "src/next2d/text/TextFormatAlign.js",
+            "src/next2d/text/TextFieldAutoSize.js",
+            "src/next2d/text/*.js",
+            "src/next2d/**/*.js",
+            "src/util/CacheStore.js",
+            "src/webgl/**/*.js",
+            "src/player/Player.js",
+            "src/player/Next2D.js",
+            "src/Footer.build.file"
+        ])
         .pipe(concat("next2d.js"))
         .pipe(preprocess({ "context": preprocessContext }));
 
@@ -219,12 +225,19 @@ function reload (done)
  */
 function watchFiles ()
 {
-    return gulp.watch([
-        "src/**/*.js",
-        "!src/worker/**/*min.js",
-        "!src/util/Util.replaced.js"
-    ])
-        .on("change", gulp.series(lint, buildWorkerFile, buildUtilFile, buildJavaScript, reload));
+    return gulp
+        .watch([
+            "src/**/*.js",
+            "!src/worker/**/*min.js",
+            "!src/util/Util.replaced.js"
+        ])
+        .on("change", gulp.series(
+            lint,
+            buildWorkerFile,
+            buildUtilFile,
+            buildJavaScript,
+            reload
+        ));
 }
 
 /**

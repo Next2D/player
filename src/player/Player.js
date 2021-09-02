@@ -1627,6 +1627,7 @@ class Player
             const actions = mc._$actions.get(frame);
             const length  = actions.length;
             for (let idx = 0; idx < length; ++idx) {
+                Util.$currentLoaderInfo = mc._$loaderInfo;
                 actions[idx].apply(mc);
             }
             mc._$actionProcess = false;
@@ -1642,7 +1643,9 @@ class Player
             }
 
         }
-        Util.$actionProcess = false;
+
+        Util.$currentLoaderInfo = null;
+        Util.$actionProcess     = false;
     }
 
     /**

@@ -17,8 +17,14 @@ class Next2D
     }
 
     /**
-     * @param  {string} url
-     * @param  {object} [options=null]
+     * @param  {string} url JSONファイルのURL
+     *                      URL of the JSON file
+     *
+     * @param  {object} [options=null] {number} width   = Stageの幅 / Stage width
+     *                                 {number} height  = Stageの高さ / Stage height
+     *                                 {string} [tagId=null] canvasを追加対象のDOMのID / ID of the DOM to which the canvas is added
+     *                                 {string} [base="/"]Loaderが読み込む際の絶対パス / Absolute path for Loader to load.
+     *                                 {number|string|boolean} [bgColor=null] 背景色 / background color
      * @return {void}
      * @method
      * @public

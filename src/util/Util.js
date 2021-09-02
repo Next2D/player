@@ -816,6 +816,13 @@ Util.$isMac = Util.$userAgent.indexOf("Mac") > -1;
 Util.$isWindows = Util.$isMac === false;
 
 /**
+ * @type {LoaderInfo}
+ * @default null
+ * @static
+ */
+Util.$currentLoaderInfo = null;
+
+/**
  * @type {HTMLCanvasElement}
  * @const
  */

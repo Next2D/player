@@ -365,7 +365,21 @@ class Loader extends DisplayObjectContainer
     {
         const loaderInfo = this.contentLoaderInfo;
 
-        loaderInfo._$data = object;
+        const symbols = Util.$getMap();
+        if (object.symbols.length) {
+            for (let idx = 0; idx < object.symbols.length; ++idx) {
+
+                const values = object.symbols[idx];
+
+                symbols.set(values[0], values[1]);
+            }
+        }
+
+        loaderInfo._$data = {
+            "stage": object.stage,
+            "characters": object.characters,
+            "symbols": symbols
+        };
 
         const root = object.characters[0];
 

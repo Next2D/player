@@ -1702,6 +1702,25 @@ class DisplayObjectContainer extends InteractiveObject
     }
 
     /**
+     * TODO
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$sync ()
+    {
+        const loaderInfo = Util.$currentLoaderInfo;
+        if (!loaderInfo) {
+            return ;
+        }
+
+        const characterId = loaderInfo._$data.symbols.get(this.namespace);
+        const character   = loaderInfo._$data.characters[characterId];
+
+        console.log(character);
+    }
+
+    /**
      * @param  {number} index
      * @return {DisplayObject}
      * @method

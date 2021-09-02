@@ -619,6 +619,7 @@ class MovieClip extends Sprite
 
                                 try {
 
+                                    Util.$currentLoaderInfo = mc._$loaderInfo;
                                     actions[idx].apply(mc);
 
                                 } catch (e) {
@@ -672,6 +673,7 @@ class MovieClip extends Sprite
 
                             try {
 
+                                Util.$currentLoaderInfo = mc._$loaderInfo;
                                 actions[idx].apply(mc);
 
                             } catch (e) {
@@ -693,7 +695,6 @@ class MovieClip extends Sprite
                         }
 
                     }
-
                 }
                 break;
 
@@ -701,6 +702,8 @@ class MovieClip extends Sprite
                 break;
 
         }
+
+        Util.$currentLoaderInfo = null;
 
         // set sound
         if (this._$canSound && this._$sounds.size
