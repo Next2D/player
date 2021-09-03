@@ -264,7 +264,7 @@ function createHTML (done)
             "templates": {
                 "cleverLinks"   : false,
                 "monospaceLinks": false,
-                "applicationName": "Next2D",
+                "applicationName": "Next2D Player",
                 "disqus": "",
                 "googleAnalytics": "",
                 "favicon": "",

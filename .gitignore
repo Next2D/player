@@ -11,3 +11,4 @@ coverage
 src/util/Util.replaced.js
 src/worker/*.min.js
 *.html
+package-lock.json
