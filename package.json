@@ -1,21 +1,21 @@
 {
-  "name": "next2d",
-  "version": "1.0.0",
+  "name": "next2d-player",
+  "private": true,
+  "version": "1.1.4",
   "description": "Next2D Player",
-  "main": "index.js",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp>",
   "license": "MIT",
   "scripts": {
     "test": "gulp test",
     "lint": "gulp lint"
   },
-  "directories": {
-    "source": "./src/",
-    "test": "./test/"
-  },
   "keywords": [
-    "Next2D"
+    "Next2D", "Next2D Player"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Next2D/Player.git"
+  },
   "devDependencies": {
     "@pixi/jsdoc-template": "^2.6.0",
     "browser-sync": "^2.27.5",

@@ -1,4 +1,4 @@
-name: UnitTest
+name: Integration UnitTest
 
 on:
   push:
@@ -22,7 +22,6 @@ jobs:
           sudo safaridriver --enable
           safaridriver -p 0 &
       - run: npm install
-      - run: npm run lint
       - run: npm run test
 
   windows-browser-test:
@@ -37,5 +36,4 @@ jobs:
         with:
           firefox-version: "84.0"
       - run: npm install
-      - run: npm run lint
       - run: npm run test
