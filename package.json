@@ -1,0 +1,16 @@
+{
+  "name": "@next2d/player",
+  "version": "0.0.1",
+  "description": "Next2D Player",
+  "author": "Toshiyuki Ienaga<ienaga@tvon.jp>",
+  "license": "MIT",
+  "homepage": "https://next2d.app",
+  "bugs": "https://github.com/Next2D/Player/issues",
+  "keywords": [
+    "Next2D", "Next2D Player"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Next2D/Player.git"
+  }
+}
