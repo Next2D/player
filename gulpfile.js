@@ -21,7 +21,7 @@ const options = minimist(process.argv.slice(2), {
         "prodBuild": false,
         "glErrorCheck": false,
         "glTrace": false,
-        "version": "1.1.4",
+        "version": "1.2.4",
         "distPath": "."
     }
 });
@@ -290,7 +290,7 @@ function createHTML (done)
                 "recurse": true,
                 "private": false,
                 "lenient": true,
-                "destination": "../next2d/docs/player/",
+                "destination": "../next2d/docs/docs/player/",
                 "template": "node_modules/@pixi/jsdoc-template"
             }
         }, done));
