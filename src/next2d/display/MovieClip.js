@@ -954,20 +954,3 @@ class MovieClip extends Sprite
         this._$canSound = false;
     }
 }
-
-/**
- * TODO 消す
- */
-class View extends MovieClip
-{
-    constructor()
-    {
-        super();
-        this._$sync();
-    }
-
-    get namespace ()
-    {
-        return "next2d.fw.View";
-    }
-}

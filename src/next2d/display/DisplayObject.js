@@ -1347,6 +1347,7 @@ class DisplayObject extends EventDispatcher
 
     /**
      * @return {object}
+     * @method
      * @private
      */
     _$sync ()

@@ -635,16 +635,13 @@ class Video extends DisplayObject
     }
 
     /**
-     * @param  {object} tag
-     * @param  {DisplayObjectContainer} parent
-     * @return {object}
+     * @param  {object} character
+     * @return {void}
      * @method
      * @private
      */
-    _$build (tag, parent)
+    _$buildCharacter (character)
     {
-        const character = super._$build(tag, parent);
-
         this._$loop     = character.loop;
         this._$autoPlay = character.autoPlay;
         this._$bounds   = character.bounds;
@@ -661,6 +658,38 @@ class Video extends DisplayObject
         // setup
         this._$video.volume = Util.$min(character.volume, SoundMixer.volume);
         this._$video.load();
+    }
+
+    /**
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$sync ()
+    {
+        const character = super._$sync();
+
+        if (character) {
+            this._$buildCharacter(character);
+        }
+
+        return character;
+    }
+
+    /**
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$build (tag, parent)
+    {
+        const character = super._$build(tag, parent);
+
+        this._$buildCharacter(character);
+
+        return character;
     }
 
     /**
