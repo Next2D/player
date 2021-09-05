@@ -365,11 +365,16 @@ class Loader extends DisplayObjectContainer
     {
         const loaderInfo = this.contentLoaderInfo;
 
+        let rootSymbol = null;
         const symbols = Util.$getMap();
         if (object.symbols.length) {
             for (let idx = 0; idx < object.symbols.length; ++idx) {
 
                 const values = object.symbols[idx];
+
+                if (values[1] === 0) {
+                    rootSymbol = values[0];
+                }
 
                 symbols.set(values[0], values[1]);
             }
@@ -381,12 +386,20 @@ class Loader extends DisplayObjectContainer
             "symbols": symbols
         };
 
-        const root = object.characters[0];
-
         // setup
-        loaderInfo._$content = new MovieClip();
+        if (rootSymbol) {
+
+            const SymbolClass = Util.$getClass(rootSymbol) || MovieClip;
+            loaderInfo._$content = new SymbolClass();
+
+        } else {
+
+            loaderInfo._$content = new MovieClip();
+
+        }
 
         // build root
+        const root = object.characters[0];
         loaderInfo._$content._$build({
             "characterId": 0,
             "clipDepth": 0,

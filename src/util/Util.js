@@ -869,7 +869,7 @@ Util.$DIV = null;
  * @method
  * @static
  */
-Util.$isArray = function (source)
+Util.$isArray = (source) =>
 {
     return Util.$Array.isArray(source);
 };
@@ -880,7 +880,7 @@ Util.$isArray = function (source)
  * @method
  * @static
  */
-Util.$getArray = function (...args)
+Util.$getArray = (...args) =>
 {
     const array = Util.$arrays.pop() || [];
     if (args.length) {
@@ -895,7 +895,7 @@ Util.$getArray = function (...args)
  * @method
  * @static
  */
-Util.$poolArray = function (array)
+Util.$poolArray = (array) =>
 {
     if (array.length) {
         array.length = 0;
@@ -912,7 +912,7 @@ Util.$poolArray = function (array)
  * @method
  * @static
  */
-Util.$clamp = function (value, min, max, default_value = null)
+Util.$clamp = (value, min, max, default_value = null) =>
 {
     const number = +value;
     return Util.$isNaN(number) && default_value !== null
@@ -927,7 +927,7 @@ Util.$clamp = function (value, min, max, default_value = null)
  * @method
  * @static
  */
-Util.$multiplicationColor = function (a, b)
+Util.$multiplicationColor = (a, b) =>
 {
     return Util.$getFloat32Array8(
         a[0] * b[0],
@@ -947,7 +947,7 @@ Util.$multiplicationColor = function (a, b)
  * @returns {Float32Array}
  * @static
  */
-Util.$multiplicationMatrix = function(a, b)
+Util.$multiplicationMatrix = (a, b) =>
 {
     return Util.$getFloat32Array6(
         a[0] * b[0] + a[2] * b[1],
@@ -968,7 +968,7 @@ Util.$multiplicationMatrix = function(a, b)
  * @method
  * @static
  */
-Util.$getBoundsObject = function (x_min = 0, x_max = 0, y_min = 0, y_max = 0)
+Util.$getBoundsObject = (x_min = 0, x_max = 0, y_min = 0, y_max = 0) =>
 {
     const object = Util.$bounds.pop() || { "xMin": 0, "xMax": 0, "yMin": 0, "yMax": 0 };
 
@@ -985,7 +985,7 @@ Util.$getBoundsObject = function (x_min = 0, x_max = 0, y_min = 0, y_max = 0)
  * @method
  * @static
  */
-Util.$poolBoundsObject = function (bounds)
+Util.$poolBoundsObject = (bounds) =>
 {
     Util.$bounds.push(bounds);
 };
@@ -996,7 +996,7 @@ Util.$poolBoundsObject = function (bounds)
  * @method
  * @static
  */
-Util.$poolMap = function (map)
+Util.$poolMap = (map) =>
 {
     if (map.size) {
         map.clear();
@@ -1009,7 +1009,7 @@ Util.$poolMap = function (map)
  * @method
  * @static
  */
-Util.$getMap = function ()
+Util.$getMap = () =>
 {
     return Util.$maps.pop() || new Util.$Map();
 };
@@ -1023,7 +1023,7 @@ Util.$getMap = function ()
  * @method
  * @static
  */
-Util.$getFloat32Array4 = function (f0 = 0, f1 = 0, f2 = 0, f3 = 0)
+Util.$getFloat32Array4 = (f0 = 0, f1 = 0, f2 = 0, f3 = 0) =>
 {
     const array = Util.$float32Array4.pop()
         || new Util.$window.Float32Array(4);
@@ -1042,7 +1042,7 @@ Util.$getFloat32Array4 = function (f0 = 0, f1 = 0, f2 = 0, f3 = 0)
  * @method
  * @static
  */
-Util.$poolFloat32Array4 = function (array)
+Util.$poolFloat32Array4 = (array) =>
 {
     Util.$float32Array4.push(array);
 };
@@ -1058,9 +1058,8 @@ Util.$poolFloat32Array4 = function (array)
  * @method
  * @static
  */
-Util.$getFloat32Array6 = function (
-    f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0
-) {
+Util.$getFloat32Array6 = (f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0) =>
+{
     const array = Util.$float32Array6.pop()
         || new Util.$window.Float32Array(6);
 
@@ -1080,7 +1079,7 @@ Util.$getFloat32Array6 = function (
  * @method
  * @static
  */
-Util.$poolFloat32Array6 = function (array)
+Util.$poolFloat32Array6 = (array) =>
 {
     Util.$float32Array6.push(array);
 };
@@ -1098,9 +1097,9 @@ Util.$poolFloat32Array6 = function (array)
  * @method
  * @static
  */
-Util.$getFloat32Array8 = function (
+Util.$getFloat32Array8 = (
     f0 = 1, f1 = 1, f2 = 1, f3 = 1, f4 = 0, f5 = 0, f6 = 0, f7 = 0
-) {
+) => {
     const array = Util.$float32Array8.pop()
         || new Util.$window.Float32Array(8);
 
@@ -1122,7 +1121,7 @@ Util.$getFloat32Array8 = function (
  * @method
  * @static
  */
-Util.$poolFloat32Array8 = function (array)
+Util.$poolFloat32Array8 = (array) =>
 {
     Util.$float32Array8.push(array);
 };
@@ -1141,9 +1140,9 @@ Util.$poolFloat32Array8 = function (array)
  * @method
  * @static
  */
-Util.$getFloat32Array9 = function (
+Util.$getFloat32Array9 = (
     f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0, f6 = 0, f7 = 0, f8 = 0
-) {
+) => {
     const array = Util.$float32Array9.pop()
         || new Util.$window.Float32Array(9);
 
@@ -1166,7 +1165,7 @@ Util.$getFloat32Array9 = function (
  * @method
  * @static
  */
-Util.$poolFloat32Array9 = function (array)
+Util.$poolFloat32Array9 = (array) =>
 {
     Util.$float32Array9.push(array);
 };
@@ -1176,7 +1175,7 @@ Util.$poolFloat32Array9 = function (array)
  * @method
  * @static
  */
-Util.$currentPlayer = function ()
+Util.$currentPlayer = () =>
 {
     return window.next2d._$player;
 };
@@ -1186,7 +1185,7 @@ Util.$currentPlayer = function ()
  * @method
  * @static
  */
-Util.$currentMousePoint = function ()
+Util.$currentMousePoint = () =>
 {
     // setup
     const player = Util.$currentPlayer();
@@ -1222,7 +1221,7 @@ Util.$currentMousePoint = function ()
  * @method
  * @static
  */
-Util.$boundsMatrix = function (bounds, matrix)
+Util.$boundsMatrix = (bounds, matrix) =>
 {
     const x0 = bounds.xMax * matrix[0] + bounds.yMax * matrix[2] + matrix[4];
     const x1 = bounds.xMax * matrix[0] + bounds.yMin * matrix[2] + matrix[4];
@@ -1247,7 +1246,7 @@ Util.$boundsMatrix = function (bounds, matrix)
  * @method
  * @static
  */
-Util.$upperPowerOfTwo = function (v)
+Util.$upperPowerOfTwo = (v) =>
 {
     v--;
     v |= v >> 1;
@@ -1268,7 +1267,7 @@ Util.$upperPowerOfTwo = function (v)
  * @param  {number} [ty=0]
  * @return {Matrix}
  */
-Util.$getMatrix = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
+Util.$getMatrix = (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0) =>
 {
     if (!Util.$matrices.length) {
         return new Matrix(a, b, c, d, tx, ty);
@@ -1284,7 +1283,7 @@ Util.$getMatrix = function (a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)
  * @method
  * @static
  */
-Util.$poolMatrix = function (matrix)
+Util.$poolMatrix = (matrix) =>
 {
     Util.$poolFloat32Array6(matrix._$matrix);
     matrix._$matrix = null;
@@ -1296,7 +1295,7 @@ Util.$poolMatrix = function (matrix)
  * @param  {*} value
  * @return {boolean}
  */
-Util.$toBoolean = function (value = false)
+Util.$toBoolean = (value = false) =>
 {
     switch (typeof value) {
 
@@ -1328,10 +1327,10 @@ Util.$toBoolean = function (value = false)
  * @param  {number} [alpha_offset=0]
  * @return {ColorTransform}
  */
-Util.$getColorTransform = function (
+Util.$getColorTransform = (
     red_multiplier = 1, green_multiplier = 1, blue_multiplier = 1, alpha_multiplier = 1,
     red_offset = 0, green_offset = 0, blue_offset = 0, alpha_offset = 0
-) {
+) => {
 
     if (!Util.$colors.length) {
         return new ColorTransform(
@@ -1356,7 +1355,7 @@ Util.$getColorTransform = function (
  * @method
  * @static
  */
-Util.$poolColorTransform = function (color_transform)
+Util.$poolColorTransform = (color_transform) =>
 {
     Util.$poolFloat32Array8(color_transform._$colorTransform);
     color_transform._$colorTransform = null;
@@ -1369,10 +1368,10 @@ Util.$poolColorTransform = function (color_transform)
  * @method
  * @static
  */
-Util.$toColorInt = function (rgb)
+Util.$toColorInt = (rgb) =>
 {
     return Util.$isNaN(+rgb)
-        ? this.$colorStringToInt(rgb)
+        ? Util.$colorStringToInt(rgb)
         : +rgb;
 };
 
@@ -1382,7 +1381,7 @@ Util.$toColorInt = function (rgb)
  * @method
  * @static
  */
-Util.$colorStringToInt = function(str)
+Util.$colorStringToInt = (str) =>
 {
     Util.$hitContext.fillStyle = str;
     const color = Util.$hitContext.fillStyle.substr(1);
@@ -1401,7 +1400,8 @@ Util.$colorStringToInt = function(str)
  * @method
  * @static
  */
-Util.$intToR = function (int, alpha, premultiplied) {
+Util.$intToR = (int, alpha, premultiplied) =>
+{
     return (int >> 16) * (premultiplied ? alpha : 1) / 255;
 };
 
@@ -1413,7 +1413,8 @@ Util.$intToR = function (int, alpha, premultiplied) {
  * @method
  * @static
  */
-Util.$intToG = function (int, alpha, premultiplied) {
+Util.$intToG = (int, alpha, premultiplied) =>
+{
     return (int >> 8 & 0xFF) * (premultiplied ? alpha : 1) / 255;
 };
 
@@ -1425,7 +1426,8 @@ Util.$intToG = function (int, alpha, premultiplied) {
  * @method
  * @static
  */
-Util.$intToB = function (int, alpha, premultiplied) {
+Util.$intToB = (int, alpha, premultiplied) =>
+{
     return (int & 0xFF) * (premultiplied ? alpha : 1) / 255;
 };
 
@@ -1435,7 +1437,7 @@ Util.$intToB = function (int, alpha, premultiplied) {
  * @method
  * @static
  */
-Util.$uintToRGBA = function (uint)
+Util.$uintToRGBA = (uint) =>
 {
     return {
         "A": uint >>> 24,
@@ -1452,7 +1454,7 @@ Util.$uintToRGBA = function (uint)
  * @method
  * @static
  */
-Util.$intToRGBA = function (color, alpha = 1)
+Util.$intToRGBA = (color, alpha = 1) =>
 {
     return {
         "R": (color & 0xff0000) >> 16,
@@ -1469,7 +1471,7 @@ Util.$intToRGBA = function (color, alpha = 1)
  * @method
  * @static
  */
-Util.$generateColorTransform = function (object, color)
+Util.$generateColorTransform = (object, color) =>
 {
     return {
         "R": Util.$max(0, Util.$min(object.R * color[0] + color[4], 255)),
@@ -1484,7 +1486,7 @@ Util.$generateColorTransform = function (object, color)
  * @method
  * @static
  */
-Util.$cacheStore = function ()
+Util.$cacheStore = () =>
 {
     return Util.$currentPlayer()._$cacheStore;
 };
@@ -1495,7 +1497,7 @@ Util.$cacheStore = function ()
  * @method
  * @static
  */
-Util.$inverseMatrix = function(m)
+Util.$inverseMatrix = (m) =>
 {
     const rdet = 1 / (m[0] * m[4] - m[3] * m[1]);
     const tx  = m[3] * m[7] - m[4] * m[6];
@@ -1571,7 +1573,7 @@ Util.$decodeAudioSuccess = function (buffer)
  * @method
  * @static
  */
-Util.$decodeAudioData = function (sound)
+Util.$decodeAudioData = (sound) =>
 {
     const buffer = sound._$character
         ? sound._$character.buffer
@@ -1595,7 +1597,7 @@ Util.$decodeAudioData = function (sound)
  * @method
  * @static
  */
-Util.$loadAudioData = function ()
+Util.$loadAudioData = () =>
 {
     // create AudioContext
     if (!Util.$audioContext) {
@@ -1635,7 +1637,7 @@ Util.$loadAudioData = function ()
  * @method
  * @static
  */
-Util.$getImageType = function (buffer)
+Util.$getImageType = (buffer) =>
 {
     if (buffer[0] === 0xff && buffer[1] === 0xd8) {
         return "jpeg";
@@ -1671,7 +1673,7 @@ Util.$resizeTimerId = 0;
  * @method
  * @static
  */
-Util.$resize = function ()
+Util.$resize = () =>
 {
     const clearTimer = Util.$clearTimeout;
     clearTimer(Util.$resizeTimerId);
@@ -1685,7 +1687,7 @@ Util.$resize = function ()
  * @method
  * @static
  */
-Util.$resizeExecute = function ()
+Util.$resizeExecute = () =>
 {
     const player = Util.$currentPlayer();
     if (player._$loadStatus === Player.LOAD_END) {
@@ -1704,7 +1706,7 @@ Util.$window.addEventListener("resize", Util.$resize);
  * @method
  * @static
  */
-Util.$resetContext = function (context)
+Util.$resetContext = (context) =>
 {
     // reset color
     const style = context._$contextStyle;
@@ -1751,7 +1753,7 @@ Util.$resetContext = function (context)
  * @return {object}
  * @static
  */
-Util.$getPreObject = function ()
+Util.$getPreObject = () =>
 {
     return Util.$preObjects.pop() ||
         {
@@ -1780,7 +1782,7 @@ Util.$getPreObject = function ()
  * @return void
  * @static
  */
-Util.$poolPreObject = function (object)
+Util.$poolPreObject = (object) =>
 {
     // reset
     object.isFilter           = false;
@@ -1812,7 +1814,7 @@ Util.$poolPreObject = function (object)
  * @method
  * @static
  */
-Util.$cross = function (x1, y1, x2, y2)
+Util.$cross = (x1, y1, x2, y2) =>
 {
     return x1 * y2 - x2 * y1;
 };
@@ -1821,7 +1823,7 @@ Util.$cross = function (x1, y1, x2, y2)
  * @param   {Float32Array} matrix
  * @returns {Float32Array}
  */
-Util.$linearGradientXY = function (matrix)
+Util.$linearGradientXY = (matrix) =>
 {
     const x0  = -819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
     const x1  =  819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
@@ -1851,7 +1853,7 @@ Util.$linearGradientXY = function (matrix)
  * @param  {object} [option = null]
  * @return void
  */
-Util.$ajax = function (option = null)
+Util.$ajax = (option = null) =>
 {
 
     if (!option) {
@@ -1944,7 +1946,7 @@ Util.$ajax = function (option = null)
  * @param  {string} header
  * @return {array}
  */
-Util.$headerToArray = function (header)
+Util.$headerToArray = (header) =>
 {
     const results = Util.$getArray();
     if (header) {
@@ -1967,12 +1969,12 @@ Util.$headerToArray = function (header)
 };
 
 /**
- * @param {string} symbol
+ * @param  {string} symbol
  * @return {function}
  * @method
  * @static
  */
-Util.$getClass = function (symbol)
+Util.$getClass = (symbol) =>
 {
     const names = symbol.split(".");
 
@@ -2115,7 +2117,7 @@ Util.$unzipHandler = function (event)
  * @method
  * @static
  */
-Util.$packages = function (object)
+Util.$packages = (object) =>
 {
     object.display = {
         "BitmapData": BitmapData,
@@ -2200,5 +2202,9 @@ Util.$packages = function (object)
         "Easing": Easing,
         "Job": Job,
         "Tween": Tween
+    };
+
+    object.fw = {
+        "View": View
     };
 };

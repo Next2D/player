@@ -834,16 +834,13 @@ class MovieClip extends Sprite
     }
 
     /**
-     * @param  {object} tag
-     * @param  {DisplayObjectContainer} parent
-     * @return {object}
+     * @param  {object} character
+     * @return {void}
      * @method
      * @private
      */
-    _$build (tag, parent)
+    _$buildCharacter (character)
     {
-        const character = super._$build(tag, parent);
-
         for (let idx = 0; idx < character.sounds.length; ++idx) {
 
             const object = character.sounds[idx];
@@ -879,6 +876,36 @@ class MovieClip extends Sprite
         }
 
         this._$totalFrames = character.totalFrame || 1;
+    }
+
+    /**
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$sync ()
+    {
+        const character = super._$sync();
+
+        if (character) {
+            this._$buildCharacter(character);
+        }
+
+        return character;
+    }
+
+    /**
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$build (tag, parent)
+    {
+        const character = super._$build(tag, parent);
+
+        this._$buildCharacter(character);
 
         return character;
     }
@@ -925,5 +952,22 @@ class MovieClip extends Sprite
         }
 
         this._$canSound = false;
+    }
+}
+
+/**
+ * TODO 消す
+ */
+class View extends MovieClip
+{
+    constructor()
+    {
+        super();
+        this._$sync();
+    }
+
+    get namespace ()
+    {
+        return "next2d.fw.View";
     }
 }

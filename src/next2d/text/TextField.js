@@ -2202,16 +2202,13 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @param  {object} tag
-     * @param  {DisplayObjectContainer} parent
-     * @return {object}
+     * @param  {object} character
+     * @return {void}
      * @method
      * @private
      */
-    _$build (tag, parent)
+    _$buildCharacter (character)
     {
-        const character = super._$build(tag, parent);
-
         const textFormat = this.defaultTextFormat;
 
         textFormat.font          = character.font;
@@ -2269,6 +2266,38 @@ class TextField extends InteractiveObject
         }
 
         this.text = character.text;
+    }
+
+    /**
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$sync ()
+    {
+        const character = super._$sync();
+
+        if (character) {
+            this._$buildCharacter(character);
+        }
+
+        return character;
+    }
+
+    /**
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$build (tag, parent)
+    {
+        const character = super._$build(tag, parent);
+
+        this._$buildCharacter(character);
+
+        return character;
     }
 
     /**

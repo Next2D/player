@@ -338,7 +338,8 @@ class EventDispatcher
                                             }
 
                                             // event execute
-                                            event._$currentTarget = obj.target;
+                                            event._$currentTarget   = obj.target;
+                                            Util.$currentLoaderInfo = obj.target._$loaderInfo;
 
                                             try {
 
@@ -390,7 +391,8 @@ class EventDispatcher
                                 }
 
                                 // event execute
-                                event._$currentTarget = obj.target;
+                                event._$currentTarget   = obj.target;
+                                Util.$currentLoaderInfo = obj.target._$loaderInfo;
 
                                 try {
 
@@ -442,7 +444,8 @@ class EventDispatcher
                                         }
 
                                         // event execute
-                                        event._$currentTarget = obj.target;
+                                        event._$currentTarget   = obj.target;
+                                        Util.$currentLoaderInfo = obj.target._$loaderInfo;
 
                                         try {
 

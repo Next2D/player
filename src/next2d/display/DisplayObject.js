@@ -1346,6 +1346,30 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
+     * @return {object}
+     * @private
+     */
+    _$sync ()
+    {
+        if (this._$loaderInfo) {
+            return null;
+        }
+
+        const loaderInfo = Util.$currentLoaderInfo;
+        if (!loaderInfo) {
+            return null;
+        }
+
+        const characterId  = loaderInfo._$data.symbols.get(this.namespace);
+        const character    = loaderInfo._$data.characters[characterId];
+
+        this._$characterId = characterId;
+        this._$loaderInfo  = loaderInfo;
+
+        return character;
+    }
+
+    /**
      * @param  {object} tag
      * @param  {DisplayObjectContainer} parent
      * @return {object}

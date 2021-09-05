@@ -114,16 +114,14 @@ class Shape extends DisplayObject
     }
 
     /**
-     * @param  {object} tag
-     * @param  {DisplayObjectContainer} parent
-     * @return {object}
+     * @param  {object} character
+     * @param  {LoaderInfo} loaderInfo
+     * @return {void}
      * @method
      * @private
      */
-    _$build (tag, parent)
+    _$buildCharacter (character, loaderInfo)
     {
-        const character = super._$build(tag, parent);
-
         const graphics = this.graphics;
 
         if (character.recodes) {
@@ -132,7 +130,6 @@ class Shape extends DisplayObject
 
                 this._$bitmapId = character.bitmapId;
 
-                const loaderInfo = parent._$loaderInfo;
                 const bitmap = loaderInfo._$data.characters[character.bitmapId];
 
                 const width  = Util.$abs(bitmap.bounds.xMax - bitmap.bounds.xMin);
@@ -197,6 +194,36 @@ class Shape extends DisplayObject
         graphics._$xMax = character.bounds.xMax;
         graphics._$yMin = character.bounds.yMin;
         graphics._$yMax = character.bounds.yMax;
+    }
+
+    /**
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$sync ()
+    {
+        const character = super._$sync();
+
+        if (character) {
+            this._$buildCharacter(character, this._$loaderInfo);
+        }
+
+        return character;
+    }
+
+    /**
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$build (tag, parent)
+    {
+        const character = super._$build(tag, parent);
+
+        this._$buildCharacter(character, parent._$loaderInfo);
 
         return character;
     }

@@ -752,8 +752,10 @@ class DisplayObjectContainer extends InteractiveObject
                     continue;
                 }
 
-                if (instance._$startFrame <= frame
-                    && instance._$endFrame > frame
+                const startFrame = instance._$startFrame;
+                const endFrame   = instance._$endFrame;
+                if (startFrame === 1 && endFrame === 0
+                    || startFrame <= frame && endFrame > frame
                 ) {
 
                     instance._$filters   = null;
@@ -1702,25 +1704,6 @@ class DisplayObjectContainer extends InteractiveObject
     }
 
     /**
-     * TODO
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$sync ()
-    {
-        const loaderInfo = Util.$currentLoaderInfo;
-        if (!loaderInfo) {
-            return ;
-        }
-
-        const characterId = loaderInfo._$data.symbols.get(this.namespace);
-        const character   = loaderInfo._$data.characters[characterId];
-
-        console.log(character);
-    }
-
-    /**
      * @param  {number} index
      * @return {DisplayObject}
      * @method
@@ -1735,17 +1718,12 @@ class DisplayObjectContainer extends InteractiveObject
 
         // symbol class
         if (!character.class) {
-
-            const symbols = loaderInfo._$data.symbols;
-
-            let symbol = character.symbol;
-            if (tag.characterId in symbols) {
-                symbol = symbols[character._$characterId];
-            }
-
-            character.class = Util.$getClass(symbol) || Util.$getClass(character.extends);
+            character.class = character.symbol
+                ? Util.$getClass(character.symbol) || Util.$getClass(character.extends)
+                : Util.$getClass(character.extends);
         }
 
+        Util.$currentLoaderInfo = null;
         const instance = new character.class();
         instance._$build(tag, this);
         instance._$id = index;
