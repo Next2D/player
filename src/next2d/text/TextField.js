@@ -586,9 +586,7 @@ class TextField extends InteractiveObject
         this._$focus = !!focus;
         if (this._$focus) {
 
-            if (this._$type === TextFieldType.INPUT
-                && this._$selectable
-            ) {
+            if (this._$type === TextFieldType.INPUT && this._$selectable) {
 
                 const player = Util.$currentPlayer();
 
@@ -609,8 +607,8 @@ class TextField extends InteractiveObject
                 );
 
                 element.style.color  = `rgb(${color.R},${color.G},${color.B})`;
-                element.style.left   = `${Util.$floor(matrix.tx * player._$scale + bounds.xMin)}px`;
-                element.style.top    = `${Util.$floor(matrix.ty * player._$scale + bounds.yMin)}px`;
+                element.style.left   = `${Util.$floor((matrix.tx + bounds.xMin) * player._$scale)}px`;
+                element.style.top    = `${Util.$floor((matrix.ty + bounds.yMin) * player._$scale)}px`;
                 element.style.width  = `${Util.$ceil((this.width  - 1) * player._$scale)}px`;
                 element.style.height = `${Util.$ceil((this.height - 1) * player._$scale)}px`;
 
@@ -3003,9 +3001,14 @@ class TextField extends InteractiveObject
         const tf = this.defaultTextFormat;
         const fontSize = Util.$ceil(tf.size * scale * this._$transform.concatenatedMatrix.d);
         this._$textarea.style.fontSize   = `${fontSize}px`;
-        this._$textarea.style.textAlign  = tf.align;
         this._$textarea.style.fontFamily = tf.font;
         this._$textarea.style.lineHeight = `${(fontSize + Util.$max(0, tf.leading | 0)) / fontSize}em`;
+
+        if (this._$autoSize !== TextFieldAutoSize.NONE) {
+            this._$textarea.style.textAlign = TextFieldAutoSize.CENTER;
+        } else {
+            this._$textarea.style.textAlign = tf.align;
+        }
 
         if (!this._$textarea.onkeydown) {
             this._$textarea.onkeydown = function (event)
