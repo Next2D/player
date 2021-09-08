@@ -2203,8 +2203,4 @@ Util.$packages = (object) =>
         "Job": Job,
         "Tween": Tween
     };
-
-    object.fw = {
-        "View": View
-    };
 };
