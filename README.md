@@ -14,7 +14,7 @@ WebGL、WebGL2を完全にサポートしており、ブラウザやデバイス
   
 [comment]: <> (Next2D Toolを利用することで、NoCodeでイメージしたアニメーションを直感的に作成でき  )
 [comment]: <> (書き出したJSONデータを、Next2D Playerで簡単に再生および公開が可能です。  )
-[comment]: <> (Next2D Toolはインストール不要、会員登録不要、アクセスすれば誰でもすぐに使えるWebサービスです。  )
+[comment]: <> (Next2D Toolはインストール不要でアクセスすれば誰でもすぐに使えるWebサービスです。  )
   
 2Dエンターテインメント開発を簡単に！快速に！快適に！  
 
@@ -27,7 +27,7 @@ It is a library that allows you to create rich, interactive graphics, cross-plat
   
 [comment]: <> (With the Next2D Tool, you can intuitively create animations as you imagine them in NoCode.  )
 [comment]: <> (The exported JSON data can be easily played and published using the Next2D Player.  )
-[comment]: <> (Next2D Tool is a web service that does not require installation or membership registration, and can be used immediately by anyone who accesses it.  )
+[comment]: <> (Next2D Tool is a web service that does not require installation and can be used immediately by anyone who accesses it.  )
   
 2D entertainment development made easy! Fast! Comfortable!
 
@@ -63,15 +63,15 @@ loader.load(request);
 @see [API Documentation](https://next2d.app/docs/player/index.html)
 
 # Related sites
-* Website
+* [Website](https://next2d.app)
+* [Player API Documentation](https://next2d.app/docs/player/index.html)
 * Next2D Tool(α version to be released in December 2021.)
 * Next2D Framework(β version to be released in December 2021.)
-* Demo
 * Tips
 * Examples
 * Tutorial
 * [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)
-* [API Documentation](https://next2d.app/docs/player/index.html)
+
 
 # License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.
