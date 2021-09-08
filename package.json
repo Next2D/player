@@ -1,18 +1,11 @@
 {
-  "name": "@next2d/player",
+  "name": "next2d-player",
   "description": "Next2D Player",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp>",
   "license": "MIT",
   "scripts": {
     "test": "gulp test",
     "lint": "gulp lint"
-  },
-  "keywords": [
-    "Next2D", "Next2D Player"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Next2D/Player.git"
   },
   "devDependencies": {
     "@pixi/jsdoc-template": "^2.6.0",

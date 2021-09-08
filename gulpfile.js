@@ -14,10 +14,9 @@ const eslint      = require("gulp-eslint");
 const fs          = require("fs");
 
 const options = minimist(process.argv.slice(2), {
-    "boolean": ["debugBuild", "prodBuild", "glErrorCheck", "glTrace"],
+    "boolean": ["prodBuild", "glErrorCheck", "glTrace"],
     "string": ["distPath", "version"],
     "default": {
-        "debugBuild": true,
         "prodBuild": false,
         "glErrorCheck": false,
         "glTrace": false,
@@ -133,9 +132,7 @@ function buildJavaScript()
     // setup
     const preprocessContext = {};
 
-    if (options.debugBuild) {
-        preprocessContext.DEBUG = true;
-    }
+    preprocessContext.DEBUG = !options.prodBuild;
 
     if (options.glErrorCheck) {
         preprocessContext.GL_ERROR_CHECK = true;
@@ -146,7 +143,6 @@ function buildJavaScript()
     }
 
     if (options.prodBuild) {
-        preprocessContext.DEBUG          = false;
         preprocessContext.GL_ERROR_CHECK = false;
         preprocessContext.TRACE_GL       = false;
     }
