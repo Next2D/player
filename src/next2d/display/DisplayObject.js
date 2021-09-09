@@ -1352,11 +1352,7 @@ class DisplayObject extends EventDispatcher
      */
     _$sync ()
     {
-        if (this._$loaderInfo) {
-            return null;
-        }
-
-        const loaderInfo = Util.$currentLoaderInfo;
+        const loaderInfo = this._$loaderInfo || Util.$currentLoaderInfo;
         if (!loaderInfo) {
             return null;
         }

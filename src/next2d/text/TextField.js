@@ -64,13 +64,6 @@ class TextField extends InteractiveObject
         this._$multiline = false;
 
         /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$selectable = true;
-
-        /**
          * @type {string}
          * @default ""
          * @private
@@ -586,7 +579,7 @@ class TextField extends InteractiveObject
         this._$focus = !!focus;
         if (this._$focus) {
 
-            if (this._$type === TextFieldType.INPUT && this._$selectable) {
+            if (this._$type === TextFieldType.INPUT) {
 
                 const player = Util.$currentPlayer();
 
@@ -883,23 +876,6 @@ class TextField extends InteractiveObject
                 this.dispatchEvent(new Event(Event.SCROLL, true));
             }
         }
-    }
-
-    /**
-     * @description テキストフィールドが選択可能であるかどうかを示すブール値です。
-     *              A Boolean value that indicates whether the text field is selectable.
-     *
-     * @member {boolean}
-     * @default true
-     * @public
-     */
-    get selectable ()
-    {
-        return this._$selectable;
-    }
-    set selectable (selectable)
-    {
-        this._$selectable = !!selectable;
     }
 
     /**
@@ -2886,6 +2862,17 @@ class TextField extends InteractiveObject
                         this.dispatchEvent(new Event(Event.CHANGE, true));
                     }
 
+                    const player = Util.$currentPlayer();
+
+                    // setup
+                    const element = this._$textarea;
+                    const matrix  = this._$transform.concatenatedMatrix;
+                    const bounds  = this._$getBounds(null);
+
+                    element.style.left   = `${Util.$floor((matrix.tx + bounds.xMin) * player._$scale)}px`;
+                    element.style.top    = `${Util.$floor((matrix.ty + bounds.yMin) * player._$scale)}px`;
+                    element.style.width  = `${Util.$ceil((this.width  - 1) * player._$scale)}px`;
+                    element.style.height = `${Util.$ceil((this.height - 1) * player._$scale)}px`;
                 }
 
             }.bind(this));

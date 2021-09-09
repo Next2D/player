@@ -2108,6 +2108,11 @@ Util.$unzipHandler = function (event)
         const buffer = new Uint8Array(object.json.buffer);
         Util.$unzipWorker.onmessage = Util.$unzipHandler.bind(object.scope);
         Util.$unzipWorker.postMessage(buffer, [buffer.buffer]);
+
+    } else {
+
+        Util.$unzipWorkerActive = false;
+
     }
 };
 
