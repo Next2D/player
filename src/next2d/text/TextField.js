@@ -627,18 +627,23 @@ class TextField extends InteractiveObject
         } else {
 
             // execute
-            this._$textarea.dispatchEvent(
-                new Util.$window.Event(`${Util.$PREFIX}_blur`)
-            );
+            if (this._$textarea) {
 
-            if (this.willTrigger(FocusEvent.FOCUS_OUT)) {
-                this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_OUT));
+                this._$textarea.dispatchEvent(
+                    new Util.$window.Event(`${Util.$PREFIX}_blur`)
+                );
+
+                if (this.willTrigger(FocusEvent.FOCUS_OUT)) {
+                    this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_OUT));
+                }
+
+                this._$textarea.remove();
+
+                this._$doChanged();
+                Util.$isUpdated = true;
+
             }
 
-            this._$textarea.remove();
-
-            this._$doChanged();
-            Util.$isUpdated = true;
         }
     }
 
