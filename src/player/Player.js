@@ -822,7 +822,7 @@ class Player
 
             const loadSpAudio = function (event)
             {
-                event.target.removeEventListener(Util.$TOUCH_START, loadSpAudio);
+                event.target.removeEventListener(Util.$TOUCH_END, loadSpAudio);
                 Util.$loadAudioData();
             };
 
