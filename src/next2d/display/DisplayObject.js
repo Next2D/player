@@ -64,7 +64,6 @@ class DisplayObject extends EventDispatcher
         this._$isMask = false;
 
         /**
-         * TODO
          * @type {null}
          * @default null
          * @private
