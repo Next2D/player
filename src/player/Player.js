@@ -167,6 +167,20 @@ class Player
         this._$matrix = new Util.$window.Float32Array([1, 0, 0, 1, 0, 0]); // fixed size 6
 
         /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$tx = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$ty = 0;
+
+        /**
          * @type {string|number}
          * @default null
          * @private
@@ -262,6 +276,13 @@ class Player
          * @private
          */
         this._$base = "";
+
+        /**
+         * @type {boolean}
+         * @default ""
+         * @private
+         */
+        this._$fullScreen = false;
 
         /**
          * @type {string}
@@ -463,6 +484,7 @@ class Player
             this._$optionHeight = options.height || this._$optionHeight;
             this._$tagId        = options.tagId  || this._$tagId;
             this.base           = options.base   || this._$base;
+            this._$fullScreen   = !!options.fullScreen;
 
             if ("bgColor" in options) {
                 this._$bgColor = options.bgColor;
@@ -975,22 +997,27 @@ class Player
                 innerHeight / this._$baseHeight
             );
 
-            let width  = this._$baseWidth  * scale | 0;
-            let height = this._$baseHeight * scale | 0;
+            let width  = this._$fullScreen
+                ? innerWidth
+                : this._$baseWidth  * scale | 0;
+
+            let height = this._$fullScreen
+                ? innerHeight
+                : this._$baseHeight * scale | 0;
 
             // div
             const style  = div.style;
             style.width  = `${width}px`;
             style.height = `${height}px`;
             style.top    = "0";
-            style.left   = `${screenWidth / 2 - width / 2}px`;
+            style.left   = this._$fullScreen
+                ? "0"
+                : `${screenWidth / 2 - width / 2}px`;
 
-            if (width !== this._$width / this._$ratio
-                || height !== this._$height / this._$ratio
-            ) {
+            if (this._$scale !== scale) {
 
-                width  = width  * Util.$devicePixelRatio | 0;
-                height = height * Util.$devicePixelRatio | 0;
+                width  *= Util.$devicePixelRatio;
+                height *= Util.$devicePixelRatio;
 
                 // params
                 this._$scale  = scale;
@@ -1028,6 +1055,20 @@ class Player
                 const mScale = this._$scale * this._$ratio;
                 this._$matrix[0] = mScale;
                 this._$matrix[3] = mScale;
+
+                if (this._$fullScreen) {
+
+                    this._$matrix[4] = (width -
+                        this._$baseWidth
+                        * scale
+                        * Util.$devicePixelRatio) / 2;
+
+                    this._$matrix[5] = (height -
+                        this._$baseHeight
+                        * scale
+                        * Util.$devicePixelRatio) / 2;
+
+                }
 
                 // cache reset
                 this._$stage._$doChanged();
