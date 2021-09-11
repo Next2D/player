@@ -1014,7 +1014,7 @@ class Player
                 ? "0"
                 : `${screenWidth / 2 - width / 2}px`;
 
-            if (this._$scale !== scale) {
+            if (this._$scale !== scale || this._$fullScreen) {
 
                 width  *= Util.$devicePixelRatio;
                 height *= Util.$devicePixelRatio;
@@ -1058,15 +1058,18 @@ class Player
 
                 if (this._$fullScreen) {
 
-                    this._$matrix[4] = (width -
+                    this._$tx = (width -
                         this._$baseWidth
                         * scale
                         * Util.$devicePixelRatio) / 2;
 
-                    this._$matrix[5] = (height -
+                    this._$ty = (height -
                         this._$baseHeight
                         * scale
                         * Util.$devicePixelRatio) / 2;
+
+                    this._$matrix[4] = this._$tx;
+                    this._$matrix[5] = this._$ty;
 
                 }
 
@@ -1246,8 +1249,10 @@ class Player
         Util.$hitContext.beginPath();
 
         // hit test
+        Util.$MATRIX_HIT_ARRAY_IDENTITY[4] = this._$tx / this._$scale / Util.$devicePixelRatio;
+        Util.$MATRIX_HIT_ARRAY_IDENTITY[5] = this._$ty / this._$scale / Util.$devicePixelRatio;
         this._$stage._$mouseHit(
-            Util.$hitContext, Util.$MATRIX_ARRAY_IDENTITY,
+            Util.$hitContext, Util.$MATRIX_HIT_ARRAY_IDENTITY,
             this._$hitObject, true
         );
 
@@ -1696,7 +1701,6 @@ class Player
      */
     _$hitTest ()
     {
-
         if (this._$stopFlag) {
             return ;
         }
@@ -1745,18 +1749,20 @@ class Player
         this._$stageY  = stageY;
 
         // setup
-        this._$hitObject.x = stageX;
-        this._$hitObject.y = stageY;
+        this._$hitObject.x       = stageX;
+        this._$hitObject.y       = stageY;
         this._$hitObject.pointer = "";
-        this._$hitObject.hit = null;
+        this._$hitObject.hit     = null;
 
         // reset
         Util.$hitContext.setTransform(1, 0, 0, 1, 0, 0);
         Util.$hitContext.beginPath();
 
         // hit test
+        Util.$MATRIX_HIT_ARRAY_IDENTITY[4] = this._$tx / this._$scale / Util.$devicePixelRatio;
+        Util.$MATRIX_HIT_ARRAY_IDENTITY[5] = this._$ty / this._$scale / Util.$devicePixelRatio;
         this._$stage._$mouseHit(
-            Util.$hitContext, Util.$MATRIX_ARRAY_IDENTITY,
+            Util.$hitContext, Util.$MATRIX_HIT_ARRAY_IDENTITY,
             this._$hitObject, true
         );
 

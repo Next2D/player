@@ -633,6 +633,13 @@ Util.$devicePixelRatio = Util.$min(2, window.devicePixelRatio);
  * @const
  * @static
  */
+Util.$MATRIX_HIT_ARRAY_IDENTITY = new Float32Array([1, 0, 0, 1, 0, 0]);
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
 Util.$MATRIX_ARRAY_IDENTITY = new Float32Array([1, 0, 0, 1, 0, 0]);
 
 /**
