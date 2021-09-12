@@ -20,7 +20,7 @@ const options = minimist(process.argv.slice(2), {
         "prodBuild": false,
         "glErrorCheck": false,
         "glTrace": false,
-        "version": "1.1.6",
+        "version": "1.2.6",
         "distPath": "."
     }
 });
