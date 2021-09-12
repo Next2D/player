@@ -99,7 +99,6 @@ describe("TextField.js property test", function()
         expect(tf.textWidth).toBe(0);
         expect(tf.numLines).toBe(1);
         expect(tf.wordWrap).toBe(false);
-        expect(tf.selectable).toBe(true);
         expect(tf.multiline).toBe(false);
         expect(tf.maxChars).toBe(0);
 
@@ -784,30 +783,6 @@ describe("TextField.js property test", function()
         expect(tf.getLineText(1)).toBe("12:00");
     });
 
-    // selectable
-    it("selectable test success case1", function ()
-    {
-        let tf = new TextField();
-        tf.selectable = true;
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("selectable test success case2", function ()
-    {
-        let tf = new TextField();
-        tf.selectable = 1;
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("selectable test success case3", function ()
-    {
-        let tf = new TextField();
-        tf.selectable = "";
-        expect(tf.selectable).toBe(false);
-        tf.selectable = "abc";
-        expect(tf.selectable).toBe(true);
-    });
-
     // multiline
     it("multiline test success case1", function ()
     {
@@ -1279,157 +1254,6 @@ describe("TextField.js multiline test", function()
         let tf = new TextField();
         tf.multiline = { "toString":function () { return "1a" } };
         expect(tf.multiline).toBe(true);
-    });
-
-});
-
-describe("TextField.js selectable test", function()
-{
-
-    it("default test case1", function()
-    {
-        let tf = new TextField();
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case2", function()
-    {
-        let tf = new TextField();
-        tf.selectable = null;
-        expect(tf.selectable).toBe(false);
-    });
-
-    it("default test case3", function()
-    {
-        let tf = new TextField();
-        tf.selectable = undefined;
-        expect(tf.selectable).toBe(false);
-    });
-
-    it("default test case4", function()
-    {
-        let tf = new TextField();
-        tf.selectable = true;
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case5", function()
-    {
-        let tf = new TextField();
-        tf.selectable = "";
-        expect(tf.selectable).toBe(false);
-    });
-
-    it("default test case6", function()
-    {
-        let tf = new TextField();
-        tf.selectable = "abc";
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case7", function()
-    {
-        let tf = new TextField();
-        tf.selectable = 0;
-        expect(tf.selectable).toBe(false);
-    });
-
-    it("default test case8", function()
-    {
-        let tf = new TextField();
-        tf.selectable = 1;
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case9", function()
-    {
-        let tf = new TextField();
-        tf.selectable = 500;
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case10", function()
-    {
-        let tf = new TextField();
-        tf.selectable = 50000000000000000;
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case11", function()
-    {
-        let tf = new TextField();
-        tf.selectable = -1;
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case12", function()
-    {
-        let tf = new TextField();
-        tf.selectable = -500;
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case13", function()
-    {
-        let tf = new TextField();
-        tf.selectable = -50000000000000000;
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case14", function()
-    {
-        let tf = new TextField();
-        tf.selectable = { "a":0 };
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case15", function()
-    {
-        let tf = new TextField();
-        tf.selectable = function a() {};
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case16", function()
-    {
-        let tf = new TextField();
-        tf.selectable = [1];
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case17", function()
-    {
-        let tf = new TextField();
-        tf.selectable = [1,2];
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case18", function()
-    {
-        let tf = new TextField();
-        tf.selectable = {};
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case19", function()
-    {
-        let tf = new TextField();
-        tf.selectable = { "toString":function () { return 1 } };
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case20", function()
-    {
-        let tf = new TextField();
-        tf.selectable = { "toString":function () { return "10" } };
-        expect(tf.selectable).toBe(true);
-    });
-
-    it("default test case21", function()
-    {
-        let tf = new TextField();
-        tf.selectable = { "toString":function () { return "1a" } };
-        expect(tf.selectable).toBe(true);
     });
 
 });
