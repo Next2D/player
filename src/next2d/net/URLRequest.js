@@ -287,15 +287,14 @@ class URLRequest
      * @description リクエストされる Header Object
      *              Header Object to be requested.
      *
-     * @member {object}
+     * @member {Map}
      * @readonly
      * @public
      */
     get headers ()
     {
-        const headers = {
-            "Content-Type": `${this._$contentType}`
-        };
+        const headers = Util.$getMap();
+        headers.set("Content-Type", `${this._$contentType}`);
 
         const length = this._$requestHeaders.length;
         for (let idx = 0; idx < length; ++idx) {
@@ -303,7 +302,7 @@ class URLRequest
             const urlRequestHeader = this._$requestHeaders[idx];
 
             if (urlRequestHeader instanceof URLRequestHeader) {
-                headers[urlRequestHeader.name] = urlRequestHeader.value;
+                headers.set(urlRequestHeader.name, urlRequestHeader.value);
             }
         }
 

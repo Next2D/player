@@ -1932,18 +1932,9 @@ Util.$ajax = (option = null) =>
 
     // set request header
     if (option.headers) {
-
-        const headers = option.headers;
-
-        const names = Object.keys(headers);
-
-        const length = names.length;
-        for (let idx = 0; idx < length; ++idx) {
-            const name = names[idx];
-            xmlHttpRequest.setRequestHeader(name, headers[name]);
+        for (const [name, value] of option.headers) {
+            xmlHttpRequest.setRequestHeader(name, value);
         }
-
-        Util.$poolArray(names);
     }
 
     xmlHttpRequest.send(postData);
