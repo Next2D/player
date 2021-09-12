@@ -172,7 +172,7 @@ class Stage extends DisplayObjectContainer
     get stageHeight ()
     {
         return this._$player
-            ? this._$player._$height / this._$player._$scale / this._$player._$ratio
+            ? this._$player._$height / Util.$devicePixelRatio
             : 0;
     }
 
@@ -187,7 +187,7 @@ class Stage extends DisplayObjectContainer
     get stageWidth ()
     {
         return this._$player
-            ? this._$player._$width / this._$player._$scale / this._$player._$ratio
+            ? this._$player._$width / Util.$devicePixelRatio
             : 0;
     }
 
