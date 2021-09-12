@@ -600,8 +600,8 @@ class TextField extends InteractiveObject
                 );
 
                 element.style.color  = `rgb(${color.R},${color.G},${color.B})`;
-                element.style.left   = `${Util.$floor((matrix.tx + bounds.xMin) * player._$scale)}px`;
-                element.style.top    = `${Util.$floor((matrix.ty + bounds.yMin) * player._$scale)}px`;
+                element.style.left   = `${(matrix.tx + bounds.xMin + player._$tx / player._$scale / Util.$devicePixelRatio) * player._$scale}px`;
+                element.style.top    = `${(matrix.ty + bounds.yMin + player._$ty / player._$scale / Util.$devicePixelRatio) * player._$scale}px`;
                 element.style.width  = `${Util.$ceil((this.width  - 1) * player._$scale)}px`;
                 element.style.height = `${Util.$ceil((this.height - 1) * player._$scale)}px`;
 
@@ -2826,9 +2826,13 @@ class TextField extends InteractiveObject
                     const element = Util
                         .$document
                         .getElementById(`${Util.$PREFIX}_TextField_${this._$instanceId}`);
+
                     if (element) {
                         element.remove();
+                        this._$focus = false;
                         this._$textAreaActive = false;
+
+                        Util.$isUpdated = true;
                         this._$doChanged();
                     }
                 }
@@ -2874,8 +2878,8 @@ class TextField extends InteractiveObject
                     const matrix  = this._$transform.concatenatedMatrix;
                     const bounds  = this._$getBounds(null);
 
-                    element.style.left   = `${Util.$floor((matrix.tx + bounds.xMin) * player._$scale)}px`;
-                    element.style.top    = `${Util.$floor((matrix.ty + bounds.yMin) * player._$scale)}px`;
+                    element.style.left   = `${Util.$floor((matrix.tx + bounds.xMin + player._$tx / player._$scale / Util.$devicePixelRatio) * player._$scale)}px`;
+                    element.style.top    = `${Util.$floor((matrix.ty + bounds.yMin + player._$ty / player._$scale / Util.$devicePixelRatio) * player._$scale)}px`;
                     element.style.width  = `${Util.$ceil((this.width  - 1) * player._$scale)}px`;
                     element.style.height = `${Util.$ceil((this.height - 1) * player._$scale)}px`;
                 }

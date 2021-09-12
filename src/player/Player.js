@@ -1073,6 +1073,12 @@ class Player
 
                 }
 
+                if (div.children.length > 1) {
+                    div.children[1].dispatchEvent(
+                        new Util.$window.Event(`${Util.$PREFIX}_blur`)
+                    );
+                }
+
                 // cache reset
                 this._$stage._$doChanged();
                 this._$cacheStore.reset();
