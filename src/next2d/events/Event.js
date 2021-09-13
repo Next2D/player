@@ -378,6 +378,22 @@ class Event
     }
 
     /**
+     * @description Event.RESIZE 定数は、resize イベントオブジェクトの
+     *              type プロパティの値を定義します。
+     *              The Event.RESIZE constant defines the value
+     *              of the type property of a resize event object.
+     *
+     * @return {string}
+     * @default resize
+     * @const
+     * @static
+     */
+    static get RESIZE ()
+    {
+        return "resize";
+    }
+
+    /**
      * @description Event.SCROLL 定数は、render イベントオブジェクトの
      *              type プロパティの値を定義します。
      *              The Event.SCROLL constant defines the value

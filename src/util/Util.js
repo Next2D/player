@@ -1698,7 +1698,13 @@ Util.$resizeExecute = () =>
 {
     const player = Util.$currentPlayer();
     if (player._$loadStatus === Player.LOAD_END) {
+
         player._$resize();
+
+        const stage = player._$stage;
+        if (stage.willTrigger(Event.RESIZE)) {
+            stage.dispatchEvent(new Event(Event.RESIZE));
+        }
     }
 };
 
