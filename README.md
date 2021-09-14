@@ -66,11 +66,11 @@ loader.load(request);
 # Related sites
 * [Website](https://next2d.app)
 * [Player API Documentation](https://next2d.app/docs/player/index.html)
-* Next2D Tool(α version to be released in December 2021.)
-* Next2D Framework(β version to be released in December 2021.)
 * Tips
 * Examples
 * Tutorial
+* Next2D Tool(α version to be released in December 2021.)
+* [Next2D Framework(α version)](https://next2d.app/#framework)
 * [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)
 
 
