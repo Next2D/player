@@ -1014,7 +1014,10 @@ class Player
                 ? "0"
                 : `${screenWidth / 2 - width / 2}px`;
 
-            if (this._$scale !== scale || this._$fullScreen) {
+            if (this._$scale !== scale
+                || this._$fullScreen
+                || this._$buffer === null
+            ) {
 
                 width  *= Util.$devicePixelRatio;
                 height *= Util.$devicePixelRatio;

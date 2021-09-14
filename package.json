@@ -4,8 +4,10 @@
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp>",
   "license": "MIT",
   "scripts": {
-    "test": "gulp test",
-    "lint": "gulp lint"
+    "start": "gulp",
+    "test" : "gulp test",
+    "lint" : "gulp lint",
+    "build": "gulp build"
   },
   "devDependencies": {
     "@pixi/jsdoc-template": "^2.6.0",
