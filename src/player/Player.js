@@ -1601,7 +1601,7 @@ class Player
         const height  = canvas.height;
         const context = this._$context;
 
-        if (this._$stage._$updated
+        if (this._$buffer && this._$stage._$updated
             && context && width > 0 && height > 0
         ) {
 
@@ -1617,12 +1617,7 @@ class Player
 
             this
                 ._$stage
-                ._$draw(
-                    context,
-                    this._$matrix,
-                    Util.$COLOR_ARRAY_IDENTITY,
-                    false
-                );
+                ._$draw(context, this._$matrix, Util.$COLOR_ARRAY_IDENTITY);
 
             // stage end
             this._$stage._$updated = false;

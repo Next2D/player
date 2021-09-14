@@ -20,7 +20,7 @@ const options = minimist(process.argv.slice(2), {
         "prodBuild": false,
         "glErrorCheck": false,
         "glTrace": false,
-        "version": "1.2.9",
+        "version": "1.2.10",
         "distPath": "."
     }
 });
@@ -320,3 +320,4 @@ exports.default = gulp.series(
 exports.test  = gulp.series(test);
 exports.jsdoc = gulp.series(createHTML);
 exports.lint  = gulp.series(lint);
+exports.build = gulp.series(buildHeaderVersion, buildFooterVersion, buildWorkerFile, buildUtilFile, buildJavaScript);

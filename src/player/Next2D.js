@@ -1,4 +1,5 @@
 /**
+ * @description TODO
  * @class
  */
 class Next2D
@@ -17,14 +18,16 @@ class Next2D
     }
 
     /**
+     * @description TODO
+     *
      * @param  {string} url JSONファイルのURL
      *                      URL of the JSON file
      *
-     * @param  {object} [options=null] {number} width   = Stageの幅 / Stage width
-     *                                 {number} height  = Stageの高さ / Stage height
-     *                                 {string} [tagId=null] canvasを追加対象のDOMのID / ID of the DOM to which the canvas is added
-     *                                 {string} [base="/"]Loaderが読み込む際の絶対パス / Absolute path for Loader to load.
-     *                                 {number|string|boolean} [bgColor=null] 背景色 / background color
+     * @param  {object} [options=null] {number} width = Stageの幅 | Stage width
+     *                                 {number} height = Stageの高さ | Stage height
+     *                                 {string} [tagId=null] canvasを追加対象のDOMのID | ID of the DOM to which the canvas is added
+     *                                 {string} [base="/"] Loaderが読み込む際の絶対パス | Absolute path for Loader to load.
+     *                                 {number|string|boolean} [bgColor=null] 背景色 | background color
      * @return {void}
      * @method
      * @public
@@ -112,6 +115,8 @@ class Next2D
     }
 
     /**
+     * @description TODO
+     *
      * @param  {number} [width=240]
      * @param  {number} [height=240]
      * @param  {number} [fps=60]
