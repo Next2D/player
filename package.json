@@ -1,11 +1,12 @@
 {
   "name": "@next2d/player",
-  "version": "1.2.11",
+  "version": "1.2.12",
   "description": "Next2D Player. Aims to provide a fast 2D player.",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp>",
   "license": "MIT",
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
+  "main": "next2d.js",
   "keywords": [
     "Next2D",
     "Next2D Player"
