@@ -106,12 +106,15 @@ class SoundMixer
      */
     static stopAll ()
     {
-        const sounds = Util.$currentPlayer()._$sounds;
-        for (let idx = 0; idx < sounds.length; ++idx) {
-            sounds[idx].stop();
+        const player = Util.$currentPlayer();
+
+        // sounds
+        const sources = player._$sources;
+        while (sources.length) {
+            sources[0].stop();
         }
 
-        const videos = Util.$currentPlayer()._$videos;
+        const videos = player._$videos;
         for (let idx = 0; idx < videos.length; ++idx) {
             videos[idx].pause();
         }

@@ -75,6 +75,13 @@ class Sound extends EventDispatcher
          * @private
          */
         this._$loop = false;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$stopFlag = true;
     }
 
     /**
@@ -338,6 +345,7 @@ class Sound extends EventDispatcher
 
         // execute
         if (!Util.$audioContext || !buffer) {
+
             const wait = function (now, start_time = 0)
             {
                 const buffer = this._$character
@@ -357,8 +365,11 @@ class Sound extends EventDispatcher
 
             const timer = Util.$requestAnimationFrame;
             timer(wait);
+
         } else {
+
             this._$createBufferSource(start_time);
+
         }
     }
 
@@ -372,12 +383,13 @@ class Sound extends EventDispatcher
      */
     stop ()
     {
+        this._$stopFlag = true;
         const length = this._$sources.length;
         if (length) {
 
+            const player = Util.$currentPlayer();
             if (Util.$audioContext) {
 
-                const player = Util.$currentPlayer();
                 for (let idx = 0; idx < length; ++idx) {
 
                     const source = this._$sources[idx];
@@ -390,12 +402,12 @@ class Sound extends EventDispatcher
 
                     source.onended = null;
                     source.disconnect();
-
-                    player._$sources.splice(
-                        player._$sources.indexOf(source), 1
-                    );
                 }
             }
+
+            player._$sources.splice(
+                player._$sources.indexOf(this), 1
+            );
 
             this._$sources.length = 0;
         }
@@ -462,9 +474,13 @@ class Sound extends EventDispatcher
         source.start(start_time | 0, offset);
 
         const player = Util.$currentPlayer();
-        player._$sources.push(source);
+        if (player._$sources.indexOf(this) === -1) {
+            player._$sources.push(this);
+        }
 
         this._$sources.push(source);
+
+        this._$stopFlag = false;
     }
 
     /**
@@ -481,12 +497,7 @@ class Sound extends EventDispatcher
             this._$sources.indexOf(source), 1
         );
 
-        const player = Util.$currentPlayer();
-        player._$sources.splice(
-            player._$sources.indexOf(source), 1
-        );
-
-        if (this._$loop) {
+        if (this._$loop && !this._$stopFlag) {
 
             this._$createBufferSource();
 
@@ -503,6 +514,13 @@ class Sound extends EventDispatcher
                 // Firefoxにて、disconnectした時にonendedが呼び出されるのを回避
                 source.onended = null;
                 source.disconnect();
+            }
+
+            if (!this._$sources.length) {
+                const player = Util.$currentPlayer();
+                player._$sources.splice(
+                    player._$sources.indexOf(this), 1
+                );
             }
 
             if (this.willTrigger(Event.SOUND_COMPLETE)) {

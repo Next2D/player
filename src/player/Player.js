@@ -469,6 +469,7 @@ class Player
         this._$stopFlag = true;
         this._$timerId  = -1;
 
+        SoundMixer.stopAll();
         Util.$cacheStore().reset();
     }
 
