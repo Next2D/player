@@ -86,10 +86,10 @@ class Loader extends DisplayObjectContainer
     }
 
     /**
-     * @description load() または loadJSON() メソッドを使用して読み込まれた JSON ファイル
-     *              またはイメージ（JPEG、PNG、または GIF）ファイルのルート表示オブジェクトが含まれます。
-     *              Contains the root display object of the JSON file
-     *              or image (JPEG, PNG, or GIF) file that was loaded by using the load() or loadJSON() methods.
+     * @description load() または loadImage() メソッドを使用して読み込まれた JSON または
+     *              イメージ（JPEG、PNG、または GIF）ファイルのルート表示オブジェクトが含まれます。
+     *              Contains the root display object of a JSON or image (JPEG, PNG, or GIF) file
+     *              that was loaded using the load() or loadImage() methods.
      *
      * @member {DisplayObject}
      * @readonly
