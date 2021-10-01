@@ -154,7 +154,9 @@ class BitmapData
     }
     set image (image)
     {
-        this._$image = image;
+        this._$image  = image;
+        this._$width  = image.width;
+        this._$height = image.height;
     }
 
     /**
