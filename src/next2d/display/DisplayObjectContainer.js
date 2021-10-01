@@ -873,7 +873,7 @@ class DisplayObjectContainer extends InteractiveObject
     _$addChild (child)
     {
         // init
-        child._$stage  = this._$stage;
+        child._$stage  = this.constructor === Stage ? this : this._$stage;
         child._$parent = this;
         child._$root   = this.constructor === Stage ? child : this._$root;
 
