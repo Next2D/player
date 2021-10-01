@@ -124,13 +124,6 @@ class MovieClip extends Sprite
          * @private
          */
         this._$isPlaying = false;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$enabled = true;
     }
 
     /**
