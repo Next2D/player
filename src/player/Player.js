@@ -816,7 +816,8 @@ class Player
             "stencil": true,
             "premultipliedAlpha": true,
             "antialias": false,
-            "depth": false
+            "depth": false,
+            "preserveDrawingBuffer": true
         };
 
         let isWebGL2Context = true;
