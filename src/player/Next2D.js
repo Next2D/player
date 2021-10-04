@@ -138,7 +138,7 @@ class Next2D
         player.height = height | 0;
         player.setOptions(options);
 
-        return player._$stage.addChild(new MovieClip());
+        return player._$stage.addChild(new Sprite());
     }
 }
 
