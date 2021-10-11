@@ -2932,7 +2932,7 @@ class TextField extends InteractiveObject
             this._$textarea.addEventListener(Util.$MOUSE_WHEEL, function (event)
             {
                 this.scrollV += event.deltaY;
-            }.bind(this));
+            }.bind(this), { "passive": true });
 
             // add scroll event
             this._$textarea.addEventListener(Util.$SCROLL, function ()

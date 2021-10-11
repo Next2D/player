@@ -851,7 +851,7 @@ class Player
             };
 
             // audio context load event
-            canvas.addEventListener(Util.$TOUCH_START, loadSpAudio);
+            canvas.addEventListener(Util.$TOUCH_START, loadSpAudio, { "passive": true });
 
             // touch event
             canvas.addEventListener(Util.$TOUCH_START, function (event)
@@ -860,7 +860,7 @@ class Player
                 Util.$eventType = Util.$TOUCH_START;
 
                 this._$hitTest();
-            }.bind(this));
+            }.bind(this), { "passive": true });
 
             canvas.addEventListener(Util.$TOUCH_MOVE, function (event)
             {
@@ -868,7 +868,7 @@ class Player
                 Util.$eventType = Util.$TOUCH_MOVE;
 
                 this._$hitTest();
-            }.bind(this));
+            }.bind(this), { "passive": true });
 
             canvas.addEventListener(Util.$TOUCH_END, function (event)
             {
@@ -944,7 +944,7 @@ class Player
             canvas.addEventListener(Util.$MOUSE_WHEEL, function (event)
             {
                 this._$mouseWheelEvent = event;
-            }.bind(this));
+            }.bind(this), { "passive": true });
 
         }
 
