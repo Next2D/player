@@ -2861,7 +2861,7 @@ class TextField extends InteractiveObject
                     value = found ? found.join("") : "";
                 }
 
-                if (this.text !== value) {
+                if (!this._$isComposing && this.text !== value) {
 
                     // update
                     this.text = value;
@@ -3030,8 +3030,10 @@ class TextField extends InteractiveObject
                 }
 
                 // update
-                this.text = value;
-                event.target.value = value;
+                if (!this._$isComposing) {
+                    this.text = value;
+                    event.target.value = value;
+                }
 
                 // enter off
                 if (event.keyCode === 13 && !this._$multiline) {
