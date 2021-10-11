@@ -71,7 +71,7 @@ loader.load(request);
 * [Player API Documentation](https://next2d.app/docs/player/index.html)
 * [Next2D NoCode Tool(α version)](https://tool.next2d.app)
 * [Next2D Framework(α version)](https://next2d.app/#framework)
-* [Tutorial](https://next2d.app/tutorials)
+* [Tutorial & Reference.](https://next2d.app/tutorials)
 * [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)
 
 
