@@ -2039,8 +2039,11 @@ Util.$decodeImage = function ()
         .beginBitmapFill(bitmapData, null, false)
         .drawRect(0, 0, width, height);
 
+    // setup
     const loaderInfo = this.scope.contentLoaderInfo;
     loaderInfo._$content = shape;
+    shape._$loaderInfo   = loaderInfo;
+
     player._$loaders.push(loaderInfo);
 
     if (currentAttachment) {

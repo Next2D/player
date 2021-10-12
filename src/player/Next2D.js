@@ -121,7 +121,7 @@ class Next2D
      * @param  {number} [height=240]
      * @param  {number} [fps=60]
      * @param  {object} [options=null]
-     * @return {MovieClip}
+     * @return {Sprite}
      * @method
      * @public
      */
