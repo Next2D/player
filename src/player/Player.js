@@ -396,6 +396,46 @@ class Player
     }
 
     /**
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get x ()
+    {
+        return this._$tx;
+    }
+
+    /**
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get y ()
+    {
+        return this._$ty;
+    }
+
+    /**
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get scaleX ()
+    {
+        return this._$matrix[0];
+    }
+
+    /**
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get scaleY ()
+    {
+        return this._$matrix[3];
+    }
+
+    /**
      * @return {string}
      * @readonly
      * @public
