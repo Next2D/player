@@ -891,7 +891,7 @@ class Player
             };
 
             // audio context load event
-            canvas.addEventListener(Util.$TOUCH_START, loadSpAudio, { "passive": true });
+            canvas.addEventListener(Util.$TOUCH_END, loadSpAudio);
 
             // touch event
             canvas.addEventListener(Util.$TOUCH_START, function (event)
@@ -900,7 +900,7 @@ class Player
                 Util.$eventType = Util.$TOUCH_START;
 
                 this._$hitTest();
-            }.bind(this), { "passive": true });
+            }.bind(this));
 
             canvas.addEventListener(Util.$TOUCH_MOVE, function (event)
             {
