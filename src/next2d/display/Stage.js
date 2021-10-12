@@ -162,6 +162,19 @@ class Stage extends DisplayObjectContainer
     }
 
     /**
+     * @description Player オブジェクトを返します。
+     *              Returns a Player object.
+     *
+     * @member {Player}
+     * @readonly
+     * @public
+     */
+    get player ()
+    {
+        return this._$player;
+    }
+
+    /**
      * @description 現在のステージの高さ（ピクセル数）です。
      *              The current height, in pixels, of the Stage.
      *
