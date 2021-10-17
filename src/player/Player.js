@@ -908,7 +908,7 @@ class Player
                 Util.$eventType = Util.$TOUCH_MOVE;
 
                 this._$hitTest();
-            }.bind(this), { "passive": true });
+            }.bind(this));
 
             canvas.addEventListener(Util.$TOUCH_END, function (event)
             {
@@ -984,7 +984,7 @@ class Player
             canvas.addEventListener(Util.$MOUSE_WHEEL, function (event)
             {
                 this._$mouseWheelEvent = event;
-            }.bind(this), { "passive": true });
+            }.bind(this));
 
         }
 
@@ -1039,7 +1039,7 @@ class Player
                 innerHeight / this._$baseHeight
             );
 
-            let width  = this._$fullScreen
+            let width = this._$fullScreen
                 ? innerWidth
                 : this._$baseWidth  * scale | 0;
 
@@ -1056,78 +1056,73 @@ class Player
                 ? "0"
                 : `${screenWidth / 2 - width / 2}px`;
 
-            if (this._$scale !== scale
-                || this._$fullScreen
-                || this._$buffer === null
-            ) {
+            width  *= Util.$devicePixelRatio;
+            height *= Util.$devicePixelRatio;
 
-                width  *= Util.$devicePixelRatio;
-                height *= Util.$devicePixelRatio;
+            // params
+            this._$scale  = scale;
+            this._$width  = width;
+            this._$height = height;
 
-                // params
-                this._$scale  = scale;
-                this._$width  = width;
-                this._$height = height;
+            // main
+            this._$canvas.width  = width;
+            this._$canvas.height = height;
+            this._$canvas.style.transform = this._$ratio === 1 && Util.$devicePixelRatio === 1
+                ? ""
+                : `scale(${1 / this._$ratio})`;
 
-                // main
-                this._$canvas.width  = width;
-                this._$canvas.height = height;
-                this._$canvas.style.transform = this._$ratio === 1 && Util.$devicePixelRatio === 1
-                    ? ""
-                    : `scale(${1 / this._$ratio})`;
+            // stage buffer
+            if (this._$context) { // unit test
 
-                // stage buffer
-                if (this._$context) { // unit test
+                this._$context._$gl.viewport(0, 0, width, height);
 
-                    this._$context._$gl.viewport(0, 0, width, height);
-
-                    const manager = this._$context._$frameBufferManager;
-                    if (this._$buffer) {
-                        manager.unbind();
-                        manager.releaseAttachment(this._$buffer, true);
-                    }
-
-                    this._$buffer = manager
-                        .createCacheAttachment(width, height, false);
-
-                    // update cache max size
-                    manager._$stencilBufferPool._$maxWidth  = width;
-                    manager._$stencilBufferPool._$maxHeight = height;
-                    manager._$textureManager._$maxWidth     = width;
-                    manager._$textureManager._$maxHeight    = height;
+                const manager = this._$context._$frameBufferManager;
+                if (this._$buffer) {
+                    manager.unbind();
+                    manager.releaseAttachment(this._$buffer, true);
                 }
 
-                const mScale = this._$scale * this._$ratio;
-                this._$matrix[0] = mScale;
-                this._$matrix[3] = mScale;
+                this._$buffer = manager
+                    .createCacheAttachment(width, height, false);
 
-                if (this._$fullScreen) {
+                // update cache max size
+                manager._$stencilBufferPool._$maxWidth  = width;
+                manager._$stencilBufferPool._$maxHeight = height;
+                manager._$textureManager._$maxWidth     = width;
+                manager._$textureManager._$maxHeight    = height;
+            }
 
-                    this._$tx = (width -
+            const mScale = this._$scale * this._$ratio;
+            this._$matrix[0] = mScale;
+            this._$matrix[3] = mScale;
+
+            if (this._$fullScreen) {
+
+                this._$tx = (width -
                         this._$baseWidth
                         * scale
                         * Util.$devicePixelRatio) / 2;
 
-                    this._$ty = (height -
+                this._$ty = (height -
                         this._$baseHeight
                         * scale
                         * Util.$devicePixelRatio) / 2;
 
-                    this._$matrix[4] = this._$tx;
-                    this._$matrix[5] = this._$ty;
+                this._$matrix[4] = this._$tx;
+                this._$matrix[5] = this._$ty;
 
-                }
-
-                if (div.children.length > 1) {
-                    div.children[1].dispatchEvent(
-                        new Util.$window.Event(`${Util.$PREFIX}_blur`)
-                    );
-                }
-
-                // cache reset
-                this._$stage._$doChanged();
-                this._$cacheStore.reset();
             }
+
+            if (div.children.length > 1) {
+                div.children[1].dispatchEvent(
+                    new Util.$window.Event(`${Util.$PREFIX}_blur`)
+                );
+            }
+
+            // cache reset
+            this._$stage._$doChanged();
+            this._$cacheStore.reset();
+
         }
     }
 
