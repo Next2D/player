@@ -82,7 +82,7 @@ describe("TextField.js autoSize test", function()
 describe("TextField.js autoFontSize test", function()
 {
 
-    it("autoSize width test", function()
+    it("autoFontSize width test", function()
     {
         let tf = new TextField();
         tf.width = 20;
@@ -95,7 +95,7 @@ describe("TextField.js autoFontSize test", function()
         expect(20 > tf.defaultTextFormat.size).toBe(true);
     });
 
-    it("autoSize width min test", function()
+    it("autoFontSize width min test", function()
     {
         let tf = new TextField();
         tf.width = 1;
@@ -108,7 +108,7 @@ describe("TextField.js autoFontSize test", function()
         expect(tf.defaultTextFormat.size).toBe(1);
     });
 
-    it("autoSize height test", function()
+    it("autoFontSize height test", function()
     {
         let tf = new TextField();
 
@@ -122,7 +122,7 @@ describe("TextField.js autoFontSize test", function()
         expect(20 > tf.defaultTextFormat.size).toBe(true);
     });
 
-    it("autoSize height min test", function()
+    it("autoFontSize height min test", function()
     {
         let tf = new TextField();
         tf.height = 1;
@@ -135,6 +135,64 @@ describe("TextField.js autoFontSize test", function()
         expect(tf.defaultTextFormat.size).toBe(1);
     });
 
+});
+
+describe("TextField.js thickness test", function()
+{
+
+    it("thickness test case1", function()
+    {
+        let tf = new TextField();
+        expect(tf.thickness).toBe(0);
+
+        tf.thickness = 4;
+        expect(tf.thickness).toBe(4);
+    });
+
+    it("thickness test case2", function()
+    {
+        let tf = new TextField();
+        expect(tf.thickness).toBe(0);
+
+        tf.thickness = "4";
+        expect(tf.thickness).toBe(4);
+    });
+
+    it("thickness test case3", function()
+    {
+        let tf = new TextField();
+        expect(tf.thickness).toBe(0);
+
+        tf.thickness = "4a";
+        expect(tf.thickness).toBe(0);
+    });
+
+    it("thickness test case4", function()
+    {
+        let tf = new TextField();
+        expect(tf.thickness).toBe(0);
+
+        tf.thickness = { "toString": function () { return "10" } };
+        expect(tf.thickness).toBe(10);
+    });
+
+    it("thickness test case5", function()
+    {
+        let tf = new TextField();
+        expect(tf.thickness).toBe(0);
+
+        tf.thickness = [100];
+        expect(tf.thickness).toBe(100);
+    });
+
+    it("thickness test case6", function()
+    {
+        let tf = new TextField();
+        expect(tf.thickness).toBe(0);
+
+        tf.thickness = [1,0,10];
+        expect(tf.thickness).toBe(0);
+    });
 });
 
 describe("TextField.js property test", function()

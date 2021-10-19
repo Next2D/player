@@ -52,7 +52,11 @@ class TextFormat
          * @default null
          * @private
          */
-        this._$color = color;
+        this._$color = color === null
+            ? null
+            : Util.$clamp(
+                Util.$toColorInt(color), 0, 0xffffff, 0xffffff
+            );
 
         /**
          * @type {boolean}

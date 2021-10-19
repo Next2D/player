@@ -310,6 +310,20 @@ class TextField extends InteractiveObject
          * @private
          */
         this._$isComposing = false;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$thickness = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$thicknessColor = 0;
     }
 
     /**
@@ -413,7 +427,6 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * TODO
      * @description テキストサイズの自動的な拡大 / 縮小および整列を制御します。
      *              Controls automatic sizing and alignment of text size.
      *
@@ -1024,6 +1037,44 @@ class TextField extends InteractiveObject
         }
 
         return this._$textWidth;
+    }
+
+    /**
+     * @description 輪郭のテキスト幅です。0(デフォルト値)で無効にできます。
+     *              The text width of the outline, which can be disabled with 0 (the default value).
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    get thickness ()
+    {
+        return this._$thickness;
+    }
+    set thickness (thickness)
+    {
+        this._$thickness = thickness | 0;
+        this._$reset();
+    }
+
+    /**
+     * @description 輪郭のテキストの色です（16 進数形式）。
+     *              The color of the outline text. (Hexadecimal format)
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    get thicknessColor ()
+    {
+        return this._$thicknessColor;
+    }
+    set thicknessColor (thickness_color)
+    {
+        this._$thicknessColor = Util.$clamp(
+            Util.$toColorInt(thickness_color), 0, 0xffffff, 0xffffff
+        );
+        this._$reset();
     }
 
     /**
@@ -2670,6 +2721,15 @@ class TextField extends InteractiveObject
                 );
                 context.fillStyle = `rgba(${rgba.R},${rgba.G},${rgba.B},${rgba.A})`;
 
+                if (this._$thickness) {
+
+                    const rgba = Util.$generateColorTransform(
+                        Util.$intToRGBA(this._$thicknessColor),
+                        color_transform
+                    );
+                    context.lineWidth   = this._$thickness;
+                    context.strokeStyle = `rgba(${rgba.R},${rgba.G},${rgba.B},${rgba.A})`;
+                }
             }
 
             const yIndex = obj.yIndex | 0;
@@ -2722,7 +2782,12 @@ class TextField extends InteractiveObject
                         context.beginPath();
                         context.textBaseline = "top";
                         context.font = tf._$generateFontStyle();
+
+                        if (this._$thickness) {
+                            context.strokeText(obj.text, offsetWidth, offsetY);
+                        }
                         context.fillText(obj.text, offsetWidth, offsetY);
+
                     }
                     break;
 
