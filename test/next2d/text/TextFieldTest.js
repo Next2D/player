@@ -79,6 +79,64 @@ describe("TextField.js autoSize test", function()
 
 });
 
+describe("TextField.js autoFontSize test", function()
+{
+
+    it("autoSize width test", function()
+    {
+        let tf = new TextField();
+        tf.width = 20;
+        tf.autoFontSize = true;
+
+        tf.defaultTextFormat = new TextFormat("_sans", 20);
+        expect(tf.defaultTextFormat.size).toBe(20);
+
+        tf.text = "Hello, World.";
+        expect(20 > tf.defaultTextFormat.size).toBe(true);
+    });
+
+    it("autoSize width min test", function()
+    {
+        let tf = new TextField();
+        tf.width = 1;
+        tf.autoFontSize = true;
+
+        tf.defaultTextFormat = new TextFormat("_sans", 100);
+        expect(tf.defaultTextFormat.size).toBe(100);
+
+        tf.text = "Hello, World.";
+        expect(tf.defaultTextFormat.size).toBe(1);
+    });
+
+    it("autoSize height test", function()
+    {
+        let tf = new TextField();
+
+        tf.height = 5;
+        tf.autoFontSize = true;
+
+        tf.defaultTextFormat = new TextFormat("_sans", 20);
+        expect(tf.defaultTextFormat.size).toBe(20);
+
+        tf.text = "Hello, World.";
+        expect(20 > tf.defaultTextFormat.size).toBe(true);
+    });
+
+    it("autoSize height min test", function()
+    {
+        let tf = new TextField();
+        tf.height = 1;
+        tf.autoFontSize = true;
+
+        tf.defaultTextFormat = new TextFormat("_sans", 100);
+        expect(tf.defaultTextFormat.size).toBe(100);
+
+        tf.text = "Hello, World.";
+        expect(tf.defaultTextFormat.size).toBe(1);
+    });
+
+});
+
 describe("TextField.js property test", function()
 {
 

@@ -1934,17 +1934,18 @@ class TextField extends InteractiveObject
 
             const div = Util.$document.createElement("div");
 
-            div.innerHTML           = "a";
-            div.style.position      = "absolute";
-            div.style.top           = "-9999px";
-            div.style.left          = "-9999px";
-            div.style.padding       = "0";
-            div.style.margin        = "0";
-            div.style.padding       = "0";
-            div.style.border        = "0";
-            div.style.outline       = "0";
-            div.style.verticalAlign = "bottom";
-            div.style.lineHeight    = "100%";
+            div.innerHTML             = "a";
+            div.style.display         = "block";
+            div.style.position        = "absolute";
+            div.style.top             = "-9999px";
+            div.style.left            = "-9999px";
+            div.style.padding         = "0";
+            div.style.margin          = "0";
+            div.style.padding         = "0";
+            div.style.border          = "0";
+            div.style.outline         = "0";
+            div.style.verticalAlign   = "bottom";
+            div.style.lineHeight      = "100%";
 
             Util.$DIV = div;
             Util.$document.body.appendChild(Util.$DIV);
@@ -1953,11 +1954,13 @@ class TextField extends InteractiveObject
 
         // update dom data
         const style = Util.$DIV.style;
+
         style.fontSize   = `${text_format._$size}px`;
         style.fontFamily = text_format._$font;
         style.fontWeight = text_format._$bold ? "bold" : "normal";
 
-        return Util.$DIV.clientHeight;
+        const scale = 10 > text_format._$size ? text_format._$size * 0.1 : 1;
+        return Util.$DIV.clientHeight * scale;
     }
 
     /**
@@ -2027,6 +2030,47 @@ class TextField extends InteractiveObject
     {
         this._$reset();
         this._$getTextData();
+
+        if (this._$autoSize === TextFieldAutoSize.NONE && this._$autoFontSize) {
+
+            if (this.width && this.textWidth
+                && this.textWidth > this.width
+            ) {
+
+                while (this.textWidth > this.width) {
+
+                    this.defaultTextFormat.size--;
+                    if (1 > this.defaultTextFormat.size) {
+                        this.defaultTextFormat.size = 1;
+                        break;
+                    }
+
+                    this._$reset();
+                    this._$getTextData();
+                }
+
+            }
+
+            if (this.height && this.textHeight
+                && this.textHeight > this.height
+            ) {
+
+                while (this.textHeight > this.height) {
+
+                    this.defaultTextFormat.size--;
+                    if (1 > this.defaultTextFormat.size) {
+                        this.defaultTextFormat.size = 1;
+                        break;
+                    }
+
+                    this._$reset();
+                    this._$getTextData();
+                }
+
+            }
+
+        }
+
         this._$resize();
     }
 
