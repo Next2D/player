@@ -324,6 +324,13 @@ class TextField extends InteractiveObject
          * @private
          */
         this._$thicknessColor = 0;
+
+        /**
+         * @type {string}
+         * @default TextFormatVerticalAlign.TOP
+         * @private
+         */
+        this._$verticalAlign = TextFormatVerticalAlign.TOP;
     }
 
     /**
@@ -1097,6 +1104,33 @@ class TextField extends InteractiveObject
             this._$textarea = null;
         } else {
             this._$type = TextFieldType.INPUT;
+        }
+    }
+
+    /**
+     * @description 縦方向の揃え位置を指定するプロパティです。
+     *              This property specifies the vertical alignment position.
+     *
+     * @member {string}
+     * @default extFormatVerticalAlign.TOP
+     * @public
+     */
+    get verticalAlign ()
+    {
+        return this._$verticalAlign;
+    }
+    set verticalAlign (vertical_align)
+    {
+        switch (vertical_align) {
+
+            case TextFormatVerticalAlign.MIDDLE:
+            case TextFormatVerticalAlign.BOTTOM:
+                this._$verticalAlign = vertical_align;
+                break;
+
+            default:
+                this._$verticalAlign = TextFormatVerticalAlign.TOP;
+                break;
         }
     }
 
@@ -2693,6 +2727,25 @@ class TextField extends InteractiveObject
         let offsetHeight = 0;
         let currentV     = 0;
 
+        let yOffset = 0;
+        if (this._$verticalAlign !== TextFormatVerticalAlign.TOP
+            && this.height > this.textHeight
+        ) {
+
+            switch (this._$verticalAlign) {
+
+                case TextFormatVerticalAlign.MIDDLE:
+                    yOffset = (this.height - this.textHeight) / 2;
+                    break;
+
+                case TextFormatVerticalAlign.BOTTOM:
+                    yOffset = this.height - this.textHeight;
+                    break;
+
+            }
+
+        }
+
         const length = textData.length;
         for (let idx = 0; idx < length; ++idx) {
 
@@ -2760,8 +2813,8 @@ class TextField extends InteractiveObject
                         context.strokeStyle = `rgba(${rgba.R},${rgba.G},${rgba.B},${rgba.A})`;
 
                         context.beginPath();
-                        context.moveTo(xOffset, offsetHeight - offset);
-                        context.lineTo(xOffset + this._$widthTable[yIndex], offsetHeight - offset);
+                        context.moveTo(xOffset, yOffset + offsetHeight - offset);
+                        context.lineTo(xOffset + this._$widthTable[yIndex], yOffset + offsetHeight - offset);
                         context.stroke();
 
                     }
@@ -2784,9 +2837,9 @@ class TextField extends InteractiveObject
                         context.font = tf._$generateFontStyle();
 
                         if (this._$thickness) {
-                            context.strokeText(obj.text, offsetWidth, offsetY);
+                            context.strokeText(obj.text, offsetWidth, yOffset + offsetY);
                         }
-                        context.fillText(obj.text, offsetWidth, offsetY);
+                        context.fillText(obj.text, offsetWidth, yOffset + offsetY);
 
                     }
                     break;
@@ -2798,7 +2851,7 @@ class TextField extends InteractiveObject
                     }
 
                     context.beginPath();
-                    context.drawImage(obj.image, obj.x, obj.y, obj.width, obj.height);
+                    context.drawImage(obj.image, obj.x, yOffset + obj.y, obj.width, obj.height);
 
                     break;
 

@@ -195,6 +195,72 @@ describe("TextField.js thickness test", function()
     });
 });
 
+describe("TextField.js thicknessColor test", function()
+{
+
+    it("thicknessColor test success case1", function ()
+    {
+        let tf = new TextField();
+        tf.thicknessColor = 0xff0000;
+        expect(tf.thicknessColor).toBe(0xff0000);
+    });
+
+    it("thicknessColor test success case2", function ()
+    {
+        let tf = new TextField();
+        tf.thicknessColor = "abc";
+        expect(tf.thicknessColor).toBe(0x000000);
+    });
+
+    it("thicknessColor test success case3", function ()
+    {
+        let tf = new TextField();
+        tf.thicknessColor = "red";
+        expect(tf.thicknessColor).toBe(0xff0000);
+    });
+
+    it("thicknessColor test success case4", function ()
+    {
+        let tf = new TextField();
+        tf.thicknessColor = "#000099";
+        expect(tf.thicknessColor).toBe(0x000099);
+    });
+
+    it("thicknessColor test success case6", function ()
+    {
+        let tf = new TextField();
+        tf.thicknessColor = 0xffffff + 100;
+        expect(tf.thicknessColor).toBe(0xffffff);
+    });
+
+    it("thicknessColor test success case7", function ()
+    {
+        let tf = new TextField();
+        tf.thicknessColor = -100;
+        expect(tf.thicknessColor).toBe(0x000000);
+    });
+});
+
+describe("TextField.js verticalAlign test", function()
+{
+
+    it("thicknessColor test success case1", function ()
+    {
+        let tf = new TextField();
+        expect(tf.verticalAlign).toBe(TextFormatVerticalAlign.TOP);
+
+        tf.verticalAlign = TextFormatVerticalAlign.MIDDLE;
+        expect(tf.verticalAlign).toBe(TextFormatVerticalAlign.MIDDLE);
+
+        tf.verticalAlign = TextFormatVerticalAlign.BOTTOM;
+        expect(tf.verticalAlign).toBe(TextFormatVerticalAlign.BOTTOM);
+
+        tf.verticalAlign = "abc";
+        expect(tf.verticalAlign).toBe(TextFormatVerticalAlign.TOP);
+    });
+    
+});
+
 describe("TextField.js property test", function()
 {
 

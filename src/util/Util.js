@@ -2207,7 +2207,8 @@ Util.$packages = (object) =>
         "TextFieldAutoSize": TextFieldAutoSize,
         "TextFieldType": TextFieldType,
         "TextFormat": TextFormat,
-        "TextFormatAlign": TextFormatAlign
+        "TextFormatAlign": TextFormatAlign,
+        "TextFormatVerticalAlign": TextFormatVerticalAlign
     };
 
     object.ui = {
