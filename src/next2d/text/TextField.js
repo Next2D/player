@@ -2738,11 +2738,11 @@ class TextField extends InteractiveObject
             switch (this._$verticalAlign) {
 
                 case TextFormatVerticalAlign.MIDDLE:
-                    yOffset = (this.height - this.textHeight) / 2;
+                    yOffset = (this.height - this.textHeight + 2) / 2;
                     break;
 
                 case TextFormatVerticalAlign.BOTTOM:
-                    yOffset = this.height - this.textHeight;
+                    yOffset = this.height - this.textHeight + 2;
                     break;
 
             }
