@@ -92,7 +92,13 @@ describe("TextField.js autoFontSize test", function()
         expect(tf.defaultTextFormat.size).toBe(20);
 
         tf.text = "Hello, World.";
-        expect(20 > tf.defaultTextFormat.size).toBe(true);
+        expect(tf.defaultTextFormat.size).toBe(20);
+        expect(tf.width > tf.textWidth).toBe(true);
+
+        // restore test
+        tf.text = "A";
+        expect(tf.defaultTextFormat.size).toBe(20);
+        expect(tf.width > tf.textWidth).toBe(true);
     });
 
     it("autoFontSize width min test", function()
@@ -105,7 +111,8 @@ describe("TextField.js autoFontSize test", function()
         expect(tf.defaultTextFormat.size).toBe(100);
 
         tf.text = "Hello, World.";
-        expect(tf.defaultTextFormat.size).toBe(1);
+        expect(tf.defaultTextFormat.size).toBe(100);
+        expect(tf.width < tf.textWidth).toBe(true);
     });
 
     it("autoFontSize height test", function()
@@ -119,7 +126,7 @@ describe("TextField.js autoFontSize test", function()
         expect(tf.defaultTextFormat.size).toBe(20);
 
         tf.text = "Hello, World.";
-        expect(20 > tf.defaultTextFormat.size).toBe(true);
+        expect(tf.height > tf.textHeight).toBe(true);
     });
 
     it("autoFontSize height min test", function()
@@ -132,7 +139,7 @@ describe("TextField.js autoFontSize test", function()
         expect(tf.defaultTextFormat.size).toBe(100);
 
         tf.text = "Hello, World.";
-        expect(tf.defaultTextFormat.size).toBe(1);
+        expect(tf.height < tf.textHeight).toBe(true);
     });
 
 });
@@ -258,7 +265,7 @@ describe("TextField.js verticalAlign test", function()
         tf.verticalAlign = "abc";
         expect(tf.verticalAlign).toBe(TextFormatVerticalAlign.TOP);
     });
-    
+
 });
 
 describe("TextField.js property test", function()

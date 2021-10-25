@@ -2118,6 +2118,7 @@ class TextField extends InteractiveObject
 
         if (this._$autoSize === TextFieldAutoSize.NONE && this._$autoFontSize) {
 
+            const fontSize = this.defaultTextFormat.size;
             if (this.width && this.textWidth
                 && this.textWidth > this.width
             ) {
@@ -2154,6 +2155,8 @@ class TextField extends InteractiveObject
 
             }
 
+            // restore
+            this.defaultTextFormat.size = fontSize;
         }
 
         this._$resize();
