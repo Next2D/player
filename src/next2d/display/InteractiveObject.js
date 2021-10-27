@@ -26,6 +26,13 @@ class InteractiveObject extends DisplayObject
          * @private
          */
         this._$mouseEnabled = true;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$continuousPress = true;
     }
 
     /**
@@ -90,7 +97,7 @@ class InteractiveObject extends DisplayObject
      *              Specifies whether this object receives mouse,
      *              or other user input, messages.
      *
-     * @member {boolean}
+     * @member  {boolean}
      * @default true
      * @public
      */
@@ -101,5 +108,22 @@ class InteractiveObject extends DisplayObject
     set mouseEnabled (mouse_enabled)
     {
         this._$mouseEnabled = !!mouse_enabled;
+    }
+
+    /**
+     * @description このオブジェクトでマウスまたはタップの連続押下を受け取るかどうかを指定します。
+     *              Specifies whether or not this object will receive continuous mouse or tap presses.
+     *
+     * @member  {boolean}
+     * @default true
+     * @public
+     */
+    get continuousPress ()
+    {
+        return this._$continuousPress;
+    }
+    set continuousPress (continuous_press)
+    {
+        this._$continuousPress = !!continuous_press;
     }
 }
