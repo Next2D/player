@@ -80,7 +80,7 @@ class PixelBufferObjectManager
      */
     getBufferSubDataAsync (pixelBufferObject)
     {
-        const data = Util.$getUint8Array(pixelBufferObject.size);
+        const data = new Uint8Array(pixelBufferObject.size);
 
         this._$gl.bindBuffer(this._$gl.PIXEL_PACK_BUFFER, pixelBufferObject);
         this._$gl.getBufferSubData(this._$gl.PIXEL_PACK_BUFFER, 0, data);

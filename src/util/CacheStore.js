@@ -73,21 +73,22 @@ class CacheStore
             case Util.$WebGLTexture:
                 {
                     const player = Util.$currentPlayer();
-
-                    // cache to buffer
-                    const bitmapData = object._$bitmapData;
-                    if (bitmapData) {
-
-                        bitmapData._$buffer = bitmapData._$getPixels(
-                            0, 0, bitmapData.width, bitmapData.height, "RGBA"
-                        );
-
-                        delete object._$bitmapData;
-                    }
-
                     if (player._$context) {
-                        player
-                            ._$context
+
+                        const context = player._$context;
+
+                        const bitmapData = object._$bitmapData;
+                        if (bitmapData) {
+
+                            bitmapData._$getPixelsAsync(
+                                0, 0, bitmapData.width, bitmapData.height, "RGBA"
+                            );
+
+                            delete object._$bitmapData;
+
+                        }
+
+                        context
                             .frameBuffer
                             .releaseTexture(object);
                     }

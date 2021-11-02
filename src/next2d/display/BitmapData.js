@@ -70,6 +70,20 @@ class BitmapData
          * @private
          */
         this._$image = null;
+
+        /**
+         * @type {CanvasRenderingContext2D}
+         * @default null
+         * @private
+         */
+        this._$canvas = null;
+
+        /**
+         * @type {WebGLBuffer}
+         * @type {null}
+         * @private
+         */
+        this._$pixelBuffer = null;
     }
 
     /**
@@ -142,7 +156,7 @@ class BitmapData
     }
 
     /**
-     * @description Imageクラスを利用して BitmapData を生成します。
+     * @description Imageクラス利用して BitmapData を生成します。
      *              Use the Image class to generate BitmapData.
      *
      * @return {HTMLImageElement}
@@ -154,9 +168,29 @@ class BitmapData
     }
     set image (image)
     {
+        this._$canvas = null;
         this._$image  = image;
         this._$width  = image.width;
         this._$height = image.height;
+    }
+
+    /**
+     * @description Canvasクラス利用して BitmapData を生成します。
+     *              Use the Canvas class to generate BitmapData.
+     *
+     * @return {CanvasRenderingContext2D}
+     * @public
+     */
+    get canvas ()
+    {
+        return this._$canvas;
+    }
+    set canvas (canvas)
+    {
+        this._$image  = null;
+        this._$canvas = canvas;
+        this._$width  = canvas.width;
+        this._$height = canvas.height;
     }
 
     /**
@@ -214,6 +248,29 @@ class BitmapData
                         .createTextureFromImage(this._$image);
 
                     this._$image = null;
+
+                    break;
+
+                case this._$canvas !== null:
+
+                    texture = context
+                        .frameBuffer
+                        .createTextureFromCanvas(this._$canvas);
+
+                    this._$canvas = null;
+
+                    break;
+
+                case this._$pixelBuffer !== null:
+
+                    texture = context
+                        .frameBuffer
+                        .createTextureFromPixels(
+                            width, height,
+                            context.pbo.getBufferSubDataAsync(this._$pixelBuffer), true
+                        );
+
+                    this._$pixelBuffer = null;
 
                     break;
 
@@ -471,6 +528,81 @@ class BitmapData
         return this._$transparent
             ? Util.$uintToRGBA(color)
             : Util.$intToRGBA(color);
+    }
+
+    /**
+     * @param  {number} x
+     * @param  {number} y
+     * @param  {number} w
+     * @param  {number} h
+     * @param  {string} [byte_order="RGBA"]
+     * @return {void}
+     * @private
+     */
+    _$getPixelsAsync (x, y, w, h, byte_order = "RGBA")
+    {
+        x = Math.max(x, 0);
+        y = Math.max(y, 0);
+
+        const width  = Util.$min(w, this.width  - x);
+        const height = Util.$min(h, this.height - y);
+        if (width <= 0 || height <= 0) {
+            return ;
+        }
+
+        const context = Util
+            .$currentPlayer()
+            ._$context;
+
+        if (!context) {
+            return ;
+        }
+
+        const shader = context
+            ._$shaderList
+            ._$bitmapData
+            .getPixels[byte_order]
+            .instance;
+
+        context
+            ._$shaderList
+            .bitmapShaderVariants
+            .setGetPixelsUniform(
+                shader.uniform,
+                width / this.width, -height / this.height,
+                x / this.width, 1 - y / this.height
+            );
+
+        const currentAttachment = context
+            .frameBuffer
+            .currentAttachment;
+
+        const attachment = context
+            .frameBuffer
+            .createCacheAttachment(width, height, false);
+        context._$bind(attachment);
+
+        context
+            ._$frameBufferManager
+            ._$textureManager
+            .bind0(this._$texture, false);
+
+        context.blend.disable();
+        shader._$drawImage();
+        context.blend.enable();
+
+        this._$pixelBuffer = context
+            .pbo
+            .readPixelsAsync(
+                0, 0, this.width, this.height
+            );
+
+        if (currentAttachment) {
+            context._$bind(currentAttachment);
+        } else {
+            context.frameBuffer.unbind();
+        }
+        context.frameBuffer.releaseAttachment(attachment);
     }
 
     /**
