@@ -599,6 +599,6 @@ class TextFormat
             fontStyle += "bold ";
         }
 
-        return `${fontStyle}${this._$size}px '${this._$font}','system-ui','sans-serif'`;
+        return `${fontStyle}${this._$size}px '${this._$font}','sans-serif'`;
     }
 }
