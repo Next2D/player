@@ -2539,9 +2539,6 @@ class Graphics
                         const repeat     = recode[idx++];
                         const smooth     = recode[idx++];
 
-                        context.fillStyle = context
-                            .createPattern(bitmapData._$texture, repeat, color_transform);
-
                         if (matrix) {
                             context.transform(
                                 matrix[0], matrix[1], matrix[2],
@@ -2549,8 +2546,24 @@ class Graphics
                             );
                         }
 
-                        context._$imageSmoothingEnabled = smooth;
-                        context.fill();
+                        if (repeat === "no-repeat"
+                            && bitmapData.width  === this._$xMax - this._$xMin
+                            && bitmapData.height === this._$yMax - this._$yMin
+                        ) {
+
+                            context.drawImage(bitmapData._$texture,
+                                0, 0, bitmapData.width, bitmapData.height
+                            );
+
+                        } else {
+
+                            context.fillStyle = context
+                                .createPattern(bitmapData._$texture, repeat, color_transform);
+
+                            context._$imageSmoothingEnabled = smooth;
+                            context.fill();
+
+                        }
 
                         // restore
                         context.restore();
