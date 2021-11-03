@@ -1492,6 +1492,7 @@ class TextField extends InteractiveObject
             this._$textHeightTable = [];
             this._$objectTable     = [];
             this._$widthTable      = [];
+            this._$heightCache     = Util.$getMap();
 
             let tfCopyOffset = -1;
             if (this._$isHTML) {
@@ -1589,6 +1590,10 @@ class TextField extends InteractiveObject
                     }
                 }
             }
+
+            // clear
+            Util.$poolMap(this._$heightCache);
+            this._$heightCache = null;
         }
 
         return this._$textData;
@@ -2037,15 +2042,37 @@ class TextField extends InteractiveObject
 
         }
 
+        const size   = text_format._$size;
+        const font   = text_format._$font;
+        const weight = text_format._$bold ? "bold" : "normal";
+
+        // use cache
+        const key = `${size}_${font}_${weight}`;
+        if (this._$heightCache.has(key)) {
+            return this._$heightCache.get(key);
+        }
+
         // update dom data
         const style = Util.$DIV.style;
 
-        style.fontSize   = `${text_format._$size}px`;
-        style.fontFamily = text_format._$font;
-        style.fontWeight = text_format._$bold ? "bold" : "normal";
+        const fontSize = `${size}px`;
+        if (style.fontSize !== fontSize) {
+            style.fontSize = fontSize;
+        }
+        if (style.fontFamily !== font) {
+            style.fontFamily = font;
+        }
+        if (style.fontWeight !== weight) {
+            style.fontWeight = weight;
+        }
 
-        const scale = 10 > text_format._$size ? text_format._$size * 0.1 : 1;
-        return Util.$DIV.clientHeight * scale;
+        const height = 10 > size
+            ? Util.$DIV.clientHeight * size * 0.1
+            : Util.$DIV.clientHeight;
+
+        // cache
+        this._$heightCache.set(key, height);
+        return height;
     }
 
     /**
