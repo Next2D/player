@@ -156,7 +156,7 @@ class BitmapData
     }
 
     /**
-     * @description Imageクラス利用して BitmapData を生成します。
+     * @description Imageクラスを利用して BitmapData を生成します。
      *              Use the Image class to generate BitmapData.
      *
      * @return {HTMLImageElement}
