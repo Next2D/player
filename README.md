@@ -35,7 +35,6 @@ Next2D NoCode Tool is a web service that does not require installation and can b
 
 2D entertainment development made easy! Fast! Comfortable!
 
-
 # Use Simple Sample
 ```javascript
 next2d.load("JSON Path...");
@@ -65,16 +64,15 @@ loader
 loader.load(request);
 
 ```
-@see [API Documentation](https://next2d.app/docs/player/index.html)
+@see [API Documentation](https://next2d.app/docs/player)
 
 # Related sites
 * [Website](https://next2d.app)
-* [Player API Documentation](https://next2d.app/docs/player/index.html)
+* [Player API Documentation](https://next2d.app/docs/player)
 * [Next2D NoCode Tool(α version)](https://tool.next2d.app)
-* [Next2D Framework(α version)](https://next2d.app/#framework)
-* [Tutorial & Reference.](https://next2d.app/tutorials)
+* [Next2D Framework(β version)](https://next2d.app/#framework)
+* [Tutorial & Reference.](https://next2d.app/tutorials/player)
 * [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)
-
 
 # License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.
