@@ -340,7 +340,8 @@ class TextureManager
     {
         const shouldBind   = texture !== this._$boundTextures[index];
         const shouldSmooth = smoothing !== null && smoothing !== texture.smoothing;
-        const shouldActive = (shouldBind || shouldSmooth) && target !== this._$activeTexture;
+        const shouldActive = (shouldBind || shouldSmooth || target === this._$gl.TEXTURE0)
+            && target !== this._$activeTexture;
 
         if (shouldActive) {
             this._$activeTexture = target;
