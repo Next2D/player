@@ -69,8 +69,8 @@ loader.load(request);
 
 | name | value | default | description |
 | --- | --- | --- | --- |
-| `base` | string | . |  The value to be set if the URL is not set at the time of the request. |
-| `fullScreen` | boolean | true |  It will be drawn beyond the width and height set in the fullscreen setting and stage. |
+| `base` | string | empty |  The value to be set if the URL is not set at the time of the request. |
+| `fullScreen` | boolean | false |  It will be drawn beyond the width and height set in the fullscreen setting and stage. |
 | `tagId` | string | empty | Set value of the ID of the DOM where you want to set the drawing. |
 | `bgColor` | array [R,G,B,A] or false | false | RGBA can be specified from 0-255. |
 
