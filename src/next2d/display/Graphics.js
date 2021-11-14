@@ -935,6 +935,7 @@ class Graphics
                         this._$lineType,
                         this._$lineWidth,
                         this._$caps,
+                        this._$joints,
                         this._$miterLimit
                     );
                     this._$recode.push.apply(

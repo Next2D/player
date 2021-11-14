@@ -1,6 +1,5 @@
 /**
  * グラデーション塗りを定義します。
- *
  * Defines a gradient fill.
  *
  * @class
