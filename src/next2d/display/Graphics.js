@@ -258,6 +258,18 @@ class Graphics
     }
 
     /**
+     * @return {number}
+     * @default 14
+     * @const
+     * @static
+     * @private
+     */
+    static get BITMAP_STROKE ()
+    {
+        return 14;
+    }
+
+    /**
      * @description 描画領域をビットマップイメージで塗りつぶします。
      *              Fills a drawing area with a bitmap image.
      *
@@ -519,7 +531,7 @@ class Graphics
         this._$doLine       = graphics._$doLine;
         this._$lineType     = graphics._$lineType;
         this._$caps         = graphics._$caps;
-        this._$joints       = graphics._$caps;
+        this._$joints       = graphics._$joints;
         this._$miterLimit   = graphics._$miterLimit;
         this._$lineWidth    = graphics._$lineWidth;
         this._$lineStyleR   = graphics._$lineStyleR;
@@ -943,6 +955,19 @@ class Graphics
                     );
                     break;
 
+                case Graphics.BITMAP_STROKE:
+                    this._$recode.push(
+                        this._$lineType,
+                        this._$lineWidth,
+                        this._$caps,
+                        this._$joints,
+                        this._$miterLimit
+                    );
+                    this._$recode.push.apply(
+                        this._$recode, this._$fillBitmap.toArray()
+                    );
+                    break;
+
             }
         }
 
@@ -961,6 +986,45 @@ class Graphics
 
         // restart
         this._$restart();
+
+        return this;
+    }
+
+    /**
+     * @description 線の描画で、線として使用するビットマップを指定します。
+     *              Specifies a bitmap to use for the line stroke when drawing lines.
+     *
+     * @param  {BitmapData} bitmap_data
+     * @param  {Matrix}     [matrix=null]
+     * @param  {boolean}    [repeat=true]
+     * @param  {boolean}    [smooth=false]
+     * @return {Graphics}
+     * @method
+     * @public
+     */
+    lineBitmapStyle (bitmap_data, matrix = null, repeat = true, smooth = false)
+    {
+        // end fill
+        if (this._$doLine) {
+            this.endLine();
+        }
+
+        if (!this._$lines) {
+            this._$lines = Util.$getArray();
+        }
+
+        // start
+        this._$maxAlpha = 1;
+        this._$doLine   = true;
+        this._$canDraw  = true;
+
+        // beginPath
+        this._$lines.push(Graphics.BEGIN_PATH);
+
+        this._$lineType   = Graphics.BITMAP_STROKE;
+        this._$fillBitmap = new GraphicsBitmapFill(
+            bitmap_data, matrix, repeat, smooth
+        );
 
         return this;
     }
@@ -2558,13 +2622,67 @@ class Graphics
 
                         } else {
 
-                            context.fillStyle = context
-                                .createPattern(bitmapData._$texture, repeat, color_transform);
+                            context.fillStyle = context.createPattern(
+                                bitmapData._$texture, repeat, color_transform
+                            );
 
                             context._$imageSmoothingEnabled = smooth;
                             context.fill();
 
                         }
+
+                        // restore
+                        context.restore();
+                        context._$imageSmoothingEnabled = false;
+
+                    }
+                    break;
+
+                case Graphics.BITMAP_STROKE:
+                    {
+                        if (options) {
+
+                            if (context.isPointInStroke(options.x, options.y)) {
+                                return true;
+                            }
+
+                            idx += 9;
+                            continue;
+                        }
+
+                        if (is_clip) {
+                            idx += 9;
+                            continue;
+                        }
+
+                        context.save();
+
+                        const lineWidth  = recode[idx++];
+                        const caps       = recode[idx++];
+                        const joints     = recode[idx++];
+                        const miterLimit = recode[idx++];
+                        const bitmapData = recode[idx++];
+                        const matrix     = recode[idx++];
+                        const repeat     = recode[idx++];
+                        const smooth     = recode[idx++];
+
+                        if (matrix) {
+                            context.transform(
+                                matrix[0], matrix[1], matrix[2],
+                                matrix[3], matrix[4], matrix[5]
+                            );
+                        }
+
+                        context.lineWidth   = lineWidth;
+                        context.lineCap     = caps;
+                        context.lineJoin    = joints;
+                        context.miterLimit  = miterLimit;
+                        context.strokeStyle = context.createPattern(
+                            bitmapData._$texture, repeat, color_transform
+                        );
+
+                        context._$imageSmoothingEnabled = smooth;
+                        context.stroke();
 
                         // restore
                         context.restore();

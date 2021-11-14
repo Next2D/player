@@ -148,19 +148,46 @@ class Shape extends DisplayObject
 
                 // clone
                 const recodes = character.recodes;
-                const length  = recodes.length - 6;
-                for (let idx = 0; idx < length; ++idx) {
-                    graphics._$recode.push(recodes[idx]);
-                }
+                if (recodes[recodes.length - 1] === Graphics.END_FILL) {
 
-                // add Bitmap Fill
-                graphics._$recode.push(
-                    Graphics.BITMAP_FILL,
-                    bitmapData,
-                    null,
-                    "repeat",
-                    false
-                );
+                    const length  = recodes.length - 6;
+                    for (let idx = 0; idx < length; ++idx) {
+                        graphics._$recode.push(recodes[idx]);
+                    }
+
+                    // add Bitmap Fill
+                    graphics._$recode.push(
+                        Graphics.BITMAP_FILL,
+                        bitmapData,
+                        null,
+                        "repeat",
+                        false
+                    );
+
+                } else {
+
+                    const width      = recodes[recodes.length - 9];
+                    const caps       = recodes[recodes.length - 8];
+                    const joints     = recodes[recodes.length - 7];
+                    const miterLimit = recodes[recodes.length - 6];
+
+                    const length  = recodes.length - 10;
+                    for (let idx = 0; idx < length; ++idx) {
+                        graphics._$recode.push(recodes[idx]);
+                    }
+
+                    graphics._$recode.push(
+                        Graphics.BITMAP_STROKE,
+                        width,
+                        caps,
+                        joints,
+                        miterLimit,
+                        bitmapData,
+                        new Util.$Float32Array([1, 0, 0, 1, character.bounds.xMin, character.bounds.yMin]),
+                        "repeat",
+                        false
+                    );
+                }
 
             } else {
 

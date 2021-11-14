@@ -2141,6 +2141,7 @@ Util.$packages = (object) =>
         "FrameLabel": FrameLabel,
         "GradientType": GradientType,
         "Graphics": Graphics,
+        "GraphicsGradientFill": GraphicsGradientFill,
         "InteractiveObject": InteractiveObject,
         "InterpolationMethod": InterpolationMethod,
         "JointStyle": JointStyle,
