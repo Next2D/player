@@ -12,7 +12,13 @@ class CacheStore
          * @type {array}
          * @private
          */
-        this._$pool  = Util.$getArray();
+        this._$pool = Util.$getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$poolBitmapData = Util.$getArray();
 
         /**
          * @type {Map}
@@ -38,7 +44,8 @@ class CacheStore
     }
 
     /**
-     * @returns void
+     * @return {void}
+     * @method
      * @public
      */
     reset ()
@@ -58,8 +65,9 @@ class CacheStore
     }
 
     /**
-     * @param   {CanvasRenderingContext2D|WebGLTexture} object
-     * @returns void
+     * @param  {CanvasRenderingContext2D|WebGLTexture} object
+     * @return {void}
+     * @method
      * @public
      */
     destroy (object)
@@ -84,8 +92,8 @@ class CacheStore
                                 0, 0, bitmapData.width, bitmapData.height, "RGBA"
                             );
 
-                            delete object._$bitmapData;
-
+                            this._$poolBitmapData.push(bitmapData);
+                            object._$bitmapData = false;
                         }
 
                         context
@@ -118,7 +126,8 @@ class CacheStore
     }
 
     /**
-     * @returns {HTMLCanvasElement}
+     * @return {HTMLCanvasElement}
+     * @method
      * @public
      */
     getCanvas ()
@@ -128,7 +137,8 @@ class CacheStore
 
     /**
      * @param   {string|number} id
-     * @returns void
+     * @returns {void}
+     * @method
      * @public
      */
     removeCache (id)
@@ -152,6 +162,8 @@ class CacheStore
      * @param  {*} id
      * @param  {*} type
      * @return {string}
+     * @method
+     * @public
      */
     generateLifeKey (id, type)
     {
@@ -159,8 +171,9 @@ class CacheStore
     }
 
     /**
-     * @param   {array} keys
-     * @returns {*}
+     * @param  {array} keys
+     * @return {*}
+     * @method
      * @public
      */
     get (keys)
@@ -190,8 +203,10 @@ class CacheStore
     }
 
     /**
-     * @param {array} keys
-     * @param {*} value
+     * @param  {array} keys
+     * @param  {*} value
+     * @return {void}
+     * @method
      * @public
      */
     set (keys, value)
@@ -229,10 +244,11 @@ class CacheStore
     }
 
     /**
-     * @param   {string|number} unique_key
-     * @param   {Float32Array} matrix
-     * @param   {Float32Array} [color=null]
-     * @returns {array}
+     * @param  {string|number} unique_key
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} [color=null]
+     * @return {array}
+     * @method
      * @public
      */
     generateShapeKeys (unique_key, matrix, color = null)
@@ -266,10 +282,11 @@ class CacheStore
     }
 
     /**
-     * @param   {string|number} unique_key
-     * @param   {array}         [matrix=null]
-     * @param   {Float32Array}  [color=null]
-     * @returns {array}
+     * @param  {string|number} unique_key
+     * @param  {array}         [matrix=null]
+     * @param  {Float32Array}  [color=null]
+     * @return {array}
+     * @method
      * @public
      */
     generateKeys (unique_key, matrix = null, color = null)
@@ -295,6 +312,8 @@ class CacheStore
     /**
      * @param  {Float32Array} [c=null]
      * @return {string}
+     * @method
+     * @public
      */
     colorToString (c = null)
     {
@@ -318,6 +337,8 @@ class CacheStore
     /**
      * @param  {string} str
      * @return {string}
+     * @method
+     * @public
      */
     generateHash (str)
     {
@@ -335,10 +356,32 @@ class CacheStore
 
     /**
      * @return void
+     * @method
      * @public
      */
     lifeCheck ()
     {
+        if (this._$poolBitmapData.length) {
+
+            const context = Util.$currentPlayer()._$context;
+
+            const length = Util.$min(50, this._$poolBitmapData.length);
+            for (let idx = 0; idx < length; ++idx) {
+
+                const bitmapData = this._$poolBitmapData.shift();
+
+                if (bitmapData._$pixelBuffer) {
+
+                    bitmapData._$buffer = context
+                        .pbo
+                        .getBufferSubDataAsync(bitmapData._$pixelBuffer);
+
+                    // reset
+                    bitmapData._$pixelBuffer = null;
+                }
+            }
+        }
+
         for (const [id, data] of this._$store) {
 
             for (const [type, value] of data) {

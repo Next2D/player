@@ -13,6 +13,9 @@ class PixelBufferObjectManager
         this._$gl              = gl;
         this._$isWebGL2Context = isWebGL2Context;
         this._$objectPool      = [];
+        this._$maxWidth        = 0;
+        this._$maxHeight       = 0;
+        this._$cacheSize       = 0;
     }
 
     /**
@@ -32,11 +35,15 @@ class PixelBufferObjectManager
             const pixelBufferObject = this._$objectPool[i];
             if (pixelBufferObject.size === size) {
                 this._$objectPool.splice(i, 1);
+                this._$cacheSize -= pixelBufferObject.size / 4;
                 return pixelBufferObject;
             }
         }
 
-        return this._$objectPool.shift();
+        const pixelBufferObject = this._$objectPool.shift();
+        this._$cacheSize -= pixelBufferObject.size / 4;
+
+        return pixelBufferObject;
     }
 
     /**
@@ -86,7 +93,7 @@ class PixelBufferObjectManager
         this._$gl.getBufferSubData(this._$gl.PIXEL_PACK_BUFFER, 0, data);
         this._$gl.bindBuffer(this._$gl.PIXEL_PACK_BUFFER, null);
 
-        this._$objectPool.push(pixelBufferObject);
+        this.release(pixelBufferObject);
 
         return data;
     }
@@ -98,6 +105,19 @@ class PixelBufferObjectManager
      */
     release (pixelBufferObject)
     {
+        if (pixelBufferObject.size > this._$maxWidth * this._$maxHeight * 4) {
+            this._$gl.deleteBuffer(pixelBufferObject);
+            return;
+        }
+
         this._$objectPool.push(pixelBufferObject);
+        this._$cacheSize += pixelBufferObject.size / 4;
+
+        // プール容量が一定を超えたら、古いbufferから削除していく
+        if (this._$cacheSize > this._$maxWidth * this._$maxHeight * 10) {
+            const oldBufferObject = this._$objectPool.shift();
+            this._$cacheSize -= oldBufferObject.size / 4;
+            this._$gl.deleteBuffer(oldBufferObject);
+        }
     }
 }

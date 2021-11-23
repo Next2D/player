@@ -1090,6 +1090,8 @@ class Player
                 manager._$stencilBufferPool._$maxHeight = height;
                 manager._$textureManager._$maxWidth     = width;
                 manager._$textureManager._$maxHeight    = height;
+                this._$context._$pbo._$maxWidth         = width;
+                this._$context._$pbo._$maxHeight        = height;
             }
 
             const mScale = this._$scale * this._$ratio;
