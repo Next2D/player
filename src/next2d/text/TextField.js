@@ -657,11 +657,10 @@ class TextField extends InteractiveObject
                     this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_OUT));
                 }
 
-                this._$textarea.remove();
-
                 this._$doChanged();
                 Util.$isUpdated = true;
 
+                this._$textarea.remove();
             }
 
         }
