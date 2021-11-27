@@ -1929,7 +1929,9 @@ class Player
                         }
 
                         // TextField focus out
-                        if (this._$textField && this._$textField instanceof TextField) {
+                        if (this._$textField
+                            && this._$textField instanceof TextField
+                        ) {
                             this._$textField.focus = false;
                             this._$textField = null;
                         }
@@ -2163,7 +2165,9 @@ class Player
                     case Util.$MOUSE_UP:
 
                         // TextField focus out
-                        if (instance !== this._$textField) {
+                        if (instance !== this._$textField
+                            && this._$textField instanceof TextField
+                        ) {
                             this._$textField.focus = false;
                             this._$textField       = null;
                         }
