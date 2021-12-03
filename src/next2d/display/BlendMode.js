@@ -1,8 +1,10 @@
 /**
  * ブレンドモードの視覚効果のために定数値を提供するクラスです。
+ * 全てのDisplayObjectに設定が可能です。
  * A class that provides constant values for visual blend mode effects.
+ * It can be set for all DisplayObjects.
  *
- * @example <caption>Example usage of BlendMode.</caption>
+ * @example <caption>usage of BlendMode.</caption>
  * // static BlendMode
  * const {BlendMode, MovieClip} = next2d.display;
  * const movieClip = new MovieClip();
