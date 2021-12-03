@@ -2349,9 +2349,9 @@ class TextField extends InteractiveObject
         const textFormat = this.defaultTextFormat;
 
         textFormat.font          = character.font;
-        textFormat.size          = character.size;
+        textFormat.size          = character.size | 0;
         textFormat.align         = character.align;
-        textFormat.color         = character.color;
+        textFormat.color         = character.color | 0;
         textFormat.leading       = character.leading;
         textFormat.letterSpacing = character.letterSpacing;
         textFormat.leftMargin    = character.leftMargin;
@@ -2374,11 +2374,14 @@ class TextField extends InteractiveObject
 
         }
 
-        this._$type      = character.inputType;
-        this._$multiline = character.multiline;
-        this._$wordWrap  = character.wordWrap;
-        this._$border    = character.border;
-        this._$scroll    = character.scroll;
+        // setup
+        this._$type           = character.inputType;
+        this._$multiline      = !!character.multiline;
+        this._$wordWrap       = !!character.wordWrap;
+        this._$border         = !!character.border;
+        this._$scroll         = !!character.scroll;
+        this._$thickness      = character.thickness | 0;
+        this._$thicknessColor = character.thicknessColor | 0;
 
         // bounds
         this._$bounds.xMin       = character.originBounds.xMin;
