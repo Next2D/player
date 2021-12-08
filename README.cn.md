@@ -11,16 +11,16 @@ Next2D Player
 [![Discord](https://img.shields.io/discord/812136803506716713?label=Discord&logo=discord)](https://discord.gg/6c9rv5Uns5)
 [![Follow us on Twitter](https://img.shields.io/twitter/follow/Next2D?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=Next2D)
 
-## About
-Next2D Player is a project derived from the JavaScript FlashPlayer "swf2js".  
-The goal is to provide the fastest 2D engine that works on any device.
+## 关于
+Next2D Player 是一个来源于 JavaScript Flash 播放器 "swf2js" 的衍生项目。
+目标是提供一个在任何设备上都工作最快的 2D 引擎。
 
-It fully supports WebGL and WebGL2, and it allows you to create rich, interactive graphics, cross-platform applications and games without having to deal with browser or device compatibility.
+它完整提供了 WebGL 和 WebGL2, 可被用于创建丰富、交互式图形、跨平台应用程序和游戏, 而不需要处理浏览器或者设备兼容性问题。
 
-By using the Next2D NoCode Tool, you can intuitively create the animation you have imagined, and the exported JSON data can be easily played and published using the Next2D Player.  
-Next2D NoCode Tool is a web service that does not require installation and can be used immediately by anyone who accesses it.
+通过使用 Next NoCode Toll, 你可以直观地创建想象中的动画, 导出的 JSON 数据可以通过使用 Next2D Player 很容易被播放和发布。
+Next2D NoCode Tool 是一个 web 服务, 不需要下载并且谁都可以立马使用。
 
-2D entertainment development made easy! Fast! Comfortable!
+使 2D 娱乐开发更简单! 快速! 舒服!
 
 ## Use Simple Sample
 ```javascript

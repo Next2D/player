@@ -12,15 +12,16 @@ Next2D Player
 [![Follow us on Twitter](https://img.shields.io/twitter/follow/Next2D?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=Next2D)
 
 ## About
-Next2D Player is a project derived from the JavaScript FlashPlayer "swf2js".  
-The goal is to provide the fastest 2D engine that works on any device.
+Next2D Playerは、JavaScript FlashPlayer「swf2js」から派生したプロジェクトで  
+あらゆるデバイスで動作する2D最速エンジンを提供することを目的としてます。
 
-It fully supports WebGL and WebGL2, and it allows you to create rich, interactive graphics, cross-platform applications and games without having to deal with browser or device compatibility.
+WebGL、WebGL2を完全にサポートしており、ブラウザやデバイスの互換性に対処したりすることなく  
+リッチでインタラクティブなグラフィック、クロスプラットフォーム アプリケーション、およびゲームを作成できるライブラリです。
 
-By using the Next2D NoCode Tool, you can intuitively create the animation you have imagined, and the exported JSON data can be easily played and published using the Next2D Player.  
-Next2D NoCode Tool is a web service that does not require installation and can be used immediately by anyone who accesses it.
+Next2D NoCode Toolを利用することで、イメージしたアニメーションを直感的に作成でき、書き出したJSONデータを、Next2D Playerで簡単に再生および公開が可能です。  
+Next2D NoCode Toolはインストール不要でアクセスすれば誰でもすぐに使えるWebサービスです。
 
-2D entertainment development made easy! Fast! Comfortable!
+2Dエンターテインメント開発を簡単に！快速に！快適に！
 
 ## Use Simple Sample
 ```javascript
