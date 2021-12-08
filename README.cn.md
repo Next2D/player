@@ -12,6 +12,7 @@ Next2D Player
 [![Follow us on Twitter](https://img.shields.io/twitter/follow/Next2D?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=Next2D)
 
 ## 关于
+
 Next2D Player 是一个来源于 JavaScript Flash 播放器 "swf2js" 的衍生项目。
 目标是提供一个在任何设备上都工作最快的 2D 引擎。
 
@@ -22,12 +23,14 @@ Next2D NoCode Tool 是一个 web 服务, 不需要下载并且谁都可以立马
 
 使 2D 娱乐开发更简单! 快速! 舒服!
 
-## Use Simple Sample
+## 使用之简单示例
+
 ```javascript
 next2d.load("JSON Path...");
 ```
 
-## Use Program Sample
+## 使用之程序示例
+
 ```javascript
 const { Loader }     = next2d.display;
 const { URLRequest } = next2d.net;
@@ -50,24 +53,26 @@ loader
 
 loader.load(request);
 ```
-@see [API Documentation](https://next2d.app/docs/player)
+@see [API 文档](https://next2d.app/docs/player)
 
-## Option settings
+## 设置选项
 
-| name | value | default | description |
+| 名称 | 值类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `base` | string | empty |  The value to be set if the URL is not set at the time of the request. |
-| `fullScreen` | boolean | false |  It will be drawn beyond the width and height set in the fullscreen setting and stage. |
-| `tagId` | string | empty | Set value of the ID of the DOM where you want to set the drawing. |
-| `bgColor` | array [R,G,B,A] or false | false | RGBA can be specified from 0-255. |
+| `base` | string | 空值 |  如果在请求时未设置URL，则要设置。 |
+| `fullScreen` | boolean | false | 全屏绘制 |
+| `tagId` | string | 空值 | 值为你希望在 DOM 中绘制位置的容器 ID。 |
+| `bgColor` | array [R,G,B,A] or false | false | RGBA 值在 0-255 范围内选择。 |
 
-## Related sites
-* [Website](https://next2d.app)
-* [Player API Documentation](https://next2d.app/docs/player)
+## 相关站点
+
+* [官网](https://next2d.app)
+* [Player API 文档](https://next2d.app/docs/player)
 * [Next2D NoCode Tool(α version)](https://tool.next2d.app)
 * [Next2D Framework(β version)](https://next2d.app/#framework)
-* [Tutorial & Reference.](https://next2d.app/tutorials/player)
-* [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)
+* [教程 & 参考](https://next2d.app/tutorials/player)
+* [聊天社区(Discord)](https://discord.gg/6c9rv5Uns5)
 
-## License
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.
+## 许可证
+
+本项目使用 [MIT License](https://opensource.org/licenses/MIT) 许可证 - 参考 [LICENSE](LICENSE) 文件了解许可证内容。
