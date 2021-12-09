@@ -1195,7 +1195,7 @@ class DisplayObject extends EventDispatcher
         if (!this._$variables) {
             this._$variables = Util.$getMap();
         }
-        Util.$variables.set(key, value);
+        this._$variables.set(key, value);
     }
 
     /**
