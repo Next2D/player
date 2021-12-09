@@ -119,13 +119,13 @@ class Next2D
      *
      * @param  {number} [width=240]
      * @param  {number} [height=240]
-     * @param  {number} [fps=60]
+     * @param  {number} [fps=24]
      * @param  {object} [options=null]
      * @return {Sprite}
      * @method
      * @public
      */
-    createRootMovieClip (width = 240, height = 240, fps = 60, options = null)
+    createRootMovieClip (width = 240, height = 240, fps = 24, options = null)
     {
         const player = this._$player;
 
