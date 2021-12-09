@@ -2694,3 +2694,42 @@ describe("DisplayObject.js y test", function()
         expect(obj.y).toBe(0);
     });
 });
+
+describe("DisplayObject.js LocalVariable test", function()
+{
+    it("default test case1", function()
+    {
+        const mc1 = new MovieClip();
+        const mc2 = new MovieClip();
+
+        mc1.setLocalVariable("test", 10);
+        mc2.setLocalVariable("test", 20);
+
+        expect(mc1.getLocalVariable("test")).toBe(10);
+        expect(mc2.getLocalVariable("test")).toBe(20);
+
+        mc1.deleteLocalVariable("test", 10);
+
+        expect(mc1.hasLocalVariable("test")).toBe(false);
+        expect(mc2.hasLocalVariable("test")).toBe(true);
+    });
+});
+
+describe("DisplayObject.js GlobalVariable test", function()
+{
+    it("default test case1", function()
+    {
+        const mc1 = new MovieClip();
+        const mc2 = new MovieClip();
+
+        mc1.setGlobalVariable("test", 10);
+
+        expect(mc1.getGlobalVariable("test")).toBe(10);
+        expect(mc2.getGlobalVariable("test")).toBe(10);
+
+        mc1.deleteGlobalVariable("test", 10);
+
+        expect(mc1.hasGlobalVariable("test")).toBe(false);
+        expect(mc2.hasGlobalVariable("test")).toBe(false);
+    });
+});
