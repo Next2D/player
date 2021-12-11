@@ -376,10 +376,16 @@ class Player
 
             } else {
 
-                const urls = base.split("?")[0].split("/");
-                urls.pop();
+                if (base.indexOf("?") === -1) {
 
-                this._$base = `${urls.join("/")}/`;
+                    this._$base = base.slice(-1) === "/" ? base : `${base}/`;
+
+                } else {
+
+                    const path  = base.split("?")[0];
+                    this._$base = path.slice(-1) === "/" ? path : `${path}/`;
+
+                }
 
             }
         }

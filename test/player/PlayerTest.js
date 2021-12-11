@@ -1,3 +1,52 @@
+describe("Player.js base test", function()
+{
+    beforeEach(function() {
+        window.next2d = new Next2D();
+        window.next2d._$player._$canvas = document.createElement("canvas");
+    });
+
+    it("base valid case1", function()
+    {
+        const root = next2d.createRootMovieClip(240, 240, 1, {
+            "base": "https://sample.com/json"
+        });
+
+        const player = root.stage._$player;
+        expect(player.base).toBe("https://sample.com/json/");
+    });
+
+    it("base valid case2", function()
+    {
+        const root = next2d.createRootMovieClip(240, 240, 1, {
+            "base": "https://sample.com/json/"
+        });
+
+        const player = root.stage._$player;
+        expect(player.base).toBe("https://sample.com/json/");
+    });
+
+    it("base valid case3", function()
+    {
+        const root = next2d.createRootMovieClip(240, 240, 1, {
+            "base": "https://sample.com/json/?param=1"
+        });
+
+        const player = root.stage._$player;
+        expect(player.base).toBe("https://sample.com/json/");
+    });
+
+    it("base valid case4", function()
+    {
+        const root = next2d.createRootMovieClip(240, 240, 1, {
+            "base": "https://sample.com/json?param=1"
+        });
+
+        const player = root.stage._$player;
+        expect(player.base).toBe("https://sample.com/json/");
+    });
+
+});
+
 describe("Player.js hitTest test", function()
 {
     beforeEach(function() {

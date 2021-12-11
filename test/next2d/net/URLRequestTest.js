@@ -36,7 +36,12 @@ describe("URLRequest.js namespace test", function()
 
 describe("URLRequest.js properties test", function()
 {
+    beforeEach(function() {
+        window.next2d = new Next2D();
+        window.next2d._$player._$canvas = document.createElement("canvas");
+    });
 
+    
     it("contentType success", function ()
     {
         let req = new URLRequest();
