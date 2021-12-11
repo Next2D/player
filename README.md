@@ -58,10 +58,10 @@ loader.load(request);
 
 | name | value | default | description |
 | --- | --- | --- | --- |
-| `base` | string | empty |  The value to be set if the URL is not set at the time of the request. |
-| `fullScreen` | boolean | false |  It will be drawn beyond the width and height set in the fullscreen setting and stage. |
-| `tagId` | string | empty | Set value of the ID of the DOM where you want to set the drawing. |
-| `bgColor` | array [R,G,B,A] or false | false | RGBA can be specified from 0-255. |
+| `base` | string | empty | When acquiring JSON by relative path, the URL set here will be applied as the root. For absolute paths, the URL set here will not be applied. |
+| `fullScreen` | boolean | false | It will be drawn on the entire screen beyond the width and height set in the Stage class. |
+| `tagId` | string | empty | When an ID is specified, drawing will be performed within the element with the specified ID. |
+| `bgColor` | The [R,G,B,A] array of background colors can be specified from 0 to 255. false is colorless and transparent. |
 
 ## Related sites
 * [Website](https://next2d.app)

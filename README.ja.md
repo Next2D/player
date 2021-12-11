@@ -55,12 +55,12 @@ loader.load(request);
 
 ## Option settings
 
-| name | value | default | description |
+| プロパティ名 | 型 | デフォルト値 | 説明 |
 | --- | --- | --- | --- |
-| `base` | string | empty |  The value to be set if the URL is not set at the time of the request. |
-| `fullScreen` | boolean | false |  It will be drawn beyond the width and height set in the fullscreen setting and stage. |
-| `tagId` | string | empty | Set value of the ID of the DOM where you want to set the drawing. |
-| `bgColor` | array [R,G,B,A] or false | false | RGBA can be specified from 0-255. |
+| `base` | string | empty | 相対パスでJSONを取得する場合、ここで設定したURLがrootとして適用されます。絶対パスの場合はここで設定したURLは適用されません。 |
+| `fullScreen` | boolean | false | Stageクラスで設定した幅と高さを超えて画面全体に描画されます。 |
+| `tagId` | string | empty | IDを指定すると、指定したIDのエレメント内で描画を行います。 |
+| `bgColor` | array [R,G,B,A] or false | false | 背景色の[R,G,B,A]の配列は0～255で指定できます。falseは無色透明です。 |
 
 ## Related sites
 * [Website](https://next2d.app)
