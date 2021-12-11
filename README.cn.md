@@ -18,7 +18,7 @@ Next2D Player 是一个来源于 JavaScript Flash 播放器 "swf2js" 的衍生�
 
 它完整提供了 WebGL 和 WebGL2, 可被用于创建丰富、交互式图形、跨平台应用程序和游戏, 而不需要处理浏览器或者设备兼容性问题。
 
-通过使用 Next NoCode Toll, 你可以直观地创建想象中的动画, 导出的 JSON 数据可以通过使用 Next2D Player 很容易被播放和发布。
+通过使用 Next NoCode Tool, 你可以直观地创建想象中的动画, 导出的 JSON 数据可以通过使用 Next2D Player 很容易被播放和发布。
 Next2D NoCode Tool 是一个 web 服务, 不需要下载并且谁都可以立马使用。
 
 使 2D 娱乐开发更简单! 快速! 舒服!
