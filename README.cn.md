@@ -52,7 +52,7 @@ loader
 
 loader.load(request);
 ```
-[CodePen](https://codepen.io/next2d/pen/VwMKGEv)
+[CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
 @see [API 文档](https://next2d.app/docs/player)
 
 ## 设置选项
