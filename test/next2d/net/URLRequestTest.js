@@ -40,7 +40,6 @@ describe("URLRequest.js properties test", function()
         window.next2d = new Next2D();
         window.next2d._$player._$canvas = document.createElement("canvas");
     });
-
     
     it("contentType success", function ()
     {
