@@ -28,6 +28,7 @@ Next2D NoCode Tool is a web service that does not require installation and can b
 ```javascript
 next2d.load("JSON Path...");
 ```
+[CodePen](https://codepen.io/next2d/pen/rNGMrZG)
 
 ## Use Program Sample
 ```javascript
@@ -45,13 +46,12 @@ loader
     .contentLoaderInfo
     .addEventListener(Event.COMPLETE, (event) =>
     {
-        const loaderInfo = event.currentTarget;
-        
-        root.addChild(loaderInfo.content);
+        root.addChild(event.currentTarget.content);
     });
 
 loader.load(request);
 ```
+[CodePen](https://codepen.io/next2d/pen/VwMKGEv)
 @see [API Documentation](https://next2d.app/docs/player)
 
 ## Option settings
