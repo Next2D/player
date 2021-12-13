@@ -681,7 +681,7 @@ describe("DisplayObject.js getBounds test", function()
 
         shape
             .graphics
-            .lineStyle(20, 0x000000, 1.0, true, DisplayObject.SQUARE, JointStyle.BEVEL, 10)
+            .lineStyle(20, 0x000000, 1.0, true, CapsStyle.SQUARE, JointStyle.BEVEL, 10)
             .moveTo(0, 0)
             .lineTo(10, 0);
 
@@ -695,7 +695,7 @@ describe("DisplayObject.js getBounds test", function()
 
         shape
             .graphics
-            .lineStyle(20, 0x000000, 1.0, true, DisplayObject.SQUARE, JointStyle.BEVEL, 10)
+            .lineStyle(20, 0x000000, 1.0, true, CapsStyle.SQUARE, JointStyle.BEVEL, 10)
             .moveTo(0, 0)
             .lineTo(10, 10);
 
@@ -709,7 +709,7 @@ describe("DisplayObject.js getBounds test", function()
 
         shape
             .graphics
-            .lineStyle(20, 0x000000, 1.0, true, DisplayObject.SQUARE, JointStyle.BEVEL, 10)
+            .lineStyle(20, 0x000000, 1.0, true, CapsStyle.SQUARE, JointStyle.BEVEL, 10)
             .moveTo(0, 0)
             .lineTo(0, 10);
 
@@ -723,7 +723,7 @@ describe("DisplayObject.js getBounds test", function()
 
         shape
             .graphics
-            .lineStyle(20, 0x000000, 1.0, true, DisplayObject.SQUARE, JointStyle.BEVEL, 10)
+            .lineStyle(20, 0x000000, 1.0, true, CapsStyle.SQUARE, JointStyle.BEVEL, 10)
             .moveTo(0, 0)
             .lineTo(-10, 10);
 
@@ -737,7 +737,7 @@ describe("DisplayObject.js getBounds test", function()
 
         shape
             .graphics
-            .lineStyle(20, 0x000000, 1.0, true, DisplayObject.SQUARE, JointStyle.BEVEL, 10)
+            .lineStyle(20, 0x000000, 1.0, true, CapsStyle.SQUARE, JointStyle.BEVEL, 10)
             .moveTo(0, 0)
             .lineTo(-10, 0);
 
@@ -751,7 +751,7 @@ describe("DisplayObject.js getBounds test", function()
 
         shape
             .graphics
-            .lineStyle(20, 0x000000, 1.0, true, DisplayObject.SQUARE, JointStyle.BEVEL, 10)
+            .lineStyle(20, 0x000000, 1.0, true, CapsStyle.SQUARE, JointStyle.BEVEL, 10)
             .moveTo(0, 0)
             .lineTo(10, -10);
 
@@ -765,7 +765,7 @@ describe("DisplayObject.js getBounds test", function()
 
         shape
             .graphics
-            .lineStyle(20, 0x000000, 1.0, true, DisplayObject.SQUARE, JointStyle.BEVEL, 10)
+            .lineStyle(20, 0x000000, 1.0, true, CapsStyle.SQUARE, JointStyle.BEVEL, 10)
             .moveTo(0, 0)
             .lineTo(0, -10);
 
@@ -793,7 +793,7 @@ describe("DisplayObject.js getBounds test", function()
 
         shape
             .graphics
-            .lineStyle(20, 0x000000, 1.0, true, DisplayObject.SQUARE, JointStyle.BEVEL, 10)
+            .lineStyle(20, 0x000000, 1.0, true, CapsStyle.SQUARE, JointStyle.BEVEL, 10)
             .moveTo(0, 0)
             .lineTo(-10, -10);
 
@@ -829,7 +829,7 @@ describe("DisplayObject.js getBounds test", function()
     //
     //     shape
     //         .graphics
-    //         .lineStyle(20, 0x000000, 1.0, true, LineScaleMode.NORMAL, DisplayObject.SQUARE, JointStyle.MITER, 10)
+    //         .lineStyle(20, 0x000000, 1.0, true, LineScaleMode.NORMAL, CapsStyle.SQUARE, JointStyle.MITER, 10)
     //         .moveTo(0, 0)
     //         .lineTo(0, 100)
     //         .lineTo(100, 100)
@@ -853,7 +853,7 @@ describe("DisplayObject.js getBounds test", function()
     //
     //     shape
     //         .graphics
-    //         .lineStyle(20, 0x000000, 1.0, true, LineScaleMode.NORMAL, DisplayObject.SQUARE, JointStyle.MITER, 10)
+    //         .lineStyle(20, 0x000000, 1.0, true, LineScaleMode.NORMAL, CapsStyle.SQUARE, JointStyle.MITER, 10)
     //         .moveTo(0, 0)
     //         .lineTo(0, 100)
     //         .lineTo(100, 100)

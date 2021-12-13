@@ -553,6 +553,13 @@ Util.$Int16Array = window.Int16Array;
 Util.$variables = new Map();
 
 /**
+ * @type {Map}
+ * @const
+ * @static
+ */
+Util.$loadedImages = new Map();
+
+/**
  * @type {boolean}
  * @default false
  * @static

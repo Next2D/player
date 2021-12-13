@@ -1607,7 +1607,6 @@ class TextField extends InteractiveObject
      */
     _$parseTag (tag, text_format, tf_copy_offset)
     {
-
         const childNodes = tag.childNodes;
         const length     = childNodes.length;
         for (let idx = 0; idx < length; ++idx) {
@@ -1615,7 +1614,6 @@ class TextField extends InteractiveObject
             let tf = text_format._$clone();
 
             const node = childNodes[idx];
-
             if (node.nodeType === 3) {
 
                 tf_copy_offset = this._$parseText(node.nodeValue, tf);
@@ -1630,6 +1628,9 @@ class TextField extends InteractiveObject
                     {
                         if (node.hasAttribute("align")) {
                             tf._$align = node.getAttribute("align").toLowerCase();
+                            if (this._$textData.length === 1) {
+                                this._$textData[0].textFormat._$align = tf._$align;
+                            }
                         }
 
                         this._$parseTag(node, tf, tf_copy_offset);
@@ -1666,7 +1667,7 @@ class TextField extends InteractiveObject
                         };
 
                         this._$objectTable[yIndex] = obj;
-                        this._$textData[this._$textData.length] = obj;
+                        this._$textData.push(obj);
                     }
                     break;
 
@@ -1764,43 +1765,55 @@ class TextField extends InteractiveObject
 
                 case "IMG":
                     {
-                        const src = node.getAttribute("src") || "";
-
-                        const width  = node.getAttribute("width") || 0;
-                        const height = node.getAttribute("height") || 0;
-                        const vspace = node.getAttribute("vspace") || 0;
-                        const hspace = node.getAttribute("hspace") || 0;
-
-                        let totalTextHeight = 0;
-                        for (let idx = 0; idx < this._$textHeightTable.length; idx++) {
-                            totalTextHeight += this._$textHeightTable[idx];
+                        let src = "";
+                        if (node.hasAttribute("src")) {
+                            src = node.getAttribute("src");
                         }
 
-                        const obj = {
-                            "mode"      : TextField.IMAGE,
-                            "src"       : src,
-                            "loaded"    : false,
-                            "x"         : 0,
-                            "y"         : totalTextHeight,
-                            "width"     : width,
-                            "height"    : height,
-                            "hspace"    : hspace,
-                            "vspace"    : vspace,
-                            "textFormat": tf
-                        };
+                        let obj = null;
+                        if (!Util.$loadedImages.has(src)) {
 
-                        if (this._$imageData.length > 0) {
+                            const width  = node.getAttribute("width") || 0;
+                            const height = node.getAttribute("height") || 0;
+                            const vspace = node.getAttribute("vspace") || 8;
+                            const hspace = node.getAttribute("hspace") || 8;
 
-                            const prevImage   = this._$imageData[this._$imageData.length - 1];
-                            const imageBottom = prevImage.y + prevImage.height + prevImage.vspace * 2;
+                            let totalTextHeight = 0;
+                            for (let idx = 0; idx < this._$textHeightTable.length; idx++) {
+                                totalTextHeight += this._$textHeightTable[idx];
+                            }
 
-                            obj.y = Util.$max(totalTextHeight, imageBottom);
+                            obj = {
+                                "mode"      : TextField.IMAGE,
+                                "src"       : src,
+                                "loaded"    : false,
+                                "x"         : 0,
+                                "y"         : totalTextHeight,
+                                "width"     : width | 0,
+                                "height"    : height | 0,
+                                "hspace"    : hspace | 0,
+                                "vspace"    : vspace | 0,
+                                "textFormat": tf._$clone()
+                            };
+
+                            if (this._$imageData.length > 0) {
+                                const prevImage   = this._$imageData[this._$imageData.length - 1];
+                                const imageBottom = prevImage.y + prevImage.height + prevImage.vspace * 2;
+
+                                obj.y = Util.$max(totalTextHeight, imageBottom);
+                            }
+
+                            this._$loadImage(obj);
+                            Util.$loadedImages.set(src, obj);
+
+                        } else {
+
+                            obj = Util.$loadedImages.get(src);
+
                         }
 
                         this._$textData[this._$textData.length]   = obj;
                         this._$imageData[this._$imageData.length] = obj;
-
-                        this._$loadImage(obj);
                     }
                     break;
 
@@ -1810,6 +1823,40 @@ class TextField extends InteractiveObject
 
             }
         }
+    }
+
+    /**
+     * @param  {Object} obj
+     * @return void
+     * @private
+     */
+    _$loadImage (obj)
+    {
+        obj.scope = this;
+        obj.image = new Util.$Image();
+
+        obj.image.crossOrigin = "anonymous";
+        obj.image.addEventListener("load", function ()
+        {
+            this.loaded = true;
+
+            // set size
+            if (!this.width) {
+                this.width = this.image.width | 0;
+            }
+            if (!this.height) {
+                this.height = this.image.height | 0;
+            }
+
+            const scope = this.scope;
+            this.scope  = null;
+
+            Util.$loadedImages.set(this.src, this);
+            scope._$reload();
+
+        }.bind(obj), false);
+
+        obj.image.src = obj.src;
     }
 
     /**
@@ -1828,23 +1875,11 @@ class TextField extends InteractiveObject
         // new format
         let tf = text_format._$clone();
 
-        let playerMatrix = Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0;
-
-        const player = Util.$currentPlayer();
-        if (player) {
-            const scale = player._$scale * player._$ratio;
-            playerMatrix = Util.$getFloat32Array6(scale, 0, 0, scale, 0, 0);
-        }
-
-        const matrix = Util.$multiplicationMatrix(
-            this._$transform.concatenatedMatrix._$matrix,
-            playerMatrix
-        );
+        const matrix = this._$transform.concatenatedMatrix._$matrix;
 
         const boundsWidth = (this._$originBounds.xMax - this._$originBounds.xMin)
             * (matrix[0] / matrix[3]);
 
-        Util.$poolFloat32Array6(playerMatrix);
         Util.$poolFloat32Array6(matrix);
 
         const maxWidth = boundsWidth - tf._$widthMargin() - 4;
@@ -2883,7 +2918,10 @@ class TextField extends InteractiveObject
                     }
 
                     context.beginPath();
-                    context.drawImage(obj.image, obj.x, yOffset + obj.y, obj.width, obj.height);
+                    context.drawImage(obj.image,
+                        obj.hspace, yOffset + obj.y,
+                        obj.width, obj.height
+                    );
 
                     break;
 
