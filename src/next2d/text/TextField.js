@@ -2558,6 +2558,11 @@ class TextField extends InteractiveObject
         }
 
         const baseBounds = this._$getBounds(null);
+        baseBounds.xMin -= this._$thickness;
+        baseBounds.xMax += this._$thickness;
+        baseBounds.yMin -= this._$thickness;
+        baseBounds.yMax += this._$thickness;
+
         const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
         const xMax   = +bounds.xMax;
         const xMin   = +bounds.xMin;
@@ -2568,6 +2573,7 @@ class TextField extends InteractiveObject
 
         let width  = Util.$ceil(Util.$abs(xMax - xMin));
         let height = Util.$ceil(Util.$abs(yMax - yMin));
+        this._$border = true;
         if (!width || !height) {
             return;
         }
