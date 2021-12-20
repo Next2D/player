@@ -2573,7 +2573,6 @@ class TextField extends InteractiveObject
 
         let width  = Util.$ceil(Util.$abs(xMax - xMin));
         let height = Util.$ceil(Util.$abs(yMax - yMin));
-        this._$border = true;
         if (!width || !height) {
             return;
         }
