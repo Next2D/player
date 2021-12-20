@@ -2148,6 +2148,14 @@ class Player
                     case Util.$MOUSE_DOWN:
 
                         // TextField focus out
+                        if (instance !== this._$textField
+                            && this._$textField instanceof TextField
+                        ) {
+                            this._$textField.focus = false;
+                            this._$textField       = null;
+                        }
+
+                        // TextField focus out
                         if (instance instanceof TextField) {
                             instance.focus   = true;
                             this._$textField = instance;
