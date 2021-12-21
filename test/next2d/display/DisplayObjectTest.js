@@ -2733,3 +2733,15 @@ describe("DisplayObject.js GlobalVariable test", function()
         expect(mc2.hasGlobalVariable("test")).toBe(false);
     });
 });
+
+
+describe("DisplayObject.js _$id test", function()
+{
+
+    it("_$id default case", function()
+    {
+        const object = new DisplayObject();
+        expect(object._$id).toBe(-1);
+    });
+
+});

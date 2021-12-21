@@ -761,7 +761,7 @@ class DisplayObjectContainer extends InteractiveObject
                     instance._$filters   = null;
                     instance._$blendMode = null;
 
-                    if (instance._$id === null) {
+                    if (instance._$id === -1) {
                         children.push(instance);
                         if (instance._$name) {
                             this._$names.set(instance._$name, instance);
