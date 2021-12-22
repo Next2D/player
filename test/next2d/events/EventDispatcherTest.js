@@ -687,3 +687,28 @@ describe("EventDispatcher.js willTrigger test", function()
     });
 
 });
+
+describe("EventDispatcher.js removeAllEventListener test", function()
+{
+
+    beforeEach(function() {
+        window.next2d = new Next2D();
+        const player = next2d._$player;
+        player.stop();
+        player._$broadcastEvents = new Map();
+    });
+
+    // hasEventListener
+    it("removeAllEventListener test success case1", function ()
+    {
+        const sprite = new Sprite();
+        sprite.addEventListener("test", function () {});
+        sprite.addEventListener("test", function () {});
+        sprite.addEventListener("test", function () {});
+
+        expect(sprite.hasEventListener("test")).toBe(true);
+        sprite.removeAllEventListener("test");
+        expect(sprite.hasEventListener("test")).toBe(false);
+    });
+
+});

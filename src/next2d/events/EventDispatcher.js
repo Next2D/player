@@ -543,9 +543,9 @@ class EventDispatcher
             }
 
             default:
-                return this._$events
+                return !!(this._$events
                     && this._$events.size
-                    && this._$events.has(type);
+                    && this._$events.has(type));
 
         }
     }
@@ -658,6 +658,116 @@ class EventDispatcher
             });
 
             this._$events.set(type, events);
+
+        }
+    }
+
+    /**
+     * @description EventDispatcherオブジェクトから指定したタイプのリスナーを全て削除します。
+     *              Removes all listeners of the specified type from the EventDispatcher object.
+     *
+     * @param  {string}   type
+     * @param  {boolean}  [use_capture=false]
+     * @return {void}
+     * @method
+     * @public
+     */
+    removeAllEventListener (type, use_capture = false)
+    {
+        type = `${type}`;
+        if (!this.hasEventListener(type)) {
+            return;
+        }
+
+        let
+            events,
+            player,
+            isBroadcast = false;
+
+        switch (type) {
+
+            case Event.ENTER_FRAME:
+            case Event.EXIT_FRAME:
+            case Event.FRAME_CONSTRUCTED:
+            case Event.RENDER:
+            case Event.ACTIVATE:
+            case Event.DEACTIVATE:
+            case "keyDown":
+            case "keyUp":
+
+                isBroadcast = true;
+
+                player = Util.$currentPlayer();
+                if (player) {
+                    events = player.broadcastEvents.get(type);
+                }
+
+                break;
+
+            default:
+                events = this._$events.get(type);
+                break;
+
+        }
+
+        // remove listener
+        const results = Util.$getArray();
+
+        const length = events.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            // event object
+            const obj = events[idx];
+            if (use_capture !== obj.useCapture) {
+                results.push(obj);
+            }
+
+        }
+
+        if (!results.length) {
+
+            if (isBroadcast) {
+
+                player.broadcastEvents.delete(type);
+
+            } else {
+
+                this._$events.delete(type);
+
+                if (!this._$events.size) {
+                    Util.$poolMap(this._$events);
+                    this._$events = null;
+                }
+
+            }
+
+            return ;
+        }
+
+        if (isBroadcast) {
+
+            player.broadcastEvents.set(type, results);
+
+        } else {
+
+            // event sort
+            results.sort(function (a, b)
+            {
+                switch (true) {
+
+                    case a.priority > b.priority:
+                        return -1;
+
+                    case a.priority < b.priority:
+                        return 1;
+
+                    default:
+                        return 0;
+
+                }
+            });
+
+            this._$events.set(type, results);
 
         }
     }
