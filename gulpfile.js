@@ -29,7 +29,7 @@ const options = minimist(process.argv.slice(2), {
  * @description フッターの書き出し
  * @public
  */
-function buildFooterVersion()
+function buildFooterVersion ()
 {
     return gulp
         .src("src/Footer.file")
@@ -42,7 +42,7 @@ function buildFooterVersion()
  * @description ヘッダーの書き出し
  * @public
  */
-function buildHeaderVersion()
+function buildHeaderVersion ()
 {
     return gulp
         .src("src/Header.file")
@@ -127,7 +127,7 @@ function lint ()
  * @description JavaScriptをまとめてminifyして出力
  * @public
  */
-function buildJavaScript()
+function buildJavaScript ()
 {
     // setup
     const preprocessContext = {};
