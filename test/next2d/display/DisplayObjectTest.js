@@ -797,7 +797,8 @@ describe("DisplayObject.js getBounds test", function()
             .moveTo(0, 0)
             .lineTo(-10, -10);
 
-        expect(shape.getBounds(shape).toString()).toBe("(x=-17.071067811865476, y=-17.071067811865476, w=27.071067811865476, h=27.071067811865476)");
+        expect(shape.getBounds(shape).toString())
+            .toBe("(x=-17.071067811865476, y=-17.071067811865476, w=54.14213562373095, h=54.14213562373095)");
 
     });
 
