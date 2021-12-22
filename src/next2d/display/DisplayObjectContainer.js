@@ -481,6 +481,8 @@ class DisplayObjectContainer extends InteractiveObject
         const children = this._$getChildren();
         children.splice(currentIndex, 1);
         children.splice(index, 0, child);
+
+        this._$doChanged();
     }
 
     /**
@@ -507,6 +509,8 @@ class DisplayObjectContainer extends InteractiveObject
 
         children[index1] = child2;
         children[index2] = child1;
+
+        this._$doChanged();
     }
 
     /**
