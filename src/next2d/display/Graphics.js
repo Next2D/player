@@ -1910,9 +1910,6 @@ class Graphics
         this._$yMin = Util.$min(this._$yMin, Util.$min(y, this._$pointerY));
         this._$yMax = Util.$max(this._$yMax, Util.$max(y, this._$pointerY));
 
-        const width  = this._$xMax - this._$xMin;
-        const height = this._$yMax - this._$yMin;
-
         // correction
         const half     = this._$lineWidth / 2;
         const radian90 = 0.5 * Util.$PI;
@@ -1932,6 +1929,11 @@ class Graphics
         let y2 = -half + y;
         let y3 = this._$pointerY + half;
         let y4 = -half + this._$pointerY;
+
+        this._$xMin = Util.$min(this._$xMin, Util.$min(x1, Util.$min(x2, Util.$min(x3, x4))));
+        this._$xMax = Util.$max(this._$xMax, Util.$max(x1, Util.$max(x2, Util.$max(x3, x4))));
+        this._$yMin = Util.$min(this._$yMin, Util.$min(y1, Util.$min(y2, Util.$min(y3, y4))));
+        this._$yMax = Util.$max(this._$yMax, Util.$max(y1, Util.$max(y2, Util.$max(y3, y4))));
 
         // pointer x
         if (Util.$abs(radian3) % radian90 !== 0) {
@@ -2044,14 +2046,6 @@ class Graphics
             default:
                 break;
 
-        }
-
-        if (this._$xMax - this._$xMin > width) {
-            this._$xMax += this._$xMax - this._$xMin - width;
-        }
-
-        if (this._$yMax - this._$yMin > height) {
-            this._$yMax += this._$yMax - this._$yMin - height;
         }
     }
 

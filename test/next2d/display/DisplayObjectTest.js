@@ -699,7 +699,8 @@ describe("DisplayObject.js getBounds test", function()
             .moveTo(0, 0)
             .lineTo(10, 10);
 
-        expect(shape.getBounds(shape).toString()).toBe("(x=-10, y=-10, w=27.071067811865476, h=27.071067811865476)");
+        expect(shape.getBounds(shape).toString())
+            .toBe("(x=-10, y=-10, w=30, h=30)");
 
     });
 
@@ -713,7 +714,8 @@ describe("DisplayObject.js getBounds test", function()
             .moveTo(0, 0)
             .lineTo(0, 10);
 
-        expect(shape.getBounds(shape).toString()).toBe("(x=-10, y=-10, w=20, h=30)");
+        expect(shape.getBounds(shape).toString())
+            .toBe("(x=-10, y=-10, w=20, h=30)");
 
     });
 
@@ -727,7 +729,8 @@ describe("DisplayObject.js getBounds test", function()
             .moveTo(0, 0)
             .lineTo(-10, 10);
 
-        expect(shape.getBounds(shape).toString()).toBe("(x=-17.071067811865476, y=-10, w=27.071067811865476, h=27.071067811865476)");
+        expect(shape.getBounds(shape).toString())
+            .toBe("(x=-20, y=-10, w=30, h=30)");
 
     });
 
@@ -755,7 +758,8 @@ describe("DisplayObject.js getBounds test", function()
             .moveTo(0, 0)
             .lineTo(10, -10);
 
-        expect(shape.getBounds(shape).toString()).toBe("(x=-10, y=-17.071067811865476, w=27.071067811865476, h=27.071067811865476)");
+        expect(shape.getBounds(shape).toString())
+            .toBe("(x=-10, y=-20, w=30, h=30)");
 
     });
 
@@ -798,7 +802,7 @@ describe("DisplayObject.js getBounds test", function()
             .lineTo(-10, -10);
 
         expect(shape.getBounds(shape).toString())
-            .toBe("(x=-17.071067811865476, y=-17.071067811865476, w=54.14213562373095, h=54.14213562373095)");
+            .toBe("(x=-20, y=-20, w=30, h=30)");
 
     });
 
@@ -886,7 +890,8 @@ describe("DisplayObject.js getBounds test", function()
 
         const bounds = shape.getBounds(shape);
 
-        expect(bounds.toString()).toBe("(x=-10, y=-10, w=114.47213595499959, h=120)");
+        expect(bounds.toString())
+            .toBe("(x=-10, y=-10, w=120, h=120)");
 
     });
 
