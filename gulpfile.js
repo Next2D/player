@@ -298,7 +298,7 @@ function createHTML (done)
  */
 function test (done)
 {
-    new TestServer({
+    return new TestServer({
         "configFile": __dirname + "/karma.conf.js",
         "singleRun": true
     }, function (error)
