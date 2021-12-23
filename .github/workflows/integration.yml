@@ -30,5 +30,7 @@ jobs:
           node-version: 14.x
       - uses: browser-actions/setup-chromium@latest
       - uses: browser-actions/setup-firefox@latest
+        with:
+          firefox-version: "84.0"
       - run: npm install
       - run: npm run test
