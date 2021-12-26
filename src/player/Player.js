@@ -1815,6 +1815,11 @@ class Player
             this._$hitObject, true
         );
 
+        // stop event
+        if (this._$hitObject.hit) {
+            event.preventDefault();
+        }
+
         // change state
         let canPointerText = false;
         let staticPointer  = false;
@@ -2288,9 +2293,6 @@ class Player
         }
 
         if (Util.$isUpdated) {
-
-            // stop event
-            event.preventDefault();
 
             // action script
             this._$stage._$prepareActions();
