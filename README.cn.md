@@ -69,7 +69,7 @@ loader.load(request);
 * [官网](https://next2d.app)
 * [Player API 文档](https://next2d.app/docs/player)
 * [Next2D NoCode Tool(α version)](https://tool.next2d.app)
-* [Next2D Framework(β version)](https://next2d.app/#framework)
+* [Next2D Framework](https://next2d.app/#framework)
 * [教程 & 参考](https://next2d.app/tutorials/player)
 * [聊天社区(Discord)](https://discord.gg/6c9rv5Uns5)
 
