@@ -29,20 +29,20 @@ const options = minimist(process.argv.slice(2), {
  * @description フッターの書き出し
  * @public
  */
-function buildFooterVersion ()
+const buildFooterVersion = () =>
 {
     return gulp
         .src("src/Footer.file")
         .pipe(replace("###BUILD_VERSION###", options.version))
         .pipe(rename("src/Footer.build.file"))
         .pipe(gulp.dest("."));
-}
+};
 
 /**
  * @description ヘッダーの書き出し
  * @public
  */
-function buildHeaderVersion ()
+const buildHeaderVersion = () =>
 {
     return gulp
         .src("src/Header.file")
@@ -50,13 +50,13 @@ function buildHeaderVersion ()
         .pipe(replace("###BUILD_YEAR###", new Date().getFullYear()))
         .pipe(rename("src/Header.build.file"))
         .pipe(gulp.dest("."));
-}
+};
 
 /**
  * @description Workerファイルをminifyにして書き出し
  * @public
  */
-function buildWorkerFile ()
+const buildWorkerFile = () =>
 {
     return gulp
         .src([
@@ -66,13 +66,13 @@ function buildWorkerFile ()
         .pipe(uglify())
         .pipe(rename({ "extname": ".min.js" }))
         .pipe(gulp.dest("src/worker"));
-}
+};
 
 /**
  * @description Util.jsの書き出し
  * @public
  */
-function buildUtilFile ()
+const buildUtilFile = () =>
 {
     return gulp
         .src("src/util/Util.js")
@@ -84,13 +84,13 @@ function buildUtilFile ()
         )
         .pipe(rename("src/util/Util.replaced.js"))
         .pipe(gulp.dest("."));
-}
+};
 
 /**
  * @description ESLintを実行
  * @public
  */
-function lint ()
+const lint = () =>
 {
     return gulp
         .src([
@@ -121,13 +121,13 @@ function lint ()
         .pipe(eslint({ "useEslintrc": true }))
         .pipe(eslint.format())
         .pipe(eslint.failOnError());
-}
+};
 
 /**
  * @description JavaScriptをまとめてminifyして出力
  * @public
  */
-function buildJavaScript ()
+const buildJavaScript = () =>
 {
     // setup
     const preprocessContext = {};
@@ -185,14 +185,14 @@ function buildJavaScript ()
 
     return build
         .pipe(gulp.dest(options.distPath));
-}
+};
 
 /**
  * @description local serverを起動
  * @return {void}
  * @public
  */
-function browser (done)
+const browser = (done) =>
 {
     browserSync.init({
         "server": {
@@ -202,24 +202,24 @@ function browser (done)
         "reloadOnRestart": true
     });
     done();
-}
+};
 
 /**
  * @description local serverを再読込
  * @return {void}
  * @public
  */
-function reload (done)
+const reload = (done) =>
 {
     browserSync.reload();
     done();
-}
+};
 
 /**
  * @description ファイルを監視、変更があればビルドしてlocal serverを再読込
  * @public
  */
-function watchFiles ()
+const watchFiles = () =>
 {
     return gulp
         .watch([
@@ -234,12 +234,12 @@ function watchFiles ()
             buildJavaScript,
             reload
         ));
-}
+};
 
 /**
  * @public
  */
-function createHTML (done)
+const createHTML = (done) =>
 {
     return gulp
         .src([
@@ -290,13 +290,13 @@ function createHTML (done)
                 "template": "node_modules/@pixi/jsdoc-template"
             }
         }, done));
-}
+};
 
 /**
  * @description テストを実行
  * @public
  */
-function test (done)
+const test = (done) =>
 {
     return new TestServer({
         "configFile": __dirname + "/karma.conf.js",
@@ -306,7 +306,7 @@ function test (done)
         console.log(error);
         done();
     }).start();
-}
+};
 
 exports.default = gulp.series(
     buildHeaderVersion,
@@ -320,4 +320,10 @@ exports.default = gulp.series(
 exports.test  = gulp.series(test);
 exports.jsdoc = gulp.series(createHTML);
 exports.lint  = gulp.series(lint);
-exports.build = gulp.series(buildHeaderVersion, buildFooterVersion, buildWorkerFile, buildUtilFile, buildJavaScript);
+exports.build = gulp.series(
+    buildHeaderVersion,
+    buildFooterVersion,
+    buildWorkerFile,
+    buildUtilFile,
+    buildJavaScript
+);
