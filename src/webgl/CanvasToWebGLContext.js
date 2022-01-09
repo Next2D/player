@@ -13,12 +13,12 @@ class CanvasToWebGLContext
         this._$gl = gl;
 
         const samples = isWebGL2Context
-            ? Util.$min(Util.$currentPlayer().getSamples(), gl.getParameter(gl.MAX_SAMPLES))
+            ? $Math.min(Util.$currentPlayer().getSamples(), gl.getParameter(gl.MAX_SAMPLES))
             : 0;
 
         // setup
         this._$isWebGL2Context = isWebGL2Context;
-        this._$maxTextureSize  = Util.$min(8192, gl.getParameter(gl.MAX_TEXTURE_SIZE)) - 2;
+        this._$maxTextureSize  = $Math.min(8192, gl.getParameter(gl.MAX_TEXTURE_SIZE)) - 2;
 
         // render params
         this._$contextStyle             = new CanvasToWebGLContextStyle();
@@ -1009,25 +1009,25 @@ class CanvasToWebGLContext
                 break;
         }
 
-        let face = Util.$sign(matrix[0] * matrix[4]);
+        let face = $Math.sign(matrix[0] * matrix[4]);
         if (face > 0 && matrix[1] !== 0 && matrix[3] !== 0) {
-            face = -Util.$sign(matrix[1] * matrix[3]);
+            face = -$Math.sign(matrix[1] * matrix[3]);
         }
 
         let lineWidth = this.lineWidth * 0.5;
         let scaleX, scaleY;
         if (this._$grid.enabled) {
             lineWidth *= Util.$getSameScaleBase();
-            scaleX = Util.$abs(this._$grid.ancestorMatrixA + this._$grid.ancestorMatrixD);
-            scaleY = Util.$abs(this._$grid.ancestorMatrixB + this._$grid.ancestorMatrixE);
+            scaleX = $Math.abs(this._$grid.ancestorMatrixA + this._$grid.ancestorMatrixD);
+            scaleY = $Math.abs(this._$grid.ancestorMatrixB + this._$grid.ancestorMatrixE);
         } else {
-            scaleX = Util.$abs(matrix[0] + matrix[3]);
-            scaleY = Util.$abs(matrix[1] + matrix[4]);
+            scaleX = $Math.abs(matrix[0] + matrix[3]);
+            scaleY = $Math.abs(matrix[1] + matrix[4]);
         }
-        const scaleMin = Util.$min(scaleX, scaleY);
-        const scaleMax = Util.$max(scaleX, scaleY);
-        lineWidth *= scaleMax * (1 - 0.3 * Util.$cos(Util.$PI * 0.5 * (scaleMin / scaleMax)));
-        lineWidth = Util.$max(1, lineWidth);
+        const scaleMin = $Math.min(scaleX, scaleY);
+        const scaleMax = $Math.max(scaleX, scaleY);
+        lineWidth *= scaleMax * (1 - 0.3 * $Math.cos($Math.PI * 0.5 * (scaleMin / scaleMax)));
+        lineWidth = $Math.max(1, lineWidth);
 
         let texture, variants, shader;
 
@@ -1287,7 +1287,7 @@ class CanvasToWebGLContext
 
         this._$frameBufferManager._$textureManager.bind0(texture, true);
 
-        const halfBlur = Util.$ceil(blur * 0.5);
+        const halfBlur = $Math.ceil(blur * 0.5);
         const fraction = 1 - (halfBlur - blur * 0.5);
         const samples  = 1 + blur;
 
@@ -1369,7 +1369,7 @@ class CanvasToWebGLContext
 
         // if (blurX < 2 && blurY < 2 && (blurX > 0 || blurY > 0)) {
         //    // ぼかし幅が2より小さい場合は、強さを調整して見た目を合わせる
-        //    strength *= (Util.$max(1, blurX, blurY) - 1) * 0.4 + 0.2;
+        //    strength *= ($Math.max(1, blurX, blurY) - 1) * 0.4 + 0.2;
         // }
 
         const transformsBase = !(isInner || type === BitmapFilterType.FULL && knockout);
@@ -1537,9 +1537,9 @@ class CanvasToWebGLContext
 
             const a = data[idx + 3];
             if (a) {
-                data[idx    ] = Util.$min(data[idx    ] * 255 / a, 255) & 0xff;
-                data[idx + 1] = Util.$min(data[idx + 1] * 255 / a, 255) & 0xff;
-                data[idx + 2] = Util.$min(data[idx + 2] * 255 / a, 255) & 0xff;
+                data[idx    ] = $Math.min(data[idx    ] * 255 / a, 255) & 0xff;
+                data[idx + 1] = $Math.min(data[idx + 1] * 255 / a, 255) & 0xff;
+                data[idx + 2] = $Math.min(data[idx + 2] * 255 / a, 255) & 0xff;
             }
 
         }
@@ -1584,7 +1584,7 @@ class CanvasToWebGLContext
      */
     _$textureScale (width, height)
     {
-        const maxSize = Util.$max(width, height);
+        const maxSize = $Math.max(width, height);
         if (maxSize > this._$maxTextureSize) {
             return this._$maxTextureSize / maxSize;
         }
@@ -1600,7 +1600,7 @@ class CanvasToWebGLContext
     {
         if (this._$isWebGL2Context) {
 
-            samples = Util.$min(samples, this._$gl.getParameter(this._$gl.MAX_SAMPLES));
+            samples = $Math.min(samples, this._$gl.getParameter(this._$gl.MAX_SAMPLES));
 
             const manager = this._$frameBufferManager;
 

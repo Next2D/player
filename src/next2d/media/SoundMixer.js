@@ -82,7 +82,7 @@ class SoundMixer
         const sources = Util.$currentPlayer()._$sources;
         for (let idx = 0; idx < sources.length; ++idx) {
             const source = sources[idx];
-            source._$gainNode.gain.value = Util.$min(
+            source._$gainNode.gain.value = $Math.min(
                 Util.$soundMixerVolume,
                 source._$volume
             );
@@ -91,7 +91,7 @@ class SoundMixer
         const videos = Util.$currentPlayer()._$videos;
         for (let idx = 0; idx < videos.length; ++idx) {
             const video  = videos[idx];
-            video._$video.volume = Util.$min(video.volume, Util.$soundMixerVolume);
+            video._$video.volume = $Math.min(video.volume, Util.$soundMixerVolume);
         }
 
     }

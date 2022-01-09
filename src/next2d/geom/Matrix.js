@@ -440,12 +440,12 @@ class Matrix
         const tx = this._$matrix[4];
         const ty = this._$matrix[5];
 
-        this.a  = a  * Util.$cos(rotation) - b  * Util.$sin(rotation);
-        this.b  = a  * Util.$sin(rotation) + b  * Util.$cos(rotation);
-        this.c  = c  * Util.$cos(rotation) - d  * Util.$sin(rotation);
-        this.d  = c  * Util.$sin(rotation) + d  * Util.$cos(rotation);
-        this.tx = tx * Util.$cos(rotation) - ty * Util.$sin(rotation);
-        this.ty = tx * Util.$sin(rotation) + ty * Util.$cos(rotation);
+        this.a  = a  * $Math.cos(rotation) - b  * $Math.sin(rotation);
+        this.b  = a  * $Math.sin(rotation) + b  * $Math.cos(rotation);
+        this.c  = c  * $Math.cos(rotation) - d  * $Math.sin(rotation);
+        this.d  = c  * $Math.sin(rotation) + d  * $Math.cos(rotation);
+        this.tx = tx * $Math.cos(rotation) - ty * $Math.sin(rotation);
+        this.ty = tx * $Math.sin(rotation) + ty * $Math.cos(rotation);
     }
 
     /**

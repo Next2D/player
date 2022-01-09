@@ -247,7 +247,7 @@ class WebGLStrokeMeshGenerator
         const bx = x3 - x2;
         const by = y3 - y2;
         const det = Util.$cross(ax, ay, bx, by);
-        if (Util.$abs(det) < 0.0001) { return }
+        if ($Math.abs(det) < 0.0001) { return }
 
         // 分割したベジェ曲線はベベルで結合する
         if (type === 2) {

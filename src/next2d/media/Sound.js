@@ -199,7 +199,7 @@ class Sound extends EventDispatcher
     }
     set volume (volume)
     {
-        this._$volume = Util.$min(
+        this._$volume = $Math.min(
             SoundMixer.volume,
             Util.$clamp(volume, 0, 1, 1)
         );
@@ -439,7 +439,7 @@ class Sound extends EventDispatcher
         }
 
         this._$loop   = tag.loop;
-        this._$volume = Util.$min(SoundMixer.volume, tag.volume);
+        this._$volume = $Math.min(SoundMixer.volume, tag.volume);
     }
 
     /**
@@ -465,7 +465,7 @@ class Sound extends EventDispatcher
         source._$gainNode = Util.$audioContext.createGain();
         source._$gainNode.connect(Util.$audioContext.destination);
 
-        const volume = Util.$min(SoundMixer.volume, this._$volume);
+        const volume = $Math.min(SoundMixer.volume, this._$volume);
 
         source._$gainNode.gain.value = volume;
         source._$volume = volume;

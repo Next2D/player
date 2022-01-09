@@ -18,8 +18,8 @@ class FragmentShaderSourceGradientLUT
         for (let i = 1; i < stops_length; i++) {
             const i0 = i - 1;
             const i1 = i;
-            const t0 = `u_mediump[${stops_length + Util.$floor(i0 / 4)}][${i0 % 4}]`;
-            const t1 = `u_mediump[${stops_length + Util.$floor(i1 / 4)}][${i1 % 4}]`;
+            const t0 = `u_mediump[${stops_length + $Math.floor(i0 / 4)}][${i0 % 4}]`;
+            const t1 = `u_mediump[${stops_length + $Math.floor(i1 / 4)}][${i1 % 4}]`;
             const c0 = `u_mediump[${i0}]`;
             const c1 = `u_mediump[${i1}]`;
             loopStatement += `

@@ -1040,7 +1040,7 @@ class Player
                 ? Util.$window.innerWidth
                 : parent.offsetWidth;
 
-            const scale = Util.$min(
+            const scale = $Math.min(
                 innerWidth  / this._$baseWidth,
                 innerHeight / this._$baseHeight
             );

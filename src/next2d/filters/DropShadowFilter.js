@@ -437,8 +437,8 @@ class DropShadowFilter extends BitmapFilter
             ._$generateFilterRect(clone, x_scale, y_scale);
 
         const radian = +(this._$angle * Util.$Deg2Rad);
-        const x      = +(Util.$cos(radian) * this._$distance);
-        const y      = +(Util.$sin(radian) * this._$distance);
+        const x      = +($Math.cos(radian) * this._$distance);
+        const y      = +($Math.sin(radian) * this._$distance);
 
         let dx = 0;
         let dy = 0;
@@ -448,12 +448,12 @@ class DropShadowFilter extends BitmapFilter
         switch (x < 0) {
 
             case true:
-                dx = Util.$floor(x) | 0;
-                dw = -Util.$round(x / 2) | 0;
+                dx = $Math.floor(x) | 0;
+                dw = -$Math.round(x / 2) | 0;
                 break;
 
             default:
-                dx = Util.$round(x / 2) | 0;
+                dx = $Math.round(x / 2) | 0;
                 dw = x / 2 | 0;
                 break;
 
@@ -462,12 +462,12 @@ class DropShadowFilter extends BitmapFilter
         switch (y < 0) {
 
             case true:
-                dy = Util.$floor(y) | 0;
-                dh = -Util.$round(y / 2) | 0;
+                dy = $Math.floor(y) | 0;
+                dh = -$Math.round(y / 2) | 0;
                 break;
 
             default:
-                dy = Util.$round(y / 2) | 0;
+                dy = $Math.round(y / 2) | 0;
                 dh = y / 2 | 0;
                 break;
 
@@ -580,14 +580,14 @@ class DropShadowFilter extends BitmapFilter
 
         // shadow point
         const radian = +(this._$angle * Util.$Deg2Rad);
-        const x = +(Util.$cos(radian) * this._$distance * Util.$devicePixelRatio);
-        const y = +(Util.$sin(radian) * this._$distance * Util.$devicePixelRatio);
+        const x = +($Math.cos(radian) * this._$distance * Util.$devicePixelRatio);
+        const y = +($Math.sin(radian) * this._$distance * Util.$devicePixelRatio);
 
         // dropShadow canvas
-        const w = this._$inner ? baseWidth  : blurWidth  + Util.$max(0, Util.$abs(x) - offsetDiffX);
-        const h = this._$inner ? baseHeight : blurHeight + Util.$max(0, Util.$abs(y) - offsetDiffY);
-        const width  = Util.$ceil(w);
-        const height = Util.$ceil(h);
+        const w = this._$inner ? baseWidth  : blurWidth  + $Math.max(0, $Math.abs(x) - offsetDiffX);
+        const h = this._$inner ? baseHeight : blurHeight + $Math.max(0, $Math.abs(y) - offsetDiffY);
+        const width  = $Math.ceil(w);
+        const height = $Math.ceil(h);
         const fractionX = (width  - w) / 2;
         const fractionY = (height - h) / 2;
 
@@ -598,10 +598,10 @@ class DropShadowFilter extends BitmapFilter
             blurTextureX = x - blurOffsetX;
             blurTextureY = y - blurOffsetY;
         } else {
-            baseTextureX = Util.$max(0, offsetDiffX - x) + fractionX;
-            baseTextureY = Util.$max(0, offsetDiffY - y) + fractionY;
-            blurTextureX = (x > 0 ? Util.$max(0, x - offsetDiffX) : 0) + fractionX;
-            blurTextureY = (y > 0 ? Util.$max(0, y - offsetDiffY) : 0) + fractionY;
+            baseTextureX = $Math.max(0, offsetDiffX - x) + fractionX;
+            baseTextureY = $Math.max(0, offsetDiffY - y) + fractionY;
+            blurTextureX = (x > 0 ? $Math.max(0, x - offsetDiffX) : 0) + fractionX;
+            blurTextureY = (y > 0 ? $Math.max(0, y - offsetDiffY) : 0) + fractionY;
         }
 
         let type, knockout;

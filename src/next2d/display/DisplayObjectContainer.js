@@ -452,7 +452,7 @@ class DisplayObjectContainer extends InteractiveObject
         begin_index = Util.$clamp(begin_index, 0, 0x7ffffffe, 0) - 1;
         end_index   = Util.$clamp(end_index, 1, 0x7ffffff, 0x7ffffff);
 
-        for (let idx = Util.$min(end_index, numChildren - 1); idx > begin_index; --idx) {
+        for (let idx = $Math.min(end_index, numChildren - 1); idx > begin_index; --idx) {
             this._$remove(children[idx]);
         }
     }
@@ -590,10 +590,10 @@ class DisplayObjectContainer extends InteractiveObject
 
             const bounds = children[idx]._$getBounds(multiMatrix);
 
-            xMin = Util.$min(xMin, bounds.xMin);
-            xMax = Util.$max(xMax, bounds.xMax);
-            yMin = Util.$min(yMin, bounds.yMin);
-            yMax = Util.$max(yMax, bounds.yMax);
+            xMin = $Math.min(xMin, bounds.xMin);
+            xMax = $Math.max(xMax, bounds.xMax);
+            yMin = $Math.min(yMin, bounds.yMin);
+            yMax = $Math.max(yMax, bounds.yMax);
 
             Util.$poolBoundsObject(bounds);
 
@@ -666,10 +666,10 @@ class DisplayObjectContainer extends InteractiveObject
 
             const bounds = children[idx]._$getLayerBounds(multiMatrix);
 
-            xMin = Util.$min(xMin, bounds.xMin);
-            xMax = Util.$max(xMax, bounds.xMax);
-            yMin = Util.$min(yMin, bounds.yMin);
-            yMax = Util.$max(yMax, bounds.yMax);
+            xMin = $Math.min(xMin, bounds.xMin);
+            xMax = $Math.max(xMax, bounds.xMax);
+            yMin = $Math.min(yMin, bounds.yMin);
+            yMax = $Math.max(yMax, bounds.yMax);
 
             Util.$poolBoundsObject(bounds);
 
@@ -1409,10 +1409,10 @@ class DisplayObjectContainer extends InteractiveObject
 
                     if (this !== maskInstance._$parent) {
                         const maskTargetParentMatrix = this._$transform._$rawMatrix();
-                        adjMatrix[0] = Util.$abs(preMatrix[0]) * Util.$sign(maskTargetParentMatrix[0]);
-                        adjMatrix[1] = Util.$abs(preMatrix[1]) * Util.$sign(maskTargetParentMatrix[1]);
-                        adjMatrix[2] = Util.$abs(preMatrix[2]) * Util.$sign(maskTargetParentMatrix[2]);
-                        adjMatrix[3] = Util.$abs(preMatrix[3]) * Util.$sign(maskTargetParentMatrix[3]);
+                        adjMatrix[0] = $Math.abs(preMatrix[0]) * $Math.sign(maskTargetParentMatrix[0]);
+                        adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(maskTargetParentMatrix[1]);
+                        adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(maskTargetParentMatrix[2]);
+                        adjMatrix[3] = $Math.abs(preMatrix[3]) * $Math.sign(maskTargetParentMatrix[3]);
                         adjMatrix[4] = preMatrix[4] - context._$cacheCurrentBounds.x;
                         adjMatrix[5] = preMatrix[5] - context._$cacheCurrentBounds.y;
                     }
@@ -1526,7 +1526,7 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         // setup
-        const mouseChildren = Util.$min(this._$mouseChildren, mouse_children);
+        const mouseChildren = $Math.min(this._$mouseChildren, mouse_children);
 
         let hit      = false;
         const isRoot = this._$root === this;

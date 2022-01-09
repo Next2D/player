@@ -228,8 +228,8 @@ class BlurFilter extends BitmapFilter
                 break;
 
             default:
-                dx = Util.$round(dx);
-                dy = Util.$round(dy);
+                dx = $Math.round(dx);
+                dy = $Math.round(dy);
                 break;
 
         }
@@ -309,17 +309,17 @@ class BlurFilter extends BitmapFilter
         }
 
         // matrix to scale
-        const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        const xScale = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const yScale = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
         // after size
         const baseRect = new Rectangle(0, 0, baseTexture.width, baseTexture.height);
         const rect = this._$generateFilterRect(baseRect, xScale, yScale);
 
-        const width   = Util.$ceil(rect.width) | 0;
-        const height  = Util.$ceil(rect.height) | 0;
-        const offsetX = Util.$ceil(Util.$abs(rect.x) + Util.$abs(width  - rect.width)  * 0.5);
-        const offsetY = Util.$ceil(Util.$abs(rect.y) + Util.$abs(height - rect.height) * 0.5);
+        const width   = $Math.ceil(rect.width) | 0;
+        const height  = $Math.ceil(rect.height) | 0;
+        const offsetX = $Math.ceil($Math.abs(rect.x) + $Math.abs(width  - rect.width)  * 0.5);
+        const offsetY = $Math.ceil($Math.abs(rect.y) + $Math.abs(height - rect.height) * 0.5);
 
         // set offset xy
         context._$offsetX = +(offsetX + context._$offsetX);
@@ -354,8 +354,8 @@ class BlurFilter extends BitmapFilter
         const bufferBlurX = baseBlurX * bufferScaleX;
         const bufferBlurY = baseBlurY * bufferScaleY;
 
-        let bufferWidth  = Util.$ceil(width  * bufferScaleX);
-        let bufferHeight = Util.$ceil(height * bufferScaleY);
+        let bufferWidth  = $Math.ceil(width  * bufferScaleX);
+        let bufferHeight = $Math.ceil(height * bufferScaleY);
 
         const attachment0 = context
             .frameBuffer

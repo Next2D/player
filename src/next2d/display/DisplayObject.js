@@ -435,7 +435,7 @@ class DisplayObject extends EventDispatcher
             this._$transform._$rawMatrix()
         );
 
-        const height = Util.$abs(bounds.yMax - bounds.yMin);
+        const height = $Math.abs(bounds.yMax - bounds.yMin);
 
         // object pool
         Util.$poolBoundsObject(bounds);
@@ -461,7 +461,7 @@ class DisplayObject extends EventDispatcher
                 ? Util.$boundsMatrix(this._$getBounds(null), this._$transform._$rawMatrix())
                 : this._$getBounds(null);
 
-            const exHeight = Util.$abs(bounds.yMax - bounds.yMin);
+            const exHeight = $Math.abs(bounds.yMax - bounds.yMin);
             Util.$poolBoundsObject(bounds);
 
             switch (exHeight) {
@@ -631,7 +631,7 @@ class DisplayObject extends EventDispatcher
     get rotation ()
     {
         const matrix = this._$transform._$rawMatrix();
-        return Util.$atan2(matrix[1], matrix[0]) * Util.$Rad2Deg;
+        return $Math.atan2(matrix[1], matrix[0]) * Util.$Rad2Deg;
     }
     set rotation (rotation)
     {
@@ -640,8 +640,8 @@ class DisplayObject extends EventDispatcher
         const transform = this._$transform;
         const matrix    = transform.matrix;
 
-        const scaleX = Util.$sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
-        const scaleY = Util.$sqrt(matrix.c * matrix.c + matrix.d * matrix.d);
+        const scaleX = $Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
+        const scaleY = $Math.sqrt(matrix.c * matrix.c + matrix.d * matrix.d);
         if (rotation === 0) {
 
             matrix.a = scaleX;
@@ -651,25 +651,25 @@ class DisplayObject extends EventDispatcher
 
         } else {
 
-            let radianX  = Util.$atan2(matrix.b,  matrix.a);
-            let radianY  = Util.$atan2(-matrix.c, matrix.d);
+            let radianX  = $Math.atan2(matrix.b,  matrix.a);
+            let radianY  = $Math.atan2(-matrix.c, matrix.d);
 
             const radian = rotation * Util.$Deg2Rad;
             radianY      = radianY + radian - radianX;
             radianX      = radian;
 
-            matrix.b = scaleX * Util.$sin(radianX);
+            matrix.b = scaleX * $Math.sin(radianX);
             if (matrix.b === 1 || matrix.b === -1) {
                 matrix.a = 0;
             } else {
-                matrix.a = scaleX * Util.$cos(radianX);
+                matrix.a = scaleX * $Math.cos(radianX);
             }
 
-            matrix.c = -scaleY * Util.$sin(radianY);
+            matrix.c = -scaleY * $Math.sin(radianY);
             if (matrix.c === 1 || matrix.c === -1) {
                 matrix.d = 0;
             } else {
-                matrix.d = scaleY * Util.$cos(radianY);
+                matrix.d = scaleY * $Math.cos(radianY);
             }
         }
 
@@ -707,7 +707,7 @@ class DisplayObject extends EventDispatcher
     get scaleX ()
     {
         const matrix = this._$transform._$rawMatrix();
-        const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const xScale = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
         return 0 > matrix[0] ? xScale * -1 : xScale;
     }
     set scaleX (scale_x)
@@ -720,12 +720,12 @@ class DisplayObject extends EventDispatcher
 
         } else {
 
-            const radianX = Util.$atan2(matrix.b, matrix.a);
+            const radianX = $Math.atan2(matrix.b, matrix.a);
 
-            matrix.b = scale_x * Util.$sin(radianX);
+            matrix.b = scale_x * $Math.sin(radianX);
             matrix.a = matrix.b === 1 || matrix.b === -1
                 ? 0
-                : scale_x * Util.$cos(radianX);
+                : scale_x * $Math.cos(radianX);
 
         }
 
@@ -744,7 +744,7 @@ class DisplayObject extends EventDispatcher
     get scaleY ()
     {
         const matrix = this._$transform._$rawMatrix();
-        const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        const yScale = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
         return 0 > matrix[3] ? yScale * -1 : yScale;
     }
     set scaleY (scale_y)
@@ -758,11 +758,11 @@ class DisplayObject extends EventDispatcher
 
         } else {
 
-            const radianY = Util.$atan2(-matrix.c, matrix.d);
-            matrix.c = -scale_y * Util.$sin(radianY);
+            const radianY = $Math.atan2(-matrix.c, matrix.d);
+            matrix.c = -scale_y * $Math.sin(radianY);
             matrix.d = matrix.c === 1 || matrix.c === -1
                 ? 0
-                : scale_y  * Util.$cos(radianY);
+                : scale_y  * $Math.cos(radianY);
 
         }
 
@@ -853,7 +853,7 @@ class DisplayObject extends EventDispatcher
             this._$transform._$rawMatrix()
         );
 
-        const width = Util.$abs(bounds.xMax - bounds.xMin);
+        const width = $Math.abs(bounds.xMax - bounds.xMin);
         Util.$poolBoundsObject(bounds);
 
         switch (true) {
@@ -877,7 +877,7 @@ class DisplayObject extends EventDispatcher
                 ? Util.$boundsMatrix(this._$getBounds(null), this._$transform._$rawMatrix())
                 : this._$getBounds(null);
 
-            const exWidth = Util.$abs(bounds.xMax - bounds.xMin);
+            const exWidth = $Math.abs(bounds.xMax - bounds.xMin);
             Util.$poolBoundsObject(bounds);
 
             switch (true) {
@@ -1005,8 +1005,8 @@ class DisplayObject extends EventDispatcher
 
         return new Rectangle(
             xMin, yMin,
-            Util.$abs(xMax - xMin),
-            Util.$abs(yMax - yMin)
+            $Math.abs(xMax - xMin),
+            $Math.abs(yMax - yMin)
         );
     }
 
@@ -1064,10 +1064,10 @@ class DisplayObject extends EventDispatcher
         Util.$poolBoundsObject(baseBounds2);
 
         // calc
-        const sx = Util.$max(bounds1.xMin, bounds2.xMin);
-        const sy = Util.$max(bounds1.yMin, bounds2.yMin);
-        const ex = Util.$min(bounds1.xMax, bounds2.xMax);
-        const ey = Util.$min(bounds1.yMax, bounds2.yMax);
+        const sx = $Math.max(bounds1.xMin, bounds2.xMin);
+        const sy = $Math.max(bounds1.yMin, bounds2.yMin);
+        const ex = $Math.min(bounds1.xMax, bounds2.xMax);
+        const ey = $Math.min(bounds1.yMax, bounds2.yMax);
 
         // pool
         Util.$poolBoundsObject(bounds1);
@@ -1603,8 +1603,8 @@ class DisplayObject extends EventDispatcher
 
             case cache === null:
             case cache.filterState !== can_apply:
-            case cache.layerWidth  !== Util.$ceil(width):
-            case cache.layerHeight !== Util.$ceil(height):
+            case cache.layerWidth  !== $Math.ceil(width):
+            case cache.layerHeight !== $Math.ceil(height):
             case cache.matrix !==
             matrix[0] + "_" + matrix[1] + "_" + matrix[2] + "_" + matrix[3] + "_" +
             position_x + "_" + position_y:
@@ -1734,8 +1734,8 @@ class DisplayObject extends EventDispatcher
             Util.$poolBoundsObject(baseBounds);
             Util.$poolBoundsObject(bounds);
 
-            const width  = Util.$abs(xMax - xMin);
-            const height = Util.$abs(yMax - yMin);
+            const width  = $Math.abs(xMax - xMin);
+            const height = $Math.abs(yMax - yMin);
             if (0 >= width || 0 >= height) {
                 return false;
             }
@@ -1762,8 +1762,8 @@ class DisplayObject extends EventDispatcher
             const layerBounds = Util.$boundsMatrix(baseLayerBounds, tMatrix);
 
             // filter size
-            let layerWidth  = Util.$abs(layerBounds.xMax - layerBounds.xMin);
-            let layerHeight = Util.$abs(layerBounds.yMax - layerBounds.yMin);
+            let layerWidth  = $Math.abs(layerBounds.xMax - layerBounds.xMin);
+            let layerHeight = $Math.abs(layerBounds.yMax - layerBounds.yMin);
             Util.$poolBoundsObject(layerBounds);
 
             if (layerWidth === width && layerHeight === height) {
@@ -1772,8 +1772,8 @@ class DisplayObject extends EventDispatcher
             }
 
             // move size
-            let tx = tMatrix[4] - Util.$floor(xMin);
-            let ty = tMatrix[5] - Util.$floor(yMin);
+            let tx = tMatrix[4] - $Math.floor(xMin);
+            let ty = tMatrix[5] - $Math.floor(yMin);
 
             let moveBounds = null;
             if (baseLayerBounds) {
@@ -1787,18 +1787,18 @@ class DisplayObject extends EventDispatcher
                 Util.$poolBoundsObject(baseLayerBounds);
                 Util.$poolFloat32Array6(layerMatrix);
 
-                tx += -Util.$floor(moveBounds.xMin) - tx;
-                ty += -Util.$floor(moveBounds.yMin) - ty;
+                tx += -$Math.floor(moveBounds.xMin) - tx;
+                ty += -$Math.floor(moveBounds.yMin) - ty;
             }
 
-            let dx = Util.$floor(xMin);
-            let dy = Util.$floor(yMin);
+            let dx = $Math.floor(xMin);
+            let dy = $Math.floor(yMin);
             let originX = xMin;
             let originY = yMin;
 
             if (moveBounds) {
-                dx -= -Util.$floor(moveBounds.xMin) - (tMatrix[4] - dx);
-                dy -= -Util.$floor(moveBounds.yMin) - (tMatrix[5] - dy);
+                dx -= -$Math.floor(moveBounds.xMin) - (tMatrix[4] - dx);
+                dy -= -$Math.floor(moveBounds.yMin) - (tMatrix[5] - dy);
 
                 originX -= -moveBounds.xMin - (tMatrix[4] - originX);
                 originY -= -moveBounds.yMin - (tMatrix[5] - originY);
@@ -1859,8 +1859,8 @@ class DisplayObject extends EventDispatcher
                 this._$buffer = context
                     .frameBuffer
                     .createCacheAttachment(
-                        Util.$ceil(layerWidth),
-                        Util.$ceil(layerHeight),
+                        $Math.ceil(layerWidth),
+                        $Math.ceil(layerHeight),
                         false
                     );
                 context._$bind(this._$buffer);
@@ -2064,8 +2064,8 @@ class DisplayObject extends EventDispatcher
         }
 
         const bounds = this._$getBounds(matrix);
-        const width  = Util.$abs(bounds.xMax - bounds.xMin);
-        const height = Util.$abs(bounds.yMax - bounds.yMin);
+        const width  = $Math.abs(bounds.xMax - bounds.xMin);
+        const height = $Math.abs(bounds.yMax - bounds.yMin);
         Util.$poolBoundsObject(bounds);
 
         // size 0

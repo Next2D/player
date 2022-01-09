@@ -622,8 +622,8 @@ class TextField extends InteractiveObject
                 element.style.color  = `rgb(${color.R},${color.G},${color.B})`;
                 element.style.left   = `${(matrix.tx + bounds.xMin + player._$tx / player._$scale / Util.$devicePixelRatio) * player._$scale}px`;
                 element.style.top    = `${(matrix.ty + bounds.yMin + player._$ty / player._$scale / Util.$devicePixelRatio) * player._$scale}px`;
-                element.style.width  = `${Util.$ceil((this.width  - 1) * player._$scale)}px`;
-                element.style.height = `${Util.$ceil((this.height - 1) * player._$scale)}px`;
+                element.style.width  = `${$Math.ceil((this.width  - 1) * player._$scale)}px`;
+                element.style.height = `${$Math.ceil((this.height - 1) * player._$scale)}px`;
 
                 // set text
                 element.value = this.text;
@@ -1037,7 +1037,7 @@ class TextField extends InteractiveObject
             this._$getTextData();
 
             for (let idx = 0; idx < this._$widthTable.length; ++idx) {
-                this._$textWidth = Util.$max(this._$textWidth, this._$widthTable[idx]);
+                this._$textWidth = $Math.max(this._$textWidth, this._$widthTable[idx]);
             }
 
         }
@@ -1167,7 +1167,7 @@ class TextField extends InteractiveObject
         if (!Util.$isNaN(width) && width > -1) {
             const bounds = this._$getBounds(null);
 
-            const xMin = Util.$abs(bounds.xMin);
+            const xMin = $Math.abs(bounds.xMin);
             this._$originBounds.xMax = width + xMin;
             this._$originBounds.xMin = xMin;
             this._$bounds.xMax = this._$originBounds.xMax;
@@ -1196,7 +1196,7 @@ class TextField extends InteractiveObject
         if (!Util.$isNaN(height) && height > -1) {
             const bounds = this._$getBounds(null);
 
-            const yMin = Util.$abs(bounds.yMin);
+            const yMin = $Math.abs(bounds.yMin);
             this._$originBounds.yMax = height + yMin;
             this._$bounds.yMax = this._$originBounds.yMax;
             this._$bounds.yMin = this._$originBounds.yMin;
@@ -1800,7 +1800,7 @@ class TextField extends InteractiveObject
                                 const prevImage   = this._$imageData[this._$imageData.length - 1];
                                 const imageBottom = prevImage.y + prevImage.height + prevImage.vspace * 2;
 
-                                obj.y = Util.$max(totalTextHeight, imageBottom);
+                                obj.y = $Math.max(totalTextHeight, imageBottom);
                             }
 
                             this._$loadImage(obj);
@@ -1995,8 +1995,8 @@ class TextField extends InteractiveObject
                         textHeight = height + leading;
 
                         this._$widthTable[yIndex - 1]     += targetObj.width;
-                        this._$heightTable[yIndex - 1]     = Util.$max(this._$heightTable[yIndex - 1], height);
-                        this._$textHeightTable[yIndex - 1] = Util.$max(this._$textHeightTable[yIndex - 1], textHeight);
+                        this._$heightTable[yIndex - 1]     = $Math.max(this._$heightTable[yIndex - 1], height);
+                        this._$textHeightTable[yIndex - 1] = $Math.max(this._$textHeightTable[yIndex - 1], textHeight);
 
                         ++offset;
                         targetObj = this._$textData[insertIdx - offset];
@@ -2011,8 +2011,8 @@ class TextField extends InteractiveObject
                         height     = this._$getTextHeight(targetObj.textFormat);
                         textHeight = height + leading;
 
-                        this._$heightTable[yIndex]     = Util.$max(this._$heightTable[yIndex], height);
-                        this._$textHeightTable[yIndex] = Util.$max(this._$textHeightTable[yIndex], textHeight);
+                        this._$heightTable[yIndex]     = $Math.max(this._$heightTable[yIndex], height);
+                        this._$textHeightTable[yIndex] = $Math.max(this._$textHeightTable[yIndex], textHeight);
 
                         targetObj.x      = this._$totalWidth;
                         targetObj.yIndex = yIndex;
@@ -2032,11 +2032,11 @@ class TextField extends InteractiveObject
                 obj.x              = this._$totalWidth;
                 this._$totalWidth += width;
 
-                this._$widthTable[yIndex] = Util.$max(this._$widthTable[yIndex], this._$totalWidth);
+                this._$widthTable[yIndex] = $Math.max(this._$widthTable[yIndex], this._$totalWidth);
 
                 // height data
-                this._$heightTable[yIndex]     = Util.$max(this._$heightTable[yIndex], height);
-                this._$textHeightTable[yIndex] = Util.$max(this._$textHeightTable[yIndex], textHeight);
+                this._$heightTable[yIndex]     = $Math.max(this._$heightTable[yIndex], height);
+                this._$textHeightTable[yIndex] = $Math.max(this._$textHeightTable[yIndex], textHeight);
 
                 this._$textData[this._$textData.length] = obj;
 
@@ -2293,20 +2293,20 @@ class TextField extends InteractiveObject
 
             // wordWrap case
             case this._$wordWrap === false && totalWidth > width:
-                return Util.$max(0, indent);
+                return $Math.max(0, indent);
 
             case textFormat._$align === TextFormatAlign.CENTER: // format CENTER
             case this._$autoSize === TextFieldAutoSize.CENTER: // autoSize CENTER
-                return Util.$max(0, width / 2 - indent - textFormat._$rightMargin - totalWidth / 2);
+                return $Math.max(0, width / 2 - indent - textFormat._$rightMargin - totalWidth / 2);
 
             case textFormat._$align === TextFormatAlign.RIGHT: // format RIGHT
             case this._$autoSize === TextFieldAutoSize.RIGHT: // autoSize RIGHT
-                return Util.$max(0, width - indent - totalWidth - textFormat._$rightMargin - 2);
+                return $Math.max(0, width - indent - totalWidth - textFormat._$rightMargin - 2);
 
             // autoSize LEFT
             // format LEFT
             default:
-                return Util.$max(0, indent + 2);
+                return $Math.max(0, indent + 2);
 
         }
     }
@@ -2492,8 +2492,8 @@ class TextField extends InteractiveObject
         const yMin   = bounds.yMin;
         Util.$poolBoundsObject(bounds);
 
-        let width  = Util.$ceil(Util.$abs(xMax - xMin));
-        let height = Util.$ceil(Util.$abs(yMax - yMin));
+        let width  = $Math.ceil($Math.abs(xMax - xMin));
+        let height = $Math.ceil($Math.abs(yMax - yMin));
         if (!width || !height) {
             return;
         }
@@ -2571,8 +2571,8 @@ class TextField extends InteractiveObject
         Util.$poolBoundsObject(bounds);
         Util.$poolBoundsObject(baseBounds);
 
-        let width  = Util.$ceil(Util.$abs(xMax - xMin));
-        let height = Util.$ceil(Util.$abs(yMax - yMin));
+        let width  = $Math.ceil($Math.abs(xMax - xMin));
+        let height = $Math.ceil($Math.abs(yMax - yMin));
         if (!width || !height) {
             return;
         }
@@ -2590,8 +2590,8 @@ class TextField extends InteractiveObject
             return;
         }
 
-        const xScale = +Util.$sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]);
-        const yScale = +Util.$sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]);
+        const xScale = +$Math.sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]);
+        const yScale = +$Math.sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]);
 
         // get cache
         const keys = Util.$getArray();
@@ -2628,7 +2628,7 @@ class TextField extends InteractiveObject
             if (this._$background || this._$border) {
 
                 ctx.beginPath();
-                ctx.rotate(Util.$atan2(matrix[1], matrix[0]));
+                ctx.rotate($Math.atan2(matrix[1], matrix[0]));
                 ctx.moveTo(0, 0);
                 ctx.lineTo(width, 0);
                 ctx.lineTo(width, height);
@@ -2664,7 +2664,7 @@ class TextField extends InteractiveObject
             // mask start
             ctx.save();
             ctx.beginPath();
-            const rotate = Util.$atan2(matrix[1], matrix[0]);
+            const rotate = $Math.atan2(matrix[1], matrix[0]);
             if (rotate) {
                 ctx.rotate(rotate);
             }
@@ -2881,7 +2881,7 @@ class TextField extends InteractiveObject
                             color_transform
                         );
 
-                        context.lineWidth   = Util.$max(1, 1 / Util.$min(matrix[0], matrix[3]));
+                        context.lineWidth   = $Math.max(1, 1 / $Math.min(matrix[0], matrix[3]));
                         context.strokeStyle = `rgba(${rgba.R},${rgba.G},${rgba.B},${rgba.A})`;
 
                         context.beginPath();
@@ -2977,8 +2977,8 @@ class TextField extends InteractiveObject
         Util.$poolBoundsObject(bounds);
         Util.$poolBoundsObject(baseBounds);
 
-        const width  = Util.$ceil(Util.$abs(xMax - xMin));
-        const height = Util.$ceil(Util.$abs(yMax - yMin));
+        const width  = $Math.ceil($Math.abs(xMax - xMin));
+        const height = $Math.ceil($Math.abs(yMax - yMin));
 
         context.setTransform(1, 0, 0, 1, xMin, yMin);
         context.beginPath();
@@ -3019,7 +3019,7 @@ class TextField extends InteractiveObject
             // setup
             this._$textarea.style.position         = "absolute";
             this._$textarea.style.outline          = "0";
-            this._$textarea.style.padding          = `2px 2px 2px ${Util.$max(3, textFormat.leftMargin | 0)}px`;
+            this._$textarea.style.padding          = `2px 2px 2px ${$Math.max(3, textFormat.leftMargin | 0)}px`;
             this._$textarea.style.margin           = "0";
             this._$textarea.style.appearance       = "none";
             this._$textarea.style.resize           = "none";
@@ -3115,10 +3115,10 @@ class TextField extends InteractiveObject
                     const matrix  = this._$transform.concatenatedMatrix;
                     const bounds  = this._$getBounds(null);
 
-                    element.style.left   = `${Util.$floor((matrix.tx + bounds.xMin + player._$tx / player._$scale / Util.$devicePixelRatio) * player._$scale)}px`;
-                    element.style.top    = `${Util.$floor((matrix.ty + bounds.yMin + player._$ty / player._$scale / Util.$devicePixelRatio) * player._$scale)}px`;
-                    element.style.width  = `${Util.$ceil((this.width  - 1) * player._$scale)}px`;
-                    element.style.height = `${Util.$ceil((this.height - 1) * player._$scale)}px`;
+                    element.style.left   = `${$Math.floor((matrix.tx + bounds.xMin + player._$tx / player._$scale / Util.$devicePixelRatio) * player._$scale)}px`;
+                    element.style.top    = `${$Math.floor((matrix.ty + bounds.yMin + player._$ty / player._$scale / Util.$devicePixelRatio) * player._$scale)}px`;
+                    element.style.width  = `${$Math.ceil((this.width  - 1) * player._$scale)}px`;
+                    element.style.height = `${$Math.ceil((this.height - 1) * player._$scale)}px`;
                 }
 
             }.bind(this));
@@ -3232,10 +3232,10 @@ class TextField extends InteractiveObject
 
         // change style
         const tf = this.defaultTextFormat;
-        const fontSize = Util.$ceil(tf.size * scale * this._$transform.concatenatedMatrix.d);
+        const fontSize = $Math.ceil(tf.size * scale * this._$transform.concatenatedMatrix.d);
         this._$textarea.style.fontSize   = `${fontSize}px`;
         this._$textarea.style.fontFamily = tf.font;
-        this._$textarea.style.lineHeight = `${(fontSize + Util.$max(0, tf.leading | 0)) / fontSize}em`;
+        this._$textarea.style.lineHeight = `${(fontSize + $Math.max(0, tf.leading | 0)) / fontSize}em`;
 
         if (this._$autoSize !== TextFieldAutoSize.NONE) {
             this._$textarea.style.textAlign = TextFieldAutoSize.CENTER;

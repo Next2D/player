@@ -365,7 +365,7 @@ class CacheStore
 
             const context = Util.$currentPlayer()._$context;
 
-            const length = Util.$min(50, this._$poolBitmapData.length);
+            const length = $Math.min(50, this._$poolBitmapData.length);
             for (let idx = 0; idx < length; ++idx) {
 
                 const bitmapData = this._$poolBitmapData.shift();

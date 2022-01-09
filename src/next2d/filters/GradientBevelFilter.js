@@ -278,14 +278,14 @@ class GradientBevelFilter  extends BitmapFilter
                 let color = colors[idx] | 0;
 
                 if (color < 0) {
-                    color = 0x1000000 - Util.$abs(color) % 0x1000000;
+                    color = 0x1000000 - $Math.abs(color) % 0x1000000;
                 }
 
                 if (color > 0xffffff) {
                     color = color % 0x1000000;
                 }
 
-                colors[idx] = Util.$toColorInt(Util.$abs(color));
+                colors[idx] = Util.$toColorInt($Math.abs(color));
             }
 
             this._$colors = colors.slice(0);
@@ -475,11 +475,11 @@ class GradientBevelFilter  extends BitmapFilter
 
         clone = this._$blurFilter._$generateFilterRect(clone);
 
-        const radian = +(this.angle * Util.$PI / 180);
-        const x      = Util.$cos(radian) * this._$distance;
-        const y      = Util.$sin(radian) * this._$distance;
-        let dx       = Util.$abs(x) | 0;
-        let dy       = Util.$abs(y) | 0;
+        const radian = +(this.angle * $Math.PI / 180);
+        const x      = $Math.cos(radian) * this._$distance;
+        const y      = $Math.sin(radian) * this._$distance;
+        let dx       = $Math.abs(x) | 0;
+        let dy       = $Math.abs(y) | 0;
 
         if (0 > x) {
             dx++;
@@ -603,13 +603,13 @@ class GradientBevelFilter  extends BitmapFilter
         const baseOffsetY = context._$offsetY;
 
         // matrix to scale
-        const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        const xScale = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const yScale = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
         // pointer
         const radian = +(this._$angle * Util.$Deg2Rad);
-        const x = +(Util.$cos(radian) * this._$distance * xScale);
-        const y = +(Util.$sin(radian) * this._$distance * yScale);
+        const x = +($Math.cos(radian) * this._$distance * xScale);
+        const y = +($Math.sin(radian) * this._$distance * yScale);
 
         // highlight buffer
         let highlightTextureBaseAttachment = context
@@ -629,16 +629,16 @@ class GradientBevelFilter  extends BitmapFilter
 
         const blurWidth   = highlightTextureBase.width;
         const blurHeight  = highlightTextureBase.height;
-        const bevelWidth  = Util.$ceil(blurWidth  + Util.$abs(x) * 2);
-        const bevelHeight = Util.$ceil(blurHeight + Util.$abs(y) * 2);
+        const bevelWidth  = $Math.ceil(blurWidth  + $Math.abs(x) * 2);
+        const bevelHeight = $Math.ceil(blurHeight + $Math.abs(y) * 2);
 
         // bevel filter buffer
         const isInner = this._$type === BitmapFilterType.INNER;
         const width   = isInner ? baseWidth  : bevelWidth;
         const height  = isInner ? baseHeight : bevelHeight;
 
-        const absX = Util.$abs(x);
-        const absY = Util.$abs(y);
+        const absX = $Math.abs(x);
+        const absY = $Math.abs(y);
         const blurOffsetX = (blurWidth  - baseWidth)  / 2;
         const blurOffsetY = (blurHeight - baseHeight) / 2;
 

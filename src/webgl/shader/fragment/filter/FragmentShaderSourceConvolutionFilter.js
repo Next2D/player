@@ -16,14 +16,14 @@ class FragmentShaderSourceConvolutionFilter
      */
     static TEMPLATE (k, mediump_length, x, y, preserve_alpha, clamp)
     {
-        const halfX = Util.$floor(x * 0.5);
-        const halfY = Util.$floor(y * 0.5);
+        const halfX = $Math.floor(x * 0.5);
+        const halfY = $Math.floor(y * 0.5);
         const size = x * y;
 
         let matrixStatement = "";
         const matrixIndex = clamp ? 1 : 2;
         for (let idx = 0; idx < size; ++idx) {
-            const index     = matrixIndex + Util.$floor(idx / 4);
+            const index     = matrixIndex + $Math.floor(idx / 4);
             const component = idx % 4;
             matrixStatement += `
     result += getWeightedColor(${idx}, u_mediump[${index}][${component}]);

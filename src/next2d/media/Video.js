@@ -363,7 +363,7 @@ class Video extends DisplayObject
     }
     set volume (volume)
     {
-        this._$volume = Util.$min(
+        this._$volume = $Math.min(
             SoundMixer.volume,
             Util.$clamp(volume, 0, 1, 1)
         );
@@ -461,7 +461,7 @@ class Video extends DisplayObject
 
             this._$stop = false;
 
-            this._$video.volume = Util.$min(this._$volume, SoundMixer.volume);
+            this._$video.volume = $Math.min(this._$volume, SoundMixer.volume);
             this._$video.play();
 
             const timer = Util.$requestAnimationFrame;
@@ -656,7 +656,7 @@ class Video extends DisplayObject
         ));
 
         // setup
-        this._$video.volume = Util.$min(character.volume, SoundMixer.volume);
+        this._$video.volume = $Math.min(character.volume, SoundMixer.volume);
         this._$video.load();
     }
 
@@ -793,8 +793,8 @@ class Video extends DisplayObject
         const yMin   = +bounds.yMin;
         Util.$poolBoundsObject(bounds);
 
-        let width  = Util.$ceil(Util.$abs(xMax - xMin));
-        let height = Util.$ceil(Util.$abs(yMax - yMin));
+        let width  = $Math.ceil($Math.abs(xMax - xMin));
+        let height = $Math.ceil($Math.abs(yMax - yMin));
         if (!width || !height) {
             return;
         }
@@ -914,8 +914,8 @@ class Video extends DisplayObject
         Util.$poolBoundsObject(bounds);
         Util.$poolBoundsObject(baseBounds);
 
-        const width  = Util.$ceil(Util.$abs(xMax - xMin));
-        const height = Util.$ceil(Util.$abs(yMax - yMin));
+        const width  = $Math.ceil($Math.abs(xMax - xMin));
+        const height = $Math.ceil($Math.abs(yMax - yMin));
 
         context.setTransform(1, 0, 0, 1, xMin, yMin);
         context.beginPath();

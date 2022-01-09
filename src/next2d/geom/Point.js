@@ -109,7 +109,7 @@ class Point
      */
     get length ()
     {
-        return Util.$sqrt(Util.$pow(this.x, 2) + Util.$pow(this.y, 2));
+        return $Math.sqrt($Math.pow(this.x, 2) + $Math.pow(this.y, 2));
     }
 
     /**
@@ -202,9 +202,9 @@ class Point
      */
     static distance (point1, point2)
     {
-        return Util.$sqrt(
-            Util.$pow(point1._$x - point2._$x, 2)
-            + Util.$pow(point1._$y - point2._$y, 2)
+        return $Math.sqrt(
+            $Math.pow(point1._$x - point2._$x, 2)
+            + $Math.pow(point1._$y - point2._$y, 2)
         );
     }
 
@@ -284,7 +284,7 @@ class Point
      */
     static polar (len, angle)
     {
-        return new Point(len * Util.$cos(angle), len * Util.$sin(angle));
+        return new Point(len * $Math.cos(angle), len * $Math.sin(angle));
     }
 
     /**

@@ -277,14 +277,14 @@ class GradientGlowFilter  extends BitmapFilter
                 let color = colors[idx] | 0;
 
                 if (color < 0) {
-                    color = 0x1000000 - Util.$abs(color) % 0x1000000;
+                    color = 0x1000000 - $Math.abs(color) % 0x1000000;
                 }
 
                 if (color > 0xffffff) {
                     color = color % 0x1000000;
                 }
 
-                colors[idx] = Util.$toColorInt(Util.$abs(color));
+                colors[idx] = Util.$toColorInt($Math.abs(color));
             }
 
             this._$colors = colors.slice(0);
@@ -480,9 +480,9 @@ class GradientGlowFilter  extends BitmapFilter
             ._$blurFilter
             ._$generateFilterRect(clone, x_scale, y_scale);
 
-        const radian = +(this.angle * Util.$PI / 180);
-        const x      = +(Util.$cos(radian) * this.distance);
-        const y      = +(Util.$sin(radian) * this.distance);
+        const radian = +(this.angle * $Math.PI / 180);
+        const x      = +($Math.cos(radian) * this.distance);
+        const y      = +($Math.sin(radian) * this.distance);
 
         let dx = 0;
         let dy = 0;
@@ -492,12 +492,12 @@ class GradientGlowFilter  extends BitmapFilter
         switch (x < 0) {
 
             case true:
-                dx = Util.$floor(x) | 0;
-                dw = -Util.$round(x / 2) | 0;
+                dx = $Math.floor(x) | 0;
+                dw = -$Math.round(x / 2) | 0;
                 break;
 
             default:
-                dx = Util.$round(x / 2) | 0;
+                dx = $Math.round(x / 2) | 0;
                 dw = x / 2 | 0;
                 break;
 
@@ -506,12 +506,12 @@ class GradientGlowFilter  extends BitmapFilter
         switch (y < 0) {
 
             case true:
-                dy = Util.$floor(y) | 0;
-                dh = -Util.$round(y / 2) | 0;
+                dy = $Math.floor(y) | 0;
+                dh = -$Math.round(y / 2) | 0;
                 break;
 
             default:
-                dy = Util.$round(y / 2) | 0;
+                dy = $Math.round(y / 2) | 0;
                 dh = y / 2 | 0;
                 break;
 
@@ -631,19 +631,19 @@ class GradientGlowFilter  extends BitmapFilter
         const offsetDiffY = blurOffsetY - baseOffsetY;
 
         // matrix to scale
-        const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        const xScale = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const yScale = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
         // shadow point
         const radian = +(this._$angle * Util.$Deg2Rad);
-        const x = +(Util.$cos(radian) * this._$distance * xScale);
-        const y = +(Util.$sin(radian) * this._$distance * yScale);
+        const x = +($Math.cos(radian) * this._$distance * xScale);
+        const y = +($Math.sin(radian) * this._$distance * yScale);
 
         const isInner = this.type === BitmapFilterType.INNER;
-        const w = isInner ? baseWidth  : blurWidth  + Util.$max(0, Util.$abs(x) - offsetDiffX);
-        const h = isInner ? baseHeight : blurHeight + Util.$max(0, Util.$abs(y) - offsetDiffY);
-        const width  = Util.$ceil(w);
-        const height = Util.$ceil(h);
+        const w = isInner ? baseWidth  : blurWidth  + $Math.max(0, $Math.abs(x) - offsetDiffX);
+        const h = isInner ? baseHeight : blurHeight + $Math.max(0, $Math.abs(y) - offsetDiffY);
+        const width  = $Math.ceil(w);
+        const height = $Math.ceil(h);
         const fractionX = (width  - w) / 2;
         const fractionY = (height - h) / 2;
 
@@ -654,10 +654,10 @@ class GradientGlowFilter  extends BitmapFilter
             blurTextureX = x - blurOffsetX;
             blurTextureY = y - blurOffsetY;
         } else {
-            baseTextureX = Util.$max(0, offsetDiffX - x) + fractionX;
-            baseTextureY = Util.$max(0, offsetDiffY - y) + fractionY;
-            blurTextureX = (x > 0 ? Util.$max(0, x - offsetDiffX) : 0) + fractionX;
-            blurTextureY = (y > 0 ? Util.$max(0, y - offsetDiffY) : 0) + fractionY;
+            baseTextureX = $Math.max(0, offsetDiffX - x) + fractionX;
+            baseTextureY = $Math.max(0, offsetDiffY - y) + fractionY;
+            blurTextureX = (x > 0 ? $Math.max(0, x - offsetDiffX) : 0) + fractionX;
+            blurTextureY = (y > 0 ? $Math.max(0, y - offsetDiffY) : 0) + fractionY;
         }
 
         context._$bind(currentAttachment);

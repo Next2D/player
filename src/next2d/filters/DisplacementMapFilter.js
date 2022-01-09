@@ -529,8 +529,8 @@ class DisplacementMapFilter extends BitmapFilter
         }
 
         // matrix to scale
-        const xScale = Util.$sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        const yScale = Util.$sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        const xScale = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const yScale = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
         context._$applyDisplacementMapFilter(
             texture,

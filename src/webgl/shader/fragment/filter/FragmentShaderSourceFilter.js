@@ -163,7 +163,7 @@ void main() {
      */
     static STATEMENT_GLOW_STRENGTH (offset)
     {
-        const index     = Util.$floor(offset / 4);
+        const index     = $Math.floor(offset / 4);
         const component = offset % 4;
         return `
     float strength = u_mediump[${index}][${component}];
@@ -258,7 +258,7 @@ void main() {
      */
     static STATEMENT_BEVEL_STRENGTH (offset)
     {
-        const index     = Util.$floor(offset / 4);
+        const index     = $Math.floor(offset / 4);
         const component = offset % 4;
         return `
     float strength = u_mediump[${index}][${component}];

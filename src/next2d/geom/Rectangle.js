@@ -458,10 +458,10 @@ class Rectangle
      */
     intersection (to_intersect)
     {
-        const sx = Util.$max(this.x, to_intersect.x);
-        const sy = Util.$max(this.y, to_intersect.y);
-        const ex = Util.$min(this.right,  to_intersect.right);
-        const ey = Util.$min(this.bottom, to_intersect.bottom);
+        const sx = $Math.max(this.x, to_intersect.x);
+        const sy = $Math.max(this.y, to_intersect.y);
+        const ex = $Math.min(this.right,  to_intersect.right);
+        const ey = $Math.min(this.bottom, to_intersect.bottom);
 
         const w = ex - sx;
         const h = ey - sy;
@@ -481,10 +481,10 @@ class Rectangle
      */
     intersects (to_intersect)
     {
-        const sx = Util.$max(this.x, to_intersect.x);
-        const sy = Util.$max(this.y, to_intersect.y);
-        const ex = Util.$min(this.right,  to_intersect.right);
-        const ey = Util.$min(this.bottom, to_intersect.bottom);
+        const sx = $Math.max(this.x, to_intersect.x);
+        const sy = $Math.max(this.y, to_intersect.y);
+        const ex = $Math.min(this.right,  to_intersect.right);
+        const ey = $Math.min(this.bottom, to_intersect.bottom);
         return ex - sx > 0 && ey - sy > 0;
     }
 
@@ -591,10 +591,10 @@ class Rectangle
         }
 
         return new Rectangle(
-            Util.$min(this.x, to_union.x),
-            Util.$min(this.y, to_union.y),
-            Util.$max(this.right - to_union.left, to_union.right - this.left),
-            Util.$max(this.bottom - to_union.top, to_union.bottom - this.top)
+            $Math.min(this.x, to_union.x),
+            $Math.min(this.y, to_union.y),
+            $Math.max(this.right - to_union.left, to_union.right - this.left),
+            $Math.max(this.bottom - to_union.top, to_union.bottom - this.top)
         );
     }
 }

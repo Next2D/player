@@ -544,8 +544,8 @@ class BitmapData
         x = Math.max(x, 0);
         y = Math.max(y, 0);
 
-        const width  = Util.$min(w, this.width  - x);
-        const height = Util.$min(h, this.height - y);
+        const width  = $Math.min(w, this.width  - x);
+        const height = $Math.min(h, this.height - y);
         if (width <= 0 || height <= 0) {
             return ;
         }
@@ -631,8 +631,8 @@ class BitmapData
 
         x = Math.max(x, 0);
         y = Math.max(y, 0);
-        const width  = Util.$min(w, this.width  - x);
-        const height = Util.$min(h, this.height - y);
+        const width  = $Math.min(w, this.width  - x);
+        const height = $Math.min(h, this.height - y);
 
         if (width <= 0 || height <= 0) {
             return new Uint8Array(0);

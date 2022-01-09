@@ -13,6 +13,13 @@ let instanceId = 0;
 let programId = 0;
 
 /**
+ * @shortcut
+ * @type {Math}
+ * @const
+ */
+const $Math = window.Math;
+
+/**
  * @description Global Object
  * @type {object}
  */
@@ -261,107 +268,11 @@ Util.$isNaN = window.isNaN;
 
 /**
  * @shortcut
- * @type {function}
+ * @type {number}
  * @const
  * @static
  */
-Util.$min = Math.min;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$max = Math.max;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$sin = Math.sin;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$cos = Math.cos;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$tan = Math.tan;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$sqrt = Math.sqrt;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$pow = Math.pow;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$abs = Math.abs;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$sign = Math.sign;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$ceil = Math.ceil;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$atan2 = Math.atan2;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$floor = Math.floor;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$round = Math.round;
+Util.$Deg2Rad = $Math.PI / 180;
 
 /**
  * @shortcut
@@ -369,31 +280,7 @@ Util.$round = Math.round;
  * @const
  * @static
  */
-Util.$SQRT2 = Math.SQRT2;
-
-/**
- * @shortcut
- * @type {number}
- * @const
- * @static
- */
-Util.$PI = Math.PI;
-
-/**
- * @shortcut
- * @type {number}
- * @const
- * @static
- */
-Util.$Deg2Rad = Util.$PI / 180;
-
-/**
- * @shortcut
- * @type {number}
- * @const
- * @static
- */
-Util.$Rad2Deg = 180 / Util.$PI;
+Util.$Rad2Deg = 180 / $Math.PI;
 
 /**
  * @shortcut
@@ -610,7 +497,7 @@ Util.$rgbToLinearTable = new Util.$Float32Array(256);
  */
 Util.$rgbIdentityTable = new Util.$Float32Array(256);
 for (let idx = 0; idx < 256; ++idx) {
-    Util.$rgbToLinearTable[idx] = Util.$pow(idx / 255, 2.23333333);
+    Util.$rgbToLinearTable[idx] = $Math.pow(idx / 255, 2.23333333);
     Util.$rgbIdentityTable[idx] = idx / 255;
 }
 
@@ -633,7 +520,7 @@ Util.$SHORT_INT_MAX = 32767;
  * @const
  * @static
  */
-Util.$devicePixelRatio = Util.$min(2, window.devicePixelRatio);
+Util.$devicePixelRatio = $Math.min(2, window.devicePixelRatio);
 
 /**
  * @type {Float32Array}
@@ -931,7 +818,7 @@ Util.$clamp = (value, min, max, default_value = null) =>
     const number = +value;
     return Util.$isNaN(number) && default_value !== null
         ? default_value
-        : Util.$min(Util.$max(min, Util.$isNaN(number) ? 0 : number), max);
+        : $Math.min($Math.max(min, Util.$isNaN(number) ? 0 : number), max);
 };
 
 /**
@@ -1246,10 +1133,10 @@ Util.$boundsMatrix = (bounds, matrix) =>
     const y2 = bounds.xMin * matrix[1] + bounds.yMax * matrix[3] + matrix[5];
     const y3 = bounds.xMin * matrix[1] + bounds.yMin * matrix[3] + matrix[5];
 
-    const xMin = Util.$min( Util.$MAX_VALUE, x0, x1, x2, x3);
-    const xMax = Util.$max(-Util.$MAX_VALUE, x0, x1, x2, x3);
-    const yMin = Util.$min( Util.$MAX_VALUE, y0, y1, y2, y3);
-    const yMax = Util.$max(-Util.$MAX_VALUE, y0, y1, y2, y3);
+    const xMin = $Math.min( Util.$MAX_VALUE, x0, x1, x2, x3);
+    const xMax = $Math.max(-Util.$MAX_VALUE, x0, x1, x2, x3);
+    const yMin = $Math.min( Util.$MAX_VALUE, y0, y1, y2, y3);
+    const yMax = $Math.max(-Util.$MAX_VALUE, y0, y1, y2, y3);
 
     return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
 };
@@ -1488,10 +1375,10 @@ Util.$intToRGBA = (color, alpha = 1) =>
 Util.$generateColorTransform = (object, color) =>
 {
     return {
-        "R": Util.$max(0, Util.$min(object.R * color[0] + color[4], 255)),
-        "G": Util.$max(0, Util.$min(object.G * color[1] + color[5], 255)),
-        "B": Util.$max(0, Util.$min(object.B * color[2] + color[6], 255)),
-        "A": Util.$max(0, Util.$min(object.A * 255 * color[3] + color[7], 255)) / 255
+        "R": $Math.max(0, $Math.min(object.R * color[0] + color[4], 255)),
+        "G": $Math.max(0, $Math.min(object.G * color[1] + color[5], 255)),
+        "B": $Math.max(0, $Math.min(object.B * color[2] + color[6], 255)),
+        "A": $Math.max(0, $Math.min(object.A * 255 * color[3] + color[7], 255)) / 255
     };
 };
 
@@ -1855,7 +1742,7 @@ Util.$linearGradientXY = (matrix) =>
     let vx2 = x2 - x0;
     let vy2 = y2 - y0;
 
-    const r1 = Util.$sqrt(vx2 * vx2 + vy2 * vy2);
+    const r1 = $Math.sqrt(vx2 * vx2 + vy2 * vy2);
     if (r1) {
         vx2 = vx2 / r1;
         vy2 = vy2 / r1;

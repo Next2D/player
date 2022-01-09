@@ -1709,7 +1709,7 @@ describe("DisplayObject.js alpha test", function()
     it("default test case21", function()
     {
         const obj = new DisplayObject();
-        obj.alpha = Util.$PI;
+        obj.alpha = $Math.PI;
         expect(obj.alpha).toBe(1);
     });
 

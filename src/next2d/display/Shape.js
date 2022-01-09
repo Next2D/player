@@ -132,8 +132,8 @@ class Shape extends DisplayObject
 
                 const bitmap = loaderInfo._$data.characters[character.bitmapId];
 
-                const width  = Util.$abs(bitmap.bounds.xMax - bitmap.bounds.xMin);
-                const height = Util.$abs(bitmap.bounds.yMax - bitmap.bounds.yMin);
+                const width  = $Math.abs(bitmap.bounds.xMax - bitmap.bounds.xMin);
+                const height = $Math.abs(bitmap.bounds.yMax - bitmap.bounds.yMin);
 
                 const bitmapData = new BitmapData(width, height, true, 0);
                 if (!bitmap._$buffer) {
@@ -197,8 +197,8 @@ class Shape extends DisplayObject
 
         } else {
 
-            const width  = Util.$abs(character.bounds.xMax - character.bounds.xMin);
-            const height = Util.$abs(character.bounds.yMax - character.bounds.yMin);
+            const width  = $Math.abs(character.bounds.xMax - character.bounds.xMin);
+            const height = $Math.abs(character.bounds.yMax - character.bounds.yMin);
 
             const bitmapData = new BitmapData(width, height, true, 0);
             if (!character._$buffer) {

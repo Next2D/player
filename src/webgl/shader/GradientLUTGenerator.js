@@ -14,13 +14,13 @@ class GradientLUTGenerator
         this._$context    = context;
         this._$gl         = gl;
         this._$attachment = context.frameBuffer.createTextureAttachment(512, 1);
-        this._$maxLength  = Util.$floor(this._$gl.getParameter(this._$gl.MAX_FRAGMENT_UNIFORM_VECTORS) * 0.75);
+        this._$maxLength  = $Math.floor(this._$gl.getParameter(this._$gl.MAX_FRAGMENT_UNIFORM_VECTORS) * 0.75);
 
         this._$rgbToLinearTable = new Util.$Float32Array(256);
         this._$rgbIdentityTable = new Util.$Float32Array(256);
         for (let i = 0; i < 256; i++) {
             const t = i / 255;
-            this._$rgbToLinearTable[i] = Util.$pow(t, 2.23333333);
+            this._$rgbToLinearTable[i] = $Math.pow(t, 2.23333333);
             this._$rgbIdentityTable[i] = t;
         }
     }
@@ -45,7 +45,7 @@ class GradientLUTGenerator
         this._$context.blend.toOneZero();
 
         for (let begin = 0; begin < stopsLength; begin += this._$maxLength - 1) {
-            const end = Util.$min(begin + this._$maxLength, stopsLength);
+            const end = $Math.min(begin + this._$maxLength, stopsLength);
 
             const shader = variants.getGradientLUTShader(end - begin, is_linear_space);
             const uniform = shader.uniform;
@@ -82,7 +82,7 @@ class GradientLUTGenerator
         this._$context.blend.toOneZero();
 
         for (let begin = 0; begin < stopsLength; begin += this._$maxLength - 1) {
-            const end = Util.$min(begin + this._$maxLength, stopsLength);
+            const end = $Math.min(begin + this._$maxLength, stopsLength);
 
             const shader = variants.getGradientLUTShader(end - begin, false);
             const uniform = shader.uniform;

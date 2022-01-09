@@ -5,5 +5,5 @@
  * copyright: (c) 2020-###BUILD_YEAR### Toshiyuki Ienaga.
  */
 if (!("next2d" in window)) {
-    (function(window) {
+    ((window) => {
         "use strict";

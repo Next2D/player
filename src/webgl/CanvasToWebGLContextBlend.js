@@ -233,34 +233,34 @@ class CanvasToWebGLContextBlend
                         const y3 = +(left  * b + top    * d + ty);
 
                         const no = Util.$MAX_VALUE;
-                        const xMin = +Util.$min(Util.$min(Util.$min(Util.$min( no, x0), x1), x2), x3);
-                        const xMax = +Util.$max(Util.$max(Util.$max(Util.$max(-no, x0), x1), x2), x3);
-                        const yMin = +Util.$min(Util.$min(Util.$min(Util.$min( no, y0), y1), y2), y3);
-                        const yMax = +Util.$max(Util.$max(Util.$max(Util.$max(-no, y0), y1), y2), y3);
+                        const xMin = +$Math.min($Math.min($Math.min($Math.min( no, x0), x1), x2), x3);
+                        const xMax = +$Math.max($Math.max($Math.max($Math.max(-no, x0), x1), x2), x3);
+                        const yMin = +$Math.min($Math.min($Math.min($Math.min( no, y0), y1), y2), y3);
+                        const yMax = +$Math.max($Math.max($Math.max($Math.max(-no, y0), y1), y2), y3);
 
-                        const sx = Util.$max(0, xMin | 0);
-                        const sy = Util.$max(0, yMin | 0);
-                        const sw = Util.$min(Util.$max(0, renderWidth  - sx), Util.$ceil(Util.$abs(xMax - xMin)));
-                        const sh = Util.$min(Util.$max(0, renderHeight - sy), Util.$ceil(Util.$abs(yMax - yMin)));
+                        const sx = $Math.max(0, xMin | 0);
+                        const sy = $Math.max(0, yMin | 0);
+                        const sw = $Math.min($Math.max(0, renderWidth  - sx), $Math.ceil($Math.abs(xMax - xMin)));
+                        const sh = $Math.min($Math.max(0, renderHeight - sy), $Math.ceil($Math.abs(yMax - yMin)));
 
                         if (!sw || !sh) {
                             return ;
                         }
 
                         this._$gl.enable(this._$gl.SCISSOR_TEST);
-                        this._$gl.scissor(sx, Util.$max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
+                        this._$gl.scissor(sx, $Math.max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
                     } else {
-                        const sx = Util.$max(0, x + tx | 0);
-                        const sy = Util.$max(0, y + ty | 0);
-                        const sw = Util.$min(Util.$max(0, renderWidth  - sx), w);
-                        const sh = Util.$min(Util.$max(0, renderHeight - sy), h);
+                        const sx = $Math.max(0, x + tx | 0);
+                        const sy = $Math.max(0, y + ty | 0);
+                        const sw = $Math.min($Math.max(0, renderWidth  - sx), w);
+                        const sh = $Math.min($Math.max(0, renderHeight - sy), h);
 
                         if (!sw || !sh) {
                             return ;
                         }
 
                         this._$gl.enable(this._$gl.SCISSOR_TEST);
-                        this._$gl.scissor(sx, Util.$max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
+                        this._$gl.scissor(sx, $Math.max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
                     }
 
                     this.toOperation(operation);
@@ -272,10 +272,10 @@ class CanvasToWebGLContextBlend
 
             default:
                 {
-                    const sx = Util.$max(0, x + matrix[6] | 0);
-                    const sy = Util.$max(0, y + matrix[7] | 0);
-                    const sw = Util.$min(Util.$max(0, renderWidth  - sx), w);
-                    const sh = Util.$min(Util.$max(0, renderHeight - sy), h);
+                    const sx = $Math.max(0, x + matrix[6] | 0);
+                    const sy = $Math.max(0, y + matrix[7] | 0);
+                    const sw = $Math.min($Math.max(0, renderWidth  - sx), w);
+                    const sh = $Math.min($Math.max(0, renderHeight - sy), h);
 
                     if (!sw || !sh) {
                         return ;
@@ -306,7 +306,7 @@ class CanvasToWebGLContextBlend
                     );
 
                     this._$gl.enable(this._$gl.SCISSOR_TEST);
-                    this._$gl.scissor(sx, Util.$max(0, renderHeight - (sy + sh)), sw, sh);
+                    this._$gl.scissor(sx, $Math.max(0, renderHeight - (sy + sh)), sw, sh);
 
                     this.toOneZero();
                     shader._$drawImage();

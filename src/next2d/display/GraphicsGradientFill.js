@@ -156,8 +156,8 @@ class GraphicsGradientFill
 
             this._$colorStops = Util.$getArray();
 
-            const length = Util.$min(
-                Util.$min(this._$alphas.length, this._$colors.length),
+            const length = $Math.min(
+                $Math.min(this._$alphas.length, this._$colors.length),
                 this._$ratios.length
             );
 

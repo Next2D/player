@@ -336,7 +336,7 @@ class Graphics
         alpha = Util.$clamp(alpha, 0, 1, 1);
 
         // setup
-        this._$maxAlpha = Util.$max(this._$maxAlpha, alpha);
+        this._$maxAlpha = $Math.max(this._$maxAlpha, alpha);
         this._$doFill   = true;
         this._$canDraw  = true;
 
@@ -391,7 +391,7 @@ class Graphics
         // setup
         const length = alphas.length;
         for (let idx = 0; idx < length; ++idx) {
-            this._$maxAlpha = Util.$max(this._$maxAlpha, alphas[idx]);
+            this._$maxAlpha = $Math.max(this._$maxAlpha, alphas[idx]);
         }
         this._$doFill  = true;
         this._$canDraw = true;
@@ -720,7 +720,7 @@ class Graphics
         const y0 = y + hh;
         const x1 = x + width;
         const y1 = y + height;
-        const c  = 4 / 3 * (Util.$SQRT2 - 1);
+        const c  = 4 / 3 * ($Math.SQRT2 - 1);
         const cw = c * hw;
         const ch = c * hh;
 
@@ -793,7 +793,7 @@ class Graphics
 
         const hew = ellipse_width  / 2;
         const heh = ellipse_height / 2;
-        const c   = 4 / 3 * (Util.$SQRT2 - 1);
+        const c   = 4 / 3 * ($Math.SQRT2 - 1);
         const cw  = c * hew;
         const ch  = c * heh;
 
@@ -1063,7 +1063,7 @@ class Graphics
         // setup
         const length = alphas.length;
         for (let idx = 0; idx < length; ++idx) {
-            this._$maxAlpha = Util.$max(this._$maxAlpha, alphas[idx]);
+            this._$maxAlpha = $Math.max(this._$maxAlpha, alphas[idx]);
         }
 
         // beginPath
@@ -1113,7 +1113,7 @@ class Graphics
         alpha = Util.$clamp(+alpha, 0, 1, 1);
 
         // setup
-        this._$maxAlpha = Util.$max(this._$maxAlpha, alpha);
+        this._$maxAlpha = $Math.max(this._$maxAlpha, alpha);
         this._$doLine   = true;
         this._$canDraw  = true;
 
@@ -1222,8 +1222,8 @@ class Graphics
         const boundsBase = this._$getBounds();
 
         const bounds = Util.$boundsMatrix(boundsBase, matrix);
-        let width    = Util.$ceil(Util.$abs(bounds.xMax - bounds.xMin));
-        let height   = Util.$ceil(Util.$abs(bounds.yMax - bounds.yMin));
+        let width    = $Math.ceil($Math.abs(bounds.xMax - bounds.xMin));
+        let height   = $Math.ceil($Math.abs(bounds.yMax - bounds.yMin));
         Util.$poolBoundsObject(boundsBase);
         Util.$poolBoundsObject(bounds);
 
@@ -1349,8 +1349,8 @@ class Graphics
         const yMin   = bounds.yMin;
         Util.$poolBoundsObject(bounds);
 
-        let width  = Util.$ceil(Util.$abs(xMax - xMin));
-        let height = Util.$ceil(Util.$abs(yMax - yMin));
+        let width  = $Math.ceil($Math.abs(xMax - xMin));
+        let height = $Math.ceil($Math.abs(yMax - yMin));
 
         switch (true) {
 
@@ -1367,8 +1367,8 @@ class Graphics
 
         }
 
-        const xScale = Math.sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]);
-        const yScale = Math.sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]);
+        const xScale = $Math.sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]);
+        const yScale = $Math.sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]);
         if (0 > xMin + width || 0 > yMin + height) {
 
             if (filters && filters.length
@@ -1431,7 +1431,7 @@ class Graphics
                 case rawMatrix[2] !== 0:
                 case rawMatrix[3] !== 1:
                     {
-                        const rotate = Math.atan2(matrix[1], matrix[0]);
+                        const rotate = $Math.atan2(matrix[1], matrix[0]);
 
                         let tx = 0;
                         let ty = 0;
@@ -1448,8 +1448,8 @@ class Graphics
                             const bottomLeft  = matrix2.transformPoint(new Point(0, height));
                             const bottomRight = matrix2.transformPoint(new Point(width, height));
 
-                            tx = Util.$min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
-                            ty = Util.$min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+                            tx = $Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+                            ty = $Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
                         }
 
                         Util.$resetContext(context);
@@ -1573,8 +1573,8 @@ class Graphics
         if (hasGrid) {
             parentMatrix = displayObject._$transform._$rawMatrix();
             hasGrid = hasGrid
-                && Util.$abs(parentMatrix[1]) < 0.001
-                && Util.$abs(parentMatrix[2]) < 0.0001;
+                && $Math.abs(parentMatrix[1]) < 0.001
+                && $Math.abs(parentMatrix[2]) < 0.0001;
         }
 
         // size
@@ -1586,9 +1586,8 @@ class Graphics
         const yMin   = bounds.yMin;
         Util.$poolBoundsObject(bounds);
 
-        let width  = Util.$ceil(Util.$abs(xMax - xMin));
-        let height = Util.$ceil(Util.$abs(yMax - yMin));
-
+        let width  = $Math.ceil($Math.abs(xMax - xMin));
+        let height = $Math.ceil($Math.abs(yMax - yMin));
         switch (true) {
 
             case width === 0:
@@ -1604,8 +1603,8 @@ class Graphics
 
         }
 
-        const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        const xScale = +$Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]).toFixed(3);
+        const yScale = +$Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]).toFixed(3);
         if (0 > xMin + width || 0 > yMin + height) {
 
             if (filters && filters.length
@@ -1633,21 +1632,24 @@ class Graphics
             return;
         }
 
-        // resize
-        const textureScale = context._$textureScale(width, height);
-        if (textureScale < 1) {
-            width  *= textureScale;
-            height *= textureScale;
-        }
-
         // get cache
-        const cacheKeys = Util
-            .$cacheStore()
-            .generateKeys(displayObject._$instanceId, [xScale, yScale], color_transform);
+        const cacheStore = Util.$cacheStore();
+        const cacheKeys  = cacheStore.generateKeys(
+            displayObject._$instanceId, [xScale, yScale], color_transform
+        );
 
         // cache
-        let texture = Util.$cacheStore().get(cacheKeys);
+        let texture = cacheStore.get(cacheKeys);
         if (!texture) {
+
+            // resize
+            width  = $Math.ceil($Math.abs(boundsBase.xMax - boundsBase.xMin) * xScale);
+            height = $Math.ceil($Math.abs(boundsBase.yMax - boundsBase.yMin) * yScale);
+            const textureScale = context._$textureScale(width, height);
+            if (textureScale < 1) {
+                width  *= textureScale;
+                height *= textureScale;
+            }
 
             // create cache buffer
             const buffer = context
@@ -1658,9 +1660,9 @@ class Graphics
             // reset
             Util.$resetContext(context);
             context.setTransform(
-                matrix[0], matrix[1], matrix[2], matrix[3],
-                matrix[4] - xMin,
-                matrix[5] - yMin
+                xScale, 0, 0, yScale,
+                -boundsBase.xMin * xScale,
+                -boundsBase.yMin * yScale
             );
 
             if (hasGrid) {
@@ -1697,8 +1699,8 @@ class Graphics
                 const parentXMin   = +parentBounds.xMin;
                 const parentYMax   = +parentBounds.yMax;
                 const parentYMin   = +parentBounds.yMin;
-                const parentWidth  = Util.$ceil(Util.$abs(parentXMax - parentXMin));
-                const parentHeight = Util.$ceil(Util.$abs(parentYMax - parentYMin));
+                const parentWidth  = $Math.ceil($Math.abs(parentXMax - parentXMin));
+                const parentHeight = $Math.ceil($Math.abs(parentYMax - parentYMin));
 
                 Util.$poolBoundsObject(parentBounds);
 
@@ -1726,7 +1728,7 @@ class Graphics
                 .getTextureFromCurrentAttachment();
 
             // set cache
-            Util.$cacheStore().set(cacheKeys, texture);
+            cacheStore.set(cacheKeys, texture);
 
             // release buffer
             context
@@ -1738,15 +1740,12 @@ class Graphics
 
         }
 
-        let isFilter = false;
-        let offsetX  = 0;
-        let offsetY  = 0;
+        let offsetX = 0;
+        let offsetY = 0;
         if (filters && filters.length) {
 
             const canApply = displayObject._$canApply(filters);
             if (canApply) {
-
-                isFilter = true;
 
                 texture = this._$drawFilter(
                     context, texture, matrix,
@@ -1767,17 +1766,39 @@ class Graphics
         context._$imageSmoothingEnabled = true;
         context._$globalCompositeOperation = blend_mode;
 
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        if (isFilter) {
-            context.drawImage(texture,
-                xMin - offsetX, yMin - offsetY,
-                texture.width, texture.height, color_transform
+        const radianX = $Math.atan2(matrix[1], matrix[0]);
+        const radianY = $Math.atan2(-matrix[2], matrix[3]);
+        if (radianX || radianY) {
+
+            const rotateBounds = Util.$getBoundsObject(
+                boundsBase.xMin * $Math.cos(radianX) - boundsBase.yMin * $Math.sin(radianY),
+                boundsBase.xMax * $Math.cos(radianX) - boundsBase.yMax * $Math.sin(radianY),
+                boundsBase.xMin * $Math.sin(radianX) + boundsBase.yMin * $Math.cos(radianY),
+                boundsBase.xMax * $Math.sin(radianX) + boundsBase.yMax * $Math.cos(radianY)
             );
+
+            context.setTransform(
+                $Math.cos(radianX),
+                $Math.sin(radianX),
+                -$Math.sin(radianY),
+                $Math.cos(radianY),
+                rotateBounds.xMin * xScale + matrix[4] - offsetX,
+                rotateBounds.yMin * yScale + matrix[5] - offsetY
+            );
+            Util.$poolBoundsObject(rotateBounds);
+
         } else {
-            context.drawImage(texture,
-                xMin, yMin, width, height, color_transform
+
+            context.setTransform(1, 0, 0, 1,
+                xMin - offsetX,
+                yMin - offsetY
             );
+
         }
+
+        context.drawImage(texture,
+            0, 0, texture.width, texture.height, color_transform
+        );
 
         // pool
         Util.$poolArray(cacheKeys);
@@ -1785,7 +1806,6 @@ class Graphics
             Util.$poolMatrix(parentMatrix);
         }
         Util.$poolBoundsObject(boundsBase);
-
     }
 
     /**
@@ -1890,10 +1910,10 @@ class Graphics
      */
     _$setFillBounds (x, y)
     {
-        this._$xMin = Util.$min(this._$xMin, x);
-        this._$xMax = Util.$max(this._$xMax, x);
-        this._$yMin = Util.$min(this._$yMin, y);
-        this._$yMax = Util.$max(this._$yMax, y);
+        this._$xMin = $Math.min(this._$xMin, x);
+        this._$xMax = $Math.max(this._$xMax, x);
+        this._$yMin = $Math.min(this._$yMin, y);
+        this._$yMax = $Math.max(this._$yMax, y);
     }
 
     /**
@@ -1905,16 +1925,16 @@ class Graphics
      */
     _$setLineBounds (x, y)
     {
-        this._$xMin = Util.$min(this._$xMin, Util.$min(x, this._$pointerX));
-        this._$xMax = Util.$max(this._$xMax, Util.$max(x, this._$pointerX));
-        this._$yMin = Util.$min(this._$yMin, Util.$min(y, this._$pointerY));
-        this._$yMax = Util.$max(this._$yMax, Util.$max(y, this._$pointerY));
+        this._$xMin = $Math.min(this._$xMin, $Math.min(x, this._$pointerX));
+        this._$xMax = $Math.max(this._$xMax, $Math.max(x, this._$pointerX));
+        this._$yMin = $Math.min(this._$yMin, $Math.min(y, this._$pointerY));
+        this._$yMax = $Math.max(this._$yMax, $Math.max(y, this._$pointerY));
 
         // correction
         const half     = this._$lineWidth / 2;
-        const radian90 = 0.5 * Util.$PI;
-        const radian1  = Util.$atan2(y - this._$pointerY, x - this._$pointerX); // to end point
-        const radian2  = Util.$atan2(this._$pointerY - y, this._$pointerX - x); // to start point
+        const radian90 = 0.5 * $Math.PI;
+        const radian1  = $Math.atan2(y - this._$pointerY, x - this._$pointerX); // to end point
+        const radian2  = $Math.atan2(this._$pointerY - y, this._$pointerX - x); // to start point
         const radian3  = radian1 + radian90;
         const radian4  = radian1 - radian90;
         const radian5  = radian2 + radian90;
@@ -1930,49 +1950,49 @@ class Graphics
         let y3 = this._$pointerY + half;
         let y4 = -half + this._$pointerY;
 
-        this._$xMin = Util.$min(this._$xMin, Util.$min(x1, Util.$min(x2, Util.$min(x3, x4))));
-        this._$xMax = Util.$max(this._$xMax, Util.$max(x1, Util.$max(x2, Util.$max(x3, x4))));
-        this._$yMin = Util.$min(this._$yMin, Util.$min(y1, Util.$min(y2, Util.$min(y3, y4))));
-        this._$yMax = Util.$max(this._$yMax, Util.$max(y1, Util.$max(y2, Util.$max(y3, y4))));
+        this._$xMin = $Math.min(this._$xMin, $Math.min(x1, $Math.min(x2, $Math.min(x3, x4))));
+        this._$xMax = $Math.max(this._$xMax, $Math.max(x1, $Math.max(x2, $Math.max(x3, x4))));
+        this._$yMin = $Math.min(this._$yMin, $Math.min(y1, $Math.min(y2, $Math.min(y3, y4))));
+        this._$yMax = $Math.max(this._$yMax, $Math.max(y1, $Math.max(y2, $Math.max(y3, y4))));
 
         // pointer x
-        if (Util.$abs(radian3) % radian90 !== 0) {
-            x1 = x + Util.$cos(radian3) * half;
+        if ($Math.abs(radian3) % radian90 !== 0) {
+            x1 = x + $Math.cos(radian3) * half;
         }
 
-        if (Util.$abs(radian4) % radian90 !== 0) {
-            x2 = x + Util.$cos(radian4) * half;
+        if ($Math.abs(radian4) % radian90 !== 0) {
+            x2 = x + $Math.cos(radian4) * half;
         }
 
-        if (Util.$abs(radian5) % radian90 !== 0) {
-            x3 = this._$pointerX + Util.$cos(radian5) * half;
+        if ($Math.abs(radian5) % radian90 !== 0) {
+            x3 = this._$pointerX + $Math.cos(radian5) * half;
         }
 
-        if (Util.$abs(radian6) % radian90 !== 0) {
-            x4 = this._$pointerX + Util.$cos(radian6) * half;
+        if ($Math.abs(radian6) % radian90 !== 0) {
+            x4 = this._$pointerX + $Math.cos(radian6) * half;
         }
 
         // pointer y
-        if (radian3 && Util.$abs(radian3) % Util.$PI !== 0) {
-            y1 = y + Util.$sin(radian3) * half;
+        if (radian3 && $Math.abs(radian3) % $Math.PI !== 0) {
+            y1 = y + $Math.sin(radian3) * half;
         }
 
-        if (radian4 && Util.$abs(radian4) % Util.$PI !== 0) {
-            y2 = y + Util.$sin(radian4) * half;
+        if (radian4 && $Math.abs(radian4) % $Math.PI !== 0) {
+            y2 = y + $Math.sin(radian4) * half;
         }
 
-        if (radian5 && Util.$abs(radian5) % Util.$PI !== 0) {
-            y3 = this._$pointerY + Util.$sin(radian5) * half;
+        if (radian5 && $Math.abs(radian5) % $Math.PI !== 0) {
+            y3 = this._$pointerY + $Math.sin(radian5) * half;
         }
 
-        if (radian6 && Util.$abs(radian6) % Util.$PI !== 0) {
-            y4 = this._$pointerY + Util.$sin(radian6) * half;
+        if (radian6 && $Math.abs(radian6) % $Math.PI !== 0) {
+            y4 = this._$pointerY + $Math.sin(radian6) * half;
         }
 
-        this._$xMin = Util.$min(this._$xMin, Util.$min(x1, Util.$min(x2, Util.$min(x3, x4))));
-        this._$xMax = Util.$max(this._$xMax, Util.$max(x1, Util.$max(x2, Util.$max(x3, x4))));
-        this._$yMin = Util.$min(this._$yMin, Util.$min(y1, Util.$min(y2, Util.$min(y3, y4))));
-        this._$yMax = Util.$max(this._$yMax, Util.$max(y1, Util.$max(y2, Util.$max(y3, y4))));
+        this._$xMin = $Math.min(this._$xMin, $Math.min(x1, $Math.min(x2, $Math.min(x3, x4))));
+        this._$xMax = $Math.max(this._$xMax, $Math.max(x1, $Math.max(x2, $Math.max(x3, x4))));
+        this._$yMin = $Math.min(this._$yMin, $Math.min(y1, $Math.min(y2, $Math.min(y3, y4))));
+        this._$yMax = $Math.max(this._$yMax, $Math.max(y1, $Math.max(y2, $Math.max(y3, y4))));
 
         // case
         let rx1 = 0;
@@ -1987,59 +2007,59 @@ class Graphics
 
             case CapsStyle.ROUND:
 
-                if (Util.$abs(radian1) % radian90 !== 0) {
-                    rx1 = x + Util.$cos(radian1) * half;
+                if ($Math.abs(radian1) % radian90 !== 0) {
+                    rx1 = x + $Math.cos(radian1) * half;
                 }
 
-                if (radian1 && Util.$abs(radian1) % Util.$PI !== 0) {
-                    ry1 = y + Util.$sin(radian1) * half;
+                if (radian1 && $Math.abs(radian1) % $Math.PI !== 0) {
+                    ry1 = y + $Math.sin(radian1) * half;
                 }
 
-                if (Util.$abs(radian2) % radian90 !== 0) {
-                    rx2 = this._$pointerX + Util.$cos(radian2) * half;
+                if ($Math.abs(radian2) % radian90 !== 0) {
+                    rx2 = this._$pointerX + $Math.cos(radian2) * half;
                 }
 
-                if (radian2 && Util.$abs(radian2) % Util.$PI !== 0) {
-                    ry2 = this._$pointerY + Util.$sin(radian2) * half;
+                if (radian2 && $Math.abs(radian2) % $Math.PI !== 0) {
+                    ry2 = this._$pointerY + $Math.sin(radian2) * half;
                 }
 
-                this._$xMin = Util.$min(this._$xMin, Util.$min(rx1, rx2));
-                this._$xMax = Util.$max(this._$xMax, Util.$max(rx1, rx2));
-                this._$yMin = Util.$min(this._$yMin, Util.$min(ry1, ry2));
-                this._$yMax = Util.$max(this._$yMax, Util.$max(ry1, ry2));
+                this._$xMin = $Math.min(this._$xMin, $Math.min(rx1, rx2));
+                this._$xMax = $Math.max(this._$xMax, $Math.max(rx1, rx2));
+                this._$yMin = $Math.min(this._$yMin, $Math.min(ry1, ry2));
+                this._$yMax = $Math.max(this._$yMax, $Math.max(ry1, ry2));
 
                 break;
 
             case CapsStyle.SQUARE:
 
-                if (Util.$abs(radian1) % radian90 !== 0) {
-                    const r1cos = Util.$cos(radian1) * half;
+                if ($Math.abs(radian1) % radian90 !== 0) {
+                    const r1cos = $Math.cos(radian1) * half;
                     rx1 = x1 + r1cos;
                     rx2 = x2 + r1cos;
                 }
 
-                if (Util.$abs(radian2) % radian90 !== 0) {
-                    const r2cos = Util.$cos(radian2) * half;
+                if ($Math.abs(radian2) % radian90 !== 0) {
+                    const r2cos = $Math.cos(radian2) * half;
                     rx3 = x3 + r2cos;
                     rx4 = x4 + r2cos;
                 }
 
-                if (radian1 && Util.$abs(radian1) % Util.$PI !== 0) {
-                    const r1sin = Util.$sin(radian1) * half;
+                if (radian1 && $Math.abs(radian1) % $Math.PI !== 0) {
+                    const r1sin = $Math.sin(radian1) * half;
                     ry1 = y1 + r1sin;
                     ry2 = y2 + r1sin;
                 }
 
-                if (radian2 && Util.$abs(radian2) % Util.$PI !== 0) {
-                    const r2sin = Util.$sin(radian2) * half;
+                if (radian2 && $Math.abs(radian2) % $Math.PI !== 0) {
+                    const r2sin = $Math.sin(radian2) * half;
                     ry3 = y3 + r2sin;
                     ry4 = y4 + r2sin;
                 }
 
-                this._$xMin = Util.$min(this._$xMin, Util.$min(rx1, Util.$min(rx2, Util.$min(rx3, rx4))));
-                this._$xMax = Util.$max(this._$xMax, Util.$max(rx1, Util.$max(rx2, Util.$max(rx3, rx4))));
-                this._$yMin = Util.$min(this._$yMin, Util.$min(ry1, Util.$min(ry2, Util.$min(ry3, ry4))));
-                this._$yMax = Util.$max(this._$yMax, Util.$max(ry1, Util.$max(ry2, Util.$max(ry3, ry4))));
+                this._$xMin = $Math.min(this._$xMin, $Math.min(rx1, $Math.min(rx2, $Math.min(rx3, rx4))));
+                this._$xMax = $Math.max(this._$xMax, $Math.max(rx1, $Math.max(rx2, $Math.max(rx3, rx4))));
+                this._$yMin = $Math.min(this._$yMin, $Math.min(ry1, $Math.min(ry2, $Math.min(ry3, ry4))));
+                this._$yMax = $Math.max(this._$yMax, $Math.max(ry1, $Math.max(ry2, $Math.max(ry3, ry4))));
 
                 break;
 
@@ -2115,10 +2135,10 @@ class Graphics
                         const tx = x * matrix[0] + y * matrix[2];
                         const ty = x * matrix[1] + y * matrix[3];
 
-                        xMin = Util.$min(tx, xMin);
-                        xMax = Util.$max(tx, xMax);
-                        yMin = Util.$min(ty, yMin);
-                        yMax = Util.$max(ty, yMax);
+                        xMin = $Math.min(tx, xMin);
+                        xMax = $Math.max(tx, xMax);
+                        yMin = $Math.min(ty, yMin);
+                        yMax = $Math.max(ty, yMax);
 
                         context.moveTo(tx, ty);
                     }
@@ -2132,10 +2152,10 @@ class Graphics
                         const tx = x * matrix[0] + y * matrix[2];
                         const ty = x * matrix[1] + y * matrix[3];
 
-                        xMin = Util.$min(tx, xMin);
-                        xMax = Util.$max(tx, xMax);
-                        yMin = Util.$min(ty, yMin);
-                        yMax = Util.$max(ty, yMax);
+                        xMin = $Math.min(tx, xMin);
+                        xMax = $Math.max(tx, xMax);
+                        yMin = $Math.min(ty, yMin);
+                        yMax = $Math.max(ty, yMax);
 
                         context.lineTo(tx, ty);
                     }
@@ -2153,15 +2173,15 @@ class Graphics
                         const tx  = x  * matrix[0] + y  * matrix[2];
                         const ty  = x  * matrix[1] + y  * matrix[3];
 
-                        xMin = Util.$min(ctx, xMin);
-                        xMax = Util.$max(ctx, xMax);
-                        yMin = Util.$min(cty, yMin);
-                        yMax = Util.$max(cty, yMax);
+                        xMin = $Math.min(ctx, xMin);
+                        xMax = $Math.max(ctx, xMax);
+                        yMin = $Math.min(cty, yMin);
+                        yMax = $Math.max(cty, yMax);
 
-                        xMin = Util.$min(tx, xMin);
-                        xMax = Util.$max(tx, xMax);
-                        yMin = Util.$min(ty, yMin);
-                        yMax = Util.$max(ty, yMax);
+                        xMin = $Math.min(tx, xMin);
+                        xMax = $Math.max(tx, xMax);
+                        yMin = $Math.min(ty, yMin);
+                        yMax = $Math.max(ty, yMax);
 
                         context.quadraticCurveTo(ctx, cty, tx, ty);
                     }
@@ -2187,20 +2207,20 @@ class Graphics
                         const tx    = x * matrix[0] + y * matrix[2];
                         const ty    = x * matrix[1] + y * matrix[3];
 
-                        xMin = Util.$min(cp1tx, xMin);
-                        xMax = Util.$max(cp1tx, xMax);
-                        yMin = Util.$min(cp1ty, yMin);
-                        yMax = Util.$max(cp1ty, yMax);
+                        xMin = $Math.min(cp1tx, xMin);
+                        xMax = $Math.max(cp1tx, xMax);
+                        yMin = $Math.min(cp1ty, yMin);
+                        yMax = $Math.max(cp1ty, yMax);
 
-                        xMin = Util.$min(cp2tx, xMin);
-                        xMax = Util.$max(cp2tx, xMax);
-                        yMin = Util.$min(cp2ty, yMin);
-                        yMax = Util.$max(cp2ty, yMax);
+                        xMin = $Math.min(cp2tx, xMin);
+                        xMax = $Math.max(cp2tx, xMax);
+                        yMin = $Math.min(cp2ty, yMin);
+                        yMax = $Math.max(cp2ty, yMax);
 
-                        xMin = Util.$min(tx, xMin);
-                        xMax = Util.$max(tx, xMax);
-                        yMin = Util.$min(ty, yMin);
-                        yMax = Util.$max(ty, yMax);
+                        xMin = $Math.min(tx, xMin);
+                        xMax = $Math.max(tx, xMax);
+                        yMin = $Math.min(ty, yMin);
+                        yMax = $Math.max(ty, yMax);
 
                         context.bezierCurveTo(cp1tx, cp1ty, cp2tx, cp2ty, tx, ty);
                     }
@@ -2215,12 +2235,12 @@ class Graphics
                         const tx = x * matrix[0] + y * matrix[2];
                         const ty = x * matrix[1] + y * matrix[3];
 
-                        xMin = Util.$min(tx, xMin);
-                        xMax = Util.$max(tx, xMax);
-                        yMin = Util.$min(ty, yMin);
-                        yMax = Util.$max(ty, yMax);
+                        xMin = $Math.min(tx, xMin);
+                        xMax = $Math.max(tx, xMax);
+                        yMin = $Math.min(ty, yMin);
+                        yMax = $Math.max(ty, yMax);
 
-                        context.arc(tx, ty, radius, 0, 2 * Util.$PI);
+                        context.arc(tx, ty, radius, 0, 2 * $Math.PI);
                     }
                     break;
 
@@ -2327,19 +2347,19 @@ class Graphics
                         const fillStyle = context._$contextStyle;
 
                         fillStyle._$fillStyle[0] = color_transform[0] !== 1 || color_transform[4] !== 0
-                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[0] + color_transform[4], 255)) / 255
+                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[0] + color_transform[4], 255)) / 255
                             : recode[idx++] / 255;
 
                         fillStyle._$fillStyle[1] = color_transform[1] !== 1 || color_transform[5] !== 0
-                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[1] + color_transform[5], 255)) / 255
+                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[1] + color_transform[5], 255)) / 255
                             : recode[idx++] / 255;
 
                         fillStyle._$fillStyle[2] = color_transform[2] !== 1 || color_transform[6] !== 0
-                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[2] + color_transform[6], 255)) / 255
+                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[2] + color_transform[6], 255)) / 255
                             : recode[idx++] / 255;
 
                         fillStyle._$fillStyle[3] = color_transform[3] !== 1 || color_transform[7] !== 0
-                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[3] + color_transform[7], 255)) / 255
+                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[3] + color_transform[7], 255)) / 255
                             : recode[idx++] / 255;
 
                         context._$style = fillStyle;
@@ -2378,19 +2398,19 @@ class Graphics
                         const strokeStyle = context._$contextStyle;
 
                         strokeStyle._$strokeStyle[0] = color_transform[0] !== 1 || color_transform[4] !== 0
-                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[0] + color_transform[4], 255)) / 255
+                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[0] + color_transform[4], 255)) / 255
                             : recode[idx++] / 255;
 
                         strokeStyle._$strokeStyle[1] = color_transform[1] !== 1 || color_transform[5] !== 0
-                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[1] + color_transform[5], 255)) / 255
+                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[1] + color_transform[5], 255)) / 255
                             : recode[idx++] / 255;
 
                         strokeStyle._$strokeStyle[2] = color_transform[2] !== 1 || color_transform[6] !== 0
-                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[2] + color_transform[6], 255)) / 255
+                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[2] + color_transform[6], 255)) / 255
                             : recode[idx++] / 255;
 
                         strokeStyle._$strokeStyle[3] = color_transform[3] !== 1 || color_transform[7] !== 0
-                            ? Util.$max(0, Util.$min(recode[idx++] * color_transform[3] + color_transform[7], 255)) / 255
+                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[3] + color_transform[7], 255)) / 255
                             : recode[idx++] / 255;
 
                         context._$style = strokeStyle;
@@ -2430,7 +2450,7 @@ class Graphics
                         const arcX   = recode[idx++];
                         const arcY   = recode[idx++];
                         const radius = recode[idx++];
-                        context.arc(arcX, arcY, radius, 0, 2 * Util.$PI);
+                        context.arc(arcX, arcY, radius, 0, 2 * $Math.PI);
                     }
                     break;
 
@@ -2488,10 +2508,10 @@ class Graphics
                             const color = stops[idx];
 
                             css.addColorStop(color.ratio, Util.$getFloat32Array4(
-                                Util.$max(0, Util.$min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
-                                Util.$max(0, Util.$min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
-                                Util.$max(0, Util.$min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
-                                Util.$max(0, Util.$min(color.A * color_transform[3] + color_transform[7], 255)) | 0
+                                $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
+                                $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
+                                $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
+                                $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0
                             ));
 
                         }
@@ -2563,10 +2583,10 @@ class Graphics
                             const color = stops[idx];
 
                             css.addColorStop(color.ratio, Util.$getFloat32Array4(
-                                Util.$max(0, Util.$min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
-                                Util.$max(0, Util.$min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
-                                Util.$max(0, Util.$min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
-                                Util.$max(0, Util.$min(color.A * color_transform[3] + color_transform[7], 255)) | 0
+                                $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
+                                $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
+                                $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
+                                $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0
                             ));
 
                         }

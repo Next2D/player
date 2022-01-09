@@ -296,8 +296,8 @@ class Transform
 
         rectangle._$x      = bounds.xMin;
         rectangle._$y      = bounds.yMin;
-        rectangle._$width  = +Util.$abs(bounds.xMax - bounds.xMin);
-        rectangle._$height = +Util.$abs(bounds.yMax - bounds.yMin);
+        rectangle._$width  = +$Math.abs(bounds.xMax - bounds.xMin);
+        rectangle._$height = +$Math.abs(bounds.yMax - bounds.yMin);
 
         Util.$poolBoundsObject(bounds);
 
