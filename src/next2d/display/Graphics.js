@@ -1219,12 +1219,12 @@ class Graphics
     _$clip (context, matrix)
     {
         // size
-        const boundsBase = this._$getBounds();
+        const baseBounds = this._$getBounds();
 
-        const bounds = Util.$boundsMatrix(boundsBase, matrix);
+        const bounds = Util.$boundsMatrix(baseBounds, matrix);
         let width    = $Math.ceil($Math.abs(bounds.xMax - bounds.xMin));
         let height   = $Math.ceil($Math.abs(bounds.yMax - bounds.yMin));
-        Util.$poolBoundsObject(boundsBase);
+        Util.$poolBoundsObject(baseBounds);
         Util.$poolBoundsObject(bounds);
 
         switch (true) {
@@ -1341,8 +1341,8 @@ class Graphics
         }
 
         // size
-        const boundsBase = this._$getBounds();
-        const bounds = Util.$boundsMatrix(boundsBase, multiMatrix);
+        const baseBounds = this._$getBounds();
+        const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
         const xMax   = bounds.xMax;
         const xMin   = bounds.xMin;
         const yMax   = bounds.yMax;
@@ -1537,7 +1537,7 @@ class Graphics
 
         // pool
         Util.$poolArray(cacheKeys);
-        Util.$poolBoundsObject(boundsBase);
+        Util.$poolBoundsObject(baseBounds);
     }
 
     /**
@@ -1578,8 +1578,8 @@ class Graphics
         }
 
         // size
-        const boundsBase = this._$getBounds();
-        const bounds = Util.$boundsMatrix(boundsBase, matrix);
+        const baseBounds = this._$getBounds();
+        const bounds = Util.$boundsMatrix(baseBounds, matrix);
         const xMax   = bounds.xMax;
         const xMin   = bounds.xMin;
         const yMax   = bounds.yMax;
@@ -1603,8 +1603,16 @@ class Graphics
 
         }
 
-        const xScale = +$Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]).toFixed(3);
-        const yScale = +$Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]).toFixed(3);
+        const xScale = +$Math.sqrt(
+            matrix[0] * matrix[0]
+            + matrix[1] * matrix[1]
+        ).toFixed(3);
+
+        const yScale = +$Math.sqrt(
+            matrix[2] * matrix[2]
+            + matrix[3] * matrix[3]
+        ).toFixed(3);
+
         if (0 > xMin + width || 0 > yMin + height) {
 
             if (filters && filters.length
@@ -1643,8 +1651,8 @@ class Graphics
         if (!texture) {
 
             // resize
-            width  = $Math.ceil($Math.abs(boundsBase.xMax - boundsBase.xMin) * xScale);
-            height = $Math.ceil($Math.abs(boundsBase.yMax - boundsBase.yMin) * yScale);
+            width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+            height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
             const textureScale = context._$textureScale(width, height);
             if (textureScale < 1) {
                 width  *= textureScale;
@@ -1661,8 +1669,8 @@ class Graphics
             Util.$resetContext(context);
             context.setTransform(
                 xScale, 0, 0, yScale,
-                -boundsBase.xMin * xScale,
-                -boundsBase.yMin * yScale
+                -baseBounds.xMin * xScale,
+                -baseBounds.yMin * yScale
             );
 
             if (hasGrid) {
@@ -1694,7 +1702,7 @@ class Graphics
                 const aOffsetY = apMatrix[5] - (matrix[5] - yMin);
                 Util.$poolFloat32Array6(apMatrix);
 
-                const parentBounds = Util.$boundsMatrix(boundsBase, pMatrix);
+                const parentBounds = Util.$boundsMatrix(baseBounds, pMatrix);
                 const parentXMax   = +parentBounds.xMax;
                 const parentXMin   = +parentBounds.xMin;
                 const parentYMax   = +parentBounds.yMax;
@@ -1706,7 +1714,7 @@ class Graphics
 
                 context.grid.enable(
                     parentXMin, parentYMin, parentWidth, parentHeight,
-                    boundsBase, displayObject._$scale9Grid,
+                    baseBounds, displayObject._$scale9Grid,
                     pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
                     aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
                 );
@@ -1771,10 +1779,10 @@ class Graphics
         if (radianX || radianY) {
 
             const rotateBounds = Util.$getBoundsObject(
-                boundsBase.xMin * $Math.cos(radianX) - boundsBase.yMin * $Math.sin(radianY),
-                boundsBase.xMax * $Math.cos(radianX) - boundsBase.yMax * $Math.sin(radianY),
-                boundsBase.xMin * $Math.sin(radianX) + boundsBase.yMin * $Math.cos(radianY),
-                boundsBase.xMax * $Math.sin(radianX) + boundsBase.yMax * $Math.cos(radianY)
+                baseBounds.xMin * $Math.cos(radianX) - baseBounds.yMin * $Math.sin(radianY),
+                baseBounds.xMax * $Math.cos(radianX) - baseBounds.yMax * $Math.sin(radianY),
+                baseBounds.xMin * $Math.sin(radianX) + baseBounds.yMin * $Math.cos(radianY),
+                baseBounds.xMax * $Math.sin(radianX) + baseBounds.yMax * $Math.cos(radianY)
             );
 
             context.setTransform(
@@ -1805,7 +1813,7 @@ class Graphics
         if (parentMatrix) {
             Util.$poolMatrix(parentMatrix);
         }
-        Util.$poolBoundsObject(boundsBase);
+        Util.$poolBoundsObject(baseBounds);
     }
 
     /**

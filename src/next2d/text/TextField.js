@@ -2563,6 +2563,12 @@ class TextField extends InteractiveObject
         baseBounds.yMin -= this._$thickness;
         baseBounds.yMax += this._$thickness;
 
+        // local cache
+        const baseXMin = baseBounds.xMin;
+        const baseXMax = baseBounds.xMax;
+        const baseYMin = baseBounds.yMin;
+        const baseYMax = baseBounds.yMax;
+
         const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
         const xMax   = +bounds.xMax;
         const xMin   = +bounds.xMin;
@@ -2590,8 +2596,14 @@ class TextField extends InteractiveObject
             return;
         }
 
-        const xScale = +$Math.sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]);
-        const yScale = +$Math.sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]);
+        const xScale = +$Math.sqrt(
+            multiMatrix[0] * multiMatrix[0]
+            + multiMatrix[1] * multiMatrix[1]
+        ).toFixed(3);
+        const yScale = +$Math.sqrt(
+            multiMatrix[2] * multiMatrix[2]
+            + multiMatrix[3] * multiMatrix[3]
+        ).toFixed(3);
 
         // get cache
         const keys = Util.$getArray();
@@ -2676,7 +2688,7 @@ class TextField extends InteractiveObject
             ctx.clip();
 
             ctx.beginPath();
-            ctx.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], 0, 0);
+            ctx.setTransform(xScale, 0, 0, yScale, 0, 0);
             this._$doDraw(ctx, matrix, multiColor, false, width / matrix[0]);
             ctx.restore();
 
@@ -2695,16 +2707,14 @@ class TextField extends InteractiveObject
         Util.$poolArray(cacheKeys);
         Util.$poolArray(keys);
 
-        let isFilter  = false;
-        let offsetX   = 0;
-        let offsetY   = 0;
-        const filters = this._$filters   || this.filters;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        const filters = this._$filters || this.filters;
         if (filters && filters.length) {
 
             const canApply = this._$canApply(filters);
             if (canApply) {
-
-                isFilter = true;
 
                 const cacheKeys = [this._$instanceId, "f"];
                 let cache = Util.$cacheStore().get(cacheKeys);
@@ -2757,18 +2767,44 @@ class TextField extends InteractiveObject
         context._$globalAlpha = alpha;
         context._$globalCompositeOperation = this._$blendMode || this.blendMode;
 
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        if (isFilter) {
-            context.drawImage(texture,
-                xMin - offsetX, yMin - offsetY,
-                texture.width, texture.height, multiColor
+        const radianX = $Math.atan2(multiMatrix[1], multiMatrix[0]);
+        const radianY = $Math.atan2(-multiMatrix[2], multiMatrix[3]);
+        if (radianX || radianY) {
+
+            const rotateBounds = Util.$getBoundsObject(
+                baseXMin * $Math.cos(radianX) - baseYMin * $Math.sin(radianY),
+                baseXMax * $Math.cos(radianX) - baseYMax * $Math.sin(radianY),
+                baseXMin * $Math.sin(radianX) + baseYMin * $Math.cos(radianY),
+                baseXMax * $Math.sin(radianX) + baseYMax * $Math.cos(radianY)
             );
+
+            context.setTransform(
+                $Math.cos(radianX),
+                $Math.sin(radianX),
+                -$Math.sin(radianY),
+                $Math.cos(radianY),
+                rotateBounds.xMin * xScale + multiMatrix[4] - offsetX,
+                rotateBounds.yMin * yScale + multiMatrix[5] - offsetY
+            );
+            Util.$poolBoundsObject(rotateBounds);
+
         } else {
-            context.drawImage(texture,
-                xMin, yMin, width, height, multiColor
+
+            context.setTransform(1, 0, 0, 1,
+                xMin - offsetX,
+                yMin - offsetY
             );
+
         }
 
+        context.drawImage(texture,
+            0, 0, texture.width, texture.height, color_transform
+        );
+
+        // pool
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
     }
 
     /**
