@@ -2676,10 +2676,6 @@ class TextField extends InteractiveObject
             // mask start
             ctx.save();
             ctx.beginPath();
-            const rotate = $Math.atan2(matrix[1], matrix[0]);
-            if (rotate) {
-                ctx.rotate(rotate);
-            }
             ctx.moveTo(2, 2);
             ctx.lineTo(width - 2, 2);
             ctx.lineTo(width - 2, height - 2);
