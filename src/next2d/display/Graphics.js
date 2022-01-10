@@ -1745,7 +1745,6 @@ class Graphics
 
             // end draw and reset current buffer
             context._$bind(currentBuffer);
-
         }
 
         let offsetX = 0;
@@ -2354,17 +2353,21 @@ class Graphics
 
                         const fillStyle = context._$contextStyle;
 
-                        fillStyle._$fillStyle[0] = color_transform[0] !== 1 || color_transform[4] !== 0
-                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[0] + color_transform[4], 255)) / 255
-                            : recode[idx++] / 255;
+                        fillStyle._$fillStyle[0] = recode[idx++] / 255;
+                        fillStyle._$fillStyle[1] = recode[idx++] / 255;
+                        fillStyle._$fillStyle[2] = recode[idx++] / 255;
 
-                        fillStyle._$fillStyle[1] = color_transform[1] !== 1 || color_transform[5] !== 0
-                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[1] + color_transform[5], 255)) / 255
-                            : recode[idx++] / 255;
+                        // fillStyle._$fillStyle[0] = color_transform[0] !== 1 || color_transform[4] !== 0
+                        //     ? $Math.max(0, $Math.min(recode[idx++] * color_transform[0] + color_transform[4], 255)) / 255
+                        //     : recode[idx++] / 255;
 
-                        fillStyle._$fillStyle[2] = color_transform[2] !== 1 || color_transform[6] !== 0
-                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[2] + color_transform[6], 255)) / 255
-                            : recode[idx++] / 255;
+                        // fillStyle._$fillStyle[1] = color_transform[1] !== 1 || color_transform[5] !== 0
+                        //     ? $Math.max(0, $Math.min(recode[idx++] * color_transform[1] + color_transform[5], 255)) / 255
+                        //     : recode[idx++] / 255;
+
+                        // fillStyle._$fillStyle[2] = color_transform[2] !== 1 || color_transform[6] !== 0
+                        //     ? $Math.max(0, $Math.min(recode[idx++] * color_transform[2] + color_transform[6], 255)) / 255
+                        //     : recode[idx++] / 255;
 
                         fillStyle._$fillStyle[3] = color_transform[3] !== 1 || color_transform[7] !== 0
                             ? $Math.max(0, $Math.min(recode[idx++] * color_transform[3] + color_transform[7], 255)) / 255
@@ -2405,17 +2408,21 @@ class Graphics
 
                         const strokeStyle = context._$contextStyle;
 
-                        strokeStyle._$strokeStyle[0] = color_transform[0] !== 1 || color_transform[4] !== 0
-                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[0] + color_transform[4], 255)) / 255
-                            : recode[idx++] / 255;
+                        strokeStyle._$strokeStyle[0] = recode[idx++] / 255;
+                        strokeStyle._$strokeStyle[1] = recode[idx++] / 255;
+                        strokeStyle._$strokeStyle[2] = recode[idx++] / 255;
 
-                        strokeStyle._$strokeStyle[1] = color_transform[1] !== 1 || color_transform[5] !== 0
-                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[1] + color_transform[5], 255)) / 255
-                            : recode[idx++] / 255;
-
-                        strokeStyle._$strokeStyle[2] = color_transform[2] !== 1 || color_transform[6] !== 0
-                            ? $Math.max(0, $Math.min(recode[idx++] * color_transform[2] + color_transform[6], 255)) / 255
-                            : recode[idx++] / 255;
+                        // strokeStyle._$strokeStyle[0] = color_transform[0] !== 1 || color_transform[4] !== 0
+                        //     ? $Math.max(0, $Math.min(recode[idx++] * color_transform[0] + color_transform[4], 255)) / 255
+                        //     : recode[idx++] / 255;
+                        //
+                        // strokeStyle._$strokeStyle[1] = color_transform[1] !== 1 || color_transform[5] !== 0
+                        //     ? $Math.max(0, $Math.min(recode[idx++] * color_transform[1] + color_transform[5], 255)) / 255
+                        //     : recode[idx++] / 255;
+                        //
+                        // strokeStyle._$strokeStyle[2] = color_transform[2] !== 1 || color_transform[6] !== 0
+                        //     ? $Math.max(0, $Math.min(recode[idx++] * color_transform[2] + color_transform[6], 255)) / 255
+                        //     : recode[idx++] / 255;
 
                         strokeStyle._$strokeStyle[3] = color_transform[3] !== 1 || color_transform[7] !== 0
                             ? $Math.max(0, $Math.min(recode[idx++] * color_transform[3] + color_transform[7], 255)) / 255

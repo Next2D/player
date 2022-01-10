@@ -2872,20 +2872,20 @@ class TextField extends InteractiveObject
             // color
             if (!is_clip) {
 
-                const rgba = Util.$generateColorTransform(
-                    Util.$intToRGBA(obj.textFormat._$color),
-                    color_transform
-                );
-                context.fillStyle = `rgba(${rgba.R},${rgba.G},${rgba.B},${rgba.A})`;
+                const rgb   = Util.$intToRGBA(obj.textFormat._$color);
+                const alpha = $Math.max(0, $Math.min(
+                    rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                ) / 255;
+
+                context.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
 
                 if (this._$thickness) {
-
-                    const rgba = Util.$generateColorTransform(
-                        Util.$intToRGBA(this._$thicknessColor),
-                        color_transform
-                    );
+                    const rgb   = Util.$intToRGBA(this._$thicknessColor);
+                    const alpha = $Math.max(0, $Math.min(
+                        rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                    ) / 255;
                     context.lineWidth   = this._$thickness;
-                    context.strokeStyle = `rgba(${rgba.R},${rgba.G},${rgba.B},${rgba.A})`;
+                    context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
                 }
             }
 
@@ -2908,13 +2908,13 @@ class TextField extends InteractiveObject
 
                         const offset = obj.textFormat._$size / 12;
 
-                        const rgba = Util.$generateColorTransform(
-                            Util.$intToRGBA(tf._$color),
-                            color_transform
-                        );
+                        const rgb   = Util.$intToRGBA(tf._$color);
+                        const alpha = $Math.max(0, $Math.min(
+                            rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                        ) / 255;
 
                         context.lineWidth   = $Math.max(1, 1 / $Math.min(matrix[0], matrix[3]));
-                        context.strokeStyle = `rgba(${rgba.R},${rgba.G},${rgba.B},${rgba.A})`;
+                        context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
 
                         context.beginPath();
                         context.moveTo(xOffset, yOffset + offsetHeight - offset);

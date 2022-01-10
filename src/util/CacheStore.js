@@ -317,21 +317,7 @@ class CacheStore
      */
     colorToString (c = null)
     {
-        switch (true) {
-
-            case c[0] !== 1:
-            case c[1] !== 1:
-            case c[2] !== 1:
-            case c[4] !== 0:
-            case c[5] !== 0:
-            case c[6] !== 0:
-            case c[7] !== 0:
-                return `_${c[0]}_${c[1]}_${c[2]}_${c[4]}_${c[5]}_${c[6]}_${c[7]}`;
-
-            default:
-                return "";
-
-        }
+        return !c || c[7] === 0 ? "" : `_${c[7]}`;
     }
 
     /**
