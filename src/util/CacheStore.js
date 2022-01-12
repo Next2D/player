@@ -15,12 +15,6 @@ class CacheStore
         this._$pool = Util.$getArray();
 
         /**
-         * @type {array}
-         * @private
-         */
-        this._$poolBitmapData = Util.$getArray();
-
-        /**
          * @type {Map}
          * @private
          */
@@ -39,8 +33,11 @@ class CacheStore
          */
         this._$delayLifeCheck = this.lifeCheck.bind(this);
 
-        const timer = Util.$setTimeout;
-        timer(this._$delayLifeCheck, 5000);
+        /**
+         * @type {function}
+         * @private
+         */
+        this._$delayBitmapLifeCheck = this.bitmapLifeCheck.bind(this);
     }
 
     /**
@@ -66,7 +63,7 @@ class CacheStore
 
     /**
      * @param  {CanvasRenderingContext2D|WebGLTexture} object
-     * @return {void}
+     * @return {void|Promise}
      * @method
      * @public
      */
@@ -79,6 +76,7 @@ class CacheStore
         switch (object.constructor) {
 
             case Util.$WebGLTexture:
+                return new Promise(() =>
                 {
                     const player = Util.$currentPlayer();
                     if (player._$context) {
@@ -92,18 +90,21 @@ class CacheStore
                                 0, 0, bitmapData.width, bitmapData.height, "RGBA"
                             );
 
-                            this._$poolBitmapData.push(bitmapData);
                             object._$bitmapData = false;
+
+                            // delay delete
+                            const timer = Util.$setTimeout;
+                            timer(this._$delayBitmapLifeCheck, 2000, bitmapData);
                         }
 
                         context
                             .frameBuffer
                             .releaseTexture(object);
                     }
-                }
-                break;
+                });
 
             case Util.$CanvasRenderingContext2D:
+                return new Promise(() =>
                 {
                     const canvas = object.canvas;
                     const width  = canvas.width;
@@ -116,8 +117,7 @@ class CacheStore
 
                     // pool
                     this._$pool.push(canvas);
-                }
-                break;
+                });
 
             default:
                 break;
@@ -209,7 +209,7 @@ class CacheStore
      * @method
      * @public
      */
-    set (keys, value)
+    set (keys, value = null)
     {
         const id   = `${keys[0]}`;
         const type = `${keys[1]}`;
@@ -241,44 +241,70 @@ class CacheStore
         // set cache
         data.set(type, value);
         data.set(`life_${type}`, this._$lifeCount);
+
+        // lifeCheck
+        const timer = Util.$setTimeout;
+        timer(this._$delayLifeCheck, 5000, id, type);
     }
 
     /**
-     * @param  {string|number} unique_key
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} [color=null]
-     * @return {array}
+     * @param  {BitmapData} bitmap_data
+     * @return {void}
      * @method
      * @public
      */
-    generateShapeKeys (unique_key, matrix, color = null)
+    bitmapLifeCheck (bitmap_data)
     {
-        let str = "";
-        switch (true) {
-
-            case matrix[0] !== 1:
-            case matrix[1] !== 0:
-            case matrix[2] !== 0:
-            case matrix[3] !== 1:
-                str = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}`;
-                break;
-
-            default:
-                break;
-
+        if (!bitmap_data._$pixelBuffer) {
+            return ;
         }
+        const context = Util.$currentPlayer()._$context;
 
-        if (color) {
-            str += this.colorToString(color);
+        bitmap_data._$buffer = context
+            .pbo
+            .getBufferSubDataAsync(bitmap_data._$pixelBuffer);
+
+        // reset
+        bitmap_data._$pixelBuffer = null;
+    }
+
+    /**
+     * @param  {*} id
+     * @param  {string} type
+     * @return {void}
+     * @method
+     * @public
+     */
+    lifeCheck (id, type)
+    {
+        if (!this._$store.has(id)) {
+            return ;
         }
+        const data = this._$store.get(id);
+        const key  = `life_${type}`;
 
-        const keys = Util.$getArray();
+        const lifeCount = data.get(key) - 1;
+        if (!lifeCount) {
 
-        keys[0] = `${unique_key}`;
-        keys[1] = str ? this.generateHash(str) : "_0";
+            // destroy
+            this.destroy(data.get(type));
 
-        return keys;
+            // delete key
+            data.delete(type);
+            data.delete(key);
 
+            if (!data.size) {
+                Util.$poolMap(data);
+                this._$store.delete(id);
+            }
+
+            return ;
+        }
+        data.set(key, lifeCount);
+
+        // next
+        const timer = Util.$setTimeout;
+        timer(this._$delayLifeCheck, 5000, id, type);
     }
 
     /**
@@ -338,67 +364,5 @@ class CacheStore
             hash |= 0;
         }
         return `_${hash}`;
-    }
-
-    /**
-     * @return void
-     * @method
-     * @public
-     */
-    lifeCheck ()
-    {
-        if (this._$poolBitmapData.length) {
-
-            const context = Util.$currentPlayer()._$context;
-
-            const length = $Math.min(50, this._$poolBitmapData.length);
-            for (let idx = 0; idx < length; ++idx) {
-
-                const bitmapData = this._$poolBitmapData.shift();
-
-                if (bitmapData._$pixelBuffer) {
-
-                    bitmapData._$buffer = context
-                        .pbo
-                        .getBufferSubDataAsync(bitmapData._$pixelBuffer);
-
-                    // reset
-                    bitmapData._$pixelBuffer = null;
-                }
-            }
-        }
-
-        for (const [id, data] of this._$store) {
-
-            for (const [type, value] of data) {
-
-                const key = `life_${type}`;
-                const lifeCount = data.get(key) - 1;
-                if (!lifeCount) {
-
-                    // destroy
-                    this.destroy(value);
-
-                    // delete key
-                    data.delete(type);
-                    data.delete(`life_${type}`);
-
-                    continue;
-                }
-
-                // update life count
-                data.set(key, lifeCount);
-            }
-
-            // delete id
-            if (!data.size) {
-                Util.$poolMap(data);
-                this._$store.delete(id);
-            }
-
-        }
-
-        const timer = Util.$setTimeout;
-        timer(this._$delayLifeCheck, 5000);
     }
 }
