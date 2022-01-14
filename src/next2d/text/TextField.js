@@ -2768,10 +2768,10 @@ class TextField extends InteractiveObject
         if (radianX || radianY) {
 
             const rotateBounds = Util.$getBoundsObject(
-                baseXMin * $Math.cos(radianX) - baseYMin * $Math.sin(radianY),
-                baseXMax * $Math.cos(radianX) - baseYMax * $Math.sin(radianY),
-                baseXMin * $Math.sin(radianX) + baseYMin * $Math.cos(radianY),
-                baseXMax * $Math.sin(radianX) + baseYMax * $Math.cos(radianY)
+                baseXMin * xScale * $Math.cos(radianX) - baseYMin * yScale * $Math.sin(radianY),
+                baseXMax * xScale * $Math.cos(radianX) - baseYMax * yScale * $Math.sin(radianY),
+                baseXMin * xScale * $Math.sin(radianX) + baseYMin * yScale * $Math.cos(radianY),
+                baseXMax * xScale * $Math.sin(radianX) + baseYMax * yScale * $Math.cos(radianY)
             );
 
             context.setTransform(
@@ -2779,8 +2779,8 @@ class TextField extends InteractiveObject
                 $Math.sin(radianX),
                 -$Math.sin(radianY),
                 $Math.cos(radianY),
-                rotateBounds.xMin * xScale + multiMatrix[4] - offsetX,
-                rotateBounds.yMin * yScale + multiMatrix[5] - offsetY
+                rotateBounds.xMin + multiMatrix[4] - offsetX,
+                rotateBounds.yMin + multiMatrix[5] - offsetY
             );
             Util.$poolBoundsObject(rotateBounds);
 
