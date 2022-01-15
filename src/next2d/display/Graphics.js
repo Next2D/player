@@ -1608,7 +1608,12 @@ class Graphics
             + matrix[1] * matrix[1]
         );
         if (!$Number.isInteger(xScale)) {
-            xScale = +xScale.toString().slice(0, 5);
+            const value = xScale.toString();
+            const index = value.indexOf("e");
+            if (index !== -1) {
+                xScale = +value.slice(0, index);
+            }
+            xScale = +xScale.toFixed(4);
         }
 
         let yScale = +$Math.sqrt(
@@ -1616,7 +1621,12 @@ class Graphics
             + matrix[3] * matrix[3]
         );
         if (!$Number.isInteger(yScale)) {
-            yScale = +yScale.toString().slice(0, 5);
+            const value = yScale.toString();
+            const index = value.indexOf("e");
+            if (index !== -1) {
+                yScale = +value.slice(0, index);
+            }
+            yScale = +yScale.toFixed(4);
         }
 
         if (0 > xMin + width || 0 > yMin + height) {

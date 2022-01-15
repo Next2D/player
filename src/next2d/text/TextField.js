@@ -2601,7 +2601,12 @@ class TextField extends InteractiveObject
             + multiMatrix[1] * multiMatrix[1]
         );
         if (!$Number.isInteger(xScale)) {
-            xScale = +xScale.toString().slice(0, 5);
+            const value = xScale.toString();
+            const index = value.indexOf("e");
+            if (index !== -1) {
+                xScale = +value.slice(0, index);
+            }
+            xScale = +xScale.toFixed(4);
         }
 
         let yScale = +$Math.sqrt(
@@ -2609,7 +2614,12 @@ class TextField extends InteractiveObject
             + multiMatrix[3] * multiMatrix[3]
         );
         if (!$Number.isInteger(yScale)) {
-            yScale = +yScale.toString().slice(0, 5);
+            const value = yScale.toString();
+            const index = value.indexOf("e");
+            if (index !== -1) {
+                yScale = +value.slice(0, index);
+            }
+            yScale = +yScale.toFixed(4);
         }
 
         // get cache
