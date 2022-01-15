@@ -1613,6 +1613,11 @@ class Graphics
             + matrix[3] * matrix[3]
         ).toFixed(3);
 
+        // if scale zero
+        if (!xScale || !yScale) {
+            return;
+        }
+
         if (0 > xMin + width || 0 > yMin + height) {
 
             if (filters && filters.length

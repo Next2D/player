@@ -2605,6 +2605,11 @@ class TextField extends InteractiveObject
             + multiMatrix[3] * multiMatrix[3]
         ).toFixed(3);
 
+        // if scale zero
+        if (!xScale || !yScale) {
+            return;
+        }
+
         // get cache
         const keys = Util.$getArray();
         keys[0] = xScale;
