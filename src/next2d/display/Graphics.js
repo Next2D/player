@@ -1603,19 +1603,20 @@ class Graphics
 
         }
 
-        const xScale = +$Math.sqrt(
+        let xScale = +$Math.sqrt(
             matrix[0] * matrix[0]
             + matrix[1] * matrix[1]
-        ).toFixed(3);
+        );
+        if (!$Number.isInteger(xScale)) {
+            xScale = +xScale.toString().slice(0, 5);
+        }
 
-        const yScale = +$Math.sqrt(
+        let yScale = +$Math.sqrt(
             matrix[2] * matrix[2]
             + matrix[3] * matrix[3]
-        ).toFixed(3);
-
-        // if scale zero
-        if (!xScale || !yScale) {
-            return;
+        );
+        if (!$Number.isInteger(yScale)) {
+            yScale = +yScale.toString().slice(0, 5);
         }
 
         if (0 > xMin + width || 0 > yMin + height) {

@@ -2596,18 +2596,20 @@ class TextField extends InteractiveObject
             return;
         }
 
-        const xScale = +$Math.sqrt(
+        let xScale = +$Math.sqrt(
             multiMatrix[0] * multiMatrix[0]
             + multiMatrix[1] * multiMatrix[1]
-        ).toFixed(3);
-        const yScale = +$Math.sqrt(
+        );
+        if (!$Number.isInteger(xScale)) {
+            xScale = +xScale.toString().slice(0, 5);
+        }
+
+        let yScale = +$Math.sqrt(
             multiMatrix[2] * multiMatrix[2]
             + multiMatrix[3] * multiMatrix[3]
-        ).toFixed(3);
-
-        // if scale zero
-        if (!xScale || !yScale) {
-            return;
+        );
+        if (!$Number.isInteger(yScale)) {
+            yScale = +yScale.toString().slice(0, 5);
         }
 
         // get cache

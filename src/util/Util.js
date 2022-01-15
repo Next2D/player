@@ -17,7 +17,14 @@ let programId = 0;
  * @type {Math}
  * @const
  */
-const $Math = window.Math;
+const $Math   = window.Math;
+
+/**
+ * @shortcut
+ * @type {Number}
+ * @const
+ */
+const $Number = window.Number;
 
 /**
  * @description Global Object
