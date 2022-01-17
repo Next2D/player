@@ -1793,22 +1793,17 @@ class Graphics
         const radianY = $Math.atan2(-matrix[2], matrix[3]);
         if (radianX || radianY) {
 
-            const rotateBounds = Util.$getBoundsObject(
-                baseBounds.xMin * xScale * $Math.cos(radianX) - baseBounds.yMin * yScale * $Math.sin(radianY),
-                baseBounds.xMax * xScale * $Math.cos(radianX) - baseBounds.yMax * yScale * $Math.sin(radianY),
-                baseBounds.xMin * xScale * $Math.sin(radianX) + baseBounds.yMin * yScale * $Math.cos(radianY),
-                baseBounds.xMax * xScale * $Math.sin(radianX) + baseBounds.yMax * yScale * $Math.cos(radianY)
-            );
+            const tx = baseBounds.xMin * xScale;
+            const ty = baseBounds.yMin * yScale;
 
             context.setTransform(
                 $Math.cos(radianX),
                 $Math.sin(radianX),
                 -$Math.sin(radianY),
                 $Math.cos(radianY),
-                rotateBounds.xMin + matrix[4] - offsetX,
-                rotateBounds.yMin + matrix[5] - offsetY
+                tx * $Math.cos(radianX) - ty * $Math.sin(radianY) + matrix[4] - offsetX,
+                tx * $Math.sin(radianX) + ty * $Math.cos(radianY) + matrix[5] - offsetY
             );
-            Util.$poolBoundsObject(rotateBounds);
 
         } else {
 

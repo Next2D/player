@@ -2565,9 +2565,7 @@ class TextField extends InteractiveObject
 
         // local cache
         const baseXMin = baseBounds.xMin;
-        const baseXMax = baseBounds.xMax;
         const baseYMin = baseBounds.yMin;
-        const baseYMax = baseBounds.yMax;
 
         const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
         const xMax   = +bounds.xMax;
@@ -2784,22 +2782,17 @@ class TextField extends InteractiveObject
         const radianY = $Math.atan2(-multiMatrix[2], multiMatrix[3]);
         if (radianX || radianY) {
 
-            const rotateBounds = Util.$getBoundsObject(
-                baseXMin * xScale * $Math.cos(radianX) - baseYMin * yScale * $Math.sin(radianY),
-                baseXMax * xScale * $Math.cos(radianX) - baseYMax * yScale * $Math.sin(radianY),
-                baseXMin * xScale * $Math.sin(radianX) + baseYMin * yScale * $Math.cos(radianY),
-                baseXMax * xScale * $Math.sin(radianX) + baseYMax * yScale * $Math.cos(radianY)
-            );
+            const tx = baseXMin * xScale;
+            const ty = baseYMin * yScale;
 
             context.setTransform(
                 $Math.cos(radianX),
                 $Math.sin(radianX),
                 -$Math.sin(radianY),
                 $Math.cos(radianY),
-                rotateBounds.xMin + multiMatrix[4] - offsetX,
-                rotateBounds.yMin + multiMatrix[5] - offsetY
+                tx * $Math.cos(radianX) - ty * $Math.sin(radianY) + multiMatrix[4] - offsetX,
+                tx * $Math.sin(radianX) + ty * $Math.cos(radianY) + multiMatrix[5] - offsetY
             );
-            Util.$poolBoundsObject(rotateBounds);
 
         } else {
 
