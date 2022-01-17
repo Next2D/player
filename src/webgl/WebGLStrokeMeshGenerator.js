@@ -5,22 +5,22 @@ class WebGLStrokeMeshGenerator
 {
     /**
      * @param  {array}  vertices
-     * @param  {string} lineCap
-     * @param  {string} lineJoin
+     * @param  {string} line_cap
+     * @param  {string} line_join
      * @return {object}
      * @method
      * @static
      */
-    static generate (vertices, lineCap, lineJoin)
+    static generate (vertices, line_cap, line_join)
     {
-        this._$vertexBufferData = this._$vertexBufferData || new Util.$Float32Array(1024);
+        this._$vertexBufferData = this._$vertexBufferData || new $Float32Array(1024);
         this._$vertexBufferPos = 0;
 
-        this._$indexBufferData = this._$indexBufferData || new Util.$Int16Array(256);
+        this._$indexBufferData = this._$indexBufferData || new $Int16Array(256);
         this._$indexBufferPos = 0;
 
-        this._$lineCap  = lineCap;
-        this._$lineJoin = lineJoin;
+        this._$lineCap  = line_cap;
+        this._$lineJoin = line_join;
 
         for (let i = 0; i < vertices.length; i++) {
             const vertexBeginOffset = this._$vertexBufferPos;
@@ -38,30 +38,32 @@ class WebGLStrokeMeshGenerator
     }
 
     /**
-     * @param  {number} deltaLength
+     * @param  {number} delta_length
      * @return {void}
      * @method
      * @static
      * @private
      */
-    static _$expandVertexBufferIfNeeded(deltaLength) {
-        if (this._$vertexBufferPos + deltaLength > this._$vertexBufferData.length) {
-            const biggerBuffer = new Util.$Float32Array(this._$vertexBufferData.length * 2);
+    static _$expandVertexBufferIfNeeded (delta_length)
+    {
+        if (this._$vertexBufferPos + delta_length > this._$vertexBufferData.length) {
+            const biggerBuffer = new $Float32Array(this._$vertexBufferData.length * 2);
             biggerBuffer.set(this._$vertexBufferData);
             this._$vertexBufferData = biggerBuffer;
         }
     }
 
     /**
-     * @param  {number} deltaLength
+     * @param  {number} delta_length
      * @return {void}
      * @method
      * @static
      * @private
      */
-    static _$expandIndexBufferIfNeeded(deltaLength) {
-        if (this._$indexBufferPos + deltaLength > this._$indexBufferData.length) {
-            const biggerBuffer = new Util.$Int16Array(this._$indexBufferData.length * 2);
+    static _$expandIndexBufferIfNeeded(delta_length)
+    {
+        if (this._$indexBufferPos + delta_length > this._$indexBufferData.length) {
+            const biggerBuffer = new $Int16Array(this._$indexBufferData.length * 2);
             biggerBuffer.set(this._$indexBufferData);
             this._$indexBufferData = biggerBuffer;
         }
@@ -200,18 +202,18 @@ class WebGLStrokeMeshGenerator
     }
 
     /**
-     * @param  {number} vertexBeginOffset 結合対象の頂点の範囲（開始）
-     * @param  {number} vertexEndOffset   結合対象の頂点の範囲（終了）
+     * @param  {number} vertex_begin_offset 結合対象の頂点の範囲（開始）
+     * @param  {number} vertex_end_offset   結合対象の頂点の範囲（終了）
      * @return {void}
      * @method
      * @static
      * @private
      */
-    static _$generateLineJoin (vertexBeginOffset, vertexEndOffset)
+    static _$generateLineJoin (vertex_begin_offset, vertex_end_offset)
     {
         const vbd = this._$vertexBufferData;
-        const length = vertexEndOffset - 55;
-        for (let v = vertexBeginOffset; v < length; v += 28) {
+        const length = vertex_end_offset - 55;
+        for (let v = vertex_begin_offset; v < length; v += 28) {
             const indexOffset = v / 7;
             this._$addLineJoinMesh(
                 vbd[v],      vbd[v + 1],
@@ -223,24 +225,26 @@ class WebGLStrokeMeshGenerator
     }
 
     /**
-     * @param  {number} x1           線分Aの始点のx座標
-     * @param  {number} y1           線分Aの始点のy座標
-     * @param  {number} x2           結合点のx座標
-     * @param  {number} y2           結合点のy座標
-     * @param  {number} type         線分タイプ
-     * @param  {number} x3           線分Bの終点のx座標
-     * @param  {number} y3           線分Bの終点のy座標
-     * @param  {number} indexOffset2 線分Aの凸側の頂点インデックス
-     * @param  {number} indexOffset3 線分Aの凹側の頂点インデックス
-     * @param  {number} indexOffset4 線分Bの凸側の頂点インデックス
-     * @param  {number} indexOffset5 線分Bの凹側の頂点インデックス
+     * @param  {number} x1            線分Aの始点のx座標
+     * @param  {number} y1            線分Aの始点のy座標
+     * @param  {number} x2            結合点のx座標
+     * @param  {number} y2            結合点のy座標
+     * @param  {number} type          線分タイプ
+     * @param  {number} x3            線分Bの終点のx座標
+     * @param  {number} y3            線分Bの終点のy座標
+     * @param  {number} index_offset2 線分Aの凸側の頂点インデックス
+     * @param  {number} index_offset3 線分Aの凹側の頂点インデックス
+     * @param  {number} index_offset4 線分Bの凸側の頂点インデックス
+     * @param  {number} index_offset5 線分Bの凹側の頂点インデックス
      * @return {void}
      * @method
      * @static
      * @private
      */
-    static _$addLineJoinMesh (x1, y1, x2, y2, type, x3, y3, indexOffset2, indexOffset3, indexOffset4, indexOffset5)
-    {
+    static _$addLineJoinMesh (
+        x1, y1, x2, y2, type, x3, y3,
+        index_offset2, index_offset3, index_offset4, index_offset5
+    ) {
         // AとBがほぼ平行なら、結合せずに終了
         const ax = x2 - x1;
         const ay = y2 - y1;
@@ -251,21 +255,34 @@ class WebGLStrokeMeshGenerator
 
         // 分割したベジェ曲線はベベルで結合する
         if (type === 2) {
-            this._$addBevelJoinMesh(x2, y2, indexOffset4, indexOffset2, indexOffset3, indexOffset5);
+            this._$addBevelJoinMesh(
+                x2, y2,
+                index_offset4, index_offset2, index_offset3, index_offset5
+            );
             return;
         }
 
         // 結合タイプに合わせたメッシュを追加する
         switch (this._$lineJoin) {
+
             case JointStyle.ROUND:
                 this._$addRoundJoinMesh(x2, y2);
                 break;
+
             case JointStyle.MITER:
-                this._$addMiterJoinMesh(x2, y2, x1, y1, x3, y3, indexOffset4, indexOffset2, indexOffset3, indexOffset5);
+                this._$addMiterJoinMesh(
+                    x2, y2, x1, y1, x3, y3,
+                    index_offset4, index_offset2, index_offset3, index_offset5
+                );
                 break;
+
             default:
-                this._$addBevelJoinMesh(x2, y2, indexOffset4, indexOffset2, indexOffset3, indexOffset5);
+                this._$addBevelJoinMesh(
+                    x2, y2,
+                    index_offset4, index_offset2, index_offset3, index_offset5
+                );
                 break;
+
         }
     }
 
@@ -338,8 +355,10 @@ class WebGLStrokeMeshGenerator
      * @static
      * @private
      */
-    static _$addMiterJoinMesh (x, y, ax, ay, bx, by, index1, index4, index5, index8)
-    {
+    static _$addMiterJoinMesh (
+        x, y, ax, ay, bx, by, index1, index4, index5, index8
+    ) {
+
         const index0 = this._$vertexBufferPos / 7;
         const index2 = index0 + 1;
         const index3 = index0 + 2;

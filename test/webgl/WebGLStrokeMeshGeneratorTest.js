@@ -9,14 +9,14 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.BEVEL);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 200, 1, 1, 1,
             100, 100, 200, 200, -1, -1, 1,
             200, 200, 100, 100, -1, -1, 1,
             200, 200, 100, 100, 1, 1, 1
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0
         ]);
@@ -34,7 +34,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.ROUND, JointStyle.BEVEL);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 200, 1, 1, 1,
             100, 100, 200, 200, -1, -1, 1,
             200, 200, 100, 100, -1, -1, 1,
@@ -79,7 +79,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             200, 200, 0, 0, 0, 0, 47
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 6,
@@ -133,7 +133,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.SQUARE, JointStyle.BEVEL);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 200, 1, 1, 1,
             100, 100, 200, 200, -1, -1, 1,
             200, 200, 100, 100, -1, -1, 1,
@@ -144,7 +144,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             200, 200, 100, 100, 1, 1, 10
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             0, 4, 5,
@@ -167,7 +167,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.BEVEL);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 100, 1, 1, 1,
             100, 100, 200, 100, -1, -1, 1,
             200, 100, 100, 100, -1, -1, 1,
@@ -178,7 +178,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             300, 100, 200, 100, 1, 1, 1
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,
@@ -199,7 +199,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.BEVEL);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 100, 1, 1, 1,
             100, 100, 200, 100, -1, -1, 1,
             200, 100, 100, 100, -1, -1, 1,
@@ -211,7 +211,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             100, 100, 0, 0, 0, 0, 0
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,
@@ -234,7 +234,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.BEVEL);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 200, 1, 1, 1,
             100, 100, 200, 200, -1, -1, 1,
             200, 200, 100, 100, -1, -1, 1,
@@ -246,7 +246,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             200, 200, 0, 0, 0, 0, 0
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,
@@ -269,7 +269,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.ROUND);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 100, 1, 1, 1,
             100, 100, 200, 100, -1, -1, 1,
             200, 100, 100, 100, -1, -1, 1,
@@ -280,7 +280,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             300, 100, 200, 100, 1, 1, 1
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,
@@ -301,7 +301,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.ROUND);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 100, 1, 1, 1,
             100, 100, 200, 100, -1, -1, 1,
             200, 100, 100, 100, -1, -1, 1,
@@ -331,7 +331,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             100, 100, 0, 0, 0, 0, 47
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,
@@ -370,7 +370,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.ROUND);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 200, 1, 1, 1,
             100, 100, 200, 200, -1, -1, 1,
             200, 200, 100, 100, -1, -1, 1,
@@ -400,7 +400,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             200, 200, 0, 0, 0, 0, 47
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,
@@ -439,7 +439,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.MITER);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 100, 1, 1, 1,
             100, 100, 200, 100, -1, -1, 1,
             200, 100, 100, 100, -1, -1, 1,
@@ -450,7 +450,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             300, 100, 200, 100, 1, 1, 1
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,
@@ -471,7 +471,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.MITER);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 100, 1, 1, 1,
             100, 100, 200, 100, -1, -1, 1,
             200, 100, 100, 100, -1, -1, 1,
@@ -487,7 +487,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             100, 100, 200, 100, 100, 6, 24
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,
@@ -514,7 +514,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.MITER);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 200, 1, 1, 1,
             100, 100, 200, 200, -1, -1, 1,
             200, 200, 100, 100, -1, -1, 1,
@@ -530,7 +530,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             200, 200, 100, 100, 300, 100, 24
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,
@@ -558,7 +558,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.BEVEL);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 117.3553695678711, 100.82644653320312, 1, 1, 1,
             100, 100, 117.3553695678711, 100.82644653320312, -1, -1, 1,
             117.3553695678711, 100.82644653320312, 100, 100, -1, -1, 2,
@@ -615,7 +615,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             199.17355346679688, 182.64462280273438, 0, 0, 0, 0, 0
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,
@@ -677,7 +677,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             ]
         ], CapsStyle.NONE, JointStyle.BEVEL);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 200, 200, 1, 1, 1,
             100, 100, 200, 200, -1, -1, 1,
             200, 200, 100, 100, -1, -1, 1,
@@ -688,7 +688,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
             100, 200, 200, 100, 1, 1, 1
         ]);
 
-        const actualIndexBufferData = new Util.$Int16Array([
+        const actualIndexBufferData = new $Int16Array([
             0, 1, 3,
             3, 2, 0,
             4, 5, 7,

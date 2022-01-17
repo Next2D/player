@@ -571,7 +571,7 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         // data init
-        const no = Util.$MAX_VALUE;
+        const no = $Number.MAX_VALUE;
         let xMin = no;
         let xMax = -no;
         let yMin = no;
@@ -647,7 +647,7 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         // data init
-        const no   = Util.$MAX_VALUE;
+        const no   = $Number.MAX_VALUE;
         let xMin = no;
         let xMax = -no;
         let yMin = no;

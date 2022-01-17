@@ -1,31 +1,3 @@
-"use strict";
-
-/**
- * @type {number}
- */
-// eslint-disable-next-line no-unused-vars
-let instanceId = 0;
-
-/**
- * @type {number}
- */
-// eslint-disable-next-line no-unused-vars
-let programId = 0;
-
-/**
- * @shortcut
- * @type {Math}
- * @const
- */
-const $Math   = window.Math;
-
-/**
- * @shortcut
- * @type {Number}
- * @const
- */
-const $Number = window.Number;
-
 /**
  * @description Global Object
  * @type {object}
@@ -38,20 +10,6 @@ const Util = {};
  * @static
  */
 Util.$PREFIX = "__next2d__";
-
-/**
- * @type {number}
- * @const
- * @static
- */
-Util.$MAX_VALUE = window.Number.MAX_VALUE;
-
-/**
- * @type {number}
- * @const
- * @static
- */
-Util.$MIN_VALUE = window.Number.MIN_VALUE;
 
 /**
  * @type {number}
@@ -191,7 +149,7 @@ Util.$P_TAG = window.document.createElement("p");
  * @const
  * @static
  */
-Util.$COLOR_ARRAY_IDENTITY = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
+Util.$COLOR_ARRAY_IDENTITY = new $Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 /**
  * @type {array}
@@ -256,14 +214,6 @@ Util.$userAgent = window.navigator.userAgent;
  * @static
  */
 Util.$location = window.location;
-
-/**
- * @shortcut
- * @type {RegExp}
- * @const
- * @static
- */
-Util.$RegExp = window.RegExp;
 
 /**
  * @shortcut
@@ -424,22 +374,6 @@ Util.$cancelAnimationFrame = window.cancelAnimationFrame;
 Util.$performance = window.performance;
 
 /**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$Float32Array = window.Float32Array;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$Int16Array = window.Int16Array;
-
-/**
  * @type {Map}
  * @const
  * @static
@@ -494,7 +428,7 @@ Util.$dragRules = {
  * @const
  * @static
  */
-Util.$rgbToLinearTable = new Util.$Float32Array(256);
+Util.$rgbToLinearTable = new $Float32Array(256);
 
 /**
  * @description RGB to Linear Table
@@ -502,7 +436,7 @@ Util.$rgbToLinearTable = new Util.$Float32Array(256);
  * @const
  * @static
  */
-Util.$rgbIdentityTable = new Util.$Float32Array(256);
+Util.$rgbIdentityTable = new $Float32Array(256);
 for (let idx = 0; idx < 256; ++idx) {
     Util.$rgbToLinearTable[idx] = $Math.pow(idx / 255, 2.23333333);
     Util.$rgbIdentityTable[idx] = idx / 255;
@@ -534,14 +468,14 @@ Util.$devicePixelRatio = $Math.min(2, window.devicePixelRatio);
  * @const
  * @static
  */
-Util.$MATRIX_HIT_ARRAY_IDENTITY = new Float32Array([1, 0, 0, 1, 0, 0]);
+Util.$MATRIX_HIT_ARRAY_IDENTITY = new $Float32Array([1, 0, 0, 1, 0, 0]);
 
 /**
  * @type {Float32Array}
  * @const
  * @static
  */
-Util.$MATRIX_ARRAY_IDENTITY = new Float32Array([1, 0, 0, 1, 0, 0]);
+Util.$MATRIX_ARRAY_IDENTITY = new $Float32Array([1, 0, 0, 1, 0, 0]);
 
 /**
  * @type {Float32Array}
@@ -934,7 +868,7 @@ Util.$getMap = () =>
 Util.$getFloat32Array4 = (f0 = 0, f1 = 0, f2 = 0, f3 = 0) =>
 {
     const array = Util.$float32Array4.pop()
-        || new Util.$window.Float32Array(4);
+        || new $Float32Array(4);
 
     array[0] = f0;
     array[1] = f1;
@@ -969,7 +903,7 @@ Util.$poolFloat32Array4 = (array) =>
 Util.$getFloat32Array6 = (f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0) =>
 {
     const array = Util.$float32Array6.pop()
-        || new Util.$window.Float32Array(6);
+        || new $Float32Array(6);
 
     array[0] = f0;
     array[1] = f1;
@@ -1009,7 +943,7 @@ Util.$getFloat32Array8 = (
     f0 = 1, f1 = 1, f2 = 1, f3 = 1, f4 = 0, f5 = 0, f6 = 0, f7 = 0
 ) => {
     const array = Util.$float32Array8.pop()
-        || new Util.$window.Float32Array(8);
+        || new $Float32Array(8);
 
     array[0] = f0;
     array[1] = f1;
@@ -1052,7 +986,7 @@ Util.$getFloat32Array9 = (
     f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0, f6 = 0, f7 = 0, f8 = 0
 ) => {
     const array = Util.$float32Array9.pop()
-        || new Util.$window.Float32Array(9);
+        || new $Float32Array(9);
 
     array[0] = f0;
     array[1] = f1;
@@ -1140,10 +1074,10 @@ Util.$boundsMatrix = (bounds, matrix) =>
     const y2 = bounds.xMin * matrix[1] + bounds.yMax * matrix[3] + matrix[5];
     const y3 = bounds.xMin * matrix[1] + bounds.yMin * matrix[3] + matrix[5];
 
-    const xMin = $Math.min( Util.$MAX_VALUE, x0, x1, x2, x3);
-    const xMax = $Math.max(-Util.$MAX_VALUE, x0, x1, x2, x3);
-    const yMin = $Math.min( Util.$MAX_VALUE, y0, y1, y2, y3);
-    const yMax = $Math.max(-Util.$MAX_VALUE, y0, y1, y2, y3);
+    const xMin = $Math.min( $Number.MAX_VALUE, x0, x1, x2, x3);
+    const xMax = $Math.max(-$Number.MAX_VALUE, x0, x1, x2, x3);
+    const yMin = $Math.min( $Number.MAX_VALUE, y0, y1, y2, y3);
+    const yMax = $Math.max(-$Number.MAX_VALUE, y0, y1, y2, y3);
 
     return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
 };

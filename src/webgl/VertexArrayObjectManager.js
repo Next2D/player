@@ -24,7 +24,7 @@ class VertexArrayObjectManager
         this._$strokeAttrib_option1 = 1;
         this._$strokeAttrib_option2 = 2;
         this._$strokeAttrib_type    = 3;
-        this._$vertexBufferData     = new Util.$window.Float32Array([0, 0, 0, 1, 1, 0, 1, 1]);
+        this._$vertexBufferData     = new $Float32Array([0, 0, 0, 1, 1, 0, 1, 1]);
 
         this._$commonVertexArray = this._$getVertexArray(0, 1);
     }

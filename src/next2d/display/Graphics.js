@@ -451,10 +451,10 @@ class Graphics
         this._$doLine        = false;
 
         // bounds size
-        this._$xMin          = Util.$MAX_VALUE;
-        this._$xMax          = -Util.$MAX_VALUE;
-        this._$yMin          = Util.$MAX_VALUE;
-        this._$yMax          = -Util.$MAX_VALUE;
+        this._$xMin          = $Number.MAX_VALUE;
+        this._$xMax          = -$Number.MAX_VALUE;
+        this._$yMin          = $Number.MAX_VALUE;
+        this._$yMax          = -$Number.MAX_VALUE;
 
         // init array
         if (this._$recode) {
@@ -1704,7 +1704,7 @@ class Graphics
                 const aMatrixBase = displayObject
                     ._$parent
                     ._$transform
-                    ._$calculateConcatenatedMatrix()
+                    .concatenatedMatrix
                     ._$matrix;
 
                 const aMatrix = Util.$getFloat32Array6(

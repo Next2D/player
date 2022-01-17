@@ -94,6 +94,7 @@ const lint = () =>
 {
     return gulp
         .src([
+            "src/util/Global.js",
             "src/util/Util.js",
             "src/next2d/events/*.js",
             "src/next2d/geom/*.js",
@@ -150,6 +151,7 @@ const buildJavaScript = () =>
     const build = gulp
         .src([
             "src/Header.build.file",
+            "src/util/Global.js",
             "src/util/Util.replaced.js",
             "src/next2d/events/*.js",
             "src/next2d/geom/*.js",

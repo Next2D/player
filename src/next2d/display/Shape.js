@@ -183,7 +183,7 @@ class Shape extends DisplayObject
                         joints,
                         miterLimit,
                         bitmapData,
-                        new Util.$Float32Array([1, 0, 0, 1, character.bounds.xMin, character.bounds.yMin]),
+                        new $Float32Array([1, 0, 0, 1, character.bounds.xMin, character.bounds.yMin]),
                         "repeat",
                         false
                     );

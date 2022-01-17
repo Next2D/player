@@ -3090,7 +3090,7 @@ class TextField extends InteractiveObject
                         pattern += "]";
                     }
 
-                    const found = value.match(new Util.$RegExp(pattern, "gm"));
+                    const found = value.match(new $RegExp(pattern, "gm"));
                     value = found ? found.join("") : "";
                 }
 
@@ -3136,7 +3136,7 @@ class TextField extends InteractiveObject
                         pattern += "]";
                     }
 
-                    const found = value.match(new Util.$RegExp(pattern, "gm"));
+                    const found = value.match(new $RegExp(pattern, "gm"));
                     value = found ? found.join("") : "";
                 }
 
@@ -3191,7 +3191,7 @@ class TextField extends InteractiveObject
                     pattern += "]";
                 }
 
-                const found = value.match(new Util.$RegExp(pattern, "gm"));
+                const found = value.match(new $RegExp(pattern, "gm"));
                 value = found ? found.join("") : "";
 
                 // update
@@ -3304,7 +3304,7 @@ class TextField extends InteractiveObject
                         pattern += "]";
                     }
 
-                    const found = value.match(new Util.$RegExp(pattern, "gm"));
+                    const found = value.match(new $RegExp(pattern, "gm"));
                     value = found ? found.join("") : "";
                 }
 

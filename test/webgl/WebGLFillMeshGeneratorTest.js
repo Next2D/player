@@ -12,7 +12,7 @@ describe("WebGLFillMeshGenerator.js test", function()
             ]
         ]);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 0.5, 0.5,
             200, 100, 0.5, 0.5,
             200, 200, 0.5, 0.5,
@@ -47,7 +47,7 @@ describe("WebGLFillMeshGenerator.js test", function()
             ],
         ]);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 0.5, 0.5,
             200, 100, 0.5, 0.5,
             200, 200, 0.5, 0.5,
@@ -88,7 +88,7 @@ describe("WebGLFillMeshGenerator.js test", function()
             ]
         ]);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 0, 0,
             150, 0, 0.5, 0,
             200, 100, 1, 1,
@@ -136,7 +136,7 @@ describe("WebGLFillMeshGenerator.js test", function()
             ],
         ]);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 0, 0,
             150, 0, 0.5, 0,
             200, 100, 1, 1,
@@ -209,7 +209,7 @@ describe("WebGLFillMeshGenerator.js test", function()
             ],
         ]);
 
-        const actualVertexBufferData = new Util.$Float32Array([
+        const actualVertexBufferData = new $Float32Array([
             100, 100, 0.5, 0.5,
             200, 100, 0.5, 0.5,
             200, 200, 0.5, 0.5,

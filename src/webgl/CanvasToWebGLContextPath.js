@@ -228,7 +228,7 @@ class CanvasToWebGLContextPath
      */
     _$resetBounds ()
     {
-        const v = Util.$MAX_VALUE;
+        const v = $Number.MAX_VALUE;
         this._$bounds.xMin =  v;
         this._$bounds.xMax = -v;
         this._$bounds.yMin =  v;

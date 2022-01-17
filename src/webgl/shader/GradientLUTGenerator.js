@@ -16,8 +16,8 @@ class GradientLUTGenerator
         this._$attachment = context.frameBuffer.createTextureAttachment(512, 1);
         this._$maxLength  = $Math.floor(this._$gl.getParameter(this._$gl.MAX_FRAGMENT_UNIFORM_VECTORS) * 0.75);
 
-        this._$rgbToLinearTable = new Util.$Float32Array(256);
-        this._$rgbIdentityTable = new Util.$Float32Array(256);
+        this._$rgbToLinearTable = new $Float32Array(256);
+        this._$rgbIdentityTable = new $Float32Array(256);
         for (let i = 0; i < 256; i++) {
             const t = i / 255;
             this._$rgbToLinearTable[i] = $Math.pow(t, 2.23333333);
