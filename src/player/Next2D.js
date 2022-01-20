@@ -59,17 +59,16 @@ class Next2D
 
         this._$player.setOptions(options);
 
-        const loader = new Loader();
-
+        const loader     = new Loader();
         const loaderInfo = loader.contentLoaderInfo;
 
-        // create event handler
-        const errorHandler = function (event)
+        loaderInfo.addEventListener(IOErrorEvent.IO_ERROR, (event) =>
         {
             event.target.removeEventListener(IOErrorEvent.IO_ERROR, event.listener);
             alert("Error: " + event.message);
-        };
-        const completeHandler = function (event)
+        });
+
+        loaderInfo.addEventListener(Event.COMPLETE, (event) =>
         {
             const loaderInfo = event.target;
             loaderInfo.removeEventListener(Event.COMPLETE, event.listener);
@@ -107,10 +106,8 @@ class Next2D
             stage.addChild(loaderInfo.content);
 
             player._$resize();
-        };
+        });
 
-        loaderInfo.addEventListener(IOErrorEvent.IO_ERROR, errorHandler);
-        loaderInfo.addEventListener(Event.COMPLETE, completeHandler);
         loader.load(new URLRequest(url));
     }
 

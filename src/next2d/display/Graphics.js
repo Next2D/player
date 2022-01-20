@@ -1770,10 +1770,56 @@ class Graphics
             const canApply = displayObject._$canApply(filters);
             if (canApply) {
 
-                texture = this._$drawFilter(
-                    context, texture, matrix,
-                    color_transform, filters, width, height
-                );
+                const filterKeys = [displayObject._$instanceId, "f"];
+
+                const cache = Util.$cacheStore().get(filterKeys);
+                if (cache && displayObject._$isFilterUpdated(
+                    width, height, matrix, color_transform,
+                    filters, true
+                )) {
+
+                    texture = cache;
+
+                } else {
+
+                    if (cache) {
+
+                        Util.$cacheStore().set(filterKeys, null);
+
+                        cache.layerWidth     = 0;
+                        cache.layerHeight    = 0;
+                        cache._$offsetX      = 0;
+                        cache._$offsetY      = 0;
+                        cache.matrix         = null;
+                        cache.colorTransform = null;
+
+                        context
+                            .frameBuffer
+                            .releaseTexture(cache);
+
+                    }
+
+                    texture = this._$drawFilter(
+                        context, texture, matrix,
+                        color_transform, filters, width, height
+                    );
+
+                    texture.filterState = true;
+                    texture.matrix = matrix[0] + "_" + matrix[1]
+                        + "_" + matrix[2] + "_" + matrix[3] + "_0_0";
+
+                    texture.colorTransform = color_transform[0] + "_" + color_transform[1]
+                        + "_" + color_transform[2] + "_" + color_transform[3]
+                        + "_" + color_transform[4] + "_" + color_transform[5]
+                        + "_" + color_transform[6] + "_" + color_transform[7];
+
+                    texture.layerWidth  = width;
+                    texture.layerHeight = height;
+
+                    Util.$cacheStore().set(filterKeys, texture);
+
+                }
+                Util.$poolArray(filterKeys);
 
                 offsetX = texture._$offsetX;
                 offsetY = texture._$offsetY;
