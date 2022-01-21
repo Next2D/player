@@ -453,10 +453,7 @@ class ConvolutionFilter extends BitmapFilter
      */
     _$canApply ()
     {
-        if (this._$matrixX * this._$matrixY !== this._$matrix.length) {
-            return false;
-        }
-        return true;
+        return this._$matrixX * this._$matrixY === this._$matrix.length;
     }
 
     /**

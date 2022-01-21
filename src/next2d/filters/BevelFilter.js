@@ -482,32 +482,14 @@ class BevelFilter extends BitmapFilter
 
         clone = this._$blurFilter._$generateFilterRect(clone, x_scale, y_scale);
 
-        const radian = +(this.angle * $Math.PI / 180);
-        const x      = $Math.cos(radian) * this.distance;
-        const y      = $Math.sin(radian) * this.distance;
-        let dx       = $Math.abs(x) | 0;
-        let dy       = $Math.abs(y) | 0;
+        const radian = this._$angle * Util.$Deg2Rad;
+        const x      = $Math.abs($Math.cos(radian) * this._$distance);
+        const y      = $Math.abs($Math.sin(radian) * this._$distance);
 
-        if (0 > x) {
-            dx++;
-        }
-
-        if (0 > y) {
-            dy++;
-        }
-
-        if (dx === 0 && 0 > y) {
-            dx = 1;
-        }
-
-        if (dy === 0 && 0 > x) {
-            dy = 1;
-        }
-
-        clone.x      -= dx;
-        clone.width  += dx * 2;
-        clone.y      -= dy;
-        clone.height += dy * 2;
+        clone.x      += -x;
+        clone.width  += x;
+        clone.y      += -y;
+        clone.height += y * 2;
 
         return clone;
     }
@@ -566,10 +548,7 @@ class BevelFilter extends BitmapFilter
      */
     _$canApply ()
     {
-        if (!this._$strength || !this._$distance) {
-            return false;
-        }
-        return true;
+        return this._$strength && this._$distance && this._$blurFilter._$canApply();
     }
 
     /**

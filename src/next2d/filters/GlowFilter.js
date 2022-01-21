@@ -384,10 +384,7 @@ class GlowFilter extends BitmapFilter
      */
     _$canApply ()
     {
-        if (!this._$alpha || !this._$strength) {
-            return false;
-        }
-        return this._$blurFilter._$canApply();
+        return this._$alpha && this._$strength && this._$blurFilter._$canApply();
     }
 
     /**

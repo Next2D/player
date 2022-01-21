@@ -1254,18 +1254,22 @@ class Graphics
 
     /**
      * @param  {CanvasToWebGLContext} context
-     * @param  {WebGLTexture} texture
+     * @param  {WebGLTexture} target_texture
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @param  {array} filters
+     * @param  {object} bounds
      * @param  {number} width
      * @param  {number} height
      * @return {WebGLTexture}
      * @method
      * @private
      */
-    _$drawFilter (context, texture, matrix, color_transform, filters, width, height)
-    {
+    _$drawFilter (
+        context, target_texture, matrix, color_transform,
+        filters, width, height
+    ) {
+
         const displayObject = this._$displayObject;
 
         const cacheKeys = [displayObject._$instanceId, "f"];
@@ -1275,6 +1279,7 @@ class Graphics
             width, height, matrix, color_transform, filters, true
         );
 
+        let texture;
         if (!cache || updated) {
 
             // cache clear
@@ -1287,24 +1292,25 @@ class Graphics
                 cache._$offsetY      = 0;
                 cache.matrix         = null;
                 cache.colorTransform = null;
-                context.frameBuffer.releaseTexture(cache);
+
+                context
+                    .frameBuffer
+                    .releaseTexture(cache);
 
                 cache = null;
             }
 
-            texture = displayObject._$getFilterTexture(
-                context, filters, texture, matrix, color_transform
+            texture = displayObject._$applyFilter(
+                context, filters, target_texture,
+                matrix, color_transform, width, height
             );
 
             Util.$cacheStore().set(cacheKeys, texture);
-
         }
 
         if (cache) {
             texture = cache;
         }
-
-        Util.$poolArray(cacheKeys);
 
         return texture;
     }
@@ -1391,7 +1397,9 @@ class Graphics
         }
 
         // cache current buffer
-        const currentBuffer = context.frameBuffer.currentAttachment;
+        const currentBuffer = context
+            .frameBuffer
+            .currentAttachment;
         if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
             return;
         }
@@ -1494,23 +1502,23 @@ class Graphics
 
         }
 
-        let isFilter = false;
-        let offsetX  = 0;
-        let offsetY  = 0;
+        // let isFilter = false;
+        // let offsetX  = 0;
+        // let offsetY  = 0;
         if (filters && filters.length) {
 
             const canApply = displayObject._$canApply(filters);
             if (canApply) {
 
-                isFilter = true;
+                // isFilter = true;
 
-                texture = this._$drawFilter(
+                return this._$drawFilter(
                     context, texture, matrix,
                     color_transform, filters, width, height
                 );
 
-                offsetX = texture._$offsetX;
-                offsetY = texture._$offsetY;
+                // offsetX = texture._$offsetX;
+                // offsetY = texture._$offsetY;
             }
 
         }
@@ -1524,16 +1532,20 @@ class Graphics
         context._$globalCompositeOperation = blend_mode;
 
         context.setTransform(1, 0, 0, 1, 0, 0);
-        if (isFilter) {
-            context.drawImage(texture,
-                xMin - offsetX, yMin - offsetY,
-                texture.width, texture.height, color_transform
-            );
-        } else {
-            context.drawImage(texture,
-                xMin, yMin, width, height, color_transform
-            );
-        }
+        context.drawImage(texture,
+            xMin, yMin, width, height, color_transform
+        );
+
+        // if (isFilter) {
+        //     context.drawImage(texture,
+        //         xMin - offsetX, yMin - offsetY,
+        //         texture.width, texture.height, color_transform
+        //     );
+        // } else {
+        //     context.drawImage(texture,
+        //         xMin, yMin, width, height, color_transform
+        //     );
+        // }
 
         // pool
         Util.$poolArray(cacheKeys);
@@ -1568,7 +1580,8 @@ class Graphics
         // set grid data
         let hasGrid = displayObject._$scale9Grid !== null;
 
-        // 9スライスを有効にしたオブジェクトが回転・傾斜成分を含む場合は、9スライスは無効になる
+        // 9スライスを有効にしたオブジェクトが回転・傾斜成分を含む場合は
+        // 9スライスは無効になる
         let parentMatrix = null;
         if (hasGrid) {
             parentMatrix = displayObject._$transform._$rawMatrix();
@@ -1667,8 +1680,8 @@ class Graphics
         if (!texture) {
 
             // resize
-            width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-            height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
+            let width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+            let height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
             const textureScale = context._$textureScale(width, height);
             if (textureScale < 1) {
                 width  *= textureScale;
@@ -1763,68 +1776,42 @@ class Graphics
             context._$bind(currentBuffer);
         }
 
-        let offsetX = 0;
-        let offsetY = 0;
+        // pool
+        Util.$poolArray(cacheKeys);
+        if (parentMatrix) {
+            Util.$poolMatrix(parentMatrix);
+        }
+        Util.$poolBoundsObject(baseBounds);
+
         if (filters && filters.length) {
 
             const canApply = displayObject._$canApply(filters);
             if (canApply) {
 
-                const filterKeys = [displayObject._$instanceId, "f"];
+                const filterTexture = this._$drawFilter(
+                    context, texture, matrix,
+                    color_transform, filters, width, height
+                );
 
-                const cache = Util.$cacheStore().get(filterKeys);
-                if (cache && displayObject._$isFilterUpdated(
-                    width, height, matrix, color_transform,
-                    filters, true
-                )) {
+                // reset
+                Util.$resetContext(context);
 
-                    texture = cache;
+                // draw
+                context._$globalAlpha = alpha;
+                context._$imageSmoothingEnabled = true;
+                context._$globalCompositeOperation = blend_mode;
 
-                } else {
+                context.setTransform(1, 0, 0, 1,
+                    xMin - filterTexture._$offsetX,
+                    yMin - filterTexture._$offsetY
+                );
+                context.drawImage(filterTexture,
+                    0, 0, filterTexture.width, filterTexture.height,
+                    color_transform
+                );
 
-                    if (cache) {
-
-                        Util.$cacheStore().set(filterKeys, null);
-
-                        cache.layerWidth     = 0;
-                        cache.layerHeight    = 0;
-                        cache._$offsetX      = 0;
-                        cache._$offsetY      = 0;
-                        cache.matrix         = null;
-                        cache.colorTransform = null;
-
-                        context
-                            .frameBuffer
-                            .releaseTexture(cache);
-
-                    }
-
-                    texture = this._$drawFilter(
-                        context, texture, matrix,
-                        color_transform, filters, width, height
-                    );
-
-                    texture.filterState = true;
-                    texture.matrix = matrix[0] + "_" + matrix[1]
-                        + "_" + matrix[2] + "_" + matrix[3] + "_0_0";
-
-                    texture.colorTransform = color_transform[0] + "_" + color_transform[1]
-                        + "_" + color_transform[2] + "_" + color_transform[3]
-                        + "_" + color_transform[4] + "_" + color_transform[5]
-                        + "_" + color_transform[6] + "_" + color_transform[7];
-
-                    texture.layerWidth  = width;
-                    texture.layerHeight = height;
-
-                    Util.$cacheStore().set(filterKeys, texture);
-
-                }
-                Util.$poolArray(filterKeys);
-
-                offsetX = texture._$offsetX;
-                offsetY = texture._$offsetY;
+                return ;
             }
-
         }
 
         // reset
@@ -1847,29 +1834,19 @@ class Graphics
                 $Math.sin(radianX),
                 -$Math.sin(radianY),
                 $Math.cos(radianY),
-                tx * $Math.cos(radianX) - ty * $Math.sin(radianY) + matrix[4] - offsetX,
-                tx * $Math.sin(radianX) + ty * $Math.cos(radianY) + matrix[5] - offsetY
+                tx * $Math.cos(radianX) - ty * $Math.sin(radianY) + matrix[4],
+                tx * $Math.sin(radianX) + ty * $Math.cos(radianY) + matrix[5]
             );
 
         } else {
 
-            context.setTransform(1, 0, 0, 1,
-                xMin - offsetX,
-                yMin - offsetY
-            );
+            context.setTransform(1, 0, 0, 1, xMin, yMin);
 
         }
 
         context.drawImage(texture,
             0, 0, texture.width, texture.height, color_transform
         );
-
-        // pool
-        Util.$poolArray(cacheKeys);
-        if (parentMatrix) {
-            Util.$poolMatrix(parentMatrix);
-        }
-        Util.$poolBoundsObject(baseBounds);
     }
 
     /**

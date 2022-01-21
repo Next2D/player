@@ -833,7 +833,7 @@ class Video extends DisplayObject
                         cache = null;
                     }
 
-                    texture = this._$getFilterTexture(
+                    texture = this._$applyFilter(
                         context, filters, this._$texture, matrix, color_transform
                     );
 

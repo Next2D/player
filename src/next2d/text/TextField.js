@@ -2751,7 +2751,7 @@ class TextField extends InteractiveObject
                         cache = null;
                     }
 
-                    texture = this._$getFilterTexture(
+                    texture = this._$applyFilter(
                         context, filters, texture, matrix, color_transform
                     );
 

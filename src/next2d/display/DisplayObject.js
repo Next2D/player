@@ -1472,7 +1472,6 @@ class DisplayObject extends EventDispatcher
             baseBounds.yMax - baseBounds.yMin
         );
         Util.$poolBoundsObject(baseBounds);
-
         for (let idx = 0; idx < length; ++idx) {
             rect = filters[idx]._$generateFilterRect(rect, null, null, true);
         }
@@ -1481,6 +1480,7 @@ class DisplayObject extends EventDispatcher
         const xMax = rect._$x + rect._$width;
         const yMin = rect._$y;
         const yMax = rect._$y + rect._$height;
+        console.log("player: ", xMin, yMin);
 
         return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
     }
@@ -1564,8 +1564,8 @@ class DisplayObject extends EventDispatcher
     /**
      * @param  {number}       width
      * @param  {number}       height
-     * @param  {Float64Array} matrix
-     * @param  {Float64Array} color_transform
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
      * @param  {array}        [filters=null]
      * @param  {boolean}      [can_apply=false]
      * @param  {number}       [position_x=0]
@@ -1625,13 +1625,16 @@ class DisplayObject extends EventDispatcher
      * @param  {CanvasToWebGLContext} context
      * @param  {array} filters
      * @param  {WebGLTexture} target_texture
-     * @param  {Float64Array} matrix
-     * @param  {Float64Array} color_transform
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {number} width
+     * @param  {number} height
      * @return {WebGLTexture}
      * @private
      */
-    _$getFilterTexture (
-        context, filters, target_texture, matrix, color_transform
+    _$applyFilter (
+        context, filters, target_texture,
+        matrix, color_transform, width, height
     ) {
 
         const currentAttachment = context
@@ -1640,17 +1643,55 @@ class DisplayObject extends EventDispatcher
 
         const buffer = context
             .frameBuffer
-            .createCacheAttachment(
-                target_texture.width,
-                target_texture.height
-            );
+            .createCacheAttachment(width, height);
 
         context._$bind(buffer);
 
         Util.$resetContext(context);
-        context.setTransform(1, 0, 0, 1, 0, 0);
+
+        const radianX = $Math.atan2(matrix[1], matrix[0]);
+        const radianY = $Math.atan2(-matrix[2], matrix[3]);
+        if (radianX || radianY) {
+
+            const w = target_texture.width  / 2;
+            const h = target_texture.height / 2;
+
+            const a = $Math.cos(radianX);
+            const b = $Math.sin(radianX);
+            const c = -$Math.sin(radianY);
+            const d = $Math.cos(radianY);
+
+            const baseMatrix = Util.$getFloat32Array6(
+                1, 0, 0, 1, -w, -h
+            );
+            const parentMatrix = Util.$getFloat32Array6(
+                a, b, c, d,
+                (width  - target_texture.width)  / 2,
+                (height - target_texture.height) / 2
+            );
+            const multiMatrix = Util.$multiplicationMatrix(
+                parentMatrix, baseMatrix
+            );
+
+            context.setTransform(a, b, c, d,
+                multiMatrix[4] + w,
+                multiMatrix[5] + h
+            );
+
+            // pool
+            Util.$poolFloat32Array6(baseMatrix);
+            Util.$poolFloat32Array6(parentMatrix);
+            Util.$poolFloat32Array6(multiMatrix);
+
+        } else {
+
+            context.setTransform(1, 0, 0, 1, 0, 0);
+
+        }
+
         context.drawImage(target_texture,
-            0, 0, target_texture.width, target_texture.height
+            0, 0, target_texture.width, target_texture.height,
+            color_transform
         );
 
         // init
@@ -1675,16 +1716,18 @@ class DisplayObject extends EventDispatcher
 
         // cache texture
         texture.matrix =
-            matrix[0] + "_" + matrix[1] + "_" + matrix[2] + "_" + matrix[3]
-            + "_0_0";
+              matrix[0] + "_" + matrix[1] + "_"
+            + matrix[2] + "_" + matrix[3] + "_0_0";
 
         texture.colorTransform =
-            color_transform[0] + "_" + color_transform[1] + "_" + color_transform[2] + "_" + color_transform[3] + "_" +
-            color_transform[4] + "_" + color_transform[5] + "_" + color_transform[6] + "_" + color_transform[7];
+              color_transform[0] + "_" + color_transform[1] + "_"
+            + color_transform[2] + "_" + color_transform[3] + "_"
+            + color_transform[4] + "_" + color_transform[5] + "_"
+            + color_transform[6] + "_" + color_transform[7];
 
         texture.filterState = true;
-        texture.layerWidth  = target_texture.width;
-        texture.layerHeight = target_texture.height;
+        texture.layerWidth  = width;
+        texture.layerHeight = height;
 
         context._$bind(currentAttachment);
         context
@@ -1696,8 +1739,8 @@ class DisplayObject extends EventDispatcher
 
     /**
      * @param  {CanvasToWebGLContext} context
-     * @param  {array} matrix
-     * @param  {array} color_transform
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
      * @return {object}
      * @private
      */
@@ -1758,6 +1801,7 @@ class DisplayObject extends EventDispatcher
             object.basePosition.y = originMatrix[5];
 
             // check after size
+            console.log(this, this._$filters, this.filters);
             let baseLayerBounds = this._$getLayerBounds(null);
             const layerBounds = Util.$boundsMatrix(baseLayerBounds, tMatrix);
 

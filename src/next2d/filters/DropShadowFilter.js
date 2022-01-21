@@ -436,53 +436,20 @@ class DropShadowFilter extends BitmapFilter
             ._$blurFilter
             ._$generateFilterRect(clone, x_scale, y_scale);
 
-        const radian = +(this._$angle * Util.$Deg2Rad);
-        const x      = +($Math.cos(radian) * this._$distance);
-        const y      = +($Math.sin(radian) * this._$distance);
+        const radian = this._$angle * Util.$Deg2Rad;
+        const x      = $Math.cos(radian) * this._$distance;
+        const y      = $Math.sin(radian) * this._$distance;
 
-        let dx = 0;
-        let dy = 0;
-        let dw = 0;
-        let dh = 0;
-
-        switch (x < 0) {
-
-            case true:
-                dx = $Math.floor(x) | 0;
-                dw = -$Math.round(x / 2) | 0;
-                break;
-
-            default:
-                dx = $Math.round(x / 2) | 0;
-                dw = x / 2 | 0;
-                break;
-
-        }
-
-        switch (y < 0) {
-
-            case true:
-                dy = $Math.floor(y) | 0;
-                dh = -$Math.round(y / 2) | 0;
-                break;
-
-            default:
-                dy = $Math.round(y / 2) | 0;
-                dh = y / 2 | 0;
-                break;
-
-        }
-
-        clone.x      += dx;
-        clone.width  += dw;
-        clone.y      += dy;
-        clone.height += dh;
+        clone.x      = $Math.min(clone.x, x);
+        clone.width  += $Math.abs(x);
+        clone.y      = $Math.min(clone.y, y);
+        clone.height += $Math.abs(y);
 
         return clone;
     }
 
     /**
-     * @param  {GlowFilter} filter
+     * @param  {DropShadowFilter} filter
      * @return {boolean}
      * @method
      * @private
@@ -531,10 +498,7 @@ class DropShadowFilter extends BitmapFilter
      */
     _$canApply ()
     {
-        if (!this._$alpha || !this._$strength) {
-            return false;
-        }
-        return true;
+        return this._$alpha && this._$strength && this._$blurFilter._$canApply();
     }
 
     /**
@@ -579,9 +543,9 @@ class DropShadowFilter extends BitmapFilter
         const offsetDiffY = blurOffsetY - baseOffsetY;
 
         // shadow point
-        const radian = +(this._$angle * Util.$Deg2Rad);
-        const x = +($Math.cos(radian) * this._$distance * Util.$devicePixelRatio);
-        const y = +($Math.sin(radian) * this._$distance * Util.$devicePixelRatio);
+        const radian = this._$angle * Util.$Deg2Rad;
+        const x = $Math.cos(radian) * this._$distance * 2;
+        const y = $Math.sin(radian) * this._$distance * 2;
 
         // dropShadow canvas
         const w = this._$inner ? baseWidth  : blurWidth  + $Math.max(0, $Math.abs(x) - offsetDiffX);

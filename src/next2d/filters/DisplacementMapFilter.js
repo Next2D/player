@@ -493,14 +493,9 @@ class DisplacementMapFilter extends BitmapFilter
      */
     _$canApply ()
     {
-        if (this._$mapBitmap === null ||
-            !this._$componentX && !this._$componentY ||
-            !this._$scaleX && !this._$scaleY
-        ) {
-            return false;
-        }
-
-        return true;
+        return this._$mapBitmap
+            && this._$componentX && this._$componentY
+            && this._$scaleX && this._$scaleY;
     }
 
     /**

@@ -475,32 +475,14 @@ class GradientBevelFilter  extends BitmapFilter
 
         clone = this._$blurFilter._$generateFilterRect(clone);
 
-        const radian = +(this.angle * $Math.PI / 180);
-        const x      = $Math.cos(radian) * this._$distance;
-        const y      = $Math.sin(radian) * this._$distance;
-        let dx       = $Math.abs(x) | 0;
-        let dy       = $Math.abs(y) | 0;
+        const radian = this._$angle * Util.$Deg2Rad;
+        const x      = $Math.abs($Math.cos(radian) * this._$distance);
+        const y      = $Math.abs($Math.sin(radian) * this._$distance);
 
-        if (0 > x) {
-            dx++;
-        }
-
-        if (0 > y) {
-            dy++;
-        }
-
-        if (dx === 0 && 0 > y) {
-            dx = 1;
-        }
-
-        if (dy === 0 && 0 > x) {
-            dy = 1;
-        }
-
-        clone.x      -= dx;
-        clone.width  += dx * 2;
-        clone.y      -= dy;
-        clone.height += dy * 2;
+        clone.x      += -x;
+        clone.width  += x;
+        clone.y      += -y;
+        clone.height += y * 2;
 
         return clone;
     }
@@ -563,12 +545,9 @@ class GradientBevelFilter  extends BitmapFilter
      */
     _$canApply ()
     {
-        if (this._$strength === 0 || this._$distance === 0
-            || !this._$alphas || !this._$ratios || !this._$colors
-        ) {
-            return false;
-        }
-        return true;
+        return this._$strength && this._$distance
+            && this._$alphas && this._$ratios && this._$colors
+            && this._$blurFilter._$canApply();
     }
 
     /**

@@ -272,10 +272,7 @@ class BlurFilter extends BitmapFilter
      */
     _$canApply ()
     {
-        if (!this._$quality || !this._$blurX && !this._$blurY) {
-            return false;
-        }
-        return true;
+        return this._$quality && this._$blurX && this._$blurY;
     }
 
     /**

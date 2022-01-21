@@ -480,47 +480,14 @@ class GradientGlowFilter  extends BitmapFilter
             ._$blurFilter
             ._$generateFilterRect(clone, x_scale, y_scale);
 
-        const radian = +(this.angle * $Math.PI / 180);
-        const x      = +($Math.cos(radian) * this.distance);
-        const y      = +($Math.sin(radian) * this.distance);
+        const radian = this._$angle * Util.$Deg2Rad;
+        const x      = $Math.cos(radian) * this._$distance;
+        const y      = $Math.sin(radian) * this._$distance;
 
-        let dx = 0;
-        let dy = 0;
-        let dw = 0;
-        let dh = 0;
-
-        switch (x < 0) {
-
-            case true:
-                dx = $Math.floor(x) | 0;
-                dw = -$Math.round(x / 2) | 0;
-                break;
-
-            default:
-                dx = $Math.round(x / 2) | 0;
-                dw = x / 2 | 0;
-                break;
-
-        }
-
-        switch (y < 0) {
-
-            case true:
-                dy = $Math.floor(y) | 0;
-                dh = -$Math.round(y / 2) | 0;
-                break;
-
-            default:
-                dy = $Math.round(y / 2) | 0;
-                dh = y / 2 | 0;
-                break;
-
-        }
-
-        clone.x      += dx;
-        clone.width  += dw;
-        clone.y      += dy;
-        clone.height += dh;
+        clone.x      = $Math.min(clone.x, x);
+        clone.width  += $Math.abs(x);
+        clone.y      = $Math.min(clone.y, y);
+        clone.height += $Math.abs(y);
 
         return clone;
     }
@@ -532,12 +499,9 @@ class GradientGlowFilter  extends BitmapFilter
      */
     _$canApply ()
     {
-        if (this._$strength === 0 || !this._$alphas
-            || !this._$ratios || !this._$colors
-        ) {
-            return false;
-        }
-        return true;
+        return this._$strength
+            && this._$alphas && this._$ratios && this._$colors
+            && this._$blurFilter._$canApply();
     }
 
     /**
