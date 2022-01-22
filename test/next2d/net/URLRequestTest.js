@@ -5,7 +5,6 @@ describe("URLRequest.js toString test", function()
     {
         expect(new URLRequest().toString()).toBe("[object URLRequest]");
     });
-
 });
 
 describe("URLRequest.js static toString test", function()
@@ -40,7 +39,7 @@ describe("URLRequest.js properties test", function()
         window.next2d = new Next2D();
         window.next2d._$player._$canvas = document.createElement("canvas");
     });
-    
+
     it("contentType success", function ()
     {
         let req = new URLRequest();
@@ -312,7 +311,11 @@ describe("URLRequest.js contentType test", function()
 
 describe("URLRequest.js url test", function()
 {
-
+    beforeEach(function() {
+        window.next2d = new Next2D();
+        window.next2d._$player._$canvas = document.createElement("canvas");
+    });
+    
     it("default test case1", function()
     {
         let ur = new URLRequest();
