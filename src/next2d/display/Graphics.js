@@ -1258,7 +1258,6 @@ class Graphics
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @param  {array} filters
-     * @param  {object} bounds
      * @param  {number} width
      * @param  {number} height
      * @return {WebGLTexture}
@@ -1616,6 +1615,12 @@ class Graphics
 
         }
 
+        // cache current buffer
+        const currentBuffer = context.frameBuffer.currentAttachment;
+        if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
+            return;
+        }
+
         let xScale = +$Math.sqrt(
             matrix[0] * matrix[0]
             + matrix[1] * matrix[1]
@@ -1661,12 +1666,6 @@ class Graphics
                 return;
             }
 
-        }
-
-        // cache current buffer
-        const currentBuffer = context.frameBuffer.currentAttachment;
-        if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
-            return;
         }
 
         // get cache
@@ -1788,7 +1787,7 @@ class Graphics
             const canApply = displayObject._$canApply(filters);
             if (canApply) {
 
-                const filterTexture = this._$drawFilter(
+                const filterTexture = displayObject._$drawFilter(
                     context, texture, matrix,
                     color_transform, filters, width, height
                 );

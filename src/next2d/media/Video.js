@@ -332,7 +332,7 @@ class Video extends DisplayObject
      */
     get videoHeight ()
     {
-        return this._$bounds.yMax;
+        return this._$video ? this._$video.videoHeight : this._$bounds.yMax;
     }
 
     /**
@@ -346,7 +346,7 @@ class Video extends DisplayObject
      */
     get videoWidth ()
     {
-        return this._$bounds.xMax;
+        return this._$video ? this._$video.videoWidth : this._$bounds.xMax;
     }
 
     /**
@@ -795,80 +795,156 @@ class Video extends DisplayObject
 
         let width  = $Math.ceil($Math.abs(xMax - xMin));
         let height = $Math.ceil($Math.abs(yMax - yMin));
-        if (!width || !height) {
+        switch (true) {
+
+            case width === 0:
+            case height === 0:
+            case width === -Util.$Infinity:
+            case height === -Util.$Infinity:
+            case width === Util.$Infinity:
+            case height === Util.$Infinity:
+                return;
+
+            default:
+                break;
+
+        }
+
+        // cache current buffer
+        const currentBuffer = context.frameBuffer.currentAttachment;
+        if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
             return;
         }
 
-        let texture  = this._$texture;
-        let offsetX  = 0;
-        let offsetY  = 0;
+        let xScale = +$Math.sqrt(
+            multiMatrix[0] * multiMatrix[0]
+            + multiMatrix[1] * multiMatrix[1]
+        );
 
-        const filters = this._$filters   || this.filters;
-        if (filters && filters.length) {
+        let yScale = +$Math.sqrt(
+            multiMatrix[2] * multiMatrix[2]
+            + multiMatrix[3] * multiMatrix[3]
+        );
 
-            const canApply = this._$canApply(filters);
-            if (canApply) {
+        const filters   = this._$filters   || this.filters;
+        const blendMode = this._$blendMode || this.blendMode;
+        if (0 > xMin + width || 0 > yMin + height) {
 
-                const cacheKeys = [this._$instanceId, "f"];
-                let cache = Util.$cacheStore().get(cacheKeys);
+            if (filters && filters.length
+                && this._$canApply(filters)
+            ) {
 
-                const updated = this._$isFilterUpdated(
-                    width, height, matrix, color_transform, filters, canApply
-                );
-
-                if (!cache || updated) {
-
-                    // cache clear
-                    if (cache) {
-
-                        Util.$cacheStore().set(cacheKeys, null);
-                        cache.layerWidth     = 0;
-                        cache.layerHeight    = 0;
-                        cache._$offsetX      = 0;
-                        cache._$offsetY      = 0;
-                        cache.matrix         = null;
-                        cache.colorTransform = null;
-                        context.frameBuffer.releaseTexture(cache);
-
-                        cache = null;
-                    }
-
-                    texture = this._$applyFilter(
-                        context, filters, this._$texture, matrix, color_transform
-                    );
-
-                    Util.$cacheStore().set(cacheKeys, texture);
-
+                let rect = new Rectangle(0, 0, width, height);
+                for (let idx = 0; idx < filters.length ; ++idx) {
+                    rect = filters[idx]._$generateFilterRect(rect, xScale, yScale);
                 }
 
-                if (cache) {
-                    texture = cache;
+                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
+                    return;
                 }
 
-                Util.$poolArray(cacheKeys);
-
-                offsetX = texture._$offsetX;
-                offsetY = texture._$offsetY;
+            } else {
+                return;
             }
 
         }
 
-        // draw
-        Util.$resetContext(context);
-        context._$globalAlpha = alpha;
-        context._$imageSmoothingEnabled = this._$smoothing;
-        context._$globalCompositeOperation = this._$blendMode || this.blendMode;
+        let texture = this._$texture;
+        if (filters && filters.length && this._$canApply(filters)) {
 
-        context.setTransform(
-            multiMatrix[0], multiMatrix[1], multiMatrix[2],
-            multiMatrix[3], multiMatrix[4], multiMatrix[5]
-        );
+            let targetTexture = this._$texture;
+            if (xScale !== Util.$devicePixelRatio
+                || yScale !== Util.$devicePixelRatio
+            ) {
 
-        context.drawImage(texture, -offsetX, -offsetY,
-            texture.width, texture.height,
-            multiColor
-        );
+                const currentAttachment = context
+                    .frameBuffer
+                    .currentAttachment;
 
+                const attachment = context
+                    .frameBuffer
+                    .createCacheAttachment(
+                        targetTexture.width  * xScale,
+                        targetTexture.height * yScale
+                    );
+
+                context._$bind(attachment);
+
+                // reset
+                Util.$resetContext(context);
+                context.setTransform(xScale, 0, 0, yScale, 0, 0);
+                context.drawImage(this._$texture,
+                    0, 0, this._$texture.width, this._$texture.height
+                );
+
+                // execute
+                targetTexture = context
+                    .frameBuffer
+                    .getTextureFromCurrentAttachment();
+
+                context._$bind(currentAttachment);
+                context
+                    .frameBuffer
+                    .releaseAttachment(attachment, false);
+
+            }
+
+            // draw filter
+            texture = this._$drawFilter(
+                context, targetTexture, multiMatrix,
+                multiColor, filters, width, height
+            );
+
+            // reset
+            Util.$resetContext(context);
+
+            // draw
+            context._$globalAlpha = alpha;
+            context._$imageSmoothingEnabled = true;
+            context._$globalCompositeOperation = blendMode;
+
+            // size
+            const bounds = Util.$boundsMatrix(this._$bounds, multiMatrix);
+            context.setTransform(1, 0, 0, 1,
+                bounds.xMin - texture._$offsetX,
+                bounds.yMin - texture._$offsetY
+            );
+            context.drawImage(texture,
+                0, 0, texture.width, texture.height,
+                multiColor
+            );
+
+            // pool
+            Util.$poolBoundsObject(bounds);
+
+        } else {
+
+            // reset
+            Util.$resetContext(context);
+
+            // draw
+            context._$globalAlpha = alpha;
+            context._$imageSmoothingEnabled = true;
+            context._$globalCompositeOperation = blendMode;
+
+            context.setTransform(
+                multiMatrix[0], multiMatrix[1], multiMatrix[2],
+                multiMatrix[3], multiMatrix[4], multiMatrix[5]
+            );
+
+            context.drawImage(
+                texture, 0, 0,
+                texture.width, texture.height, multiColor
+            );
+        }
+
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+
+        if (multiColor !== color_transform) {
+            Util.$poolFloat32Array8(multiColor);
+        }
     }
 
     /**

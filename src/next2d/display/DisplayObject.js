@@ -1448,6 +1448,66 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {WebGLTexture}         target_texture
+     * @param  {Float32Array}         matrix
+     * @param  {Float32Array}         color_transform
+     * @param  {array}                filters
+     * @param  {number}               width
+     * @param  {number} height
+     * @return {WebGLTexture}
+     * @method
+     * @private
+     */
+    _$drawFilter (
+        context, target_texture, matrix, color_transform,
+        filters, width, height
+    ) {
+
+        const cacheKeys = [this._$instanceId, "f"];
+        let cache = Util.$cacheStore().get(cacheKeys);
+
+        const updated = this._$isFilterUpdated(
+            width, height, matrix, color_transform, filters, true
+        );
+
+        let texture;
+        if (!cache || updated) {
+
+            // cache clear
+            if (cache) {
+
+                Util.$cacheStore().set(cacheKeys, null);
+                cache.layerWidth     = 0;
+                cache.layerHeight    = 0;
+                cache._$offsetX      = 0;
+                cache._$offsetY      = 0;
+                cache.matrix         = null;
+                cache.colorTransform = null;
+
+                context
+                    .frameBuffer
+                    .releaseTexture(cache);
+
+                cache = null;
+            }
+
+            texture = this._$applyFilter(
+                context, filters, target_texture,
+                matrix, color_transform, width, height
+            );
+
+            Util.$cacheStore().set(cacheKeys, texture);
+        }
+
+        if (cache) {
+            texture = cache;
+        }
+
+        return texture;
+    }
+
+    /**
      * @param   {array}  [matrix=null]
      * @returns {object}
      * @private
