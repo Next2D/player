@@ -2597,8 +2597,8 @@ class TextField extends InteractiveObject
         }
 
         // cache current buffer
-        const currentBuffer = context.frameBuffer.currentAttachment;
-        if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
+        const currentAttachment = context.frameBuffer.currentAttachment;
+        if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
             return;
         }
 

@@ -1396,10 +1396,10 @@ class Graphics
         }
 
         // cache current buffer
-        const currentBuffer = context
+        const currentAttachment = context
             .frameBuffer
             .currentAttachment;
-        if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
+        if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
             return;
         }
 
@@ -1497,7 +1497,7 @@ class Graphics
                 .releaseAttachment(buffer, false);
 
             // end draw and reset current buffer
-            context._$bind(currentBuffer);
+            context._$bind(currentAttachment);
 
         }
 
@@ -1774,7 +1774,7 @@ class Graphics
                 .releaseAttachment(buffer, false);
 
             // end draw and reset current buffer
-            context._$bind(currentBuffer);
+            context._$bind(currentAttachment);
         }
 
         // pool
