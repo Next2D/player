@@ -2577,19 +2577,27 @@ class TextField extends InteractiveObject
 
         let width  = $Math.ceil($Math.abs(xMax - xMin));
         let height = $Math.ceil($Math.abs(yMax - yMin));
-        if (!width || !height) {
-            return;
+        switch (true) {
+
+            case width === 0:
+            case height === 0:
+            case width === -Util.$Infinity:
+            case height === -Util.$Infinity:
+            case width === Util.$Infinity:
+            case height === Util.$Infinity:
+                return;
+
+            default:
+                break;
+
         }
 
         if (0 > xMin + width || 0 > yMin + height) {
             return;
         }
 
-        // area check
-        const currentBuffer = context
-            .frameBuffer
-            .currentAttachment;
-
+        // cache current buffer
+        const currentBuffer = context.frameBuffer.currentAttachment;
         if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
             return;
         }
@@ -2620,6 +2628,26 @@ class TextField extends InteractiveObject
             yScale = +yScale.toFixed(4);
         }
 
+        const filters = this._$filters || this.filters;
+        if (0 > xMin + width || 0 > yMin + height) {
+
+            if (filters && filters.length && this._$canApply(filters)) {
+
+                let rect = new Rectangle(0, 0, width, height);
+                for (let idx = 0; idx < filters.length ; ++idx) {
+                    rect = filters[idx]._$generateFilterRect(rect, xScale, yScale);
+                }
+
+                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
+                    return;
+                }
+
+            } else {
+                return;
+            }
+
+        }
+
         // get cache
         const keys = Util.$getArray();
         keys[0] = xScale;
@@ -2628,6 +2656,7 @@ class TextField extends InteractiveObject
         const cacheStore = Util.$cacheStore();
         const cacheKeys  = cacheStore.generateKeys(this._$instanceId, keys, multiColor);
         let texture      = cacheStore.get(cacheKeys);
+        Util.$poolArray(keys);
 
         // texture is small or renew
         if (texture && (this._$renew || this._$isUpdated())) {
@@ -2655,7 +2684,6 @@ class TextField extends InteractiveObject
             if (this._$background || this._$border) {
 
                 ctx.beginPath();
-                ctx.rotate($Math.atan2(matrix[1], matrix[0]));
                 ctx.moveTo(0, 0);
                 ctx.lineTo(width, 0);
                 ctx.lineTo(width, height);
@@ -2700,7 +2728,7 @@ class TextField extends InteractiveObject
 
             ctx.beginPath();
             ctx.setTransform(xScale, 0, 0, yScale, 0, 0);
-            this._$doDraw(ctx, matrix, multiColor, false, width / matrix[0]);
+            this._$doDraw(ctx, matrix, multiColor, width / matrix[0]);
             ctx.restore();
 
             texture = context
@@ -2714,59 +2742,45 @@ class TextField extends InteractiveObject
             cacheStore.destroy(ctx);
 
         }
-
         Util.$poolArray(cacheKeys);
-        Util.$poolArray(keys);
 
-        let offsetX = 0;
-        let offsetY = 0;
-
-        const filters = this._$filters || this.filters;
+        const blendMode = this._$blendMode || this.blendMode;
         if (filters && filters.length) {
 
             const canApply = this._$canApply(filters);
             if (canApply) {
 
-                const cacheKeys = [this._$instanceId, "f"];
-                let cache = Util.$cacheStore().get(cacheKeys);
-
-                const updated = this._$isFilterUpdated(
-                    width, height, matrix, color_transform, filters, canApply
+                const filterTexture = this._$drawFilter(
+                    context, texture, multiMatrix,
+                    filters, width, height
                 );
 
-                if (!cache || updated) {
+                // reset
+                Util.$resetContext(context);
 
-                    // cache clear
-                    if (cache) {
+                // draw
+                context._$globalAlpha = alpha;
+                context._$globalCompositeOperation = blendMode;
 
-                        Util.$cacheStore().set(cacheKeys, null);
-                        cache.layerWidth     = 0;
-                        cache.layerHeight    = 0;
-                        cache._$offsetX      = 0;
-                        cache._$offsetY      = 0;
-                        cache.matrix         = null;
-                        cache.colorTransform = null;
-                        context.frameBuffer.releaseTexture(cache);
+                context.setTransform(1, 0, 0, 1,
+                    xMin - filterTexture._$offsetX,
+                    yMin - filterTexture._$offsetY
+                );
+                context.drawImage(filterTexture,
+                    0, 0, filterTexture.width, filterTexture.height,
+                    multiColor
+                );
 
-                        cache = null;
-                    }
-
-                    texture = this._$applyFilter(
-                        context, filters, texture, matrix, color_transform
-                    );
-
-                    Util.$cacheStore().set(cacheKeys, texture);
-
+                if (multiMatrix !== matrix) {
+                    Util.$poolFloat32Array6(multiMatrix);
                 }
 
-                if (cache) {
-                    texture = cache;
+                if (multiColor !== color_transform) {
+                    Util.$poolFloat32Array8(multiColor);
                 }
 
-                Util.$poolArray(cacheKeys);
+                return ;
 
-                offsetX = texture._$offsetX;
-                offsetY = texture._$offsetY;
             }
 
         }
@@ -2776,7 +2790,7 @@ class TextField extends InteractiveObject
 
         // draw
         context._$globalAlpha = alpha;
-        context._$globalCompositeOperation = this._$blendMode || this.blendMode;
+        context._$globalCompositeOperation = blendMode;
 
         const radianX = $Math.atan2(multiMatrix[1], multiMatrix[0]);
         const radianY = $Math.atan2(-multiMatrix[2], multiMatrix[3]);
@@ -2790,26 +2804,27 @@ class TextField extends InteractiveObject
                 $Math.sin(radianX),
                 -$Math.sin(radianY),
                 $Math.cos(radianY),
-                tx * $Math.cos(radianX) - ty * $Math.sin(radianY) + multiMatrix[4] - offsetX,
-                tx * $Math.sin(radianX) + ty * $Math.cos(radianY) + multiMatrix[5] - offsetY
+                tx * $Math.cos(radianX) - ty * $Math.sin(radianY) + multiMatrix[4],
+                tx * $Math.sin(radianX) + ty * $Math.cos(radianY) + multiMatrix[5]
             );
 
         } else {
 
-            context.setTransform(1, 0, 0, 1,
-                xMin - offsetX,
-                yMin - offsetY
-            );
+            context.setTransform(1, 0, 0, 1, xMin, yMin);
 
         }
 
         context.drawImage(texture,
-            0, 0, texture.width, texture.height, color_transform
+            0, 0, texture.width, texture.height, multiColor
         );
 
         // pool
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
+        }
+
+        if (multiColor !== color_transform) {
+            Util.$poolFloat32Array8(multiColor);
         }
     }
 
@@ -2817,24 +2832,18 @@ class TextField extends InteractiveObject
      * @param  {CanvasRenderingContext2D} context
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
-     * @param  {boolean} is_clip
      * @param  {number} width
      * @return {void}
      * @method
      * @private
      */
-    _$doDraw (context, matrix, color_transform, is_clip, width)
+    _$doDraw (context, matrix, color_transform, width)
     {
         // init
         const textData = this._$getTextData();
 
-        const limitWidth = is_clip
-            ? 0
-            : this.width;
-
-        const limitHeight = is_clip
-            ? 0
-            : this.height;
+        const limitWidth  = this.width;
+        const limitHeight = this.height;
 
         // setup
         let xOffset      = 0;
@@ -2870,8 +2879,7 @@ class TextField extends InteractiveObject
 
             // check
             const offsetWidth = xOffset + obj.x;
-            if (!is_clip
-                && this._$autoSize === TextFieldAutoSize.NONE
+            if (this._$autoSize === TextFieldAutoSize.NONE
                 && (offsetHeight > limitHeight || offsetWidth > limitWidth)
             ) {
                 continue;
@@ -2880,23 +2888,20 @@ class TextField extends InteractiveObject
             let tf = obj.textFormat;
 
             // color
-            if (!is_clip) {
+            const rgb   = Util.$intToRGBA(obj.textFormat._$color);
+            const alpha = $Math.max(0, $Math.min(
+                rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+            ) / 255;
 
-                const rgb   = Util.$intToRGBA(obj.textFormat._$color);
+            context.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+
+            if (this._$thickness) {
+                const rgb   = Util.$intToRGBA(this._$thicknessColor);
                 const alpha = $Math.max(0, $Math.min(
                     rgb.A * 255 * color_transform[3] + color_transform[7], 255)
                 ) / 255;
-
-                context.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-
-                if (this._$thickness) {
-                    const rgb   = Util.$intToRGBA(this._$thicknessColor);
-                    const alpha = $Math.max(0, $Math.min(
-                        rgb.A * 255 * color_transform[3] + color_transform[7], 255)
-                    ) / 255;
-                    context.lineWidth   = this._$thickness;
-                    context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-                }
+                context.lineWidth   = this._$thickness;
+                context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
             }
 
             const yIndex = obj.yIndex | 0;

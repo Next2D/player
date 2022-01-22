@@ -1275,7 +1275,7 @@ class Graphics
         let cache = Util.$cacheStore().get(cacheKeys);
 
         const updated = displayObject._$isFilterUpdated(
-            width, height, matrix, color_transform, filters, true
+            width, height, matrix, filters, true
         );
 
         let texture;
@@ -1616,8 +1616,8 @@ class Graphics
         }
 
         // cache current buffer
-        const currentBuffer = context.frameBuffer.currentAttachment;
-        if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
+        const currentAttachment = context.frameBuffer.currentAttachment;
+        if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
             return;
         }
 
@@ -1649,9 +1649,7 @@ class Graphics
 
         if (0 > xMin + width || 0 > yMin + height) {
 
-            if (filters && filters.length
-                && displayObject._$canApply(filters)
-            ) {
+            if (filters && filters.length && displayObject._$canApply(filters)) {
 
                 let rect = new Rectangle(0, 0, width, height);
                 for (let idx = 0; idx < filters.length ; ++idx) {
@@ -1669,10 +1667,14 @@ class Graphics
         }
 
         // get cache
+        const keys = Util.$getArray();
+        keys[0] = xScale;
+        keys[1] = yScale;
         const cacheStore = Util.$cacheStore();
         const cacheKeys  = cacheStore.generateKeys(
-            displayObject._$instanceId, [xScale, yScale], color_transform
+            displayObject._$instanceId, keys, color_transform
         );
+        Util.$poolArray(keys);
 
         // cache
         let texture = cacheStore.get(cacheKeys);
@@ -1789,7 +1791,7 @@ class Graphics
 
                 const filterTexture = displayObject._$drawFilter(
                     context, texture, matrix,
-                    color_transform, filters, width, height
+                    filters, width, height
                 );
 
                 // reset

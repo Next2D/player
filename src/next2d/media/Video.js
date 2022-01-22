@@ -811,8 +811,8 @@ class Video extends DisplayObject
         }
 
         // cache current buffer
-        const currentBuffer = context.frameBuffer.currentAttachment;
-        if (xMin > currentBuffer.width || yMin > currentBuffer.height) {
+        const currentAttachment = context.frameBuffer.currentAttachment;
+        if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
             return;
         }
 
@@ -826,13 +826,10 @@ class Video extends DisplayObject
             + multiMatrix[3] * multiMatrix[3]
         );
 
-        const filters   = this._$filters   || this.filters;
-        const blendMode = this._$blendMode || this.blendMode;
+        const filters = this._$filters   || this.filters;
         if (0 > xMin + width || 0 > yMin + height) {
 
-            if (filters && filters.length
-                && this._$canApply(filters)
-            ) {
+            if (filters && filters.length && this._$canApply(filters)) {
 
                 let rect = new Rectangle(0, 0, width, height);
                 for (let idx = 0; idx < filters.length ; ++idx) {
@@ -850,12 +847,11 @@ class Video extends DisplayObject
         }
 
         let texture = this._$texture;
+        const blendMode = this._$blendMode || this.blendMode;
         if (filters && filters.length && this._$canApply(filters)) {
 
             let targetTexture = this._$texture;
-            if (xScale !== Util.$devicePixelRatio
-                || yScale !== Util.$devicePixelRatio
-            ) {
+            if (xScale !== 1 || yScale !== 1) {
 
                 const currentAttachment = context
                     .frameBuffer
@@ -892,7 +888,7 @@ class Video extends DisplayObject
             // draw filter
             texture = this._$drawFilter(
                 context, targetTexture, multiMatrix,
-                multiColor, filters, width, height
+                filters, width, height
             );
 
             // reset
@@ -900,7 +896,7 @@ class Video extends DisplayObject
 
             // draw
             context._$globalAlpha = alpha;
-            context._$imageSmoothingEnabled = true;
+            context._$imageSmoothingEnabled = this._$smoothing;
             context._$globalCompositeOperation = blendMode;
 
             // size
@@ -924,7 +920,7 @@ class Video extends DisplayObject
 
             // draw
             context._$globalAlpha = alpha;
-            context._$imageSmoothingEnabled = true;
+            context._$imageSmoothingEnabled = this._$smoothing;
             context._$globalCompositeOperation = blendMode;
 
             context.setTransform(

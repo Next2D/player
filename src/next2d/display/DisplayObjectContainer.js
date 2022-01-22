@@ -1235,7 +1235,7 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         // pre data
-        const preData = this._$preDraw(context, matrix, color_transform);
+        const preData = this._$preDraw(context, matrix);
         if (!preData) {
             return ;
         }

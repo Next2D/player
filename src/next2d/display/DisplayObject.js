@@ -1451,16 +1451,15 @@ class DisplayObject extends EventDispatcher
      * @param  {CanvasToWebGLContext} context
      * @param  {WebGLTexture}         target_texture
      * @param  {Float32Array}         matrix
-     * @param  {Float32Array}         color_transform
      * @param  {array}                filters
      * @param  {number}               width
-     * @param  {number} height
+     * @param  {number}               height
      * @return {WebGLTexture}
      * @method
      * @private
      */
     _$drawFilter (
-        context, target_texture, matrix, color_transform,
+        context, target_texture, matrix,
         filters, width, height
     ) {
 
@@ -1468,7 +1467,7 @@ class DisplayObject extends EventDispatcher
         let cache = Util.$cacheStore().get(cacheKeys);
 
         const updated = this._$isFilterUpdated(
-            width, height, matrix, color_transform, filters, true
+            width, height, matrix, filters, true
         );
 
         let texture;
@@ -1494,7 +1493,7 @@ class DisplayObject extends EventDispatcher
 
             texture = this._$applyFilter(
                 context, filters, target_texture,
-                matrix, color_transform, width, height
+                matrix, width, height
             );
 
             Util.$cacheStore().set(cacheKeys, texture);
@@ -1625,7 +1624,6 @@ class DisplayObject extends EventDispatcher
      * @param  {number}       width
      * @param  {number}       height
      * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
      * @param  {array}        [filters=null]
      * @param  {boolean}      [can_apply=false]
      * @param  {number}       [position_x=0]
@@ -1634,8 +1632,9 @@ class DisplayObject extends EventDispatcher
      * @private
      */
     _$isFilterUpdated (
-        width, height, matrix, color_transform,
-        filters = null, can_apply = false, position_x = 0, position_y = 0
+        width, height, matrix,
+        filters = null, can_apply = false,
+        position_x = 0, position_y = 0
     ) {
 
         // cache flag
@@ -1668,9 +1667,6 @@ class DisplayObject extends EventDispatcher
             case cache.matrix !==
             matrix[0] + "_" + matrix[1] + "_" + matrix[2] + "_" + matrix[3] + "_" +
             position_x + "_" + position_y:
-            case cache.colorTransform !==
-            color_transform[0] + "_" + color_transform[1] + "_" + color_transform[2] + "_" + color_transform[3] + "_" +
-            color_transform[4] + "_" + color_transform[5] + "_" + color_transform[6] + "_" + color_transform[7]:
                 return true;
 
             default:
@@ -1686,7 +1682,6 @@ class DisplayObject extends EventDispatcher
      * @param  {array} filters
      * @param  {WebGLTexture} target_texture
      * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
      * @param  {number} width
      * @param  {number} height
      * @return {WebGLTexture}
@@ -1694,7 +1689,7 @@ class DisplayObject extends EventDispatcher
      */
     _$applyFilter (
         context, filters, target_texture,
-        matrix, color_transform, width, height
+        matrix, width, height
     ) {
 
         const currentAttachment = context
@@ -1750,8 +1745,7 @@ class DisplayObject extends EventDispatcher
         }
 
         context.drawImage(target_texture,
-            0, 0, target_texture.width, target_texture.height,
-            color_transform
+            0, 0, target_texture.width, target_texture.height
         );
 
         // init
@@ -1779,12 +1773,6 @@ class DisplayObject extends EventDispatcher
               matrix[0] + "_" + matrix[1] + "_"
             + matrix[2] + "_" + matrix[3] + "_0_0";
 
-        texture.colorTransform =
-              color_transform[0] + "_" + color_transform[1] + "_"
-            + color_transform[2] + "_" + color_transform[3] + "_"
-            + color_transform[4] + "_" + color_transform[5] + "_"
-            + color_transform[6] + "_" + color_transform[7];
-
         texture.filterState = true;
         texture.layerWidth  = width;
         texture.layerHeight = height;
@@ -1800,11 +1788,10 @@ class DisplayObject extends EventDispatcher
     /**
      * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
      * @return {object}
      * @private
      */
-    _$preDraw (context, matrix, color_transform)
+    _$preDraw (context, matrix)
     {
         const originMatrix = this._$transform._$rawMatrix();
         const tMatrix = Util.$multiplicationMatrix(matrix, originMatrix);
@@ -1948,7 +1935,7 @@ class DisplayObject extends EventDispatcher
             // check cache
             object.canApply = this._$canApply(filters);
             let updated = this._$isFilterUpdated(
-                layerWidth, layerHeight, tMatrix, color_transform, filters,
+                layerWidth, layerHeight, tMatrix, filters,
                 object.canApply, object.basePosition.x, object.basePosition.y
             );
 
@@ -1975,7 +1962,6 @@ class DisplayObject extends EventDispatcher
             object.isUpdated         = updated;
             object.color             = Util.$getFloat32Array8();
             object.baseMatrix        = tMatrix;
-            object.baseColor         = color_transform;
             object.currentAttachment = currentAttachment;
             object.currentMaskBuffer = currentMaskBuffer;
             object.currentMaskBounds = currentMaskBounds;
@@ -2092,11 +2078,6 @@ class DisplayObject extends EventDispatcher
             texture.matrix = mat[0] + "_" + mat[1] + "_" + mat[2] + "_" + mat[3]
                 + "_" + object.basePosition.x + "_" + object.basePosition.y;
 
-            const col = object.baseColor;
-            texture.colorTransform =
-                col[0] + "_" + col[1] + "_" + col[2] + "_" + col[3] + "_" +
-                col[4] + "_" + col[5] + "_" + col[6] + "_" + col[7];
-
             texture.layerWidth  = object.layerWidth;
             texture.layerHeight = object.layerHeight;
         }
@@ -2114,9 +2095,11 @@ class DisplayObject extends EventDispatcher
 
         // set
         Util.$resetContext(context);
-        context.setTransform(1, 0, 0, 1, 0, 0);
+
         context._$globalAlpha = Util.$clamp(color_transform[3] + color_transform[7] / 255, 0, 1);
         context._$globalCompositeOperation = object.blendMode;
+
+        context.setTransform(1, 0, 0, 1, 0, 0);
         context.drawImage(texture,
             -offsetX + object.position.dx,
             -offsetY + object.position.dy,
