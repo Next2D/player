@@ -315,7 +315,7 @@ describe("URLRequest.js url test", function()
         window.next2d = new Next2D();
         window.next2d._$player._$canvas = document.createElement("canvas");
     });
-    
+
     it("default test case1", function()
     {
         let ur = new URLRequest();
