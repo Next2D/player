@@ -1254,68 +1254,6 @@ class Graphics
 
     /**
      * @param  {CanvasToWebGLContext} context
-     * @param  {WebGLTexture} target_texture
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
-     * @param  {array} filters
-     * @param  {number} width
-     * @param  {number} height
-     * @return {WebGLTexture}
-     * @method
-     * @private
-     */
-    _$drawFilter (
-        context, target_texture, matrix, color_transform,
-        filters, width, height
-    ) {
-
-        const displayObject = this._$displayObject;
-
-        const cacheKeys = [displayObject._$instanceId, "f"];
-        let cache = Util.$cacheStore().get(cacheKeys);
-
-        const updated = displayObject._$isFilterUpdated(
-            width, height, matrix, filters, true
-        );
-
-        let texture;
-        if (!cache || updated) {
-
-            // cache clear
-            if (cache) {
-
-                Util.$cacheStore().set(cacheKeys, null);
-                cache.layerWidth     = 0;
-                cache.layerHeight    = 0;
-                cache._$offsetX      = 0;
-                cache._$offsetY      = 0;
-                cache.matrix         = null;
-                cache.colorTransform = null;
-
-                context
-                    .frameBuffer
-                    .releaseTexture(cache);
-
-                cache = null;
-            }
-
-            texture = displayObject._$applyFilter(
-                context, filters, target_texture,
-                matrix, color_transform, width, height
-            );
-
-            Util.$cacheStore().set(cacheKeys, texture);
-        }
-
-        if (cache) {
-            texture = cache;
-        }
-
-        return texture;
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @param  {string} [blend_mode=BlendMode.NORMAL]
@@ -1372,6 +1310,12 @@ class Graphics
 
         }
 
+        // cache current buffer
+        const currentAttachment = context.frameBuffer.currentAttachment;
+        if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
+            return;
+        }
+
         const xScale = $Math.sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]);
         const yScale = $Math.sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]);
         if (0 > xMin + width || 0 > yMin + height) {
@@ -1395,29 +1339,28 @@ class Graphics
 
         }
 
-        // cache current buffer
-        const currentAttachment = context
-            .frameBuffer
-            .currentAttachment;
-        if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
-            return;
-        }
-
-        // resize
-        const textureScale = context._$textureScale(width, height);
-        if (textureScale < 1) {
-            width  *= textureScale;
-            height *= textureScale;
-        }
-
         // get cache
+        const keys = Util.$getArray(
+            multiMatrix[0], multiMatrix[1],
+            multiMatrix[2], multiMatrix[3]
+        );
+
         const cacheKeys = Util
             .$cacheStore()
-            .generateKeys(displayObject._$instanceId, [xScale, yScale], color_transform);
+            .generateKeys(displayObject._$instanceId, keys, color_transform);
+
+        Util.$poolArray(keys);
 
         // cache
         let texture = Util.$cacheStore().get(cacheKeys);
         if (!texture) {
+
+            // resize
+            const textureScale = context._$textureScale(width, height);
+            if (textureScale < 1) {
+                width  *= textureScale;
+                height *= textureScale;
+            }
 
             // create cache buffer
             const buffer = context
@@ -1431,58 +1374,41 @@ class Graphics
             // plain alpha
             color_transform[3] = 1;
 
-            switch (true) {
+            const hw = width  / 2;
+            const hh = height / 2;
 
-                case rawMatrix[0] !== 1:
-                case rawMatrix[1] !== 0:
-                case rawMatrix[2] !== 0:
-                case rawMatrix[3] !== 1:
-                    {
-                        const rotate = $Math.atan2(matrix[1], matrix[0]);
+            const ratio = Util.$devicePixelRatio;
+            const ratioMatrix = Util.$getFloat32Array6(
+                1 / ratio, 0, 0, 1 / ratio
+            );
+            const parentMatrix = Util.$getFloat32Array6(
+                matrix[0], matrix[1], matrix[2], matrix[3], 0, 0
+            );
+            const baseMatrix = Util.$multiplicationMatrix(
+                ratioMatrix, parentMatrix
+            );
+            Util.$poolFloat32Array6(ratioMatrix);
+            Util.$poolFloat32Array6(parentMatrix);
 
-                        let tx = 0;
-                        let ty = 0;
-                        if (rotate) {
+            const childMatrix = Util.$getFloat32Array6(
+                1, 0, 0, 1, -hw, -hh
+            );
+            const multiMatrix = Util.$multiplicationMatrix(
+                baseMatrix, childMatrix
+            );
+            Util.$poolFloat32Array6(baseMatrix);
+            Util.$poolFloat32Array6(childMatrix);
 
-                            // TODO
-                            const matrix2 = new Matrix();
-                            matrix2.translate(-width / 2, -height / 2);
-                            matrix2.rotate(rotate);
-                            matrix2.translate(width / 2, height / 2);
+            Util.$resetContext(context);
+            context.setTransform(
+                matrix[0], matrix[1], matrix[2], matrix[3],
+                multiMatrix[4] + hw,
+                multiMatrix[5] + hh
+            );
+            Util.$poolFloat32Array6(multiMatrix);
 
-                            const topLeft     = matrix2.transformPoint(new Point(0, 0));
-                            const topRight    = matrix2.transformPoint(new Point(width, 0));
-                            const bottomLeft  = matrix2.transformPoint(new Point(0, height));
-                            const bottomRight = matrix2.transformPoint(new Point(width, height));
-
-                            tx = $Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
-                            ty = $Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
-                        }
-
-                        Util.$resetContext(context);
-                        context.setTransform(
-                            matrix[0], matrix[1], matrix[2], matrix[3],
-                            -tx, -ty
-                        );
-
-                        context.beginPath();
-                        this._$runTransformCommand(context, rawMatrix, color_transform);
-                    }
-                    break;
-
-                default:
-
-                    context.setTransform(
-                        multiMatrix[0], multiMatrix[1], multiMatrix[2], multiMatrix[3],
-                        multiMatrix[4] - xMin,
-                        multiMatrix[5] - yMin
-                    );
-
-                    this._$doDraw(context, color_transform);
-
-                    break;
-
-            }
+            context.beginPath();
+            this._$runTransformCommand(context, rawMatrix, color_transform);
 
             texture = context
                 .frameBuffer
@@ -1501,50 +1427,45 @@ class Graphics
 
         }
 
-        // let isFilter = false;
-        // let offsetX  = 0;
-        // let offsetY  = 0;
-        if (filters && filters.length) {
+        if (filters && filters.length && displayObject._$canApply(filters)) {
 
-            const canApply = displayObject._$canApply(filters);
-            if (canApply) {
+            const filterTexture = displayObject._$drawFilter(
+                context, texture, matrix,
+                filters, width, height
+            );
 
-                // isFilter = true;
+            // reset
+            Util.$resetContext(context);
 
-                return this._$drawFilter(
-                    context, texture, matrix,
-                    color_transform, filters, width, height
-                );
+            // draw
+            context._$globalAlpha = alpha;
+            context._$imageSmoothingEnabled = true;
+            context._$globalCompositeOperation = blend_mode;
 
-                // offsetX = texture._$offsetX;
-                // offsetY = texture._$offsetY;
-            }
+            context.setTransform(1, 0, 0, 1,
+                xMin - filterTexture._$offsetX,
+                yMin - filterTexture._$offsetY
+            );
+            context.drawImage(filterTexture,
+                0, 0, filterTexture.width, filterTexture.height,
+                color_transform
+            );
 
+        } else {
+
+            // reset
+            Util.$resetContext(context);
+
+            // draw
+            context._$globalAlpha = alpha;
+            context._$imageSmoothingEnabled = true;
+            context._$globalCompositeOperation = blend_mode;
+
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.drawImage(texture,
+                xMin, yMin, width, height, color_transform
+            );
         }
-
-        // reset
-        Util.$resetContext(context);
-
-        // draw
-        context._$globalAlpha = alpha;
-        context._$imageSmoothingEnabled = true;
-        context._$globalCompositeOperation = blend_mode;
-
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.drawImage(texture,
-            xMin, yMin, width, height, color_transform
-        );
-
-        // if (isFilter) {
-        //     context.drawImage(texture,
-        //         xMin - offsetX, yMin - offsetY,
-        //         texture.width, texture.height, color_transform
-        //     );
-        // } else {
-        //     context.drawImage(texture,
-        //         xMin, yMin, width, height, color_transform
-        //     );
-        // }
 
         // pool
         Util.$poolArray(cacheKeys);
@@ -1667,9 +1588,7 @@ class Graphics
         }
 
         // get cache
-        const keys = Util.$getArray();
-        keys[0] = xScale;
-        keys[1] = yScale;
+        const keys = Util.$getArray(xScale, yScale);
         const cacheStore = Util.$cacheStore();
         const cacheKeys  = cacheStore.generateKeys(
             displayObject._$instanceId, keys, color_transform

@@ -320,7 +320,7 @@ class CacheStore
 
         let str = "";
         if (matrix) {
-            str += `${matrix[0]}_${matrix[1]}`;
+            str += `${matrix.join("_")}`;
         }
 
         // color

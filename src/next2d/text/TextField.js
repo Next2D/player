@@ -2649,10 +2649,7 @@ class TextField extends InteractiveObject
         }
 
         // get cache
-        const keys = Util.$getArray();
-        keys[0] = xScale;
-        keys[1] = yScale;
-
+        const keys = Util.$getArray(xScale, yScale);
         const cacheStore = Util.$cacheStore();
         const cacheKeys  = cacheStore.generateKeys(this._$instanceId, keys, multiColor);
         let texture      = cacheStore.get(cacheKeys);
