@@ -1539,7 +1539,6 @@ class DisplayObject extends EventDispatcher
         const xMax = rect._$x + rect._$width;
         const yMin = rect._$y;
         const yMax = rect._$y + rect._$height;
-        console.log("player: ", xMin, yMin);
 
         return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
     }
@@ -1848,7 +1847,6 @@ class DisplayObject extends EventDispatcher
             object.basePosition.y = originMatrix[5];
 
             // check after size
-            console.log(this, this._$filters, this.filters);
             let baseLayerBounds = this._$getLayerBounds(null);
             const layerBounds = Util.$boundsMatrix(baseLayerBounds, tMatrix);
 

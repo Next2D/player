@@ -2573,7 +2573,6 @@ class TextField extends InteractiveObject
         const yMax   = +bounds.yMax;
         const yMin   = +bounds.yMin;
         Util.$poolBoundsObject(bounds);
-        Util.$poolBoundsObject(baseBounds);
 
         let width  = $Math.ceil($Math.abs(xMax - xMin));
         let height = $Math.ceil($Math.abs(yMax - yMin));
@@ -2657,14 +2656,15 @@ class TextField extends InteractiveObject
 
         // texture is small or renew
         if (texture && (this._$renew || this._$isUpdated())) {
-            cacheStore.set(cacheKeys, null);
-            cacheStore.destroy(texture);
+            cacheStore.removeCache(this._$instanceId);
             texture = null;
         }
 
-        width  += 4 * Util.$devicePixelRatio;
-        height += 4 * Util.$devicePixelRatio;
         if (!texture) {
+
+            // resize
+            const baseWidth  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+            const baseHeight = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
 
             this._$renew = false;
 
@@ -2673,8 +2673,8 @@ class TextField extends InteractiveObject
 
             // new canvas
             const canvas  = cacheStore.getCanvas();
-            canvas.width  = width;
-            canvas.height = height;
+            canvas.width  = baseWidth;
+            canvas.height = baseHeight;
             const ctx     = canvas.getContext("2d");
 
             // border and background
@@ -2682,31 +2682,31 @@ class TextField extends InteractiveObject
 
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
-                ctx.lineTo(width, 0);
-                ctx.lineTo(width, height);
-                ctx.lineTo(0, height);
+                ctx.lineTo(baseWidth, 0);
+                ctx.lineTo(baseWidth, baseHeight);
+                ctx.lineTo(0, baseHeight);
                 ctx.lineTo(0, 0);
 
                 if (this._$background) {
 
-                    const rgba = Util.$generateColorTransform(
-                        Util.$intToRGBA(this._$backgroundColor),
-                        multiColor
-                    );
+                    const rgb   = Util.$intToRGBA(this._$backgroundColor);
+                    const alpha = $Math.max(0, $Math.min(
+                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
+                    ) / 255;
 
-                    ctx.fillStyle = `rgba(${rgba.R},${rgba.G},${rgba.B},${rgba.A})`;
+                    ctx.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
                     ctx.fill();
                 }
 
                 if (this._$border) {
 
-                    const rgba = Util.$generateColorTransform(
-                        Util.$intToRGBA(this._$borderColor),
-                        multiColor
-                    );
+                    const rgb   = Util.$intToRGBA(this._$borderColor);
+                    const alpha = $Math.max(0, $Math.min(
+                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
+                    ) / 255;
 
                     ctx.lineWidth   = 1;
-                    ctx.strokeStyle = `rgba(${rgba.R},${rgba.G},${rgba.B},${rgba.A})`;
+                    ctx.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
                     ctx.stroke();
 
                 }
@@ -2717,15 +2717,15 @@ class TextField extends InteractiveObject
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(2, 2);
-            ctx.lineTo(width - 2, 2);
-            ctx.lineTo(width - 2, height - 2);
-            ctx.lineTo(2, height - 2);
+            ctx.lineTo(baseWidth - 2, 2);
+            ctx.lineTo(baseWidth - 2, baseHeight - 2);
+            ctx.lineTo(2, baseHeight - 2);
             ctx.lineTo(2, 2);
             ctx.clip();
 
             ctx.beginPath();
             ctx.setTransform(xScale, 0, 0, yScale, 0, 0);
-            this._$doDraw(ctx, matrix, multiColor, width / matrix[0]);
+            this._$doDraw(ctx, matrix, multiColor, baseWidth / matrix[0]);
             ctx.restore();
 
             texture = context
@@ -2740,6 +2740,7 @@ class TextField extends InteractiveObject
 
         }
         Util.$poolArray(cacheKeys);
+        Util.$poolBoundsObject(baseBounds);
 
         const blendMode = this._$blendMode || this.blendMode;
         if (filters && filters.length) {

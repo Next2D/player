@@ -1291,6 +1291,7 @@ class Graphics
         const yMax   = bounds.yMax;
         const yMin   = bounds.yMin;
         Util.$poolBoundsObject(bounds);
+        Util.$poolBoundsObject(baseBounds);
 
         let width  = $Math.ceil($Math.abs(xMax - xMin));
         let height = $Math.ceil($Math.abs(yMax - yMin));
@@ -1426,6 +1427,7 @@ class Graphics
             context._$bind(currentAttachment);
 
         }
+        Util.$poolArray(cacheKeys);
 
         if (filters && filters.length && displayObject._$canApply(filters)) {
 
@@ -1467,9 +1469,9 @@ class Graphics
             );
         }
 
-        // pool
-        Util.$poolArray(cacheKeys);
-        Util.$poolBoundsObject(baseBounds);
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
     }
 
     /**
