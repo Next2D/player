@@ -37,7 +37,7 @@ class ShapeShaderVariantCollection
             if (is_stroke) {
                 vertexShaderSource = VertexShaderSourceStroke.TEMPLATE(
                     this._$keyword, highpLength, fragmentIndex,
-                    false, has_grid
+                    false, false, has_grid
                 );
             } else {
                 vertexShaderSource = VertexShaderSourceFill.TEMPLATE(
@@ -76,7 +76,7 @@ class ShapeShaderVariantCollection
             if (is_stroke) {
                 vertexShaderSource = VertexShaderSourceStroke.TEMPLATE(
                     this._$keyword, highpLength, fragmentIndex,
-                    true, has_grid
+                    true, false, has_grid
                 );
             } else {
                 vertexShaderSource = VertexShaderSourceFill.TEMPLATE(
@@ -118,7 +118,7 @@ class ShapeShaderVariantCollection
             if (is_stroke) {
                 vertexShaderSource = VertexShaderSourceStroke.TEMPLATE(
                     this._$keyword, highpLength, fragmentIndex,
-                    false, has_grid
+                    false, true, has_grid
                 );
             } else {
                 vertexShaderSource = VertexShaderSourceFill.TEMPLATE(
@@ -165,30 +165,30 @@ class ShapeShaderVariantCollection
 
         if (has_grid) {
             // vertex: u_parent_matrix
-            highp[0]  = grid.parentmatrix_a;
-            highp[1]  = grid.parentmatrix_b;
-            highp[2]  = grid.parentmatrix_c;
+            highp[0]  = grid.parentMatrixA;
+            highp[1]  = grid.parentMatrixB;
+            highp[2]  = grid.parentMatrixC;
 
-            highp[4]  = grid.parentmatrix_d;
-            highp[5]  = grid.parentmatrix_e;
-            highp[6]  = grid.parentmatrix_f;
+            highp[4]  = grid.parentMatrixD;
+            highp[5]  = grid.parentMatrixE;
+            highp[6]  = grid.parentMatrixF;
 
-            highp[8]  = grid.parentmatrix_g;
-            highp[9]  = grid.parentmatrix_h;
-            highp[10] = grid.parentmatrix_i;
+            highp[8]  = grid.parentMatrixG;
+            highp[9]  = grid.parentMatrixH;
+            highp[10] = grid.parentMatrixI;
 
             // vertex: u_ancestor_matrix
-            highp[12] = grid.ancestormatrix_a;
-            highp[13] = grid.ancestormatrix_b;
-            highp[14] = grid.ancestormatrix_c;
+            highp[12] = grid.ancestorMatrixA;
+            highp[13] = grid.ancestorMatrixB;
+            highp[14] = grid.ancestorMatrixC;
 
-            highp[16] = grid.ancestormatrix_d;
-            highp[17] = grid.ancestormatrix_e;
-            highp[18] = grid.ancestormatrix_f;
+            highp[16] = grid.ancestorMatrixD;
+            highp[17] = grid.ancestorMatrixE;
+            highp[18] = grid.ancestorMatrixF;
 
-            highp[20] = grid.ancestormatrix_g;
-            highp[21] = grid.ancestormatrix_h;
-            highp[22] = grid.ancestormatrix_i;
+            highp[20] = grid.ancestorMatrixG;
+            highp[21] = grid.ancestorMatrixH;
+            highp[22] = grid.ancestorMatrixI;
 
             // vertex: u_viewport
             highp[3]  = viewport_width;
@@ -259,7 +259,7 @@ class ShapeShaderVariantCollection
      * @param {number}  miter_limit
      * @param {boolean} has_grid
      * @param {array}   matrix
-     * @param {array}   inverseMatrix
+     * @param {array}   inverse_matrix
      * @param {number}  viewport_width
      * @param {number}  viewport_height
      * @param {CanvasToWebGLContextGrid} grid
@@ -279,7 +279,7 @@ class ShapeShaderVariantCollection
     setBitmapShapeUniform (
         uniform,
         is_stroke, half_width, face, miter_limit,
-        has_grid, matrix, inverseMatrix,
+        has_grid, matrix, inverse_matrix,
         viewport_width, viewport_height, grid,
         texture_width, texture_height,
         mul1, mul2, mul3, mul4,
@@ -302,17 +302,17 @@ class ShapeShaderVariantCollection
         highp[10] = matrix[8];
 
         // vertex: u_inverse_matrix
-        highp[12] = inverseMatrix[0];
-        highp[13] = inverseMatrix[1];
-        highp[14] = inverseMatrix[2];
+        highp[12] = inverse_matrix[0];
+        highp[13] = inverse_matrix[1];
+        highp[14] = inverse_matrix[2];
 
-        highp[16] = inverseMatrix[3];
-        highp[17] = inverseMatrix[4];
-        highp[18] = inverseMatrix[5];
+        highp[16] = inverse_matrix[3];
+        highp[17] = inverse_matrix[4];
+        highp[18] = inverse_matrix[5];
 
-        highp[11] = inverseMatrix[6];
-        highp[15] = inverseMatrix[7];
-        highp[19] = inverseMatrix[8];
+        highp[11] = inverse_matrix[6];
+        highp[15] = inverse_matrix[7];
+        highp[19] = inverse_matrix[8];
 
         // vertex: u_viewport
         highp[3] = viewport_width;
@@ -322,30 +322,30 @@ class ShapeShaderVariantCollection
 
         if (has_grid) {
             // vertex: u_parent_matrix
-            highp[i]      = grid.parentmatrix_a;
-            highp[i + 1]  = grid.parentmatrix_b;
-            highp[i + 2]  = grid.parentmatrix_c;
+            highp[i]      = grid.parentMatrixA;
+            highp[i + 1]  = grid.parentMatrixB;
+            highp[i + 2]  = grid.parentMatrixC;
 
-            highp[i + 4]  = grid.parentmatrix_d;
-            highp[i + 5]  = grid.parentmatrix_e;
-            highp[i + 6]  = grid.parentmatrix_f;
+            highp[i + 4]  = grid.parentMatrixD;
+            highp[i + 5]  = grid.parentMatrixE;
+            highp[i + 6]  = grid.parentMatrixF;
 
-            highp[i + 8]  = grid.parentmatrix_g;
-            highp[i + 9]  = grid.parentmatrix_h;
-            highp[i + 10] = grid.parentmatrix_i;
+            highp[i + 8]  = grid.parentMatrixG;
+            highp[i + 9]  = grid.parentMatrixH;
+            highp[i + 10] = grid.parentMatrixI;
 
             // vertex: u_ancestor_matrix
-            highp[i + 12] = grid.ancestormatrix_a;
-            highp[i + 13] = grid.ancestormatrix_b;
-            highp[i + 14] = grid.ancestormatrix_c;
+            highp[i + 12] = grid.ancestorMatrixA;
+            highp[i + 13] = grid.ancestorMatrixB;
+            highp[i + 14] = grid.ancestorMatrixC;
 
-            highp[i + 16] = grid.ancestormatrix_d;
-            highp[i + 17] = grid.ancestormatrix_e;
-            highp[i + 18] = grid.ancestormatrix_f;
+            highp[i + 16] = grid.ancestorMatrixD;
+            highp[i + 17] = grid.ancestorMatrixE;
+            highp[i + 18] = grid.ancestorMatrixF;
 
-            highp[i + 20] = grid.ancestormatrix_g;
-            highp[i + 21] = grid.ancestormatrix_h;
-            highp[i + 22] = grid.ancestormatrix_i;
+            highp[i + 20] = grid.ancestorMatrixG;
+            highp[i + 21] = grid.ancestorMatrixH;
+            highp[i + 22] = grid.ancestorMatrixI;
 
             // vertex: u_parent_viewport
             highp[i + 11] = grid.parentViewportX;
@@ -396,7 +396,7 @@ class ShapeShaderVariantCollection
 
     /**
      * @param {WebGLShaderUniform} uniform
-     * @param {boolean} has_grid
+     * @param {boolean} hasGrid
      * @param {number}  matrix_a
      * @param {number}  matrix_b
      * @param {number}  matrix_c
@@ -413,7 +413,7 @@ class ShapeShaderVariantCollection
      * @public
      */
     setMaskShapeUniform (
-        uniform, has_grid,
+        uniform, hasGrid,
         matrix_a, matrix_b, matrix_c,
         matrix_d, matrix_e, matrix_f,
         matrix_g, matrix_h, matrix_i,
@@ -421,32 +421,32 @@ class ShapeShaderVariantCollection
     ) {
         const highp = uniform.highp;
 
-        if (has_grid) {
+        if (hasGrid) {
             // vertex: u_parent_matrix
-            highp[0]  = grid.parentmatrix_a;
-            highp[1]  = grid.parentmatrix_b;
-            highp[2]  = grid.parentmatrix_c;
+            highp[0]  = grid.parentMatrixA;
+            highp[1]  = grid.parentMatrixB;
+            highp[2]  = grid.parentMatrixC;
 
-            highp[4]  = grid.parentmatrix_d;
-            highp[5]  = grid.parentmatrix_e;
-            highp[6]  = grid.parentmatrix_f;
+            highp[4]  = grid.parentMatrixD;
+            highp[5]  = grid.parentMatrixE;
+            highp[6]  = grid.parentMatrixF;
 
-            highp[8]  = grid.parentmatrix_g;
-            highp[9]  = grid.parentmatrix_h;
-            highp[10] = grid.parentmatrix_i;
+            highp[8]  = grid.parentMatrixG;
+            highp[9]  = grid.parentMatrixH;
+            highp[10] = grid.parentMatrixI;
 
             // vertex: u_ancestor_matrix
-            highp[12] = grid.ancestormatrix_a;
-            highp[13] = grid.ancestormatrix_b;
-            highp[14] = grid.ancestormatrix_c;
+            highp[12] = grid.ancestorMatrixA;
+            highp[13] = grid.ancestorMatrixB;
+            highp[14] = grid.ancestorMatrixC;
 
-            highp[16] = grid.ancestormatrix_d;
-            highp[17] = grid.ancestormatrix_e;
-            highp[18] = grid.ancestormatrix_f;
+            highp[16] = grid.ancestorMatrixD;
+            highp[17] = grid.ancestorMatrixE;
+            highp[18] = grid.ancestorMatrixF;
 
-            highp[20] = grid.ancestormatrix_g;
-            highp[21] = grid.ancestormatrix_h;
-            highp[22] = grid.ancestormatrix_i;
+            highp[20] = grid.ancestorMatrixG;
+            highp[21] = grid.ancestorMatrixH;
+            highp[22] = grid.ancestorMatrixI;
 
             // vertex: u_viewport
             highp[3]  = viewport_width;
