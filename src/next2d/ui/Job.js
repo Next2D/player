@@ -76,6 +76,13 @@ class Job extends EventDispatcher
         this._$stopFlag = false;
 
         /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$forceStop = false;
+
+        /**
          * @type {object}
          * @default null
          * @private
@@ -235,6 +242,9 @@ class Job extends EventDispatcher
      */
     initialize ()
     {
+        if (this._$forceStop) {
+            return ;
+        }
         // setup
         this._$stopFlag  = false;
         this._$startTime = Util.$performance.now();
@@ -297,7 +307,8 @@ class Job extends EventDispatcher
      */
     stop ()
     {
-        this._$stopFlag = true;
+        this._$forceStop = true;
+        this._$stopFlag  = true;
 
         this.removeEventListener(Event.ENTER_FRAME, this._$update);
 
