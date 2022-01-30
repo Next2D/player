@@ -1590,7 +1590,10 @@ class Graphics
         }
 
         // get cache
-        const keys = Util.$getArray(xScale, yScale);
+        const keys = hasGrid
+            ? Util.$getArray(matrix[0], matrix[1], matrix[2], matrix[3])
+            : Util.$getArray(xScale, yScale);
+
         const cacheStore = Util.$cacheStore();
         const cacheKeys  = cacheStore.generateKeys(
             displayObject._$instanceId, keys, color_transform
