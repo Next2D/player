@@ -310,6 +310,13 @@ class Player
          */
         this._$textField = null;
 
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$touchY = 0;
+
         // delay
         this._$bindRun = this._$run.bind(this);
         this._$timerId = -1;
@@ -904,7 +911,8 @@ class Player
             {
                 Util.$event     = event;
                 Util.$eventType = Util.$TOUCH_START;
-
+                // start position
+                this._$touchY   = event.changedTouches[0].pageY;
                 this._$hitTest();
             }.bind(this));
 
@@ -923,6 +931,20 @@ class Player
 
                 this._$hitTest();
             }.bind(this));
+
+            // mouse wheel
+            canvas.addEventListener(Util.$TOUCH_MOVE, function (event)
+            {
+                // update
+                const pageY   = event.changedTouches[0].pageY;
+                event.deltaY  = this._$touchY - pageY;
+                this._$touchY = pageY;
+
+                Util.$event     = event;
+                Util.$eventType = Util.$MOUSE_WHEEL;
+
+                this._$hitTest();
+            }.bind(this), { "passive": false });
 
         } else {
 
@@ -989,8 +1011,15 @@ class Player
             // mouse wheel
             canvas.addEventListener(Util.$MOUSE_WHEEL, function (event)
             {
-                this._$mouseWheelEvent = event;
-            }.bind(this));
+                // this._$mouseWheelEvent = event;
+                if (!event.defaultPrevented) {
+
+                    Util.$event     = event;
+                    Util.$eventType = Util.$MOUSE_WHEEL;
+
+                    this._$hitTest();
+                }
+            }.bind(this), { "passive": false });
 
         }
 
@@ -2221,7 +2250,7 @@ class Player
                             instance.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_WHEEL));
                         }
 
-                        if (instance instanceof TextField) {
+                        if (instance instanceof TextField && instance._$scrollEnabled) {
                             instance.scrollV += event.deltaY;
                         }
                         break;

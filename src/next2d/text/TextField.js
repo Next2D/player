@@ -278,10 +278,17 @@ class TextField extends InteractiveObject
 
         /**
          * @type {boolean}
-         * @default false
+         * @default true
          * @private
          */
-        this._$scroll = false;
+        this._$scrollEnabled = true;
+
+        /**
+         * @type {Sprite}
+         * @default null
+         * @private
+         */
+        this._$scrollSprite = null;
 
         /**
          * @type {string}
@@ -830,21 +837,20 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * TODO
      * @description スクロール機能のON/OFFの制御。
      *              Control ON/OFF of the scroll function.
      *
      * @member {boolean}
-     * @default false
+     * @default true
      * @public
      */
-    get scroll ()
+    get scrollEnabled ()
     {
-        return this._$scroll;
+        return this._$scrollEnabled;
     }
-    set scroll (scroll)
+    set scrollEnabled (scroll_enabled)
     {
-        this._$scroll = !!scroll;
+        this._$scrollEnabled = !!scroll_enabled;
     }
 
     /**
@@ -892,9 +898,55 @@ class TextField extends InteractiveObject
 
         if (this._$scrollV !== scroll_v) {
 
-            this._$scrollV = scroll_v;
+            this._$scrollV = $Math.max(1, scroll_v);
 
             this._$reset();
+
+            if (this.textHeight > this.height) {
+                this._$scrollSprite.height = this.height * this.height / this.textHeight - 1;
+
+                const parent = this._$parent;
+                if (parent) {
+                    // view start
+                    this._$scrollSprite.alpha = 1;
+
+                    // set position
+                    this._$scrollSprite.x = this.x + this.width - this._$scrollSprite.width - 0.5;
+                    this._$scrollSprite.y = this.y + 0.5
+                        + (this.height - 1 - this._$scrollSprite.height)
+                        / (this.maxScrollV - 1)
+                        * (this._$scrollV - 1);
+
+                    // added sprite
+                    parent.addChildAt(
+                        this._$scrollSprite,
+                        parent.getChildIndex(this) + 1
+                    );
+
+                    // start animation
+                    if (this._$scrollSprite.hasLocalVariable("job")) {
+                        this._$scrollSprite.getLocalVariable("job").stop();
+                    }
+
+                    const job = Tween.add(this._$scrollSprite,
+                        { "alpha" : 1 },
+                        { "alpha" : 0 },
+                        1
+                    );
+
+                    job.addEventListener(Event.COMPLETE, (event) =>
+                    {
+                        const sprite = event.target.target;
+                        sprite.deleteLocalVariable("job");
+                        if (sprite.parent) {
+                            sprite.parent.removeChild(sprite);
+                        }
+                    });
+                    job.start();
+
+                    this._$scrollSprite.setLocalVariable("job", job);
+                }
+            }
 
             if (this.willTrigger(Event.SCROLL)) {
                 this.dispatchEvent(new Event(Event.SCROLL, true));
@@ -2270,6 +2322,17 @@ class TextField extends InteractiveObject
             // set height
             this._$bounds.yMax = this.textHeight
                 + 4 + this._$originBounds.yMin;
+
+        } else {
+
+            if (this._$scrollEnabled && !this._$scrollSprite) {
+                this._$scrollSprite = new Sprite();
+                this._$scrollSprite
+                    .graphics
+                    .beginFill("#000", 0.3)
+                    .drawRoundRect(0, 0, 3, 3, 3);
+                this._$scrollSprite._$scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
+            }
         }
     }
 
@@ -2414,7 +2477,7 @@ class TextField extends InteractiveObject
         this._$multiline      = !!character.multiline;
         this._$wordWrap       = !!character.wordWrap;
         this._$border         = !!character.border;
-        this._$scroll         = !!character.scroll;
+        this._$scrollEnabled  = !!character.scroll;
         this._$thickness      = character.thickness | 0;
         this._$thicknessColor = character.thicknessColor | 0;
 
@@ -2663,6 +2726,7 @@ class TextField extends InteractiveObject
         if (!texture) {
 
             // resize
+            const lineWidth  = $Math.min(1, $Math.max(xScale, yScale));
             const baseWidth  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
             const baseHeight = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
 
@@ -2673,8 +2737,8 @@ class TextField extends InteractiveObject
 
             // new canvas
             const canvas  = cacheStore.getCanvas();
-            canvas.width  = baseWidth;
-            canvas.height = baseHeight;
+            canvas.width  = baseWidth  + lineWidth * 2;
+            canvas.height = baseHeight + lineWidth * 2;
             const ctx     = canvas.getContext("2d");
 
             // border and background
@@ -2705,7 +2769,7 @@ class TextField extends InteractiveObject
                         rgb.A * 255 * multiColor[3] + multiColor[7], 255)
                     ) / 255;
 
-                    ctx.lineWidth   = 1;
+                    ctx.lineWidth   = lineWidth;
                     ctx.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
                     ctx.stroke();
 
