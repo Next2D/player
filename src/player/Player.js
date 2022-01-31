@@ -78,13 +78,6 @@ class Player
         this._$mouseOverTarget = null;
 
         /**
-         * @type {DisplayObject}
-         * @default null
-         * @private
-         */
-        this._$mouseWheelEvent = null;
-
-        /**
          * @type {number}
          * @private
          */
@@ -1011,7 +1004,6 @@ class Player
             // mouse wheel
             canvas.addEventListener(Util.$MOUSE_WHEEL, function (event)
             {
-                // this._$mouseWheelEvent = event;
                 if (!event.defaultPrevented) {
 
                     Util.$event     = event;
@@ -1230,27 +1222,6 @@ class Player
     }
 
     /**
-     * @return void
-     * @public
-     */
-    _$wheelEvent ()
-    {
-        const event = this._$mouseWheelEvent;
-        if (event) {
-
-            if (!event.defaultPrevented) {
-
-                Util.$event     = event;
-                Util.$eventType = Util.$MOUSE_WHEEL;
-
-                this._$hitTest();
-            }
-
-            this._$mouseWheelEvent = null;
-        }
-    }
-
-    /**
      * @param  {number} timestamp
      * @return {void}
      * @method
@@ -1271,8 +1242,6 @@ class Player
             glstats.begin();
         }
         // @endif
-
-        this._$wheelEvent();
 
         // delay action
         this._$doAction();
