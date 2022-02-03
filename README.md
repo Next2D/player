@@ -14,15 +14,12 @@ Next2D Player
 [日本語](./README.ja.md) | [简体中文](./README.cn.md)
 
 ## About
-Next2D Player is a project derived from the JavaScript FlashPlayer "swf2js".  
-The goal is to provide the fastest 2D engine that works on any device.
+Next2D Player is a project derived from the JavaScript FlashPlayer "swf2js" and aims to provide the fastest 2D engine that works on any device.
 
-It fully supports WebGL and WebGL2, and it allows you to create rich, interactive graphics, cross-platform applications and games without having to deal with browser or device compatibility.
+It fully supports WebGL and WebGL2, and can be used to create rich and interactive web content, without having to deal with browser or device compatibility. With full support for WebGL and WebGL2, you can create rich, interactive web content and games without having to deal with browser or device compatibility.
 
-By using the Next2D NoCode Tool, you can intuitively create the animation you have imagined, and the exported JSON data can be easily played and published using the Next2D Player.  
+With the Next2D NoCode Tool, you can intuitively create the animations you envision, and the exported JSON data can be easily played and published with the Next2D Player.  
 Next2D NoCode Tool is a web service that does not require installation and can be used immediately by anyone who accesses it.
-
-2D entertainment development made easy! Fast! Comfortable!
 
 ## Use Simple Sample
 ```javascript
