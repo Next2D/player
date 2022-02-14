@@ -250,19 +250,9 @@ class BlurFilter extends BitmapFilter
      */
     _$isSame (filter)
     {
-        if (this._$quality !== filter._$quality) {
-            return false;
-        }
-
-        if (this._$blurX !== filter._$blurX) {
-            return false;
-        }
-
-        if (this._$blurY !== filter._$blurY) {
-            return false;
-        }
-
-        return true;
+        return this._$quality === filter._$quality
+            && this._$blurX === filter._$blurX
+            && this._$blurY === filter._$blurY;
     }
 
     /**

@@ -274,7 +274,7 @@ class GradientGlowFilter  extends BitmapFilter
             const length = colors.length;
             for (let idx = 0; idx < length; ++idx) {
 
-                let color = colors[idx] | 0;
+                let color = Util.$toColorInt(colors[idx]) | 0;
 
                 if (color < 0) {
                     color = 0x1000000 - $Math.abs(color) % 0x1000000;
@@ -284,7 +284,7 @@ class GradientGlowFilter  extends BitmapFilter
                     color = color % 0x1000000;
                 }
 
-                colors[idx] = Util.$toColorInt($Math.abs(color));
+                colors[idx] = Util.$clamp($Math.abs(color), 0, 0xffffff);
             }
 
             this._$colors = colors.slice(0);
