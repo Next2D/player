@@ -1050,8 +1050,8 @@ Util.$currentMousePoint = () =>
         touchY = changedTouche.pageY;
     }
 
-    const pointX = (touchX - x) / player._$scale | 0;
-    const pointY = (touchY - y) / player._$scale | 0;
+    const pointX = (touchX - x) / player._$scale - player._$tx / player._$scale / Util.$devicePixelRatio;
+    const pointY = (touchY - y) / player._$scale - player._$ty / player._$scale / Util.$devicePixelRatio;
 
     return new Point(pointX, pointY);
 };

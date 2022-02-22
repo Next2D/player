@@ -81,8 +81,6 @@ class CacheStore
                     const player = Util.$currentPlayer();
                     if (player._$context) {
 
-                        const context = player._$context;
-
                         const bitmapData = object._$bitmapData;
                         if (bitmapData) {
 
@@ -97,7 +95,8 @@ class CacheStore
                             timer(this._$delayBitmapLifeCheck, 2000, bitmapData);
                         }
 
-                        context
+                        player
+                            ._$context
                             .frameBuffer
                             .releaseTexture(object);
                     }
