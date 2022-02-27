@@ -62,10 +62,10 @@ loader.load(request);
 
 ## Related sites
 * [Website](https://next2d.app)
-* [Player API Documentation](https://next2d.app/docs/player)
+* [Player API Documentation](https://next2d.app/ja/docs/player)
 * [Next2D NoCode Tool(α version)](https://tool.next2d.app)
 * [Next2D Framework](https://next2d.app/#framework)
-* [Tutorial & Reference.](https://next2d.app/tutorials/player)
+* [Tutorial & Reference.](https://next2d.app/ja/reference/player)
 * [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)
 
 ## License
