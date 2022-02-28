@@ -61,7 +61,7 @@ loader.load(request);
 
 | 名称 | 值类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `base` | string | 空值 |  如果在请求时未设置URL，则要设置。 |
+| `base` | string | 空值 | 如果在请求时未设置URL，则要设置。 |
 | `fullScreen` | boolean | false | 全屏绘制 |
 | `tagId` | string | 空值 | 值为你希望在 DOM 中绘制位置的容器 ID。 |
 | `bgColor` | array | empty | RGBA 值在 0-255 范围内选择。 |
