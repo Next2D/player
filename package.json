@@ -10,7 +10,7 @@
     "build": "gulp build"
   },
   "devDependencies": {
-    "@next2d/jsdoc-template": "^0.0.1",
+    "@next2d/jsdoc-template": "^1.0.0",
     "browser-sync": "^2.27.7",
     "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",
