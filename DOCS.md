@@ -1,13 +1,11 @@
-## About
-
 ${{ player-api.about }}$
 
-## ${{ player-api.sample.simple }}$
+#### ${{ player-api.sample.simple }}$
 ```javascript
 next2d.load("JSON Path...");
 ```
 
-## ${{ player-api.sample.program }}$
+#### ${{ player-api.sample.program }}$
 ```javascript
 const { Loader }     = next2d.display;
 const { URLRequest } = next2d.net;
@@ -29,7 +27,7 @@ loader
 loader.load(request);
 ```
 
-## ${{ player-api.options.title }}$
+#### ${{ player-api.options.title }}$
 
 | ${{ player-api.options.th1 }}$ | ${{ player-api.options.th2 }}$ | ${{ player-api.options.th3 }}$ | ${{ player-api.options.th4 }}$ |
 | --- | --- | --- | --- |
