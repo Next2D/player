@@ -11,6 +11,8 @@ Next2D Player
 [![Discord](https://img.shields.io/discord/812136803506716713?label=Discord&logo=discord)](https://discord.gg/6c9rv5Uns5)
 [![Follow us on Twitter](https://img.shields.io/twitter/follow/Next2D?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=Next2D)
 
+[English](./README.md) | [简体中文](./README.cn.md)
+
 ## About
 Next2D Playerは、JavaScript FlashPlayer「swf2js」から派生したプロジェクトで 、あらゆるデバイスで動作する2D最速エンジンを提供することを目的としてます。
 
