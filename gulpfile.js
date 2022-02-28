@@ -287,7 +287,7 @@ const createHTML = (done) =>
                 "private": false,
                 "lenient": true,
                 "destination": "../next2d/dist/docs/player/",
-                "template": "../jsdoc-template"
+                "template": "node_modules/@next2d/jsdoc-template"
             }
         }, done));
 };
