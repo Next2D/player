@@ -62,7 +62,7 @@ class InterpolationMethod
      * @return  {string}
      * @default next2d.display.InterpolationMethod
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

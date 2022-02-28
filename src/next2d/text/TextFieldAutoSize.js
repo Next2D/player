@@ -57,7 +57,7 @@ class TextFieldAutoSize
      * @return  {string}
      * @default next2d.text.TextFieldAutoSize
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

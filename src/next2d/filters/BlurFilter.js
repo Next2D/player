@@ -106,7 +106,7 @@ class BlurFilter extends BitmapFilter
      * @return  {string}
      * @default next2d.filters.BlurFilter
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

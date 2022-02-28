@@ -114,7 +114,7 @@ class LoaderInfo extends EventDispatcher
      * @return  {string}
      * @default next2d.display.LoaderInfo
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

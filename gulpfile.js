@@ -263,18 +263,16 @@ const createHTML = (done) =>
                 "cleverLinks"   : false,
                 "monospaceLinks": false,
                 "applicationName": "Next2D Player",
-                "disqus": "",
-                "googleAnalytics": "",
-                "favicon": "",
+                "path": "../../../",
                 "openGraph": {
-                    "title": "Next2D Player API Documentation",
+                    "title": "Player API Documentation",
+                    "description": "Player API Documentation.",
                     "type": "website",
-                    "image": "",
-                    "site_name": "Next2D Player API Documentation",
+                    "image": "https://next2d.app/assets/img/ogp.png",
                     "url": "https://next2d.app/"
                 },
                 "meta": {
-                    "title": "Next2D Player API Documentation",
+                    "title": "Player API Documentation",
                     "description": "Next2D Player API Documentation.",
                     "keyword": "Next2D, WebGL, WebGL2, JavaScript, HTML5"
                 },
@@ -288,8 +286,8 @@ const createHTML = (done) =>
                 "recurse": true,
                 "private": false,
                 "lenient": true,
-                "destination": "../next2d/docs/docs/player/",
-                "template": "node_modules/@pixi/jsdoc-template"
+                "destination": "../next2d/dist/docs/player/",
+                "template": "../jsdoc-template"
             }
         }, done));
 };

@@ -56,7 +56,7 @@ class SoundMixer
      * @return  {string}
      * @default next2d.media.SoundMixer
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

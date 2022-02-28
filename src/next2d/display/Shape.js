@@ -89,7 +89,7 @@ class Shape extends DisplayObject
      * @return  {string}
      * @default next2d.display.Shape
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

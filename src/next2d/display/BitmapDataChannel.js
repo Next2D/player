@@ -64,7 +64,7 @@ class BitmapDataChannel
      * @return  {string}
      * @default next2d.display.BitmapDataChannel
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

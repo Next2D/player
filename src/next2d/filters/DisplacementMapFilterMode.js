@@ -57,7 +57,7 @@ class DisplacementMapFilterMode
      * @return  {string}
      * @default next2d.filters.DisplacementMapFilterMode
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

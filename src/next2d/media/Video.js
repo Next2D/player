@@ -178,7 +178,7 @@ class Video extends DisplayObject
      * @return  {string}
      * @default next2d.media.Video
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

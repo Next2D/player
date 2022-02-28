@@ -160,7 +160,7 @@ class DropShadowFilter extends BitmapFilter
      * @return  {string}
      * @default next2d.filters.DropShadowFilter
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

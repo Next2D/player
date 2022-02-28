@@ -60,7 +60,7 @@ class SpreadMethod
      * @return  {string}
      * @default next2d.display.SpreadMethod
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

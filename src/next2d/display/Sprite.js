@@ -104,7 +104,7 @@ class Sprite extends DisplayObjectContainer
      * @return  {string}
      * @default next2d.display.Sprite
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

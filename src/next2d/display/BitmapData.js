@@ -135,7 +135,7 @@ class BitmapData
      * @return  {string}
      * @default next2d.display.BitmapData
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

@@ -172,7 +172,7 @@ class BevelFilter extends BitmapFilter
      * @return  {string}
      * @default next2d.filters.BevelFilter
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

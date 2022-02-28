@@ -159,7 +159,7 @@ class ConvolutionFilter extends BitmapFilter
      * @return  {string}
      * @default next2d.filters.ConvolutionFilter
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

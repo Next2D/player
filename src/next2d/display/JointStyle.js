@@ -62,7 +62,7 @@ class JointStyle
      * @return  {string}
      * @default next2d.display.JointStyle
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

@@ -133,7 +133,7 @@ class Sound extends EventDispatcher
      * @return  {string}
      * @default next2d.media.Sound
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

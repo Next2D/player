@@ -83,7 +83,7 @@ class Graphics
      * @return  {string}
      * @default next2d.display.Graphics
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {
@@ -107,6 +107,7 @@ class Graphics
      * @default 1
      * @const
      * @static
+     * @private
      */
     static get CURVE_TO ()
     {

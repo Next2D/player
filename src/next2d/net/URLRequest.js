@@ -121,7 +121,7 @@ class URLRequest
      * @return  {string}
      * @default next2d.net.URLRequest
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

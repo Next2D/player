@@ -59,7 +59,7 @@ class GradientType
      * @return  {string}
      * @default next2d.display.GradientType
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

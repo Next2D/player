@@ -185,7 +185,7 @@ class TextFormat
      * @return  {string}
      * @default next2d.text.TextFormat
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

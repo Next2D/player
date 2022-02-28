@@ -65,7 +65,7 @@ class BlendMode
      * @return  {string}
      * @default next2d.display.BlendMode
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

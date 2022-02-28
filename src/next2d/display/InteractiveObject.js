@@ -77,7 +77,7 @@ class InteractiveObject extends DisplayObject
      * @return  {string}
      * @default next2d.display.InteractiveObject
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

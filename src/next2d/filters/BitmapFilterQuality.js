@@ -56,7 +56,7 @@ class BitmapFilterQuality
      * @return  {string}
      * @default next2d.filters.BitmapFilterQuality
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

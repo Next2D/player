@@ -57,7 +57,7 @@ class URLLoaderDataFormat
      * @return  {string}
      * @default next2d.net.URLLoaderDataFormat
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

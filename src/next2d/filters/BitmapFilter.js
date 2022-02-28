@@ -78,7 +78,7 @@ class BitmapFilter
      * @return  {string}
      * @default next2d.filters.BitmapFilter
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

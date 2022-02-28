@@ -83,7 +83,7 @@ class URLRequestHeader
      * @return  {string}
      * @default next2d.net.URLRequestHeader
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

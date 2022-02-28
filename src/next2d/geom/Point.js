@@ -90,8 +90,8 @@ class Point
      *
      * @member  {string}
      * @default next2d.geom.Point
-     * @public
      * @const
+     * @public
      */
     get namespace ()
     {

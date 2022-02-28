@@ -127,8 +127,8 @@ class ColorTransform
      *
      * @member  {string}
      * @default next2d.geom.ColorTransform
-     * @public
      * @const
+     * @public
      */
     get namespace ()
     {

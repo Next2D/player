@@ -1638,7 +1638,7 @@ class Player
 
     /**
      * @returns void
-     * @public
+     * @private
      */
     _$draw ()
     {

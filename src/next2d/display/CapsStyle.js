@@ -60,7 +60,7 @@ class CapsStyle
      * @return  {string}
      * @default next2d.display.CapsStyle
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

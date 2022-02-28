@@ -99,8 +99,8 @@ class Matrix
      *
      * @member  {string}
      * @default next2d.geom.Matrix
-     * @public
      * @const
+     * @public
      */
     get namespace ()
     {

@@ -122,8 +122,8 @@ class Transform
      *
      * @member  {string}
      * @default next2d.geom.Transform
-     * @public
      * @const
+     * @public
      */
     get namespace ()
     {

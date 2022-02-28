@@ -156,7 +156,7 @@ class DisplacementMapFilter extends BitmapFilter
      * @return  {string}
      * @default next2d.filters.DisplacementMapFilter
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

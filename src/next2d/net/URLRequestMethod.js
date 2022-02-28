@@ -59,7 +59,7 @@ class URLRequestMethod
      * @return  {string}
      * @default next2d.net.URLRequestMethod
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

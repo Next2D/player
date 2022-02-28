@@ -85,7 +85,7 @@ class SoundTransform
      * @return  {string}
      * @default next2d.media.SoundTransform
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

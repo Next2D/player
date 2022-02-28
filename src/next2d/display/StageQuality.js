@@ -60,7 +60,7 @@ class StageQuality
      * @return  {string}
      * @default next2d.display.StageQuality
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

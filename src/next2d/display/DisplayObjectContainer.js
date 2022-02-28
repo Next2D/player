@@ -146,7 +146,7 @@ class DisplayObjectContainer extends InteractiveObject
      * @return  {string}
      * @default next2d.display.DisplayObjectContainer
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

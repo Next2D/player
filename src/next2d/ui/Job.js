@@ -146,7 +146,7 @@ class Job extends EventDispatcher
      * @return  {string}
      * @default next2d.ui.Job
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

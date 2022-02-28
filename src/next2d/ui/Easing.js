@@ -56,7 +56,7 @@ class Easing
      * @return  {string}
      * @default next2d.ui.Easing
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

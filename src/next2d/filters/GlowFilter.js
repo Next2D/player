@@ -133,7 +133,7 @@ class GlowFilter extends BitmapFilter
      * @return  {string}
      * @default next2d.filters.GlowFilter
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

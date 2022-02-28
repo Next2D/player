@@ -114,8 +114,8 @@ class Rectangle
      *
      * @member  {string}
      * @default next2d.geom.Rectangle
-     * @public
      * @const
+     * @public
      */
     get namespace ()
     {

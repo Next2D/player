@@ -389,7 +389,7 @@ class TextField extends InteractiveObject
      * @return  {string}
      * @default next2d.text.TextField
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {
@@ -401,6 +401,7 @@ class TextField extends InteractiveObject
      * @default text
      * @const
      * @static
+     * @private
      */
     static get TEXT ()
     {
@@ -412,6 +413,7 @@ class TextField extends InteractiveObject
      * @default text
      * @const
      * @static
+     * @private
      */
     static get BREAK ()
     {
@@ -423,6 +425,7 @@ class TextField extends InteractiveObject
      * @default text
      * @const
      * @static
+     * @private
      */
     static get WRAP ()
     {
@@ -434,6 +437,7 @@ class TextField extends InteractiveObject
      * @default text
      * @const
      * @static
+     * @private
      */
     static get IMAGE ()
     {

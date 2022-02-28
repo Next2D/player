@@ -273,7 +273,7 @@ class DisplayObject extends EventDispatcher
      * @return  {string}
      * @default next2d.display.DisplayObject
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

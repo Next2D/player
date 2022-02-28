@@ -175,7 +175,7 @@ class MovieClip extends Sprite
      * @return  {string}
      * @default next2d.display.MovieClip
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

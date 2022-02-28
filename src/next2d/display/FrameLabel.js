@@ -98,7 +98,7 @@ class FrameLabel extends EventDispatcher
      * @return  {string}
      * @default next2d.display.FrameLabel
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

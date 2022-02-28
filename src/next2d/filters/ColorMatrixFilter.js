@@ -100,7 +100,7 @@ class ColorMatrixFilter extends BitmapFilter
      * @return  {string}
      * @default next2d.filters.ColorMatrixFilter
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

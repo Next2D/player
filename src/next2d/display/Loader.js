@@ -78,7 +78,7 @@ class Loader extends DisplayObjectContainer
      * @return  {string}
      * @default next2d.display.Loader
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

@@ -53,7 +53,7 @@ class Tween
      * @return  {string}
      * @default next2d.ui.Tween
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

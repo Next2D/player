@@ -56,7 +56,7 @@ class TextFormatVerticalAlign
      * @return  {string}
      * @default next2d.text.TextFormatVerticalAlign
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

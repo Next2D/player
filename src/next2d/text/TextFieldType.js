@@ -58,7 +58,7 @@ class TextFieldType
      * @return  {string}
      * @default next2d.text.TextFieldType
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

@@ -160,7 +160,7 @@ class GradientGlowFilter  extends BitmapFilter
      * @return  {string}
      * @default next2d.filters.GradientGlowFilter
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

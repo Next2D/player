@@ -106,7 +106,7 @@ class Stage extends DisplayObjectContainer
      * @return  {string}
      * @default next2d.display.Stage
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {

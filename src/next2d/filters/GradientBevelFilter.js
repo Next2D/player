@@ -161,7 +161,7 @@ class GradientBevelFilter  extends BitmapFilter
      * @return  {string}
      * @default next2d.filters.GradientBevelFilter
      * @const
-     * @static
+     * @public
      */
     get namespace ()
     {
