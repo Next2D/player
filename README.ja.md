@@ -21,13 +21,13 @@ Next2D NoCode Toolはインストール不要でアクセスすれば誰でも�
 
 2Dエンターテインメント開発を簡単に！快速に！快適に！
 
-## Use Simple Sample
+## シンプルサンプル
 ```javascript
 next2d.load("JSON Path...");
 ```
 [CodePen](https://codepen.io/next2d/pen/rNGMrZG)
 
-## Use Program Sample
+## プログラムサンプル
 ```javascript
 const { Loader }     = next2d.display;
 const { URLRequest } = next2d.net;
@@ -49,21 +49,21 @@ loader
 loader.load(request);
 ```
 [CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
-@see [API Documentation](https://next2d.app/docs/player)
+@see [API Documentation](https://next2d.app/ja/docs/player)
 
-## Option settings
+## オプション設定
 
 | プロパティ名 | 型 | デフォルト値 | 説明 |
 | --- | --- | --- | --- |
 | `base` | string | empty | 相対パスでJSONを取得する場合、ここで設定したURLがrootとして適用されます。絶対パスの場合はここで設定したURLは適用されません。 |
 | `fullScreen` | boolean | false | Stageクラスで設定した幅と高さを超えて画面全体に描画されます。 |
 | `tagId` | string | empty | IDを指定すると、指定したIDのエレメント内で描画を行います。 |
-| `bgColor` | array [R,G,B,A] or false | false | 背景色の[R,G,B,A]の配列は0～255で指定できます。falseは無色透明です。 |
+| `bgColor` | array | empty | 背景色の[R,G,B,A]の配列は0～255で指定できます。falseは無色透明です。 |
 
 ## Related sites
 * [Website](https://next2d.app)
 * [Player API Documentation](https://next2d.app/ja/docs/player)
-* [Next2D NoCode Tool(α version)](https://tool.next2d.app)
+* [Next2D NoCode Tool(β version)](https://tool.next2d.app)
 * [Next2D Framework](https://next2d.app/#framework)
 * [Tutorial & Reference.](https://next2d.app/ja/reference/player)
 * [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)

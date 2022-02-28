@@ -49,21 +49,21 @@ loader
 loader.load(request);
 ```
 [CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
-@see [API Documentation](https://next2d.app/docs/player)
+@see [API Documentation](https://next2d.app/en/docs/player)
 
 ## Option settings
 
-| name | value | default | description |
+| name | type | default | description |
 | --- | --- | --- | --- |
 | `base` | string | empty | When acquiring JSON by relative path, the URL set here will be applied as the root. For absolute paths, the URL set here will not be applied. |
 | `fullScreen` | boolean | false | It will be drawn on the entire screen beyond the width and height set in the Stage class. |
 | `tagId` | string | empty | When an ID is specified, drawing will be performed within the element with the specified ID. |
-| `bgColor` | The [R,G,B,A] array of background colors can be specified from 0 to 255. false is colorless and transparent. |
+| `bgColor` | array | empty | The [R,G,B,A] array of background colors can be specified from 0 to 255. false is colorless and transparent. |
 
 ## Related sites
 * [Website](https://next2d.app)
 * [Player API Documentation](https://next2d.app/en/docs/player)
-* [Next2D NoCode Tool(α version)](https://tool.next2d.app)
+* [Next2D NoCode Tool(β version)](https://tool.next2d.app)
 * [Next2D Framework](https://next2d.app/#framework)
 * [Tutorial & Reference.](https://next2d.app/en/reference/player)
 * [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)

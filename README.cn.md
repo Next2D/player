@@ -53,7 +53,7 @@ loader
 loader.load(request);
 ```
 [CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
-@see [API 文档](https://next2d.app/docs/player)
+@see [API 文档](https://next2d.app/cn/docs/player)
 
 ## 设置选项
 
@@ -62,13 +62,13 @@ loader.load(request);
 | `base` | string | 空值 |  如果在请求时未设置URL，则要设置。 |
 | `fullScreen` | boolean | false | 全屏绘制 |
 | `tagId` | string | 空值 | 值为你希望在 DOM 中绘制位置的容器 ID。 |
-| `bgColor` | array [R,G,B,A] or false | false | RGBA 值在 0-255 范围内选择。 |
+| `bgColor` | array | empty | RGBA 值在 0-255 范围内选择。 |
 
 ## 相关站点
 
 * [官网](https://next2d.app)
 * [Player API 文档](https://next2d.app/cn/docs/player)
-* [Next2D NoCode Tool(α version)](https://tool.next2d.app)
+* [Next2D NoCode Tool(β version)](https://tool.next2d.app)
 * [Next2D Framework](https://next2d.app/#framework)
 * [教程 & 参考](https://next2d.app/cn/reference/player)
 * [聊天社区(Discord)](https://discord.gg/6c9rv5Uns5)
