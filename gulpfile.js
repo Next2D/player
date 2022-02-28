@@ -250,7 +250,7 @@ const createHTML = (done) =>
             "!src/util/*.js",
             "!src/webgl/**/*.js",
             "!src/worker/**/*.js",
-            "README.md"
+            "DOCS.md"
         ], { "read": false })
         .pipe(jsdoc({
             "plugins": [
