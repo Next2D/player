@@ -175,14 +175,14 @@ class Stage extends DisplayObjectContainer
     }
 
     /**
-     * @description 現在のステージの高さ（ピクセル数）です。
-     *              The current height, in pixels, of the Stage.
+     * @description 現在のCanvasの高さをピクセル単位で指定します。
+     *              Specifies the height of the current Canvas in pixels.
      *
      * @member {number}
      * @readonly
      * @public
      */
-    get stageHeight ()
+    get canvasHeight ()
     {
         return this._$player
             ? this._$player._$height / Util.$devicePixelRatio
@@ -190,8 +190,66 @@ class Stage extends DisplayObjectContainer
     }
 
     /**
-     * @description ステージの現在の幅をピクセル単位で指定します。
-     *              Specifies the current width, in pixels, of the Stage.
+     * @description 現在のCanvasの幅をピクセル単位で指定します。
+     *              Specifies the width of the current Canvas in pixels.
+     *
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get canvasWidth ()
+    {
+        return this._$player
+            ? this._$player._$width / Util.$devicePixelRatio
+            : 0;
+    }
+
+    /**
+     * @description 現在のStageの高さをピクセル単位で指定します。
+     *              Specifies the height of the current Stage in pixels.
+     *
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get currentStageHeight ()
+    {
+        return this._$player
+            ? this._$player._$baseHeight * this._$player._$scale
+            : 0;
+    }
+
+    /**
+     * @description 現在のStageの幅をピクセル単位で指定します。
+     *              Specifies the width of the current Stage in pixels.
+     *
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get currentStageWidth ()
+    {
+        return this._$player
+            ? this._$player._$baseWidth * this._$player._$scale
+            : 0;
+    }
+
+    /**
+     * @description 初期設定したステージの高さをピクセル単位で指定します。
+     *              Specifies the height of the initially set stage in pixels.
+     *
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get stageHeight ()
+    {
+        return this._$player ? this._$player._$baseHeight : 0;
+    }
+
+    /**
+     * @description 初期設定したステージの幅をピクセル単位で指定します。
+     *              Specifies the width of the initially set stage in pixels.
      *
      * @member {number}
      * @readonly
@@ -199,9 +257,7 @@ class Stage extends DisplayObjectContainer
      */
     get stageWidth ()
     {
-        return this._$player
-            ? this._$player._$width / Util.$devicePixelRatio
-            : 0;
+        return this._$player ? this._$player._$baseWidth : 0;
     }
 
     /**
