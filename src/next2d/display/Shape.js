@@ -221,6 +221,14 @@ class Shape extends DisplayObject
         graphics._$xMax = character.bounds.xMax;
         graphics._$yMin = character.bounds.yMin;
         graphics._$yMax = character.bounds.yMax;
+
+        // 9-scale
+        if (character.grid) {
+            this._$scale9Grid = new Rectangle(
+                character.grid.x, character.grid.y,
+                character.grid.w, character.grid.h
+            );
+        }
     }
 
     /**
