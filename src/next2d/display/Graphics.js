@@ -1701,9 +1701,6 @@ class Graphics
 
         // pool
         Util.$poolArray(cacheKeys);
-        if (parentMatrix) {
-            Util.$poolMatrix(parentMatrix);
-        }
         Util.$poolBoundsObject(baseBounds);
 
         if (filters && filters.length) {
