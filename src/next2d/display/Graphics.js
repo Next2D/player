@@ -1592,10 +1592,16 @@ class Graphics
 
         // get cache
         const keys = Util.$getArray(xScale, yScale);
+
+        const uniqueId = !hasGrid && displayObject._$characterId
+            ? displayObject._$characterId
+            : displayObject._$instanceId;
+
         const cacheStore = Util.$cacheStore();
         const cacheKeys  = cacheStore.generateKeys(
-            displayObject._$instanceId, keys, color_transform
+            uniqueId, keys, color_transform
         );
+
         Util.$poolArray(keys);
 
         // cache
@@ -1844,6 +1850,11 @@ class Graphics
                 .$cacheStore()
                 .removeCache(this._$displayObject._$instanceId);
 
+            if (this._$displayObject._$characterId) {
+                Util
+                    .$cacheStore()
+                    .removeCache(this._$displayObject._$characterId);
+            }
         }
     }
 
