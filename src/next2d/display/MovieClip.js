@@ -298,6 +298,10 @@ class MovieClip extends Sprite
             return null;
         }
 
+        if (!parent._$loopConfigs) {
+            return null;
+        }
+
         const placeMap = parent._$placeMap;
         if (!placeMap || !placeMap.length) {
             return null;
@@ -843,17 +847,83 @@ class MovieClip extends Sprite
 
                     const loopConfig = this.loopConfig;
                     if (!loopConfig) {
+
                         // next frame point
                         ++this._$currentFrame;
                         if (this._$currentFrame > this._$totalFrames) {
                             this._$currentFrame = 1;
                         }
+
                     } else {
-                        this._$currentFrame = this._$getLoopFrame(loopConfig);
+
+                        const totalFrames = loopConfig.end
+                            ? loopConfig.end
+                            : this._$totalFrames;
+
+                        switch (loopConfig.type) {
+
+                            case LoopType.REPEAT:
+                                ++this._$currentFrame;
+                                if (this._$currentFrame > totalFrames) {
+                                    this._$currentFrame = loopConfig.start;
+                                }
+                                break;
+
+                            case LoopType.NO_REPEAT:
+                                ++this._$currentFrame;
+                                if (this._$currentFrame > totalFrames) {
+                                    this._$currentFrame = totalFrames;
+                                    isNext = false;
+
+                                    // action on
+                                    this._$canAction = false;
+
+                                    // sound on
+                                    this._$canSound = false;
+                                }
+                                break;
+
+                            case LoopType.FIXED:
+                                isNext = false;
+
+                                // action on
+                                this._$canAction = false;
+
+                                // sound on
+                                this._$canSound = false;
+                                break;
+
+                            case LoopType.NO_REPEAT_REVERSAL:
+                                --this._$currentFrame;
+                                if (loopConfig.start > this._$currentFrame) {
+                                    this._$currentFrame = loopConfig.start;
+
+                                    isNext = false;
+
+                                    // action on
+                                    this._$canAction = false;
+
+                                    // sound on
+                                    this._$canSound = false;
+                                }
+                                break;
+
+                            case LoopType.REPEAT_REVERSAL:
+                                --this._$currentFrame;
+                                if (loopConfig.start > this._$currentFrame) {
+                                    this._$currentFrame = totalFrames;
+                                }
+                                break;
+
+                        }
+
                     }
 
                     // clear
-                    this._$clearChildren();
+                    if (isNext) {
+                        this._$clearChildren();
+                    }
+
                 }
                 break;
 
