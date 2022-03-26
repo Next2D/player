@@ -767,8 +767,11 @@ class DisplayObjectContainer extends InteractiveObject
                     || startFrame <= frame && endFrame > frame
                 ) {
 
-                    instance._$filters   = null;
-                    instance._$blendMode = null;
+                    // reset
+                    instance._$isNext      = true;
+                    instance._$placeObject = null;
+                    instance._$filters     = null;
+                    instance._$blendMode   = null;
 
                     if (instance._$id === -1) {
                         children.push(instance);
@@ -811,13 +814,15 @@ class DisplayObjectContainer extends InteractiveObject
                     instance.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE, true));
                 }
 
-                instance._$added      = false;
-                instance._$addedStage = false;
-                instance._$active     = false;
-                instance._$updated    = true;
-                instance._$filters    = null;
-                instance._$blendMode  = null;
-                instance._$isNext     = true;
+                // reset
+                instance._$added       = false;
+                instance._$addedStage  = false;
+                instance._$active      = false;
+                instance._$updated     = true;
+                instance._$filters     = null;
+                instance._$blendMode   = null;
+                instance._$isNext      = true;
+                instance._$placeObject = null;
 
                 if (instance instanceof DisplayObjectContainer) {
                     instance._$executeRemovedFromStage();

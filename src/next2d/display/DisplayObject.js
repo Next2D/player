@@ -222,6 +222,20 @@ class DisplayObject extends EventDispatcher
          * @private
          */
         this._$placeObject = null;
+
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$currentPlaceId = -1;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$changePlace = false;
     }
 
     /**
@@ -1338,7 +1352,10 @@ class DisplayObject extends EventDispatcher
                 return null;
             }
 
-            this._$placeObject = parent._$placeObjects[map[placeId]];
+            const currentPlaceId  = map[placeId];
+            this._$changePlace    = currentPlaceId !== this._$currentPlaceId;
+            this._$currentPlaceId = currentPlaceId;
+            this._$placeObject    = parent._$placeObjects[currentPlaceId];
 
         }
         return this._$placeObject;

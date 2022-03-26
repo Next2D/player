@@ -126,13 +126,6 @@ class MovieClip extends Sprite
         this._$isPlaying = false;
 
         /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$loopConfigs = null;
-
-        /**
          * @type {LoopConfig}
          * @default null
          * @private
@@ -288,31 +281,12 @@ class MovieClip extends Sprite
             return this._$loopConfig;
         }
 
-        const placeId = this._$placeId;
-        if (placeId === null) {
+        const place = this._$getPlaceObject();
+        if (!place || !place.loop) {
             return null;
         }
 
-        const parent = this._$parent;
-        if (!parent) {
-            return null;
-        }
-
-        if (!parent._$loopConfigs) {
-            return null;
-        }
-
-        const placeMap = parent._$placeMap;
-        if (!placeMap || !placeMap.length) {
-            return null;
-        }
-
-        const map = placeMap[parent._$currentFrame || 1];
-        if (!map) {
-            return null;
-        }
-
-        return parent._$loopConfigs[map[placeId]];
+        return place.loop;
     }
     set loopConfig (loop_config)
     {
@@ -863,40 +837,49 @@ class MovieClip extends Sprite
                         switch (loopConfig.type) {
 
                             case LoopType.REPEAT:
-                                ++this._$currentFrame;
-                                if (this._$currentFrame > totalFrames) {
+                                if (this._$changePlace) {
+
                                     this._$currentFrame = loopConfig.start;
+
+                                } else {
+
+                                    ++this._$currentFrame;
+                                    if (this._$currentFrame > totalFrames) {
+                                        this._$currentFrame = loopConfig.start;
+                                    }
+
                                 }
                                 break;
 
                             case LoopType.NO_REPEAT:
-                                ++this._$currentFrame;
-                                if (this._$currentFrame > totalFrames) {
-                                    this._$currentFrame = totalFrames;
-                                    isNext = false;
+                                if (this._$changePlace) {
 
-                                    // action on
-                                    this._$canAction = false;
+                                    this._$currentFrame = loopConfig.start;
 
-                                    // sound on
-                                    this._$canSound = false;
+                                } else {
+
+                                    ++this._$currentFrame;
+                                    if (this._$currentFrame > totalFrames) {
+
+                                        this._$currentFrame = totalFrames;
+                                        isNext = false;
+
+                                        // action on
+                                        this._$canAction = false;
+
+                                        // sound on
+                                        this._$canSound = false;
+                                    }
+
                                 }
                                 break;
 
                             case LoopType.FIXED:
-                                isNext = false;
+                                if (this._$changePlace) {
 
-                                // action on
-                                this._$canAction = false;
-
-                                // sound on
-                                this._$canSound = false;
-                                break;
-
-                            case LoopType.NO_REPEAT_REVERSAL:
-                                --this._$currentFrame;
-                                if (loopConfig.start > this._$currentFrame) {
                                     this._$currentFrame = loopConfig.start;
+
+                                } else {
 
                                     isNext = false;
 
@@ -905,18 +888,49 @@ class MovieClip extends Sprite
 
                                     // sound on
                                     this._$canSound = false;
+
+                                }
+                                break;
+
+                            case LoopType.NO_REPEAT_REVERSAL:
+                                if (this._$changePlace) {
+
+                                    this._$currentFrame = ltotalFrames;
+
+                                } else {
+
+                                    --this._$currentFrame;
+                                    if (loopConfig.start > this._$currentFrame) {
+                                        this._$currentFrame = loopConfig.start;
+
+                                        isNext = false;
+
+                                        // action on
+                                        this._$canAction = false;
+
+                                        // sound on
+                                        this._$canSound = false;
+                                    }
+
                                 }
                                 break;
 
                             case LoopType.REPEAT_REVERSAL:
-                                --this._$currentFrame;
-                                if (loopConfig.start > this._$currentFrame) {
+                                if (this._$changePlace) {
+
                                     this._$currentFrame = totalFrames;
+
+                                } else {
+
+                                    --this._$currentFrame;
+                                    if (loopConfig.start > this._$currentFrame) {
+                                        this._$currentFrame = totalFrames;
+                                    }
+
                                 }
                                 break;
 
                         }
-
                     }
 
                     // clear
@@ -1083,7 +1097,6 @@ class MovieClip extends Sprite
 
         }
 
-        this._$loopConfigs = character.loopConfigs;
         this._$totalFrames = character.totalFrame || 1;
     }
 
