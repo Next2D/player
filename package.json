@@ -1,6 +1,6 @@
 {
   "name": "@next2d/player",
-  "version": "1.10.1",
+  "version": "1.11.0",
   "description": "Experience the fast and beautiful anti-aliased rendering of WebGL. You can create rich, interactive graphics, cross-platform applications and games without worrying about browser or device compatibility.",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp>",
   "license": "MIT",
