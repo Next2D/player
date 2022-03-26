@@ -1982,6 +1982,8 @@ Util.$packages = (object) =>
         "JointStyle": JointStyle,
         "Loader": Loader,
         "LoaderInfo": LoaderInfo,
+        "LoopConfig": LoopConfig,
+        "LoopType": LoopType,
         "MovieClip": MovieClip,
         "Shape": Shape,
         "SpreadMethod": SpreadMethod,

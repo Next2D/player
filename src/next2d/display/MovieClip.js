@@ -124,6 +124,20 @@ class MovieClip extends Sprite
          * @private
          */
         this._$isPlaying = false;
+
+        /**
+         * @type {array}
+         * @default null
+         * @private
+         */
+        this._$loopConfigs = null;
+
+        /**
+         * @type {LoopConfig}
+         * @default null
+         * @private
+         */
+        this._$loopConfig = null;
     }
 
     /**
@@ -258,6 +272,52 @@ class MovieClip extends Sprite
     get totalFrames ()
     {
         return this._$totalFrames;
+    }
+
+    /**
+     * @description MovieClipのフレームヘッダーの移動方法の設定オブジェクトを返します。
+     *              Returns a configuration object for how MovieClip's frame headers are moved.
+     *
+     * @member  {object}
+     * @default null
+     * @public
+     */
+    get loopConfig ()
+    {
+        if (this._$loopConfig) {
+            return this._$loopConfig;
+        }
+
+        const placeId = this._$placeId;
+        if (placeId === null) {
+            return null;
+        }
+
+        const parent = this._$parent;
+        if (!parent) {
+            return null;
+        }
+
+        const placeMap = parent._$placeMap;
+        if (!placeMap || !placeMap.length) {
+            return null;
+        }
+
+        const map = placeMap[parent._$currentFrame || 1];
+        if (!map) {
+            return null;
+        }
+
+        return parent._$loopConfigs[map[placeId]];
+    }
+    set loopConfig (loop_config)
+    {
+        this._$loopConfig = null;
+        if (loop_config instanceof LoopConfig) {
+            loop_config._$frame = this._$startFrame;
+            this._$loopConfig   = loop_config;
+            this._$currentFrame = this._$getLoopFrame(loop_config);
+        }
     }
 
     /**
@@ -772,24 +832,29 @@ class MovieClip extends Sprite
                 break;
 
             default:
+                {
+                    isNext = true;
 
-                isNext = true;
+                    // action on
+                    this._$canAction = true;
 
-                // action on
-                this._$canAction = true;
+                    // sound on
+                    this._$canSound = true;
 
-                // sound on
-                this._$canSound = true;
+                    const loopConfig = this.loopConfig;
+                    if (!loopConfig) {
+                        // next frame point
+                        ++this._$currentFrame;
+                        if (this._$currentFrame > this._$totalFrames) {
+                            this._$currentFrame = 1;
+                        }
+                    } else {
+                        this._$currentFrame = this._$getLoopFrame(loopConfig);
+                    }
 
-                // next frame point
-                ++this._$currentFrame;
-                if (this._$currentFrame > this._$totalFrames) {
-                    this._$currentFrame = 1;
+                    // clear
+                    this._$clearChildren();
                 }
-
-                // clear
-                this._$clearChildren();
-
                 break;
 
         }
@@ -824,6 +889,86 @@ class MovieClip extends Sprite
         this._$isNext = isNext;
 
         return this._$isNext;
+    }
+
+    /**
+     * @param  {LoopConfig} loop_config
+     * @return {number}
+     * @method
+     * @private
+     */
+    _$getLoopFrame (loop_config)
+    {
+        const parent = this._$parent;
+        const length = parent._$currentFrame - loop_config.frame;
+
+        let frame = 1;
+        switch (loop_config.type) {
+
+            case LoopType.REPEAT:
+                {
+                    const totalFrame = loop_config.end
+                        ? loop_config.end
+                        : this._$totalFrames;
+
+                    frame = loop_config.start;
+                    for (let idx = 0; idx < length; ++idx) {
+
+                        ++frame;
+
+                        if (frame > totalFrame) {
+                            frame = loop_config.start;
+                        }
+
+                    }
+                }
+                break;
+
+            case LoopType.NO_REPEAT:
+                {
+                    const totalFrame = loop_config.end
+                        ? loop_config.end
+                        : this._$totalFrames;
+
+                    frame = $Math.min(totalFrame, loop_config.start + length);
+                }
+                break;
+
+            case LoopType.FIXED:
+                frame = loop_config.start;
+                break;
+
+            case LoopType.NO_REPEAT_REVERSAL:
+
+                frame = loop_config.end
+                    ? loop_config.end
+                    : this._$totalFrames;
+
+                frame = $Math.max(loop_config.start, frame - length);
+                break;
+
+            case LoopType.REPEAT_REVERSAL:
+                {
+                    const totalFrame = loop_config.end
+                        ? loop_config.end
+                        : this._$totalFrames;
+
+                    frame = totalFrame;
+                    for (let idx = 0; idx < length; ++idx) {
+
+                        --frame;
+
+                        if (loop_config.start > frame) {
+                            frame = totalFrame;
+                        }
+
+                    }
+                }
+                break;
+
+        }
+
+        return frame;
     }
 
     /**
@@ -868,6 +1013,7 @@ class MovieClip extends Sprite
 
         }
 
+        this._$loopConfigs = character.loopConfigs;
         this._$totalFrames = character.totalFrame || 1;
     }
 

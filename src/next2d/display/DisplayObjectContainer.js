@@ -732,6 +732,11 @@ class DisplayObjectContainer extends InteractiveObject
                         const instance = this._$createInstance(controller[idx]);
                         instance._$placeId = idx;
 
+                        const loopConfig = instance.loopConfig;
+                        if (loopConfig) {
+                            instance._$currentFrame = instance._$getLoopFrame(loopConfig);
+                        }
+
                         this._$children.push(instance);
                         if (instance._$name) {
                             this._$names.set(instance._$name, instance);
@@ -834,6 +839,12 @@ class DisplayObjectContainer extends InteractiveObject
                         : this._$createInstance(id);
 
                     instance._$placeId = idx;
+
+                    const loopConfig = instance.loopConfig;
+                    if (loopConfig) {
+                        instance._$currentFrame = instance._$getLoopFrame(loopConfig);
+                    }
+
                     children.push(instance);
                     if (instance._$name) {
                         this._$names.set(instance._$name, instance);
