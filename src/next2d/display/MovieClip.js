@@ -131,6 +131,13 @@ class MovieClip extends Sprite
          * @private
          */
         this._$loopConfig = null;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$tweenFrame = 0;
     }
 
     /**
@@ -284,6 +291,16 @@ class MovieClip extends Sprite
         const place = this._$getPlaceObject();
         if (!place || !place.loop) {
             return null;
+        }
+
+        if (place.loop.tweenFrame) {
+            this._$tweenFrame = place.loop.tweenFrame;
+            return null;
+        }
+
+        if (this._$tweenFrame) {
+            this._$changePlace = this._$tweenFrame !== this._$parent._$currentFrame;
+            this._$tweenFrame  = 0;
         }
 
         return place.loop;

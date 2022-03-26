@@ -1332,8 +1332,8 @@ class DisplayObject extends EventDispatcher
     {
         if (!this._$placeObject) {
 
-            const placeId = this._$placeId;
-            if (placeId === null) {
+            const index = this._$placeId;
+            if (index === null) {
                 return null;
             }
 
@@ -1352,11 +1352,10 @@ class DisplayObject extends EventDispatcher
                 return null;
             }
 
-            const currentPlaceId  = map[placeId];
+            const currentPlaceId  = map[index];
             this._$changePlace    = currentPlaceId !== this._$currentPlaceId;
             this._$currentPlaceId = currentPlaceId;
             this._$placeObject    = parent._$placeObjects[currentPlaceId];
-
         }
         return this._$placeObject;
     }
