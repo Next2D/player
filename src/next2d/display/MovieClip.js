@@ -293,14 +293,13 @@ class MovieClip extends Sprite
             return null;
         }
 
-        if (place.loop.tweenFrame) {
-            this._$tweenFrame = place.loop.tweenFrame;
-            return null;
-        }
-
         if (this._$tweenFrame) {
             this._$changePlace = this._$tweenFrame !== this._$parent._$currentFrame;
             this._$tweenFrame  = 0;
+        }
+
+        if (place.loop.tweenFrame) {
+            this._$tweenFrame = place.loop.tweenFrame;
         }
 
         return place.loop;
