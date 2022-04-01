@@ -282,8 +282,6 @@ class BitmapData
                             width, height, this._$buffer, true
                         );
 
-                    this._$buffer = null;
-
                     break;
 
                 default:
@@ -333,7 +331,7 @@ class BitmapData
         Util.$poolArray(cacheKeys);
         // this._$flushSetPixelQueue();
 
-        if (!texture._$bitmapData) {
+        if (!this._$buffer && !texture._$bitmapData) {
             texture._$bitmapData = this;
         }
 
