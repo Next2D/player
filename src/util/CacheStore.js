@@ -63,7 +63,7 @@ class CacheStore
 
     /**
      * @param  {CanvasRenderingContext2D|WebGLTexture} object
-     * @return {void|Promise}
+     * @return {void}
      * @method
      * @public
      */
@@ -76,34 +76,37 @@ class CacheStore
         switch (object.constructor) {
 
             case Util.$WebGLTexture:
-                return new Promise(() =>
                 {
-                    const player = Util.$currentPlayer();
-                    if (player._$context) {
+                    const timer = Util.$requestAnimationFrame;
+                    timer(() =>
+                    {
+                        const player = Util.$currentPlayer();
+                        if (player._$context) {
 
-                        const bitmapData = object._$bitmapData;
-                        if (bitmapData) {
+                            const bitmapData = object._$bitmapData;
+                            if (bitmapData) {
 
-                            bitmapData._$getPixelsAsync(
-                                0, 0, bitmapData.width, bitmapData.height, "RGBA"
-                            );
+                                bitmapData._$getPixelsAsync(
+                                    0, 0, bitmapData.width, bitmapData.height, "RGBA"
+                                );
 
-                            object._$bitmapData = false;
+                                object._$bitmapData = false;
 
-                            // delay delete
-                            const timer = Util.$setTimeout;
-                            timer(this._$delayBitmapLifeCheck, 2000, bitmapData);
+                                // delay delete
+                                const timer = Util.$setTimeout;
+                                timer(this._$delayBitmapLifeCheck, 2000, bitmapData);
+                            }
+
+                            player
+                                ._$context
+                                .frameBuffer
+                                .releaseTexture(object);
                         }
-
-                        player
-                            ._$context
-                            .frameBuffer
-                            .releaseTexture(object);
-                    }
-                });
+                    });
+                }
+                break;
 
             case Util.$CanvasRenderingContext2D:
-                return new Promise(() =>
                 {
                     const canvas = object.canvas;
                     const width  = canvas.width;
@@ -116,7 +119,8 @@ class CacheStore
 
                     // pool
                     this._$pool.push(canvas);
-                });
+                }
+                break;
 
             default:
                 break;
