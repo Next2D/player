@@ -714,6 +714,7 @@ class BitmapData
             // reset and draw to canvas
             Util.$resetContext(context);
             context.setTransform(1, 0, 0, 1, 0, 0);
+            context._$setColor(0, 0, 0, 0);
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
             context.drawImage(this._$texture, 0, 0, width, height);
             context._$bind(player._$buffer);
@@ -757,8 +758,9 @@ class BitmapData
         const player  = Util.$currentPlayer();
         const texture = this._$texture;
 
-        // cache
-        texture._$bitmapData = false;
+        if (texture) {
+            texture._$bitmapData = false;
+        }
 
         // set null
         player
