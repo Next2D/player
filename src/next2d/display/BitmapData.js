@@ -708,21 +708,30 @@ class BitmapData
         const image = new Image();
         if (width || height) {
 
+            const player  = Util.$currentPlayer();
+            const context = player._$context;
+
+            context.frameBuffer.unbind();
+
+            // reset and draw to canvas
+            Util.$resetContext(context);
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+            context.drawImage(this._$texture, 0, 0, width, height);
+            context._$bind(player._$buffer);
+
             const canvas  = Util.$cacheStore().getCanvas();
             canvas.width  = width;
             canvas.height = height;
 
-            const imageData = new ImageData(width, height);
-            imageData.data.set(this._$getPixels(0, 0, width, height, "RGBA"));
-
-            const context = canvas.getContext("2d");
-            context.putImageData(imageData, 0, 0);
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(player._$context.canvas, 0, 0);
 
             image.width  = width;
             image.height = height;
-            image.src    = context.canvas.toDataURL();
+            image.src    = ctx.canvas.toDataURL();
 
-            Util.$cacheStore().destroy(context);
+            Util.$cacheStore().destroy(ctx);
         }
 
         return image;
@@ -738,5 +747,24 @@ class BitmapData
         return this._$buffer
             ? this._$buffer
             : this._$getPixels(0, 0, this.width, this.height, "RGBA");
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    dispose ()
+    {
+        const player  = Util.$currentPlayer();
+        const texture = this._$texture;
+
+        // cache
+        texture._$bitmapData = false;
+
+        // set null
+        player
+            ._$cacheStore
+            .removeCache(this._$instanceId);
     }
 }
