@@ -586,7 +586,6 @@ class CanvasToWebGLContext
      */
     clearRect (x, y, w, h)
     {
-
         this._$mask._$onClearRect();
         this._$gl.enable(this._$gl.SCISSOR_TEST);
         this._$gl.scissor(x, y, w, h);

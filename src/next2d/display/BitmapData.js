@@ -709,28 +709,45 @@ class BitmapData
             const player  = Util.$currentPlayer();
             const context = player._$context;
 
+            const cacheWidth  = player._$canvas.width;
+            const cacheHeight = player._$canvas.height;
+
+            // resize
             context.frameBuffer.unbind();
+            player._$canvas.width  = width;
+            player._$canvas.height = height;
+            context._$gl.viewport(0, 0, width, height);
+            context._$viewportWidth  = width;
+            context._$viewportHeight = height;
 
             // reset and draw to canvas
             Util.$resetContext(context);
             context.setTransform(1, 0, 0, 1, 0, 0);
             context._$setColor(0, 0, 0, 0);
-            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+            context.clearRect(0, 0, width, height);
             context.drawImage(this._$texture, 0, 0, width, height);
-            context._$bind(player._$buffer);
 
             const canvas  = Util.$cacheStore().getCanvas();
             canvas.width  = width;
             canvas.height = height;
 
             const ctx = canvas.getContext("2d");
-            ctx.drawImage(player._$context.canvas, 0, 0);
+            ctx.drawImage(player._$canvas, 0, 0);
 
             image.width  = width;
             image.height = height;
             image.src    = ctx.canvas.toDataURL();
-
             Util.$cacheStore().destroy(ctx);
+
+            // reset
+            player._$canvas.width  = cacheWidth;
+            player._$canvas.height = cacheHeight;
+            context._$gl.viewport(0, 0, cacheWidth, cacheHeight);
+            context._$viewportWidth  = cacheWidth;
+            context._$viewportHeight = cacheHeight;
+
+            // re bind
+            context._$bind(player._$buffer);
         }
 
         return image;
