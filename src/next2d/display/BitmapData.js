@@ -712,19 +712,26 @@ class BitmapData
             const cacheWidth  = player._$canvas.width;
             const cacheHeight = player._$canvas.height;
 
-            // resize
             context.frameBuffer.unbind();
-            player._$canvas.width  = width;
-            player._$canvas.height = height;
-            context._$gl.viewport(0, 0, width, height);
-            context._$viewportWidth  = width;
-            context._$viewportHeight = height;
-
-            // reset and draw to canvas
             Util.$resetContext(context);
             context.setTransform(1, 0, 0, 1, 0, 0);
             context._$setColor(0, 0, 0, 0);
-            context.clearRect(0, 0, width, height);
+            context.clearRect(0, 0, cacheWidth, cacheHeight);
+
+            // resize
+            const resize = width > cacheWidth || height > cacheHeight;
+            if (resize) {
+                // canvas
+                player._$canvas.width  = width;
+                player._$canvas.height = height;
+
+                // webgl
+                context._$gl.viewport(0, 0, width, height);
+                context._$viewportWidth  = width;
+                context._$viewportHeight = height;
+            }
+
+            // reset and draw to canvas
             context.drawImage(this._$texture, 0, 0, width, height);
 
             const canvas  = Util.$cacheStore().getCanvas();
@@ -740,13 +747,18 @@ class BitmapData
             Util.$cacheStore().destroy(ctx);
 
             // reset
-            player._$canvas.width  = cacheWidth;
-            player._$canvas.height = cacheHeight;
-            context._$gl.viewport(0, 0, cacheWidth, cacheHeight);
-            context._$viewportWidth  = cacheWidth;
-            context._$viewportHeight = cacheHeight;
+            if (resize) {
+                // canvas
+                player._$canvas.width  = cacheWidth;
+                player._$canvas.height = cacheHeight;
 
-            // re bind
+                // webgl
+                context._$gl.viewport(0, 0, cacheWidth, cacheHeight);
+                context._$viewportWidth  = cacheWidth;
+                context._$viewportHeight = cacheHeight;
+            }
+
+            // end
             context._$bind(player._$buffer);
         }
 
