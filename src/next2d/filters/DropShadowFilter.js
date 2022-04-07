@@ -437,8 +437,8 @@ class DropShadowFilter extends BitmapFilter
             ._$generateFilterRect(clone, x_scale, y_scale);
 
         const radian = this._$angle * Util.$Deg2Rad;
-        const x      = $Math.cos(radian) * this._$distance;
-        const y      = $Math.sin(radian) * this._$distance;
+        const x      = $Math.cos(radian) * this._$distance * 2;
+        const y      = $Math.sin(radian) * this._$distance * 2;
 
         clone.x      = $Math.min(clone.x, x);
         clone.width  += $Math.abs(x);
@@ -542,10 +542,13 @@ class DropShadowFilter extends BitmapFilter
         const offsetDiffX = blurOffsetX - baseOffsetX;
         const offsetDiffY = blurOffsetY - baseOffsetY;
 
+        const xScale = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const yScale = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+
         // shadow point
         const radian = this._$angle * Util.$Deg2Rad;
-        const x = $Math.cos(radian) * this._$distance * 2;
-        const y = $Math.sin(radian) * this._$distance * 2;
+        const x = $Math.cos(radian) * this._$distance * 2 * xScale / Util.$devicePixelRatio;
+        const y = $Math.sin(radian) * this._$distance * 2 * yScale / Util.$devicePixelRatio;
 
         // dropShadow canvas
         const w = this._$inner ? baseWidth  : blurWidth  + $Math.max(0, $Math.abs(x) - offsetDiffX);
