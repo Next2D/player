@@ -24,6 +24,12 @@ class LoaderInfo extends EventDispatcher
 
         /**
          * @type {number}
+         * @private
+         */
+        this._$id = loaderInfoId++;
+
+        /**
+         * @type {number}
          * @default 0
          * @private
          */

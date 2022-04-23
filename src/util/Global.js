@@ -10,6 +10,12 @@ let instanceId = 0;
  * @type {number}
  */
 // eslint-disable-next-line no-unused-vars
+let loaderInfoId = 0;
+
+/**
+ * @type {number}
+ */
+// eslint-disable-next-line no-unused-vars
 let programId = 0;
 
 /**

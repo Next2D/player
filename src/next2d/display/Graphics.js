@@ -1593,9 +1593,13 @@ class Graphics
         // get cache
         const keys = Util.$getArray(xScale, yScale);
 
-        const uniqueId = !hasGrid && displayObject._$characterId
-            ? displayObject._$characterId
-            : displayObject._$instanceId;
+        let uniqueId = displayObject._$instanceId;
+        if (!hasGrid
+            && displayObject._$loaderInfo
+            && displayObject._$characterId
+        ) {
+            uniqueId = `${displayObject._$loaderInfo._$id}@${displayObject._$characterId}`;
+        }
 
         const cacheStore = Util.$cacheStore();
         const cacheKeys  = cacheStore.generateKeys(
