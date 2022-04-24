@@ -126,72 +126,109 @@ class Shape extends DisplayObject
 
         if (character.recodes) {
 
-            if (character.bitmapId) {
+            switch (true) {
 
-                this._$bitmapId = character.bitmapId;
+                case character.bitmapId > 0:
+                    {
+                        this._$bitmapId = character.bitmapId;
 
-                const bitmap = loaderInfo._$data.characters[character.bitmapId];
+                        const bitmap = loaderInfo._$data.characters[character.bitmapId];
 
-                const width  = $Math.abs(bitmap.bounds.xMax - bitmap.bounds.xMin);
-                const height = $Math.abs(bitmap.bounds.yMax - bitmap.bounds.yMin);
+                        const width  = $Math.abs(bitmap.bounds.xMax - bitmap.bounds.xMin);
+                        const height = $Math.abs(bitmap.bounds.yMax - bitmap.bounds.yMin);
 
-                const bitmapData = new BitmapData(width, height, true, 0);
-                if (!bitmap._$buffer) {
-                    bitmap._$buffer = new Uint8Array(bitmap.buffer);
-                    Util.$poolArray(bitmap.buffer);
-                    bitmap.buffer = null;
-                }
-                bitmapData._$buffer = bitmap._$buffer.slice();
+                        const bitmapData = new BitmapData(width, height, true, 0);
+                        if (!bitmap._$buffer) {
+                            bitmap._$buffer = new Uint8Array(bitmap.buffer);
+                            Util.$poolArray(bitmap.buffer);
+                            bitmap.buffer = null;
+                        }
+                        bitmapData._$buffer = bitmap._$buffer.slice();
 
-                // setup
-                graphics._$recode = Util.$getArray();
+                        // setup
+                        graphics._$recode = Util.$getArray();
 
-                // clone
-                const recodes = character.recodes;
-                if (recodes[recodes.length - 1] === Graphics.END_FILL) {
+                        // clone
+                        const recodes = character.recodes;
+                        if (recodes[recodes.length - 1] === Graphics.END_FILL) {
 
-                    const length  = recodes.length - 6;
-                    for (let idx = 0; idx < length; ++idx) {
-                        graphics._$recode.push(recodes[idx]);
+                            const length  = recodes.length - 6;
+                            for (let idx = 0; idx < length; ++idx) {
+                                graphics._$recode.push(recodes[idx]);
+                            }
+
+                            // add Bitmap Fill
+                            graphics._$recode.push(
+                                Graphics.BITMAP_FILL,
+                                bitmapData,
+                                null,
+                                "repeat",
+                                false
+                            );
+
+                        } else {
+
+                            const width      = recodes[recodes.length - 9];
+                            const caps       = recodes[recodes.length - 8];
+                            const joints     = recodes[recodes.length - 7];
+                            const miterLimit = recodes[recodes.length - 6];
+
+                            const length  = recodes.length - 10;
+                            for (let idx = 0; idx < length; ++idx) {
+                                graphics._$recode.push(recodes[idx]);
+                            }
+
+                            graphics._$recode.push(
+                                Graphics.BITMAP_STROKE,
+                                width,
+                                caps,
+                                joints,
+                                miterLimit,
+                                bitmapData,
+                                new $Float32Array([1, 0, 0, 1, character.bounds.xMin, character.bounds.yMin]),
+                                "repeat",
+                                false
+                            );
+                        }
                     }
+                    break;
 
-                    // add Bitmap Fill
-                    graphics._$recode.push(
-                        Graphics.BITMAP_FILL,
-                        bitmapData,
-                        null,
-                        "repeat",
-                        false
-                    );
+                case character.inBitmap:
+                    {
+                        // setup
+                        graphics._$recode = Util.$getArray();
 
-                } else {
+                        const recodes = character.recodes;
+                        for (let idx = 0; idx < recodes.length; ++idx) {
+                            const value = recodes[idx];
+                            graphics._$recode[idx] = value;
 
-                    const width      = recodes[recodes.length - 9];
-                    const caps       = recodes[recodes.length - 8];
-                    const joints     = recodes[recodes.length - 7];
-                    const miterLimit = recodes[recodes.length - 6];
+                            if (typeof value !== "object") {
+                                continue;
+                            }
 
-                    const length  = recodes.length - 10;
-                    for (let idx = 0; idx < length; ++idx) {
-                        graphics._$recode.push(recodes[idx]);
+                            if (!value.buffer) {
+                                continue;
+                            }
+
+                            const bitmapData = new BitmapData(
+                                value.width, value.height, true, 0
+                            );
+                            bitmapData._$buffer = new Uint8Array(value.buffer);
+                            graphics._$recode[idx++] = bitmapData;
+
+                            const matrix = recodes[idx];
+                            graphics._$recode[idx] = Util.$getFloat32Array6(
+                                matrix[0], matrix[1], matrix[2],
+                                matrix[3], matrix[4], matrix[5]
+                            );
+                        }
                     }
+                    break;
 
-                    graphics._$recode.push(
-                        Graphics.BITMAP_STROKE,
-                        width,
-                        caps,
-                        joints,
-                        miterLimit,
-                        bitmapData,
-                        new $Float32Array([1, 0, 0, 1, character.bounds.xMin, character.bounds.yMin]),
-                        "repeat",
-                        false
-                    );
-                }
-
-            } else {
-
-                graphics._$recode = character.recodes.slice(0);
+                default:
+                    graphics._$recode = character.recodes.slice(0);
+                    break;
 
             }
 
