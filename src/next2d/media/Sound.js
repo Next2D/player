@@ -70,11 +70,18 @@ class Sound extends EventDispatcher
         this._$volume = 1;
 
         /**
-         * @type {boolean}
-         * @default false
+         * @type {number}
+         * @default 0
          * @private
          */
-        this._$loop = false;
+        this._$currentCount = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$loopCount = 0;
 
         /**
          * @type {boolean}
@@ -169,20 +176,20 @@ class Sound extends EventDispatcher
     }
 
     /**
-     * @description ループ設定です。
-     *              loop setting.
+     * @description ループ回数の設定
+     *              Loop count setting.
      *
-     * @member {boolean}
-     * @default false
+     * @member {number}
+     * @default 0
      * @public
      */
-    get loop ()
+    get loopCount ()
     {
-        return this._$loop;
+        return this._$loopCount;
     }
-    set loop (loop)
+    set loopCount (loop_count)
     {
-        this._$loop = loop;
+        this._$loopCount = loop_count;
     }
 
     /**
@@ -409,6 +416,7 @@ class Sound extends EventDispatcher
                 player._$sources.indexOf(this), 1
             );
 
+            this._$currentCount   = 0;
             this._$sources.length = 0;
         }
     }
@@ -438,7 +446,7 @@ class Sound extends EventDispatcher
             }
         }
 
-        this._$loop   = tag.loop;
+        this._$loopCount = tag.loopCount | 0;
         this._$volume = $Math.min(SoundMixer.volume, tag.volume);
     }
 
@@ -497,11 +505,15 @@ class Sound extends EventDispatcher
             this._$sources.indexOf(source), 1
         );
 
-        if (this._$loop && !this._$stopFlag) {
+        if (!this._$stopFlag && this._$loopCount > this._$currentCount) {
 
             this._$createBufferSource();
 
+            this._$currentCount++;
+
         } else {
+
+            this._$currentCount = 0;
 
             if (Util.$audioContext) {
 
