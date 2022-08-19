@@ -695,15 +695,35 @@ class BitmapData
     }
 
     /**
-     * @return {HTMLImageElement}
+     * @return {string}
      * @method
      * @public
      */
-    toImage ()
+    toDataURL ()
+    {
+        const context = this.getContext2D();
+        const base64  = context.canvas.toDataURL();
+
+        // recycle
+        Util.$cacheStore().destroy(context);
+
+        return base64;
+    }
+
+    /**
+     * @return {CanvasRenderingContext2D}
+     * @method
+     * @public
+     */
+    getContext2D ()
     {
         const { width, height } = this;
 
-        const image = new Image();
+        const canvas  = Util.$cacheStore().getCanvas();
+        canvas.width  = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
         if (width || height) {
 
             const player  = Util.$currentPlayer();
@@ -733,20 +753,8 @@ class BitmapData
 
             // reset and draw to canvas
             context.drawImage(this._$texture, 0, 0, width, height);
-
-            const canvas  = Util.$cacheStore().getCanvas();
-            canvas.width  = width;
-            canvas.height = height;
-
-            const ctx = canvas.getContext("2d");
             ctx.drawImage(player._$canvas, 0, 0);
 
-            image.width  = width;
-            image.height = height;
-            image.src    = ctx.canvas.toDataURL();
-            Util.$cacheStore().destroy(ctx);
-
-            // reset
             if (resize) {
                 // canvas
                 player._$canvas.width  = cacheWidth;
@@ -762,7 +770,7 @@ class BitmapData
             context._$bind(player._$buffer);
         }
 
-        return image;
+        return ctx;
     }
 
     /**
