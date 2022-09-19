@@ -472,6 +472,7 @@ describe("Transform.js concatenatedMatrix test", function()
 
     beforeEach(function() {
         window.next2d = new Next2D();
+        window.next2d._$player.stop();
     });
 
     it("concatenatedMatrix on stage test", function()
@@ -505,6 +506,7 @@ describe("Transform.js concatenatedTransform test", function()
 
     beforeEach(function() {
         window.next2d = new Next2D();
+        window.next2d._$player.stop();
     });
 
     it("concatenatedTransform test", function()

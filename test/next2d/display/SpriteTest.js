@@ -73,6 +73,7 @@ describe("Sprite.js hitArea test", function()
 {
     beforeEach(function() {
         window.next2d = new Next2D();
+        window.next2d._$player.stop();
     });
 
     it("hitArea test case1", function ()

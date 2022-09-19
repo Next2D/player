@@ -501,6 +501,7 @@ describe("MovieClip.js _$goToFrame test", function()
 {
     beforeEach(function() {
         window.next2d = new Next2D();
+        window.next2d._$player.stop();
     });
 
     it("_$goToFrame test case1", function()
