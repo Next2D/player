@@ -301,10 +301,13 @@ const test = (done) =>
     return new TestServer({
         "configFile": __dirname + "/karma.conf.js",
         "singleRun": true
-    }, function (error)
+    }, (error_count) =>
     {
-        console.log(error);
-        done();
+        if (error_count) {
+            process.exit(1);
+        } else {
+            done();
+        }
     }).start();
 };
 
