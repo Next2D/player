@@ -40,9 +40,7 @@ describe("EventDispatcher.js namespace test", function()
 describe("EventDispatcher.js addEventListener test", function()
 {
     beforeEach(function() {
-        if (!("next2d" in window)) {
-            window.next2d = new Next2D();
-        }
+        window.next2d = new Next2D();
         const player = next2d._$player;
         player.stop();
         player._$broadcastEvents = new Map();
@@ -188,9 +186,7 @@ describe("EventDispatcher.js hasEventListener test", function()
 {
 
     beforeEach(function() {
-        if (!("next2d" in window)) {
-            window.next2d = new Next2D();
-        }
+        window.next2d = new Next2D();
         const player = next2d._$player;
         player.stop();
         player._$broadcastEvents = new Map();
@@ -233,9 +229,7 @@ describe("EventDispatcher.js removeEventListener test", function()
 {
 
     beforeEach(function() {
-        if (!("next2d" in window)) {
-            window.next2d = new Next2D();
-        }
+        window.next2d = new Next2D();
         const player = next2d._$player;
         player.stop();
         player._$broadcastEvents = new Map();
@@ -355,9 +349,7 @@ describe("EventDispatcher.js dispatchEvent test", function()
 {
 
     beforeEach(function() {
-        if (!("next2d" in window)) {
-            window.next2d = new Next2D();
-        }
+        window.next2d = new Next2D();
         const player = next2d._$player;
         player.stop();
         player._$broadcastEvents = new Map();
@@ -654,9 +646,7 @@ describe("EventDispatcher.js willTrigger test", function()
 {
 
     beforeEach(function() {
-        if (!("next2d" in window)) {
-            window.next2d = new Next2D();
-        }
+        window.next2d = new Next2D();
         const player = next2d._$player;
         player.stop();
         player._$broadcastEvents = new Map();
@@ -702,9 +692,7 @@ describe("EventDispatcher.js removeAllEventListener test", function()
 {
 
     beforeEach(function() {
-        if (!("next2d" in window)) {
-            window.next2d = new Next2D();
-        }
+        window.next2d = new Next2D();
         const player = next2d._$player;
         player.stop();
         player._$broadcastEvents = new Map();

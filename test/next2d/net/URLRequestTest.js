@@ -36,9 +36,7 @@ describe("URLRequest.js namespace test", function()
 describe("URLRequest.js properties test", function()
 {
     beforeEach(function() {
-        if (!("next2d" in window)) {
-            window.next2d = new Next2D();
-        }
+        window.next2d = new Next2D();
         window.next2d._$player._$canvas = document.createElement("canvas");
         window.next2d._$player.stop();
     });
@@ -315,9 +313,7 @@ describe("URLRequest.js contentType test", function()
 describe("URLRequest.js url test", function()
 {
     beforeEach(function() {
-        if (!("next2d" in window)) {
-            window.next2d = new Next2D();
-        }
+        window.next2d = new Next2D();
         window.next2d._$player._$canvas = document.createElement("canvas");
         window.next2d._$player.stop();
     });
