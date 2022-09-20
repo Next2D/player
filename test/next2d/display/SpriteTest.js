@@ -72,7 +72,9 @@ describe("Sprite.js property test", function()
 describe("Sprite.js hitArea test", function()
 {
     beforeEach(function() {
-        window.next2d = new Next2D();
+        if (!("next2d" in window)) {
+            window.next2d = new Next2D();
+        }
         window.next2d._$player.stop();
     });
 

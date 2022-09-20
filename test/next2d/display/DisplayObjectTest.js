@@ -29,7 +29,9 @@ describe("DisplayObject.js property test", function()
 {
 
     beforeEach(function() {
-        window.next2d = new Next2D();
+        if (!("next2d" in window)) {
+            window.next2d = new Next2D();
+        }
         window.next2d._$player.stop();
     });
 
@@ -653,7 +655,9 @@ describe("DisplayObject.js getBounds test", function()
 {
 
     beforeEach(function() {
-        window.next2d = new Next2D();
+        if (!("next2d" in window)) {
+            window.next2d = new Next2D();
+        }
         window.next2d._$player.stop();
     });
 
@@ -1034,7 +1038,9 @@ describe("DisplayObject.js hitTestObject test", function()
 {
 
     beforeEach(function() {
-        window.next2d = new Next2D();
+        if (!("next2d" in window)) {
+            window.next2d = new Next2D();
+        }
         window.next2d._$player.stop();
     });
 
@@ -1307,7 +1313,9 @@ describe("DisplayObject.js hitTestObject test", function()
 describe("DisplayObject.js localToGlobal test", function()
 {
     beforeEach(function() {
-        window.next2d = new Next2D();
+        if (!("next2d" in window)) {
+            window.next2d = new Next2D();
+        }
         window.next2d._$player.stop();
     });
 
@@ -1337,7 +1345,9 @@ describe("DisplayObject.js globalToLocal test", function()
 {
 
     beforeEach(function() {
-        window.next2d = new Next2D();
+        if (!("next2d" in window)) {
+            window.next2d = new Next2D();
+        }
         window.next2d._$player.stop();
     });
 
@@ -1367,7 +1377,9 @@ describe("DisplayObject.js mouseX and mouseY test", function()
 {
 
     beforeEach(function() {
-        window.next2d = new Next2D();
+        if (!("next2d" in window)) {
+            window.next2d = new Next2D();
+        }
         window.next2d._$player.stop();
     });
 

@@ -1,7 +1,9 @@
 describe("Player.js base test", function()
 {
     beforeEach(function() {
-        window.next2d = new Next2D();
+        if (!("next2d" in window)) {
+            window.next2d = new Next2D();
+        }
         window.next2d._$player._$canvas = document.createElement("canvas");
         window.next2d._$player.stop();
     });
@@ -51,7 +53,9 @@ describe("Player.js base test", function()
 describe("Player.js hitTest test", function()
 {
     beforeEach(function() {
-        window.next2d = new Next2D();
+        if (!("next2d" in window)) {
+            window.next2d = new Next2D();
+        }
         window.next2d._$player._$canvas = document.createElement("canvas");
         window.next2d._$player.stop();
     });
