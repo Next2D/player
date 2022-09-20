@@ -1413,6 +1413,7 @@ describe("DisplayObject.js mouseX and mouseY test", function()
         expect(sprite.mouseX <= 1180).toBe(true);
         expect(sprite.mouseY).toBe(430);
 
+        player.stop();
     });
 
 });

@@ -497,6 +497,7 @@ describe("Transform.js concatenatedMatrix test", function()
             "(a=0.7071067690849304, b=0.7071067690849304, c=-0.7071067690849304, d=0.7071067690849304, tx=100, ty=100)"
         );
 
+        next2d._$player.stop();
     });
 
 });
@@ -526,6 +527,7 @@ describe("Transform.js concatenatedTransform test", function()
             "(redMultiplier=1, greenMultiplier=1, blueMultiplier=1, alphaMultiplier=1, redOffset=0, greenOffset=200, blueOffset=0, alphaOffset=0)"
         );
 
+        next2d._$player.stop();
     });
 
 });

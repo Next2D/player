@@ -3,7 +3,6 @@ describe("Player.js base test", function()
     beforeEach(function() {
         window.next2d = new Next2D();
         window.next2d._$player._$canvas = document.createElement("canvas");
-        window.next2d._$player.stop();
     });
 
     it("base valid case1", function()
@@ -14,6 +13,7 @@ describe("Player.js base test", function()
 
         const player = root.stage._$player;
         expect(player.base).toBe("https://sample.com/json/");
+        player.stop();
     });
 
     it("base valid case2", function()
@@ -24,6 +24,7 @@ describe("Player.js base test", function()
 
         const player = root.stage._$player;
         expect(player.base).toBe("https://sample.com/json/");
+        player.stop();
     });
 
     it("base valid case3", function()
@@ -34,6 +35,7 @@ describe("Player.js base test", function()
 
         const player = root.stage._$player;
         expect(player.base).toBe("https://sample.com/json/");
+        player.stop();
     });
 
     it("base valid case4", function()
@@ -44,6 +46,7 @@ describe("Player.js base test", function()
 
         const player = root.stage._$player;
         expect(player.base).toBe("https://sample.com/json/");
+        player.stop();
     });
 
 });
@@ -192,6 +195,7 @@ describe("Player.js hitTest test", function()
         expect(overString).toBe("");
         expect(orderString).toBe(MouseEvent.MOUSE_OUT);
 
+        player.stop();
     });
 
     it("mouse move event case1", function()
@@ -415,6 +419,7 @@ describe("Player.js hitTest test", function()
         expect(clickString).toBe("");
         expect(orderString).toBe(MouseEvent.MOUSE_UP);
 
+        player.stop();
     });
 
     it("mouse roll over and out event case1", function()
@@ -625,6 +630,7 @@ describe("Player.js hitTest test", function()
 
         }
 
+        player.stop();
     });
 
     it("mouse mouseChildren event case1", function()
@@ -752,6 +758,7 @@ describe("Player.js hitTest test", function()
 
         }
 
+        player.stop();
     });
 
     it("mouse mouseEnabled event case1", function()
@@ -879,6 +886,7 @@ describe("Player.js hitTest test", function()
 
         }
 
+        player.stop();
     });
 
 });

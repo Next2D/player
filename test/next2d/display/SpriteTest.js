@@ -127,6 +127,7 @@ describe("Sprite.js hitArea test", function()
 
         expect(targetName).toBe("circle");
 
+        player.stop();
     });
 
 });
