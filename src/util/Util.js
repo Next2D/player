@@ -201,14 +201,6 @@ Util.$navigator = window.navigator;
 
 /**
  * @shortcut
- * @type {string}
- * @const
- * @static
- */
-Util.$userAgent = window.navigator.userAgent;
-
-/**
- * @shortcut
  * @type {Location}
  * @const
  * @static
@@ -594,68 +586,83 @@ Util.$float32Array8 = [];
  */
 Util.$float32Array9 = [];
 
-/**
- * @type {boolean}
- * @const
- * @static
- */
-Util.$isAndroid = Util.$userAgent.indexOf("Android") > -1;
+const userAgentData = window.navigator.userAgentData;
+if (userAgentData) {
+    userAgentData
+        .getHighEntropyValues(["platform", "mobile"])
+        .then((object) =>
+        {
+            /**
+             * @type {boolean}
+             * @const
+             * @static
+             */
+            Util.$isTouch = object.mobile;
 
-/**
- * @type {boolean}
- * @const
- * @static
- */
-Util.isiOS = Util.$userAgent.indexOf("iPhone") > -1 || Util.$userAgent.indexOf("iPod") > -1;
+            for (let idx = 0; idx < object.brands.length; ++idx) {
 
-/**
- * @type {boolean}
- * @const
- * @static
- */
-Util.$isTouch = Util.$isAndroid || Util.isiOS;
+                if (object.brands[idx].brand.indexOf("Chrome") === -1) {
+                    continue;
+                }
 
-/**
- * @type {boolean}
- * @const
- * @static
- */
-Util.$isChrome = Util.$userAgent.indexOf("Chrome") > -1;
+                /**
+                 * @type {boolean}
+                 * @const
+                 * @static
+                 */
+                Util.$isChrome = true;
 
-/**
- * @type {boolean}
- * @const
- * @static
- */
-Util.$isFireFox = Util.$userAgent.indexOf("Firefox") > -1;
+                break;
+            }
 
-/**
- * @type {boolean}
- * @const
- * @static
- */
-Util.$isSafari = Util.$userAgent.indexOf("Chrome") === -1 && Util.$userAgent.indexOf("Safari") > -1;
+            Util.$isSafari = Util.$isFireFox = false;
+        });
+} else {
 
-/**
- * @type {boolean}
- * @const
- * @static
- */
-Util.$isEdge = Util.$userAgent.indexOf("Edge") > -1;
+    const userAgent = window.navigator.userAgent;
 
-/**
- * @type {boolean}
- * @const
- * @static
- */
-Util.$isMac = Util.$userAgent.indexOf("Mac") > -1;
+    /**
+     * @type {boolean}
+     * @const
+     * @static
+     */
+    Util.$isAndroid = userAgent.indexOf("Android") > -1;
 
-/**
- * @type {boolean}
- * @const
- * @static
- */
-Util.$isWindows = Util.$isMac === false;
+    /**
+     * @type {boolean}
+     * @const
+     * @static
+     */
+    Util.isiOS = userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPod") > -1;
+
+    /**
+     * @type {boolean}
+     * @const
+     * @static
+     */
+    Util.$isTouch = Util.$isAndroid || Util.isiOS;
+
+    /**
+     * @type {boolean}
+     * @const
+     * @static
+     */
+    Util.$isChrome = userAgent.indexOf("Chrome") > -1;
+
+    /**
+     * @type {boolean}
+     * @const
+     * @static
+     */
+    Util.$isFireFox = userAgent.indexOf("Firefox") > -1;
+
+    /**
+     * @type {boolean}
+     * @const
+     * @static
+     */
+    Util.$isSafari = userAgent.indexOf("Chrome") === -1 && userAgent.indexOf("Safari") > -1;
+}
 
 /**
  * @type {LoaderInfo}

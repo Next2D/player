@@ -147,13 +147,6 @@ describe("URLRequest.js properties test", function()
         expect(req.url).toBe("123");
     });
 
-    it("userAgent success", function ()
-    {
-        let req      = new URLRequest();
-        req.userAgent = "iOS";
-        expect(req.userAgent).toBe(navigator.userAgent);
-    });
-
 });
 
 describe("URLRequest.js contentType test", function()

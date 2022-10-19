@@ -240,19 +240,6 @@ class URLRequest
     }
 
     /**
-     * @description HTTP 要求で使用されるユーザーエージェントストリングを指定します。
-     *              Specifies the user-agent string to be used in the HTTP request.
-     *
-     * @member {string}
-     * @readonly
-     * @public
-     */
-    get userAgent ()
-    {
-        return this._$userAgent;
-    }
-
-    /**
      * @description レスポンスのデータフォーマットを指定します。
      *              Specifies the data format of the response.
      *
