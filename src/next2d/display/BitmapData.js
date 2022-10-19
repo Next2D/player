@@ -695,31 +695,15 @@ class BitmapData
     }
 
     /**
-     * @return {string}
-     * @method
-     * @public
-     */
-    toDataURL ()
-    {
-        const context = this.getContext2D();
-        const base64  = context.canvas.toDataURL();
-
-        // recycle
-        Util.$cacheStore().destroy(context);
-
-        return base64;
-    }
-
-    /**
+     * @param  {HTMLCanvasElement} canvas
      * @return {CanvasRenderingContext2D}
      * @method
      * @public
      */
-    getContext2D ()
+    drawFromCanvas (canvas)
     {
         const { width, height } = this;
 
-        const canvas  = Util.$cacheStore().getCanvas();
         canvas.width  = width;
         canvas.height = height;
 
@@ -749,22 +733,20 @@ class BitmapData
                 context._$gl.viewport(0, 0, width, height);
                 context._$viewportWidth  = width;
                 context._$viewportHeight = height;
+
+                const manager = context._$frameBufferManager;
+                if (player._$buffer) {
+                    manager.unbind();
+                    manager.releaseAttachment(player._$buffer, true);
+                }
+
+                player._$buffer = manager
+                    .createCacheAttachment(width, height, false);
             }
 
             // reset and draw to canvas
             context.drawImage(this._$texture, 0, 0, width, height);
             ctx.drawImage(player._$canvas, 0, 0);
-
-            if (resize) {
-                // canvas
-                player._$canvas.width  = cacheWidth;
-                player._$canvas.height = cacheHeight;
-
-                // webgl
-                context._$gl.viewport(0, 0, cacheWidth, cacheHeight);
-                context._$viewportWidth  = cacheWidth;
-                context._$viewportHeight = cacheHeight;
-            }
 
             // end
             context._$bind(player._$buffer);

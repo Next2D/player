@@ -28,6 +28,12 @@ class CacheStore
         this._$lifeCount = 2;
 
         /**
+         * @type {Map}
+         * @private
+         */
+        this._$timerMap = new Map();
+
+        /**
          * @type {function}
          * @private
          */
@@ -159,6 +165,12 @@ class CacheStore
             Util.$poolMap(data);
             this._$store.delete(id);
         }
+
+        if (this._$timerMap.has(id)) {
+            const timerId = this._$timerMap.get(id);
+            const timer = Util.$clearTimeout;
+            timer(timerId);
+        }
     }
 
     /**
@@ -247,7 +259,8 @@ class CacheStore
 
         // lifeCheck
         const timer = Util.$setTimeout;
-        timer(this._$delayLifeCheck, 5000, id, type);
+        const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
+        this._$timerMap.set(id, timerId);
     }
 
     /**
@@ -307,7 +320,9 @@ class CacheStore
 
         // next
         const timer = Util.$setTimeout;
-        timer(this._$delayLifeCheck, 5000, id, type);
+        const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
+        this._$timerMap.set(id, timerId);
+        this._$timerMap.set(id, timerId);
     }
 
     /**
@@ -320,7 +335,6 @@ class CacheStore
      */
     generateKeys (unique_key, matrix = null, color = null)
     {
-
         let str = "";
         if (matrix) {
             str += `${matrix.join("_")}`;
