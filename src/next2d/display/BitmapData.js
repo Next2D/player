@@ -453,6 +453,7 @@ class BitmapData
             ? color_transform._$colorTransform
             : Util.$COLOR_ARRAY_IDENTITY;
 
+        Util.$useCache = false;
         if (source instanceof DisplayObject) {
 
             // matrix invert
@@ -514,6 +515,9 @@ class BitmapData
         // pool
         context.frameBuffer.releaseTexture(sourceTexture);
         context.frameBuffer.releaseAttachment(attachment, false);
+
+        // reset
+        Util.$useCache = true;
     }
 
     /**
@@ -710,6 +714,8 @@ class BitmapData
         const ctx = canvas.getContext("2d");
         if (width || height) {
 
+            Util.$useCache = false;
+
             const player  = Util.$currentPlayer();
             const context = player._$context;
 
@@ -750,6 +756,9 @@ class BitmapData
 
             // end
             context._$bind(player._$buffer);
+
+            // reset
+            Util.$useCache = true;
         }
 
         return ctx;

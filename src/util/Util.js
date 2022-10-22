@@ -164,6 +164,12 @@ Util.$COLOR_MATRIX_FILTER = [
 ];
 
 /**
+ * @type {boolean}
+ * @static
+ */
+Util.$useCache = true;
+
+/**
  * @type {number}
  * @static
  */

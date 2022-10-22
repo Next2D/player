@@ -258,9 +258,11 @@ class CacheStore
         data.set(`life_${type}`, this._$lifeCount);
 
         // lifeCheck
-        const timer = Util.$setTimeout;
-        const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
-        this._$timerMap.set(id, timerId);
+        if (Util.$useCache) {
+            const timer = Util.$setTimeout;
+            const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
+            this._$timerMap.set(id, timerId);
+        }
     }
 
     /**
@@ -321,7 +323,6 @@ class CacheStore
         // next
         const timer = Util.$setTimeout;
         const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
-        this._$timerMap.set(id, timerId);
         this._$timerMap.set(id, timerId);
     }
 

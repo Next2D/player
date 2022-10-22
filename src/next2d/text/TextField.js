@@ -2801,7 +2801,9 @@ class TextField extends InteractiveObject
                 .createTextureFromCanvas(ctx.canvas);
 
             // set cache
-            cacheStore.set(cacheKeys, texture);
+            if (Util.$useCache) {
+                cacheStore.set(cacheKeys, texture);
+            }
 
             // destroy cache
             cacheStore.destroy(ctx);
