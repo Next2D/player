@@ -1698,7 +1698,9 @@ class Graphics
                 .getTextureFromCurrentAttachment();
 
             // set cache
-            cacheStore.set(cacheKeys, texture);
+            if (Util.$useCache) {
+                cacheStore.set(cacheKeys, texture);
+            }
 
             // release buffer
             context
