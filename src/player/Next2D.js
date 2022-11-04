@@ -34,7 +34,6 @@ class Next2D
      */
     load (url, options = null)
     {
-        // @ifdef DEBUG
         if (url === "develop") {
             const path = Util.$location.search.substr(1).split("&")[0];
             if (!path) {
@@ -42,7 +41,6 @@ class Next2D
             }
             url = `${Util.$location.origin}/${path}`;
         }
-        // @endif
 
         if (!url) {
             return ;

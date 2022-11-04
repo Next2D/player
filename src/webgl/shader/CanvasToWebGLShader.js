@@ -46,22 +46,10 @@ class CanvasToWebGLShader
         const vertexShader = this._$gl.createShader(this._$gl.VERTEX_SHADER);
         this._$gl.shaderSource(vertexShader, vertex_source);
         this._$gl.compileShader(vertexShader);
-        // @ifdef GL_ERROR_CHECK
-        if (!this._$gl.getShaderParameter(vertexShader, this._$gl.COMPILE_STATUS)) {
-            const infoLog = this._$gl.getShaderInfoLog(vertexShader);
-            throw new Error("vertex shader compilation failed: " + infoLog + "\n" + vertex_source);
-        }
-        // @endif
 
         const fragmentShader = this._$gl.createShader(this._$gl.FRAGMENT_SHADER);
         this._$gl.shaderSource(fragmentShader, fragment_source);
         this._$gl.compileShader(fragmentShader);
-        // @ifdef GL_ERROR_CHECK
-        if (!this._$gl.getShaderParameter(fragmentShader, this._$gl.COMPILE_STATUS)) {
-            const infoLog = this._$gl.getShaderInfoLog(fragmentShader);
-            throw new Error("fragment shader compilation failed: " + infoLog + "\n" + fragment_source);
-        }
-        // @endif
 
         if (!this._$context._$isWebGL2Context) {
             // https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glBindAttribLocation.xml
@@ -86,12 +74,6 @@ class CanvasToWebGLShader
         this._$gl.attachShader(program, vertexShader);
         this._$gl.attachShader(program, fragmentShader);
         this._$gl.linkProgram(program);
-        // @ifdef GL_ERROR_CHECK
-        if (!this._$gl.getProgramParameter(program, this._$gl.LINK_STATUS)) {
-            const infoLog = this._$gl.getProgramInfoLog(program);
-            throw new Error("link program failed: " + infoLog + "\n" + vertex_source + "\n========\n" + fragment_source);
-        }
-        // @endif
 
         this._$gl.detachShader(program, vertexShader);
         this._$gl.detachShader(program, fragmentShader);
@@ -120,12 +102,6 @@ class CanvasToWebGLShader
      */
     _$drawImage ()
     {
-        // @ifdef DEBUG
-        if (window.glstats) {
-            glstats.ondraw();
-        }
-        // @endif
-
         this._$attachProgram();
         this._$uniform.bindUniforms();
         this._$context.vao.bindCommonVertexArray();
@@ -140,12 +116,6 @@ class CanvasToWebGLShader
      */
     _$drawGradient (begin, end)
     {
-        // @ifdef DEBUG
-        if (window.glstats) {
-            glstats.ondraw();
-        }
-        // @endif
-
         this._$attachProgram();
         this._$uniform.bindUniforms();
         this._$context.vao.bindGradientVertexArray(begin, end);
@@ -159,12 +129,6 @@ class CanvasToWebGLShader
      */
     _$stroke (object)
     {
-        // @ifdef DEBUG
-        if (window.glstats) {
-            glstats.ondraw();
-        }
-        // @endif
-
         // setup
         this._$attachProgram();
 
@@ -188,12 +152,6 @@ class CanvasToWebGLShader
      */
     _$fill (object)
     {
-        // @ifdef DEBUG
-        if (window.glstats) {
-            glstats.ondraw();
-        }
-        // @endif
-
         // setup
         this._$attachProgram();
 
@@ -220,12 +178,6 @@ class CanvasToWebGLShader
      */
     _$containerClip (vertex_array, first, count)
     {
-        // @ifdef DEBUG
-        if (window.glstats) {
-            glstats.ondraw();
-        }
-        // @endif
-
         // setup
         this._$attachProgram();
 
@@ -250,17 +202,8 @@ class CanvasToWebGLShader
      */
     _$drawPoints (vertex_array, first, count)
     {
-        // @ifdef DEBUG
-        if (window.glstats) {
-            glstats.ondraw();
-        }
-        // @endif
-
         // setup
         this._$attachProgram();
-
-        // ここでblendの設定はしない
-        // this._$context.blend.reset();
 
         // update data
         this._$uniform.bindUniforms();

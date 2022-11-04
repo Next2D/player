@@ -52,12 +52,6 @@ class TextureManager
             texture.area   = width * height;
             texture.dirty  = false;
             this._$gl.texStorage2D(this._$gl.TEXTURE_2D, 1, this._$gl.RGBA8, width, height);
-
-            // @ifdef DEBUG
-            if (window.glstats) {
-                glstats.ontex(texture.area);
-            }
-            // @endif
         }
 
         return texture;
@@ -152,12 +146,6 @@ class TextureManager
                 this._$gl.TEXTURE_2D, 0, this._$gl.RGBA, width, height,
                 0, this._$gl.RGBA, this._$gl.UNSIGNED_BYTE, pixels
             );
-
-            // @ifdef DEBUG
-            if (window.glstats) {
-                glstats.ontex(texture.area);
-            }
-            // @endif
         } else if (pixels) {
             texture.dirty = false;
 
@@ -235,12 +223,6 @@ class TextureManager
                 this._$gl.TEXTURE_2D, 0, this._$gl.RGBA,
                 this._$gl.RGBA, this._$gl.UNSIGNED_BYTE, element
             );
-
-            // @ifdef DEBUG
-            if (window.glstats) {
-                glstats.ontex(texture.area);
-            }
-            // @endif
         } else {
             this._$gl.texSubImage2D(
                 this._$gl.TEXTURE_2D, 0, 0, 0,

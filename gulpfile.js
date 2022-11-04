@@ -6,7 +6,6 @@ const uglify      = require("gulp-uglify-es").default;
 const browserSync = require("browser-sync").create();
 const TestServer  = require("karma").Server;
 const jsdoc       = require("gulp-jsdoc3");
-const preprocess  = require("gulp-preprocess");
 const minimist    = require("minimist");
 const replace     = require("gulp-replace");
 const rename      = require("gulp-rename");
@@ -14,13 +13,11 @@ const eslint      = require("gulp-eslint");
 const fs          = require("fs");
 
 const options = minimist(process.argv.slice(2), {
-    "boolean": ["prodBuild", "glErrorCheck", "glTrace"],
+    "boolean": ["prodBuild"],
     "string": ["distPath", "version"],
     "default": {
         "prodBuild": false,
-        "glErrorCheck": false,
-        "glTrace": false,
-        "version": "1.12.4",
+        "version": "1.12.5",
         "distPath": "."
     }
 });
@@ -130,24 +127,6 @@ const lint = () =>
  */
 const buildJavaScript = () =>
 {
-    // setup
-    const preprocessContext = {};
-
-    preprocessContext.DEBUG = !options.prodBuild;
-
-    if (options.glErrorCheck) {
-        preprocessContext.GL_ERROR_CHECK = true;
-    }
-
-    if (options.glTrace) {
-        preprocessContext.TRACE_GL = true;
-    }
-
-    if (options.prodBuild) {
-        preprocessContext.GL_ERROR_CHECK = false;
-        preprocessContext.TRACE_GL       = false;
-    }
-
     const build = gulp
         .src([
             "src/Header.build.file",
@@ -177,8 +156,7 @@ const buildJavaScript = () =>
             "src/player/Next2D.js",
             "src/Footer.build.file"
         ])
-        .pipe(concat("next2d.js"))
-        .pipe(preprocess({ "context": preprocessContext }));
+        .pipe(concat("next2d.js"));
 
     if (options.prodBuild) {
         build

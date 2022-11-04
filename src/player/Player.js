@@ -881,12 +881,6 @@ class Player
             alert("WebGL setting is off. Please turn the setting on.");
         }
 
-        // @ifdef DEBUG
-        if (window.glstats) {
-            glstats.init(gl, isWebGL2Context, Util.$isChrome, Util.$isFireFox);
-        }
-        // @endif
-
         // set event
         if (Util.$isTouch) {
 
@@ -1233,16 +1227,6 @@ class Player
             return ;
         }
 
-        // @ifdef DEBUG
-        if (window.stats) {
-            stats.begin();
-        }
-
-        if (window.glstats) {
-            glstats.begin();
-        }
-        // @endif
-
         // delay action
         this._$doAction();
 
@@ -1264,16 +1248,6 @@ class Player
                 this._$pointerCheck();
             }
         }
-
-        // @ifdef DEBUG
-        if (window.stats) {
-            stats.end();
-        }
-
-        if (window.glstats) {
-            glstats.end();
-        }
-        // @endif
 
         // next frame
         const timer = Util.$requestAnimationFrame;
