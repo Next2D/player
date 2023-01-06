@@ -89,6 +89,13 @@ class Sound extends EventDispatcher
          * @private
          */
         this._$stopFlag = true;
+
+        /**
+         * @type {string}
+         * @default ""
+         * @private
+         */
+        this._$src = "";
     }
 
     /**
@@ -193,6 +200,23 @@ class Sound extends EventDispatcher
     }
 
     /**
+     * @description 外部サウンドのURL
+     *              URL for external sound.
+     *
+     * @member {string}
+     * @default ""
+     * @public
+     */
+    get src ()
+    {
+        return this._$src;
+    }
+    set src (url)
+    {
+        this.load(new URLRequest(url));
+    }
+
+    /**
      * @description ボリュームです。範囲は 0（無音）～ 1（フルボリューム）です。
      *              The volume, ranging from 0 (silent) to 1 (full volume).
      *
@@ -257,6 +281,8 @@ class Sound extends EventDispatcher
      */
     load (request)
     {
+        this._$src = request.url;
+
         Util.$ajax({
             "format": URLLoaderDataFormat.ARRAY_BUFFER,
             "url": request.url,
@@ -428,7 +454,7 @@ class Sound extends EventDispatcher
      * @method
      * @private
      */
-    _$build(tag, parent)
+    _$build (tag, parent)
     {
         this._$character = parent
             ._$loaderInfo

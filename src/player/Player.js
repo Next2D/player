@@ -546,6 +546,18 @@ class Player
      * @method
      * @private
      */
+    _$loadWebAudio ()
+    {
+        if (!Util.$audioContext) {
+            Util.$loadAudioData();
+        }
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
     _$updateLoadStatus ()
     {
         if (this._$loadStatus === Player.LOAD_END) {
