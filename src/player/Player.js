@@ -286,6 +286,12 @@ class Player
         this._$bindRun = this._$run.bind(this);
         this._$timerId = -1;
         this._$loadId  = -1;
+
+        /**
+         * @type {Renderer}
+         * @private
+         */
+        this._$renderer = new Renderer();
     }
 
     /**
@@ -813,7 +819,6 @@ class Player
      */
     _$initializeCanvas ()
     {
-        this._$renderer = new Renderer();
         this._$renderer.samples = this.getSamples();
         this._$renderer.initialize();
 

@@ -255,6 +255,9 @@ class Renderer
         } else {
 
             const context = this._$context;
+            if (!context) {
+                return ;
+            }
 
             context._$bind(this._$buffer);
 
@@ -286,6 +289,9 @@ class Renderer
         } else {
 
             const context = this._$context;
+            if (!context) {
+                return ;
+            }
 
             const bufferManager = context._$frameBufferManager;
             const bufferTexture = bufferManager.getTextureFromCurrentAttachment();
