@@ -174,13 +174,6 @@ class Player
         this._$ty = 0;
 
         /**
-         * @type {string|number}
-         * @default null
-         * @private
-         */
-        this._$backgroundColor = null;
-
-        /**
          * @type {string}
          * @default up
          * @private
@@ -213,27 +206,6 @@ class Player
          * @private
          */
         this._$broadcastEvents = Util.$getMap();
-
-        /**
-         * @type {null}
-         * @default null
-         * @private
-         */
-        this._$context = null;
-
-        /**
-         * @type {null}
-         * @default null
-         * @private
-         */
-        this._$canvas = null;
-
-        /**
-         * @type {null}
-         * @default null
-         * @private
-         */
-        this._$buffer = null;
 
         /**
          * @type {number}
@@ -579,30 +551,8 @@ class Player
         const element = Util.$document.getElementById(this.contentElementId);
         if (element) {
 
-            // set backgroundColor
-            if (this._$bgColor !== null) {
-                this._$backgroundColor = this._$bgColor;
-            }
-
             // background color
-            if (this._$context) {
-
-                if (!this._$backgroundColor || this._$backgroundColor === "transparent") {
-
-                    this._$context._$setColor(0, 0, 0, 0);
-
-                } else {
-
-                    this._$context._$setColor(
-                        this._$backgroundColor[0],
-                        this._$backgroundColor[1],
-                        this._$backgroundColor[2],
-                        this._$backgroundColor[3]
-                    );
-
-                }
-
-            }
+            this._$renderer.setBackgroundColor(this._$bgColor);
 
             // DOM
             this._$deleteNode();
@@ -863,35 +813,13 @@ class Player
      */
     _$initializeCanvas ()
     {
-        // main canvas
-        const canvas  = Util.$document.createElement("canvas");
-        canvas.width  = 1;
-        canvas.height = 1;
+        this._$renderer = new Renderer();
+        this._$renderer.samples = this.getSamples();
+        this._$renderer.initialize();
+
+        // set main canvas
+        const canvas  = this._$renderer.canvas;
         this._$canvas = canvas;
-
-        // create gl context
-        const option = {
-            "stencil": true,
-            "premultipliedAlpha": true,
-            "antialias": false,
-            "depth": false,
-            "preserveDrawingBuffer": true
-        };
-
-        let isWebGL2Context = true;
-
-        let gl = canvas.getContext("webgl2", option);
-        if (!gl) {
-            gl = canvas.getContext("webgl", option)
-                || canvas.getContext("experimental-webgl", option);
-            isWebGL2Context = false;
-        }
-
-        if (gl) {
-            this._$context = new CanvasToWebGLContext(gl, isWebGL2Context);
-        } else {
-            alert("WebGL setting is off. Please turn the setting on.");
-        }
 
         // set event
         if (Util.$isTouch) {
@@ -1097,35 +1025,15 @@ class Player
             this._$width  = width;
             this._$height = height;
 
-            // main
-            this._$canvas.width  = width;
-            this._$canvas.height = height;
+            // main canvas resize
+            if (this._$renderer) {
+                this._$renderer.resize(width, height);
+                this._$renderer.setBackgroundColor(this._$bgColor);
+            }
+
             this._$canvas.style.transform = this._$ratio === 1 && Util.$devicePixelRatio === 1
                 ? ""
                 : `scale(${1 / this._$ratio})`;
-
-            // stage buffer
-            if (this._$context) { // unit test
-
-                this._$context._$gl.viewport(0, 0, width, height);
-
-                const manager = this._$context._$frameBufferManager;
-                if (this._$buffer) {
-                    manager.unbind();
-                    manager.releaseAttachment(this._$buffer, true);
-                }
-
-                this._$buffer = manager
-                    .createCacheAttachment(width, height, false);
-
-                // update cache max size
-                manager._$stencilBufferPool._$maxWidth  = width;
-                manager._$stencilBufferPool._$maxHeight = height;
-                manager._$textureManager._$maxWidth     = width;
-                manager._$textureManager._$maxHeight    = height;
-                this._$context._$pbo._$maxWidth         = width;
-                this._$context._$pbo._$maxHeight        = height;
-            }
 
             const mScale = this._$scale * this._$ratio;
             this._$matrix[0] = mScale;
@@ -1250,7 +1158,7 @@ class Player
 
             // execute
             this._$action();
-            this._$draw(0);
+            this._$draw();
 
             // draw event
             if (!this._$hitTestStart
@@ -1628,28 +1536,17 @@ class Player
      */
     _$draw ()
     {
-        const canvas  = this._$canvas;
-        const width   = canvas.width;
-        const height  = canvas.height;
-        const context = this._$context;
-
-        if (this._$buffer && this._$stage._$updated
-            && context && width > 0 && height > 0
+        if (this._$width > 0 && this._$height > 0
+            && this._$stage._$updated && this._$renderer
         ) {
 
-            context._$bind(this._$buffer);
+            this._$renderer.begin();
 
-            // pre draw
-            Util.$resetContext(context);
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context.clearRect(0, 0, width, height);
-
-            // draw
-            context.beginPath();
-
-            this
-                ._$stage
-                ._$draw(context, this._$matrix, Util.$COLOR_ARRAY_IDENTITY);
+            // this._$stage._$draw(
+            //     this._$renderer.context,
+            //     this._$matrix,
+            //     Util.$COLOR_ARRAY_IDENTITY
+            // );
 
             // stage end
             this._$stage._$updated = false;
@@ -1663,19 +1560,7 @@ class Player
                 this._$sounds.clear();
             }
 
-            const bufferTexture = context
-                .frameBuffer
-                .getTextureFromCurrentAttachment();
-
-            context.frameBuffer.unbind();
-
-            // reset and draw to canvas
-            Util.$resetContext(context);
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context.clearRect(0, 0, width, height);
-            context.drawImage(bufferTexture, 0, 0, width, height);
-
-            context._$bind(this._$buffer);
+            this._$renderer.updateMain();
         }
 
     }

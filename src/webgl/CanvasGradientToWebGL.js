@@ -12,7 +12,7 @@ class CanvasGradientToWebGL
         this._$rgb             = InterpolationMethod.RGB;
         this._$mode            = SpreadMethod.PAD;
         this._$focalPointRatio = 0;
-        this._$points          = Util.$getFloat32Array6(); // fixed size 6
+        this._$points          = new Float32Array(6);
         this._$stops           = Util.$getArray();
         this._$type            = null;
     }

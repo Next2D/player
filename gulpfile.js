@@ -17,7 +17,7 @@ const options = minimist(process.argv.slice(2), {
     "string": ["distPath", "version"],
     "default": {
         "prodBuild": false,
-        "version": "1.13.0",
+        "version": "1.14.0",
         "distPath": "."
     }
 });
@@ -50,6 +50,26 @@ const buildHeaderVersion = () =>
 };
 
 /**
+ * @description RenderWorkerを生成
+ * @public
+ */
+const buildRenderWorker = () =>
+{
+    return gulp
+        .src([
+            "src/worker/RenderUtil.js",
+            "src/next2d/display/BlendMode.js",
+            "src/next2d/display/InterpolationMethod.js",
+            "src/next2d/display/SpreadMethod.js",
+            "src/next2d/display/GradientType.js",
+            "src/webgl/**/*.js",
+            "src/worker/RenderBase.js"
+        ])
+        .pipe(concat("RenderWorker.js"))
+        .pipe(gulp.dest("src/worker"));
+};
+
+/**
  * @description Workerファイルをminifyにして書き出し
  * @public
  */
@@ -57,7 +77,7 @@ const buildWorkerFile = () =>
 {
     return gulp
         .src([
-            "src/worker/*.js",
+            "src/worker/*Worker.js",
             "!src/worker/*.min.js"
         ])
         .pipe(uglify())
@@ -75,6 +95,12 @@ const buildUtilFile = () =>
         .src("src/util/Util.js")
         .pipe(replace("###UNZIP_WORKER###",
             fs.readFileSync("src/worker/UnzipWorker.min.js", "utf8")
+                .replace(/\\/g, "\\\\")
+                .replace(/"/g, "\\\"")
+                .replace(/\n/g, ""))
+        )
+        .pipe(replace("###RENDER_WORKER###",
+            fs.readFileSync("src/worker/RenderWorker.min.js", "utf8")
                 .replace(/\\/g, "\\\\")
                 .replace(/"/g, "\\\"")
                 .replace(/\n/g, ""))
@@ -113,6 +139,7 @@ const lint = () =>
             "src/next2d/**/*.js",
             "src/util/CacheStore.js",
             "src/webgl/**/*.js",
+            "src/player/Renderer.js",
             "src/player/Player.js",
             "src/player/Next2D.js"
         ])
@@ -152,6 +179,7 @@ const buildJavaScript = () =>
             "src/next2d/**/*.js",
             "src/util/CacheStore.js",
             "src/webgl/**/*.js",
+            "src/player/Renderer.js",
             "src/player/Player.js",
             "src/player/Next2D.js",
             "src/Footer.build.file"
@@ -204,11 +232,13 @@ const watchFiles = () =>
     return gulp
         .watch([
             "src/**/*.js",
+            "!src/worker/**/RenderWorker.js",
             "!src/worker/**/*min.js",
             "!src/util/Util.replaced.js"
         ])
         .on("change", gulp.series(
             lint,
+            buildRenderWorker,
             buildWorkerFile,
             buildUtilFile,
             buildJavaScript,
@@ -292,6 +322,7 @@ const test = (done) =>
 exports.default = gulp.series(
     buildHeaderVersion,
     buildFooterVersion,
+    buildRenderWorker,
     buildWorkerFile,
     buildUtilFile,
     buildJavaScript,
@@ -304,6 +335,7 @@ exports.lint  = gulp.series(lint);
 exports.build = gulp.series(
     buildHeaderVersion,
     buildFooterVersion,
+    buildRenderWorker,
     buildWorkerFile,
     buildUtilFile,
     buildJavaScript

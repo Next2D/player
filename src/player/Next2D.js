@@ -85,19 +85,12 @@ class Next2D
                     `0x${data.bgColor.substr(1)}` | 0
                 );
 
-                player._$context._$setColor(
+                player._$bgColor = Util.$getArray(
                     color.R / 255,
                     color.G / 255,
                     color.B / 255,
                     1
                 );
-
-                player._$backgroundColor = [
-                    color.R / 255,
-                    color.G / 255,
-                    color.B / 255,
-                    1
-                ];
 
             }
 

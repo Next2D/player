@@ -98,8 +98,8 @@ class CanvasToWebGLContextMask
         // size
         let x      = bounds.xMin;
         let y      = bounds.yMin;
-        let width  = $Math.abs(bounds.xMax - bounds.xMin);
-        let height = $Math.abs(bounds.yMax - bounds.yMin);
+        let width  = Math.abs(bounds.xMax - bounds.xMin);
+        let height = Math.abs(bounds.yMax - bounds.yMin);
         Util.$poolBoundsObject(bounds);
 
         // resize
@@ -127,8 +127,8 @@ class CanvasToWebGLContextMask
             return null;
         }
 
-        width  = $Math.ceil(width);
-        height = $Math.ceil(height);
+        width  = Math.ceil(width);
+        height = Math.ceil(height);
 
         // set bounds
         this._$context._$cacheCurrentBounds.x = x;
@@ -145,7 +145,7 @@ class CanvasToWebGLContextMask
 
         const samples = this._$context._$isWebGL2Context
             && (player._$quality === StageQuality.LOW || player._$quality === StageQuality.MIDDLE)
-            ? $Math.min(Util.$HIGH_SAMPLES, this._$gl.getParameter(this._$gl.MAX_SAMPLES))
+            ? Math.min(Util.$HIGH_SAMPLES, this._$gl.getParameter(this._$gl.MAX_SAMPLES))
             : 0;
 
         // create new buffer

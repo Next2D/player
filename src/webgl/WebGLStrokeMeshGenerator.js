@@ -13,10 +13,10 @@ class WebGLStrokeMeshGenerator
      */
     static generate (vertices, line_cap, line_join)
     {
-        this._$vertexBufferData = this._$vertexBufferData || new $Float32Array(1024);
+        this._$vertexBufferData = this._$vertexBufferData || new Float32Array(1024);
         this._$vertexBufferPos = 0;
 
-        this._$indexBufferData = this._$indexBufferData || new $Int16Array(256);
+        this._$indexBufferData = this._$indexBufferData || new Int16Array(256);
         this._$indexBufferPos = 0;
 
         this._$lineCap  = line_cap;
@@ -47,7 +47,7 @@ class WebGLStrokeMeshGenerator
     static _$expandVertexBufferIfNeeded (delta_length)
     {
         if (this._$vertexBufferPos + delta_length > this._$vertexBufferData.length) {
-            const biggerBuffer = new $Float32Array(this._$vertexBufferData.length * 2);
+            const biggerBuffer = new Float32Array(this._$vertexBufferData.length * 2);
             biggerBuffer.set(this._$vertexBufferData);
             this._$vertexBufferData = biggerBuffer;
         }
@@ -251,7 +251,7 @@ class WebGLStrokeMeshGenerator
         const bx = x3 - x2;
         const by = y3 - y2;
         const det = Util.$cross(ax, ay, bx, by);
-        if ($Math.abs(det) < 0.0001) { return }
+        if (Math.abs(det) < 0.0001) { return }
 
         // 分割したベジェ曲線はベベルで結合する
         if (type === 2) {

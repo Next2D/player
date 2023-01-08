@@ -61,8 +61,8 @@ class ColorBufferPool
     create (width, height, samples = 0)
     {
         // 128以下で描画崩れが発生する場合がある？ため、256を最小サイズにする
-        width  = $Math.max(256, Util.$upperPowerOfTwo(width));
-        height = $Math.max(256, Util.$upperPowerOfTwo(height));
+        width  = Math.max(256, Util.$upperPowerOfTwo(width));
+        height = Math.max(256, Util.$upperPowerOfTwo(height));
 
         const colorBuffer = this._$getColorBuffer(width * height);
 
@@ -70,8 +70,8 @@ class ColorBufferPool
             || colorBuffer.height < height
             || samples && colorBuffer.samples !== samples
         ) {
-            width  = $Math.max(width,  colorBuffer.width);
-            height = $Math.max(height, colorBuffer.height);
+            width  = Math.max(width,  colorBuffer.width);
+            height = Math.max(height, colorBuffer.height);
 
             colorBuffer.samples = samples || this._$samples;
             colorBuffer.width   = width;
@@ -123,8 +123,8 @@ class ColorBufferPool
         let ng = -1;
         let ok = this._$objectPool.length;
 
-        while ($Math.abs(ok - ng) > 1) {
-            const mid = $Math.floor((ok + ng) / 2);
+        while (Math.abs(ok - ng) > 1) {
+            const mid = Math.floor((ok + ng) / 2);
             if (area <= this._$objectPool[mid].area) {
                 ok = mid;
             } else {

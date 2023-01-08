@@ -32,7 +32,7 @@ class GradientLUTShaderVariantCollection
         const key = `l${key1}${key2}`;
 
         if (!this._$collection.has(key)) {
-            const mediumpLength = $Math.ceil(stops_length * 5 / 4);
+            const mediumpLength = Math.ceil(stops_length * 5 / 4);
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,

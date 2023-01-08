@@ -1923,6 +1923,21 @@ Util.$decodeImage = function ()
  * @type {string}
  * @static
  */
+Util.$renderURL = URL.createObjectURL(
+    new Blob(["###RENDER_WORKER###"], { "type": "text/javascript" })
+);
+
+/**
+ * @default null
+ * @type {Worker}
+ * @static
+ */
+Util.$renderWorker = null;
+
+/**
+ * @type {string}
+ * @static
+ */
 Util.$unzipURL = URL.createObjectURL(
     new Blob(["###UNZIP_WORKER###"], { "type": "text/javascript" })
 );

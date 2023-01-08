@@ -81,8 +81,8 @@ class CanvasToWebGLContextGrid
 
         const player = Util.$currentPlayer();
         const sameScale  = player._$scale * player._$ratio;
-        const sameWidth  = $Math.abs($Math.ceil(boundsWidth  * sameScale));
-        const sameHeight = $Math.abs($Math.ceil(boundsHeight * sameScale));
+        const sameWidth  = Math.abs(Math.ceil(boundsWidth  * sameScale));
+        const sameHeight = Math.abs(Math.ceil(boundsHeight * sameScale));
 
         // 等倍サイズでの正規化grid
         const minXST = gridWidth  > 0 ? (grid._$x - bounds.xMin) / boundsWidth  : 0.00001;
@@ -98,14 +98,14 @@ class CanvasToWebGLContextGrid
 
         if (minXPQ >= maxXPQ) {
             const m = minXST / (minXST + (1 - maxXST));
-            minXPQ = $Math.max(m - 0.00001, 0);
-            maxXPQ = $Math.min(m + 0.00001, 1);
+            minXPQ = Math.max(m - 0.00001, 0);
+            maxXPQ = Math.min(m + 0.00001, 1);
         }
 
         if (minYPQ >= maxYPQ) {
             const m = minYST / (minYST + (1 - maxYST));
-            minYPQ = $Math.max(m - 0.00001, 0);
-            maxYPQ = $Math.min(m + 0.00001, 1);
+            minYPQ = Math.max(m - 0.00001, 0);
+            maxYPQ = Math.min(m + 0.00001, 1);
         }
 
         this.enabled = true;

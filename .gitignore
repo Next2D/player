@@ -9,6 +9,7 @@ next2d.js
 json
 coverage
 src/util/Util.replaced.js
+src/worker/RenderWorker.js
 src/worker/*.min.js
 *.html
 package-lock.json

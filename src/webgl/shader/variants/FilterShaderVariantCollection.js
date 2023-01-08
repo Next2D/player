@@ -76,7 +76,7 @@ class FilterShaderVariantCollection
             } else {
                 mediumpLength += is_glow ? 4 : 8;
             }
-            mediumpLength = $Math.ceil(mediumpLength / 4);
+            mediumpLength = Math.ceil(mediumpLength / 4);
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
@@ -131,7 +131,7 @@ class FilterShaderVariantCollection
         const key = `c${key1}${key2}${key3}${key4}`;
 
         if (!this._$collection.has(key)) {
-            const mediumpLength = (clamp ? 1 : 2) + $Math.ceil(x * y / 4);
+            const mediumpLength = (clamp ? 1 : 2) + Math.ceil(x * y / 4);
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
