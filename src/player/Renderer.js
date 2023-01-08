@@ -140,7 +140,7 @@ class Renderer
         canvas.width  = 1;
         canvas.height = 1;
 
-        if ("transferControlToOffscreen" in this._$canvas) {
+        if (Util.$renderURL) {
 
             this._$worker = new Worker(Util.$renderURL);
 

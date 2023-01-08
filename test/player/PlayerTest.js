@@ -3,6 +3,7 @@ describe("Player.js base test", function()
     beforeEach(function() {
         window.next2d = new Next2D();
         window.next2d._$player._$canvas = document.createElement("canvas");
+        Util.$renderURL = null;
     });
 
     it("base valid case1", function()
@@ -56,6 +57,7 @@ describe("Player.js hitTest test", function()
     beforeEach(function() {
         window.next2d = new Next2D();
         window.next2d._$player._$canvas = document.createElement("canvas");
+        Util.$renderURL = null;
     });
 
     it("mouse move event case1", function()

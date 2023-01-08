@@ -1923,9 +1923,9 @@ Util.$decodeImage = function ()
  * @type {string}
  * @static
  */
-Util.$renderURL = URL.createObjectURL(
-    new Blob(["###RENDER_WORKER###"], { "type": "text/javascript" })
-);
+Util.$renderURL = "OffscreenCanvas" in window
+    ? URL.createObjectURL(new Blob(["###RENDER_WORKER###"], { "type": "text/javascript" }))
+    : null;
 
 /**
  * @default null

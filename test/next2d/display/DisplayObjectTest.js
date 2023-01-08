@@ -31,6 +31,7 @@ describe("DisplayObject.js property test", function()
     beforeEach(function() {
         window.next2d = new Next2D();
         window.next2d._$player.stop();
+        Util.$renderURL = null;
     });
 
     // stage
@@ -655,6 +656,7 @@ describe("DisplayObject.js getBounds test", function()
     beforeEach(function() {
         window.next2d = new Next2D();
         window.next2d._$player.stop();
+        Util.$renderURL = null;
     });
 
     it("getBounds test success case1", function () {
@@ -1036,6 +1038,7 @@ describe("DisplayObject.js hitTestObject test", function()
     beforeEach(function() {
         window.next2d = new Next2D();
         window.next2d._$player.stop();
+        Util.$renderURL = null;
     });
 
     function leaf(s) {
@@ -1309,6 +1312,7 @@ describe("DisplayObject.js localToGlobal test", function()
     beforeEach(function() {
         window.next2d = new Next2D();
         window.next2d._$player.stop();
+        Util.$renderURL = null;
     });
 
     it("localToGlobal test success case1", function ()
@@ -1339,6 +1343,7 @@ describe("DisplayObject.js globalToLocal test", function()
     beforeEach(function() {
         window.next2d = new Next2D();
         window.next2d._$player.stop();
+        Util.$renderURL = null;
     });
 
     it("globalToLocal test success case1", function ()
@@ -1369,6 +1374,7 @@ describe("DisplayObject.js mouseX and mouseY test", function()
     beforeEach(function() {
         window.next2d = new Next2D();
         window.next2d._$player.stop();
+        Util.$renderURL = null;
     });
 
     it("mouseX and mouseY test success case1", function ()
