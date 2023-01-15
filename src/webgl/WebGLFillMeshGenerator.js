@@ -16,11 +16,12 @@ class WebGLFillMeshGenerator
             vertexBufferLen += (vertices[i].length / 3 - 2) * 12;
         }
 
-        this._$vertexBufferData = new Float32Array(vertexBufferLen);
+        this._$vertexBufferData = new $Float32Array(vertexBufferLen);
         this._$indexRanges      = Util.$getArray();
         this._$currentIndex     = 0;
 
         for (let i = 0; i < vertices.length; i++) {
+
             const first = this._$currentIndex;
             this._$generateMesh(vertices[i]);
             const count = this._$currentIndex - first;

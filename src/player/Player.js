@@ -475,7 +475,7 @@ class Player
 
             this._$fps = 1000 / this._$stage._$frameRate;
 
-            const timer = Util.$requestAnimationFrame;
+            const timer = $requestAnimationFrame;
             this._$timerId = timer(this._$bindRun);
         }
     }
@@ -543,7 +543,7 @@ class Player
             return ;
         }
 
-        const timer = Util.$requestAnimationFrame;
+        const timer = $requestAnimationFrame;
         this._$loadId = timer(this._$updateLoadStatus.bind(this));
     }
 
@@ -821,6 +821,8 @@ class Player
     {
         this._$renderer.samples = this.getSamples();
         this._$renderer.initialize();
+
+        this._$cacheStore._$context = this._$renderer._$context;
 
         // set main canvas
         const canvas  = this._$renderer.canvas;
@@ -1175,7 +1177,7 @@ class Player
         }
 
         // next frame
-        const timer = Util.$requestAnimationFrame;
+        const timer = $requestAnimationFrame;
         this._$timerId = timer(this._$bindRun);
     }
 
@@ -1545,13 +1547,13 @@ class Player
             && this._$stage._$updated && this._$renderer
         ) {
 
-            this._$renderer.begin();
+            this._$renderer.begin(this._$width, this._$height);
 
-            // this._$stage._$draw(
-            //     this._$renderer.context,
-            //     this._$matrix,
-            //     Util.$COLOR_ARRAY_IDENTITY
-            // );
+            this._$stage._$draw(
+                this._$renderer,
+                this._$matrix,
+                Util.$COLOR_ARRAY_IDENTITY
+            );
 
             // stage end
             this._$stage._$updated = false;

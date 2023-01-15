@@ -337,9 +337,7 @@ class TextureManager
 
         if (shouldSmooth) {
             texture.smoothing = smoothing;
-            const filter = smoothing && Util.$currentPlayer()._$quality !== StageQuality.LOW
-                ? this._$gl.LINEAR
-                : this._$gl.NEAREST;
+            const filter = smoothing ? this._$gl.LINEAR : this._$gl.NEAREST;
             this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MIN_FILTER, filter);
             this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MAG_FILTER, filter);
         }

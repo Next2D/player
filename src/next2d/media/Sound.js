@@ -391,12 +391,12 @@ class Sound extends EventDispatcher
                     return ;
                 }
 
-                const timer = Util.$requestAnimationFrame;
+                const timer = $requestAnimationFrame;
                 timer(wait);
 
             }.bind(this, Util.$performance.now(), start_time);
 
-            const timer = Util.$requestAnimationFrame;
+            const timer = $requestAnimationFrame;
             timer(wait);
 
         } else {

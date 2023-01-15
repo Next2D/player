@@ -58,6 +58,7 @@ const buildRenderWorker = () =>
     return gulp
         .src([
             "src/worker/RenderUtil.js",
+            "src/util/CacheStore.js",
             "src/next2d/display/BlendMode.js",
             "src/next2d/display/InterpolationMethod.js",
             "src/next2d/display/SpreadMethod.js",
@@ -237,7 +238,7 @@ const watchFiles = () =>
             "!src/util/Util.replaced.js"
         ])
         .on("change", gulp.series(
-            lint,
+            // lint,
             buildRenderWorker,
             buildWorkerFile,
             buildUtilFile,

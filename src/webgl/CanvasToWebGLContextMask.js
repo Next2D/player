@@ -63,106 +63,15 @@ class CanvasToWebGLContextMask
 
         const x = this._$context._$cacheCurrentBounds.x;
         const y = this._$context._$cacheCurrentBounds.y;
-        const w = this._$context._$cacheCurrentBounds.w;
-        const h = this._$context._$cacheCurrentBounds.h;
 
         Util.$resetContext(this._$context);
         this._$context.setTransform(1, 0, 0, 1, 0, 0);
-        this._$context.drawImage(texture, x, y, w, h);
+        this._$context.drawImage(texture, x, y, texture.width, texture.height);
 
         // blend restart
         this._$context._$blend.enable();
 
         manager.releaseAttachment(currentBuffer, true);
-    }
-
-    /**
-     * @param  {DisplayObject} display_object
-     * @param  {Float32Array} matrix
-     * @return {Float32Array}
-     * @public
-     */
-    _$startClip (display_object, matrix)
-    {
-
-        const tMatrix = Util.$multiplicationMatrix(
-            matrix,
-            display_object._$transform._$rawMatrix()
-        );
-
-        const baseBounds = display_object._$getBounds(null);
-        const bounds = Util.$boundsMatrix(baseBounds, tMatrix);
-        Util.$poolFloat32Array9(tMatrix);
-        Util.$poolBoundsObject(baseBounds);
-
-        // size
-        let x      = bounds.xMin;
-        let y      = bounds.yMin;
-        let width  = Math.abs(bounds.xMax - bounds.xMin);
-        let height = Math.abs(bounds.yMax - bounds.yMin);
-        Util.$poolBoundsObject(bounds);
-
-        // resize
-        const manager = this._$context._$frameBufferManager;
-        const currentBuffer = manager.currentAttachment;
-        if (width + x > currentBuffer.texture.width) {
-            width -= width - currentBuffer.texture.width + x;
-        }
-
-        if (height + y > currentBuffer.texture.height) {
-            height -= height - currentBuffer.texture.height + y;
-        }
-
-        if (0 > x) {
-            width += x;
-            x = 0;
-        }
-
-        if (0 > y) {
-            height += y;
-            y = 0;
-        }
-
-        if (0 >= width || 0 >= height) {
-            return null;
-        }
-
-        width  = Math.ceil(width);
-        height = Math.ceil(height);
-
-        // set bounds
-        this._$context._$cacheCurrentBounds.x = x;
-        this._$context._$cacheCurrentBounds.y = y;
-        this._$context._$cacheCurrentBounds.w = width;
-        this._$context._$cacheCurrentBounds.h = height;
-
-        // cache
-        const texture = manager.getTextureFromCurrentAttachment();
-
-        this._$context._$cacheCurrentBuffer = currentBuffer;
-
-        const player = Util.$currentPlayer();
-
-        const samples = this._$context._$isWebGL2Context
-            && (player._$quality === StageQuality.LOW || player._$quality === StageQuality.MIDDLE)
-            ? Math.min(Util.$HIGH_SAMPLES, this._$gl.getParameter(this._$gl.MAX_SAMPLES))
-            : 0;
-
-        // create new buffer
-        const buffer = manager
-            .createCacheAttachment(width, height, true, samples);
-        this._$context._$bind(buffer);
-
-        // draw background
-        Util.$resetContext(this._$context);
-        this._$context.setTransform(1, 0, 0, 1, 0, 0);
-        this._$context.drawImage(texture, -x, -y, texture.width, texture.height);
-
-        return Util.$getFloat32Array9(
-            matrix[0], matrix[1], matrix[2], matrix[3],
-            matrix[4] - x,
-            matrix[5] - y
-        );
     }
 
     /**
@@ -177,7 +86,11 @@ class CanvasToWebGLContextMask
         }
 
         // buffer mask on
-        const currentBuffer = this._$context._$frameBufferManager.currentAttachment;
+        const currentBuffer = this
+            ._$context
+            ._$frameBufferManager
+            .currentAttachment;
+
         currentBuffer.mask  = true;
         ++currentBuffer.clipLevel;
     }
@@ -188,7 +101,10 @@ class CanvasToWebGLContextMask
      */
     _$beginClipDef ()
     {
-        const currentBuffer = this._$context._$frameBufferManager.currentAttachment;
+        const currentBuffer = this
+            ._$context
+            ._$frameBufferManager
+            .currentAttachment;
 
         this._$gl.enable(this._$gl.SAMPLE_ALPHA_TO_COVERAGE);
         this._$gl.stencilFunc(this._$gl.ALWAYS, 0, 0xff);
@@ -203,7 +119,11 @@ class CanvasToWebGLContextMask
      */
     _$endClipDef ()
     {
-        const currentBuffer = this._$context._$frameBufferManager.currentAttachment;
+        const currentBuffer = this
+            ._$context
+            ._$frameBufferManager
+            .currentAttachment;
+
         const clipLevel = currentBuffer.clipLevel;
 
         let mask = 0;
@@ -224,13 +144,19 @@ class CanvasToWebGLContextMask
      */
     _$leaveClip ()
     {
-        const currentBuffer = this._$context._$frameBufferManager.currentAttachment;
+        const currentBuffer = this
+            ._$context
+            ._$frameBufferManager
+            .currentAttachment;
+
         --currentBuffer.clipLevel;
-        currentBuffer.mask = Util.$toBoolean(currentBuffer.clipLevel);
+        currentBuffer.mask = !!currentBuffer.clipLevel;
 
         // end clip
         if (!currentBuffer.clipLevel) {
-            this._$context._$clearRectStencil(0, 0, currentBuffer.width, currentBuffer.height);
+            this._$context._$clearRectStencil(
+                0, 0, currentBuffer.width, currentBuffer.height
+            );
             if (this._$context._$cacheCurrentBuffer) {
                 this._$endClip();
             }
@@ -281,7 +207,11 @@ class CanvasToWebGLContextMask
      */
     _$drawContainerClip ()
     {
-        const currentBuffer = this._$context._$frameBufferManager.currentAttachment;
+        const currentBuffer = this
+            ._$context
+            ._$frameBufferManager
+            .currentAttachment;
+
         const currentClipLevel = currentBuffer.clipLevel;
 
         const length = this._$poolClip.length;
@@ -450,7 +380,7 @@ class CanvasToWebGLContextMask
     _$onRestore ()
     {
         if (this._$clips.length) {
-            this._$clipStatus = Util.$toBoolean(this._$clips.pop());
+            this._$clipStatus = !!this._$clips.pop();
         }
     }
 }

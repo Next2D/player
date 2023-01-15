@@ -1801,12 +1801,12 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
+     * @param  {Renderer} renderer
      * @param  {Float32Array} matrix
      * @return {object}
      * @private
      */
-    _$preDraw (context, matrix)
+    _$preDraw (renderer, matrix)
     {
         const originMatrix = this._$transform._$rawMatrix();
         const tMatrix = Util.$multiplicationMatrix(matrix, originMatrix);
@@ -1954,8 +1954,8 @@ class DisplayObject extends EventDispatcher
             );
 
             // cache
-            const currentMaskBuffer = context._$cacheCurrentBuffer;
-            context._$cacheCurrentBuffer = null;
+            const currentMaskBuffer = renderer._$cacheCurrentBuffer;
+            renderer._$cacheCurrentBuffer = null;
 
             const rect = context._$cacheCurrentBounds;
             const currentMaskBounds = Util.$getBoundsObject(rect.x, rect.w, rect.y, rect.h);
@@ -2177,21 +2177,40 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
+     * @param  {Renderer} renderer
      * @param  {Float32Array} matrix
      * @return {Float32Array|boolean|null}
      * @method
      * @private
      */
-    _$startClip (context, matrix)
+    _$startClip (renderer, matrix)
     {
         let clipMatrix = null;
 
         // ネストしてない初回のマスクだけ実行
         // ネストしてる場合は初回に作られたbufferを流用
-        if (!context._$cacheCurrentBuffer) {
+        if (!renderer._$cacheCurrentBuffer) {
 
-            clipMatrix = context._$startClip(this, matrix);
+            let multiMatrix = matrix;
+            const rawMatrix = this._$transform._$rawMatrix();
+            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+            ) {
+                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            }
+
+            const baseBounds = this._$getBounds(null);
+            const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
+            Util.$poolBoundsObject(baseBounds);
+
+            clipMatrix = renderer.startClip(matrix, bounds);
+            Util.$poolBoundsObject(bounds);
+
+            if (multiMatrix !== matrix) {
+                Util.$poolFloat32Array6(multiMatrix);
+            }
+
             if (!clipMatrix) {
                 return false;
             }
@@ -2199,30 +2218,32 @@ class DisplayObject extends EventDispatcher
         }
 
         // start clip
-        context._$enterClip();
+        renderer.enterClip();
 
         // mask start
-        context._$beginClipDef();
+        renderer.beginClipDef();
 
+        let containerClip = false;
         if (this instanceof DisplayObjectContainer) {
-            context._$mask._$containerClip = true;
+            containerClip = true;
+            renderer.updateContainerClipFlag(true);
         }
 
-        this._$clip(context, clipMatrix || matrix);
+        this._$clip(renderer, clipMatrix || matrix);
         this._$updated = false;
 
         // container clip
-        if (context._$mask._$containerClip) {
+        if (containerClip) {
 
             // update flag
-            context._$mask._$containerClip = false;
+            renderer.updateContainerClipFlag(false);
 
             // execute clip
-            context._$drawContainerClip();
+            renderer.drawContainerClip();
         }
 
         // mask end
-        context._$endClipDef();
+        renderer.endClipDef();
 
         return clipMatrix;
     }

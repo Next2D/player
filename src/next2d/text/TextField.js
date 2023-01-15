@@ -641,7 +641,7 @@ class TextField extends InteractiveObject
 
                 div.appendChild(element);
 
-                const timer = Util.$requestAnimationFrame;
+                const timer = $requestAnimationFrame;
                 timer(() => { element.focus() });
 
                 this._$textAreaActive = true;

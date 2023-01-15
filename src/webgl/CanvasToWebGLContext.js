@@ -612,17 +612,6 @@ class CanvasToWebGLContext
     }
 
     /**
-     * @param  {DisplayObject} display_object
-     * @param  {Float32Array} matrix
-     * @return {Float32Array}
-     * @public
-     */
-    _$startClip (display_object, matrix)
-    {
-        return this._$mask._$startClip(display_object, matrix);
-    }
-
-    /**
      * @param {number} x
      * @param {number} y
      * @return void
@@ -1189,7 +1178,6 @@ class CanvasToWebGLContext
      */
     save ()
     {
-
         // matrix
         const m = this._$matrix;
         this._$stack.push(Util.$getFloat32Array9(

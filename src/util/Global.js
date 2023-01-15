@@ -41,6 +41,27 @@ const $RegExp = window.RegExp;
 
 /**
  * @shortcut
+ * @type {(handler: TimerHandler, timeout?: number, ...arguments: any[]) => number}
+ * @const
+ */
+const $setTimeout = window.setTimeout;
+
+/**
+ * @shortcut
+ * @type {(callback: FrameRequestCallback) => number}
+ * @const
+ */
+const $requestAnimationFrame = window.requestAnimationFrame;
+
+/**
+ * @shortcut
+ * @type {WebGLTexture}
+ * @const
+ */
+const $WebGLTexture = window.WebGLTexture;
+
+/**
+ * @shortcut
  * @type {Float32Array}
  * @const
  */

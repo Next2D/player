@@ -329,14 +329,14 @@ class Shape extends DisplayObject
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
+     * @param  {Renderer} renderer
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @return {void}
      * @method
      * @private
      */
-    _$draw (context, matrix, color_transform)
+    _$draw (renderer, matrix, color_transform)
     {
         if (!this._$visible) {
             return ;
@@ -348,7 +348,11 @@ class Shape extends DisplayObject
 
         let multiColor = color_transform;
         const rawColor = this._$transform._$rawColorTransform();
-        if (rawColor !== Util.$COLOR_ARRAY_IDENTITY) {
+        if (rawColor[0] !== 1 || rawColor[1] !== 1
+            || rawColor[2] !== 1 || rawColor[3] !== 1
+            || rawColor[4] !== 0 || rawColor[5] !== 0
+            || rawColor[6] !== 0 || rawColor[7] !== 0
+        ) {
             multiColor = Util.$multiplicationColor(color_transform, rawColor);
         }
 
@@ -366,13 +370,16 @@ class Shape extends DisplayObject
 
             let multiMatrix = matrix;
             const rawMatrix = this._$transform._$rawMatrix();
-            if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+            ) {
                 multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
             }
 
             this
                 ._$graphics
-                ._$draw(context, multiMatrix, multiColor, blendMode, filters);
+                ._$draw(renderer, multiMatrix, multiColor, blendMode, filters);
 
             if (multiMatrix !== matrix) {
                 Util.$poolFloat32Array6(multiMatrix);
@@ -382,7 +389,7 @@ class Shape extends DisplayObject
 
             this
                 ._$graphics
-                ._$drawBitmap(context, matrix, multiColor, blendMode, filters);
+                ._$drawBitmap(renderer, matrix, multiColor, blendMode, filters);
 
         }
 
@@ -393,21 +400,24 @@ class Shape extends DisplayObject
     }
 
     /**
-     * @param   {CanvasToWebGLContext} context
+     * @param   {Renderer} renderer
      * @param   {Float32Array} matrix
      * @returns {void}
      * @method
      * @private
      */
-    _$clip (context, matrix)
+    _$clip (renderer, matrix)
     {
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();
-        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
-        this._$graphics._$clip(context, multiMatrix);
+        this._$graphics._$clip(renderer, multiMatrix);
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);

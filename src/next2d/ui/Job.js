@@ -288,7 +288,7 @@ class Job extends EventDispatcher
     {
         if (this._$delay) {
 
-            const timer = Util.$setTimeout;
+            const timer = $setTimeout;
             timer(function ()
             {
                 this.initialize();

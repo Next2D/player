@@ -6,6 +6,45 @@
 // eslint-disable-next-line no-unused-vars
 let programId = 0;
 
+/**
+ * @shortcut
+ * @type {Math}
+ * @const
+ */
+const $Math = Math;
+
+/**
+ * @shortcut
+ * @type {WebGLTexture}
+ * @const
+ */
+const $WebGLTexture = WebGLTexture;
+
+/**
+ * @shortcut
+ * @type {Float32Array}
+ * @const
+ */
+const $Float32Array = Float32Array;
+
+/**
+ * @shortcut
+ * @type {(callback: FrameRequestCallback) => number}
+ * @const
+ */
+const $requestAnimationFrame = requestAnimationFrame;
+
+/**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+const $setTimeout = setTimeout;
+
+/**
+ * @type {object}
+ */
 const Util = {};
 
 /**
@@ -33,6 +72,16 @@ Util.$float32Array9 = [];
  * @static
  */
 Util.$arrays = [];
+
+/**
+ * 使用済みになったMap Objectをプール
+ * Pool Map objects that are no longer in use.
+ *
+ * @type {Map[]}
+ * @const
+ * @static
+ */
+Util.$maps = [];
 
 /**
  * @param  {number} [f0=0]
@@ -107,6 +156,47 @@ Util.$poolArray = (array) =>
     Util.$arrays.push(array);
 };
 
+/**
+ * @param  {Map} map
+ * @return void
+ * @method
+ * @static
+ */
+Util.$poolMap = (map) =>
+{
+    if (map.size) {
+        map.clear();
+    }
+    Util.$maps.push(map);
+};
+
+/**
+ * @return {Map}
+ * @method
+ * @static
+ */
+Util.$getMap = () =>
+{
+    return Util.$maps.pop() || new Map();
+};
+
+/**
+ * @param  {number} v
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$upperPowerOfTwo = (v) =>
+{
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v++;
+    return v;
+};
 
 /**
  * @param  {CanvasToWebGLContext} context

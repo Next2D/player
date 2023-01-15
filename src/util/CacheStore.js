@@ -12,13 +12,13 @@ class CacheStore
          * @type {array}
          * @private
          */
-        this._$pool = Util.$getArray();
+        this._$pool = [];
 
         /**
          * @type {Map}
          * @private
          */
-        this._$store = Util.$getMap();
+        this._$store = new Map();
 
         /**
          * @type {number}
@@ -32,6 +32,13 @@ class CacheStore
          * @private
          */
         this._$timerMap = new Map();
+
+        /**
+         * @type {CanvasToWebGLContext}
+         * @default null
+         * @private
+         */
+        this._$context = null;
 
         /**
          * @type {function}
@@ -81,13 +88,12 @@ class CacheStore
 
         switch (object.constructor) {
 
-            case Util.$WebGLTexture:
+            case $WebGLTexture:
                 {
-                    const timer = Util.$requestAnimationFrame;
+                    const timer = $requestAnimationFrame;
                     timer(() =>
                     {
-                        const player = Util.$currentPlayer();
-                        if (player._$context) {
+                        if (this._$context) {
 
                             const bitmapData = object._$bitmapData;
                             if (bitmapData) {
@@ -99,11 +105,11 @@ class CacheStore
                                 object._$bitmapData = false;
 
                                 // delay delete
-                                const timer = Util.$setTimeout;
+                                const timer = $setTimeout;
                                 timer(this._$delayBitmapLifeCheck, 2000, bitmapData);
                             }
 
-                            player
+                            this
                                 ._$context
                                 .frameBuffer
                                 .releaseTexture(object);
@@ -258,11 +264,9 @@ class CacheStore
         data.set(`life_${type}`, this._$lifeCount);
 
         // lifeCheck
-        if (Util.$useCache) {
-            const timer = Util.$setTimeout;
-            const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
-            this._$timerMap.set(id, timerId);
-        }
+        const timer = $setTimeout;
+        const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
+        this._$timerMap.set(id, timerId);
     }
 
     /**
@@ -276,7 +280,11 @@ class CacheStore
         if (!bitmap_data._$pixelBuffer) {
             return ;
         }
-        const context = Util.$currentPlayer()._$context;
+
+        const context = this._$context;
+        if (!context) {
+            return ;
+        }
 
         bitmap_data._$buffer = context
             .pbo
@@ -321,7 +329,7 @@ class CacheStore
         data.set(key, lifeCount);
 
         // next
-        const timer = Util.$setTimeout;
+        const timer = $setTimeout;
         const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
         this._$timerMap.set(id, timerId);
     }

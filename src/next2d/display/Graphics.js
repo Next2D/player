@@ -468,6 +468,7 @@ class Graphics
             Util.$poolArray(this._$lines);
         }
 
+        this._$buffer = null;
         this._$recode = null;
         this._$fills  = null;
         this._$lines  = null;
@@ -1212,12 +1213,12 @@ class Graphics
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
+     * @param  {Renderer} renderer
      * @param  {Float32Array} matrix
      * @return void
      * @private
      */
-    _$clip (context, matrix)
+    _$clip (renderer, matrix)
     {
         // size
         const baseBounds = this._$getBounds();
@@ -1243,14 +1244,7 @@ class Graphics
 
         }
 
-        Util.$resetContext(context);
-        context.setTransform(
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4], matrix[5]
-        );
-        this._$doDraw(context, Util.$COLOR_ARRAY_IDENTITY, true);
-
-        context.clip();
+        renderer.clipGraphics(this, matrix);
     }
 
     /**
@@ -1476,7 +1470,7 @@ class Graphics
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
+     * @param  {Renderer} renderer
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @param  {string} [blend_mode=BlendMode.NORMAL]
@@ -1486,7 +1480,7 @@ class Graphics
      * @private
      */
     _$draw (
-        context, matrix, color_transform,
+        renderer, matrix, color_transform,
         blend_mode = BlendMode.NORMAL, filters = null
     ) {
 
@@ -1522,8 +1516,8 @@ class Graphics
         const yMin   = bounds.yMin;
         Util.$poolBoundsObject(bounds);
 
-        let width  = $Math.ceil($Math.abs(xMax - xMin));
-        let height = $Math.ceil($Math.abs(yMax - yMin));
+        const width  = $Math.ceil($Math.abs(xMax - xMin));
+        const height = $Math.ceil($Math.abs(yMax - yMin));
         switch (true) {
 
             case width === 0:
@@ -1540,7 +1534,7 @@ class Graphics
         }
 
         // cache current buffer
-        const currentAttachment = context.frameBuffer.currentAttachment;
+        const currentAttachment = renderer.currentAttachment;
         if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
             return;
         }
@@ -1608,177 +1602,15 @@ class Graphics
 
         Util.$poolArray(keys);
 
-        // cache
-        let texture = cacheStore.get(cacheKeys);
-        if (!texture) {
-
-            // resize
-            let width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-            let height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
-            const textureScale = context._$textureScale(width, height);
-            if (textureScale < 1) {
-                width  *= textureScale;
-                height *= textureScale;
-            }
-
-            // create cache buffer
-            const buffer = context
-                .frameBuffer
-                .createCacheAttachment(width, height, true);
-            context._$bind(buffer);
-
-            // reset
-            Util.$resetContext(context);
-            context.setTransform(
-                xScale, 0, 0, yScale,
-                -baseBounds.xMin * xScale,
-                -baseBounds.yMin * yScale
-            );
-
-            if (hasGrid) {
-
-                const player = Util.$currentPlayer();
-                const mScale = player._$scale * player._$ratio;
-                const baseMatrix = Util.$getFloat32Array6(mScale, 0, 0, mScale, 0, 0);
-
-                const pMatrix = Util.$multiplicationMatrix(
-                    baseMatrix, parentMatrix
-                );
-
-                Util.$poolFloat32Array6(baseMatrix);
-
-                const aMatrixBase = displayObject
-                    ._$parent
-                    ._$transform
-                    .concatenatedMatrix
-                    ._$matrix;
-
-                const aMatrix = Util.$getFloat32Array6(
-                    aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
-                    aMatrixBase[4] * mScale - xMin,
-                    aMatrixBase[5] * mScale - yMin
-                );
-
-                const apMatrix = Util.$multiplicationMatrix(aMatrix, pMatrix);
-                const aOffsetX = apMatrix[4] - (matrix[4] - xMin);
-                const aOffsetY = apMatrix[5] - (matrix[5] - yMin);
-                Util.$poolFloat32Array6(apMatrix);
-
-                const parentBounds = Util.$boundsMatrix(baseBounds, pMatrix);
-                const parentXMax   = +parentBounds.xMax;
-                const parentXMin   = +parentBounds.xMin;
-                const parentYMax   = +parentBounds.yMax;
-                const parentYMin   = +parentBounds.yMin;
-                const parentWidth  = $Math.ceil($Math.abs(parentXMax - parentXMin));
-                const parentHeight = $Math.ceil($Math.abs(parentYMax - parentYMin));
-
-                Util.$poolBoundsObject(parentBounds);
-
-                context.grid.enable(
-                    parentXMin, parentYMin, parentWidth, parentHeight,
-                    baseBounds, displayObject._$scale9Grid,
-                    pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
-                    aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
-                );
-
-                Util.$poolFloat32Array6(pMatrix);
-                Util.$poolFloat32Array6(aMatrix);
-            }
-
-            // plain alpha
-            color_transform[3] = 1;
-            this._$doDraw(context, color_transform, false);
-
-            if (hasGrid) {
-                context.grid.disable();
-            }
-
-            texture = context
-                .frameBuffer
-                .getTextureFromCurrentAttachment();
-
-            // set cache
-            if (Util.$useCache) {
-                cacheStore.set(cacheKeys, texture);
-            }
-
-            // release buffer
-            context
-                .frameBuffer
-                .releaseAttachment(buffer, false);
-
-            // end draw and reset current buffer
-            context._$bind(currentAttachment);
-        }
+        renderer.drawGraphics(this,
+            cacheKeys, baseBounds, width, height, xScale, yScale,
+            matrix, color_transform, filters, alpha, blend_mode,
+            xMin, yMin, hasGrid, parentMatrix
+        );
 
         // pool
         Util.$poolArray(cacheKeys);
         Util.$poolBoundsObject(baseBounds);
-
-        if (filters && filters.length) {
-
-            const canApply = displayObject._$canApply(filters);
-            if (canApply) {
-
-                const filterTexture = displayObject._$drawFilter(
-                    context, texture, matrix,
-                    filters, width, height
-                );
-
-                // reset
-                Util.$resetContext(context);
-
-                // draw
-                context._$globalAlpha = alpha;
-                context._$imageSmoothingEnabled = true;
-                context._$globalCompositeOperation = blend_mode;
-
-                context.setTransform(1, 0, 0, 1,
-                    xMin - filterTexture._$offsetX,
-                    yMin - filterTexture._$offsetY
-                );
-                context.drawImage(filterTexture,
-                    0, 0, filterTexture.width, filterTexture.height,
-                    color_transform
-                );
-
-                return ;
-            }
-        }
-
-        // reset
-        Util.$resetContext(context);
-
-        // draw
-        context._$globalAlpha = alpha;
-        context._$imageSmoothingEnabled = true;
-        context._$globalCompositeOperation = blend_mode;
-
-        const radianX = $Math.atan2(matrix[1], matrix[0]);
-        const radianY = $Math.atan2(-matrix[2], matrix[3]);
-        if (radianX || radianY) {
-
-            const tx = baseBounds.xMin * xScale;
-            const ty = baseBounds.yMin * yScale;
-
-            context.setTransform(
-                $Math.cos(radianX),
-                $Math.sin(radianX),
-                -$Math.sin(radianY),
-                $Math.cos(radianY),
-                tx * $Math.cos(radianX) - ty * $Math.sin(radianY) + matrix[4],
-                tx * $Math.sin(radianX) + ty * $Math.cos(radianY) + matrix[5]
-            );
-
-        } else {
-
-            context.setTransform(1, 0, 0, 1, xMin, yMin);
-
-        }
-
-        context.drawImage(texture,
-            0, 0, texture.width, texture.height, color_transform
-        );
     }
 
     /**
@@ -2066,10 +1898,38 @@ class Graphics
     }
 
     /**
+     * @return {Float32Array}
+     * @method
+     * @private
+     */
+    _$getRecodes ()
+    {
+        // fixed logic
+        if (this._$doLine) {
+            this.endLine();
+        }
+
+        // fixed logic
+        if (this._$doFill) {
+            this.endFill();
+        }
+
+        if (!this._$recode) {
+            this._$recode = Util.$getArray();
+        }
+
+        if (!this._$buffer) {
+            this._$buffer = new $Float32Array(this._$recode);
+        }
+
+        return this._$buffer.slice();
+    }
+
+    /**
      * @param  {CanvasToWebGLContext|CanvasRenderingContext2D} context
      * @param  {Float32Array} matrix
      * @param  {Float32Array} [color_transform=null]
-     * @return {boolean}
+     * @return {void}
      * @method
      * @private
      */
@@ -2087,7 +1947,7 @@ class Graphics
         }
 
         if (!this._$recode) {
-            return false;
+            return ;
         }
 
         let xMin =  Number.MAX_VALUE;
@@ -2261,8 +2121,6 @@ class Graphics
             }
 
         }
-
-        return false;
     }
 
     /**
@@ -2274,8 +2132,9 @@ class Graphics
      * @method
      * @private
      */
-    _$runCommand (context, color_transform = null, is_clip = false, options = null)
-    {
+    _$runCommand (
+        context, color_transform = null, is_clip = false, options = null
+    ) {
         // fixed logic
         if (this._$doLine) {
             this.endLine();
@@ -2293,7 +2152,6 @@ class Graphics
         const recode = this._$recode;
         const length = recode.length;
         for (let idx = 0; idx < length; ) {
-
             switch (recode[idx++]) {
 
                 case Graphics.BEGIN_PATH:
@@ -2406,12 +2264,10 @@ class Graphics
                     break;
 
                 case Graphics.ARC:
-                    {
-                        const arcX   = recode[idx++];
-                        const arcY   = recode[idx++];
-                        const radius = recode[idx++];
-                        context.arc(arcX, arcY, radius, 0, 2 * $Math.PI);
-                    }
+                    context.arc(
+                        recode[idx++], recode[idx++], recode[idx++],
+                        0, 2 * $Math.PI
+                    );
                     break;
 
                 case Graphics.GRADIENT_FILL:
@@ -2680,7 +2536,6 @@ class Graphics
                     break;
 
             }
-
         }
 
         return false;

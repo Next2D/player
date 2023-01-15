@@ -464,7 +464,7 @@ class Video extends DisplayObject
             this._$video.volume = $Math.min(this._$volume, SoundMixer.volume);
             this._$video.play();
 
-            const timer = Util.$requestAnimationFrame;
+            const timer = $requestAnimationFrame;
             this._$timerId = timer(this._$update);
 
             this.dispatchEvent(
@@ -555,7 +555,7 @@ class Video extends DisplayObject
                 this._$doChanged();
             }
 
-            const timer = Util.$requestAnimationFrame;
+            const timer = $requestAnimationFrame;
             this._$timerId = timer(this._$update);
 
         }.bind(this);
@@ -755,7 +755,7 @@ class Video extends DisplayObject
                 this._$bytesLoaded, this._$bytesTotal
             );
 
-            const timer = Util.$requestAnimationFrame;
+            const timer = $requestAnimationFrame;
             this._$timerId = timer(this._$update);
 
             this._$wait = false;

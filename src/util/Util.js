@@ -291,14 +291,6 @@ Util.$parseFloat = window.parseFloat;
  * @const
  * @static
  */
-Util.$setTimeout = window.setTimeout;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
 Util.$encodeURIComponent = window.encodeURIComponent;
 
 /**
@@ -315,23 +307,7 @@ Util.$Infinity = window.Infinity;
  * @const
  * @static
  */
-Util.$WebGLTexture = window.WebGLTexture;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
 Util.$clearTimeout = window.clearTimeout;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$setTimeout = window.setTimeout;
 
 /**
  * @type {AudioContext}
@@ -346,14 +322,6 @@ Util.$audioContext = null;
  * @static
  */
 Util.$CanvasRenderingContext2D = window.CanvasRenderingContext2D;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$requestAnimationFrame = window.requestAnimationFrame;
 
 /**
  * @shortcut
@@ -1533,7 +1501,7 @@ Util.$resize = () =>
     const clearTimer = Util.$clearTimeout;
     clearTimer(Util.$resizeTimerId);
 
-    const timer = Util.$setTimeout;
+    const timer = $setTimeout;
     Util.$resizeTimerId = timer(Util.$resizeExecute, 300);
 };
 

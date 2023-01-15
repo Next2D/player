@@ -1173,23 +1173,26 @@ class DisplayObjectContainer extends InteractiveObject
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
+     * @param  {Renderer} renderer
      * @param  {Float32Array} matrix
      * @return {void}
      * @method
      * @private
      */
-    _$clip (context, matrix)
+    _$clip (renderer, matrix)
     {
         let multiMatrix = matrix;
 
         const rawMatrix = this._$transform._$rawMatrix();
-        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
         if (this._$graphics && this._$graphics._$getBounds()) {
-            this._$graphics._$clip(context, multiMatrix);
+            this._$graphics._$clip(renderer, multiMatrix);
         }
 
         const children = this._$getChildren();
@@ -1203,7 +1206,7 @@ class DisplayObjectContainer extends InteractiveObject
                 continue;
             }
 
-            instance._$clip(context, multiMatrix);
+            instance._$clip(renderer, multiMatrix);
             instance._$updated = false;
 
         }
@@ -1214,14 +1217,14 @@ class DisplayObjectContainer extends InteractiveObject
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
+     * @param  {Renderer} renderer
      * @param  {array} matrix
      * @param  {array} color_transform
      * @return {void}
      * @method
      * @private
      */
-    _$draw (context, matrix, color_transform)
+    _$draw (renderer, matrix, color_transform)
     {
         // not draw
         if (!this._$visible) {
@@ -1230,7 +1233,11 @@ class DisplayObjectContainer extends InteractiveObject
 
         let multiColor = color_transform;
         const rawColor = this._$transform._$rawColorTransform();
-        if (rawColor !== Util.$COLOR_ARRAY_IDENTITY) {
+        if (rawColor[0] !== 1 || rawColor[1] !== 1
+            || rawColor[2] !== 1 || rawColor[3] !== 1
+            || rawColor[4] !== 0 || rawColor[5] !== 0
+            || rawColor[6] !== 0 || rawColor[7] !== 0
+        ) {
             multiColor = Util.$multiplicationColor(color_transform, rawColor);
         }
 
@@ -1251,7 +1258,7 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         // pre data
-        const preData = this._$preDraw(context, matrix);
+        const preData = this._$preDraw(renderer, matrix);
         if (!preData) {
             return ;
         }
@@ -1279,7 +1286,7 @@ class DisplayObjectContainer extends InteractiveObject
         const shouldClips     = Util.$getArray();
 
         // draw children
-        const isLayer  = context._$isLayer;
+        const isLayer  = renderer._$isLayer;
         const isUpdate = this._$isUpdated();
         for (let idx = 0; idx < length; ++idx) {
 
@@ -1307,10 +1314,10 @@ class DisplayObjectContainer extends InteractiveObject
                 && (instance._$placeId > clipDepth || instance._$clipDepth > 0)
             ) {
 
-                context.restore();
+                renderer.restore();
 
                 if (shouldClip) {
-                    context._$leaveClip();
+                    renderer.leaveClip();
 
                     if (clipMatrix.length) {
                         Util.$poolFloat32Array6(preMatrix);
@@ -1332,7 +1339,7 @@ class DisplayObjectContainer extends InteractiveObject
             // mask start
             if (instance._$clipDepth > 0) {
 
-                context.save();
+                renderer.save();
 
                 if (clipDepth) {
                     clipStack.push(clipDepth);
@@ -1344,7 +1351,7 @@ class DisplayObjectContainer extends InteractiveObject
                 shouldClip = instance._$shouldClip(preMatrix);
                 if (shouldClip) {
 
-                    const adjMatrix = instance._$startClip(context, preMatrix);
+                    const adjMatrix = instance._$startClip(renderer, preMatrix);
                     if (adjMatrix === false) { // fixed
                         shouldClip = false;
                         continue;
@@ -1393,13 +1400,13 @@ class DisplayObjectContainer extends InteractiveObject
 
                     maskMatrix = Util.$multiplicationMatrix(playerMatrix, maskMatrix);
 
-                    if (context._$isLayer) {
+                    if (renderer._$isLayer) {
                         const currentPosition = context._$getCurrentPosition();
                         maskMatrix[4] -= currentPosition.xMin;
                         maskMatrix[5] -= currentPosition.yMin;
                     }
 
-                    if (context._$cacheCurrentBuffer) {
+                    if (renderer._$cacheCurrentBuffer) {
                         maskMatrix[4] -= context._$cacheCurrentBounds.x;
                         maskMatrix[5] -= context._$cacheCurrentBounds.y;
                     }
@@ -1412,10 +1419,10 @@ class DisplayObjectContainer extends InteractiveObject
 
                 let adjMatrix = maskInstance._$startClip(context, maskMatrix);
 
-                context.save();
+                renderer.save();
 
                 if (adjMatrix === false) { // fixed
-                    context.restore();
+                    renderer.restore();
                     continue;
                 }
 
@@ -1438,15 +1445,15 @@ class DisplayObjectContainer extends InteractiveObject
 
             }
 
-            instance._$draw(context, preMatrix, preColorTransform);
+            instance._$draw(renderer, preMatrix, preColorTransform);
             instance._$updated = false;
 
             // mask end
             if (maskInstance) {
 
-                context.restore();
+                renderer.restore();
 
-                context._$leaveClip();
+                renderer.leaveClip();
 
                 if (instanceMatrix.length) {
                     Util.$poolFloat32Array6(preMatrix);
@@ -1460,10 +1467,10 @@ class DisplayObjectContainer extends InteractiveObject
         // end mask
         if (clipDepth) {
 
-            context.restore();
+            renderer.restore();
 
             if (shouldClips.pop()) {
-                context._$leaveClip();
+                renderer.leaveClip();
             }
 
         }
