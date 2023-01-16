@@ -312,17 +312,26 @@ class Shape extends DisplayObject
             return Util.$getBoundsObject(0, 0, 0, 0);
         }
 
-        const bounds = this._$graphics._$getBounds();
-        if (matrix) {
+        const baseBounds = this._$graphics._$getBounds();
+        if (!matrix) {
+            return baseBounds;
+        }
 
-            const tMatrix = Util.$multiplicationMatrix(
-                matrix, this._$transform._$rawMatrix()
-            );
+        let multiMatrix = matrix;
 
-            const result = Util.$boundsMatrix(bounds, tMatrix);
-            Util.$poolBoundsObject(bounds);
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
 
-            return result;
+        const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
+        Util.$poolBoundsObject(baseBounds);
+
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
         }
 
         return bounds;
@@ -461,7 +470,10 @@ class Shape extends DisplayObject
 
             let multiMatrix = matrix;
             const rawMatrix = this._$transform._$rawMatrix();
-            if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+            ) {
                 multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
             }
 

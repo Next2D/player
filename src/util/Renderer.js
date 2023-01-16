@@ -294,8 +294,6 @@ class Renderer
      */
     resize (width, height)
     {
-        this._$cacheCurrentBuffer = null;
-
         this._$width  = width;
         this._$height = height;
 
@@ -350,6 +348,8 @@ class Renderer
      */
     begin (width, height)
     {
+        // 初期化
+        this._$cacheCurrentBuffer = null;
         this._$currentAttachment.width  = width;
         this._$currentAttachment.height = height;
         this._$currentAttachment.texture.width  = width;

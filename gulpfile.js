@@ -63,6 +63,8 @@ const buildRenderWorker = () =>
             "src/next2d/display/InterpolationMethod.js",
             "src/next2d/display/SpreadMethod.js",
             "src/next2d/display/GradientType.js",
+            "src/next2d/display/JointStyle.js",
+            "src/next2d/display/CapsStyle.js",
             "src/webgl/**/*.js",
             "src/worker/RenderBase.js"
         ])
@@ -140,7 +142,7 @@ const lint = () =>
             "src/next2d/**/*.js",
             "src/util/CacheStore.js",
             "src/webgl/**/*.js",
-            "src/player/Renderer.js",
+            "src/util/Renderer.js",
             "src/player/Player.js",
             "src/player/Next2D.js"
         ])
@@ -180,7 +182,7 @@ const buildJavaScript = () =>
             "src/next2d/**/*.js",
             "src/util/CacheStore.js",
             "src/webgl/**/*.js",
-            "src/player/Renderer.js",
+            "src/util/Renderer.js",
             "src/player/Player.js",
             "src/player/Next2D.js",
             "src/Footer.build.file"

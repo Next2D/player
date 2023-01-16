@@ -1919,7 +1919,326 @@ class Graphics
         }
 
         if (!this._$buffer) {
-            this._$buffer = new $Float32Array(this._$recode);
+
+            const array = Util.$getArray();
+
+            const recode = this._$recode;
+            for (let idx = 0; idx < recode.length;) {
+
+                const type = recode[idx++];
+                array.push(type);
+                switch (type) {
+
+                    case Graphics.BEGIN_PATH:
+                    case Graphics.END_FILL:
+                    case Graphics.END_STROKE:
+                    case Graphics.CLOSE_PATH:
+                        break;
+
+                    case Graphics.MOVE_TO:
+                    case Graphics.LINE_TO:
+                        array.push(recode[idx++], recode[idx++]);
+                        break;
+
+                    case Graphics.CURVE_TO:
+                    case Graphics.FILL_STYLE:
+                        array.push(
+                            recode[idx++], recode[idx++],
+                            recode[idx++], recode[idx++]
+                        );
+                        break;
+
+                    case Graphics.CUBIC:
+                        array.push(
+                            recode[idx++], recode[idx++],
+                            recode[idx++], recode[idx++],
+                            recode[idx++], recode[idx++]
+                        );
+                        break;
+
+                    case Graphics.STROKE_STYLE:
+                        {
+                            array.push(recode[idx++]);
+
+                            const lineCap = recode[idx++];
+                            switch (lineCap) {
+
+                                case CapsStyle.NONE:
+                                    array.push(0);
+                                    break;
+
+                                case CapsStyle.ROUND:
+                                    array.push(1);
+                                    break;
+
+                                case CapsStyle.SQUARE:
+                                    array.push(2);
+                                    break;
+
+                            }
+
+                            const lineJoin = recode[idx++];
+                            switch (lineJoin) {
+
+                                case JointStyle.BEVEL:
+                                    array.push(0);
+                                    break;
+
+                                case JointStyle.MITER:
+                                    array.push(1);
+                                    break;
+
+                                case JointStyle.ROUND:
+                                    array.push(2);
+                                    break;
+
+                            }
+
+                            array.push(
+                                recode[idx++], // MITER LIMIT
+                                recode[idx++], recode[idx++],
+                                recode[idx++], recode[idx++]
+                            );
+                        }
+                        break;
+
+                    case Graphics.ARC:
+                        array.push(recode[idx++], recode[idx++], recode[idx++]);
+                        break;
+
+                    case Graphics.GRADIENT_FILL:
+                        {
+                            const type          = recode[idx++];
+                            const stops         = recode[idx++];
+                            const matrix        = recode[idx++];
+                            const spread        = recode[idx++];
+                            const interpolation = recode[idx++];
+                            const focal         = recode[idx++];
+
+                            array.push(type === GradientType.LINEAR ? 0 : 1);
+
+                            array.push(stops.length);
+                            for (let idx = 0; idx < stops.length; ++idx) {
+                                const color = stops[idx];
+                                array.push(
+                                    color.ratio,
+                                    color.R,
+                                    color.G,
+                                    color.B,
+                                    color.A
+                                );
+                            }
+
+                            array.push(
+                                matrix[0], matrix[1], matrix[2],
+                                matrix[3], matrix[4], matrix[5]
+                            );
+
+                            switch (spread) {
+
+                                case SpreadMethod.REFLECT:
+                                    array.push(0);
+                                    break;
+
+                                case SpreadMethod.REPEAT:
+                                    array.push(1);
+                                    break;
+
+                                default:
+                                    array.push(2);
+                                    break;
+
+                            }
+
+                            array.push(
+                                interpolation === InterpolationMethod.LINEAR_RGB ? 0 : 1
+                            );
+
+                            array.push(focal);
+                        }
+                        break;
+
+                    case Graphics.GRADIENT_STROKE:
+                        {
+                            array.push(recode[idx++]);
+
+                            const lineCap = recode[idx++];
+                            switch (lineCap) {
+
+                                case CapsStyle.NONE:
+                                    array.push(0);
+                                    break;
+
+                                case CapsStyle.ROUND:
+                                    array.push(1);
+                                    break;
+
+                                case CapsStyle.SQUARE:
+                                    array.push(2);
+                                    break;
+
+                            }
+
+                            const lineJoin = recode[idx++];
+                            switch (lineJoin) {
+
+                                case JointStyle.BEVEL:
+                                    array.push(0);
+                                    break;
+
+                                case JointStyle.MITER:
+                                    array.push(1);
+                                    break;
+
+                                case JointStyle.ROUND:
+                                    array.push(2);
+                                    break;
+
+                            }
+
+                            // miterLimit
+                            array.push(recode[idx++]);
+
+                            const type          = recode[idx++];
+                            const stops         = recode[idx++];
+                            const matrix        = recode[idx++];
+                            const spread        = recode[idx++];
+                            const interpolation = recode[idx++];
+                            const focal         = recode[idx++];
+
+                            array.push(type === GradientType.LINEAR ? 0 : 1);
+
+                            array.push(stops.length);
+                            for (let idx = 0; idx < stops.length; ++idx) {
+                                const color = stops[idx];
+                                array.push(
+                                    color.ratio,
+                                    color.R,
+                                    color.G,
+                                    color.B,
+                                    color.A
+                                );
+                            }
+
+                            array.push(
+                                matrix[0], matrix[1], matrix[2],
+                                matrix[3], matrix[4], matrix[5]
+                            );
+
+                            switch (spread) {
+
+                                case SpreadMethod.REFLECT:
+                                    array.push(0);
+                                    break;
+
+                                case SpreadMethod.REPEAT:
+                                    array.push(1);
+                                    break;
+
+                                default:
+                                    array.push(2);
+                                    break;
+
+                            }
+
+                            array.push(
+                                interpolation === InterpolationMethod.LINEAR_RGB ? 0 : 1
+                            );
+
+                            array.push(focal);
+                        }
+                        break;
+
+                    case Graphics.BITMAP_FILL:
+                        {
+                            context.save();
+
+                            const bitmapData = recode[idx++];
+                            const matrix     = recode[idx++];
+                            const repeat     = recode[idx++];
+                            const smooth     = recode[idx++];
+
+                            if (matrix) {
+                                context.transform(
+                                    matrix[0], matrix[1], matrix[2],
+                                    matrix[3], matrix[4], matrix[5]
+                                );
+                            }
+
+                            if (repeat === "no-repeat"
+                                && bitmapData.width  === this._$xMax - this._$xMin
+                                && bitmapData.height === this._$yMax - this._$yMin
+                            ) {
+
+                                context.drawImage(bitmapData._$texture,
+                                    0, 0, bitmapData.width, bitmapData.height
+                                );
+
+                            } else {
+
+                                context.fillStyle = context.createPattern(
+                                    bitmapData._$texture, repeat, color_transform
+                                );
+
+                                context._$imageSmoothingEnabled = smooth;
+                                context.fill();
+
+                            }
+
+                            // restore
+                            context.restore();
+                            context._$imageSmoothingEnabled = false;
+
+                        }
+                        break;
+
+                    case Graphics.BITMAP_STROKE:
+                        {
+
+                            context.save();
+
+                            const lineWidth  = recode[idx++];
+                            const caps       = recode[idx++];
+                            const joints     = recode[idx++];
+                            const miterLimit = recode[idx++];
+                            const bitmapData = recode[idx++];
+                            const matrix     = recode[idx++];
+                            const repeat     = recode[idx++];
+                            const smooth     = recode[idx++];
+
+                            if (matrix) {
+                                context.transform(
+                                    matrix[0], matrix[1], matrix[2],
+                                    matrix[3], matrix[4], matrix[5]
+                                );
+                            }
+
+                            context.lineWidth   = lineWidth;
+                            context.lineCap     = caps;
+                            context.lineJoin    = joints;
+                            context.miterLimit  = miterLimit;
+                            context.strokeStyle = context.createPattern(
+                                bitmapData._$texture, repeat, color_transform
+                            );
+
+                            context._$imageSmoothingEnabled = smooth;
+                            context.stroke();
+
+                            // restore
+                            context.restore();
+                            context._$imageSmoothingEnabled = false;
+
+                        }
+                        break;
+
+                    default:
+                        break;
+
+                }
+            }
+
+            console.log(array);
+            this._$buffer = new $Float32Array(array);
         }
 
         return this._$buffer.slice();

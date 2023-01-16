@@ -21,7 +21,7 @@ class GraphicsGradientFill
      * @constructor
      * @private
      */
-    constructor(
+    constructor (
         type = GradientType.LINEAR, colors = null, alphas = null, ratios = null,
         matrix = null, spread_method = SpreadMethod.PAD,
         interpolation_method = InterpolationMethod.RGB,
@@ -218,6 +218,26 @@ class GraphicsGradientFill
                 : Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0,
             this._$spreadMethod,
             this._$interpolationMethod,
+            this._$focalPointRatio
+        );
+    }
+
+    /**
+     * @description 新しい GraphicsGradientFill オブジェクトとして、クローンを返します。
+     *              含まれるオブジェクトはまったく同じコピーになります。
+     *              Returns a clone as a new GraphicsGradientFill object.
+     *              The contained object will be an exact copy.
+     *
+     * @return {GraphicsGradientFill}
+     * @method
+     * @public
+     */
+    clone ()
+    {
+        return new GraphicsGradientFill(this._$type,
+            this._$colors.slice(), this._$alphas.slice(), this._$ratios.slice(),
+            this._$matrix ? this._$matrix.clone() : null,
+            this._$spreadMethod, this._$interpolationMethod,
             this._$focalPointRatio
         );
     }

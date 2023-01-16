@@ -29,6 +29,20 @@ const $Float32Array = Float32Array;
 
 /**
  * @shortcut
+ * @type {Int16Array}
+ * @const
+ */
+const $Int16Array = Int16Array;
+
+/**
+ * @shortcut
+ * @type {(number: number) => boolean}
+ * @const
+ */
+const $isNaN = isNaN;
+
+/**
+ * @shortcut
  * @type {(callback: FrameRequestCallback) => number}
  * @const
  */
@@ -52,6 +66,26 @@ const Util = {};
  * @static
  */
 Util.$bezierConverterBuffer = new Array(32);
+
+/**
+ * 使用済みになったFloat32Arrayをプール、サイズは4固定
+ * Pool used Float32Array, size fixed at 4.
+ *
+ * @type {Float32Array[]}
+ * @const
+ * @static
+ */
+Util.$float32Array4 = [];
+
+/**
+ * 使用済みになったFloat32Arrayをプール、サイズは6固定
+ * Pool used Float32Array, size fixed at 6.
+ *
+ * @type {Float32Array[]}
+ * @const
+ * @static
+ */
+Util.$float32Array6 = [];
 
 /**
  * 使用済みになったFloat32Arrayをプール、サイズは9固定
@@ -82,6 +116,76 @@ Util.$arrays = [];
  * @static
  */
 Util.$maps = [];
+
+/**
+ * @param  {number} [f0=0]
+ * @param  {number} [f1=0]
+ * @param  {number} [f2=0]
+ * @param  {number} [f3=0]
+ * @return {Float32Array}
+ * @method
+ * @static
+ */
+Util.$getFloat32Array4 = (f0 = 0, f1 = 0, f2 = 0, f3 = 0) =>
+{
+    const array = Util.$float32Array4.pop()
+        || new $Float32Array(4);
+
+    array[0] = f0;
+    array[1] = f1;
+    array[2] = f2;
+    array[3] = f3;
+
+    return array;
+};
+
+/**
+ * @param  {Float32Array} array
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$poolFloat32Array4 = (array) =>
+{
+    Util.$float32Array4.push(array);
+};
+
+/**
+ * @param  {number} [f0=0]
+ * @param  {number} [f1=0]
+ * @param  {number} [f2=0]
+ * @param  {number} [f3=0]
+ * @param  {number} [f4=0]
+ * @param  {number} [f5=0]
+ * @return {Float32Array}
+ * @method
+ * @static
+ */
+Util.$getFloat32Array6 = (f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0) =>
+{
+    const array = Util.$float32Array6.pop()
+        || new $Float32Array(6);
+
+    array[0] = f0;
+    array[1] = f1;
+    array[2] = f2;
+    array[3] = f3;
+    array[4] = f4;
+    array[5] = f5;
+
+    return array;
+};
+
+/**
+ * @param  {Float32Array} array
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$poolFloat32Array6 = (array) =>
+{
+    Util.$float32Array6.push(array);
+};
 
 /**
  * @param  {number} [f0=0]
@@ -245,4 +349,84 @@ Util.$resetContext = (context) =>
     context._$globalAlpha              = 1;
     context._$globalCompositeOperation = BlendMode.NORMAL;
     context._$imageSmoothingEnabled    = false;
+};
+
+/**
+ * @param   {Float32Array} matrix
+ * @returns {Float32Array}
+ */
+Util.$linearGradientXY = (matrix) =>
+{
+    const x0  = -819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
+    const x1  =  819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
+    const x2  = -819.2 * matrix[0] + 819.2 * matrix[2] + matrix[4];
+    const y0  = -819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
+    const y1  =  819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
+    const y2  = -819.2 * matrix[1] + 819.2 * matrix[3] + matrix[5];
+
+    let vx2 = x2 - x0;
+    let vy2 = y2 - y0;
+
+    const r1 = $Math.sqrt(vx2 * vx2 + vy2 * vy2);
+    if (r1) {
+        vx2 = vx2 / r1;
+        vy2 = vy2 / r1;
+    } else {
+        vx2 = 0;
+        vy2 = 0;
+    }
+
+    const r2 = (x1 - x0) * vx2 + (y1 - y0) * vy2;
+
+    return Util.$getArray(x0 + r2 * vx2, y0 + r2 * vy2, x1, y1);
+};
+
+/**
+ * @param   {Float32Array} m
+ * @returns {Float32Array}
+ * @method
+ * @static
+ */
+Util.$inverseMatrix = (m) =>
+{
+    const rdet = 1 / (m[0] * m[4] - m[3] * m[1]);
+    const tx  = m[3] * m[7] - m[4] * m[6];
+    const ty  = m[1] * m[6] - m[0] * m[7];
+
+    return Util.$getFloat32Array9(
+        m[4] * rdet,  -m[1] * rdet, 0,
+        -m[3] * rdet,  m[0] * rdet, 0,
+        tx * rdet, ty * rdet, 1
+    );
+};
+
+/**
+ * @param  {number} value
+ * @param  {number} min
+ * @param  {number} max
+ * @param  {number} [default_value=null]
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$clamp = (value, min, max, default_value = null) =>
+{
+    const number = +value;
+    return $isNaN(number) && default_value !== null
+        ? default_value
+        : $Math.min($Math.max(min, $isNaN(number) ? 0 : number), max);
+};
+
+/**
+ * @param  {number} x1
+ * @param  {number} y1
+ * @param  {number} x2
+ * @param  {number} y2
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$cross = (x1, y1, x2, y2) =>
+{
+    return x1 * y2 - x2 * y1;
 };

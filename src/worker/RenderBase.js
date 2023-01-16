@@ -401,6 +401,147 @@ class CommandController
     }
 
     /**
+     * @description strokeのセットアップ
+     *
+     * @param {number} line_width
+     * @param {number} line_cap
+     * @param {number} line_join
+     * @param {number} miter_limit
+     * @return {void}
+     * @method
+     * @public
+     */
+    setupStroke (line_width, line_cap, line_join, miter_limit)
+    {
+        const context = this._$context;
+
+        context.lineWidth = line_width;
+
+        switch (line_cap) {
+
+            case 0:
+                context.lineCap = CapsStyle.NONE;
+                break;
+
+            case 1:
+                context.lineCap = CapsStyle.ROUND;
+                break;
+
+            case 2:
+                context.lineCap = CapsStyle.SQUARE;
+                break;
+
+        }
+
+        switch (line_join) {
+
+            case 0:
+                context.lineJoin = JointStyle.BEVEL;
+                break;
+
+            case 1:
+                context.lineJoin = JointStyle.MITER;
+                break;
+
+            case 2:
+                context.lineJoin = JointStyle.ROUND;
+                break;
+
+        }
+
+        context.miterLimit = miter_limit;
+    }
+
+    /**
+     * @description CanvasGradientToWebGLオブジェクトを生成
+     *
+     * @param {number} type
+     * @param {array} stops
+     * @param {Float32Array} matrix
+     * @param {number} spread
+     * @param {number} interpolation
+     * @param {number} focal
+     * @param {Float32Array} [color_transform=null]
+     * @return {CanvasGradientToWebGL}
+     * @method
+     * @public
+     */
+    createGradientStyle (
+        type, stops, matrix,
+        spread, interpolation, focal,
+        color_transform = null
+    ) {
+
+        const context = this._$context;
+
+        let spreadMethod = "pad";
+        switch (spread) {
+
+            case 0:// REFLECT
+                spreadMethod = "reflect";
+                break;
+
+            case 1: // REPEAT
+                spreadMethod = "repeat";
+                break;
+
+        }
+
+        let css = null;
+        if (type === 0) {
+
+            // LINEAR
+            const xy = Util.$linearGradientXY(matrix);
+            css = context.createLinearGradient(
+                xy[0], xy[1], xy[2], xy[3],
+                interpolation ? "rgb" : "linearRGB",
+                spreadMethod
+            );
+
+        } else {
+
+            context.save();
+            context.transform(
+                matrix[0], matrix[1], matrix[2],
+                matrix[3], matrix[4], matrix[5]
+            );
+
+            css = context.createRadialGradient(
+                0, 0, 0, 0, 0, 819.2,
+                interpolation ? "rgb" : "linearRGB",
+                spreadMethod, focal
+            );
+
+        }
+
+        for (let idx = 0; idx < stops.length; ++idx) {
+
+            const color = stops[idx];
+
+            if (!color_transform) {
+
+                css.addColorStop(color.ratio,
+                    Util.$getFloat32Array4(
+                        color.R, color.G, color.B, color.A
+                    )
+                );
+
+            } else {
+
+                css.addColorStop(color.ratio, Util.$getFloat32Array4(
+                    $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
+                    $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
+                    $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
+                    $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0
+                ));
+
+            }
+        }
+
+        return css;
+    }
+
+    /**
      * @description Graphicsクラスの描画を実行
      *              Execute drawing in the Graphics class
      *
@@ -480,10 +621,10 @@ class CommandController
                             continue;
                         }
 
-                        context.lineWidth  = recodes[idx++];
-                        context.lineCap    = recodes[idx++];
-                        context.lineJoin   = recodes[idx++];
-                        context.miterLimit = recodes[idx++];
+                        this.setupStroke(
+                            recodes[idx++], recodes[idx++],
+                            recodes[idx++], recodes[idx++]
+                        );
 
                         const strokeStyle = context._$contextStyle;
 
@@ -529,131 +670,103 @@ class CommandController
                 case 10: // GRADIENT_FILL
                     {
                         if (is_clip) {
-                            idx += 6;
+                            idx += 1;
+                            const length = recodes[idx++];
+                            idx += length * 5;
+                            idx += 9;
                             continue;
                         }
 
-                        const type          = recodes[idx++];
-                        const stops         = recodes[idx++];
-                        const matrix        = recodes[idx++];
-                        const spread        = recodes[idx++];
-                        const interpolation = recodes[idx++];
-                        const focal         = recodes[idx++];
+                        const type = recodes[idx++];
 
-                        let css = null;
-                        if (type === GradientType.LINEAR) {
+                        let stopLength = recodes[idx++];
 
-                            const xy = Util.$linearGradientXY(matrix);
-                            css = context.createLinearGradient(
-                                xy[0], xy[1], xy[2], xy[3],
-                                interpolation, spread
-                            );
-
-                        } else {
-
-                            context.save();
-                            context.transform(
-                                matrix[0], matrix[1], matrix[2],
-                                matrix[3], matrix[4], matrix[5]
-                            );
-
-                            css = context.createRadialGradient(
-                                0, 0, 0, 0, 0, 819.2,
-                                interpolation, spread, focal
-                            );
-
+                        const stops = Util.$getArray();
+                        while (stopLength) {
+                            stops.push({
+                                "ratio": recodes[idx++],
+                                "R": recodes[idx++],
+                                "G": recodes[idx++],
+                                "B": recodes[idx++],
+                                "A": recodes[idx++]
+                            });
+                            stopLength--;
                         }
 
-                        const length = stops.length;
-                        for (let idx = 0; idx < length; ++idx) {
+                        const matrix = Util.$getFloat32Array6(
+                            recodes[idx++], recodes[idx++], recodes[idx++],
+                            recodes[idx++], recodes[idx++], recodes[idx++]
+                        );
 
-                            const color = stops[idx];
+                        context.fillStyle = this.createGradientStyle(
+                            type, stops, matrix,
+                            recodes[idx++], recodes[idx++], recodes[idx++],
+                            color_transform
+                        );
 
-                            css.addColorStop(color.ratio, Util.$getFloat32Array4(
-                                $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
-                                $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
-                                $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
-                                $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0
-                            ));
-
-                        }
-
-                        context.fillStyle = css;
                         context.fill();
 
-                        if (type === GradientType.RADIAL) {
+                        // if RADIAL
+                        if (type === 1) {
                             context.restore();
                         }
+
+                        Util.$poolFloat32Array6(matrix);
+                        Util.$poolArray(stops);
                     }
                     break;
 
                 case 11: // GRADIENT_STROKE
                     {
                         if (is_clip) {
-                            idx += 12;
+                            idx += 5;
+                            const length = recodes[idx++];
+                            idx += length * 5;
+                            idx += 9;
                             continue;
                         }
 
-                        const lineWidth     = recodes[idx++];
-                        const caps          = recodes[idx++];
-                        const joints        = recodes[idx++];
-                        const miterLimit    = recodes[idx++];
-                        const type          = recodes[idx++];
-                        const stops         = recodes[idx++];
-                        const matrix        = recodes[idx++];
-                        const spread        = recodes[idx++];
-                        const interpolation = recodes[idx++];
-                        const focal         = recodes[idx++];
+                        this.setupStroke(
+                            recodes[idx++], recodes[idx++],
+                            recodes[idx++], recodes[idx++]
+                        );
 
-                        let css = null;
-                        if (type === GradientType.LINEAR) {
+                        const type = recodes[idx++];
 
-                            const xy = Util.$linearGradientXY(matrix);
-                            css = context.createLinearGradient(
-                                xy[0], xy[1], xy[2], xy[3],
-                                interpolation, spread
-                            );
+                        let stopLength = recodes[idx++];
 
-                        } else {
-
-                            context.save();
-                            context.transform(
-                                matrix[0], matrix[1], matrix[2],
-                                matrix[3], matrix[4], matrix[5]
-                            );
-
-                            css = context.createRadialGradient(
-                                0, 0, 0, 0, 0, 819.2,
-                                interpolation, spread, focal
-                            );
-
+                        const stops = Util.$getArray();
+                        while (stopLength) {
+                            stops.push({
+                                "ratio": recodes[idx++],
+                                "R": recodes[idx++],
+                                "G": recodes[idx++],
+                                "B": recodes[idx++],
+                                "A": recodes[idx++]
+                            });
+                            stopLength--;
                         }
 
-                        const length = stops.length;
-                        for (let idx = 0; idx < length; ++idx) {
+                        const matrix = Util.$getFloat32Array6(
+                            recodes[idx++], recodes[idx++], recodes[idx++],
+                            recodes[idx++], recodes[idx++], recodes[idx++]
+                        );
 
-                            const color = stops[idx];
+                        context.strokeStyle = this.createGradientStyle(
+                            type, stops, matrix,
+                            recodes[idx++], recodes[idx++], recodes[idx++],
+                            color_transform
+                        );
 
-                            css.addColorStop(color.ratio, Util.$getFloat32Array4(
-                                $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
-                                $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
-                                $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
-                                $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0
-                            ));
-
-                        }
-
-                        context.strokeStyle = css;
-                        context.lineWidth   = lineWidth;
-                        context.lineCap     = caps;
-                        context.lineJoin    = joints;
-                        context.miterLimit  = miterLimit;
                         context.stroke();
 
-                        if (type === GradientType.RADIAL) {
+                        // if RADIAL
+                        if (type === 1) {
                             context.restore();
                         }
 
+                        Util.$poolFloat32Array6(matrix);
+                        Util.$poolArray(stops);
                     }
                     break;
 
