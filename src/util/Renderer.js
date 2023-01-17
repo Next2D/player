@@ -486,7 +486,7 @@ class Renderer
         matrix, color_transform, filters, alpha, blend_mode,
         x_min, y_min, has_grid = false, parent_matrix = null
     ) {
-        const cacheStore = Util.$cacheStore();
+
         if (this._$worker) {
 
             const recodes = graphics._$getRecodes();
@@ -543,6 +543,7 @@ class Renderer
                 return ;
             }
 
+            const cacheStore = Util.$cacheStore();
             const displayObject = graphics._$displayObject;
             let texture = cacheStore.get(cache_keys);
             if (!texture) {

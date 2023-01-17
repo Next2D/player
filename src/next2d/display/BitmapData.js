@@ -238,7 +238,7 @@ class BitmapData
         // delay init
         if (!texture) {
 
-            const context = player._$context;
+            const context = player._$renderer._$context;
             switch (true) {
 
                 case this._$image !== null:

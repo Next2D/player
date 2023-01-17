@@ -375,31 +375,22 @@ class Shape extends DisplayObject
 
         const filters   = this._$filters   || this.filters;
         const blendMode = this._$blendMode || this.blendMode;
-        if (!this._$bitmapId) {
 
-            let multiMatrix = matrix;
-            const rawMatrix = this._$transform._$rawMatrix();
-            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-            ) {
-                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
-            }
+        let multiMatrix = matrix;
+        const rawMatrix = this._$transform._$rawMatrix();
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+        }
 
-            this
-                ._$graphics
-                ._$draw(renderer, multiMatrix, multiColor, blendMode, filters);
+        this
+            ._$graphics
+            ._$draw(renderer, multiMatrix, multiColor, blendMode, filters);
 
-            if (multiMatrix !== matrix) {
-                Util.$poolFloat32Array6(multiMatrix);
-            }
-
-        } else {
-
-            this
-                ._$graphics
-                ._$drawBitmap(renderer, matrix, multiColor, blendMode, filters);
-
+        if (multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
         }
 
         if (multiColor !== color_transform) {

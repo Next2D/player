@@ -10,7 +10,7 @@ class CanvasPatternToWebGL
      * @constructor
      * @public
      */
-    constructor (texture = null, repeat = null, color_transform = null)
+    constructor (texture = null, repeat = "", color_transform = null)
     {
         this._$initialization(texture, repeat, color_transform);
     }
@@ -23,7 +23,7 @@ class CanvasPatternToWebGL
      * @method
      * @private
      */
-    _$initialization (texture = null, repeat = null, color_transform = null)
+    _$initialization (texture = null, repeat = "", color_transform = null)
     {
         this._$texture         = texture;
         this._$repeat          = repeat;

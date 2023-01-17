@@ -772,38 +772,59 @@ class CommandController
 
                 case 13: // BITMAP_FILL
                     {
+                        const width  = recodes[idx++];
+                        const height = recodes[idx++];
+                        const graphicsWidth  = recodes[idx++];
+                        const graphicsHeight = recodes[idx++];
+                        const bitmapLength = recodes[idx++];
                         if (is_clip) {
-                            idx += 6;
+                            idx += bitmapLength;
+                            idx += 8;
                             continue;
                         }
 
+                        const buffer = new Uint8Array(
+                            recodes.subarray(idx, bitmapLength + idx)
+                        );
+
+                        idx += bitmapLength;
+                        const matrix = Util.$getFloat32Array6(
+                            recodes[idx++], recodes[idx++], recodes[idx++],
+                            recodes[idx++], recodes[idx++], recodes[idx++]
+                        );
+
+                        const repeat = recodes[idx++] ? "repeat" : "no-repeat";
+                        const smooth = !!recodes[idx++];
+
                         context.save();
 
-                        const bitmapData = recodes[idx++];
-                        const matrix     = recodes[idx++];
-                        const repeat     = recodes[idx++];
-                        const smooth     = recodes[idx++];
-
-                        if (matrix) {
+                        if (matrix[0] !== 1 || matrix[1] !== 0
+                            || matrix[2] !== 0 || matrix[3] !== 1
+                            || matrix[4] !== 0 || matrix[5] !== 0
+                        ) {
                             context.transform(
                                 matrix[0], matrix[1], matrix[2],
                                 matrix[3], matrix[4], matrix[5]
                             );
                         }
+                        Util.$poolFloat32Array6(matrix);
+
+                        const manager = context._$frameBufferManager;
+                        const texture = manager.createTextureFromPixels(
+                            width, height, buffer, true
+                        );
 
                         if (repeat === "no-repeat"
-                            && bitmapData.width  === this._$xMax - this._$xMin
-                            && bitmapData.height === this._$yMax - this._$yMin
+                            && width  === graphicsWidth
+                            && height === graphicsHeight
                         ) {
 
-                            context.drawImage(bitmapData._$texture,
-                                0, 0, bitmapData.width, bitmapData.height
-                            );
+                            context.drawImage(texture, 0, 0, width, height);
 
                         } else {
 
                             context.fillStyle = context.createPattern(
-                                bitmapData._$texture, repeat, color_transform
+                                texture, repeat, color_transform
                             );
 
                             context._$imageSmoothingEnabled = smooth;
@@ -815,40 +836,62 @@ class CommandController
                         context.restore();
                         context._$imageSmoothingEnabled = false;
 
+                        manager.releaseTexture(texture);
                     }
                     break;
 
                 case 14: // BITMAP_STROKE
                     {
                         if (is_clip) {
-                            idx += 9;
+                            idx += 4;
+                            const bitmapLength = recodes[idx++];
+                            idx += bitmapLength;
+                            idx += 8;
                             continue;
                         }
 
                         context.save();
 
-                        const lineWidth  = recodes[idx++];
-                        const caps       = recodes[idx++];
-                        const joints     = recodes[idx++];
-                        const miterLimit = recodes[idx++];
-                        const bitmapData = recodes[idx++];
-                        const matrix     = recodes[idx++];
-                        const repeat     = recodes[idx++];
-                        const smooth     = recodes[idx++];
+                        this.setupStroke(
+                            recodes[idx++], recodes[idx++],
+                            recodes[idx++], recodes[idx++]
+                        );
 
-                        if (matrix) {
+                        const width  = recodes[idx++];
+                        const height = recodes[idx++];
+                        const bitmapLength = recodes[idx++];
+
+                        const buffer = new Uint8Array(
+                            recodes.subarray(idx, bitmapLength + idx)
+                        );
+
+                        idx += bitmapLength;
+                        const matrix = Util.$getFloat32Array6(
+                            recodes[idx++], recodes[idx++], recodes[idx++],
+                            recodes[idx++], recodes[idx++], recodes[idx++]
+                        );
+
+                        if (matrix[0] !== 1 || matrix[1] !== 0
+                            || matrix[2] !== 0 || matrix[3] !== 1
+                            || matrix[4] !== 0 || matrix[5] !== 0
+                        ) {
                             context.transform(
                                 matrix[0], matrix[1], matrix[2],
                                 matrix[3], matrix[4], matrix[5]
                             );
                         }
+                        Util.$poolFloat32Array6(matrix);
 
-                        context.lineWidth   = lineWidth;
-                        context.lineCap     = caps;
-                        context.lineJoin    = joints;
-                        context.miterLimit  = miterLimit;
+                        const repeat = recodes[idx++] ? "repeat" : "no-repeat";
+                        const smooth = !!recodes[idx++];
+
+                        const manager = context._$frameBufferManager;
+                        const texture = manager.createTextureFromPixels(
+                            width, height, buffer, true
+                        );
+
                         context.strokeStyle = context.createPattern(
-                            bitmapData._$texture, repeat, color_transform
+                            texture, repeat, color_transform
                         );
 
                         context._$imageSmoothingEnabled = smooth;
@@ -858,6 +901,7 @@ class CommandController
                         context.restore();
                         context._$imageSmoothingEnabled = false;
 
+                        manager.releaseTexture(texture);
                     }
                     break;
 

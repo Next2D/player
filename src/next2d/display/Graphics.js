@@ -1248,228 +1248,6 @@ class Graphics
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
-     * @param  {string} [blend_mode=BlendMode.NORMAL]
-     * @param  {array}  [filters=null]
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$drawBitmap (
-        context, matrix, color_transform,
-        blend_mode = BlendMode.NORMAL, filters = null
-    ) {
-
-        if (!this._$maxAlpha) {
-            return ;
-        }
-
-        const alpha = Util.$clamp(
-            color_transform[3] + color_transform[7] / 255, 0, 1
-        );
-
-        const displayObject = this._$displayObject;
-
-        let multiMatrix = matrix;
-        const rawMatrix = displayObject._$transform._$rawMatrix();
-        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
-            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
-        }
-
-        // size
-        const baseBounds = this._$getBounds();
-        const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
-        const xMax   = bounds.xMax;
-        const xMin   = bounds.xMin;
-        const yMax   = bounds.yMax;
-        const yMin   = bounds.yMin;
-        Util.$poolBoundsObject(bounds);
-        Util.$poolBoundsObject(baseBounds);
-
-        let width  = $Math.ceil($Math.abs(xMax - xMin));
-        let height = $Math.ceil($Math.abs(yMax - yMin));
-
-        switch (true) {
-
-            case width === 0:
-            case height === 0:
-            case width === -Util.$Infinity:
-            case height === -Util.$Infinity:
-            case width === Util.$Infinity:
-            case height === Util.$Infinity:
-                return;
-
-            default:
-                break;
-
-        }
-
-        // cache current buffer
-        const currentAttachment = context.frameBuffer.currentAttachment;
-        if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
-            return;
-        }
-
-        const xScale = $Math.sqrt(multiMatrix[0] * multiMatrix[0] + multiMatrix[1] * multiMatrix[1]);
-        const yScale = $Math.sqrt(multiMatrix[2] * multiMatrix[2] + multiMatrix[3] * multiMatrix[3]);
-        if (0 > xMin + width || 0 > yMin + height) {
-
-            if (filters && filters.length
-                && displayObject._$canApply(filters)
-            ) {
-
-                let rect = new Rectangle(0, 0, width, height);
-                for (let idx = 0; idx < filters.length ; ++idx) {
-                    rect = filters[idx]._$generateFilterRect(rect, xScale, yScale);
-                }
-
-                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
-                    return;
-                }
-
-            } else {
-                return;
-            }
-
-        }
-
-        // get cache
-        const keys = Util.$getArray(
-            multiMatrix[0], multiMatrix[1],
-            multiMatrix[2], multiMatrix[3]
-        );
-
-        const cacheKeys = Util
-            .$cacheStore()
-            .generateKeys(displayObject._$instanceId, keys, color_transform);
-
-        Util.$poolArray(keys);
-
-        // cache
-        let texture = Util.$cacheStore().get(cacheKeys);
-        if (!texture) {
-
-            // resize
-            const textureScale = context._$textureScale(width, height);
-            if (textureScale < 1) {
-                width  *= textureScale;
-                height *= textureScale;
-            }
-
-            // create cache buffer
-            const buffer = context
-                .frameBuffer
-                .createCacheAttachment(width, height, true);
-            context._$bind(buffer);
-
-            // reset
-            Util.$resetContext(context);
-
-            // plain alpha
-            color_transform[3] = 1;
-
-            const hw = width  / 2;
-            const hh = height / 2;
-
-            const ratio = Util.$devicePixelRatio;
-            const ratioMatrix = Util.$getFloat32Array6(
-                1 / ratio, 0, 0, 1 / ratio
-            );
-            const parentMatrix = Util.$getFloat32Array6(
-                matrix[0], matrix[1], matrix[2], matrix[3], 0, 0
-            );
-            const baseMatrix = Util.$multiplicationMatrix(
-                ratioMatrix, parentMatrix
-            );
-            Util.$poolFloat32Array6(ratioMatrix);
-            Util.$poolFloat32Array6(parentMatrix);
-
-            const childMatrix = Util.$getFloat32Array6(
-                1, 0, 0, 1, -hw, -hh
-            );
-            const multiMatrix = Util.$multiplicationMatrix(
-                baseMatrix, childMatrix
-            );
-            Util.$poolFloat32Array6(baseMatrix);
-            Util.$poolFloat32Array6(childMatrix);
-
-            Util.$resetContext(context);
-            context.setTransform(
-                matrix[0], matrix[1], matrix[2], matrix[3],
-                multiMatrix[4] + hw,
-                multiMatrix[5] + hh
-            );
-            Util.$poolFloat32Array6(multiMatrix);
-
-            context.beginPath();
-            this._$runTransformCommand(context, rawMatrix, color_transform);
-
-            texture = context
-                .frameBuffer
-                .getTextureFromCurrentAttachment();
-
-            // set cache
-            Util.$cacheStore().set(cacheKeys, texture);
-
-            // release buffer
-            context
-                .frameBuffer
-                .releaseAttachment(buffer, false);
-
-            // end draw and reset current buffer
-            context._$bind(currentAttachment);
-
-        }
-        Util.$poolArray(cacheKeys);
-
-        if (filters && filters.length && displayObject._$canApply(filters)) {
-
-            const filterTexture = displayObject._$drawFilter(
-                context, texture, matrix,
-                filters, width, height
-            );
-
-            // reset
-            Util.$resetContext(context);
-
-            // draw
-            context._$globalAlpha = alpha;
-            context._$imageSmoothingEnabled = true;
-            context._$globalCompositeOperation = blend_mode;
-
-            context.setTransform(1, 0, 0, 1,
-                xMin - filterTexture._$offsetX,
-                yMin - filterTexture._$offsetY
-            );
-            context.drawImage(filterTexture,
-                0, 0, filterTexture.width, filterTexture.height,
-                color_transform
-            );
-
-        } else {
-
-            // reset
-            Util.$resetContext(context);
-
-            // draw
-            context._$globalAlpha = alpha;
-            context._$imageSmoothingEnabled = true;
-            context._$globalCompositeOperation = blend_mode;
-
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context.drawImage(texture,
-                xMin, yMin, width, height, color_transform
-            );
-        }
-
-        if (multiMatrix !== matrix) {
-            Util.$poolFloat32Array6(multiMatrix);
-        }
-    }
-
-    /**
      * @param  {Renderer} renderer
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
@@ -2151,83 +1929,129 @@ class Graphics
 
                     case Graphics.BITMAP_FILL:
                         {
-                            context.save();
-
                             const bitmapData = recode[idx++];
-                            const matrix     = recode[idx++];
-                            const repeat     = recode[idx++];
-                            const smooth     = recode[idx++];
+                            let buffer = null;
+                            switch (true) {
 
+                                case bitmapData._$image !== null:
+                                    break;
+
+                                case bitmapData._$canvas !== null:
+                                    break;
+
+                                case bitmapData._$buffer !== null:
+                                    buffer = bitmapData._$buffer;
+                                    break;
+
+                            }
+
+                            array.push(bitmapData.width);
+                            array.push(bitmapData.height);
+                            array.push(this._$xMax - this._$xMin);
+                            array.push(this._$yMax - this._$yMin);
+                            array.push(buffer.length);
+                            for (let idx = 0; idx < buffer.length; ++idx) {
+                                array.push(buffer[idx]);
+                            }
+
+                            const matrix = recode[idx++];
                             if (matrix) {
-                                context.transform(
+                                array.push(
                                     matrix[0], matrix[1], matrix[2],
                                     matrix[3], matrix[4], matrix[5]
                                 );
-                            }
-
-                            if (repeat === "no-repeat"
-                                && bitmapData.width  === this._$xMax - this._$xMin
-                                && bitmapData.height === this._$yMax - this._$yMin
-                            ) {
-
-                                context.drawImage(bitmapData._$texture,
-                                    0, 0, bitmapData.width, bitmapData.height
-                                );
-
                             } else {
-
-                                context.fillStyle = context.createPattern(
-                                    bitmapData._$texture, repeat, color_transform
-                                );
-
-                                context._$imageSmoothingEnabled = smooth;
-                                context.fill();
-
+                                array.push(1, 0, 0, 1, 0, 0);
                             }
 
-                            // restore
-                            context.restore();
-                            context._$imageSmoothingEnabled = false;
+                            const repeat = recode[idx++];
+                            array.push(repeat === "repeat" ? 1 : 0);
 
+                            const smooth = recode[idx++];
+                            array.push(smooth ? 1 : 0);
                         }
                         break;
 
                     case Graphics.BITMAP_STROKE:
                         {
 
-                            context.save();
+                            array.push(recode[idx++]);
 
-                            const lineWidth  = recode[idx++];
-                            const caps       = recode[idx++];
-                            const joints     = recode[idx++];
-                            const miterLimit = recode[idx++];
+                            const lineCap = recode[idx++];
+                            switch (lineCap) {
+
+                                case CapsStyle.NONE:
+                                    array.push(0);
+                                    break;
+
+                                case CapsStyle.ROUND:
+                                    array.push(1);
+                                    break;
+
+                                case CapsStyle.SQUARE:
+                                    array.push(2);
+                                    break;
+
+                            }
+
+                            const lineJoin = recode[idx++];
+                            switch (lineJoin) {
+
+                                case JointStyle.BEVEL:
+                                    array.push(0);
+                                    break;
+
+                                case JointStyle.MITER:
+                                    array.push(1);
+                                    break;
+
+                                case JointStyle.ROUND:
+                                    array.push(2);
+                                    break;
+
+                            }
+
+                            // MITER LIMIT
+                            array.push(recode[idx++]);
+
                             const bitmapData = recode[idx++];
-                            const matrix     = recode[idx++];
-                            const repeat     = recode[idx++];
-                            const smooth     = recode[idx++];
+                            let buffer = null;
+                            switch (true) {
 
+                                case bitmapData._$image !== null:
+                                    break;
+
+                                case bitmapData._$canvas !== null:
+                                    break;
+
+                                case bitmapData._$buffer !== null:
+                                    buffer = bitmapData._$buffer;
+                                    break;
+
+                            }
+
+                            array.push(bitmapData.width);
+                            array.push(bitmapData.height);
+                            array.push(buffer.length);
+                            for (let idx = 0; idx < buffer.length; ++idx) {
+                                array.push(buffer[idx]);
+                            }
+
+                            const matrix = recode[idx++];
                             if (matrix) {
-                                context.transform(
+                                array.push(
                                     matrix[0], matrix[1], matrix[2],
                                     matrix[3], matrix[4], matrix[5]
                                 );
+                            } else {
+                                array.push(1, 0, 0, 1, 0, 0);
                             }
 
-                            context.lineWidth   = lineWidth;
-                            context.lineCap     = caps;
-                            context.lineJoin    = joints;
-                            context.miterLimit  = miterLimit;
-                            context.strokeStyle = context.createPattern(
-                                bitmapData._$texture, repeat, color_transform
-                            );
+                            const repeat = recode[idx++];
+                            array.push(repeat === "repeat" ? 1 : 0);
 
-                            context._$imageSmoothingEnabled = smooth;
-                            context.stroke();
-
-                            // restore
-                            context.restore();
-                            context._$imageSmoothingEnabled = false;
-
+                            const smooth = recode[idx++];
+                            array.push(smooth ? 1 : 0);
                         }
                         break;
 
@@ -2237,7 +2061,6 @@ class Graphics
                 }
             }
 
-            console.log(array);
             this._$buffer = new $Float32Array(array);
         }
 
@@ -2414,8 +2237,9 @@ class Graphics
                         const repeat     = recode[idx++];
                         const smooth     = recode[idx++];
 
-                        context.fillStyle = context
-                            .createPattern(bitmapData._$texture, repeat, color_transform);
+                        context.fillStyle = context.createPattern(
+                            bitmapData._$texture, repeat, color_transform
+                        );
 
                         if (matrix) {
                             context.transform(
@@ -2514,16 +2338,13 @@ class Graphics
 
                 case Graphics.END_FILL:
 
-                    if (options) {
-
-                        if (context.isPointInPath(options.x, options.y)) {
-                            return true;
-                        }
-
-                        continue;
+                    if (options
+                        && context.isPointInPath(options.x, options.y)
+                    ) {
+                        return true;
                     }
 
-                    if (!is_clip) {
+                    if (!is_clip && !options) {
                         context.fill();
                     }
 
@@ -2556,16 +2377,13 @@ class Graphics
 
                 case Graphics.END_STROKE:
 
-                    if (options) {
-
-                        if (context.isPointInStroke(options.x, options.y)) {
-                            return true;
-                        }
-
-                        continue;
+                    if (options
+                        && context.isPointInStroke(options.x, options.y)
+                    ) {
+                        return true;
                     }
 
-                    if (!is_clip) {
+                    if (!is_clip && !options) {
                         context.stroke();
                     }
                     break;
@@ -2591,17 +2409,13 @@ class Graphics
 
                 case Graphics.GRADIENT_FILL:
                     {
-                        if (options) {
-
-                            if (context.isPointInPath(options.x, options.y)) {
-                                return true;
-                            }
-
-                            idx += 6;
-                            continue;
+                        if (options
+                            && context.isPointInPath(options.x, options.y)
+                        ) {
+                            return true;
                         }
 
-                        if (is_clip) {
+                        if (is_clip || options) {
                             idx += 6;
                             continue;
                         }
@@ -2642,12 +2456,22 @@ class Graphics
 
                             const color = stops[idx];
 
-                            css.addColorStop(color.ratio, Util.$getFloat32Array4(
-                                $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
-                                $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
-                                $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
-                                $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0
-                            ));
+                            if (color_transform) {
+
+                                css.addColorStop(color.ratio, Util.$getFloat32Array4(
+                                    $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
+                                    $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
+                                    $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
+                                    $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0
+                                ));
+
+                            } else {
+
+                                css.addColorStop(color.ratio, Util.$getFloat32Array4(
+                                    color.R, color.G, color.B, color.A
+                                ));
+
+                            }
 
                         }
 
@@ -2662,25 +2486,22 @@ class Graphics
 
                 case Graphics.GRADIENT_STROKE:
                     {
-                        if (options) {
+                        if (options
+                            && context.isPointInStroke(options.x, options.y)
+                        ) {
+                            return true;
+                        }
 
-                            if (context.isPointInStroke(options.x, options.y)) {
-                                return true;
-                            }
-
+                        if (is_clip || options) {
                             idx += 12;
                             continue;
                         }
 
-                        if (is_clip) {
-                            idx += 12;
-                            continue;
-                        }
+                        context.lineWidth  = recode[idx++];
+                        context.lineCap    = recode[idx++];
+                        context.lineJoin   = recode[idx++];
+                        context.miterLimit = recode[idx++];
 
-                        const lineWidth     = recode[idx++];
-                        const caps          = recode[idx++];
-                        const joints        = recode[idx++];
-                        const miterLimit    = recode[idx++];
                         const type          = recode[idx++];
                         const stops         = recode[idx++];
                         const matrix        = recode[idx++];
@@ -2717,20 +2538,26 @@ class Graphics
 
                             const color = stops[idx];
 
-                            css.addColorStop(color.ratio, Util.$getFloat32Array4(
-                                $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
-                                $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
-                                $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
-                                $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0
-                            ));
+                            if (color_transform) {
+
+                                css.addColorStop(color.ratio, Util.$getFloat32Array4(
+                                    $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
+                                    $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
+                                    $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
+                                    $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0
+                                ));
+
+                            } else {
+
+                                css.addColorStop(color.ratio, Util.$getFloat32Array4(
+                                    color.R, color.G, color.B, color.A
+                                ));
+
+                            }
 
                         }
 
                         context.strokeStyle = css;
-                        context.lineWidth   = lineWidth;
-                        context.lineCap     = caps;
-                        context.lineJoin    = joints;
-                        context.miterLimit  = miterLimit;
                         context.stroke();
 
                         if (type === GradientType.RADIAL) {
@@ -2742,17 +2569,13 @@ class Graphics
 
                 case Graphics.BITMAP_FILL:
                     {
-                        if (options) {
-
-                            if (context.isPointInPath(options.x, options.y)) {
-                                return true;
-                            }
-
-                            idx += 6;
-                            continue;
+                        if (options
+                            && context.isPointInPath(options.x, options.y)
+                        ) {
+                            return true;
                         }
 
-                        if (is_clip) {
+                        if (is_clip || options) {
                             idx += 6;
                             continue;
                         }
@@ -2800,27 +2623,24 @@ class Graphics
 
                 case Graphics.BITMAP_STROKE:
                     {
-                        if (options) {
-
-                            if (context.isPointInStroke(options.x, options.y)) {
-                                return true;
-                            }
-
-                            idx += 9;
-                            continue;
+                        if (options
+                            && context.isPointInStroke(options.x, options.y)
+                        ) {
+                            return true;
                         }
 
-                        if (is_clip) {
+                        if (is_clip || options) {
                             idx += 9;
                             continue;
                         }
 
                         context.save();
 
-                        const lineWidth  = recode[idx++];
-                        const caps       = recode[idx++];
-                        const joints     = recode[idx++];
-                        const miterLimit = recode[idx++];
+                        context.lineWidth  = recode[idx++];
+                        context.lineCap    = recode[idx++];
+                        context.lineJoin   = recode[idx++];
+                        context.miterLimit = recode[idx++];
+
                         const bitmapData = recode[idx++];
                         const matrix     = recode[idx++];
                         const repeat     = recode[idx++];
@@ -2833,10 +2653,6 @@ class Graphics
                             );
                         }
 
-                        context.lineWidth   = lineWidth;
-                        context.lineCap     = caps;
-                        context.lineJoin    = joints;
-                        context.miterLimit  = miterLimit;
                         context.strokeStyle = context.createPattern(
                             bitmapData._$texture, repeat, color_transform
                         );
