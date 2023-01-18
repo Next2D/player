@@ -1274,7 +1274,7 @@ class DisplayObjectContainer extends InteractiveObject
 
         // if graphics draw
         if (this._$graphics && this._$graphics._$canDraw) {
-            this._$graphics._$draw(context, preMatrix, preColorTransform);
+            this._$graphics._$draw(renderer, preMatrix, preColorTransform);
         }
 
         // init clip params
@@ -1395,10 +1395,11 @@ class DisplayObjectContainer extends InteractiveObject
                     }
 
                     const player = this.stage._$player;
-                    const mScale = player._$scale * player._$ratio / 20;
+                    const mScale = player._$scale * player._$ratio;
                     const playerMatrix = Util.$getFloat32Array6(mScale, 0, 0, mScale, 0, 0);
 
                     maskMatrix = Util.$multiplicationMatrix(playerMatrix, maskMatrix);
+                    Util.$poolFloat32Array6(playerMatrix);
 
                     if (renderer._$isLayer) {
                         const currentPosition = context._$getCurrentPosition();
@@ -1407,8 +1408,8 @@ class DisplayObjectContainer extends InteractiveObject
                     }
 
                     if (renderer._$cacheCurrentBuffer) {
-                        maskMatrix[4] -= context._$cacheCurrentBounds.x;
-                        maskMatrix[5] -= context._$cacheCurrentBounds.y;
+                        maskMatrix[4] -= renderer._$cacheCurrentBounds.x;
+                        maskMatrix[5] -= renderer._$cacheCurrentBounds.y;
                     }
 
                 }
@@ -1417,7 +1418,7 @@ class DisplayObjectContainer extends InteractiveObject
                     continue;
                 }
 
-                let adjMatrix = maskInstance._$startClip(context, maskMatrix);
+                let adjMatrix = maskInstance._$startClip(renderer, maskMatrix);
 
                 renderer.save();
 
@@ -1436,8 +1437,8 @@ class DisplayObjectContainer extends InteractiveObject
                         adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(maskTargetParentMatrix[1]);
                         adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(maskTargetParentMatrix[2]);
                         adjMatrix[3] = $Math.abs(preMatrix[3]) * $Math.sign(maskTargetParentMatrix[3]);
-                        adjMatrix[4] = preMatrix[4] - context._$cacheCurrentBounds.x;
-                        adjMatrix[5] = preMatrix[5] - context._$cacheCurrentBounds.y;
+                        adjMatrix[4] = preMatrix[4] - renderer._$cacheCurrentBounds.x;
+                        adjMatrix[5] = preMatrix[5] - renderer._$cacheCurrentBounds.y;
                     }
 
                     preMatrix = adjMatrix;

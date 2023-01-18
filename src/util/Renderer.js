@@ -99,6 +99,12 @@ class Renderer
          * @private
          */
         this._$cacheCurrentBuffer = null;
+
+        /**
+         * @type {object}
+         * @private
+         */
+        this._$cacheCurrentBounds = { "x": 0, "y": 0, "w": 0, "h": 0 };
     }
 
     /**
@@ -176,7 +182,7 @@ class Renderer
         canvas.height = 1;
 
         // TODO
-        // Util.$renderURL = null;
+        Util.$renderURL = null;
         if (Util.$renderURL) {
 
             this._$worker = new Worker(Util.$renderURL);
@@ -875,7 +881,10 @@ class Renderer
 
         // cache
         this._$cacheCurrentBuffer = currentAttachment;
-
+        this._$cacheCurrentBounds.x = x;
+        this._$cacheCurrentBounds.y = y;
+        this._$cacheCurrentBounds.w = width;
+        this._$cacheCurrentBounds.h = height;
         if (this._$worker) {
 
             this._$worker.postMessage({
