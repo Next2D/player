@@ -487,6 +487,8 @@ class Renderer
         x_min, y_min, has_grid = false, parent_matrix = null
     ) {
 
+        const player = Util.$currentPlayer();
+        const mScale = player._$scale * player._$ratio;
         if (this._$worker) {
 
             const recodes = graphics._$getRecodes();
@@ -531,7 +533,25 @@ class Renderer
             }
 
             if (has_grid) {
+                message.hasGrid = has_grid;
                 message.parentMatrix = parent_matrix;
+                message.mScale = mScale;
+
+                const displayObject = graphics._$displayObject;
+
+                const grid = displayObject._$scale9Grid;
+                message.scale9Grid = {
+                    "x": grid.x,
+                    "y": grid.y,
+                    "width": grid.width,
+                    "height": grid.height
+                };
+
+                message.concatMatrix = displayObject
+                    ._$parent
+                    ._$transform
+                    .concatenatedMatrix
+                    ._$matrix;
             }
 
             this._$worker.postMessage(message, [recodes.buffer]);
@@ -575,9 +595,9 @@ class Renderer
 
                 if (has_grid) {
 
-                    const player = Util.$currentPlayer();
-                    const mScale = player._$scale * player._$ratio;
-                    const baseMatrix = Util.$getFloat32Array6(mScale, 0, 0, mScale, 0, 0);
+                    const baseMatrix = Util.$getFloat32Array6(
+                        mScale, 0, 0, mScale, 0, 0
+                    );
 
                     const pMatrix = Util.$multiplicationMatrix(
                         baseMatrix, parent_matrix
@@ -590,6 +610,7 @@ class Renderer
                         ._$transform
                         .concatenatedMatrix
                         ._$matrix;
+                    Util.$poolFloat32Array6(aMatrixBase);
 
                     const aMatrix = Util.$getFloat32Array6(
                         aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
@@ -597,7 +618,9 @@ class Renderer
                         aMatrixBase[5] * mScale - y_min
                     );
 
-                    const apMatrix = Util.$multiplicationMatrix(aMatrix, pMatrix);
+                    const apMatrix = Util.$multiplicationMatrix(
+                        aMatrix, pMatrix
+                    );
                     const aOffsetX = apMatrix[4] - (matrix[4] - x_min);
                     const aOffsetY = apMatrix[5] - (matrix[5] - y_min);
                     Util.$poolFloat32Array6(apMatrix);
@@ -614,7 +637,7 @@ class Renderer
 
                     context.grid.enable(
                         parentXMin, parentYMin, parentWidth, parentHeight,
-                        base_bounds, displayObject._$scale9Grid,
+                        base_bounds, displayObject._$scale9Grid, mScale,
                         pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
                         aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
                     );

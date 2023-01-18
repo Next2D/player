@@ -233,15 +233,15 @@ class CanvasToWebGLContextBlend
                         const y3 = +(left  * b + top    * d + ty);
 
                         const no = Number.MAX_VALUE;
-                        const xMin = +Math.min(Math.min(Math.min(Math.min( no, x0), x1), x2), x3);
-                        const xMax = +Math.max(Math.max(Math.max(Math.max(-no, x0), x1), x2), x3);
-                        const yMin = +Math.min(Math.min(Math.min(Math.min( no, y0), y1), y2), y3);
-                        const yMax = +Math.max(Math.max(Math.max(Math.max(-no, y0), y1), y2), y3);
+                        const xMin = +$Math.min($Math.min($Math.min($Math.min( no, x0), x1), x2), x3);
+                        const xMax = +$Math.max($Math.max($Math.max($Math.max(-no, x0), x1), x2), x3);
+                        const yMin = +$Math.min($Math.min($Math.min($Math.min( no, y0), y1), y2), y3);
+                        const yMax = +$Math.max($Math.max($Math.max($Math.max(-no, y0), y1), y2), y3);
 
-                        const sx = Math.max(0, xMin | 0);
-                        const sy = Math.max(0, yMin | 0);
-                        const sw = Math.min(Math.max(0, renderWidth  - sx), Math.ceil(Math.abs(xMax - xMin)));
-                        const sh = Math.min(Math.max(0, renderHeight - sy), Math.ceil(Math.abs(yMax - yMin)));
+                        const sx = $Math.max(0, xMin | 0);
+                        const sy = $Math.max(0, yMin | 0);
+                        const sw = $Math.min($Math.max(0, renderWidth  - sx), $Math.ceil($Math.abs(xMax - xMin)));
+                        const sh = $Math.min($Math.max(0, renderHeight - sy), $Math.ceil($Math.abs(yMax - yMin)));
 
                         if (!sw || !sh) {
                             return ;

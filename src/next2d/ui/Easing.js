@@ -267,7 +267,7 @@ class Easing
      */
     static inSine (t, b, c, d)
     {
-        return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
+        return -c * $Math.cos(t / d * ($Math.PI / 2)) + c + b;
     }
 
     /**

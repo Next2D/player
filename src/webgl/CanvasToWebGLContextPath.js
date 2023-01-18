@@ -201,10 +201,10 @@ class CanvasToWebGLContextPath
         this._$currentPath.push(y);
         this._$currentPath.push(isControlPoint);
 
-        this._$bounds.xMin = Math.min(x, this._$bounds.xMin);
-        this._$bounds.xMax = Math.max(x, this._$bounds.xMax);
-        this._$bounds.yMin = Math.min(y, this._$bounds.yMin);
-        this._$bounds.yMax = Math.max(y, this._$bounds.yMax);
+        this._$bounds.xMin = $Math.min(x, this._$bounds.xMin);
+        this._$bounds.xMax = $Math.max(x, this._$bounds.xMax);
+        this._$bounds.yMin = $Math.min(y, this._$bounds.yMin);
+        this._$bounds.yMax = $Math.max(y, this._$bounds.yMax);
     }
 
     /**

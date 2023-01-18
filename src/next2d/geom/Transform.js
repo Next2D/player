@@ -320,6 +320,14 @@ class Transform
 
         const placeObject = this._$displayObject._$getPlaceObject();
         if (placeObject) {
+            if (Util.$isArray(placeObject.matrix)) {
+                const matrix = placeObject.matrix;
+                placeObject.matrix = Util.$getFloat32Array6(
+                    matrix[0], matrix[1], matrix[2],
+                    matrix[3], matrix[4], matrix[5]
+                );
+                Util.$poolArray(matrix);
+            }
             return placeObject.matrix;
         }
 
@@ -342,6 +350,16 @@ class Transform
 
         const placeObject = this._$displayObject._$getPlaceObject();
         if (placeObject) {
+            if (Util.$isArray(placeObject.colorTransform)) {
+                const colorTransform = placeObject.colorTransform;
+                placeObject.colorTransform = Util.$getFloat32Array8(
+                    colorTransform[0], colorTransform[1],
+                    colorTransform[2], colorTransform[3],
+                    colorTransform[4], colorTransform[5],
+                    colorTransform[6], colorTransform[7]
+                );
+                Util.$poolArray(colorTransform);
+            }
             return placeObject.colorTransform;
         }
 

@@ -307,7 +307,52 @@ class CommandController
             );
 
             if (object.hasGrid) {
-                // TODO
+
+                const baseMatrix = Util.$getFloat32Array6(
+                    object.mScale, 0, 0, object.mScale, 0, 0
+                );
+
+                const pMatrix = Util.$multiplicationMatrix(
+                    baseMatrix, object.parentMatrix
+                );
+
+                Util.$poolFloat32Array6(baseMatrix);
+
+                const aMatrixBase = object.concatMatrix;
+
+                const aMatrix = Util.$getFloat32Array6(
+                    aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
+                    aMatrixBase[4] * object.mScale - object.xMin,
+                    aMatrixBase[5] * object.mScale - object.yMin
+                );
+                Util.$poolFloat32Array6(aMatrixBase);
+
+                const apMatrix = Util.$multiplicationMatrix(
+                    aMatrix, pMatrix
+                );
+                const aOffsetX = apMatrix[4] - (matrix[4] - object.xMin);
+                const aOffsetY = apMatrix[5] - (matrix[5] - object.yMin);
+                Util.$poolFloat32Array6(apMatrix);
+
+                const parentBounds = Util.$boundsMatrix(baseBounds, pMatrix);
+                const parentXMax   = +parentBounds.xMax;
+                const parentXMin   = +parentBounds.xMin;
+                const parentYMax   = +parentBounds.yMax;
+                const parentYMin   = +parentBounds.yMin;
+                const parentWidth  = $Math.ceil($Math.abs(parentXMax - parentXMin));
+                const parentHeight = $Math.ceil($Math.abs(parentYMax - parentYMin));
+
+                Util.$poolBoundsObject(parentBounds);
+
+                context.grid.enable(
+                    parentXMin, parentYMin, parentWidth, parentHeight,
+                    baseBounds, object.scale9Grid, object.mScale,
+                    pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
+                    aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
+                );
+
+                Util.$poolFloat32Array6(pMatrix);
+                Util.$poolFloat32Array6(aMatrix);
             }
 
             // plain alpha
@@ -317,6 +362,10 @@ class CommandController
 
             // execute draw
             this.drawGraphics(object.recodes, colorTransform);
+
+            if (object.hasGrid) {
+                context.grid.disable();
+            }
 
             texture = manager.getTextureFromCurrentAttachment();
 
@@ -500,6 +549,7 @@ class CommandController
 
         } else {
 
+            // RADIAL
             context.save();
             context.transform(
                 matrix[0], matrix[1], matrix[2],
@@ -522,17 +572,20 @@ class CommandController
 
                 css.addColorStop(color.ratio,
                     Util.$getFloat32Array4(
-                        color.R, color.G, color.B, color.A
+                        $Math.max(0, $Math.min(color.R, 255)),
+                        $Math.max(0, $Math.min(color.G, 255)),
+                        $Math.max(0, $Math.min(color.B, 255)),
+                        $Math.max(0, $Math.min(color.A, 255))
                     )
                 );
 
             } else {
 
                 css.addColorStop(color.ratio, Util.$getFloat32Array4(
-                    $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)) | 0,
-                    $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)) | 0,
-                    $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)) | 0,
-                    $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0
+                    $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)),
+                    $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)),
+                    $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)),
+                    $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255))
                 ));
 
             }

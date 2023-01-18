@@ -15,6 +15,13 @@ const $Math = Math;
 
 /**
  * @shortcut
+ * @type {NumberConstructor}
+ * @const
+ */
+const $Number = Number;
+
+/**
+ * @shortcut
  * @type {WebGLTexture}
  * @const
  */
@@ -118,6 +125,47 @@ Util.$arrays = [];
 Util.$maps = [];
 
 /**
+ * 使用済みになったbounds Objectをプール
+ * Pool bounds objects that are no longer in use.
+ *
+ * @type {object[]}
+ * @const
+ * @static
+ */
+Util.$bounds = [];
+
+/**
+ * @param  {number} x_min
+ * @param  {number} x_max
+ * @param  {number} y_min
+ * @param  {number} y_max
+ * @return {object}
+ * @method
+ * @static
+ */
+Util.$getBoundsObject = (x_min = 0, x_max = 0, y_min = 0, y_max = 0) =>
+{
+    const object = Util.$bounds.pop() || { "xMin": 0, "xMax": 0, "yMin": 0, "yMax": 0 };
+
+    object.xMin = x_min;
+    object.xMax = x_max;
+    object.yMin = y_min;
+    object.yMax = y_max;
+
+    return object;
+};
+
+/**
+ * @return {object}
+ * @method
+ * @static
+ */
+Util.$poolBoundsObject = (bounds) =>
+{
+    Util.$bounds.push(bounds);
+};
+
+/**
  * @param  {number} [f0=0]
  * @param  {number} [f1=0]
  * @param  {number} [f2=0]
@@ -205,7 +253,7 @@ Util.$getFloat32Array9 = (
     f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0, f6 = 0, f7 = 0, f8 = 0
 ) => {
     const array = Util.$float32Array9.pop()
-        || new Float32Array(9);
+        || new $Float32Array(9);
 
     array[0] = f0;
     array[1] = f1;
@@ -315,15 +363,24 @@ Util.$resetContext = (context) =>
     switch (style._$fillStyle.constructor) {
 
         case CanvasGradientToWebGL:
+            {
+                const stops = style._$fillStyle._$stops
+                for (let idx = 0; idx < stops.length; ++idx) {
+                    Util.$poolFloat32Array4(stops[idx]);
+                }
+                style._$fillStyle = Util.$getFloat32Array4(1, 1, 1, 1); // fixed size 4
+            }
+            break;
+
         case CanvasPatternToWebGL:
-            style._$fillStyle = new Float32Array(1, 1, 1, 1); // fixed size 4
+            context
+                ._$frameBufferManager
+                .releaseTexture(style._$fillStyle._$texture);
+            style._$fillStyle = Util.$getFloat32Array4(1, 1, 1, 1); // fixed size 4
             break;
 
         default:
-            style._$fillStyle[0] = 1;
-            style._$fillStyle[1] = 1;
-            style._$fillStyle[2] = 1;
-            style._$fillStyle[3] = 1;
+            style._$fillStyle.fill(1);
             break;
 
     }
@@ -331,15 +388,24 @@ Util.$resetContext = (context) =>
     switch (style._$strokeStyle.constructor) {
 
         case CanvasGradientToWebGL:
+            {
+                const stops = style._$fillStyle._$stops
+                for (let idx = 0; idx < stops.length; ++idx) {
+                    Util.$poolFloat32Array4(stops[idx]);
+                }
+                style._$strokeStyle = Util.$getFloat32Array4(1, 1, 1, 1); // fixed size 4
+            }
+            break;
+
         case CanvasPatternToWebGL:
-            style._$strokeStyle = new Float32Array(1, 1, 1, 1); // fixed size 4
+            context
+                ._$frameBufferManager
+                .releaseTexture(style._$strokeStyle._$texture);
+            style._$strokeStyle = Util.$getFloat32Array4(1, 1, 1, 1); // fixed size 4
             break;
 
         default:
-            style._$strokeStyle[0] = 1;
-            style._$strokeStyle[1] = 1;
-            style._$strokeStyle[2] = 1;
-            style._$strokeStyle[3] = 1;
+            style._$strokeStyle.fill(1);
             break;
 
     }
@@ -429,4 +495,48 @@ Util.$clamp = (value, min, max, default_value = null) =>
 Util.$cross = (x1, y1, x2, y2) =>
 {
     return x1 * y2 - x2 * y1;
+};
+
+/**
+ * @param   {Float32Array} a
+ * @param   {Float32Array} b
+ * @returns {Float32Array}
+ * @static
+ */
+Util.$multiplicationMatrix = (a, b) =>
+{
+    return Util.$getFloat32Array6(
+        a[0] * b[0] + a[2] * b[1],
+        a[1] * b[0] + a[3] * b[1],
+        a[0] * b[2] + a[2] * b[3],
+        a[1] * b[2] + a[3] * b[3],
+        a[0] * b[4] + a[2] * b[5] + a[4],
+        a[1] * b[4] + a[3] * b[5] + a[5]
+    );
+};
+
+/**
+ * @param  {object} bounds
+ * @param  {Float32Array} matrix
+ * @return {object}
+ * @method
+ * @static
+ */
+Util.$boundsMatrix = (bounds, matrix) =>
+{
+    const x0 = bounds.xMax * matrix[0] + bounds.yMax * matrix[2] + matrix[4];
+    const x1 = bounds.xMax * matrix[0] + bounds.yMin * matrix[2] + matrix[4];
+    const x2 = bounds.xMin * matrix[0] + bounds.yMax * matrix[2] + matrix[4];
+    const x3 = bounds.xMin * matrix[0] + bounds.yMin * matrix[2] + matrix[4];
+    const y0 = bounds.xMax * matrix[1] + bounds.yMax * matrix[3] + matrix[5];
+    const y1 = bounds.xMax * matrix[1] + bounds.yMin * matrix[3] + matrix[5];
+    const y2 = bounds.xMin * matrix[1] + bounds.yMax * matrix[3] + matrix[5];
+    const y3 = bounds.xMin * matrix[1] + bounds.yMin * matrix[3] + matrix[5];
+
+    const xMin = $Math.min( $Number.MAX_VALUE, x0, x1, x2, x3);
+    const xMax = $Math.max(-$Number.MAX_VALUE, x0, x1, x2, x3);
+    const yMin = $Math.min( $Number.MAX_VALUE, y0, y1, y2, y3);
+    const yMax = $Math.max(-$Number.MAX_VALUE, y0, y1, y2, y3);
+
+    return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
 };

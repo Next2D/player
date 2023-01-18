@@ -48,7 +48,7 @@ class ConvexHull
 
             // 要素数mは、元のアルゴリズムではなくswf2js用にカスタムして計算する
             // const m = Math.pow(2, Math.pow(2, t));
-            const m = 16 * Math.pow(4, t);
+            const m = 16 * $Math.pow(4, t);
             const m3 = m * 3;
 
             // 点集合を要素数mの部分集合に分割し、部分凸包(subhulls)を求める
@@ -56,7 +56,7 @@ class ConvexHull
             this.clearExtremePoints();
             const verticesLength = ConvexHullVars.vertices.length;
             for (let i = 0; i < verticesLength; i += m3) {
-                this.calcSubhulls(i, Math.min(i + m3, verticesLength));
+                this.calcSubhulls(i, $Math.min(i + m3, verticesLength));
             }
 
             // 部分凸包のサイズを求めるために、最後にConvexHullVars.subhullsIndexを追加する
@@ -253,8 +253,8 @@ class ConvexHull
         const by = ConvexHullVars.vertices[b + 1];
 
         // aとbの値がほぼ等しいかどうか
-        const absX = Math.abs(ax - bx);
-        const absY = Math.abs(ay - by);
+        const absX = $Math.abs(ax - bx);
+        const absY = $Math.abs(ay - by);
         return absX < 0.001 && absY < 0.001;
     }
 
@@ -341,7 +341,7 @@ class ConvexHull
                 ConvexHullVars.subhulls[currentSubhullsIndex]
             );
 
-            const centerIndex = Math.floor((beginIndex + endIndex) / 2);
+            const centerIndex = $Math.floor((beginIndex + endIndex) / 2);
             let prevCenterIndex = centerIndex - 1;
             let nextCenterIndex = centerIndex + 1;
             if (prevCenterIndex < extremeSubhullsIndex) {
