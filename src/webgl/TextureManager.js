@@ -5,19 +5,18 @@ class TextureManager
 {
     /**
      * @param {WebGLRenderingContext} gl
-     * @param {boolean}               isWebGL2Context
      * @constructor
+     * @public
      */
-    constructor (gl, isWebGL2Context)
+    constructor (gl)
     {
-        this._$gl              = gl;
-        this._$isWebGL2Context = isWebGL2Context;
-        this._$objectPool      = [];
-        this._$objectPoolArea  = 0;
-        this._$activeTexture   = -1;
-        this._$boundTextures   = [null, null, null];
-        this._$maxWidth        = 0;
-        this._$maxHeight       = 0;
+        this._$gl             = gl;
+        this._$objectPool     = [];
+        this._$objectPoolArea = 0;
+        this._$activeTexture  = -1;
+        this._$boundTextures  = [null, null, null];
+        this._$maxWidth       = 0;
+        this._$maxHeight      = 0;
 
         this._$gl.pixelStorei(this._$gl.UNPACK_ALIGNMENT, 1);
         this._$gl.pixelStorei(this._$gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -46,13 +45,11 @@ class TextureManager
         this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_WRAP_S, this._$gl.CLAMP_TO_EDGE);
         this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_WRAP_T, this._$gl.CLAMP_TO_EDGE);
 
-        if (this._$isWebGL2Context) {
-            texture.width  = width;
-            texture.height = height;
-            texture.area   = width * height;
-            texture.dirty  = false;
-            this._$gl.texStorage2D(this._$gl.TEXTURE_2D, 1, this._$gl.RGBA8, width, height);
-        }
+        texture.width  = width;
+        texture.height = height;
+        texture.area   = width * height;
+        texture.dirty  = false;
+        this._$gl.texStorage2D(this._$gl.TEXTURE_2D, 1, this._$gl.RGBA8, width, height);
 
         return texture;
     }

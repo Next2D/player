@@ -4,7 +4,6 @@
 class FragmentShaderSourceGradientLUT
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @param  {number}  mediump_length
      * @param  {number}  stops_length
      * @param  {boolean} is_linear_space
@@ -12,7 +11,7 @@ class FragmentShaderSourceGradientLUT
      * @method
      * @static
      */
-    static TEMPLATE (k, mediump_length, stops_length, is_linear_space)
+    static TEMPLATE (mediump_length, stops_length, is_linear_space)
     {
         let loopStatement = "";
         for (let i = 1; i < stops_length; i++) {
@@ -33,13 +32,13 @@ class FragmentShaderSourceGradientLUT
             ? "color = pow(color, vec4(0.45454545));"
             : "";
 
-        return `${k.version()}
+        return `#version 300 es
 precision mediump float;
 
 uniform vec4 u_mediump[${mediump_length}];
 
-${k.varyingIn()} vec2 v_coord;
-${k.outColor()}
+in vec2 v_coord;
+out vec4 o_color;
 
 vec4 getGradientColor(in float t) {
     if (t <= u_mediump[${stops_length}][0]) {
@@ -54,7 +53,7 @@ void main() {
     ${colorSpaceStatement}
     color.rgb *= color.a;
 
-    ${k.fragColor()} = color;
+    o_color = color;
 }
 
 `;

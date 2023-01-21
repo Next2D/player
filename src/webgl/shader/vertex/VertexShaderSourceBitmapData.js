@@ -4,16 +4,15 @@
 class VertexShaderSourceBitmapData
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static POSITION_ONLY (k)
+    static POSITION_ONLY ()
     {
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
+layout (location = 0) in vec2 a_vertex;
 
 uniform vec4 u_highp[3];
 
@@ -28,21 +27,20 @@ void main() {
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static SRC_AND_DST_TEX_COORD (k)
+    static SRC_AND_DST_TEX_COORD ()
     {
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
+layout (location = 0) in vec2 a_vertex;
 
 uniform vec4 u_highp[5];
 
-${k.varyingOut()} vec2 v_src_tex_coord;
-${k.varyingOut()} vec2 v_dst_tex_coord;
+out vec2 v_src_tex_coord;
+out vec2 v_dst_tex_coord;
 
 void main() {
     mat3 matrix = mat3(u_highp[0].xyz, u_highp[1].xyz, u_highp[2].xyz);
@@ -63,20 +61,19 @@ void main() {
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static SRC_TEX_COORD (k)
+    static SRC_TEX_COORD ()
     {
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
+layout (location = 0) in vec2 a_vertex;
 
 uniform vec4 u_highp[5];
 
-${k.varyingOut()} vec2 v_src_tex_coord;
+out vec2 v_src_tex_coord;
 
 void main() {
     mat3 matrix = mat3(u_highp[0].xyz, u_highp[1].xyz, u_highp[2].xyz);
@@ -96,21 +93,20 @@ void main() {
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static SRC_AND_ALPHA_TEX_COORD (k)
+    static SRC_AND_ALPHA_TEX_COORD ()
     {
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
+layout (location = 0) in vec2 a_vertex;
 
 uniform vec4 u_highp[7];
 
-${k.varyingOut()} vec2 v_src_tex_coord;
-${k.varyingOut()} vec2 v_alpha_tex_coord;
+out vec2 v_src_tex_coord;
+out vec2 v_alpha_tex_coord;
 
 void main() {
     mat3 matrix = mat3(u_highp[0].xyz, u_highp[1].xyz, u_highp[2].xyz);
@@ -132,16 +128,15 @@ void main() {
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static PIXEL_DISSOLVE_COLOR (k)
+    static PIXEL_DISSOLVE_COLOR ()
     {
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
+layout (location = 0) in vec2 a_vertex;
 
 uniform mat3 u_highp[3];
 
@@ -158,20 +153,19 @@ void main() {
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static PIXEL_DISSOLVE_TEXTURE (k)
+    static PIXEL_DISSOLVE_TEXTURE ()
     {
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
+layout (location = 0) in vec2 a_vertex;
 
 uniform mat3 u_highp[5];
 
-${k.varyingOut()} vec2 v_src_tex_coord;
+out vec2 v_src_tex_coord;
 
 void main() {
     mat3 matrix = mat3(u_highp[0].xyz, u_highp[1].xyz, u_highp[2].xyz);
@@ -193,22 +187,21 @@ void main() {
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static SET_PIXEL_QUEUE (k)
+    static SET_PIXEL_QUEUE ()
     {
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
-${k.attribute(1)} vec4 a_color;
+layout (location = 0) in vec2 a_vertex;
+layout (location = 1) in vec4 a_color;
 
 uniform mat3 u_highp[3];
 
-${k.varyingOut()} vec2 v_dst_tex_coord;
-${k.varyingOut()} vec4 v_color;
+out vec2 v_dst_tex_coord;
+out vec4 v_color;
 
 void main() {
     mat3 matrix = mat3(u_highp[0].xyz, u_highp[1].xyz, u_highp[2].xyz);

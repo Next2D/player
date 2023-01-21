@@ -4,93 +4,88 @@
 class FragmentShaderSource
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static SOLID_COLOR (k)
+    static SOLID_COLOR ()
     {
-        return `${k.version()}
+        return `#version 300 es
 precision mediump float;
 
 uniform vec4 u_mediump;
 
-${k.outColor()}
+out vec4 o_color;
 
 void main() {
-    ${k.fragColor()} = vec4(u_mediump.rgb * u_mediump.a, u_mediump.a);
+    o_color = vec4(u_mediump.rgb * u_mediump.a, u_mediump.a);
 }
 
 `;
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static BITMAP_CLIPPED (k)
+    static BITMAP_CLIPPED ()
     {
-        return `${k.version()}
+        return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_texture;
 uniform vec4 u_mediump[3];
 
-${k.varyingIn()} vec2 v_uv;
-${k.outColor()}
+in vec2 v_uv;
+out vec4 o_color;
 
 void main() {
     vec2 uv = vec2(v_uv.x, u_mediump[0].y - v_uv.y) / u_mediump[0].xy;
 
-    vec4 src = ${k.texture2D()}(u_texture, uv);
+    vec4 src = texture(u_texture, uv);
     ${FragmentShaderLibrary.STATEMENT_COLOR_TRANSFORM_ON(1)}
-    ${k.fragColor()} = src;
+    o_color = src;
 }`;
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static BITMAP_PATTERN (k)
+    static BITMAP_PATTERN ()
     {
-        return `${k.version()}
+        return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_texture;
 uniform vec4 u_mediump[3];
 
-${k.varyingIn()} vec2 v_uv;
-${k.outColor()}
+in vec2 v_uv;
+out vec4 o_color;
 
 void main() {
     vec2 uv = fract(vec2(v_uv.x, -v_uv.y) / u_mediump[0].xy);
     
-    vec4 src = ${k.texture2D()}(u_texture, uv);
+    vec4 src = texture(u_texture, uv);
     ${FragmentShaderLibrary.STATEMENT_COLOR_TRANSFORM_ON(1)}
-    ${k.fragColor()} = src;
+    o_color = src;
 }`;
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static MASK (k)
+    static MASK ()
     {
-        return `${k.version()}
-${k.extensionDerivatives()}
+        return `#version 300 es
 precision mediump float;
 
-${k.varyingIn()} vec2 v_bezier;
-${k.outColor()}
+in vec2 v_bezier;
+out vec4 o_color;
 
 void main() {
     vec2 px = dFdx(v_bezier);
@@ -100,7 +95,7 @@ void main() {
     float alpha = 0.5 - (v_bezier.x * v_bezier.x - v_bezier.y) / length(f);
 
     if (alpha > 0.0) {
-        ${k.fragColor()} = vec4(min(alpha, 1.0));
+        o_color = vec4(min(alpha, 1.0));
     } else {
         discard;
     }    

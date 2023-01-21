@@ -6,15 +6,13 @@ class BlendShaderVariantCollection
     /**
      * @param {CanvasToWebGLContext}  context
      * @param {WebGLRenderingContext} gl
-     * @param {WebGLShaderKeyword}    keyword
      * @constructor
      * @public
      */
-    constructor (context, gl, keyword)
+    constructor (context, gl)
     {
         this._$context    = context;
         this._$gl         = gl;
-        this._$keyword    = keyword;
         this._$collection = new Map();
     }
 
@@ -31,8 +29,8 @@ class BlendShaderVariantCollection
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
-                VertexShaderSource.BLEND(this._$keyword),
-                FragmentShaderSourceTexture.TEMPLATE(this._$keyword, with_color_transform)
+                VertexShaderSource.BLEND(),
+                FragmentShaderSourceTexture.TEMPLATE(with_color_transform)
             ));
         }
 
@@ -51,8 +49,8 @@ class BlendShaderVariantCollection
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
-                VertexShaderSource.BLEND_CLIP(this._$keyword),
-                FragmentShaderSourceTexture.TEMPLATE(this._$keyword, false)
+                VertexShaderSource.BLEND_CLIP(),
+                FragmentShaderSourceTexture.TEMPLATE(false)
             ));
         }
 
@@ -73,8 +71,8 @@ class BlendShaderVariantCollection
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
-                VertexShaderSource.BLEND(this._$keyword),
-                FragmentShaderSourceBlend.TEMPLATE(this._$keyword, operation, with_color_transform)
+                VertexShaderSource.BLEND(),
+                FragmentShaderSourceBlend.TEMPLATE(operation, with_color_transform)
             ));
         }
 

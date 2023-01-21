@@ -364,7 +364,7 @@ Util.$resetContext = (context) =>
 
         case CanvasGradientToWebGL:
             {
-                const stops = style._$fillStyle._$stops
+                const stops = style._$fillStyle._$stops;
                 for (let idx = 0; idx < stops.length; ++idx) {
                     Util.$poolFloat32Array4(stops[idx]);
                 }
@@ -389,7 +389,7 @@ Util.$resetContext = (context) =>
 
         case CanvasGradientToWebGL:
             {
-                const stops = style._$fillStyle._$stops
+                const stops = style._$strokeStyle._$stops;
                 for (let idx = 0; idx < stops.length; ++idx) {
                     Util.$poolFloat32Array4(stops[idx]);
                 }

@@ -4,7 +4,6 @@
 class FragmentShaderSourceConvolutionFilter
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @param  {number}  mediump_length
      * @param  {number}  x
      * @param  {number}  y
@@ -14,7 +13,7 @@ class FragmentShaderSourceConvolutionFilter
      * @method
      * @static
      */
-    static TEMPLATE (k, mediump_length, x, y, preserve_alpha, clamp)
+    static TEMPLATE (mediump_length, x, y, preserve_alpha, clamp)
     {
         const halfX = $Math.floor(x * 0.5);
         const halfY = $Math.floor(y * 0.5);
@@ -31,7 +30,7 @@ class FragmentShaderSourceConvolutionFilter
         }
 
         const preserve_alphaStatement = preserve_alpha
-            ? `result.a = ${k.texture2D()}(u_texture, v_coord).a;`
+            ? "result.a = texture(u_texture, v_coord).a;"
             : "";
         const clampStatement = clamp
             ? ""
@@ -40,14 +39,14 @@ class FragmentShaderSourceConvolutionFilter
     color = mix(substitute_color, color, isInside(uv));
 `;
 
-        return `${k.version()}
+        return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_texture;
 uniform vec4 u_mediump[${mediump_length}];
 
-${k.varyingIn()} vec2 v_coord;
-${k.outColor()}
+in vec2 v_coord;
+out vec4 o_color;
 
 ${FragmentShaderLibrary.FUNCTION_IS_INSIDE()}
 
@@ -59,7 +58,7 @@ vec4 getWeightedColor (in int i, in float weight) {
     vec2 offset = vec2(i_mod_x - ${halfX}, ${halfY} - i_div_x);
     vec2 uv = v_coord + offset * rcp_size;
 
-    vec4 color = ${k.texture2D()}(u_texture, uv);
+    vec4 color = texture(u_texture, uv);
     color.rgb /= max(0.0001, color.a);
     ${clampStatement}
 
@@ -76,7 +75,7 @@ void main() {
     ${preserve_alphaStatement}
 
     result.rgb *= result.a;
-    ${k.fragColor()} = result;
+    o_color = result;
 }
 
 `;

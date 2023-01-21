@@ -99,10 +99,10 @@ class Player
 
         /**
          * @type {number}
-         * @default 60
+         * @default 16
          * @private
          */
-        this._$fps = 60;
+        this._$fps = 16;
 
         /**
          * @type {boolean}

@@ -4,14 +4,13 @@
 class FragmentShaderSourceBlend
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @param  {string}  operation
      * @param  {boolean} with_color_transform
      * @return {string}
      * @method
      * @static
      */
-    static TEMPLATE (k, operation, with_color_transform)
+    static TEMPLATE (operation, with_color_transform)
     {
         let blendFunction;
         switch (operation) {
@@ -51,22 +50,22 @@ class FragmentShaderSourceBlend
             ? FragmentShaderLibrary.STATEMENT_COLOR_TRANSFORM_ON(0)
             : "";
 
-        return `${k.version()}
+        return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_textures[2];
 ${colorTransformUniform}
 
-${k.varyingIn()} vec2 v_coord;
-${k.outColor()}
+in vec2 v_coord;
+out vec4 o_color;
 
 ${blendFunction}
 
 void main() {
-    vec4 dst = ${k.texture2D()}(u_textures[0], v_coord);
-    vec4 src = ${k.texture2D()}(u_textures[1], v_coord);
+    vec4 dst = texture(u_textures[0], v_coord);
+    vec4 src = texture(u_textures[1], v_coord);
     ${colorTransformStatement}
-    ${k.fragColor()} = blend(src, dst);
+    o_color = blend(src, dst);
 }
 
 `;

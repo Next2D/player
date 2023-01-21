@@ -1277,12 +1277,11 @@ class Graphics
 
         // 9スライスを有効にしたオブジェクトが回転・傾斜成分を含む場合は
         // 9スライスは無効になる
-        let parentMatrix = null;
+        const rawMatrix = displayObject._$transform._$rawMatrix();
         if (hasGrid) {
-            parentMatrix = displayObject._$transform._$rawMatrix();
             hasGrid = hasGrid
-                && $Math.abs(parentMatrix[1]) < 0.001
-                && $Math.abs(parentMatrix[2]) < 0.0001;
+                && $Math.abs(rawMatrix[1]) < 0.001
+                && $Math.abs(rawMatrix[2]) < 0.0001;
         }
 
         // size
@@ -1383,7 +1382,7 @@ class Graphics
         renderer.drawGraphics(this,
             cacheKeys, baseBounds, width, height, xScale, yScale,
             matrix, color_transform, filters, alpha, blend_mode,
-            xMin, yMin, hasGrid, parentMatrix
+            xMin, yMin, hasGrid, rawMatrix
         );
 
         // pool

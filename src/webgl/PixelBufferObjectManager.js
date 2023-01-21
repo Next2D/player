@@ -5,17 +5,15 @@ class PixelBufferObjectManager
 {
     /**
      * @param {WebGLRenderingContext} gl
-     * @param {boolean}               isWebGL2Context
      * @constructor
      */
-    constructor (gl, isWebGL2Context)
+    constructor (gl)
     {
-        this._$gl              = gl;
-        this._$isWebGL2Context = isWebGL2Context;
-        this._$objectPool      = [];
-        this._$maxWidth        = 0;
-        this._$maxHeight       = 0;
-        this._$cacheSize       = 0;
+        this._$gl         = gl;
+        this._$objectPool = [];
+        this._$maxWidth   = 0;
+        this._$maxHeight  = 0;
+        this._$cacheSize  = 0;
     }
 
     /**
@@ -56,10 +54,6 @@ class PixelBufferObjectManager
      */
     readPixelsAsync (x, y, width, height)
     {
-        if (!this._$isWebGL2Context) {
-            return null;
-        }
-
         const size              = width * height * 4;
         const pixelBufferObject = this._$getPixelBufferObject(size);
 

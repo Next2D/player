@@ -4,7 +4,6 @@
 class VertexShaderSourceFill
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @param  {number}  highp_length
      * @param  {boolean} with_uv
      * @param  {boolean} for_mask
@@ -13,14 +12,14 @@ class VertexShaderSourceFill
      * @method
      * @static
      */
-    static TEMPLATE (k, highp_length, with_uv, for_mask, has_grid)
+    static TEMPLATE (highp_length, with_uv, for_mask, has_grid)
     {
         const bezierAttribute = for_mask
-            ? this.ATTRIBUTE_BEZIER_ON(k)
+            ? this.ATTRIBUTE_BEZIER_ON()
             : "";
         const uvVarying =
-              for_mask ? this.VARYING_BEZIER_ON(k)
-                  : with_uv  ? this.VARYING_UV_ON(k)
+              for_mask ? this.VARYING_BEZIER_ON()
+                  : with_uv  ? this.VARYING_UV_ON()
                       : "";
         const uvStatement =
               for_mask ? this.STATEMENT_BEZIER_ON()
@@ -30,9 +29,9 @@ class VertexShaderSourceFill
             ? VertexShaderLibrary.FUNCTION_GRID_ON(with_uv ? 5 : 0)
             : VertexShaderLibrary.FUNCTION_GRID_OFF();
 
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
+layout (location = 0) in vec2 a_vertex;
 ${bezierAttribute}
 
 uniform vec4 u_highp[${highp_length}];
@@ -55,39 +54,36 @@ void main() {
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      */
-    static ATTRIBUTE_BEZIER_ON (k)
+    static ATTRIBUTE_BEZIER_ON ()
     {
         return `
-${k.attribute(1)} vec2 a_bezier;
+layout (location = 1) in vec2 a_bezier;
 `;
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static VARYING_UV_ON (k)
+    static VARYING_UV_ON ()
     {
         return `
-${k.varyingOut()} vec2 v_uv;
+out vec2 v_uv;
 `;
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static VARYING_BEZIER_ON (k)
+    static VARYING_BEZIER_ON ()
     {
         return `
-${k.varyingOut()} vec2 v_bezier;
+out vec2 v_bezier;
 `;
     }
 

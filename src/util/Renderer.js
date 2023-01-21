@@ -207,18 +207,11 @@ class Renderer
                 "preserveDrawingBuffer": true
             };
 
-            let isWebGL2Context = true;
             let gl = canvas.getContext("webgl2", option);
-            if (!gl) {
-                gl = canvas.getContext("webgl", option)
-                    || canvas.getContext("experimental-webgl", option);
-                isWebGL2Context = false;
-            }
-
             if (gl) {
 
                 this._$context = new CanvasToWebGLContext(
-                    gl, isWebGL2Context, this.samples
+                    gl, this.samples
                 );
 
                 this._$maxTextureSize = Math.min(
@@ -480,6 +473,57 @@ class Renderer
         return this._$currentAttachment;
     }
 
+    drawFilter (target_texture, matrix, filters, width, height)
+    {
+
+        const context = this._$context;
+        if (!context) {
+            return ;
+        }
+
+        const cacheKeys = [this._$instanceId, "f"];
+        let cache = Util.$cacheStore().get(cacheKeys);
+
+        const updated = this._$isFilterUpdated(
+            width, height, matrix, filters, true
+        );
+
+        let texture;
+        if (!cache || updated) {
+
+            // cache clear
+            if (cache) {
+
+                Util.$cacheStore().set(cacheKeys, null);
+                cache.layerWidth     = 0;
+                cache.layerHeight    = 0;
+                cache._$offsetX      = 0;
+                cache._$offsetY      = 0;
+                cache.matrix         = null;
+                cache.colorTransform = null;
+
+                context
+                    .frameBuffer
+                    .releaseTexture(cache);
+
+                cache = null;
+            }
+
+            texture = this._$applyFilter(
+                context, filters, target_texture,
+                matrix, width, height
+            );
+
+            Util.$cacheStore().set(cacheKeys, texture);
+        }
+
+        if (cache) {
+            texture = cache;
+        }
+
+        return texture;
+    }
+
     /**
      * @description グラフィックオブジェクトの描画処理を実行
      *
@@ -497,28 +541,34 @@ class Renderer
         const mScale = player._$scale * player._$ratio;
         if (this._$worker) {
 
-            const recodes = graphics._$getRecodes();
+            const displayObject = graphics._$displayObject;
 
             const message = {
                 "command": "beginGraphics",
                 "useCache": Util.$useCache,
                 "cacheKeys": cache_keys,
                 "baseBounds": base_bounds,
-                "width": width,
-                "height": height,
-                "xScale": x_scale,
-                "yScale": y_scale,
-                "alpha": alpha,
                 "xMin": x_min,
                 "yMin": y_min,
-                "recodes": recodes
+                "xScale": x_scale,
+                "yScale": y_scale,
+                "recodes": graphics._$getRecodes()
             };
+
+            const options = Util.$getArray(
+                message.recodes.buffer
+            );
+
+            if (alpha !== 1) {
+                message.alpha = alpha;
+            }
 
             if (matrix[0] !== 1 || matrix[1] !== 0
                 || matrix[2] !== 0 || matrix[3] !== 1
                 || matrix[4] !== 0 || matrix[5] !== 0
             ) {
-                message.matrix = matrix;
+                message.matrix = matrix.slice();
+                options.push(message.matrix.buffer);
             }
 
             if (color_transform[0] !== 1 || color_transform[1] !== 1
@@ -526,12 +576,41 @@ class Renderer
                 || color_transform[4] !== 0 || color_transform[5] !== 0
                 || color_transform[6] !== 0 || color_transform[7] !== 0
             ) {
-                message.colorTransform = color_transform;
+                message.colorTransform = color_transform.slice();
+                options.push(message.colorTransform.buffer);
             }
 
             // TODO
-            if (filters && filters.length) {
-                message.filters = filters;
+            if (filters && filters.length
+                && displayObject._$canApply(filters)
+            ) {
+                let updated = displayObject._$isUpdated();
+                if (!updated) {
+                    for (let idx = 0; idx < filters.length; ++idx) {
+
+                        if (!filters[idx]._$isUpdated()) {
+                            continue;
+                        }
+
+                        updated = true;
+                        break;
+                    }
+                }
+
+                const parameters = Util.$getArray();
+                for (let idx = 0; idx < filters.length; ++idx) {
+                    parameters.push(filters[idx]._$toArray());
+                }
+
+                message.inFilter   = true;
+                message.instanceId = displayObject._$instanceId;
+                message.updated    = updated;
+                message.parameters = parameters;
+
+                message.tx     = parent_matrix[4];
+                message.ty     = parent_matrix[5];
+                message.width  = width;
+                message.height = height;
             }
 
             if (blend_mode !== BlendMode.NORMAL) {
@@ -540,10 +619,10 @@ class Renderer
 
             if (has_grid) {
                 message.hasGrid = has_grid;
-                message.parentMatrix = parent_matrix;
-                message.mScale = mScale;
+                message.mScale  = mScale;
 
-                const displayObject = graphics._$displayObject;
+                message.parentMatrix = parent_matrix.slice();
+                options.push(message.parentMatrix.buffer);
 
                 const grid = displayObject._$scale9Grid;
                 message.scale9Grid = {
@@ -558,9 +637,13 @@ class Renderer
                     ._$transform
                     .concatenatedMatrix
                     ._$matrix;
+
+                options.push(message.concatMatrix.buffer);
             }
 
-            this._$worker.postMessage(message, [recodes.buffer]);
+            this._$worker.postMessage(message, options);
+
+            Util.$poolArray(options);
 
         } else {
 
@@ -674,47 +757,26 @@ class Renderer
                 context._$bind(currentAttachment);
             }
 
-            if (filters && filters.length) {
+            let drawFilter = false;
+            let offsetX = 0;
+            let offsetY = 0;
+            if (filters && filters.length
+                && displayObject._$canApply(filters)
+            ) {
 
-                const canApply = displayObject._$canApply(filters);
-                if (canApply) {
+                drawFilter = true;
 
-                    const filterTexture = displayObject._$drawFilter(
-                        context, texture, matrix,
-                        filters, width, height
-                    );
+                texture = displayObject._$drawFilter(
+                    context, texture, matrix,
+                    filters, width, height
+                );
 
-                    // reset
-                    Util.$resetContext(context);
-
-                    // draw
-                    context._$globalAlpha = alpha;
-                    context._$imageSmoothingEnabled = true;
-                    context._$globalCompositeOperation = blend_mode;
-
-                    context.setTransform(1, 0, 0, 1,
-                        x_min - filterTexture._$offsetX,
-                        y_min - filterTexture._$offsetY
-                    );
-                    context.drawImage(filterTexture,
-                        0, 0, filterTexture.width, filterTexture.height,
-                        color_transform
-                    );
-
-                    return ;
-                }
+                offsetX = texture._$offsetX;
+                offsetY = texture._$offsetY;
             }
 
-            // reset
-            Util.$resetContext(context);
-
-            // draw
-            context._$globalAlpha = alpha;
-            context._$imageSmoothingEnabled = true;
-            context._$globalCompositeOperation = blend_mode;
-
-            const radianX = $Math.atan2(matrix[1], matrix[0]);
-            const radianY = $Math.atan2(-matrix[2], matrix[3]);
+            const radianX = drawFilter ? 0 : $Math.atan2(matrix[1], matrix[0]);
+            const radianY = drawFilter ? 0 : $Math.atan2(-matrix[2], matrix[3]);
             if (radianX || radianY) {
 
                 const tx = base_bounds.xMin * x_scale;
@@ -733,13 +795,98 @@ class Renderer
 
             } else {
 
-                context.setTransform(1, 0, 0, 1, x_min, y_min);
+                context.setTransform(1, 0, 0, 1,
+                    x_min - offsetX, y_min - offsetY
+                );
 
             }
+
+            // reset
+            Util.$resetContext(context);
+
+            // draw
+            context._$globalAlpha = alpha;
+            context._$imageSmoothingEnabled = true;
+            context._$globalCompositeOperation = blend_mode;
 
             context.drawImage(texture,
                 0, 0, texture.width, texture.height, color_transform
             );
+        }
+    }
+
+    /**
+     * @description Videoエレメントの画像をTextureにセット
+     *
+     * @param  {Video} video
+     * @return {void}
+     * @method
+     * @public
+     */
+    attachVideoToTexture (video)
+    {
+        if (this._$worker) {
+
+            // TODO
+
+        } else {
+
+            const context = this._$context;
+            if (!context) {
+                return ;
+            }
+
+            video._$texture = context
+                .frameBuffer
+                .createTextureFromVideo(
+                    video._$video, video._$smoothing, video._$texture
+                );
+
+        }
+    }
+
+    /**
+     * @description Videoクラスのマスク処理
+     *
+     * @param  {number} width
+     * @param  {number} height
+     * @param  {Float32Array} matrix
+     * @return {void}
+     * @method
+     * @public
+     */
+    clipVideo (width, height, matrix)
+    {
+        if (this._$worker) {
+
+            this._$worker.postMessage({
+                "command": "clipVideo",
+                "width": width,
+                "height": height,
+                "matrix": matrix
+            });
+
+        } else {
+
+            const context = this._$context;
+            if (!context) {
+                return ;
+            }
+
+            Util.$resetContext(context);
+            context.setTransform(
+                matrix[0], matrix[1], matrix[2],
+                matrix[3], matrix[4], matrix[5]
+            );
+
+            context.beginPath();
+            context.moveTo(0, 0);
+            context.lineTo(width, 0);
+            context.lineTo(width, height);
+            context.lineTo(0, height);
+            context.lineTo(0, 0);
+            context.clip(true);
+
         }
     }
 

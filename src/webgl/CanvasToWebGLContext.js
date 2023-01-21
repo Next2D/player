@@ -5,21 +5,20 @@ class CanvasToWebGLContext
 {
     /**
      * @param {WebGLRenderingContext} gl
-     * @param {boolean}               isWebGL2Context
-     * @param {number}                sample
+     * @param {number} sample
      * @constructor
+     * @public
      */
-    constructor (gl, isWebGL2Context, sample)
+    constructor (gl, sample)
     {
         this._$gl = gl;
 
-        const samples = isWebGL2Context
-            ? $Math.min(sample, gl.getParameter(gl.MAX_SAMPLES))
-            : 0;
+        const samples = $Math.min(sample, gl.getParameter(gl.MAX_SAMPLES));
 
         // setup
-        this._$isWebGL2Context = isWebGL2Context;
-        this._$maxTextureSize  = $Math.min(8192, gl.getParameter(gl.MAX_TEXTURE_SIZE)) - 2;
+        this._$maxTextureSize = $Math.min(8192,
+            gl.getParameter(gl.MAX_TEXTURE_SIZE)
+        ) - 2;
 
         // render params
         this._$contextStyle             = new CanvasToWebGLContextStyle();
@@ -42,7 +41,7 @@ class CanvasToWebGLContext
         this._$viewportWidth  = 0;
         this._$viewportHeight = 0;
 
-        this._$frameBufferManager = new FrameBufferManager(gl, isWebGL2Context, samples);
+        this._$frameBufferManager = new FrameBufferManager(gl, samples);
         this._$path = new CanvasToWebGLContextPath();
         this._$grid = new CanvasToWebGLContextGrid();
 
@@ -60,9 +59,9 @@ class CanvasToWebGLContext
         this._$gradientLUT = new GradientLUTGenerator(this, gl);
 
         // vertex array object
-        this._$vao = new VertexArrayObjectManager(gl, isWebGL2Context);
+        this._$vao = new VertexArrayObjectManager(gl);
         // pixel buffer object
-        this._$pbo = new PixelBufferObjectManager(gl, isWebGL2Context);
+        this._$pbo = new PixelBufferObjectManager(gl);
 
         this._$mask  = new CanvasToWebGLContextMask(this, gl);
         this._$blend = new CanvasToWebGLContextBlend(this, gl);
@@ -1586,20 +1585,18 @@ class CanvasToWebGLContext
      */
     changeSamples (samples = 4)
     {
-        if (this._$isWebGL2Context) {
+        samples = $Math.min(samples,
+            this._$gl.getParameter(this._$gl.MAX_SAMPLES)
+        );
 
-            samples = $Math.min(samples, this._$gl.getParameter(this._$gl.MAX_SAMPLES));
+        const manager = this._$frameBufferManager;
 
-            const manager = this._$frameBufferManager;
+        // reset
+        manager._$objectPool = [];
+        manager._$colorBufferPool._$objectPool   = [];
+        manager._$stencilBufferPool._$objectPool = [];
 
-            // reset
-            manager._$objectPool = [];
-            manager._$colorBufferPool._$objectPool   = [];
-            manager._$stencilBufferPool._$objectPool = [];
-
-            // edit param
-            manager._$colorBufferPool._$samples       = samples;
-
-        }
+        // edit param
+        manager._$colorBufferPool._$samples = samples;
     }
 }

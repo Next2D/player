@@ -6,15 +6,13 @@ class ShapeShaderVariantCollection
     /**
      * @param {CanvasToWebGLContext}  context
      * @param {WebGLRenderingContext} gl
-     * @param {WebGLShaderKeyword}    keyword
      * @constructor
      * @public
      */
-    constructor (context, gl, keyword)
+    constructor (context, gl)
     {
         this._$context    = context;
         this._$gl         = gl;
-        this._$keyword    = keyword;
         this._$collection = new Map();
     }
 
@@ -36,20 +34,19 @@ class ShapeShaderVariantCollection
             let vertexShaderSource;
             if (is_stroke) {
                 vertexShaderSource = VertexShaderSourceStroke.TEMPLATE(
-                    this._$keyword, highpLength, fragmentIndex,
+                    highpLength, fragmentIndex,
                     false, false, has_grid
                 );
             } else {
                 vertexShaderSource = VertexShaderSourceFill.TEMPLATE(
-                    this._$keyword, highpLength,
-                    false, false, has_grid
+                    highpLength, false, false, has_grid
                 );
             }
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
                 vertexShaderSource,
-                FragmentShaderSource.SOLID_COLOR(this._$keyword)
+                FragmentShaderSource.SOLID_COLOR()
             ));
         }
 
@@ -75,19 +72,18 @@ class ShapeShaderVariantCollection
             let vertexShaderSource;
             if (is_stroke) {
                 vertexShaderSource = VertexShaderSourceStroke.TEMPLATE(
-                    this._$keyword, highpLength, fragmentIndex,
+                    highpLength, fragmentIndex,
                     true, false, has_grid
                 );
             } else {
                 vertexShaderSource = VertexShaderSourceFill.TEMPLATE(
-                    this._$keyword, highpLength,
-                    true, false, has_grid
+                    highpLength, true, false, has_grid
                 );
             }
 
             const fragmentShaderSource = repeat
-                ? FragmentShaderSource.BITMAP_PATTERN(this._$keyword)
-                : FragmentShaderSource.BITMAP_CLIPPED(this._$keyword);
+                ? FragmentShaderSource.BITMAP_PATTERN()
+                : FragmentShaderSource.BITMAP_CLIPPED();
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
@@ -117,20 +113,19 @@ class ShapeShaderVariantCollection
             let vertexShaderSource;
             if (is_stroke) {
                 vertexShaderSource = VertexShaderSourceStroke.TEMPLATE(
-                    this._$keyword, highpLength, fragmentIndex,
+                    highpLength, fragmentIndex,
                     false, true, has_grid
                 );
             } else {
                 vertexShaderSource = VertexShaderSourceFill.TEMPLATE(
-                    this._$keyword, highpLength,
-                    false, true, has_grid
+                    highpLength, false, true, has_grid
                 );
             }
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
                 vertexShaderSource,
-                FragmentShaderSource.MASK(this._$keyword)
+                FragmentShaderSource.MASK()
             ));
         }
 

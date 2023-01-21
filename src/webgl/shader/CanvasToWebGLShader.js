@@ -51,26 +51,6 @@ class CanvasToWebGLShader
         this._$gl.shaderSource(fragmentShader, fragment_source);
         this._$gl.compileShader(fragmentShader);
 
-        if (!this._$context._$isWebGL2Context) {
-            // https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glBindAttribLocation.xml
-            //
-            // It is also permissible to bind a generic attribute index to an attribute variable name that is never used in a vertex shader.
-            // 頂点シェーダ内で使用されていない属性変数名を属性インデックスにバインドすることができる。
-            //
-            // If name was bound previously, that information is lost. Thus you cannot bind one user-defined attribute variable to multiple indices,
-            // but you can bind multiple user-defined attribute variables to the same index.
-            // 属性変数名を複数のインデックスにバインドすることはできないが、複数の属性変数名を1つのインデックスにバインドすることはできる。
-
-            // 上に引用した仕様により、以下の属性変数名がシェーダに存在しなくても問題なく、
-            // また、a_bezier と a_option1 のどちらも 1 にバインドすることも問題ない。
-
-            this._$gl.bindAttribLocation(program, 0, "a_vertex");
-            this._$gl.bindAttribLocation(program, 1, "a_bezier");
-            this._$gl.bindAttribLocation(program, 1, "a_option1");
-            this._$gl.bindAttribLocation(program, 2, "a_option2");
-            this._$gl.bindAttribLocation(program, 3, "a_type");
-        }
-
         this._$gl.attachShader(program, vertexShader);
         this._$gl.attachShader(program, fragmentShader);
         this._$gl.linkProgram(program);

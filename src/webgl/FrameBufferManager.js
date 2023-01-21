@@ -5,29 +5,24 @@ class FrameBufferManager
 {
     /**
      * @param {WebGLRenderingContext} gl
-     * @param {boolean}               isWebGL2Context
-     * @param {number}                samples
+     * @param {number} samples
      * @constructor
      */
-    constructor (gl, isWebGL2Context, samples)
+    constructor (gl, samples)
     {
         this._$gl                 = gl;
-        this._$isWebGL2Context    = isWebGL2Context;
         this._$objectPool         = [];
         this._$frameBuffer        = gl.createFramebuffer();
         this._$frameBufferTexture = null;
         this._$currentAttachment  = null;
         this._$isBinding          = false;
-        this._$textureManager     = new TextureManager(gl, isWebGL2Context);
+        this._$textureManager     = new TextureManager(gl);
         this._$colorBufferPool    = null;
         this._$stencilBufferPool  = new StencilBufferPool(gl);
+        this._$frameBufferTexture = gl.createFramebuffer();
+        this._$colorBufferPool    = new ColorBufferPool(gl, samples);
 
-        if (isWebGL2Context) {
-            this._$frameBufferTexture = gl.createFramebuffer();
-            this._$colorBufferPool    = new ColorBufferPool(gl, samples);
-
-            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._$frameBuffer);
-        }
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._$frameBuffer);
     }
 
     /**
@@ -59,7 +54,7 @@ class FrameBufferManager
         attachment.width  = width;
         attachment.height = height;
 
-        if (this._$isWebGL2Context && multisample) {
+        if (multisample) {
             attachment.color   = this._$colorBufferPool.create(width, height, samples);
             attachment.texture = texture;
             attachment.msaa    = true;

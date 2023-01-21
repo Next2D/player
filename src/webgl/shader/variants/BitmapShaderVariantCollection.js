@@ -6,14 +6,12 @@ class BitmapShaderVariantCollection
     /**
      * @param {CanvasToWebGLContext}  context
      * @param {WebGLRenderingContext} gl
-     * @param {WebGLShaderKeyword}    keyword
      * @constructor
      */
-    constructor (context, gl, keyword)
+    constructor (context, gl)
     {
         this._$context    = context;
         this._$gl         = gl;
-        this._$keyword    = keyword;
         this._$collection = new Map();
     }
 
@@ -28,8 +26,8 @@ class BitmapShaderVariantCollection
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
-                VertexShaderSource.TEXTURE(this._$keyword),
-                FragmentShaderSourceTexture.TEMPLATE(this._$keyword, 0, 0, false)
+                VertexShaderSource.TEXTURE(),
+                FragmentShaderSourceTexture.TEMPLATE(0, 0, false)
             ));
         }
 

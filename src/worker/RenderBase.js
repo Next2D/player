@@ -1,4 +1,6 @@
 let context = null;
+let state   = "deactivate";
+const queue = [];
 
 /**
  * @class
@@ -65,6 +67,12 @@ class CommandController
          * @private
          */
         this._$cacheStore = new CacheStore();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$layers = [];
     }
 
     /**
@@ -109,12 +117,8 @@ class CommandController
         };
 
         let gl = canvas.getContext("webgl2", option);
-        if (!gl) {
-            gl = canvas.getContext("webgl", option)
-                || canvas.getContext("experimental-webgl", option);
-        }
 
-        this._$context = new CanvasToWebGLContext(gl, true, this.samples);
+        this._$context = new CanvasToWebGLContext(gl, this.samples);
         this._$cacheStore._$context = this._$context;
 
         this._$maxTextureSize = $Math.min(8192,
@@ -162,6 +166,8 @@ class CommandController
         manager._$textureManager._$maxHeight    = height;
         context._$pbo._$maxWidth                = width;
         context._$pbo._$maxHeight               = height;
+
+        this._$cacheStore.reset();
     }
 
     /**
@@ -261,6 +267,46 @@ class CommandController
     }
 
     /**
+     * @description 配列のフィルター処理を実行
+     *
+     * @param  {object} object
+     * @param  {WebGLTexture} texture
+     * @return {void}
+     * @method
+     * @public
+     */
+    applyFilter (object, texture)
+    {
+        const context = this._$context;
+
+        const width  = object.width;
+        const height = object.height;
+        const matrix = object.matrix || Util.$poolFloat32Array6(1, 0, 0, 1, 0, 0);
+
+        const cache = this._$cacheStore.get([object.instanceId, "f"]);
+        switch (true) {
+
+            case cache === null:
+            case cache.filterState !== can_apply:
+            case cache.layerWidth  !== $Math.ceil(width):
+            case cache.layerHeight !== $Math.ceil(height):
+            case cache.matrix !==
+            matrix[0] + "_" + matrix[1] + "_" + matrix[2] + "_" + matrix[3] + "_" +
+            position_x + "_" + position_y:
+                return true;
+
+            default:
+                break;
+
+        }
+
+        if (!object.matrix) {
+            Util.$poolFloat32Array6(matrix);
+        }
+
+    }
+
+    /**
      * @description Graphicsクラスの描画処理を実行
      *
      * @param  {object} object
@@ -276,6 +322,8 @@ class CommandController
         const colorTransform = object.colorTransform;
 
         const baseBounds = object.baseBounds;
+        const xMin = object.xMin;
+        const yMin = object.yMin;
         const xScale = object.xScale;
         const yScale = object.yScale;
 
@@ -322,16 +370,16 @@ class CommandController
 
                 const aMatrix = Util.$getFloat32Array6(
                     aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
-                    aMatrixBase[4] * object.mScale - object.xMin,
-                    aMatrixBase[5] * object.mScale - object.yMin
+                    aMatrixBase[4] * object.mScale - xMin,
+                    aMatrixBase[5] * object.mScale - yMin
                 );
                 Util.$poolFloat32Array6(aMatrixBase);
 
                 const apMatrix = Util.$multiplicationMatrix(
                     aMatrix, pMatrix
                 );
-                const aOffsetX = apMatrix[4] - (matrix[4] - object.xMin);
-                const aOffsetY = apMatrix[5] - (matrix[5] - object.yMin);
+                const aOffsetX = apMatrix[4] - (matrix[4] - xMin);
+                const aOffsetY = apMatrix[5] - (matrix[5] - yMin);
                 Util.$poolFloat32Array6(apMatrix);
 
                 const parentBounds = Util.$boundsMatrix(baseBounds, pMatrix);
@@ -380,19 +428,19 @@ class CommandController
             context._$bind(currentAttachment);
         }
 
-        // reset
-        Util.$resetContext(context);
+        let offsetX = 0;
+        let offsetY = 0;
+        if (object.isFilter) {
 
-        // draw setup
-        context._$globalAlpha = object.alpha;
-        context._$imageSmoothingEnabled = true;
-        context._$globalCompositeOperation = object.blendMode
-            ? object.blendMode
-            : BlendMode.NORMAL;
+            texture = this.applyFilter(object, texture);
+
+            offsetX = texture._$offsetX;
+            offsetY = texture._$offsetY;
+        }
 
         let radianX = 0;
         let radianY = 0;
-        if (matrix) {
+        if (matrix && !object.isFilter) {
             radianX = $Math.atan2(matrix[1], matrix[0]);
             radianY = $Math.atan2(-matrix[2], matrix[3]);
         }
@@ -415,9 +463,19 @@ class CommandController
 
         } else {
 
-            context.setTransform(1, 0, 0, 1, object.xMin, object.yMin);
+            context.setTransform(1, 0, 0, 1, xMin - offsetX, yMin - offsetY);
 
         }
+
+        // reset
+        Util.$resetContext(context);
+
+        // draw setup
+        context._$globalAlpha = object.alpha || 1;
+        context._$imageSmoothingEnabled = true;
+        context._$globalCompositeOperation = object.blendMode
+            ? object.blendMode
+            : BlendMode.NORMAL;
 
         context.drawImage(texture,
             0, 0, texture.width, texture.height, colorTransform
@@ -1004,6 +1062,32 @@ class CommandController
     }
 
     /**
+     * @description Videoクラスのマスク処理
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    clipVideo (width, height, matrix)
+    {
+        const context = this._$context;
+
+        Util.$resetContext(context);
+        context.setTransform(
+            matrix[0], matrix[1], matrix[2],
+            matrix[3], matrix[4], matrix[5]
+        );
+
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(width, 0);
+        context.lineTo(width, height);
+        context.lineTo(0, height);
+        context.lineTo(0, 0);
+        context.clip(true);
+    }
+
+    /**
      * @description 処理を実行
      *              Execute process
      *
@@ -1096,6 +1180,10 @@ class CommandController
                     this._$context._$drawContainerClip();
                     break;
 
+                case "clipVideo":
+                    this.clipVideo(object.width, object.height, object.matrix);
+                    break;
+
                 default:
                     break;
 
@@ -1107,8 +1195,6 @@ class CommandController
 
 }
 const command = new CommandController();
-const queue   = [];
-let state     = "deactivate";
 
 /**
  * @public

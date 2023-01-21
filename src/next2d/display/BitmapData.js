@@ -272,6 +272,10 @@ class BitmapData
 
                     this._$pixelBuffer = null;
 
+                    if (!texture._$bitmapData) {
+                        texture._$bitmapData = this;
+                    }
+
                     break;
 
                 case this._$buffer !== null:
@@ -320,6 +324,9 @@ class BitmapData
                             .frameBuffer
                             .releaseAttachment(attachment, false);
 
+                        if (!texture._$bitmapData) {
+                            texture._$bitmapData = this;
+                        }
                     }
                     break;
 
@@ -330,10 +337,6 @@ class BitmapData
 
         Util.$poolArray(cacheKeys);
         // this._$flushSetPixelQueue();
-
-        if (!this._$buffer && !texture._$bitmapData) {
-            texture._$bitmapData = this;
-        }
 
         return texture;
 

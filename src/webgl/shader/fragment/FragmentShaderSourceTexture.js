@@ -4,13 +4,12 @@
 class FragmentShaderSourceTexture
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @param  {boolean} with_color_transform
      * @return {string}
      * @method
      * @static
      */
-    static TEMPLATE (k, with_color_transform)
+    static TEMPLATE (with_color_transform)
     {
         const colorTransformUniform = with_color_transform
             ? "uniform vec4 u_mediump[2];"
@@ -19,19 +18,19 @@ class FragmentShaderSourceTexture
             ? FragmentShaderLibrary.STATEMENT_COLOR_TRANSFORM_ON(0)
             : "";
 
-        return `${k.version()}
+        return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_texture;
 ${colorTransformUniform}
 
-${k.varyingIn()} vec2 v_coord;
-${k.outColor()}
+in vec2 v_coord;
+out vec4 o_color;
 
 void main() {
-    vec4 src = ${k.texture2D()}(u_texture, v_coord);
+    vec4 src = texture(u_texture, v_coord);
     ${colorTransformStatement}
-    ${k.fragColor()} = src;
+    o_color = src;
 }
 
 `;

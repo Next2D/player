@@ -21,7 +21,7 @@ class DisplayObjectContainer extends InteractiveObject
      * @constructor
      * @public
      */
-    constructor()
+    constructor ()
     {
         super();
 

@@ -4,7 +4,6 @@
 class FragmentShaderSourceDisplacementMapFilter
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @param  {number} mediump_length
      * @param  {number} component_x
      * @param  {number} component_y
@@ -13,7 +12,7 @@ class FragmentShaderSourceDisplacementMapFilter
      * @method
      * @static
      */
-    static TEMPLATE (k, mediump_length, component_x, component_y, mode)
+    static TEMPLATE (mediump_length, component_x, component_y, mode)
     {
         let cx, cy, modeStatement;
 
@@ -56,37 +55,37 @@ class FragmentShaderSourceDisplacementMapFilter
         switch (mode) {
             case DisplacementMapFilterMode.CLAMP:
                 modeStatement = `
-    vec4 source_color = ${k.texture2D()}(u_textures[0], uv);
+    vec4 source_color = texture(u_textures[0], uv);
 `;
                 break;
             case DisplacementMapFilterMode.IGNORE:
                 // 置き換え後の座標が範囲外なら、置き換え前の座標をとる（x軸とy軸を別々に判定する）
                 modeStatement = `
-    vec4 source_color =${k.texture2D()}(u_textures[0], mix(v_coord, uv, step(abs(uv - vec2(0.5)), vec2(0.5))));
+    vec4 source_color =texture(u_textures[0], mix(v_coord, uv, step(abs(uv - vec2(0.5)), vec2(0.5))));
 `;
                 break;
             case DisplacementMapFilterMode.COLOR:
                 modeStatement = `
     vec4 substitute_color = u_mediump[2];
-    vec4 source_color = mix(substitute_color, ${k.texture2D()}(u_textures[0], uv), isInside(uv));
+    vec4 source_color = mix(substitute_color, texture(u_textures[0], uv), isInside(uv));
 `;
                 break;
             case DisplacementMapFilterMode.WRAP:
             default:
                 modeStatement = `
-    vec4 source_color = ${k.texture2D()}(u_textures[0], fract(uv));
+    vec4 source_color = texture(u_textures[0], fract(uv));
 `;
                 break;
         }
 
-        return `${k.version()}
+        return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_textures[2];
 uniform vec4 u_mediump[${mediump_length}];
 
-${k.varyingIn()} vec2 v_coord;
-${k.outColor()}
+in vec2 v_coord;
+out vec4 o_color;
 
 ${FragmentShaderLibrary.FUNCTION_IS_INSIDE()}
 
@@ -96,13 +95,13 @@ void main() {
     vec2 scale           = u_mediump[1].xy;
 
     vec2 st = v_coord * uv_to_st_scale - uv_to_st_offset;
-    vec4 map_color = ${k.texture2D()}(u_textures[1], st);
+    vec4 map_color = texture(u_textures[1], st);
 
     vec2 offset = vec2(${cx}, ${cy}) - 0.5;
     vec2 uv = v_coord + offset * scale;
     ${modeStatement}
 
-    ${k.fragColor()} = mix(${k.texture2D()}(u_textures[0], v_coord), source_color, isInside(st));
+    o_color = mix(texture(u_textures[0], v_coord), source_color, isInside(st));
 }
 
 `;

@@ -5,40 +5,24 @@ class VertexArrayObjectManager
 {
     /**
      * @param {WebGLRenderingContext} gl
-     * @param {boolean}               isWebGL2Context
      * @constructor
      * @public
      */
-    constructor (gl, isWebGL2Context)
+    constructor (gl)
     {
-        this._$gl                     = gl;
-        this._$isWebGL2Context        = isWebGL2Context;
-        this._$fillVertexArrayPool    = [];
-        this._$strokeVertexArrayPool  = [];
-        this._$boundVertexArray       = null;
-
-        this._$extension = isWebGL2Context ? null : gl.getExtension("OES_vertex_array_object");
-        this._$fillAttrib_vertex    = 0;
-        this._$fillAttrib_bezier    = 1;
-        this._$strokeAttrib_vertex  = 0;
-        this._$strokeAttrib_option1 = 1;
-        this._$strokeAttrib_option2 = 2;
-        this._$strokeAttrib_type    = 3;
-        this._$vertexBufferData     = new $Float32Array([0, 0, 0, 1, 1, 0, 1, 1]);
+        this._$gl                    = gl;
+        this._$fillVertexArrayPool   = [];
+        this._$strokeVertexArrayPool = [];
+        this._$boundVertexArray      = null;
+        this._$fillAttrib_vertex     = 0;
+        this._$fillAttrib_bezier     = 1;
+        this._$strokeAttrib_vertex   = 0;
+        this._$strokeAttrib_option1  = 1;
+        this._$strokeAttrib_option2  = 2;
+        this._$strokeAttrib_type     = 3;
+        this._$vertexBufferData      = new $Float32Array([0, 0, 0, 1, 1, 0, 1, 1]);
 
         this._$commonVertexArray = this._$getVertexArray(0, 1);
-    }
-
-    /**
-     * @return {WebGLVertexArrayObject}
-     * @method
-     * @private
-     */
-    _$createVertexArray ()
-    {
-        return this._$isWebGL2Context
-            ? this._$gl.createVertexArray()
-            : this._$extension.createVertexArrayOES();
     }
 
     /**
@@ -50,7 +34,7 @@ class VertexArrayObjectManager
      */
     _$getVertexArray (begin, end)
     {
-        const vertexArray = this._$createVertexArray();
+        const vertexArray = this._$gl.createVertexArray();
         this.bind(vertexArray);
 
         const vertexBuffer = this._$gl.createBuffer();
@@ -79,7 +63,7 @@ class VertexArrayObjectManager
             return this._$fillVertexArrayPool.pop();
         }
 
-        const vertexArray = this._$createVertexArray();
+        const vertexArray = this._$gl.createVertexArray();
         this.bind(vertexArray);
 
         const vertexBuffer = this._$gl.createBuffer();
@@ -106,7 +90,7 @@ class VertexArrayObjectManager
             return this._$strokeVertexArrayPool.pop();
         }
 
-        const vertexArray = this._$createVertexArray();
+        const vertexArray = this._$gl.createVertexArray();
         this.bind(vertexArray);
 
         const vertexBuffer = this._$gl.createBuffer();
@@ -226,11 +210,7 @@ class VertexArrayObjectManager
             this._$boundVertexArray = vertexArray;
         }
 
-        if (this._$isWebGL2Context) {
-            this._$gl.bindVertexArray(vertexArray);
-        } else {
-            this._$extension.bindVertexArrayOES(vertexArray);
-        }
+        this._$gl.bindVertexArray(vertexArray);
     }
 
     /**

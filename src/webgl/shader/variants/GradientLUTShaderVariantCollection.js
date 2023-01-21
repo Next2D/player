@@ -6,15 +6,13 @@ class GradientLUTShaderVariantCollection
     /**
      * @param {CanvasToWebGLContext}  context
      * @param {WebGLRenderingContext} gl
-     * @param {WebGLShaderKeyword}    keyword
      * @constructor
      * @public
      */
-    constructor (context, gl, keyword)
+    constructor (context, gl)
     {
         this._$context    = context;
         this._$gl         = gl;
-        this._$keyword    = keyword;
         this._$collection = new Map();
     }
 
@@ -36,8 +34,8 @@ class GradientLUTShaderVariantCollection
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
-                VertexShaderSource.TEXTURE(this._$keyword),
-                FragmentShaderSourceGradientLUT.TEMPLATE(this._$keyword, mediumpLength, stops_length, is_linear_space)
+                VertexShaderSource.TEXTURE(),
+                FragmentShaderSourceGradientLUT.TEMPLATE(mediumpLength, stops_length, is_linear_space)
             ));
         }
 

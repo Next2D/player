@@ -6,15 +6,13 @@ class GradientShapeShaderVariantCollection
     /**
      * @param {CanvasToWebGLContext}  context
      * @param {WebGLRenderingContext} gl
-     * @param {WebGLShaderKeyword}    keyword
      * @constructor
      * @public
      */
-    constructor (context, gl, keyword)
+    constructor (context, gl)
     {
         this._$context    = context;
         this._$gl         = gl;
-        this._$keyword    = keyword;
         this._$collection = new Map();
     }
 
@@ -43,13 +41,12 @@ class GradientShapeShaderVariantCollection
             let vertexShaderSource;
             if (is_stroke) {
                 vertexShaderSource = VertexShaderSourceStroke.TEMPLATE(
-                    this._$keyword, highpLength, fragmentIndex,
+                    highpLength, fragmentIndex,
                     true, has_grid
                 );
             } else {
                 vertexShaderSource = VertexShaderSourceFill.TEMPLATE(
-                    this._$keyword, highpLength,
-                    true, false, has_grid
+                    highpLength, true, false, has_grid
                 );
             }
 
@@ -57,7 +54,7 @@ class GradientShapeShaderVariantCollection
                 this._$gl, this._$context,
                 vertexShaderSource,
                 FragmentShaderSourceGradient.TEMPLATE(
-                    this._$keyword, highpLength, fragmentIndex,
+                    highpLength, fragmentIndex,
                     is_radial, has_focal_point, spread_method
                 )
             ));

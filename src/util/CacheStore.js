@@ -41,6 +41,13 @@ class CacheStore
         this._$context = null;
 
         /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$useTimer = true;
+
+        /**
          * @type {function}
          * @private
          */
@@ -90,30 +97,31 @@ class CacheStore
 
             case $WebGLTexture:
                 {
+                    if (!this._$context) {
+                        return ;
+                    }
+
                     const timer = $requestAnimationFrame;
                     timer(() =>
                     {
-                        if (this._$context) {
+                        const bitmapData = object._$bitmapData;
+                        if (bitmapData && !bitmapData._$buffer) {
 
-                            const bitmapData = object._$bitmapData;
-                            if (bitmapData) {
+                            bitmapData._$getPixelsAsync(
+                                0, 0, bitmapData.width, bitmapData.height, "RGBA"
+                            );
 
-                                bitmapData._$getPixelsAsync(
-                                    0, 0, bitmapData.width, bitmapData.height, "RGBA"
-                                );
+                            object._$bitmapData = false;
 
-                                object._$bitmapData = false;
-
-                                // delay delete
-                                const timer = $setTimeout;
-                                timer(this._$delayBitmapLifeCheck, 2000, bitmapData);
-                            }
-
-                            this
-                                ._$context
-                                .frameBuffer
-                                .releaseTexture(object);
+                            // delay delete
+                            const timer = $setTimeout;
+                            timer(this._$delayBitmapLifeCheck, 2000, bitmapData);
                         }
+
+                        this
+                            ._$context
+                            .frameBuffer
+                            .releaseTexture(object);
                     });
                 }
                 break;
@@ -261,12 +269,14 @@ class CacheStore
 
         // set cache
         data.set(type, value);
-        data.set(`life_${type}`, this._$lifeCount);
 
         // lifeCheck
-        const timer = $setTimeout;
-        const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
-        this._$timerMap.set(id, timerId);
+        if (this._$useTimer) {
+            data.set(`life_${type}`, this._$lifeCount);
+            const timer = $setTimeout;
+            const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
+            this._$timerMap.set(id, timerId);
+        }
     }
 
     /**

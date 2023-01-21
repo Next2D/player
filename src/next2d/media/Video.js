@@ -20,7 +20,7 @@ class Video extends DisplayObject
      * @constructor
      * @public
      */
-    constructor(width = 320, height = 240)
+    constructor (width = 320, height = 240)
     {
         super();
 
@@ -127,6 +127,13 @@ class Video extends DisplayObject
          * @private
          */
         this._$volume = 1;
+
+        /**
+         * @type {Uint8Array}
+         * @default null
+         * @private
+         */
+        this._$buffer = null;
     }
 
     /**
@@ -317,7 +324,18 @@ class Video extends DisplayObject
 
         }
 
-        this._$video.src = src;
+        fetch(src)
+            .then((response) => response.arrayBuffer())
+            .then((buffer) =>
+            {
+                this._$buffer = new Uint8Array(buffer);
+                this._$video.src = URL.createObjectURL(new Blob(
+                    [this._$buffer],
+                    { "type": "video/mp4" }
+                ));
+            });
+
+        // this._$video.src = src;
         this._$video.load();
     }
 
@@ -521,7 +539,12 @@ class Video extends DisplayObject
                 this._$timerId = -1;
 
                 if (this._$texture) {
-                    player._$context
+
+                    const context = player
+                        ._$renderer
+                        ._$context;
+
+                    context
                         .frameBuffer
                         .releaseTexture(this._$texture);
 
@@ -541,7 +564,11 @@ class Video extends DisplayObject
 
             if (this._$video.currentTime) {
 
-                this._$texture = player._$context
+                const context = player
+                    ._$renderer
+                    ._$context;
+
+                this._$texture = context
                     .frameBuffer
                     .createTextureFromVideo(
                         this._$video, this._$smoothing, this._$texture
@@ -693,13 +720,13 @@ class Video extends DisplayObject
     }
 
     /**
-     * @param   {CanvasToWebGLContext} context
+     * @param   {Renderer} renderer
      * @param   {Float32Array} matrix
      * @returns {void}
      * @method
      * @private
      */
-    _$clip (context, matrix)
+    _$clip (renderer, matrix)
     {
         let width  = this._$bounds.xMax;
         let height = this._$bounds.yMax;
@@ -709,22 +736,14 @@ class Video extends DisplayObject
 
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();
-        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
-        Util.$resetContext(context);
-        context.setTransform(
-            multiMatrix[0], multiMatrix[1], multiMatrix[2],
-            multiMatrix[3], multiMatrix[4], multiMatrix[5]
-        );
-        context.beginPath();
-        context.moveTo(0, 0);
-        context.lineTo(width, 0);
-        context.lineTo(width, height);
-        context.lineTo(0, height);
-        context.lineTo(0, 0);
-        context.clip(true);
+        renderer.clipVideo(width, height, multiMatrix);
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
@@ -732,14 +751,14 @@ class Video extends DisplayObject
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
+     * @param  {Renderer} renderer
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @return void
      * @method
      * @private
      */
-    _$draw (context, matrix, color_transform)
+    _$draw (renderer, matrix, color_transform)
     {
         if (!this._$visible) {
             return ;
@@ -767,7 +786,11 @@ class Video extends DisplayObject
 
         let multiColor = color_transform;
         const rawColor = this._$transform._$rawColorTransform();
-        if (rawColor !== Util.$COLOR_ARRAY_IDENTITY) {
+        if (rawColor[0] !== 1 || rawColor[1] !== 1
+            || rawColor[2] !== 1 || rawColor[3] !== 1
+            || rawColor[4] !== 0 || rawColor[5] !== 0
+            || rawColor[6] !== 0 || rawColor[7] !== 0
+        ) {
             multiColor = Util.$multiplicationColor(color_transform, rawColor);
         }
 
@@ -781,7 +804,10 @@ class Video extends DisplayObject
 
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();
-        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
@@ -811,7 +837,7 @@ class Video extends DisplayObject
         }
 
         // cache current buffer
-        const currentAttachment = context.frameBuffer.currentAttachment;
+        const currentAttachment = renderer.currentAttachment;
         if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
             return;
         }

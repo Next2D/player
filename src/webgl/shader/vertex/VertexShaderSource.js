@@ -4,18 +4,17 @@
 class VertexShaderSource
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static TEXTURE (k)
+    static TEXTURE ()
     {
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
+layout (location = 0) in vec2 a_vertex;
 
-${k.varyingOut()} vec2 v_coord;
+out vec2 v_coord;
 
 void main() {
     v_coord = a_vertex;
@@ -28,20 +27,19 @@ void main() {
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static BLEND (k)
+    static BLEND ()
     {
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
+layout (location = 0) in vec2 a_vertex;
 
 uniform vec4 u_highp[4];
 
-${k.varyingOut()} vec2 v_coord;
+out vec2 v_coord;
 
 void main() {
     v_coord = a_vertex;
@@ -64,20 +62,19 @@ void main() {
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static BLEND_CLIP (k)
+    static BLEND_CLIP ()
     {
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
+layout (location = 0) in vec2 a_vertex;
 
 uniform vec4 u_highp[4];
 
-${k.varyingOut()} vec2 v_coord;
+out vec2 v_coord;
 
 void main() {
     v_coord = a_vertex;

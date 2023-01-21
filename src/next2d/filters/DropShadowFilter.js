@@ -408,6 +408,20 @@ class DropShadowFilter extends BitmapFilter
     }
 
     /**
+     * @return {array}
+     * @method
+     * @public
+     */
+    _$toArray ()
+    {
+        return Util.$getArray("DropShadowFilter",
+            this._$distance, this._$angle, this._$color, this._$alpha,
+            this._$blurFilter._$blurX, this._$blurFilter._$blurY, this._$strength,
+            this._$blurFilter._$quality, this._$inner, this._$knockout, this._$hideObject
+        );
+    }
+
+    /**
      * @return {boolean}
      * @method
      * @public

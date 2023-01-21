@@ -6,15 +6,13 @@ class FilterShaderVariantCollection
     /**
      * @param {CanvasToWebGLContext}  context
      * @param {WebGLRenderingContext} gl
-     * @param {WebGLShaderKeyword}    keyword
      * @constructor
      * @public
      */
-    constructor (context, gl, keyword)
+    constructor (context, gl)
     {
         this._$context    = context;
         this._$gl         = gl;
-        this._$keyword    = keyword;
         this._$collection = new Map();
     }
 
@@ -31,8 +29,8 @@ class FilterShaderVariantCollection
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
-                VertexShaderSource.TEXTURE(this._$keyword),
-                FragmentShaderSourceBlurFilter.TEMPLATE(this._$keyword, half_blur)
+                VertexShaderSource.TEXTURE(),
+                FragmentShaderSourceBlurFilter.TEMPLATE(half_blur)
             ));
         }
 
@@ -80,9 +78,9 @@ class FilterShaderVariantCollection
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
-                VertexShaderSource.TEXTURE(this._$keyword),
+                VertexShaderSource.TEXTURE(),
                 FragmentShaderSourceFilter.TEMPLATE(
-                    this._$keyword, texturesLength, mediumpLength,
+                    texturesLength, mediumpLength,
                     transforms_base, transforms_blur,
                     is_glow, type, knockout,
                     applies_strength, is_gradient
@@ -105,8 +103,8 @@ class FilterShaderVariantCollection
         if (!this._$collection.has(key)) {
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
-                VertexShaderSource.TEXTURE(this._$keyword),
-                FragmentShaderSourceColorMatrixFilter.TEMPLATE(this._$keyword)
+                VertexShaderSource.TEXTURE(),
+                FragmentShaderSourceColorMatrixFilter.TEMPLATE()
             ));
         }
 
@@ -135,10 +133,9 @@ class FilterShaderVariantCollection
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
-                VertexShaderSource.TEXTURE(this._$keyword),
+                VertexShaderSource.TEXTURE(),
                 FragmentShaderSourceConvolutionFilter.TEMPLATE(
-                    this._$keyword, mediumpLength,
-                    x, y, preserve_alpha, clamp
+                    mediumpLength, x, y, preserve_alpha, clamp
                 )
             ));
         }
@@ -163,10 +160,9 @@ class FilterShaderVariantCollection
 
             this._$collection.set(key, new CanvasToWebGLShader(
                 this._$gl, this._$context,
-                VertexShaderSource.TEXTURE(this._$keyword),
+                VertexShaderSource.TEXTURE(),
                 FragmentShaderSourceDisplacementMapFilter.TEMPLATE(
-                    this._$keyword, mediumpLength,
-                    component_x, component_y, mode
+                    mediumpLength, component_x, component_y, mode
                 )
             ));
         }

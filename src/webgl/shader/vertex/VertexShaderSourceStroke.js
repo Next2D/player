@@ -4,7 +4,6 @@
 class VertexShaderSourceStroke
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @param  {number}  highp_length
      * @param  {number}  fragment_index
      * @param  {boolean} with_uv
@@ -13,12 +12,12 @@ class VertexShaderSourceStroke
      * @method
      * @static
      */
-    static TEMPLATE (k, highp_length, fragment_index, with_uv, has_grid)
+    static TEMPLATE (highp_length, fragment_index, with_uv, has_grid)
     {
         const strokeIndex = fragment_index - 1;
 
         const uvVarying = with_uv
-            ? this.VARYING_UV_ON(k)
+            ? this.VARYING_UV_ON()
             : "";
         const uvStatement = with_uv
             ? this.STATEMENT_UV_ON()
@@ -27,12 +26,12 @@ class VertexShaderSourceStroke
             ? VertexShaderLibrary.FUNCTION_GRID_ON(with_uv ? 5 : 0)
             : VertexShaderLibrary.FUNCTION_GRID_OFF();
 
-        return `${k.version()}
+        return `#version 300 es
 
-${k.attribute(0)} vec2 a_vertex;
-${k.attribute(1)} vec2 a_option1;
-${k.attribute(2)} vec2 a_option2;
-${k.attribute(3)} float a_type;
+layout (location = 0) in vec2 a_vertex;
+layout (location = 1) in vec2 a_option1;
+layout (location = 2) in vec2 a_option2;
+layout (location = 3) in float a_type;
 
 uniform vec4 u_highp[${highp_length}];
 
@@ -119,15 +118,14 @@ void main() {
     }
 
     /**
-     * @param  {WebGLShaderKeyword} k
      * @return {string}
      * @method
      * @static
      */
-    static VARYING_UV_ON (k)
+    static VARYING_UV_ON ()
     {
         return `
-${k.varyingOut()} vec2 v_uv;
+out vec2 v_uv;
 `;
     }
 

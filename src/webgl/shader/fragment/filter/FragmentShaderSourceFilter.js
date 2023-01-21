@@ -4,7 +4,6 @@
 class FragmentShaderSourceFilter
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @param  {number}  textures_length
      * @param  {number}  mediump_length
      * @param  {boolean} transforms_base
@@ -19,7 +18,7 @@ class FragmentShaderSourceFilter
      * @static
      */
     static TEMPLATE (
-        k, textures_length, mediump_length,
+        textures_length, mediump_length,
         transforms_base, transforms_blur,
         isGlow, type, knockout,
         applies_strength, is_gradient
@@ -27,11 +26,11 @@ class FragmentShaderSourceFilter
         let index = 0;
 
         const baseStatement = transforms_base
-            ? this.STATEMENT_BASE_TEXTURE_TRANSFORM(k, index++)
+            ? this.STATEMENT_BASE_TEXTURE_TRANSFORM(index++)
             : "";
         const blurStatement = transforms_blur
-            ? this.STATEMENT_BLUR_TEXTURE_TRANSFORM(k, index++)
-            : this.STATEMENT_BLUR_TEXTURE(k);
+            ? this.STATEMENT_BLUR_TEXTURE_TRANSFORM(index++)
+            : this.STATEMENT_BLUR_TEXTURE();
         const isInner = type === BitmapFilterType.INNER;
 
         const colorIndex = index;
@@ -39,14 +38,14 @@ class FragmentShaderSourceFilter
         let colorStatement;
         if (is_gradient) {
             colorStatement = isGlow
-                ? this.STATEMENT_GLOW(k, false, transforms_base, applies_strength, is_gradient, colorIndex, strengthOffset)
-                : this.STATEMENT_BEVEL(k, transforms_base, transforms_blur, applies_strength, is_gradient, colorIndex, strengthOffset);
+                ? this.STATEMENT_GLOW(false, transforms_base, applies_strength, is_gradient, colorIndex, strengthOffset)
+                : this.STATEMENT_BEVEL(transforms_base, transforms_blur, applies_strength, is_gradient, colorIndex, strengthOffset);
         } else if (isGlow) {
             strengthOffset += 4;
-            colorStatement = this.STATEMENT_GLOW(k, isInner, transforms_base, applies_strength, is_gradient, colorIndex, strengthOffset);
+            colorStatement = this.STATEMENT_GLOW(isInner, transforms_base, applies_strength, is_gradient, colorIndex, strengthOffset);
         } else {
             strengthOffset += 8;
-            colorStatement = this.STATEMENT_BEVEL(k, transforms_base, transforms_blur, applies_strength, is_gradient, colorIndex, strengthOffset);
+            colorStatement = this.STATEMENT_BEVEL(transforms_base, transforms_blur, applies_strength, is_gradient, colorIndex, strengthOffset);
         }
 
         let modeExpression;
@@ -67,14 +66,14 @@ class FragmentShaderSourceFilter
                 break;
         }
 
-        return `${k.version()}
+        return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_textures[${textures_length}];
 uniform vec4 u_mediump[${mediump_length}];
 
-${k.varyingIn()} vec2 v_coord;
-${k.outColor()}
+in vec2 v_coord;
+out vec4 o_color;
 
 ${FragmentShaderLibrary.FUNCTION_IS_INSIDE()}
 
@@ -82,7 +81,7 @@ void main() {
     ${baseStatement}
     ${blurStatement}
     ${colorStatement}
-    ${k.fragColor()} = ${modeExpression};
+    o_color = ${modeExpression};
 }
 
 `;
@@ -93,14 +92,14 @@ void main() {
      * @method
      * @static
      */
-    static STATEMENT_BASE_TEXTURE_TRANSFORM (k, index)
+    static STATEMENT_BASE_TEXTURE_TRANSFORM (index)
     {
         return `
     vec2 base_scale  = u_mediump[${index}].xy;
     vec2 base_offset = u_mediump[${index}].zw;
 
     vec2 uv = v_coord * base_scale - base_offset;
-    vec4 base = mix(vec4(0.0), ${k.texture2D()}(u_textures[1], uv), isInside(uv));
+    vec4 base = mix(vec4(0.0), texture(u_textures[1], uv), isInside(uv));
 `;
     }
 
@@ -109,10 +108,10 @@ void main() {
      * @method
      * @static
      */
-    static STATEMENT_BLUR_TEXTURE (k)
+    static STATEMENT_BLUR_TEXTURE ()
     {
         return `
-    vec4 blur = ${k.texture2D()}(u_textures[0], v_coord);
+    vec4 blur = texture(u_textures[0], v_coord);
 `;
     }
 
@@ -121,14 +120,14 @@ void main() {
      * @method
      * @static
      */
-    static STATEMENT_BLUR_TEXTURE_TRANSFORM (k, index)
+    static STATEMENT_BLUR_TEXTURE_TRANSFORM (index)
     {
         return `
     vec2 blur_scale  = u_mediump[${index}].xy;
     vec2 blur_offset = u_mediump[${index}].zw;
 
     vec2 st = v_coord * blur_scale - blur_offset;
-    vec4 blur = mix(vec4(0.0), ${k.texture2D()}(u_textures[0], st), isInside(st));
+    vec4 blur = mix(vec4(0.0), texture(u_textures[0], st), isInside(st));
 `;
     }
 
@@ -137,7 +136,7 @@ void main() {
      * @method
      * @static
      */
-    static STATEMENT_GLOW (k, isInner, transforms_base, applies_strength, is_gradient, colorIndex, strengthOffset)
+    static STATEMENT_GLOW (isInner, transforms_base, applies_strength, is_gradient, colorIndex, strengthOffset)
     {
         const innerStatement = isInner
             ? "blur.a = 1.0 - blur.a;"
@@ -146,7 +145,7 @@ void main() {
             ? this.STATEMENT_GLOW_STRENGTH(strengthOffset)
             : "";
         const colorStatement = is_gradient
-            ? this.STATEMENT_GLOW_GRADIENT_COLOR(k, transforms_base)
+            ? this.STATEMENT_GLOW_GRADIENT_COLOR(transforms_base)
             : this.STATEMENT_GLOW_SOLID_COLOR(colorIndex);
 
         return `
@@ -189,12 +188,12 @@ void main() {
      * @method
      * @static
      */
-    static STATEMENT_GLOW_GRADIENT_COLOR (k, transforms_base)
+    static STATEMENT_GLOW_GRADIENT_COLOR (transforms_base)
     {
         const unit = transforms_base ? 2 : 1;
 
         return `
-    blur = ${k.texture2D()}(u_textures[${unit}], vec2(blur.a, 0.5));
+    blur = texture(u_textures[${unit}], vec2(blur.a, 0.5));
 `;
     }
 
@@ -203,16 +202,18 @@ void main() {
      * @method
      * @static
      */
-    static STATEMENT_BEVEL (k, transforms_base, transforms_blur, applies_strength, is_gradient, colorIndex, strengthOffset)
-    {
+    static STATEMENT_BEVEL (
+        transforms_base, transforms_blur, applies_strength,
+        is_gradient, colorIndex, strengthOffset
+    ) {
         const blur2Statement = transforms_blur
-            ? this.STATEMENT_BLUR_TEXTURE_TRANSFORM_2(k)
-            : this.STATEMENT_BLUR_TEXTURE_2(k);
+            ? this.STATEMENT_BLUR_TEXTURE_TRANSFORM_2()
+            : this.STATEMENT_BLUR_TEXTURE_2();
         const strengthStatement = applies_strength
             ? this.STATEMENT_BEVEL_STRENGTH(strengthOffset)
             : "";
         const colorStatement = is_gradient
-            ? this.STATEMENT_BEVEL_GRADIENT_COLOR(k, transforms_base)
+            ? this.STATEMENT_BEVEL_GRADIENT_COLOR(transforms_base)
             : this.STATEMENT_BEVEL_SOLID_COLOR(colorIndex);
 
         return `
@@ -231,10 +232,10 @@ void main() {
      * @method
      * @static
      */
-    static STATEMENT_BLUR_TEXTURE_2 (k)
+    static STATEMENT_BLUR_TEXTURE_2 ()
     {
         return `
-    vec4 blur2 = ${k.texture2D()}(u_textures[0], 1.0 - v_coord);
+    vec4 blur2 = texture(u_textures[0], 1.0 - v_coord);
 `;
     }
 
@@ -243,11 +244,11 @@ void main() {
      * @method
      * @static
      */
-    static STATEMENT_BLUR_TEXTURE_TRANSFORM_2 (k)
+    static STATEMENT_BLUR_TEXTURE_TRANSFORM_2 ()
     {
         return `
     vec2 pq = (1.0 - v_coord) * blur_scale - blur_offset;
-    vec4 blur2 = mix(vec4(0.0), ${k.texture2D()}(u_textures[0], pq), isInside(pq));
+    vec4 blur2 = mix(vec4(0.0), texture(u_textures[0], pq), isInside(pq));
 `;
     }
 
@@ -286,12 +287,12 @@ void main() {
      * @method
      * @static
      */
-    static STATEMENT_BEVEL_GRADIENT_COLOR (k, transforms_base)
+    static STATEMENT_BEVEL_GRADIENT_COLOR (transforms_base)
     {
         const unit = transforms_base ? 2 : 1;
 
         return `
-    blur = ${k.texture2D()}(u_textures[${unit}], vec2(
+    blur = texture(u_textures[${unit}], vec2(
         0.5019607843137255 - 0.5019607843137255 * shadow_alpha + 0.4980392156862745 * highlight_alpha,
         0.5
     ));

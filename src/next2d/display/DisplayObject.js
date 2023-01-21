@@ -21,7 +21,7 @@ class DisplayObject extends EventDispatcher
      * @constructor
      * @public
      */
-    constructor()
+    constructor ()
     {
         super();
 
@@ -1653,8 +1653,7 @@ class DisplayObject extends EventDispatcher
     ) {
 
         // cache flag
-        let updated = this._$isUpdated();
-        if (updated) {
+        if (this._$isUpdated()) {
             return true;
         }
 
@@ -1663,10 +1662,11 @@ class DisplayObject extends EventDispatcher
 
             for (let idx = 0; idx < filters.length; ++idx) {
 
-                if (filters[idx]._$isUpdated()) {
-                    return true;
+                if (!filters[idx]._$isUpdated()) {
+                    continue;
                 }
 
+                return true;
             }
 
         }

@@ -4,7 +4,6 @@
 class FragmentShaderSourceGradient
 {
     /**
-     * @param  {WebGLShaderKeyword} k
      * @param  {number}  highp_length
      * @param  {number}  fragment_index
      * @param  {boolean} is_radial
@@ -14,7 +13,7 @@ class FragmentShaderSourceGradient
      * @method
      * @static
      */
-    static TEMPLATE (k, highp_length, fragment_index, is_radial, has_focal_point, spread_method)
+    static TEMPLATE (highp_length, fragment_index, is_radial, has_focal_point, spread_method)
     {
         const gradientTypeStatement = is_radial
             ? this.STATEMENT_GRADIENT_TYPE_RADIAL(fragment_index, has_focal_point)
@@ -33,20 +32,20 @@ class FragmentShaderSourceGradient
                 break;
         }
 
-        return `${k.version()}
+        return `#version 300 es
 precision highp float;
 
 uniform sampler2D u_texture;
 uniform vec4 u_highp[${highp_length}];
 
-${k.varyingIn()} vec2 v_uv;
-${k.outColor()}
+in vec2 v_uv;
+out vec4 o_color;
 
 void main() {
     vec2 p = v_uv;
     ${gradientTypeStatement}
     t = ${spread_methodExpression};
-    ${k.fragColor()} = ${k.texture2D()}(u_texture, vec2(t, 0.5));
+    o_color = texture(u_texture, vec2(t, 0.5));
 }
 
 `;
