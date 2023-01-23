@@ -231,7 +231,9 @@ class Renderer
                 "preserveDrawingBuffer": true
             };
 
-            let gl = canvas.getContext("webgl2", option);
+            let gl = canvas.getContext("webgl2", option)
+                || canvas.getContext("webgl", option)
+                || canvas.getContext("experimental-webgl", option);
             if (gl) {
 
                 this._$context = new CanvasToWebGLContext(

@@ -47,7 +47,7 @@ describe("ConvolutionFilter.js property test", function()
         expect(filter.clamp).toBe(true);
         expect(filter.color).toBe(0);
         expect(filter.divisor).toBe(1);
-        expect(Util.$isArray(filter.matrix)).toBe(true);
+        expect(Array.isArray(filter.matrix)).toBe(true);
         expect(filter.matrixX).toBe(0);
         expect(filter.matrixY).toBe(0);
         expect(filter.preserveAlpha).toBe(true);
@@ -150,7 +150,7 @@ describe("ConvolutionFilter.js property test", function()
     it("matrix test valid case1", function()
     {
         let filter = new ConvolutionFilter(3, 1, {});
-        expect(Util.$isArray(filter.matrix)).toBe(true);
+        expect(Array.isArray(filter.matrix)).toBe(true);
     });
 
     // divisor
