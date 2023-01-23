@@ -1,3 +1,15 @@
+Util.$filters = [
+    BevelFilter,
+    BlurFilter,
+    ColorMatrixFilter,
+    ConvolutionFilter,
+    DisplacementMapFilter,
+    DropShadowFilter,
+    GlowFilter,
+    GradientBevelFilter,
+    GradientGlowFilter
+];
+
 let context = null;
 let state   = "deactivate";
 const queue = [];
@@ -66,7 +78,7 @@ class CommandController
          * @type {CacheStore}
          * @private
          */
-        this._$cacheStore = new CacheStore();
+        this._$cacheStore = new CacheStore(true);
 
         /**
          * @type {array}
@@ -267,6 +279,115 @@ class CommandController
     }
 
     /**
+     * @param  {array} filters
+     * @param  {WebGLTexture} target_texture
+     * @param  {Float32Array} matrix
+     * @param  {number} width
+     * @param  {number} height
+     * @return {WebGLTexture}
+     * @private
+     */
+    _$applyFilter (
+        filters, target_texture,
+        matrix, width, height
+    ) {
+
+        const context = this._$context;
+        const manager = context._$frameBufferManager;
+
+        const currentAttachment = manager.currentAttachment;
+
+        const buffer = manager.createCacheAttachment(width, height);
+        context._$bind(buffer);
+
+        Util.$resetContext(context);
+
+        const radianX = $Math.atan2(matrix[1], matrix[0]);
+        const radianY = $Math.atan2(-matrix[2], matrix[3]);
+        if (radianX || radianY) {
+
+            const w = target_texture.width  / 2;
+            const h = target_texture.height / 2;
+
+            const a = $Math.cos(radianX);
+            const b = $Math.sin(radianX);
+            const c = -$Math.sin(radianY);
+            const d = $Math.cos(radianY);
+
+            const baseMatrix = Util.$getFloat32Array6(
+                1, 0, 0, 1, -w, -h
+            );
+            const parentMatrix = Util.$getFloat32Array6(
+                a, b, c, d,
+                (width  - target_texture.width)  / 2,
+                (height - target_texture.height) / 2
+            );
+            const multiMatrix = Util.$multiplicationMatrix(
+                parentMatrix, baseMatrix
+            );
+
+            context.setTransform(a, b, c, d,
+                multiMatrix[4] + w,
+                multiMatrix[5] + h
+            );
+
+            // pool
+            Util.$poolFloat32Array6(baseMatrix);
+            Util.$poolFloat32Array6(parentMatrix);
+            Util.$poolFloat32Array6(multiMatrix);
+
+        } else {
+
+            context.setTransform(1, 0, 0, 1, 0, 0);
+
+        }
+
+        context.drawImage(target_texture,
+            0, 0, target_texture.width, target_texture.height
+        );
+
+        // init
+        context._$offsetX = 0;
+        context._$offsetY = 0;
+
+        let texture = manager.getTextureFromCurrentAttachment();
+        for (let idx = 0; idx < filters.length; ++idx) {
+
+            const parameters = filters[idx];
+
+            const filterClass = Util.$filters[parameters[0]];
+            const filter = new (filterClass.bind.apply(filterClass, parameters))();
+
+            texture = filter._$applyFilter(context, matrix);
+        }
+
+        let offsetX = context._$offsetX;
+        let offsetY = context._$offsetY;
+
+        // reset
+        context._$offsetX = 0;
+        context._$offsetY = 0;
+
+        // set offset
+        texture._$offsetX = offsetX;
+        texture._$offsetY = offsetY;
+
+        // cache texture
+        texture.matrix =
+            matrix[0] + "_" + matrix[1] + "_"
+                + matrix[2] + "_" + matrix[3];
+
+        texture.filterState = true;
+        texture.layerWidth  = width;
+        texture.layerHeight = height;
+
+        context._$bind(currentAttachment);
+        manager.releaseAttachment(buffer, false);
+
+        return texture;
+    }
+
+    /**
      * @description 配列のフィルター処理を実行
      *
      * @param  {object} object
@@ -277,33 +398,57 @@ class CommandController
      */
     applyFilter (object, texture)
     {
-        const context = this._$context;
-
         const width  = object.width;
         const height = object.height;
         const matrix = object.matrix || Util.$poolFloat32Array6(1, 0, 0, 1, 0, 0);
 
-        const cache = this._$cacheStore.get([object.instanceId, "f"]);
-        switch (true) {
+        const cacheKeys = Util.$getArray(object.instanceId, "f");
 
-            case cache === null:
-            case cache.filterState !== can_apply:
-            case cache.layerWidth  !== $Math.ceil(width):
-            case cache.layerHeight !== $Math.ceil(height):
-            case cache.matrix !==
-            matrix[0] + "_" + matrix[1] + "_" + matrix[2] + "_" + matrix[3] + "_" +
-            position_x + "_" + position_y:
-                return true;
+        let cache = this._$cacheStore.get(cacheKeys);
+        if (cache) {
 
-            default:
-                break;
+            if (!object.updated && cache.filterState
+                && cache.layerWidth === $Math.ceil(width)
+                && cache.layerHeight === $Math.ceil(height)
+                && cache.matrix === matrix[0] + "_" + matrix[1] + "_" + matrix[2] + "_" + matrix[3]
+            ) {
+                if (!object.matrix) {
+                    Util.$poolFloat32Array6(matrix);
+                }
 
+                return cache;
+            }
+
+            // set null
+            this._$cacheStore.set(cacheKeys, null);
+
+            cache.layerWidth     = 0;
+            cache.layerHeight    = 0;
+            cache._$offsetX      = 0;
+            cache._$offsetY      = 0;
+            cache.matrix         = null;
+            cache.colorTransform = null;
+
+            this
+                ._$context
+                .frameBuffer
+                .releaseTexture(cache);
         }
+
+        cache = this._$applyFilter(
+            object.filters, texture,
+            matrix, width, height
+        );
+
+        this._$cacheStore.set(cacheKeys, cache);
+
+        Util.$poolArray(cacheKeys);
 
         if (!object.matrix) {
             Util.$poolFloat32Array6(matrix);
         }
 
+        return cache;
     }
 
     /**
@@ -409,7 +554,9 @@ class CommandController
             }
 
             // execute draw
-            this.drawGraphics(object.recodes, colorTransform);
+            if (object.recodes) {
+                this.drawGraphics(object.recodes, colorTransform);
+            }
 
             if (object.hasGrid) {
                 context.grid.disable();
@@ -430,6 +577,7 @@ class CommandController
 
         let offsetX = 0;
         let offsetY = 0;
+
         if (object.isFilter) {
 
             texture = this.applyFilter(object, texture);
@@ -1088,6 +1236,142 @@ class CommandController
     }
 
     /**
+     * @description フィルター、ブレンドモードの事後処理
+     *
+     * @param  {number} instance_id
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {object} object
+     * @return {void}
+     * @method
+     * @public
+     */
+    postDraw (instance_id, matrix, color_transform, object)
+    {
+        const context = this._$context;
+
+        // cache
+        const cacheKeys = Util.$getArray(instance_id, "f");
+
+        const cacheStore = this._$cacheStore;
+        const manager = context._$frameBufferManager;
+
+        // cache or new texture
+        let texture = null;
+        if (object.isUpdated) {
+
+            texture = manager.getTextureFromCurrentAttachment();
+
+            const cacheTexture = cacheStore.get(cacheKeys);
+            if (cacheTexture) {
+                cacheStore.set(cacheKeys, null);
+                manager.releaseTexture(cacheTexture);
+            }
+
+        } else {
+
+            texture = cacheStore.get(cacheKeys);
+
+        }
+
+        // blend only
+        if (!object.canApply) {
+            texture._$offsetX = 0;
+            texture._$offsetY = 0;
+        }
+
+        // set cache offset
+        let offsetX = texture._$offsetX;
+        let offsetY = texture._$offsetY;
+
+        // execute filter
+        if (object.isUpdated && object.canApply) {
+
+            // cache clear
+            let cache = cacheStore.get(cacheKeys);
+            if (cache) {
+
+                // reset cache params
+                cacheStore.set(cacheKeys, null);
+                cache.layerWidth     = 0;
+                cache.layerHeight    = 0;
+                cache._$offsetX      = 0;
+                cache._$offsetY      = 0;
+                cache.matrix         = null;
+                cache.colorTransform = null;
+                manager.releaseTexture(cache);
+
+                cache  = null;
+            }
+
+            // apply filter
+            const length = object.filters.length;
+            if (length) {
+
+                // init
+                context._$offsetX = 0;
+                context._$offsetY = 0;
+
+                texture = this._$applyFilter(
+                    object.filters, texture, matrix,
+                    object.layerWidth, object.layerHeight
+                );
+
+                offsetX = context._$offsetX;
+                offsetY = context._$offsetY;
+
+                // reset
+                context._$offsetX = 0;
+                context._$offsetY = 0;
+
+                // set offset
+                texture._$offsetX = offsetX;
+                texture._$offsetY = offsetY;
+
+            }
+        }
+
+        // update cache params
+        if (object.isUpdated) {
+
+            texture.filterState = object.canApply;
+
+            // cache texture
+            const mat = object.baseMatrix;
+            texture.matrix = mat[0] + "_" + mat[1] + "_"
+                + mat[2] + "_" + mat[3];
+
+            texture.layerWidth  = object.layerWidth;
+            texture.layerHeight = object.layerHeight;
+        }
+
+        // cache texture
+        cacheStore.set(cacheKeys, texture);
+        Util.$poolArray(cacheKeys);
+
+        // set current buffer
+        if (object.isUpdated) {
+            context._$restoreAttachment();
+        }
+
+        // set
+        Util.$resetContext(context);
+
+        context._$globalAlpha = Util.$clamp(
+            color_transform[3] + color_transform[7] / 255, 0, 1
+        );
+        context._$globalCompositeOperation = object.blendMode;
+
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.drawImage(texture,
+            -offsetX + object.position.dx,
+            -offsetY + object.position.dy,
+            texture.width, texture.height,
+            color_transform
+        );
+    }
+
+    /**
      * @description 処理を実行
      *              Execute process
      *
@@ -1180,8 +1464,43 @@ class CommandController
                     this._$context._$drawContainerClip();
                     break;
 
+                case "postDraw":
+                    this.postDraw(
+                        object.instanceId,
+                        object.matrix,
+                        object.colorTransform,
+                        object.object
+                    );
+                    break;
+
                 case "clipVideo":
                     this.clipVideo(object.width, object.height, object.matrix);
+                    break;
+
+                case "startLayer":
+                    this._$context._$startLayer(object.position);
+                    break;
+
+                case "endLayer":
+                    this._$context._$endLayer();
+                    break;
+
+                case "saveCurrentMask":
+                    this._$context._$saveCurrentMask();
+                    break;
+
+                case "restoreCurrentMask":
+                    this._$context._$restoreCurrentMask();
+                    break;
+
+                case "saveAttachment":
+                    this._$context._$saveAttachment(
+                        object.width, object.height, object.multisample
+                    );
+                    break;
+
+                case "restoreAttachment":
+                    this._$context._$restoreAttachment();
                     break;
 
                 default:

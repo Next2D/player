@@ -195,7 +195,7 @@ class BevelFilter extends BitmapFilter
     {
         angle %= 360;
         if (angle !== this._$angle) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$angle = Util.$clamp(angle, -360, 360, 45);
     }
@@ -250,7 +250,7 @@ class BevelFilter extends BitmapFilter
     {
         distance = Util.$clamp(+distance, -255, 255, 4);
         if (distance !== this._$distance) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$distance = distance;
     }
@@ -271,7 +271,7 @@ class BevelFilter extends BitmapFilter
     {
         highlight_alpha = Util.$clamp(+highlight_alpha, 0, 1, 0);
         if (highlight_alpha !== this._$highlightAlpha) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$highlightAlpha = highlight_alpha;
     }
@@ -294,7 +294,7 @@ class BevelFilter extends BitmapFilter
             Util.$toColorInt(highlight_color), 0, 0xffffff, 0xffffff
         );
         if (highlight_color !== this._$highlightColor) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         this._$highlightColor = highlight_color;
@@ -316,7 +316,7 @@ class BevelFilter extends BitmapFilter
     {
         knockout = !!knockout;
         if (knockout !== this._$knockout) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$knockout = knockout;
     }
@@ -354,7 +354,7 @@ class BevelFilter extends BitmapFilter
     {
         shadow_alpha = Util.$clamp(+shadow_alpha, 0, 1, 0);
         if (shadow_alpha !== this._$shadowAlpha) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$shadowAlpha = shadow_alpha;
     }
@@ -378,7 +378,7 @@ class BevelFilter extends BitmapFilter
         );
 
         if (shadow_color !== this._$shadowColor) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         this._$shadowColor = shadow_color;
@@ -400,7 +400,7 @@ class BevelFilter extends BitmapFilter
     {
         strength = Util.$clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$strength = strength;
     }
@@ -421,7 +421,7 @@ class BevelFilter extends BitmapFilter
     {
         type += "";
         if (type !== this._$type) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         switch (type) {
@@ -449,6 +449,20 @@ class BevelFilter extends BitmapFilter
     clone ()
     {
         return new BevelFilter(
+            this._$distance, this._$angle, this._$highlightColor, this._$highlightAlpha,
+            this._$shadowColor, this._$shadowAlpha, this._$blurFilter._$blurX, this._$blurFilter._$blurY,
+            this._$strength, this._$blurFilter._$quality, this._$type, this._$knockout
+        );
+    }
+
+    /**
+     * @return {array}
+     * @method
+     * @public
+     */
+    _$toArray ()
+    {
+        return Util.$getArray(0,
             this._$distance, this._$angle, this._$highlightColor, this._$highlightAlpha,
             this._$shadowColor, this._$shadowAlpha, this._$blurFilter._$blurX, this._$blurFilter._$blurY,
             this._$strength, this._$blurFilter._$quality, this._$type, this._$knockout
@@ -559,7 +573,7 @@ class BevelFilter extends BitmapFilter
      */
     _$applyFilter (context, matrix)
     {
-        this._$doChanged(false);
+        this._$updated = false;
 
         const currentAttachment = context
             .frameBuffer

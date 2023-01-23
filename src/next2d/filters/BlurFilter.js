@@ -138,7 +138,7 @@ class BlurFilter extends BitmapFilter
     {
         blur_x = Util.$clamp(+blur_x, 0, 255, 0);
         if (blur_x !== this._$blurX) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$blurX = blur_x;
     }
@@ -159,7 +159,7 @@ class BlurFilter extends BitmapFilter
     {
         blur_y = Util.$clamp(+blur_y, 0, 255, 0);
         if (blur_y !== this._$blurY) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$blurY = blur_y;
     }
@@ -180,7 +180,7 @@ class BlurFilter extends BitmapFilter
     {
         quality = Util.$clamp(quality | 0, 0, 15, BitmapFilterQuality.LOW);
         if (quality !== this._$quality) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$quality = quality;
     }
@@ -196,6 +196,18 @@ class BlurFilter extends BitmapFilter
     clone ()
     {
         return new BlurFilter(this._$blurX, this._$blurY, this._$quality);
+    }
+
+    /**
+     * @return {array}
+     * @method
+     * @public
+     */
+    _$toArray ()
+    {
+        return Util.$getArray(1,
+            this._$blurX, this._$blurY, this._$quality
+        );
     }
 
     /**
@@ -275,24 +287,20 @@ class BlurFilter extends BitmapFilter
      */
     _$applyFilter (context, matrix, removed = true)
     {
-        this._$doChanged(false);
+        this._$updated = false;
 
-        const currentAttachment = context
-            .frameBuffer
-            .currentAttachment;
+        const manager = context._$frameBufferManager;
+        const currentAttachment = manager.currentAttachment;
 
-        const baseTexture = context
-            .frameBuffer
-            .getTextureFromCurrentAttachment();
+        const baseTexture = manager.getTextureFromCurrentAttachment();
 
         if (!this._$canApply()) {
             if (removed) {
                 return baseTexture;
             }
-            return context
-                .frameBuffer
-                .createTextureFromCurrentAttachment();
 
+            return manager
+                .createTextureFromCurrentAttachment();
         }
 
         // matrix to scale
@@ -344,12 +352,10 @@ class BlurFilter extends BitmapFilter
         let bufferWidth  = $Math.ceil(width  * bufferScaleX);
         let bufferHeight = $Math.ceil(height * bufferScaleY);
 
-        const attachment0 = context
-            .frameBuffer
+        const attachment0 = manager
             .createTextureAttachment(bufferWidth, bufferHeight);
 
-        const attachment1 = context
-            .frameBuffer
+        const attachment1 = manager
             .createTextureAttachment(bufferWidth, bufferHeight);
 
         const attachments = [attachment0, attachment1];
@@ -369,10 +375,7 @@ class BlurFilter extends BitmapFilter
         context.blend.toOneZero();
 
         // execute
-        let targetTexture = context
-            .frameBuffer
-            .getTextureFromCurrentAttachment();
-
+        let targetTexture = manager.getTextureFromCurrentAttachment();
         for (let q = 0; q < this._$quality; ++q) {
 
             // draw blur x
@@ -385,9 +388,7 @@ class BlurFilter extends BitmapFilter
 
                 context._$applyBlurFilter(targetTexture, true, bufferBlurX);
 
-                targetTexture = context
-                    .frameBuffer
-                    .getTextureFromCurrentAttachment();
+                targetTexture = manager.getTextureFromCurrentAttachment();
             }
 
             // draw blur y
@@ -400,9 +401,7 @@ class BlurFilter extends BitmapFilter
 
                 context._$applyBlurFilter(targetTexture, false, bufferBlurY);
 
-                targetTexture = context
-                    .frameBuffer
-                    .getTextureFromCurrentAttachment();
+                targetTexture = manager.getTextureFromCurrentAttachment();
             }
         }
 
@@ -411,57 +410,47 @@ class BlurFilter extends BitmapFilter
 
         if (bufferScaleX !== 1 || bufferScaleY !== 1) {
 
-            const resultAttachment = context
-                .frameBuffer
+            const resultAttachment = manager
                 .createTextureAttachment(width, height);
             context._$bind(resultAttachment);
 
             Util.$resetContext(context);
-            context.imageSmoothingEnabled = true;
+            context._$imageSmoothingEnabled = true;
             context.setTransform(1 / bufferScaleX, 0, 0, 1 / bufferScaleY, 0, 0);
             context.drawImage(targetTexture, 0, 0, bufferWidth, bufferHeight);
 
-            targetTexture = context
-                .frameBuffer
-                .getTextureFromCurrentAttachment();
+            targetTexture = manager.getTextureFromCurrentAttachment();
 
             Util.$resetContext(context);
             context.setTransform(1, 0, 0, 1, 0, 0);
 
-            context
-                .frameBuffer
+            manager
                 .releaseAttachment(attachments[0], true);
 
-            context
-                .frameBuffer
+            manager
                 .releaseAttachment(attachments[1], true);
 
             if (removed) {
-                context
-                    .frameBuffer
+                manager
                     .releaseAttachment(currentAttachment, true);
             } else {
-                context
-                    .frameBuffer
+                manager
                     .releaseAttachment(resultAttachment, false);
             }
 
         } else {
 
             // 最終結果ではない方のAttachmentを解放する
-            context
-                .frameBuffer
+            manager
                 .releaseAttachment(attachments[(attachmentIndex + 1) % 2], true);
 
             if (removed) {
                 // 適用前のAttachmentを解放する
-                context
-                    .frameBuffer
+                manager
                     .releaseAttachment(currentAttachment, true);
             } else {
                 // 適用後のAttachmentを解放する
-                context
-                    .frameBuffer
+                manager
                     .releaseAttachment(attachments[attachmentIndex], false);
             }
         }

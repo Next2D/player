@@ -48,7 +48,7 @@ class GraphicsGradientFill
          * @default null
          * @private
          */
-        this._$colors =  Util.$isArray(colors)
+        this._$colors =  $Array.isArray(colors)
             ? this._$toColorInt(colors)
             : null;
 
@@ -60,7 +60,7 @@ class GraphicsGradientFill
          * @default null
          * @private
          */
-        this._$alphas = Util.$isArray(alphas)
+        this._$alphas = $Array.isArray(alphas)
             ? this._$toColorInt(alphas)
             : null;
 
@@ -73,7 +73,7 @@ class GraphicsGradientFill
          * @private
          */
         this._$ratios = null;
-        if (Util.$isArray(ratios)) {
+        if ($Array.isArray(ratios)) {
             for (let idx = 0; idx < ratios.length; ++idx) {
                 ratios[idx] = Util.$clamp(ratios[idx], 0, 255, 0);
             }

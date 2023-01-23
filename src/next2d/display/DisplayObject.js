@@ -64,13 +64,6 @@ class DisplayObject extends EventDispatcher
         this._$isMask = false;
 
         /**
-         * @type {null}
-         * @default null
-         * @private
-         */
-        this._$buffer = null;
-
-        /**
          * @type {boolean}
          * @default false
          * @private
@@ -1849,9 +1842,7 @@ class DisplayObject extends EventDispatcher
                 return false;
             }
 
-            const currentAttachment = context
-                .frameBuffer
-                .currentAttachment;
+            const currentAttachment = renderer.currentAttachment;
             if (xMin > currentAttachment.width
                 || yMin > currentAttachment.height
             ) {
@@ -1942,7 +1933,7 @@ class DisplayObject extends EventDispatcher
             }
 
             // start layer
-            context._$startLayer(
+            renderer.startLayer(
                 Util.$getBoundsObject(originX, 0, originY, 0)
             );
 
@@ -1953,37 +1944,27 @@ class DisplayObject extends EventDispatcher
                 object.canApply, object.basePosition.x, object.basePosition.y
             );
 
-            // cache
-            const currentMaskBuffer = renderer._$cacheCurrentBuffer;
-            renderer._$cacheCurrentBuffer = null;
-
-            const rect = context._$cacheCurrentBounds;
-            const currentMaskBounds = Util.$getBoundsObject(rect.x, rect.w, rect.y, rect.h);
+            // current mask cache
+            renderer.saveCurrentMask();
 
             if (updated) {
-                this._$buffer = context
-                    .frameBuffer
-                    .createCacheAttachment(
-                        $Math.ceil(layerWidth),
-                        $Math.ceil(layerHeight),
-                        false
-                    );
-                context._$bind(this._$buffer);
+                renderer.saveAttachment(
+                    $Math.ceil(layerWidth),
+                    $Math.ceil(layerHeight),
+                    false
+                );
             }
 
             // setup
-            object.isFilter          = true;
-            object.isUpdated         = updated;
-            object.color             = Util.$getFloat32Array8();
-            object.baseMatrix        = tMatrix;
-            object.currentAttachment = currentAttachment;
-            object.currentMaskBuffer = currentMaskBuffer;
-            object.currentMaskBounds = currentMaskBounds;
-            object.filters           = filters;
-            object.blendMode         = blendMode;
-            object.layerWidth        = layerWidth;
-            object.layerHeight       = layerHeight;
-            object.matrix            = Util.$getFloat32Array6(
+            object.isFilter    = true;
+            object.isUpdated   = updated;
+            object.color       = Util.$getFloat32Array8();
+            object.baseMatrix  = tMatrix;
+            object.filters     = filters;
+            object.blendMode   = blendMode;
+            object.layerWidth  = layerWidth;
+            object.layerHeight = layerHeight;
+            object.matrix      = Util.$getFloat32Array6(
                 tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tx, ty
             );
         }
@@ -1992,7 +1973,7 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
+     * @param  {Renderer} renderer
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @param  {object} object
@@ -2000,152 +1981,22 @@ class DisplayObject extends EventDispatcher
      * @method
      * @private
      */
-    _$postDraw (context, matrix, color_transform, object)
+    _$postDraw (renderer, matrix, color_transform, object)
     {
-
-        // cache
-        const cacheKeys = [this._$instanceId, "f"];
-
-        // cache or new texture
-        let texture = null;
-        if (this._$buffer) {
-
-            texture = context
-                .frameBuffer
-                .getTextureFromCurrentAttachment();
-
-            const cacheTexture = Util.$cacheStore().get(cacheKeys);
-            if (cacheTexture) {
-                Util.$cacheStore().set(cacheKeys, null);
-                context
-                    .frameBuffer
-                    .releaseTexture(cacheTexture);
-            }
-
-        } else {
-            texture = Util.$cacheStore().get(cacheKeys);
-        }
-
-        // blend only
-        if (!object.canApply) {
-            texture._$offsetX = 0;
-            texture._$offsetY = 0;
-        }
-
-        // set cache offset
-        let offsetX = texture._$offsetX;
-        let offsetY = texture._$offsetY;
-
-        // execute filter
-        if (object.isUpdated && object.canApply) {
-
-            // cache clear
-            let cache = Util.$cacheStore().get(cacheKeys);
-            if (cache) {
-
-                // reset cache params
-                Util.$cacheStore().set(cacheKeys, null);
-                cache.layerWidth     = 0;
-                cache.layerHeight    = 0;
-                cache._$offsetX      = 0;
-                cache._$offsetY      = 0;
-                cache.matrix         = null;
-                cache.colorTransform = null;
-                context.frameBuffer.releaseTexture(cache);
-
-                cache  = null;
-            }
-
-            // apply filter
-            const length = object.filters.length;
-            if (length) {
-
-                // init
-                context._$offsetX = 0;
-                context._$offsetY = 0;
-
-                for (let idx = 0; idx < length; ++idx) {
-                    texture = object.filters[idx]._$applyFilter(context, matrix);
-                }
-
-                offsetX = context._$offsetX;
-                offsetY = context._$offsetY;
-
-                // reset
-                context._$offsetX = 0;
-                context._$offsetY = 0;
-
-                // set offset
-                texture._$offsetX = offsetX;
-                texture._$offsetY = offsetY;
-
-            }
-        }
-
-        // update cache params
-        if (object.isUpdated) {
-
-            texture.filterState = object.canApply;
-
-            // cache texture
-            const mat = object.baseMatrix;
-            texture.matrix = mat[0] + "_" + mat[1] + "_" + mat[2] + "_" + mat[3]
-                + "_" + object.basePosition.x + "_" + object.basePosition.y;
-
-            texture.layerWidth  = object.layerWidth;
-            texture.layerHeight = object.layerHeight;
-        }
-
-        // cache texture
-        Util.$cacheStore().set(cacheKeys, texture);
-        Util.$poolArray(cacheKeys);
-
-        // set current buffer
-        context._$bind(object.currentAttachment);
-
-        // setup
-        const width  = texture.width;
-        const height = texture.height;
-
-        // set
-        Util.$resetContext(context);
-
-        context._$globalAlpha = Util.$clamp(color_transform[3] + color_transform[7] / 255, 0, 1);
-        context._$globalCompositeOperation = object.blendMode;
-
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.drawImage(texture,
-            -offsetX + object.position.dx,
-            -offsetY + object.position.dy,
-            width, height,
-            color_transform
+        renderer.postDraw(
+            this._$instanceId, matrix, color_transform, object
         );
 
         // end blend
-        context._$endLayer();
-
-        // pool buffer
-        if (this._$buffer) {
-
-            context
-                .frameBuffer
-                .releaseAttachment(this._$buffer, false);
-
-            this._$buffer = null;
-        }
+        renderer.endLayer();
 
         // reset
-        context._$cacheCurrentBuffer   = object.currentMaskBuffer;
-        context._$cacheCurrentBounds.x = object.currentMaskBounds.xMin;
-        context._$cacheCurrentBounds.y = object.currentMaskBounds.yMin;
-        context._$cacheCurrentBounds.w = object.currentMaskBounds.xMax;
-        context._$cacheCurrentBounds.h = object.currentMaskBounds.yMax;
+        renderer.restoreCurrentMask();
 
         // object pool
         Util.$poolFloat32Array8(object.color);
         Util.$poolFloat32Array6(object.matrix);
         Util.$poolFloat32Array6(object.baseMatrix);
-        Util.$poolBoundsObject(object.currentMaskBounds);
         Util.$poolPreObject(object);
     }
 

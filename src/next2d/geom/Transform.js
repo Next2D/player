@@ -320,7 +320,7 @@ class Transform
 
         const placeObject = this._$displayObject._$getPlaceObject();
         if (placeObject) {
-            if (Util.$isArray(placeObject.matrix)) {
+            if ($Array.isArray(placeObject.matrix)) {
                 const matrix = placeObject.matrix;
                 placeObject.matrix = Util.$getFloat32Array6(
                     matrix[0], matrix[1], matrix[2],
@@ -350,7 +350,7 @@ class Transform
 
         const placeObject = this._$displayObject._$getPlaceObject();
         if (placeObject) {
-            if (Util.$isArray(placeObject.colorTransform)) {
+            if ($Array.isArray(placeObject.colorTransform)) {
                 const colorTransform = placeObject.colorTransform;
                 placeObject.colorTransform = Util.$getFloat32Array8(
                     colorTransform[0], colorTransform[1],
@@ -471,7 +471,7 @@ class Transform
     _$setFilters (filters = null, object = null)
     {
 
-        if (Util.$isArray(filters)) {
+        if ($Array.isArray(filters)) {
 
             if (this._$filters) {
                 Util.$poolArray(this._$filters);

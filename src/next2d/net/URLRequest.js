@@ -205,7 +205,7 @@ class URLRequest
     }
     set requestHeaders (request_headers)
     {
-        if (Util.$isArray(request_headers)) {
+        if ($Array.isArray(request_headers)) {
             this._$requestHeaders = request_headers;
         }
     }

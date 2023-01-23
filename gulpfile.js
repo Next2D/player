@@ -59,12 +59,19 @@ const buildRenderWorker = () =>
         .src([
             "src/worker/RenderUtil.js",
             "src/util/CacheStore.js",
+            "src/next2d/geom/Rectangle.js",
             "src/next2d/display/BlendMode.js",
             "src/next2d/display/InterpolationMethod.js",
             "src/next2d/display/SpreadMethod.js",
             "src/next2d/display/GradientType.js",
             "src/next2d/display/JointStyle.js",
             "src/next2d/display/CapsStyle.js",
+            "src/next2d/filters/BitmapFilter.js",
+            "src/next2d/filters/BitmapFilterType.js",
+            "src/next2d/filters/BitmapFilterQuality.js",
+            "src/next2d/filters/DisplacementMapFilterMode.js",
+            "src/next2d/filters/BlurFilter.js",
+            "src/next2d/filters/*.js",
             "src/webgl/**/*.js",
             "src/worker/RenderBase.js"
         ])

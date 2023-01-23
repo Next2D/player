@@ -15,6 +15,13 @@ const $Math = Math;
 
 /**
  * @shortcut
+ * @type {ArrayConstructor}
+ * @const
+ */
+const $Array = Array;
+
+/**
+ * @shortcut
  * @type {NumberConstructor}
  * @const
  */
@@ -69,10 +76,39 @@ const $setTimeout = setTimeout;
 const Util = {};
 
 /**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$SHORT_INT_MIN = -32768;
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$SHORT_INT_MAX = 32767;
+
+/**
+ * @shortcut
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$Deg2Rad = $Math.PI / 180;
+
+/**
  * @type {array}
  * @static
  */
 Util.$bezierConverterBuffer = new Array(32);
+
+/**
+ * @type {number}
+ * @const
+ * @static
+ */
+Util.$devicePixelRatio = 2;
 
 /**
  * 使用済みになったFloat32Arrayをプール、サイズは4固定
@@ -539,4 +575,73 @@ Util.$boundsMatrix = (bounds, matrix) =>
     const yMax = $Math.max(-$Number.MAX_VALUE, y0, y1, y2, y3);
 
     return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+};
+
+/**
+ * @param   {number|string} rgb
+ * @returns {number}
+ * @method
+ * @static
+ */
+Util.$toColorInt = (rgb) =>
+{
+    return $isNaN(+rgb)
+        ? Util.$colorStringToInt(rgb)
+        : +rgb;
+};
+
+/**
+ * @param   {string} str
+ * @returns {number}
+ * @method
+ * @static
+ */
+Util.$colorStringToInt = (str) =>
+{
+    Util.$hitContext.fillStyle = str;
+    const color = Util.$hitContext.fillStyle.substr(1);
+
+    // reset
+    Util.$hitContext.fillStyle = "rgba(0, 0, 0, 1)";
+
+    return `0x${color}` | 0;
+};
+
+/**
+ * @param  {number}  int
+ * @param  {number}  alpha
+ * @param  {boolean} premultiplied
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$intToR = (int, alpha, premultiplied) =>
+{
+    return (int >> 16) * (premultiplied ? alpha : 1) / 255;
+};
+
+/**
+ * @param  {number}  int
+ * @param  {number}  alpha
+ * @param  {boolean} premultiplied
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$intToG = (int, alpha, premultiplied) =>
+{
+    return (int >> 8 & 0xFF) * (premultiplied ? alpha : 1) / 255;
+};
+
+/**
+ * @param  {number}  int
+ * @param  {number}  alpha
+ * @param  {boolean} premultiplied
+ * @return {number}
+ * @method
+ * @static
+ */
+Util.$intToB = (int, alpha, premultiplied) =>
+{
+    return (int & 0xFF) * (premultiplied ? alpha : 1) / 255;
 };

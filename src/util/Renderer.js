@@ -87,6 +87,18 @@ class Renderer
         this._$isLayer = false;
 
         /**
+         * @type {array}
+         * @private
+         */
+        this._$layerState = [];
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$positions = [];
+
+        /**
          * @type {number}
          * @default 8192
          * @private
@@ -94,17 +106,29 @@ class Renderer
         this._$maxTextureSize = 8192;
 
         /**
-         * @type {object}
-         * @default null
+         * @type {boolean}
+         * @default false
          * @private
          */
-        this._$cacheCurrentBuffer = null;
+        this._$cacheCurrentBuffer = false;
 
         /**
          * @type {object}
          * @private
          */
         this._$cacheCurrentBounds = { "x": 0, "y": 0, "w": 0, "h": 0 };
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$maskState = [];
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$maskBounds = [];
     }
 
     /**
@@ -242,6 +266,12 @@ class Renderer
                 this._$initializeHandler(event.data);
                 break;
 
+            case "cacheClear":
+                Util.$cacheStore().remove(
+                    event.data.id,
+                    event.data.type
+                );
+                break;
             default:
                 break;
 
@@ -348,7 +378,7 @@ class Renderer
     begin (width, height)
     {
         // 初期化
-        this._$cacheCurrentBuffer = null;
+        this._$cacheCurrentBuffer = false;
         this._$currentAttachment.width  = width;
         this._$currentAttachment.height = height;
         this._$currentAttachment.texture.width  = width;
@@ -537,27 +567,29 @@ class Renderer
         x_min, y_min, has_grid = false, parent_matrix = null
     ) {
 
+        const cacheStore = Util.$cacheStore();
+
         const player = Util.$currentPlayer();
         const mScale = player._$scale * player._$ratio;
         if (this._$worker) {
 
             const displayObject = graphics._$displayObject;
 
+            const options = Util.$getArray();
+
             const message = {
                 "command": "beginGraphics",
+                "recodes": graphics._$getRecodes(),
                 "useCache": Util.$useCache,
                 "cacheKeys": cache_keys,
                 "baseBounds": base_bounds,
                 "xMin": x_min,
                 "yMin": y_min,
                 "xScale": x_scale,
-                "yScale": y_scale,
-                "recodes": graphics._$getRecodes()
+                "yScale": y_scale
             };
 
-            const options = Util.$getArray(
-                message.recodes.buffer
-            );
+            options.push(message.recodes.buffer);
 
             if (alpha !== 1) {
                 message.alpha = alpha;
@@ -602,15 +634,12 @@ class Renderer
                     parameters.push(filters[idx]._$toArray());
                 }
 
-                message.inFilter   = true;
+                message.isFilter   = true;
+                message.width      = width;
+                message.height     = height;
                 message.instanceId = displayObject._$instanceId;
                 message.updated    = updated;
-                message.parameters = parameters;
-
-                message.tx     = parent_matrix[4];
-                message.ty     = parent_matrix[5];
-                message.width  = width;
-                message.height = height;
+                message.filters    = parameters;
             }
 
             if (blend_mode !== BlendMode.NORMAL) {
@@ -652,7 +681,6 @@ class Renderer
                 return ;
             }
 
-            const cacheStore = Util.$cacheStore();
             const displayObject = graphics._$displayObject;
             let texture = cacheStore.get(cache_keys);
             if (!texture) {
@@ -1027,7 +1055,7 @@ class Renderer
         height = Math.ceil(height);
 
         // cache
-        this._$cacheCurrentBuffer = currentAttachment;
+        this._$cacheCurrentBuffer = true;
         this._$cacheCurrentBounds.x = x;
         this._$cacheCurrentBounds.y = y;
         this._$cacheCurrentBounds.w = width;
@@ -1089,7 +1117,7 @@ class Renderer
     {
         this._$currentAttachment.clipLevel--;
         if (!this._$currentAttachment.clipLevel) {
-            this._$cacheCurrentBuffer = null;
+            this._$cacheCurrentBuffer = false;
         }
 
         if (this._$worker) {
@@ -1238,6 +1266,359 @@ class Renderer
             }
 
             context._$mask._$containerClip = flag;
+        }
+    }
+
+    /**
+     * @description レイヤーモードを起動
+     *
+     * @param  {object} position
+     * @return {void}
+     * @method
+     * @public
+     */
+    startLayer (position)
+    {
+        this._$positions.push(position);
+        this._$layerState.push(this._$isLayer);
+
+        if (this._$worker) {
+
+            this._$worker.postMessage({
+                "command": "startLayer",
+                "position": position
+            });
+
+        } else {
+
+            const context = this._$context;
+            if (!context) {
+                return ;
+            }
+
+            context._$startLayer(position);
+        }
+    }
+
+    /**
+     * @description レイヤーモードを終了
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    endLayer ()
+    {
+        const bounds = this._$positions.pop();
+
+        this._$isLayer = !!this._$layerState.pop();
+        if (this._$worker) {
+
+            this._$worker.postMessage({
+                "command": "endLayer"
+            });
+
+            Util.$poolBoundsObject(bounds);
+
+        } else {
+
+            const context = this._$context;
+            if (!context) {
+                return ;
+            }
+
+            context._$endLayer();
+        }
+    }
+
+    /**
+     * @description レイヤーの表示領域を返却
+     *
+     * @return {object}
+     * @method
+     * @public
+     */
+    getCurrentPosition ()
+    {
+        return this._$positions[this._$positions.length - 1];
+    }
+
+    /**
+     * @description マスク情報をキャッシュ
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    saveCurrentMask ()
+    {
+        this._$maskState.push(this._$cacheCurrentBuffer);
+
+        const bounds = this._$cacheCurrentBounds;
+        this._$maskBounds.push(Util.$getBoundsObject(
+            bounds.x, bounds.w, bounds.y, bounds.h
+        ));
+
+        this._$cacheCurrentBuffer = false;
+
+        if (this._$worker) {
+
+            this._$worker.postMessage({
+                "command": "saveCurrentMask"
+            });
+
+        } else {
+            const context = this._$context;
+            if (!context) {
+                return ;
+            }
+
+            context._$saveCurrentMask();
+        }
+    }
+
+    /**
+     * @description キャッシュしたマスク情報を復元
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    restoreCurrentMask ()
+    {
+        this._$cacheCurrentBuffer = this._$maskState.pop();
+        this._$cacheCurrentBounds = this._$maskBounds.pop();
+
+        if (this._$worker) {
+
+            this._$worker.postMessage({
+                "command": "restoreCurrentMask"
+            });
+
+        } else {
+            const context = this._$context;
+            if (!context) {
+                return ;
+            }
+
+            context._$restoreCurrentMask();
+        }
+    }
+
+    /**
+     * @description 現在セットされてるbufferをキャッシュして新しいbufferをセット
+     *
+     * @param  {number} width
+     * @param  {number} height
+     * @param  {boolean} [multisample=false]
+     * @return {void}
+     * @method
+     * @public
+     */
+    saveAttachment (width, height, multisample = false)
+    {
+        if (this._$worker) {
+
+            this._$worker.postMessage({
+                "command": "saveAttachment",
+                "width": width,
+                "height": height,
+                "multisample": multisample
+            });
+
+        } else {
+
+            const context = this._$context;
+            if (!context) {
+                return ;
+            }
+
+            context._$saveAttachment(width, height, multisample);
+        }
+    }
+
+    /**
+     * @description キャッシュしたbufferを再セット
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    restoreAttachment ()
+    {
+        if (this._$worker) {
+
+            this._$worker.postMessage({
+                "command": "restoreAttachment"
+            });
+
+        } else {
+
+            const context = this._$context;
+            if (!context) {
+                return ;
+            }
+
+            context._$restoreAttachment();
+        }
+    }
+
+    /**
+     * @description フィルター、ブレンドモードの事後処理
+     *
+     * @param  {number} instance_id
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {object} object
+     * @return {void}
+     * @method
+     * @public
+     */
+    postDraw (instance_id, matrix, color_transform, object)
+    {
+        if (this._$worker) {
+
+            if (object.filters.length) {
+                const filters = Util.$getArray();
+                for (let idx = 0; idx < object.filters.length; ++idx) {
+                    filters.push(object.filters[idx]._$toArray());
+                }
+                object.filters = filters;
+            }
+
+            this._$worker.postMessage({
+                "command": "postDraw",
+                "instanceId": instance_id,
+                "matrix": matrix,
+                "colorTransform": color_transform,
+                "object": object
+            });
+
+        } else {
+
+            const context = this._$context;
+            if (!context) {
+                return ;
+            }
+
+            // cache
+            const cacheKeys = Util.$getArray(instance_id, "f");
+
+            const cacheStore = Util.$cacheStore();
+            const manager = context._$frameBufferManager;
+
+            // cache or new texture
+            let texture = null;
+            if (object.isUpdated) {
+
+                texture = manager.getTextureFromCurrentAttachment();
+
+                const cacheTexture = cacheStore.get(cacheKeys);
+                if (cacheTexture) {
+                    cacheStore.set(cacheKeys, null);
+                    manager.releaseTexture(cacheTexture);
+                }
+
+            } else {
+
+                texture = cacheStore.get(cacheKeys);
+
+            }
+
+            // blend only
+            if (!object.canApply) {
+                texture._$offsetX = 0;
+                texture._$offsetY = 0;
+            }
+
+            // set cache offset
+            let offsetX = texture._$offsetX;
+            let offsetY = texture._$offsetY;
+
+            // execute filter
+            if (object.isUpdated && object.canApply) {
+
+                // cache clear
+                let cache = cacheStore.get(cacheKeys);
+                if (cache) {
+
+                    // reset cache params
+                    cacheStore.set(cacheKeys, null);
+                    cache.layerWidth     = 0;
+                    cache.layerHeight    = 0;
+                    cache._$offsetX      = 0;
+                    cache._$offsetY      = 0;
+                    cache.matrix         = null;
+                    cache.colorTransform = null;
+                    manager.releaseTexture(cache);
+
+                    cache  = null;
+                }
+
+                // apply filter
+                const length = object.filters.length;
+                if (length) {
+
+                    // init
+                    context._$offsetX = 0;
+                    context._$offsetY = 0;
+
+                    for (let idx = 0; idx < length; ++idx) {
+                        texture = object.filters[idx]._$applyFilter(context, matrix);
+                    }
+
+                    offsetX = context._$offsetX;
+                    offsetY = context._$offsetY;
+
+                    // reset
+                    context._$offsetX = 0;
+                    context._$offsetY = 0;
+
+                    // set offset
+                    texture._$offsetX = offsetX;
+                    texture._$offsetY = offsetY;
+
+                }
+            }
+
+            // update cache params
+            if (object.isUpdated) {
+
+                texture.filterState = object.canApply;
+
+                // cache texture
+                const mat = object.baseMatrix;
+                texture.matrix = mat[0] + "_" + mat[1] + "_"
+                    + mat[2] + "_" + mat[3];
+
+                texture.layerWidth  = object.layerWidth;
+                texture.layerHeight = object.layerHeight;
+            }
+
+            // cache texture
+            cacheStore.set(cacheKeys, texture);
+            Util.$poolArray(cacheKeys);
+
+            // set current buffer
+            if (object.isUpdated) {
+                this.restoreAttachment();
+            }
+
+            // set
+            Util.$resetContext(context);
+
+            context._$globalAlpha = Util.$clamp(
+                color_transform[3] + color_transform[7] / 255, 0, 1
+            );
+            context._$globalCompositeOperation = object.blendMode;
+
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.drawImage(texture,
+                -offsetX + object.position.dx,
+                -offsetY + object.position.dy,
+                texture.width, texture.height,
+                color_transform
+            );
         }
     }
 }

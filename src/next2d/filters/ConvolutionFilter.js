@@ -182,7 +182,7 @@ class ConvolutionFilter extends BitmapFilter
     {
         alpha = Util.$clamp(+alpha, 0, 1, 0);
         if (alpha !== this._$alpha) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$alpha = alpha;
     }
@@ -203,7 +203,7 @@ class ConvolutionFilter extends BitmapFilter
     {
         bias = +bias;
         if (bias !== this._$bias) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$bias = bias;
     }
@@ -224,7 +224,7 @@ class ConvolutionFilter extends BitmapFilter
     {
         clamp = !!clamp;
         if (clamp !== this._$clamp) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$clamp = clamp;
     }
@@ -248,7 +248,7 @@ class ConvolutionFilter extends BitmapFilter
         );
 
         if (color !== this._$color) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         this._$color = color;
@@ -270,7 +270,7 @@ class ConvolutionFilter extends BitmapFilter
     {
         divisor = +divisor;
         if (divisor !== this._$divisor) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$divisor = divisor;
     }
@@ -289,7 +289,7 @@ class ConvolutionFilter extends BitmapFilter
     }
     set matrix (matrix)
     {
-        this._$doChanged(true);
+        this._$doChanged();
 
         if (this._$matrix) {
             Util.$poolArray(this._$matrix);
@@ -298,7 +298,7 @@ class ConvolutionFilter extends BitmapFilter
         // default
         this._$matrix = Util.$getArray();
 
-        if (Util.$isArray(matrix)) {
+        if ($Array.isArray(matrix)) {
             this._$matrix = matrix.slice(0);
         }
     }
@@ -319,7 +319,7 @@ class ConvolutionFilter extends BitmapFilter
     {
         matrix_x = Util.$clamp(matrix_x | 0, 0, 15, 0) | 0;
         if (matrix_x !== this._$matrixX) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$matrixX = matrix_x;
     }
@@ -340,7 +340,7 @@ class ConvolutionFilter extends BitmapFilter
     {
         matrix_y = Util.$clamp(matrix_y | 0, 0, 15, 0) | 0;
         if (matrix_y !== this._$matrixY) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$matrixY = matrix_y;
     }
@@ -363,7 +363,7 @@ class ConvolutionFilter extends BitmapFilter
     {
         preserve_alpha = !!preserve_alpha;
         if (preserve_alpha !== this._$preserveAlpha) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$preserveAlpha = preserve_alpha;
     }
@@ -379,6 +379,20 @@ class ConvolutionFilter extends BitmapFilter
     clone ()
     {
         return new ConvolutionFilter(
+            this._$matrixX, this._$matrixY, this._$matrix,
+            this._$divisor, this._$bias, this._$preserveAlpha,
+            this._$clamp, this._$color, this._$alpha
+        );
+    }
+
+    /**
+     * @return {array}
+     * @method
+     * @public
+     */
+    _$toArray ()
+    {
+        return Util.$getArray(3,
             this._$matrixX, this._$matrixY, this._$matrix,
             this._$divisor, this._$bias, this._$preserveAlpha,
             this._$clamp, this._$color, this._$alpha
@@ -464,7 +478,7 @@ class ConvolutionFilter extends BitmapFilter
      */
     _$applyFilter (context)
     {
-        this._$doChanged(false);
+        this._$updated = false;
 
         const currentAttachment = context
             .frameBuffer

@@ -11,7 +11,7 @@
  * @memberOf next2d.filters
  * @extends  BitmapFilter
  */
-class GradientGlowFilter  extends BitmapFilter
+class GradientGlowFilter extends BitmapFilter
 {
     /**
      * @param {number}  [distance=4.0]
@@ -183,9 +183,9 @@ class GradientGlowFilter  extends BitmapFilter
     set alphas (alphas)
     {
         this._$alphas = null;
-        if (Util.$isArray(alphas)) {
+        if ($Array.isArray(alphas)) {
 
-            this._$doChanged(true);
+            this._$doChanged();
 
             const length = alphas.length;
             for (let idx = 0; idx < length; ++idx) {
@@ -213,7 +213,7 @@ class GradientGlowFilter  extends BitmapFilter
     {
         angle %= 360;
         if (angle !== this._$angle) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$angle = Util.$clamp(angle, -360, 360, 45);
     }
@@ -267,9 +267,9 @@ class GradientGlowFilter  extends BitmapFilter
     set colors (colors)
     {
         this._$colors = null;
-        if (Util.$isArray(colors)) {
+        if ($Array.isArray(colors)) {
 
-            this._$doChanged(true);
+            this._$doChanged();
 
             const length = colors.length;
             for (let idx = 0; idx < length; ++idx) {
@@ -307,7 +307,7 @@ class GradientGlowFilter  extends BitmapFilter
     {
         distance = Util.$clamp(+distance, -255, 255, 4);
         if (distance !== this._$distance) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$distance = distance;
     }
@@ -328,7 +328,7 @@ class GradientGlowFilter  extends BitmapFilter
     {
         knockout = !!knockout;
         if (knockout !== this._$knockout) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$knockout = knockout;
     }
@@ -366,9 +366,9 @@ class GradientGlowFilter  extends BitmapFilter
     set ratios (ratios)
     {
         this._$ratios = null;
-        if (Util.$isArray(ratios)) {
+        if ($Array.isArray(ratios)) {
 
-            this._$doChanged(true);
+            this._$doChanged();
 
             const length = ratios.length;
             for (let idx = 0; idx < length; ++idx) {
@@ -396,7 +396,7 @@ class GradientGlowFilter  extends BitmapFilter
     {
         strength = Util.$clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$strength = strength;
     }
@@ -417,7 +417,7 @@ class GradientGlowFilter  extends BitmapFilter
     {
         type += "";
         if (type !== this._$type) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         switch (type) {
@@ -445,6 +445,20 @@ class GradientGlowFilter  extends BitmapFilter
     clone ()
     {
         return new GradientGlowFilter(
+            this._$distance, this._$angle, this._$colors, this._$alphas, this._$ratios,
+            this._$blurFilter._$blurX, this._$blurFilter._$blurY, this._$strength,
+            this._$blurFilter._$quality, this._$type, this._$knockout
+        );
+    }
+
+    /**
+     * @return {array}
+     * @method
+     * @public
+     */
+    _$toArray ()
+    {
+        return Util.$getArray(8,
             this._$distance, this._$angle, this._$colors, this._$alphas, this._$ratios,
             this._$blurFilter._$blurX, this._$blurFilter._$blurY, this._$strength,
             this._$blurFilter._$quality, this._$type, this._$knockout
@@ -562,7 +576,7 @@ class GradientGlowFilter  extends BitmapFilter
      */
     _$applyFilter (context, matrix)
     {
-        this._$doChanged(false);
+        this._$updated = false;
 
         const currentAttachment = context
             .frameBuffer

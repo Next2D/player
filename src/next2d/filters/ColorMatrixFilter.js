@@ -121,7 +121,7 @@ class ColorMatrixFilter extends BitmapFilter
     }
     set matrix (matrix)
     {
-        if (!Util.$isArray(matrix) || matrix.length !== 20) {
+        if (!$Array.isArray(matrix) || matrix.length !== 20) {
             return ;
         }
 
@@ -134,7 +134,7 @@ class ColorMatrixFilter extends BitmapFilter
                     continue;
                 }
 
-                this._$doChanged(true);
+                this._$doChanged();
                 this._$doApply = true;
                 break;
             }
@@ -155,6 +155,18 @@ class ColorMatrixFilter extends BitmapFilter
     clone ()
     {
         return new ColorMatrixFilter(this._$matrix);
+    }
+
+    /**
+     * @return {array}
+     * @method
+     * @public
+     */
+    _$toArray ()
+    {
+        return Util.$getArray(2,
+            this._$matrix
+        );
     }
 
     /**
@@ -203,7 +215,7 @@ class ColorMatrixFilter extends BitmapFilter
      */
     _$applyFilter (context)
     {
-        this._$doChanged(false);
+        this._$updated = false;
 
         const currentAttachment = context
             .frameBuffer

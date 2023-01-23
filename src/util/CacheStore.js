@@ -4,9 +4,10 @@
 class CacheStore
 {
     /**
+     * @param {boolean} [use_worker = false]
      * @constructor
      */
-    constructor ()
+    constructor (use_worker = false)
     {
         /**
          * @type {array}
@@ -46,6 +47,13 @@ class CacheStore
          * @private
          */
         this._$useTimer = true;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$useWorker = !!use_worker;
 
         /**
          * @type {function}
@@ -159,6 +167,33 @@ class CacheStore
     }
 
     /**
+     * @param   {string} id
+     * @param   {string} type
+     * @returns {void}
+     * @method
+     * @public
+     */
+    remove (id, type)
+    {
+        if (!this._$store.has(id)) {
+            return ;
+        }
+
+        const data = this._$store.get(id);
+        if (!data.has(type)) {
+            return ;
+        }
+
+        // delete key
+        data.delete(type);
+
+        if (!data.size) {
+            Util.$poolMap(data);
+            this._$store.delete(id);
+        }
+    }
+
+    /**
      * @param   {string|number} id
      * @returns {void}
      * @method
@@ -219,7 +254,7 @@ class CacheStore
                 const key = `life_${type}`;
 
                 // reset
-                if (data.has(key) === 1) {
+                if (data.has(key) && data.get(key) === 1) {
                     data.set(key, this._$lifeCount);
                 }
 
@@ -280,6 +315,21 @@ class CacheStore
     }
 
     /**
+     * @param  {array} keys
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    has (keys)
+    {
+        const id = `${keys[0]}`;
+        if (!this._$store.has(id)) {
+            return false;
+        }
+        return this._$store.get(id).has(`${keys[1]}`);
+    }
+
+    /**
      * @param  {BitmapData} bitmap_data
      * @return {void}
      * @method
@@ -321,6 +371,14 @@ class CacheStore
 
         const lifeCount = data.get(key) - 1;
         if (!lifeCount) {
+
+            if (this._$useWorker) {
+                globalThis.postMessage({
+                    "command": "cacheClear",
+                    "id": id,
+                    "type": type
+                });
+            }
 
             // destroy
             this.destroy(data.get(type));

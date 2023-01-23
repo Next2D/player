@@ -1265,7 +1265,7 @@ class DisplayObjectContainer extends InteractiveObject
 
         // use cache
         if (preData.isFilter && !preData.isUpdated) {
-            this._$postDraw(context, matrix, multiColor, preData);
+            this._$postDraw(renderer, matrix, multiColor, preData);
             return ;
         }
 
@@ -1402,7 +1402,7 @@ class DisplayObjectContainer extends InteractiveObject
                     Util.$poolFloat32Array6(playerMatrix);
 
                     if (renderer._$isLayer) {
-                        const currentPosition = context._$getCurrentPosition();
+                        const currentPosition = renderer.getCurrentPosition();
                         maskMatrix[4] -= currentPosition.xMin;
                         maskMatrix[5] -= currentPosition.yMin;
                     }
@@ -1484,7 +1484,7 @@ class DisplayObjectContainer extends InteractiveObject
 
         // filter and blend
         if (preData.isFilter) {
-            return this._$postDraw(context, matrix, multiColor, preData);
+            return this._$postDraw(renderer, matrix, multiColor, preData);
         }
 
         Util.$poolFloat32Array6(preMatrix);

@@ -414,7 +414,7 @@ class DropShadowFilter extends BitmapFilter
      */
     _$toArray ()
     {
-        return Util.$getArray("DropShadowFilter",
+        return Util.$getArray(5,
             this._$distance, this._$angle, this._$color, this._$alpha,
             this._$blurFilter._$blurX, this._$blurFilter._$blurY, this._$strength,
             this._$blurFilter._$quality, this._$inner, this._$knockout, this._$hideObject
@@ -524,19 +524,15 @@ class DropShadowFilter extends BitmapFilter
      */
     _$applyFilter (context, matrix)
     {
-        this._$doChanged(false);
+        const manager = context._$frameBufferManager;
 
-        const currentAttachment = context
-            .frameBuffer
-            .currentAttachment;
+        const currentAttachment = manager.currentAttachment;
 
         // reset
         context.setTransform(1, 0, 0, 1, 0, 0);
 
         if (!this._$canApply()) {
-            return context
-                .frameBuffer
-                .getTextureFromCurrentAttachment();
+            return manager.getTextureFromCurrentAttachment();
         }
 
         const baseWidth   = currentAttachment.width;
@@ -614,12 +610,8 @@ class DropShadowFilter extends BitmapFilter
         context._$offsetX = baseOffsetX + baseTextureX;
         context._$offsetY = baseOffsetY + baseTextureY;
 
-        context
-            .frameBuffer
-            .releaseTexture(blurTexture);
+        manager.releaseTexture(blurTexture);
 
-        return context
-            .frameBuffer
-            .getTextureFromCurrentAttachment();
+        return manager.getTextureFromCurrentAttachment();
     }
 }

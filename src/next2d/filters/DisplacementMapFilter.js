@@ -179,7 +179,7 @@ class DisplacementMapFilter extends BitmapFilter
     {
         alpha = Util.$clamp(+alpha, 0, 1, 0);
         if (alpha !== this._$alpha) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$alpha = alpha;
     }
@@ -203,7 +203,7 @@ class DisplacementMapFilter extends BitmapFilter
         );
 
         if (color !== this._$color) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         this._$color = color;
@@ -225,7 +225,7 @@ class DisplacementMapFilter extends BitmapFilter
     {
         component_x |= 0;
         if (component_x !== this._$componentX) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         this._$componentX = 0;
@@ -260,7 +260,7 @@ class DisplacementMapFilter extends BitmapFilter
     {
         component_y |= 0;
         if (component_y !== this._$componentY) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         this._$componentY = 0;
@@ -294,7 +294,7 @@ class DisplacementMapFilter extends BitmapFilter
     set mapBitmap (map_bitmap)
     {
         if (map_bitmap !== this._$mapBitmap) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         // default
@@ -321,7 +321,7 @@ class DisplacementMapFilter extends BitmapFilter
     set mapPoint (map_point)
     {
         if (map_point !== this._$mapPoint) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         // default
@@ -348,7 +348,7 @@ class DisplacementMapFilter extends BitmapFilter
     {
         mode += "";
         if (mode !== this._$mode) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         this._$mode = DisplacementMapFilterMode.WRAP;
@@ -382,7 +382,7 @@ class DisplacementMapFilter extends BitmapFilter
     {
         scale_x = Util.$clamp(+scale_x, -0xffff, 0xffff, 0);
         if (scale_x !== this._$scaleX) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$scaleX = scale_x;
     }
@@ -403,7 +403,7 @@ class DisplacementMapFilter extends BitmapFilter
     {
         scale_y = Util.$clamp(+scale_y, -0xffff, 0xffff, 0);
         if (scale_y !== this._$scaleY) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$scaleY = scale_y;
     }
@@ -419,6 +419,19 @@ class DisplacementMapFilter extends BitmapFilter
     clone ()
     {
         return new DisplacementMapFilter(
+            this._$mapBitmap, this._$mapPoint, this._$componentX, this._$componentY,
+            this._$scaleX, this._$scaleY, this._$mode, this._$color, this._$alpha
+        );
+    }
+
+    /**
+     * @return {array}
+     * @method
+     * @public
+     */
+    _$toArray ()
+    {
+        return Util.$getArray(4,
             this._$mapBitmap, this._$mapPoint, this._$componentX, this._$componentY,
             this._$scaleX, this._$scaleY, this._$mode, this._$color, this._$alpha
         );
@@ -507,7 +520,7 @@ class DisplacementMapFilter extends BitmapFilter
      */
     _$applyFilter (context, matrix)
     {
-        this._$doChanged(false);
+        this._$updated = false;
 
         const currentAttachment = context
             .frameBuffer

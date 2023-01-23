@@ -184,7 +184,9 @@ class CanvasToWebGLContextBlend
         ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
         operation, renderWidth, renderHeight, matrix, imageSmoothingEnabled
     ) {
-        const currentBuffer = this._$context._$frameBufferManager.currentAttachment;
+
+        const manager = this._$context._$frameBufferManager;
+        const currentBuffer = manager.currentAttachment;
 
         const withCT =
             ct0 !== 1 || ct1 !== 1 || ct2 !== 1 || ct3 !== 1 ||
@@ -202,7 +204,7 @@ class CanvasToWebGLContextBlend
             case BlendMode.ERASE:
             case "copy":
                 {
-                    this._$context._$frameBufferManager._$textureManager.bind0(image, imageSmoothingEnabled);
+                    manager._$textureManager.bind0(image, imageSmoothingEnabled);
 
                     const shader = variants.getNormalBlendShader(withCT);
                     variants.setNormalBlendUniform(
@@ -232,7 +234,7 @@ class CanvasToWebGLContextBlend
                         const y2 = +(left  * b + bottom * d + ty);
                         const y3 = +(left  * b + top    * d + ty);
 
-                        const no = Number.MAX_VALUE;
+                        const no = $Number.MAX_VALUE;
                         const xMin = +$Math.min($Math.min($Math.min($Math.min( no, x0), x1), x2), x3);
                         const xMax = +$Math.max($Math.max($Math.max($Math.max(-no, x0), x1), x2), x3);
                         const yMin = +$Math.min($Math.min($Math.min($Math.min( no, y0), y1), y2), y3);
@@ -248,12 +250,12 @@ class CanvasToWebGLContextBlend
                         }
 
                         this._$gl.enable(this._$gl.SCISSOR_TEST);
-                        this._$gl.scissor(sx, Math.max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
+                        this._$gl.scissor(sx, $Math.max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
                     } else {
-                        const sx = Math.max(0, x + tx | 0);
-                        const sy = Math.max(0, y + ty | 0);
-                        const sw = Math.min(Math.max(0, renderWidth  - sx), w);
-                        const sh = Math.min(Math.max(0, renderHeight - sy), h);
+                        const sx = $Math.max(0, x + tx | 0);
+                        const sy = $Math.max(0, y + ty | 0);
+                        const sw = $Math.min($Math.max(0, renderWidth  - sx), w);
+                        const sh = $Math.min($Math.max(0, renderHeight - sy), h);
 
                         if (!sw || !sh) {
                             return ;
@@ -281,11 +283,11 @@ class CanvasToWebGLContextBlend
                         return ;
                     }
 
-                    const texture = this._$context._$frameBufferManager.getTextureFromCurrentAttachment();
+                    const texture = manager.getTextureFromCurrentAttachment();
 
                     const backTextureAttachment = this._$context._$frameBufferManager.createTextureAttachment(w, h);
                     this._$context._$bind(backTextureAttachment);
-                    this._$context._$frameBufferManager._$textureManager.bind0(texture);
+                    manager._$textureManager.bind0(texture);
 
                     const clipShader = variants.getClipShader();
                     const clipUniform = clipShader.uniform;
@@ -293,11 +295,11 @@ class CanvasToWebGLContextBlend
 
                     this.reset();
                     clipShader._$drawImage();
-                    const backTexture = this._$context._$frameBufferManager.getTextureFromCurrentAttachment();
+                    const backTexture = manager.getTextureFromCurrentAttachment();
 
                     this._$context._$bind(currentBuffer);
 
-                    this._$context._$frameBufferManager._$textureManager.bind01(backTexture, image, imageSmoothingEnabled);
+                    manager._$textureManager.bind01(backTexture, image, imageSmoothingEnabled);
 
                     const shader = variants.getBlendShader(operation, withCT);
                     variants.setBlendUniform(
@@ -313,7 +315,7 @@ class CanvasToWebGLContextBlend
 
                     this._$gl.disable(this._$gl.SCISSOR_TEST);
 
-                    this._$context._$frameBufferManager.releaseAttachment(backTextureAttachment, true);
+                    manager.releaseAttachment(backTextureAttachment, true);
 
                 }
                 break;

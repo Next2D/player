@@ -69,6 +69,11 @@ class CanvasToWebGLContext
         // singleton
         this._$canvasPatternToWebGL  = new CanvasPatternToWebGL();
         this._$canvasGradientToWebGL = new CanvasGradientToWebGL();
+
+        // cache buffer and state
+        this._$maskBufferArray = [];
+        this._$maskBoundsArray = [];
+        this._$attachmentArray = [];
     }
 
     /**
@@ -292,7 +297,7 @@ class CanvasToWebGLContext
      */
     set imageSmoothingEnabled (image_smoothing_enabled)
     {
-        this._$imageSmoothingEnabled = Util.$toBoolean(image_smoothing_enabled);
+        this._$imageSmoothingEnabled = !!image_smoothing_enabled;
     }
 
     /**
@@ -1268,11 +1273,12 @@ class CanvasToWebGLContext
      */
     _$applyBlurFilter (texture, isHorizontal, blur)
     {
-        const currentBuffer = this._$frameBufferManager.currentAttachment;
+        const manager = this._$frameBufferManager;
+        const currentBuffer = manager.currentAttachment;
         const width  = currentBuffer.width;
         const height = currentBuffer.height;
 
-        this._$frameBufferManager._$textureManager.bind0(texture, true);
+        manager._$textureManager.bind0(texture, true);
 
         const halfBlur = $Math.ceil(blur * 0.5);
         const fraction = 1 - (halfBlur - blur * 0.5);
@@ -1325,10 +1331,12 @@ class CanvasToWebGLContext
         colorR1, colorG1, colorB1, colorA1,
         colorR2, colorG2, colorB2, colorA2
     ) {
+
+        const manager = this._$frameBufferManager;
         const isInner = type === BitmapFilterType.INNER;
 
-        const baseAttachment = this._$frameBufferManager.currentAttachment;
-        const baseTexture = this._$frameBufferManager.getTextureFromCurrentAttachment();
+        const baseAttachment = manager.currentAttachment;
+        const baseTexture = manager.getTextureFromCurrentAttachment();
 
         let lut;
         const isGradient = ratios !== null;
@@ -1339,25 +1347,20 @@ class CanvasToWebGLContext
         let targetTextureAttachment;
         if (isInner) {
             if (isGradient) {
-                this._$frameBufferManager._$textureManager.bind02(blurTexture, lut, true);
+                manager._$textureManager.bind02(blurTexture, lut, true);
             } else {
-                this._$frameBufferManager._$textureManager.bind0(blurTexture);
+                manager._$textureManager.bind0(blurTexture);
             }
         } else {
             targetTextureAttachment = this._$frameBufferManager.createTextureAttachment(width, height);
             this._$bind(targetTextureAttachment);
 
             if (isGradient) {
-                this._$frameBufferManager._$textureManager.bind012(blurTexture, baseTexture, lut, true);
+                manager._$textureManager.bind012(blurTexture, baseTexture, lut, true);
             } else {
-                this._$frameBufferManager._$textureManager.bind01(blurTexture, baseTexture);
+                manager._$textureManager.bind01(blurTexture, baseTexture);
             }
         }
-
-        // if (blurX < 2 && blurY < 2 && (blurX > 0 || blurY > 0)) {
-        //    // ぼかし幅が2より小さい場合は、強さを調整して見た目を合わせる
-        //    strength *= (Math.max(1, blurX, blurY) - 1) * 0.4 + 0.2;
-        // }
 
         const transformsBase = !(isInner || type === BitmapFilterType.FULL && knockout);
         const transformsBlur = !(width === blurWidth && height === blurHeight && blurOffsetX === 0 && blurOffsetY === 0);
@@ -1390,7 +1393,7 @@ class CanvasToWebGLContext
         shader._$drawImage();
 
         if (!isInner) {
-            this._$frameBufferManager.releaseAttachment(baseAttachment, true);
+            manager.releaseAttachment(baseAttachment, true);
         }
     }
 
@@ -1546,12 +1549,76 @@ class CanvasToWebGLContext
     }
 
     /**
+     * @return {void}
+     * @method
      * @return void
      */
     _$endLayer ()
     {
         Util.$poolBoundsObject(this._$positions.pop());
-        this._$isLayer = Util.$toBoolean(this._$blends.pop());
+        this._$isLayer = !!this._$blends.pop();
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$saveCurrentMask ()
+    {
+        this._$maskBufferArray.push(this._$cacheCurrentBuffer);
+        this._$cacheCurrentBuffer = null;
+
+        const bounds = this._$cacheCurrentBounds;
+        this._$maskBoundsArray.push(
+            Util.$getBoundsObject(bounds.x, bounds.w, bounds.y, bounds.h)
+        );
+    }
+
+    /**
+     * @param  {number} width
+     * @param  {number} height
+     * @param  {boolean} [multisample=false]
+     * @return {void}
+     * @method
+     * @public
+     */
+    _$saveAttachment (width, height, multisample = false)
+    {
+        const manager = this._$frameBufferManager;
+        this._$attachmentArray.push(manager.currentAttachment);
+        this._$bind(
+            manager.createCacheAttachment(width, height, multisample)
+        );
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    _$restoreAttachment (release_texture = false)
+    {
+        const manager = this._$frameBufferManager;
+
+        manager.releaseAttachment(
+            manager.currentAttachment, release_texture
+        );
+
+        this._$bind(
+            this._$attachmentArray.pop()
+        );
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$restoreCurrentMask ()
+    {
+        this._$cacheCurrentBuffer = this._$maskBufferArray.pop();
+        this._$cacheCurrentBounds = this._$maskBoundsArray.pop();
     }
 
     /**

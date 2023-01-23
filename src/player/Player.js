@@ -822,7 +822,10 @@ class Player
         this._$renderer.samples = this.getSamples();
         this._$renderer.initialize();
 
-        this._$cacheStore._$context = this._$renderer._$context;
+        this._$cacheStore._$context  = this._$renderer._$context;
+        if (this._$renderer._$worker) {
+            this._$cacheStore._$useTimer = false;
+        }
 
         // set main canvas
         const canvas  = this._$renderer.canvas;

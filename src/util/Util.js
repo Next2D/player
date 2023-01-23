@@ -687,17 +687,6 @@ Util.$hitContext.imageSmoothingEnabled = false;
 Util.$DIV = null;
 
 /**
- * @param  {*} source
- * @return {boolean}
- * @method
- * @static
- */
-Util.$isArray = (source) =>
-{
-    return Util.$Array.isArray(source);
-};
-
-/**
  * @param  {array} args
  * @return {array}
  * @method
@@ -1586,23 +1575,19 @@ Util.$getPreObject = () =>
 {
     return Util.$preObjects.pop() ||
         {
-            "isFilter":           false,
-            "isUpdated":          null,
-            "canApply":           null,
-            "matrix":             null,
-            "color":              null,
-            "basePosition":       { "x": 0, "y": 0 },
-            "position":           { "dx": 0, "dy": 0 },
-            "baseMatrix":         null,
-            "baseColor":          null,
-            "currentAttachment":  null,
-            "currentMaskBuffer":  null,
-            "currentMaskBounds":  null,
-            "cacheCurrentBounds": null,
-            "blendMode":          null,
-            "filters":            null,
-            "layerWidth":         null,
-            "layerHeight":        null
+            "isFilter":     false,
+            "isUpdated":    null,
+            "canApply":     null,
+            "matrix":       null,
+            "color":        null,
+            "basePosition": { "x": 0, "y": 0 },
+            "position":     { "dx": 0, "dy": 0 },
+            "baseMatrix":   null,
+            "baseColor":    null,
+            "blendMode":    null,
+            "filters":      null,
+            "layerWidth":   null,
+            "layerHeight":  null
         };
 };
 
@@ -1614,21 +1599,17 @@ Util.$getPreObject = () =>
 Util.$poolPreObject = (object) =>
 {
     // reset
-    object.isFilter           = false;
-    object.isUpdated          = null;
-    object.canApply           = null;
-    object.matrix             = null;
-    object.color              = null;
-    object.baseMatrix         = null;
-    object.baseColor          = null;
-    object.currentAttachment  = null;
-    object.currentMaskBuffer  = null;
-    object.currentMaskBounds  = null;
-    object.cacheCurrentBounds = null;
-    object.blendMode          = null;
-    object.filters            = null;
-    object.layerWidth         = null;
-    object.layerHeight        = null;
+    object.isFilter    = false;
+    object.isUpdated   = null;
+    object.canApply    = null;
+    object.matrix      = null;
+    object.color       = null;
+    object.baseMatrix  = null;
+    object.baseColor   = null;
+    object.blendMode   = null;
+    object.filters     = null;
+    object.layerWidth  = null;
+    object.layerHeight = null;
 
     // pool
     Util.$preObjects.push(object);

@@ -27,6 +27,13 @@ const $Math = window.Math;
 
 /**
  * @shortcut
+ * @type {ArrayConstructor}
+ * @const
+ */
+const $Array = window.Array;
+
+/**
+ * @shortcut
  * @type {Number}
  * @const
  */

@@ -156,7 +156,7 @@ class GlowFilter extends BitmapFilter
     {
         alpha = Util.$clamp(+alpha, 0, 1, 0);
         if (alpha !== this._$alpha) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$alpha = alpha;
     }
@@ -214,7 +214,7 @@ class GlowFilter extends BitmapFilter
         );
 
         if (color !== this._$color) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
 
         this._$color = color;
@@ -236,7 +236,7 @@ class GlowFilter extends BitmapFilter
     {
         inner = !!inner;
         if (inner !== this._$inner) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$inner = inner;
     }
@@ -257,7 +257,7 @@ class GlowFilter extends BitmapFilter
     {
         knockout = !!knockout;
         if (knockout !== this._$knockout) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$knockout = knockout;
     }
@@ -295,7 +295,7 @@ class GlowFilter extends BitmapFilter
     {
         strength = Util.$clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
-            this._$doChanged(true);
+            this._$doChanged();
         }
         this._$strength = strength;
     }
@@ -311,6 +311,19 @@ class GlowFilter extends BitmapFilter
     clone ()
     {
         return new GlowFilter(
+            this._$color, this._$alpha, this._$blurFilter._$blurX, this._$blurFilter._$blurY,
+            this._$strength, this._$blurFilter._$quality, this._$inner, this._$knockout
+        );
+    }
+
+    /**
+     * @return {array}
+     * @method
+     * @public
+     */
+    _$toArray ()
+    {
+        return Util.$getArray(6,
             this._$color, this._$alpha, this._$blurFilter._$blurX, this._$blurFilter._$blurY,
             this._$strength, this._$blurFilter._$quality, this._$inner, this._$knockout
         );
@@ -396,7 +409,7 @@ class GlowFilter extends BitmapFilter
      */
     _$applyFilter (context, matrix)
     {
-        this._$doChanged(false);
+        this._$updated = false;
 
         const currentAttachment = context
             .frameBuffer
