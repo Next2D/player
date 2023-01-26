@@ -134,7 +134,7 @@ class CacheStore
                 }
                 break;
 
-            case Util.$CanvasRenderingContext2D:
+            case $CanvasRenderingContext2D:
                 {
                     const canvas = object.canvas;
                     const width  = canvas.width;

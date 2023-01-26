@@ -397,54 +397,6 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @return  {string}
-     * @default text
-     * @const
-     * @static
-     * @private
-     */
-    static get TEXT ()
-    {
-        return "text";
-    }
-
-    /**
-     * @return  {string}
-     * @default text
-     * @const
-     * @static
-     * @private
-     */
-    static get BREAK ()
-    {
-        return "break";
-    }
-
-    /**
-     * @return  {string}
-     * @default text
-     * @const
-     * @static
-     * @private
-     */
-    static get WRAP ()
-    {
-        return "wrap";
-    }
-
-    /**
-     * @return  {string}
-     * @default text
-     * @const
-     * @static
-     * @private
-     */
-    static get IMAGE ()
-    {
-        return "image";
-    }
-
-    /**
      * @description テキストサイズの自動的な拡大 / 縮小および整列を制御します。
      *              Controls automatic sizing and alignment of text size.
      *
@@ -984,11 +936,11 @@ class TextField extends InteractiveObject
             const object = textData[idx];
             switch (object.mode) {
 
-                case TextField.TEXT:
+                case TextMode.TEXT:
                     text += object.text;
                     break;
 
-                case TextField.BREAK:
+                case TextMode.BREAK:
                     text += "\r";
                     break;
 
@@ -1350,7 +1302,7 @@ class TextField extends InteractiveObject
         let idx = begin_index > -1 ? begin_index : 0;
         for ( ; idx < length; ++idx) {
 
-            if (data[idx].mode === TextField.BREAK) {
+            if (data[idx].mode === TextMode.BREAK) {
                 continue;
             }
 
@@ -1409,7 +1361,7 @@ class TextField extends InteractiveObject
                 continue;
             }
 
-            if (obj.mode !== TextField.TEXT) {
+            if (obj.mode !== TextMode.TEXT) {
                 continue;
             }
 
@@ -1494,7 +1446,7 @@ class TextField extends InteractiveObject
                 {
                     let idx = begin_index + 1;
                     let obj = textData[idx];
-                    if (obj.mode === TextField.WRAP) {
+                    if (obj.mode === TextMode.WRAP) {
                         obj = textData[++idx];
                     }
                     this._$textFormatTable[idx] = text_format._$clone();
@@ -1511,8 +1463,8 @@ class TextField extends InteractiveObject
                             continue;
                         }
 
-                        if (obj.mode === TextField.WRAP
-                            || obj.mode === TextField.BREAK
+                        if (obj.mode === TextMode.WRAP
+                            || obj.mode === TextMode.BREAK
                         ) {
                             ++end_index;
                             --offset;
@@ -1581,7 +1533,7 @@ class TextField extends InteractiveObject
                 this._$widthTable[0]      = 0;
 
                 const obj = {
-                    "mode"      : TextField.BREAK,
+                    "mode"      : TextMode.BREAK,
                     "x"         : 0,
                     "yIndex"    : 0,
                     "textFormat": tf._$clone()
@@ -1627,7 +1579,7 @@ class TextField extends InteractiveObject
                     }
 
                     const obj = {
-                        "mode"      : TextField.BREAK,
+                        "mode"      : TextMode.BREAK,
                         "x"         : 0,
                         "yIndex"    : yIndex,
                         "textFormat": tf._$clone()
@@ -1716,7 +1668,7 @@ class TextField extends InteractiveObject
                         }
 
                         const obj = {
-                            "mode"      : TextField.BREAK,
+                            "mode"      : TextMode.BREAK,
                             "x"         : 0,
                             "yIndex"    : yIndex,
                             "textFormat": tf
@@ -1808,7 +1760,7 @@ class TextField extends InteractiveObject
 
                         // set x offset
                         const obj = {
-                            "mode"      : TextField.BREAK,
+                            "mode"      : TextMode.BREAK,
                             "x"         : 0,
                             "yIndex"    : yIndex,
                             "textFormat": tf
@@ -1840,7 +1792,7 @@ class TextField extends InteractiveObject
                             }
 
                             obj = {
-                                "mode"      : TextField.IMAGE,
+                                "mode"      : TextMode.IMAGE,
                                 "src"       : src,
                                 "loaded"    : false,
                                 "x"         : 0,
@@ -1950,7 +1902,7 @@ class TextField extends InteractiveObject
 
             // reset object
             const obj = {
-                "mode"      : TextField.TEXT,
+                "mode"      : TextMode.TEXT,
                 "text"      : text[idx],
                 "x"         : 0,
                 "width"     : 0,
@@ -1997,7 +1949,7 @@ class TextField extends InteractiveObject
                 tf._$indent = 0;
 
                 // set x offset
-                const mode = breakCode ? TextField.BREAK : TextField.WRAP;
+                const mode = breakCode ? TextMode.BREAK : TextMode.WRAP;
                 wrapObj = {
                     "mode"      : mode,
                     "x"         : 0,
@@ -2020,7 +1972,7 @@ class TextField extends InteractiveObject
                     ++chunkLength;
                     const prevObj = this._$textData[this._$textData.length - chunkLength];
 
-                    if (prevObj.mode !== TextField.TEXT) {
+                    if (prevObj.mode !== TextMode.TEXT) {
                         isSeparated = false;
                         break;
                     }
@@ -2045,7 +1997,7 @@ class TextField extends InteractiveObject
                     this._$heightTable[yIndex - 1]     = 0;
                     this._$textHeightTable[yIndex - 1] = 0;
 
-                    while (targetObj.mode === TextField.TEXT) {
+                    while (targetObj.mode === TextMode.TEXT) {
 
                         height     = this._$getTextHeight(targetObj.textFormat);
                         textHeight = height + leading;
@@ -2387,9 +2339,15 @@ class TextField extends InteractiveObject
     {
         if (matrix) {
 
-            const multiMatrix = Util.$multiplicationMatrix(
-                matrix, this._$correctMatrix(this._$transform._$rawMatrix())
-            );
+            let multiMatrix = matrix;
+
+            const rawMatrix = this._$transform._$rawMatrix();
+            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+            ) {
+                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            }
 
             return Util.$boundsMatrix(this._$bounds, multiMatrix);
         }
@@ -2543,13 +2501,13 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @param   {CanvasToWebGLContext} context
+     * @param   {Renderer} renderer
      * @param   {Float32Array} matrix
      * @returns {void}
      * @method
      * @private
      */
-    _$clip (context, matrix)
+    _$clip (renderer, matrix)
     {
         // size
         const bounds = this._$getBounds();
@@ -2567,22 +2525,14 @@ class TextField extends InteractiveObject
 
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();
-        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
-        Util.$resetContext(context);
-        context.setTransform(
-            multiMatrix[0], multiMatrix[1], multiMatrix[2],
-            multiMatrix[3], multiMatrix[4], multiMatrix[5]
-        );
-        context.beginPath();
-        context.moveTo(0, 0);
-        context.lineTo(width, 0);
-        context.lineTo(width, height);
-        context.lineTo(0, height);
-        context.lineTo(0, 0);
-        context.clip(true);
+        renderer.clipText(width, height, multiMatrix);
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
@@ -2590,14 +2540,14 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
+     * @param  {Renderer} renderer
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @return {void}
      * @method
      * @private
      */
-    _$draw (context, matrix, color_transform)
+    _$draw (renderer, matrix, color_transform)
     {
         if (!this._$visible || this._$textAreaActive) {
             return ;
@@ -2609,7 +2559,11 @@ class TextField extends InteractiveObject
 
         let multiColor = color_transform;
         const rawColor = this._$transform._$rawColorTransform();
-        if (rawColor !== Util.$COLOR_ARRAY_IDENTITY) {
+        if (rawColor[0] !== 1 || rawColor[1] !== 1
+            || rawColor[2] !== 1 || rawColor[3] !== 1
+            || rawColor[4] !== 0 || rawColor[5] !== 0
+            || rawColor[6] !== 0 || rawColor[7] !== 0
+        ) {
             multiColor = Util.$multiplicationColor(color_transform, rawColor);
         }
 
@@ -2620,7 +2574,10 @@ class TextField extends InteractiveObject
 
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();
-        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
@@ -2629,10 +2586,6 @@ class TextField extends InteractiveObject
         baseBounds.xMax += this._$thickness;
         baseBounds.yMin -= this._$thickness;
         baseBounds.yMax += this._$thickness;
-
-        // local cache
-        const baseXMin = baseBounds.xMin;
-        const baseYMin = baseBounds.yMin;
 
         const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
         const xMax   = +bounds.xMax;
@@ -2663,8 +2616,10 @@ class TextField extends InteractiveObject
         }
 
         // cache current buffer
-        const currentAttachment = context.frameBuffer.currentAttachment;
-        if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
+        const currentAttachment = renderer.currentAttachment;
+        if (xMin > currentAttachment.width
+            || yMin > currentAttachment.height
+        ) {
             return;
         }
 
@@ -2714,177 +2669,18 @@ class TextField extends InteractiveObject
 
         }
 
+        const blendMode = this._$blendMode || this.blendMode;
+        const cacheKeys = Util.$getArray(xScale, yScale);
+
+        renderer.drawText(this,
+            cacheKeys, baseBounds, width, height, xScale, yScale,
+            multiMatrix, multiColor, filters, alpha, blendMode,
+            xMin, yMin
+        );
+
         // get cache
-        const keys = Util.$getArray(xScale, yScale);
-        const cacheStore = Util.$cacheStore();
-        const cacheKeys  = cacheStore.generateKeys(this._$instanceId, keys, multiColor);
-        let texture      = cacheStore.get(cacheKeys);
-        Util.$poolArray(keys);
-
-        // texture is small or renew
-        if (texture && (this._$renew || this._$isUpdated())) {
-            cacheStore.removeCache(this._$instanceId);
-            texture = null;
-        }
-
-        if (!texture) {
-
-            // resize
-            const lineWidth  = $Math.min(1, $Math.max(xScale, yScale));
-            const baseWidth  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-            const baseHeight = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
-
-            this._$renew = false;
-
-            // alpha reset
-            multiColor[3] = 1;
-
-            // new canvas
-            const canvas  = cacheStore.getCanvas();
-            canvas.width  = baseWidth  + lineWidth * 2;
-            canvas.height = baseHeight + lineWidth * 2;
-            const ctx     = canvas.getContext("2d");
-
-            // border and background
-            if (this._$background || this._$border) {
-
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(baseWidth, 0);
-                ctx.lineTo(baseWidth, baseHeight);
-                ctx.lineTo(0, baseHeight);
-                ctx.lineTo(0, 0);
-
-                if (this._$background) {
-
-                    const rgb   = Util.$intToRGBA(this._$backgroundColor);
-                    const alpha = $Math.max(0, $Math.min(
-                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
-                    ) / 255;
-
-                    ctx.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-                    ctx.fill();
-                }
-
-                if (this._$border) {
-
-                    const rgb   = Util.$intToRGBA(this._$borderColor);
-                    const alpha = $Math.max(0, $Math.min(
-                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
-                    ) / 255;
-
-                    ctx.lineWidth   = lineWidth;
-                    ctx.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-                    ctx.stroke();
-
-                }
-
-            }
-
-            // mask start
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(2, 2);
-            ctx.lineTo(baseWidth - 2, 2);
-            ctx.lineTo(baseWidth - 2, baseHeight - 2);
-            ctx.lineTo(2, baseHeight - 2);
-            ctx.lineTo(2, 2);
-            ctx.clip();
-
-            ctx.beginPath();
-            ctx.setTransform(xScale, 0, 0, yScale, 0, 0);
-            this._$doDraw(ctx, matrix, multiColor, baseWidth / matrix[0]);
-            ctx.restore();
-
-            texture = context
-                .frameBuffer
-                .createTextureFromCanvas(ctx.canvas);
-
-            // set cache
-            if (Util.$useCache) {
-                cacheStore.set(cacheKeys, texture);
-            }
-
-            // destroy cache
-            cacheStore.destroy(ctx);
-
-        }
         Util.$poolArray(cacheKeys);
         Util.$poolBoundsObject(baseBounds);
-
-        const blendMode = this._$blendMode || this.blendMode;
-        if (filters && filters.length) {
-
-            const canApply = this._$canApply(filters);
-            if (canApply) {
-
-                const filterTexture = this._$drawFilter(
-                    context, texture, multiMatrix,
-                    filters, width, height
-                );
-
-                // reset
-                Util.$resetContext(context);
-
-                // draw
-                context._$globalAlpha = alpha;
-                context._$globalCompositeOperation = blendMode;
-
-                context.setTransform(1, 0, 0, 1,
-                    xMin - filterTexture._$offsetX,
-                    yMin - filterTexture._$offsetY
-                );
-                context.drawImage(filterTexture,
-                    0, 0, filterTexture.width, filterTexture.height,
-                    multiColor
-                );
-
-                if (multiMatrix !== matrix) {
-                    Util.$poolFloat32Array6(multiMatrix);
-                }
-
-                if (multiColor !== color_transform) {
-                    Util.$poolFloat32Array8(multiColor);
-                }
-
-                return ;
-
-            }
-
-        }
-
-        // reset
-        Util.$resetContext(context);
-
-        // draw
-        context._$globalAlpha = alpha;
-        context._$globalCompositeOperation = blendMode;
-
-        const radianX = $Math.atan2(multiMatrix[1], multiMatrix[0]);
-        const radianY = $Math.atan2(-multiMatrix[2], multiMatrix[3]);
-        if (radianX || radianY) {
-
-            const tx = baseXMin * xScale;
-            const ty = baseYMin * yScale;
-
-            context.setTransform(
-                $Math.cos(radianX),
-                $Math.sin(radianX),
-                -$Math.sin(radianY),
-                $Math.cos(radianY),
-                tx * $Math.cos(radianX) - ty * $Math.sin(radianY) + multiMatrix[4],
-                tx * $Math.sin(radianX) + ty * $Math.cos(radianY) + multiMatrix[5]
-            );
-
-        } else {
-
-            context.setTransform(1, 0, 0, 1, xMin, yMin);
-
-        }
-
-        context.drawImage(texture,
-            0, 0, texture.width, texture.height, multiColor
-        );
 
         // pool
         if (multiMatrix !== matrix) {
@@ -2975,8 +2771,8 @@ class TextField extends InteractiveObject
             const yIndex = obj.yIndex | 0;
             switch (obj.mode) {
 
-                case TextField.BREAK:
-                case TextField.WRAP:
+                case TextMode.BREAK:
+                case TextMode.WRAP:
 
                     currentV++;
 
@@ -3008,7 +2804,7 @@ class TextField extends InteractiveObject
 
                     break;
 
-                case TextField.TEXT:
+                case TextMode.TEXT:
                     {
                         if (this.scrollV > currentV) {
                             continue;
@@ -3021,17 +2817,20 @@ class TextField extends InteractiveObject
 
                         context.beginPath();
                         context.textBaseline = "top";
-                        context.font = tf._$generateFontStyle();
+                        context.font = Util.$generateFontStyle(
+                            tf._$font, tf._$size, tf._$italic, tf._$bold
+                        );
 
                         if (this._$thickness) {
                             context.strokeText(obj.text, offsetWidth, yOffset + offsetY);
                         }
+
                         context.fillText(obj.text, offsetWidth, yOffset + offsetY);
 
                     }
                     break;
 
-                case TextField.IMAGE:
+                case TextMode.IMAGE:
 
                     if (!obj.loaded) {
                         continue;
@@ -3078,7 +2877,10 @@ class TextField extends InteractiveObject
     {
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();
-        if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 

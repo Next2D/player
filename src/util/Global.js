@@ -48,6 +48,14 @@ const $RegExp = window.RegExp;
 
 /**
  * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+const $CanvasRenderingContext2D = window.CanvasRenderingContext2D;
+
+/**
+ * @shortcut
  * @type {(handler: TimerHandler, timeout?: number, ...arguments: any[]) => number}
  * @const
  */

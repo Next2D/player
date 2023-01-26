@@ -486,7 +486,6 @@ class TextFormat
         );
 
         textFormat._$letterSpacing = this._$letterSpacing;
-        textFormat._$textField     = this._$textField;
 
         return textFormat;
     }

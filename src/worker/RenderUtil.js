@@ -50,6 +50,20 @@ const $Int16Array = Int16Array;
 
 /**
  * @shortcut
+ * @type {OffscreenCanvas}
+ * @const
+ */
+const $OffscreenCanvas = OffscreenCanvas;
+
+/**
+ * @shortcut
+ * @type {OffscreenCanvasRenderingContext2D}
+ * @const
+ */
+const $OffscreenCanvasRenderingContext2D = OffscreenCanvasRenderingContext2D;
+
+/**
+ * @shortcut
  * @type {(number: number) => boolean}
  * @const
  */
@@ -644,4 +658,43 @@ Util.$intToG = (int, alpha, premultiplied) =>
 Util.$intToB = (int, alpha, premultiplied) =>
 {
     return (int & 0xFF) * (premultiplied ? alpha : 1) / 255;
+};
+
+/**
+ * @param   {number} color
+ * @param   {number} [alpha=1]
+ * @returns {{R: number, G: number, B: number, A: number}}
+ * @method
+ * @static
+ */
+Util.$intToRGBA = (color, alpha = 1) =>
+{
+    return {
+        "R": (color & 0xff0000) >> 16,
+        "G": (color & 0x00ff00) >> 8,
+        "B": color & 0x0000ff,
+        "A": alpha * 255
+    };
+};
+
+/**
+ * @param {string} font
+ * @param {number} size
+ * @param {boolean} [italic=false]
+ * @param {boolean} [bold=false]
+ * @return {string}
+ * @method
+ * @static
+ */
+Util.$generateFontStyle = (font, size, italic = false, bold = false) =>
+{
+    let fontStyle = "";
+    if (italic) {
+        fontStyle = "italic ";
+    }
+    if (bold) {
+        fontStyle += "bold ";
+    }
+
+    return `${fontStyle}${size}px '${font}','sans-serif'`;
 };

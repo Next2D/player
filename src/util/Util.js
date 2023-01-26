@@ -321,14 +321,6 @@ Util.$audioContext = null;
  * @const
  * @static
  */
-Util.$CanvasRenderingContext2D = window.CanvasRenderingContext2D;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
 Util.$cancelAnimationFrame = window.cancelAnimationFrame;
 
 /**
@@ -1767,6 +1759,28 @@ Util.$headerToArray = (header) =>
 
     }
     return results;
+};
+
+/**
+ * @param {string} font
+ * @param {number} size
+ * @param {boolean} [italic=false]
+ * @param {boolean} [bold=false]
+ * @return {string}
+ * @method
+ * @static
+ */
+Util.$generateFontStyle = (font, size, italic = false, bold = false) =>
+{
+    let fontStyle = "";
+    if (italic) {
+        fontStyle = "italic ";
+    }
+    if (bold) {
+        fontStyle += "bold ";
+    }
+
+    return `${fontStyle}${size}px '${font}','sans-serif'`;
 };
 
 /**
