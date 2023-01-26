@@ -1177,6 +1177,13 @@ class Player
             ) {
                 this._$pointerCheck();
             }
+
+        } else {
+
+            if (this._$videos.length) {
+                this._$draw();
+            }
+
         }
 
         // next frame

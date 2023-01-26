@@ -206,7 +206,7 @@ class Renderer
         canvas.height = 1;
 
         // TODO
-        // Util.$renderURL = null;
+        Util.$renderURL = null;
         if (Util.$renderURL) {
 
             this._$worker = new Worker(Util.$renderURL);

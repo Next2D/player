@@ -559,9 +559,7 @@ class Video extends DisplayObject
             }
 
             // update
-            player._$draw(0);
             this._$bytesLoaded = this._$video.currentTime;
-
             if (this._$video.currentTime) {
 
                 const context = player
@@ -871,6 +869,8 @@ class Video extends DisplayObject
             }
 
         }
+
+        const context = renderer._$context;
 
         let texture = this._$texture;
         const blendMode = this._$blendMode || this.blendMode;

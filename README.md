@@ -15,7 +15,7 @@ The develop branch is a development-only branch.
 開発に必要なミドルウェアと対応バージョン  
 Middleware required for development and supported versions
 ```
-node >= v14.x
+node >= v17.x
 gulp >= 4.x
 karma >= 6.x
 ```
