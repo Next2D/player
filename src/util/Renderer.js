@@ -233,9 +233,7 @@ class Renderer
 
             if (gl) {
 
-                this._$context = new CanvasToWebGLContext(
-                    gl, this.samples
-                );
+                this._$context = new CanvasToWebGLContext(gl, this.samples);
 
                 this._$maxTextureSize = Math.min(
                     8192, gl.getParameter(gl.MAX_TEXTURE_SIZE)

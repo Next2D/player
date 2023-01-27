@@ -120,7 +120,7 @@ class CommandController
         this._$canvas  = canvas
         this._$samples = samples;
 
-        let gl = canvas.getContext("webgl2", {
+        const gl = canvas.getContext("webgl2", {
             "stencil": true,
             "premultipliedAlpha": true,
             "antialias": false,
