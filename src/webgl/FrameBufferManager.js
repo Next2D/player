@@ -269,7 +269,7 @@ class FrameBufferManager
      */
     createTextureFromImage (image, smoothing = false)
     {
-        return this._$textureManager.createFromImage(image);
+        return this._$textureManager.createFromImage(image, smoothing);
     }
 
     /**
