@@ -263,10 +263,11 @@ class FrameBufferManager
 
     /**
      * @param  {HTMLImageElement} image
+     * @param  {boolean} [smoothing=false]
      * @return {WebGLTexture}
      * @public
      */
-    createTextureFromImage (image)
+    createTextureFromImage (image, smoothing = false)
     {
         return this._$textureManager.createFromImage(image);
     }

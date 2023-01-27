@@ -206,7 +206,7 @@ class Renderer
         canvas.height = 1;
 
         // TODO
-        Util.$renderURL = null;
+        // Util.$renderURL = null;
         if (Util.$renderURL) {
 
             this._$worker = new Worker(Util.$renderURL);
@@ -843,18 +843,85 @@ class Renderer
     }
 
     /**
-     * @description Videoエレメントの画像をTextureにセット
+     * @description Videoの描画
      *
-     * @param  {Video} video
+     * @param {next2d.media.Video} video
+     * @param {Float32Array} matrix
+     * @param {Float32Array} color_transform
+     * @param {number} width
+     * @param {number} height
+     * @param {number} alpha
+     * @param {string} blend_mode
+     * @param {array} [filters=null]
      * @return {void}
      * @method
      * @public
      */
-    attachVideoToTexture (video)
-    {
+    drawVideo (
+        video, matrix, color_transform, width, height,
+        alpha, blend_mode, filters = null
+    ) {
         if (this._$worker) {
 
-            // TODO
+            video._$context.drawImage(video._$video, 0, 0);
+
+            const imageBitmap = video
+                ._$context
+                .canvas
+                .transferToImageBitmap();
+
+            const options = Util.$getArray(imageBitmap);
+
+            const message = {
+                "command": "drawVideo",
+                "smoothing": video._$smoothing,
+                "imageBitmap": imageBitmap
+            };
+
+            if (alpha !== 1) {
+                message.alpha = alpha;
+            }
+
+            if (matrix[0] !== 1 || matrix[1] !== 0
+                || matrix[2] !== 0 || matrix[3] !== 1
+                || matrix[4] !== 0 || matrix[5] !== 0
+            ) {
+                message.matrix = matrix.slice();
+                options.push(message.matrix.buffer);
+            }
+
+            if (color_transform[0] !== 1 || color_transform[1] !== 1
+                || color_transform[2] !== 1 || color_transform[3] !== 1
+                || color_transform[4] !== 0 || color_transform[5] !== 0
+                || color_transform[6] !== 0 || color_transform[7] !== 0
+            ) {
+                message.colorTransform = color_transform.slice();
+                options.push(message.colorTransform.buffer);
+            }
+
+            if (filters && filters.length
+                && video._$canApply(filters)
+            ) {
+
+                const parameters = Util.$getArray();
+                for (let idx = 0; idx < filters.length; ++idx) {
+                    parameters.push(filters[idx]._$toArray());
+                }
+
+                message.isFilter   = true;
+                message.baseBounds = video._$bounds;
+                message.width      = width;
+                message.height     = height;
+                message.filters    = parameters;
+            }
+
+            if (blend_mode !== BlendMode.NORMAL) {
+                message.blendMode = blend_mode;
+            }
+
+            this._$worker.postMessage(message, [imageBitmap]);
+
+            Util.$poolArray(options);
 
         } else {
 
@@ -863,18 +930,67 @@ class Renderer
                 return ;
             }
 
-            video._$texture = context
-                .frameBuffer
-                .createTextureFromVideo(
-                    video._$video, video._$smoothing, video._$texture
+            const manager = context._$frameBufferManager;
+
+            let texture = manager.createTextureFromVideo(
+                video._$video, video._$smoothing
+            );
+
+            if (filters && filters.length
+                && video._$canApply(filters)
+            ) {
+
+                // draw filter
+                texture = video._$drawFilter(
+                    context, texture, matrix,
+                    filters, width, height
                 );
 
+                // reset
+                Util.$resetContext(context);
+
+                // draw
+                context._$globalAlpha = alpha;
+                context._$imageSmoothingEnabled = video._$smoothing;
+                context._$globalCompositeOperation = blend_mode;
+
+                // size
+                const bounds = Util.$boundsMatrix(video._$bounds, matrix);
+                context.setTransform(1, 0, 0, 1,
+                    bounds.xMin - texture._$offsetX,
+                    bounds.yMin - texture._$offsetY
+                );
+                context.drawImage(texture,
+                    0, 0, texture.width, texture.height,
+                    color_transform
+                );
+
+                // pool
+                Util.$poolBoundsObject(bounds);
+
+            } else {
+
+                // reset
+                Util.$resetContext(context);
+
+                // draw
+                context._$globalAlpha = alpha;
+                context._$imageSmoothingEnabled = video._$smoothing;
+                context._$globalCompositeOperation = blend_mode;
+
+                context.setTransform(
+                    matrix[0], matrix[1], matrix[2],
+                    matrix[3], matrix[4], matrix[5]
+                );
+
+                context.drawImage(
+                    texture, 0, 0,
+                    texture.width, texture.height, color_transform
+                );
+            }
+
+            manager.releaseTexture(texture);
         }
-    }
-
-    drawVideo ()
-    {
-
     }
 
     /**

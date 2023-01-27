@@ -165,12 +165,13 @@ class TextureManager
 
     /**
      * @param  {HTMLImageElement} image
+     * @param  {boolean} [smoothing=false]
      * @return {WebGLTexture}
      * @public
      */
-    createFromImage (image)
+    createFromImage (image, smoothing = false)
     {
-        return this._$createFromElement(image.width, image.height, image, false, null);
+        return this._$createFromElement(image.width, image.height, image, smoothing, null);
     }
 
     /**

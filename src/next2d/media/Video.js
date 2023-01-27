@@ -14,13 +14,13 @@
 class Video extends DisplayObject
 {
     /**
-     * @param {number} [width = 320]
-     * @param {number} [height = 240]
+     * @param {number} [width = 0]
+     * @param {number} [height = 0]
      *
      * @constructor
      * @public
      */
-    constructor (width = 320, height = 240)
+    constructor (width = 0, height = 0)
     {
         super();
 
@@ -129,11 +129,11 @@ class Video extends DisplayObject
         this._$buffer = null;
 
         /**
-         * @type {MediaStream}
+         * @type {OffscreenCanvasRenderingContext2D}
          * @default null
          * @private
          */
-        this._$stream = null;
+        this._$context = null;
     }
 
     /**
@@ -570,11 +570,11 @@ class Video extends DisplayObject
             this._$bounds.yMax = this._$video.videoHeight;
             this._$bytesTotal  = this._$video.duration;
 
+            const player = Util.$currentPlayer();
             if (!Util.$audioContext) {
 
                 const name = Util.$isTouch ? Util.$TOUCH_END : Util.$MOUSE_UP;
-                Util
-                    .$currentPlayer()
+                player
                     ._$canvas
                     .addEventListener(name, this._$sound);
 
@@ -586,7 +586,6 @@ class Video extends DisplayObject
 
             if (this._$autoPlay) {
 
-                const player = Util.$currentPlayer();
                 if (player._$videos.indexOf(this) === -1) {
                     player._$videos.push(this);
                 }
@@ -595,7 +594,13 @@ class Video extends DisplayObject
                 this._$doChanged();
             }
 
-            // this._$stream = this._$video.captureStream();
+            if (player._$renderer._$worker) {
+                const canvas = new $OffscreenCanvas(
+                    this._$video.videoWidth,
+                    this._$video.videoHeight
+                );
+                this._$context = canvas.getContext("2d");
+            }
 
         }.bind(this);
         this._$video.addEventListener("canplaythrough", this._$start);
@@ -719,11 +724,7 @@ class Video extends DisplayObject
      */
     _$draw (renderer, matrix, color_transform)
     {
-        if (!this._$visible
-            || !this._$video
-            || !this._$video.videoWidth
-            || !this._$video.videoHeight
-        ) {
+        if (!this._$visible || !this._$video) {
             return ;
         }
 
@@ -811,7 +812,7 @@ class Video extends DisplayObject
             + multiMatrix[3] * multiMatrix[3]
         );
 
-        const filters = this._$filters   || this.filters;
+        const filters = this._$filters || this.filters;
         if (0 > xMin + width || 0 > yMin + height) {
 
             if (filters && filters.length && this._$canApply(filters)) {
@@ -831,63 +832,12 @@ class Video extends DisplayObject
 
         }
 
-        const context = renderer._$context;
-
-        let texture = context
-            .frameBuffer
-            .createTextureFromVideo(this._$video, this._$smoothing);
-
         const blendMode = this._$blendMode || this.blendMode;
-        if (filters && filters.length && this._$canApply(filters)) {
 
-            // draw filter
-            texture = this._$drawFilter(
-                context, texture, multiMatrix,
-                filters, width, height
-            );
-
-            // reset
-            Util.$resetContext(context);
-
-            // draw
-            context._$globalAlpha = alpha;
-            context._$imageSmoothingEnabled = this._$smoothing;
-            context._$globalCompositeOperation = blendMode;
-
-            // size
-            const bounds = Util.$boundsMatrix(this._$bounds, multiMatrix);
-            context.setTransform(1, 0, 0, 1,
-                bounds.xMin - texture._$offsetX,
-                bounds.yMin - texture._$offsetY
-            );
-            context.drawImage(texture,
-                0, 0, texture.width, texture.height,
-                multiColor
-            );
-
-            // pool
-            Util.$poolBoundsObject(bounds);
-
-        } else {
-
-            // reset
-            Util.$resetContext(context);
-
-            // draw
-            context._$globalAlpha = alpha;
-            context._$imageSmoothingEnabled = this._$smoothing;
-            context._$globalCompositeOperation = blendMode;
-
-            context.setTransform(
-                multiMatrix[0], multiMatrix[1], multiMatrix[2],
-                multiMatrix[3], multiMatrix[4], multiMatrix[5]
-            );
-
-            context.drawImage(
-                texture, 0, 0,
-                texture.width, texture.height, multiColor
-            );
-        }
+        renderer.drawVideo(
+            this, multiMatrix, multiColor, width, height,
+            alpha, blendMode, filters
+        );
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
@@ -896,10 +846,6 @@ class Video extends DisplayObject
         if (multiColor !== color_transform) {
             Util.$poolFloat32Array8(multiColor);
         }
-
-        context
-            .frameBuffer
-            .releaseTexture(texture);
     }
 
     /**

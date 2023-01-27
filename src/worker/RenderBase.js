@@ -832,6 +832,78 @@ class CommandController
     }
 
     /**
+     * @description Videoを描画
+     *
+     * @param  {object} object
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawVideo (object)
+    {
+        const context = this._$context;
+
+        const matrix         = object.matrix;
+        const colorTransform = object.colorTransform;
+
+        const manager = context._$frameBufferManager;
+
+        let texture = manager.createTextureFromImage(
+            object.imageBitmap, object.smoothing
+        );
+
+        if (object.isFilter) {
+
+            texture = this.applyFilter(object, texture);
+
+            // reset
+            Util.$resetContext(context);
+
+            // draw
+            context._$globalAlpha = object.alpha || 1;
+            context._$imageSmoothingEnabled = object.smoothing;
+            context._$globalCompositeOperation = object.blendMode;
+
+            // size
+            const bounds = Util.$boundsMatrix(object.baseBounds, matrix);
+            context.setTransform(1, 0, 0, 1,
+                bounds.xMin - texture._$offsetX,
+                bounds.yMin - texture._$offsetY
+            );
+            context.drawImage(texture,
+                0, 0, texture.width, texture.height,
+                colorTransform
+            );
+
+            // pool
+            Util.$poolBoundsObject(bounds);
+
+        } else {
+
+            // reset
+            Util.$resetContext(context);
+
+            // draw
+            context._$globalAlpha = object.alpha || 1;
+            context._$imageSmoothingEnabled = object.smoothing;
+            context._$globalCompositeOperation = object.blendMode;
+
+            context.setTransform(
+                matrix[0], matrix[1], matrix[2],
+                matrix[3], matrix[4], matrix[5]
+            );
+
+            context.drawImage(
+                texture, 0, 0,
+                texture.width, texture.height, colorTransform
+            );
+
+        }
+        
+        manager.releaseTexture(texture);
+    }
+
+    /**
      * @description テキストエリアを描画
      *
      * @param  {object} object
@@ -1873,6 +1945,10 @@ class CommandController
 
                 case "drawText":
                     this.drawText(object);
+                    break;
+
+                case "drawVideo":
+                    this.drawVideo(object);
                     break;
 
                 case "clipText":

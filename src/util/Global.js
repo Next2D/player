@@ -56,6 +56,14 @@ const $CanvasRenderingContext2D = window.CanvasRenderingContext2D;
 
 /**
  * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+const $OffscreenCanvas =  window.OffscreenCanvas;
+
+/**
+ * @shortcut
  * @type {(handler: TimerHandler, timeout?: number, ...arguments: any[]) => number}
  * @const
  */
