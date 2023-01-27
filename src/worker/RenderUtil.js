@@ -64,6 +64,13 @@ const $OffscreenCanvasRenderingContext2D = OffscreenCanvasRenderingContext2D;
 
 /**
  * @shortcut
+ * @type {object}
+ * @const
+ */
+const $CanvasRenderingContext2D = null;
+
+/**
+ * @shortcut
  * @type {(number: number) => boolean}
  * @const
  */

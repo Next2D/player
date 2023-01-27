@@ -49,6 +49,7 @@ class FrameBufferManager
         const attachment = this._$objectPool.length
             ? this._$objectPool.pop()
             : {};
+
         const texture = this._$textureManager.create(width, height);
 
         attachment.width  = width;

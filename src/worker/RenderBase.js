@@ -237,7 +237,7 @@ class CommandController
      * @method
      * @public
      */
-    setBackgroundColor (background_color)
+    setBackgroundColor (background_color = null)
     {
         if (!background_color
             || background_color === "transparent"
@@ -1981,6 +1981,10 @@ class CommandController
 
                 case "restoreAttachment":
                     this._$context._$restoreAttachment();
+                    break;
+
+                case "cacheClear":
+                    this._$cacheStore.reset();
                     break;
 
                 default:

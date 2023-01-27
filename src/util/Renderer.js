@@ -206,7 +206,7 @@ class Renderer
         canvas.height = 1;
 
         // TODO
-        // Util.$renderURL = null;
+        Util.$renderURL = null;
         if (Util.$renderURL) {
 
             this._$worker = new Worker(Util.$renderURL);
@@ -263,12 +263,6 @@ class Renderer
                 this._$initializeHandler(event.data);
                 break;
 
-            case "cacheClear":
-                Util.$cacheStore().remove(
-                    event.data.id,
-                    event.data.type
-                );
-                break;
             default:
                 break;
 
@@ -500,6 +494,32 @@ class Renderer
         return this._$currentAttachment;
     }
 
+    /**
+     * @description キャッシュを全て消去
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    cacheClear ()
+    {
+        if (this._$worker) {
+            this._$worker.postMessage({
+                "command": "cacheClear"
+            });
+        }
+    }
+
+    /**
+     * @description フィルターを実行
+     *
+     * @param  {WebGLTexture} target_texture
+     * @param  {Float32Array} matrix
+     * @param  {array} filters
+     * @param  {number} width
+     * @param  {number} height
+     * @return {WebGLTexture|void}
+     */
     drawFilter (target_texture, matrix, filters, width, height)
     {
 

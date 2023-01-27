@@ -710,9 +710,10 @@ class CanvasToWebGLContext
      */
     fill ()
     {
+        const fillStyle = this.fillStyle;
         let matrix = this._$matrix;
         switch (true) {
-            case this.fillStyle.constructor === CanvasGradientToWebGL:
+            case fillStyle.constructor === CanvasGradientToWebGL:
                 switch (this.fillStyle._$type) {
                     case GradientType.LINEAR:
                         break;
@@ -721,7 +722,7 @@ class CanvasToWebGLContext
                         break;
                 }
                 break;
-            case this.fillStyle.constructor === CanvasPatternToWebGL:
+            case fillStyle.constructor === CanvasPatternToWebGL:
                 matrix = this._$stack[this._$stack.length - 1];
                 break;
         }
@@ -733,7 +734,7 @@ class CanvasToWebGLContext
         switch (true) {
 
             // Gradient
-            case this.fillStyle.constructor === CanvasGradientToWebGL:
+            case fillStyle.constructor === CanvasGradientToWebGL:
                 {
                     const gradient = this.fillStyle;
                     const stops = gradient._$stops;
@@ -764,7 +765,7 @@ class CanvasToWebGLContext
                 }
                 break;
 
-            case this.fillStyle.constructor === CanvasPatternToWebGL:
+            case fillStyle.constructor === CanvasPatternToWebGL:
                 {
                     const pattern = this.fillStyle;
                     const pct = pattern.colorTransform;
@@ -806,7 +807,7 @@ class CanvasToWebGLContext
                     shader.uniform, false, 0, 0, 0,
                     hasGrid, matrix,
                     this._$viewportWidth, this._$viewportHeight, this._$grid,
-                    this.fillStyle, this._$globalAlpha
+                    fillStyle, this._$globalAlpha
                 );
 
                 break;

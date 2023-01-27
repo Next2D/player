@@ -16,12 +16,11 @@ class BitmapData
      * @param   {number}  [width=0]
      * @param   {number}  [height=0]
      * @param   {boolean} [transparent=true]
-     * @param   {number}  [color=0xffffffff]
      *
      * @constructor
      * @public
      */
-    constructor (width = 0, height = 0, transparent = true, color = 0xffffffff)
+    constructor (width = 0, height = 0, transparent = true)
     {
         /**
          * @type {number}
@@ -36,20 +35,6 @@ class BitmapData
          * @private
          */
         this._$height = height | 0;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$transparent = transparent;
-
-        /**
-         * @type {number}
-         * @default 0xffffffff
-         * @private
-         */
-        this._$color = this._$toRGBA(Util.$clamp(color, 0, 0xffffffff, 0xffffffff));
 
         /**
          * @type {number}
@@ -191,19 +176,6 @@ class BitmapData
         this._$canvas = canvas;
         this._$width  = canvas.width;
         this._$height = canvas.height;
-    }
-
-    /**
-     * @description ビットマップイメージがピクセル単位の透明度をサポートするかどうかを定義します。
-     *              Defines whether the bitmap image supports per-pixel transparency.
-     *
-     * @return  {boolean}
-     * @readonly
-     * @public
-     */
-    get transparent ()
-    {
-        return this._$transparent;
     }
 
     /**
@@ -524,18 +496,6 @@ class BitmapData
     }
 
     /**
-     * @param  {uint} color
-     * @return {object}
-     * @private
-     */
-    _$toRGBA (color)
-    {
-        return this._$transparent
-            ? Util.$uintToRGBA(color)
-            : Util.$intToRGBA(color);
-    }
-
-    /**
      * @param  {number} x
      * @param  {number} y
      * @param  {number} w
@@ -765,18 +725,6 @@ class BitmapData
         }
 
         return ctx;
-    }
-
-    /**
-     * @return {Uint8Array}
-     * @method
-     * @public
-     */
-    toUint8Array ()
-    {
-        return this._$buffer
-            ? this._$buffer
-            : this._$getPixels(0, 0, this.width, this.height, "RGBA");
     }
 
     /**

@@ -620,7 +620,6 @@ class Player
 
             // render
             this._$draw();
-
         }
 
     }
@@ -983,6 +982,11 @@ class Player
         const div = Util.$document.getElementById(this.contentElementId);
         if (div) {
 
+            // cache reset
+            this._$stage._$doChanged();
+            this._$cacheStore.reset();
+            this._$renderer.cacheClear();
+
             const parent = div.parentNode;
 
             const innerWidth = this._$optionWidth
@@ -1071,11 +1075,6 @@ class Player
                     new Util.$window.Event(`${Util.$PREFIX}_blur`)
                 );
             }
-
-            // cache reset
-            this._$stage._$doChanged();
-            this._$cacheStore.reset();
-
         }
     }
 
