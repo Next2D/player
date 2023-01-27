@@ -101,13 +101,6 @@ class Video extends DisplayObject
         this._$video = null;
 
         /**
-         * @type {WebGLTexture}
-         * @default null
-         * @private
-         */
-        this._$texture = null;
-
-        /**
          * @type {boolean}
          * @default true
          * @private
@@ -134,6 +127,13 @@ class Video extends DisplayObject
          * @private
          */
         this._$buffer = null;
+
+        /**
+         * @type {MediaStream}
+         * @default null
+         * @private
+         */
+        this._$stream = null;
     }
 
     /**
@@ -335,7 +335,6 @@ class Video extends DisplayObject
                 ));
             });
 
-        // this._$video.src = src;
         this._$video.load();
     }
 
@@ -402,13 +401,6 @@ class Video extends DisplayObject
      */
     clear ()
     {
-        if (this._$texture) {
-            Util.$currentPlayer()
-                ._$context
-                .frameBuffer
-                .releaseTexture(this._$texture);
-        }
-
         if (this._$video) {
             this._$video.pause();
         }
@@ -418,7 +410,6 @@ class Video extends DisplayObject
         this._$update      = null;
         this._$sound       = null;
         this._$video       = null;
-        this._$texture     = null;
         this._$bounds.xMax = 0;
         this._$bounds.yMax = 0;
 
@@ -443,15 +434,6 @@ class Video extends DisplayObject
             const cancelTimer = Util.$cancelAnimationFrame;
             cancelTimer(this._$timerId);
             this._$timerId = -1;
-
-            if (this._$texture) {
-                Util.$currentPlayer()
-                    ._$context
-                    .frameBuffer
-                    .releaseTexture(this._$texture);
-
-                this._$texture = null;
-            }
 
             this.dispatchEvent(
                 new VideoEvent(VideoEvent.PAUSE), false, false,
@@ -538,19 +520,6 @@ class Video extends DisplayObject
                 cancelTimer(this._$timerId);
                 this._$timerId = -1;
 
-                if (this._$texture) {
-
-                    const context = player
-                        ._$renderer
-                        ._$context;
-
-                    context
-                        .frameBuffer
-                        .releaseTexture(this._$texture);
-
-                    this._$texture = null;
-                }
-
                 player._$videos.splice(
                     player._$videos.indexOf(this), 1
                 );
@@ -561,16 +530,6 @@ class Video extends DisplayObject
             // update
             this._$bytesLoaded = this._$video.currentTime;
             if (this._$video.currentTime) {
-
-                const context = player
-                    ._$renderer
-                    ._$context;
-
-                this._$texture = context
-                    .frameBuffer
-                    .createTextureFromVideo(
-                        this._$video, this._$smoothing, this._$texture
-                    );
 
                 this.dispatchEvent(
                     new VideoEvent(VideoEvent.PROGRESS), false, false,
@@ -635,6 +594,8 @@ class Video extends DisplayObject
                 this._$wait = true;
                 this._$doChanged();
             }
+
+            // this._$stream = this._$video.captureStream();
 
         }.bind(this);
         this._$video.addEventListener("canplaythrough", this._$start);
@@ -758,7 +719,11 @@ class Video extends DisplayObject
      */
     _$draw (renderer, matrix, color_transform)
     {
-        if (!this._$visible) {
+        if (!this._$visible
+            || !this._$video
+            || !this._$video.videoWidth
+            || !this._$video.videoHeight
+        ) {
             return ;
         }
 
@@ -776,10 +741,6 @@ class Video extends DisplayObject
             this._$timerId = timer(this._$update);
 
             this._$wait = false;
-        }
-
-        if (!this._$texture) {
-            return ;
         }
 
         let multiColor = color_transform;
@@ -872,48 +833,16 @@ class Video extends DisplayObject
 
         const context = renderer._$context;
 
-        let texture = this._$texture;
+        let texture = context
+            .frameBuffer
+            .createTextureFromVideo(this._$video, this._$smoothing);
+
         const blendMode = this._$blendMode || this.blendMode;
         if (filters && filters.length && this._$canApply(filters)) {
 
-            let targetTexture = this._$texture;
-            if (xScale !== 1 || yScale !== 1) {
-
-                const currentAttachment = context
-                    .frameBuffer
-                    .currentAttachment;
-
-                const attachment = context
-                    .frameBuffer
-                    .createCacheAttachment(
-                        targetTexture.width  * xScale,
-                        targetTexture.height * yScale
-                    );
-
-                context._$bind(attachment);
-
-                // reset
-                Util.$resetContext(context);
-                context.setTransform(xScale, 0, 0, yScale, 0, 0);
-                context.drawImage(this._$texture,
-                    0, 0, this._$texture.width, this._$texture.height
-                );
-
-                // execute
-                targetTexture = context
-                    .frameBuffer
-                    .getTextureFromCurrentAttachment();
-
-                context._$bind(currentAttachment);
-                context
-                    .frameBuffer
-                    .releaseAttachment(attachment, false);
-
-            }
-
             // draw filter
             texture = this._$drawFilter(
-                context, targetTexture, multiMatrix,
+                context, texture, multiMatrix,
                 filters, width, height
             );
 
@@ -967,6 +896,10 @@ class Video extends DisplayObject
         if (multiColor !== color_transform) {
             Util.$poolFloat32Array8(multiColor);
         }
+
+        context
+            .frameBuffer
+            .releaseTexture(texture);
     }
 
     /**

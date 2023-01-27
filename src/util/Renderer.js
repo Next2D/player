@@ -872,6 +872,11 @@ class Renderer
         }
     }
 
+    drawVideo ()
+    {
+
+    }
+
     /**
      * @description テキストを描画
      *
