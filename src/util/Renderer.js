@@ -223,16 +223,14 @@ class Renderer
         } else {
 
             // create gl context
-            const option = {
+            const gl = canvas.getContext("webgl2", {
                 "stencil": true,
                 "premultipliedAlpha": true,
                 "antialias": false,
                 "depth": false,
                 "preserveDrawingBuffer": true
-            };
+            });
 
-            let gl = canvas.getContext("webgl2", option)
-                || canvas.getContext("webgl", option);
             if (gl) {
 
                 this._$context = new CanvasToWebGLContext(
