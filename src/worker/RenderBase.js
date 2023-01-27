@@ -899,7 +899,7 @@ class CommandController
             );
 
         }
-        
+
         manager.releaseTexture(texture);
     }
 
