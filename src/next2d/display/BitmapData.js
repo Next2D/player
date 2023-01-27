@@ -13,14 +13,12 @@
 class BitmapData
 {
     /**
-     * @param   {number}  [width=0]
-     * @param   {number}  [height=0]
-     * @param   {boolean} [transparent=true]
-     *
+     * @param {number} [width=0]
+     * @param {number} [height=0]
      * @constructor
      * @public
      */
-    constructor (width = 0, height = 0, transparent = true)
+    constructor (width = 0, height = 0)
     {
         /**
          * @type {number}
