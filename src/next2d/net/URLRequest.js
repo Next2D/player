@@ -48,14 +48,7 @@ class URLRequest
          * @type {array}
          * @private
          */
-        this._$requestHeaders  = Util.$getArray();
-
-        /**
-         * @type {string}
-         * @default navigator.userAgent
-         * @private
-         */
-        this._$userAgent = Util.$navigator.userAgent;
+        this._$requestHeaders = Util.$getArray();
 
         /**
          * @type {string}

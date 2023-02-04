@@ -1213,12 +1213,12 @@ class Graphics
     }
 
     /**
-     * @param  {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @return void
      * @private
      */
-    _$clip (renderer, matrix)
+    _$clip (context, matrix)
     {
         // size
         const baseBounds = this._$getBounds();
@@ -1233,10 +1233,10 @@ class Graphics
 
             case width === 0:
             case height === 0:
-            case width === -Util.$Infinity:
-            case height === -Util.$Infinity:
-            case width === Util.$Infinity:
-            case height === Util.$Infinity:
+            case width === -$Infinity:
+            case height === -$Infinity:
+            case width === $Infinity:
+            case height === $Infinity:
                 return;
 
             default:
@@ -1244,11 +1244,19 @@ class Graphics
 
         }
 
-        renderer.clipGraphics(this, matrix);
+        Util.$resetContext(context);
+        context.setTransform(
+            matrix[0], matrix[1], matrix[2],
+            matrix[3], matrix[4], matrix[5]
+        );
+
+        this._$doDraw(context, null, true);
+
+        context.clip();
     }
 
     /**
-     * @param  {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @param  {string} [blend_mode=BlendMode.NORMAL]
@@ -1258,7 +1266,7 @@ class Graphics
      * @private
      */
     _$draw (
-        renderer, matrix, color_transform,
+        context, matrix, color_transform,
         blend_mode = BlendMode.NORMAL, filters = null
     ) {
 
@@ -1299,10 +1307,10 @@ class Graphics
 
             case width === 0:
             case height === 0:
-            case width === -Util.$Infinity:
-            case height === -Util.$Infinity:
-            case width === Util.$Infinity:
-            case height === Util.$Infinity:
+            case width === -$Infinity:
+            case height === -$Infinity:
+            case width === $Infinity:
+            case height === $Infinity:
                 return;
 
             default:
@@ -1311,7 +1319,7 @@ class Graphics
         }
 
         // cache current buffer
-        const currentAttachment = renderer.currentAttachment;
+        const currentAttachment = context.frameBuffer.currentAttachment;
         if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
             return;
         }
@@ -1379,10 +1387,166 @@ class Graphics
 
         Util.$poolArray(keys);
 
-        renderer.drawGraphics(this,
-            cacheKeys, baseBounds, width, height, xScale, yScale,
-            matrix, color_transform, filters, alpha, blend_mode,
-            xMin, yMin, hasGrid, rawMatrix
+        let texture = cacheStore.get(cacheKeys);
+        if (!texture) {
+
+            const manager = context._$frameBufferManager;
+            const currentAttachment = manager.currentAttachment;
+
+            // resize
+            let width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+            let height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
+            const textureScale = context._$getTextureScale(width, height);
+            if (textureScale < 1) {
+                width  *= textureScale;
+                height *= textureScale;
+            }
+
+            // create cache buffer
+            const buffer = manager
+                .createCacheAttachment(width, height, true);
+            context._$bind(buffer);
+
+            // reset
+            Util.$resetContext(context);
+            context.setTransform(
+                xScale, 0, 0, yScale,
+                -baseBounds.xMin * xScale,
+                -baseBounds.yMin * yScale
+            );
+
+            if (hasGrid) {
+
+                const player = Util.$currentPlayer();
+                const mScale = player._$scale * player._$ratio;
+
+                const baseMatrix = Util.$getFloat32Array6(
+                    mScale, 0, 0, mScale, 0, 0
+                );
+
+                const pMatrix = Util.$multiplicationMatrix(
+                    baseMatrix, rawMatrix
+                );
+
+                Util.$poolFloat32Array6(baseMatrix);
+
+                const aMatrixBase = displayObject
+                    ._$parent
+                    ._$transform
+                    .concatenatedMatrix
+                    ._$matrix;
+                Util.$poolFloat32Array6(aMatrixBase);
+
+                const aMatrix = Util.$getFloat32Array6(
+                    aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
+                    aMatrixBase[4] * mScale - xMin,
+                    aMatrixBase[5] * mScale - yMin
+                );
+
+                const apMatrix = Util.$multiplicationMatrix(
+                    aMatrix, pMatrix
+                );
+                const aOffsetX = apMatrix[4] - (matrix[4] - xMin);
+                const aOffsetY = apMatrix[5] - (matrix[5] - yMin);
+                Util.$poolFloat32Array6(apMatrix);
+
+                const parentBounds = Util.$boundsMatrix(baseBounds, pMatrix);
+                const parentXMax   = +parentBounds.xMax;
+                const parentXMin   = +parentBounds.xMin;
+                const parentYMax   = +parentBounds.yMax;
+                const parentYMin   = +parentBounds.yMin;
+                const parentWidth  = $Math.ceil($Math.abs(parentXMax - parentXMin));
+                const parentHeight = $Math.ceil($Math.abs(parentYMax - parentYMin));
+
+                Util.$poolBoundsObject(parentBounds);
+
+                context.grid.enable(
+                    parentXMin, parentYMin, parentWidth, parentHeight,
+                    baseBounds, displayObject._$scale9Grid, mScale,
+                    pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
+                    aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
+                );
+
+                Util.$poolFloat32Array6(pMatrix);
+                Util.$poolFloat32Array6(aMatrix);
+            }
+
+            // plain alpha
+            color_transform[3] = 1;
+            this._$doDraw(context, color_transform, false);
+
+            if (hasGrid) {
+                context.grid.disable();
+            }
+
+            texture = manager.getTextureFromCurrentAttachment();
+
+            // set cache
+            if (Util.$useCache) {
+                cacheStore.set(cacheKeys, texture);
+            }
+
+            // release buffer
+            manager.releaseAttachment(buffer, false);
+
+            // end draw and reset current buffer
+            context._$bind(currentAttachment);
+        }
+
+        let drawFilter = false;
+        let offsetX = 0;
+        let offsetY = 0;
+        if (filters && filters.length
+            && displayObject._$canApply(filters)
+        ) {
+
+            drawFilter = true;
+
+            texture = displayObject._$drawFilter(
+                context, texture, matrix,
+                filters, width, height
+            );
+
+            offsetX = texture._$offsetX;
+            offsetY = texture._$offsetY;
+        }
+
+        const radianX = drawFilter ? 0 : $Math.atan2(matrix[1], matrix[0]);
+        const radianY = drawFilter ? 0 : $Math.atan2(-matrix[2], matrix[3]);
+        if (radianX || radianY) {
+
+            const tx = baseBounds.xMin * xScale;
+            const ty = baseBounds.yMin * yScale;
+
+            const cosX = $Math.cos(radianX);
+            const sinX = $Math.sin(radianX);
+            const cosY = $Math.cos(radianY);
+            const sinY = $Math.sin(radianY);
+
+            context.setTransform(
+                cosX, sinX, -sinY, cosY,
+                tx * cosX - ty * sinY + matrix[4],
+                tx * sinX + ty * cosY + matrix[5]
+            );
+
+        } else {
+
+            context.setTransform(1, 0, 0, 1,
+                xMin - offsetX, yMin - offsetY
+            );
+
+        }
+
+        // reset
+        Util.$resetContext(context);
+
+        // draw
+        context._$globalAlpha = alpha;
+        context._$imageSmoothingEnabled = true;
+        context._$globalCompositeOperation = blend_mode;
+
+        context.drawImage(texture,
+            0, 0, texture.width, texture.height, color_transform
         );
 
         // pool

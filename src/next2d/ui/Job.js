@@ -247,7 +247,7 @@ class Job extends EventDispatcher
         }
         // setup
         this._$stopFlag  = false;
-        this._$startTime = Util.$performance.now();
+        this._$startTime = $performance.now();
         this._$update    = this.update.bind(this);
 
         this._$names = this.entries(this._$from);
@@ -329,7 +329,7 @@ class Job extends EventDispatcher
             return ;
         }
 
-        this._$currentTime = (Util.$performance.now() - this._$startTime) * 0.001;
+        this._$currentTime = ($performance.now() - this._$startTime) * 0.001;
 
         this.updateProperty(
             this._$target, this._$from, this._$to, this._$names

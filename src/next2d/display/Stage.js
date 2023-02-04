@@ -185,7 +185,7 @@ class Stage extends DisplayObjectContainer
     get canvasHeight ()
     {
         return this._$player
-            ? this._$player._$height / Util.$devicePixelRatio
+            ? this._$player._$height / $devicePixelRatio
             : 0;
     }
 
@@ -200,7 +200,7 @@ class Stage extends DisplayObjectContainer
     get canvasWidth ()
     {
         return this._$player
-            ? this._$player._$width / Util.$devicePixelRatio
+            ? this._$player._$width / $devicePixelRatio
             : 0;
     }
 

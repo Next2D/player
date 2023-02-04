@@ -1217,14 +1217,14 @@ class DisplayObjectContainer extends InteractiveObject
     }
 
     /**
-     * @param  {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param  {array} matrix
      * @param  {array} color_transform
      * @return {void}
      * @method
      * @private
      */
-    _$draw (renderer, matrix, color_transform)
+    _$draw (context, matrix, color_transform)
     {
         // not draw
         if (!this._$visible) {
@@ -1258,14 +1258,14 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         // pre data
-        const preData = this._$preDraw(renderer, matrix);
+        const preData = this._$preDraw(context, matrix);
         if (!preData) {
             return ;
         }
 
         // use cache
         if (preData.isFilter && !preData.isUpdated) {
-            this._$postDraw(renderer, matrix, multiColor, preData);
+            this._$postDraw(context, matrix, multiColor, preData);
             return ;
         }
 
@@ -1274,7 +1274,7 @@ class DisplayObjectContainer extends InteractiveObject
 
         // if graphics draw
         if (this._$graphics && this._$graphics._$canDraw) {
-            this._$graphics._$draw(renderer, preMatrix, preColorTransform);
+            this._$graphics._$draw(context, preMatrix, preColorTransform);
         }
 
         // init clip params
@@ -1286,7 +1286,7 @@ class DisplayObjectContainer extends InteractiveObject
         const shouldClips     = Util.$getArray();
 
         // draw children
-        const isLayer  = renderer._$isLayer;
+        const isLayer  = context._$isLayer;
         const isUpdate = this._$isUpdated();
         for (let idx = 0; idx < length; ++idx) {
 
@@ -1314,10 +1314,10 @@ class DisplayObjectContainer extends InteractiveObject
                 && (instance._$placeId > clipDepth || instance._$clipDepth > 0)
             ) {
 
-                renderer.restore();
+                context.restore();
 
                 if (shouldClip) {
-                    renderer.leaveClip();
+                    context._$leaveClip();
 
                     if (clipMatrix.length) {
                         Util.$poolFloat32Array6(preMatrix);
@@ -1339,7 +1339,7 @@ class DisplayObjectContainer extends InteractiveObject
             // mask start
             if (instance._$clipDepth > 0) {
 
-                renderer.save();
+                context.save();
 
                 if (clipDepth) {
                     clipStack.push(clipDepth);
@@ -1351,7 +1351,7 @@ class DisplayObjectContainer extends InteractiveObject
                 shouldClip = instance._$shouldClip(preMatrix);
                 if (shouldClip) {
 
-                    const adjMatrix = instance._$startClip(renderer, preMatrix);
+                    const adjMatrix = instance._$startClip(context, preMatrix);
                     if (adjMatrix === false) { // fixed
                         shouldClip = false;
                         continue;
@@ -1401,15 +1401,15 @@ class DisplayObjectContainer extends InteractiveObject
                     maskMatrix = Util.$multiplicationMatrix(playerMatrix, maskMatrix);
                     Util.$poolFloat32Array6(playerMatrix);
 
-                    if (renderer._$isLayer) {
-                        const currentPosition = renderer.getCurrentPosition();
+                    if (context._$isLayer) {
+                        const currentPosition = context._$getCurrentPosition();
                         maskMatrix[4] -= currentPosition.xMin;
                         maskMatrix[5] -= currentPosition.yMin;
                     }
 
-                    if (renderer._$cacheCurrentBuffer) {
-                        maskMatrix[4] -= renderer._$cacheCurrentBounds.x;
-                        maskMatrix[5] -= renderer._$cacheCurrentBounds.y;
+                    if (context._$cacheCurrentBuffer) {
+                        maskMatrix[4] -= context._$cacheCurrentBounds.x;
+                        maskMatrix[5] -= context._$cacheCurrentBounds.y;
                     }
 
                 }
@@ -1418,12 +1418,12 @@ class DisplayObjectContainer extends InteractiveObject
                     continue;
                 }
 
-                let adjMatrix = maskInstance._$startClip(renderer, maskMatrix);
+                let adjMatrix = maskInstance._$startClip(context, maskMatrix);
 
-                renderer.save();
+                context.save();
 
                 if (adjMatrix === false) { // fixed
-                    renderer.restore();
+                    context.restore();
                     continue;
                 }
 
@@ -1437,8 +1437,8 @@ class DisplayObjectContainer extends InteractiveObject
                         adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(maskTargetParentMatrix[1]);
                         adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(maskTargetParentMatrix[2]);
                         adjMatrix[3] = $Math.abs(preMatrix[3]) * $Math.sign(maskTargetParentMatrix[3]);
-                        adjMatrix[4] = preMatrix[4] - renderer._$cacheCurrentBounds.x;
-                        adjMatrix[5] = preMatrix[5] - renderer._$cacheCurrentBounds.y;
+                        adjMatrix[4] = preMatrix[4] - context._$cacheCurrentBounds.x;
+                        adjMatrix[5] = preMatrix[5] - context._$cacheCurrentBounds.y;
                     }
 
                     preMatrix = adjMatrix;
@@ -1446,15 +1446,15 @@ class DisplayObjectContainer extends InteractiveObject
 
             }
 
-            instance._$draw(renderer, preMatrix, preColorTransform);
+            instance._$draw(context, preMatrix, preColorTransform);
             instance._$updated = false;
 
             // mask end
             if (maskInstance) {
 
-                renderer.restore();
+                context.restore();
 
-                renderer.leaveClip();
+                context._$leaveClip();
 
                 if (instanceMatrix.length) {
                     Util.$poolFloat32Array6(preMatrix);
@@ -1468,10 +1468,10 @@ class DisplayObjectContainer extends InteractiveObject
         // end mask
         if (clipDepth) {
 
-            renderer.restore();
+            context.restore();
 
             if (shouldClips.pop()) {
-                renderer.leaveClip();
+                context._$leaveClip();
             }
 
         }
@@ -1484,7 +1484,7 @@ class DisplayObjectContainer extends InteractiveObject
 
         // filter and blend
         if (preData.isFilter) {
-            return this._$postDraw(renderer, matrix, multiColor, preData);
+            return this._$postDraw(context, matrix, multiColor, preData);
         }
 
         Util.$poolFloat32Array6(preMatrix);

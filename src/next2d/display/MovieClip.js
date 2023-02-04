@@ -243,7 +243,7 @@ class MovieClip extends Sprite
      */
     get currentLabels ()
     {
-        return !this._$labels ? null : Util.$Array.from(this._$labels.values());
+        return !this._$labels ? null : $Array.from(this._$labels.values());
     }
 
     /**
@@ -461,7 +461,7 @@ class MovieClip extends Sprite
         for (let idx = 0; idx < length; idx += 2) {
 
             let frame = arguments[idx];
-            if (Util.$isNaN(frame | 0)) {
+            if ($isNaN(frame | 0)) {
                 frame = this._$getFrameForLabel(frame);
             }
 
@@ -571,7 +571,7 @@ class MovieClip extends Sprite
      */
     _$goToFrame (frame)
     {
-        if (Util.$isNaN(+frame)) {
+        if ($isNaN(+frame)) {
             frame = this._$getFrameForLabel(frame);
         }
 

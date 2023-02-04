@@ -35,11 +35,11 @@ class Next2D
     load (url, options = null)
     {
         if (url === "develop") {
-            const path = Util.$location.search.substr(1).split("&")[0];
+            const path = $location.search.substr(1).split("&")[0];
             if (!path) {
                 return ;
             }
-            url = `${Util.$location.origin}/${path}`;
+            url = `${$location.origin}/${path}`;
         }
 
         if (!url) {
@@ -72,17 +72,16 @@ class Next2D
             loaderInfo.removeEventListener(Event.COMPLETE, event.listener);
 
             const player = Util.$currentPlayer();
-            const stage  = player.stage;
-            const data   = loaderInfo._$data.stage;
+            const stage  = loaderInfo._$data.stage;
 
-            player.width  = data.width;
-            player.height = data.height;
-            player.stage.frameRate = data.fps;
+            player.width  = stage.width;
+            player.height = stage.height;
+            player.stage.frameRate = stage.fps;
 
             if (player._$bgColor === null) {
 
                 const color = Util.$intToRGBA(
-                    `0x${data.bgColor.substr(1)}` | 0
+                    `0x${stage.bgColor.substr(1)}` | 0
                 );
 
                 player._$bgColor = Util.$getArray(
@@ -94,7 +93,7 @@ class Next2D
 
             }
 
-            stage.addChild(loaderInfo.content);
+            player.stage.addChild(loaderInfo.content);
 
             player._$resize();
         });
@@ -130,5 +129,5 @@ class Next2D
     }
 }
 
-Util.$window.next2d = new Next2D();
-Util.$packages(Util.$window.next2d);
+$window.next2d = new Next2D();
+Util.$packages($window.next2d);

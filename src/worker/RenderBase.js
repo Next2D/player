@@ -110,12 +110,16 @@ class CommandController
      *
      * @param  {HTMLCanvasElement} canvas
      * @param  {number} [samples=4]
+     * @param  {number} [devicePixelRatio=2]
      * @return {void}
      * @method
      * @public
      */
-    initialize (canvas, samples = 4)
+    initialize (canvas, samples = 4, devicePixelRatio = 2)
     {
+        // update
+        $devicePixelRatio = devicePixelRatio;
+
         // setup
         this._$canvas  = canvas
         this._$samples = samples;
@@ -226,6 +230,22 @@ class CommandController
 
         // re bind
         context._$bind(this._$buffer);
+    }
+
+    /**
+     * @description 転写したBitmapDataをメインcanvasに転写
+     *
+     * @param  {OffscreenCanvas} canvas
+     * @param  {number} width
+     * @param  {number} height
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawBitmapData (canvas, width, height)
+    {
+        this.updateMain();
+        canvas.getContext("2d").drawImage(this._$canvas, 0, 0);
     }
 
     /**
@@ -1547,6 +1567,7 @@ class CommandController
                         ) {
 
                             context.drawImage(texture, 0, 0, width, height);
+                            manager.releaseTexture(texture);
 
                         } else {
 
@@ -1563,7 +1584,6 @@ class CommandController
                         context.restore();
                         context._$imageSmoothingEnabled = false;
 
-                        manager.releaseTexture(texture);
                     }
                     break;
 
@@ -1627,8 +1647,6 @@ class CommandController
                         // restore
                         context.restore();
                         context._$imageSmoothingEnabled = false;
-
-                        manager.releaseTexture(texture);
                     }
                     break;
 
@@ -1861,7 +1879,9 @@ class CommandController
             switch (object.command) {
 
                 case "initialize":
-                    this.initialize(object.canvas, object.samples);
+                    this.initialize(
+                        object.canvas, object.samples, object.devicePixelRatio
+                    );
                     break;
 
                 case "resize":
@@ -1985,6 +2005,12 @@ class CommandController
 
                 case "cacheClear":
                     this._$cacheStore.reset();
+                    break;
+
+                case "drawBitmapData":
+                    this.drawBitmapData(
+                        object.canvas, object.width, object.height
+                    );
                     break;
 
                 default:

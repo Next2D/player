@@ -25,9 +25,9 @@ class CanvasPatternToWebGL
      */
     _$initialization (texture = null, repeat = "", color_transform = null)
     {
-        this._$texture         = texture;
-        this._$repeat          = repeat;
-        this._$color_transform = color_transform;
+        this._$texture        = texture;
+        this._$repeat         = repeat;
+        this._$colorTransform = color_transform;
         return this;
     }
 
@@ -61,6 +61,6 @@ class CanvasPatternToWebGL
      */
     get colorTransform ()
     {
-        return this._$color_transform;
+        return this._$colorTransform;
     }
 }

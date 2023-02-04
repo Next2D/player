@@ -330,13 +330,13 @@ class Loader extends DisplayObjectContainer
     _$imageDecode (buffer)
     {
         const target = {
-            "image": new Util.$Image(),
+            "image": new $Image(),
             "scope": this
         };
 
         target.image.decoding = "async";
-        target.image.src = Util.$URL.createObjectURL(
-            new Util.$Blob([buffer], {
+        target.image.src = $URL.createObjectURL(
+            new $Blob([buffer], {
                 "type": `image/${Util.$getImageType(buffer)}`
             })
         );

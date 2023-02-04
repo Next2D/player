@@ -557,8 +557,8 @@ class DropShadowFilter extends BitmapFilter
 
         // shadow point
         const radian = this._$angle * Util.$Deg2Rad;
-        const x = $Math.cos(radian) * this._$distance * 2 * xScale / Util.$devicePixelRatio;
-        const y = $Math.sin(radian) * this._$distance * 2 * yScale / Util.$devicePixelRatio;
+        const x = $Math.cos(radian) * this._$distance * 2 * xScale / $devicePixelRatio;
+        const y = $Math.sin(radian) * this._$distance * 2 * yScale / $devicePixelRatio;
 
         // dropShadow canvas
         const w = this._$inner ? baseWidth  : blurWidth  + $Math.max(0, $Math.abs(x) - offsetDiffX);

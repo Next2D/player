@@ -85,6 +85,20 @@ const $requestAnimationFrame = requestAnimationFrame;
 
 /**
  * @shortcut
+ * @type {(handle: number) => void}
+ * @const
+ */
+const $cancelAnimationFrame = cancelAnimationFrame;
+
+/**
+ * @shortcut
+ * @type {Performance}
+ * @const
+ */
+const $performance = performance;
+
+/**
+ * @shortcut
  * @type {function}
  * @const
  * @static
@@ -129,7 +143,31 @@ Util.$bezierConverterBuffer = new Array(32);
  * @const
  * @static
  */
-Util.$devicePixelRatio = 2;
+let $devicePixelRatio = 2;
+
+/**
+ * @type {array}
+ * @static
+ */
+Util.$shapes = [];
+
+/**
+ * @type {array}
+ * @static
+ */
+Util.$textFields = [];
+
+/**
+ * @type {array}
+ * @static
+ */
+Util.$containers = [];
+
+/**
+ * @type {array}
+ * @static
+ */
+Util.$videos = [];
 
 /**
  * 使用済みになったFloat32Arrayをプール、サイズは4固定
@@ -220,6 +258,18 @@ Util.$getBoundsObject = (x_min = 0, x_max = 0, y_min = 0, y_max = 0) =>
 Util.$poolBoundsObject = (bounds) =>
 {
     Util.$bounds.push(bounds);
+};
+
+/**
+ * @return {object}
+ * @method
+ * @static
+ */
+Util.$getShape = () =>
+{
+    return Util.$shapes.length
+        ? Util.$shapes.pop()
+        : new RenderShape();
 };
 
 /**

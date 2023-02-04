@@ -7,7 +7,7 @@ class Player
      * @constructor
      * @public
      */
-    constructor()
+    constructor ()
     {
         /**
          * @type {Stage}
@@ -81,7 +81,7 @@ class Player
          * @type {number}
          * @private
          */
-        this._$ratio = Util.$devicePixelRatio;
+        this._$ratio = $devicePixelRatio;
 
         /**
          * @type {boolean}
@@ -292,6 +292,26 @@ class Player
          * @private
          */
         this._$renderer = new Renderer();
+
+        /**
+         * @type {boolean}
+         * @private
+         */
+        this._$useWorker = false;
+
+        /**
+         * @type {CanvasToWebGLContext}
+         * @default null
+         * @private
+         */
+        this._$context = null;
+
+        /**
+         * @type {object}
+         * @default null
+         * @private
+         */
+        this._$buffer = null;
     }
 
     /**
@@ -347,7 +367,7 @@ class Player
                 }
                 urls.pop();
 
-                this._$base = `${Util.$location.origin}/`;
+                this._$base = `${$location.origin}/`;
                 if (urls.length) {
                     this._$base += `${urls.join("/")}/`;
                 }
@@ -467,11 +487,11 @@ class Player
             this._$stopFlag = false;
 
             if (this._$timerId > -1) {
-                const clearTimer = Util.$cancelAnimationFrame;
+                const clearTimer = $cancelAnimationFrame;
                 clearTimer(this._$timerId);
             }
 
-            this._$startTime = Util.$performance.now();
+            this._$startTime = $performance.now();
 
             this._$fps = 1000 / this._$stage._$frameRate;
 
@@ -487,7 +507,7 @@ class Player
      */
     stop ()
     {
-        const clearTimer = Util.$cancelAnimationFrame;
+        const clearTimer = $cancelAnimationFrame;
         clearTimer(this._$timerId);
 
         this._$stopFlag = true;
@@ -554,7 +574,7 @@ class Player
      */
     _$loaded ()
     {
-        const element = Util.$document.getElementById(this.contentElementId);
+        const element = $document.getElementById(this.contentElementId);
         if (element) {
 
             // background color
@@ -631,7 +651,7 @@ class Player
      */
     _$initialize ()
     {
-        const doc = Util.$document;
+        const doc = $document;
         if (doc.readyState === "loading") {
 
             const initialize = function (event)
@@ -641,7 +661,7 @@ class Player
 
             }.bind(this);
 
-            Util.$window.addEventListener("DOMContentLoaded", initialize);
+            $window.addEventListener("DOMContentLoaded", initialize);
 
             return ;
         }
@@ -693,13 +713,13 @@ class Player
             const width  = this._$optionWidth
                 ? this._$optionWidth
                 : parent.tagName === "BODY"
-                    ? Util.$window.innerWidth
+                    ? $window.innerWidth
                     : parent.offsetWidth;
 
             const height = this._$optionHeight
                 ? this._$optionHeight
                 : parent.tagName === "BODY"
-                    ? Util.$window.innerHeight
+                    ? $window.innerHeight
                     : parent.offsetHeight;
 
             // set center
@@ -761,7 +781,7 @@ class Player
      */
     _$buildWait ()
     {
-        const element = Util.$document.getElementById(this.contentElementId);
+        const element = $document.getElementById(this.contentElementId);
         if (element) {
 
             const loadingId = `${this.contentElementId}_loading`;
@@ -790,7 +810,7 @@ class Player
 }
 </style>`;
 
-            const div = Util.$document.createElement("div");
+            const div = $document.createElement("div");
             div.id    = loadingId;
 
             element.appendChild(div);
@@ -804,7 +824,7 @@ class Player
      */
     _$deleteNode ()
     {
-        const element = Util.$document.getElementById(this.contentElementId);
+        const element = $document.getElementById(this.contentElementId);
         if (element) {
             while (element.childNodes.length) {
                 element.removeChild(element.childNodes[0]);
@@ -818,22 +838,57 @@ class Player
      */
     _$initializeCanvas ()
     {
-        this._$renderer.samples = this.getSamples();
-        this._$renderer.initialize();
+        // main canvas
+        const canvas  = $document.createElement("canvas");
+        this._$canvas = canvas;
+        canvas.width  = 1;
+        canvas.height = 1;
 
-        this._$cacheStore._$context  = this._$renderer._$context;
-        if (this._$renderer._$worker) {
-            this._$cacheStore._$useTimer = false;
+        if (Util.$rendererWorker) {
+
+            this._$useWorker = true;
+
+            const offscreenCanvas = canvas.transferControlToOffscreen();
+
+            Util.$rendererWorker.postMessage({
+                "canvas": offscreenCanvas,
+                "samples": this._$getSamples(),
+                "devicePixelRatio": $devicePixelRatio,
+                "command": "initialize"
+            }, [offscreenCanvas]);
+
+        } else {
+
+            // create gl context
+            const gl = canvas.getContext("webgl2", {
+                "stencil": true,
+                "premultipliedAlpha": true,
+                "antialias": false,
+                "depth": false,
+                "preserveDrawingBuffer": true
+            });
+
+            if (gl) {
+
+                this._$context = new CanvasToWebGLContext(
+                    gl, this._$getSamples()
+                );
+
+                this._$cacheStore._$context = this._$context;
+
+            } else {
+                alert("WebGL setting is off. Please turn the setting on.");
+            }
+
         }
 
         // set main canvas
-        const canvas  = this._$renderer.canvas;
         this._$canvas = canvas;
 
         // set event
         if (Util.$isTouch) {
 
-            const loadSpAudio = function (event)
+            const loadSpAudio = (event) =>
             {
                 event.target.removeEventListener(Util.$TOUCH_END, loadSpAudio);
                 Util.$loadAudioData();
@@ -843,33 +898,33 @@ class Player
             canvas.addEventListener(Util.$TOUCH_END, loadSpAudio);
 
             // touch event
-            canvas.addEventListener(Util.$TOUCH_START, function (event)
+            canvas.addEventListener(Util.$TOUCH_START, (event) =>
             {
                 Util.$event     = event;
                 Util.$eventType = Util.$TOUCH_START;
                 // start position
                 this._$touchY   = event.changedTouches[0].pageY;
                 this._$hitTest();
-            }.bind(this));
+            });
 
-            canvas.addEventListener(Util.$TOUCH_MOVE, function (event)
+            canvas.addEventListener(Util.$TOUCH_MOVE, (event) =>
             {
                 Util.$event     = event;
                 Util.$eventType = Util.$TOUCH_MOVE;
 
                 this._$hitTest();
-            }.bind(this));
+            });
 
-            canvas.addEventListener(Util.$TOUCH_END, function (event)
+            canvas.addEventListener(Util.$TOUCH_END, (event) =>
             {
                 Util.$event     = event;
                 Util.$eventType = Util.$TOUCH_END;
 
                 this._$hitTest();
-            }.bind(this));
+            });
 
             // mouse wheel
-            canvas.addEventListener(Util.$TOUCH_MOVE, function (event)
+            canvas.addEventListener(Util.$TOUCH_MOVE, (event) =>
             {
                 // update
                 const pageY   = event.changedTouches[0].pageY;
@@ -880,11 +935,11 @@ class Player
                 Util.$eventType = Util.$MOUSE_WHEEL;
 
                 this._$hitTest();
-            }.bind(this), { "passive": false });
+            }, { "passive": false });
 
         } else {
 
-            const loadWebAudio = function (event)
+            const loadWebAudio = (event) =>
             {
                 event.target.removeEventListener(Util.$MOUSE_DOWN, loadWebAudio);
                 Util.$loadAudioData();
@@ -894,7 +949,7 @@ class Player
             canvas.addEventListener(Util.$MOUSE_DOWN, loadWebAudio);
 
             // mouse event
-            canvas.addEventListener(Util.$MOUSE_DOWN, function (event)
+            canvas.addEventListener(Util.$MOUSE_DOWN, (event) =>
             {
                 Util.$event     = event;
                 Util.$eventType = Util.$MOUSE_DOWN;
@@ -902,9 +957,9 @@ class Player
                 if (!event.button) {
                     this._$hitTest();
                 }
-            }.bind(this));
+            });
 
-            canvas.addEventListener(Util.$DOUBLE_CLICK, function (event)
+            canvas.addEventListener(Util.$DOUBLE_CLICK, (event) =>
             {
                 Util.$event     = event;
                 Util.$eventType = Util.$DOUBLE_CLICK;
@@ -912,9 +967,9 @@ class Player
                 if (!event.button) {
                     this._$hitTest();
                 }
-            }.bind(this));
+            });
 
-            canvas.addEventListener(Util.$MOUSE_LEAVE, function (event)
+            canvas.addEventListener(Util.$MOUSE_LEAVE, (event) =>
             {
                 Util.$event     = event;
                 Util.$eventType = Util.$MOUSE_LEAVE;
@@ -924,9 +979,9 @@ class Player
                 Util.$event = null;
                 this._$stageX = -1;
                 this._$stageY = -1;
-            }.bind(this));
+            });
 
-            canvas.addEventListener(Util.$MOUSE_UP, function (event)
+            canvas.addEventListener(Util.$MOUSE_UP, (event) =>
             {
                 Util.$event     = event;
                 Util.$eventType = Util.$MOUSE_UP;
@@ -934,18 +989,18 @@ class Player
                 if (!event.button) {
                     this._$hitTest();
                 }
-            }.bind(this));
+            });
 
-            canvas.addEventListener(Util.$MOUSE_MOVE, function (event)
+            canvas.addEventListener(Util.$MOUSE_MOVE, (event) =>
             {
                 Util.$event     = event;
                 Util.$eventType = Util.$MOUSE_MOVE;
 
                 this._$hitTest();
-            }.bind(this));
+            });
 
             // mouse wheel
-            canvas.addEventListener(Util.$MOUSE_WHEEL, function (event)
+            canvas.addEventListener(Util.$MOUSE_WHEEL, (event) =>
             {
                 if (!event.defaultPrevented) {
 
@@ -954,7 +1009,7 @@ class Player
 
                     this._$hitTest();
                 }
-            }.bind(this), { "passive": false });
+            }, { "passive": false });
 
         }
 
@@ -966,8 +1021,8 @@ class Player
         style.webkitTapHighlightColor = "rgba(0,0,0,0)";
         style.backfaceVisibility      = "hidden";
         style.transformOrigin         = "0 0";
-        if (Util.$devicePixelRatio !== 1) {
-            style.transform = `scale(${1 / Util.$devicePixelRatio})`;
+        if ($devicePixelRatio !== 1) {
+            style.transform = `scale(${1 / $devicePixelRatio})`;
         }
 
     }
@@ -979,7 +1034,7 @@ class Player
      */
     _$resize ()
     {
-        const div = Util.$document.getElementById(this.contentElementId);
+        const div = $document.getElementById(this.contentElementId);
         if (div) {
 
             // cache reset
@@ -992,21 +1047,21 @@ class Player
             const innerWidth = this._$optionWidth
                 ? this._$optionWidth
                 : parent.tagName === "BODY"
-                    ? Util.$window.innerWidth
+                    ? $window.innerWidth
                     : parent.offsetWidth
                         ? parent.offsetWidth
-                        : Util.$parseFloat(parent.style.width);
+                        : $parseFloat(parent.style.width);
 
             const innerHeight = this._$optionHeight
                 ? this._$optionHeight
                 : parent.tagName === "BODY"
-                    ? Util.$window.innerHeight
+                    ? $window.innerHeight
                     : parent.offsetHeight
                         ? parent.offsetHeight
-                        : Util.$parseFloat(parent.style.height);
+                        : $parseFloat(parent.style.height);
 
             const screenWidth = parent.tagName === "BODY"
-                ? Util.$window.innerWidth
+                ? $window.innerWidth
                 : parent.offsetWidth;
 
             const scale = $Math.min(
@@ -1031,8 +1086,8 @@ class Player
                 ? "0"
                 : `${screenWidth / 2 - width / 2}px`;
 
-            width  *= Util.$devicePixelRatio;
-            height *= Util.$devicePixelRatio;
+            width  *= $devicePixelRatio;
+            height *= $devicePixelRatio;
 
             // params
             this._$scale  = scale;
@@ -1040,14 +1095,12 @@ class Player
             this._$height = height;
 
             // main canvas resize
-            if (this._$renderer) {
-                this._$renderer.resize(width, height);
-                this._$renderer.setBackgroundColor(this._$bgColor);
-            }
+            this._$resizeCanvas(width, height);
+            this._$setBackgroundColor(this._$bgColor);
 
-            this._$canvas.style.transform = this._$ratio === 1 && Util.$devicePixelRatio === 1
-                ? ""
-                : `scale(${1 / this._$ratio})`;
+            if (this._$ratio > 1 && $devicePixelRatio > 1) {
+                this._$canvas.style.transform = `scale(${1 / this._$ratio})`;
+            }
 
             const mScale = this._$scale * this._$ratio;
             this._$matrix[0] = mScale;
@@ -1058,12 +1111,12 @@ class Player
                 this._$tx = (width -
                         this._$baseWidth
                         * scale
-                        * Util.$devicePixelRatio) / 2;
+                        * $devicePixelRatio) / 2;
 
                 this._$ty = (height -
                         this._$baseHeight
                         * scale
-                        * Util.$devicePixelRatio) / 2;
+                        * $devicePixelRatio) / 2;
 
                 this._$matrix[4] = this._$tx;
                 this._$matrix[5] = this._$ty;
@@ -1072,18 +1125,112 @@ class Player
 
             if (div.children.length > 1) {
                 div.children[1].dispatchEvent(
-                    new Util.$window.Event(`${Util.$PREFIX}_blur`)
+                    new $window.Event(`${Util.$PREFIX}_blur`)
                 );
             }
         }
     }
 
     /**
-     * @return {uint}
+     * @description 表示用のcanvasを更新
+     *              Update canvas for display
+     *
+     * @param  {string|number|null} [background_color=null]
+     * @return {void}
      * @method
      * @public
      */
-    getSamples ()
+    _$setBackgroundColor (background_color = null)
+    {
+        if (Util.$rendererWorker) {
+
+            Util.$rendererWorker.postMessage({
+                "backgroundColor": background_color,
+                "command": "setBackgroundColor"
+            });
+
+        } else {
+
+            const context = this._$context;
+            if (!context) {
+                return ;
+            }
+
+            if (!background_color
+                || background_color === "transparent"
+            ) {
+
+                context._$setColor(0, 0, 0, 0);
+
+            } else {
+
+                context._$setColor(
+                    background_color[0],
+                    background_color[1],
+                    background_color[2],
+                    background_color[3]
+                );
+
+            }
+
+        }
+    }
+
+    /**
+     * @param  {number} width
+     * @param  {number} height
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$resizeCanvas (width, height)
+    {
+        if (Util.$rendererWorker) {
+
+            Util.$rendererWorker.postMessage({
+                "command": "resize",
+                "width": width,
+                "height": height
+            });
+
+        } else {
+
+            const context = this._$context;
+            if (!context) { // unit test
+                return ;
+            }
+
+            this._$canvas.width  = width;
+            this._$canvas.height = height;
+
+            context._$gl.viewport(0, 0, width, height);
+
+            const manager = context._$frameBufferManager;
+            if (this._$buffer) {
+                manager.unbind();
+                manager.releaseAttachment(this._$buffer, true);
+            }
+
+            this._$buffer = manager
+                .createCacheAttachment(width, height, false);
+
+            // update cache max size
+            manager._$stencilBufferPool._$maxWidth  = width;
+            manager._$stencilBufferPool._$maxHeight = height;
+            manager._$textureManager._$maxWidth     = width;
+            manager._$textureManager._$maxHeight    = height;
+            context._$pbo._$maxWidth                = width;
+            context._$pbo._$maxHeight               = height;
+
+        }
+    }
+
+    /**
+     * @return {number}
+     * @method
+     * @private
+     */
+    _$getSamples ()
     {
         switch (this._$quality) {
 
@@ -1129,7 +1276,7 @@ class Player
                 event._$currentTarget = obj.target;
 
                 event._$listener = obj.listener;
-                obj.listener.call(Util.$window, event);
+                obj.listener.call($window, event);
 
                 if (event._$stopImmediatePropagation) {
                     break;
@@ -1211,8 +1358,8 @@ class Player
         Util.$hitContext.beginPath();
 
         // hit test
-        Util.$MATRIX_HIT_ARRAY_IDENTITY[4] = this._$tx / this._$scale / Util.$devicePixelRatio;
-        Util.$MATRIX_HIT_ARRAY_IDENTITY[5] = this._$ty / this._$scale / Util.$devicePixelRatio;
+        Util.$MATRIX_HIT_ARRAY_IDENTITY[4] = this._$tx / this._$scale / $devicePixelRatio;
+        Util.$MATRIX_HIT_ARRAY_IDENTITY[5] = this._$ty / this._$scale / $devicePixelRatio;
         this._$stage._$mouseHit(
             Util.$hitContext, Util.$MATRIX_HIT_ARRAY_IDENTITY,
             this._$hitObject, true
@@ -1552,33 +1699,62 @@ class Player
      */
     _$draw ()
     {
-        if (this._$width > 0 && this._$height > 0
-            && this._$stage._$updated && this._$renderer
-        ) {
-
-            this._$renderer.begin(this._$width, this._$height);
-
-            this._$stage._$draw(
-                this._$renderer,
-                this._$matrix,
-                Util.$COLOR_ARRAY_IDENTITY
-            );
-
-            // stage end
-            this._$stage._$updated = false;
-
-            // start sound
-            if (this._$sounds.size) {
-                const values = this._$sounds.values();
-                for (let movieClip of values) {
-                    movieClip._$soundPlay();
-                }
-                this._$sounds.clear();
-            }
-
-            this._$renderer.updateMain();
+        if (this._$useWorker) {
+            return ;
         }
 
+        if (!this._$width || !this._$height) {
+            return ;
+        }
+
+        if (!this._$stage._$updated) {
+            return ;
+        }
+
+        const context = this._$context;
+        if (!context) {
+            return ;
+        }
+
+        context._$bind(this._$buffer);
+
+        // reset
+        Util.$resetContext(context);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, this._$width, this._$height);
+        context.beginPath();
+
+        this._$stage._$draw(
+            context,
+            this._$matrix,
+            Util.$COLOR_ARRAY_IDENTITY
+        );
+
+        // stage end
+        this._$stage._$updated = false;
+
+        // start sound
+        if (this._$sounds.size) {
+            const values = this._$sounds.values();
+            for (let movieClip of values) {
+                movieClip._$soundPlay();
+            }
+            this._$sounds.clear();
+        }
+
+        const manager = context._$frameBufferManager;
+        const texture = manager.getTextureFromCurrentAttachment();
+
+        manager.unbind();
+
+        // reset and draw to main canvas
+        Util.$resetContext(context);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, this._$width, this._$height);
+        context.drawImage(texture, 0, 0, this._$width, this._$height);
+
+        // re bind
+        context._$bind(this._$buffer);
     }
 
     /**
@@ -1650,10 +1826,10 @@ class Player
         let instance = null;
         let target   = null;
 
-        let x = Util.$window.pageXOffset;
-        let y = Util.$window.pageYOffset;
+        let x = $window.pageXOffset;
+        let y = $window.pageYOffset;
 
-        const div = Util.$document.getElementById(this.contentElementId);
+        const div = $document.getElementById(this.contentElementId);
         if (div) {
             const rect = div.getBoundingClientRect();
             x += rect.left;
@@ -1693,8 +1869,8 @@ class Player
         Util.$hitContext.beginPath();
 
         // hit test
-        Util.$MATRIX_HIT_ARRAY_IDENTITY[4] = this._$tx / this._$scale / Util.$devicePixelRatio;
-        Util.$MATRIX_HIT_ARRAY_IDENTITY[5] = this._$ty / this._$scale / Util.$devicePixelRatio;
+        Util.$MATRIX_HIT_ARRAY_IDENTITY[4] = this._$tx / this._$scale / $devicePixelRatio;
+        Util.$MATRIX_HIT_ARRAY_IDENTITY[5] = this._$ty / this._$scale / $devicePixelRatio;
         this._$stage._$mouseHit(
             Util.$hitContext, Util.$MATRIX_HIT_ARRAY_IDENTITY,
             this._$hitObject, true

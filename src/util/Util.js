@@ -142,7 +142,7 @@ Util.$SCROLL = "scroll";
  * @const
  * @static
  */
-Util.$P_TAG = window.document.createElement("p");
+Util.$P_TAG = $document.createElement("p");
 
 /**
  * @type {Float32Array}
@@ -183,46 +183,6 @@ Util.$bezierConverterBuffer = new Array(32);
 
 /**
  * @shortcut
- * @type {Window}
- * @const
- * @static
- */
-Util.$window = window;
-
-/**
- * @shortcut
- * @type {Document}
- * @const
- * @static
- */
-Util.$document = window.document;
-
-/**
- * @shortcut
- * @type {Navigator}
- * @const
- * @static
- */
-Util.$navigator = window.navigator;
-
-/**
- * @shortcut
- * @type {Location}
- * @const
- * @static
- */
-Util.$location = window.location;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$isNaN = window.isNaN;
-
-/**
- * @shortcut
  * @type {number}
  * @const
  * @static
@@ -238,98 +198,10 @@ Util.$Deg2Rad = $Math.PI / 180;
 Util.$Rad2Deg = 180 / $Math.PI;
 
 /**
- * @shortcut
- * @type {ArrayConstructor}
- * @const
- * @static
- */
-Util.$Array = window.Array;
-
-/**
- * @shortcut
- * @type {MapConstructor}
- * @const
- * @static
- */
-Util.$Map = window.Map;
-
-/**
- * @shortcut
- * @type {Image}
- * @const
- * @static
- */
-Util.$Image = window.Image;
-
-/**
- * @shortcut
- * @type {URL}
- * @const
- * @static
- */
-Util.$URL = window.URL;
-
-/**
- * @shortcut
- * @type {Blob}
- * @const
- * @static
- */
-Util.$Blob = window.Blob;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$parseFloat = window.parseFloat;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$encodeURIComponent = window.encodeURIComponent;
-
-/**
- * @shortcut
- * @type {number}
- * @const
- * @static
- */
-Util.$Infinity = window.Infinity;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$clearTimeout = window.clearTimeout;
-
-/**
  * @type {AudioContext}
  * @static
  */
 Util.$audioContext = null;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$cancelAnimationFrame = window.cancelAnimationFrame;
-
-/**
- * @shortcut
- * @type {function}
- * @const
- * @static
- */
-Util.$performance = window.performance;
 
 /**
  * @type {Map}
@@ -415,13 +287,6 @@ Util.$SHORT_INT_MIN = -32768;
 Util.$SHORT_INT_MAX = 32767;
 
 /**
- * @type {number}
- * @const
- * @static
- */
-Util.$devicePixelRatio = $Math.min(2, window.devicePixelRatio);
-
-/**
  * @type {Float32Array}
  * @const
  * @static
@@ -441,8 +306,8 @@ Util.$MATRIX_ARRAY_IDENTITY = new $Float32Array([1, 0, 0, 1, 0, 0]);
  * @static
  */
 Util.$MATRIX_ARRAY_RATIO_0_0_RATIO_0_0 = new Float32Array([
-    Util.$devicePixelRatio, 0, 0,
-    Util.$devicePixelRatio, 0, 0
+    $devicePixelRatio, 0, 0,
+    $devicePixelRatio, 0, 0
 ]);
 
 /**
@@ -552,7 +417,7 @@ Util.$float32Array8 = [];
  */
 Util.$float32Array9 = [];
 
-const userAgentData = window.navigator.userAgentData;
+const userAgentData = $navigator.userAgentData;
 if (userAgentData) {
     userAgentData
         .getHighEntropyValues(["platform", "mobile"])
@@ -585,7 +450,7 @@ if (userAgentData) {
         });
 } else {
 
-    const userAgent = window.navigator.userAgent;
+    const userAgent = $navigator.userAgent;
 
     /**
      * @type {boolean}
@@ -641,7 +506,7 @@ Util.$currentLoaderInfo = null;
  * @type {HTMLCanvasElement}
  * @const
  */
-const hitCanvas  = window.document.createElement("canvas");
+const hitCanvas  = $document.createElement("canvas");
 hitCanvas.width  = 1;
 hitCanvas.height = 1;
 
@@ -658,7 +523,7 @@ Util.$hitContext.imageSmoothingEnabled = false;
  * @type {HTMLCanvasElement}
  * @const
  */
-const textCanvas  = window.document.createElement("canvas");
+const textCanvas  = $document.createElement("canvas");
 textCanvas.width  = 1;
 textCanvas.height = 1;
 
@@ -719,9 +584,9 @@ Util.$poolArray = (array) =>
 Util.$clamp = (value, min, max, default_value = null) =>
 {
     const number = +value;
-    return Util.$isNaN(number) && default_value !== null
+    return $isNaN(number) && default_value !== null
         ? default_value
-        : $Math.min($Math.max(min, Util.$isNaN(number) ? 0 : number), max);
+        : $Math.min($Math.max(min, $isNaN(number) ? 0 : number), max);
 };
 
 /**
@@ -815,7 +680,7 @@ Util.$poolMap = (map) =>
  */
 Util.$getMap = () =>
 {
-    return Util.$maps.pop() || new Util.$Map();
+    return Util.$maps.pop() || new $Map();
 };
 
 /**
@@ -981,7 +846,7 @@ Util.$poolFloat32Array9 = (array) =>
  */
 Util.$currentPlayer = () =>
 {
-    return window.next2d._$player;
+    return $window.next2d._$player;
 };
 
 /**
@@ -994,10 +859,10 @@ Util.$currentMousePoint = () =>
     // setup
     const player = Util.$currentPlayer();
 
-    let x = Util.$window.pageXOffset;
-    let y = Util.$window.pageYOffset;
+    let x = $window.pageXOffset;
+    let y = $window.pageYOffset;
 
-    const div = Util.$document.getElementById(player.contentElementId);
+    const div = $document.getElementById(player.contentElementId);
     if (div) {
         const rect = div.getBoundingClientRect();
         x += rect.left;
@@ -1012,8 +877,8 @@ Util.$currentMousePoint = () =>
         touchY = changedTouche.pageY;
     }
 
-    const pointX = (touchX - x) / player._$scale - player._$tx / player._$scale / Util.$devicePixelRatio;
-    const pointY = (touchY - y) / player._$scale - player._$ty / player._$scale / Util.$devicePixelRatio;
+    const pointX = (touchX - x) / player._$scale - player._$tx / player._$scale / $devicePixelRatio;
+    const pointY = (touchY - y) / player._$scale - player._$ty / player._$scale / $devicePixelRatio;
 
     return new Point(pointX, pointY);
 };
@@ -1174,7 +1039,7 @@ Util.$poolColorTransform = (color_transform) =>
  */
 Util.$toColorInt = (rgb) =>
 {
-    return Util.$isNaN(+rgb)
+    return $isNaN(+rgb)
         ? Util.$colorStringToInt(rgb)
         : +rgb;
 };
@@ -1406,7 +1271,7 @@ Util.$loadAudioData = () =>
     // create AudioContext
     if (!Util.$audioContext) {
 
-        Util.$audioContext = new Util.$window.AudioContext();
+        Util.$audioContext = new $window.AudioContext();
         Util.$audioContext.resume();
 
     }
@@ -1479,7 +1344,7 @@ Util.$resizeTimerId = 0;
  */
 Util.$resize = () =>
 {
-    const clearTimer = Util.$clearTimeout;
+    const clearTimer = $clearTimeout;
     clearTimer(Util.$resizeTimerId);
 
     const timer = $setTimeout;
@@ -1508,7 +1373,7 @@ Util.$resizeExecute = () =>
 /**
  * added resize event
  */
-Util.$window.addEventListener("resize", Util.$resize);
+$window.addEventListener("resize", Util.$resize);
 
 /**
  * @param  {CanvasToWebGLContext} context
@@ -1793,7 +1658,7 @@ Util.$getClass = (symbol) =>
 {
     const names = symbol.split(".");
 
-    let object = Util.$window;
+    let object = $window;
     for (let idx = 0; idx < names.length; ++idx) {
 
         const name = names[idx];
@@ -1883,19 +1748,16 @@ Util.$decodeImage = function ()
 };
 
 /**
- * @type {string}
- * @static
- */
-Util.$renderURL = "OffscreenCanvas" in window
-    ? URL.createObjectURL(new Blob(["###RENDER_WORKER###"], { "type": "text/javascript" }))
-    : null;
-
-/**
  * @default null
  * @type {Worker}
  * @static
  */
-Util.$renderWorker = null;
+Util.$rendererWorker = "OffscreenCanvas" in window
+    ? new Worker(URL.createObjectURL(new Blob(["###RENDER_WORKER###"], { "type": "text/javascript" })))
+    : null;
+
+// TODO
+Util.$rendererWorker = null;
 
 /**
  * @type {string}

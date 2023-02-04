@@ -431,7 +431,7 @@ class Video extends DisplayObject
             this._$stop = true;
             this._$video.pause();
 
-            const cancelTimer = Util.$cancelAnimationFrame;
+            const cancelTimer = $cancelAnimationFrame;
             cancelTimer(this._$timerId);
             this._$timerId = -1;
 
@@ -507,7 +507,7 @@ class Video extends DisplayObject
      */
     _$initializeVideo ()
     {
-        this._$video = Util.$document.createElement("video");
+        this._$video = $document.createElement("video");
 
         this._$update = function ()
         {
@@ -516,7 +516,7 @@ class Video extends DisplayObject
 
                 this._$video.pause();
 
-                const cancelTimer = Util.$cancelAnimationFrame;
+                const cancelTimer = $cancelAnimationFrame;
                 cancelTimer(this._$timerId);
                 this._$timerId = -1;
 
@@ -617,7 +617,7 @@ class Video extends DisplayObject
                 this._$bytesLoaded, this._$bytesTotal
             );
 
-            const cancelTimer = Util.$cancelAnimationFrame;
+            const cancelTimer = $cancelAnimationFrame;
             cancelTimer(this._$timerId);
 
             this._$timerId = -1;
@@ -684,13 +684,13 @@ class Video extends DisplayObject
     }
 
     /**
-     * @param   {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param   {Float32Array} matrix
      * @returns {void}
      * @method
      * @private
      */
-    _$clip (renderer, matrix)
+    _$clip (context, matrix)
     {
         let width  = this._$bounds.xMax;
         let height = this._$bounds.yMax;
@@ -707,7 +707,19 @@ class Video extends DisplayObject
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
-        renderer.clipVideo(width, height, multiMatrix);
+        Util.$resetContext(context);
+        context.setTransform(
+            matrix[0], matrix[1], matrix[2],
+            matrix[3], matrix[4], matrix[5]
+        );
+
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(width, 0);
+        context.lineTo(width, height);
+        context.lineTo(0, height);
+        context.lineTo(0, 0);
+        context.clip(true);
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
@@ -715,14 +727,14 @@ class Video extends DisplayObject
     }
 
     /**
-     * @param  {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
-     * @return void
+     * @return {void}
      * @method
      * @private
      */
-    _$draw (renderer, matrix, color_transform)
+    _$draw (context, matrix, color_transform)
     {
         if (!this._$visible || !this._$video) {
             return ;
@@ -785,10 +797,10 @@ class Video extends DisplayObject
 
             case width === 0:
             case height === 0:
-            case width === -Util.$Infinity:
-            case height === -Util.$Infinity:
-            case width === Util.$Infinity:
-            case height === Util.$Infinity:
+            case width === -$Infinity:
+            case height === -$Infinity:
+            case width === $Infinity:
+            case height === $Infinity:
                 return;
 
             default:
@@ -797,7 +809,7 @@ class Video extends DisplayObject
         }
 
         // cache current buffer
-        const currentAttachment = renderer.currentAttachment;
+        const currentAttachment = context.frameBuffer.currentAttachment;
         if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
             return;
         }
@@ -834,10 +846,66 @@ class Video extends DisplayObject
 
         const blendMode = this._$blendMode || this.blendMode;
 
-        renderer.drawVideo(
-            this, multiMatrix, multiColor, width, height,
-            alpha, blendMode, filters
+        const manager = context._$frameBufferManager;
+
+        let texture = manager.createTextureFromVideo(
+            this._$video, this._$smoothing
         );
+
+        if (filters && filters.length
+            && this._$canApply(filters)
+        ) {
+
+            // draw filter
+            texture = this._$drawFilter(
+                context, texture, matrix,
+                filters, width, height
+            );
+
+            // reset
+            Util.$resetContext(context);
+
+            // draw
+            context._$globalAlpha = alpha;
+            context._$imageSmoothingEnabled = this._$smoothing;
+            context._$globalCompositeOperation = blendMode;
+
+            // size
+            const bounds = Util.$boundsMatrix(this._$bounds, matrix);
+            context.setTransform(1, 0, 0, 1,
+                bounds.xMin - texture._$offsetX,
+                bounds.yMin - texture._$offsetY
+            );
+            context.drawImage(texture,
+                0, 0, texture.width, texture.height,
+                color_transform
+            );
+
+            // pool
+            Util.$poolBoundsObject(bounds);
+
+        } else {
+
+            // reset
+            Util.$resetContext(context);
+
+            // draw
+            context._$globalAlpha = alpha;
+            context._$imageSmoothingEnabled = this._$smoothing;
+            context._$globalCompositeOperation = blendMode;
+
+            context.setTransform(
+                matrix[0], matrix[1], matrix[2],
+                matrix[3], matrix[4], matrix[5]
+            );
+
+            context.drawImage(
+                texture, 0, 0,
+                texture.width, texture.height, color_transform
+            );
+        }
+
+        manager.releaseTexture(texture);
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);

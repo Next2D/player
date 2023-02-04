@@ -372,7 +372,7 @@ describe("DisplayObject.js property test", function()
         const shape  = new Shape();
         shape.graphics.drawRect(0, 0, 50, 40).endFill();
 
-        shape.height = Util.$Infinity;
+        shape.height = $Infinity;
 
         expect(shape.height).toBe(1310680);
 
@@ -546,7 +546,7 @@ describe("DisplayObject.js property test", function()
         const shape  = new Shape();
         shape.graphics.drawRect(0, 0, 50, 40).endFill();
 
-        shape.width = Util.$Infinity;
+        shape.width = $Infinity;
 
         expect(shape.width).toBe(1638350);
 

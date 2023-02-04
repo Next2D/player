@@ -566,7 +566,7 @@ class TextField extends InteractiveObject
 
                 const player = Util.$currentPlayer();
 
-                const div = Util.$document.getElementById(player.contentElementId);
+                const div = $document.getElementById(player.contentElementId);
                 if (!div) {
                     return;
                 }
@@ -583,8 +583,8 @@ class TextField extends InteractiveObject
                 );
 
                 element.style.color  = `rgb(${color.R},${color.G},${color.B})`;
-                element.style.left   = `${(matrix.tx + bounds.xMin + player._$tx / player._$scale / Util.$devicePixelRatio) * player._$scale}px`;
-                element.style.top    = `${(matrix.ty + bounds.yMin + player._$ty / player._$scale / Util.$devicePixelRatio) * player._$scale}px`;
+                element.style.left   = `${(matrix.tx + bounds.xMin + player._$tx / player._$scale / $devicePixelRatio) * player._$scale}px`;
+                element.style.top    = `${(matrix.ty + bounds.yMin + player._$ty / player._$scale / $devicePixelRatio) * player._$scale}px`;
                 element.style.width  = `${$Math.ceil((this.width  - 1) * player._$scale)}px`;
                 element.style.height = `${$Math.ceil((this.height - 1) * player._$scale)}px`;
 
@@ -613,7 +613,7 @@ class TextField extends InteractiveObject
             if (this._$textarea) {
 
                 this._$textarea.dispatchEvent(
-                    new Util.$window.Event(`${Util.$PREFIX}_blur`)
+                    new $window.Event(`${Util.$PREFIX}_blur`)
                 );
 
                 if (this.willTrigger(FocusEvent.FOCUS_OUT)) {
@@ -1172,7 +1172,7 @@ class TextField extends InteractiveObject
     set width (width)
     {
         width = +width;
-        if (!Util.$isNaN(width) && width > -1) {
+        if (!$isNaN(width) && width > -1) {
             const bounds = this._$getBounds(null);
 
             const xMin = $Math.abs(bounds.xMin);
@@ -1201,7 +1201,7 @@ class TextField extends InteractiveObject
     set height (height)
     {
         height = +height;
-        if (!Util.$isNaN(height) && height > -1) {
+        if (!$isNaN(height) && height > -1) {
             const bounds = this._$getBounds(null);
 
             const yMin = $Math.abs(bounds.yMin);
@@ -1841,7 +1841,7 @@ class TextField extends InteractiveObject
     _$loadImage (obj)
     {
         obj.scope = this;
-        obj.image = new Util.$Image();
+        obj.image = new $Image();
 
         obj.image.crossOrigin = "anonymous";
         obj.image.addEventListener("load", function ()
@@ -2064,7 +2064,7 @@ class TextField extends InteractiveObject
     {
         if (!Util.$DIV) {
 
-            const div = Util.$document.createElement("div");
+            const div = $document.createElement("div");
 
             div.innerHTML             = "a";
             div.style.display         = "block";
@@ -2080,7 +2080,7 @@ class TextField extends InteractiveObject
             div.style.lineHeight      = "100%";
 
             Util.$DIV = div;
-            Util.$document.body.appendChild(Util.$DIV);
+            $document.body.appendChild(Util.$DIV);
 
         }
 
@@ -2501,13 +2501,13 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @param   {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param   {Float32Array} matrix
      * @returns {void}
      * @method
      * @private
      */
-    _$clip (renderer, matrix)
+    _$clip (context, matrix)
     {
         // size
         const bounds = this._$getBounds();
@@ -2532,7 +2532,18 @@ class TextField extends InteractiveObject
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
-        renderer.clipText(width, height, multiMatrix);
+        Util.$resetContext(context);
+        context.setTransform(
+            matrix[0], matrix[1], matrix[2],
+            matrix[3], matrix[4], matrix[5]
+        );
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(width, 0);
+        context.lineTo(width, height);
+        context.lineTo(0, height);
+        context.lineTo(0, 0);
+        context.clip(true);
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
@@ -2540,14 +2551,14 @@ class TextField extends InteractiveObject
     }
 
     /**
-     * @param  {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @return {void}
      * @method
      * @private
      */
-    _$draw (renderer, matrix, color_transform)
+    _$draw (context, matrix, color_transform)
     {
         if (!this._$visible || this._$textAreaActive) {
             return ;
@@ -2600,10 +2611,10 @@ class TextField extends InteractiveObject
 
             case width === 0:
             case height === 0:
-            case width === -Util.$Infinity:
-            case height === -Util.$Infinity:
-            case width === Util.$Infinity:
-            case height === Util.$Infinity:
+            case width === -$Infinity:
+            case height === -$Infinity:
+            case width === $Infinity:
+            case height === $Infinity:
                 return;
 
             default:
@@ -2616,7 +2627,7 @@ class TextField extends InteractiveObject
         }
 
         // cache current buffer
-        const currentAttachment = renderer.currentAttachment;
+        const currentAttachment = context.frameBuffer.currentAttachment;
         if (xMin > currentAttachment.width
             || yMin > currentAttachment.height
         ) {
@@ -2670,12 +2681,160 @@ class TextField extends InteractiveObject
         }
 
         const blendMode = this._$blendMode || this.blendMode;
-        const cacheKeys = Util.$getArray(xScale, yScale);
+        const keys = Util.$getArray(xScale, yScale);
 
-        renderer.drawText(this,
-            cacheKeys, baseBounds, width, height, xScale, yScale,
-            multiMatrix, multiColor, filters, alpha, blendMode,
-            xMin, yMin
+        const instanceId = this._$instanceId;
+
+        const cacheStore = Util.$cacheStore();
+        const cacheKeys  = cacheStore.generateKeys(
+            instanceId, keys
+        );
+
+        let texture = cacheStore.get(cacheKeys);
+
+        // texture is small or renew
+        if (this._$renew || this._$isUpdated()) {
+            cacheStore.removeCache(instanceId);
+            texture = null;
+        }
+
+        if (!texture) {
+
+            // resize
+            const lineWidth  = $Math.min(1, $Math.max(xScale, yScale));
+            const baseWidth  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+            const baseHeight = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
+
+            this._$renew = false;
+
+            // alpha reset
+            color_transform[3] = 1;
+
+            // new canvas
+            const canvas  = cacheStore.getCanvas();
+            canvas.width  = baseWidth  + lineWidth * 2;
+            canvas.height = baseHeight + lineWidth * 2;
+            const ctx     = canvas.getContext("2d");
+
+            // border and background
+            if (this._$background || this._$border) {
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(baseWidth, 0);
+                ctx.lineTo(baseWidth, baseHeight);
+                ctx.lineTo(0, baseHeight);
+                ctx.lineTo(0, 0);
+
+                if (this._$background) {
+
+                    const rgb   = Util.$intToRGBA(this._$backgroundColor);
+                    const alpha = $Math.max(0, $Math.min(
+                        rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                    ) / 255;
+
+                    ctx.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                    ctx.fill();
+                }
+
+                if (this._$border) {
+
+                    const rgb   = Util.$intToRGBA(this._$borderColor);
+                    const alpha = $Math.max(0, $Math.min(
+                        rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                    ) / 255;
+
+                    ctx.lineWidth   = lineWidth;
+                    ctx.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                    ctx.stroke();
+
+                }
+
+            }
+
+            // mask start
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(2, 2);
+            ctx.lineTo(baseWidth - 2, 2);
+            ctx.lineTo(baseWidth - 2, baseHeight - 2);
+            ctx.lineTo(2, baseHeight - 2);
+            ctx.lineTo(2, 2);
+            ctx.clip();
+
+            ctx.beginPath();
+            ctx.setTransform(xScale, 0, 0, yScale, 0, 0);
+            this._$doDraw(ctx, matrix, color_transform, baseWidth / matrix[0]);
+            ctx.restore();
+
+            texture = context
+                .frameBuffer
+                .createTextureFromCanvas(ctx.canvas);
+
+            // set cache
+            if (Util.$useCache) {
+                cacheStore.set(cacheKeys, texture);
+            }
+
+            // destroy cache
+            cacheStore.destroy(ctx);
+
+        }
+
+        let drawFilter = false;
+        let offsetX = 0;
+        let offsetY = 0;
+        if (filters && filters.length
+            && this._$canApply(filters)
+        ) {
+
+            drawFilter = true;
+
+            texture = this._$drawFilter(
+                context, texture, matrix,
+                filters, width, height
+            );
+
+            offsetX = texture._$offsetX;
+            offsetY = texture._$offsetY;
+        }
+
+        const radianX = drawFilter ? 0 : $Math.atan2(matrix[1], matrix[0]);
+        const radianY = drawFilter ? 0 : $Math.atan2(-matrix[2], matrix[3]);
+        if (radianX || radianY) {
+
+            const tx = baseBounds.xMin * xScale;
+            const ty = baseBounds.yMin * yScale;
+
+            const cosX = $Math.cos(radianX);
+            const sinX = $Math.sin(radianX);
+            const cosY = $Math.cos(radianY);
+            const sinY = $Math.sin(radianY);
+
+            context.setTransform(
+                cosX, sinX, -sinY, cosY,
+                tx * cosX - ty * sinY + matrix[4],
+                tx * sinX + ty * cosY + matrix[5]
+            );
+
+        } else {
+
+            context.setTransform(1, 0, 0, 1,
+                xMin - offsetX, yMin - offsetY
+            );
+
+        }
+
+        // reset
+        Util.$resetContext(context);
+
+        // draw
+        context._$globalAlpha = alpha;
+        context._$imageSmoothingEnabled = true;
+        context._$globalCompositeOperation = blendMode;
+
+        context.drawImage(texture,
+            0, 0, texture.width, texture.height, color_transform
         );
 
         // get cache
@@ -2923,7 +3082,7 @@ class TextField extends InteractiveObject
         // new text area
         if (!this._$textarea) {
 
-            this._$textarea       = Util.$document.createElement("textarea");
+            this._$textarea       = $document.createElement("textarea");
             this._$textarea.value = this.text;
             this._$textarea.id    = `${Util.$PREFIX}_TextField_${this._$instanceId}`;
 
@@ -3032,8 +3191,8 @@ class TextField extends InteractiveObject
                     const matrix  = this._$transform.concatenatedMatrix;
                     const bounds  = this._$getBounds(null);
 
-                    element.style.left   = `${$Math.floor((matrix.tx + bounds.xMin + player._$tx / player._$scale / Util.$devicePixelRatio) * player._$scale)}px`;
-                    element.style.top    = `${$Math.floor((matrix.ty + bounds.yMin + player._$ty / player._$scale / Util.$devicePixelRatio) * player._$scale)}px`;
+                    element.style.left   = `${$Math.floor((matrix.tx + bounds.xMin + player._$tx / player._$scale / $devicePixelRatio) * player._$scale)}px`;
+                    element.style.top    = `${$Math.floor((matrix.ty + bounds.yMin + player._$ty / player._$scale / $devicePixelRatio) * player._$scale)}px`;
                     element.style.width  = `${$Math.ceil((this.width  - 1) * player._$scale)}px`;
                     element.style.height = `${$Math.ceil((this.height - 1) * player._$scale)}px`;
                 }

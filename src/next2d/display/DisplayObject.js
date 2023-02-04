@@ -450,8 +450,8 @@ class DisplayObject extends EventDispatcher
         switch (height) {
 
             case 0:
-            case Util.$Infinity:
-            case -Util.$Infinity:
+            case $Infinity:
+            case -$Infinity:
                 return 0;
 
             default:
@@ -462,7 +462,7 @@ class DisplayObject extends EventDispatcher
     set height (height)
     {
         height = +height;
-        if (!Util.$isNaN(height) && height > -1) {
+        if (!$isNaN(height) && height > -1) {
 
             const bounds = this.rotation
                 ? Util.$boundsMatrix(this._$getBounds(null), this._$transform._$rawMatrix())
@@ -474,8 +474,8 @@ class DisplayObject extends EventDispatcher
             switch (exHeight) {
 
                 case 0:
-                case Util.$Infinity:
-                case -Util.$Infinity:
+                case $Infinity:
+                case -$Infinity:
                     this.scaleY = 0;
                     break;
 
@@ -721,7 +721,7 @@ class DisplayObject extends EventDispatcher
     {
         const transform = this._$transform;
         const matrix    = transform.matrix;
-        if (matrix.b === 0 || Util.$isNaN(matrix.b)) {
+        if (matrix.b === 0 || $isNaN(matrix.b)) {
 
             matrix.a = scale_x;
 
@@ -759,7 +759,7 @@ class DisplayObject extends EventDispatcher
         const transform = this._$transform;
         const matrix    = transform.matrix;
 
-        if (matrix.c === 0 || Util.$isNaN(matrix.c)) {
+        if (matrix.c === 0 || $isNaN(matrix.c)) {
 
             matrix.d = scale_y;
 
@@ -866,8 +866,8 @@ class DisplayObject extends EventDispatcher
         switch (true) {
 
             case width === 0:
-            case width === Util.$Infinity:
-            case width === -Util.$Infinity:
+            case width === $Infinity:
+            case width === -$Infinity:
                 return 0;
 
             default:
@@ -878,7 +878,7 @@ class DisplayObject extends EventDispatcher
     set width (width)
     {
         width = +width;
-        if (!Util.$isNaN(width) && width > -1) {
+        if (!$isNaN(width) && width > -1) {
 
             const bounds = this.rotation
                 ? Util.$boundsMatrix(this._$getBounds(null), this._$transform._$rawMatrix())
@@ -890,8 +890,8 @@ class DisplayObject extends EventDispatcher
             switch (true) {
 
                 case exWidth === 0:
-                case exWidth === Util.$Infinity:
-                case exWidth === -Util.$Infinity:
+                case exWidth === $Infinity:
+                case exWidth === -$Infinity:
                     this.scaleX = 0;
                     break;
 
@@ -1794,12 +1794,12 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @param  {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @return {object}
      * @private
      */
-    _$preDraw (renderer, matrix)
+    _$preDraw (context, matrix)
     {
         const originMatrix = this._$transform._$rawMatrix();
         const tMatrix = Util.$multiplicationMatrix(matrix, originMatrix);
@@ -1842,7 +1842,10 @@ class DisplayObject extends EventDispatcher
                 return false;
             }
 
-            const currentAttachment = renderer.currentAttachment;
+            const currentAttachment = context
+                .frameBuffer
+                .currentAttachment;
+
             if (xMin > currentAttachment.width
                 || yMin > currentAttachment.height
             ) {
@@ -1933,7 +1936,7 @@ class DisplayObject extends EventDispatcher
             }
 
             // start layer
-            renderer.startLayer(
+            context._$startLayer(
                 Util.$getBoundsObject(originX, 0, originY, 0)
             );
 
@@ -1945,10 +1948,10 @@ class DisplayObject extends EventDispatcher
             );
 
             // current mask cache
-            renderer.saveCurrentMask();
+            context._$saveCurrentMask();
 
             if (updated) {
-                renderer.saveAttachment(
+                context._$saveAttachment(
                     $Math.ceil(layerWidth),
                     $Math.ceil(layerHeight),
                     false
@@ -1973,7 +1976,7 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @param  {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @param  {object} object
@@ -1981,17 +1984,133 @@ class DisplayObject extends EventDispatcher
      * @method
      * @private
      */
-    _$postDraw (renderer, matrix, color_transform, object)
+    _$postDraw (context, matrix, color_transform, object)
     {
-        renderer.postDraw(
-            this._$instanceId, matrix, color_transform, object
+        // cache
+        const cacheKeys = Util.$getArray(this._$instanceId, "f");
+
+        const cacheStore = Util.$cacheStore();
+        const manager = context._$frameBufferManager;
+
+        // cache or new texture
+        let texture = null;
+        if (object.isUpdated) {
+
+            texture = manager.getTextureFromCurrentAttachment();
+
+            const cacheTexture = cacheStore.get(cacheKeys);
+            if (cacheTexture) {
+                cacheStore.set(cacheKeys, null);
+                manager.releaseTexture(cacheTexture);
+            }
+
+        } else {
+
+            texture = cacheStore.get(cacheKeys);
+
+        }
+
+        // blend only
+        if (!object.canApply) {
+            texture._$offsetX = 0;
+            texture._$offsetY = 0;
+        }
+
+        // set cache offset
+        let offsetX = texture._$offsetX;
+        let offsetY = texture._$offsetY;
+
+        // execute filter
+        if (object.isUpdated && object.canApply) {
+
+            // cache clear
+            let cache = cacheStore.get(cacheKeys);
+            if (cache) {
+
+                // reset cache params
+                cacheStore.set(cacheKeys, null);
+                cache.layerWidth     = 0;
+                cache.layerHeight    = 0;
+                cache._$offsetX      = 0;
+                cache._$offsetY      = 0;
+                cache.matrix         = null;
+                cache.colorTransform = null;
+                manager.releaseTexture(cache);
+
+                cache  = null;
+            }
+
+            // apply filter
+            const length = object.filters.length;
+            if (length) {
+
+                // init
+                context._$offsetX = 0;
+                context._$offsetY = 0;
+
+                for (let idx = 0; idx < length; ++idx) {
+                    texture = object
+                        .filters[idx]
+                        ._$applyFilter(context, matrix);
+                }
+
+                offsetX = context._$offsetX;
+                offsetY = context._$offsetY;
+
+                // reset
+                context._$offsetX = 0;
+                context._$offsetY = 0;
+
+                // set offset
+                texture._$offsetX = offsetX;
+                texture._$offsetY = offsetY;
+
+            }
+        }
+
+        // update cache params
+        if (object.isUpdated) {
+
+            texture.filterState = object.canApply;
+
+            // cache texture
+            const mat = object.baseMatrix;
+            texture.matrix = `${mat[0]}_${mat[1]}_${mat[2]}_${mat[3]}`;
+
+            texture.layerWidth  = object.layerWidth;
+            texture.layerHeight = object.layerHeight;
+        }
+
+        // cache texture
+        cacheStore.set(cacheKeys, texture);
+        Util.$poolArray(cacheKeys);
+
+        // set current buffer
+        if (object.isUpdated) {
+            context._$restoreAttachment();
+        }
+
+        // set
+        Util.$resetContext(context);
+
+        context._$globalAlpha = Util.$clamp(
+            color_transform[3] + color_transform[7] / 255, 0, 1
+        );
+        context._$globalCompositeOperation = object.blendMode;
+
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.drawImage(texture,
+            -offsetX + object.position.dx,
+            -offsetY + object.position.dy,
+            texture.width, texture.height,
+            color_transform
         );
 
         // end blend
-        renderer.endLayer();
+        context._$endLayer();
 
         // reset
-        renderer.restoreCurrentMask();
+        context._$restoreCurrentMask();
 
         // object pool
         Util.$poolFloat32Array8(object.color);
@@ -2028,19 +2147,19 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @param  {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @return {Float32Array|boolean|null}
      * @method
      * @private
      */
-    _$startClip (renderer, matrix)
+    _$startClip (context, matrix)
     {
         let clipMatrix = null;
 
         // ネストしてない初回のマスクだけ実行
         // ネストしてる場合は初回に作られたbufferを流用
-        if (!renderer._$cacheCurrentBuffer) {
+        if (!context._$cacheCurrentBuffer) {
 
             let multiMatrix = matrix;
             const rawMatrix = this._$transform._$rawMatrix();
@@ -2055,7 +2174,7 @@ class DisplayObject extends EventDispatcher
             const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
             Util.$poolBoundsObject(baseBounds);
 
-            clipMatrix = renderer.startClip(matrix, bounds);
+            clipMatrix = context._$startClip(matrix, bounds);
             Util.$poolBoundsObject(bounds);
 
             if (multiMatrix !== matrix) {
@@ -2069,32 +2188,32 @@ class DisplayObject extends EventDispatcher
         }
 
         // start clip
-        renderer.enterClip();
+        context._$enterClip();
 
         // mask start
-        renderer.beginClipDef();
+        context._$beginClipDef();
 
         let containerClip = false;
         if (this instanceof DisplayObjectContainer) {
             containerClip = true;
-            renderer.updateContainerClipFlag(true);
+            context._$updateContainerClipFlag(true);
         }
 
-        this._$clip(renderer, clipMatrix || matrix);
+        this._$clip(context, clipMatrix || matrix);
         this._$updated = false;
 
         // container clip
         if (containerClip) {
 
             // update flag
-            renderer.updateContainerClipFlag(false);
+            context._$updateContainerClipFlag(false);
 
             // execute clip
-            renderer.drawContainerClip();
+            context._$drawContainerClip();
         }
 
         // mask end
-        renderer.endClipDef();
+        context._$endClipDef();
 
         return clipMatrix;
     }

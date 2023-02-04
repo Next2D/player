@@ -256,7 +256,7 @@ class EventDispatcher
                             try {
 
                                 event._$listener = obj.listener;
-                                obj.listener.call(Util.$window, event);
+                                obj.listener.call($window, event);
 
                             } catch (e) {
 
@@ -344,7 +344,7 @@ class EventDispatcher
                                             try {
 
                                                 event._$listener = obj.listener;
-                                                obj.listener.call(Util.$window, event);
+                                                obj.listener.call($window, event);
 
                                             } catch (e) {
 
@@ -397,7 +397,7 @@ class EventDispatcher
                                 try {
 
                                     event._$listener = obj.listener;
-                                    obj.listener.call(Util.$window, event);
+                                    obj.listener.call($window, event);
 
                                 } catch (e) {
 
@@ -450,7 +450,7 @@ class EventDispatcher
                                         try {
 
                                             event._$listener = obj.listener;
-                                            obj.listener.call(Util.$window, event);
+                                            obj.listener.call($window, event);
 
                                         } catch (e) {
 

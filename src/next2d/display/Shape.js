@@ -268,6 +268,14 @@ class Shape extends DisplayObject
                 character.grid.w, character.grid.h
             );
         }
+
+        if (Util.$rendererWorker) {
+            const recode = graphics._$getRecodes();
+            Util.$rendererWorker.postMessage({
+                "command": "createShape",
+                "recode": recode
+            }, [recode.buffer]);
+        }
     }
 
     /**
@@ -340,14 +348,14 @@ class Shape extends DisplayObject
     }
 
     /**
-     * @param  {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @return {void}
      * @method
      * @private
      */
-    _$draw (renderer, matrix, color_transform)
+    _$draw (context, matrix, color_transform)
     {
         if (!this._$visible) {
             return ;
@@ -389,7 +397,7 @@ class Shape extends DisplayObject
 
         this
             ._$graphics
-            ._$draw(renderer, multiMatrix, multiColor, blendMode, filters);
+            ._$draw(context, multiMatrix, multiColor, blendMode, filters);
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
@@ -402,13 +410,13 @@ class Shape extends DisplayObject
     }
 
     /**
-     * @param   {Renderer} renderer
+     * @param   {CanvasToWebGLContext} context
      * @param   {Float32Array} matrix
      * @returns {void}
      * @method
      * @private
      */
-    _$clip (renderer, matrix)
+    _$clip (context, matrix)
     {
         let multiMatrix = matrix;
         const rawMatrix = this._$transform._$rawMatrix();
@@ -419,7 +427,7 @@ class Shape extends DisplayObject
             multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
-        this._$graphics._$clip(renderer, multiMatrix);
+        this._$graphics._$clip(context, multiMatrix);
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);

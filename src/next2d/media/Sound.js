@@ -386,7 +386,7 @@ class Sound extends EventDispatcher
                     : this._$audioBuffer;
 
                 if (buffer !== null && Util.$audioContext !== null) {
-                    const offset = (Util.$performance.now() - now) / 1000;
+                    const offset = ($performance.now() - now) / 1000;
                     this._$createBufferSource(start_time, offset);
                     return ;
                 }
@@ -394,7 +394,7 @@ class Sound extends EventDispatcher
                 const timer = $requestAnimationFrame;
                 timer(wait);
 
-            }.bind(this, Util.$performance.now(), start_time);
+            }.bind(this, $performance.now(), start_time);
 
             const timer = $requestAnimationFrame;
             timer(wait);

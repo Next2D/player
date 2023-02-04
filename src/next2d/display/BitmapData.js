@@ -55,7 +55,7 @@ class BitmapData
         this._$image = null;
 
         /**
-         * @type {CanvasRenderingContext2D}
+         * @type {HTMLCanvasElement}
          * @default null
          * @private
          */
@@ -208,7 +208,7 @@ class BitmapData
         // delay init
         if (!texture) {
 
-            const context = player._$renderer._$context;
+            const context = player._$context;
             switch (true) {
 
                 case this._$image !== null:
@@ -271,10 +271,6 @@ class BitmapData
                         context._$bind(attachment);
 
                         Util.$resetContext(context);
-                        context.fillStyle = [
-                            this._$color.R / 255, this._$color.G / 255,
-                            this._$color.B / 255, this._$color.A / 255
-                        ];
                         context.setTransform(1, 0, 0, 1, 0, 0);
                         context.beginPath();
                         context.fillRect(0, 0, width, height);
@@ -357,140 +353,27 @@ class BitmapData
     }
 
     /**
-     * @param  {DisplayObject}  source
-     * @param  {Matrix}         [matrix=null]
-     * @param  {ColorTransform} [color_transform=null]
-     * @param  {string}         [blend_mode=BlendMode.NORMAL]
-     * @param  {Rectangle}      [clip_rect=null]
-     * @param  {boolean}        [smoothing=false]
+     * @param  {DisplayObject}     source
+     * @param  {Matrix}            [matrix=null]
+     * @param  {ColorTransform}    [color_transform=null]
+     * @param  {HTMLCanvasElement} [canvas=null]
      * @return {void}
      * @public
      */
-    draw (
-        source, matrix = null, color_transform = null,
-        blend_mode = BlendMode.NORMAL, clip_rect = null, smoothing = false
-    ) {
-
-        const width  = this._$width;
-        const height = this._$height;
-        if (!width || !height) {
+    draw (source, matrix = null, color_transform = null, canvas = null)
+    {
+        if (!(source instanceof DisplayObject)) {
             return ;
         }
 
-        const player = Util.$currentPlayer();
-
-        const context = player._$context;
-
-        const currentAttachment = context
-            .frameBuffer
-            .currentAttachment;
-
-        // new buffer
-        const sourceAttachment = context
-            .frameBuffer
-            .createCacheAttachment(width, height, false);
-        context._$bind(sourceAttachment);
-
-        Util.$resetContext(context);
-        context.setTransform(1, 0, 0, 1, 0, 0);
-
-        // id clip
-        if (clip_rect) {
-
-            const dx = clip_rect.x;
-            const dy = clip_rect.y;
-            const dw = clip_rect.width;
-            const dh = clip_rect.height;
-
-            context.save();
-            context._$enterClip();
-            context._$beginClipDef();
-
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context.beginPath();
-            context.moveTo(dx     , dy);
-            context.lineTo(dx + dw, dy);
-            context.lineTo(dx + dw, dy + dh);
-            context.lineTo(dx     , dy + dh);
-            context.lineTo(dx     , dy);
-            context.clip(true);
-            context._$endClipDef();
-
+        if (!this._$width || !this._$height) {
+            return ;
         }
 
-        let tMatrix = matrix
-            ? matrix._$matrix
-            : Util.$MATRIX_ARRAY_IDENTITY;
-
-        let colorTransform = color_transform
-            ? color_transform._$colorTransform
-            : Util.$COLOR_ARRAY_IDENTITY;
-
-        Util.$useCache = false;
-        if (source instanceof DisplayObject) {
-
-            // matrix invert
-            const clone = source._$transform.matrix;
-            clone.invert();
-
-            if (matrix) {
-                tMatrix = Util.$multiplicationMatrix(
-                    tMatrix, clone._$matrix
-                );
-            }
-
-            source._$draw(context, tMatrix, colorTransform);
-
-            Util.$poolMatrix(clone);
-
-        } else {
-
-            // clone canvas
-            const bitmap = new Bitmap(source, PixelSnapping.AUTO, smoothing);
-            bitmap._$draw(context, tMatrix, colorTransform);
-
-        }
-
-        // clip end
-        if (clip_rect) {
-            context.restore();
-            context._$leaveClip();
-        }
-
-        const sourceTexture = context
-            .frameBuffer
-            .getTextureFromCurrentAttachment();
-
-        // setup
-        const attachment = context
-            .frameBuffer
-            .createTextureAttachmentFrom(this._$texture);
-        context._$bind(attachment);
-
-        // pool
-        context
-            .frameBuffer
-            .releaseAttachment(sourceAttachment, false);
-
-        // draw source
-        Util.$resetContext(context);
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context._$imageSmoothingEnabled    = smoothing;
-        context._$globalCompositeOperation = blend_mode;
-        context.drawImage(sourceTexture, 0, 0, width, height);
-
-        if (currentAttachment) {
-            context._$bind(currentAttachment);
-        } else {
-            context.frameBuffer.unbind();
-        }
-
-        // pool
-        context.frameBuffer.releaseTexture(sourceTexture);
-        context.frameBuffer.releaseAttachment(attachment, false);
-
-        // reset
-        Util.$useCache = true;
+        const renderer = Util.$currentPlayer()._$renderer;
+        this._$canvas  = renderer.drawBitmapData(
+            this, source, matrix, color_transform, canvas
+        );
     }
 
     /**
@@ -686,7 +569,7 @@ class BitmapData
             context.frameBuffer.unbind();
             Util.$resetContext(context);
             context.setTransform(1, 0, 0, 1, 0, 0);
-            context._$setColor(0, 0, 0, 0);
+            context._$setColor(1, 1, 1, 1);
             context.clearRect(0, 0, cacheWidth, cacheHeight);
 
             // resize
@@ -732,16 +615,16 @@ class BitmapData
      */
     dispose ()
     {
-        const player  = Util.$currentPlayer();
-        const texture = this._$texture;
-
-        if (texture) {
-            texture._$bitmapData = false;
-        }
-
-        // set null
-        player
-            ._$cacheStore
-            .removeCache(this._$instanceId);
+        // const player  = Util.$currentPlayer();
+        // const texture = this._$texture;
+        //
+        // if (texture) {
+        //     texture._$bitmapData = false;
+        // }
+        //
+        // // set null
+        // player
+        //     ._$cacheStore
+        //     .removeCache(this._$instanceId);
     }
 }

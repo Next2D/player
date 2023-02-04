@@ -390,6 +390,25 @@ class CanvasToWebGLContext
     }
 
     /**
+     * @description textureの最大描画可能サイズからリサイズの比率を算出して返す
+     *              Calculate and return the resize ratio from the maximum drawable size of texture
+     *
+     * @param  {number} width
+     * @param  {number} height
+     * @return {number}
+     * @method
+     * @public
+     */
+    _$getTextureScale (width, height)
+    {
+        const maxSize = Math.max(width, height);
+        if (maxSize > this._$maxTextureSize) {
+            return this._$maxTextureSize / maxSize;
+        }
+        return 1;
+    }
+
+    /**
      * @param  {object} attachment
      * @return void
      * @public
@@ -897,6 +916,87 @@ class CanvasToWebGLContext
     _$beginClipDef ()
     {
         this._$mask._$beginClipDef();
+    }
+
+    /**
+     * @param  {boolean} flag
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$updateContainerClipFlag (flag)
+    {
+        this._$mask._$containerClip = !!flag;
+    }
+
+    /**
+     * @description マスク処理の開始関数
+     *              Mask processing start function
+     *
+     * @param  {Float32Array} matrix
+     * @param  {object} bounds
+     * @return {Float32Array}
+     * @method
+     * @public
+     */
+    _$startClip (matrix, bounds)
+    {
+        let x      = bounds.xMin;
+        let y      = bounds.yMin;
+        let width  = Math.abs(bounds.xMax - bounds.xMin);
+        let height = Math.abs(bounds.yMax - bounds.yMin);
+
+        // resize
+        const manager = this._$frameBufferManager;
+        const currentAttachment = manager.currentAttachment;
+        if (width + x > currentAttachment.texture.width) {
+            width -= width - currentAttachment.texture.width + x;
+        }
+
+        if (height + y > currentAttachment.texture.height) {
+            height -= height - currentAttachment.texture.height + y;
+        }
+
+        if (0 > x) {
+            width += x;
+            x = 0;
+        }
+
+        if (0 > y) {
+            height += y;
+            y = 0;
+        }
+
+        if (0 >= width || 0 >= height) {
+            return null;
+        }
+
+        width  = Math.ceil(width);
+        height = Math.ceil(height);
+
+        this._$cacheCurrentBounds.x = x;
+        this._$cacheCurrentBounds.y = y;
+        this._$cacheCurrentBounds.w = width;
+        this._$cacheCurrentBounds.h = height;
+
+        this._$cacheCurrentBuffer = currentAttachment;
+        const texture = currentAttachment.texture;
+
+        // create new buffer
+        this._$bind(
+            manager.createCacheAttachment(width, height, true)
+        );
+
+        // draw background
+        Util.$resetContext(this);
+        this.setTransform(1, 0, 0, 1, 0, 0);
+        this.drawImage(texture, -x, -y, texture.width, texture.height);
+
+        return Util.$getFloat32Array6(
+            matrix[0], matrix[1], matrix[2], matrix[3],
+            matrix[4] - x,
+            matrix[5] - y
+        );
     }
 
     /**

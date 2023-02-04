@@ -43,13 +43,6 @@ class CacheStore
 
         /**
          * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$useTimer = true;
-
-        /**
-         * @type {boolean}
          * @default false
          * @private
          */
@@ -163,7 +156,7 @@ class CacheStore
      */
     getCanvas ()
     {
-        return this._$pool.pop() || Util.$document.createElement("canvas");
+        return this._$pool.pop() || $document.createElement("canvas");
     }
 
     /**
@@ -217,7 +210,7 @@ class CacheStore
 
         if (this._$timerMap.has(id)) {
             const timerId = this._$timerMap.get(id);
-            const timer = Util.$clearTimeout;
+            const timer = $clearTimeout;
             timer(timerId);
         }
     }
@@ -306,12 +299,10 @@ class CacheStore
         data.set(type, value);
 
         // lifeCheck
-        if (this._$useTimer) {
-            data.set(`life_${type}`, this._$lifeCount);
-            const timer = $setTimeout;
-            const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
-            this._$timerMap.set(id, timerId);
-        }
+        data.set(`life_${type}`, this._$lifeCount);
+        const timer = $setTimeout;
+        const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
+        this._$timerMap.set(id, timerId);
     }
 
     /**
