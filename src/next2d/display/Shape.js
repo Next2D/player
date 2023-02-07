@@ -270,12 +270,60 @@ class Shape extends DisplayObject
         }
 
         if (Util.$rendererWorker) {
-            const recode = graphics._$getRecodes();
-            Util.$rendererWorker.postMessage({
-                "command": "createShape",
-                "recode": recode
-            }, [recode.buffer]);
+            this._$createWorkerInstance();
         }
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$createWorkerInstance ()
+    {
+        const graphics = this._$graphics;
+        const recodes  = graphics._$getRecodes();
+
+        const bounds = this._$getBounds();
+
+        const options = Util.$getArray();
+        const message = {
+            "command": "createShape",
+            "instanceId": this._$instanceId,
+            "maxAlpha": graphics._$maxAlpha,
+            "canDraw": graphics._$canDraw,
+            "xMin": bounds.xMin,
+            "yMin": bounds.yMin,
+            "xMax": bounds.xMax,
+            "yMax": bounds.yMax
+        };
+
+        if (recodes.length
+            && graphics._$maxAlpha > 0
+            && graphics._$canDraw
+        ) {
+            message.recodes = recodes;
+            options.push(recodes.buffer);
+        }
+
+        if (this._$characterId > -1) {
+            message.characterId = this._$characterId;
+        }
+
+        if (this._$loaderInfo) {
+            message.loaderInfoId = this._$loaderInfo._$id;
+        }
+
+        if (this._$scale9Grid) {
+            message.grid = {
+                "x": this._$scale9Grid.x,
+                "y": this._$scale9Grid.y,
+                "w": this._$scale9Grid.width,
+                "h": this._$scale9Grid.height
+            };
+        }
+
+        Util.$rendererWorker.postMessage(message, options);
     }
 
     /**

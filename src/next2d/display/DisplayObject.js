@@ -520,11 +520,22 @@ class DisplayObject extends EventDispatcher
 
         // reset
         if (this._$mask) {
+            if (Util.$rendererWorker && this._$mask._$stage) {
+                Util.$rendererWorker.postMessage({
+                    "command": "remove",
+                    "instanceId": this._$mask._$instanceId
+                });
+            }
+
             this._$mask._$isMask = false;
             this._$mask = null;
         }
 
         if (mask instanceof DisplayObject) {
+            if (Util.$rendererWorker) {
+                mask._$createWorkerInstance();
+            }
+
             mask._$isMask = true;
             this._$mask   = mask;
         }
@@ -1447,6 +1458,13 @@ class DisplayObject extends EventDispatcher
      */
     _$doChanged ()
     {
+        if (Util.$rendererWorker) {
+            Util.$rendererWorker.postMessage({
+                "command": "doChanged",
+                "instanceId": this._$instanceId
+            });
+        }
+
         this._$isNext  = true;
         this._$updated = true;
 
@@ -1794,332 +1812,6 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
-     * @return {object}
-     * @private
-     */
-    _$preDraw (context, matrix)
-    {
-        const originMatrix = this._$transform._$rawMatrix();
-        const tMatrix = Util.$multiplicationMatrix(matrix, originMatrix);
-
-        // size zero
-        if (!tMatrix[0] && !tMatrix[1] || !tMatrix[2] && !tMatrix[3]) {
-            return false;
-        }
-
-        // return object
-        const object = Util.$getPreObject();
-
-        // setup
-        object.matrix = tMatrix;
-
-        // check
-        const filters   = this._$filters   || this.filters;
-        const blendMode = this._$blendMode || this.blendMode;
-        if (filters.length > 0 || blendMode !== BlendMode.NORMAL) {
-
-            // check size
-            const baseBounds = this._$getBounds(null);
-            const bounds = Util.$boundsMatrix(baseBounds, tMatrix);
-            const xMax   = +bounds.xMax;
-            const xMin   = +bounds.xMin;
-            const yMax   = +bounds.yMax;
-            const yMin   = +bounds.yMin;
-
-            // pool
-            Util.$poolBoundsObject(baseBounds);
-            Util.$poolBoundsObject(bounds);
-
-            const width  = $Math.abs(xMax - xMin);
-            const height = $Math.abs(yMax - yMin);
-            if (0 >= width || 0 >= height) {
-                return false;
-            }
-
-            if (0 > xMin + width || 0 > yMin + height) {
-                return false;
-            }
-
-            const currentAttachment = context
-                .frameBuffer
-                .currentAttachment;
-
-            if (xMin > currentAttachment.width
-                || yMin > currentAttachment.height
-            ) {
-                return false;
-            }
-
-            // set origin position
-            object.basePosition.x = originMatrix[4];
-            object.basePosition.y = originMatrix[5];
-
-            // check after size
-            let baseLayerBounds = this._$getLayerBounds(null);
-            const layerBounds = Util.$boundsMatrix(baseLayerBounds, tMatrix);
-
-            // filter size
-            let layerWidth  = $Math.abs(layerBounds.xMax - layerBounds.xMin);
-            let layerHeight = $Math.abs(layerBounds.yMax - layerBounds.yMin);
-            Util.$poolBoundsObject(layerBounds);
-
-            if (layerWidth === width && layerHeight === height) {
-                Util.$poolBoundsObject(baseLayerBounds);
-                baseLayerBounds = null;
-            }
-
-            // move size
-            let tx = tMatrix[4] - $Math.floor(xMin);
-            let ty = tMatrix[5] - $Math.floor(yMin);
-
-            let moveBounds = null;
-            if (baseLayerBounds) {
-
-                const layerMatrix = Util.$getFloat32Array6(
-                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], 0, 0
-                );
-                moveBounds = Util.$boundsMatrix(baseLayerBounds, layerMatrix);
-
-                // pool
-                Util.$poolBoundsObject(baseLayerBounds);
-                Util.$poolFloat32Array6(layerMatrix);
-
-                tx += -$Math.floor(moveBounds.xMin) - tx;
-                ty += -$Math.floor(moveBounds.yMin) - ty;
-            }
-
-            let dx = $Math.floor(xMin);
-            let dy = $Math.floor(yMin);
-            let originX = xMin;
-            let originY = yMin;
-
-            if (moveBounds) {
-                dx -= -$Math.floor(moveBounds.xMin) - (tMatrix[4] - dx);
-                dy -= -$Math.floor(moveBounds.yMin) - (tMatrix[5] - dy);
-
-                originX -= -moveBounds.xMin - (tMatrix[4] - originX);
-                originY -= -moveBounds.yMin - (tMatrix[5] - originY);
-
-                Util.$poolBoundsObject(moveBounds);
-            }
-
-            // set position
-            object.position.dx = dx > 0 ? dx : 0;
-            object.position.dy = dy > 0 ? dy : 0;
-
-            // resize
-            if (layerWidth + originX > currentAttachment.texture.width) {
-                layerWidth -= layerWidth - currentAttachment.texture.width + originX;
-            }
-
-            if (layerHeight + originY > currentAttachment.texture.height) {
-                layerHeight -= layerHeight - currentAttachment.texture.height + originY;
-            }
-
-            if (0 > dx) {
-                tx += dx;
-                layerWidth += originX;
-            }
-
-            if (0 > dy) {
-                ty += dy;
-                layerHeight += originY;
-            }
-
-            if (0 >= layerWidth || 0 >= layerHeight // size (-)
-                || !layerWidth || !layerHeight // NaN or Infinity
-            ) {
-                Util.$poolPreObject(object);
-                return false;
-            }
-
-            // start layer
-            context._$startLayer(
-                Util.$getBoundsObject(originX, 0, originY, 0)
-            );
-
-            // check cache
-            object.canApply = this._$canApply(filters);
-            let updated = this._$isFilterUpdated(
-                layerWidth, layerHeight, tMatrix, filters,
-                object.canApply, object.basePosition.x, object.basePosition.y
-            );
-
-            // current mask cache
-            context._$saveCurrentMask();
-
-            if (updated) {
-                context._$saveAttachment(
-                    $Math.ceil(layerWidth),
-                    $Math.ceil(layerHeight),
-                    false
-                );
-            }
-
-            // setup
-            object.isFilter    = true;
-            object.isUpdated   = updated;
-            object.color       = Util.$getFloat32Array8();
-            object.baseMatrix  = tMatrix;
-            object.filters     = filters;
-            object.blendMode   = blendMode;
-            object.layerWidth  = layerWidth;
-            object.layerHeight = layerHeight;
-            object.matrix      = Util.$getFloat32Array6(
-                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tx, ty
-            );
-        }
-
-        return object;
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
-     * @param  {object} object
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$postDraw (context, matrix, color_transform, object)
-    {
-        // cache
-        const cacheKeys = Util.$getArray(this._$instanceId, "f");
-
-        const cacheStore = Util.$cacheStore();
-        const manager = context._$frameBufferManager;
-
-        // cache or new texture
-        let texture = null;
-        if (object.isUpdated) {
-
-            texture = manager.getTextureFromCurrentAttachment();
-
-            const cacheTexture = cacheStore.get(cacheKeys);
-            if (cacheTexture) {
-                cacheStore.set(cacheKeys, null);
-                manager.releaseTexture(cacheTexture);
-            }
-
-        } else {
-
-            texture = cacheStore.get(cacheKeys);
-
-        }
-
-        // blend only
-        if (!object.canApply) {
-            texture._$offsetX = 0;
-            texture._$offsetY = 0;
-        }
-
-        // set cache offset
-        let offsetX = texture._$offsetX;
-        let offsetY = texture._$offsetY;
-
-        // execute filter
-        if (object.isUpdated && object.canApply) {
-
-            // cache clear
-            let cache = cacheStore.get(cacheKeys);
-            if (cache) {
-
-                // reset cache params
-                cacheStore.set(cacheKeys, null);
-                cache.layerWidth     = 0;
-                cache.layerHeight    = 0;
-                cache._$offsetX      = 0;
-                cache._$offsetY      = 0;
-                cache.matrix         = null;
-                cache.colorTransform = null;
-                manager.releaseTexture(cache);
-
-                cache  = null;
-            }
-
-            // apply filter
-            const length = object.filters.length;
-            if (length) {
-
-                // init
-                context._$offsetX = 0;
-                context._$offsetY = 0;
-
-                for (let idx = 0; idx < length; ++idx) {
-                    texture = object
-                        .filters[idx]
-                        ._$applyFilter(context, matrix);
-                }
-
-                offsetX = context._$offsetX;
-                offsetY = context._$offsetY;
-
-                // reset
-                context._$offsetX = 0;
-                context._$offsetY = 0;
-
-                // set offset
-                texture._$offsetX = offsetX;
-                texture._$offsetY = offsetY;
-
-            }
-        }
-
-        // update cache params
-        if (object.isUpdated) {
-
-            texture.filterState = object.canApply;
-
-            // cache texture
-            const mat = object.baseMatrix;
-            texture.matrix = `${mat[0]}_${mat[1]}_${mat[2]}_${mat[3]}`;
-
-            texture.layerWidth  = object.layerWidth;
-            texture.layerHeight = object.layerHeight;
-        }
-
-        // cache texture
-        cacheStore.set(cacheKeys, texture);
-        Util.$poolArray(cacheKeys);
-
-        // set current buffer
-        if (object.isUpdated) {
-            context._$restoreAttachment();
-        }
-
-        // set
-        Util.$resetContext(context);
-
-        context._$globalAlpha = Util.$clamp(
-            color_transform[3] + color_transform[7] / 255, 0, 1
-        );
-        context._$globalCompositeOperation = object.blendMode;
-
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.drawImage(texture,
-            -offsetX + object.position.dx,
-            -offsetY + object.position.dy,
-            texture.width, texture.height,
-            color_transform
-        );
-
-        // end blend
-        context._$endLayer();
-
-        // reset
-        context._$restoreCurrentMask();
-
-        // object pool
-        Util.$poolFloat32Array8(object.color);
-        Util.$poolFloat32Array6(object.matrix);
-        Util.$poolFloat32Array6(object.baseMatrix);
-        Util.$poolPreObject(object);
-    }
-
-    /**
      * @param  {Float32Array} matrix
      * @return {boolean}
      * @method
@@ -2216,5 +1908,106 @@ class DisplayObject extends EventDispatcher
         context._$endClipDef();
 
         return clipMatrix;
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$postProperty ()
+    {
+        const message = {
+            "command": "setProperty",
+            "instanceId": this._$instanceId,
+            "visible": this._$visible,
+            "isMask": this._$isMask,
+            "clipDepth": this._$clipDepth,
+            "depth": this._$placeId,
+            "maskId": this._$mask ? this._$mask._$instanceId : -1
+        };
+
+        if (this._$visible) {
+
+            const transform = this._$transform;
+
+            const matrix = transform._$rawMatrix();
+            if (matrix[0] !== 1) {
+                message.a = matrix[0];
+            }
+
+            if (matrix[1] !== 0) {
+                message.b = matrix[1];
+            }
+
+            if (matrix[2] !== 0) {
+                message.c = matrix[2];
+            }
+
+            if (matrix[3] !== 1) {
+                message.d = matrix[3];
+            }
+
+            if (matrix[4] !== 0) {
+                message.tx = matrix[4];
+            }
+
+            if (matrix[5] !== 0) {
+                message.ty = matrix[5];
+            }
+
+            const colorTransform = transform._$rawColorTransform();
+            if (colorTransform[0] !== 1) {
+                message.f0 = colorTransform[0];
+            }
+
+            if (colorTransform[1] !== 1) {
+                message.f1 = colorTransform[1];
+            }
+
+            if (colorTransform[2] !== 1) {
+                message.f2 = colorTransform[2];
+            }
+
+            if (colorTransform[3] !== 1) {
+                message.f3 = colorTransform[3];
+            }
+
+            if (colorTransform[4] !== 0) {
+                message.f4 = colorTransform[4];
+            }
+
+            if (colorTransform[5] !== 0) {
+                message.f5 = colorTransform[5];
+            }
+
+            if (colorTransform[6] !== 0) {
+                message.f6 = colorTransform[6];
+            }
+
+            if (colorTransform[7] !== 0) {
+                message.f7 = colorTransform[7];
+            }
+
+            const filters = this._$filters || this.filters;
+            if (filters && filters.length) {
+                const parameters = Util.$getArray();
+                for (let idx = 0; idx < filters.length; ++idx) {
+                    parameters.push(filters[idx]._$toArray());
+                }
+
+                message.filters = parameters;
+            }
+
+            const blendMode = this._$blendMode || this.blendMode;
+            if (blendMode !== BlendMode.NORMAL) {
+                message.blendMode = blendMode;
+            }
+        }
+
+        Util
+            .$rendererWorker
+            .postMessage(message);
+
     }
 }

@@ -8,6 +8,13 @@ let programId = 0;
 
 /**
  * @shortcut
+ * @type {number}
+ * @const
+ */
+const $Infinity = Infinity;
+
+/**
+ * @shortcut
  * @type {Math}
  * @const
  */
@@ -106,9 +113,24 @@ const $performance = performance;
 const $setTimeout = setTimeout;
 
 /**
+ * @shortcut
+ * @type {function}
+ * @const
+ * @static
+ */
+const $clearTimeout = clearTimeout;
+
+/**
  * @type {object}
  */
 const Util = {};
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
+Util.$COLOR_ARRAY_IDENTITY = new $Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 /**
  * @type {number}
@@ -144,6 +166,12 @@ Util.$bezierConverterBuffer = new Array(32);
  * @static
  */
 let $devicePixelRatio = 2;
+
+/**
+ * @type {array}
+ * @static
+ */
+Util.$preObjects = [];
 
 /**
  * @type {array}
@@ -190,6 +218,16 @@ Util.$float32Array4 = [];
 Util.$float32Array6 = [];
 
 /**
+ * 使用済みになったFloat32Arrayをプール、サイズは8固定
+ * Pool used Float32Array, size fixed at 8.
+ *
+ * @type {Float32Array[]}
+ * @const
+ * @static
+ */
+Util.$float32Array8 = [];
+
+/**
  * 使用済みになったFloat32Arrayをプール、サイズは9固定
  * Pool used Float32Array, size fixed at 9.
  *
@@ -230,6 +268,12 @@ Util.$maps = [];
 Util.$bounds = [];
 
 /**
+ * @type {boolean}
+ * @static
+ */
+Util.$useCache = true;
+
+/**
  * @param  {number} x_min
  * @param  {number} x_max
  * @param  {number} y_min
@@ -261,7 +305,43 @@ Util.$poolBoundsObject = (bounds) =>
 };
 
 /**
- * @return {object}
+ * @return {RenderDisplayObjectContainer}
+ * @method
+ * @static
+ */
+Util.$getDisplayObjectContainer = () =>
+{
+    return Util.$containers.length
+        ? Util.$containers.pop()
+        : new RenderDisplayObjectContainer();
+};
+
+/**
+ * @return {RenderTextField}
+ * @method
+ * @static
+ */
+Util.$getTextField = () =>
+{
+    return Util.$textFields.length
+        ? Util.$textFields.pop()
+        : new RenderTextField();
+};
+
+/**
+ * @return {RenderVideo}
+ * @method
+ * @static
+ */
+Util.$getVideo = () =>
+{
+    return Util.$videos.length
+        ? Util.$videos.pop()
+        : new RenderVideo();
+};
+
+/**
+ * @return {RenderShape}
  * @method
  * @static
  */
@@ -340,6 +420,48 @@ Util.$getFloat32Array6 = (f0 = 0, f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0) =>
 Util.$poolFloat32Array6 = (array) =>
 {
     Util.$float32Array6.push(array);
+};
+
+/**
+ * @param  {number} [f0=0]
+ * @param  {number} [f1=0]
+ * @param  {number} [f2=0]
+ * @param  {number} [f3=0]
+ * @param  {number} [f4=0]
+ * @param  {number} [f5=0]
+ * @param  {number} [f6=0]
+ * @param  {number} [f7=0]
+ * @return {Float32Array}
+ * @method
+ * @static
+ */
+Util.$getFloat32Array8 = (
+    f0 = 1, f1 = 1, f2 = 1, f3 = 1, f4 = 0, f5 = 0, f6 = 0, f7 = 0
+) => {
+    const array = Util.$float32Array8.pop()
+        || new $Float32Array(8);
+
+    array[0] = f0;
+    array[1] = f1;
+    array[2] = f2;
+    array[3] = f3;
+    array[4] = f4;
+    array[5] = f5;
+    array[6] = f6;
+    array[7] = f7;
+
+    return array;
+};
+
+/**
+ * @param  {Float32Array} array
+ * @return {void}
+ * @method
+ * @static
+ */
+Util.$poolFloat32Array8 = (array) =>
+{
+    Util.$float32Array8.push(array);
 };
 
 /**
@@ -623,6 +745,27 @@ Util.$multiplicationMatrix = (a, b) =>
 };
 
 /**
+ * @param   {Float32Array} a
+ * @param   {Float32Array} b
+ * @returns {Float32Array}
+ * @method
+ * @static
+ */
+Util.$multiplicationColor = (a, b) =>
+{
+    return Util.$getFloat32Array8(
+        a[0] * b[0],
+        a[1] * b[1],
+        a[2] * b[2],
+        a[3] * b[3],
+        a[0] * b[4] + a[4],
+        a[1] * b[5] + a[5],
+        a[2] * b[6] + a[6],
+        a[3] * b[7] + a[7]
+    );
+};
+
+/**
  * @param  {object} bounds
  * @param  {Float32Array} matrix
  * @return {object}
@@ -754,4 +897,62 @@ Util.$generateFontStyle = (font, size, italic = false, bold = false) =>
     }
 
     return `${fontStyle}${size}px '${font}','sans-serif'`;
+};
+
+/**
+ * @return {CacheStore}
+ * @method
+ * @static
+ */
+Util.$cacheStore = () =>
+{
+    return Util.$renderPlayer._$cacheStore;
+};
+
+/**
+ * @return {object}
+ * @static
+ */
+Util.$getPreObject = () =>
+{
+    return Util.$preObjects.pop() ||
+        {
+            "isFilter":     false,
+            "isUpdated":    null,
+            "canApply":     null,
+            "matrix":       null,
+            "color":        null,
+            "basePosition": { "x": 0, "y": 0 },
+            "position":     { "dx": 0, "dy": 0 },
+            "baseMatrix":   null,
+            "baseColor":    null,
+            "blendMode":    null,
+            "filters":      null,
+            "layerWidth":   null,
+            "layerHeight":  null
+        };
+};
+
+/**
+ * @param {object} object
+ * @return void
+ * @static
+ */
+Util.$poolPreObject = (object) =>
+{
+    // reset
+    object.isFilter    = false;
+    object.isUpdated   = null;
+    object.canApply    = null;
+    object.matrix      = null;
+    object.color       = null;
+    object.baseMatrix  = null;
+    object.baseColor   = null;
+    object.blendMode   = null;
+    object.filters     = null;
+    object.layerWidth  = null;
+    object.layerHeight = null;
+
+    // pool
+    Util.$preObjects.push(object);
 };

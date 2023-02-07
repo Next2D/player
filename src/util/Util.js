@@ -1756,8 +1756,7 @@ Util.$rendererWorker = "OffscreenCanvas" in window
     ? new Worker(URL.createObjectURL(new Blob(["###RENDER_WORKER###"], { "type": "text/javascript" })))
     : null;
 
-// TODO
-Util.$rendererWorker = null;
+// Util.$rendererWorker = null;
 
 /**
  * @type {string}

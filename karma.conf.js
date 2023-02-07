@@ -36,7 +36,7 @@ module.exports = function (config)
             "src/next2d/**/*.js",
             "src/util/CacheStore.js",
             "src/webgl/**/*.js",
-            "src/util/Renderer.js",
+            "src/renderer/Renderer.js",
             "src/player/Player.js",
             "src/player/Next2D.js",
             "test/**/*.js"

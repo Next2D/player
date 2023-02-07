@@ -711,6 +711,9 @@ class DisplayObjectContainer extends InteractiveObject
     {
         if (this._$needsChildren) {
 
+            const cacheStore = Util.$cacheStore();
+            const useWorker  = Util.$rendererWorker !== null && !!this._$stage;
+
             // set flag
             this._$needsChildren = false;
 
@@ -720,6 +723,8 @@ class DisplayObjectContainer extends InteractiveObject
             }
 
             let controller = this._$controller[frame];
+
+            const childrenIds = Util.$getArray();
 
             // first build
             const length = this._$children.length;
@@ -734,15 +739,31 @@ class DisplayObjectContainer extends InteractiveObject
 
                         const loopConfig = instance.loopConfig;
                         if (loopConfig) {
-                            instance._$currentFrame = instance._$getLoopFrame(loopConfig);
+                            instance._$currentFrame = instance
+                                ._$getLoopFrame(loopConfig);
                         }
 
                         this._$children.push(instance);
                         if (instance._$name) {
                             this._$names.set(instance._$name, instance);
                         }
+
+                        if (useWorker) {
+                            childrenIds.push(instance._$instanceId);
+                            instance._$postProperty();
+                        }
                     }
                 }
+
+                if (useWorker) {
+                    Util.$rendererWorker.postMessage({
+                        "command": "setChildren",
+                        "instanceId": this._$instanceId,
+                        "children": childrenIds
+                    });
+                }
+
+                Util.$poolArray(childrenIds);
 
                 return this._$children;
             }
@@ -761,6 +782,7 @@ class DisplayObjectContainer extends InteractiveObject
                     continue;
                 }
 
+                const instanceId = instance._$instanceId;
                 const startFrame = instance._$startFrame;
                 const endFrame   = instance._$endFrame;
                 if (startFrame === 1 && endFrame === 0
@@ -774,10 +796,17 @@ class DisplayObjectContainer extends InteractiveObject
                     instance._$blendMode   = null;
 
                     if (instance._$id === -1) {
+
                         children.push(instance);
                         if (instance._$name) {
                             this._$names.set(instance._$name, instance);
                         }
+
+                        if (useWorker) {
+                            childrenIds.push(instanceId);
+                            instance._$postProperty();
+                        }
+
                         continue;
                     }
 
@@ -798,6 +827,11 @@ class DisplayObjectContainer extends InteractiveObject
                         skipIds.set(id, true);
                         depth++;
 
+                        if (useWorker) {
+                            childrenIds.push(instanceId);
+                            instance._$postProperty();
+                        }
+
                         continue;
                     }
 
@@ -806,12 +840,28 @@ class DisplayObjectContainer extends InteractiveObject
                     continue;
                 }
 
+                if (useWorker) {
+                    Util.$rendererWorker.postMessage({
+                        "command": "remove",
+                        "instanceId": instanceId
+                    });
+                }
+
+                cacheStore.setRemoveTimer(instanceId);
+                if (instance._$loaderInfo && instance._$characterId) {
+                    cacheStore.setRemoveTimer(
+                        `${instance._$loaderInfo._$id}@${instance._$characterId}`
+                    );
+                }
+
                 // remove event
                 if (instance.willTrigger(Event.REMOVED)) {
                     instance.dispatchEvent(new Event(Event.REMOVED, true));
                 }
                 if (instance.willTrigger(Event.REMOVED_FROM_STAGE)) {
-                    instance.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE, true));
+                    instance.dispatchEvent(
+                        new Event(Event.REMOVED_FROM_STAGE, true)
+                    );
                 }
 
                 // reset
@@ -847,22 +897,37 @@ class DisplayObjectContainer extends InteractiveObject
 
                     const loopConfig = instance.loopConfig;
                     if (loopConfig) {
-                        instance._$currentFrame = instance._$getLoopFrame(loopConfig);
+                        instance._$currentFrame = instance
+                            ._$getLoopFrame(loopConfig);
                     }
 
                     children.push(instance);
                     if (instance._$name) {
                         this._$names.set(instance._$name, instance);
                     }
+
+                    if (useWorker) {
+                        childrenIds.push(instance._$instanceId);
+                        instance._$postProperty();
+                    }
                 }
+            }
+
+            if (useWorker) {
+                Util.$rendererWorker.postMessage({
+                    "command": "setChildren",
+                    "instanceId": this._$instanceId,
+                    "children": childrenIds
+                });
             }
 
             // object pool
             Util.$poolMap(skipIds);
             Util.$poolMap(poolInstances);
             Util.$poolArray(this._$children);
+            Util.$poolArray(childrenIds);
 
-            this._$children = null;
+            // update
             this._$children = children;
         }
 
@@ -893,9 +958,38 @@ class DisplayObjectContainer extends InteractiveObject
     _$addChild (child)
     {
         // init
-        child._$stage  = this.constructor === Stage ? this : this._$stage;
         child._$parent = this;
-        child._$root   = this.constructor === Stage ? child : this._$root;
+        if (this.constructor === Stage) {
+
+            child._$stage = this;
+            child._$root  = child;
+
+        } else {
+
+            child._$stage = this._$stage;
+            child._$root  = this._$root;
+
+        }
+
+        if (Util.$rendererWorker && this._$stage) {
+
+            child._$createWorkerInstance();
+
+            const children = this._$getChildren();
+
+            const childrenIds = Util.$getArray();
+            for (let idx = 0; idx < children.length; ++idx) {
+                childrenIds.push(children[idx]._$instanceId);
+            }
+
+            Util.$rendererWorker.postMessage({
+                "command": "setChildren",
+                "instanceId": this._$instanceId,
+                "children": childrenIds
+            });
+
+            Util.$poolArray(childrenIds);
+        }
 
         // setup
         if (child instanceof DisplayObjectContainer) {
@@ -1019,7 +1113,6 @@ class DisplayObjectContainer extends InteractiveObject
 
             // remove stage event
             if (this._$stage !== null) {
-
                 if (child.willTrigger(Event.REMOVED_FROM_STAGE)) {
                     child.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE));
                 }
@@ -1029,8 +1122,37 @@ class DisplayObjectContainer extends InteractiveObject
                 }
             }
 
+            const cacheStore = Util.$cacheStore();
+            cacheStore.setRemoveTimer(child._$instanceId);
+            if (child._$loaderInfo && child._$characterId) {
+                cacheStore.setRemoveTimer(
+                    `${child._$loaderInfo._$id}@${child._$characterId}`
+                );
+            }
+
             // reset params
             if (child instanceof DisplayObjectContainer) {
+
+                if (Util.$rendererWorker && this._$stage) {
+
+                    Util.$rendererWorker.postMessage({
+                        "command": "remove",
+                        "instanceId": child._$instanceId
+                    });
+
+                    const childrenIds = Util.$getArray();
+                    for (let idx = 0; idx < children.length; ++idx) {
+                        childrenIds.push(children[idx]._$instanceId);
+                    }
+
+                    Util.$rendererWorker.postMessage({
+                        "command": "setChildren",
+                        "instanceId": this._$instanceId,
+                        "children": childrenIds
+                    });
+
+                    Util.$poolArray(childrenIds);
+                }
                 child._$removeParentAndStage();
             }
 
@@ -1089,10 +1211,26 @@ class DisplayObjectContainer extends InteractiveObject
             ? this._$getChildren()
             : this._$children;
 
+        const cacheStore = Util.$cacheStore();
         const length = children.length;
         for (let idx = 0; idx < length; ++idx) {
 
             const instance = children[idx];
+
+            cacheStore.setRemoveTimer(instance._$instanceId);
+            if (instance._$loaderInfo && instance._$characterId) {
+                cacheStore.setRemoveTimer(
+                    `${instance._$loaderInfo._$id}@${instance._$characterId}`
+                );
+            }
+
+            if (Util.$rendererWorker && this._$stage) {
+                Util.$rendererWorker.postMessage({
+                    "command": "remove",
+                    "instanceId": instance._$instanceId
+                });
+            }
+
             if (instance instanceof DisplayObjectContainer) {
                 instance._$removeParentAndStage();
             }
@@ -1111,6 +1249,8 @@ class DisplayObjectContainer extends InteractiveObject
                 }
             }
         }
+
+        this._$needsChildren = true;
     }
 
     /**
@@ -1148,7 +1288,6 @@ class DisplayObjectContainer extends InteractiveObject
         for (let idx = children.length - 1; idx > -1; --idx) {
 
             const child = children[idx];
-
             if (!child._$isNext) {
                 continue;
             }
@@ -1214,6 +1353,332 @@ class DisplayObjectContainer extends InteractiveObject
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
         }
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @return {object}
+     * @private
+     */
+    _$preDraw (context, matrix)
+    {
+        const originMatrix = this._$transform._$rawMatrix();
+        const tMatrix = Util.$multiplicationMatrix(matrix, originMatrix);
+
+        // size zero
+        if (!tMatrix[0] && !tMatrix[1] || !tMatrix[2] && !tMatrix[3]) {
+            return false;
+        }
+
+        // return object
+        const object = Util.$getPreObject();
+
+        // setup
+        object.matrix = tMatrix;
+
+        // check
+        const filters   = this._$filters   || this.filters;
+        const blendMode = this._$blendMode || this.blendMode;
+        if (filters.length > 0 || blendMode !== BlendMode.NORMAL) {
+
+            // check size
+            const baseBounds = this._$getBounds(null);
+            const bounds = Util.$boundsMatrix(baseBounds, tMatrix);
+            const xMax   = +bounds.xMax;
+            const xMin   = +bounds.xMin;
+            const yMax   = +bounds.yMax;
+            const yMin   = +bounds.yMin;
+
+            // pool
+            Util.$poolBoundsObject(baseBounds);
+            Util.$poolBoundsObject(bounds);
+
+            const width  = $Math.abs(xMax - xMin);
+            const height = $Math.abs(yMax - yMin);
+            if (0 >= width || 0 >= height) {
+                return false;
+            }
+
+            if (0 > xMin + width || 0 > yMin + height) {
+                return false;
+            }
+
+            const currentAttachment = context
+                .frameBuffer
+                .currentAttachment;
+
+            if (xMin > currentAttachment.width
+                || yMin > currentAttachment.height
+            ) {
+                return false;
+            }
+
+            // set origin position
+            object.basePosition.x = originMatrix[4];
+            object.basePosition.y = originMatrix[5];
+
+            // check after size
+            let baseLayerBounds = this._$getLayerBounds(null);
+            const layerBounds = Util.$boundsMatrix(baseLayerBounds, tMatrix);
+
+            // filter size
+            let layerWidth  = $Math.abs(layerBounds.xMax - layerBounds.xMin);
+            let layerHeight = $Math.abs(layerBounds.yMax - layerBounds.yMin);
+            Util.$poolBoundsObject(layerBounds);
+
+            if (layerWidth === width && layerHeight === height) {
+                Util.$poolBoundsObject(baseLayerBounds);
+                baseLayerBounds = null;
+            }
+
+            // move size
+            let tx = tMatrix[4] - $Math.floor(xMin);
+            let ty = tMatrix[5] - $Math.floor(yMin);
+
+            let moveBounds = null;
+            if (baseLayerBounds) {
+
+                const layerMatrix = Util.$getFloat32Array6(
+                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], 0, 0
+                );
+                moveBounds = Util.$boundsMatrix(baseLayerBounds, layerMatrix);
+
+                // pool
+                Util.$poolBoundsObject(baseLayerBounds);
+                Util.$poolFloat32Array6(layerMatrix);
+
+                tx += -$Math.floor(moveBounds.xMin) - tx;
+                ty += -$Math.floor(moveBounds.yMin) - ty;
+            }
+
+            let dx = $Math.floor(xMin);
+            let dy = $Math.floor(yMin);
+            let originX = xMin;
+            let originY = yMin;
+
+            if (moveBounds) {
+                dx -= -$Math.floor(moveBounds.xMin) - (tMatrix[4] - dx);
+                dy -= -$Math.floor(moveBounds.yMin) - (tMatrix[5] - dy);
+
+                originX -= -moveBounds.xMin - (tMatrix[4] - originX);
+                originY -= -moveBounds.yMin - (tMatrix[5] - originY);
+
+                Util.$poolBoundsObject(moveBounds);
+            }
+
+            // set position
+            object.position.dx = dx > 0 ? dx : 0;
+            object.position.dy = dy > 0 ? dy : 0;
+
+            // resize
+            if (layerWidth + originX > currentAttachment.texture.width) {
+                layerWidth -= layerWidth - currentAttachment.texture.width + originX;
+            }
+
+            if (layerHeight + originY > currentAttachment.texture.height) {
+                layerHeight -= layerHeight - currentAttachment.texture.height + originY;
+            }
+
+            if (0 > dx) {
+                tx += dx;
+                layerWidth += originX;
+            }
+
+            if (0 > dy) {
+                ty += dy;
+                layerHeight += originY;
+            }
+
+            if (0 >= layerWidth || 0 >= layerHeight // size (-)
+                || !layerWidth || !layerHeight // NaN or Infinity
+            ) {
+                Util.$poolPreObject(object);
+                return false;
+            }
+
+            // start layer
+            context._$startLayer(
+                Util.$getBoundsObject(originX, 0, originY, 0)
+            );
+
+            // check cache
+            object.canApply = this._$canApply(filters);
+            let updated = this._$isFilterUpdated(
+                layerWidth, layerHeight, tMatrix, filters,
+                object.canApply, object.basePosition.x, object.basePosition.y
+            );
+
+            // current mask cache
+            context._$saveCurrentMask();
+
+            if (updated) {
+                context._$saveAttachment(
+                    $Math.ceil(layerWidth),
+                    $Math.ceil(layerHeight),
+                    false
+                );
+            }
+
+            // setup
+            object.isFilter    = true;
+            object.isUpdated   = updated;
+            object.color       = Util.$getFloat32Array8();
+            object.baseMatrix  = tMatrix;
+            object.filters     = filters;
+            object.blendMode   = blendMode;
+            object.layerWidth  = layerWidth;
+            object.layerHeight = layerHeight;
+            object.matrix      = Util.$getFloat32Array6(
+                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tx, ty
+            );
+        }
+
+        return object;
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {object} object
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$postDraw (context, matrix, color_transform, object)
+    {
+        // cache
+        const cacheKeys = Util.$getArray(this._$instanceId, "f");
+
+        const cacheStore = Util.$cacheStore();
+        const manager = context._$frameBufferManager;
+
+        // cache or new texture
+        let texture = null;
+        if (object.isUpdated) {
+
+            texture = manager.getTextureFromCurrentAttachment();
+
+            const cacheTexture = cacheStore.get(cacheKeys);
+            if (cacheTexture) {
+                cacheStore.set(cacheKeys, null);
+                manager.releaseTexture(cacheTexture);
+            }
+
+        } else {
+
+            texture = cacheStore.get(cacheKeys);
+
+        }
+
+        // blend only
+        if (!object.canApply) {
+            texture._$offsetX = 0;
+            texture._$offsetY = 0;
+        }
+
+        // set cache offset
+        let offsetX = texture._$offsetX;
+        let offsetY = texture._$offsetY;
+
+        // execute filter
+        if (object.isUpdated && object.canApply) {
+
+            // cache clear
+            let cache = cacheStore.get(cacheKeys);
+            if (cache) {
+
+                // reset cache params
+                cacheStore.set(cacheKeys, null);
+                cache.layerWidth     = 0;
+                cache.layerHeight    = 0;
+                cache._$offsetX      = 0;
+                cache._$offsetY      = 0;
+                cache.matrix         = null;
+                cache.colorTransform = null;
+                manager.releaseTexture(cache);
+
+                cache  = null;
+            }
+
+            // apply filter
+            const length = object.filters.length;
+            if (length) {
+
+                // init
+                context._$offsetX = 0;
+                context._$offsetY = 0;
+
+                for (let idx = 0; idx < length; ++idx) {
+                    texture = object
+                        .filters[idx]
+                        ._$applyFilter(context, matrix);
+                }
+
+                offsetX = context._$offsetX;
+                offsetY = context._$offsetY;
+
+                // reset
+                context._$offsetX = 0;
+                context._$offsetY = 0;
+
+                // set offset
+                texture._$offsetX = offsetX;
+                texture._$offsetY = offsetY;
+
+            }
+        }
+
+        // update cache params
+        if (object.isUpdated) {
+
+            texture.filterState = object.canApply;
+
+            // cache texture
+            const mat = object.baseMatrix;
+            texture.matrix = `${mat[0]}_${mat[1]}_${mat[2]}_${mat[3]}`;
+
+            texture.layerWidth  = object.layerWidth;
+            texture.layerHeight = object.layerHeight;
+        }
+
+        // cache texture
+        cacheStore.set(cacheKeys, texture);
+        Util.$poolArray(cacheKeys);
+
+        // set current buffer
+        if (object.isUpdated) {
+            context._$restoreAttachment();
+        }
+
+        // set
+        Util.$resetContext(context);
+
+        context._$globalAlpha = Util.$clamp(
+            color_transform[3] + color_transform[7] / 255, 0, 1
+        );
+        context._$globalCompositeOperation = object.blendMode;
+
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.drawImage(texture,
+            -offsetX + object.position.dx,
+            -offsetY + object.position.dy,
+            texture.width, texture.height,
+            color_transform
+        );
+
+        // end blend
+        context._$endLayer();
+
+        // reset
+        context._$restoreCurrentMask();
+
+        // object pool
+        Util.$poolFloat32Array8(object.color);
+        Util.$poolFloat32Array6(object.matrix);
+        Util.$poolFloat32Array6(object.baseMatrix);
+        Util.$poolPreObject(object);
     }
 
     /**
@@ -1396,9 +1861,13 @@ class DisplayObjectContainer extends InteractiveObject
 
                     const player = this.stage._$player;
                     const mScale = player._$scale * player._$ratio;
-                    const playerMatrix = Util.$getFloat32Array6(mScale, 0, 0, mScale, 0, 0);
+                    const playerMatrix = Util.$getFloat32Array6(
+                        mScale, 0, 0, mScale, 0, 0
+                    );
 
-                    maskMatrix = Util.$multiplicationMatrix(playerMatrix, maskMatrix);
+                    maskMatrix = Util.$multiplicationMatrix(
+                        playerMatrix, maskMatrix
+                    );
                     Util.$poolFloat32Array6(playerMatrix);
 
                     if (context._$isLayer) {
@@ -1489,7 +1958,6 @@ class DisplayObjectContainer extends InteractiveObject
 
         Util.$poolFloat32Array6(preMatrix);
         Util.$poolPreObject(preData);
-
     }
 
     /**
@@ -1784,5 +2252,38 @@ class DisplayObjectContainer extends InteractiveObject
         Util.$hitContext.beginPath();
 
         return this._$mouseHit(Util.$hitContext, matrix, { "x": x, "y": y });
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$createWorkerInstance ()
+    {
+        const options = Util.$getArray();
+        const message = {
+            "command": "createDisplayObjectContainer",
+            "instanceId": this._$instanceId
+        };
+
+        if (this._$graphics) {
+            const graphics = this._$graphics;
+            const recodes  = graphics._$getRecodes();
+
+            if (recodes.length
+                && graphics._$maxAlpha > 1
+                && graphics._$canDraw
+            ) {
+                message.recodes = recodes;
+                message.xMin    = graphics._$xMin;
+                message.yMin    = graphics._$yMin;
+                message.xMax    = graphics._$xMax;
+                message.yMax    = graphics._$yMax;
+                options.push(recodes.buffer);
+            }
+        }
+
+        Util.$rendererWorker.postMessage(message, options);
     }
 }

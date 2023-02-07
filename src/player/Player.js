@@ -16,6 +16,13 @@ class Player
         this._$stage = new Stage();
         this._$stage._$player = this;
 
+        if (Util.$rendererWorker) {
+            Util.$rendererWorker.postMessage({
+                "command": "setStage",
+                "instanceId": this._$stage._$instanceId
+            });
+        }
+
         /**
          * @type {CacheStore}
          * @private
@@ -288,18 +295,6 @@ class Player
         this._$loadId  = -1;
 
         /**
-         * @type {Renderer}
-         * @private
-         */
-        this._$renderer = new Renderer();
-
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this._$useWorker = false;
-
-        /**
          * @type {CanvasToWebGLContext}
          * @default null
          * @private
@@ -493,10 +488,18 @@ class Player
 
             this._$startTime = $performance.now();
 
-            this._$fps = 1000 / this._$stage._$frameRate;
+            const frameRate = this._$stage._$frameRate;
+            this._$fps = 1000 / frameRate;
 
             const timer = $requestAnimationFrame;
             this._$timerId = timer(this._$bindRun);
+
+            if (Util.$rendererWorker) {
+                Util.$rendererWorker.postMessage({
+                    "command": "play",
+                    "frameRate": frameRate
+                });
+            }
         }
     }
 
@@ -514,7 +517,13 @@ class Player
         this._$timerId  = -1;
 
         SoundMixer.stopAll();
-        Util.$cacheStore().reset();
+        this._$cacheStore.reset();
+
+        if (Util.$rendererWorker) {
+            Util.$rendererWorker.postMessage({
+                "command": "stop"
+            });
+        }
     }
 
     /**
@@ -578,7 +587,7 @@ class Player
         if (element) {
 
             // background color
-            this._$renderer.setBackgroundColor(this._$bgColor);
+            this._$setBackgroundColor(this._$bgColor);
 
             // DOM
             this._$deleteNode();
@@ -846,8 +855,6 @@ class Player
 
         if (Util.$rendererWorker) {
 
-            this._$useWorker = true;
-
             const offscreenCanvas = canvas.transferControlToOffscreen();
 
             Util.$rendererWorker.postMessage({
@@ -1040,7 +1047,6 @@ class Player
             // cache reset
             this._$stage._$doChanged();
             this._$cacheStore.reset();
-            this._$renderer.cacheClear();
 
             const parent = div.parentNode;
 
@@ -1094,14 +1100,6 @@ class Player
             this._$width  = width;
             this._$height = height;
 
-            // main canvas resize
-            this._$resizeCanvas(width, height);
-            this._$setBackgroundColor(this._$bgColor);
-
-            if (this._$ratio > 1 && $devicePixelRatio > 1) {
-                this._$canvas.style.transform = `scale(${1 / this._$ratio})`;
-            }
-
             const mScale = this._$scale * this._$ratio;
             this._$matrix[0] = mScale;
             this._$matrix[3] = mScale;
@@ -1109,18 +1107,25 @@ class Player
             if (this._$fullScreen) {
 
                 this._$tx = (width -
-                        this._$baseWidth
-                        * scale
-                        * $devicePixelRatio) / 2;
+                    this._$baseWidth
+                    * scale
+                    * $devicePixelRatio) / 2;
 
                 this._$ty = (height -
-                        this._$baseHeight
-                        * scale
-                        * $devicePixelRatio) / 2;
+                    this._$baseHeight
+                    * scale
+                    * $devicePixelRatio) / 2;
 
                 this._$matrix[4] = this._$tx;
                 this._$matrix[5] = this._$ty;
 
+            }
+
+            // main canvas resize
+            this._$resizeCanvas(width, height, mScale, this._$tx, this._$ty);
+
+            if (this._$ratio > 1 && $devicePixelRatio > 1) {
+                this._$canvas.style.transform = `scale(${1 / this._$ratio})`;
             }
 
             if (div.children.length > 1) {
@@ -1145,8 +1150,8 @@ class Player
         if (Util.$rendererWorker) {
 
             Util.$rendererWorker.postMessage({
-                "backgroundColor": background_color,
-                "command": "setBackgroundColor"
+                "command": "setBackgroundColor",
+                "backgroundColor": background_color
             });
 
         } else {
@@ -1179,18 +1184,24 @@ class Player
     /**
      * @param  {number} width
      * @param  {number} height
+     * @param  {number} scale
+     * @param  {number} [tx = 0]
+     * @param  {number} [ty = 0]
      * @return {void}
      * @method
      * @private
      */
-    _$resizeCanvas (width, height)
+    _$resizeCanvas (width, height, scale, tx = 0, ty = 0)
     {
         if (Util.$rendererWorker) {
 
             Util.$rendererWorker.postMessage({
                 "command": "resize",
                 "width": width,
-                "height": height
+                "height": height,
+                "scale": scale,
+                "tx": tx,
+                "ty": ty
             });
 
         } else {
@@ -1699,16 +1710,21 @@ class Player
      */
     _$draw ()
     {
-        if (this._$useWorker) {
-            return ;
-        }
-
         if (!this._$width || !this._$height) {
             return ;
         }
 
         if (!this._$stage._$updated) {
             return ;
+        }
+
+        // start sound
+        if (this._$sounds.size) {
+            const values = this._$sounds.values();
+            for (const movieClip of values) {
+                movieClip._$soundPlay();
+            }
+            this._$sounds.clear();
         }
 
         const context = this._$context;
@@ -1732,15 +1748,6 @@ class Player
 
         // stage end
         this._$stage._$updated = false;
-
-        // start sound
-        if (this._$sounds.size) {
-            const values = this._$sounds.values();
-            for (let movieClip of values) {
-                movieClip._$soundPlay();
-            }
-            this._$sounds.clear();
-        }
 
         const manager = context._$frameBufferManager;
         const texture = manager.getTextureFromCurrentAttachment();

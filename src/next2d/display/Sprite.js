@@ -15,7 +15,7 @@ class Sprite extends DisplayObjectContainer
      * @constructor
      * @public
      */
-    constructor()
+    constructor ()
     {
         super();
 
@@ -302,6 +302,12 @@ class Sprite extends DisplayObjectContainer
     _$build (tag, parent)
     {
         const character = super._$build(tag, parent);
+        if (Util.$rendererWorker) {
+            Util.$rendererWorker.postMessage({
+                "command": "createDisplayObjectContainer",
+                "instanceId": this._$instanceId
+            });
+        }
 
         this._$controller   = character.controller;
         this._$dictionary   = character.dictionary;

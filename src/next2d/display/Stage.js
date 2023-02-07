@@ -12,7 +12,7 @@ class Stage extends DisplayObjectContainer
      * @constructor
      * @public
      */
-    constructor()
+    constructor ()
     {
         super();
 

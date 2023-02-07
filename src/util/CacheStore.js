@@ -4,10 +4,9 @@
 class CacheStore
 {
     /**
-     * @param {boolean} [use_worker = false]
      * @constructor
      */
-    constructor (use_worker = false)
+    constructor ()
     {
         /**
          * @type {array}
@@ -22,13 +21,6 @@ class CacheStore
         this._$store = new Map();
 
         /**
-         * @type {number}
-         * @default 2
-         * @private
-         */
-        this._$lifeCount = 2;
-
-        /**
          * @type {Map}
          * @private
          */
@@ -40,19 +32,6 @@ class CacheStore
          * @private
          */
         this._$context = null;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$useWorker = !!use_worker;
-
-        /**
-         * @type {function}
-         * @private
-         */
-        this._$delayLifeCheck = this.lifeCheck.bind(this);
 
         /**
          * @type {function}
@@ -187,6 +166,22 @@ class CacheStore
     }
 
     /**
+     * @param  {string|number} id
+     * @return {void}
+     * @method
+     * @public
+     */
+    clearTimer (id)
+    {
+        id = `${id}`;
+        if (this._$timerMap.has(id)) {
+            const timer = $clearTimeout;
+            timer(this._$timerMap.get(id));
+            this._$timerMap.delete(id);
+        }
+    }
+
+    /**
      * @param   {string|number} id
      * @returns {void}
      * @method
@@ -198,20 +193,37 @@ class CacheStore
         if (this._$store.has(id)) {
 
             const data = this._$store.get(id);
-
-            const values = data.values();
-            for (const value of values) {
+            for (const value of data.values()) {
                 this.destroy(value);
             }
 
+            data.clear();
             Util.$poolMap(data);
             this._$store.delete(id);
         }
 
-        if (this._$timerMap.has(id)) {
-            const timerId = this._$timerMap.get(id);
-            const timer = $clearTimeout;
-            timer(timerId);
+        this.clearTimer(id);
+    }
+
+    /**
+     * @description 5秒後にキャッシュを削除
+     *
+     * @param  {number|string} id
+     * @return {void}
+     * @method
+     * @public
+     */
+    setRemoveTimer (id)
+    {
+        id = `${id}`;
+
+        this.clearTimer(id);
+
+        // set timer
+        if (this._$store.has(id)) {
+            const timer = $setTimeout;
+            const timerId = timer(() => { this.removeCache(id) }, 5000);
+            this._$timerMap.set(id, timerId);
         }
     }
 
@@ -240,17 +252,12 @@ class CacheStore
 
         if (this._$store.has(id)) {
 
+            if (this._$timerMap.has(id)) {
+                this.clearTimer(id);
+            }
+
             const data = this._$store.get(id);
-
             if (data.has(type)) {
-
-                const key = `life_${type}`;
-
-                // reset
-                if (data.has(key) && data.get(key) === 1) {
-                    data.set(key, this._$lifeCount);
-                }
-
                 return data.get(type);
             }
 
@@ -297,12 +304,6 @@ class CacheStore
 
         // set cache
         data.set(type, value);
-
-        // lifeCheck
-        data.set(`life_${type}`, this._$lifeCount);
-        const timer = $setTimeout;
-        const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
-        this._$timerMap.set(id, timerId);
     }
 
     /**
@@ -343,54 +344,6 @@ class CacheStore
 
         // reset
         bitmap_data._$pixelBuffer = null;
-    }
-
-    /**
-     * @param  {*} id
-     * @param  {string} type
-     * @return {void}
-     * @method
-     * @public
-     */
-    lifeCheck (id, type)
-    {
-        if (!this._$store.has(id)) {
-            return ;
-        }
-        const data = this._$store.get(id);
-        const key  = `life_${type}`;
-
-        const lifeCount = data.get(key) - 1;
-        if (!lifeCount) {
-
-            if (this._$useWorker) {
-                globalThis.postMessage({
-                    "command": "cacheClear",
-                    "id": id,
-                    "type": type
-                });
-            }
-
-            // destroy
-            this.destroy(data.get(type));
-
-            // delete key
-            data.delete(type);
-            data.delete(key);
-
-            if (!data.size) {
-                Util.$poolMap(data);
-                this._$store.delete(id);
-            }
-
-            return ;
-        }
-        data.set(key, lifeCount);
-
-        // next
-        const timer = $setTimeout;
-        const timerId = timer(() => { this._$delayLifeCheck(id, type) }, 5000);
-        this._$timerMap.set(id, timerId);
     }
 
     /**

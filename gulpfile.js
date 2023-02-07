@@ -57,7 +57,7 @@ const buildRenderWorker = () =>
 {
     return gulp
         .src([
-            "src/worker/RenderUtil.js",
+            "src/renderer/RenderUtil.js",
             "src/util/CacheStore.js",
             "src/next2d/geom/Rectangle.js",
             "src/next2d/display/BlendMode.js",
@@ -77,7 +77,9 @@ const buildRenderWorker = () =>
             "src/next2d/filters/BlurFilter.js",
             "src/next2d/filters/*.js",
             "src/webgl/**/*.js",
-            "src/worker/RenderBase.js"
+            "src/renderer/RenderDisplayObject.js",
+            "src/renderer/RenderGraphics.js",
+            "src/renderer/*.js"
         ])
         .pipe(concat("RenderWorker.js"))
         .pipe(gulp.dest("src/worker"));
@@ -153,7 +155,7 @@ const lint = () =>
             "src/next2d/**/*.js",
             "src/util/CacheStore.js",
             "src/webgl/**/*.js",
-            "src/util/Renderer.js",
+            "src/renderer/*.js",
             "src/player/Player.js",
             "src/player/Next2D.js"
         ])
@@ -193,7 +195,6 @@ const buildJavaScript = () =>
             "src/next2d/**/*.js",
             "src/util/CacheStore.js",
             "src/webgl/**/*.js",
-            "src/util/Renderer.js",
             "src/player/Player.js",
             "src/player/Next2D.js",
             "src/Footer.build.file"
