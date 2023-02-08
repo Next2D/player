@@ -34,6 +34,323 @@ class RenderGraphics extends RenderDisplayObject
     }
 
     /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$clip (context, matrix)
+    {
+        context.setTransform(
+            matrix[0], matrix[1], matrix[2],
+            matrix[3], matrix[4], matrix[5]
+        );
+
+        this._$runCommand(context, this._$recodes, null, true);
+
+        context.clip();
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {string} [blend_mode=BlendMode.NORMAL]
+     * @param  {array}  [filters=null]
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$draw (context, matrix, color_transform,
+        blend_mode = BlendMode.NORMAL, filters = null
+    ) {
+
+        if (!this._$visible) {
+            return ;
+        }
+
+        const alpha = Util.$clamp(color_transform[3] + color_transform[7] / 255, 0, 1, 0);
+        if (!alpha || !this._$maxAlpha) {
+            return ;
+        }
+
+        const rawMatrix = this._$matrix;
+
+        // set grid data
+        let hasGrid = this._$scale9Grid !== null;
+
+        // 9スライスを有効にしたオブジェクトが回転・傾斜成分を含む場合は
+        // 9スライスは無効になる
+        if (hasGrid) {
+            hasGrid = hasGrid
+                && $Math.abs(rawMatrix[1]) < 0.001
+                && $Math.abs(rawMatrix[2]) < 0.0001;
+        }
+
+        // size
+        const baseBounds = Util.$getBoundsObject(
+            this._$xMin, this._$xMax,
+            this._$yMin, this._$yMax
+        );
+
+        const bounds = Util.$boundsMatrix(baseBounds, matrix);
+        const xMax   = bounds.xMax;
+        const xMin   = bounds.xMin;
+        const yMax   = bounds.yMax;
+        const yMin   = bounds.yMin;
+        Util.$poolBoundsObject(bounds);
+
+        const width  = $Math.ceil($Math.abs(xMax - xMin));
+        const height = $Math.ceil($Math.abs(yMax - yMin));
+        switch (true) {
+
+            case width === 0:
+            case height === 0:
+            case width === -$Infinity:
+            case height === -$Infinity:
+            case width === $Infinity:
+            case height === $Infinity:
+                return;
+
+            default:
+                break;
+
+        }
+
+        // cache current buffer
+        const manager = context._$frameBufferManager;
+        const currentAttachment = manager.currentAttachment;
+        if (xMin > currentAttachment.width
+            || yMin > currentAttachment.height
+        ) {
+            return;
+        }
+
+        let xScale = +$Math.sqrt(
+            matrix[0] * matrix[0]
+            + matrix[1] * matrix[1]
+        );
+        if (!$Number.isInteger(xScale)) {
+            const value = xScale.toString();
+            const index = value.indexOf("e");
+            if (index !== -1) {
+                xScale = +value.slice(0, index);
+            }
+            xScale = +xScale.toFixed(4);
+        }
+
+        let yScale = +$Math.sqrt(
+            matrix[2] * matrix[2]
+            + matrix[3] * matrix[3]
+        );
+        if (!$Number.isInteger(yScale)) {
+            const value = yScale.toString();
+            const index = value.indexOf("e");
+            if (index !== -1) {
+                yScale = +value.slice(0, index);
+            }
+            yScale = +yScale.toFixed(4);
+        }
+
+        if (0 > xMin + width || 0 > yMin + height) {
+
+            if (filters && filters.length && this._$canApply(filters)) {
+
+                let rect = new Rectangle(0, 0, width, height);
+                for (let idx = 0; idx < filters.length ; ++idx) {
+                    rect = filters[idx]
+                        ._$generateFilterRect(rect, xScale, yScale);
+                }
+
+                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
+                    return;
+                }
+
+            } else {
+                return;
+            }
+
+        }
+
+        // get cache
+        const keys = Util.$getArray(xScale, yScale);
+
+        let uniqueId = this._$instanceId;
+        if (!hasGrid
+            && this._$loaderInfoId > -1
+            && this._$characterId > -1
+        ) {
+            uniqueId = `${this._$loaderInfoId}@${this._$characterId}`;
+        }
+
+        const cacheStore = Util.$cacheStore();
+        const cacheKeys  = cacheStore.generateKeys(
+            uniqueId, keys, color_transform
+        );
+
+        Util.$poolArray(keys);
+
+        let texture = cacheStore.get(cacheKeys);
+        if (!texture) {
+
+            // resize
+            let width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+            let height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
+            const textureScale = context._$getTextureScale(width, height);
+            if (textureScale < 1) {
+                width  *= textureScale;
+                height *= textureScale;
+            }
+
+            // create cache buffer
+            const buffer = manager
+                .createCacheAttachment(width, height, true);
+            context._$bind(buffer);
+
+            // reset
+            Util.$resetContext(context);
+            context.setTransform(
+                xScale, 0, 0, yScale,
+                -baseBounds.xMin * xScale,
+                -baseBounds.yMin * yScale
+            );
+
+            if (hasGrid) {
+
+                const player = Util.$renderPlayer;
+                const mScale = player._$matrix[0];
+
+                const baseMatrix = Util.$getFloat32Array6(
+                    mScale, 0, 0, mScale, 0, 0
+                );
+
+                const pMatrix = Util.$multiplicationMatrix(
+                    baseMatrix, rawMatrix
+                );
+
+                Util.$poolFloat32Array6(baseMatrix);
+
+                const aMatrixBase = this._$matrixBase;
+
+                const aMatrix = Util.$getFloat32Array6(
+                    aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
+                    aMatrixBase[4] * mScale - xMin,
+                    aMatrixBase[5] * mScale - yMin
+                );
+
+                const apMatrix = Util.$multiplicationMatrix(
+                    aMatrix, pMatrix
+                );
+                const aOffsetX = apMatrix[4] - (matrix[4] - xMin);
+                const aOffsetY = apMatrix[5] - (matrix[5] - yMin);
+                Util.$poolFloat32Array6(apMatrix);
+
+                const parentBounds = Util.$boundsMatrix(baseBounds, pMatrix);
+                const parentXMax   = +parentBounds.xMax;
+                const parentXMin   = +parentBounds.xMin;
+                const parentYMax   = +parentBounds.yMax;
+                const parentYMin   = +parentBounds.yMin;
+                const parentWidth  = $Math.ceil($Math.abs(parentXMax - parentXMin));
+                const parentHeight = $Math.ceil($Math.abs(parentYMax - parentYMin));
+
+                Util.$poolBoundsObject(parentBounds);
+
+                context.grid.enable(
+                    parentXMin, parentYMin, parentWidth, parentHeight,
+                    baseBounds, this._$scale9Grid, mScale,
+                    pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
+                    aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
+                );
+
+                Util.$poolFloat32Array6(pMatrix);
+                Util.$poolFloat32Array6(aMatrix);
+            }
+
+            // plain alpha
+            color_transform[3] = 1;
+            this._$runCommand(context, this._$recodes, color_transform, false);
+
+            if (hasGrid) {
+                context.grid.disable();
+            }
+
+            texture = manager.getTextureFromCurrentAttachment();
+
+            // set cache
+            if (Util.$useCache) {
+                cacheStore.set(cacheKeys, texture);
+            }
+
+            // release buffer
+            manager.releaseAttachment(buffer, false);
+
+            // end draw and reset current buffer
+            context._$bind(currentAttachment);
+        }
+
+        let drawFilter = false;
+        let offsetX = 0;
+        let offsetY = 0;
+        if (filters && filters.length
+            && this._$canApply(filters)
+        ) {
+
+            drawFilter = true;
+
+            texture = this._$drawFilter(
+                context, texture, matrix,
+                filters, width, height
+            );
+
+            offsetX = texture._$offsetX;
+            offsetY = texture._$offsetY;
+        }
+
+        const radianX = drawFilter ? 0 : $Math.atan2(matrix[1], matrix[0]);
+        const radianY = drawFilter ? 0 : $Math.atan2(-matrix[2], matrix[3]);
+        if (radianX || radianY) {
+
+            const tx = baseBounds.xMin * xScale;
+            const ty = baseBounds.yMin * yScale;
+
+            const cosX = $Math.cos(radianX);
+            const sinX = $Math.sin(radianX);
+            const cosY = $Math.cos(radianY);
+            const sinY = $Math.sin(radianY);
+
+            context.setTransform(
+                cosX, sinX, -sinY, cosY,
+                tx * cosX - ty * sinY + matrix[4],
+                tx * sinX + ty * cosY + matrix[5]
+            );
+
+        } else {
+
+            context.setTransform(1, 0, 0, 1,
+                xMin - offsetX, yMin - offsetY
+            );
+
+        }
+
+        // reset
+        Util.$resetContext(context);
+
+        // draw
+        context._$globalAlpha = alpha;
+        context._$imageSmoothingEnabled = true;
+        context._$globalCompositeOperation = blend_mode;
+
+        context.drawImage(texture,
+            0, 0, texture.width, texture.height, color_transform
+        );
+
+        // pool
+        Util.$poolArray(cacheKeys);
+        Util.$poolBoundsObject(baseBounds);
+    }
+
+    /**
      * @description strokeのセットアップ
      *
      * @param  {CanvasToWebGLContext|CanvasRenderingContext2D} context

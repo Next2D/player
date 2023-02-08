@@ -162,6 +162,45 @@ class RenderDisplayObject
     }
 
     /**
+     * @param   {Float32Array}  [matrix=null]
+     * @returns {object}
+     * @private
+     */
+    _$getLayerBounds (matrix = null)
+    {
+        const baseBounds = this._$getBounds(matrix);
+
+        const filters = this._$filters;
+        if (!filters) {
+            return baseBounds;
+        }
+
+        const length = filters.length;
+        if (!length) {
+            return baseBounds;
+        }
+
+        let rect = new Rectangle(
+            baseBounds.xMin,
+            baseBounds.yMin,
+            baseBounds.xMax - baseBounds.xMin,
+            baseBounds.yMax - baseBounds.yMin
+        );
+        Util.$poolBoundsObject(baseBounds);
+
+        for (let idx = 0; idx < length; ++idx) {
+            rect = filters[idx]._$generateFilterRect(rect, null, null, true);
+        }
+
+        const xMin = rect._$x;
+        const xMax = rect._$x + rect._$width;
+        const yMin = rect._$y;
+        const yMax = rect._$y + rect._$height;
+
+        return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+    }
+
+    /**
      * @param   {Float32Array} [matrix=null]
      * @returns {object}
      * @method
@@ -315,6 +354,10 @@ class RenderDisplayObject
                     new (filterClass.bind.apply(filterClass, parameters))()
                 );
             }
+        }
+
+        if (object.matrixBase) {
+            this._$matrixBase = object.matrixBase;
         }
     }
 

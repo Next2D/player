@@ -130,6 +130,13 @@ const Util = {};
  * @const
  * @static
  */
+Util.$MATRIX_ARRAY_IDENTITY = new $Float32Array([1, 0, 0, 1, 0, 0]);
+
+/**
+ * @type {Float32Array}
+ * @const
+ * @static
+ */
 Util.$COLOR_ARRAY_IDENTITY = new $Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 /**

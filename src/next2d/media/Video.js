@@ -1007,4 +1007,14 @@ class Video extends DisplayObject
             this._$bounds.yMin, this._$bounds.yMax
         );
     }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$createWorkerInstance ()
+    {
+        console.log("createWorkerInstance");
+    }
 }

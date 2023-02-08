@@ -44,7 +44,7 @@ describe("DisplayObject.js property test", function()
     it("stage test success case2", function ()
     {
         const stage = new Stage();
-        const obj   = stage.addChild(new DisplayObject());
+        const obj   = stage.addChild(new Shape());
         expect(stage._$id).toBe(obj.stage._$id); // reset
     });
 
@@ -56,7 +56,7 @@ describe("DisplayObject.js property test", function()
 
     it("parent test success case2", function () {
         const stage = new Stage();
-        const obj   = stage.addChild(new DisplayObject());
+        const obj   = stage.addChild(new Shape());
         expect(obj.parent._$instanceId).toBe(stage._$instanceId);
     });
 

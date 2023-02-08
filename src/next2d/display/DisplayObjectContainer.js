@@ -545,12 +545,15 @@ class DisplayObjectContainer extends InteractiveObject
             multiMatrix = matrix;
 
             const rawMatrix = this._$transform._$rawMatrix();
-            if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
+            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+            ) {
                 multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
             }
         }
 
-        const isGraphics = this._$graphics && this._$graphics._$getBounds();
+        const isGraphics = !!this._$graphics;
 
         const children = this._$needsChildren
             ? this._$getChildren()
@@ -1312,13 +1315,13 @@ class DisplayObjectContainer extends InteractiveObject
     }
 
     /**
-     * @param  {Renderer} renderer
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @return {void}
      * @method
      * @private
      */
-    _$clip (renderer, matrix)
+    _$clip (context, matrix)
     {
         let multiMatrix = matrix;
 
@@ -1331,7 +1334,7 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         if (this._$graphics && this._$graphics._$getBounds()) {
-            this._$graphics._$clip(renderer, multiMatrix);
+            this._$graphics._$clip(context, multiMatrix);
         }
 
         const children = this._$getChildren();
@@ -1345,7 +1348,7 @@ class DisplayObjectContainer extends InteractiveObject
                 continue;
             }
 
-            instance._$clip(renderer, multiMatrix);
+            instance._$clip(context, multiMatrix);
             instance._$updated = false;
 
         }
@@ -2267,9 +2270,10 @@ class DisplayObjectContainer extends InteractiveObject
             "instanceId": this._$instanceId
         };
 
-        if (this._$graphics) {
-            const graphics = this._$graphics;
-            const recodes  = graphics._$getRecodes();
+        const graphics = this._$graphics;
+        if (graphics) {
+
+            const recodes = graphics._$getRecodes();
 
             if (recodes.length
                 && graphics._$maxAlpha > 1
@@ -2285,5 +2289,45 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         Util.$rendererWorker.postMessage(message, options);
+    }
+
+    /**
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$postProperty ()
+    {
+        const message = super._$postProperty();
+
+        const graphics = this._$graphics;
+        if (graphics && !graphics._$buffer) {
+
+            message.maxAlpha = graphics._$maxAlpha;
+            message.canDraw  = graphics._$canDraw;
+
+            const recodes = graphics._$getRecodes();
+            message.recodes = recodes;
+            const options = Util.$getArray(recodes.buffer);
+
+            const bounds = this._$getBounds();
+            message.xMin = bounds.xMin;
+            message.yMin = bounds.yMin;
+            message.xMax = bounds.xMax;
+            message.yMax = bounds.yMax;
+
+            Util
+                .$rendererWorker
+                .postMessage(message, options);
+
+            Util.$poolArray(options);
+
+        } else {
+
+            Util
+                .$rendererWorker
+                .postMessage(message);
+
+        }
     }
 }

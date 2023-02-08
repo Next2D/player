@@ -19,79 +19,53 @@ class RenderDisplayObjectContainer extends RenderGraphics
     }
 
     /**
-     * @param  {array} [matrix=null]
-     * @return {object}
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @return {void}
+     * @method
      * @private
      */
-    _$getBounds (matrix = null)
+    _$clip (context, matrix)
     {
-        let multiMatrix = Util.$MATRIX_ARRAY_IDENTITY;
-        if (matrix) {
+        let multiMatrix = matrix;
 
-            multiMatrix = matrix;
-
-            const rawMatrix = this._$transform._$rawMatrix();
-            if (rawMatrix !== Util.$MATRIX_ARRAY_IDENTITY) {
-                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
-            }
+        const rawMatrix = this._$matrix;
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
+            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
         }
 
-        const length = this._$children.length;
-
-        // size zero
-        if (!length && !this._$recodes) {
-            const bounds = Util.$getBoundsObject(
-                multiMatrix[4], -multiMatrix[4],
-                multiMatrix[5], -multiMatrix[5]
-            );
-            if (matrix && multiMatrix !== matrix) {
-                Util.$poolFloat32Array6(multiMatrix);
-            }
-            return bounds;
+        if (this._$recodes && this._$canDraw) {
+            super._$clip(context, multiMatrix);
         }
 
-        // data init
-        const no = $Number.MAX_VALUE;
-        let xMin = no;
-        let xMax = -no;
-        let yMin = no;
-        let yMax = -no;
-
-        if (this._$recodes) {
-
-            const baseBounds = Util.$getBoundsObject(
-                this._$xMin, this._$xMax, this._$yMin, this._$yMax
-            );
-
-            const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
-            xMin   = bounds.xMin;
-            xMax   = bounds.xMax;
-            yMin   = bounds.yMin;
-            yMax   = bounds.yMax;
-
-            Util.$poolBoundsObject(bounds);
-            Util.$poolBoundsObject(baseBounds);
-        }
-
+        const instances = Util.$renderPlayer._$instances;
+        const children  = this._$children;
+        const length    = children.length;
         for (let idx = 0; idx < length; ++idx) {
 
-            const bounds = this._$children[idx]._$getBounds(multiMatrix);
+            const id = children[idx];
+            if (instances.has(id)) {
+                continue;
+            }
 
-            xMin = $Math.min(xMin, bounds.xMin);
-            xMax = $Math.max(xMax, bounds.xMax);
-            yMin = $Math.min(yMin, bounds.yMin);
-            yMax = $Math.max(yMax, bounds.yMax);
+            const instance = instances.get(id);
 
-            Util.$poolBoundsObject(bounds);
+            // mask instance
+            if (instance._$isMask) {
+                continue;
+            }
+
+            instance._$clip(context, multiMatrix);
+            instance._$updated = false;
 
         }
 
-        if (matrix && multiMatrix !== matrix) {
+        if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
         }
-
-        // end
-        return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
     }
 
     /**
@@ -144,8 +118,8 @@ class RenderDisplayObjectContainer extends RenderGraphics
         const preColorTransform = preData.isFilter ? preData.color : multiColor;
 
         // if graphics draw
-        if (this._$graphics && this._$graphics._$canDraw) {
-            this._$graphics._$draw(context, preMatrix, preColorTransform);
+        if (this._$recodes && this._$canDraw && this._$maxAlpha > 0) {
+            super._$draw(context, preMatrix, preColorTransform);
         }
 
         // init clip params
@@ -368,6 +342,200 @@ class RenderDisplayObjectContainer extends RenderGraphics
     }
 
     /**
+     * @param  {array} [matrix=null]
+     * @return {object}
+     * @private
+     */
+    _$getLayerBounds (matrix = null)
+    {
+        let multiMatrix = Util.$MATRIX_ARRAY_IDENTITY;
+
+        const rawMatrix = this._$matrix;
+        if (matrix) {
+
+            multiMatrix = matrix;
+
+            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+            ) {
+                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            }
+        }
+
+        const isGraphics = this._$recodes;
+        const children   = this._$children;
+        const length     = children.length;
+
+        // size zero
+        if (!length && !isGraphics) {
+            const bounds = Util.$getBoundsObject(
+                multiMatrix[4], -multiMatrix[4],
+                multiMatrix[5], -multiMatrix[5]
+            );
+            if (matrix && multiMatrix !== matrix) {
+                Util.$poolFloat32Array6(multiMatrix);
+            }
+            return bounds;
+        }
+
+        // data init
+        const no   = $Number.MAX_VALUE;
+        let xMin = no;
+        let xMax = -no;
+        let yMin = no;
+        let yMax = -no;
+
+        if (isGraphics) {
+            const baseBounds = Util.$getBoundsObject(
+                this._$xMin, this._$xMax,
+                this._$yMin, this._$yMax
+            );
+
+            const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
+            xMin   = bounds.xMin;
+            xMax   = bounds.xMax;
+            yMin   = bounds.yMin;
+            yMax   = bounds.yMax;
+            Util.$poolBoundsObject(bounds);
+            Util.$poolBoundsObject(baseBounds);
+        }
+
+        const instances = Util.$renderPlayer._$instances;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const id = children[idx];
+            if (!instances.has(id)) {
+                continue;
+            }
+
+            const bounds = instances.get(id)._$getLayerBounds(multiMatrix);
+
+            xMin = $Math.min(xMin, bounds.xMin);
+            xMax = $Math.max(xMax, bounds.xMax);
+            yMin = $Math.min(yMin, bounds.yMin);
+            yMax = $Math.max(yMax, bounds.yMax);
+
+            Util.$poolBoundsObject(bounds);
+
+        }
+
+        if (matrix && multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+
+        // end
+        if (!matrix) {
+            return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+        }
+
+        const filters = this._$filters;
+        const fLength = filters.length;
+        if (!fLength) {
+            return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+        }
+
+        let rect = new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
+        for (let idx = 0; idx < fLength; ++idx) {
+            rect = filters[idx]._$generateFilterRect(rect, null, null, true);
+        }
+
+        xMin = rect._$x;
+        xMax = rect._$x + rect._$width;
+        yMin = rect._$y;
+        yMax = rect._$y + rect._$height;
+
+        return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+    }
+
+    /**
+     * @param   {Float32Array} [matrix=null]
+     * @returns {object}
+     * @method
+     * @private
+     */
+    _$getBounds (matrix = null)
+    {
+        let multiMatrix = Util.$MATRIX_ARRAY_IDENTITY;
+        if (matrix) {
+
+            multiMatrix = matrix;
+
+            const rawMatrix = this._$transform._$rawMatrix();
+            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+            ) {
+                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            }
+        }
+
+        const isGraphics = this._$recodes;
+        const children   = this._$children;
+        const length     = children.length;
+
+        // size zero
+        if (!length && !isGraphics) {
+            const bounds = Util.$getBoundsObject(
+                multiMatrix[4], -multiMatrix[4],
+                multiMatrix[5], -multiMatrix[5]
+            );
+            if (matrix && multiMatrix !== matrix) {
+                Util.$poolFloat32Array6(multiMatrix);
+            }
+            return bounds;
+        }
+
+        // data init
+        const no = $Number.MAX_VALUE;
+        let xMin = no;
+        let xMax = -no;
+        let yMin = no;
+        let yMax = -no;
+
+        if (isGraphics) {
+            const baseBounds = Util.$getBoundsObject(
+                this._$xMin, this._$xMax,
+                this._$yMin, this._$yMax
+            );
+
+            const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
+            xMin   = bounds.xMin;
+            xMax   = bounds.xMax;
+            yMin   = bounds.yMin;
+            yMax   = bounds.yMax;
+            Util.$poolBoundsObject(bounds);
+            Util.$poolBoundsObject(baseBounds);
+        }
+
+        const instances = Util.$renderPlayer._$instances;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const id = children[idx];
+            if (!instances.has(id)) {
+                continue;
+            }
+
+            const bounds = instances.get(id)._$getBounds(multiMatrix);
+
+            xMin = $Math.min(xMin, bounds.xMin);
+            xMax = $Math.max(xMax, bounds.xMax);
+            yMin = $Math.min(yMin, bounds.yMin);
+            yMax = $Math.max(yMax, bounds.yMax);
+
+            Util.$poolBoundsObject(bounds);
+
+        }
+
+        if (matrix && multiMatrix !== matrix) {
+            Util.$poolFloat32Array6(multiMatrix);
+        }
+
+        // end
+        return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+    }
+
+    /**
      * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @return {object}
@@ -375,9 +543,8 @@ class RenderDisplayObjectContainer extends RenderGraphics
      */
     _$preDraw (context, matrix)
     {
-        const multiMatrix = this._$matrix
-            ? Util.$multiplicationMatrix(matrix, this._$matrix)
-            : matrix;
+        const originMatrix = this._$matrix;
+        const multiMatrix  = Util.$multiplicationMatrix(matrix, originMatrix);
 
         // size zero
         if (!multiMatrix[0] && !multiMatrix[1]
@@ -554,6 +721,150 @@ class RenderDisplayObjectContainer extends RenderGraphics
         }
 
         return object;
+    }
+
+    /**
+     * @param  {CanvasToWebGLContext} context
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {object} object
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$postDraw (context, matrix, color_transform, object)
+    {
+        // cache
+        const cacheKeys = Util.$getArray(this._$instanceId, "f");
+
+        const cacheStore = Util.$cacheStore();
+        const manager = context._$frameBufferManager;
+
+        // cache or new texture
+        let texture = null;
+        if (object.isUpdated) {
+
+            texture = manager.getTextureFromCurrentAttachment();
+
+            const cacheTexture = cacheStore.get(cacheKeys);
+            if (cacheTexture) {
+                cacheStore.set(cacheKeys, null);
+                manager.releaseTexture(cacheTexture);
+            }
+
+        } else {
+
+            texture = cacheStore.get(cacheKeys);
+
+        }
+
+        // blend only
+        if (!object.canApply) {
+            texture._$offsetX = 0;
+            texture._$offsetY = 0;
+        }
+
+        // set cache offset
+        let offsetX = texture._$offsetX;
+        let offsetY = texture._$offsetY;
+
+        // execute filter
+        if (object.isUpdated && object.canApply) {
+
+            // cache clear
+            let cache = cacheStore.get(cacheKeys);
+            if (cache) {
+
+                // reset cache params
+                cacheStore.set(cacheKeys, null);
+                cache.layerWidth     = 0;
+                cache.layerHeight    = 0;
+                cache._$offsetX      = 0;
+                cache._$offsetY      = 0;
+                cache.matrix         = null;
+                cache.colorTransform = null;
+                manager.releaseTexture(cache);
+
+                cache  = null;
+            }
+
+            // apply filter
+            const length = object.filters.length;
+            if (length) {
+
+                // init
+                context._$offsetX = 0;
+                context._$offsetY = 0;
+
+                for (let idx = 0; idx < length; ++idx) {
+                    texture = object
+                        .filters[idx]
+                        ._$applyFilter(context, matrix);
+                }
+
+                offsetX = context._$offsetX;
+                offsetY = context._$offsetY;
+
+                // reset
+                context._$offsetX = 0;
+                context._$offsetY = 0;
+
+                // set offset
+                texture._$offsetX = offsetX;
+                texture._$offsetY = offsetY;
+
+            }
+        }
+
+        // update cache params
+        if (object.isUpdated) {
+
+            texture.filterState = object.canApply;
+
+            // cache texture
+            const mat = object.baseMatrix;
+            texture.matrix = `${mat[0]}_${mat[1]}_${mat[2]}_${mat[3]}`;
+
+            texture.layerWidth  = object.layerWidth;
+            texture.layerHeight = object.layerHeight;
+        }
+
+        // cache texture
+        cacheStore.set(cacheKeys, texture);
+        Util.$poolArray(cacheKeys);
+
+        // set current buffer
+        if (object.isUpdated) {
+            context._$restoreAttachment();
+        }
+
+        // set
+        Util.$resetContext(context);
+
+        context._$globalAlpha = Util.$clamp(
+            color_transform[3] + color_transform[7] / 255, 0, 1
+        );
+        context._$globalCompositeOperation = object.blendMode;
+
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.drawImage(texture,
+            -offsetX + object.position.dx,
+            -offsetY + object.position.dy,
+            texture.width, texture.height,
+            color_transform
+        );
+
+        // end blend
+        context._$endLayer();
+
+        // reset
+        context._$restoreCurrentMask();
+
+        // object pool
+        Util.$poolFloat32Array8(object.color);
+        Util.$poolFloat32Array6(object.matrix);
+        Util.$poolFloat32Array6(object.baseMatrix);
+        Util.$poolPreObject(object);
     }
 
     /**

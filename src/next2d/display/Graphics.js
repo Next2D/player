@@ -423,39 +423,39 @@ class Graphics
     clear ()
     {
         // param clear
-        this._$maxAlpha      = 0;
-        this._$pointerX      = 0;
-        this._$pointerY      = 0;
-        this._$canDraw       = false;
+        this._$maxAlpha     = 0;
+        this._$pointerX     = 0;
+        this._$pointerY     = 0;
+        this._$canDraw      = false;
 
         // fill
-        this._$fillType      = 0;
-        this._$fillGradient  = null;
-        this._$fillBitmap    = null;
-        this._$fillStyleR    = 0;
-        this._$fillStyleG    = 0;
-        this._$fillStyleB    = 0;
-        this._$fillStyleA    = 0;
-        this._$doFill        = false;
+        this._$fillType     = 0;
+        this._$fillGradient = null;
+        this._$fillBitmap   = null;
+        this._$fillStyleR   = 0;
+        this._$fillStyleG   = 0;
+        this._$fillStyleB   = 0;
+        this._$fillStyleA   = 0;
+        this._$doFill       = false;
 
         // stroke
-        this._$lineType      = 0;
-        this._$lineGradient  = 0;
-        this._$caps          = CapsStyle.NONE;
-        this._$joints        = JointStyle.ROUND;
-        this._$miterLimit    = 0;
-        this._$lineWidth     = 1;
-        this._$lineStyleR    = 0;
-        this._$lineStyleG    = 0;
-        this._$lineStyleB    = 0;
-        this._$lineStyleA    = 0;
-        this._$doLine        = false;
+        this._$lineType     = 0;
+        this._$lineGradient = 0;
+        this._$caps         = CapsStyle.NONE;
+        this._$joints       = JointStyle.ROUND;
+        this._$miterLimit   = 0;
+        this._$lineWidth    = 1;
+        this._$lineStyleR   = 0;
+        this._$lineStyleG   = 0;
+        this._$lineStyleB   = 0;
+        this._$lineStyleA   = 0;
+        this._$doLine       = false;
 
         // bounds size
-        this._$xMin          = $Number.MAX_VALUE;
-        this._$xMax          = -$Number.MAX_VALUE;
-        this._$yMin          = $Number.MAX_VALUE;
-        this._$yMax          = -$Number.MAX_VALUE;
+        this._$xMin         = $Number.MAX_VALUE;
+        this._$xMax         = -$Number.MAX_VALUE;
+        this._$yMin         = $Number.MAX_VALUE;
+        this._$yMax         = -$Number.MAX_VALUE;
 
         // init array
         if (this._$recode) {

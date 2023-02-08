@@ -1911,7 +1911,7 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @return {void}
+     * @return {object}
      * @method
      * @private
      */
@@ -2003,11 +2003,20 @@ class DisplayObject extends EventDispatcher
             if (blendMode !== BlendMode.NORMAL) {
                 message.blendMode = blendMode;
             }
+
+            if (this._$scale9Grid && this._$isUpdated()) {
+
+                const baseMatrix = this
+                    ._$parent
+                    ._$transform
+                    .concatenatedMatrix;
+
+                message.matrixBase = baseMatrix._$matrix.slice();
+
+                Util.$poolMatrix(baseMatrix);
+            }
         }
 
-        Util
-            .$rendererWorker
-            .postMessage(message);
-
+        return message;
     }
 }

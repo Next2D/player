@@ -3363,4 +3363,14 @@ class TextField extends InteractiveObject
         }
 
     }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$createWorkerInstance ()
+    {
+        console.log("createWorkerInstance");
+    }
 }

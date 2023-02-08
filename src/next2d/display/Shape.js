@@ -282,6 +282,10 @@ class Shape extends DisplayObject
     _$createWorkerInstance ()
     {
         const graphics = this._$graphics;
+        if (!graphics) {
+            return ;
+        }
+
         const recodes  = graphics._$getRecodes();
 
         const bounds = this._$getBounds();
@@ -370,7 +374,7 @@ class Shape extends DisplayObject
             return Util.$getBoundsObject(0, 0, 0, 0);
         }
 
-        const baseBounds = this._$graphics._$getBounds();
+        const baseBounds = this._$graphics._$getBounds(matrix);
         if (!matrix) {
             return baseBounds;
         }
@@ -537,5 +541,45 @@ class Shape extends DisplayObject
         }
 
         return hit;
+    }
+
+    /**
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$postProperty ()
+    {
+        const message = super._$postProperty();
+
+        const graphics = this._$graphics;
+        if (graphics && !graphics._$buffer) {
+
+            message.maxAlpha = graphics._$maxAlpha;
+            message.canDraw  = graphics._$canDraw;
+
+            const recodes = graphics._$getRecodes();
+            message.recodes = recodes;
+            const options = Util.$getArray(recodes.buffer);
+
+            const bounds = this._$getBounds();
+            message.xMin = bounds.xMin;
+            message.yMin = bounds.yMin;
+            message.xMax = bounds.xMax;
+            message.yMax = bounds.yMax;
+
+            Util
+                .$rendererWorker
+                .postMessage(message, options);
+
+            Util.$poolArray(options);
+
+        } else {
+
+            Util
+                .$rendererWorker
+                .postMessage(message);
+
+        }
     }
 }
