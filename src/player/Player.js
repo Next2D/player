@@ -1337,7 +1337,7 @@ class Player
 
         } else {
 
-            if (this._$videos.length) {
+            if (this._$videos.length && !Util.$rendererWorker) {
                 this._$draw();
             }
 

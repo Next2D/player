@@ -113,6 +113,13 @@ class DisplayObject extends EventDispatcher
         this._$isNext = true;
 
         /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$posted = false;
+
+        /**
          * @type {number}
          * @default 0
          * @private
@@ -1465,6 +1472,7 @@ class DisplayObject extends EventDispatcher
             });
         }
 
+        this._$posted  = false;
         this._$isNext  = true;
         this._$updated = true;
 
@@ -1625,6 +1633,10 @@ class DisplayObject extends EventDispatcher
         this._$executeAddedEvent();
 
         this._$isNext = false;
+
+        if (!this._$posted && Util.$rendererWorker) {
+            this._$postProperty();
+        }
 
         return false;
     }
@@ -1917,6 +1929,8 @@ class DisplayObject extends EventDispatcher
      */
     _$postProperty ()
     {
+        this._$posted = true;
+
         const message = {
             "command": "setProperty",
             "instanceId": this._$instanceId,

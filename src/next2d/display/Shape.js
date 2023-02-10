@@ -286,11 +286,10 @@ class Shape extends DisplayObject
             return ;
         }
 
-        const recodes  = graphics._$getRecodes();
-
-        const bounds = this._$getBounds();
-
+        const recodes = graphics._$getRecodes();
+        const bounds  = this._$getBounds();
         const options = Util.$getArray();
+
         const message = {
             "command": "createShape",
             "instanceId": this._$instanceId,

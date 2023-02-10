@@ -122,13 +122,6 @@ class Video extends DisplayObject
         this._$volume = 1;
 
         /**
-         * @type {Uint8Array}
-         * @default null
-         * @private
-         */
-        this._$buffer = null;
-
-        /**
          * @type {OffscreenCanvasRenderingContext2D}
          * @default null
          * @private
@@ -328,9 +321,8 @@ class Video extends DisplayObject
             .then((response) => response.arrayBuffer())
             .then((buffer) =>
             {
-                this._$buffer = new Uint8Array(buffer);
                 this._$video.src = URL.createObjectURL(new Blob(
-                    [this._$buffer],
+                    [buffer],
                     { "type": "video/mp4" }
                 ));
             });
@@ -527,6 +519,10 @@ class Video extends DisplayObject
                 return ;
             }
 
+            if (Util.$rendererWorker) {
+                this._$postProperty();
+            }
+
             // update
             this._$bytesLoaded = this._$video.currentTime;
             if (this._$video.currentTime) {
@@ -594,7 +590,7 @@ class Video extends DisplayObject
                 this._$doChanged();
             }
 
-            if (player._$renderer._$worker) {
+            if (Util.$rendererWorker) {
                 const canvas = new $OffscreenCanvas(
                     this._$video.videoWidth,
                     this._$video.videoHeight
@@ -649,6 +645,10 @@ class Video extends DisplayObject
         // setup
         this._$video.volume = $Math.min(character.volume, SoundMixer.volume);
         this._$video.load();
+
+        if (Util.$rendererWorker) {
+            this._$createWorkerInstance();
+        }
     }
 
     /**
@@ -709,8 +709,8 @@ class Video extends DisplayObject
 
         Util.$resetContext(context);
         context.setTransform(
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4], matrix[5]
+            multiMatrix[0], multiMatrix[1], multiMatrix[2],
+            multiMatrix[3], multiMatrix[4], multiMatrix[5]
         );
 
         context.beginPath();
@@ -809,8 +809,11 @@ class Video extends DisplayObject
         }
 
         // cache current buffer
-        const currentAttachment = context.frameBuffer.currentAttachment;
-        if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
+        const manager = context._$frameBufferManager;
+        const currentAttachment = manager.currentAttachment;
+        if (xMin > currentAttachment.width
+            || yMin > currentAttachment.height
+        ) {
             return;
         }
 
@@ -845,8 +848,6 @@ class Video extends DisplayObject
         }
 
         const blendMode = this._$blendMode || this.blendMode;
-
-        const manager = context._$frameBufferManager;
 
         let texture = manager.createTextureFromVideo(
             this._$video, this._$smoothing
@@ -895,8 +896,8 @@ class Video extends DisplayObject
             context._$globalCompositeOperation = blendMode;
 
             context.setTransform(
-                matrix[0], matrix[1], matrix[2],
-                matrix[3], matrix[4], matrix[5]
+                multiMatrix[0], multiMatrix[1], multiMatrix[2],
+                multiMatrix[3], multiMatrix[4], multiMatrix[5]
             );
 
             context.drawImage(
@@ -1015,6 +1016,83 @@ class Video extends DisplayObject
      */
     _$createWorkerInstance ()
     {
-        console.log("createWorkerInstance");
+        const message = {
+            "command": "createVideo",
+            "instanceId": this._$instanceId,
+            "smoothing": this._$smoothing,
+            "xMin": this._$bounds.xMin,
+            "yMin": this._$bounds.yMin,
+            "xMax": this._$bounds.xMax,
+            "yMax": this._$bounds.yMax
+        };
+
+        if (this._$characterId > -1) {
+            message.characterId = this._$characterId;
+        }
+
+        if (this._$loaderInfo) {
+            message.loaderInfoId = this._$loaderInfo._$id;
+        }
+
+        if (this._$scale9Grid) {
+            message.grid = {
+                "x": this._$scale9Grid.x,
+                "y": this._$scale9Grid.y,
+                "w": this._$scale9Grid.width,
+                "h": this._$scale9Grid.height
+            };
+        }
+
+        Util.$rendererWorker.postMessage(message);
+    }
+
+    /**
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$postProperty ()
+    {
+        if (this._$wait && this._$stage) {
+
+            this._$stop = false;
+            this._$video.play();
+
+            this.dispatchEvent(
+                new VideoEvent(VideoEvent.PLAY_START), false, false,
+                this._$bytesLoaded, this._$bytesTotal
+            );
+
+            const timer = $requestAnimationFrame;
+            this._$timerId = timer(this._$update);
+
+            this._$wait = false;
+        }
+
+        const message = super._$postProperty();
+        message.smoothing = this._$smoothing;
+
+        const options = Util.$getArray();
+        if (this._$context) {
+
+            message.xMin = this._$bounds.xMin;
+            message.yMin = this._$bounds.yMin;
+            message.xMax = this._$bounds.xMax;
+            message.yMax = this._$bounds.yMax;
+
+            this._$context.drawImage(this._$video, 0, 0);
+
+            const imageBitmap = this
+                ._$context
+                .canvas
+                .transferToImageBitmap();
+
+            message.imageBitmap = imageBitmap;
+            options.push(imageBitmap);
+        }
+
+        Util.$rendererWorker.postMessage(message, options);
+
+        Util.$poolArray(options);
     }
 }

@@ -40,7 +40,7 @@ class RenderPlayer
          * @default false
          * @private
          */
-        this._$stopFlag = false;
+        this._$stopFlag = true;
 
         /**
          * @type {number}
@@ -410,7 +410,20 @@ class RenderPlayer
      */
     _$createVideo (object)
     {
-        console.log(object);
+        const video = Util.$getVideo();
+
+        video._$instanceId = object.instanceId;
+
+        if ("characterId" in object) {
+            video._$characterId = object.characterId;
+        }
+        if ("loaderInfoId" in object) {
+            video._$loaderInfoId = object.loaderInfoId;
+        }
+
+        video._$updateProperty(object);
+
+        this._$instances.set(video._$instanceId, video);
     }
 
     /**
@@ -423,7 +436,26 @@ class RenderPlayer
      */
     _$createTextField (object)
     {
-        console.log(object);
+        const textField = Util.$getTextField();
+
+        textField._$instanceId = object.instanceId;
+
+        // bounds
+        textField._$xMin = object.xMin;
+        textField._$yMin = object.yMin;
+        textField._$xMax = object.xMax;
+        textField._$yMax = object.yMax;
+
+        if ("characterId" in object) {
+            textField._$characterId = object.characterId;
+        }
+        if ("loaderInfoId" in object) {
+            textField._$loaderInfoId = object.loaderInfoId;
+        }
+
+        textField._$updateProperty(object);
+
+        this._$instances.set(textField._$instanceId, textField);
     }
 }
 

@@ -602,9 +602,6 @@ class TextField extends InteractiveObject
                 if (this.willTrigger(FocusEvent.FOCUS_IN)) {
                     this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_IN));
                 }
-
-                this._$doChanged();
-                Util.$isUpdated = true;
             }
 
         } else {
@@ -619,9 +616,6 @@ class TextField extends InteractiveObject
                 if (this.willTrigger(FocusEvent.FOCUS_OUT)) {
                     this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_OUT));
                 }
-
-                this._$doChanged();
-                Util.$isUpdated = true;
 
                 this._$textarea.remove();
             }
@@ -2466,6 +2460,10 @@ class TextField extends InteractiveObject
         }
 
         this.text = character.text;
+
+        if (Util.$rendererWorker) {
+            this._$createWorkerInstance();
+        }
     }
 
     /**
@@ -3128,8 +3126,6 @@ class TextField extends InteractiveObject
                     value = found ? found.join("") : "";
                 }
 
-                this.text = value;
-
                 const div = Util
                     .$document
                     .getElementById(Util.$currentPlayer().contentElementId);
@@ -3142,13 +3138,12 @@ class TextField extends InteractiveObject
 
                     if (element) {
                         element.remove();
-                        this._$focus = false;
-                        this._$textAreaActive = false;
-
-                        Util.$isUpdated = true;
-                        this._$doChanged();
                     }
                 }
+
+                this.text = value;
+                this._$focus = false;
+                this._$textAreaActive = false;
 
             }.bind(this));
 
@@ -3361,7 +3356,6 @@ class TextField extends InteractiveObject
         if (this._$maxChars) {
             this._$textarea.maxLength = this._$maxChars;
         }
-
     }
 
     /**
@@ -3371,6 +3365,91 @@ class TextField extends InteractiveObject
      */
     _$createWorkerInstance ()
     {
-        console.log("createWorkerInstance");
+        const bounds = this._$getBounds();
+
+        const message = {
+            "command": "createTextField",
+            "instanceId": this._$instanceId,
+            "xMin": bounds.xMin,
+            "yMin": bounds.yMin,
+            "xMax": bounds.xMax,
+            "yMax": bounds.yMax,
+            "textData": this._$getTextData(),
+            "scrollV": this.scrollV,
+            "widthTable": this._$widthTable,
+            "heightTable": this._$heightTable,
+            "textHeightTable": this._$textHeightTable,
+            "objectTable": this._$objectTable,
+            "limitWidth": this.width,
+            "limitHeight": this.height,
+            "textHeight": this.textHeight,
+            "verticalAlign": this._$verticalAlign,
+            "autoSize": this._$autoSize
+        };
+
+        if (this._$characterId > -1) {
+            message.characterId = this._$characterId;
+        }
+
+        if (this._$loaderInfo) {
+            message.loaderInfoId = this._$loaderInfo._$id;
+        }
+
+        if (this._$scale9Grid) {
+            message.grid = {
+                "x": this._$scale9Grid.x,
+                "y": this._$scale9Grid.y,
+                "w": this._$scale9Grid.width,
+                "h": this._$scale9Grid.height
+            };
+        }
+
+        Util.$rendererWorker.postMessage(message);
+    }
+
+    /**
+     * @return {object}
+     * @method
+     * @private
+     */
+    _$postProperty ()
+    {
+        const message = super._$postProperty();
+
+        message.textAreaActive = this._$textAreaActive;
+        if (this._$renew || this._$isUpdated()) {
+
+            message.textData        = this._$getTextData();
+            message.scrollV         = this.scrollV;
+            message.widthTable      = this._$widthTable;
+            message.heightTable     = this._$heightTable;
+            message.textHeightTable = this._$textHeightTable;
+            message.objectTable     = this._$objectTable;
+            message.limitWidth      = this.width;
+            message.limitHeight     = this.height;
+            message.textHeight      = this.textHeight;
+            message.verticalAlign   = this._$verticalAlign;
+            message.autoSize        = this._$autoSize;
+            message.wordWrap        = this._$wordWrap;
+
+            message.border = this._$border;
+            if (this._$border) {
+                message.borderColor = this._$borderColor;
+            }
+
+            message.background = this._$background;
+            if (this._$background) {
+                message.backgroundColor = this._$backgroundColor;
+            }
+
+            message.thickness = this._$thickness;
+            if (this._$thickness) {
+                message.thicknessColor = this._$backgroundColor;
+            }
+        }
+
+        Util
+            .$rendererWorker
+            .postMessage(message);
     }
 }
