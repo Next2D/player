@@ -174,20 +174,20 @@ class RenderVideo extends RenderDisplayObject
             return;
         }
 
-        let xScale = +$Math.sqrt(
-            multiMatrix[0] * multiMatrix[0]
-            + multiMatrix[1] * multiMatrix[1]
-        );
-
-        let yScale = +$Math.sqrt(
-            multiMatrix[2] * multiMatrix[2]
-            + multiMatrix[3] * multiMatrix[3]
-        );
-
         const filters = this._$filters || this.filters;
         if (0 > xMin + width || 0 > yMin + height) {
 
             if (filters && filters.length && this._$canApply(filters)) {
+
+                const xScale = +$Math.sqrt(
+                    multiMatrix[0] * multiMatrix[0]
+                    + multiMatrix[1] * multiMatrix[1]
+                );
+
+                const yScale = +$Math.sqrt(
+                    multiMatrix[2] * multiMatrix[2]
+                    + multiMatrix[3] * multiMatrix[3]
+                );
 
                 let rect = new Rectangle(0, 0, width, height);
                 for (let idx = 0; idx < filters.length ; ++idx) {
@@ -216,7 +216,7 @@ class RenderVideo extends RenderDisplayObject
 
             // draw filter
             texture = this._$drawFilter(
-                context, texture, matrix,
+                context, texture, multiMatrix,
                 filters, width, height
             );
 
@@ -230,11 +230,12 @@ class RenderVideo extends RenderDisplayObject
 
             // size
             const baseBounds = this._$getBounds();
-            const bounds = Util.$boundsMatrix(baseBounds, matrix);
+            const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
             context.setTransform(1, 0, 0, 1,
                 bounds.xMin - texture._$offsetX,
                 bounds.yMin - texture._$offsetY
             );
+
             context.drawImage(texture,
                 0, 0, texture.width, texture.height,
                 color_transform
@@ -259,13 +260,13 @@ class RenderVideo extends RenderDisplayObject
                 multiMatrix[3], multiMatrix[4], multiMatrix[5]
             );
 
-            context.drawImage(
-                texture, 0, 0,
-                texture.width, texture.height, color_transform
+            context.drawImage(texture,
+                0, 0, texture.width, texture.height,
+                color_transform
             );
-        }
 
-        manager.releaseTexture(texture);
+            manager.releaseTexture(texture);
+        }
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
@@ -294,6 +295,7 @@ class RenderVideo extends RenderDisplayObject
 
         super._$remove();
 
+        Util.$renderPlayer._$videos--;
         Util.$videos.push(this);
     }
 

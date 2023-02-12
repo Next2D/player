@@ -817,20 +817,20 @@ class Video extends DisplayObject
             return;
         }
 
-        let xScale = +$Math.sqrt(
-            multiMatrix[0] * multiMatrix[0]
-            + multiMatrix[1] * multiMatrix[1]
-        );
-
-        let yScale = +$Math.sqrt(
-            multiMatrix[2] * multiMatrix[2]
-            + multiMatrix[3] * multiMatrix[3]
-        );
-
         const filters = this._$filters || this.filters;
         if (0 > xMin + width || 0 > yMin + height) {
 
             if (filters && filters.length && this._$canApply(filters)) {
+
+                const xScale = +$Math.sqrt(
+                    multiMatrix[0] * multiMatrix[0]
+                    + multiMatrix[1] * multiMatrix[1]
+                );
+
+                const yScale = +$Math.sqrt(
+                    multiMatrix[2] * multiMatrix[2]
+                    + multiMatrix[3] * multiMatrix[3]
+                );
 
                 let rect = new Rectangle(0, 0, width, height);
                 for (let idx = 0; idx < filters.length ; ++idx) {
@@ -859,7 +859,7 @@ class Video extends DisplayObject
 
             // draw filter
             texture = this._$drawFilter(
-                context, texture, matrix,
+                context, texture, multiMatrix,
                 filters, width, height
             );
 
@@ -872,11 +872,12 @@ class Video extends DisplayObject
             context._$globalCompositeOperation = blendMode;
 
             // size
-            const bounds = Util.$boundsMatrix(this._$bounds, matrix);
+            const bounds = Util.$boundsMatrix(this._$bounds, multiMatrix);
             context.setTransform(1, 0, 0, 1,
                 bounds.xMin - texture._$offsetX,
                 bounds.yMin - texture._$offsetY
             );
+
             context.drawImage(texture,
                 0, 0, texture.width, texture.height,
                 color_transform
@@ -900,13 +901,13 @@ class Video extends DisplayObject
                 multiMatrix[3], multiMatrix[4], multiMatrix[5]
             );
 
-            context.drawImage(
-                texture, 0, 0,
-                texture.width, texture.height, color_transform
+            context.drawImage(texture,
+                0, 0, texture.width, texture.height,
+                color_transform
             );
-        }
 
-        manager.releaseTexture(texture);
+            manager.releaseTexture(texture);
+        }
 
         if (multiMatrix !== matrix) {
             Util.$poolFloat32Array6(multiMatrix);
@@ -1073,20 +1074,17 @@ class Video extends DisplayObject
         message.smoothing = this._$smoothing;
 
         const options = Util.$getArray();
-        if (this._$context) {
+        const context = this._$context;
+        if (context) {
 
             message.xMin = this._$bounds.xMin;
             message.yMin = this._$bounds.yMin;
             message.xMax = this._$bounds.xMax;
             message.yMax = this._$bounds.yMax;
 
-            this._$context.drawImage(this._$video, 0, 0);
+            context.drawImage(this._$video, 0, 0);
 
-            const imageBitmap = this
-                ._$context
-                .canvas
-                .transferToImageBitmap();
-
+            const imageBitmap = context.canvas.transferToImageBitmap();
             message.imageBitmap = imageBitmap;
             options.push(imageBitmap);
         }

@@ -287,7 +287,6 @@ class CacheStore
         if (!value) {
 
             data.delete(type);
-            data.delete(`life_${type}`);
 
             if (!data.size) {
                 Util.$poolMap(data);

@@ -84,11 +84,15 @@ class CommandController
 
         } else {
 
+            const color = Util.$uintToRGBA(
+                Util.$toColorInt(background_color)
+            );
+
             player._$context._$setColor(
-                background_color[0],
-                background_color[1],
-                background_color[2],
-                background_color[3]
+                color.R / 255,
+                color.G / 255,
+                color.B / 255,
+                color.A / 255
             );
 
         }

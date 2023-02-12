@@ -812,6 +812,22 @@ Util.$toColorInt = (rgb) =>
 };
 
 /**
+ * @param  {number} uint
+ * @return {object}
+ * @method
+ * @static
+ */
+Util.$uintToRGBA = (uint) =>
+{
+    return {
+        "A": uint >>> 24,
+        "R": (uint & 0x00ff0000) >> 16,
+        "G": (uint & 0x0000ff00) >> 8,
+        "B": uint & 0x000000ff
+    };
+};
+
+/**
  * @param   {string} str
  * @returns {number}
  * @method
@@ -820,7 +836,7 @@ Util.$toColorInt = (rgb) =>
 Util.$colorStringToInt = (str) =>
 {
     Util.$hitContext.fillStyle = str;
-    const color = Util.$hitContext.fillStyle.substr(1);
+    const color = Util.$hitContext.fillStyle.slice(1);
 
     // reset
     Util.$hitContext.fillStyle = "rgba(0, 0, 0, 1)";

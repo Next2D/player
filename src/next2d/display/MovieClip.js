@@ -988,6 +988,10 @@ class MovieClip extends Sprite
 
         this._$isNext = isNext;
 
+        if (!this._$posted && Util.$rendererWorker) {
+            this._$postProperty();
+        }
+
         return this._$isNext;
     }
 

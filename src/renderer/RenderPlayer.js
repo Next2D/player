@@ -91,10 +91,11 @@ class RenderPlayer
         this._$stage = new RenderDisplayObjectContainer();
 
         /**
-         * @type {array}
+         * @type {number}
+         * @default 0
          * @private
          */
-        this._$videos = [];
+        this._$videos = 0;
 
         /**
          * @type {number}
@@ -200,7 +201,7 @@ class RenderPlayer
 
         } else {
 
-            if (this._$videos.length) {
+            if (this._$videos) {
                 this._$draw();
             }
 
@@ -424,6 +425,8 @@ class RenderPlayer
         video._$updateProperty(object);
 
         this._$instances.set(video._$instanceId, video);
+
+        this._$videos++;
     }
 
     /**

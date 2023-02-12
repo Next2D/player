@@ -1498,8 +1498,10 @@ class DisplayObject extends EventDispatcher
         filters, width, height
     ) {
 
+        const cacheStore = Util.$cacheStore();
+
         const cacheKeys = [this._$instanceId, "f"];
-        let cache = Util.$cacheStore().get(cacheKeys);
+        let cache = cacheStore.get(cacheKeys);
 
         const updated = this._$isFilterUpdated(
             width, height, matrix, filters, true
@@ -1511,7 +1513,7 @@ class DisplayObject extends EventDispatcher
             // cache clear
             if (cache) {
 
-                Util.$cacheStore().set(cacheKeys, null);
+                cacheStore.set(cacheKeys, null);
                 cache.layerWidth     = 0;
                 cache.layerHeight    = 0;
                 cache._$offsetX      = 0;
@@ -1531,7 +1533,7 @@ class DisplayObject extends EventDispatcher
                 matrix, width, height
             );
 
-            Util.$cacheStore().set(cacheKeys, texture);
+            cacheStore.set(cacheKeys, texture);
         }
 
         if (cache) {
@@ -1730,57 +1732,35 @@ class DisplayObject extends EventDispatcher
         matrix, width, height
     ) {
 
-        const currentAttachment = context
-            .frameBuffer
-            .currentAttachment;
+        const parentMatrix = Util.$getFloat32Array6(
+            matrix[0], matrix[1], matrix[2], matrix[3],
+            width / 2, height / 2
+        );
 
-        const buffer = context
-            .frameBuffer
-            .createCacheAttachment(width, height);
+        const baseMatrix = Util.$getFloat32Array6(
+            1, 0, 0, 1,
+            -target_texture.width / 2,
+            -target_texture.height / 2
+        );
 
-        context._$bind(buffer);
+        const multiMatrix = Util.$multiplicationMatrix(
+            parentMatrix, baseMatrix
+        );
+        Util.$poolFloat32Array6(parentMatrix);
+        Util.$poolFloat32Array6(baseMatrix);
+
+        const manager = context._$frameBufferManager;
+        const currentAttachment = manager.currentAttachment;
+        const attachment = manager.createCacheAttachment(width, height);
+        context._$bind(attachment);
 
         Util.$resetContext(context);
-
-        const radianX = $Math.atan2(matrix[1], matrix[0]);
-        const radianY = $Math.atan2(-matrix[2], matrix[3]);
-        if (radianX || radianY) {
-
-            const w = target_texture.width  / 2;
-            const h = target_texture.height / 2;
-
-            const a = $Math.cos(radianX);
-            const b = $Math.sin(radianX);
-            const c = -$Math.sin(radianY);
-            const d = $Math.cos(radianY);
-
-            const baseMatrix = Util.$getFloat32Array6(
-                1, 0, 0, 1, -w, -h
-            );
-            const parentMatrix = Util.$getFloat32Array6(
-                a, b, c, d,
-                (width  - target_texture.width)  / 2,
-                (height - target_texture.height) / 2
-            );
-            const multiMatrix = Util.$multiplicationMatrix(
-                parentMatrix, baseMatrix
-            );
-
-            context.setTransform(a, b, c, d,
-                multiMatrix[4] + w,
-                multiMatrix[5] + h
-            );
-
-            // pool
-            Util.$poolFloat32Array6(baseMatrix);
-            Util.$poolFloat32Array6(parentMatrix);
-            Util.$poolFloat32Array6(multiMatrix);
-
-        } else {
-
-            context.setTransform(1, 0, 0, 1, 0, 0);
-
-        }
+        context.setTransform(
+            multiMatrix[0], multiMatrix[1],
+            multiMatrix[2], multiMatrix[3],
+            multiMatrix[4], multiMatrix[5]
+        );
+        Util.$poolFloat32Array6(multiMatrix);
 
         context.drawImage(target_texture,
             0, 0, target_texture.width, target_texture.height
@@ -1809,16 +1789,14 @@ class DisplayObject extends EventDispatcher
         // cache texture
         texture.matrix =
               matrix[0] + "_" + matrix[1] + "_"
-            + matrix[2] + "_" + matrix[3] + "_0_0";
+            + matrix[2] + "_" + matrix[3];
 
         texture.filterState = true;
         texture.layerWidth  = width;
         texture.layerHeight = height;
 
         context._$bind(currentAttachment);
-        context
-            .frameBuffer
-            .releaseAttachment(buffer, false);
+        manager.releaseAttachment(attachment, false);
 
         return texture;
     }

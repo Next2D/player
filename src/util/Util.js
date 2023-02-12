@@ -1053,7 +1053,7 @@ Util.$toColorInt = (rgb) =>
 Util.$colorStringToInt = (str) =>
 {
     Util.$hitContext.fillStyle = str;
-    const color = Util.$hitContext.fillStyle.substr(1);
+    const color = Util.$hitContext.fillStyle.slice(1);
 
     // reset
     Util.$hitContext.fillStyle = "rgba(0, 0, 0, 1)";

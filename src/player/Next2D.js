@@ -35,7 +35,7 @@ class Next2D
     load (url, options = null)
     {
         if (url === "develop") {
-            const path = $location.search.substr(1).split("&")[0];
+            const path = $location.search.slice(1).split("&")[0];
             if (!path) {
                 return ;
             }

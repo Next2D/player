@@ -1311,6 +1311,10 @@ class DisplayObjectContainer extends InteractiveObject
 
         this._$isNext = isNext;
 
+        if (!this._$posted && Util.$rendererWorker) {
+            this._$postProperty();
+        }
+
         return this._$isNext;
     }
 
@@ -2298,6 +2302,7 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$postProperty ()
     {
+        const options = Util.$getArray();
         const message = super._$postProperty();
 
         const graphics = this._$graphics;
@@ -2308,26 +2313,19 @@ class DisplayObjectContainer extends InteractiveObject
 
             const recodes = graphics._$getRecodes();
             message.recodes = recodes;
-            const options = Util.$getArray(recodes.buffer);
+            options.push(recodes.buffer);
 
             const bounds = this._$getBounds();
             message.xMin = bounds.xMin;
             message.yMin = bounds.yMin;
             message.xMax = bounds.xMax;
             message.yMax = bounds.yMax;
-
-            Util
-                .$rendererWorker
-                .postMessage(message, options);
-
-            Util.$poolArray(options);
-
-        } else {
-
-            Util
-                .$rendererWorker
-                .postMessage(message);
-
         }
+
+        Util
+            .$rendererWorker
+            .postMessage(message, options);
+
+        Util.$poolArray(options);
     }
 }
