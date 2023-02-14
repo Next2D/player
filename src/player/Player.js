@@ -595,9 +595,6 @@ class Player
             // append canvas
             element.appendChild(this._$canvas);
 
-            // start
-            this.play();
-
             // stage init action
             this._$stage._$prepareActions();
 
@@ -649,6 +646,9 @@ class Player
 
             // render
             this._$draw();
+
+            // start
+            this.play();
         }
 
     }

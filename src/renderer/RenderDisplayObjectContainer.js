@@ -85,7 +85,11 @@ class RenderDisplayObjectContainer extends RenderGraphics
 
         let multiColor = color_transform;
         const rawColor = this._$colorTransform;
-        if (rawColor) {
+        if (rawColor[0] !== 1 || rawColor[1] !== 1
+            || rawColor[2] !== 1 || rawColor[3] !== 1
+            || rawColor[4] !== 0 || rawColor[5] !== 0
+            || rawColor[6] !== 0 || rawColor[7] !== 0
+        ) {
             multiColor = Util.$multiplicationColor(color_transform, rawColor);
         }
 
@@ -312,7 +316,6 @@ class RenderDisplayObjectContainer extends RenderGraphics
                 }
 
             }
-
         }
 
         // end mask
@@ -339,6 +342,10 @@ class RenderDisplayObjectContainer extends RenderGraphics
 
         Util.$poolFloat32Array6(preMatrix);
         Util.$poolPreObject(preData);
+
+        if (multiColor !== color_transform) {
+            Util.$poolFloat32Array8(multiColor);
+        }
     }
 
     /**

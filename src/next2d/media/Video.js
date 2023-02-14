@@ -501,7 +501,7 @@ class Video extends DisplayObject
     {
         this._$video = $document.createElement("video");
 
-        this._$update = function ()
+        this._$update = () =>
         {
             const player = Util.$currentPlayer();
             if (!this._$stage) {
@@ -538,9 +538,9 @@ class Video extends DisplayObject
             const timer = $requestAnimationFrame;
             this._$timerId = timer(this._$update);
 
-        }.bind(this);
+        };
 
-        this._$sound = function ()
+        this._$sound = () =>
         {
             const name = Util.$isTouch ? Util.$TOUCH_END : Util.$MOUSE_UP;
             Util.$currentPlayer()
@@ -549,7 +549,7 @@ class Video extends DisplayObject
 
             this._$video.muted = false;
 
-        }.bind(this);
+        };
 
         this._$video.muted       = true;
         this._$video.autoplay    = false;
@@ -560,7 +560,7 @@ class Video extends DisplayObject
             this._$video.setAttribute("playsinline", "");
         }
 
-        this._$start = function ()
+        this._$start = () =>
         {
             this._$bounds.xMax = this._$video.videoWidth;
             this._$bounds.yMax = this._$video.videoHeight;
@@ -598,10 +598,10 @@ class Video extends DisplayObject
                 this._$context = canvas.getContext("2d");
             }
 
-        }.bind(this);
+        };
         this._$video.addEventListener("canplaythrough", this._$start);
 
-        this._$video.addEventListener("ended", function ()
+        this._$video.addEventListener("ended", () =>
         {
             if (this._$loop) {
                 this._$video.currentTime = 0;
@@ -618,7 +618,7 @@ class Video extends DisplayObject
 
             this._$timerId = -1;
 
-        }.bind(this));
+        });
     }
 
     /**
@@ -857,6 +857,64 @@ class Video extends DisplayObject
             && this._$canApply(filters)
         ) {
 
+            const xScale = +$Math.sqrt(
+                multiMatrix[0] * multiMatrix[0]
+                + multiMatrix[1] * multiMatrix[1]
+            );
+            const yScale = +$Math.sqrt(
+                multiMatrix[2] * multiMatrix[2]
+                + multiMatrix[3] * multiMatrix[3]
+            );
+
+            if (xScale !== 1 || yScale !== 1) {
+                const currentAttachment = manager.currentAttachment;
+
+                // create cache buffer
+                const buffer = manager
+                    .createCacheAttachment(width, height, false);
+                context._$bind(buffer);
+
+                Util.$resetContext(context);
+
+                const parentMatrix = Util.$getFloat32Array6(
+                    xScale, 0, 0, yScale,
+                    width / 2, height / 2
+                );
+
+                const baseMatrix = Util.$getFloat32Array6(
+                    1, 0, 0, 1,
+                    -texture.width / 2,
+                    -texture.height / 2
+                );
+
+                const scaleMatrix = Util.$multiplicationMatrix(
+                    parentMatrix, baseMatrix
+                );
+
+                Util.$poolFloat32Array6(parentMatrix);
+                Util.$poolFloat32Array6(baseMatrix);
+
+                context.setTransform(
+                    scaleMatrix[0], scaleMatrix[1],
+                    scaleMatrix[2], scaleMatrix[3],
+                    scaleMatrix[4], scaleMatrix[5]
+                );
+                context.drawImage(texture,
+                    0, 0, texture.width, texture.height
+                );
+
+                manager.releaseTexture(texture);
+                Util.$poolFloat32Array6(scaleMatrix);
+
+                texture = manager.getTextureFromCurrentAttachment();
+
+                // release buffer
+                manager.releaseAttachment(buffer, false);
+
+                // end draw and reset current buffer
+                context._$bind(currentAttachment);
+            }
+
             // draw filter
             texture = this._$drawFilter(
                 context, texture, multiMatrix,
@@ -880,7 +938,7 @@ class Video extends DisplayObject
 
             context.drawImage(texture,
                 0, 0, texture.width, texture.height,
-                color_transform
+                multiColor
             );
 
             // pool
@@ -903,7 +961,7 @@ class Video extends DisplayObject
 
             context.drawImage(texture,
                 0, 0, texture.width, texture.height,
-                color_transform
+                multiColor
             );
 
             manager.releaseTexture(texture);
@@ -1017,6 +1075,11 @@ class Video extends DisplayObject
      */
     _$createWorkerInstance ()
     {
+        if (this._$created || !this._$stage) {
+            return ;
+        }
+        this._$created = true;
+
         const message = {
             "command": "createVideo",
             "instanceId": this._$instanceId,
@@ -1054,6 +1117,10 @@ class Video extends DisplayObject
      */
     _$postProperty ()
     {
+        if (!this._$stage) {
+            return ;
+        }
+
         if (this._$wait && this._$stage) {
 
             this._$stop = false;

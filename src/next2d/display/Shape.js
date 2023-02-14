@@ -281,32 +281,40 @@ class Shape extends DisplayObject
      */
     _$createWorkerInstance ()
     {
-        const graphics = this._$graphics;
-        if (!graphics) {
+        if (this._$created || !this._$stage) {
             return ;
         }
+        this._$created = true;
 
-        const recodes = graphics._$getRecodes();
-        const bounds  = this._$getBounds();
-        const options = Util.$getArray();
+        const options  = Util.$getArray();
+        const bounds   = this._$getBounds();
 
         const message = {
             "command": "createShape",
             "instanceId": this._$instanceId,
-            "maxAlpha": graphics._$maxAlpha,
-            "canDraw": graphics._$canDraw,
+            "maxAlpha": 0,
+            "canDraw": false,
             "xMin": bounds.xMin,
             "yMin": bounds.yMin,
             "xMax": bounds.xMax,
             "yMax": bounds.yMax
         };
 
-        if (recodes.length
-            && graphics._$maxAlpha > 0
-            && graphics._$canDraw
-        ) {
-            message.recodes = recodes;
-            options.push(recodes.buffer);
+        const graphics = this._$graphics;
+        if (graphics) {
+
+            const recodes = graphics._$getRecodes();
+
+            if (recodes.length
+                && graphics._$maxAlpha > 0
+                && graphics._$canDraw
+            ) {
+                message.maxAlpha = graphics._$maxAlpha;
+                message.canDraw  = graphics._$canDraw;
+                message.recodes  = recodes;
+                options.push(recodes.buffer);
+            }
+
         }
 
         if (this._$characterId > -1) {
@@ -549,6 +557,10 @@ class Shape extends DisplayObject
      */
     _$postProperty ()
     {
+        if (!this._$stage) {
+            return ;
+        }
+
         const message = super._$postProperty();
 
         const graphics = this._$graphics;

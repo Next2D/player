@@ -230,6 +230,9 @@ class RenderPlayer
         }
 
         const context = this._$context;
+        if (!context) {
+            return ;
+        }
 
         context._$bind(this._$buffer);
 
@@ -280,10 +283,17 @@ class RenderPlayer
         this._$width  = width;
         this._$height = height;
 
+        if (!this._$canvas) {
+            return ;
+        }
+
         this._$canvas.width  = width;
         this._$canvas.height = height;
 
         const context = this._$context;
+        if (!context) {
+            return ;
+        }
 
         context._$gl.viewport(0, 0, width, height);
 
@@ -352,11 +362,13 @@ class RenderPlayer
         sprite._$instanceId = object.instanceId;
 
         if (object.recodes) {
-            sprite._$recodes = object.recodes;
-            sprite._$xMin    = object.xMin;
-            sprite._$yMin    = object.yMin;
-            sprite._$xMax    = object.xMax;
-            sprite._$yMax    = object.yMax;
+            sprite._$recodes  = object.recodes;
+            sprite._$maxAlpha = object.maxAlpha;
+            sprite._$canDraw  = object.canDraw;
+            sprite._$xMin     = object.xMin;
+            sprite._$yMin     = object.yMin;
+            sprite._$xMax     = object.xMax;
+            sprite._$yMax     = object.yMax;
         }
 
         this._$instances.set(sprite._$instanceId, sprite);

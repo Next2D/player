@@ -336,7 +336,9 @@ class RenderTextField extends RenderDisplayObject
             return ;
         }
 
-        if (!this._$background && !this._$border && 2 > this._$textData.length) {
+        if (!this._$background && !this._$border
+            && 2 > this._$textData.length
+        ) {
             return;
         }
 
@@ -400,7 +402,8 @@ class RenderTextField extends RenderDisplayObject
         }
 
         // cache current buffer
-        const currentAttachment = context.frameBuffer.currentAttachment;
+        const manager = context._$frameBufferManager;
+        const currentAttachment = manager.currentAttachment;
         if (xMin > currentAttachment.width
             || yMin > currentAttachment.height
         ) {
@@ -481,7 +484,7 @@ class RenderTextField extends RenderDisplayObject
             this._$renew = false;
 
             // alpha reset
-            color_transform[3] = 1;
+            multiColor[3] = 1;
 
             // new canvas
             const canvas = new OffscreenCanvas(
@@ -504,7 +507,7 @@ class RenderTextField extends RenderDisplayObject
 
                     const rgb   = Util.$intToRGBA(this._$backgroundColor);
                     const alpha = $Math.max(0, $Math.min(
-                        rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
                     ) / 255;
 
                     ctx.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
@@ -515,7 +518,7 @@ class RenderTextField extends RenderDisplayObject
 
                     const rgb   = Util.$intToRGBA(this._$borderColor);
                     const alpha = $Math.max(0, $Math.min(
-                        rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
                     ) / 255;
 
                     ctx.lineWidth   = lineWidth;
@@ -541,9 +544,7 @@ class RenderTextField extends RenderDisplayObject
             this._$doDraw(ctx, matrix, color_transform, baseWidth / matrix[0]);
             ctx.restore();
 
-            texture = context
-                .frameBuffer
-                .createTextureFromCanvas(ctx.canvas);
+            texture = manager.createTextureFromCanvas(ctx.canvas);
 
             // set cache
             if (Util.$useCache) {
@@ -565,7 +566,7 @@ class RenderTextField extends RenderDisplayObject
             drawFilter = true;
 
             texture = this._$drawFilter(
-                context, texture, matrix,
+                context, texture, multiMatrix,
                 filters, width, height
             );
 
@@ -573,9 +574,9 @@ class RenderTextField extends RenderDisplayObject
             offsetY = texture._$offsetY;
         }
 
-        const radianX = drawFilter ? 0 : $Math.atan2(matrix[1], matrix[0]);
-        const radianY = drawFilter ? 0 : $Math.atan2(-matrix[2], matrix[3]);
-        if (radianX || radianY) {
+        const radianX = $Math.atan2(multiMatrix[1], multiMatrix[0]);
+        const radianY = $Math.atan2(-multiMatrix[2], multiMatrix[3]);
+        if (!drawFilter && (radianX || radianY)) {
 
             const tx = baseBounds.xMin * xScale;
             const ty = baseBounds.yMin * yScale;
@@ -587,8 +588,8 @@ class RenderTextField extends RenderDisplayObject
 
             context.setTransform(
                 cosX, sinX, -sinY, cosY,
-                tx * cosX - ty * sinY + matrix[4],
-                tx * sinX + ty * cosY + matrix[5]
+                tx * cosX - ty * sinY + multiMatrix[4],
+                tx * sinX + ty * cosY + multiMatrix[5]
             );
 
         } else {
@@ -608,7 +609,7 @@ class RenderTextField extends RenderDisplayObject
         context._$globalCompositeOperation = blendMode;
 
         context.drawImage(texture,
-            0, 0, texture.width, texture.height, color_transform
+            0, 0, texture.width, texture.height, multiColor
         );
 
         // get cache
@@ -783,14 +784,14 @@ class RenderTextField extends RenderDisplayObject
 
     /**
      * @param  {object} obj
-     * @param  {number} total_width
      * @param  {number} width
      * @return {number}
      * @private
      */
-    _$getAlignOffset (obj, total_width, width)
+    _$getAlignOffset (obj, width)
     {
         // default
+        const totalWidth = this._$widthTable[obj.yIndex];
         const textFormat = obj.textFormat;
         const indent     = textFormat._$blockIndent + textFormat._$leftMargin > 0
             ? textFormat._$blockIndent + textFormat._$leftMargin
@@ -799,16 +800,16 @@ class RenderTextField extends RenderDisplayObject
         switch (true) {
 
             // wordWrap case
-            case this._$wordWrap === false && total_width > width:
+            case this._$wordWrap === false && totalWidth > width:
                 return $Math.max(0, indent);
 
             case textFormat._$align === TextFormatAlign.CENTER: // format CENTER
             case this._$autoSize === TextFieldAutoSize.CENTER: // autoSize CENTER
-                return $Math.max(0, width / 2 - indent - textFormat._$rightMargin - total_width / 2);
+                return $Math.max(0, width / 2 - indent - textFormat._$rightMargin - totalWidth / 2);
 
             case textFormat._$align === TextFormatAlign.RIGHT: // format RIGHT
             case this._$autoSize === TextFieldAutoSize.RIGHT: // autoSize RIGHT
-                return $Math.max(0, width - indent - total_width - textFormat._$rightMargin - 2);
+                return $Math.max(0, width - indent - totalWidth - textFormat._$rightMargin - 2);
 
             // autoSize LEFT
             // format LEFT
@@ -849,9 +850,11 @@ class RenderTextField extends RenderDisplayObject
     _$updateProperty (object)
     {
         // update property
+        this._$textAreaActive = !!object.textAreaActive;
+
         this._$renew    = true;
         this._$textData = object.textData;
-        this._$wordWrap = object.wordWrap;
+        this._$wordWrap = !!object.wordWrap;
 
         // format
         this._$limitWidth      = object.limitWidth;
@@ -866,13 +869,13 @@ class RenderTextField extends RenderDisplayObject
         this._$verticalAlign   = object.verticalAlign;
 
         // color
-        if ("border" in object) {
-            this._$border = object.border;
+        this._$border = !!object.border;
+        if (this._$border) {
             this._$borderColor = object.borderColor;
         }
 
-        if ("background" in object) {
-            this._$background = object.background;
+        this._$background = !!object.background;
+        if (this._$background) {
             this._$backgroundColor = object.backgroundColor;
         }
 
@@ -893,6 +896,13 @@ class RenderTextField extends RenderDisplayObject
     _$update (object)
     {
         super._$update(object);
+
+        this._$textAreaActive = !!object.textAreaActive;
+
+        this._$xMin = object.xMin;
+        this._$yMin = object.yMin;
+        this._$xMax = object.xMax;
+        this._$yMax = object.yMax;
 
         if (object.textData) {
             this._$updateProperty(object);

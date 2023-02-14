@@ -1511,9 +1511,10 @@ class Graphics
             offsetY = texture._$offsetY;
         }
 
-        const radianX = drawFilter ? 0 : $Math.atan2(matrix[1], matrix[0]);
-        const radianY = drawFilter ? 0 : $Math.atan2(-matrix[2], matrix[3]);
-        if (radianX || radianY) {
+        const radianX = $Math.atan2(matrix[1], matrix[0]);
+        const radianY = $Math.atan2(-matrix[2], matrix[3]);
+
+        if (!drawFilter && (radianX || radianY)) {
 
             const tx = baseBounds.xMin * xScale;
             const ty = baseBounds.yMin * yScale;
@@ -1621,9 +1622,9 @@ class Graphics
         if (this._$displayObject
             && !this._$displayObject._$isUpdated()
         ) {
-
             this._$displayObject._$doChanged();
             Util.$isUpdated = true;
+            this._$buffer = null;
 
             Util
                 .$cacheStore()

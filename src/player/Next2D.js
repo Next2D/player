@@ -74,10 +74,6 @@ class Next2D
             const player = Util.$currentPlayer();
             const stage  = loaderInfo._$data.stage;
 
-            player.width  = stage.width;
-            player.height = stage.height;
-            player.stage.frameRate = stage.fps;
-
             if (player._$bgColor === null) {
                 player._$bgColor = Util.$getArray(1, 1, 1, 1);
             }
@@ -93,6 +89,10 @@ class Next2D
             player._$setBackgroundColor(player._$bgColor);
 
             player.stage.addChild(loaderInfo.content);
+
+            player._$baseWidth  = stage.width | 0;
+            player._$baseHeight = stage.height | 0;
+            player.stage._$frameRate = Util.$clamp(+stage.fps, 1, 60, 60);
 
             player._$resize();
         });

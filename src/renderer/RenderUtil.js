@@ -281,6 +281,12 @@ Util.$bounds = [];
 Util.$useCache = true;
 
 /**
+ * @type {CanvasRenderingContext2D}
+ * @static
+ */
+Util.$colorContext = new $OffscreenCanvas(1, 1).getContext("2d");
+
+/**
  * @param  {number} x_min
  * @param  {number} x_max
  * @param  {number} y_min
@@ -835,11 +841,11 @@ Util.$uintToRGBA = (uint) =>
  */
 Util.$colorStringToInt = (str) =>
 {
-    Util.$hitContext.fillStyle = str;
-    const color = Util.$hitContext.fillStyle.slice(1);
+    Util.$colorContext.fillStyle = str;
+    const color = Util.$colorContext.fillStyle.slice(1);
 
     // reset
-    Util.$hitContext.fillStyle = "rgba(0, 0, 0, 1)";
+    Util.$colorContext.fillStyle = "rgba(0, 0, 0, 1)";
 
     return `0x${color}` | 0;
 };

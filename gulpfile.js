@@ -344,7 +344,12 @@ exports.default = gulp.series(
     browser,
     watchFiles
 );
-exports.test  = gulp.series(test);
+exports.test = gulp.series(
+    buildRenderWorker,
+    buildWorkerFile,
+    buildUtilFile,
+    test
+);
 exports.jsdoc = gulp.series(createHTML);
 exports.lint  = gulp.series(lint);
 exports.build = gulp.series(

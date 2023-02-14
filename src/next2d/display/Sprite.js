@@ -282,6 +282,10 @@ class Sprite extends DisplayObjectContainer
     {
         const character = super._$sync();
 
+        if (Util.$rendererWorker) {
+            this._$createWorkerInstance();
+        }
+
         if (character) {
             this._$controller   = character.controller;
             this._$dictionary   = character.dictionary;
@@ -302,11 +306,9 @@ class Sprite extends DisplayObjectContainer
     _$build (tag, parent)
     {
         const character = super._$build(tag, parent);
+
         if (Util.$rendererWorker) {
-            Util.$rendererWorker.postMessage({
-                "command": "createDisplayObjectContainer",
-                "instanceId": this._$instanceId
-            });
+            this._$createWorkerInstance();
         }
 
         this._$controller   = character.controller;

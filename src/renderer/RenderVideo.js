@@ -214,6 +214,64 @@ class RenderVideo extends RenderDisplayObject
             && this._$canApply(filters)
         ) {
 
+            const xScale = +$Math.sqrt(
+                multiMatrix[0] * multiMatrix[0]
+                + multiMatrix[1] * multiMatrix[1]
+            );
+            const yScale = +$Math.sqrt(
+                multiMatrix[2] * multiMatrix[2]
+                + multiMatrix[3] * multiMatrix[3]
+            );
+
+            if (xScale !== 1 || yScale !== 1) {
+                const currentAttachment = manager.currentAttachment;
+
+                // create cache buffer
+                const buffer = manager
+                    .createCacheAttachment(width, height, false);
+                context._$bind(buffer);
+
+                Util.$resetContext(context);
+
+                const parentMatrix = Util.$getFloat32Array6(
+                    xScale, 0, 0, yScale,
+                    width / 2, height / 2
+                );
+
+                const baseMatrix = Util.$getFloat32Array6(
+                    1, 0, 0, 1,
+                    -texture.width / 2,
+                    -texture.height / 2
+                );
+
+                const scaleMatrix = Util.$multiplicationMatrix(
+                    parentMatrix, baseMatrix
+                );
+
+                Util.$poolFloat32Array6(parentMatrix);
+                Util.$poolFloat32Array6(baseMatrix);
+
+                context.setTransform(
+                    scaleMatrix[0], scaleMatrix[1],
+                    scaleMatrix[2], scaleMatrix[3],
+                    scaleMatrix[4], scaleMatrix[5]
+                );
+                context.drawImage(texture,
+                    0, 0, texture.width, texture.height
+                );
+
+                manager.releaseTexture(texture);
+                Util.$poolFloat32Array6(scaleMatrix);
+
+                texture = manager.getTextureFromCurrentAttachment();
+
+                // release buffer
+                manager.releaseAttachment(buffer, false);
+
+                // end draw and reset current buffer
+                context._$bind(currentAttachment);
+            }
+
             // draw filter
             texture = this._$drawFilter(
                 context, texture, multiMatrix,

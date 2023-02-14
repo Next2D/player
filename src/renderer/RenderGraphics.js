@@ -307,9 +307,9 @@ class RenderGraphics extends RenderDisplayObject
             offsetY = texture._$offsetY;
         }
 
-        const radianX = drawFilter ? 0 : $Math.atan2(matrix[1], matrix[0]);
-        const radianY = drawFilter ? 0 : $Math.atan2(-matrix[2], matrix[3]);
-        if (radianX || radianY) {
+        const radianX = $Math.atan2(matrix[1], matrix[0]);
+        const radianY = $Math.atan2(-matrix[2], matrix[3]);
+        if (!drawFilter && (radianX || radianY)) {
 
             const tx = baseBounds.xMin * xScale;
             const ty = baseBounds.yMin * yScale;
@@ -861,6 +861,41 @@ class RenderGraphics extends RenderDisplayObject
                 default:
                     break;
 
+            }
+        }
+    }
+
+    /**
+     * @description 描画情報を更新
+     *
+     * @param  {object} object
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$update (object)
+    {
+        super._$update(object);
+
+        if (object.recodes) {
+
+            this._$recodes  = object.recodes;
+            this._$xMin     = object.xMin;
+            this._$yMin     = object.yMin;
+            this._$xMax     = object.xMax;
+            this._$yMax     = object.yMax;
+            this._$maxAlpha = object.maxAlpha;
+            this._$canDraw  = object.canDraw;
+
+            const cacheStore = Util.$renderPlayer._$cacheStore;
+            cacheStore.removeCache(this._$instanceId);
+
+            if (this._$loaderInfoId > -1
+                && this._$characterId > -1
+            ) {
+                cacheStore.removeCache(
+                    `${this._$loaderInfoId}@${this._$characterId}`
+                );
             }
         }
     }

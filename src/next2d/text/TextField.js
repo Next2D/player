@@ -539,6 +539,8 @@ class TextField extends InteractiveObject
             text_format._$textField = this;
 
             this._$defaultTextFormat = text_format;
+
+            this._$reset();
         }
     }
 
@@ -596,6 +598,8 @@ class TextField extends InteractiveObject
                 const timer = $requestAnimationFrame;
                 timer(() => { element.focus() });
 
+                this._$doChanged();
+                Util.$isUpdated = true;
                 this._$textAreaActive = true;
 
                 // focus in event
@@ -2625,7 +2629,8 @@ class TextField extends InteractiveObject
         }
 
         // cache current buffer
-        const currentAttachment = context.frameBuffer.currentAttachment;
+        const manager = context._$frameBufferManager;
+        const currentAttachment = manager.currentAttachment;
         if (xMin > currentAttachment.width
             || yMin > currentAttachment.height
         ) {
@@ -2706,7 +2711,7 @@ class TextField extends InteractiveObject
             this._$renew = false;
 
             // alpha reset
-            color_transform[3] = 1;
+            multiColor[3] = 1;
 
             // new canvas
             const canvas  = cacheStore.getCanvas();
@@ -2728,7 +2733,7 @@ class TextField extends InteractiveObject
 
                     const rgb   = Util.$intToRGBA(this._$backgroundColor);
                     const alpha = $Math.max(0, $Math.min(
-                        rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
                     ) / 255;
 
                     ctx.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
@@ -2739,7 +2744,7 @@ class TextField extends InteractiveObject
 
                     const rgb   = Util.$intToRGBA(this._$borderColor);
                     const alpha = $Math.max(0, $Math.min(
-                        rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
                     ) / 255;
 
                     ctx.lineWidth   = lineWidth;
@@ -2762,12 +2767,10 @@ class TextField extends InteractiveObject
 
             ctx.beginPath();
             ctx.setTransform(xScale, 0, 0, yScale, 0, 0);
-            this._$doDraw(ctx, matrix, color_transform, baseWidth / matrix[0]);
+            this._$doDraw(ctx, matrix, multiColor, baseWidth / matrix[0]);
             ctx.restore();
 
-            texture = context
-                .frameBuffer
-                .createTextureFromCanvas(ctx.canvas);
+            texture = manager.createTextureFromCanvas(ctx.canvas);
 
             // set cache
             if (Util.$useCache) {
@@ -2776,7 +2779,6 @@ class TextField extends InteractiveObject
 
             // destroy cache
             cacheStore.destroy(ctx);
-
         }
 
         let drawFilter = false;
@@ -2789,7 +2791,7 @@ class TextField extends InteractiveObject
             drawFilter = true;
 
             texture = this._$drawFilter(
-                context, texture, matrix,
+                context, texture, multiMatrix,
                 filters, width, height
             );
 
@@ -2797,9 +2799,9 @@ class TextField extends InteractiveObject
             offsetY = texture._$offsetY;
         }
 
-        const radianX = drawFilter ? 0 : $Math.atan2(matrix[1], matrix[0]);
-        const radianY = drawFilter ? 0 : $Math.atan2(-matrix[2], matrix[3]);
-        if (radianX || radianY) {
+        const radianX = $Math.atan2(multiMatrix[1], multiMatrix[0]);
+        const radianY = $Math.atan2(-multiMatrix[2], multiMatrix[3]);
+        if (!drawFilter && (radianX || radianY)) {
 
             const tx = baseBounds.xMin * xScale;
             const ty = baseBounds.yMin * yScale;
@@ -2811,8 +2813,8 @@ class TextField extends InteractiveObject
 
             context.setTransform(
                 cosX, sinX, -sinY, cosY,
-                tx * cosX - ty * sinY + matrix[4],
-                tx * sinX + ty * cosY + matrix[5]
+                tx * cosX - ty * sinY + multiMatrix[4],
+                tx * sinX + ty * cosY + multiMatrix[5]
             );
 
         } else {
@@ -2832,7 +2834,7 @@ class TextField extends InteractiveObject
         context._$globalCompositeOperation = blendMode;
 
         context.drawImage(texture,
-            0, 0, texture.width, texture.height, color_transform
+            0, 0, texture.width, texture.height, multiColor
         );
 
         // get cache
@@ -3091,22 +3093,23 @@ class TextField extends InteractiveObject
             const textFormat = this.defaultTextFormat;
 
             // setup
-            this._$textarea.style.position         = "absolute";
-            this._$textarea.style.outline          = "0";
-            this._$textarea.style.padding          = `2px 2px 2px ${$Math.max(3, textFormat.leftMargin | 0)}px`;
-            this._$textarea.style.margin           = "0";
-            this._$textarea.style.appearance       = "none";
-            this._$textarea.style.resize           = "none";
-            this._$textarea.style.border           = this._$border ? `solid 1px #${this.borderColor.toString(16)}` : "none";
-            this._$textarea.style.overflow         = "hidden";
-            this._$textarea.style.zIndex           = 0x7fffffff;
-            this._$textarea.style.verticalAlign    = "top";
-            this._$textarea.style.backgroundColor  = this._$border || this._$background
+            const style = this._$textarea.style;
+            style.position         = "absolute";
+            style.outline          = "0";
+            style.padding          = `2px 2px 2px ${$Math.max(3, textFormat.leftMargin | 0)}px`;
+            style.margin           = "0";
+            style.appearance       = "none";
+            style.resize           = "none";
+            style.border           = this._$border ? `solid 1px #${this.borderColor.toString(16)}` : "none";
+            style.overflow         = "hidden";
+            style.zIndex           = 0x7fffffff;
+            style.verticalAlign    = "top";
+            style.backgroundColor  = this._$border || this._$background
                 ? `#${this.backgroundColor.toString(16)}`
                 : "transparent";
 
             // add blur event
-            this._$textarea.addEventListener(`${Util.$PREFIX}_blur`, function (event)
+            this._$textarea.addEventListener(`${Util.$PREFIX}_blur`, (event) =>
             {
                 // set new text
                 let value = event.target.value ? event.target.value : "";
@@ -3126,15 +3129,15 @@ class TextField extends InteractiveObject
                     value = found ? found.join("") : "";
                 }
 
-                const div = Util
-                    .$document
-                    .getElementById(Util.$currentPlayer().contentElementId);
+                const div = $document.getElementById(
+                    Util.$currentPlayer().contentElementId
+                );
 
                 if (div) {
 
-                    const element = Util
-                        .$document
-                        .getElementById(`${Util.$PREFIX}_TextField_${this._$instanceId}`);
+                    const element = $document.getElementById(
+                        `${Util.$PREFIX}_TextField_${this._$instanceId}`
+                    );
 
                     if (element) {
                         element.remove();
@@ -3145,10 +3148,12 @@ class TextField extends InteractiveObject
                 this._$focus = false;
                 this._$textAreaActive = false;
 
-            }.bind(this));
+                this._$doChanged();
+                Util.$isUpdated = true;
+            });
 
             // input event
-            this._$textarea.addEventListener("input", function (event)
+            this._$textarea.addEventListener("input", (event) =>
             {
                 // set new text
                 let value = event.target.value ? event.target.value : "";
@@ -3192,16 +3197,16 @@ class TextField extends InteractiveObject
                     element.style.height = `${$Math.ceil((this.height - 1) * player._$scale)}px`;
                 }
 
-            }.bind(this));
+            });
 
             // IME入力開始時のevent
-            this._$textarea.addEventListener("compositionstart", function ()
+            this._$textarea.addEventListener("compositionstart", () =>
             {
                 this._$isComposing = true;
-            }.bind(this));
+            });
 
             // IME入力確定時のevent
-            this._$textarea.addEventListener("compositionend", function (event)
+            this._$textarea.addEventListener("compositionend", (event) =>
             {
                 this._$isComposing = false;
                 let value = event.target.value ? event.target.value : "";
@@ -3226,24 +3231,24 @@ class TextField extends InteractiveObject
                 // update
                 this.text = value;
                 event.target.value = value;
-            }.bind(this));
+            });
 
             // add click event
-            this._$textarea.addEventListener("click", function ()
+            this._$textarea.addEventListener("click", () =>
             {
                 if (this.willTrigger(MouseEvent.CLICK)) {
                     this.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
                 }
-            }.bind(this));
+            });
 
             // add mousewheel event
-            this._$textarea.addEventListener(Util.$MOUSE_WHEEL, function (event)
+            this._$textarea.addEventListener(Util.$MOUSE_WHEEL, (event) =>
             {
                 this.scrollV += event.deltaY;
-            }.bind(this));
+            });
 
             // add scroll event
-            this._$textarea.addEventListener(Util.$SCROLL, function ()
+            this._$textarea.addEventListener(Util.$SCROLL, () =>
             {
                 if (this._$scrollEventLock) {
                     this._$scrollEventLock = false;
@@ -3252,13 +3257,13 @@ class TextField extends InteractiveObject
 
                 const height = parseFloat(this._$textarea.style.height);
                 this.scrollV = this._$textarea.scrollTop / (this._$textarea.scrollHeight - height) * this.maxScrollV + 1;
-            }.bind(this));
+            });
 
             switch (true) {
 
                 case Util.$isTouch:
                     // down event
-                    this._$textarea.addEventListener(Util.$TOUCH_START, function ()
+                    this._$textarea.addEventListener(Util.$TOUCH_START, () =>
                     {
                         const player = Util.$currentPlayer();
                         if (player) {
@@ -3267,7 +3272,7 @@ class TextField extends InteractiveObject
                     });
 
                     // up event
-                    this._$textarea.addEventListener(Util.$TOUCH_END, function ()
+                    this._$textarea.addEventListener(Util.$TOUCH_END, () =>
                     {
                         const player = Util.$currentPlayer();
                         if (player) {
@@ -3278,7 +3283,7 @@ class TextField extends InteractiveObject
 
                 default:
                     // down event
-                    this._$textarea.addEventListener(Util.$MOUSE_DOWN, function ()
+                    this._$textarea.addEventListener(Util.$MOUSE_DOWN, () =>
                     {
                         const player = Util.$currentPlayer();
                         if (player) {
@@ -3287,7 +3292,7 @@ class TextField extends InteractiveObject
                     });
 
                     // up event
-                    this._$textarea.addEventListener(Util.$MOUSE_UP, function ()
+                    this._$textarea.addEventListener(Util.$MOUSE_UP, () =>
                     {
                         const player = Util.$currentPlayer();
                         if (player) {
@@ -3315,7 +3320,7 @@ class TextField extends InteractiveObject
         }
 
         if (!this._$textarea.onkeydown) {
-            this._$textarea.onkeydown = function (event)
+            this._$textarea.onkeydown = (event) =>
             {
 
                 // set new text
@@ -3348,7 +3353,7 @@ class TextField extends InteractiveObject
                     return false;
                 }
 
-            }.bind(this);
+            };
         }
 
         //reset
@@ -3365,6 +3370,11 @@ class TextField extends InteractiveObject
      */
     _$createWorkerInstance ()
     {
+        if (this._$created || !this._$stage) {
+            return ;
+        }
+        this._$created = true;
+
         const bounds = this._$getBounds();
 
         const message = {
@@ -3414,10 +3424,21 @@ class TextField extends InteractiveObject
      */
     _$postProperty ()
     {
+        if (!this._$stage) {
+            return ;
+        }
+
         const message = super._$postProperty();
+
+        message.xMin = this._$bounds.xMin;
+        message.yMin = this._$bounds.yMin;
+        message.xMax = this._$bounds.xMax;
+        message.yMax = this._$bounds.yMax;
 
         message.textAreaActive = this._$textAreaActive;
         if (this._$renew || this._$isUpdated()) {
+
+            this._$renew = false;
 
             message.textData        = this._$getTextData();
             message.scrollV         = this.scrollV;

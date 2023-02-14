@@ -714,17 +714,16 @@ class DisplayObjectContainer extends InteractiveObject
     {
         if (this._$needsChildren) {
 
-            const cacheStore = Util.$cacheStore();
-            const useWorker  = Util.$rendererWorker !== null && !!this._$stage;
-
             // set flag
             this._$needsChildren = false;
 
-            const frame = this._$currentFrame || 1;
+            const cacheStore = Util.$cacheStore();
+            const useWorker  = Util.$rendererWorker !== null && !!this._$stage;
             if (!this._$controller) {
                 return this._$children;
             }
 
+            const frame = this._$currentFrame || 1;
             let controller = this._$controller[frame];
 
             const childrenIds = Util.$getArray();
@@ -876,6 +875,8 @@ class DisplayObjectContainer extends InteractiveObject
                 instance._$blendMode   = null;
                 instance._$isNext      = true;
                 instance._$placeObject = null;
+                instance._$created     = false;
+                instance._$posted      = false;
 
                 if (instance instanceof DisplayObjectContainer) {
                     instance._$executeRemovedFromStage();
@@ -974,26 +975,6 @@ class DisplayObjectContainer extends InteractiveObject
 
         }
 
-        if (Util.$rendererWorker && this._$stage) {
-
-            child._$createWorkerInstance();
-
-            const children = this._$getChildren();
-
-            const childrenIds = Util.$getArray();
-            for (let idx = 0; idx < children.length; ++idx) {
-                childrenIds.push(children[idx]._$instanceId);
-            }
-
-            Util.$rendererWorker.postMessage({
-                "command": "setChildren",
-                "instanceId": this._$instanceId,
-                "children": childrenIds
-            });
-
-            Util.$poolArray(childrenIds);
-        }
-
         // setup
         if (child instanceof DisplayObjectContainer) {
             child._$setParentAndStage();
@@ -1009,6 +990,29 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         if (this._$stage !== null && !child._$addedStage) {
+
+            if (Util.$rendererWorker) {
+
+                child._$createWorkerInstance();
+                child._$postProperty();
+
+                const children = this._$needsChildren
+                    ? this._$getChildren()
+                    : this._$children;
+
+                const childrenIds = Util.$getArray();
+                for (let idx = 0; idx < children.length; ++idx) {
+                    childrenIds.push(children[idx]._$instanceId);
+                }
+
+                Util.$rendererWorker.postMessage({
+                    "command": "setChildren",
+                    "instanceId": this._$instanceId,
+                    "children": childrenIds
+                });
+
+                Util.$poolArray(childrenIds);
+            }
 
             if (child.willTrigger(Event.ADDED_TO_STAGE)) {
                 child.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
@@ -1066,6 +1070,8 @@ class DisplayObjectContainer extends InteractiveObject
             ? this._$getChildren()
             : this._$children;
 
+        const childrenIds = Util.$getArray();
+
         const length = children.length;
         for (let idx = 0; idx < length; ++idx) {
 
@@ -1074,10 +1080,18 @@ class DisplayObjectContainer extends InteractiveObject
                 continue;
             }
 
+            childrenIds.push(instance._$instanceId);
             if (!instance._$addedStage) {
+
+                if (Util.$rendererWorker) {
+                    instance._$createWorkerInstance();
+                    instance._$postProperty();
+                }
+
                 if (instance.willTrigger(Event.ADDED_TO_STAGE)) {
                     instance.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
                 }
+
                 instance._$addedStage = true;
             }
 
@@ -1086,6 +1100,16 @@ class DisplayObjectContainer extends InteractiveObject
             }
 
         }
+
+        if (Util.$rendererWorker) {
+            Util.$rendererWorker.postMessage({
+                "command": "setChildren",
+                "instanceId": this._$instanceId,
+                "children": childrenIds
+            });
+        }
+
+        Util.$poolArray(childrenIds);
     }
 
     /**
@@ -1116,6 +1140,28 @@ class DisplayObjectContainer extends InteractiveObject
 
             // remove stage event
             if (this._$stage !== null) {
+
+                // worker側のDisplayObjectも削除
+                if (Util.$rendererWorker) {
+                    Util.$rendererWorker.postMessage({
+                        "command": "remove",
+                        "instanceId": child._$instanceId
+                    });
+
+                    const childrenIds = Util.$getArray();
+                    for (let idx = 0; idx < children.length; ++idx) {
+                        childrenIds.push(children[idx]._$instanceId);
+                    }
+
+                    Util.$rendererWorker.postMessage({
+                        "command": "setChildren",
+                        "instanceId": this._$instanceId,
+                        "children": childrenIds
+                    });
+
+                    Util.$poolArray(childrenIds);
+                }
+
                 if (child.willTrigger(Event.REMOVED_FROM_STAGE)) {
                     child.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE));
                 }
@@ -1135,27 +1181,6 @@ class DisplayObjectContainer extends InteractiveObject
 
             // reset params
             if (child instanceof DisplayObjectContainer) {
-
-                if (Util.$rendererWorker && this._$stage) {
-
-                    Util.$rendererWorker.postMessage({
-                        "command": "remove",
-                        "instanceId": child._$instanceId
-                    });
-
-                    const childrenIds = Util.$getArray();
-                    for (let idx = 0; idx < children.length; ++idx) {
-                        childrenIds.push(children[idx]._$instanceId);
-                    }
-
-                    Util.$rendererWorker.postMessage({
-                        "command": "setChildren",
-                        "instanceId": this._$instanceId,
-                        "children": childrenIds
-                    });
-
-                    Util.$poolArray(childrenIds);
-                }
                 child._$removeParentAndStage();
             }
 
@@ -1168,6 +1193,8 @@ class DisplayObjectContainer extends InteractiveObject
             child._$updated    = true;
             child._$added      = false;
             child._$addedStage = false;
+            child._$created    = false;
+            child._$posted     = false;
             this._$doChanged();
 
         }
@@ -1191,9 +1218,21 @@ class DisplayObjectContainer extends InteractiveObject
             }
 
             if (instance._$addedStage) {
+
+                // workerのDisplayObjectを削除
+                if (Util.$rendererWorker) {
+                    Util.$rendererWorker.postMessage({
+                        "command": "remove",
+                        "instanceId": instance._$instanceId
+                    });
+                }
+
                 if (instance.willTrigger(Event.REMOVED_FROM_STAGE)) {
                     instance.dispatchEvent(new Event(Event.REMOVED_FROM_STAGE));
                 }
+
+                instance._$created    = false;
+                instance._$posted     = false;
                 instance._$addedStage = false;
             }
 
@@ -1225,13 +1264,6 @@ class DisplayObjectContainer extends InteractiveObject
                 cacheStore.setRemoveTimer(
                     `${instance._$loaderInfo._$id}@${instance._$characterId}`
                 );
-            }
-
-            if (Util.$rendererWorker && this._$stage) {
-                Util.$rendererWorker.postMessage({
-                    "command": "remove",
-                    "instanceId": instance._$instanceId
-                });
             }
 
             if (instance instanceof DisplayObjectContainer) {
@@ -1965,6 +1997,10 @@ class DisplayObjectContainer extends InteractiveObject
 
         Util.$poolFloat32Array6(preMatrix);
         Util.$poolPreObject(preData);
+
+        if (multiColor !== color_transform) {
+            Util.$poolFloat32Array8(multiColor);
+        }
     }
 
     /**
@@ -2268,6 +2304,11 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$createWorkerInstance ()
     {
+        if (this._$created || !this._$stage) {
+            return ;
+        }
+        this._$created = true;
+
         const options = Util.$getArray();
         const message = {
             "command": "createDisplayObjectContainer",
@@ -2278,18 +2319,16 @@ class DisplayObjectContainer extends InteractiveObject
         if (graphics) {
 
             const recodes = graphics._$getRecodes();
+            options.push(recodes.buffer);
 
-            if (recodes.length
-                && graphics._$maxAlpha > 1
-                && graphics._$canDraw
-            ) {
-                message.recodes = recodes;
-                message.xMin    = graphics._$xMin;
-                message.yMin    = graphics._$yMin;
-                message.xMax    = graphics._$xMax;
-                message.yMax    = graphics._$yMax;
-                options.push(recodes.buffer);
-            }
+            message.recodes  = recodes;
+            message.maxAlpha = graphics._$maxAlpha;
+            message.canDraw  = graphics._$canDraw;
+            message.xMin     = graphics._$xMin;
+            message.yMin     = graphics._$yMin;
+            message.xMax     = graphics._$xMax;
+            message.yMax     = graphics._$yMax;
+
         }
 
         Util.$rendererWorker.postMessage(message, options);
@@ -2302,6 +2341,10 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$postProperty ()
     {
+        if (!this._$stage) {
+            return ;
+        }
+
         const options = Util.$getArray();
         const message = super._$postProperty();
 

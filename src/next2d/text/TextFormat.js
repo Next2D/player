@@ -221,7 +221,8 @@ class TextFormat
         }
 
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -241,7 +242,8 @@ class TextFormat
     {
         this._$blockIndent = block_indent;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -261,7 +263,8 @@ class TextFormat
     {
         this._$bold = !!bold;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -283,7 +286,8 @@ class TextFormat
             Util.$toColorInt(color), 0, 0xffffff, 0
         );
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -303,7 +307,8 @@ class TextFormat
     {
         this._$font = `${font}`;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -324,7 +329,8 @@ class TextFormat
     {
         this._$indent = indent;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -344,7 +350,8 @@ class TextFormat
     {
         this._$italic = !!italic;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -365,7 +372,8 @@ class TextFormat
     {
         this._$leading = leading;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -385,7 +393,8 @@ class TextFormat
     {
         this._$leftMargin = left_margin;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -406,7 +415,8 @@ class TextFormat
     {
         this._$letterSpacing = letter_spacing;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -426,7 +436,8 @@ class TextFormat
     {
         this._$rightMargin = right_margin;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -446,7 +457,8 @@ class TextFormat
     {
         this._$size = size | 0;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -468,7 +480,8 @@ class TextFormat
     {
         this._$underline = !!underline;
         if (this._$textField) {
-            this._$textField._$renew = true;
+            this._$textField._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 

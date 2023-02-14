@@ -117,6 +117,13 @@ class DisplayObject extends EventDispatcher
          * @default false
          * @private
          */
+        this._$created = false;
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
         this._$posted = false;
 
         /**
@@ -1732,8 +1739,21 @@ class DisplayObject extends EventDispatcher
         matrix, width, height
     ) {
 
+        const xScale = +$Math.sqrt(
+            matrix[0] * matrix[0]
+            + matrix[1] * matrix[1]
+        );
+        const yScale = +$Math.sqrt(
+            matrix[2] * matrix[2]
+            + matrix[3] * matrix[3]
+        );
+
+        const radianX = $Math.atan2(matrix[1], matrix[0]);
+        const radianY = $Math.atan2(-matrix[2], matrix[3]);
+
         const parentMatrix = Util.$getFloat32Array6(
-            matrix[0], matrix[1], matrix[2], matrix[3],
+            $Math.cos(radianX), $Math.sin(radianX),
+            -$Math.sin(radianY), $Math.cos(radianY),
             width / 2, height / 2
         );
 
@@ -1770,10 +1790,16 @@ class DisplayObject extends EventDispatcher
         context._$offsetX = 0;
         context._$offsetY = 0;
 
+        const filterMatrix = Util.$getFloat32Array6(
+            xScale, 0, 0, yScale, 0, 0
+        );
+
         let texture = null;
         for (let idx = 0; idx < filters.length; ++idx) {
-            texture = filters[idx]._$applyFilter(context, matrix);
+            texture = filters[idx]._$applyFilter(context, filterMatrix);
         }
+
+        Util.$poolFloat32Array6(filterMatrix);
 
         let offsetX = context._$offsetX;
         let offsetY = context._$offsetY;
@@ -1907,7 +1933,8 @@ class DisplayObject extends EventDispatcher
      */
     _$postProperty ()
     {
-        this._$posted = true;
+        this._$posted  = true;
+        this._$updated = false;
 
         const message = {
             "command": "setProperty",
