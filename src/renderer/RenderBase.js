@@ -46,6 +46,10 @@ class CommandController
         // update
         $devicePixelRatio = devicePixelRatio;
 
+        const player = Util.$renderPlayer;
+        player._$samples = samples;
+        player._$canvas  = canvas;
+
         const gl = canvas.getContext("webgl2", {
             "stencil": true,
             "premultipliedAlpha": true,
@@ -54,13 +58,11 @@ class CommandController
             "preserveDrawingBuffer": true
         });
 
-        const player = Util.$renderPlayer;
-        player._$samples = samples;
-        player._$canvas  = canvas;
-
-        const context = new CanvasToWebGLContext(gl, samples);
-        player._$context = context;
-        player._$cacheStore._$context = context;
+        if (gl) {
+            const context = new CanvasToWebGLContext(gl, samples);
+            player._$context = context;
+            player._$cacheStore._$context = context;
+        }
     }
 
     /**
@@ -74,13 +76,16 @@ class CommandController
      */
     setBackgroundColor (background_color = null)
     {
-        const player = Util.$renderPlayer;
+        const context = Util.$renderPlayer._$context;
+        if (!context) {
+            return ;
+        }
 
         if (!background_color
             || background_color === "transparent"
         ) {
 
-            player._$context._$setColor(0, 0, 0, 0);
+            context._$setColor(0, 0, 0, 0);
 
         } else {
 
@@ -88,7 +93,7 @@ class CommandController
                 Util.$toColorInt(background_color)
             );
 
-            player._$context._$setColor(
+            context._$setColor(
                 color.R / 255,
                 color.G / 255,
                 color.B / 255,
