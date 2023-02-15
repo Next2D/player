@@ -115,16 +115,20 @@ class Next2D
     {
         const player = this._$player;
 
-        player._$loadStatus = Player.LOAD_END;
-        player._$mode = "create";
-        player._$stage.frameRate = fps | 0;
-
         // setup
         player.width  = width | 0;
         player.height = height | 0;
         player.setOptions(options);
 
-        return player._$stage.addChild(new Sprite());
+        player._$loadStatus = Player.LOAD_END;
+        player._$mode = "create";
+        player._$stage._$frameRate = fps | 0;
+
+        const root = player._$stage.addChild(new Sprite());
+
+        player.play();
+
+        return root;
     }
 }
 

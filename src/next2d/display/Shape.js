@@ -592,5 +592,8 @@ class Shape extends DisplayObject
                 .postMessage(message);
 
         }
+
+        this._$posted  = true;
+        this._$updated = false;
     }
 }

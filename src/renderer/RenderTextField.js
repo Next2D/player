@@ -16,13 +16,6 @@ class RenderTextField extends RenderDisplayObject
          * @default false
          * @private
          */
-        this._$renew = false;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
         this._$background = false;
 
         /**
@@ -367,7 +360,6 @@ class RenderTextField extends RenderDisplayObject
         }
 
         const baseBounds = this._$getBounds(null);
-
         baseBounds.xMin -= this._$thickness;
         baseBounds.xMax += this._$thickness;
         baseBounds.yMin -= this._$thickness;
@@ -469,7 +461,7 @@ class RenderTextField extends RenderDisplayObject
         let texture = cacheStore.get(cacheKeys);
 
         // texture is small or renew
-        if (this._$renew) {
+        if (this._$isUpdated()) {
             cacheStore.removeCache(instanceId);
             texture = null;
         }
@@ -480,8 +472,6 @@ class RenderTextField extends RenderDisplayObject
             const lineWidth  = $Math.min(1, $Math.max(xScale, yScale));
             const baseWidth  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
             const baseHeight = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
-
-            this._$renew = false;
 
             // alpha reset
             multiColor[3] = 1;
@@ -650,17 +640,17 @@ class RenderTextField extends RenderDisplayObject
 
         let yOffset = 0;
         if (this._$verticalAlign !== TextFormatVerticalAlign.TOP
-            && this.height > this.textHeight
+            && this.height > this._$textHeight
         ) {
 
             switch (this._$verticalAlign) {
 
                 case TextFormatVerticalAlign.MIDDLE:
-                    yOffset = (this.height - this.textHeight + 2) / 2;
+                    yOffset = (this.height - this._$textHeight + 2) / 2;
                     break;
 
                 case TextFormatVerticalAlign.BOTTOM:
-                    yOffset = this.height - this.textHeight + 2;
+                    yOffset = this.height - this._$textHeight + 2;
                     break;
 
             }
@@ -710,7 +700,7 @@ class RenderTextField extends RenderDisplayObject
 
                     currentV++;
 
-                    if (this.scrollV > currentV) {
+                    if (this._$scrollV > currentV) {
                         continue;
                     }
 
@@ -740,7 +730,7 @@ class RenderTextField extends RenderDisplayObject
 
                 case TextMode.TEXT:
                     {
-                        if (this.scrollV > currentV) {
+                        if (this._$scrollV > currentV) {
                             continue;
                         }
 
@@ -834,6 +824,8 @@ class RenderTextField extends RenderDisplayObject
         this._$yMax     = 0;
         this._$textData = null;
 
+        this._$textAreaActive = false;
+
         super._$remove();
 
         Util.$textFields.push(this);
@@ -852,7 +844,6 @@ class RenderTextField extends RenderDisplayObject
         // update property
         this._$textAreaActive = !!object.textAreaActive;
 
-        this._$renew    = true;
         this._$textData = object.textData;
         this._$wordWrap = !!object.wordWrap;
 

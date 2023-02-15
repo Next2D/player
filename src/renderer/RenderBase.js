@@ -37,14 +37,16 @@ class CommandController
      * @param  {HTMLCanvasElement} canvas
      * @param  {number} [samples=4]
      * @param  {number} [devicePixelRatio=2]
+     * @param  {boolean} [is_safari=false]
      * @return {void}
      * @method
      * @public
      */
-    initialize (canvas, samples = 4, devicePixelRatio = 2)
+    initialize (canvas, samples = 4, devicePixelRatio = 2, is_safari = false)
     {
         // update
         $devicePixelRatio = devicePixelRatio;
+        Util.$isSafari = !!is_safari;
 
         const player = Util.$renderPlayer;
         player._$samples = samples;

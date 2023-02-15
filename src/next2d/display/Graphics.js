@@ -1320,7 +1320,9 @@ class Graphics
 
         // cache current buffer
         const currentAttachment = context.frameBuffer.currentAttachment;
-        if (xMin > currentAttachment.width || yMin > currentAttachment.height) {
+        if (xMin > currentAttachment.width
+            || yMin > currentAttachment.height
+        ) {
             return;
         }
 
@@ -1619,21 +1621,25 @@ class Graphics
      */
     _$restart ()
     {
-        if (this._$displayObject
-            && !this._$displayObject._$isUpdated()
-        ) {
-            this._$displayObject._$doChanged();
-            Util.$isUpdated = true;
+        if (this._$displayObject) {
+
+            this._$displayObject._$posted = false;
             this._$buffer = null;
 
-            Util
-                .$cacheStore()
-                .removeCache(this._$displayObject._$instanceId);
+            if (!this._$displayObject._$isUpdated()) {
 
-            if (this._$displayObject._$characterId) {
+                this._$displayObject._$doChanged();
+                Util.$isUpdated = true;
+
                 Util
                     .$cacheStore()
-                    .removeCache(this._$displayObject._$characterId);
+                    .removeCache(this._$displayObject._$instanceId);
+
+                if (this._$displayObject._$characterId) {
+                    Util
+                        .$cacheStore()
+                        .removeCache(this._$displayObject._$characterId);
+                }
             }
         }
     }

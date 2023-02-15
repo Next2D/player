@@ -179,13 +179,6 @@ class TextField extends InteractiveObject
         this._$textData = null;
 
         /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$renew = true;
-
-        /**
          * @type {number}
          * @default null
          * @private
@@ -961,10 +954,10 @@ class TextField extends InteractiveObject
 
         text = `${text}`;
         if (text !== this._$text) {
-            this._$text            = text;
-            this._$htmlText        = "";
-            this._$cacheText       = "";
-            this._$isHTML          = false;
+            this._$text      = text;
+            this._$htmlText  = "";
+            this._$cacheText = "";
+            this._$isHTML    = false;
 
             if (!this._$textAppending) {
                 this._$textFormatTable = [];
@@ -2153,7 +2146,6 @@ class TextField extends InteractiveObject
      */
     _$reset ()
     {
-        this._$renew           = true;
         this._$textData        = null;
         this._$imageData       = null;
         this._$textHeight      = null;
@@ -2696,7 +2688,7 @@ class TextField extends InteractiveObject
         let texture = cacheStore.get(cacheKeys);
 
         // texture is small or renew
-        if (this._$renew || this._$isUpdated()) {
+        if (this._$isUpdated()) {
             cacheStore.removeCache(instanceId);
             texture = null;
         }
@@ -2707,8 +2699,6 @@ class TextField extends InteractiveObject
             const lineWidth  = $Math.min(1, $Math.max(xScale, yScale));
             const baseWidth  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
             const baseHeight = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
-
-            this._$renew = false;
 
             // alpha reset
             multiColor[3] = 1;
@@ -3430,15 +3420,16 @@ class TextField extends InteractiveObject
 
         const message = super._$postProperty();
 
-        message.xMin = this._$bounds.xMin;
-        message.yMin = this._$bounds.yMin;
-        message.xMax = this._$bounds.xMax;
-        message.yMax = this._$bounds.yMax;
-
         message.textAreaActive = this._$textAreaActive;
-        if (this._$renew || this._$isUpdated()) {
 
-            this._$renew = false;
+        const bounds = this._$getBounds(null);
+        message.xMin = bounds.xMin;
+        message.yMin = bounds.yMin;
+        message.xMax = bounds.xMax;
+        message.yMax = bounds.yMax;
+        Util.$poolBoundsObject(bounds);
+
+        if (this._$isUpdated()) {
 
             message.textData        = this._$getTextData();
             message.scrollV         = this.scrollV;
@@ -3472,5 +3463,8 @@ class TextField extends InteractiveObject
         Util
             .$rendererWorker
             .postMessage(message);
+
+        this._$posted  = true;
+        this._$updated = false;
     }
 }

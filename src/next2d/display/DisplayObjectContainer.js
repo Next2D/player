@@ -2370,5 +2370,8 @@ class DisplayObjectContainer extends InteractiveObject
             .postMessage(message, options);
 
         Util.$poolArray(options);
+
+        this._$posted  = true;
+        this._$updated = false;
     }
 }

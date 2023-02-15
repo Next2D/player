@@ -1933,9 +1933,6 @@ class DisplayObject extends EventDispatcher
      */
     _$postProperty ()
     {
-        this._$posted  = true;
-        this._$updated = false;
-
         const message = {
             "command": "setProperty",
             "instanceId": this._$instanceId,
