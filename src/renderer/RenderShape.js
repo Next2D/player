@@ -4,29 +4,6 @@
 class RenderShape extends RenderGraphics
 {
     /**
-     * @constructor
-     * @public
-     */
-    constructor ()
-    {
-        super();
-
-        /**
-         * @type {Rectangle|null}
-         * @default null
-         * @private
-         */
-        this._$scale9Grid = null;
-
-        /**
-         * @type {Float32Array}
-         * @default null
-         * @private
-         */
-        this._$matrixBase = null;
-    }
-
-    /**
      * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
      * @return {void}
@@ -57,8 +34,8 @@ class RenderShape extends RenderGraphics
 
             case width === 0:
             case height === 0:
-            case width === -$Infinity:
-            case height === -$Infinity:
+            case width === 0 - $Infinity:
+            case height === 0 - $Infinity:
             case width === $Infinity:
             case height === $Infinity:
                 return;

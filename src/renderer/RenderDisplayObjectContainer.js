@@ -218,54 +218,33 @@ class RenderDisplayObjectContainer extends RenderGraphics
             }
 
             // mask start
-            const maskInstance = instance._$mask;
+            let maskInstance = null;
+            if (instance._$maskId > 0 - 1) {
+                maskInstance = instances.get(instance._$maskId);
+            }
+
             if (maskInstance) {
 
                 maskInstance._$updated = false;
 
-                let maskMatrix;
+                const mScale = Util.$renderPlayer._$matrix[0];
+                const playerMatrix = Util.$getFloat32Array6(
+                    mScale, 0, 0, mScale, 0, 0
+                );
+                const maskMatrix = Util.$multiplicationMatrix(
+                    playerMatrix, instance._$maskMatrix
+                );
+                Util.$poolFloat32Array6(playerMatrix);
 
-                if (this === maskInstance._$parent) {
+                if (context._$isLayer) {
+                    const currentPosition = context._$getCurrentPosition();
+                    maskMatrix[4] -= currentPosition.xMin;
+                    maskMatrix[5] -= currentPosition.yMin;
+                }
 
-                    maskMatrix = preMatrix;
-
-                } else {
-
-                    maskMatrix = Util.$MATRIX_ARRAY_IDENTITY;
-
-                    let parent = maskInstance._$parent;
-                    while (parent) {
-
-                        maskMatrix = Util.$multiplicationMatrix(
-                            parent._$transform._$rawMatrix(),
-                            maskMatrix
-                        );
-
-                        parent = parent._$parent;
-                    }
-
-                    const player = this.stage._$player;
-                    const mScale = player._$scale * player._$ratio;
-                    const playerMatrix = Util.$getFloat32Array6(
-                        mScale, 0, 0, mScale, 0, 0
-                    );
-
-                    maskMatrix = Util.$multiplicationMatrix(
-                        playerMatrix, maskMatrix
-                    );
-                    Util.$poolFloat32Array6(playerMatrix);
-
-                    if (context._$isLayer) {
-                        const currentPosition = context._$getCurrentPosition();
-                        maskMatrix[4] -= currentPosition.xMin;
-                        maskMatrix[5] -= currentPosition.yMin;
-                    }
-
-                    if (context._$cacheCurrentBuffer) {
-                        maskMatrix[4] -= context._$cacheCurrentBounds.x;
-                        maskMatrix[5] -= context._$cacheCurrentBounds.y;
-                    }
-
+                if (context._$cacheCurrentBuffer) {
+                    maskMatrix[4] -= context._$cacheCurrentBounds.x;
+                    maskMatrix[5] -= context._$cacheCurrentBounds.y;
                 }
 
                 if (!maskInstance._$shouldClip(maskMatrix)) {
@@ -286,7 +265,7 @@ class RenderDisplayObjectContainer extends RenderGraphics
                     instanceMatrix.push(preMatrix);
 
                     if (this !== maskInstance._$parent) {
-                        const maskTargetParentMatrix = this._$transform._$rawMatrix();
+                        const maskTargetParentMatrix = this._$matrix;
                         adjMatrix[0] = $Math.abs(preMatrix[0]) * $Math.sign(maskTargetParentMatrix[0]);
                         adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(maskTargetParentMatrix[1]);
                         adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(maskTargetParentMatrix[2]);
@@ -377,8 +356,8 @@ class RenderDisplayObjectContainer extends RenderGraphics
         // size zero
         if (!length && !isGraphics) {
             const bounds = Util.$getBoundsObject(
-                multiMatrix[4], -multiMatrix[4],
-                multiMatrix[5], -multiMatrix[5]
+                multiMatrix[4], 0 - multiMatrix[4],
+                multiMatrix[5], 0 - multiMatrix[5]
             );
             if (matrix && multiMatrix !== matrix) {
                 Util.$poolFloat32Array6(multiMatrix);
@@ -389,9 +368,9 @@ class RenderDisplayObjectContainer extends RenderGraphics
         // data init
         const no   = $Number.MAX_VALUE;
         let xMin = no;
-        let xMax = -no;
+        let xMax = 0 - no;
         let yMin = no;
-        let yMax = -no;
+        let yMax = 0 - no;
 
         if (isGraphics) {
             const baseBounds = Util.$getBoundsObject(
@@ -468,7 +447,7 @@ class RenderDisplayObjectContainer extends RenderGraphics
 
             multiMatrix = matrix;
 
-            const rawMatrix = this._$transform._$rawMatrix();
+            const rawMatrix = this._$matrix;
             if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
                 || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
                 || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
@@ -484,8 +463,8 @@ class RenderDisplayObjectContainer extends RenderGraphics
         // size zero
         if (!length && !isGraphics) {
             const bounds = Util.$getBoundsObject(
-                multiMatrix[4], -multiMatrix[4],
-                multiMatrix[5], -multiMatrix[5]
+                multiMatrix[4], 0 - multiMatrix[4],
+                multiMatrix[5], 0 - multiMatrix[5]
             );
             if (matrix && multiMatrix !== matrix) {
                 Util.$poolFloat32Array6(multiMatrix);
@@ -496,9 +475,9 @@ class RenderDisplayObjectContainer extends RenderGraphics
         // data init
         const no = $Number.MAX_VALUE;
         let xMin = no;
-        let xMax = -no;
+        let xMax = 0 - no;
         let yMin = no;
-        let yMax = -no;
+        let yMax = 0 - no;
 
         if (isGraphics) {
             const baseBounds = Util.$getBoundsObject(
@@ -639,8 +618,8 @@ class RenderDisplayObjectContainer extends RenderGraphics
                 Util.$poolBoundsObject(baseLayerBounds);
                 Util.$poolFloat32Array6(layerMatrix);
 
-                tx += -$Math.floor(moveBounds.xMin) - tx;
-                ty += -$Math.floor(moveBounds.yMin) - ty;
+                tx += 0 - $Math.floor(moveBounds.xMin) - tx;
+                ty += 0 - $Math.floor(moveBounds.yMin) - ty;
             }
 
             let dx = $Math.floor(xMin);
@@ -649,11 +628,11 @@ class RenderDisplayObjectContainer extends RenderGraphics
             let originY = yMin;
 
             if (moveBounds) {
-                dx -= -$Math.floor(moveBounds.xMin) - (multiMatrix[4] - dx);
-                dy -= -$Math.floor(moveBounds.yMin) - (multiMatrix[5] - dy);
+                dx -= 0 - $Math.floor(moveBounds.xMin) - (multiMatrix[4] - dx);
+                dy -= 0 - $Math.floor(moveBounds.yMin) - (multiMatrix[5] - dy);
 
-                originX -= -moveBounds.xMin - (multiMatrix[4] - originX);
-                originY -= -moveBounds.yMin - (multiMatrix[5] - originY);
+                originX -= 0 - moveBounds.xMin - (multiMatrix[4] - originX);
+                originY -= 0 - moveBounds.yMin - (multiMatrix[5] - originY);
 
                 Util.$poolBoundsObject(moveBounds);
             }
@@ -855,8 +834,8 @@ class RenderDisplayObjectContainer extends RenderGraphics
 
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.drawImage(texture,
-            -offsetX + object.position.dx,
-            -offsetY + object.position.dy,
+            0 - offsetX + object.position.dx,
+            0 - offsetY + object.position.dy,
             texture.width, texture.height,
             color_transform
         );

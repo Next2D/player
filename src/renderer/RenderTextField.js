@@ -187,7 +187,7 @@ class RenderTextField extends RenderDisplayObject
 
             case width === 0:
             case width === $Infinity:
-            case width === -$Infinity:
+            case width === 0 - $Infinity:
                 return 0;
 
             default:
@@ -219,7 +219,7 @@ class RenderTextField extends RenderDisplayObject
 
             case 0:
             case $Infinity:
-            case -$Infinity:
+            case 0 - $Infinity:
                 return 0;
 
             default:
@@ -378,8 +378,8 @@ class RenderTextField extends RenderDisplayObject
 
             case width === 0:
             case height === 0:
-            case width === -$Infinity:
-            case height === -$Infinity:
+            case width === 0 - $Infinity:
+            case height === 0 - $Infinity:
             case width === $Infinity:
             case height === $Infinity:
                 return;
@@ -409,7 +409,7 @@ class RenderTextField extends RenderDisplayObject
         if (!$Number.isInteger(xScale)) {
             const value = xScale.toString();
             const index = value.indexOf("e");
-            if (index !== -1) {
+            if (index !== 0 - 1) {
                 xScale = +value.slice(0, index);
             }
             xScale = +xScale.toFixed(4);
@@ -422,7 +422,7 @@ class RenderTextField extends RenderDisplayObject
         if (!$Number.isInteger(yScale)) {
             const value = yScale.toString();
             const index = value.indexOf("e");
-            if (index !== -1) {
+            if (index !== 0 - 1) {
                 yScale = +value.slice(0, index);
             }
             yScale = +yScale.toFixed(4);
@@ -531,7 +531,7 @@ class RenderTextField extends RenderDisplayObject
 
             ctx.beginPath();
             ctx.setTransform(xScale, 0, 0, yScale, 0, 0);
-            this._$doDraw(ctx, matrix, color_transform, baseWidth / matrix[0]);
+            this._$doDraw(ctx, matrix, color_transform, baseWidth / xScale);
             ctx.restore();
 
             texture = manager.createTextureFromCanvas(ctx.canvas);
@@ -565,7 +565,7 @@ class RenderTextField extends RenderDisplayObject
         }
 
         const radianX = $Math.atan2(multiMatrix[1], multiMatrix[0]);
-        const radianY = $Math.atan2(-multiMatrix[2], multiMatrix[3]);
+        const radianY = $Math.atan2(0 - multiMatrix[2], multiMatrix[3]);
         if (!drawFilter && (radianX || radianY)) {
 
             const tx = baseBounds.xMin * xScale;
@@ -577,7 +577,7 @@ class RenderTextField extends RenderDisplayObject
             const sinY = $Math.sin(radianY);
 
             context.setTransform(
-                cosX, sinX, -sinY, cosY,
+                cosX, sinX, 0 - sinY, cosY,
                 tx * cosX - ty * sinY + multiMatrix[4],
                 tx * sinX + ty * cosY + multiMatrix[5]
             );

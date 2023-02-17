@@ -14,21 +14,21 @@ class RenderDisplayObject
          * @default -1
          * @private
          */
-        this._$instanceId = -1;
+        this._$instanceId = 0 - 1;
 
         /**
          * @type {number}
          * @default -1
          * @private
          */
-        this._$loaderInfoId = -1;
+        this._$loaderInfoId = 0 - 1;
 
         /**
          * @type {number}
          * @default -1
          * @private
          */
-        this._$characterId = -1;
+        this._$characterId = 0 - 1;
 
         /**
          * @type {number}
@@ -96,7 +96,14 @@ class RenderDisplayObject
          * @default -1
          * @private
          */
-        this._$maskId = -1;
+        this._$maskId = 0 - 1;
+
+        /**
+         * @type {Float32Array}
+         * @default null
+         * @private
+         */
+        this._$maskMatrix = null;
 
         /**
          * @type {boolean}
@@ -134,11 +141,18 @@ class RenderDisplayObject
         this._$yMax = 0;
 
         /**
-         * @type {Rectangle}
+         * @type {Rectangle|null}
          * @default null
          * @private
          */
         this._$scale9Grid = null;
+
+        /**
+         * @type {Float32Array}
+         * @default null
+         * @private
+         */
+        this._$matrixBase = null;
     }
 
     /**
@@ -150,7 +164,7 @@ class RenderDisplayObject
     _$shouldClip (matrix)
     {
         if (this instanceof RenderTextField) {
-            if (!this.textWidth || !this.textHeight) {
+            if (!this._$textWidth || !this._$textHeight) {
                 return false;
             }
             return true;
@@ -328,9 +342,13 @@ class RenderDisplayObject
         this._$updated   = true;
         this._$visible   = object.visible;
         this._$isMask    = object.isMask;
-        this._$maskId    = object.maskId;
         this._$depth     = object.depth;
         this._$clipDepth = object.clipDepth;
+
+        this._$maskId = object.maskId;
+        if (this._$maskId > 0 - 1) {
+            this._$maskMatrix = object.maskMatrix;
+        }
 
         this._$matrix[0] = "a"  in object ? object.a  : 1;
         this._$matrix[1] = "b"  in object ? object.b  : 0;
@@ -363,7 +381,11 @@ class RenderDisplayObject
             }
         }
 
-        if (object.matrixBase) {
+        if (object.grid) {
+            this._$scale9Grid = new Rectangle(
+                object.grid.x, object.grid.y,
+                object.grid.w, object.grid.h
+            );
             this._$matrixBase = object.matrixBase;
         }
     }
@@ -399,7 +421,7 @@ class RenderDisplayObject
         // キャッシュ削除のタイマーをセット
         const cacheStore = player._$cacheStore;
         cacheStore.setRemoveTimer(this._$instanceId);
-        if (this._$loaderInfoId > -1 && this._$characterId) {
+        if (this._$loaderInfoId > 0 - 1 && this._$characterId) {
             cacheStore.setRemoveTimer(
                 `${this._$loaderInfoId}@${this._$characterId}`
             );
@@ -408,14 +430,14 @@ class RenderDisplayObject
         player._$instances.delete(this._$instanceId);
 
         // reset
-        this._$instanceId     = -1;
-        this._$loaderInfoId   = -1;
-        this._$characterId    = -1;
+        this._$instanceId     = 0 - 1;
+        this._$loaderInfoId   = 0 - 1;
+        this._$characterId    = 0 - 1;
         this._$updated        = true;
         this._$blendMode      = BlendMode.NORMAL;
         this._$filters        = null;
         this._$visible        = true;
-        this._$maskId         = -1;
+        this._$maskId         = 0 - 1;
         this._$isMask         = false;
         this._$depth          = 0;
         this._$clipDepth      = 0;
@@ -517,18 +539,18 @@ class RenderDisplayObject
         );
 
         const radianX = $Math.atan2(matrix[1], matrix[0]);
-        const radianY = $Math.atan2(-matrix[2], matrix[3]);
+        const radianY = $Math.atan2(0 - matrix[2], matrix[3]);
 
         const parentMatrix = Util.$getFloat32Array6(
             $Math.cos(radianX), $Math.sin(radianX),
-            -$Math.sin(radianY), $Math.cos(radianY),
+            0 - $Math.sin(radianY), $Math.cos(radianY),
             width / 2, height / 2
         );
 
         const baseMatrix = Util.$getFloat32Array6(
             1, 0, 0, 1,
-            -target_texture.width / 2,
-            -target_texture.height / 2
+            0 - target_texture.width / 2,
+            0 - target_texture.height / 2
         );
 
         const multiMatrix = Util.$multiplicationMatrix(

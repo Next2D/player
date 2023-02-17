@@ -2757,7 +2757,7 @@ class TextField extends InteractiveObject
 
             ctx.beginPath();
             ctx.setTransform(xScale, 0, 0, yScale, 0, 0);
-            this._$doDraw(ctx, matrix, multiColor, baseWidth / matrix[0]);
+            this._$doDraw(ctx, matrix, multiColor, baseWidth / xScale);
             ctx.restore();
 
             texture = manager.createTextureFromCanvas(ctx.canvas);

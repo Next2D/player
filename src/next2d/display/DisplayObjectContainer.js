@@ -482,6 +482,10 @@ class DisplayObjectContainer extends InteractiveObject
         children.splice(currentIndex, 1);
         children.splice(index, 0, child);
 
+        if (Util.$rendererWorker) {
+            this._$postChildrenIds();
+        }
+
         this._$doChanged();
     }
 
@@ -509,6 +513,10 @@ class DisplayObjectContainer extends InteractiveObject
 
         children[index1] = child2;
         children[index2] = child1;
+
+        if (Util.$rendererWorker) {
+            this._$postChildrenIds();
+        }
 
         this._$doChanged();
     }
@@ -758,11 +766,7 @@ class DisplayObjectContainer extends InteractiveObject
                 }
 
                 if (useWorker) {
-                    Util.$rendererWorker.postMessage({
-                        "command": "setChildren",
-                        "instanceId": this._$instanceId,
-                        "children": childrenIds
-                    });
+                    this._$postChildrenIds(childrenIds);
                 }
 
                 Util.$poolArray(childrenIds);
@@ -918,11 +922,7 @@ class DisplayObjectContainer extends InteractiveObject
             }
 
             if (useWorker) {
-                Util.$rendererWorker.postMessage({
-                    "command": "setChildren",
-                    "instanceId": this._$instanceId,
-                    "children": childrenIds
-                });
+                this._$postChildrenIds(childrenIds);
             }
 
             // object pool
@@ -996,22 +996,7 @@ class DisplayObjectContainer extends InteractiveObject
                 child._$createWorkerInstance();
                 child._$postProperty();
 
-                const children = this._$needsChildren
-                    ? this._$getChildren()
-                    : this._$children;
-
-                const childrenIds = Util.$getArray();
-                for (let idx = 0; idx < children.length; ++idx) {
-                    childrenIds.push(children[idx]._$instanceId);
-                }
-
-                Util.$rendererWorker.postMessage({
-                    "command": "setChildren",
-                    "instanceId": this._$instanceId,
-                    "children": childrenIds
-                });
-
-                Util.$poolArray(childrenIds);
+                this._$postChildrenIds();
             }
 
             if (child.willTrigger(Event.ADDED_TO_STAGE)) {
@@ -1102,11 +1087,7 @@ class DisplayObjectContainer extends InteractiveObject
         }
 
         if (Util.$rendererWorker) {
-            Util.$rendererWorker.postMessage({
-                "command": "setChildren",
-                "instanceId": this._$instanceId,
-                "children": childrenIds
-            });
+            this._$postChildrenIds(childrenIds);
         }
 
         Util.$poolArray(childrenIds);
@@ -1148,18 +1129,7 @@ class DisplayObjectContainer extends InteractiveObject
                         "instanceId": child._$instanceId
                     });
 
-                    const childrenIds = Util.$getArray();
-                    for (let idx = 0; idx < children.length; ++idx) {
-                        childrenIds.push(children[idx]._$instanceId);
-                    }
-
-                    Util.$rendererWorker.postMessage({
-                        "command": "setChildren",
-                        "instanceId": this._$instanceId,
-                        "children": childrenIds
-                    });
-
-                    Util.$poolArray(childrenIds);
+                    this._$postChildrenIds();
                 }
 
                 if (child.willTrigger(Event.REMOVED_FROM_STAGE)) {
@@ -2373,5 +2343,43 @@ class DisplayObjectContainer extends InteractiveObject
 
         this._$posted  = true;
         this._$updated = false;
+    }
+
+    /**
+     * @param  {array} [childrenIds=null]
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$postChildrenIds (childrenIds = null)
+    {
+        if (!childrenIds) {
+
+            const children = this._$needsChildren
+                ? this._$getChildren()
+                : this._$children;
+
+            childrenIds = Util.$getArray();
+            for (let idx = 0; idx < children.length; ++idx) {
+                childrenIds.push(children[idx]._$instanceId);
+            }
+
+            Util.$rendererWorker.postMessage({
+                "command": "setChildren",
+                "instanceId": this._$instanceId,
+                "children": childrenIds
+            });
+
+            Util.$poolArray(childrenIds);
+
+        } else {
+
+            Util.$rendererWorker.postMessage({
+                "command": "setChildren",
+                "instanceId": this._$instanceId,
+                "children": childrenIds
+            });
+
+        }
     }
 }

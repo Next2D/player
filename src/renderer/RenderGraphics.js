@@ -107,8 +107,8 @@ class RenderGraphics extends RenderDisplayObject
 
             case width === 0:
             case height === 0:
-            case width === -$Infinity:
-            case height === -$Infinity:
+            case width === 0 - $Infinity:
+            case height === 0 - $Infinity:
             case width === $Infinity:
             case height === $Infinity:
                 return;
@@ -134,7 +134,7 @@ class RenderGraphics extends RenderDisplayObject
         if (!$Number.isInteger(xScale)) {
             const value = xScale.toString();
             const index = value.indexOf("e");
-            if (index !== -1) {
+            if (index !== 0 - 1) {
                 xScale = +value.slice(0, index);
             }
             xScale = +xScale.toFixed(4);
@@ -147,7 +147,7 @@ class RenderGraphics extends RenderDisplayObject
         if (!$Number.isInteger(yScale)) {
             const value = yScale.toString();
             const index = value.indexOf("e");
-            if (index !== -1) {
+            if (index !== 0 - 1) {
                 yScale = +value.slice(0, index);
             }
             yScale = +yScale.toFixed(4);
@@ -178,8 +178,8 @@ class RenderGraphics extends RenderDisplayObject
 
         let uniqueId = this._$instanceId;
         if (!hasGrid
-            && this._$loaderInfoId > -1
-            && this._$characterId > -1
+            && this._$loaderInfoId > 0 - 1
+            && this._$characterId > 0 - 1
         ) {
             uniqueId = `${this._$loaderInfoId}@${this._$characterId}`;
         }
@@ -212,8 +212,8 @@ class RenderGraphics extends RenderDisplayObject
             Util.$resetContext(context);
             context.setTransform(
                 xScale, 0, 0, yScale,
-                -baseBounds.xMin * xScale,
-                -baseBounds.yMin * yScale
+                0 - baseBounds.xMin * xScale,
+                0 - baseBounds.yMin * yScale
             );
 
             if (hasGrid) {
@@ -308,7 +308,7 @@ class RenderGraphics extends RenderDisplayObject
         }
 
         const radianX = $Math.atan2(matrix[1], matrix[0]);
-        const radianY = $Math.atan2(-matrix[2], matrix[3]);
+        const radianY = $Math.atan2(0 - matrix[2], matrix[3]);
         if (!drawFilter && (radianX || radianY)) {
 
             const tx = baseBounds.xMin * xScale;
@@ -320,7 +320,7 @@ class RenderGraphics extends RenderDisplayObject
             const sinY = $Math.sin(radianY);
 
             context.setTransform(
-                cosX, sinX, -sinY, cosY,
+                cosX, sinX, 0 - sinY, cosY,
                 tx * cosX - ty * sinY + matrix[4],
                 tx * sinX + ty * cosY + matrix[5]
             );
@@ -890,8 +890,8 @@ class RenderGraphics extends RenderDisplayObject
             const cacheStore = Util.$renderPlayer._$cacheStore;
             cacheStore.removeCache(this._$instanceId);
 
-            if (this._$loaderInfoId > -1
-                && this._$characterId > -1
+            if (this._$loaderInfoId > 0 - 1
+                && this._$characterId > 0 - 1
             ) {
                 cacheStore.removeCache(
                     `${this._$loaderInfoId}@${this._$characterId}`

@@ -144,7 +144,7 @@ Util.$COLOR_ARRAY_IDENTITY = new $Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
  * @const
  * @static
  */
-Util.$SHORT_INT_MIN = -32768;
+Util.$SHORT_INT_MIN = 0 - 32768;
 
 /**
  * @type {number}
@@ -665,12 +665,12 @@ Util.$resetContext = (context) =>
  */
 Util.$linearGradientXY = (matrix) =>
 {
-    const x0  = -819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
+    const x0  = (0 - 819.2) * matrix[0] - 819.2 * matrix[2] + matrix[4];
     const x1  =  819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
-    const x2  = -819.2 * matrix[0] + 819.2 * matrix[2] + matrix[4];
-    const y0  = -819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
+    const x2  = (0 - 819.2) * matrix[0] + 819.2 * matrix[2] + matrix[4];
+    const y0  = (0 - 819.2) * matrix[1] - 819.2 * matrix[3] + matrix[5];
     const y1  =  819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
-    const y2  = -819.2 * matrix[1] + 819.2 * matrix[3] + matrix[5];
+    const y2  = (0 - 819.2) * matrix[1] + 819.2 * matrix[3] + matrix[5];
 
     let vx2 = x2 - x0;
     let vy2 = y2 - y0;
@@ -702,8 +702,8 @@ Util.$inverseMatrix = (m) =>
     const ty  = m[1] * m[6] - m[0] * m[7];
 
     return Util.$getFloat32Array9(
-        m[4] * rdet,  -m[1] * rdet, 0,
-        -m[3] * rdet,  m[0] * rdet, 0,
+        m[4] * rdet,  0 - m[1] * rdet, 0,
+        0 - m[3] * rdet,  m[0] * rdet, 0,
         tx * rdet, ty * rdet, 1
     );
 };
@@ -797,9 +797,9 @@ Util.$boundsMatrix = (bounds, matrix) =>
     const y3 = bounds.xMin * matrix[1] + bounds.yMin * matrix[3] + matrix[5];
 
     const xMin = $Math.min( $Number.MAX_VALUE, x0, x1, x2, x3);
-    const xMax = $Math.max(-$Number.MAX_VALUE, x0, x1, x2, x3);
+    const xMax = $Math.max(0 - $Number.MAX_VALUE, x0, x1, x2, x3);
     const yMin = $Math.min( $Number.MAX_VALUE, y0, y1, y2, y3);
-    const yMax = $Math.max(-$Number.MAX_VALUE, y0, y1, y2, y3);
+    const yMax = $Math.max(0 - $Number.MAX_VALUE, y0, y1, y2, y3);
 
     return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
 };

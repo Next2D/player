@@ -154,8 +154,8 @@ class RenderVideo extends RenderDisplayObject
 
             case width === 0:
             case height === 0:
-            case width === -$Infinity:
-            case height === -$Infinity:
+            case width === 0 - $Infinity:
+            case height === 0 - $Infinity:
             case width === $Infinity:
             case height === $Infinity:
                 return;
@@ -240,8 +240,8 @@ class RenderVideo extends RenderDisplayObject
 
                 const baseMatrix = Util.$getFloat32Array6(
                     1, 0, 0, 1,
-                    -texture.width / 2,
-                    -texture.height / 2
+                    0 - texture.width / 2,
+                    0 - texture.height / 2
                 );
 
                 const scaleMatrix = Util.$multiplicationMatrix(

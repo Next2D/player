@@ -47,7 +47,7 @@ class RenderPlayer
          * @default -1
          * @private
          */
-        this._$timerId = -1;
+        this._$timerId = 0 - 1;
 
         /**
          * @type {number}
@@ -145,10 +145,10 @@ class RenderPlayer
 
             this._$stopFlag = false;
 
-            if (this._$timerId > -1) {
+            if (this._$timerId > 0 - 1) {
                 const clearTimer = $cancelAnimationFrame;
                 clearTimer(this._$timerId);
-                this._$timerId = -1;
+                this._$timerId = 0 - 1;
             }
 
             this._$startTime = $performance.now();
@@ -173,7 +173,7 @@ class RenderPlayer
         clearTimer(this._$timerId);
 
         this._$stopFlag = true;
-        this._$timerId  = -1;
+        this._$timerId  = 0 - 1;
     }
 
     /**
@@ -369,6 +369,13 @@ class RenderPlayer
             sprite._$yMin     = object.yMin;
             sprite._$xMax     = object.xMax;
             sprite._$yMax     = object.yMax;
+        }
+
+        if (object.grid) {
+            sprite._$scale9Grid = new Rectangle(
+                object.grid.x, object.grid.y,
+                object.grid.w, object.grid.h
+            );
         }
 
         this._$instances.set(sprite._$instanceId, sprite);

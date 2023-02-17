@@ -29,7 +29,7 @@ class DisplayObject extends EventDispatcher
          * @type {number}
          * @private
          */
-        this._$id = -1;
+        this._$id = 0 - 1;
 
         /**
          * @type {number}
@@ -667,7 +667,7 @@ class DisplayObject extends EventDispatcher
     }
     set rotation (rotation)
     {
-        rotation = Util.$clamp(rotation % 360, -360, 360, 0);
+        rotation = Util.$clamp(rotation % 360, 0 - 360, 360, 0);
 
         const transform = this._$transform;
         const matrix    = transform.matrix;
@@ -684,7 +684,7 @@ class DisplayObject extends EventDispatcher
         } else {
 
             let radianX  = $Math.atan2(matrix.b,  matrix.a);
-            let radianY  = $Math.atan2(-matrix.c, matrix.d);
+            let radianY  = $Math.atan2(0 - matrix.c, matrix.d);
 
             const radian = rotation * Util.$Deg2Rad;
             radianY      = radianY + radian - radianX;
@@ -725,6 +725,8 @@ class DisplayObject extends EventDispatcher
         this._$scale9Grid = null;
         if (scale_9_grid instanceof Rectangle) {
             this._$scale9Grid = scale_9_grid;
+            this._$doChanged();
+            Util.$isUpdated = true;
         }
     }
 
@@ -739,11 +741,33 @@ class DisplayObject extends EventDispatcher
     get scaleX ()
     {
         const matrix = this._$transform._$rawMatrix();
-        const xScale = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+
+        let xScale = $Math.sqrt(
+            matrix[0] * matrix[0]
+            + matrix[1] * matrix[1]
+        );
+        if (!$Number.isInteger(xScale)) {
+            const value = xScale.toString();
+            const index = value.indexOf("e");
+            if (index !== -1) {
+                xScale = +value.slice(0, index);
+            }
+            xScale = +xScale.toFixed(4);
+        }
+
         return 0 > matrix[0] ? xScale * -1 : xScale;
     }
     set scaleX (scale_x)
     {
+        if (!$Number.isInteger(scale_x)) {
+            const value = scale_x.toString();
+            const index = value.indexOf("e");
+            if (index !== -1) {
+                scale_x = +value.slice(0, index);
+            }
+            scale_x = +scale_x.toFixed(4);
+        }
+
         const transform = this._$transform;
         const matrix    = transform.matrix;
         if (matrix.b === 0 || $isNaN(matrix.b)) {
@@ -776,11 +800,34 @@ class DisplayObject extends EventDispatcher
     get scaleY ()
     {
         const matrix = this._$transform._$rawMatrix();
-        const yScale = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+
+        let yScale = $Math.sqrt(
+            matrix[2] * matrix[2]
+            + matrix[3] * matrix[3]
+        );
+
+        if (!$Number.isInteger(yScale)) {
+            const value = yScale.toString();
+            const index = value.indexOf("e");
+            if (index !== -1) {
+                yScale = +value.slice(0, index);
+            }
+            yScale = +yScale.toFixed(4);
+        }
+
         return 0 > matrix[3] ? yScale * -1 : yScale;
     }
     set scaleY (scale_y)
     {
+        if (!$Number.isInteger(scale_y)) {
+            const value = scale_y.toString();
+            const index = value.indexOf("e");
+            if (index !== -1) {
+                scale_y = +value.slice(0, index);
+            }
+            scale_y = +scale_y.toFixed(4);
+        }
+
         const transform = this._$transform;
         const matrix    = transform.matrix;
 
@@ -1940,8 +1987,27 @@ class DisplayObject extends EventDispatcher
             "isMask": this._$isMask,
             "clipDepth": this._$clipDepth,
             "depth": this._$placeId,
-            "maskId": this._$mask ? this._$mask._$instanceId : -1
+            "maskId": -1
         };
+
+        const mask = this._$mask;
+        if (mask) {
+            message.maskId = mask._$instanceId;
+
+            let maskMatrix = Util.$MATRIX_ARRAY_IDENTITY;
+            let parent = mask._$parent;
+            while (parent) {
+
+                maskMatrix = Util.$multiplicationMatrix(
+                    parent._$transform._$rawMatrix(),
+                    maskMatrix
+                );
+
+                parent = parent._$parent;
+            }
+
+            message.maskMatrix = maskMatrix;
+        }
 
         if (this._$visible) {
 
@@ -2020,7 +2086,8 @@ class DisplayObject extends EventDispatcher
                 message.blendMode = blendMode;
             }
 
-            if (this._$scale9Grid && this._$isUpdated()) {
+            const scale9Grid = this._$scale9Grid;
+            if (scale9Grid && this._$isUpdated()) {
 
                 const baseMatrix = this
                     ._$parent
@@ -2028,8 +2095,14 @@ class DisplayObject extends EventDispatcher
                     .concatenatedMatrix;
 
                 message.matrixBase = baseMatrix._$matrix.slice();
-
                 Util.$poolMatrix(baseMatrix);
+
+                message.grid = {
+                    "x": scale9Grid.x,
+                    "y": scale9Grid.y,
+                    "w": scale9Grid.width,
+                    "h": scale9Grid.height
+                };
             }
         }
 

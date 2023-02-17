@@ -1319,7 +1319,8 @@ class Graphics
         }
 
         // cache current buffer
-        const currentAttachment = context.frameBuffer.currentAttachment;
+        const manager = context._$frameBufferManager;
+        const currentAttachment = manager.currentAttachment;
         if (xMin > currentAttachment.width
             || yMin > currentAttachment.height
         ) {
@@ -1392,7 +1393,6 @@ class Graphics
         let texture = cacheStore.get(cacheKeys);
         if (!texture) {
 
-            const manager = context._$frameBufferManager;
             const currentAttachment = manager.currentAttachment;
 
             // resize
