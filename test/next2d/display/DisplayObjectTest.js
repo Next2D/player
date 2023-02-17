@@ -189,34 +189,34 @@ describe("DisplayObject.js property test", function()
     it("scaleY test success case5", function () {
         const obj    = new DisplayObject();
         obj.scaleY = 0.5449999999999999;
-        expect(obj.scaleY).toBe(0.5450000166893005);
+        expect(obj.scaleY).toBe(0.545);
     });
 
     it("scaleY test success case6", function () {
         const obj    = new DisplayObject();
 
         obj.scaleY = -0.6717931453290831;
-        expect(obj.scaleY).toBe(-0.6717931628227234);
+        expect(obj.scaleY).toBe(-0.6718);
         obj.scaleY = -0.9990366556971153;
-        expect(obj.scaleY).toBe(-0.9990366697311401);
+        expect(obj.scaleY).toBe(-0.999);
     });
 
     it("scaleY test success case7", function () {
         const obj    = new DisplayObject();
 
         obj.scaleY = -0.9758;
-        expect(obj.scaleY).toBe(-0.9757999777793884);
+        expect(obj.scaleY).toBe(-0.9758);
         obj.scaleY = 0.1858000000000002;
-        expect(obj.scaleY).toBe(0.1858000010251999);
+        expect(obj.scaleY).toBe(0.1858);
     });
 
-    it("scaleY test success case7", function () {
+    it("scaleY test success case8", function () {
         const obj    = new DisplayObject();
 
         obj.scaleY = -1;
         expect(obj.scaleY).toBe(-1);
         obj.scaleY = -0.7822;
-        expect(obj.scaleY).toBe(-0.7821999788284302);
+        expect(obj.scaleY).toBe(-0.7822);
     });
 
     it("scaleY test valid case1", function () {
@@ -282,7 +282,7 @@ describe("DisplayObject.js property test", function()
 
         mc.height = 100;
 
-        expect(mc.height).toBe(100.00000417232513);
+        expect(mc.height).toBe(100);
     });
 
     it("height test success case3", function () {
@@ -308,7 +308,7 @@ describe("DisplayObject.js property test", function()
 
         mc.height = "123";
 
-        expect(mc.height).toBe(122.9999977350235);
+        expect(mc.height).toBe(123);
     });
 
     it("height test success case4", function () {
@@ -394,7 +394,7 @@ describe("DisplayObject.js property test", function()
         shape.rotation = 90;
 
         shape.height = 30;
-        expect(shape.width).toBe(24.000000953674316);
+        expect(shape.width).toBe(24);
         expect(shape.height).toBe(50);
 
         /**
@@ -402,7 +402,7 @@ describe("DisplayObject.js property test", function()
          * @see https://blog.gskinner.com/archives/2007/08/annoying_as3_bu.html
          */
         shape.height = 30;
-        expect(shape.width).toBe(24.000000953674316);
+        expect(shape.width).toBe(24);
         expect(shape.height).toBe(50);
     });
 
@@ -454,7 +454,7 @@ describe("DisplayObject.js property test", function()
 
         mc.width = 100;
 
-        expect(mc.width).toBe(100.00000298023224);
+        expect(mc.width).toBe(100);
     });
 
     it("width test success case3", function () {
@@ -481,7 +481,7 @@ describe("DisplayObject.js property test", function()
         expect(mc.width).toBe(75);
 
         mc.width = "312";
-        expect(mc.width).toBe(311.9999885559082);
+        expect(mc.width).toBe(312);
     });
 
     it("width test success case4", function () {

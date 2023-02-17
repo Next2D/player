@@ -277,7 +277,7 @@ for (let idx = 0; idx < 256; ++idx) {
  * @const
  * @static
  */
-Util.$SHORT_INT_MIN = -32768;
+Util.$SHORT_INT_MIN = 0 - 32768;
 
 /**
  * @type {number}

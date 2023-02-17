@@ -469,7 +469,7 @@ class DisplayObject extends EventDispatcher
                 return 0;
 
             default:
-                return height;
+                return +height.toFixed(2);
 
         }
     }
@@ -759,6 +759,10 @@ class DisplayObject extends EventDispatcher
     }
     set scaleX (scale_x)
     {
+        scale_x = Util.$clamp(+scale_x,
+            Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX
+        );
+
         if (!$Number.isInteger(scale_x)) {
             const value = scale_x.toString();
             const index = value.indexOf("e");
@@ -819,6 +823,10 @@ class DisplayObject extends EventDispatcher
     }
     set scaleY (scale_y)
     {
+        scale_y = Util.$clamp(+scale_y,
+            Util.$SHORT_INT_MIN, Util.$SHORT_INT_MAX
+        );
+
         if (!$Number.isInteger(scale_y)) {
             const value = scale_y.toString();
             const index = value.indexOf("e");
@@ -939,11 +947,11 @@ class DisplayObject extends EventDispatcher
 
             case width === 0:
             case width === $Infinity:
-            case width === -$Infinity:
+            case width === 0 - $Infinity:
                 return 0;
 
             default:
-                return width;
+                return +width.toFixed(2);
 
         }
     }
