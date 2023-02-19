@@ -2457,7 +2457,7 @@ class TextField extends InteractiveObject
 
         this.text = character.text;
 
-        if (Util.$rendererWorker) {
+        if (Util.$rendererWorker && this._$stage) {
             this._$createWorkerInstance();
         }
     }
@@ -3360,7 +3360,7 @@ class TextField extends InteractiveObject
      */
     _$createWorkerInstance ()
     {
-        if (this._$created || !this._$stage) {
+        if (this._$created) {
             return ;
         }
         this._$created = true;
@@ -3414,10 +3414,6 @@ class TextField extends InteractiveObject
      */
     _$postProperty ()
     {
-        if (!this._$stage) {
-            return ;
-        }
-
         const message = super._$postProperty();
 
         message.textAreaActive = this._$textAreaActive;

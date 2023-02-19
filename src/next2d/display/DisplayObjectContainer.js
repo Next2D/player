@@ -726,7 +726,7 @@ class DisplayObjectContainer extends InteractiveObject
             this._$needsChildren = false;
 
             const cacheStore = Util.$cacheStore();
-            const useWorker  = Util.$rendererWorker !== null && !!this._$stage;
+            const useWorker  = !!Util.$rendererWorker && !!this._$stage;
             if (!this._$controller) {
                 return this._$children;
             }
@@ -757,16 +757,7 @@ class DisplayObjectContainer extends InteractiveObject
                         if (instance._$name) {
                             this._$names.set(instance._$name, instance);
                         }
-
-                        if (useWorker) {
-                            childrenIds.push(instance._$instanceId);
-                            instance._$postProperty();
-                        }
                     }
-                }
-
-                if (useWorker) {
-                    this._$postChildrenIds(childrenIds);
                 }
 
                 Util.$poolArray(childrenIds);
@@ -808,11 +799,6 @@ class DisplayObjectContainer extends InteractiveObject
                             this._$names.set(instance._$name, instance);
                         }
 
-                        if (useWorker) {
-                            childrenIds.push(instanceId);
-                            instance._$postProperty();
-                        }
-
                         continue;
                     }
 
@@ -834,7 +820,6 @@ class DisplayObjectContainer extends InteractiveObject
                         depth++;
 
                         if (useWorker) {
-                            childrenIds.push(instanceId);
                             instance._$postProperty();
                         }
 
@@ -914,15 +899,7 @@ class DisplayObjectContainer extends InteractiveObject
                         this._$names.set(instance._$name, instance);
                     }
 
-                    if (useWorker) {
-                        childrenIds.push(instance._$instanceId);
-                        instance._$postProperty();
-                    }
                 }
-            }
-
-            if (useWorker) {
-                this._$postChildrenIds(childrenIds);
             }
 
             // object pool
@@ -2274,7 +2251,7 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$createWorkerInstance ()
     {
-        if (this._$created || !this._$stage) {
+        if (this._$created) {
             return ;
         }
         this._$created = true;
@@ -2311,9 +2288,7 @@ class DisplayObjectContainer extends InteractiveObject
      */
     _$postProperty ()
     {
-        if (!this._$stage) {
-            return ;
-        }
+        this._$postChildrenIds();
 
         const options = Util.$getArray();
         const message = super._$postProperty();

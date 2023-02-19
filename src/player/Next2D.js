@@ -116,13 +116,12 @@ class Next2D
         const player = this._$player;
 
         // setup
-        player.width  = width | 0;
-        player.height = height | 0;
-        player.setOptions(options);
-
+        player._$baseWidth  = width | 0;
+        player._$baseHeight = height | 0;
         player._$loadStatus = Player.LOAD_END;
         player._$mode = "create";
         player._$stage._$frameRate = fps | 0;
+        player.setOptions(options);
 
         const root = player._$stage.addChild(new Sprite());
 

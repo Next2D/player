@@ -222,6 +222,39 @@ class CommandController
                     Util.$renderPlayer.stop();
                     break;
 
+                case "bitmapDraw":
+                    {
+                        const player = Util.$renderPlayer;
+                        const stopFlag = player._$stopFlag;
+
+                        if (!stopFlag) {
+                            player.stop();
+                        }
+
+                        const canvas = new $OffscreenCanvas(
+                            object.width,
+                            object.height
+                        );
+
+                        player._$bitmapDraw(
+                            player._$instances.get(object.sourceId),
+                            object.matrix,
+                            object.colorTransform,
+                            canvas
+                        );
+
+                        if (!stopFlag) {
+                            player.play();
+                        }
+
+                        const imageBitmap = canvas.transferToImageBitmap();
+                        globalThis.postMessage({
+                            "sourceId": object.sourceId,
+                            "imageBitmap": imageBitmap
+                        }, [imageBitmap]);
+                    }
+                    break;
+
                 default:
                     break;
 

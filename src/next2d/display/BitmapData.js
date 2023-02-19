@@ -357,23 +357,153 @@ class BitmapData
      * @param  {Matrix}            [matrix=null]
      * @param  {ColorTransform}    [color_transform=null]
      * @param  {HTMLCanvasElement} [canvas=null]
+     * @param  {function}          [callback=null]
      * @return {void}
      * @public
      */
-    draw (source, matrix = null, color_transform = null, canvas = null)
-    {
+    draw (
+        source, matrix = null, color_transform = null,
+        canvas = null, callback = null
+    ) {
+
         if (!(source instanceof DisplayObject)) {
             return ;
         }
 
-        if (!this._$width || !this._$height) {
+        const width  = this._$width;
+        const height = this._$height;
+        if (!width || !height) {
             return ;
         }
 
-        const renderer = Util.$currentPlayer()._$renderer;
-        this._$canvas  = renderer.drawBitmapData(
-            this, source, matrix, color_transform, canvas
-        );
+        const player = Util.$currentPlayer();
+        const cacheWidth  = player._$width;
+        const cacheHeight = player._$height;
+        const resize = width > cacheWidth || height > cacheHeight;
+        if (resize) {
+            player._$width  = width;
+            player._$height = height;
+            player._$resizeCanvas(width, height, player._$matrix[0]);
+        }
+
+        const colorTransform = color_transform
+            ? color_transform._$colorTransform.slice()
+            : Util.$COLOR_ARRAY_IDENTITY.slice();
+
+        let tMatrix = matrix
+            ? matrix._$matrix.slice()
+            : Util.$MATRIX_ARRAY_IDENTITY.slice();
+
+        let clone = null;
+        if (matrix) {
+            clone = source._$transform.matrix;
+            clone.invert();
+
+            tMatrix = Util.$multiplicationMatrix(
+                tMatrix, clone._$matrix
+            );
+
+            Util.$poolMatrix(clone);
+        }
+
+        if (!canvas) {
+            canvas = Util.$cacheStore().getCanvas();
+        }
+
+        if (Util.$rendererWorker) {
+
+            if (!source._$stage) {
+                if (source instanceof DisplayObjectContainer) {
+
+                    Util.$postContainerWorker(source);
+
+                } else {
+
+                    source._$createWorkerInstance();
+                    source._$postProperty();
+
+                }
+            }
+
+            canvas.width  = width;
+            canvas.height = height;
+            const context = canvas.getContext("2d");
+            context.clearRect(0, 0, width, height);
+
+            const instanceId = source._$instanceId;
+            Util.$bitmapDrawMap.set(instanceId, {
+                "source": source,
+                "context": context,
+                "callback": callback
+            });
+
+            Util.$rendererWorker.postMessage({
+                "command": "bitmapDraw",
+                "sourceId": instanceId,
+                "width": width,
+                "height": height,
+                "matrix": tMatrix,
+                "colorTransform": colorTransform
+            }, [tMatrix.buffer, colorTransform.buffer]);
+
+        } else {
+
+            const context = player._$context;
+            if (!context) {
+                return ;
+            }
+
+            const manager = context._$frameBufferManager;
+
+            const currentAttachment = manager.currentAttachment;
+
+            context._$bind(player._$buffer);
+
+            // reset
+            Util.$resetContext(context);
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.clearRect(0, 0, player._$width, player._$height);
+            context.beginPath();
+
+            source._$draw(context, tMatrix, colorTransform);
+
+            const texture = manager
+                .getTextureFromCurrentAttachment();
+
+            // reset and draw to main canvas
+            manager.unbind();
+
+            Util.$resetContext(context);
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.clearRect(0, 0, texture.width + 1, texture.height + 1);
+            context.drawImage(texture,
+                0, 0, texture.width, texture.height
+            );
+
+            canvas.width  = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, width, height);
+            ctx.drawImage(player._$canvas, 0, 0);
+
+            if (currentAttachment) {
+                context._$bind(currentAttachment);
+            }
+
+            if (callback) {
+                callback(canvas);
+            }
+        }
+
+        if (matrix) {
+            Util.$poolMatrix(matrix);
+        }
+
+        if (color_transform) {
+            Util.$poolColorTransform(color_transform);
+        }
     }
 
     /**
@@ -540,72 +670,6 @@ class BitmapData
         context.frameBuffer.releaseAttachment(attachment);
 
         return pixels;
-    }
-
-    /**
-     * @param  {HTMLCanvasElement} canvas
-     * @return {CanvasRenderingContext2D}
-     * @method
-     * @public
-     */
-    drawFromCanvas (canvas)
-    {
-        const { width, height } = this;
-
-        canvas.width  = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext("2d");
-        if (width || height) {
-
-            Util.$useCache = false;
-
-            const player  = Util.$currentPlayer();
-            const context = player._$context;
-
-            const cacheWidth  = player._$canvas.width;
-            const cacheHeight = player._$canvas.height;
-
-            context.frameBuffer.unbind();
-            Util.$resetContext(context);
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context._$setColor(1, 1, 1, 1);
-            context.clearRect(0, 0, cacheWidth, cacheHeight);
-
-            // resize
-            const resize = width > cacheWidth || height > cacheHeight;
-            if (resize) {
-                // canvas
-                player._$canvas.width  = width;
-                player._$canvas.height = height;
-
-                // webgl
-                context._$gl.viewport(0, 0, width, height);
-                context._$viewportWidth  = width;
-                context._$viewportHeight = height;
-
-                const manager = context._$frameBufferManager;
-                if (player._$buffer) {
-                    manager.unbind();
-                    manager.releaseAttachment(player._$buffer, true);
-                }
-
-                player._$buffer = manager
-                    .createCacheAttachment(width, height, false);
-            }
-
-            // reset and draw to canvas
-            context.drawImage(this._$texture, 0, 0, width, height);
-            ctx.drawImage(player._$canvas, 0, 0);
-
-            // end
-            context._$bind(player._$buffer);
-
-            // reset
-            Util.$useCache = true;
-        }
-
-        return ctx;
     }
 
     /**

@@ -849,7 +849,6 @@ class Player
     {
         // main canvas
         const canvas  = $document.createElement("canvas");
-        this._$canvas = canvas;
         canvas.width  = 1;
         canvas.height = 1;
 
@@ -888,9 +887,6 @@ class Player
             }
 
         }
-
-        // set main canvas
-        this._$canvas = canvas;
 
         // set event
         if (Util.$isTouch) {
@@ -1032,6 +1028,8 @@ class Player
             style.transform = `scale(${1 / $devicePixelRatio})`;
         }
 
+        // set main canvas
+        this._$canvas = canvas;
     }
 
     /**
@@ -1077,7 +1075,7 @@ class Player
 
             let width = this._$fullScreen
                 ? innerWidth
-                : this._$baseWidth  * scale | 0;
+                : this._$baseWidth * scale | 0;
 
             let height = this._$fullScreen
                 ? innerHeight

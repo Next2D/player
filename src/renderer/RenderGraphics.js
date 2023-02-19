@@ -71,6 +71,7 @@ class RenderGraphics extends RenderDisplayObject
         }
 
         const alpha = Util.$clamp(color_transform[3] + color_transform[7] / 255, 0, 1, 0);
+
         if (!alpha || !this._$maxAlpha) {
             return ;
         }

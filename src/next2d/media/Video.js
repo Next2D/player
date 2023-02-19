@@ -646,7 +646,7 @@ class Video extends DisplayObject
         this._$video.volume = $Math.min(character.volume, SoundMixer.volume);
         this._$video.load();
 
-        if (Util.$rendererWorker) {
+        if (Util.$rendererWorker && this._$stage) {
             this._$createWorkerInstance();
         }
     }
@@ -1075,7 +1075,7 @@ class Video extends DisplayObject
      */
     _$createWorkerInstance ()
     {
-        if (this._$created || !this._$stage) {
+        if (this._$created) {
             return ;
         }
         this._$created = true;
@@ -1117,11 +1117,7 @@ class Video extends DisplayObject
      */
     _$postProperty ()
     {
-        if (!this._$stage) {
-            return ;
-        }
-
-        if (this._$wait && this._$stage) {
+        if (this._$wait) {
 
             this._$stop = false;
             this._$video.play();

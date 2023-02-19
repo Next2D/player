@@ -269,7 +269,7 @@ class Shape extends DisplayObject
             );
         }
 
-        if (Util.$rendererWorker) {
+        if (Util.$rendererWorker && this._$stage) {
             this._$createWorkerInstance();
         }
     }
@@ -281,7 +281,7 @@ class Shape extends DisplayObject
      */
     _$createWorkerInstance ()
     {
-        if (this._$created || !this._$stage) {
+        if (this._$created) {
             return ;
         }
         this._$created = true;
@@ -557,10 +557,6 @@ class Shape extends DisplayObject
      */
     _$postProperty ()
     {
-        if (!this._$stage) {
-            return ;
-        }
-
         const message = super._$postProperty();
 
         const graphics = this._$graphics;

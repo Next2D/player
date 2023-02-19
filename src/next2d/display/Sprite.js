@@ -282,7 +282,7 @@ class Sprite extends DisplayObjectContainer
     {
         const character = super._$sync();
 
-        if (Util.$rendererWorker) {
+        if (Util.$rendererWorker && this._$stage) {
             this._$createWorkerInstance();
         }
 
@@ -307,7 +307,7 @@ class Sprite extends DisplayObjectContainer
     {
         const character = super._$build(tag, parent);
 
-        if (Util.$rendererWorker) {
+        if (Util.$rendererWorker && this._$stage) {
             this._$createWorkerInstance();
         }
 

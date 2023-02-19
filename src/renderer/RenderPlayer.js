@@ -142,7 +142,6 @@ class RenderPlayer
     play ()
     {
         if (this._$stopFlag) {
-
             this._$stopFlag = false;
 
             if (this._$timerId > 0 - 1) {
@@ -213,6 +212,53 @@ class RenderPlayer
     }
 
     /**
+     * @description 指定canvasに転写
+     *
+     * @param  {RenderDisplayObject} source
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {OffscreenCanvas} canvas
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$bitmapDraw (source, matrix, color_transform, canvas)
+    {
+        const context = this._$context;
+        if (!context) {
+            return ;
+        }
+
+        context._$bind(this._$buffer);
+
+        // reset
+        Util.$resetContext(context);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, this._$width, this._$height);
+        context.beginPath();
+
+        source._$draw(context, matrix, color_transform);
+
+        const manager = context._$frameBufferManager;
+        const texture = manager.getTextureFromCurrentAttachment();
+
+        manager.unbind();
+
+        // reset and draw to main canvas
+        Util.$resetContext(context);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, this._$width, this._$height);
+        context.drawImage(texture, 0, 0, this._$width, this._$height);
+
+        // re bind
+        context._$bind(this._$buffer);
+
+        canvas
+            .getContext("2d")
+            .drawImage(this._$canvas, 0, 0);
+    }
+
+    /**
      * @description 描画処理を実行
      *
      * @return {void}
@@ -221,6 +267,7 @@ class RenderPlayer
      */
     _$draw ()
     {
+
         if (!this._$width || !this._$height) {
             return ;
         }

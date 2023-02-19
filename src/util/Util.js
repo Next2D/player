@@ -417,6 +417,13 @@ Util.$float32Array8 = [];
  */
 Util.$float32Array9 = [];
 
+/**
+ * @type {Map}
+ * @const
+ * @static
+ */
+Util.$bitmapDrawMap = new Map();
+
 const userAgentData = $navigator.userAgentData;
 if (userAgentData) {
     userAgentData
@@ -1757,6 +1764,115 @@ Util.$rendererWorker = "OffscreenCanvas" in window
     : null;
 
 // Util.$rendererWorker = null;
+
+if (Util.$rendererWorker) {
+
+    /**
+     * @param  {DisplayObjectContainer} source
+     * @return {void}
+     * @method
+     * @static
+     */
+    Util.$removeContainerWorker = (source) =>
+    {
+        Util.$rendererWorker.postMessage({
+            "command": "remove",
+            "instanceId": source._$instanceId
+        });
+
+        const children = source._$needsChildren
+            ? source._$getChildren()
+            : source._$children;
+
+        const length = children.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const instance = children[idx];
+            if (!instance) {
+                continue;
+            }
+
+            if (instance instanceof DisplayObjectContainer) {
+
+                Util.$removeContainerWorker(instance);
+
+            } else {
+                Util.$rendererWorker.postMessage({
+                    "command": "remove",
+                    "instanceId": instance._$instanceId
+                });
+            }
+        }
+    };
+
+    /**
+     * @param  {DisplayObjectContainer} source
+     * @return {void}
+     * @method
+     * @private
+     */
+    Util.$postContainerWorker = (source) =>
+    {
+        source._$createWorkerInstance();
+        source._$postProperty();
+
+        const children = source._$needsChildren
+            ? source._$getChildren()
+            : source._$children;
+
+        const childrenIds = Util.$getArray();
+
+        const length = children.length;
+        for (let idx = 0; idx < length; ++idx) {
+
+            const instance = children[idx];
+            if (!instance) {
+                continue;
+            }
+
+            childrenIds.push(instance._$instanceId);
+
+            if (instance instanceof DisplayObjectContainer) {
+                Util.$postContainerWorker(instance);
+                continue;
+            }
+
+            instance._$createWorkerInstance();
+            instance._$postProperty();
+        }
+
+        source._$postChildrenIds(childrenIds);
+
+        Util.$poolArray(childrenIds);
+    };
+
+    Util.$rendererWorker.onmessage = (event) =>
+    {
+        const sourceId = event.data.sourceId;
+        const object = Util.$bitmapDrawMap.get(sourceId);
+        Util.$bitmapDrawMap.delete(sourceId);
+
+        // reset
+        const source = object.source;
+        if (source instanceof DisplayObjectContainer) {
+
+            Util.$removeContainerWorker(source);
+
+        } else {
+
+            Util.$rendererWorker.postMessage({
+                "command": "remove",
+                "instanceId": sourceId
+            });
+        }
+
+        if (object.callback) {
+            const context = object.context;
+            context.drawImage(event.data.imageBitmap, 0, 0);
+            object.callback(context.canvas);
+        }
+    };
+}
 
 /**
  * @type {string}
