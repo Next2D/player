@@ -247,6 +247,14 @@ class CommandController
                             player.play();
                         }
 
+                        // canvas
+                        //     .convertToBlob()
+                        //     .then((blob) =>
+                        //     {
+                        //         const dataURL = new FileReaderSync().readAsDataURL(blob);
+                        //         console.log(dataURL);
+                        //     });
+
                         const imageBitmap = canvas.transferToImageBitmap();
                         globalThis.postMessage({
                             "sourceId": object.sourceId,

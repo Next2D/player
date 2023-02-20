@@ -1775,10 +1775,7 @@ if (Util.$rendererWorker) {
      */
     Util.$removeContainerWorker = (source) =>
     {
-        Util.$rendererWorker.postMessage({
-            "command": "remove",
-            "instanceId": source._$instanceId
-        });
+        source._$removeWorkerInstance();
 
         const children = source._$needsChildren
             ? source._$getChildren()
@@ -1797,10 +1794,7 @@ if (Util.$rendererWorker) {
                 Util.$removeContainerWorker(instance);
 
             } else {
-                Util.$rendererWorker.postMessage({
-                    "command": "remove",
-                    "instanceId": instance._$instanceId
-                });
+                instance._$removeWorkerInstance();
             }
         }
     };
@@ -1859,11 +1853,7 @@ if (Util.$rendererWorker) {
             Util.$removeContainerWorker(source);
 
         } else {
-
-            Util.$rendererWorker.postMessage({
-                "command": "remove",
-                "instanceId": sourceId
-            });
+            source._$removeWorkerInstance();
         }
 
         if (object.callback) {

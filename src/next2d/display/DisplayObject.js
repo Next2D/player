@@ -535,10 +535,7 @@ class DisplayObject extends EventDispatcher
         // reset
         if (this._$mask) {
             if (Util.$rendererWorker && this._$mask._$stage) {
-                Util.$rendererWorker.postMessage({
-                    "command": "remove",
-                    "instanceId": this._$mask._$instanceId
-                });
+                this._$mask._$removeWorkerInstance();
             }
 
             this._$mask._$isMask = false;
@@ -1979,6 +1976,19 @@ class DisplayObject extends EventDispatcher
         context._$endClipDef();
 
         return clipMatrix;
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$removeWorkerInstance ()
+    {
+        Util.$rendererWorker.postMessage({
+            "command": "remove",
+            "instanceId": this._$instanceId
+        });
     }
 
     /**

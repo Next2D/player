@@ -857,10 +857,10 @@ class Player
             const offscreenCanvas = canvas.transferControlToOffscreen();
 
             Util.$rendererWorker.postMessage({
+                "command": "initialize",
                 "canvas": offscreenCanvas,
                 "samples": this._$getSamples(),
-                "devicePixelRatio": $devicePixelRatio,
-                "command": "initialize"
+                "devicePixelRatio": $devicePixelRatio
             }, [offscreenCanvas]);
 
         } else {

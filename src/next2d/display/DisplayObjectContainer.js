@@ -832,10 +832,7 @@ class DisplayObjectContainer extends InteractiveObject
                 }
 
                 if (useWorker) {
-                    Util.$rendererWorker.postMessage({
-                        "command": "remove",
-                        "instanceId": instanceId
-                    });
+                    instance._$removeWorkerInstance();
                 }
 
                 cacheStore.setRemoveTimer(instanceId);
@@ -1101,11 +1098,7 @@ class DisplayObjectContainer extends InteractiveObject
 
                 // worker側のDisplayObjectも削除
                 if (Util.$rendererWorker) {
-                    Util.$rendererWorker.postMessage({
-                        "command": "remove",
-                        "instanceId": child._$instanceId
-                    });
-
+                    child._$removeWorkerInstance();
                     this._$postChildrenIds();
                 }
 
@@ -1168,10 +1161,7 @@ class DisplayObjectContainer extends InteractiveObject
 
                 // workerのDisplayObjectを削除
                 if (Util.$rendererWorker) {
-                    Util.$rendererWorker.postMessage({
-                        "command": "remove",
-                        "instanceId": instance._$instanceId
-                    });
+                    instance._$removeWorkerInstance();
                 }
 
                 if (instance.willTrigger(Event.REMOVED_FROM_STAGE)) {

@@ -416,13 +416,12 @@ class RenderDisplayObjectContainer extends RenderGraphics
         }
 
         const filters = this._$filters;
-        const fLength = filters.length;
-        if (!fLength) {
+        if (!filters) {
             return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
         }
 
         let rect = new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
-        for (let idx = 0; idx < fLength; ++idx) {
+        for (let idx = 0; idx < filters.length; ++idx) {
             rect = filters[idx]._$generateFilterRect(rect, null, null, true);
         }
 
