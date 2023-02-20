@@ -358,12 +358,13 @@ class BitmapData
      * @param  {ColorTransform}    [color_transform=null]
      * @param  {HTMLCanvasElement} [canvas=null]
      * @param  {function}          [callback=null]
+     * @param  {boolean}           [use_cache=false]
      * @return {void}
      * @public
      */
     draw (
         source, matrix = null, color_transform = null,
-        canvas = null, callback = null
+        canvas = null, callback = null, use_cache = false
     ) {
 
         if (!(source instanceof DisplayObject)) {
@@ -434,7 +435,8 @@ class BitmapData
             Util.$bitmapDrawMap.set(instanceId, {
                 "source": source,
                 "context": context,
-                "callback": callback
+                "callback": callback,
+                "useCache": use_cache
             });
 
             Util.$rendererWorker.postMessage({

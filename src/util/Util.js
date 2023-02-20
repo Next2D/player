@@ -1763,8 +1763,6 @@ Util.$rendererWorker = "OffscreenCanvas" in window
     ? new Worker(URL.createObjectURL(new Blob(["###RENDER_WORKER###"], { "type": "text/javascript" })))
     : null;
 
-// Util.$rendererWorker = null;
-
 if (Util.$rendererWorker) {
 
     /**
@@ -1847,13 +1845,15 @@ if (Util.$rendererWorker) {
         Util.$bitmapDrawMap.delete(sourceId);
 
         // reset
-        const source = object.source;
-        if (source instanceof DisplayObjectContainer) {
+        if (!object.useCache) {
+            const source = object.source;
+            if (source instanceof DisplayObjectContainer) {
 
-            Util.$removeContainerWorker(source);
+                Util.$removeContainerWorker(source);
 
-        } else {
-            source._$removeWorkerInstance();
+            } else {
+                source._$removeWorkerInstance();
+            }
         }
 
         if (object.callback) {
