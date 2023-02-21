@@ -1524,7 +1524,7 @@ class DisplayObject extends EventDispatcher
      */
     _$doChanged ()
     {
-        if (Util.$rendererWorker) {
+        if (Util.$rendererWorker && this._$created) {
             Util.$rendererWorker.postMessage({
                 "command": "doChanged",
                 "instanceId": this._$instanceId
@@ -1985,6 +1985,10 @@ class DisplayObject extends EventDispatcher
      */
     _$removeWorkerInstance ()
     {
+        if (this._$cache) {
+            return;
+        }
+
         Util.$rendererWorker.postMessage({
             "command": "remove",
             "instanceId": this._$instanceId
