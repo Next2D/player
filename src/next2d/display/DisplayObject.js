@@ -2005,7 +2005,7 @@ class DisplayObject extends EventDispatcher
         if (!Util.$rendererWorker) {
             return ;
         }
-        
+
         Util.$rendererWorker.postMessage({
             "command": "removeCache",
             "characterId": this._$characterId,

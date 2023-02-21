@@ -173,6 +173,7 @@ class RenderPlayer
 
         this._$stopFlag = true;
         this._$timerId  = 0 - 1;
+        this._$cacheStore.reset();
     }
 
     /**

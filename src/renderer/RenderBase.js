@@ -259,7 +259,6 @@ class CommandController
                 case "removeCache":
                     {
                         const cacheStore = Util.$renderPlayer._$cacheStore;
-
                         cacheStore.removeCache(object.instanceId);
                         cacheStore.removeCache(object.characterId);
                     }
