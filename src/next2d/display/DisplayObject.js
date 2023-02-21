@@ -1996,6 +1996,24 @@ class DisplayObject extends EventDispatcher
     }
 
     /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$removeWorkerCache ()
+    {
+        if (!Util.$rendererWorker) {
+            return ;
+        }
+        
+        Util.$rendererWorker.postMessage({
+            "command": "removeCache",
+            "characterId": this._$characterId,
+            "instanceId": this._$instanceId
+        });
+    }
+
+    /**
      * @return {object}
      * @method
      * @private
