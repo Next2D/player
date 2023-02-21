@@ -249,6 +249,7 @@ class CommandController
 
                         const imageBitmap = canvas.transferToImageBitmap();
                         globalThis.postMessage({
+                            "command": "bitmapDraw",
                             "sourceId": object.sourceId,
                             "imageBitmap": imageBitmap
                         }, [imageBitmap]);

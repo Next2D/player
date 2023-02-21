@@ -590,14 +590,7 @@ class Video extends DisplayObject
                 this._$doChanged();
             }
 
-            if (Util.$rendererWorker) {
-                const canvas = new $OffscreenCanvas(
-                    this._$video.videoWidth,
-                    this._$video.videoHeight
-                );
-                this._$context = canvas.getContext("2d");
-            }
-
+            this._$createContext();
         };
         this._$video.addEventListener("canplaythrough", this._$start);
 
@@ -619,6 +612,22 @@ class Video extends DisplayObject
             this._$timerId = -1;
 
         });
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$createContext ()
+    {
+        if (Util.$rendererWorker) {
+            const canvas = new $OffscreenCanvas(
+                this._$video.videoWidth,
+                this._$video.videoHeight
+            );
+            this._$context = canvas.getContext("2d");
+        }
     }
 
     /**

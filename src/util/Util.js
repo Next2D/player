@@ -1840,6 +1840,10 @@ if (Util.$rendererWorker) {
 
     Util.$rendererWorker.onmessage = (event) =>
     {
+        if (event.data.command !== "bitmapDraw") {
+            return ;
+        }
+
         const sourceId = event.data.sourceId;
         const object = Util.$bitmapDrawMap.get(sourceId);
         Util.$bitmapDrawMap.delete(sourceId);

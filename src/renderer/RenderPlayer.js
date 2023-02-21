@@ -267,7 +267,6 @@ class RenderPlayer
      */
     _$draw ()
     {
-
         if (!this._$width || !this._$height) {
             return ;
         }

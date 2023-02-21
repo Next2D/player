@@ -19,6 +19,12 @@ class RenderVideo extends RenderDisplayObject
         this._$imageBitmap = null;
 
         /**
+         * @type {null}
+         * @private
+         */
+        this._$context = null;
+
+        /**
          * @type {boolean}
          * @default true
          * @private
@@ -206,9 +212,18 @@ class RenderVideo extends RenderDisplayObject
 
         const blendMode = this._$blendMode || this.blendMode;
 
-        let texture = manager.createTextureFromImage(
-            this._$imageBitmap, this._$smoothing
-        );
+        this
+            ._$context
+            .drawImage(this._$imageBitmap, 0, 0);
+
+        let texture = manager
+            ._$textureManager
+            ._$createFromElement(
+                this._$imageBitmap.width,
+                this._$imageBitmap.height,
+                this._$context.canvas,
+                this._$smoothing
+            );
 
         if (filters && filters.length
             && this._$canApply(filters)
@@ -373,6 +388,14 @@ class RenderVideo extends RenderDisplayObject
         this._$yMax        = object.yMax;
         this._$imageBitmap = object.imageBitmap;
         this._$smoothing   = object.smoothing;
+
+        if (!this._$context && this._$imageBitmap) {
+            const canvas = new $OffscreenCanvas(
+                this._$imageBitmap.width,
+                this._$imageBitmap.height
+            );
+            this._$context = canvas.getContext("2d");
+        }
     }
 
     /**
