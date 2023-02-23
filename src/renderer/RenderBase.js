@@ -238,8 +238,8 @@ class CommandController
 
                         player._$bitmapDraw(
                             player._$instances.get(object.sourceId),
-                            object.matrix,
-                            object.colorTransform,
+                            object.matrix || Util.$MATRIX_ARRAY_IDENTITY,
+                            object.colorTransform || Util.$COLOR_ARRAY_IDENTITY,
                             canvas
                         );
 

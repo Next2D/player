@@ -1849,15 +1849,11 @@ if (Util.$rendererWorker) {
         Util.$bitmapDrawMap.delete(sourceId);
 
         // reset
-        if (!object.useCache) {
-            const source = object.source;
-            if (source instanceof DisplayObjectContainer) {
-
-                Util.$removeContainerWorker(source);
-
-            } else {
-                source._$removeWorkerInstance();
-            }
+        const source = object.source;
+        if (source instanceof DisplayObjectContainer) {
+            Util.$removeContainerWorker(source);
+        } else {
+            source._$removeWorkerInstance();
         }
 
         if (object.callback) {

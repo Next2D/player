@@ -358,13 +358,12 @@ class BitmapData
      * @param  {ColorTransform}    [color_transform=null]
      * @param  {HTMLCanvasElement} [canvas=null]
      * @param  {function}          [callback=null]
-     * @param  {boolean}           [use_cache=false]
      * @return {void}
      * @public
      */
     draw (
         source, matrix = null, color_transform = null,
-        canvas = null, callback = null, use_cache = false
+        canvas = null, callback = null
     ) {
 
         if (!(source instanceof DisplayObject)) {
@@ -388,12 +387,12 @@ class BitmapData
         }
 
         const colorTransform = color_transform
-            ? color_transform._$colorTransform.slice()
-            : Util.$COLOR_ARRAY_IDENTITY.slice();
+            ? color_transform._$colorTransform
+            : Util.$COLOR_ARRAY_IDENTITY;
 
         let tMatrix = matrix
-            ? matrix._$matrix.slice()
-            : Util.$MATRIX_ARRAY_IDENTITY.slice();
+            ? matrix._$matrix
+            : Util.$MATRIX_ARRAY_IDENTITY;
 
         let clone = null;
         if (matrix) {
@@ -435,18 +434,37 @@ class BitmapData
             Util.$bitmapDrawMap.set(instanceId, {
                 "source": source,
                 "context": context,
-                "callback": callback,
-                "useCache": use_cache
+                "callback": callback
             });
 
-            Util.$rendererWorker.postMessage({
+            const options = Util.$getArray();
+            const message = {
                 "command": "bitmapDraw",
                 "sourceId": instanceId,
                 "width": width,
-                "height": height,
-                "matrix": tMatrix,
-                "colorTransform": colorTransform
-            }, [tMatrix.buffer, colorTransform.buffer]);
+                "height": height
+            };
+
+            if (tMatrix[0] !== 1 || tMatrix[1] !== 0
+                || tMatrix[2] !== 0 || tMatrix[3] !== 1
+                || tMatrix[4] !== 0 || tMatrix[5] !== 0
+            ) {
+                message.matrix = tMatrix.slice();
+                options.push(message.matrix.buffer);
+            }
+
+            if (colorTransform[0] !== 1 || colorTransform[1] !== 1
+                || colorTransform[2] !== 1 || colorTransform[3] !== 1
+                || colorTransform[4] !== 0 || colorTransform[5] !== 0
+                || colorTransform[6] !== 0 || colorTransform[7] !== 0
+            ) {
+                message.colorTransform = colorTransform.slice();
+                options.push(message.colorTransform.buffer);
+            }
+
+            Util.$rendererWorker.postMessage(message, options);
+
+            Util.$poolArray(options);
 
         } else {
 
@@ -672,25 +690,5 @@ class BitmapData
         context.frameBuffer.releaseAttachment(attachment);
 
         return pixels;
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @public
-     */
-    dispose ()
-    {
-        // const player  = Util.$currentPlayer();
-        // const texture = this._$texture;
-        //
-        // if (texture) {
-        //     texture._$bitmapData = false;
-        // }
-        //
-        // // set null
-        // player
-        //     ._$cacheStore
-        //     .removeCache(this._$instanceId);
     }
 }
