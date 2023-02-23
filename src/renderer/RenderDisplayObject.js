@@ -441,6 +441,7 @@ class RenderDisplayObject
         this._$isMask         = false;
         this._$depth          = 0;
         this._$clipDepth      = 0;
+        this._$scale9Grid     = null;
     }
 
     /**
