@@ -253,14 +253,7 @@ class CommandController
                             "sourceId": object.sourceId,
                             "imageBitmap": imageBitmap
                         }, [imageBitmap]);
-                    }
-                    break;
 
-                case "removeCache":
-                    {
-                        const cacheStore = Util.$renderPlayer._$cacheStore;
-                        cacheStore.removeCache(object.instanceId);
-                        cacheStore.removeCache(object.characterId);
                     }
                     break;
 

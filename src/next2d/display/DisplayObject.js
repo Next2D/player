@@ -1985,30 +1985,8 @@ class DisplayObject extends EventDispatcher
      */
     _$removeWorkerInstance ()
     {
-        if (this._$cache) {
-            return;
-        }
-
         Util.$rendererWorker.postMessage({
             "command": "remove",
-            "instanceId": this._$instanceId
-        });
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$removeWorkerCache ()
-    {
-        if (!Util.$rendererWorker) {
-            return ;
-        }
-
-        Util.$rendererWorker.postMessage({
-            "command": "removeCache",
-            "characterId": this._$characterId,
             "instanceId": this._$instanceId
         });
     }
