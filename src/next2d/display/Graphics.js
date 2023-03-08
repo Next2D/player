@@ -1120,12 +1120,7 @@ class Graphics
         this._$canDraw  = true;
 
         // beginPath
-        this._$lines.push(
-            Graphics.BEGIN_PATH,
-            Graphics.MOVE_TO,
-            this._$pointerX,
-            this._$pointerY
-        );
+        this._$lines.push(Graphics.BEGIN_PATH);
 
         // add Fill Style
         const object = Util.$intToRGBA(color, alpha);
