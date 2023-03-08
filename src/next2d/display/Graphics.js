@@ -1205,7 +1205,28 @@ class Graphics
 
         this._$setBounds(x, y);
 
-        this._$margePath(Util.$getArray(Graphics.MOVE_TO, x, y));
+        let duplication = false;
+        if (this._$doFill) {
+            const isMove = this._$fills[this._$fills.length - 3] === Graphics.MOVE_TO;
+            if (isMove) {
+                duplication = true;
+                this._$fills[this._$fills.length - 2] = x;
+                this._$fills[this._$fills.length - 1] = y;
+            }
+        }
+
+        if (this._$doLine) {
+            const isMove = this._$lines[this._$lines.length - 3] === Graphics.MOVE_TO;
+            if (isMove) {
+                duplication = true;
+                this._$lines[this._$fills.length - 2] = x;
+                this._$lines[this._$fills.length - 1] = y;
+            }
+        }
+
+        if (!duplication) {
+            this._$margePath(Util.$getArray(Graphics.MOVE_TO, x, y));
+        }
 
         // restart
         this._$restart();
