@@ -1753,80 +1753,70 @@ class Graphics
         this._$yMax = $Math.max(this._$yMax, $Math.max(y1, $Math.max(y2, $Math.max(y3, y4))));
 
         // case
-        let rx1 = null;
-        let ry1 = null;
-        let rx2 = null;
-        let ry2 = null;
-        let rx3 = null;
-        let ry3 = null;
-        let rx4 = null;
-        let ry4 = null;
         switch (this._$caps) {
 
             case CapsStyle.ROUND:
 
                 if ($Math.abs(radian1) % radian90 !== 0) {
-                    rx1 = x + $Math.cos(radian1) * half;
+                    const rx1 = x + $Math.cos(radian1) * half;
+                    this._$xMin = $Math.min(this._$xMin, rx1);
+                    this._$xMax = $Math.max(this._$xMax, rx1);
                 }
 
                 if (radian1 && $Math.abs(radian1) % $Math.PI !== 0) {
-                    ry1 = y + $Math.sin(radian1) * half;
+                    const ry1 = y + $Math.sin(radian1) * half;
+                    this._$yMin = $Math.min(this._$yMin, ry1);
+                    this._$yMax = $Math.max(this._$yMax, ry1);
                 }
 
                 if ($Math.abs(radian2) % radian90 !== 0) {
-                    rx2 = this._$pointerX + $Math.cos(radian2) * half;
+                    const rx2 = this._$pointerX + $Math.cos(radian2) * half;
+                    this._$xMin = $Math.min(this._$xMin, rx2);
+                    this._$xMax = $Math.max(this._$xMax, rx2);
                 }
 
                 if (radian2 && $Math.abs(radian2) % $Math.PI !== 0) {
-                    ry2 = this._$pointerY + $Math.sin(radian2) * half;
+                    const ry2 = this._$pointerY + $Math.sin(radian2) * half;
+                    this._$yMin = $Math.min(this._$yMin, ry2);
+                    this._$yMax = $Math.max(this._$yMax, ry2);
                 }
 
-                if (rx1 !== null && rx2 !== null) {
-                    this._$xMin = $Math.min(this._$xMin, $Math.min(rx1, rx2));
-                    this._$xMax = $Math.max(this._$xMax, $Math.max(rx1, rx2));
-                }
-
-                if (ry1 !== null && ry2 !== null) {
-                    this._$yMin = $Math.min(this._$yMin, $Math.min(ry1, ry2));
-                    this._$yMax = $Math.max(this._$yMax, $Math.max(ry1, ry2));
-                }
                 break;
 
             case CapsStyle.SQUARE:
 
                 if ($Math.abs(radian1) % radian90 !== 0) {
                     const r1cos = $Math.cos(radian1) * half;
-                    rx1 = x1 + r1cos;
-                    rx2 = x2 + r1cos;
+                    const rx1 = x1 + r1cos;
+                    const rx2 = x2 + r1cos;
+                    this._$xMin = $Math.min(this._$xMin, $Math.min(rx1, rx2));
+                    this._$xMax = $Math.max(this._$xMax, $Math.max(rx1, rx2));
                 }
 
                 if ($Math.abs(radian2) % radian90 !== 0) {
                     const r2cos = $Math.cos(radian2) * half;
-                    rx3 = x3 + r2cos;
-                    rx4 = x4 + r2cos;
+                    const rx3 = x3 + r2cos;
+                    const rx4 = x4 + r2cos;
+                    this._$xMin = $Math.min(this._$xMin, $Math.min(rx3, rx4));
+                    this._$xMax = $Math.max(this._$xMax, $Math.max(rx3, rx4));
                 }
 
                 if (radian1 && $Math.abs(radian1) % $Math.PI !== 0) {
                     const r1sin = $Math.sin(radian1) * half;
-                    ry1 = y1 + r1sin;
-                    ry2 = y2 + r1sin;
+                    const ry1 = y1 + r1sin;
+                    const ry2 = y2 + r1sin;
+                    this._$yMin = $Math.min(this._$yMin, $Math.min(ry1, ry2));
+                    this._$yMax = $Math.max(this._$yMax, $Math.max(ry1, ry2));
                 }
 
                 if (radian2 && $Math.abs(radian2) % $Math.PI !== 0) {
                     const r2sin = $Math.sin(radian2) * half;
-                    ry3 = y3 + r2sin;
-                    ry4 = y4 + r2sin;
+                    const ry3 = y3 + r2sin;
+                    const ry4 = y4 + r2sin;
+                    this._$yMin = $Math.min(this._$yMin, $Math.min(ry3, ry4));
+                    this._$yMax = $Math.max(this._$yMax, $Math.max(ry3, ry4));
                 }
 
-                if (rx1 !== null && rx2 !== null && rx3 !== null && rx4 !== null) {
-                    this._$xMin = $Math.min(this._$xMin, $Math.min(rx1, $Math.min(rx2, $Math.min(rx3, rx4))));
-                    this._$xMax = $Math.max(this._$xMax, $Math.max(rx1, $Math.max(rx2, $Math.max(rx3, rx4))));
-                }
-
-                if (ry1 !== null && ry2 !== null && ry3 !== null && ry4 !== null) {
-                    this._$yMin = $Math.min(this._$yMin, $Math.min(ry1, $Math.min(ry2, $Math.min(ry3, ry4))));
-                    this._$yMax = $Math.max(this._$yMax, $Math.max(ry1, $Math.max(ry2, $Math.max(ry3, ry4))));
-                }
                 break;
 
             default:
