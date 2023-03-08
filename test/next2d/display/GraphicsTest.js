@@ -838,6 +838,7 @@ describe("Graphics.js lineStyle test", function()
         expect(g._$joints).toBe(JointStyle.MITER);
         expect(g._$miterLimit).toBe(1);
 
+        console.log(g._$lines);
         expect(g._$lines[0]).toBe(Graphics.BEGIN_PATH);
         expect(g._$lines[1]).toBe(Graphics.MOVE_TO);
         expect(g._$lines[2]).toBe(120);
