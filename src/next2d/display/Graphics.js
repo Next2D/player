@@ -1219,8 +1219,8 @@ class Graphics
             const isMove = this._$lines[this._$lines.length - 3] === Graphics.MOVE_TO;
             if (isMove) {
                 duplication = true;
-                this._$lines[this._$fills.length - 2] = x;
-                this._$lines[this._$fills.length - 1] = y;
+                this._$lines[this._$lines.length - 2] = x;
+                this._$lines[this._$lines.length - 1] = y;
             }
         }
 
