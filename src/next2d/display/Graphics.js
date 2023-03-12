@@ -832,7 +832,7 @@ class Graphics
      */
     endFill ()
     {
-        if (this._$doFill && this._$fills.length > 6) {
+        if (this._$doFill && this._$fills.length > 7) {
 
             if (!this._$recode) {
                 this._$recode = Util.$getArray();
