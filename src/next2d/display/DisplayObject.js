@@ -29,7 +29,7 @@ class DisplayObject extends EventDispatcher
          * @type {number}
          * @private
          */
-        this._$id = 0 - 1;
+        this._$id = -1;
 
         /**
          * @type {number}

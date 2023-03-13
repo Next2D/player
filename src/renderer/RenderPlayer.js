@@ -47,7 +47,7 @@ class RenderPlayer
          * @default -1
          * @private
          */
-        this._$timerId = 0 - 1;
+        this._$timerId = -1;
 
         /**
          * @type {number}
@@ -144,10 +144,10 @@ class RenderPlayer
         if (this._$stopFlag) {
             this._$stopFlag = false;
 
-            if (this._$timerId > 0 - 1) {
+            if (this._$timerId > -1) {
                 const clearTimer = $cancelAnimationFrame;
                 clearTimer(this._$timerId);
-                this._$timerId = 0 - 1;
+                this._$timerId = -1;
             }
 
             this._$startTime = $performance.now();
@@ -172,7 +172,7 @@ class RenderPlayer
         clearTimer(this._$timerId);
 
         this._$stopFlag = true;
-        this._$timerId  = 0 - 1;
+        this._$timerId  = -1;
         this._$cacheStore.reset();
     }
 

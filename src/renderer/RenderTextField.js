@@ -409,7 +409,7 @@ class RenderTextField extends RenderDisplayObject
         if (!$Number.isInteger(xScale)) {
             const value = xScale.toString();
             const index = value.indexOf("e");
-            if (index !== 0 - 1) {
+            if (index !== -1) {
                 xScale = +value.slice(0, index);
             }
             xScale = +xScale.toFixed(4);
@@ -422,7 +422,7 @@ class RenderTextField extends RenderDisplayObject
         if (!$Number.isInteger(yScale)) {
             const value = yScale.toString();
             const index = value.indexOf("e");
-            if (index !== 0 - 1) {
+            if (index !== -1) {
                 yScale = +value.slice(0, index);
             }
             yScale = +yScale.toFixed(4);

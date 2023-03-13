@@ -219,7 +219,7 @@ class RenderDisplayObjectContainer extends RenderGraphics
 
             // mask start
             let maskInstance = null;
-            if (instance._$maskId > 0 - 1) {
+            if (instance._$maskId > -1) {
                 maskInstance = instances.get(instance._$maskId);
             }
 

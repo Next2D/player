@@ -14,21 +14,21 @@ class RenderDisplayObject
          * @default -1
          * @private
          */
-        this._$instanceId = 0 - 1;
+        this._$instanceId = -1;
 
         /**
          * @type {number}
          * @default -1
          * @private
          */
-        this._$loaderInfoId = 0 - 1;
+        this._$loaderInfoId = -1;
 
         /**
          * @type {number}
          * @default -1
          * @private
          */
-        this._$characterId = 0 - 1;
+        this._$characterId = -1;
 
         /**
          * @type {number}
@@ -96,7 +96,7 @@ class RenderDisplayObject
          * @default -1
          * @private
          */
-        this._$maskId = 0 - 1;
+        this._$maskId = -1;
 
         /**
          * @type {Float32Array}
@@ -346,7 +346,7 @@ class RenderDisplayObject
         this._$clipDepth = object.clipDepth;
 
         this._$maskId = object.maskId;
-        if (this._$maskId > 0 - 1) {
+        if (this._$maskId > -1) {
             this._$maskMatrix = object.maskMatrix;
         }
 
@@ -421,7 +421,7 @@ class RenderDisplayObject
         // キャッシュ削除のタイマーをセット
         const cacheStore = player._$cacheStore;
         cacheStore.setRemoveTimer(this._$instanceId);
-        if (this._$loaderInfoId > 0 - 1 && this._$characterId) {
+        if (this._$loaderInfoId > -1 && this._$characterId) {
             cacheStore.setRemoveTimer(
                 `${this._$loaderInfoId}@${this._$characterId}`
             );
@@ -430,14 +430,14 @@ class RenderDisplayObject
         player._$instances.delete(this._$instanceId);
 
         // reset
-        this._$instanceId     = 0 - 1;
-        this._$loaderInfoId   = 0 - 1;
-        this._$characterId    = 0 - 1;
+        this._$instanceId     = -1;
+        this._$loaderInfoId   = -1;
+        this._$characterId    = -1;
         this._$updated        = true;
         this._$blendMode      = BlendMode.NORMAL;
         this._$filters        = null;
         this._$visible        = true;
-        this._$maskId         = 0 - 1;
+        this._$maskId         = -1;
         this._$isMask         = false;
         this._$depth          = 0;
         this._$clipDepth      = 0;

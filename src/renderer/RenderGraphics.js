@@ -135,7 +135,7 @@ class RenderGraphics extends RenderDisplayObject
         if (!$Number.isInteger(xScale)) {
             const value = xScale.toString();
             const index = value.indexOf("e");
-            if (index !== 0 - 1) {
+            if (index !== -1) {
                 xScale = +value.slice(0, index);
             }
             xScale = +xScale.toFixed(4);
@@ -148,7 +148,7 @@ class RenderGraphics extends RenderDisplayObject
         if (!$Number.isInteger(yScale)) {
             const value = yScale.toString();
             const index = value.indexOf("e");
-            if (index !== 0 - 1) {
+            if (index !== -1) {
                 yScale = +value.slice(0, index);
             }
             yScale = +yScale.toFixed(4);
@@ -179,8 +179,8 @@ class RenderGraphics extends RenderDisplayObject
 
         let uniqueId = this._$instanceId;
         if (!hasGrid
-            && this._$loaderInfoId > 0 - 1
-            && this._$characterId > 0 - 1
+            && this._$loaderInfoId > -1
+            && this._$characterId > -1
         ) {
             uniqueId = `${this._$loaderInfoId}@${this._$characterId}`;
         }
@@ -891,8 +891,8 @@ class RenderGraphics extends RenderDisplayObject
             const cacheStore = Util.$renderPlayer._$cacheStore;
             cacheStore.removeCache(this._$instanceId);
 
-            if (this._$loaderInfoId > 0 - 1
-                && this._$characterId > 0 - 1
+            if (this._$loaderInfoId > -1
+                && this._$characterId > -1
             ) {
                 cacheStore.removeCache(
                     `${this._$loaderInfoId}@${this._$characterId}`
