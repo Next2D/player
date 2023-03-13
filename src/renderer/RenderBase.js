@@ -222,6 +222,10 @@ class CommandController
                     Util.$renderPlayer.stop();
                     break;
 
+                case "removeCache":
+                    Util.$renderPlayer._$cacheStore.removeCache(object.id);
+                    break;
+
                 case "bitmapDraw":
                     {
                         const player = Util.$renderPlayer;

@@ -527,6 +527,23 @@ class Player
     }
 
     /**
+     * @param  {string} id
+     * @return {void}
+     * @method
+     * @public
+     */
+    removeCache (id)
+    {
+        this._$cacheStore.removeCache(id);
+        if (Util.$rendererWorker) {
+            Util.$rendererWorker.postMessage({
+                "command": "removeCache",
+                "id": id
+            });
+        }
+    }
+
+    /**
      * @param  {object} [options=null]
      * @return {void}
      * @public
