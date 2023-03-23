@@ -78,13 +78,15 @@ class Next2D
                 player._$bgColor = Util.$getArray(1, 1, 1, 1);
             }
 
-            const color = Util.$intToRGBA(
-                `0x${stage.bgColor.slice(1)}` | 0
-            );
+            if (Util.$isArray(player._$bgColor)) {
+                const color = Util.$intToRGBA(
+                    `0x${stage.bgColor.slice(1)}` | 0
+                );
 
-            player._$bgColor[0] = color.R / 255;
-            player._$bgColor[1] = color.G / 255;
-            player._$bgColor[2] = color.B / 255;
+                player._$bgColor[0] = color.R / 255;
+                player._$bgColor[1] = color.G / 255;
+                player._$bgColor[2] = color.B / 255;
+            }
 
             player._$setBackgroundColor(player._$bgColor);
 
