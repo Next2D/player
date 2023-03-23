@@ -78,7 +78,7 @@ class Next2D
                 player._$bgColor = Util.$getArray(1, 1, 1, 1);
             }
 
-            if (Util.$isArray(player._$bgColor)) {
+            if ($Array.isArray(player._$bgColor)) {
                 const color = Util.$intToRGBA(
                     `0x${stage.bgColor.slice(1)}` | 0
                 );
