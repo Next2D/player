@@ -38,6 +38,13 @@ class Shape extends DisplayObject
          * @private
          */
         this._$bitmapId = 0;
+
+        /**
+         * @type {string}
+         * @default ""
+         * @private
+         */
+        this._$src = "";
     }
 
     /**
@@ -111,6 +118,40 @@ class Shape extends DisplayObject
             this._$graphics = new Graphics(this);
         }
         return this._$graphics;
+    }
+
+    /**
+     * @description 指定されたパスから画像を読み込み、Graphicsを生成します
+     *              Reads images from the specified path and generates Graphics.
+     *
+     * @member  {Graphics}
+     * @readonly
+     * @public
+     */
+    get src ()
+    {
+        return this._$src;
+    }
+    set src (src)
+    {
+        const image = new Image();
+        image.addEventListener("load", (event) =>
+        {
+            const target = event.target;
+            const width  = target.width;
+            const height = target.height;
+
+            const bitmapData = new BitmapData(width, height);
+            bitmapData.image = target;
+
+            this
+                .graphics
+                .beginBitmapFill(bitmapData)
+                .drawRect(0, 0, width, height);
+
+            this.dispatchEvent(new Event(Event.LOAD));
+        });
+        this._$src = image.src = src;
     }
 
     /**

@@ -2124,9 +2124,47 @@ class Graphics
                             switch (true) {
 
                                 case bitmapData._$image !== null:
+                                    {
+                                        const cacheStore = Util.$cacheStore();
+
+                                        const canvas  = cacheStore.getCanvas();
+
+                                        const width   = bitmapData.width;
+                                        const height  = bitmapData.height;
+                                        canvas.width  = width;
+                                        canvas.height = height;
+
+                                        const context = canvas.getContext("2d");
+                                        context.drawImage(bitmapData._$image, 0, 0);
+
+                                        buffer = new $Uint8Array(
+                                            context.getImageData(0, 0, width, height).data
+                                        );
+
+                                        cacheStore.destroy(canvas);
+                                    }
                                     break;
 
                                 case bitmapData._$canvas !== null:
+                                    {
+                                        const cacheStore = Util.$cacheStore();
+
+                                        const canvas  = cacheStore.getCanvas();
+
+                                        const width   = bitmapData.width;
+                                        const height  = bitmapData.height;
+                                        canvas.width  = width;
+                                        canvas.height = height;
+
+                                        const context = canvas.getContext("2d");
+                                        context.drawImage(bitmapData._$canvas, 0, 0);
+
+                                        buffer = new $Uint8Array(
+                                            context.getImageData(0, 0, width, height).data
+                                        );
+
+                                        cacheStore.destroy(canvas);
+                                    }
                                     break;
 
                                 case bitmapData._$buffer !== null:

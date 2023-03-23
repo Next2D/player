@@ -196,6 +196,13 @@ const $WebGLTexture = $window.WebGLTexture;
 
 /**
  * @shortcut
+ * @type {Uint8Array}
+ * @const
+ */
+const $Uint8Array = $window.Uint8Array;
+
+/**
+ * @shortcut
  * @type {Float32Array}
  * @const
  */

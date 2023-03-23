@@ -317,6 +317,21 @@ class Event
     }
 
     /**
+     * @description Event.LOAD 定数は、load イベントオブジェクトの type プロパティの値を定義します。
+     *              The Event.LOAD constant defines the value
+     *              of the type property of an load event object.
+     *
+     * @return  {string}
+     * @default frameConstructed
+     * @const
+     * @static
+     */
+    static get LOAD ()
+    {
+        return "load";
+    }
+
+    /**
      * @description Event.MOUSE_LEAVE 定数は、mouseLeave イベントオブジェクトの type プロパティの値を定義します。
      *              The Event.MOUSE_LEAVE constant defines the value
      *              of the type property of a mouseLeave event object.
