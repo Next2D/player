@@ -426,6 +426,7 @@ Util.$bitmapDrawMap = new Map();
 
 const userAgentData = $navigator.userAgentData;
 if (userAgentData) {
+    Util.$isSafari = Util.$isFireFox = false;
     userAgentData
         .getHighEntropyValues(["platform", "mobile"])
         .then((object) =>
@@ -452,8 +453,6 @@ if (userAgentData) {
 
                 break;
             }
-
-            Util.$isSafari = Util.$isFireFox = false;
         });
 } else {
 
@@ -1759,7 +1758,7 @@ Util.$decodeImage = function ()
  * @type {Worker}
  * @static
  */
-Util.$rendererWorkerOffsc = !Util.$isSafari && "OffscreenCanvas" in window
+Util.$rendererWorker = !Util.$isSafari && "OffscreenCanvas" in window
     ? new Worker(URL.createObjectURL(new Blob(["###RENDER_WORKER###"], { "type": "text/javascript" })))
     : null;
 
