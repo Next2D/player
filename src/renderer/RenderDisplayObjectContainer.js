@@ -47,7 +47,7 @@ class RenderDisplayObjectContainer extends RenderGraphics
         for (let idx = 0; idx < length; ++idx) {
 
             const id = children[idx];
-            if (instances.has(id)) {
+            if (!instances.has(id)) {
                 continue;
             }
 
@@ -221,62 +221,61 @@ class RenderDisplayObjectContainer extends RenderGraphics
             let maskInstance = null;
             if (instance._$maskId > -1) {
                 maskInstance = instances.get(instance._$maskId);
-            }
+                if (maskInstance) {
 
-            if (maskInstance) {
+                    maskInstance._$updated = false;
 
-                maskInstance._$updated = false;
+                    const mScale = Util.$renderPlayer._$matrix[0];
+                    const playerMatrix = Util.$getFloat32Array6(
+                        mScale, 0, 0, mScale, 0, 0
+                    );
+                    const maskMatrix = Util.$multiplicationMatrix(
+                        playerMatrix, instance._$maskMatrix
+                    );
+                    Util.$poolFloat32Array6(playerMatrix);
 
-                const mScale = Util.$renderPlayer._$matrix[0];
-                const playerMatrix = Util.$getFloat32Array6(
-                    mScale, 0, 0, mScale, 0, 0
-                );
-                const maskMatrix = Util.$multiplicationMatrix(
-                    playerMatrix, instance._$maskMatrix
-                );
-                Util.$poolFloat32Array6(playerMatrix);
-
-                if (context._$isLayer) {
-                    const currentPosition = context._$getCurrentPosition();
-                    maskMatrix[4] -= currentPosition.xMin;
-                    maskMatrix[5] -= currentPosition.yMin;
-                }
-
-                if (context._$cacheCurrentBuffer) {
-                    maskMatrix[4] -= context._$cacheCurrentBounds.x;
-                    maskMatrix[5] -= context._$cacheCurrentBounds.y;
-                }
-
-                if (!maskInstance._$shouldClip(maskMatrix)) {
-                    continue;
-                }
-
-                let adjMatrix = maskInstance._$startClip(context, maskMatrix);
-
-                context.save();
-
-                if (adjMatrix === false) { // fixed
-                    context.restore();
-                    continue;
-                }
-
-                if (adjMatrix) {
-
-                    instanceMatrix.push(preMatrix);
-
-                    if (this !== maskInstance._$parent) {
-                        const maskTargetParentMatrix = this._$matrix;
-                        adjMatrix[0] = $Math.abs(preMatrix[0]) * $Math.sign(maskTargetParentMatrix[0]);
-                        adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(maskTargetParentMatrix[1]);
-                        adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(maskTargetParentMatrix[2]);
-                        adjMatrix[3] = $Math.abs(preMatrix[3]) * $Math.sign(maskTargetParentMatrix[3]);
-                        adjMatrix[4] = preMatrix[4] - context._$cacheCurrentBounds.x;
-                        adjMatrix[5] = preMatrix[5] - context._$cacheCurrentBounds.y;
+                    if (context._$isLayer) {
+                        const currentPosition = context._$getCurrentPosition();
+                        maskMatrix[4] -= currentPosition.xMin;
+                        maskMatrix[5] -= currentPosition.yMin;
                     }
 
-                    preMatrix = adjMatrix;
-                }
+                    if (context._$cacheCurrentBuffer) {
+                        maskMatrix[4] -= context._$cacheCurrentBounds.x;
+                        maskMatrix[5] -= context._$cacheCurrentBounds.y;
+                    }
 
+                    if (!maskInstance._$shouldClip(maskMatrix)) {
+                        continue;
+                    }
+
+                    let adjMatrix = maskInstance._$startClip(context, maskMatrix);
+
+                    context.save();
+
+                    if (adjMatrix === false) { // fixed
+                        context.restore();
+                        continue;
+                    }
+
+                    if (adjMatrix) {
+
+                        instanceMatrix.push(preMatrix);
+
+                        if (this !== maskInstance._$parent) {
+                            const maskTargetParentMatrix = this._$matrix;
+                            adjMatrix[0] = $Math.abs(preMatrix[0]) * $Math.sign(maskTargetParentMatrix[0]);
+                            adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(maskTargetParentMatrix[1]);
+                            adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(maskTargetParentMatrix[2]);
+                            adjMatrix[3] = $Math.abs(preMatrix[3]) * $Math.sign(maskTargetParentMatrix[3]);
+                            adjMatrix[4] = preMatrix[4] - context._$cacheCurrentBounds.x;
+                            adjMatrix[5] = preMatrix[5] - context._$cacheCurrentBounds.y;
+                        }
+
+                        preMatrix = adjMatrix;
+                    }
+
+                }
             }
 
             instance._$draw(context, preMatrix, preColorTransform);
