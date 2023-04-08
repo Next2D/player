@@ -243,6 +243,27 @@ class DisplayObject extends EventDispatcher
          * @private
          */
         this._$changePlace = false;
+
+        /**
+         * @type {number}
+         * @default null
+         * @private
+         */
+        this._$scaleX = null;
+
+        /**
+         * @type {number}
+         * @default null
+         * @private
+         */
+        this._$scaleY = null;
+
+        /**
+         * @type {number}
+         * @default null
+         * @private
+         */
+        this._$rotation = null;
     }
 
     /**
@@ -659,12 +680,19 @@ class DisplayObject extends EventDispatcher
      */
     get rotation ()
     {
+        if (this._$rotation !== null) {
+            return this._$rotation;
+        }
+
         const matrix = this._$transform._$rawMatrix();
         return $Math.atan2(matrix[1], matrix[0]) * Util.$Rad2Deg;
     }
     set rotation (rotation)
     {
         rotation = Util.$clamp(rotation % 360, 0 - 360, 360, 0);
+        if (this._$rotation === rotation) {
+            return ;
+        }
 
         const transform = this._$transform;
         const matrix    = transform.matrix;
@@ -704,6 +732,8 @@ class DisplayObject extends EventDispatcher
 
         transform.matrix = matrix;
         Util.$poolMatrix(matrix);
+
+        this._$rotation = rotation;
     }
 
     /**
@@ -737,6 +767,10 @@ class DisplayObject extends EventDispatcher
      */
     get scaleX ()
     {
+        if (this._$scaleX !== null) {
+            return this._$scaleX;
+        }
+
         const matrix = this._$transform._$rawMatrix();
 
         let xScale = $Math.sqrt(
@@ -769,6 +803,10 @@ class DisplayObject extends EventDispatcher
             scale_x = +scale_x.toFixed(4);
         }
 
+        if (this._$scaleX === scale_x) {
+            return ;
+        }
+
         const transform = this._$transform;
         const matrix    = transform.matrix;
         if (matrix.b === 0 || $isNaN(matrix.b)) {
@@ -777,17 +815,20 @@ class DisplayObject extends EventDispatcher
 
         } else {
 
-            const radianX = $Math.atan2(matrix.b, matrix.a);
+            let radianX = $Math.atan2(matrix.b, matrix.a);
+            if (radianX === -$Math.PI) {
+                radianX = 0;
+            }
 
             matrix.b = scale_x * $Math.sin(radianX);
-            matrix.a = matrix.b === 1 || matrix.b === -1
-                ? 0
-                : scale_x * $Math.cos(radianX);
+            matrix.a = scale_x * $Math.cos(radianX);
 
         }
 
         transform.matrix = matrix;
         Util.$poolMatrix(matrix);
+
+        this._$scaleX = scale_x;
     }
 
     /**
@@ -800,6 +841,10 @@ class DisplayObject extends EventDispatcher
      */
     get scaleY ()
     {
+        if (this._$scaleY !== null) {
+            return this._$scaleY;
+        }
+
         const matrix = this._$transform._$rawMatrix();
 
         let yScale = $Math.sqrt(
@@ -833,6 +878,10 @@ class DisplayObject extends EventDispatcher
             scale_y = +scale_y.toFixed(4);
         }
 
+        if (this._$scaleY === scale_y) {
+            return ;
+        }
+
         const transform = this._$transform;
         const matrix    = transform.matrix;
 
@@ -842,16 +891,19 @@ class DisplayObject extends EventDispatcher
 
         } else {
 
-            const radianY = $Math.atan2(-matrix.c, matrix.d);
+            let radianY = $Math.atan2(-matrix.c, matrix.d);
+            if (radianY === -$Math.PI) {
+                radianY = 0;
+            }
             matrix.c = -scale_y * $Math.sin(radianY);
-            matrix.d = matrix.c === 1 || matrix.c === -1
-                ? 0
-                : scale_y  * $Math.cos(radianY);
+            matrix.d = scale_y  * $Math.cos(radianY);
 
         }
 
         transform.matrix = matrix;
         Util.$poolMatrix(matrix);
+
+        this._$scaleY = scale_y;
     }
 
     /**

@@ -115,11 +115,7 @@ describe("DisplayObject.js property test", function()
 
         for (let i = 0; i <= 360; i++) {
             obj.rotation = i;
-            if (i > 180) {
-                expect(Math.round(obj.rotation)).toBe(i - 360);
-            } else {
-                expect(Math.round(obj.rotation)).toBe(i);
-            }
+            expect(obj.rotation).toBe(Util.$clamp(i % 360, 0 - 360, 360, 0));
         }
     });
 
@@ -130,11 +126,7 @@ describe("DisplayObject.js property test", function()
             const value = i * -1;
 
             obj.rotation = value;
-            if (i > 180) {
-                expect(Math.round(obj.rotation)).toBe(360 - i);
-            } else {
-                expect(Math.round(obj.rotation)).toBe(value);
-            }
+            expect(obj.rotation).toBe(Util.$clamp(value % 360, 0 - 360, 360, 0));
         }
     });
 
@@ -1920,7 +1912,10 @@ describe("DisplayObject.js rotation test", function()
     {
         const obj = new DisplayObject();
         obj.rotation = true;
-        expect(obj.rotation).toBe(0.9999999465488009);
+
+        const matrix = obj._$transform._$rawMatrix();
+        expect($Math.atan2(matrix[1], matrix[0]) * Util.$Rad2Deg).toBe(0.9999999465488009);
+        expect(obj.rotation).toBe(1);
     });
 
     it("default test case5", function()
@@ -1948,28 +1943,40 @@ describe("DisplayObject.js rotation test", function()
     {
         const obj = new DisplayObject();
         obj.rotation = 1;
-        expect(obj.rotation).toBe(0.9999999465488009);
+
+        const matrix = obj._$transform._$rawMatrix();
+        expect($Math.atan2(matrix[1], matrix[0]) * Util.$Rad2Deg).toBe(0.9999999465488009);
+        expect(obj.rotation).toBe(1);
     });
 
     it("default test case9", function()
     {
         const obj = new DisplayObject();
         obj.rotation = 500;
-        expect(obj.rotation).toBe(139.99999868188684);
+
+        const matrix = obj._$transform._$rawMatrix();
+        expect($Math.atan2(matrix[1], matrix[0]) * Util.$Rad2Deg).toBe(139.99999868188684);
+        expect(obj.rotation).toBe(Util.$clamp(500 % 360, 0 - 360, 360, 0));
     });
 
     it("default test case10", function()
     {
         const obj = new DisplayObject();
         obj.rotation = -1;
-        expect(obj.rotation).toBe(-0.9999999465488009);
+
+        const matrix = obj._$transform._$rawMatrix();
+        expect($Math.atan2(matrix[1], matrix[0]) * Util.$Rad2Deg).toBe(-0.9999999465488009);
+        expect(obj.rotation).toBe(-1);
     });
 
     it("default test case11", function()
     {
         const obj = new DisplayObject();
         obj.rotation = -500;
-        expect(obj.rotation).toBe(-139.99999868188684);
+
+        const matrix = obj._$transform._$rawMatrix();
+        expect($Math.atan2(matrix[1], matrix[0]) * Util.$Rad2Deg).toBe(-139.99999868188684);
+        expect(obj.rotation).toBe(Util.$clamp(-500 % 360, 0 - 360, 360, 0));
     });
 
     it("default test case12", function()
@@ -1990,7 +1997,10 @@ describe("DisplayObject.js rotation test", function()
     {
         const obj = new DisplayObject();
         obj.rotation = [1];
-        expect(obj.rotation).toBe(0.9999999465488009);
+
+        const matrix = obj._$transform._$rawMatrix();
+        expect($Math.atan2(matrix[1], matrix[0]) * Util.$Rad2Deg).toBe(0.9999999465488009);
+        expect(obj.rotation).toBe(1);
     });
 
     it("default test case15", function()
@@ -2011,14 +2021,20 @@ describe("DisplayObject.js rotation test", function()
     {
         const obj = new DisplayObject();
         obj.rotation = { "toString":function () { return 1 } };
-        expect(obj.rotation).toBe(0.9999999465488009);
+
+        const matrix = obj._$transform._$rawMatrix();
+        expect($Math.atan2(matrix[1], matrix[0]) * Util.$Rad2Deg).toBe(0.9999999465488009);
+        expect(obj.rotation).toBe(1);
     });
 
     it("default test case18", function()
     {
         const obj = new DisplayObject();
         obj.rotation = { "toString":function () { return "1" } };
-        expect(obj.rotation).toBe(0.9999999465488009);
+
+        const matrix = obj._$transform._$rawMatrix();
+        expect($Math.atan2(matrix[1], matrix[0]) * Util.$Rad2Deg).toBe(0.9999999465488009);
+        expect(obj.rotation).toBe(1);
     });
 
     it("default test case19", function()
