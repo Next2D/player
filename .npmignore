@@ -8,3 +8,5 @@ node_modules
 .gitattributes
 gulpfile.js
 karma.conf.js
+DOCS.md
+DEVELOP.md
