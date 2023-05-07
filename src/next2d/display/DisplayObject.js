@@ -1500,11 +1500,11 @@ class DisplayObject extends EventDispatcher
             loaderInfo = this._$loaderInfo || Util.$currentLoaderInfo;
         }
 
-        if (!loaderInfo) {
+        if (!loaderInfo || !loaderInfo.has(name)) {
             return null;
         }
 
-        const characterId  = loaderInfo._$data.symbols.get(this.namespace);
+        const characterId  = loaderInfo._$data.symbols.get(name);
         const character    = loaderInfo._$data.characters[characterId];
 
         this._$characterId = characterId;
