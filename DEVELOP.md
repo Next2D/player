@@ -7,10 +7,6 @@
 [![Discord](https://img.shields.io/discord/812136803506716713?label=Discord&logo=discord)](https://discord.gg/6c9rv5Uns5)
 [![Follow us on Twitter](https://img.shields.io/twitter/follow/Next2D?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=Next2D)
 
-# About
-developブランチは開発専用のブランチです。  
-The develop branch is a development-only branch.
-
 ## Version
 開発に必要なミドルウェアと対応バージョン  
 Middleware required for development and supported versions
@@ -22,30 +18,29 @@ karma >= 6.x
 
 ## Initial Settings
 ```
-git clone -b develop git@github.com:Next2D/Player.git
-cd Player
-npm install -g gulp karma
+git clone -b develop git@github.com:Next2D/player.git
+cd player
 npm install
 ```
 
 ## Start Development
 ```
-gulp
+npm start
 ```
 
 ## Unit Test
 ```
-gulp test
+npm test
 ```
 
 ## ESLint
 ```
-gulp lint
+npm run lint
 ```
 
 ## Export minify
 ```
-gulp --prodBuild=true
+npm run build -- --prodBuild=true
 ```
 
 ## License
