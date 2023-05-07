@@ -5,7 +5,6 @@ Thumbs.db
 node_modules
 Footer.build.file
 Header.build.file
-next2d.js
 json
 coverage
 src/util/Util.replaced.js

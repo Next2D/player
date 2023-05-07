@@ -1489,15 +1489,11 @@ class DisplayObject extends EventDispatcher
      */
     _$sync ()
     {
-        const name = this.contentName;
+        const name = this.namespace;
 
         let loaderInfo = null;
-        if (next2d.fw.response.has(name)) {
-            loaderInfo = next2d.fw.response.get(name)._$loaderInfo;
-        }
-
-        if (!loaderInfo && next2d.fw.cache.has(name)) {
-            loaderInfo = next2d.fw.cache.get(name)._$loaderInfo;
+        if (next2d.fw.loaderInfo.has(name)) {
+            loaderInfo = next2d.fw.loaderInfo.get(name)._$loaderInfo;
         }
 
         if (!loaderInfo) {

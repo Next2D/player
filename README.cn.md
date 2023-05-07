@@ -11,23 +11,29 @@ Next2D Player
 [![Discord](https://img.shields.io/discord/812136803506716713?label=Discord&logo=discord)](https://discord.gg/6c9rv5Uns5)
 [![Follow us on Twitter](https://img.shields.io/twitter/follow/Next2D?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=Next2D)
 
-[日本語](./README.ja.md) | [简体中文](./README.cn.md)
+[English](./README.md) | [日本語](./README.ja.md)
 
-## About
-Next2D Player is a project derived from the JavaScript FlashPlayer "swf2js" and aims to provide the fastest 2D engine that works on any device.
+## 关于
 
-It fully supports WebGL and WebGL2, and can be used to create rich and interactive web content, without having to deal with browser or device compatibility. With full support for WebGL and WebGL2, you can create rich, interactive web content and games without having to deal with browser or device compatibility.
+Next2D Player 是一个来源于 JavaScript Flash 播放器 "swf2js" 的衍生项目。
+目标是提供一个在任何设备上都工作最快的 2D 引擎。
 
-With the Next2D NoCode Tool, you can intuitively create the animations you envision, and the exported JSON data can be easily played and published with the Next2D Player.  
-Next2D NoCode Tool is a web service that does not require installation and can be used immediately by anyone who accesses it.
+它完整提供了 WebGL 和 WebGL2, 可被用于创建丰富、交互式图形、跨平台应用程序和游戏, 而不需要处理浏览器或者设备兼容性问题。
 
-## Use Simple Sample
+通过使用 Next NoCode Tool, 你可以直观地创建想象中的动画, 导出的 JSON 数据可以通过使用 Next2D Player 很容易被播放和发布。
+Next2D NoCode Tool 是一个 web 服务, 不需要下载并且谁都可以立马使用。
+
+使 2D 娱乐开发更简单! 快速! 舒服!
+
+## 使用之简单示例
+
 ```javascript
 next2d.load("JSON Path...");
 ```
 [CodePen](https://codepen.io/next2d/pen/rNGMrZG)
 
-## Use Program Sample
+## 使用之程序示例
+
 ```javascript
 const { Loader }     = next2d.display;
 const { URLRequest } = next2d.net;
@@ -49,24 +55,26 @@ loader
 loader.load(request);
 ```
 [CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
-@see [API Documentation](https://next2d.app/en/docs/player)
+@see [API 文档](https://next2d.app/cn/docs/player)
 
-## Option settings
+## 设置选项
 
-| name | type | default | description |
+| 名称 | 值类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `base` | string | empty | When acquiring JSON by relative path, the URL set here will be applied as the root. For absolute paths, the URL set here will not be applied. |
-| `fullScreen` | boolean | false | It will be drawn on the entire screen beyond the width and height set in the Stage class. |
-| `tagId` | string | empty | When an ID is specified, drawing will be performed within the element with the specified ID. |
-| `bgColor` | array | empty | The [R,G,B,A] array of background colors can be specified from 0 to 255. false is colorless and transparent. |
+| `base` | string | 空值 | 如果在请求时未设置URL，则要设置。 |
+| `fullScreen` | boolean | false | 全屏绘制 |
+| `tagId` | string | 空值 | 值为你希望在 DOM 中绘制位置的容器 ID。 |
+| `bgColor` | array | empty | RGBA 值在 0-255 范围内选择。 |
 
-## Related sites
-* [Website](https://next2d.app)
-* [Player API Documentation](https://next2d.app/en/docs/player)
+## 相关站点
+
+* [官网](https://next2d.app)
+* [Player API 文档](https://next2d.app/cn/docs/player)
 * [Next2D NoCode Tool(β version)](https://tool.next2d.app)
 * [Next2D Framework](https://next2d.app/#framework)
-* [Tutorial & Reference.](https://next2d.app/en/reference/player)
-* [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)
+* [教程 & 参考](https://next2d.app/cn/reference/player)
+* [聊天社区(Discord)](https://discord.gg/6c9rv5Uns5)
 
-## License
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.
+## 许可证
+
+本项目使用 [MIT License](https://opensource.org/licenses/MIT) 许可证 - 参考 [LICENSE](LICENSE) 文件了解许可证内容。
