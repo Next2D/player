@@ -946,15 +946,19 @@ class CanvasToWebGLContext
         let width  = Math.abs(bounds.xMax - bounds.xMin);
         let height = Math.abs(bounds.yMax - bounds.yMin);
 
+        if (x > width || y > height) {
+            return null;
+        }
+
         // resize
         const manager = this._$frameBufferManager;
         const currentAttachment = manager.currentAttachment;
         if (width + x > currentAttachment.texture.width) {
-            width -= width - currentAttachment.texture.width + x;
+            width = currentAttachment.texture.width - x;
         }
 
         if (height + y > currentAttachment.texture.height) {
-            height -= height - currentAttachment.texture.height + y;
+            height = currentAttachment.texture.height - y;
         }
 
         if (0 > x) {
@@ -994,8 +998,8 @@ class CanvasToWebGLContext
 
         return Util.$getFloat32Array6(
             matrix[0], matrix[1], matrix[2], matrix[3],
-            matrix[4] - x,
-            matrix[5] - y
+            matrix[4] - bounds.xMin,
+            matrix[5] - bounds.yMin
         );
     }
 
