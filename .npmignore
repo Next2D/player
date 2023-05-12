@@ -1,2 +1,12 @@
 .gitignore
 .github
+test
+src
+node_modules
+.eslintignore
+.eslintrc.json
+.gitattributes
+gulpfile.js
+karma.conf.js
+DOCS.md
+DEVELOP.md
