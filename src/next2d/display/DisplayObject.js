@@ -1506,6 +1506,9 @@ class DisplayObject extends EventDispatcher
 
         const characterId  = loaderInfo._$data.symbols.get(name);
         const character    = loaderInfo._$data.characters[characterId];
+        if (!character) {
+            return null;
+        }
 
         this._$characterId = characterId;
         this._$loaderInfo  = loaderInfo;
