@@ -1500,7 +1500,7 @@ class DisplayObject extends EventDispatcher
             loaderInfo = this._$loaderInfo || Util.$currentLoaderInfo;
         }
 
-        if (!loaderInfo || !loaderInfo.has(name)) {
+        if (!loaderInfo) {
             return null;
         }
 
