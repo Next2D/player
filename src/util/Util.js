@@ -426,34 +426,50 @@ Util.$bitmapDrawMap = new Map();
 
 const userAgentData = $navigator.userAgentData;
 if (userAgentData) {
-    Util.$isSafari = Util.$isFireFox = false;
+
+    /**
+     * @type {boolean}
+     * @const
+     * @static
+     */
+    Util.$isChrome = Util.$isSafari = Util.$isFireFox = false;
+
     userAgentData
         .getHighEntropyValues(["platform", "mobile"])
         .then((object) =>
         {
+            const brands = object.brands;
+            for (let idx = 0; idx < brands.length; ++idx) {
+                if (brands[idx].brand.indexOf("Chrome") === -1) {
+                    continue;
+                }
+
+                Util.$isChrome = true;
+                break;
+            }
+
             /**
              * @type {boolean}
              * @const
              * @static
              */
-            Util.$isTouch = object.mobile;
+            Util.$isAndroid = object.platform === "Android";
 
-            for (let idx = 0; idx < object.brands.length; ++idx) {
+            /**
+             * @type {boolean}
+             * @const
+             * @static
+             */
+            Util.isiOS = object.platform === "iOS";
 
-                if (object.brands[idx].brand.indexOf("Chrome") === -1) {
-                    continue;
-                }
-
-                /**
-                 * @type {boolean}
-                 * @const
-                 * @static
-                 */
-                Util.$isChrome = true;
-
-                break;
-            }
+            /**
+             * @type {boolean}
+             * @const
+             * @static
+             */
+            Util.$isTouch = Util.$isAndroid || Util.isiOS;
         });
+
 } else {
 
     const userAgent = $navigator.userAgent;
@@ -470,14 +486,8 @@ if (userAgentData) {
      * @const
      * @static
      */
-    Util.isiOS = userAgent.indexOf("iPhone") > -1 || userAgent.indexOf("iPod") > -1;
-
-    /**
-     * @type {boolean}
-     * @const
-     * @static
-     */
-    Util.$isTouch = Util.$isAndroid || Util.isiOS;
+    Util.isiOS = userAgent.indexOf("iPhone") > -1
+        || userAgent.indexOf("iPod") > -1;
 
     /**
      * @type {boolean}
@@ -499,6 +509,13 @@ if (userAgentData) {
      * @static
      */
     Util.$isSafari = userAgent.indexOf("Chrome") === -1 && userAgent.indexOf("Safari") > -1;
+
+    /**
+     * @type {boolean}
+     * @const
+     * @static
+     */
+    Util.$isTouch = Util.$isAndroid || Util.isiOS;
 }
 
 /**
@@ -1753,114 +1770,120 @@ Util.$decodeImage = function ()
     }
 };
 
-/**
- * @default null
- * @type {Worker}
- * @static
- */
-Util.$rendererWorker = !Util.$isSafari && "OffscreenCanvas" in window
-    ? new Worker(URL.createObjectURL(new Blob(["###RENDER_WORKER###"], { "type": "text/javascript" })))
-    : null;
+if ("OffscreenCanvas" in window) {
 
-if (Util.$rendererWorker) {
+    const offscreen = new window.OffscreenCanvas(0,0);
+    const context = offscreen.getContext("webgl2");
 
     /**
-     * @param  {DisplayObjectContainer} source
-     * @return {void}
-     * @method
+     * @default null
+     * @type {Worker}
      * @static
      */
-    Util.$removeContainerWorker = (source) =>
-    {
-        source._$removeWorkerInstance();
+    Util.$rendererWorker = context !== null
+        ? new Worker(URL.createObjectURL(new Blob(["###RENDER_WORKER###"], { "type": "text/javascript" })))
+        : null;
 
-        const children = source._$needsChildren
-            ? source._$getChildren()
-            : source._$children;
+    if (Util.$rendererWorker) {
 
-        const length = children.length;
-        for (let idx = 0; idx < length; ++idx) {
-
-            const instance = children[idx];
-            if (!instance) {
-                continue;
-            }
-
-            if (instance instanceof DisplayObjectContainer) {
-
-                Util.$removeContainerWorker(instance);
-
-            } else {
-                instance._$removeWorkerInstance();
-            }
-        }
-    };
-
-    /**
-     * @param  {DisplayObjectContainer} source
-     * @return {void}
-     * @method
-     * @private
-     */
-    Util.$postContainerWorker = (source) =>
-    {
-        source._$createWorkerInstance();
-        source._$postProperty();
-
-        const children = source._$needsChildren
-            ? source._$getChildren()
-            : source._$children;
-
-        const childrenIds = Util.$getArray();
-
-        const length = children.length;
-        for (let idx = 0; idx < length; ++idx) {
-
-            const instance = children[idx];
-            if (!instance) {
-                continue;
-            }
-
-            childrenIds.push(instance._$instanceId);
-
-            if (instance instanceof DisplayObjectContainer) {
-                Util.$postContainerWorker(instance);
-                continue;
-            }
-
-            instance._$createWorkerInstance();
-            instance._$postProperty();
-        }
-
-        source._$postChildrenIds(childrenIds);
-
-        Util.$poolArray(childrenIds);
-    };
-
-    Util.$rendererWorker.onmessage = (event) =>
-    {
-        if (event.data.command !== "bitmapDraw") {
-            return ;
-        }
-
-        const sourceId = event.data.sourceId;
-        const object = Util.$bitmapDrawMap.get(sourceId);
-        Util.$bitmapDrawMap.delete(sourceId);
-
-        // reset
-        const source = object.source;
-        if (source instanceof DisplayObjectContainer) {
-            Util.$removeContainerWorker(source);
-        } else {
+        /**
+         * @param  {DisplayObjectContainer} source
+         * @return {void}
+         * @method
+         * @static
+         */
+        Util.$removeContainerWorker = (source) =>
+        {
             source._$removeWorkerInstance();
-        }
 
-        if (object.callback) {
-            const context = object.context;
-            context.drawImage(event.data.imageBitmap, 0, 0);
-            object.callback(context.canvas);
-        }
-    };
+            const children = source._$needsChildren
+                ? source._$getChildren()
+                : source._$children;
+
+            const length = children.length;
+            for (let idx = 0; idx < length; ++idx) {
+
+                const instance = children[idx];
+                if (!instance) {
+                    continue;
+                }
+
+                if (instance instanceof DisplayObjectContainer) {
+
+                    Util.$removeContainerWorker(instance);
+
+                } else {
+                    instance._$removeWorkerInstance();
+                }
+            }
+        };
+
+        /**
+         * @param  {DisplayObjectContainer} source
+         * @return {void}
+         * @method
+         * @private
+         */
+        Util.$postContainerWorker = (source) =>
+        {
+            source._$createWorkerInstance();
+            source._$postProperty();
+
+            const children = source._$needsChildren
+                ? source._$getChildren()
+                : source._$children;
+
+            const childrenIds = Util.$getArray();
+
+            const length = children.length;
+            for (let idx = 0; idx < length; ++idx) {
+
+                const instance = children[idx];
+                if (!instance) {
+                    continue;
+                }
+
+                childrenIds.push(instance._$instanceId);
+
+                if (instance instanceof DisplayObjectContainer) {
+                    Util.$postContainerWorker(instance);
+                    continue;
+                }
+
+                instance._$createWorkerInstance();
+                instance._$postProperty();
+            }
+
+            source._$postChildrenIds(childrenIds);
+
+            Util.$poolArray(childrenIds);
+        };
+
+        Util.$rendererWorker.onmessage = (event) =>
+        {
+            if (event.data.command !== "bitmapDraw") {
+                return ;
+            }
+
+            const sourceId = event.data.sourceId;
+            const object = Util.$bitmapDrawMap.get(sourceId);
+            Util.$bitmapDrawMap.delete(sourceId);
+
+            // reset
+            const source = object.source;
+            if (source instanceof DisplayObjectContainer) {
+                Util.$removeContainerWorker(source);
+            } else {
+                source._$removeWorkerInstance();
+            }
+
+            if (object.callback) {
+                const context = object.context;
+                context.drawImage(event.data.imageBitmap, 0, 0);
+                object.callback(context.canvas);
+            }
+        };
+    }
 }
 
 /**
