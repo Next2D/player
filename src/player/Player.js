@@ -906,132 +906,120 @@ class Player
         }
 
         // set event
-        if (Util.$isTouch) {
+        const loadWebAudio = (event) =>
+        {
+            event.target.removeEventListener(Util.$MOUSE_DOWN, loadWebAudio);
+            Util.$loadAudioData();
+        };
 
-            const loadSpAudio = (event) =>
-            {
-                event.target.removeEventListener(Util.$TOUCH_END, loadSpAudio);
-                Util.$loadAudioData();
-            };
+        // audio context load event
+        canvas.addEventListener(Util.$TOUCH_END, loadWebAudio);
 
-            // audio context load event
-            canvas.addEventListener(Util.$TOUCH_END, loadSpAudio);
+        // audio context load event
+        canvas.addEventListener(Util.$MOUSE_DOWN, loadWebAudio);
 
-            // touch event
-            canvas.addEventListener(Util.$TOUCH_START, (event) =>
-            {
-                Util.$event     = event;
-                Util.$eventType = Util.$TOUCH_START;
-                // start position
-                this._$touchY   = event.changedTouches[0].pageY;
+        // touch event
+        canvas.addEventListener(Util.$TOUCH_START, (event) =>
+        {
+            Util.$event     = event;
+            Util.$eventType = Util.$TOUCH_START;
+            // start position
+            this._$touchY   = event.changedTouches[0].pageY;
+            this._$hitTest();
+        });
+
+        canvas.addEventListener(Util.$TOUCH_MOVE, (event) =>
+        {
+            Util.$event     = event;
+            Util.$eventType = Util.$TOUCH_MOVE;
+
+            this._$hitTest();
+        });
+
+        canvas.addEventListener(Util.$TOUCH_END, (event) =>
+        {
+            Util.$event     = event;
+            Util.$eventType = Util.$TOUCH_END;
+
+            this._$hitTest();
+        });
+
+        // mouse wheel
+        canvas.addEventListener(Util.$TOUCH_MOVE, (event) =>
+        {
+            // update
+            const pageY   = event.changedTouches[0].pageY;
+            event.deltaY  = this._$touchY - pageY;
+            this._$touchY = pageY;
+
+            Util.$event     = event;
+            Util.$eventType = Util.$MOUSE_WHEEL;
+
+            this._$hitTest();
+        }, { "passive": false });
+
+        // mouse event
+        canvas.addEventListener(Util.$MOUSE_DOWN, (event) =>
+        {
+            Util.$event     = event;
+            Util.$eventType = Util.$MOUSE_DOWN;
+
+            if (!event.button) {
                 this._$hitTest();
-            });
+            }
+        });
 
-            canvas.addEventListener(Util.$TOUCH_MOVE, (event) =>
-            {
-                Util.$event     = event;
-                Util.$eventType = Util.$TOUCH_MOVE;
+        canvas.addEventListener(Util.$DOUBLE_CLICK, (event) =>
+        {
+            Util.$event     = event;
+            Util.$eventType = Util.$DOUBLE_CLICK;
 
+            if (!event.button) {
                 this._$hitTest();
-            });
+            }
+        });
 
-            canvas.addEventListener(Util.$TOUCH_END, (event) =>
-            {
-                Util.$event     = event;
-                Util.$eventType = Util.$TOUCH_END;
+        canvas.addEventListener(Util.$MOUSE_LEAVE, (event) =>
+        {
+            Util.$event     = event;
+            Util.$eventType = Util.$MOUSE_LEAVE;
 
+            this._$hitTest();
+
+            Util.$event = null;
+            this._$stageX = -1;
+            this._$stageY = -1;
+        });
+
+        canvas.addEventListener(Util.$MOUSE_UP, (event) =>
+        {
+            Util.$event     = event;
+            Util.$eventType = Util.$MOUSE_UP;
+
+            if (!event.button) {
                 this._$hitTest();
-            });
+            }
+        });
 
-            // mouse wheel
-            canvas.addEventListener(Util.$TOUCH_MOVE, (event) =>
-            {
-                // update
-                const pageY   = event.changedTouches[0].pageY;
-                event.deltaY  = this._$touchY - pageY;
-                this._$touchY = pageY;
+        canvas.addEventListener(Util.$MOUSE_MOVE, (event) =>
+        {
+            Util.$event     = event;
+            Util.$eventType = Util.$MOUSE_MOVE;
+
+            this._$hitTest();
+        });
+
+        // mouse wheel
+        canvas.addEventListener(Util.$MOUSE_WHEEL, (event) =>
+        {
+            if (!event.defaultPrevented) {
 
                 Util.$event     = event;
                 Util.$eventType = Util.$MOUSE_WHEEL;
 
                 this._$hitTest();
-            }, { "passive": false });
-
-        } else {
-
-            const loadWebAudio = (event) =>
-            {
-                event.target.removeEventListener(Util.$MOUSE_DOWN, loadWebAudio);
-                Util.$loadAudioData();
-            };
-
-            // audio context load event
-            canvas.addEventListener(Util.$MOUSE_DOWN, loadWebAudio);
-
-            // mouse event
-            canvas.addEventListener(Util.$MOUSE_DOWN, (event) =>
-            {
-                Util.$event     = event;
-                Util.$eventType = Util.$MOUSE_DOWN;
-
-                if (!event.button) {
-                    this._$hitTest();
-                }
-            });
-
-            canvas.addEventListener(Util.$DOUBLE_CLICK, (event) =>
-            {
-                Util.$event     = event;
-                Util.$eventType = Util.$DOUBLE_CLICK;
-
-                if (!event.button) {
-                    this._$hitTest();
-                }
-            });
-
-            canvas.addEventListener(Util.$MOUSE_LEAVE, (event) =>
-            {
-                Util.$event     = event;
-                Util.$eventType = Util.$MOUSE_LEAVE;
-
-                this._$hitTest();
-
-                Util.$event = null;
-                this._$stageX = -1;
-                this._$stageY = -1;
-            });
-
-            canvas.addEventListener(Util.$MOUSE_UP, (event) =>
-            {
-                Util.$event     = event;
-                Util.$eventType = Util.$MOUSE_UP;
-
-                if (!event.button) {
-                    this._$hitTest();
-                }
-            });
-
-            canvas.addEventListener(Util.$MOUSE_MOVE, (event) =>
-            {
-                Util.$event     = event;
-                Util.$eventType = Util.$MOUSE_MOVE;
-
-                this._$hitTest();
-            });
-
-            // mouse wheel
-            canvas.addEventListener(Util.$MOUSE_WHEEL, (event) =>
-            {
-                if (!event.defaultPrevented) {
-
-                    Util.$event     = event;
-                    Util.$eventType = Util.$MOUSE_WHEEL;
-
-                    this._$hitTest();
-                }
-            }, { "passive": false });
-
-        }
+            }
+        }, { "passive": false });
 
         // set css
         const style = canvas.style;
