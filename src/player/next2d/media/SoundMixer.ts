@@ -1,6 +1,6 @@
-import { Player } from "../../player/Player";
-import { Sound } from "./Sound";
-import { Video } from "./Video";
+import type { Player } from "../../player/Player";
+import type { Sound } from "./Sound";
+import type { Video } from "./Video";
 import { $currentPlayer } from "../../util/Util";
 import {
     $clamp,

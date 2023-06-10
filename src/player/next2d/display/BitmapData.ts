@@ -1,12 +1,12 @@
-import { Player } from "../../player/Player";
-import { CacheStore } from "../../util/CacheStore";
-import { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
-import { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
-import { Matrix } from "../geom/Matrix";
-import { ColorTransform } from "../geom/ColorTransform";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
-import { FrameBufferManager } from "../../../webgl/FrameBufferManager";
-import { AttachmentImpl } from "../../../interface/AttachmentImpl";
+import type { Player } from "../../player/Player";
+import type { CacheStore } from "../../util/CacheStore";
+import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
+import type { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
+import type { Matrix } from "../geom/Matrix";
+import type { ColorTransform } from "../geom/ColorTransform";
+import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
+import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
 import { $getInstanceId } from "../../util/Global";
 import {
     $bitmapDrawMap,

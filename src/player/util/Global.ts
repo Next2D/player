@@ -1,4 +1,4 @@
-import { LoaderInfo } from "../next2d/display/LoaderInfo";
+import type { LoaderInfo } from "../next2d/display/LoaderInfo";
 
 /**
  * @type {number}

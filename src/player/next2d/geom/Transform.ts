@@ -1,11 +1,4 @@
-import { ColorTransform } from "./ColorTransform";
-import { Matrix } from "./Matrix";
 import { Rectangle } from "./Rectangle";
-import { PlaceObjectImpl } from "../../../interface/PlaceObjectImpl";
-import { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
-import { ParentImpl } from "../../../interface/ParentImpl";
-import { BoundsImpl } from "../../../interface/BoundsImpl";
-import { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
 import { BevelFilter } from "../filters/BevelFilter";
 import { BlurFilter } from "../filters/BlurFilter";
 import { ColorMatrixFilter } from "../filters/ColorMatrixFilter";
@@ -15,8 +8,15 @@ import { DropShadowFilter } from "../filters/DropShadowFilter";
 import { GlowFilter } from "../filters/GlowFilter";
 import { GradientBevelFilter } from "../filters/GradientBevelFilter";
 import { GradientGlowFilter } from "../filters/GradientGlowFilter";
-import { BlendModeImpl } from "../../../interface/BlendModeImpl";
-import { SurfaceFilterImpl } from "../../../interface/SurfaceFilterImpl";
+import type { ColorTransform } from "./ColorTransform";
+import type { Matrix } from "./Matrix";
+import type { PlaceObjectImpl } from "../../../interface/PlaceObjectImpl";
+import type { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
+import type { ParentImpl } from "../../../interface/ParentImpl";
+import type { BoundsImpl } from "../../../interface/BoundsImpl";
+import type { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
+import type { BlendModeImpl } from "../../../interface/BlendModeImpl";
+import type { SurfaceFilterImpl } from "../../../interface/SurfaceFilterImpl";
 import { $doUpdated } from "../../util/Global";
 import {
     $getColorTransform,

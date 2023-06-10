@@ -60,7 +60,7 @@ const render_worker = {
 };
 
 const player = {
-    "mode": "production",
+    "mode": "development",
     "entry": path.resolve(__dirname, "src/player/index.ts"),
     "output": {
         "filename": "next2d.js",
@@ -88,6 +88,15 @@ const player = {
                 }
             }
         ]
+    },
+
+    "devServer": {
+        "static": [
+            { "directory": __dirname }
+        ],
+        "historyApiFallback": true,
+        "compress": false,
+        "open": true
     }
 };
 

@@ -1,13 +1,13 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
-import { SpriteImpl } from "../../../interface/SpriteImpl";
-import { SoundTransform } from "../media/SoundTransform";
 import { Graphics } from "./Graphics";
-import { DropTargetImpl } from "../../../interface/DropTargetImpl";
-import { Rectangle } from "../geom/Rectangle";
-import { Point } from "../geom/Point";
-import { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
-import { ParentImpl } from "../../../interface/ParentImpl";
-import { MovieClipCharacterImpl } from "../../../interface/MovieClipCharacterImpl";
+import { SoundTransform } from "../media/SoundTransform";
+import type { Rectangle } from "../geom/Rectangle";
+import type { Point } from "../geom/Point";
+import type { SpriteImpl } from "../../../interface/SpriteImpl";
+import type { DropTargetImpl } from "../../../interface/DropTargetImpl";
+import type { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
+import type { ParentImpl } from "../../../interface/ParentImpl";
+import type { MovieClipCharacterImpl } from "../../../interface/MovieClipCharacterImpl";
 import {
     $currentMousePoint,
     $dragRules,

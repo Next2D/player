@@ -1,12 +1,12 @@
 import { BitmapFilter } from "./BitmapFilter";
 import { BlurFilter } from "./BlurFilter";
-import { FilterQualityImpl } from "../../../interface/FilterQualityImpl";
-import { Rectangle } from "../geom/Rectangle";
-import { FrameBufferManager } from "../../../webgl/FrameBufferManager";
-import { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
-import { AttachmentImpl } from "../../../interface/AttachmentImpl";
+import type { FilterQualityImpl } from "../../../interface/FilterQualityImpl";
+import type { Rectangle } from "../geom/Rectangle";
+import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
+import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
+import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
+import type { BitmapFilterTypeImpl } from "../../../interface/BitmapFilterTypeImpl";
 import { $devicePixelRatio } from "../../util/Shortcut";
-import { BitmapFilterTypeImpl } from "../../../interface/BitmapFilterTypeImpl";
 import {
     $clamp,
     $Deg2Rad,

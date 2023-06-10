@@ -1,5 +1,5 @@
-import { Player } from "../player/Player";
-import { CanvasToWebGLContext } from "../../webgl/CanvasToWebGLContext";
+import type { Player } from "../player/Player";
+import type { CanvasToWebGLContext } from "../../webgl/CanvasToWebGLContext";
 import { $currentPlayer } from "./Util";
 import { $document } from "./Shortcut";
 import {

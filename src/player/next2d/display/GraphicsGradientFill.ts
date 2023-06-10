@@ -1,5 +1,5 @@
-import { Matrix } from "../geom/Matrix";
-import { ColorStopImpl } from "../../../interface/ColorStopImpl";
+import type { Matrix } from "../geom/Matrix";
+import type { ColorStopImpl } from "../../../interface/ColorStopImpl";
 import { $MATRIX_ARRAY_RATIO_0_0_RATIO_0_0 } from "../../util/Util";
 import {
     GradientType,

@@ -1,9 +1,9 @@
 import { BitmapFilter } from "./BitmapFilter";
-import { FilterQualityImpl } from "../../../interface/FilterQualityImpl";
 import { Rectangle } from "../geom/Rectangle";
-import { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
-import { FrameBufferManager } from "../../../webgl/FrameBufferManager";
-import { AttachmentImpl } from "../../../interface/AttachmentImpl";
+import type { FilterQualityImpl } from "../../../interface/FilterQualityImpl";
+import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
+import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
+import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
 import {
     $Math,
     $getArray,

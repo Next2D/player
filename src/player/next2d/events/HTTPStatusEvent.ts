@@ -1,5 +1,5 @@
 import { Event } from "./Event";
-import { URLRequestHeader } from "../net/URLRequestHeader";
+import type { URLRequestHeader } from "../net/URLRequestHeader";
 
 /**
  * ネットワーク要求が HTTP ステータスコードを返すと、アプリケーションによって HTTPStatusEvent オブジェクトが送出されます。

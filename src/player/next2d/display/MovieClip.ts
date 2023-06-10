@@ -1,19 +1,19 @@
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
-import { Event } from "../events/Event";
 import { Sound } from "../media/Sound";
-import { PlaceObjectImpl } from "../../../interface/PlaceObjectImpl";
-import { LoopConfigImpl } from "../../../interface/LoopConfigImpl";
-import { Player } from "../../player/Player";
-import { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
-import { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
-import { ParentImpl } from "../../../interface/ParentImpl";
-import { MovieClipCharacterImpl } from "../../../interface/MovieClipCharacterImpl";
-import { MovieClipSoundObjectImpl } from "../../../interface/MovieClipSoundObjectImpl";
-import { MovieClipActionObjectImpl } from "../../../interface/MovieClipActionObjectImpl";
-import { MovieClipLabelObjectImpl } from "../../../interface/MovieClipLabelObjectImpl";
-import { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
-import { SoundTransform } from "../media/SoundTransform";
+import { Event } from "../events/Event";
+import type { PlaceObjectImpl } from "../../../interface/PlaceObjectImpl";
+import type { LoopConfigImpl } from "../../../interface/LoopConfigImpl";
+import type { Player } from "../../player/Player";
+import type { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
+import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
+import type { ParentImpl } from "../../../interface/ParentImpl";
+import type { MovieClipCharacterImpl } from "../../../interface/MovieClipCharacterImpl";
+import type { MovieClipSoundObjectImpl } from "../../../interface/MovieClipSoundObjectImpl";
+import type { MovieClipActionObjectImpl } from "../../../interface/MovieClipActionObjectImpl";
+import type { MovieClipLabelObjectImpl } from "../../../interface/MovieClipLabelObjectImpl";
+import type { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
+import type { SoundTransform } from "../media/SoundTransform";
 import { $setCurrentLoaderInfo } from "../../util/Global";
 import {
     $currentPlayer,

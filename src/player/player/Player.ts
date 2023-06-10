@@ -1,26 +1,26 @@
 import { Stage } from "../next2d/display/Stage";
 import { CacheStore } from "../util/CacheStore";
-import { StageQualityImpl } from "../../interface/StageQualityImpl";
 import { Event as Next2DEvent } from "../next2d/events/Event";
 import { MouseEvent as Next2DMouseEvent } from "../next2d/events/MouseEvent";
 import { TextField } from "../next2d/text/TextField";
 import { Video } from "../next2d/media/Video";
 import { Sound } from "../next2d/media/Sound";
-import { PlayerOptionsImpl } from "../../interface/PlayerOptionsImpl";
-import { PlayerHitObjectImpl } from "../../interface/PlayerHitObjectImpl";
-import { PlayerModeImpl } from "../../interface/PlayerModeImpl";
-import { CanvasToWebGLContext } from "../../webgl/CanvasToWebGLContext";
-import { AttachmentImpl } from "../../interface/AttachmentImpl";
-import { EventListenerImpl } from "../../interface/EventListenerImpl";
-import { SoundMixer } from "../next2d/media/SoundMixer";
-import { FrameBufferManager } from "../../webgl/FrameBufferManager";
 import { EventPhase } from "../next2d/events/EventPhase";
-import { DisplayObjectImpl } from "../../interface/DisplayObjectImpl";
-import { EventDispatcherImpl } from "../../interface/EventDispatcherImpl";
-import { ParentImpl } from "../../interface/ParentImpl";
-import { MovieClip } from "../next2d/display/MovieClip";
-import { Point } from "../next2d/geom/Point";
-import { Rectangle } from "../next2d/geom/Rectangle";
+import { CanvasToWebGLContext } from "../../webgl/CanvasToWebGLContext";
+import { SoundMixer } from "../next2d/media/SoundMixer";
+import type { StageQualityImpl } from "../../interface/StageQualityImpl";
+import type { PlayerOptionsImpl } from "../../interface/PlayerOptionsImpl";
+import type { PlayerHitObjectImpl } from "../../interface/PlayerHitObjectImpl";
+import type { PlayerModeImpl } from "../../interface/PlayerModeImpl";
+import type { AttachmentImpl } from "../../interface/AttachmentImpl";
+import type { EventListenerImpl } from "../../interface/EventListenerImpl";
+import type { FrameBufferManager } from "../../webgl/FrameBufferManager";
+import type { DisplayObjectImpl } from "../../interface/DisplayObjectImpl";
+import type { EventDispatcherImpl } from "../../interface/EventDispatcherImpl";
+import type { ParentImpl } from "../../interface/ParentImpl";
+import type { MovieClip } from "../next2d/display/MovieClip";
+import type { Point } from "../next2d/geom/Point";
+import type { Rectangle } from "../next2d/geom/Rectangle";
 import {
     $devicePixelRatio,
     $document,

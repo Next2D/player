@@ -2,7 +2,7 @@ import { Sound } from "../next2d/media/Sound";
 import { SoundMixer } from "../next2d/media/SoundMixer";
 import { SoundTransform } from "../next2d/media/SoundTransform";
 import { Video } from "../next2d/media/Video";
-import { MediaImpl } from "../../interface/MediaImpl";
+import type { MediaImpl } from "../../interface/MediaImpl";
 
 const media: MediaImpl = {
     Sound,

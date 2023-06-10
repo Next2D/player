@@ -1,17 +1,17 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { LoaderInfo } from "./LoaderInfo";
 import { MovieClip } from "./MovieClip";
-import { URLRequest } from "../net/URLRequest";
 import { IOErrorEvent } from "../events/IOErrorEvent";
 import { Event } from "../events/Event";
 import { ProgressEvent as Next2DProgressEvent } from "../events/ProgressEvent";
 import { HTTPStatusEvent } from "../events/HTTPStatusEvent";
-import { NoCodeDataZlibImpl } from "../../../interface/NoCodeDataZlibImpl";
-import { UnzipQueueImpl } from "../../../interface/UnzipQueueImpl";
-import { NoCodeDataImpl } from "../../../interface/NoCodeDataImpl";
-import { Player } from "../../player/Player";
-import { ParentImpl } from "../../../interface/ParentImpl";
-import { MovieClipCharacterImpl } from "../../../interface/MovieClipCharacterImpl";
+import type { Player } from "../../player/Player";
+import type { URLRequest } from "../net/URLRequest";
+import type { NoCodeDataZlibImpl } from "../../../interface/NoCodeDataZlibImpl";
+import type { UnzipQueueImpl } from "../../../interface/UnzipQueueImpl";
+import type { NoCodeDataImpl } from "../../../interface/NoCodeDataImpl";
+import type { ParentImpl } from "../../../interface/ParentImpl";
+import type { MovieClipCharacterImpl } from "../../../interface/MovieClipCharacterImpl";
 import {
     $ajax,
     $headerToArray,
@@ -436,8 +436,8 @@ export class Loader extends DisplayObjectContainer
         player._$loaders.push(loaderInfo);
 
         // next
-        if (player._$loadStatus === Player.LOAD_START) {
-            player._$loadStatus = Player.LOAD_END;
+        if (player._$loadStatus === 1) { // LOAD_START
+            player._$loadStatus = 2; // LOAD_END
         }
     }
 }

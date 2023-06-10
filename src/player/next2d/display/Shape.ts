@@ -1,21 +1,21 @@
 import { DisplayObject } from "./DisplayObject";
 import { Graphics } from "./Graphics";
-import { BoundsImpl } from "../../../interface/BoundsImpl";
 import { BitmapData } from "./BitmapData";
-import { Event } from "../events/Event";
-import { LoaderInfo } from "./LoaderInfo";
-import { ShapeCharacterImpl } from "../../../interface/ShapeCharacterImpl";
-import { CapsStyle, JointStyle } from "../../../interface/StrokeTypeImpl";
 import { Rectangle } from "../geom/Rectangle";
-import { ParentImpl } from "../../../interface/ParentImpl";
-import { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
-import { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
-import { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
-import { BlendModeImpl } from "../../../interface/BlendModeImpl";
-import { PlayerHitObjectImpl } from "../../../interface/PlayerHitObjectImpl";
-import { Character } from "../../../interface/Character";
-import { PropertyMessageMapImpl } from "../../../interface/PropertyMessageMapImpl";
-import { PropertyShapeMessageImpl } from "../../../interface/PropertyShapeMessageImpl";
+import { Event } from "../events/Event";
+import type { LoaderInfo } from "./LoaderInfo";
+import type { BoundsImpl } from "../../../interface/BoundsImpl";
+import type { ShapeCharacterImpl } from "../../../interface/ShapeCharacterImpl";
+import type { CapsStyle, JointStyle } from "../../../interface/StrokeTypeImpl";
+import type { ParentImpl } from "../../../interface/ParentImpl";
+import type { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
+import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
+import type { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
+import type { BlendModeImpl } from "../../../interface/BlendModeImpl";
+import type { PlayerHitObjectImpl } from "../../../interface/PlayerHitObjectImpl";
+import type { Character } from "../../../interface/Character";
+import type { PropertyMessageMapImpl } from "../../../interface/PropertyMessageMapImpl";
+import type { PropertyShapeMessageImpl } from "../../../interface/PropertyShapeMessageImpl";
 import { $rendererWorker } from "../../util/Util";
 import {
     $getArray,

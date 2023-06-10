@@ -1,6 +1,6 @@
 import { URLRequest } from "../next2d/net/URLRequest";
 import { URLRequestHeader } from "../next2d/net/URLRequestHeader";
-import { NetImpl } from "../../interface/NetImpl";
+import type { NetImpl } from "../../interface/NetImpl";
 
 const net: NetImpl = {
     URLRequest,

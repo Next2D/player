@@ -1,4 +1,4 @@
-import { TextFormatAlignImpl } from "../../../interface/TextFormatAlignImpl";
+import type { TextFormatAlignImpl } from "../../../interface/TextFormatAlignImpl";
 import {
     $clamp,
     $toColorInt

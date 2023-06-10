@@ -1,5 +1,6 @@
-import { Player } from "../../player/Player";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
+import type { Player } from "../../player/Player";
+import type { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
 import { $devicePixelRatio } from "../../util/Shortcut";
 import {
     $clamp,
@@ -17,7 +18,7 @@ import {
  */
 export class Stage extends DisplayObjectContainer
 {
-    public _$player: Player|null;
+    public _$player: Player | null;
     public _$invalidate: boolean;
     private _$color: number;
     public _$frameRate: number;
@@ -290,5 +291,18 @@ export class Stage extends DisplayObjectContainer
     invalidate (): void
     {
         this._$invalidate = true;
+    }
+
+    /**
+     * @param  {DisplayObject} child
+     * @return {DisplayObject}
+     * @method
+     * @private
+     */
+    _$addChild (child: DisplayObjectImpl<any>): DisplayObjectImpl<any>
+    {
+        child._$stage = this;
+        child._$root  = child;
+        return super._$addChild(child);
     }
 }

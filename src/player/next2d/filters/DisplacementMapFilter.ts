@@ -1,11 +1,11 @@
 import { BitmapFilter } from "./BitmapFilter";
-import { FrameBufferManager } from "../../../webgl/FrameBufferManager";
-import { BitmapData } from "../display/BitmapData";
-import { DisplacementMapFilterModeImpl } from "../../../interface/DisplacementMapFilterModeImpl";
-import { Point } from "../geom/Point";
-import { Rectangle } from "../geom/Rectangle";
-import { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
-import { AttachmentImpl } from "../../../interface/AttachmentImpl";
+import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
+import type { BitmapData } from "../display/BitmapData";
+import type { DisplacementMapFilterModeImpl } from "../../../interface/DisplacementMapFilterModeImpl";
+import type { Point } from "../geom/Point";
+import type { Rectangle } from "../geom/Rectangle";
+import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
+import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
 import {
     $clamp,
     $getArray,

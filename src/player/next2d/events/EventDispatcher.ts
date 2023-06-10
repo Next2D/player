@@ -1,9 +1,9 @@
 import { Event } from "./Event";
-import { Player } from "../../player/Player";
-import { EventListenerImpl } from "../../../interface/EventListenerImpl";
 import { EventPhase } from "./EventPhase";
 import { DisplayObject } from "../display/DisplayObject";
-import { DisplayObjectContainer } from "../display/DisplayObjectContainer";
+import type { Player } from "../../player/Player";
+import type { EventListenerImpl } from "../../../interface/EventListenerImpl";
+import type { DisplayObjectContainer } from "../display/DisplayObjectContainer";
 import { $setCurrentLoaderInfo } from "../../util/Global";
 import { $currentPlayer } from "../../util/Util";
 import {
@@ -298,12 +298,12 @@ export class EventDispatcher
             default:
                 {
 
-                    let events: EventListenerImpl[] | void;
+                    let events: EventListenerImpl[] | null = null;
                     if (this._$events
                         && this._$events.size
                         && this._$events.has(event.type)
                     ) {
-                        events = this._$events.get(event.type);
+                        events = this._$events.get(event.type) as NonNullable<EventListenerImpl[]>;
                         if (events) {
                             events = events.slice(0);
                         }

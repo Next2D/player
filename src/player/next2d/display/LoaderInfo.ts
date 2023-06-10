@@ -1,8 +1,8 @@
 import { EventDispatcher } from "../events/EventDispatcher";
+import type { URLLoaderDataFormatImpl } from "../../../interface/URLLoaderDataFormatImpl";
+import type { ParentImpl } from "../../../interface/ParentImpl";
+import type { LoaderInfoDataImpl } from "../../../interface/LoaderInfoDataImpl";
 import { $getLoaderInfoId } from "../../util/Global";
-import { URLLoaderDataFormatImpl } from "../../../interface/URLLoaderDataFormatImpl";
-import { ParentImpl } from "../../../interface/ParentImpl";
-import { LoaderInfoDataImpl } from "../../../interface/LoaderInfoDataImpl";
 
 /**
  * LoaderInfo クラスは、読み込まれる JSON ファイルやイメージファイル（JPEG、GIF、PNG ファイルなど）に関する情報を提供します。

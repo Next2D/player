@@ -1,15 +1,6 @@
-import { BoundsImpl } from "../../interface/BoundsImpl";
-import { RGBAImpl } from "../../interface/RGBAImpl";
-import { PreObjectImpl } from "../../interface/PreObjectImpl";
-import { BevelFilter } from "../next2d/filters/BevelFilter";
-import { BlurFilter } from "../next2d/filters/BlurFilter";
-import { ColorMatrixFilter } from "../next2d/filters/ColorMatrixFilter";
-import { ConvolutionFilter } from "../next2d/filters/ConvolutionFilter";
-import { DisplacementMapFilter } from "../next2d/filters/DisplacementMapFilter";
-import { DropShadowFilter } from "../next2d/filters/DropShadowFilter";
-import { GlowFilter } from "../next2d/filters/GlowFilter";
-import { GradientBevelFilter } from "../next2d/filters/GradientBevelFilter";
-import { GradientGlowFilter } from "../next2d/filters/GradientGlowFilter";
+import type { BoundsImpl } from "../../interface/BoundsImpl";
+import type { RGBAImpl } from "../../interface/RGBAImpl";
+import type { PreObjectImpl } from "../../interface/PreObjectImpl";
 
 /**
  * @type {number}
@@ -25,21 +16,6 @@ export const $getProgramId = (): number =>
 {
     return programId++;
 };
-
-/**
- * @type {array}
- */
-export const $filters = [
-    BevelFilter,
-    BlurFilter,
-    ColorMatrixFilter,
-    ConvolutionFilter,
-    DisplacementMapFilter,
-    DropShadowFilter,
-    GlowFilter,
-    GradientBevelFilter,
-    GradientGlowFilter
-];
 
 /**
  * @shortcut

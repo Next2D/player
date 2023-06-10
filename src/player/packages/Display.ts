@@ -1,25 +1,31 @@
+import { DisplayObject } from "../next2d/display/DisplayObject";
+import { InteractiveObject } from "../next2d/display/InteractiveObject";
+import { DisplayObjectContainer } from "../next2d/display/DisplayObjectContainer";
+import { Sprite } from "../next2d/display/Sprite";
+import { MovieClip } from "../next2d/display/MovieClip";
 import { BitmapData } from "../next2d/display/BitmapData";
 import { BlendMode } from "../next2d/display/BlendMode";
 import { FrameLabel } from "../next2d/display/FrameLabel";
 import { Graphics } from "../next2d/display/Graphics";
 import { Loader } from "../next2d/display/Loader";
 import { LoaderInfo } from "../next2d/display/LoaderInfo";
-import { MovieClip } from "../next2d/display/MovieClip";
 import { Shape } from "../next2d/display/Shape";
-import { Sprite } from "../next2d/display/Sprite";
 import { Stage } from "../next2d/display/Stage";
-import { DisplayImpl } from "../../interface/DisplayImpl";
+import type { DisplayImpl } from "../../interface/DisplayImpl";
 
 const display: DisplayImpl = {
+    DisplayObject,
+    InteractiveObject,
+    DisplayObjectContainer,
+    Sprite,
+    MovieClip,
     BitmapData,
     BlendMode,
     FrameLabel,
     Graphics,
     Loader,
     LoaderInfo,
-    MovieClip,
     Shape,
-    Sprite,
     Stage
 };
 

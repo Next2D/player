@@ -7,7 +7,7 @@ import { DropShadowFilter } from "../next2d/filters/DropShadowFilter";
 import { GlowFilter } from "../next2d/filters/GlowFilter";
 import { GradientBevelFilter } from "../next2d/filters/GradientBevelFilter";
 import { GradientGlowFilter } from "../next2d/filters/GradientGlowFilter";
-import { FiltersImpl } from "../../interface/FiltersImpl";
+import type { FiltersImpl } from "../../interface/FiltersImpl";
 
 const filters: FiltersImpl = {
     BevelFilter,

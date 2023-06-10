@@ -7,7 +7,7 @@ import { IOErrorEvent } from "../next2d/events/IOErrorEvent";
 import { MouseEvent } from "../next2d/events/MouseEvent";
 import { ProgressEvent } from "../next2d/events/ProgressEvent";
 import { VideoEvent } from "../next2d/events/VideoEvent";
-import { EventsImpl } from "../../interface/EventsImpl";
+import type { EventsImpl } from "../../interface/EventsImpl";
 
 const events: EventsImpl = {
     Event,

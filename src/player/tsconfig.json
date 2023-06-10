@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": false,
-    "target": "es6",
+    "target": "esnext",
     "lib": ["es6", "dom"],
     "module": "esnext",
     "moduleResolution": "node",

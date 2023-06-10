@@ -1,5 +1,5 @@
-import { BitmapData } from "./BitmapData";
-import { Matrix } from "../geom/Matrix";
+import type { BitmapData } from "./BitmapData";
+import type { Matrix } from "../geom/Matrix";
 import { $getArray } from "../../util/RenderUtil";
 
 /**

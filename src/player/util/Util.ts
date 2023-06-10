@@ -1,20 +1,20 @@
 import { Matrix } from "../next2d/geom/Matrix";
 import { ColorTransform } from "../next2d/geom/ColorTransform";
 import { DisplayObjectContainer } from "../next2d/display/DisplayObjectContainer";
-import { Sound } from "../next2d/media/Sound";
-import { DragRulesImpl } from "../../interface/DragRulesImpl";
-import { AjaxOptionImpl } from "../../interface/AjaxOptionImpl";
 import { URLRequestHeader } from "../next2d/net/URLRequestHeader";
 import { Player } from "../player/Player";
-import { UnzipQueueImpl } from "../../interface/UnzipQueueImpl";
-import { ImageTypeImpl } from "../../interface/ImageTypeImpl";
-import { DropTargetImpl } from "../../interface/DropTargetImpl";
 import { Point } from "../next2d/geom/Point";
 import { Event as Next2DEvent } from "../next2d/events/Event";
-import { ParentImpl } from "../../interface/ParentImpl";
 import { Stage } from "../next2d/display/Stage";
-import { BitmapDrawObjectImpl } from "../../interface/BitmapDrawObjectImpl";
 import { Next2D } from "../player/Next2D";
+import type { Sound } from "../next2d/media/Sound";
+import type { DragRulesImpl } from "../../interface/DragRulesImpl";
+import type { AjaxOptionImpl } from "../../interface/AjaxOptionImpl";
+import type { UnzipQueueImpl } from "../../interface/UnzipQueueImpl";
+import type { ImageTypeImpl } from "../../interface/ImageTypeImpl";
+import type { DropTargetImpl } from "../../interface/DropTargetImpl";
+import type { ParentImpl } from "../../interface/ParentImpl";
+import type { BitmapDrawObjectImpl } from "../../interface/BitmapDrawObjectImpl";
 import {
     $document,
     $window,
@@ -879,10 +879,20 @@ export let $postContainerWorker: Function|null = null;
 
 /**
  * @type {string}
+ * @private
+ */
+// const $UNZIP_WORKER_SOURCE = require("../../worker/UnzipWorker.min.js");
+// console.log($UNZIP_WORKER_SOURCE);
+// .replace(/\\/g, "\\\\")
+// .replace(/"/g, "\\\"")
+// .replace(/\n/g, "");
+
+/**
+ * @type {string}
  * @static
  */
 const $unzipURL = URL.createObjectURL(
-    new Blob(["###UNZIP_WORKER###"], { "type": "text/javascript" })
+    new Blob([""], { "type": "text/javascript" })
 );
 
 /**

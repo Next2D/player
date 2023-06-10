@@ -1,30 +1,27 @@
 import { InteractiveObject } from "./InteractiveObject";
-import { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
-import { PlaceObjectImpl } from "../../../interface/PlaceObjectImpl";
-import { CacheStore } from "../../util/CacheStore";
-import { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
-import { Player } from "../../player/Player";
 import { Event as Next2DEvent } from "../events/Event";
-import { Stage } from "./Stage";
-import { BoundsImpl } from "../../../interface/BoundsImpl";
-import { Graphics } from "./Graphics";
-import { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
 import { Rectangle } from "../geom/Rectangle";
-import { LoopConfigImpl } from "../../../interface/LoopConfigImpl";
-import { ParentImpl } from "../../../interface/ParentImpl";
-import { Sound } from "../media/Sound";
-import { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
-import { PreObjectImpl } from "../../../interface/PreObjectImpl";
-import { AttachmentImpl } from "../../../interface/AttachmentImpl";
-import { FrameBufferManager } from "../../../webgl/FrameBufferManager";
-import { BlendModeImpl } from "../../../interface/BlendModeImpl";
-import { PlayerHitObjectImpl } from "../../../interface/PlayerHitObjectImpl";
-import { TextField } from "../text/TextField";
-import { Sprite } from "./Sprite";
-import { LoaderInfo } from "./LoaderInfo";
-import { Character } from "../../../interface/Character";
-import { PropertyMessageMapImpl } from "../../../interface/PropertyMessageMapImpl";
-import { PropertyContainerMessageImpl } from "../../../interface/PropertyContainerMessageImpl";
+import type { LoaderInfo } from "./LoaderInfo";
+import type { Graphics } from "./Graphics";
+import type { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
+import type { PlaceObjectImpl } from "../../../interface/PlaceObjectImpl";
+import type { CacheStore } from "../../util/CacheStore";
+import type { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
+import type { Player } from "../../player/Player";
+import type { BoundsImpl } from "../../../interface/BoundsImpl";
+import type { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
+import type { LoopConfigImpl } from "../../../interface/LoopConfigImpl";
+import type { ParentImpl } from "../../../interface/ParentImpl";
+import type { Sound } from "../media/Sound";
+import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
+import type { PreObjectImpl } from "../../../interface/PreObjectImpl";
+import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
+import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
+import type { BlendModeImpl } from "../../../interface/BlendModeImpl";
+import type { PlayerHitObjectImpl } from "../../../interface/PlayerHitObjectImpl";
+import type { Character } from "../../../interface/Character";
+import type { PropertyMessageMapImpl } from "../../../interface/PropertyMessageMapImpl";
+import type { PropertyContainerMessageImpl } from "../../../interface/PropertyContainerMessageImpl";
 import { $doUpdated } from "../../util/Global";
 import {
     $currentPlayer,
@@ -934,16 +931,9 @@ export class DisplayObjectContainer extends InteractiveObject
     {
         // init
         child._$parent = this;
-        if (this.constructor === Stage) {
-
-            child._$stage = this;
-            child._$root  = child;
-
-        } else {
-
+        if (!child._$stage || !child._$root) {
             child._$stage = this._$stage;
             child._$root  = this._$root;
-
         }
 
         // setup
@@ -2137,13 +2127,15 @@ export class DisplayObjectContainer extends InteractiveObject
 
                     if (!$isTouch && !options.pointer) {
 
-                        if (instance instanceof TextField
+                        if ("_$text" in instance
+                            && "type" in instance
                             && instance.type === "input"
                         ) {
                             options.pointer = "text";
                         }
 
-                        if (instance instanceof Sprite
+                        if ("buttonMode" in instance
+                            && "useHandCursor" in instance
                             && instance.buttonMode
                             && instance.useHandCursor
                         ) {

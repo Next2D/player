@@ -1,9 +1,9 @@
-import { URLRequestMethodImpl } from "../../../interface/URLRequestMethodImpl";
-import { URLLoaderDataFormatImpl } from "../../../interface/URLLoaderDataFormatImpl";
 import { URLRequestHeader } from "./URLRequestHeader";
+import type { URLRequestMethodImpl } from "../../../interface/URLRequestMethodImpl";
+import type { URLLoaderDataFormatImpl } from "../../../interface/URLLoaderDataFormatImpl";
+import type { Player } from "../../player/Player";
 import { $getArray } from "../../util/RenderUtil";
 import { $currentPlayer } from "../../util/Util";
-import { Player } from "../../player/Player";
 
 /**
  * URLRequestクラスは、外部へのリクエストを管理するクラスです

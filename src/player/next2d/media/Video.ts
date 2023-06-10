@@ -1,19 +1,19 @@
 import { DisplayObject } from "../display/DisplayObject";
 import { VideoEvent } from "../events/VideoEvent";
 import { SoundMixer } from "./SoundMixer";
-import { Player } from "../../player/Player";
-import { BoundsImpl } from "../../../interface/BoundsImpl";
-import { VideoCharacterImpl } from "../../../interface/VideoCharacterImpl";
-import { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
-import { ParentImpl } from "../../../interface/ParentImpl";
-import { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
-import { FrameBufferManager } from "../../../webgl/FrameBufferManager";
-import { AttachmentImpl } from "../../../interface/AttachmentImpl";
-import { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
 import { Rectangle } from "../geom/Rectangle";
-import { BlendModeImpl } from "../../../interface/BlendModeImpl";
-import { PlayerHitObjectImpl } from "../../../interface/PlayerHitObjectImpl";
-import { PropertyVideoMessageImpl } from "../../../interface/PropertyVideoMessageImpl";
+import type { Player } from "../../player/Player";
+import type { BoundsImpl } from "../../../interface/BoundsImpl";
+import type { VideoCharacterImpl } from "../../../interface/VideoCharacterImpl";
+import type { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
+import type { ParentImpl } from "../../../interface/ParentImpl";
+import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
+import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
+import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
+import type { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
+import type { BlendModeImpl } from "../../../interface/BlendModeImpl";
+import type { PlayerHitObjectImpl } from "../../../interface/PlayerHitObjectImpl";
+import type { PropertyVideoMessageImpl } from "../../../interface/PropertyVideoMessageImpl";
 import { $document } from "../../util/Shortcut";
 import {
     $audioContext,

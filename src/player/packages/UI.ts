@@ -1,7 +1,7 @@
 import { Easing } from "../next2d/ui/Easing";
 import { Job } from "../next2d/ui/Job";
 import { Tween } from "../next2d/ui/Tween";
-import { UIImpl } from "../../interface/UIImpl";
+import type { UIImpl } from "../../interface/UIImpl";
 
 const ui: UIImpl = {
     Easing,

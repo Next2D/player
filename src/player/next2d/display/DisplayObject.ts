@@ -1,30 +1,28 @@
 import { EventDispatcher } from "../events/EventDispatcher";
-import { Stage } from "./Stage";
-import { Rectangle } from "../geom/Rectangle";
-import { DisplayObjectContainer } from "./DisplayObjectContainer";
-import { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
-import { BlendModeImpl } from "../../../interface/BlendModeImpl";
 import { Transform } from "../geom/Transform";
-import { Sprite } from "./Sprite";
-import { ParentImpl } from "../../../interface/ParentImpl";
-import { ColorTransform } from "../geom/ColorTransform";
-import { PlaceObjectImpl }  from "../../../interface/PlaceObjectImpl";
-import { BoundsImpl } from "../../../interface/BoundsImpl";
-import { LoaderInfo } from "./LoaderInfo";
-import { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
-import { PropertyMessageMapImpl } from "../../../interface/PropertyMessageMapImpl";
-import { Player } from "../../player/Player";
-import { CacheStore } from "../../util/CacheStore";
-import { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
-import { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
-import { Matrix } from "../geom/Matrix";
+import { Rectangle } from "../geom/Rectangle";
 import { Point } from "../geom/Point";
-import { Character } from "../../../interface/Character";
 import { Event as Next2DEvent } from "../events/Event";
-import { FrameBufferManager } from "../../../webgl/FrameBufferManager";
-import { AttachmentImpl } from "../../../interface/AttachmentImpl";
-import { TextField } from "../text/TextField";
-import { PropertyMessageImpl } from "../../../interface/PropertyMessageImpl";
+import type { Stage } from "./Stage";
+import type { LoaderInfo } from "./LoaderInfo";
+import type { Sprite } from "./Sprite";
+import type { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
+import type { BlendModeImpl } from "../../../interface/BlendModeImpl";
+import type { ParentImpl } from "../../../interface/ParentImpl";
+import type { ColorTransform } from "../geom/ColorTransform";
+import type { PlaceObjectImpl }  from "../../../interface/PlaceObjectImpl";
+import type { BoundsImpl } from "../../../interface/BoundsImpl";
+import type { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
+import type { PropertyMessageMapImpl } from "../../../interface/PropertyMessageMapImpl";
+import type { Player } from "../../player/Player";
+import type { CacheStore } from "../../util/CacheStore";
+import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
+import type { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
+import type { Matrix } from "../geom/Matrix";
+import type { Character } from "../../../interface/Character";
+import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
+import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
+import type { PropertyMessageImpl } from "../../../interface/PropertyMessageImpl";
 import {
     $doUpdated,
     $getCurrentLoaderInfo,
@@ -996,11 +994,6 @@ export class DisplayObject extends EventDispatcher
         // find parent
         const parent: ParentImpl<any> | null = this._$parent;
         if (parent) {
-
-            if (parent instanceof Stage) {
-                return parent;
-            }
-
             return parent._$stage;
         }
 
@@ -2079,13 +2072,6 @@ export class DisplayObject extends EventDispatcher
      */
     _$shouldClip (matrix: Float32Array): boolean
     {
-        if (this instanceof TextField) {
-            if (!this.textWidth || !this.textHeight) {
-                return false;
-            }
-            return true;
-        }
-
         const bounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
             ? this._$getBounds(matrix) as BoundsImpl
             : $getBoundsObject();
@@ -2095,11 +2081,7 @@ export class DisplayObject extends EventDispatcher
         $poolBoundsObject(bounds);
 
         // size 0
-        if (!width || !height) {
-            return false;
-        }
-
-        return true;
+        return !(!width || !height);
     }
 
     /**
@@ -2156,7 +2138,7 @@ export class DisplayObject extends EventDispatcher
         context._$beginClipDef();
 
         let containerClip = false;
-        if (this instanceof DisplayObjectContainer) {
+        if ("_$children" in this) {
             containerClip = true;
             context._$updateContainerClipFlag(true);
         }

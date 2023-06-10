@@ -4,12 +4,12 @@ import { SoundMixer } from "./SoundMixer";
 import { Event as Next2DEvent } from "../events/Event";
 import { IOErrorEvent } from "../events/IOErrorEvent";
 import { ProgressEvent as Next2DProgressEvent } from "../events/ProgressEvent";
-import { DisplayObjectContainer } from "../display/DisplayObjectContainer";
-import { SoundTagImpl } from "../../../interface/SoundTagImpl";
-import { Player } from "../../player/Player";
-import { SoundCharacterImpl } from "../../../interface/SoundCharacterImpl";
-import { LoaderInfo } from "../display/LoaderInfo";
-import { Character } from "../../../interface/Character";
+import type { DisplayObjectContainer } from "../display/DisplayObjectContainer";
+import type { SoundTagImpl } from "../../../interface/SoundTagImpl";
+import type { Player } from "../../player/Player";
+import type { SoundCharacterImpl } from "../../../interface/SoundCharacterImpl";
+import type { LoaderInfo } from "../display/LoaderInfo";
+import type { Character } from "../../../interface/Character";
 import {
     $Math,
     $performance,
