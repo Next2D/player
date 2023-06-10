@@ -1,8 +1,17 @@
 {
   "env": {
-    "es6": true
+    "es6": true,
+    "jest": true
   },
-  "extends": "eslint:recommended",
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": "latest"
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
   "rules": {
     "no-var": "error",
     "semi": ["error", "always", { "omitLastInOneLineBlock": true }],

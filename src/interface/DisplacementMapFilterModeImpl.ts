@@ -1,0 +1,1 @@
+export type DisplacementMapFilterModeImpl = "clamp" | "color" | "ignore" | "wrap";

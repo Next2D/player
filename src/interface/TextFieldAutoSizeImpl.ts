@@ -1,0 +1,1 @@
+export type TextFieldAutoSizeImpl = "center" | "left" | "none" | "right";

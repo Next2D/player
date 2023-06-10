@@ -1,0 +1,1 @@
+export type TextFormatAlignImpl = "center" | "left" | "right";

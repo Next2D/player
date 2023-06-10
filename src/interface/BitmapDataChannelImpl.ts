@@ -1,0 +1,1 @@
+export type BitmapDataChannelImpl = 8 | 4 | 2 | 0;
