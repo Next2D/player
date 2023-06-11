@@ -860,13 +860,13 @@ export class MovieClip extends Sprite
         super._$draw(context, matrix, color_transform);
 
         // set sound
-        const player: Player = $currentPlayer();
-
         if (this._$canSound && this._$sounds.size
             && this._$sounds.has(this._$currentFrame)
-            && !player._$sounds.has(this._$instanceId)
         ) {
-            player._$sounds.set(this._$instanceId, this);
+            const player: Player = $currentPlayer();
+            if (!player._$sounds.has(this._$instanceId)) {
+                player._$sounds.set(this._$instanceId, this);
+            }
         }
     }
 
@@ -1147,38 +1147,44 @@ export class MovieClip extends Sprite
      */
     _$buildCharacter (character: MovieClipCharacterImpl)
     {
-        for (let idx: number = 0; idx < character.sounds.length; ++idx) {
+        if (character.sounds) {
+            for (let idx: number = 0; idx < character.sounds.length; ++idx) {
 
-            const object: MovieClipSoundObjectImpl = character.sounds[idx];
+                const object: MovieClipSoundObjectImpl = character.sounds[idx];
 
-            const sounds: Sound[] = $getArray();
-            for (let idx: number = 0; idx < object.sound.length; ++idx) {
+                const sounds: Sound[] = $getArray();
+                for (let idx: number = 0; idx < object.sound.length; ++idx) {
 
-                const sound: Sound = new Sound();
-                sound._$build(object.sound[idx], this);
+                    const sound: Sound = new Sound();
+                    sound._$build(object.sound[idx], this);
 
-                sounds.push(sound);
+                    sounds.push(sound);
+                }
+
+                this._$sounds.set(object.frame, sounds);
             }
-
-            this._$sounds.set(object.frame, sounds);
         }
 
-        for (let idx: number = 0; idx < character.actions.length; ++idx) {
+        if (character.actions) {
+            for (let idx: number = 0; idx < character.actions.length; ++idx) {
 
-            const object: MovieClipActionObjectImpl = character.actions[idx];
-            if (!object.script) {
-                object.script = Function(object.action);
+                const object: MovieClipActionObjectImpl = character.actions[idx];
+                if (!object.script) {
+                    object.script = Function(object.action);
+                }
+
+                this._$addAction(object.frame, object.script);
             }
-
-            this._$addAction(object.frame, object.script);
         }
 
-        for (let idx: number = 0; idx < character.labels.length; ++idx) {
+        if (character.labels) {
+            for (let idx: number = 0; idx < character.labels.length; ++idx) {
 
-            const label: MovieClipLabelObjectImpl = character.labels[idx];
+                const label: MovieClipLabelObjectImpl = character.labels[idx];
 
-            this.addFrameLabel(new FrameLabel(label.name, label.frame));
+                this.addFrameLabel(new FrameLabel(label.name, label.frame));
 
+            }
         }
 
         this._$totalFrames = character.totalFrame || 1;

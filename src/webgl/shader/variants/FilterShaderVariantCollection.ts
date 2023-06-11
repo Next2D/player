@@ -1,13 +1,16 @@
 import { CanvasToWebGLShader } from "../CanvasToWebGLShader";
-import { WebGLShaderUniform } from "../WebGLShaderUniform";
-import { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 import { VertexShaderSource } from "../vertex/VertexShaderSource";
 import { FragmentShaderSourceFilter } from "../fragment/filter/FragmentShaderSourceFilter";
 import { FragmentShaderSourceBlurFilter } from "../fragment/filter/FragmentShaderSourceBlurFilter";
 import { FragmentShaderSourceColorMatrixFilter } from "../fragment/filter/FragmentShaderSourceColorMatrixFilter";
 import { FragmentShaderSourceConvolutionFilter } from "../fragment/filter/FragmentShaderSourceConvolutionFilter";
 import { FragmentShaderSourceDisplacementMapFilter } from "../fragment/filter/FragmentShaderSourceDisplacementMapFilter";
-import { $Math, $getMap } from "../../../player/util/RenderUtil";
+import type { WebGLShaderUniform } from "../WebGLShaderUniform";
+import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
+import {
+    $Math,
+    $getMap
+} from "../../../player/util/RenderUtil";
 
 /**
  * @class

@@ -1,9 +1,9 @@
 import { CanvasToWebGLShader } from "../CanvasToWebGLShader";
-import { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 import { VertexShaderSource } from "../vertex/VertexShaderSource";
 import { FragmentShaderSourceTexture } from "../fragment/FragmentShaderSourceTexture";
 import { FragmentShaderSourceBlend } from "../fragment/FragmentShaderSourceBlend";
-import { WebGLShaderUniform } from "../WebGLShaderUniform";
+import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
+import type { WebGLShaderUniform } from "../WebGLShaderUniform";
 import { $getMap } from "../../../player/util/RenderUtil";
 
 /**

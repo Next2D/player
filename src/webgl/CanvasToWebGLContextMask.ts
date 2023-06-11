@@ -1,13 +1,13 @@
-import { CanvasToWebGLContext } from "./CanvasToWebGLContext";
-import { FrameBufferManager } from "./FrameBufferManager";
-import { AttachmentImpl } from "../interface/AttachmentImpl";
-import { ClipObjectImpl } from "../interface/ClipObjectImpl";
-import { BoundsImpl } from "../interface/BoundsImpl";
-import { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
-import { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
-import { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
-import { IndexRangeImpl } from "../interface/IndexRangeImpl";
 import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
+import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
+import type { FrameBufferManager } from "./FrameBufferManager";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { ClipObjectImpl } from "../interface/ClipObjectImpl";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
+import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
+import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
+import type { IndexRangeImpl } from "../interface/IndexRangeImpl";
 import { $poolArray } from "../player/util/RenderUtil";
 
 /**
@@ -144,6 +144,7 @@ export class CanvasToWebGLContextMask
     {
         const manager: FrameBufferManager = this._$context.frameBuffer;
 
+        const currentAttachment: AttachmentImpl = manager.currentAttachment as NonNullable<AttachmentImpl>;
         const texture: WebGLTexture = manager.getTextureFromCurrentAttachment();
 
         this._$context._$bind(this._$context.cacheAttachment);
@@ -165,7 +166,7 @@ export class CanvasToWebGLContextMask
         // blend restart
         this._$context.blend.enable();
 
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+        // pool
         manager.releaseAttachment(currentAttachment, true);
     }
 
@@ -335,7 +336,7 @@ export class CanvasToWebGLContextMask
 
         this._$context.vao.releaseFill(object);
 
-        this._$context._$endClipDef();
+        this._$endClipDef();
     }
 
     /**

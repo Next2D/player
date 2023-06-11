@@ -1,8 +1,8 @@
-import { CanvasToWebGLContext } from "./CanvasToWebGLContext";
-import { BlendModeImpl } from "../interface/BlendModeImpl";
-import { FrameBufferManager } from "./FrameBufferManager";
-import { AttachmentImpl } from "../interface/AttachmentImpl";
-import { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
+import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
+import type { BlendModeImpl } from "../interface/BlendModeImpl";
+import type { FrameBufferManager } from "./FrameBufferManager";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import {
     $Math,
     $Number,

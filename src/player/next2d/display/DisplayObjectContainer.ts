@@ -22,12 +22,14 @@ import type { PlayerHitObjectImpl } from "../../../interface/PlayerHitObjectImpl
 import type { Character } from "../../../interface/Character";
 import type { PropertyMessageMapImpl } from "../../../interface/PropertyMessageMapImpl";
 import type { PropertyContainerMessageImpl } from "../../../interface/PropertyContainerMessageImpl";
+import type { Transform } from "../geom/Transform";
 import { $doUpdated } from "../../util/Global";
 import {
     $currentPlayer,
     $getClass,
     $hitContext,
     $isTouch,
+    $MATRIX_HIT_ARRAY_IDENTITY,
     $rendererWorker
 } from "../../util/Util";
 import {
@@ -40,6 +42,7 @@ import {
     $getMap,
     $getPreObject,
     $Math,
+    $COLOR_ARRAY_IDENTITY,
     $MATRIX_ARRAY_IDENTITY,
     $multiplicationColor,
     $multiplicationMatrix,
@@ -1354,11 +1357,20 @@ export class DisplayObjectContainer extends InteractiveObject
         matrix: Float32Array
     ): PreObjectImpl | null {
 
-        const originMatrix: Float32Array = this._$transform._$rawMatrix();
-        const tMatrix: Float32Array = $multiplicationMatrix(matrix, originMatrix);
+        let multiMatrix: Float32Array = matrix;
+        const rawMatrix: Float32Array = this._$transform._$rawMatrix();
+        if (rawMatrix !== $MATRIX_HIT_ARRAY_IDENTITY
+            && rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
+            multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
+        }
 
         // size zero
-        if (!tMatrix[0] && !tMatrix[1] || !tMatrix[2] && !tMatrix[3]) {
+        if (!multiMatrix[0] && !multiMatrix[1]
+            || !multiMatrix[2] && !multiMatrix[3]
+        ) {
             return null;
         }
 
@@ -1366,7 +1378,7 @@ export class DisplayObjectContainer extends InteractiveObject
         const object: PreObjectImpl = $getPreObject();
 
         // setup
-        object.matrix = tMatrix;
+        object.matrix = multiMatrix;
 
         // check
         const filters   = this._$filters   || this.filters;
@@ -1375,7 +1387,7 @@ export class DisplayObjectContainer extends InteractiveObject
 
             // check size
             const baseBounds: BoundsImpl = this._$getBounds(null);
-            const bounds: BoundsImpl = $boundsMatrix(baseBounds, tMatrix);
+            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
             const xMax: number = +bounds.xMax;
             const xMin: number = +bounds.xMin;
             const yMax: number = +bounds.yMax;
@@ -1404,16 +1416,17 @@ export class DisplayObjectContainer extends InteractiveObject
                 || xMin > currentAttachment.width
                 || yMin > currentAttachment.height
             ) {
+                $poolPreObject(object);
                 return null;
             }
 
             // set origin position
-            object.basePosition.x = originMatrix[4];
-            object.basePosition.y = originMatrix[5];
+            object.basePosition.x = rawMatrix[4];
+            object.basePosition.y = rawMatrix[5];
 
             // check after size
             const baseLayerBounds: BoundsImpl = this._$getLayerBounds(null);
-            const layerBounds: BoundsImpl = $boundsMatrix(baseLayerBounds, tMatrix);
+            const layerBounds: BoundsImpl = $boundsMatrix(baseLayerBounds, multiMatrix);
 
             // filter size
             let layerWidth: number  = $Math.abs(layerBounds.xMax - layerBounds.xMin);
@@ -1421,8 +1434,8 @@ export class DisplayObjectContainer extends InteractiveObject
             $poolBoundsObject(layerBounds);
 
             // move size
-            let tx: number = tMatrix[4] - $Math.floor(xMin);
-            let ty: number = tMatrix[5] - $Math.floor(yMin);
+            let tx: number = multiMatrix[4] - $Math.floor(xMin);
+            let ty: number = multiMatrix[5] - $Math.floor(yMin);
 
             let dx: number = $Math.floor(xMin);
             let dy: number = $Math.floor(yMin);
@@ -1432,7 +1445,9 @@ export class DisplayObjectContainer extends InteractiveObject
             if (layerWidth !== width || layerHeight !== height) {
 
                 const layerMatrix: Float32Array = $getFloat32Array6(
-                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], 0, 0
+                    multiMatrix[0], multiMatrix[1],
+                    multiMatrix[2], multiMatrix[3],
+                    0, 0
                 );
 
                 const moveBounds: BoundsImpl = $boundsMatrix(baseLayerBounds, layerMatrix);
@@ -1443,11 +1458,11 @@ export class DisplayObjectContainer extends InteractiveObject
                 tx += -$Math.floor(moveBounds.xMin) - tx;
                 ty += -$Math.floor(moveBounds.yMin) - ty;
 
-                dx -= -$Math.floor(moveBounds.xMin) - (tMatrix[4] - dx);
-                dy -= -$Math.floor(moveBounds.yMin) - (tMatrix[5] - dy);
+                dx -= -$Math.floor(moveBounds.xMin) - (multiMatrix[4] - dx);
+                dy -= -$Math.floor(moveBounds.yMin) - (multiMatrix[5] - dy);
 
-                originX -= -moveBounds.xMin - (tMatrix[4] - originX);
-                originY -= -moveBounds.yMin - (tMatrix[5] - originY);
+                originX -= -moveBounds.xMin - (multiMatrix[4] - originX);
+                originY -= -moveBounds.yMin - (multiMatrix[5] - originY);
 
                 $poolBoundsObject(moveBounds);
             }
@@ -1492,7 +1507,7 @@ export class DisplayObjectContainer extends InteractiveObject
             // check cache
             object.canApply = this._$canApply(filters);
             const updated: boolean = this._$isFilterUpdated(
-                layerWidth, layerHeight, tMatrix, filters,
+                layerWidth, layerHeight, multiMatrix, filters,
                 object.canApply, object.basePosition.x, object.basePosition.y
             );
 
@@ -1511,13 +1526,15 @@ export class DisplayObjectContainer extends InteractiveObject
             object.isFilter    = true;
             object.isUpdated   = updated;
             object.color       = $getFloat32Array8();
-            object.baseMatrix  = tMatrix;
+            object.baseMatrix  = multiMatrix;
             object.filters     = filters;
             object.blendMode   = blendMode;
             object.layerWidth  = layerWidth;
             object.layerHeight = layerHeight;
             object.matrix      = $getFloat32Array6(
-                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tx, ty
+                multiMatrix[0], multiMatrix[1],
+                multiMatrix[2], multiMatrix[3],
+                tx, ty
             );
         }
 
@@ -1692,9 +1709,12 @@ export class DisplayObjectContainer extends InteractiveObject
             return ;
         }
 
+        const transform: Transform = this._$transform;
+
         let multiColor: Float32Array = color_transform;
-        const rawColor: Float32Array = this._$transform._$rawColorTransform();
-        if (rawColor[0] !== 1 || rawColor[1] !== 1
+        const rawColor: Float32Array = transform._$rawColorTransform();
+        if (rawColor !== $COLOR_ARRAY_IDENTITY
+            && rawColor[0] !== 1 || rawColor[1] !== 1
             || rawColor[2] !== 1 || rawColor[3] !== 1
             || rawColor[4] !== 0 || rawColor[5] !== 0
             || rawColor[6] !== 0 || rawColor[7] !== 0
@@ -1734,9 +1754,7 @@ export class DisplayObjectContainer extends InteractiveObject
             return ;
         }
 
-        let preMatrix: Float32Array = preObject.matrix
-            ? preObject.matrix
-            : matrix;
+        let preMatrix: Float32Array = preObject.matrix as NonNullable<Float32Array>;
 
         const preColorTransform: Float32Array = preObject.isFilter && preObject.color
             ? preObject.color
@@ -1761,7 +1779,7 @@ export class DisplayObjectContainer extends InteractiveObject
         // draw children
         const isLayer: boolean  = context.isLayer;
         const isUpdate: boolean = this._$isUpdated();
-        for (let idx = 0; idx < length; ++idx) {
+        for (let idx: number = 0; idx < length; ++idx) {
 
             const instance = children[idx];
 
@@ -1826,7 +1844,9 @@ export class DisplayObjectContainer extends InteractiveObject
                 shouldClip = instance._$shouldClip(preMatrix);
                 if (shouldClip) {
 
-                    const adjMatrix: Float32Array | boolean | null = instance._$startClip(context, preMatrix);
+                    const adjMatrix: Float32Array | boolean | null
+                        = instance._$startClip(context, preMatrix);
+
                     if (adjMatrix === false) { // fixed
                         shouldClip = false;
                         continue;
@@ -1910,11 +1930,11 @@ export class DisplayObjectContainer extends InteractiveObject
                     instanceMatrix.push(preMatrix);
 
                     if (this !== maskInstance._$parent) {
-                        const maskTargetParentMatrix = this._$transform._$rawMatrix();
-                        adjMatrix[0] = $Math.abs(preMatrix[0]) * $Math.sign(maskTargetParentMatrix[0]);
-                        adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(maskTargetParentMatrix[1]);
-                        adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(maskTargetParentMatrix[2]);
-                        adjMatrix[3] = $Math.abs(preMatrix[3]) * $Math.sign(maskTargetParentMatrix[3]);
+                        const rawMatrix: Float32Array = transform._$rawMatrix();
+                        adjMatrix[0] = $Math.abs(preMatrix[0]) * $Math.sign(rawMatrix[0]);
+                        adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(rawMatrix[1]);
+                        adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(rawMatrix[2]);
+                        adjMatrix[3] = $Math.abs(preMatrix[3]) * $Math.sign(rawMatrix[3]);
                         adjMatrix[4] = preMatrix[4] - context.cacheBounds.xMin;
                         adjMatrix[5] = preMatrix[5] - context.cacheBounds.yMin;
                     }
@@ -1968,12 +1988,15 @@ export class DisplayObjectContainer extends InteractiveObject
             return this._$postDraw(context, matrix, multiColor, preObject);
         }
 
-        $poolFloat32Array6(preMatrix);
-        $poolPreObject(preObject);
+        if (preObject.matrix !== matrix) {
+            $poolFloat32Array6(preObject.matrix as NonNullable<Float32Array>);
+        }
 
         if (multiColor !== color_transform) {
             $poolFloat32Array8(multiColor);
         }
+
+        $poolPreObject(preObject);
     }
 
     /**

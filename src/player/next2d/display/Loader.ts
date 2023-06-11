@@ -16,11 +16,11 @@ import {
     $ajax,
     $headerToArray,
     $unzipQueues,
-    $canUnzipWorker,
     $updateUnzipWorkerStatus,
     $getUnzipWorker,
     $getClass,
-    $currentPlayer
+    $currentPlayer,
+    $useUnzipWorker
 } from "../../util/Util";
 import { $getMap } from "../../util/RenderUtil";
 
@@ -230,7 +230,7 @@ export class Loader extends DisplayObjectContainer
 
                 if (json.type === "zlib") {
 
-                    if (!$canUnzipWorker()) {
+                    if ($useUnzipWorker()) {
 
                         $unzipQueues.push({
                             "json": json,
@@ -245,7 +245,7 @@ export class Loader extends DisplayObjectContainer
                     const unzipWorker = $getUnzipWorker();
 
                     const buffer: Uint8Array = new Uint8Array(json.buffer);
-                    unzipWorker.onmessage = (event: MessageEvent) =>
+                    unzipWorker.onmessage = async (event: MessageEvent) =>
                     {
                         this._$unzipHandler(event);
                     };
@@ -430,12 +430,10 @@ export class Loader extends DisplayObjectContainer
         loaderInfo._$content._$added      = false;
         loaderInfo._$content._$addedStage = false;
 
-        const player: Player = $currentPlayer();
-
         // to event
+        const player: Player = $currentPlayer();
         player._$loaders.push(loaderInfo);
 
-        // next
         if (player._$loadStatus === 1) { // LOAD_START
             player._$loadStatus = 2; // LOAD_END
         }

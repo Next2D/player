@@ -1,10 +1,10 @@
 import { CanvasToWebGLShader } from "../CanvasToWebGLShader";
-import { WebGLShaderUniform } from "../WebGLShaderUniform";
 import { VertexShaderSourceStroke } from "../vertex/VertexShaderSourceStroke";
 import { VertexShaderSourceFill } from "../vertex/VertexShaderSourceFill";
 import { FragmentShaderSource } from "../fragment/FragmentShaderSource";
-import { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
-import { CanvasToWebGLContextGrid } from "../../CanvasToWebGLContextGrid";
+import type { WebGLShaderUniform } from "../WebGLShaderUniform";
+import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
+import type { CanvasToWebGLContextGrid } from "../../CanvasToWebGLContextGrid";
 import { $getMap } from "../../../player/util/RenderUtil";
 
 /**

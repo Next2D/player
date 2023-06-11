@@ -12,7 +12,7 @@ export class WebGLFillMeshGenerator
 {
     private static _$vertexBufferData: Float32Array;
     private static _$indexRanges: IndexRangeImpl[];
-    private static _$indexRangePool: IndexRangeImpl[];
+    private static _$indexRangePool: IndexRangeImpl[] = $getArray();
     private static _$currentIndex: number;
 
     /**
@@ -21,7 +21,7 @@ export class WebGLFillMeshGenerator
      */
     static get indexRangePool ()
     {
-        return WebGLFillMeshGenerator._$indexRangePool;
+        return this._$indexRangePool;
     }
 
     /**

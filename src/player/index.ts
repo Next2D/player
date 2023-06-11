@@ -1,39 +1,43 @@
 "use strict";
 
 import { $initialize } from "./util/Util";
+import { Next2D } from "./player/Next2D";
 
 if (!("next2d" in window)) {
 
     // output build version
-    const packageJson = require("../../package.json");
-    console.log(`%c Next2D Player %c ${packageJson.version} %c https://next2d.app`,
+    console.log("%c Next2D Player %c 2.0.0 %c https://next2d.app",
         "color: #fff; background: #5f5f5f",
         "color: #fff; background: #4bc729",
         "");
 
-    if (document.readyState === "loading") {
+    // @ts-ignore
+    window.next2d = new Next2D([new Promise((resolve) =>
+    {
+        if (document.readyState === "loading") {
 
-        const initialize = (): void =>
-        {
-            window.removeEventListener("DOMContentLoaded", initialize);
+            const initialize = (): void =>
+            {
+                window.removeEventListener("DOMContentLoaded", initialize);
+
+                $initialize()
+                    .then((): void =>
+                    {
+                        resolve();
+                    });
+            };
+
+            // @ts-ignore
+            window.addEventListener("DOMContentLoaded", initialize);
+
+        } else {
 
             $initialize()
-                .then((next2d): void =>
+                .then((): void =>
                 {
-                    window.next2d = next2d;
+                    resolve();
                 });
-        };
 
-        // @ts-ignore
-        window.addEventListener("DOMContentLoaded", initialize);
-
-    } else {
-
-        $initialize()
-            .then((next2d): void =>
-            {
-                window.next2d = next2d;
-            });
-
-    }
+        }
+    })]);
 }

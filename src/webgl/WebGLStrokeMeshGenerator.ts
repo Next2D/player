@@ -1,5 +1,5 @@
-import { StrokeMethImpl } from "../interface/StrokeMethImpl";
-import { JointStyle, CapsStyle } from "../interface/StrokeTypeImpl";
+import type { StrokeMethImpl } from "../interface/StrokeMethImpl";
+import type { JointStyle, CapsStyle } from "../interface/StrokeTypeImpl";
 import {
     $Float32Array,
     $Int16Array,

@@ -1,6 +1,6 @@
 import { CanvasGradientToWebGL } from "./CanvasGradientToWebGL";
 import { CanvasPatternToWebGL } from "./CanvasPatternToWebGL";
-import { CapsStyle, JointStyle } from "../interface/StrokeTypeImpl";
+import type { CapsStyle, JointStyle } from "../interface/StrokeTypeImpl";
 import {
     $getFloat32Array4,
     $poolFloat32Array4,

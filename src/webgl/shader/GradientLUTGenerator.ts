@@ -1,8 +1,8 @@
-import { CanvasToWebGLContext } from "../CanvasToWebGLContext";
-import { AttachmentImpl } from "../../interface/AttachmentImpl";
-import { GradientLUTShaderVariantCollection } from "./variants/GradientLUTShaderVariantCollection";
-import { CanvasToWebGLShader } from "./CanvasToWebGLShader";
-import { WebGLShaderUniform } from "./WebGLShaderUniform";
+import type { CanvasToWebGLContext } from "../CanvasToWebGLContext";
+import type { AttachmentImpl } from "../../interface/AttachmentImpl";
+import type { GradientLUTShaderVariantCollection } from "./variants/GradientLUTShaderVariantCollection";
+import type { CanvasToWebGLShader } from "./CanvasToWebGLShader";
+import type { WebGLShaderUniform } from "./WebGLShaderUniform";
 import { $Math } from "../../player/util/RenderUtil";
 
 /**

@@ -1,9 +1,12 @@
-import { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
-import { CanvasToWebGLShader } from "../CanvasToWebGLShader";
-import { WebGLShaderUniform } from "../WebGLShaderUniform";
 import { VertexShaderSource } from "../vertex/VertexShaderSource";
 import { FragmentShaderSourceGradientLUT } from "../fragment/FragmentShaderSourceGradientLUT";
-import { $Math, $getMap } from "../../../player/util/RenderUtil";
+import { CanvasToWebGLShader } from "../CanvasToWebGLShader";
+import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
+import type { WebGLShaderUniform } from "../WebGLShaderUniform";
+import {
+    $Math,
+    $getMap
+} from "../../../player/util/RenderUtil";
 
 /**
  * @class

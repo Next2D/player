@@ -21,6 +21,7 @@ import type { ParentImpl } from "../../interface/ParentImpl";
 import type { MovieClip } from "../next2d/display/MovieClip";
 import type { Point } from "../next2d/geom/Point";
 import type { Rectangle } from "../next2d/geom/Rectangle";
+import type { RGBAImpl } from "../../interface/RGBAImpl";
 import {
     $devicePixelRatio,
     $document,
@@ -1144,11 +1145,21 @@ export class Player
 
         }
 
-        // @ts-ignore
-        this._$canvas.addEventListener($TOUCH_END, this._$loadWebAudio);
+        const loadWebAudio = (): void =>
+        {
+            this._$canvas.removeEventListener($MOUSE_UP,  loadWebAudio);
+            this._$canvas.removeEventListener($TOUCH_END, loadWebAudio);
+
+            if (!$audioContext) {
+                $loadAudioData();
+            }
+        };
 
         // @ts-ignore
-        this._$canvas.addEventListener($MOUSE_UP, this._$loadWebAudio);
+        this._$canvas.addEventListener($TOUCH_END, loadWebAudio);
+
+        // @ts-ignore
+        this._$canvas.addEventListener($MOUSE_UP, loadWebAudio);
 
         // touch event
         this._$canvas.addEventListener($TOUCH_START, (event: TouchEvent) =>
@@ -1395,7 +1406,7 @@ export class Player
 
         } else {
 
-            const context = this._$context;
+            const context: CanvasToWebGLContext | null = this._$context;
             if (!context) {
                 return ;
             }
@@ -1406,7 +1417,7 @@ export class Player
 
             } else {
 
-                const color = $uintToRGBA(
+                const color: RGBAImpl = $uintToRGBA(
                     $toColorInt(background_color)
                 );
 
@@ -1414,7 +1425,7 @@ export class Player
                     color.R / 255,
                     color.G / 255,
                     color.B / 255,
-                    color.A / 255
+                    1
                 );
 
             }

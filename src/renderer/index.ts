@@ -5,7 +5,7 @@ const command: CommandController = new CommandController();
 /**
  * @public
  */
-globalThis.addEventListener("message", (event: MessageEvent) =>
+self.addEventListener("message", async (event: MessageEvent) =>
 {
     command.queue.push(event.data);
     if (command.state === "deactivate") {

@@ -1,5 +1,5 @@
-import { Rectangle } from "../player/next2d/geom/Rectangle";
-import { BoundsImpl } from "../interface/BoundsImpl";
+import type { Rectangle } from "../player/next2d/geom/Rectangle";
+import type { BoundsImpl } from "../interface/BoundsImpl";
 import { $Math } from "../player/util/RenderUtil";
 
 /**

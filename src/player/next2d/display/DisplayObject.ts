@@ -23,6 +23,7 @@ import type { Character } from "../../../interface/Character";
 import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
 import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
 import type { PropertyMessageImpl } from "../../../interface/PropertyMessageImpl";
+import { $window } from "../../util/Shortcut";
 import {
     $doUpdated,
     $getCurrentLoaderInfo,
@@ -36,7 +37,7 @@ import {
     $event,
     $poolMatrix,
     $hitContext,
-    $variables, next2d
+    $variables
 } from "../../util/Util";
 import {
     $clamp,
@@ -56,7 +57,8 @@ import {
     $multiplicationMatrix,
     $poolFloat32Array6,
     $getMap,
-    $poolMap, $getFloat32Array6
+    $poolMap,
+    $getFloat32Array6
 } from "../../util/RenderUtil";
 
 /**
@@ -452,9 +454,9 @@ export class DisplayObject extends EventDispatcher
     {
         // use cache
         if (this._$filters) {
-            const filters: FilterArrayImpl = this._$filters.slice(0);
-            for (let idx: number = 0; idx < filters.length; ++idx) {
-                filters[idx] = filters[idx].clone();
+            const filters: FilterArrayImpl = $getArray();
+            for (let idx: number = 0; idx < this._$filters.length; ++idx) {
+                filters[idx] = this._$filters[idx].clone();
             }
             return filters;
         }
@@ -462,10 +464,10 @@ export class DisplayObject extends EventDispatcher
         const transform: Transform = this._$transform;
         if (transform._$filters) {
 
-            const clone: FilterArrayImpl = $getArray();
-            const filters: FilterArrayImpl = transform._$filters.slice(0);
-            for (let idx: number = 0; idx < filters.length; ++idx) {
-                const filter = filters[idx];
+            const clone: FilterArrayImpl   = $getArray();
+            const filters: FilterArrayImpl = $getArray();
+            for (let idx: number = 0; idx < transform._$filters.length; ++idx) {
+                const filter = transform._$filters[idx];
                 clone[idx]   = filter.clone();
                 filters[idx] = filter.clone();
             }
@@ -488,9 +490,9 @@ export class DisplayObject extends EventDispatcher
             const clone: FilterArrayImpl = $getArray();
 
             // @ts-ignore
-            const filters: FilterArrayImpl = transform._$filters.slice(0);
-            for (let idx: number = 0; idx < filters.length; ++idx) {
-                const filter = filters[idx];
+            const filters: FilterArrayImpl = $getArray();
+            for (let idx: number = 0; idx < placeObject.filters.length; ++idx) {
+                const filter = placeObject.filters[idx];
                 clone[idx]   = filter.clone();
                 filters[idx] = filter.clone();
             }
@@ -1597,8 +1599,8 @@ export class DisplayObject extends EventDispatcher
         const name = this.namespace;
 
         let loaderInfo: LoaderInfo | null = null;
-        if (next2d.fw && next2d.fw.loaderInfo.has(name)) {
-            loaderInfo = next2d.fw.loaderInfo.get(name)._$loaderInfo;
+        if ($window.next2d.fw && $window.next2d.fw.loaderInfo.has(name)) {
+            loaderInfo = $window.next2d.fw.loaderInfo.get(name)._$loaderInfo;
         }
 
         if (!loaderInfo) {
@@ -2087,6 +2089,8 @@ export class DisplayObject extends EventDispatcher
     /**
      * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
+     * @param  {number} width
+     * @param  {number} height
      * @return {Float32Array|boolean|null}
      * @method
      * @private

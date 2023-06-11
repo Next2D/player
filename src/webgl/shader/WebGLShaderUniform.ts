@@ -1,5 +1,9 @@
-import { $getMap, $Float32Array, $Int32Array } from "../../player/util/RenderUtil";
-import { UniformDataImpl } from "../../interface/UniformDataImpl";
+import type { UniformDataImpl } from "../../interface/UniformDataImpl";
+import {
+    $getMap,
+    $Float32Array,
+    $Int32Array
+} from "../../player/util/RenderUtil";
 
 /**
  * @class

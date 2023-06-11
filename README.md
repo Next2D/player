@@ -35,19 +35,22 @@ const { URLRequest } = next2d.net;
 const { Event }      = next2d.events;
 
 // create root MovieClip
-const root = next2d.createRootMovieClip();
-
-const request = new URLRequest("JSON path");
-const loader  = new Loader(request);
-
-loader
-    .contentLoaderInfo
-    .addEventListener(Event.COMPLETE, (event) =>
+next2d
+    .createRootMovieClip()
+    .then((root) => 
     {
-        root.addChild(event.currentTarget.content);
+        const request = new URLRequest("JSON path");
+        const loader  = new Loader(request);
+        
+        loader
+            .contentLoaderInfo
+            .addEventListener(Event.COMPLETE, (event) =>
+            {
+                root.addChild(event.currentTarget.content);
+            });
+        
+        loader.load(request);
     });
-
-loader.load(request);
 ```
 [CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
 @see [API Documentation](https://next2d.app/en/docs/player)

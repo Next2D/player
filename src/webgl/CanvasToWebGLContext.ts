@@ -9,21 +9,20 @@ import { CanvasToWebGLContextMask } from "./CanvasToWebGLContextMask";
 import { CanvasToWebGLContextBlend } from "./CanvasToWebGLContextBlend";
 import { CanvasPatternToWebGL } from "./CanvasPatternToWebGL";
 import { CanvasGradientToWebGL } from "./CanvasGradientToWebGL";
-import { AttachmentImpl } from "../interface/AttachmentImpl";
-import { BoundsImpl } from "../interface/BoundsImpl";
-import { BlendModeImpl } from "../interface/BlendModeImpl";
-import { IndexRangeImpl } from "../interface/IndexRangeImpl";
 import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
-import { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
-import { GradientShapeShaderVariantCollection } from "./shader/variants/GradientShapeShaderVariantCollection";
-import { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
-import { ConvexHull } from "./ConvexHull";
-import { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
-import { InterpolationMethod, SpreadMethod } from "../interface/GradientTypeImpl";
-import { FilterShaderVariantCollection } from "./shader/variants/FilterShaderVariantCollection";
-import { CapsStyle, JointStyle } from "../interface/StrokeTypeImpl";
-import { PointImpl } from "../interface/PointImpl";
-import { VerticesImpl } from "../interface/VerticesImpl";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { BlendModeImpl } from "../interface/BlendModeImpl";
+import type { IndexRangeImpl } from "../interface/IndexRangeImpl";
+import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
+import type { GradientShapeShaderVariantCollection } from "./shader/variants/GradientShapeShaderVariantCollection";
+import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
+import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
+import type { InterpolationMethod, SpreadMethod } from "../interface/GradientTypeImpl";
+import type { FilterShaderVariantCollection } from "./shader/variants/FilterShaderVariantCollection";
+import type { CapsStyle, JointStyle } from "../interface/StrokeTypeImpl";
+import type { PointImpl } from "../interface/PointImpl";
+import type { VerticesImpl } from "../interface/VerticesImpl";
 import {
     $Math,
     $getFloat32Array9,
@@ -882,22 +881,7 @@ export class CanvasToWebGLContext
             return ;
         }
 
-        const fillVertexArrayObject: WebGLVertexArrayObject = this._$vao.createFill(checkVertices);
-
-        const unionArray: any[] = $getArray();
-        for (let idx = 0; idx < checkVertices.length; ++idx) {
-            unionArray.push(...checkVertices[idx]);
-        }
-        $poolArray(checkVertices);
-
-        const boundsVertices: any[] = $getArray(ConvexHull.compute(unionArray));
-        $poolArray(unionArray);
-
-        const boundVertexArrayObject: WebGLVertexArrayObject = this._$vao.createFill(boundsVertices);
-
-        // object pool
-        $poolArray(boundsVertices.pop());
-        $poolArray(boundsVertices);
+        const fillVertexArrayObject: WebGLVertexArrayObject  = this._$vao.createFill(checkVertices);
 
         const fillStyle: Float32Array|CanvasGradientToWebGL|CanvasPatternToWebGL = this.fillStyle;
 
@@ -1054,14 +1038,13 @@ export class CanvasToWebGLContext
         this._$gl.stencilFunc(this._$gl.NOTEQUAL, 0, 0xff);
         this._$gl.stencilOp(this._$gl.KEEP, this._$gl.ZERO, this._$gl.ZERO);
         this._$gl.colorMask(true, true, true, true);
-        shader._$fill(boundVertexArrayObject);
+        shader._$fill(fillVertexArrayObject);
 
         // mask off
         this._$gl.disable(this._$gl.STENCIL_TEST);
 
         // release vertex array
         this.releaseFillVertexArray(fillVertexArrayObject);
-        this.releaseFillVertexArray(boundVertexArrayObject);
     }
 
     /**
@@ -1133,10 +1116,6 @@ export class CanvasToWebGLContext
         let width: number  = Math.abs(bounds.xMax - bounds.xMin);
         let height: number = Math.abs(bounds.yMax - bounds.yMin);
 
-        if (x > width || y > height) {
-            return null;
-        }
-
         // resize
         const manager: FrameBufferManager = this._$frameBufferManager;
         const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
@@ -1144,12 +1123,18 @@ export class CanvasToWebGLContext
             throw new Error("the current Attachment is null.");
         }
 
-        if (width + x > currentAttachment.texture.width) {
-            width = currentAttachment.texture.width - x;
+        if (x > currentAttachment.width
+            || y > currentAttachment.height
+        ) {
+            return null;
         }
 
-        if (height + y > currentAttachment.texture.height) {
-            height = currentAttachment.texture.height - y;
+        if (width + x > currentAttachment.width) {
+            width = currentAttachment.width - x;
+        }
+
+        if (height + y > currentAttachment.height) {
+            height = currentAttachment.height - y;
         }
 
         if (0 > x) {
@@ -1173,9 +1158,7 @@ export class CanvasToWebGLContext
         this._$cacheBounds.yMin = y;
         this._$cacheBounds.xMax = width;
         this._$cacheBounds.yMax = height;
-
-        this._$cacheAttachment = currentAttachment;
-        const texture: WebGLTexture = currentAttachment.texture;
+        this._$cacheAttachment  = currentAttachment;
 
         // create new buffer
         this._$bind(
@@ -1183,6 +1166,7 @@ export class CanvasToWebGLContext
         );
 
         // draw background
+        const texture: WebGLTexture = currentAttachment.texture;
         this.reset();
         this.setTransform(1, 0, 0, 1, 0, 0);
         this.drawImage(texture, -x, -y, texture.width, texture.height);

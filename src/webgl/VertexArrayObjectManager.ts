@@ -1,8 +1,8 @@
 import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
-import { FillMeshImpl } from "../interface/FillMeshImpl";
-import { StrokeMethImpl } from "../interface/StrokeMethImpl";
-import { CapsStyle, JointStyle } from "../interface/StrokeTypeImpl";
 import { WebGLStrokeMeshGenerator } from "./WebGLStrokeMeshGenerator";
+import type { FillMeshImpl } from "../interface/FillMeshImpl";
+import type { StrokeMethImpl } from "../interface/StrokeMethImpl";
+import type { CapsStyle, JointStyle } from "../interface/StrokeTypeImpl";
 import {
     $Float32Array,
     $getArray,

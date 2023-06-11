@@ -83,7 +83,7 @@
     "no-dupe-args": "error",
     "no-extra-boolean-cast": "error",
     "no-obj-calls": "error",
-    "no-console": "warn",
+    "no-console": "off",
     "no-extra-semi": "warn"
   }
 }

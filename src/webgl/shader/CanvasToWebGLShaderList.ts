@@ -3,7 +3,7 @@ import { GradientShapeShaderVariantCollection } from "./variants/GradientShapeSh
 import { GradientLUTShaderVariantCollection } from "./variants/GradientLUTShaderVariantCollection";
 import { FilterShaderVariantCollection } from "./variants/FilterShaderVariantCollection";
 import { BlendShaderVariantCollection } from "./variants/BlendShaderVariantCollection";
-import { CanvasToWebGLContext } from "../CanvasToWebGLContext";
+import type { CanvasToWebGLContext } from "../CanvasToWebGLContext";
 
 /**
  * @class

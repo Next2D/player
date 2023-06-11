@@ -1,7 +1,7 @@
-import { AttachmentImpl } from "../interface/AttachmentImpl";
 import { TextureManager } from "./TextureManager";
 import { StencilBufferPool } from "./StencilBufferPool";
 import { ColorBufferPool } from "./ColorBufferPool";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
 
 /**
  * @class

@@ -1,4 +1,4 @@
-import { CanvasToWebGLContext } from "./CanvasToWebGLContext";
+import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
 
 /**
  * @class

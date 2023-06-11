@@ -16,7 +16,10 @@ import type { PlayerHitObjectImpl } from "../../../interface/PlayerHitObjectImpl
 import type { Character } from "../../../interface/Character";
 import type { PropertyMessageMapImpl } from "../../../interface/PropertyMessageMapImpl";
 import type { PropertyShapeMessageImpl } from "../../../interface/PropertyShapeMessageImpl";
-import { $rendererWorker } from "../../util/Util";
+import {
+    $MATRIX_HIT_ARRAY_IDENTITY,
+    $rendererWorker
+} from "../../util/Util";
 import {
     $getArray,
     $poolArray,
@@ -29,7 +32,7 @@ import {
     $multiplicationColor,
     $clamp,
     $poolFloat32Array8,
-    $Math
+    $Math, $COLOR_ARRAY_IDENTITY
 } from "../../util/RenderUtil";
 
 /**
@@ -535,7 +538,8 @@ export class Shape extends DisplayObject
 
         let multiColor: Float32Array = color_transform;
         const rawColor: Float32Array = this._$transform._$rawColorTransform();
-        if (rawColor[0] !== 1 || rawColor[1] !== 1
+        if (rawColor !== $COLOR_ARRAY_IDENTITY
+            && rawColor[0] !== 1 || rawColor[1] !== 1
             || rawColor[2] !== 1 || rawColor[3] !== 1
             || rawColor[4] !== 0 || rawColor[5] !== 0
             || rawColor[6] !== 0 || rawColor[7] !== 0
@@ -556,7 +560,8 @@ export class Shape extends DisplayObject
 
         let multiMatrix: Float32Array = matrix;
         const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+        if (rawMatrix !== $MATRIX_HIT_ARRAY_IDENTITY
+            && rawMatrix[0] !== 1 || rawMatrix[1] !== 0
             || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
             || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
         ) {

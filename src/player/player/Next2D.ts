@@ -24,7 +24,10 @@ import type { TextImpl } from "../../interface/TextImpl";
 import type { UIImpl } from "../../interface/UIImpl";
 import type { StageDataImpl } from "../../interface/StageDataImpl";
 import { $location } from "../util/Shortcut";
-import { $clamp } from "../util/RenderUtil";
+import {
+    $clamp,
+    $poolArray
+} from "../util/RenderUtil";
 
 /**
  * playerの起動管理クラス
@@ -43,13 +46,20 @@ export class Next2D
     public readonly text: TextImpl;
     public readonly ui: UIImpl;
     public fw: any;
+    private readonly _$promises: Promise<void>[];
 
     /**
      * @constructor
      * @public
      */
-    constructor ()
+    constructor (promises: Promise<void>[])
     {
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$promises = promises;
+
         /**
          * @type {Player}
          * @private
@@ -141,72 +151,80 @@ export class Next2D
      */
     load (url: string, options: PlayerOptionsImpl): void
     {
-        if (url === "develop") {
-            const path: string = $location
-                .search
-                .slice(1)
-                .split("&")[0];
+        Promise
+            .all(this._$promises)
+            .then(() =>
+            {
+                $poolArray(this._$promises);
 
-            if (!path) {
-                return ;
-            }
-            url = `${$location.origin}/${path}`;
-        }
+                if (url === "develop") {
+                    const path: string = $location
+                        .search
+                        .slice(1)
+                        .split("&")[0];
 
-        if (!url) {
-            return ;
-        }
+                    if (!path) {
+                        return ;
+                    }
+                    url = `${$location.origin}/${path}`;
+                }
 
-        if (url.charAt(1) === "/") {
-            url = url.slice(1);
-        }
+                if (!url) {
+                    return ;
+                }
 
-        // base set
-        if ((!options || !("base" in options)) && url.indexOf("//") > -1) {
-            this._$player.base = url;
-        }
+                if (url.charAt(1) === "/") {
+                    url = url.slice(1);
+                }
 
-        this._$player.setOptions(options);
-        this._$player._$initialize();
+                // base set
+                if ((!options || !("base" in options)) && url.indexOf("//") > -1) {
+                    this._$player.base = url;
+                }
 
-        const loader: Loader = new Loader();
-        const loaderInfo: LoaderInfo = loader.contentLoaderInfo as NonNullable<LoaderInfo>;
+                this._$player.setOptions(options);
+                this._$player._$initialize();
 
-        loaderInfo.addEventListener(IOErrorEvent.IO_ERROR, (event: IOErrorEvent) =>
-        {
-            if (event.target) {
-                event.target.removeEventListener(IOErrorEvent.IO_ERROR, event.listener);
-            }
-            alert("Error: " + event.text);
-        });
+                const loader: Loader = new Loader();
+                const loaderInfo: LoaderInfo = loader.contentLoaderInfo as NonNullable<LoaderInfo>;
 
-        loaderInfo.addEventListener(Event.COMPLETE, (event: Event) =>
-        {
-            const loaderInfo: LoaderInfo = event.target;
-            const player: Player = this._$player;
+                loaderInfo.addEventListener(IOErrorEvent.IO_ERROR, (event: IOErrorEvent) =>
+                {
+                    if (event.target) {
+                        event.target.removeEventListener(IOErrorEvent.IO_ERROR, event.listener);
+                    }
+                    alert("Error: " + event.text);
+                });
 
-            if (loaderInfo && loaderInfo._$data) {
+                loaderInfo.addEventListener(Event.COMPLETE, (event: Event) =>
+                {
+                    const loaderInfo: LoaderInfo = event.target as NonNullable<LoaderInfo>;
+                    const player: Player = this._$player;
 
-                loaderInfo.removeEventListener(Event.COMPLETE, event.listener);
+                    loaderInfo
+                        .removeEventListener(Event.COMPLETE, event.listener);
 
-                const stage: StageDataImpl = loaderInfo._$data.stage;
+                    if (loaderInfo._$data) {
 
-                player.bgColor = stage.bgColor;
-                player._$setBackgroundColor(stage.bgColor);
+                        const stage: StageDataImpl = loaderInfo._$data.stage;
 
-                player.stage.addChild(loaderInfo.content);
+                        player.bgColor = stage.bgColor;
+                        player._$setBackgroundColor(stage.bgColor);
 
-                player.width  = stage.width;
-                player.height = stage.height;
+                        player.stage.addChild(loaderInfo.content);
 
-                // set fps fixed logic
-                player.stage._$frameRate = $clamp(+stage.fps, 1, 60, 60);
-            }
+                        player.width  = stage.width;
+                        player.height = stage.height;
 
-            player._$resize();
-        });
+                        // set fps fixed logic
+                        player.stage._$frameRate = $clamp(+stage.fps, 1, 60, 60);
+                    }
 
-        loader.load(new URLRequest(url));
+                    player._$resize();
+                });
+
+                loader.load(new URLRequest(url));
+            });
     }
 
     /**
@@ -224,23 +242,30 @@ export class Next2D
     createRootMovieClip (
         width: number = 240, height: number = 240,
         fps: number = 24, options: PlayerOptionsImpl|null = null
-    ): Sprite {
+    ): Promise<Sprite> {
 
-        const player: Player = this._$player;
+        return Promise
+            .all(this._$promises)
+            .then(() =>
+            {
+                $poolArray(this._$promises);
 
-        // setup
-        player.width  = width | 0;
-        player.height = height | 0;
-        player.mode   = "create";
-        player.stage._$frameRate = fps | 0;
-        player.setOptions(options);
-        player._$initialize();
+                const player: Player = this._$player;
 
-        const root: Sprite = player.stage.addChild(new Sprite());
+                // setup
+                player.width  = width | 0;
+                player.height = height | 0;
+                player.mode   = "create";
+                player.stage._$frameRate = fps | 0;
+                player.setOptions(options);
+                player._$initialize();
 
-        player._$loadStatus = Player.LOAD_END;
-        player.play();
+                const root: Sprite = player.stage.addChild(new Sprite());
 
-        return root;
+                player._$loadStatus = Player.LOAD_END;
+                player.play();
+
+                return Promise.resolve(root);
+            });
     }
 }
