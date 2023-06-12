@@ -2,12 +2,12 @@ import { Stage } from "../next2d/display/Stage";
 import { CacheStore } from "../util/CacheStore";
 import { Event as Next2DEvent } from "../next2d/events/Event";
 import { MouseEvent as Next2DMouseEvent } from "../next2d/events/MouseEvent";
-import { TextField } from "../next2d/text/TextField";
 import { Video } from "../next2d/media/Video";
 import { Sound } from "../next2d/media/Sound";
 import { EventPhase } from "../next2d/events/EventPhase";
 import { CanvasToWebGLContext } from "../../webgl/CanvasToWebGLContext";
 import { SoundMixer } from "../next2d/media/SoundMixer";
+import type { TextField } from "../next2d/text/TextField";
 import type { StageQualityImpl } from "../../interface/StageQualityImpl";
 import type { PlayerOptionsImpl } from "../../interface/PlayerOptionsImpl";
 import type { PlayerHitObjectImpl } from "../../interface/PlayerHitObjectImpl";
@@ -1145,6 +1145,11 @@ export class Player
 
         }
 
+        /**
+         * @return {void}
+         * @method
+         * @private
+         */
         const loadWebAudio = (): void =>
         {
             this._$canvas.removeEventListener($MOUSE_UP,  loadWebAudio);
@@ -1152,6 +1157,15 @@ export class Player
 
             if (!$audioContext) {
                 $loadAudioData();
+
+                for (let idx = 0; idx < this._$videos.length; ++idx) {
+                    const video: Video = this._$videos[idx];
+                    if (!video._$video) {
+                        continue;
+                    }
+
+                    video._$video.muted = false;
+                }
             }
         };
 
@@ -1575,6 +1589,16 @@ export class Player
 
             // execute
             this._$action();
+
+            // start sound
+            if (this._$sounds.size) {
+                for (const movieClip of this._$sounds.values()) {
+                    movieClip._$soundPlay();
+                }
+                this._$sounds.clear();
+            }
+
+            // draw
             this._$draw();
 
             // draw event
@@ -1773,21 +1797,15 @@ export class Player
                 target = instance;
                 while (target && target.root !== target) {
 
-                    switch (true) {
-
-                        case target instanceof TextField:
-                            if (target._$type === "input") {
-                                canPointerText = true;
-                            }
+                    if ("_$text" in target) {
+                        if (target.type === "input") {
+                            canPointerText = true;
                             break;
-
-                        case target.buttonMode:
-                            canPointer = true;
-                            break;
-
+                        }
                     }
 
-                    if (canPointerText || canPointer) {
+                    if ("buttonMode" in target) {
+                        canPointer = true;
                         break;
                     }
 
@@ -1965,14 +1983,6 @@ export class Player
             return ;
         }
 
-        // start sound
-        if (this._$sounds.size) {
-            for (const movieClip of this._$sounds.values()) {
-                movieClip._$soundPlay();
-            }
-            this._$sounds.clear();
-        }
-
         const context: CanvasToWebGLContext | null = this._$context;
         if (!context) {
             return ;
@@ -2105,13 +2115,11 @@ export class Player
         let stageX: number = 0;
         let stageY: number = 0;
 
-        if (event instanceof TouchEvent) {
+        if ("changedTouches" in event) {
             const changedTouche = event.changedTouches[0];
             stageX = changedTouche.pageX;
             stageY = changedTouche.pageY;
-        }
-
-        if (event instanceof MouseEvent) {
+        } else if ("pageX" in event) {
             stageX = event.pageX;
             stageY = event.pageY;
         }
@@ -2121,12 +2129,8 @@ export class Player
         stageY = (stageY - y) / this._$scale;
 
         // update
-        // @ts-ignore
-        event._$stageX = stageX;
-        // @ts-ignore
-        event._$stageY = stageY;
-        this._$stageX  = stageX;
-        this._$stageY  = stageY;
+        this._$stageX = stageX;
+        this._$stageY = stageY;
 
         // setup
         this._$hitObject.x       = stageX;
@@ -2464,15 +2468,16 @@ export class Player
                     case $MOUSE_DOWN:
 
                         // TextField focus out
-                        if (instance !== this._$textField
-                            && this._$textField instanceof TextField
+                        if (this._$textField
+                            && instance !== this._$textField
+                            && "_$text" in this._$textField
                         ) {
                             this._$textField.focus = false;
                             this._$textField       = null;
                         }
 
                         // TextField focus out
-                        if (instance instanceof TextField) {
+                        if ("_$text" in instance) {
                             instance.focus   = true;
                             this._$textField = instance;
                         }
@@ -2494,8 +2499,9 @@ export class Player
                     case $MOUSE_UP:
 
                         // TextField focus out
-                        if (instance !== this._$textField
-                            && this._$textField instanceof TextField
+                        if (this._$textField
+                            && instance !== this._$textField
+                            && "_$text" in this._$textField
                         ) {
                             this._$textField.focus = false;
                             this._$textField       = null;
@@ -2531,7 +2537,7 @@ export class Player
                             );
                         }
 
-                        if (instance instanceof TextField && instance.scrollEnabled) {
+                        if ("_$text" in instance && instance.scrollEnabled) {
                             // @ts-ignore
                             instance.scrollV += event.deltaY;
                         }
@@ -2558,7 +2564,7 @@ export class Player
                         target = instance;
                         while (target && target.root !== target) {
 
-                            if (target instanceof TextField) {
+                            if ("_$text" in target) {
 
                                 if (target.type === "input") {
                                     canPointerText = true;

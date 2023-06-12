@@ -167,7 +167,7 @@ export class DisplayObjectContainer extends InteractiveObject
 
     /**
      * @description オブジェクトの子がマウスまたはユーザー入力デバイスに対応しているかどうかを判断します。
-     *              Determines whether or not the children of the object are mouse, or user input device, enabled.
+     *              Determine if the object's children are compatible with mouse or user input devices.
      *
      * @member {boolean}
      * @public
@@ -1262,10 +1262,7 @@ export class DisplayObjectContainer extends InteractiveObject
     {
         let isNext: boolean = false;
 
-        const children: DisplayObjectImpl<any>[] = this._$needsChildren
-            ? this._$getChildren()
-            : this._$children;
-
+        const children: DisplayObjectImpl<any>[] = this._$getChildren();
         for (let idx: number = children.length - 1; idx > -1; --idx) {
 
             const child: DisplayObjectImpl<any> = children[idx];
@@ -1565,7 +1562,7 @@ export class DisplayObjectContainer extends InteractiveObject
         const manager: FrameBufferManager = context.frameBuffer;
 
         // cache or new texture
-        let texture: WebGLTexture | null = null;
+        let texture: WebGLTexture | null;
         if (object.isUpdated) {
 
             texture = manager
@@ -1687,6 +1684,10 @@ export class DisplayObjectContainer extends InteractiveObject
         context._$restoreCurrentMask();
 
         // object pool
+        if (object.baseMatrix !== matrix) {
+            $poolFloat32Array6(object.baseMatrix as NonNullable<Float32Array>);
+        }
+        $poolFloat32Array6(object.matrix as NonNullable<Float32Array>);
         $poolPreObject(object);
     }
 
@@ -1729,10 +1730,7 @@ export class DisplayObjectContainer extends InteractiveObject
         }
 
         // not draw
-        const children: DisplayObjectImpl<any>[] = this._$needsChildren
-            ? this._$getChildren()
-            : this._$children;
-
+        const children: DisplayObjectImpl<any>[] = this._$getChildren();
         const length: number = children.length;
         const graphics: Graphics | null = "_$graphics" in this
             ? this._$graphics as Graphics | null
@@ -2430,9 +2428,7 @@ export class DisplayObjectContainer extends InteractiveObject
 
         if (!childrenIds) {
 
-            const children: DisplayObjectImpl<any>[] = this._$needsChildren
-                ? this._$getChildren()
-                : this._$children;
+            const children: DisplayObjectImpl<any>[] = this._$getChildren();
 
             childrenIds = $getArray();
             for (let idx: number = 0; idx < children.length; ++idx) {

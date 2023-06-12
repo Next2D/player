@@ -1,5 +1,6 @@
 const path = require("path");
 const ESLintPlugin = require("eslint-webpack-plugin");
+const WebpackWorkerLoaderPlugin = require("@next2d/webpack-worker-loader-plugin");
 
 const unzip_worker = {
     "mode": "production",
@@ -70,7 +71,8 @@ const player = {
         new ESLintPlugin({
             "extensions": [".ts", ".js"],
             "exclude": "node_modules"
-        })
+        }),
+        new WebpackWorkerLoaderPlugin()
     ],
     "resolve": {
         "alias": {
@@ -89,7 +91,6 @@ const player = {
             }
         ]
     },
-
     "devServer": {
         "static": [
             { "directory": __dirname }

@@ -6,7 +6,6 @@ import type { PlaceObjectImpl } from "../../../interface/PlaceObjectImpl";
 import type { LoopConfigImpl } from "../../../interface/LoopConfigImpl";
 import type { Player } from "../../player/Player";
 import type { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
-import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
 import type { ParentImpl } from "../../../interface/ParentImpl";
 import type { MovieClipCharacterImpl } from "../../../interface/MovieClipCharacterImpl";
 import type { MovieClipSoundObjectImpl } from "../../../interface/MovieClipSoundObjectImpl";
@@ -844,33 +843,6 @@ export class MovieClip extends Sprite
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$draw (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array,
-        color_transform: Float32Array
-    ): void {
-
-        super._$draw(context, matrix, color_transform);
-
-        // set sound
-        if (this._$canSound && this._$sounds.size
-            && this._$sounds.has(this._$currentFrame)
-        ) {
-            const player: Player = $currentPlayer();
-            if (!player._$sounds.has(this._$instanceId)) {
-                player._$sounds.set(this._$instanceId, this);
-            }
-        }
-    }
-
-    /**
      * @return {boolean}
      * @method
      * @private
@@ -1016,6 +988,16 @@ export class MovieClip extends Sprite
                     // clear
                     if (isNext) {
                         this._$clearChildren();
+                    }
+
+                    // set sound
+                    if (this._$canSound && this._$sounds.size
+                        && this._$sounds.has(this._$currentFrame)
+                    ) {
+                        const player: Player = $currentPlayer();
+                        if (!player._$sounds.has(this._$instanceId)) {
+                            player._$sounds.set(this._$instanceId, this);
+                        }
                     }
 
                 }
@@ -1236,11 +1218,7 @@ export class MovieClip extends Sprite
             return ;
         }
 
-        const sounds: Sound[] | void = this._$sounds.get(this._$currentFrame);
-        if (!sounds) {
-            return ;
-        }
-
+        const sounds: Sound[] = this._$sounds.get(this._$currentFrame) as NonNullable<Sound[]>;
         if (sounds.length) {
 
             // set SoundTransform

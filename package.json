@@ -18,7 +18,7 @@
   "scripts": {
     "start": "webpack serve",
     "lint": "eslint src/**/*.ts",
-    "output": "tsc",
+    "publish": "tsc",
     "build": "webpack --mode production",
     "test": "jest",
     "jsdoc": "tsc && jsdoc -c jsdoc.conf.js -r dist DOCS.md"
@@ -29,7 +29,10 @@
     "@types"
   ],
   "devDependencies": {
+    "@babel/core": "^7.22.5",
+    "@babel/preset-env": "^7.22.5",
     "@next2d/jsdoc-template": "^1.0.7",
+    "@next2d/webpack-worker-loader-plugin": "^0.0.1",
     "@types/jest": "^29.5.2",
     "@typescript-eslint/eslint-plugin": "^5.59.9",
     "@typescript-eslint/parser": "^5.59.9",

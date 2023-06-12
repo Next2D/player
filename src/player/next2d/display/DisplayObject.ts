@@ -635,7 +635,7 @@ export class DisplayObject extends EventDispatcher
             this._$mask = null;
         }
 
-        if (mask instanceof DisplayObject) {
+        if (mask) {
             if ($rendererWorker
                 && "_$createWorkerInstance" in mask
                 && typeof mask._$createWorkerInstance === "function"

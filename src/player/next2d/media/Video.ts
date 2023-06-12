@@ -19,9 +19,7 @@ import {
     $audioContext,
     $currentPlayer,
     $isTouch,
-    $MOUSE_UP,
-    $rendererWorker,
-    $TOUCH_END
+    $rendererWorker
 } from "../../util/Util";
 import {
     $Math,
@@ -68,7 +66,7 @@ export class Video extends DisplayObject
     public _$video: HTMLVideoElement|null;
     private _$stop: boolean;
     private _$volume: number;
-    private _$wait: boolean;
+    private _$ready: boolean;
     private _$context: OffscreenCanvasRenderingContext2D|null;
 
     /**
@@ -149,7 +147,7 @@ export class Video extends DisplayObject
          * @default false
          * @private
          */
-        this._$wait = false;
+        this._$ready = false;
 
         /**
          * @type {number}
@@ -473,24 +471,30 @@ export class Video extends DisplayObject
             this._$stop = false;
 
             this._$video.volume = $Math.min(this._$volume, SoundMixer.volume);
-            this._$video.play();
+            this
+                ._$video
+                .play()
+                .then(() =>
+                {
+                    this._$timerId = $requestAnimationFrame(() =>
+                    {
+                        this._$update();
+                    });
 
-            this._$timerId = $requestAnimationFrame(() =>
-            {
-                this._$update();
-            });
+                    if (this.hasEventListener(VideoEvent.PLAY)) {
+                        this.dispatchEvent(new VideoEvent(
+                            VideoEvent.PLAY, false, false,
+                            this._$bytesLoaded, this._$bytesTotal
+                        ));
+                    }
 
-            if (this.hasEventListener(VideoEvent.PLAY)) {
-                this.dispatchEvent(new VideoEvent(
-                    VideoEvent.PLAY, false, false,
-                    this._$bytesLoaded, this._$bytesTotal
-                ));
-            }
+                    const player = $currentPlayer();
+                    if (player._$videos.indexOf(this) === -1) {
+                        player._$videos.push(this);
+                    }
 
-            const player = $currentPlayer();
-            if (player._$videos.indexOf(this) === -1) {
-                player._$videos.push(this);
-            }
+                    this._$ready = true;
+                });
         }
     }
 
@@ -570,24 +574,6 @@ export class Video extends DisplayObject
      * @method
      * @private
      */
-    _$sound ()
-    {
-        const player: Player = $currentPlayer();
-
-        player
-            .canvas
-            .removeEventListener($TOUCH_END, this._$sound);
-
-        player
-            .canvas
-            .removeEventListener($MOUSE_UP, this._$sound);
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
     _$start ()
     {
         if (!this._$video) {
@@ -598,29 +584,35 @@ export class Video extends DisplayObject
         this._$bounds.yMax = this._$video.videoHeight;
         this._$bytesTotal  = this._$video.duration;
 
-        this._$video.muted = false;
-
         const player = $currentPlayer();
-        if (!$audioContext) {
-
-            player
-                .canvas
-                .addEventListener($TOUCH_END, this._$sound);
-
-            player
-                .canvas
-                .addEventListener($MOUSE_UP, this._$sound);
-
-        }
-
         if (this._$autoPlay) {
 
-            if (player._$videos.indexOf(this) === -1) {
-                player._$videos.push(this);
-            }
+            this._$stop = false;
+            this
+                ._$video
+                .play()
+                .then(() =>
+                {
+                    if (player._$videos.indexOf(this) === -1) {
+                        player._$videos.push(this);
+                    }
 
-            this._$wait = true;
-            this._$doChanged();
+                    if (this.hasEventListener(VideoEvent.PLAY_START)) {
+                        this.dispatchEvent(new VideoEvent(
+                            VideoEvent.PLAY_START, false, false,
+                            this._$bytesLoaded, this._$bytesTotal
+                        ));
+                    }
+
+                    this._$timerId = $requestAnimationFrame(() =>
+                    {
+                        this._$update();
+                    });
+
+                    this._$ready = true;
+
+                    this._$doChanged();
+                });
         }
 
         this._$createContext();
@@ -635,9 +627,12 @@ export class Video extends DisplayObject
     {
         const video = $document.createElement("video");
 
-        video.muted       = true;
         video.autoplay    = false;
         video.crossOrigin = "anonymous";
+
+        if (!$audioContext) {
+            video.muted = true;
+        }
 
         if ($isTouch) {
             video.setAttribute("playsinline", "");
@@ -695,6 +690,11 @@ export class Video extends DisplayObject
      */
     _$buildCharacter (character: VideoCharacterImpl): void
     {
+        if (character.buffer && !character._$buffer) {
+            character._$buffer = new Uint8Array(character.buffer);
+            character.buffer = null;
+        }
+
         this._$loop        = character.loop;
         this._$autoPlay    = character.autoPlay;
         this._$bounds.xMin = character.bounds.xMin;
@@ -707,7 +707,7 @@ export class Video extends DisplayObject
         }
 
         this._$video.src = URL.createObjectURL(new Blob(
-            [new Uint8Array(character.buffer)],
+            [character._$buffer],
             { "type": "video/mp4" }
         ));
 
@@ -812,28 +812,8 @@ export class Video extends DisplayObject
         color_transform: Float32Array
     ): void {
 
-        if (!this._$visible || !this._$video) {
+        if (!this._$visible || !this._$video || !this._$ready) {
             return ;
-        }
-
-        if (this._$wait) {
-
-            this._$stop = false;
-            this._$video.play();
-
-            if (this.hasEventListener(VideoEvent.PLAY_START)) {
-                this.dispatchEvent(new VideoEvent(
-                    VideoEvent.PLAY_START, false, false,
-                    this._$bytesLoaded, this._$bytesTotal
-                ));
-            }
-
-            this._$timerId = $requestAnimationFrame(() =>
-            {
-                this._$update();
-            });
-
-            this._$wait = false;
         }
 
         let multiColor: Float32Array = color_transform;
@@ -1207,26 +1187,6 @@ export class Video extends DisplayObject
     {
         if (!$rendererWorker) {
             return ;
-        }
-
-        if (this._$wait && this._$video) {
-
-            this._$stop = false;
-            this._$video.play();
-
-            if (this.hasEventListener(VideoEvent.PLAY_START)) {
-                this.dispatchEvent(new VideoEvent(
-                    VideoEvent.PLAY_START, false, false,
-                    this._$bytesLoaded, this._$bytesTotal
-                ));
-            }
-
-            this._$timerId = $requestAnimationFrame(() =>
-            {
-                this._$update();
-            });
-
-            this._$wait = false;
         }
 
         const message: PropertyVideoMessageImpl = this._$createMessage();

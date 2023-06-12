@@ -205,8 +205,7 @@ export class TextureManager
             image.width,
             image.height,
             image,
-            smoothing,
-            null
+            smoothing
         );
     }
 
@@ -222,8 +221,7 @@ export class TextureManager
             canvas.width,
             canvas.height,
             canvas,
-            false,
-            null
+            false
         );
     }
 
@@ -237,15 +235,13 @@ export class TextureManager
      */
     createFromVideo (
         video: HTMLVideoElement,
-        smoothing: boolean = false,
-        target_texture: WebGLTexture|null = null
+        smoothing: boolean = false
     ): WebGLTexture {
         return this._$createFromElement(
             video.videoWidth,
             video.videoHeight,
             video,
-            smoothing,
-            target_texture
+            smoothing
         );
     }
 
@@ -254,19 +250,17 @@ export class TextureManager
      * @param  {number} height
      * @param  {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} element
      * @param  {boolean} [smoothing=false]
-     * @param  {WebGLTexture|null} [target_texture=null]
      * @return {WebGLTexture}
      * @method
      * @private
      */
     _$createFromElement (
         width: number, height: number,
-        element: HTMLImageElement|HTMLCanvasElement|HTMLVideoElement,
-        smoothing: boolean = false,
-        target_texture: WebGLTexture|null = null
+        element: HTMLImageElement | HTMLCanvasElement | HTMLVideoElement,
+        smoothing: boolean = false
     ): WebGLTexture {
 
-        const texture: WebGLTexture = target_texture || this._$getTexture(width, height);
+        const texture: WebGLTexture = this._$getTexture(width, height);
 
         texture.dirty = false;
 
@@ -291,7 +285,6 @@ export class TextureManager
                 this._$gl.TEXTURE_2D, 0, 0, 0,
                 this._$gl.RGBA, this._$gl.UNSIGNED_BYTE, element
             );
-
         }
 
         this._$gl.pixelStorei(this._$gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);

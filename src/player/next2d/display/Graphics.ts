@@ -1152,7 +1152,7 @@ export class Graphics
                     this._$fills[3]
                 );
             }
-            this._$recode.push(...this._$recode, ...this._$fills);
+            this._$recode.push(...this._$fills);
 
             // fill
             switch (this._$fillType) {
@@ -1172,7 +1172,6 @@ export class Graphics
                     if (this._$fillGradient) {
                         this._$recode.push(
                             this._$fillType,
-                            ...this._$recode,
                             ...this._$fillGradient.toArray()
                         );
                     }
@@ -1182,7 +1181,6 @@ export class Graphics
                     if (this._$fillBitmap) {
                         this._$recode.push(
                             this._$fillType,
-                            ...this._$recode,
                             ...this._$fillBitmap.toArray()
                         );
                     }
@@ -1231,10 +1229,7 @@ export class Graphics
                 this._$recode = $getArray();
             }
 
-            this._$recode.push(
-                ...this._$recode,
-                ...this._$lines
-            );
+            this._$recode.push(...this._$lines);
 
             // clear
             $poolArray(this._$lines);
@@ -1266,7 +1261,6 @@ export class Graphics
                             this._$caps,
                             this._$joints,
                             this._$miterLimit,
-                            ...this._$recode,
                             ...this._$lineGradient.toArray()
                         );
                     }
@@ -1280,7 +1274,6 @@ export class Graphics
                             this._$caps,
                             this._$joints,
                             this._$miterLimit,
-                            ...this._$recode,
                             ...this._$fillBitmap.toArray()
                         );
                     }
@@ -2202,11 +2195,11 @@ export class Graphics
     _$margePath (data: any[]): void
     {
         if (this._$doFill && this._$fills) {
-            this._$fills.push(this._$fills, ...data);
+            this._$fills.push(...data);
         }
 
         if (this._$doLine && this._$lines) {
-            this._$lines.push(this._$lines, ...data);
+            this._$lines.push(...data);
         }
 
         $poolArray(data);

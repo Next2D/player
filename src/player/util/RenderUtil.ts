@@ -428,13 +428,6 @@ export const $getFloat32Array8 = (
  */
 export const $poolFloat32Array8 = (array: Float32Array): void =>
 {
-    if (array.length === 6) {
-        try {
-            throw new Error("koko");
-        } catch (e) {
-            console.log(e);
-        }
-    }
     $float32Array8.push(array);
 };
 
@@ -888,14 +881,6 @@ export const $poolPreObject = (object: PreObjectImpl): void =>
 {
     if (object.color) {
         $poolFloat32Array8(object.color);
-    }
-
-    // if (object.matrix) {
-    //     $poolFloat32Array6(object.matrix);
-    // }
-
-    if (object.baseMatrix) {
-        $poolFloat32Array6(object.baseMatrix);
     }
 
     // reset

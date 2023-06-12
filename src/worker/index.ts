@@ -9,7 +9,6 @@ self.addEventListener("message", async (event: MessageEvent) =>
 
     let json: string = "";
     for (let idx: number = 0; idx < buffer.length; idx += 4096) {
-        // @ts-ignore
         json += String.fromCharCode(...buffer.slice(idx, idx + 4096));
     }
 

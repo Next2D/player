@@ -5,7 +5,6 @@ import { Next2D } from "./player/Next2D";
 
 if (!("next2d" in window)) {
 
-    // output build version
     console.log("%c Next2D Player %c 2.0.0 %c https://next2d.app",
         "color: #fff; background: #5f5f5f",
         "color: #fff; background: #4bc729",

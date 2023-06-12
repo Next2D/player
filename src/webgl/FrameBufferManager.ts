@@ -434,18 +434,16 @@ export class FrameBufferManager
     /**
      * @param  {HTMLVideoElement} video
      * @param  {boolean} [smoothing=false]
-     * @param  {WebGLTexture} [target_texture=null]
      * @return {WebGLTexture}
      * @public
      */
     createTextureFromVideo (
         video: HTMLVideoElement,
-        smoothing: boolean = false,
-        target_texture: WebGLTexture|null = null
+        smoothing: boolean = false
     ): WebGLTexture {
         return this
             ._$textureManager
-            .createFromVideo(video, smoothing, target_texture);
+            .createFromVideo(video, smoothing);
     }
 
     /**

@@ -15,7 +15,8 @@
   },
   "include": [
     "**/*.ts",
-    "webgl/**/*.ts",
+    "../webgl/**/*.ts",
+    "../player/**/*.ts",
     "../../@types/**/*.ts"
   ],
   "exclude": [
