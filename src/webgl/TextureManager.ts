@@ -77,10 +77,7 @@ export class TextureManager
      */
     _$createTexture (width: number, height: number): WebGLTexture
     {
-        const texture: WebGLTexture|null = this._$gl.createTexture();
-        if (!texture) {
-            throw new Error("the texture is null.");
-        }
+        const texture: WebGLTexture = this._$gl.createTexture() as NonNullable<WebGLTexture>;
 
         texture.width     = 0;
         texture.height    = 0;
@@ -228,7 +225,6 @@ export class TextureManager
     /**
      * @param  {HTMLVideoElement} video
      * @param  {boolean} [smoothing=false]
-     * @param  {WebGLTexture} [target_texture=null]
      * @return {WebGLTexture}
      * @method
      * @public
@@ -312,12 +308,11 @@ export class TextureManager
         this._$objectPoolArea += texture.area;
 
         // プール容量が一定を超えたら、古いテクスチャから削除していく
-        if (this._$objectPoolArea > this._$maxWidth * this._$maxHeight * 10) {
+        if (this._$objectPool.length
+            && this._$objectPoolArea > this._$maxWidth * this._$maxHeight * 10
+        ) {
 
-            const oldTexture: WebGLTexture|void = this._$objectPool.shift();
-            if (!oldTexture) {
-                return ;
-            }
+            const oldTexture: WebGLTexture = this._$objectPool.shift() as NonNullable<WebGLTexture>;
 
             this._$objectPoolArea -= oldTexture.area;
 

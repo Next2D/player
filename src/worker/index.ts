@@ -1,11 +1,11 @@
-import * as fflate from "fflate";
+import { decompressSync } from "fflate";
 
 /**
  * @public
  */
 self.addEventListener("message", async (event: MessageEvent) =>
 {
-    const buffer: Uint8Array = fflate.decompressSync(event.data);
+    const buffer: Uint8Array = decompressSync(event.data);
 
     let json: string = "";
     for (let idx: number = 0; idx < buffer.length; idx += 4096) {

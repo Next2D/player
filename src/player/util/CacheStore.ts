@@ -1,6 +1,4 @@
-import type { Player } from "../player/Player";
 import type { CanvasToWebGLContext } from "../../webgl/CanvasToWebGLContext";
-import { $currentPlayer } from "./Util";
 import { $document } from "./Shortcut";
 import {
     $requestAnimationFrame,
@@ -93,21 +91,14 @@ export class CacheStore
         }
 
         if (object instanceof WebGLTexture) {
-
-            if (!this._$context) {
-                return ;
-            }
-
             $requestAnimationFrame((): void =>
             {
-                const player: Player = $currentPlayer();
-
-                const context = player.context;
-                if (!context) {
+                if (!this._$context) {
                     return ;
                 }
 
-                context
+                this
+                    ._$context
                     .frameBuffer
                     .releaseTexture(object);
             });
@@ -174,12 +165,11 @@ export class CacheStore
      * @method
      * @public
      */
-    clearTimer (id: string|number): void
+    stopTimer (id: string | number): void
     {
         id = `${id}`;
         if (this._$timerMap.has(id)) {
-            const timer: Function = $clearTimeout;
-            timer(this._$timerMap.get(id));
+            $clearTimeout(this._$timerMap.get(id));
             this._$timerMap.delete(id);
         }
     }
@@ -190,7 +180,7 @@ export class CacheStore
      * @method
      * @public
      */
-    removeCache (id: string|number): void
+    removeCache (id: string | number): void
     {
         id = `${id}`;
         if (this._$store.has(id)) {
@@ -205,7 +195,7 @@ export class CacheStore
             this._$store.delete(id);
         }
 
-        this.clearTimer(id);
+        this._$timerMap.delete(id);
     }
 
     /**
@@ -216,16 +206,19 @@ export class CacheStore
      * @method
      * @public
      */
-    setRemoveTimer (id: string|number): void
+    setRemoveTimer (id: string | number): void
     {
         id = `${id}`;
 
-        this.clearTimer(id);
+        this.stopTimer(id);
 
         // set timer
         if (this._$store.has(id)) {
-            const timer: Function = $setTimeout;
-            const timerId: number = timer(() => { this.removeCache(id) }, 5000);
+            // @ts-ignore
+            const timerId: number = $setTimeout(() =>
+            {
+                this.removeCache(id);
+            }, 5000);
             this._$timerMap.set(id, timerId);
         }
     }
@@ -255,9 +248,7 @@ export class CacheStore
 
         if (this._$store.has(id)) {
 
-            if (this._$timerMap.has(id)) {
-                this.clearTimer(id);
-            }
+            this.stopTimer(id);
 
             const data: Map<string, any> = this._$store.get(id);
             if (data.has(type)) {

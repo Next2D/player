@@ -304,49 +304,34 @@ export class BitmapData
         }
 
         const player: Player = $currentPlayer();
-        const cacheStore: CacheStore = player.cacheStore;
-        const cacheKeys: string[] = cacheStore.generateKeys(this._$instanceId);
-        let texture: WebGLTexture | void = cacheStore.get(cacheKeys);
+        const context: CanvasToWebGLContext | null = player.context;
+        if (!context) {
+            throw new Error("the context is null.");
+        }
 
-        // delay init
-        if (!texture) {
+        if (this._$image !== null) {
 
-            const context: CanvasToWebGLContext | null = player.context;
-            if (!context) {
-                throw new Error("the context is null.");
-            }
+            return context
+                .frameBuffer
+                .createTextureFromImage(this._$image);
 
-            if (this._$image !== null) {
+        } else if (this._$canvas !== null) {
 
-                texture = context
-                    .frameBuffer
-                    .createTextureFromImage(this._$image);
+            return context
+                .frameBuffer
+                .createTextureFromCanvas(this._$canvas);
 
-            } else if (this._$canvas !== null) {
+        } else if (this._$buffer !== null) {
 
-                texture = context
-                    .frameBuffer
-                    .createTextureFromCanvas(this._$canvas);
-
-            } else if (this._$buffer !== null) {
-
-                texture = context
-                    .frameBuffer
-                    .createTextureFromPixels(
-                        width, height, this._$buffer, true
-                    );
-
-            }
-
-            if (texture) {
-                cacheStore.set(cacheKeys, texture);
-            }
+            return context
+                .frameBuffer
+                .createTextureFromPixels(
+                    width, height, this._$buffer, true
+                );
 
         }
 
-        $poolArray(cacheKeys);
-
-        return texture ? texture : null;
+        return null;
     }
 
     /**

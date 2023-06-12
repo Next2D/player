@@ -1,11 +1,12 @@
-import { $renderPlayer } from "../src/renderer/RenderUtil";
+import { $renderPlayer } from "./RenderGlobal";
+import {CanvasToWebGLContext} from "../webgl/CanvasToWebGLContext";
 
 /**
  * @class
  */
 export class CommandController
 {
-    protected _$wait: boolean;
+    private _$wait: boolean;
     public state: string;
     public queue: any[];
 
@@ -71,7 +72,7 @@ export class CommandController
         if (gl) {
             const context = new CanvasToWebGLContext(gl, samples);
             player._$context = context;
-            player._$cacheStore._$context = context;
+            player._$cacheStore.context = context;
         }
     }
 

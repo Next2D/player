@@ -1,18 +1,17 @@
 import { RenderDisplayObject } from "./RenderDisplayObject";
-import { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
+import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
 import {
     $boundsMatrix,
-    $clamp, $Infinity, $Math,
+    $clamp,
+    $Infinity,
+    $Math,
     $multiplicationColor,
-    $multiplicationMatrix, $poolBoundsObject,
+    $multiplicationMatrix,
+    $poolBoundsObject,
     $poolFloat32Array6,
     $poolFloat32Array8
-} from "../src/renderer/RenderUtil";
-import {BoundsImpl} from "../src/interface/BoundsImpl";
-import {FrameBufferManager} from "../webgl/FrameBufferManager";
-import {AttachmentImpl} from "../src/interface/AttachmentImpl";
-import {FilterArrayImpl} from "../src/interface/FilterArrayImpl";
-import {Rectangle} from "../src/next2d/geom/Rectangle";
+} from "../player/util/RenderUtil";
+import {PropertyVideoMessageImpl} from "../interface/PropertyVideoMessageImpl";
 
 /**
  * @class
@@ -383,12 +382,12 @@ export class RenderVideo extends RenderDisplayObject
      * @method
      * @private
      */
-    _$updateProperty (object)
+    _$updateProperty (object: PropertyVideoMessageImpl)
     {
-        this._$xMin        = object.xMin;
-        this._$yMin        = object.yMin;
-        this._$xMax        = object.xMax;
-        this._$yMax        = object.yMax;
+        this._$xMin        = object.xMin as NonNullable<number>;
+        this._$yMin        = object.yMin as NonNullable<number>;
+        this._$xMax        = object.xMax as NonNullable<number>;
+        this._$yMax        = object.yMax as NonNullable<number>;
         this._$imageBitmap = object.imageBitmap;
         this._$smoothing   = object.smoothing;
 

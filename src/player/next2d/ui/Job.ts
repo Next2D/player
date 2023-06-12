@@ -316,8 +316,7 @@ export class Job extends EventDispatcher
     {
         if (this._$delay) {
 
-            const timer = $setTimeout;
-            timer(() =>
+            $setTimeout(() =>
             {
                 this.initialize();
             }, this._$delay * 1000);

@@ -1,3 +1,5 @@
+import { BlendModeImpl } from "./BlendModeImpl";
+
 export interface PropertyMessageImpl {
     command: string;
     instanceId: number;
@@ -26,7 +28,7 @@ export interface PropertyMessageImpl {
     f6?: number;
     f7?: number;
     filters?: any[];
-    blendMode?: string;
+    blendMode?: BlendModeImpl;
     matrixBase?: Float32Array;
     grid?: {
         x: number;

@@ -1732,46 +1732,45 @@ export class DisplayObject extends EventDispatcher
         const cacheStore: CacheStore = player.cacheStore;
 
         const cacheKeys: any[] = [this._$instanceId, "f"];
-        let cache = cacheStore.get(cacheKeys);
+        const cache: WebGLTexture | void = cacheStore.get(cacheKeys);
 
-        const updated = this._$isFilterUpdated(
+        const updated: boolean = this._$isFilterUpdated(
             width, height, matrix, filters, true
         );
 
-        let texture;
+        if (cache && !updated) {
+            return cache;
+        }
+
+        // cache clear
+        if (cache) {
+
+            cacheStore.set(cacheKeys, null);
+            cache.layerWidth     = 0;
+            cache.layerHeight    = 0;
+            cache._$offsetX      = 0;
+            cache._$offsetY      = 0;
+            cache.matrix         = null;
+            cache.colorTransform = null;
+
+            context
+                .frameBuffer
+                .releaseTexture(cache);
+        }
+
         if (!cache || updated) {
 
-            // cache clear
-            if (cache) {
-
-                cacheStore.set(cacheKeys, null);
-                cache.layerWidth     = 0;
-                cache.layerHeight    = 0;
-                cache._$offsetX      = 0;
-                cache._$offsetY      = 0;
-                cache.matrix         = null;
-                cache.colorTransform = null;
-
-                context
-                    .frameBuffer
-                    .releaseTexture(cache);
-
-                cache = null;
-            }
-
-            texture = this._$applyFilter(
+            const texture = this._$applyFilter(
                 context, filters, target_texture,
                 matrix, width, height
             );
 
             cacheStore.set(cacheKeys, texture);
+
+            return texture;
         }
 
-        if (cache) {
-            texture = cache;
-        }
-
-        return texture;
+        return cache;
     }
 
     /**
@@ -2089,8 +2088,6 @@ export class DisplayObject extends EventDispatcher
     /**
      * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
-     * @param  {number} width
-     * @param  {number} height
      * @return {Float32Array|boolean|null}
      * @method
      * @private

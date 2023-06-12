@@ -353,7 +353,7 @@ export class FrameBufferManager
         const width: number   = this._$currentAttachment.width;
         const height: number  = this._$currentAttachment.height;
 
-        const texture: WebGLTexture|null = this._$currentAttachment.texture;
+        const texture: WebGLTexture | null = this._$currentAttachment.texture;
         if (!texture) {
             throw new Error("the texture is null.");
         }

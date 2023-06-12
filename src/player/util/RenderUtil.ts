@@ -487,8 +487,7 @@ export const $getArray = (...args: any[]): any[] =>
 {
     const array: any[] = $arrays.pop() || [];
     if (args.length) {
-        // eslint-disable-next-line prefer-spread
-        array.push.apply(array, args);
+        array.push(...args);
     }
     return array;
 };
@@ -625,20 +624,6 @@ export const $clamp = (
     return $isNaN(number) && default_value !== null
         ? default_value
         : $Math.min($Math.max(min, $isNaN(number) ? 0 : number), max);
-};
-
-/**
- * @param  {number} x1
- * @param  {number} y1
- * @param  {number} x2
- * @param  {number} y2
- * @return {number}
- * @method
- * @static
- */
-export const $cross = (x1: number, y1: number, x2: number, y2: number): number =>
-{
-    return x1 * y2 - x2 * y1;
 };
 
 /**

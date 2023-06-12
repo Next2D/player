@@ -3,8 +3,7 @@ import type { JointStyle, CapsStyle } from "../interface/StrokeTypeImpl";
 import {
     $Float32Array,
     $Int16Array,
-    $Math,
-    $cross
+    $Math
 } from "../player/util/RenderUtil";
 
 /**
@@ -262,6 +261,20 @@ export class WebGLStrokeMeshGenerator
     }
 
     /**
+     * @param  {number} x1
+     * @param  {number} y1
+     * @param  {number} x2
+     * @param  {number} y2
+     * @return {number}
+     * @method
+     * @static
+     */
+    static _$cross = (x1: number, y1: number, x2: number, y2: number): number =>
+    {
+        return x1 * y2 - x2 * y1;
+    };
+
+    /**
      * @param  {number} x1            線分Aの始点のx座標
      * @param  {number} y1            線分Aの始点のy座標
      * @param  {number} x2            結合点のx座標
@@ -291,7 +304,7 @@ export class WebGLStrokeMeshGenerator
         const ay: number = y2 - y1;
         const bx: number = x3 - x2;
         const by: number = y3 - y2;
-        const det: number = $cross(ax, ay, bx, by);
+        const det: number = this._$cross(ax, ay, bx, by);
         if ($Math.abs(det) < 0.0001) {
             return ;
         }

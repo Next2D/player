@@ -52,6 +52,7 @@ next2d
         loader.load(request);
     });
 ```
+
 [CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
 @see [API Documentation](https://next2d.app/en/docs/player)
 

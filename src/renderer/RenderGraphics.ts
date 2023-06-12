@@ -1,13 +1,44 @@
-import {RenderDisplayObject} from "./RenderDisplayObject";
+import { RenderDisplayObject } from "./RenderDisplayObject";
+import { Rectangle } from "../player/next2d/geom/Rectangle";
+import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
+import type { BlendModeImpl } from "../interface/BlendModeImpl";
+import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { FrameBufferManager } from "../webgl/FrameBufferManager";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { CacheStore } from "../player/util/CacheStore";
+import type { CanvasGradientToWebGL } from "../webgl/CanvasGradientToWebGL";
+import type { ColorStopImpl } from "../interface/ColorStopImpl";
+import type { SpreadMethod } from "../interface/GradientTypeImpl";
+import type { PropertyMessageMapImpl } from "../interface/PropertyMessageMapImpl";
+import { $renderPlayer } from "./RenderGlobal";
+import {
+    $clamp,
+    $getBoundsObject,
+    $boundsMatrix,
+    $Math,
+    $poolBoundsObject,
+    $Infinity,
+    $Number,
+    $getArray,
+    $poolArray,
+    $getFloat32Array6,
+    $multiplicationMatrix,
+    $poolFloat32Array6,
+    $useCache,
+    $getFloat32Array4,
+    $linearGradientXY,
+    $getFloat32Array8
+} from "../player/util/RenderUtil";
 
 /**
  * @class
  */
 export class RenderGraphics extends RenderDisplayObject
 {
-    protected _$recodes: Float32Array | null;
-    protected _$maxAlpha: number;
-    protected _$canDraw: boolean;
+    public _$recodes: Float32Array | null;
+    public _$maxAlpha: number;
+    public _$canDraw: boolean;
 
     /**
      * @constructor
@@ -46,8 +77,15 @@ export class RenderGraphics extends RenderDisplayObject
      * @method
      * @private
      */
-    _$clip (context, matrix)
-    {
+    _$clip (
+        context: CanvasToWebGLContext,
+        matrix: Float32Array
+    ): void {
+
+        if (!this._$recodes) {
+            return ;
+        }
+
         context.setTransform(
             matrix[0], matrix[1], matrix[2],
             matrix[3], matrix[4], matrix[5]
@@ -68,24 +106,27 @@ export class RenderGraphics extends RenderDisplayObject
      * @method
      * @private
      */
-    _$draw (context, matrix, color_transform,
-        blend_mode = BlendMode.NORMAL, filters = null
-    ) {
+    _$draw (
+        context: CanvasToWebGLContext,
+        matrix: Float32Array,
+        color_transform: Float32Array,
+        blend_mode: BlendModeImpl = "normal",
+        filters: FilterArrayImpl | null = null
+    ): void {
 
-        if (!this._$visible) {
+        if (!this._$visible || !this._$recodes) {
             return ;
         }
 
-        const alpha = Util.$clamp(color_transform[3] + color_transform[7] / 255, 0, 1, 0);
-
+        const alpha: number = $clamp(color_transform[3] + color_transform[7] / 255, 0, 1, 0);
         if (!alpha || !this._$maxAlpha) {
             return ;
         }
 
-        const rawMatrix = this._$matrix;
+        const rawMatrix: Float32Array = this._$matrix;
 
         // set grid data
-        let hasGrid = this._$scale9Grid !== null;
+        let hasGrid: boolean = this._$scale9Grid !== null;
 
         // 9スライスを有効にしたオブジェクトが回転・傾斜成分を含む場合は
         // 9スライスは無効になる
@@ -96,20 +137,20 @@ export class RenderGraphics extends RenderDisplayObject
         }
 
         // size
-        const baseBounds = Util.$getBoundsObject(
+        const baseBounds: BoundsImpl = $getBoundsObject(
             this._$xMin, this._$xMax,
             this._$yMin, this._$yMax
         );
 
-        const bounds = Util.$boundsMatrix(baseBounds, matrix);
-        const xMax   = bounds.xMax;
-        const xMin   = bounds.xMin;
-        const yMax   = bounds.yMax;
-        const yMin   = bounds.yMin;
-        Util.$poolBoundsObject(bounds);
+        const bounds: BoundsImpl = $boundsMatrix(baseBounds, matrix);
+        const xMax: number   = bounds.xMax;
+        const xMin: number   = bounds.xMin;
+        const yMax: number   = bounds.yMax;
+        const yMin: number   = bounds.yMin;
+        $poolBoundsObject(bounds);
 
-        const width  = $Math.ceil($Math.abs(xMax - xMin));
-        const height = $Math.ceil($Math.abs(yMax - yMin));
+        const width: number  = $Math.ceil($Math.abs(xMax - xMin));
+        const height: number = $Math.ceil($Math.abs(yMax - yMin));
         switch (true) {
 
             case width === 0:
@@ -126,34 +167,35 @@ export class RenderGraphics extends RenderDisplayObject
         }
 
         // cache current buffer
-        const manager = context._$frameBufferManager;
-        const currentAttachment = manager.currentAttachment;
-        if (xMin > currentAttachment.width
+        const manager: FrameBufferManager = context.frameBuffer;
+        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+        if (!currentAttachment
+            || xMin > currentAttachment.width
             || yMin > currentAttachment.height
         ) {
             return;
         }
 
-        let xScale = +$Math.sqrt(
+        let xScale: number = +$Math.sqrt(
             matrix[0] * matrix[0]
             + matrix[1] * matrix[1]
         );
         if (!$Number.isInteger(xScale)) {
-            const value = xScale.toString();
-            const index = value.indexOf("e");
+            const value: string = xScale.toString();
+            const index: number = value.indexOf("e");
             if (index !== -1) {
                 xScale = +value.slice(0, index);
             }
             xScale = +xScale.toFixed(4);
         }
 
-        let yScale = +$Math.sqrt(
+        let yScale: number = +$Math.sqrt(
             matrix[2] * matrix[2]
             + matrix[3] * matrix[3]
         );
         if (!$Number.isInteger(yScale)) {
-            const value = yScale.toString();
-            const index = value.indexOf("e");
+            const value: string = yScale.toString();
+            const index: number = value.indexOf("e");
             if (index !== -1) {
                 yScale = +value.slice(0, index);
             }
@@ -164,8 +206,8 @@ export class RenderGraphics extends RenderDisplayObject
 
             if (filters && filters.length && this._$canApply(filters)) {
 
-                let rect = new Rectangle(0, 0, width, height);
-                for (let idx = 0; idx < filters.length ; ++idx) {
+                let rect: Rectangle = new Rectangle(0, 0, width, height);
+                for (let idx: number = 0; idx < filters.length ; ++idx) {
                     rect = filters[idx]
                         ._$generateFilterRect(rect, xScale, yScale);
                 }
@@ -181,9 +223,9 @@ export class RenderGraphics extends RenderDisplayObject
         }
 
         // get cache
-        const keys = Util.$getArray(xScale, yScale);
+        const keys: any[] = $getArray(xScale, yScale);
 
-        let uniqueId = this._$instanceId;
+        let uniqueId: string = `${this._$instanceId}`;
         if (!hasGrid
             && this._$loaderInfoId > -1
             && this._$characterId > -1
@@ -191,19 +233,19 @@ export class RenderGraphics extends RenderDisplayObject
             uniqueId = `${this._$loaderInfoId}@${this._$characterId}`;
         }
 
-        const cacheStore = Util.$cacheStore();
-        const cacheKeys  = cacheStore.generateKeys(
+        const cacheStore: CacheStore = $renderPlayer._$cacheStore;
+        const cacheKeys: string[] = cacheStore.generateKeys(
             uniqueId, keys, color_transform
         );
 
-        Util.$poolArray(keys);
+        $poolArray(keys);
 
-        let texture = cacheStore.get(cacheKeys);
+        let texture: WebGLTexture | null = cacheStore.get(cacheKeys);
         if (!texture) {
 
             // resize
-            let width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-            let height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
+            let width: number  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+            let height: number = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
             const textureScale = context._$getTextureScale(width, height);
             if (textureScale < 1) {
                 width  *= textureScale;
@@ -211,12 +253,12 @@ export class RenderGraphics extends RenderDisplayObject
             }
 
             // create cache buffer
-            const buffer = manager
+            const attachment: AttachmentImpl = manager
                 .createCacheAttachment(width, height, true);
-            context._$bind(buffer);
+            context._$bind(attachment);
 
             // reset
-            Util.$resetContext(context);
+            context.reset();
             context.setTransform(
                 xScale, 0, 0, yScale,
                 0 - baseBounds.xMin * xScale,
@@ -225,53 +267,53 @@ export class RenderGraphics extends RenderDisplayObject
 
             if (hasGrid) {
 
-                const player = Util.$renderPlayer;
-                const mScale = player._$matrix[0];
+                const mScale: number = $renderPlayer._$matrix[0];
 
-                const baseMatrix = Util.$getFloat32Array6(
+                const baseMatrix: Float32Array = $getFloat32Array6(
                     mScale, 0, 0, mScale, 0, 0
                 );
 
-                const pMatrix = Util.$multiplicationMatrix(
+                const pMatrix: Float32Array = $multiplicationMatrix(
                     baseMatrix, rawMatrix
                 );
 
-                Util.$poolFloat32Array6(baseMatrix);
+                $poolFloat32Array6(baseMatrix);
 
-                const aMatrixBase = this._$matrixBase;
-
-                const aMatrix = Util.$getFloat32Array6(
-                    aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
+                const aMatrixBase: Float32Array = this._$matrixBase as NonNullable<Float32Array>;
+                const aMatrix = $getFloat32Array6(
+                    aMatrixBase[0], aMatrixBase[1],
+                    aMatrixBase[2], aMatrixBase[3],
                     aMatrixBase[4] * mScale - xMin,
                     aMatrixBase[5] * mScale - yMin
                 );
 
-                const apMatrix = Util.$multiplicationMatrix(
+                const apMatrix: Float32Array = $multiplicationMatrix(
                     aMatrix, pMatrix
                 );
-                const aOffsetX = apMatrix[4] - (matrix[4] - xMin);
-                const aOffsetY = apMatrix[5] - (matrix[5] - yMin);
-                Util.$poolFloat32Array6(apMatrix);
 
-                const parentBounds = Util.$boundsMatrix(baseBounds, pMatrix);
-                const parentXMax   = +parentBounds.xMax;
-                const parentXMin   = +parentBounds.xMin;
-                const parentYMax   = +parentBounds.yMax;
-                const parentYMin   = +parentBounds.yMin;
-                const parentWidth  = $Math.ceil($Math.abs(parentXMax - parentXMin));
-                const parentHeight = $Math.ceil($Math.abs(parentYMax - parentYMin));
+                const aOffsetX: number = apMatrix[4] - (matrix[4] - xMin);
+                const aOffsetY: number = apMatrix[5] - (matrix[5] - yMin);
+                $poolFloat32Array6(apMatrix);
 
-                Util.$poolBoundsObject(parentBounds);
+                const parentBounds: BoundsImpl = $boundsMatrix(baseBounds, pMatrix);
+                const parentXMax: number   = +parentBounds.xMax;
+                const parentXMin: number   = +parentBounds.xMin;
+                const parentYMax: number   = +parentBounds.yMax;
+                const parentYMin: number   = +parentBounds.yMin;
+                const parentWidth: number  = $Math.ceil($Math.abs(parentXMax - parentXMin));
+                const parentHeight: number = $Math.ceil($Math.abs(parentYMax - parentYMin));
+
+                $poolBoundsObject(parentBounds);
 
                 context.grid.enable(
                     parentXMin, parentYMin, parentWidth, parentHeight,
-                    baseBounds, this._$scale9Grid, mScale,
+                    baseBounds, this._$scale9Grid as NonNullable<Rectangle>, mScale,
                     pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
                     aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
                 );
 
-                Util.$poolFloat32Array6(pMatrix);
-                Util.$poolFloat32Array6(aMatrix);
+                $poolFloat32Array6(pMatrix);
+                $poolFloat32Array6(aMatrix);
             }
 
             // plain alpha
@@ -285,20 +327,20 @@ export class RenderGraphics extends RenderDisplayObject
             texture = manager.getTextureFromCurrentAttachment();
 
             // set cache
-            if (Util.$useCache) {
+            if ($useCache) {
                 cacheStore.set(cacheKeys, texture);
             }
 
             // release buffer
-            manager.releaseAttachment(buffer, false);
+            manager.releaseAttachment(attachment, false);
 
             // end draw and reset current buffer
             context._$bind(currentAttachment);
         }
 
-        let drawFilter = false;
-        let offsetX = 0;
-        let offsetY = 0;
+        let drawFilter: boolean = false;
+        let offsetX: number = 0;
+        let offsetY: number = 0;
         if (filters && filters.length
             && this._$canApply(filters)
         ) {
@@ -314,17 +356,17 @@ export class RenderGraphics extends RenderDisplayObject
             offsetY = texture._$offsetY;
         }
 
-        const radianX = $Math.atan2(matrix[1], matrix[0]);
-        const radianY = $Math.atan2(0 - matrix[2], matrix[3]);
+        const radianX: number = $Math.atan2(matrix[1], matrix[0]);
+        const radianY: number = $Math.atan2(0 - matrix[2], matrix[3]);
         if (!drawFilter && (radianX || radianY)) {
 
-            const tx = baseBounds.xMin * xScale;
-            const ty = baseBounds.yMin * yScale;
+            const tx: number = baseBounds.xMin * xScale;
+            const ty: number = baseBounds.yMin * yScale;
 
-            const cosX = $Math.cos(radianX);
-            const sinX = $Math.sin(radianX);
-            const cosY = $Math.cos(radianY);
-            const sinY = $Math.sin(radianY);
+            const cosX: number = $Math.cos(radianX);
+            const sinX: number = $Math.sin(radianX);
+            const cosY: number = $Math.cos(radianY);
+            const sinY: number = $Math.sin(radianY);
 
             context.setTransform(
                 cosX, sinX, 0 - sinY, cosY,
@@ -340,27 +382,25 @@ export class RenderGraphics extends RenderDisplayObject
 
         }
 
-        // reset
-        Util.$resetContext(context);
-
         // draw
-        context._$globalAlpha = alpha;
-        context._$imageSmoothingEnabled = true;
-        context._$globalCompositeOperation = blend_mode;
+        context.reset();
+        context.globalAlpha = alpha;
+        context.imageSmoothingEnabled = true;
+        context.globalCompositeOperation = blend_mode;
 
         context.drawImage(texture,
             0, 0, texture.width, texture.height, color_transform
         );
 
         // pool
-        Util.$poolArray(cacheKeys);
-        Util.$poolBoundsObject(baseBounds);
+        $poolArray(cacheKeys);
+        $poolBoundsObject(baseBounds);
     }
 
     /**
      * @description strokeのセットアップ
      *
-     * @param  {CanvasToWebGLContext|CanvasRenderingContext2D} context
+     * @param  {CanvasToWebGLContext} context
      * @param  {number} line_width
      * @param  {number} line_cap
      * @param  {number} line_join
@@ -369,22 +409,26 @@ export class RenderGraphics extends RenderDisplayObject
      * @method
      * @public
      */
-    setupStroke (context, line_width, line_cap, line_join, miter_limit)
-    {
+    setupStroke (
+        context: CanvasToWebGLContext,
+        line_width: number, line_cap: number,
+        line_join: number, miter_limit: number
+    ): void {
+
         context.lineWidth = line_width;
 
         switch (line_cap) {
 
             case 0:
-                context.lineCap = CapsStyle.NONE;
+                context.lineCap = "none";
                 break;
 
             case 1:
-                context.lineCap = CapsStyle.ROUND;
+                context.lineCap = "round";
                 break;
 
             case 2:
-                context.lineCap = CapsStyle.SQUARE;
+                context.lineCap = "square";
                 break;
 
         }
@@ -392,15 +436,15 @@ export class RenderGraphics extends RenderDisplayObject
         switch (line_join) {
 
             case 0:
-                context.lineJoin = JointStyle.BEVEL;
+                context.lineJoin = "bevel";
                 break;
 
             case 1:
-                context.lineJoin = JointStyle.MITER;
+                context.lineJoin = "miter";
                 break;
 
             case 2:
-                context.lineJoin = JointStyle.ROUND;
+                context.lineJoin = "round";
                 break;
 
         }
@@ -411,7 +455,7 @@ export class RenderGraphics extends RenderDisplayObject
     /**
      * @description CanvasGradientToWebGLオブジェクトを生成
      *
-     * @param  {CanvasToWebGLContext|CanvasRenderingContext2D} context
+     * @param  {CanvasToWebGLContext} context
      * @param  {number} type
      * @param  {array} stops
      * @param  {Float32Array} matrix
@@ -424,12 +468,14 @@ export class RenderGraphics extends RenderDisplayObject
      * @public
      */
     createGradientStyle (
-        context, type, stops, matrix,
-        spread, interpolation, focal,
-        color_transform = null
-    ) {
+        context: CanvasToWebGLContext,
+        type: number, stops: ColorStopImpl[],
+        matrix: Float32Array,
+        spread: number, interpolation: number, focal: number,
+        color_transform: Float32Array | null = null
+    ): CanvasGradientToWebGL {
 
-        let spreadMethod = "pad";
+        let spreadMethod: SpreadMethod = "pad";
         switch (spread) {
 
             case 0:// REFLECT
@@ -442,11 +488,11 @@ export class RenderGraphics extends RenderDisplayObject
 
         }
 
-        let css = null;
+        let css: CanvasGradientToWebGL;
         if (type === 0) {
 
             // LINEAR
-            const xy = Util.$linearGradientXY(matrix);
+            const xy: Float32Array = $linearGradientXY(matrix);
             css = context.createLinearGradient(
                 xy[0], xy[1], xy[2], xy[3],
                 interpolation ? "rgb" : "linearRGB",
@@ -470,31 +516,20 @@ export class RenderGraphics extends RenderDisplayObject
 
         }
 
-        for (let idx = 0; idx < stops.length; ++idx) {
+        for (let idx: number = 0; idx < stops.length; ++idx) {
 
-            const color = stops[idx];
+            const color: ColorStopImpl = stops[idx];
 
-            if (!color_transform) {
-
-                css.addColorStop(color.ratio,
-                    Util.$getFloat32Array4(
-                        $Math.max(0, $Math.min(color.R, 255)),
-                        $Math.max(0, $Math.min(color.G, 255)),
-                        $Math.max(0, $Math.min(color.B, 255)),
-                        $Math.max(0, $Math.min(color.A, 255))
-                    )
-                );
-
-            } else {
-
-                css.addColorStop(color.ratio, Util.$getFloat32Array4(
-                    $Math.max(0, $Math.min(color.R * color_transform[0] + color_transform[4], 255)),
-                    $Math.max(0, $Math.min(color.G * color_transform[1] + color_transform[5], 255)),
-                    $Math.max(0, $Math.min(color.B * color_transform[2] + color_transform[6], 255)),
-                    $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255))
-                ));
-
+            let alpha: number = color.A;
+            if (color_transform) {
+                if (color_transform[3] !== 1 || color_transform[7] !== 0) {
+                    alpha = $Math.max(0, $Math.min(color.A * color_transform[3] + color_transform[7], 255)) | 0;
+                }
             }
+
+            css.addColorStop(color.ratio, $getFloat32Array4(
+                color.R, color.G, color.B, alpha
+            ));
         }
 
         return css;
@@ -504,7 +539,7 @@ export class RenderGraphics extends RenderDisplayObject
      * @description Graphicsクラスの描画を実行
      *              Execute drawing in the Graphics class
      *
-     * @param  {CanvasToWebGLContext|CanvasRenderingContext2D} context
+     * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} recodes
      * @param  {Float32Array} [color_transform=null]
      * @param  {boolean} [is_clip=false]
@@ -512,14 +547,19 @@ export class RenderGraphics extends RenderDisplayObject
      * @method
      * @public
      */
-    _$runCommand (context, recodes, color_transform = null, is_clip = false)
-    {
+    _$runCommand (
+        context: CanvasToWebGLContext,
+        recodes: Float32Array,
+        color_transform: Float32Array | null = null,
+        is_clip: boolean = false
+    ): void {
+
         // reset
-        Util.$resetContext(context);
+        context.reset();
         context.beginPath();
 
-        const length = recodes.length;
-        for (let idx = 0; idx < length; ) {
+        const length: number = recodes.length;
+        for (let idx: number = 0; idx < length; ) {
 
             switch (recodes[idx++]) {
 
@@ -549,19 +589,21 @@ export class RenderGraphics extends RenderDisplayObject
                             continue;
                         }
 
-                        const fillStyle = context._$contextStyle;
+                        const color: Float32Array = $getFloat32Array4();
+                        color[0] = recodes[idx++] / 255;
+                        color[1] = recodes[idx++] / 255;
+                        color[2] = recodes[idx++] / 255;
+                        color[3] = recodes[idx++] / 255;
 
-                        fillStyle._$fillStyle[0] = recodes[idx++] / 255;
-                        fillStyle._$fillStyle[1] = recodes[idx++] / 255;
-                        fillStyle._$fillStyle[2] = recodes[idx++] / 255;
+                        if (color_transform !== null) {
+                            if (color_transform[3] !== 1 || color_transform[7] !== 0) {
+                                color[3] = $Math.max(0, $Math.min(
+                                    color[3] * color_transform[3] + color_transform[7], 255)
+                                ) / 255;
+                            }
+                        }
 
-                        fillStyle._$fillStyle[3] = !color_transform || color_transform[3] === 1 && color_transform[7] === 0
-                            ? recodes[idx++] / 255
-                            : $Math.max(0, $Math.min(
-                                recodes[idx++] * color_transform[3] + color_transform[7], 255)
-                            ) / 255;
-
-                        context._$style = fillStyle;
+                        context.fillStyle = color;
                     }
                     break;
 
@@ -586,19 +628,22 @@ export class RenderGraphics extends RenderDisplayObject
                             recodes[idx++], recodes[idx++]
                         );
 
-                        const strokeStyle = context._$contextStyle;
+                        const color = $getFloat32Array4();
 
-                        strokeStyle._$strokeStyle[0] = recodes[idx++] / 255;
-                        strokeStyle._$strokeStyle[1] = recodes[idx++] / 255;
-                        strokeStyle._$strokeStyle[2] = recodes[idx++] / 255;
+                        color[0] = recodes[idx++] / 255;
+                        color[1] = recodes[idx++] / 255;
+                        color[2] = recodes[idx++] / 255;
+                        color[3] = recodes[idx++] / 255;
 
-                        strokeStyle._$strokeStyle[3] = !color_transform || color_transform[3] === 1 && color_transform[7] === 0
-                            ? recodes[idx++] / 255
-                            : $Math.max(0, $Math.min(
-                                recodes[idx++] * color_transform[3] + color_transform[7], 255)
-                            ) / 255;
+                        if (color_transform !== null) {
+                            if (color_transform[3] !== 1 || color_transform[7] !== 0) {
+                                color[3] = $Math.max(0, $Math.min(
+                                    color[3] * color_transform[3] + color_transform[7], 255)
+                                ) / 255;
+                            }
+                        }
 
-                        context._$style = strokeStyle;
+                        context.strokeStyle = color;
                     }
                     break;
 
@@ -621,10 +666,7 @@ export class RenderGraphics extends RenderDisplayObject
                     break;
 
                 case 4: // ARC
-                    context.arc(
-                        recodes[idx++], recodes[idx++], recodes[idx++],
-                        0, 2 * $Math.PI
-                    );
+                    context.arc(recodes[idx++], recodes[idx++], recodes[idx++]);
                     break;
 
                 case 10: // GRADIENT_FILL
@@ -637,11 +679,10 @@ export class RenderGraphics extends RenderDisplayObject
                             continue;
                         }
 
-                        const type = recodes[idx++];
+                        const type: number = recodes[idx++];
 
-                        let stopLength = recodes[idx++];
-
-                        const stops = Util.$getArray();
+                        let stopLength: number = recodes[idx++];
+                        const stops: ColorStopImpl[] = $getArray();
                         while (stopLength) {
                             stops.push({
                                 "ratio": recodes[idx++],
@@ -653,7 +694,7 @@ export class RenderGraphics extends RenderDisplayObject
                             stopLength--;
                         }
 
-                        const matrix = Util.$getFloat32Array6(
+                        const matrix: Float32Array = $getFloat32Array6(
                             recodes[idx++], recodes[idx++], recodes[idx++],
                             recodes[idx++], recodes[idx++], recodes[idx++]
                         );
@@ -671,8 +712,8 @@ export class RenderGraphics extends RenderDisplayObject
                             context.restore();
                         }
 
-                        Util.$poolFloat32Array6(matrix);
-                        Util.$poolArray(stops);
+                        $poolFloat32Array6(matrix);
+                        $poolArray(stops);
                     }
                     break;
 
@@ -692,11 +733,11 @@ export class RenderGraphics extends RenderDisplayObject
                             recodes[idx++], recodes[idx++]
                         );
 
-                        const type = recodes[idx++];
+                        const type: number = recodes[idx++];
 
-                        let stopLength = recodes[idx++];
+                        let stopLength: number = recodes[idx++];
 
-                        const stops = Util.$getArray();
+                        const stops: ColorStopImpl[] = $getArray();
                         while (stopLength) {
                             stops.push({
                                 "ratio": recodes[idx++],
@@ -708,7 +749,7 @@ export class RenderGraphics extends RenderDisplayObject
                             stopLength--;
                         }
 
-                        const matrix = Util.$getFloat32Array6(
+                        const matrix: Float32Array = $getFloat32Array6(
                             recodes[idx++], recodes[idx++], recodes[idx++],
                             recodes[idx++], recodes[idx++], recodes[idx++]
                         );
@@ -726,36 +767,36 @@ export class RenderGraphics extends RenderDisplayObject
                             context.restore();
                         }
 
-                        Util.$poolFloat32Array6(matrix);
-                        Util.$poolArray(stops);
+                        $poolFloat32Array6(matrix);
+                        $poolArray(stops);
                     }
                     break;
 
                 case 13: // BITMAP_FILL
                     {
-                        const width  = recodes[idx++];
-                        const height = recodes[idx++];
-                        const graphicsWidth  = recodes[idx++];
-                        const graphicsHeight = recodes[idx++];
-                        const bitmapLength = recodes[idx++];
+                        const width: number          = recodes[idx++];
+                        const height: number         = recodes[idx++];
+                        const graphicsWidth: number  = recodes[idx++];
+                        const graphicsHeight: number = recodes[idx++];
+                        const bitmapLength: number   = recodes[idx++];
                         if (is_clip) {
                             idx += bitmapLength;
                             idx += 8;
                             continue;
                         }
 
-                        const buffer = new Uint8Array(
+                        const buffer: Uint8Array = new Uint8Array(
                             recodes.subarray(idx, bitmapLength + idx)
                         );
 
                         idx += bitmapLength;
-                        const matrix = Util.$getFloat32Array6(
+                        const matrix: Float32Array = $getFloat32Array6(
                             recodes[idx++], recodes[idx++], recodes[idx++],
                             recodes[idx++], recodes[idx++], recodes[idx++]
                         );
 
-                        const repeat = recodes[idx++] ? "repeat" : "no-repeat";
-                        const smooth = !!recodes[idx++];
+                        const repeat: string  = recodes[idx++] ? "repeat" : "no-repeat";
+                        const smooth: boolean = !!recodes[idx++];
 
                         context.save();
 
@@ -768,10 +809,10 @@ export class RenderGraphics extends RenderDisplayObject
                                 matrix[3], matrix[4], matrix[5]
                             );
                         }
-                        Util.$poolFloat32Array6(matrix);
+                        $poolFloat32Array6(matrix);
 
-                        const manager = context._$frameBufferManager;
-                        const texture = manager.createTextureFromPixels(
+                        const manager: FrameBufferManager = context.frameBuffer;
+                        const texture: WebGLTexture = manager.createTextureFromPixels(
                             width, height, buffer, true
                         );
 
@@ -786,17 +827,17 @@ export class RenderGraphics extends RenderDisplayObject
                         } else {
 
                             context.fillStyle = context.createPattern(
-                                texture, repeat, color_transform
+                                texture, repeat, color_transform || $getFloat32Array8()
                             );
 
-                            context._$imageSmoothingEnabled = smooth;
+                            context.imageSmoothingEnabled = smooth;
                             context.fill();
 
                         }
 
                         // restore
                         context.restore();
-                        context._$imageSmoothingEnabled = false;
+                        context.imageSmoothingEnabled = false;
 
                     }
                     break;
@@ -819,16 +860,16 @@ export class RenderGraphics extends RenderDisplayObject
                             recodes[idx++], recodes[idx++]
                         );
 
-                        const width  = recodes[idx++];
-                        const height = recodes[idx++];
-                        const bitmapLength = recodes[idx++];
+                        const width: number  = recodes[idx++];
+                        const height: number = recodes[idx++];
+                        const bitmapLength: number = recodes[idx++];
 
-                        const buffer = new Uint8Array(
+                        const buffer: Uint8Array = new Uint8Array(
                             recodes.subarray(idx, bitmapLength + idx)
                         );
 
                         idx += bitmapLength;
-                        const matrix = Util.$getFloat32Array6(
+                        const matrix: Float32Array = $getFloat32Array6(
                             recodes[idx++], recodes[idx++], recodes[idx++],
                             recodes[idx++], recodes[idx++], recodes[idx++]
                         );
@@ -842,26 +883,26 @@ export class RenderGraphics extends RenderDisplayObject
                                 matrix[3], matrix[4], matrix[5]
                             );
                         }
-                        Util.$poolFloat32Array6(matrix);
+                        $poolFloat32Array6(matrix);
 
-                        const repeat = recodes[idx++] ? "repeat" : "no-repeat";
-                        const smooth = !!recodes[idx++];
+                        const repeat: string  = recodes[idx++] ? "repeat" : "no-repeat";
+                        const smooth: boolean = !!recodes[idx++];
 
-                        const manager = context._$frameBufferManager;
-                        const texture = manager.createTextureFromPixels(
+                        const manager: FrameBufferManager = context.frameBuffer;
+                        const texture: WebGLTexture = manager.createTextureFromPixels(
                             width, height, buffer, true
                         );
 
                         context.strokeStyle = context.createPattern(
-                            texture, repeat, color_transform
+                            texture, repeat, color_transform || $getFloat32Array8()
                         );
 
-                        context._$imageSmoothingEnabled = smooth;
+                        context.imageSmoothingEnabled = smooth;
                         context.stroke();
 
                         // restore
                         context.restore();
-                        context._$imageSmoothingEnabled = false;
+                        context.imageSmoothingEnabled = false;
                     }
                     break;
 
@@ -880,7 +921,7 @@ export class RenderGraphics extends RenderDisplayObject
      * @method
      * @private
      */
-    _$update (object)
+    _$update (object: PropertyMessageMapImpl<any>): void
     {
         super._$update(object);
 
@@ -894,7 +935,7 @@ export class RenderGraphics extends RenderDisplayObject
             this._$maxAlpha = object.maxAlpha;
             this._$canDraw  = object.canDraw;
 
-            const cacheStore = Util.$renderPlayer._$cacheStore;
+            const cacheStore: CacheStore = $renderPlayer._$cacheStore;
             cacheStore.removeCache(this._$instanceId);
 
             if (this._$loaderInfoId > -1

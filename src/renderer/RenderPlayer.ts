@@ -1,24 +1,37 @@
-import {CacheStore} from "../src/util/CacheStore";
+import { CacheStore } from "../player/util/CacheStore";
+import { RenderDisplayObjectContainer } from "./RenderDisplayObjectContainer";
+import { Rectangle } from "../player/next2d/geom/Rectangle";
+import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
+import type { FrameBufferManager } from "../webgl/FrameBufferManager";
+import type { PropertyContainerMessageImpl } from "../interface/PropertyContainerMessageImpl";
 import {
-    $cancelAnimationFrame, $COLOR_ARRAY_IDENTITY,
+    $cancelAnimationFrame,
+    $COLOR_ARRAY_IDENTITY,
     $Float32Array,
     $getFloat32Array6,
     $performance,
     $requestAnimationFrame
-} from "../src/renderer/RenderUtil";
-import {RenderDisplayObjectContainer} from "./RenderDisplayObjectContainer";
-import {AttachmentImpl} from "../src/interface/AttachmentImpl";
-import {CanvasToWebGLContext} from "../webgl/CanvasToWebGLContext";
+} from "../player/util/RenderUtil";
+import {
+    $getDisplayObjectContainer,
+    $getShape,
+    $getTextField,
+    $getVideo
+} from "./RenderGlobal";
 
 /**
  * @class
  */
 export class RenderPlayer
 {
-    private _$instances: Map<any, any>;
-    private _$cacheStore: CacheStore;
-    private readonly _$matrix: Float32Array;
+    public readonly _$instances: Map<number, RenderDisplayObjectImpl<any>>;
+    public readonly _$cacheStore: CacheStore;
+    public readonly _$matrix: Float32Array;
     private readonly _$colorTransform: Float32Array;
+    public _$canvas: OffscreenCanvas | null;
+    public _$context: CanvasToWebGLContext | null;
     private _$stopFlag: boolean;
     private _$timerId: number;
     private _$startTime: number;
@@ -29,8 +42,6 @@ export class RenderPlayer
     private readonly _$stage: RenderDisplayObjectContainer;
     private _$videos: number;
     private _$samples: number;
-    private _$canvas: OffscreenCanvas | null;
-    private _$context: CanvasToWebGLContext | null;
     private _$attachment: AttachmentImpl | null;
 
     /**
@@ -163,9 +174,10 @@ export class RenderPlayer
      * @method
      * @public
      */
-    play ()
+    play (): void
     {
         if (this._$stopFlag) {
+
             this._$stopFlag = false;
 
             if (this._$timerId > -1) {
@@ -191,7 +203,7 @@ export class RenderPlayer
      * @method
      * @public
      */
-    stop ()
+    stop (): void
     {
         $cancelAnimationFrame(this._$timerId);
 
@@ -208,7 +220,7 @@ export class RenderPlayer
      * @method
      * @public
      */
-    _$run (timestamp: number = 0)
+    _$run (timestamp: number = 0): void
     {
         if (this._$stopFlag) {
             return ;
@@ -250,7 +262,7 @@ export class RenderPlayer
      * @private
      */
     _$bitmapDraw (
-        source: RenderDisplayObject,
+        source: RenderDisplayObjectImpl<any>,
         matrix: Float32Array,
         color_transform: Float32Array,
         canvas: OffscreenCanvas
@@ -271,23 +283,24 @@ export class RenderPlayer
 
         source._$draw(context, matrix, color_transform);
 
-        const manager = context._$frameBufferManager;
-        const texture = manager.getTextureFromCurrentAttachment();
+        const manager: FrameBufferManager = context.frameBuffer;
+        const texture: WebGLTexture = manager.getTextureFromCurrentAttachment();
 
         manager.unbind();
 
         // reset and draw to main canvas
-        Util.$resetContext(context);
+        context.reset();
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.clearRect(0, 0, this._$width, this._$height);
         context.drawImage(texture, 0, 0, this._$width, this._$height);
 
         // re bind
-        context._$bind(this._$buffer);
+        context._$bind(this._$attachment);
 
-        canvas
-            .getContext("2d")
-            .drawImage(this._$canvas, 0, 0);
+        const ctx: OffscreenCanvasRenderingContext2D | null = canvas.getContext("2d");
+        if (ctx && this._$canvas) {
+            ctx.drawImage(this._$canvas, 0, 0);
+        }
     }
 
     /**
@@ -329,19 +342,19 @@ export class RenderPlayer
         // stage end
         this._$stage._$updated = false;
 
-        const manager = context._$frameBufferManager;
-        const texture = manager.getTextureFromCurrentAttachment();
+        const manager: FrameBufferManager = context.frameBuffer;
+        const texture: WebGLTexture = manager.getTextureFromCurrentAttachment();
 
         manager.unbind();
 
         // reset and draw to main canvas
-        Util.$resetContext(context);
+        context.reset();
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.clearRect(0, 0, this._$width, this._$height);
         context.drawImage(texture, 0, 0, this._$width, this._$height);
 
         // re bind
-        context._$bind(this._$buffer);
+        context._$bind(this._$attachment);
     }
 
     /**
@@ -356,8 +369,12 @@ export class RenderPlayer
      * @method
      * @private
      */
-    _$resize (width, height, scale, tx = 0, ty = 0)
-    {
+    _$resize (
+        width: number, height: number, scale: number,
+        tx: number = 0,
+        ty: number = 0
+    ): void {
+
         this._$width  = width;
         this._$height = height;
 
@@ -375,13 +392,13 @@ export class RenderPlayer
 
         context._$gl.viewport(0, 0, width, height);
 
-        const manager = context._$frameBufferManager;
-        if (this._$buffer) {
+        const manager: FrameBufferManager = context.frameBuffer;
+        if (this._$attachment) {
             manager.unbind();
-            manager.releaseAttachment(this._$buffer, true);
+            manager.releaseAttachment(this._$attachment, true);
         }
 
-        this._$buffer = manager
+        this._$attachment = manager
             .createCacheAttachment(width, height, false);
 
         this._$matrix[0] = scale;
@@ -390,12 +407,7 @@ export class RenderPlayer
         this._$matrix[5] = ty;
 
         // update cache max size
-        manager._$stencilBufferPool._$maxWidth  = width;
-        manager._$stencilBufferPool._$maxHeight = height;
-        manager._$textureManager._$maxWidth     = width;
-        manager._$textureManager._$maxHeight    = height;
-        context._$pbo._$maxWidth                = width;
-        context._$pbo._$maxHeight               = height;
+        manager.setMaxSize(width, height);
 
         this._$stage._$updated = true;
         this._$cacheStore.reset();
@@ -407,7 +419,7 @@ export class RenderPlayer
      * @method
      * @private
      */
-    _$setStage (instance_id)
+    _$setStage (instance_id: number): void
     {
         this._$stage._$instanceId = instance_id;
         this._$instances.set(instance_id, this._$stage);
@@ -433,9 +445,9 @@ export class RenderPlayer
      * @method
      * @private
      */
-    _$createDisplayObjectContainer (object)
+    _$createDisplayObjectContainer (object: PropertyContainerMessageImpl)
     {
-        const sprite = Util.$getDisplayObjectContainer();
+        const sprite = $getDisplayObjectContainer();
 
         sprite._$instanceId = object.instanceId;
 
@@ -469,7 +481,7 @@ export class RenderPlayer
      */
     _$createShape (object)
     {
-        const shape = Util.$getShape();
+        const shape = $getShape();
 
         shape._$instanceId = object.instanceId;
         shape._$recodes    = object.recodes;
@@ -508,7 +520,7 @@ export class RenderPlayer
      */
     _$createVideo (object)
     {
-        const video = Util.$getVideo();
+        const video = $getVideo();
 
         video._$instanceId = object.instanceId;
 
@@ -536,7 +548,7 @@ export class RenderPlayer
      */
     _$createTextField (object)
     {
-        const textField = Util.$getTextField();
+        const textField = $getTextField();
 
         textField._$instanceId = object.instanceId;
 

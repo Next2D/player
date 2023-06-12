@@ -1,12 +1,22 @@
-import { RenderDisplayObject } from "./RenderDisplayObject";
 import { RenderGraphics } from "./RenderGraphics";
+import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
+import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
+import {
+    $containers,
+    $renderPlayer
+} from "./RenderGlobal";
+import {
+    $getArray,
+    $multiplicationMatrix,
+    $poolFloat32Array6
+} from "../player/util/RenderUtil";
 
 /**
  * @class
  */
 export class RenderDisplayObjectContainer extends RenderGraphics
 {
-    private readonly _$children: RenderDisplayObject[] = [];
+    private readonly _$children: number[];
 
     /**
      * @constructor
@@ -20,7 +30,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
          * @type {array}
          * @private
          */
-        this._$children = [];
+        this._$children = $getArray();
     }
 
     /**
@@ -30,36 +40,37 @@ export class RenderDisplayObjectContainer extends RenderGraphics
      * @method
      * @private
      */
-    _$clip (context, matrix)
-    {
-        let multiMatrix = matrix;
+    _$clip (
+        context: CanvasToWebGLContext,
+        matrix: Float32Array
+    ): void {
 
-        const rawMatrix = this._$matrix;
+        let multiMatrix: Float32Array = matrix;
+        const rawMatrix: Float32Array = this._$matrix;
         if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
             || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
             || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
         ) {
-            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
         }
 
         if (this._$recodes && this._$canDraw) {
             super._$clip(context, multiMatrix);
         }
 
-        const instances = Util.$renderPlayer._$instances;
-        const children  = this._$children;
-        const length    = children.length;
-        for (let idx = 0; idx < length; ++idx) {
+        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer._$instances;
+        const children = this._$children;
+        for (let idx: number = 0; idx < this._$children.length; ++idx) {
 
-            const id = children[idx];
+            const id: number = children[idx];
             if (!instances.has(id)) {
                 continue;
             }
 
-            const instance = instances.get(id);
+            const instance: RenderDisplayObjectImpl<any> | void = instances.get(id);
 
             // mask instance
-            if (instance._$isMask) {
+            if (!instance || instance._$isMask) {
                 continue;
             }
 
@@ -69,7 +80,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         }
 
         if (multiMatrix !== matrix) {
-            Util.$poolFloat32Array6(multiMatrix);
+            $poolFloat32Array6(multiMatrix);
         }
     }
 
@@ -871,6 +882,6 @@ export class RenderDisplayObjectContainer extends RenderGraphics
 
         super._$remove();
 
-        Util.$containers.push(this);
+        $containers.push(this);
     }
 }
