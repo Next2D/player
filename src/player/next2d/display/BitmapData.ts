@@ -310,25 +310,23 @@ export class BitmapData
         }
 
         if (this._$image !== null) {
-
             return context
                 .frameBuffer
                 .createTextureFromImage(this._$image);
+        }
 
-        } else if (this._$canvas !== null) {
-
+        if (this._$canvas !== null) {
             return context
                 .frameBuffer
                 .createTextureFromCanvas(this._$canvas);
+        }
 
-        } else if (this._$buffer !== null) {
-
+        if (this._$buffer !== null) {
             return context
                 .frameBuffer
                 .createTextureFromPixels(
                     width, height, this._$buffer, true
                 );
-
         }
 
         return null;

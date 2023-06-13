@@ -7,7 +7,7 @@ export class CanvasPatternToWebGL
 {
     private readonly _$context: CanvasToWebGLContext;
     private readonly _$texture: WebGLTexture;
-    private readonly _$repeat: string;
+    private readonly _$repeat: boolean;
     private readonly _$colorTransform: Float32Array;
 
     /**
@@ -17,7 +17,7 @@ export class CanvasPatternToWebGL
     constructor (
         context: CanvasToWebGLContext,
         texture: WebGLTexture,
-        repeat: string,
+        repeat: boolean,
         color_transform: Float32Array
     ) {
 
@@ -70,11 +70,11 @@ export class CanvasPatternToWebGL
     }
 
     /**
-     * @member {string}
+     * @member {boolean}
      * @readonly
      * @public
      */
-    get repeat (): string
+    get repeat (): boolean
     {
         return this._$repeat;
     }

@@ -111,7 +111,7 @@ export class GraphicsBitmapFill
         return $getArray(
             this._$bitmapData,
             this._$matrix,
-            this._$repeat ? "repeat" : "no-repeat",
+            this._$repeat,
             this._$smooth
         );
     }

@@ -962,7 +962,7 @@ export class CanvasToWebGLContext
 
             shader = variants
                 .getBitmapShapeShader(
-                    false, fillStyle.repeat !== "", hasGrid
+                    false, fillStyle.repeat, hasGrid
                 );
 
             if (pct) {
@@ -1358,7 +1358,7 @@ export class CanvasToWebGLContext
 
             shader = variants
                 .getBitmapShapeShader(
-                    true, strokeStyle.repeat !== "", this._$grid.enabled
+                    true, strokeStyle.repeat, this._$grid.enabled
                 );
 
             if (pct) {
@@ -1520,7 +1520,7 @@ export class CanvasToWebGLContext
 
     /**
      * @param  {WebGLTexture} texture
-     * @param  {string}       repeat
+     * @param  {boolean}      repeat
      * @param  {Float32Array} color_transform
      * @return {CanvasPatternToWebGL}
      * @method
@@ -1528,7 +1528,7 @@ export class CanvasToWebGLContext
      */
     createPattern (
         texture: WebGLTexture,
-        repeat: string,
+        repeat: boolean,
         color_transform: Float32Array
     ): CanvasPatternToWebGL {
         return new CanvasPatternToWebGL(this, texture, repeat, color_transform);

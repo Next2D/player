@@ -63,9 +63,7 @@ import {
     $getMap,
     $poolFloat32Array6,
     $boundsMatrix,
-    $MATRIX_ARRAY_IDENTITY,
     $multiplicationMatrix,
-    $getFloat32Array6,
     $poolBoundsObject,
     $multiplicationColor,
     $Infinity,
@@ -73,7 +71,7 @@ import {
     $useCache,
     $poolArray,
     $poolFloat32Array8,
-    $generateFontStyle
+    $generateFontStyle, $getBoundsObject
 } from "../../util/RenderUtil";
 
 /**
@@ -2260,6 +2258,7 @@ export class TextField extends InteractiveObject
      */
     _$reset (): void
     {
+        this._$createdTextData        = false;
         this._$textData.length        = 0;
         this._$imageData.length       = 0;
         this._$heightTable.length     = 0;
@@ -2462,47 +2461,9 @@ export class TextField extends InteractiveObject
             return $boundsMatrix(this._$bounds, multiMatrix);
         }
 
-        const correctMatrix: Float32Array = this._$correctMatrix($MATRIX_ARRAY_IDENTITY);
-
-        const bounds: BoundsImpl = $boundsMatrix(
-            this._$bounds, correctMatrix
-        );
-
-        $poolFloat32Array6(correctMatrix);
-
-        return bounds;
-    }
-
-    /**
-     * @param  {Float32Array} matrix
-     * @return {Float32Array}
-     * @private
-     */
-    _$correctMatrix (matrix: Float32Array): Float32Array
-    {
-        const textWidth: number = this.textWidth + 4;
-
-        const width: number = this._$originBounds.xMax - this._$originBounds.xMin;
-
-        let xOffset = 0;
-        switch (this._$autoSize) {
-
-            case "center":
-                xOffset = width / 2 - textWidth / 2;
-                break;
-
-            case "right":
-                xOffset = width - (textWidth - this._$originBounds.xMin);
-                break;
-
-            default:
-                break;
-
-        }
-
-        return $getFloat32Array6(
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4] + xOffset, matrix[5]
+        return $getBoundsObject(
+            this._$bounds.xMin, this._$bounds.xMax,
+            this._$bounds.yMin, this._$bounds.yMax
         );
     }
 
@@ -2514,7 +2475,7 @@ export class TextField extends InteractiveObject
      */
     _$buildCharacter (character: TextCharacterImpl)
     {
-        const textFormat = this.defaultTextFormat;
+        const textFormat = this._$defaultTextFormat;
 
         textFormat.font          = character.font;
         textFormat.size          = character.size | 0;

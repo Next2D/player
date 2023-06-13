@@ -2064,10 +2064,9 @@ export class DisplayObjectContainer extends InteractiveObject
         let hit: boolean = false;
         const isRoot = this._$root === this;
 
-        for (let idx: number = 0; idx < targets.length; ++idx) {
+        while (targets.length) {
 
             const instance: DisplayObjectImpl<any> = targets.pop();
-
             if (instance._$isMask) {
                 continue;
             }

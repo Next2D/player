@@ -2516,8 +2516,8 @@ export class Graphics
                                 array.push(1, 0, 0, 1, 0, 0);
                             }
 
-                            const repeat: string = recode[idx++];
-                            array.push(repeat === "repeat" ? 1 : 0);
+                            const repeat: boolean = recode[idx++];
+                            array.push(repeat ? 1 : 0);
 
                             const smooth: boolean = recode[idx++];
                             array.push(smooth ? 1 : 0);
@@ -2623,8 +2623,8 @@ export class Graphics
                                 array.push(1, 0, 0, 1, 0, 0);
                             }
 
-                            const repeat: string = recode[idx++];
-                            array.push(repeat === "repeat" ? 1 : 0);
+                            const repeat: boolean = recode[idx++];
+                            array.push(repeat ? 1 : 0);
 
                             const smooth: boolean = recode[idx++];
                             array.push(smooth ? 1 : 0);
@@ -2968,7 +2968,7 @@ export class Graphics
 
                         const bitmapData: BitmapData = recode[idx++];
                         const matrix: Float32Array = recode[idx++];
-                        const repeat: string = recode[idx++];
+                        const repeat: boolean = recode[idx++];
                         const smooth: boolean = recode[idx++];
 
                         if (matrix) {
@@ -2983,7 +2983,7 @@ export class Graphics
                             break;
                         }
 
-                        if (repeat === "no-repeat"
+                        if (!repeat
                             && bitmapData.width  === this._$xMax - this._$xMin
                             && bitmapData.height === this._$yMax - this._$yMin
                         ) {
@@ -3034,7 +3034,7 @@ export class Graphics
 
                         const bitmapData: BitmapData = recode[idx++];
                         const matrix: Float32Array = recode[idx++];
-                        const repeat: string = recode[idx++];
+                        const repeat: boolean = recode[idx++];
                         const smooth: boolean = recode[idx++];
 
                         if (matrix) {

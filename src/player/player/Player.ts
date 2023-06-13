@@ -1602,7 +1602,8 @@ export class Player
             this._$draw();
 
             // draw event
-            if (!this._$hitTestStart
+            if (!$isTouch
+                && !this._$hitTestStart
                 && this._$state === "up"
                 && this._$stageX > -1
                 && this._$stageY > -1
@@ -2322,7 +2323,6 @@ export class Player
             default:
 
                 instance = this._$hitObject.hit;
-
                 switch (eventType) {
 
                     // move event
@@ -2537,9 +2537,9 @@ export class Player
                             );
                         }
 
-                        if ("_$text" in instance && instance.scrollEnabled) {
+                        if ("deltaY" in event && instance.scrollEnabled) {
                             // @ts-ignore
-                            instance.scrollV += event.deltaY;
+                            instance.scrollV += $clamp(event.deltaY, -1, 1, 0);
                         }
                         break;
 
