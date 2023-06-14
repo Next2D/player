@@ -620,9 +620,6 @@ export class RenderTextField extends RenderDisplayObject
             // set cache
             cacheStore.set(cacheKeys, texture);
 
-            // destroy cache
-            cacheStore.destroy(ctx);
-
         }
 
         let drawFilter: boolean = false;

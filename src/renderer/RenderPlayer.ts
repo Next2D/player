@@ -14,12 +14,9 @@ import type { RenderVideo } from "./RenderVideo";
 import type { RenderTextField } from "./RenderTextField";
 import type { RGBAImpl } from "../interface/RGBAImpl";
 import {
-    $cancelAnimationFrame,
     $COLOR_ARRAY_IDENTITY,
     $Float32Array,
     $getFloat32Array6,
-    $performance,
-    $requestAnimationFrame,
     $toColorInt,
     $uintToRGBA
 } from "../player/util/RenderUtil";
@@ -36,19 +33,13 @@ import {
  */
 export class RenderPlayer
 {
-    public _$videos: number;
     private readonly _$instances: Map<number, RenderDisplayObjectImpl<any>>;
     private readonly _$cacheStore: CacheStore;
     private readonly _$matrix: Float32Array;
     private readonly _$colorTransform: Float32Array;
     private _$context: CanvasToWebGLContext | null;
-    private _$frameRate: number;
-    private _$stopFlag: boolean;
     private _$canvas: OffscreenCanvas | null;
     private _$samples: number;
-    private _$timerId: number;
-    private _$startTime: number;
-    private _$fps: number;
     private _$width: number;
     private _$height: number;
     private readonly _$stage: RenderDisplayObjectContainer;
@@ -87,40 +78,6 @@ export class RenderPlayer
         this._$colorTransform = new $Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
         /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$stopFlag = true;
-
-        /**
-         * @type {number}
-         * @default -1
-         * @private
-         */
-        this._$timerId = -1;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$startTime = 0;
-
-        /**
-         * @type {number}
-         * @default 60
-         * @private
-         */
-        this._$frameRate = 60;
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._$fps = 1000 / 60;
-
-        /**
          * @type {number}
          * @default 0
          * @private
@@ -140,13 +97,6 @@ export class RenderPlayer
          * @private
          */
         this._$stage = new RenderDisplayObjectContainer();
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$videos = 0;
 
         /**
          * @type {number}
@@ -175,18 +125,6 @@ export class RenderPlayer
          * @private
          */
         this._$attachment = null;
-    }
-
-    /**
-     * @description フレームレートをセット
-     *
-     * @param  {number} frame_rate
-     * @return {void}
-     * @public
-     */
-    set frameRate (frame_rate: number)
-    {
-        this._$frameRate = frame_rate;
     }
 
     /**
@@ -230,35 +168,6 @@ export class RenderPlayer
     }
 
     /**
-     * @description 描画を開始
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
-    play (): void
-    {
-        if (this._$stopFlag) {
-
-            this._$stopFlag = false;
-
-            if (this._$timerId > -1) {
-                $cancelAnimationFrame(this._$timerId);
-                this._$timerId = -1;
-            }
-
-            this._$startTime = $performance.now();
-
-            this._$fps = 1000 / this._$frameRate;
-
-            this._$timerId = $requestAnimationFrame((timestamp: number) =>
-            {
-                this._$run(timestamp);
-            });
-        }
-    }
-
-    /**
      * @description 描画の停止
      *
      * @return {void}
@@ -267,10 +176,6 @@ export class RenderPlayer
      */
     stop (): void
     {
-        $cancelAnimationFrame(this._$timerId);
-
-        this._$stopFlag = true;
-        this._$timerId  = -1;
         this._$cacheStore.reset();
     }
 
@@ -346,44 +251,6 @@ export class RenderPlayer
     }
 
     /**
-     * @description フレームレートに合わせて描画を実行
-     *
-     * @param  {number} timestamp
-     * @return {void}
-     * @method
-     * @public
-     */
-    _$run (timestamp: number = 0): void
-    {
-        if (this._$stopFlag) {
-            return ;
-        }
-
-        const delta: number = timestamp - this._$startTime;
-        if (delta > this._$fps) {
-
-            // update
-            this._$startTime = timestamp - delta % this._$fps;
-
-            // execute
-            this._$draw();
-
-        } else {
-
-            if (this._$videos) {
-                this._$draw();
-            }
-
-        }
-
-        // next frame
-        this._$timerId = $requestAnimationFrame((timestamp: number) =>
-        {
-            this._$run(timestamp);
-        });
-    }
-
-    /**
      * @description 指定canvasに転写
      *
      * @param  {RenderDisplayObject} source
@@ -404,11 +271,6 @@ export class RenderPlayer
         const context: CanvasToWebGLContext | null = this._$context;
         if (!context) {
             return ;
-        }
-
-        const stopFlag: boolean = this._$stopFlag;
-        if (!stopFlag) {
-            this.stop();
         }
 
         context._$bind(this._$attachment);
@@ -440,9 +302,6 @@ export class RenderPlayer
             ctx.drawImage(this._$canvas, 0, 0);
         }
 
-        if (!stopFlag) {
-            this.play();
-        }
     }
 
     /**
@@ -458,9 +317,9 @@ export class RenderPlayer
             return ;
         }
 
-        if (!this._$stage._$updated) {
-            return ;
-        }
+        // if (!this._$stage._$updated) {
+        //     return ;
+        // }
 
         const context: CanvasToWebGLContext | null = this._$context;
         if (!context) {
@@ -679,8 +538,6 @@ export class RenderPlayer
         video._$updateProperty(object);
 
         this._$instances.set(video._$instanceId, video);
-
-        this._$videos++;
     }
 
     /**

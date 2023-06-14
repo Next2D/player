@@ -2352,7 +2352,7 @@ export class DisplayObjectContainer extends InteractiveObject
         const message: PropertyContainerMessageImpl = {
             "command": "createDisplayObjectContainer",
             "instanceId": this._$instanceId,
-            "parentId": this._$parent._$instanceId
+            "parentId": this._$parent ? this._$parent._$instanceId : -1
         };
 
         const graphics: Graphics | null = "_$graphics" in this

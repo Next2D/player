@@ -84,7 +84,7 @@ export class CacheStore
      * @public
      */
     destroy (
-        object: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | WebGLTexture | null = null
+        object: CanvasRenderingContext2D | WebGLTexture | null = null
     ): void {
 
         if (!object) {

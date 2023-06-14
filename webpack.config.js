@@ -25,6 +25,9 @@ const unzip_worker = {
                 }
             }
         ]
+    },
+    "performance": {
+        "hints": false
     }
 };
 
@@ -57,6 +60,9 @@ const render_worker = {
                 }
             }
         ]
+    },
+    "performance": {
+        "hints": false
     }
 };
 
@@ -98,6 +104,9 @@ const player = {
         "historyApiFallback": true,
         "compress": false,
         "open": true
+    },
+    "performance": {
+        "hints": false
     }
 };
 

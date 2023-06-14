@@ -54,6 +54,10 @@ export class CommandController
             const object: any = this.queue.shift();
             switch (object.command) {
 
+                case "draw":
+                    $renderPlayer._$draw();
+                    break;
+
                 case "setProperty":
                     {
                         const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
@@ -141,11 +145,6 @@ export class CommandController
 
                 case "setStage":
                     $renderPlayer._$setStage(object.instanceId);
-                    break;
-
-                case "play":
-                    $renderPlayer.frameRate = object.frameRate || 60;
-                    $renderPlayer.play();
                     break;
 
                 case "stop":

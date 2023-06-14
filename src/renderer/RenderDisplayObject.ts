@@ -399,21 +399,21 @@ export class RenderDisplayObject
             this._$maskMatrix = object.maskMatrix;
         }
 
-        this._$matrix[0] = object.a  || 1;
-        this._$matrix[1] = object.b  || 0;
-        this._$matrix[2] = object.c  || 0;
-        this._$matrix[3] = object.d  || 1;
-        this._$matrix[4] = object.tx || 0;
-        this._$matrix[5] = object.ty || 0;
+        this._$matrix[0] = "a"  in object ? object.a  : 1;
+        this._$matrix[1] = "b"  in object ? object.b  : 0;
+        this._$matrix[2] = "c"  in object ? object.c  : 0;
+        this._$matrix[3] = "d"  in object ? object.d  : 1;
+        this._$matrix[4] = "tx" in object ? object.tx : 0;
+        this._$matrix[5] = "ty" in object ? object.ty : 0;
 
-        this._$colorTransform[0] = object.f0 || 1;
-        this._$colorTransform[1] = object.f1 || 1;
-        this._$colorTransform[2] = object.f2 || 1;
-        this._$colorTransform[3] = object.f3 || 1;
-        this._$colorTransform[4] = object.f4 || 0;
-        this._$colorTransform[5] = object.f5 || 0;
-        this._$colorTransform[6] = object.f6 || 0;
-        this._$colorTransform[7] = object.f7 || 0;
+        this._$colorTransform[0] = "f0" in object ? object.f0 : 1;
+        this._$colorTransform[1] = "f1" in object ? object.f1 : 1;
+        this._$colorTransform[2] = "f2" in object ? object.f2 : 1;
+        this._$colorTransform[3] = "f3" in object ? object.f3 : 1;
+        this._$colorTransform[4] = "f4" in object ? object.f4 : 0;
+        this._$colorTransform[5] = "f5" in object ? object.f5 : 0;
+        this._$colorTransform[6] = "f6" in object ? object.f6 : 0;
+        this._$colorTransform[7] = "f7" in object ? object.f7 : 0;
 
         this._$blendMode = object.blendMode || "normal";
 

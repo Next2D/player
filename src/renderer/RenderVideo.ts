@@ -17,10 +17,7 @@ import {
     $poolFloat32Array8,
     $OffscreenCanvas, $getFloat32Array6
 } from "../player/util/RenderUtil";
-import {
-    $renderPlayer,
-    $videos
-} from "./RenderGlobal";
+import { $videos } from "./RenderGlobal";
 
 /**
  * @class
@@ -377,7 +374,6 @@ export class RenderVideo extends RenderDisplayObject
 
         super._$remove();
 
-        $renderPlayer._$videos--;
         $videos.push(this);
     }
 

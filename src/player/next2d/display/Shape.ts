@@ -394,7 +394,7 @@ export class Shape extends DisplayObject
         const message: PropertyShapeMessageImpl = {
             "command": "createShape",
             "instanceId": this._$instanceId,
-            "parentId": this._$parent._$instanceId,
+            "parentId": this._$parent ? this._$parent._$instanceId : -1,
             "maxAlpha": 0,
             "canDraw": false,
             "xMin": bounds.xMin,

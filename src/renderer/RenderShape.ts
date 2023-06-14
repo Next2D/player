@@ -85,7 +85,7 @@ export class RenderShape extends RenderGraphics
         color_transform: Float32Array
     ): void {
 
-        if (!this._$visible) {
+        if (!this._$visible || !this._$maxAlpha || !this._$canDraw) {
             return ;
         }
 
@@ -100,7 +100,7 @@ export class RenderShape extends RenderGraphics
         }
 
         const alpha: number = $clamp(multiColor[3] + multiColor[7] / 255, 0, 1, 0);
-        if (!alpha || !this._$maxAlpha) {
+        if (!alpha) {
             if (multiColor !== color_transform) {
                 $poolFloat32Array8(multiColor);
             }

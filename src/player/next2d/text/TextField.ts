@@ -3473,7 +3473,7 @@ export class TextField extends InteractiveObject
         const message: PropertyTextMessageImpl = {
             "command": "createTextField",
             "instanceId": this._$instanceId,
-            "parentId": this._$parent._$instanceId,
+            "parentId": this._$parent ? this._$parent._$instanceId : -1,
             "xMin": bounds.xMin,
             "yMin": bounds.yMin,
             "xMax": bounds.xMax,

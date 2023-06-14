@@ -714,13 +714,6 @@ export class Player
             {
                 this._$run(timestamp);
             });
-
-            if ($rendererWorker) {
-                $rendererWorker.postMessage({
-                    "command": "play",
-                    "frameRate": frameRate
-                });
-            }
         }
     }
 
@@ -1800,7 +1793,7 @@ export class Player
                         }
                     }
 
-                    if ("buttonMode" in target) {
+                    if ("buttonMode" in target && target.buttonMode) {
                         canPointer = true;
                         break;
                     }
@@ -1973,6 +1966,12 @@ export class Player
     {
         if (!this._$width || !this._$height) {
             return ;
+        }
+
+        if ($rendererWorker) {
+            $rendererWorker.postMessage({
+                "command": "draw"
+            });
         }
 
         if (!this._$stage._$isUpdated()) {
