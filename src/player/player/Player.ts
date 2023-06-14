@@ -25,9 +25,7 @@ import type { RGBAImpl } from "../../interface/RGBAImpl";
 import {
     $devicePixelRatio,
     $document,
-    $location,
-    $window,
-    $parseFloat
+    $window
 } from "../util/Shortcut";
 import {
     $rendererWorker,
@@ -92,7 +90,7 @@ export class Player
     private readonly _$hitObject: PlayerHitObjectImpl;
     private _$rollOverObject: DisplayObjectImpl<any> | null;
     private _$mouseOverTarget: DisplayObjectImpl<any> | null;
-    public readonly _$ratio: number;
+    private readonly _$ratio: number;
     public _$stopFlag: boolean;
     private _$startTime: number;
     private _$fps: number;
@@ -143,13 +141,6 @@ export class Player
          */
         this._$stage = new Stage();
         this._$stage._$player = this;
-
-        if ($rendererWorker) {
-            $rendererWorker.postMessage({
-                "command": "setStage",
-                "instanceId": this._$stage._$instanceId
-            });
-        }
 
         /**
          * @type {CacheStore}
@@ -478,8 +469,6 @@ export class Player
          * @private
          */
         this._$canvas = $document.createElement("canvas");
-
-        this._$initializeCanvas();
     }
 
     /**
@@ -568,7 +557,7 @@ export class Player
             }
             urls.pop();
 
-            this._$base = `${$location.origin}/`;
+            this._$base = `${location.origin}/`;
             if (urls.length) {
                 this._$base += `${urls.join("/")}/`;
             }
@@ -1109,6 +1098,11 @@ export class Player
 
         if ($rendererWorker) {
 
+            $rendererWorker.postMessage({
+                "command": "setStage",
+                "instanceId": this._$stage._$instanceId
+            });
+
             const offscreenCanvas: OffscreenCanvas = this
                 ._$canvas
                 .transferControlToOffscreen();
@@ -1321,7 +1315,7 @@ export class Player
                     ? $window.innerWidth
                     : parent.offsetWidth
                         ? parent.offsetWidth
-                        : $parseFloat(parent.style.width);
+                        : parseFloat(parent.style.width);
 
             const innerHeight: number = this._$optionHeight
                 ? this._$optionHeight
@@ -1329,7 +1323,7 @@ export class Player
                     ? $window.innerHeight
                     : parent.offsetHeight
                         ? parent.offsetHeight
-                        : $parseFloat(parent.style.height);
+                        : parseFloat(parent.style.height);
 
             const screenWidth: number = parent.tagName === "BODY"
                 ? $window.innerWidth

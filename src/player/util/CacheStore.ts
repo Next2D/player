@@ -1,5 +1,4 @@
 import type { CanvasToWebGLContext } from "../../webgl/CanvasToWebGLContext";
-import { $document } from "./Shortcut";
 import {
     $requestAnimationFrame,
     $clearTimeout,
@@ -131,7 +130,7 @@ export class CacheStore
      */
     getCanvas (): HTMLCanvasElement
     {
-        return this._$pool.pop() || $document.createElement("canvas");
+        return this._$pool.pop() || document.createElement("canvas");
     }
 
     /**

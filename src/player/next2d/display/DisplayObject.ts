@@ -2189,6 +2189,7 @@ export class DisplayObject extends EventDispatcher
         const message: PropertyMessageImpl = {
             "command": "setProperty",
             "instanceId": this._$instanceId,
+            "parentId": this._$parent ? this._$parent._$instanceId : -1,
             "visible": this._$visible,
             "isMask": this._$isMask,
             "clipDepth": this._$clipDepth,

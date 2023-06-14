@@ -19,7 +19,9 @@ import {
     $Float32Array,
     $getFloat32Array6,
     $performance,
-    $requestAnimationFrame, $toColorInt, $uintToRGBA
+    $requestAnimationFrame,
+    $toColorInt,
+    $uintToRGBA
 } from "../player/util/RenderUtil";
 import {
     $getDisplayObjectContainer,
@@ -510,9 +512,8 @@ export class RenderPlayer
      * @private
      */
     _$resize (
-        width: number, height: number, scale: number,
-        tx: number = 0,
-        ty: number = 0
+        width: number, height: number,
+        scale: number, tx: number = 0, ty: number = 0
     ): void {
 
         this._$width  = width;
@@ -624,6 +625,7 @@ export class RenderPlayer
         const shape: RenderShape = $getShape();
 
         shape._$instanceId = object.instanceId;
+        shape._$parentId   = object.parentId;
         if (object.recodes) {
             shape._$recodes = object.recodes;
         }

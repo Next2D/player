@@ -1148,9 +1148,10 @@ export class Video extends DisplayObject
         }
         this._$created = true;
 
-        const message: any = {
+        const message: PropertyVideoMessageImpl = {
             "command": "createVideo",
             "instanceId": this._$instanceId,
+            "parentId": this._$parent._$instanceId,
             "smoothing": this._$smoothing,
             "xMin": this._$bounds.xMin,
             "yMin": this._$bounds.yMin,

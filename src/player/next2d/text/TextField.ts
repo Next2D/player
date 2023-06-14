@@ -50,7 +50,8 @@ import {
 } from "../../util/Util";
 import {
     $devicePixelRatio,
-    $document, $RegExp
+    $document,
+    $RegExp
 } from "../../util/Shortcut";
 import {
     $clamp,
@@ -3469,9 +3470,10 @@ export class TextField extends InteractiveObject
 
         const bounds: BoundsImpl = this._$getBounds();
 
-        const message: any = {
+        const message: PropertyTextMessageImpl = {
             "command": "createTextField",
             "instanceId": this._$instanceId,
+            "parentId": this._$parent._$instanceId,
             "xMin": bounds.xMin,
             "yMin": bounds.yMin,
             "xMax": bounds.xMax,
@@ -3486,8 +3488,24 @@ export class TextField extends InteractiveObject
             "limitHeight": this.height,
             "textHeight": this.textHeight,
             "verticalAlign": this._$verticalAlign,
-            "autoSize": this._$autoSize
+            "autoSize": this._$autoSize,
+            "wordWrap": this._$wordWrap,
+            "border": this._$border,
+            "background": this._$background,
+            "thickness": this._$thickness
         };
+
+        if (this._$border) {
+            message.borderColor = this._$borderColor;
+        }
+
+        if (this._$background) {
+            message.backgroundColor = this._$backgroundColor;
+        }
+
+        if (this._$thickness) {
+            message.thicknessColor = this._$backgroundColor;
+        }
 
         if (this._$characterId > -1) {
             message.characterId = this._$characterId;

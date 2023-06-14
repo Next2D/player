@@ -23,7 +23,6 @@ import type { NetImpl } from "../../interface/NetImpl";
 import type { TextImpl } from "../../interface/TextImpl";
 import type { UIImpl } from "../../interface/UIImpl";
 import type { StageDataImpl } from "../../interface/StageDataImpl";
-import { $location } from "../util/Shortcut";
 import {
     $clamp,
     $poolArray
@@ -158,7 +157,7 @@ export class Next2D
                 $poolArray(this._$promises);
 
                 if (url === "develop") {
-                    const path: string = $location
+                    const path: string = location
                         .search
                         .slice(1)
                         .split("&")[0];
@@ -166,7 +165,7 @@ export class Next2D
                     if (!path) {
                         return ;
                     }
-                    url = `${$location.origin}/${path}`;
+                    url = `${location.origin}/${path}`;
                 }
 
                 if (!url) {

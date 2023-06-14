@@ -1,11 +1,12 @@
 "use strict";
 
-import { Next2D } from "./player/Next2D";
 import {
+    $currentPlayer,
     $initialize,
     $isSafari,
     $rendererWorker
 } from "./util/Util";
+import { Next2D } from "./player/Next2D";
 
 if (!("next2d" in window)) {
 
@@ -32,6 +33,8 @@ if (!("next2d" in window)) {
                                 "isSafari": $isSafari
                             });
                         }
+
+                        $currentPlayer()._$initializeCanvas();
                         resolve();
                     });
             };
@@ -50,6 +53,8 @@ if (!("next2d" in window)) {
                             "isSafari": $isSafari
                         });
                     }
+
+                    $currentPlayer()._$initializeCanvas();
                     resolve();
                 });
 

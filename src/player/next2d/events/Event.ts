@@ -1,5 +1,5 @@
 import { EventPhase } from "./EventPhase";
-import { EventDispatcher } from "./EventDispatcher";
+import type { EventDispatcher } from "./EventDispatcher";
 
 /**
  * Event クラスのメソッドは、イベントリスナー関数で使用してイベントオブジェクトの動作に影響を与えることができます。
@@ -527,7 +527,7 @@ export class Event
      * @member {EventDispatcher|null}
      * @public
      */
-    get currentTarget (): EventDispatcher|null
+    get currentTarget (): EventDispatcher | null
     {
         return this._$currentTarget;
     }

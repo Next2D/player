@@ -1772,7 +1772,7 @@ export class Graphics
 
             if (hasGrid) {
 
-                const mScale: number = player._$scale * player._$ratio;
+                const mScale: number = player.scaleX;
 
                 const baseMatrix: Float32Array = $getFloat32Array6(
                     mScale, 0, 0, mScale, 0, 0

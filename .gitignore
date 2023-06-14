@@ -2,8 +2,6 @@ node_modules
 json
 dist
 coverage
-src/worker/*.min.js
-src/renderer/*.min.js
 *.html
 package-lock.json
 .DS_Store

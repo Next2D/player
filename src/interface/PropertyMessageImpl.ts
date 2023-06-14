@@ -3,6 +3,7 @@ import { BlendModeImpl } from "./BlendModeImpl";
 export interface PropertyMessageImpl {
     command: string;
     instanceId: number;
+    parentId: number;
     visible?: boolean;
     isMask?: boolean;
     clipDepth?: number;

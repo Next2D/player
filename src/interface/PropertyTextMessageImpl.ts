@@ -4,7 +4,7 @@ import { TextFormatVerticalAlignImpl } from "./TextFormatVerticalAlignImpl";
 import { TextFieldAutoSizeImpl } from "./TextFieldAutoSizeImpl";
 
 export interface PropertyTextMessageImpl extends PropertyMessageImpl {
-    textAreaActive: boolean;
+    textAreaActive?: boolean;
     textData: TextDataImpl<any>[];
     scrollV: number;
     widthTable: number[];
@@ -18,9 +18,9 @@ export interface PropertyTextMessageImpl extends PropertyMessageImpl {
     autoSize: TextFieldAutoSizeImpl;
     wordWrap: boolean;
     border: boolean;
-    borderColor: number;
+    borderColor?: number;
     background: boolean;
-    backgroundColor: number;
+    backgroundColor?: number;
     thickness: number;
-    thicknessColor: number;
+    thicknessColor?: number;
 }

@@ -931,7 +931,7 @@ export class RenderTextField extends RenderDisplayObject
     _$updateProperty (object: PropertyTextMessageImpl): void
     {
         // update property
-        this._$textAreaActive = object.textAreaActive;
+        this._$textAreaActive = !!object.textAreaActive;
 
         // set array
         this._$textData.push(...object.textData);
@@ -952,17 +952,17 @@ export class RenderTextField extends RenderDisplayObject
         // color
         this._$border = object.border;
         if (this._$border) {
-            this._$borderColor = object.borderColor;
+            this._$borderColor = object.borderColor as NonNullable<number>;
         }
 
         this._$background = object.background;
         if (this._$background) {
-            this._$backgroundColor = object.backgroundColor;
+            this._$backgroundColor = object.backgroundColor as NonNullable<number>;
         }
 
         if ("thickness" in object) {
             this._$thickness = object.thickness;
-            this._$thicknessColor = object.thicknessColor;
+            this._$thicknessColor = object.thicknessColor as NonNullable<number>;
         }
     }
 
@@ -978,7 +978,7 @@ export class RenderTextField extends RenderDisplayObject
     {
         super._$update(object);
 
-        this._$textAreaActive = object.textAreaActive;
+        this._$textAreaActive = !!object.textAreaActive;
 
         this._$xMin = object.xMin as NonNullable<number>;
         this._$yMin = object.yMin as NonNullable<number>;

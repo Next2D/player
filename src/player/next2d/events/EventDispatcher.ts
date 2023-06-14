@@ -1,6 +1,5 @@
 import { Event } from "./Event";
 import { EventPhase } from "./EventPhase";
-import { DisplayObject } from "../display/DisplayObject";
 import type { Player } from "../../player/Player";
 import type { EventListenerImpl } from "../../../interface/EventListenerImpl";
 import type { DisplayObjectContainer } from "../display/DisplayObjectContainer";
@@ -315,9 +314,9 @@ export class EventDispatcher
 
                     // parent
                     const parentEvents = $getArray();
-                    if (this instanceof DisplayObject) {
+                    if ("parent" in this) {
 
-                        let parent: DisplayObjectContainer | null = this.parent;
+                        let parent: DisplayObjectContainer | null = this.parent as NonNullable<DisplayObjectContainer | null>;
                         while (parent) {
 
                             if (parent.hasEventListener(event.type)) {
@@ -853,9 +852,9 @@ export class EventDispatcher
             return true;
         }
 
-        if (this instanceof DisplayObject) {
+        if ("parent" in this) {
 
-            let parent: DisplayObjectContainer | null = this.parent;
+            let parent: DisplayObjectContainer | null = this.parent as NonNullable<DisplayObjectContainer | null>;
             while (parent) {
 
                 if (parent.hasEventListener(type)) {

@@ -36,6 +36,7 @@ import {
 export class RenderDisplayObject
 {
     public _$instanceId: number;
+    public _$parentId: number;
     public _$loaderInfoId: number;
     public _$characterId: number;
     public _$clipDepth: number;
@@ -68,6 +69,13 @@ export class RenderDisplayObject
          * @private
          */
         this._$instanceId = -1;
+
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$parentId = -1;
 
         /**
          * @type {number}
@@ -531,6 +539,7 @@ export class RenderDisplayObject
 
         // reset
         this._$instanceId     = -1;
+        this._$parentId       = -1;
         this._$loaderInfoId   = -1;
         this._$characterId    = -1;
         this._$updated        = true;

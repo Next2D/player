@@ -6,7 +6,6 @@ import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
 import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
 import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
 import type { BitmapFilterTypeImpl } from "../../../interface/BitmapFilterTypeImpl";
-import { $devicePixelRatio } from "../../util/Shortcut";
 import {
     $clamp,
     $Deg2Rad,
@@ -552,8 +551,8 @@ export class DropShadowFilter extends BitmapFilter
 
         // shadow point
         const radian: number = this._$angle * $Deg2Rad;
-        const x: number = $Math.cos(radian) * this._$distance * 2 * xScale / $devicePixelRatio;
-        const y: number = $Math.sin(radian) * this._$distance * 2 * yScale / $devicePixelRatio;
+        const x: number = $Math.cos(radian) * this._$distance * xScale;
+        const y: number = $Math.sin(radian) * this._$distance * yScale;
 
         // dropShadow canvas
         const w: number = this._$inner ? baseWidth  : blurWidth  + $Math.max(0, $Math.abs(x) - offsetDiffX);

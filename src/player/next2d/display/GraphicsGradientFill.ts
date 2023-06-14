@@ -1,6 +1,5 @@
 import type { Matrix } from "../geom/Matrix";
 import type { ColorStopImpl } from "../../../interface/ColorStopImpl";
-import { $MATRIX_ARRAY_RATIO_0_0_RATIO_0_0 } from "../../util/Util";
 import {
     GradientType,
     SpreadMethod,
@@ -9,7 +8,8 @@ import {
 import {
     $getArray,
     $intToRGBA,
-    $Math
+    $Math,
+    $MATRIX_ARRAY_IDENTITY
 } from "../../util/RenderUtil";
 
 /**
@@ -193,7 +193,7 @@ export class GraphicsGradientFill
             this.colorStops,
             this._$matrix
                 ? this._$matrix._$matrix
-                : $MATRIX_ARRAY_RATIO_0_0_RATIO_0_0,
+                : $MATRIX_ARRAY_IDENTITY,
             this._$spreadMethod,
             this._$interpolationMethod,
             this._$focalPointRatio

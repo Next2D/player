@@ -1,14 +1,38 @@
 import { RenderGraphics } from "./RenderGraphics";
+import { Rectangle } from "../player/next2d/geom/Rectangle";
 import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
 import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
+import type { PreObjectImpl } from "../interface/PreObjectImpl";
+import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
+import type { BlendModeImpl } from "../interface/BlendModeImpl";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { CacheStore } from "../player/util/CacheStore";
+import type { FrameBufferManager } from "../webgl/FrameBufferManager";
+import type { DisplayObjectImpl } from "../interface/DisplayObjectImpl";
+import type { ParentImpl } from "../interface/ParentImpl";
 import {
     $containers,
     $renderPlayer
 } from "./RenderGlobal";
 import {
+    $boundsMatrix,
+    $clamp,
     $getArray,
+    $getBoundsObject,
+    $getFloat32Array6,
+    $getFloat32Array8,
+    $getPreObject,
+    $Math,
+    $MATRIX_ARRAY_IDENTITY,
+    $multiplicationColor,
     $multiplicationMatrix,
-    $poolFloat32Array6
+    $Number,
+    $poolArray,
+    $poolBoundsObject,
+    $poolFloat32Array6,
+    $poolFloat32Array8,
+    $poolPreObject
 } from "../player/util/RenderUtil";
 
 /**
@@ -58,8 +82,8 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             super._$clip(context, multiMatrix);
         }
 
-        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer._$instances;
-        const children = this._$children;
+        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
+        const children: number[] = this._$children;
         for (let idx: number = 0; idx < this._$children.length; ++idx) {
 
             const id: number = children[idx];
@@ -92,50 +116,56 @@ export class RenderDisplayObjectContainer extends RenderGraphics
      * @method
      * @private
      */
-    _$draw (context, matrix, color_transform)
-    {
+    _$draw (
+        context: CanvasToWebGLContext,
+        matrix: Float32Array,
+        color_transform: Float32Array
+    ): void {
+
         // not draw
         if (!this._$visible) {
             return ;
         }
 
-        let multiColor = color_transform;
-        const rawColor = this._$colorTransform;
+        let multiColor: Float32Array = color_transform;
+        const rawColor: Float32Array = this._$colorTransform;
         if (rawColor[0] !== 1 || rawColor[1] !== 1
             || rawColor[2] !== 1 || rawColor[3] !== 1
             || rawColor[4] !== 0 || rawColor[5] !== 0
             || rawColor[6] !== 0 || rawColor[7] !== 0
         ) {
-            multiColor = Util.$multiplicationColor(color_transform, rawColor);
+            multiColor = $multiplicationColor(color_transform, rawColor);
         }
 
         // not draw
-        const alpha = Util.$clamp(multiColor[3] + multiColor[7] / 255, 0, 1, 0);
+        const alpha: number = $clamp(multiColor[3] + multiColor[7] / 255, 0, 1, 0);
         if (!alpha) {
             return ;
         }
 
         // not draw
-        const children = this._$children;
-        const length = children.length;
+        const children: number[] = this._$children;
+        const length: number = children.length;
         if (!length && (!this._$recodes || !this._$canDraw)) {
             return ;
         }
 
         // pre data
-        const preData = this._$preDraw(context, matrix);
-        if (!preData) {
+        const preObject: PreObjectImpl | null = this._$preDraw(context, matrix);
+        if (!preObject) {
             return ;
         }
 
         // use cache
-        if (preData.isFilter && !preData.isUpdated) {
-            this._$postDraw(context, matrix, multiColor, preData);
+        if (preObject.isFilter && !preObject.isUpdated) {
+            this._$postDraw(context, matrix, multiColor, preObject);
             return ;
         }
 
-        let preMatrix = preData.matrix;
-        const preColorTransform = preData.isFilter ? preData.color : multiColor;
+        let preMatrix: Float32Array = preObject.matrix as NonNullable<Float32Array>;
+        const preColorTransform: Float32Array = preObject.isFilter && preObject.color
+            ? preObject.color
+            : multiColor;
 
         // if graphics draw
         if (this._$recodes && this._$canDraw && this._$maxAlpha > 0) {
@@ -143,24 +173,25 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         }
 
         // init clip params
-        let shouldClip        = true;
-        let clipDepth         = null;
-        const clipMatrix      = Util.$getArray();
-        const instanceMatrix  = Util.$getArray();
-        const clipStack       = Util.$getArray();
-        const shouldClips     = Util.$getArray();
+        let shouldClip: boolean = true;
+        let clipDepth: number   = 0;
+
+        const clipMatrix: Float32Array[]     = $getArray();
+        const instanceMatrix: Float32Array[] = $getArray();
+        const clipStack: number[]            = $getArray();
+        const shouldClips: boolean[]         = $getArray();
 
         // draw children
-        const instances = Util.$renderPlayer._$instances;
-        const isLayer   = context._$isLayer;
-        for (let idx = 0; idx < length; ++idx) {
+        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
+        const isLayer: boolean  = context.isLayer;
+        for (let idx: number = 0; idx < length; ++idx) {
 
-            const id = children[idx];
+            const id: number = children[idx];
             if (!instances.has(id)) {
                 continue;
             }
 
-            const instance = instances.get(id);
+            const instance: RenderDisplayObjectImpl<any> = instances.get(id);
 
             // mask instance
             if (instance._$isMask) {
@@ -168,8 +199,8 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             }
 
             // not layer mode
-            const blendMode = instance._$blendMode;
-            if ((blendMode === BlendMode.ALPHA || blendMode === BlendMode.ERASE)
+            const blendMode: BlendModeImpl = instance._$blendMode;
+            if ((blendMode === "alpha" || blendMode === "erase")
                 && !isLayer
             ) {
                 continue;
@@ -186,15 +217,18 @@ export class RenderDisplayObjectContainer extends RenderGraphics
                     context._$leaveClip();
 
                     if (clipMatrix.length) {
-                        Util.$poolFloat32Array6(preMatrix);
-                        preMatrix = clipMatrix.pop();
+                        const matrix: Float32Array | void = clipMatrix.pop();
+                        if (matrix) {
+                            $poolFloat32Array6(preMatrix);
+                            preMatrix = matrix;
+                        }
                     }
 
                 }
 
                 // clear
-                clipDepth  = clipStack.length ? clipStack.pop() : null;
-                shouldClip = shouldClips.pop();
+                clipDepth  = clipStack.length ? clipStack.pop() || 0 : 0;
+                shouldClip = !!shouldClips.pop();
             }
 
             // mask size 0
@@ -217,13 +251,15 @@ export class RenderDisplayObjectContainer extends RenderGraphics
                 shouldClip = instance._$shouldClip(preMatrix);
                 if (shouldClip) {
 
-                    const adjMatrix = instance._$startClip(context, preMatrix);
+                    const adjMatrix: Float32Array | boolean | null
+                        = instance._$startClip(context, preMatrix);
+
                     if (adjMatrix === false) { // fixed
                         shouldClip = false;
                         continue;
                     }
 
-                    if (adjMatrix) {
+                    if (adjMatrix instanceof Float32Array) {
                         clipMatrix.push(preMatrix);
                         preMatrix = adjMatrix;
                     }
@@ -234,64 +270,87 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             }
 
             // mask start
-            let maskInstance = null;
-            if (instance._$maskId > -1) {
-                maskInstance = instances.get(instance._$maskId);
-                if (maskInstance) {
+            const maskInstance: DisplayObjectImpl<any> | null = instance._$maskId > -1 && instances.has(instance._$maskId)
+                ? instances.get(instance._$maskId)
+                : null;
 
-                    maskInstance._$updated = false;
+            if (maskInstance) {
 
-                    const mScale = Util.$renderPlayer._$matrix[0];
-                    const playerMatrix = Util.$getFloat32Array6(
+                maskInstance._$updated = false;
+
+                let maskMatrix: Float32Array;
+
+                if (this._$instanceId === maskInstance._$parentId) {
+
+                    maskMatrix = preMatrix;
+
+                } else {
+
+                    maskMatrix = $MATRIX_ARRAY_IDENTITY;
+
+                    let parent: ParentImpl<any> | void = instances.get(maskInstance._$parentId);
+                    while (parent || parent._$instanceId !== parent._$parentId) {
+
+                        maskMatrix = $multiplicationMatrix(
+                            parent._$matrix,
+                            maskMatrix
+                        );
+
+                        parent = instances.get(parent._$parentId);
+                    }
+
+                    const mScale: number = $renderPlayer.scaleX;
+                    const playerMatrix: Float32Array = $getFloat32Array6(
                         mScale, 0, 0, mScale, 0, 0
                     );
-                    const maskMatrix = Util.$multiplicationMatrix(
-                        playerMatrix, instance._$maskMatrix
-                    );
-                    Util.$poolFloat32Array6(playerMatrix);
 
-                    if (context._$isLayer) {
-                        const currentPosition = context._$getCurrentPosition();
+                    maskMatrix = $multiplicationMatrix(
+                        playerMatrix, maskMatrix
+                    );
+                    $poolFloat32Array6(playerMatrix);
+
+                    if (context.isLayer) {
+                        const currentPosition: BoundsImpl = context.getCurrentPosition();
                         maskMatrix[4] -= currentPosition.xMin;
                         maskMatrix[5] -= currentPosition.yMin;
                     }
 
-                    if (context._$cacheCurrentBuffer) {
-                        maskMatrix[4] -= context._$cacheCurrentBounds.x;
-                        maskMatrix[5] -= context._$cacheCurrentBounds.y;
+                    if (context.cacheBounds) {
+                        maskMatrix[4] -= context.cacheBounds.xMin;
+                        maskMatrix[5] -= context.cacheBounds.yMin;
                     }
-
-                    if (!maskInstance._$shouldClip(maskMatrix)) {
-                        continue;
-                    }
-
-                    let adjMatrix = maskInstance._$startClip(context, maskMatrix);
-
-                    context.save();
-
-                    if (adjMatrix === false) { // fixed
-                        context.restore();
-                        continue;
-                    }
-
-                    if (adjMatrix) {
-
-                        instanceMatrix.push(preMatrix);
-
-                        if (this !== maskInstance._$parent) {
-                            const maskTargetParentMatrix = this._$matrix;
-                            adjMatrix[0] = $Math.abs(preMatrix[0]) * $Math.sign(maskTargetParentMatrix[0]);
-                            adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(maskTargetParentMatrix[1]);
-                            adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(maskTargetParentMatrix[2]);
-                            adjMatrix[3] = $Math.abs(preMatrix[3]) * $Math.sign(maskTargetParentMatrix[3]);
-                            adjMatrix[4] = preMatrix[4] - context._$cacheCurrentBounds.x;
-                            adjMatrix[5] = preMatrix[5] - context._$cacheCurrentBounds.y;
-                        }
-
-                        preMatrix = adjMatrix;
-                    }
-
                 }
+
+                if (!maskInstance._$shouldClip(maskMatrix)) {
+                    continue;
+                }
+
+                const adjMatrix: Float32Array | boolean | null = maskInstance._$startClip(context, maskMatrix);
+
+                context.save();
+
+                if (adjMatrix === false) { // fixed
+                    context.restore();
+                    continue;
+                }
+
+                if (adjMatrix instanceof Float32Array) {
+
+                    instanceMatrix.push(preMatrix);
+
+                    if (this !== maskInstance._$parent) {
+                        const rawMatrix: Float32Array = this._$matrix;
+                        adjMatrix[0] = $Math.abs(preMatrix[0]) * $Math.sign(rawMatrix[0]);
+                        adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(rawMatrix[1]);
+                        adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(rawMatrix[2]);
+                        adjMatrix[3] = $Math.abs(preMatrix[3]) * $Math.sign(rawMatrix[3]);
+                        adjMatrix[4] = preMatrix[4] - context.cacheBounds.xMin;
+                        adjMatrix[5] = preMatrix[5] - context.cacheBounds.yMin;
+                    }
+
+                    preMatrix = adjMatrix;
+                }
+
             }
 
             instance._$draw(context, preMatrix, preColorTransform);
@@ -305,8 +364,11 @@ export class RenderDisplayObjectContainer extends RenderGraphics
                 context._$leaveClip();
 
                 if (instanceMatrix.length) {
-                    Util.$poolFloat32Array6(preMatrix);
-                    preMatrix = instanceMatrix.pop();
+                    const matrix: Float32Array | void = instanceMatrix.pop();
+                    if (matrix) {
+                        $poolFloat32Array6(preMatrix);
+                        preMatrix = matrix;
+                    }
                 }
 
             }
@@ -324,22 +386,25 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         }
 
         // object pool
-        Util.$poolArray(clipMatrix);
-        Util.$poolArray(instanceMatrix);
-        Util.$poolArray(clipStack);
-        Util.$poolArray(shouldClips);
+        $poolArray(clipMatrix);
+        $poolArray(instanceMatrix);
+        $poolArray(clipStack);
+        $poolArray(shouldClips);
 
         // filter and blend
-        if (preData.isFilter) {
-            return this._$postDraw(context, matrix, multiColor, preData);
+        if (preObject.isFilter) {
+            return this._$postDraw(context, matrix, multiColor, preObject);
         }
 
-        Util.$poolFloat32Array6(preMatrix);
-        Util.$poolPreObject(preData);
+        if (preObject.matrix !== matrix) {
+            $poolFloat32Array6(preObject.matrix as NonNullable<Float32Array>);
+        }
 
         if (multiColor !== color_transform) {
-            Util.$poolFloat32Array8(multiColor);
+            $poolFloat32Array8(multiColor);
         }
+
+        $poolPreObject(preObject);
     }
 
     /**
@@ -349,103 +414,105 @@ export class RenderDisplayObjectContainer extends RenderGraphics
      */
     _$getLayerBounds (matrix = null)
     {
-        let multiMatrix = Util.$MATRIX_ARRAY_IDENTITY;
-
-        const rawMatrix = this._$matrix;
+        let multiMatrix: Float32Array = $MATRIX_ARRAY_IDENTITY;
         if (matrix) {
 
             multiMatrix = matrix;
 
-            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-            ) {
-                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            const rawMatrix: Float32Array = this._$matrix;
+            if (rawMatrix !== $MATRIX_ARRAY_IDENTITY) {
+                multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
             }
         }
 
-        const isGraphics = this._$recodes;
-        const children   = this._$children;
-        const length     = children.length;
+        const isGraphics: boolean = !!this._$recodes;
+        const children: number[]  = this._$children;
+        const length: number      = children.length;
 
         // size zero
         if (!length && !isGraphics) {
-            const bounds = Util.$getBoundsObject(
-                multiMatrix[4], 0 - multiMatrix[4],
-                multiMatrix[5], 0 - multiMatrix[5]
+
+            const bounds: BoundsImpl = $getBoundsObject(
+                multiMatrix[4], -multiMatrix[4],
+                multiMatrix[5], -multiMatrix[5]
             );
+
             if (matrix && multiMatrix !== matrix) {
-                Util.$poolFloat32Array6(multiMatrix);
+                $poolFloat32Array6(multiMatrix);
             }
+
             return bounds;
         }
 
         // data init
-        const no   = $Number.MAX_VALUE;
-        let xMin = no;
-        let xMax = 0 - no;
-        let yMin = no;
-        let yMax = 0 - no;
+        const no: number = $Number.MAX_VALUE;
+        let xMin: number = no;
+        let xMax: number = -no;
+        let yMin: number = no;
+        let yMax: number = -no;
 
         if (isGraphics) {
-            const baseBounds = Util.$getBoundsObject(
+
+            const baseBounds: BoundsImpl = $getBoundsObject(
                 this._$xMin, this._$xMax,
                 this._$yMin, this._$yMax
             );
+            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
+            $poolBoundsObject(baseBounds);
 
-            const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
-            xMin   = bounds.xMin;
-            xMax   = bounds.xMax;
-            yMin   = bounds.yMin;
-            yMax   = bounds.yMax;
-            Util.$poolBoundsObject(bounds);
-            Util.$poolBoundsObject(baseBounds);
+            xMin   = +bounds.xMin;
+            xMax   = +bounds.xMax;
+            yMin   = +bounds.yMin;
+            yMax   = +bounds.yMax;
+            $poolBoundsObject(bounds);
         }
 
-        const instances = Util.$renderPlayer._$instances;
-        for (let idx = 0; idx < length; ++idx) {
+        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
+        for (let idx: number = 0; idx < children.length; ++idx) {
 
-            const id = children[idx];
+            const id: number = children[idx];
             if (!instances.has(id)) {
                 continue;
             }
 
-            const bounds = instances.get(id)._$getLayerBounds(multiMatrix);
+            const bounds: BoundsImpl = instances
+                .get(id)
+                ._$getLayerBounds(multiMatrix);
 
             xMin = $Math.min(xMin, bounds.xMin);
             xMax = $Math.max(xMax, bounds.xMax);
             yMin = $Math.min(yMin, bounds.yMin);
             yMax = $Math.max(yMax, bounds.yMax);
 
-            Util.$poolBoundsObject(bounds);
+            $poolBoundsObject(bounds);
 
         }
 
         if (matrix && multiMatrix !== matrix) {
-            Util.$poolFloat32Array6(multiMatrix);
+            $poolFloat32Array6(multiMatrix);
         }
 
         // end
         if (!matrix) {
-            return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+            return $getBoundsObject(xMin, xMax, yMin, yMax);
         }
 
-        const filters = this._$filters;
-        if (!filters) {
-            return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+        if (!this._$filters) {
+            return $getBoundsObject(xMin, xMax, yMin, yMax);
         }
 
-        let rect = new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
-        for (let idx = 0; idx < filters.length; ++idx) {
-            rect = filters[idx]._$generateFilterRect(rect, null, null, true);
+        let rect: Rectangle = new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
+        for (let idx: number = 0; idx < this._$filters.length; ++idx) {
+            rect = this._$filters[idx]
+                ._$generateFilterRect(rect, 0, 0);
         }
 
-        xMin = rect._$x;
-        xMax = rect._$x + rect._$width;
-        yMin = rect._$y;
-        yMax = rect._$y + rect._$height;
+        xMin = rect.x;
+        xMax = rect.x + rect.width;
+        yMin = rect.y;
+        yMax = rect.y + rect.height;
 
-        return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+        return $getBoundsObject(xMin, xMax, yMin, yMax);
     }
 
     /**
@@ -454,85 +521,91 @@ export class RenderDisplayObjectContainer extends RenderGraphics
      * @method
      * @private
      */
-    _$getBounds (matrix = null)
+    _$getBounds (matrix: Float32Array | null = null): BoundsImpl
     {
-        let multiMatrix = Util.$MATRIX_ARRAY_IDENTITY;
+        let multiMatrix: Float32Array = $MATRIX_ARRAY_IDENTITY;
         if (matrix) {
 
             multiMatrix = matrix;
 
-            const rawMatrix = this._$matrix;
+            const rawMatrix: Float32Array = this._$matrix;
             if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
                 || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
                 || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
             ) {
-                multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+                multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
             }
         }
 
-        const isGraphics = this._$recodes;
-        const children   = this._$children;
-        const length     = children.length;
+        const isGraphics: boolean = !!this._$recodes;
+        const children: number[]  = this._$children;
+        const length: number      = children.length;
 
         // size zero
         if (!length && !isGraphics) {
-            const bounds = Util.$getBoundsObject(
-                multiMatrix[4], 0 - multiMatrix[4],
-                multiMatrix[5], 0 - multiMatrix[5]
+
+            const bounds: BoundsImpl = $getBoundsObject(
+                multiMatrix[4], -multiMatrix[4],
+                multiMatrix[5], -multiMatrix[5]
             );
+
             if (matrix && multiMatrix !== matrix) {
-                Util.$poolFloat32Array6(multiMatrix);
+                $poolFloat32Array6(multiMatrix);
             }
+
             return bounds;
         }
 
         // data init
         const no = $Number.MAX_VALUE;
         let xMin = no;
-        let xMax = 0 - no;
+        let xMax = -no;
         let yMin = no;
-        let yMax = 0 - no;
+        let yMax = -no;
 
         if (isGraphics) {
-            const baseBounds = Util.$getBoundsObject(
+
+            const baseBounds: BoundsImpl = $getBoundsObject(
                 this._$xMin, this._$xMax,
                 this._$yMin, this._$yMax
             );
+            $poolBoundsObject(baseBounds);
 
-            const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
-            xMin   = bounds.xMin;
-            xMax   = bounds.xMax;
-            yMin   = bounds.yMin;
-            yMax   = bounds.yMax;
-            Util.$poolBoundsObject(bounds);
-            Util.$poolBoundsObject(baseBounds);
+            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
+            xMin = bounds.xMin;
+            xMax = bounds.xMax;
+            yMin = bounds.yMin;
+            yMax = bounds.yMax;
+            $poolBoundsObject(bounds);
         }
 
-        const instances = Util.$renderPlayer._$instances;
-        for (let idx = 0; idx < length; ++idx) {
+        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
+        for (let idx: number = 0; idx < children.length; ++idx) {
 
-            const id = children[idx];
+            const id: number = children[idx];
             if (!instances.has(id)) {
                 continue;
             }
 
-            const bounds = instances.get(id)._$getBounds(multiMatrix);
+            const bounds: BoundsImpl = instances
+                .get(id)
+                ._$getBounds(multiMatrix);
 
             xMin = $Math.min(xMin, bounds.xMin);
             xMax = $Math.max(xMax, bounds.xMax);
             yMin = $Math.min(yMin, bounds.yMin);
             yMax = $Math.max(yMax, bounds.yMax);
 
-            Util.$poolBoundsObject(bounds);
+            $poolBoundsObject(bounds);
 
         }
 
         if (matrix && multiMatrix !== matrix) {
-            Util.$poolFloat32Array6(multiMatrix);
+            $poolFloat32Array6(multiMatrix);
         }
 
         // end
-        return Util.$getBoundsObject(xMin, xMax, yMin, yMax);
+        return $getBoundsObject(xMin, xMax, yMin, yMax);
     }
 
     /**
@@ -541,115 +614,123 @@ export class RenderDisplayObjectContainer extends RenderGraphics
      * @return {object}
      * @private
      */
-    _$preDraw (context, matrix)
-    {
-        const originMatrix = this._$matrix;
-        const multiMatrix  = Util.$multiplicationMatrix(matrix, originMatrix);
+    _$preDraw (
+        context: CanvasToWebGLContext,
+        matrix: Float32Array
+    ): PreObjectImpl | null {
+
+        let multiMatrix: Float32Array = matrix;
+        const rawMatrix: Float32Array = this._$matrix;
+        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        ) {
+            multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
+        }
 
         // size zero
         if (!multiMatrix[0] && !multiMatrix[1]
             || !multiMatrix[2] && !multiMatrix[3]
         ) {
-            return false;
+            return null;
         }
 
         // return object
-        const object = Util.$getPreObject();
+        const object: PreObjectImpl = $getPreObject();
 
         // setup
         object.matrix = multiMatrix;
 
         // check
-        const filters   = this._$filters;
-        const blendMode = this._$blendMode;
-        if (blendMode !== BlendMode.NORMAL || filters && filters.length > 0) {
+        const blendMode: BlendModeImpl = this._$blendMode;
+        if (blendMode !== "normal"
+            || this._$filters && this._$filters.length > 0
+        ) {
 
             // check size
-            const baseBounds = this._$getBounds(null);
-            const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
-            const xMax   = +bounds.xMax;
-            const xMin   = +bounds.xMin;
-            const yMax   = +bounds.yMax;
-            const yMin   = +bounds.yMin;
+            const baseBounds: BoundsImpl = this._$getBounds(null);
+            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
+            $poolBoundsObject(baseBounds);
 
-            // pool
-            Util.$poolBoundsObject(baseBounds);
-            Util.$poolBoundsObject(bounds);
+            const xMax: number = +bounds.xMax;
+            const xMin: number = +bounds.xMin;
+            const yMax: number = +bounds.yMax;
+            const yMin: number = +bounds.yMin;
+            $poolBoundsObject(bounds);
 
-            const width  = $Math.abs(xMax - xMin);
-            const height = $Math.abs(yMax - yMin);
+            const width: number  = $Math.abs(xMax - xMin);
+            const height: number = $Math.abs(yMax - yMin);
             if (0 >= width || 0 >= height) {
-                return false;
+                $poolPreObject(object);
+                return null;
             }
 
             if (0 > xMin + width || 0 > yMin + height) {
-                return false;
+                $poolPreObject(object);
+                return null;
             }
 
-            const currentAttachment = context
+            const currentAttachment: AttachmentImpl | null = context
                 .frameBuffer
                 .currentAttachment;
 
-            if (xMin > currentAttachment.width
+            if (!currentAttachment
+                || !currentAttachment.texture
+                || xMin > currentAttachment.width
                 || yMin > currentAttachment.height
             ) {
-                return false;
+                $poolPreObject(object);
+                return null;
             }
 
             // set origin position
-            object.basePosition.x = originMatrix[4];
-            object.basePosition.y = originMatrix[5];
+            object.basePosition.x = rawMatrix[4];
+            object.basePosition.y = rawMatrix[5];
 
             // check after size
-            let baseLayerBounds = this._$getLayerBounds(null);
-            const layerBounds = Util.$boundsMatrix(baseLayerBounds, multiMatrix);
+            const baseLayerBounds: BoundsImpl = this._$getLayerBounds(null);
+            const layerBounds: BoundsImpl = $boundsMatrix(baseLayerBounds, multiMatrix);
 
             // filter size
-            let layerWidth  = $Math.abs(layerBounds.xMax - layerBounds.xMin);
-            let layerHeight = $Math.abs(layerBounds.yMax - layerBounds.yMin);
-            Util.$poolBoundsObject(layerBounds);
-
-            if (layerWidth === width && layerHeight === height) {
-                Util.$poolBoundsObject(baseLayerBounds);
-                baseLayerBounds = null;
-            }
+            let layerWidth: number  = $Math.abs(layerBounds.xMax - layerBounds.xMin);
+            let layerHeight: number = $Math.abs(layerBounds.yMax - layerBounds.yMin);
+            $poolBoundsObject(layerBounds);
 
             // move size
-            let tx = multiMatrix[4] - $Math.floor(xMin);
-            let ty = multiMatrix[5] - $Math.floor(yMin);
+            let tx: number = multiMatrix[4] - $Math.floor(xMin);
+            let ty: number = multiMatrix[5] - $Math.floor(yMin);
 
-            let moveBounds = null;
-            if (baseLayerBounds) {
+            let dx: number = $Math.floor(xMin);
+            let dy: number = $Math.floor(yMin);
+            let originX: number = xMin;
+            let originY: number = yMin;
 
-                const layerMatrix = Util.$getFloat32Array6(
+            if (layerWidth !== width || layerHeight !== height) {
+
+                const layerMatrix: Float32Array = $getFloat32Array6(
                     multiMatrix[0], multiMatrix[1],
                     multiMatrix[2], multiMatrix[3],
                     0, 0
                 );
-                moveBounds = Util.$boundsMatrix(baseLayerBounds, layerMatrix);
+
+                const moveBounds: BoundsImpl = $boundsMatrix(baseLayerBounds, layerMatrix);
 
                 // pool
-                Util.$poolBoundsObject(baseLayerBounds);
-                Util.$poolFloat32Array6(layerMatrix);
+                $poolFloat32Array6(layerMatrix);
 
-                tx += 0 - $Math.floor(moveBounds.xMin) - tx;
-                ty += 0 - $Math.floor(moveBounds.yMin) - ty;
+                tx += -$Math.floor(moveBounds.xMin) - tx;
+                ty += -$Math.floor(moveBounds.yMin) - ty;
+
+                dx -= -$Math.floor(moveBounds.xMin) - (multiMatrix[4] - dx);
+                dy -= -$Math.floor(moveBounds.yMin) - (multiMatrix[5] - dy);
+
+                originX -= -moveBounds.xMin - (multiMatrix[4] - originX);
+                originY -= -moveBounds.yMin - (multiMatrix[5] - originY);
+
+                $poolBoundsObject(moveBounds);
             }
 
-            let dx = $Math.floor(xMin);
-            let dy = $Math.floor(yMin);
-            let originX = xMin;
-            let originY = yMin;
-
-            if (moveBounds) {
-                dx -= 0 - $Math.floor(moveBounds.xMin) - (multiMatrix[4] - dx);
-                dy -= 0 - $Math.floor(moveBounds.yMin) - (multiMatrix[5] - dy);
-
-                originX -= 0 - moveBounds.xMin - (multiMatrix[4] - originX);
-                originY -= 0 - moveBounds.yMin - (multiMatrix[5] - originY);
-
-                Util.$poolBoundsObject(moveBounds);
-            }
+            $poolBoundsObject(baseLayerBounds);
 
             // set position
             object.position.dx = dx > 0 ? dx : 0;
@@ -677,19 +758,19 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             if (0 >= layerWidth || 0 >= layerHeight // size (-)
                 || !layerWidth || !layerHeight // NaN or Infinity
             ) {
-                Util.$poolPreObject(object);
-                return false;
+                $poolPreObject(object);
+                return null;
             }
 
             // start layer
             context._$startLayer(
-                Util.$getBoundsObject(originX, 0, originY, 0)
+                $getBoundsObject(originX, 0, originY, 0)
             );
 
             // check cache
-            object.canApply = this._$canApply(filters);
-            let updated = this._$isFilterUpdated(
-                layerWidth, layerHeight, multiMatrix, filters,
+            object.canApply = this._$canApply(this._$filters);
+            const updated: boolean = this._$isFilterUpdated(
+                layerWidth, layerHeight, multiMatrix, this._$filters,
                 object.canApply, object.basePosition.x, object.basePosition.y
             );
 
@@ -707,13 +788,13 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             // setup
             object.isFilter    = true;
             object.isUpdated   = updated;
-            object.color       = Util.$getFloat32Array8();
+            object.color       = $getFloat32Array8();
             object.baseMatrix  = multiMatrix;
-            object.filters     = filters;
+            object.filters     = this._$filters;
             object.blendMode   = blendMode;
             object.layerWidth  = layerWidth;
             object.layerHeight = layerHeight;
-            object.matrix      = Util.$getFloat32Array6(
+            object.matrix      = $getFloat32Array6(
                 multiMatrix[0], multiMatrix[1],
                 multiMatrix[2], multiMatrix[3],
                 tx, ty
@@ -732,21 +813,26 @@ export class RenderDisplayObjectContainer extends RenderGraphics
      * @method
      * @private
      */
-    _$postDraw (context, matrix, color_transform, object)
-    {
-        // cache
-        const cacheKeys = Util.$getArray(this._$instanceId, "f");
+    _$postDraw (
+        context: CanvasToWebGLContext,
+        matrix: Float32Array,
+        color_transform: Float32Array,
+        object: PreObjectImpl
+    ): void {
 
-        const cacheStore = Util.$cacheStore();
-        const manager = context._$frameBufferManager;
+        // cache
+        const cacheKeys: any[] = $getArray(this._$instanceId, "f");
+
+        const cacheStore: CacheStore = $renderPlayer.cacheStore;
+        const manager: FrameBufferManager = context.frameBuffer;
 
         // cache or new texture
-        let texture = null;
+        let texture: WebGLTexture | null;
         if (object.isUpdated) {
 
             texture = manager.getTextureFromCurrentAttachment();
 
-            const cacheTexture = cacheStore.get(cacheKeys);
+            const cacheTexture: WebGLTexture | void = cacheStore.get(cacheKeys);
             if (cacheTexture) {
                 cacheStore.set(cacheKeys, null);
                 manager.releaseTexture(cacheTexture);
@@ -755,6 +841,9 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         } else {
 
             texture = cacheStore.get(cacheKeys);
+            if (!texture) {
+                throw new Error("the texture is null.");
+            }
 
         }
 
@@ -772,7 +861,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         if (object.isUpdated && object.canApply) {
 
             // cache clear
-            let cache = cacheStore.get(cacheKeys);
+            const cache: WebGLTexture | void = cacheStore.get(cacheKeys);
             if (cache) {
 
                 // reset cache params
@@ -784,21 +873,18 @@ export class RenderDisplayObjectContainer extends RenderGraphics
                 cache.matrix         = null;
                 cache.colorTransform = null;
                 manager.releaseTexture(cache);
-
-                cache  = null;
             }
 
             // apply filter
-            const length = object.filters.length;
-            if (length) {
+            const filters: FilterArrayImpl | null = object.filters;
+            if (filters && filters.length) {
 
                 // init
                 context._$offsetX = 0;
                 context._$offsetY = 0;
 
-                for (let idx = 0; idx < length; ++idx) {
-                    texture = object
-                        .filters[idx]
+                for (let idx: number = 0; idx < filters.length; ++idx) {
+                    texture = filters[idx]
                         ._$applyFilter(context, matrix);
                 }
 
@@ -822,8 +908,10 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             texture.filterState = object.canApply;
 
             // cache texture
-            const mat = object.baseMatrix;
-            texture.matrix = `${mat[0]}_${mat[1]}_${mat[2]}_${mat[3]}`;
+            const matrix: Float32Array | null = object.baseMatrix;
+            if (matrix) {
+                texture.matrix = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}`;
+            }
 
             texture.layerWidth  = object.layerWidth;
             texture.layerHeight = object.layerHeight;
@@ -831,7 +919,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
 
         // cache texture
         cacheStore.set(cacheKeys, texture);
-        Util.$poolArray(cacheKeys);
+        $poolArray(cacheKeys);
 
         // set current buffer
         if (object.isUpdated) {
@@ -839,17 +927,16 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         }
 
         // set
-        Util.$resetContext(context);
-
-        context._$globalAlpha = Util.$clamp(
+        context.reset();
+        context.globalAlpha = $clamp(
             color_transform[3] + color_transform[7] / 255, 0, 1
         );
-        context._$globalCompositeOperation = object.blendMode;
+        context.globalCompositeOperation = object.blendMode;
 
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.drawImage(texture,
-            0 - offsetX + object.position.dx,
-            0 - offsetY + object.position.dy,
+            -offsetX + object.position.dx,
+            -offsetY + object.position.dy,
             texture.width, texture.height,
             color_transform
         );
@@ -861,10 +948,11 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         context._$restoreCurrentMask();
 
         // object pool
-        Util.$poolFloat32Array8(object.color);
-        Util.$poolFloat32Array6(object.matrix);
-        Util.$poolFloat32Array6(object.baseMatrix);
-        Util.$poolPreObject(object);
+        if (object.baseMatrix !== matrix) {
+            $poolFloat32Array6(object.baseMatrix as NonNullable<Float32Array>);
+        }
+        $poolFloat32Array6(object.matrix as NonNullable<Float32Array>);
+        $poolPreObject(object);
     }
 
     /**
@@ -874,7 +962,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
      * @method
      * @private
      */
-    _$remove ()
+    _$remove (): void
     {
         // reset
         this._$children.length = 0;

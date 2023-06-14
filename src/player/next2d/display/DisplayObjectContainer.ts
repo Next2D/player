@@ -532,7 +532,7 @@ export class DisplayObjectContainer extends InteractiveObject
      * @return {object}
      * @private
      */
-    _$getBounds (matrix: Float32Array | null = null)
+    _$getBounds (matrix: Float32Array | null = null): BoundsImpl
     {
         let multiMatrix: Float32Array = $MATRIX_ARRAY_IDENTITY;
         if (matrix) {
@@ -579,7 +579,10 @@ export class DisplayObjectContainer extends InteractiveObject
         let yMax = -no;
 
         if (graphics) {
-            const bounds: BoundsImpl = $boundsMatrix(graphics._$getBounds(), multiMatrix);
+            const baseBounds: BoundsImpl = graphics._$getBounds();
+            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
+            $poolBoundsObject(baseBounds);
+
             xMin   = bounds.xMin;
             xMax   = bounds.xMax;
             yMin   = bounds.yMin;
@@ -658,7 +661,11 @@ export class DisplayObjectContainer extends InteractiveObject
         let yMax: number = -no;
 
         if (graphics) {
-            const bounds: BoundsImpl = $boundsMatrix(graphics._$getBounds(), multiMatrix);
+
+            const baseBounds: BoundsImpl = graphics._$getBounds();
+            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
+            $poolBoundsObject(baseBounds);
+
             xMin   = +bounds.xMin;
             xMax   = +bounds.xMax;
             yMin   = +bounds.yMin;
@@ -957,14 +964,6 @@ export class DisplayObjectContainer extends InteractiveObject
 
         if (this._$stage !== null && !child._$addedStage) {
 
-            if ($rendererWorker) {
-
-                child._$createWorkerInstance();
-                child._$postProperty();
-
-                this._$postChildrenIds();
-            }
-
             if (child.willTrigger(Next2DEvent.ADDED_TO_STAGE)) {
                 child.dispatchEvent(
                     new Next2DEvent(Next2DEvent.ADDED_TO_STAGE)
@@ -976,6 +975,14 @@ export class DisplayObjectContainer extends InteractiveObject
             // set params
             if (child instanceof DisplayObjectContainer) {
                 child._$executeAddedToStage();
+            }
+
+            if ($rendererWorker) {
+
+                child._$createWorkerInstance();
+                child._$postProperty();
+
+                this._$postChildrenIds();
             }
         }
 
@@ -1378,29 +1385,30 @@ export class DisplayObjectContainer extends InteractiveObject
         object.matrix = multiMatrix;
 
         // check
-        const filters   = this._$filters   || this.filters;
-        const blendMode = this._$blendMode || this.blendMode;
+        const filters: FilterArrayImpl = this._$filters   || this.filters;
+        const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
         if (filters.length > 0 || blendMode !== "normal") {
 
             // check size
             const baseBounds: BoundsImpl = this._$getBounds(null);
             const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
+            $poolBoundsObject(baseBounds);
+
             const xMax: number = +bounds.xMax;
             const xMin: number = +bounds.xMin;
             const yMax: number = +bounds.yMax;
             const yMin: number = +bounds.yMin;
-
-            // pool
-            $poolBoundsObject(baseBounds);
             $poolBoundsObject(bounds);
 
             const width: number  = $Math.abs(xMax - xMin);
             const height: number = $Math.abs(yMax - yMin);
             if (0 >= width || 0 >= height) {
+                $poolPreObject(object);
                 return null;
             }
 
             if (0 > xMin + width || 0 > yMin + height) {
+                $poolPreObject(object);
                 return null;
             }
 
@@ -1562,7 +1570,7 @@ export class DisplayObjectContainer extends InteractiveObject
         const manager: FrameBufferManager = context.frameBuffer;
 
         // cache or new texture
-        let texture: WebGLTexture | null;
+        let texture: WebGLTexture | null = null;
         if (object.isUpdated) {
 
             texture = manager
@@ -1809,7 +1817,7 @@ export class DisplayObjectContainer extends InteractiveObject
                     context._$leaveClip();
 
                     if (clipMatrix.length) {
-                        const matrix = clipMatrix.pop();
+                        const matrix: Float32Array | void = clipMatrix.pop();
                         if (matrix) {
                             $poolFloat32Array6(preMatrix);
                             preMatrix = matrix;
@@ -1887,7 +1895,7 @@ export class DisplayObjectContainer extends InteractiveObject
                         parent = parent._$parent;
                     }
 
-                    const mScale: number = player._$scale * player._$ratio;
+                    const mScale: number = player.scaleX;
                     const playerMatrix: Float32Array = $getFloat32Array6(
                         mScale, 0, 0, mScale, 0, 0
                     );
@@ -1953,7 +1961,7 @@ export class DisplayObjectContainer extends InteractiveObject
                 context._$leaveClip();
 
                 if (instanceMatrix.length) {
-                    const matrix = instanceMatrix.pop();
+                    const matrix: Float32Array | void = instanceMatrix.pop();
                     if (matrix) {
                         $poolFloat32Array6(preMatrix);
                         preMatrix = matrix;
@@ -2341,9 +2349,10 @@ export class DisplayObjectContainer extends InteractiveObject
         this._$created = true;
 
         const options: ArrayBuffer[] = $getArray();
-        const message: any = {
+        const message: PropertyContainerMessageImpl = {
             "command": "createDisplayObjectContainer",
-            "instanceId": this._$instanceId
+            "instanceId": this._$instanceId,
+            "parentId": this._$parent._$instanceId
         };
 
         const graphics: Graphics | null = "_$graphics" in this
