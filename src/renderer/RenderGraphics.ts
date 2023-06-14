@@ -233,7 +233,7 @@ export class RenderGraphics extends RenderDisplayObject
             uniqueId = `${this._$loaderInfoId}@${this._$characterId}`;
         }
 
-        const cacheStore: CacheStore = $renderPlayer._$cacheStore;
+        const cacheStore: CacheStore = $renderPlayer.cacheStore;
         const cacheKeys: string[] = cacheStore.generateKeys(
             uniqueId, keys, color_transform
         );
@@ -267,7 +267,7 @@ export class RenderGraphics extends RenderDisplayObject
 
             if (hasGrid) {
 
-                const mScale: number = $renderPlayer._$matrix[0];
+                const mScale: number = $renderPlayer.scaleX;
 
                 const baseMatrix: Float32Array = $getFloat32Array6(
                     mScale, 0, 0, mScale, 0, 0
@@ -795,7 +795,7 @@ export class RenderGraphics extends RenderDisplayObject
                             recodes[idx++], recodes[idx++], recodes[idx++]
                         );
 
-                        const repeat: string  = recodes[idx++] ? "repeat" : "no-repeat";
+                        const repeat: boolean = !!recodes[idx++];
                         const smooth: boolean = !!recodes[idx++];
 
                         context.save();
@@ -816,7 +816,7 @@ export class RenderGraphics extends RenderDisplayObject
                             width, height, buffer, true
                         );
 
-                        if (repeat === "no-repeat"
+                        if (!repeat
                             && width  === graphicsWidth
                             && height === graphicsHeight
                         ) {
@@ -885,7 +885,7 @@ export class RenderGraphics extends RenderDisplayObject
                         }
                         $poolFloat32Array6(matrix);
 
-                        const repeat: string  = recodes[idx++] ? "repeat" : "no-repeat";
+                        const repeat: boolean = !!recodes[idx++];
                         const smooth: boolean = !!recodes[idx++];
 
                         const manager: FrameBufferManager = context.frameBuffer;
@@ -935,7 +935,7 @@ export class RenderGraphics extends RenderDisplayObject
             this._$maxAlpha = object.maxAlpha;
             this._$canDraw  = object.canDraw;
 
-            const cacheStore: CacheStore = $renderPlayer._$cacheStore;
+            const cacheStore: CacheStore = $renderPlayer.cacheStore;
             cacheStore.removeCache(this._$instanceId);
 
             if (this._$loaderInfoId > -1

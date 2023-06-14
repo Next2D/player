@@ -3,11 +3,13 @@ import { BlendModeImpl } from "./BlendModeImpl";
 export interface PropertyMessageImpl {
     command: string;
     instanceId: number;
-    visible: boolean;
-    isMask: boolean;
-    clipDepth: number;
-    depth: number;
-    maskId: number;
+    visible?: boolean;
+    isMask?: boolean;
+    clipDepth?: number;
+    depth?: number;
+    maskId?: number;
+    loaderInfoId?: number;
+    characterId?: number;
     maskMatrix?: Float32Array;
     xMin?: number;
     yMin?: number;

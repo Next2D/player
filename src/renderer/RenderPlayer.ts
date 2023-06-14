@@ -1,24 +1,32 @@
 import { CacheStore } from "../player/util/CacheStore";
 import { RenderDisplayObjectContainer } from "./RenderDisplayObjectContainer";
 import { Rectangle } from "../player/next2d/geom/Rectangle";
-import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
+import { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
 import type { AttachmentImpl } from "../interface/AttachmentImpl";
 import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
 import type { FrameBufferManager } from "../webgl/FrameBufferManager";
 import type { PropertyContainerMessageImpl } from "../interface/PropertyContainerMessageImpl";
+import type { PropertyShapeMessageImpl } from "../interface/PropertyShapeMessageImpl";
+import type { RenderShape } from "./RenderShape";
+import type { PropertyTextMessageImpl } from "../interface/PropertyTextMessageImpl";
+import type { PropertyVideoMessageImpl } from "../interface/PropertyVideoMessageImpl";
+import type { RenderVideo } from "./RenderVideo";
+import type { RenderTextField } from "./RenderTextField";
+import type { RGBAImpl } from "../interface/RGBAImpl";
 import {
     $cancelAnimationFrame,
     $COLOR_ARRAY_IDENTITY,
     $Float32Array,
     $getFloat32Array6,
     $performance,
-    $requestAnimationFrame
+    $requestAnimationFrame, $toColorInt, $uintToRGBA
 } from "../player/util/RenderUtil";
 import {
     $getDisplayObjectContainer,
     $getShape,
     $getTextField,
-    $getVideo
+    $getVideo,
+    $setDevicePixelRatio
 } from "./RenderGlobal";
 
 /**
@@ -26,22 +34,22 @@ import {
  */
 export class RenderPlayer
 {
-    public readonly _$instances: Map<number, RenderDisplayObjectImpl<any>>;
-    public readonly _$cacheStore: CacheStore;
-    public readonly _$matrix: Float32Array;
+    private readonly _$instances: Map<number, RenderDisplayObjectImpl<any>>;
+    private readonly _$cacheStore: CacheStore;
+    private readonly _$matrix: Float32Array;
     private readonly _$colorTransform: Float32Array;
-    public _$canvas: OffscreenCanvas | null;
-    public _$context: CanvasToWebGLContext | null;
+    private _$context: CanvasToWebGLContext | null;
+    private _$frameRate: number;
     private _$stopFlag: boolean;
+    private _$canvas: OffscreenCanvas | null;
+    private _$samples: number;
     private _$timerId: number;
     private _$startTime: number;
-    private _$frameRate: number;
     private _$fps: number;
     private _$width: number;
     private _$height: number;
     private readonly _$stage: RenderDisplayObjectContainer;
     private _$videos: number;
-    private _$samples: number;
     private _$attachment: AttachmentImpl | null;
 
     /**
@@ -168,6 +176,58 @@ export class RenderPlayer
     }
 
     /**
+     * @description フレームレートをセット
+     *
+     * @param  {number} frame_rate
+     * @return {void}
+     * @public
+     */
+    set frameRate (frame_rate: number)
+    {
+        this._$frameRate = frame_rate;
+    }
+
+    /**
+     * @return {Map}
+     * @readonly
+     * @public
+     */
+    get instances (): Map<number, RenderDisplayObjectImpl<any>>
+    {
+        return this._$instances;
+    }
+
+    /**
+     * @return {CacheStore}
+     * @readonly
+     * @public
+     */
+    get cacheStore (): CacheStore
+    {
+        return this._$cacheStore;
+    }
+
+    /**
+     * @return {CanvasToWebGLContext}
+     * @readonly
+     * @public
+     */
+    get context (): CanvasToWebGLContext | null
+    {
+        return this._$context;
+    }
+
+    /**
+     * @return {number}
+     * @readonly
+     * @public
+     */
+    get scaleX (): number
+    {
+        return this._$matrix[0];
+    }
+
+    /**
      * @description 描画を開始
      *
      * @return {void}
@@ -210,6 +270,77 @@ export class RenderPlayer
         this._$stopFlag = true;
         this._$timerId  = -1;
         this._$cacheStore.reset();
+    }
+
+    /**
+     * @description WebGLを起動
+     *
+     * @param  {OffscreenCanvas} canvas
+     * @param  {number} [samples=4]
+     * @param  {number} [device_pixel_ratio=2]
+     * @return {void}
+     * @method
+     * @public
+     */
+    _$initialize (
+        canvas: OffscreenCanvas,
+        samples: number = 4,
+        device_pixel_ratio: number = 2
+    ): void {
+
+        // update
+        $setDevicePixelRatio(device_pixel_ratio);
+
+        this._$samples = samples;
+        this._$canvas  = canvas;
+
+        const gl: WebGL2RenderingContext | null = canvas.getContext("webgl2", {
+            "stencil": true,
+            "premultipliedAlpha": true,
+            "antialias": false,
+            "depth": false,
+            "preserveDrawingBuffer": true
+        });
+
+        if (gl) {
+            const context: CanvasToWebGLContext = new CanvasToWebGLContext(gl, samples);
+            this._$context = context;
+            this._$cacheStore.context = context;
+        }
+    }
+
+    /**
+     * @description 背景色をセット
+     *
+     * @param  {string} [background_color="transparent"]
+     * @return {void}
+     * @method
+     * @public
+     */
+    _$setBackgroundColor (background_color = "transparent"): void
+    {
+        if (!this._$context) {
+            return ;
+        }
+
+        if (background_color === "transparent") {
+
+            this._$context._$setColor(0, 0, 0, 0);
+
+        } else {
+
+            const color: RGBAImpl = $uintToRGBA(
+                $toColorInt(background_color)
+            );
+
+            this._$context._$setColor(
+                color.R / 255,
+                color.G / 255,
+                color.B / 255,
+                1
+            );
+
+        }
     }
 
     /**
@@ -273,6 +404,11 @@ export class RenderPlayer
             return ;
         }
 
+        const stopFlag: boolean = this._$stopFlag;
+        if (!stopFlag) {
+            this.stop();
+        }
+
         context._$bind(this._$attachment);
 
         // reset
@@ -300,6 +436,10 @@ export class RenderPlayer
         const ctx: OffscreenCanvasRenderingContext2D | null = canvas.getContext("2d");
         if (ctx && this._$canvas) {
             ctx.drawImage(this._$canvas, 0, 0);
+        }
+
+        if (!stopFlag) {
+            this.play();
         }
     }
 
@@ -432,7 +572,7 @@ export class RenderPlayer
      * @method
      * @private
      */
-    _$updateStage ()
+    _$updateStage (): void
     {
         this._$stage._$updated = true;
     }
@@ -445,20 +585,20 @@ export class RenderPlayer
      * @method
      * @private
      */
-    _$createDisplayObjectContainer (object: PropertyContainerMessageImpl)
+    _$createDisplayObjectContainer (object: PropertyContainerMessageImpl): void
     {
-        const sprite = $getDisplayObjectContainer();
+        const sprite: RenderDisplayObjectContainer = $getDisplayObjectContainer();
 
         sprite._$instanceId = object.instanceId;
 
         if (object.recodes) {
             sprite._$recodes  = object.recodes;
-            sprite._$maxAlpha = object.maxAlpha;
-            sprite._$canDraw  = object.canDraw;
-            sprite._$xMin     = object.xMin;
-            sprite._$yMin     = object.yMin;
-            sprite._$xMax     = object.xMax;
-            sprite._$yMax     = object.yMax;
+            sprite._$maxAlpha = object.maxAlpha || 1;
+            sprite._$canDraw  = object.canDraw || true;
+            sprite._$xMin     = object.xMin || 0;
+            sprite._$yMin     = object.yMin || 0;
+            sprite._$xMax     = object.xMax || 0;
+            sprite._$yMax     = object.yMax || 0;
         }
 
         if (object.grid) {
@@ -479,25 +619,28 @@ export class RenderPlayer
      * @method
      * @private
      */
-    _$createShape (object)
+    _$createShape (object: PropertyShapeMessageImpl): void
     {
-        const shape = $getShape();
+        const shape: RenderShape = $getShape();
 
         shape._$instanceId = object.instanceId;
-        shape._$recodes    = object.recodes;
-        shape._$maxAlpha   = object.maxAlpha;
-        shape._$canDraw    = object.canDraw;
+        if (object.recodes) {
+            shape._$recodes = object.recodes;
+        }
 
-        shape._$xMin = object.xMin;
-        shape._$yMin = object.yMin;
-        shape._$xMax = object.xMax;
-        shape._$yMax = object.yMax;
+        shape._$maxAlpha = object.maxAlpha || 1;
+        shape._$canDraw  = object.canDraw || true;
 
-        if ("characterId" in object) {
+        shape._$xMin = object.xMin || 0;
+        shape._$yMin = object.yMin || 0;
+        shape._$xMax = object.xMax || 0;
+        shape._$yMax = object.yMax || 0;
+
+        if (object.characterId) {
             shape._$characterId = object.characterId;
         }
         if ("loaderInfoId" in object) {
-            shape._$loaderInfoId = object.loaderInfoId;
+            shape._$loaderInfoId = object.loaderInfoId || 0;
         }
 
         if (object.grid) {
@@ -518,17 +661,17 @@ export class RenderPlayer
      * @method
      * @private
      */
-    _$createVideo (object)
+    _$createVideo (object: PropertyVideoMessageImpl): void
     {
-        const video = $getVideo();
+        const video: RenderVideo = $getVideo();
 
         video._$instanceId = object.instanceId;
 
-        if ("characterId" in object) {
+        if (object.characterId) {
             video._$characterId = object.characterId;
         }
         if ("loaderInfoId" in object) {
-            video._$loaderInfoId = object.loaderInfoId;
+            video._$loaderInfoId = object.loaderInfoId || 0;
         }
 
         video._$updateProperty(object);
@@ -546,23 +689,23 @@ export class RenderPlayer
      * @method
      * @private
      */
-    _$createTextField (object)
+    _$createTextField (object: PropertyTextMessageImpl): void
     {
-        const textField = $getTextField();
+        const textField: RenderTextField = $getTextField();
 
         textField._$instanceId = object.instanceId;
 
         // bounds
-        textField._$xMin = object.xMin;
-        textField._$yMin = object.yMin;
-        textField._$xMax = object.xMax;
-        textField._$yMax = object.yMax;
+        textField._$xMin = object.xMin || 0;
+        textField._$yMin = object.yMin || 0;
+        textField._$xMax = object.xMax || 0;
+        textField._$yMax = object.yMax || 0;
 
-        if ("characterId" in object) {
+        if (object.characterId) {
             textField._$characterId = object.characterId;
         }
         if ("loaderInfoId" in object) {
-            textField._$loaderInfoId = object.loaderInfoId;
+            textField._$loaderInfoId = object.loaderInfoId || 0;
         }
 
         textField._$updateProperty(object);

@@ -391,7 +391,7 @@ export class Shape extends DisplayObject
         const options: ArrayBuffer[] = $getArray();
         const bounds: BoundsImpl     = this._$getBounds();
 
-        const message: any = {
+        const message: PropertyShapeMessageImpl = {
             "command": "createShape",
             "instanceId": this._$instanceId,
             "maxAlpha": 0,

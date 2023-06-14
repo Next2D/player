@@ -1,4 +1,17 @@
-import {RenderGraphics} from "./RenderGraphics";
+import { RenderGraphics } from "./RenderGraphics";
+import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import {
+    $boundsMatrix,
+    $clamp,
+    $Infinity,
+    $Math,
+    $multiplicationColor,
+    $multiplicationMatrix,
+    $poolBoundsObject,
+    $poolFloat32Array6,
+    $poolFloat32Array8
+} from "../player/util/RenderUtil";
 
 /**
  * @class
@@ -12,25 +25,28 @@ export class RenderShape extends RenderGraphics
      * @method
      * @private
      */
-    _$clip (context, matrix)
-    {
-        let multiMatrix = matrix;
-        const rawMatrix = this._$matrix;
+    _$clip (
+        context: CanvasToWebGLContext,
+        matrix: Float32Array
+    ): void {
+
+        let multiMatrix: Float32Array = matrix;
+        const rawMatrix: Float32Array = this._$matrix;
         if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
             || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
             || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
         ) {
-            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
         }
 
         // size
-        const baseBounds = this._$getBounds();
+        const baseBounds: BoundsImpl = this._$getBounds();
+        const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
+        $poolBoundsObject(baseBounds);
 
-        const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
-        let width    = $Math.ceil($Math.abs(bounds.xMax - bounds.xMin));
-        let height   = $Math.ceil($Math.abs(bounds.yMax - bounds.yMin));
-        Util.$poolBoundsObject(baseBounds);
-        Util.$poolBoundsObject(bounds);
+        const width: number  = $Math.ceil($Math.abs(bounds.xMax - bounds.xMin));
+        const height: number = $Math.ceil($Math.abs(bounds.yMax - bounds.yMin));
+        $poolBoundsObject(bounds);
 
         switch (true) {
 
@@ -50,7 +66,7 @@ export class RenderShape extends RenderGraphics
         super._$clip(context, multiMatrix);
 
         if (multiMatrix !== matrix) {
-            Util.$poolFloat32Array6(multiMatrix);
+            $poolFloat32Array6(multiMatrix);
         }
     }
 
@@ -62,26 +78,30 @@ export class RenderShape extends RenderGraphics
      * @method
      * @private
      */
-    _$draw (context, matrix, color_transform)
-    {
+    _$draw (
+        context: CanvasToWebGLContext,
+        matrix: Float32Array,
+        color_transform: Float32Array
+    ): void {
+
         if (!this._$visible) {
             return ;
         }
 
-        let multiColor = color_transform;
-        const rawColor = this._$colorTransform;
+        let multiColor: Float32Array = color_transform;
+        const rawColor: Float32Array = this._$colorTransform;
         if (rawColor[0] !== 1 || rawColor[1] !== 1
             || rawColor[2] !== 1 || rawColor[3] !== 1
             || rawColor[4] !== 0 || rawColor[5] !== 0
             || rawColor[6] !== 0 || rawColor[7] !== 0
         ) {
-            multiColor = Util.$multiplicationColor(color_transform, rawColor);
+            multiColor = $multiplicationColor(color_transform, rawColor);
         }
 
-        const alpha = Util.$clamp(multiColor[3] + multiColor[7] / 255, 0, 1, 0);
+        const alpha = $clamp(multiColor[3] + multiColor[7] / 255, 0, 1, 0);
         if (!alpha || !this._$maxAlpha) {
             if (multiColor !== color_transform) {
-                Util.$poolFloat32Array8(multiColor);
+                $poolFloat32Array8(multiColor);
             }
             return ;
         }

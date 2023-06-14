@@ -1,12 +1,15 @@
+import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
 import { $renderPlayer } from "./RenderGlobal";
-import {CanvasToWebGLContext} from "../webgl/CanvasToWebGLContext";
+import {
+    $MATRIX_ARRAY_IDENTITY,
+    $COLOR_ARRAY_IDENTITY
+} from "../player/util/RenderUtil";
 
 /**
  * @class
  */
 export class CommandController
 {
-    private _$wait: boolean;
     public state: string;
     public queue: any[];
 
@@ -16,13 +19,6 @@ export class CommandController
      */
     constructor ()
     {
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$wait = false;
-
         /**
          * @type {string}
          * @default "deactivate"
@@ -35,83 +31,6 @@ export class CommandController
          * @public
          */
         this.queue = [];
-    }
-
-    /**
-     * @description 初期起動関数、CanvasToWebGLContextを起動
-     *              Initial startup function, CanvasToWebGLContext
-     *
-     * @param  {HTMLCanvasElement} canvas
-     * @param  {number} [samples=4]
-     * @param  {number} [devicePixelRatio=2]
-     * @return {void}
-     * @method
-     * @public
-     */
-    initialize (
-        canvas: HTMLCanvasElement,
-        samples: number = 4,
-        devicePixelRatio: number = 2
-    ): void {
-
-        // update
-        $devicePixelRatio = devicePixelRatio;
-
-        const player = Util.$renderPlayer;
-        player._$samples = samples;
-        player._$canvas  = canvas;
-
-        const gl = canvas.getContext("webgl2", {
-            "stencil": true,
-            "premultipliedAlpha": true,
-            "antialias": false,
-            "depth": false,
-            "preserveDrawingBuffer": true
-        });
-
-        if (gl) {
-            const context = new CanvasToWebGLContext(gl, samples);
-            player._$context = context;
-            player._$cacheStore.context = context;
-        }
-    }
-
-    /**
-     * @description 表示用のcanvasを更新
-     *              Update canvas for display
-     *
-     * @param  {string|number|null} [background_color=null]
-     * @return {void}
-     * @method
-     * @public
-     */
-    setBackgroundColor (background_color = null)
-    {
-        const context = Util.$renderPlayer._$context;
-        if (!context) {
-            return ;
-        }
-
-        if (!background_color
-            || background_color === "transparent"
-        ) {
-
-            context._$setColor(0, 0, 0, 0);
-
-        } else {
-
-            const color = Util.$uintToRGBA(
-                Util.$toColorInt(background_color)
-            );
-
-            context._$setColor(
-                color.R / 255,
-                color.G / 255,
-                color.B / 255,
-                color.A / 255
-            );
-
-        }
     }
 
     /**
@@ -128,16 +47,12 @@ export class CommandController
 
         while (this.queue.length) {
 
-            if (this._$wait) {
-                continue;
-            }
-
-            const object = this.queue.shift();
+            const object: any = this.queue.shift();
             switch (object.command) {
 
                 case "setProperty":
                     {
-                        const instances = Util.$renderPlayer._$instances;
+                        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
                         if (!instances.has(object.instanceId)) {
                             continue;
                         }
@@ -148,7 +63,7 @@ export class CommandController
 
                 case "setChildren":
                     {
-                        const instances = Util.$renderPlayer._$instances;
+                        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
                         if (!instances.has(object.instanceId)) {
                             continue;
                         }
@@ -158,7 +73,7 @@ export class CommandController
 
                 case "doChanged":
                     {
-                        const instances = Util.$renderPlayer._$instances;
+                        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
                         if (!instances.has(object.instanceId)) {
                             continue;
                         }
@@ -168,7 +83,7 @@ export class CommandController
 
                 case "remove":
                     {
-                        const instances = Util.$renderPlayer._$instances;
+                        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
                         if (!instances.has(object.instanceId)) {
                             continue;
                         }
@@ -185,19 +100,19 @@ export class CommandController
                     break;
 
                 case "createDisplayObjectContainer":
-                    Util.$renderPlayer._$createDisplayObjectContainer(object);
+                    $renderPlayer._$createDisplayObjectContainer(object);
                     break;
 
                 case "createTextField":
-                    Util.$renderPlayer._$createTextField(object);
+                    $renderPlayer._$createTextField(object);
                     break;
 
                 case "createVideo":
-                    Util.$renderPlayer._$createVideo(object);
+                    $renderPlayer._$createVideo(object);
                     break;
 
                 case "resize":
-                    Util.$renderPlayer._$resize(
+                    $renderPlayer._$resize(
                         object.width,
                         object.height,
                         object.scale,
@@ -207,64 +122,59 @@ export class CommandController
                     break;
 
                 case "initialize":
-                    this.initialize(
+                    $renderPlayer._$initialize(
                         object.canvas, object.samples, object.devicePixelRatio
                     );
                     break;
 
                 case "setBackgroundColor":
-                    this.setBackgroundColor(object.backgroundColor);
+                    $renderPlayer._$setBackgroundColor(object.backgroundColor);
                     break;
 
                 case "setStage":
-                    Util.$renderPlayer._$setStage(
-                        object.instanceId
-                    );
+                    $renderPlayer._$setStage(object.instanceId);
                     break;
 
                 case "play":
-                    Util.$renderPlayer._$frameRate = object.frameRate;
-                    Util.$renderPlayer.play();
+                    $renderPlayer.frameRate = object.frameRate || 60;
+                    $renderPlayer.play();
                     break;
 
                 case "stop":
-                    Util.$renderPlayer.stop();
+                    $renderPlayer.stop();
                     break;
 
                 case "removeCache":
-                    Util.$renderPlayer._$cacheStore.removeCache(object.id);
+                    $renderPlayer.cacheStore.removeCache(object.id);
                     break;
 
                 case "bitmapDraw":
                     {
-                        const player = Util.$renderPlayer;
-                        const stopFlag = player._$stopFlag;
-
-                        if (!stopFlag) {
-                            player.stop();
+                        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
+                        if (!instances.has(object.sourceId)) {
+                            continue;
                         }
 
-                        const canvas = new $OffscreenCanvas(
+                        const instance: RenderDisplayObjectImpl<any> = instances.get(object.sourceId);
+
+                        const canvas: OffscreenCanvas = new OffscreenCanvas(
                             object.width,
                             object.height
                         );
 
-                        player._$bitmapDraw(
-                            player._$instances.get(object.sourceId),
-                            object.matrix || Util.$MATRIX_ARRAY_IDENTITY,
-                            object.colorTransform || Util.$COLOR_ARRAY_IDENTITY,
+                        $renderPlayer._$bitmapDraw(
+                            instance,
+                            object.matrix || $MATRIX_ARRAY_IDENTITY,
+                            object.colorTransform || $COLOR_ARRAY_IDENTITY,
                             canvas
                         );
 
-                        if (!stopFlag) {
-                            player.play();
-                        }
-
-                        const imageBitmap = canvas.transferToImageBitmap();
+                        const imageBitmap: ImageBitmap = canvas.transferToImageBitmap();
                         globalThis.postMessage({
                             "command": "bitmapDraw",
                             "sourceId": object.sourceId,
                             "imageBitmap": imageBitmap
+                        // @ts-ignore
                         }, [imageBitmap]);
 
                     }
