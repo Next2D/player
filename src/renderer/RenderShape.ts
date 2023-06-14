@@ -98,7 +98,7 @@ export class RenderShape extends RenderGraphics
             multiColor = $multiplicationColor(color_transform, rawColor);
         }
 
-        const alpha = $clamp(multiColor[3] + multiColor[7] / 255, 0, 1, 0);
+        const alpha: number = $clamp(multiColor[3] + multiColor[7] / 255, 0, 1, 0);
         if (!alpha || !this._$maxAlpha) {
             if (multiColor !== color_transform) {
                 $poolFloat32Array8(multiColor);
@@ -106,13 +106,13 @@ export class RenderShape extends RenderGraphics
             return ;
         }
 
-        let multiMatrix = matrix;
-        const rawMatrix = this._$matrix;
+        let multiMatrix: Float32Array = matrix;
+        const rawMatrix: Float32Array = this._$matrix;
         if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
             || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
             || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
         ) {
-            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
         }
 
         super._$draw(
@@ -121,11 +121,11 @@ export class RenderShape extends RenderGraphics
         );
 
         if (multiMatrix !== matrix) {
-            Util.$poolFloat32Array6(multiMatrix);
+            $poolFloat32Array6(multiMatrix);
         }
 
         if (multiColor !== color_transform) {
-            Util.$poolFloat32Array8(multiColor);
+            $poolFloat32Array8(multiColor);
         }
     }
 
