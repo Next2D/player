@@ -518,7 +518,7 @@ export class RenderDisplayObject
         const player: RenderPlayer = $renderPlayer;
 
         // キャッシュ削除のタイマーをセット
-        const cacheStore: CacheStore = player._$cacheStore;
+        const cacheStore: CacheStore = player.cacheStore;
         cacheStore.setRemoveTimer(this._$instanceId);
 
         if (this._$loaderInfoId > -1 && this._$characterId) {
@@ -527,7 +527,7 @@ export class RenderDisplayObject
             );
         }
 
-        player._$instances.delete(this._$instanceId);
+        player.instances.delete(this._$instanceId);
 
         // reset
         this._$instanceId     = -1;
@@ -593,7 +593,7 @@ export class RenderDisplayObject
 
         // check status
         const cache: WebGLTexture | null = $renderPlayer
-            ._$cacheStore
+            .cacheStore
             .get([this._$instanceId, "f"]);
 
         if (!cache) {
@@ -751,7 +751,7 @@ export class RenderDisplayObject
         width: number, height: number
     ): WebGLTexture {
 
-        const cacheStore: CacheStore = $renderPlayer._$cacheStore;
+        const cacheStore: CacheStore = $renderPlayer.cacheStore;
 
         const cacheKeys: any[] = [this._$instanceId, "f"];
         const cache: WebGLTexture | void = cacheStore.get(cacheKeys);

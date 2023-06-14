@@ -1,6 +1,7 @@
 import { RenderGraphics } from "./RenderGraphics";
 import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
 import type { BoundsImpl } from "../interface/BoundsImpl";
+import { $shapes } from "./RenderGlobal";
 import {
     $boundsMatrix,
     $clamp,
@@ -136,7 +137,7 @@ export class RenderShape extends RenderGraphics
      * @method
      * @private
      */
-    _$remove ()
+    _$remove (): void
     {
         this._$xMin    = 0;
         this._$yMin    = 0;
@@ -146,6 +147,6 @@ export class RenderShape extends RenderGraphics
 
         super._$remove();
 
-        Util.$shapes.push(this);
+        $shapes.push(this);
     }
 }

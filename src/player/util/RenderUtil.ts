@@ -266,12 +266,6 @@ export const $maps: Map<any, any>[] = [];
 export const $bounds: BoundsImpl[] = [];
 
 /**
- * @type {boolean}
- * @static
- */
-export const $useCache = true;
-
-/**
  * @type {CanvasRenderingContext2D}
  * @static
  */

@@ -4,6 +4,10 @@ import { RenderTextField } from "./RenderTextField";
 import { RenderDisplayObjectContainer } from "./RenderDisplayObjectContainer";
 import { RenderVideo } from "./RenderVideo";
 
+/**
+ * @type {number}
+ * @public
+ */
 export let $devicePixelRatio = 2;
 
 /**
@@ -14,6 +18,22 @@ export let $devicePixelRatio = 2;
 export const $setDevicePixelRatio = (device_pixel_ratio: number): void =>
 {
     $devicePixelRatio = device_pixel_ratio;
+};
+
+/**
+ * @type {boolean}
+ * @public
+ */
+export let $isSafari = false;
+
+/**
+ * @param {boolean} is_safari
+ * @method
+ * @public
+ */
+export const $setSafari = (is_safari: boolean): void =>
+{
+    $isSafari = is_safari;
 };
 
 /**

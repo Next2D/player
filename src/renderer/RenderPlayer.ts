@@ -34,6 +34,7 @@ import {
  */
 export class RenderPlayer
 {
+    public _$videos: number;
     private readonly _$instances: Map<number, RenderDisplayObjectImpl<any>>;
     private readonly _$cacheStore: CacheStore;
     private readonly _$matrix: Float32Array;
@@ -49,7 +50,6 @@ export class RenderPlayer
     private _$width: number;
     private _$height: number;
     private readonly _$stage: RenderDisplayObjectContainer;
-    private _$videos: number;
     private _$attachment: AttachmentImpl | null;
 
     /**

@@ -25,7 +25,6 @@ import {
     $getFloat32Array6,
     $multiplicationMatrix,
     $poolFloat32Array6,
-    $useCache,
     $getFloat32Array4,
     $linearGradientXY,
     $getFloat32Array8
@@ -114,12 +113,16 @@ export class RenderGraphics extends RenderDisplayObject
         filters: FilterArrayImpl | null = null
     ): void {
 
-        if (!this._$visible || !this._$recodes) {
+        if (!this._$visible
+            || !this._$recodes
+            || !this._$maxAlpha
+            || !this._$canDraw
+        ) {
             return ;
         }
 
         const alpha: number = $clamp(color_transform[3] + color_transform[7] / 255, 0, 1, 0);
-        if (!alpha || !this._$maxAlpha) {
+        if (!alpha) {
             return ;
         }
 
@@ -327,9 +330,7 @@ export class RenderGraphics extends RenderDisplayObject
             texture = manager.getTextureFromCurrentAttachment();
 
             // set cache
-            if ($useCache) {
-                cacheStore.set(cacheKeys, texture);
-            }
+            cacheStore.set(cacheKeys, texture);
 
             // release buffer
             manager.releaseAttachment(attachment, false);

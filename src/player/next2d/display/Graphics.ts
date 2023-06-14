@@ -38,7 +38,6 @@ import {
     $getFloat32Array6,
     $multiplicationMatrix,
     $poolFloat32Array6,
-    $useCache,
     $getBoundsObject,
     $Float32Array,
     $getFloat32Array4,
@@ -1837,9 +1836,7 @@ export class Graphics
             texture = manager.getTextureFromCurrentAttachment();
 
             // set cache
-            if ($useCache) {
-                cacheStore.set(cacheKeys, texture);
-            }
+            cacheStore.set(cacheKeys, texture);
 
             // release buffer
             manager.releaseAttachment(attachment, false);

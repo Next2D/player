@@ -1,7 +1,11 @@
 "use strict";
 
-import { $initialize } from "./util/Util";
 import { Next2D } from "./player/Next2D";
+import {
+    $initialize,
+    $isSafari,
+    $rendererWorker
+} from "./util/Util";
 
 if (!("next2d" in window)) {
 
@@ -22,6 +26,12 @@ if (!("next2d" in window)) {
                 $initialize()
                     .then((): void =>
                     {
+                        if ($rendererWorker) {
+                            $rendererWorker.postMessage({
+                                "command": "setSafari",
+                                "isSafari": $isSafari
+                            });
+                        }
                         resolve();
                     });
             };
@@ -34,6 +44,12 @@ if (!("next2d" in window)) {
             $initialize()
                 .then((): void =>
                 {
+                    if ($rendererWorker) {
+                        $rendererWorker.postMessage({
+                            "command": "setSafari",
+                            "isSafari": $isSafari
+                        });
+                    }
                     resolve();
                 });
 

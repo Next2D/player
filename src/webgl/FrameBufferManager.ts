@@ -409,7 +409,7 @@ export class FrameBufferManager
      * @return {WebGLTexture}
      * @public
      */
-    createTextureFromCanvas (canvas: HTMLCanvasElement): WebGLTexture
+    createTextureFromCanvas (canvas: HTMLCanvasElement | OffscreenCanvas): WebGLTexture
     {
         return this
             ._$textureManager

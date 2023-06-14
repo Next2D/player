@@ -212,7 +212,7 @@ export class TextureManager
      * @method
      * @public
      */
-    createFromCanvas (canvas: HTMLCanvasElement): WebGLTexture
+    createFromCanvas (canvas: HTMLCanvasElement | OffscreenCanvas): WebGLTexture
     {
         return this._$createFromElement(
             canvas.width,
@@ -252,7 +252,7 @@ export class TextureManager
      */
     _$createFromElement (
         width: number, height: number,
-        element: HTMLImageElement | HTMLCanvasElement | HTMLVideoElement,
+        element: HTMLImageElement | HTMLCanvasElement | HTMLVideoElement | OffscreenCanvas,
         smoothing: boolean = false
     ): WebGLTexture {
 

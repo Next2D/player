@@ -68,10 +68,10 @@ import {
     $multiplicationColor,
     $Infinity,
     $Number,
-    $useCache,
     $poolArray,
     $poolFloat32Array8,
-    $generateFontStyle, $getBoundsObject
+    $generateFontStyle,
+    $getBoundsObject
 } from "../../util/RenderUtil";
 
 /**
@@ -89,6 +89,16 @@ import {
  */
 export class TextField extends InteractiveObject
 {
+    private readonly _$bounds: BoundsImpl;
+    private readonly _$originBounds: BoundsImpl;
+    private readonly _$textData: TextDataImpl<any>[];
+    private readonly _$widthTable: number[];
+    private readonly _$heightTable: number[];
+    private readonly _$textFormatTable: TextFormat[];
+    private readonly _$objectTable: TextDataImpl<any>[];
+    private readonly _$imageData: TextDataImpl<any>[];
+    private readonly _$textHeightTable: number[];
+    private readonly _$heightCache: Map<string, number>;
     private _$background: boolean;
     private _$backgroundColor: number;
     private _$border: boolean;
@@ -104,33 +114,23 @@ export class TextField extends InteractiveObject
     private _$maxChars: number;
     private _$defaultTextFormat: TextFormat;
     private _$rawHtmlText: string;
-    private readonly _$bounds: BoundsImpl;
-    private readonly _$originBounds: BoundsImpl;
     private _$restrict: string;
     private _$isHTML: boolean;
-    private readonly _$textData: TextDataImpl<any>[];
     private _$textHeight: number | null;
     private _$textWidth: number | null;
-    private readonly _$widthTable: number[];
     private _$textarea: HTMLTextAreaElement | null;
     private _$autoSize: TextFieldAutoSizeImpl;
     private _$autoFontSize: boolean;
-    private readonly _$heightTable: number[];
-    private readonly _$textFormatTable: TextFormat[];
     private _$textAreaActive: boolean;
     private _$totalWidth: number;
-    private readonly _$objectTable: TextDataImpl<any>[];
-    private readonly _$imageData: TextDataImpl<any>[];
     private _$scrollEnabled: boolean;
     private _$scrollSprite: Sprite | null;
     private _$type: TextFieldTypeImpl;
-    private readonly _$textHeightTable: number[];
     private _$focus: boolean;
     private _$isComposing: boolean;
     private _$thickness: number;
     private _$thicknessColor: number;
     private _$verticalAlign: TextFormatVerticalAlignImpl;
-    private readonly _$heightCache: Map<string, number>;
     private _$createdTextData: boolean;
 
     /**
@@ -2859,9 +2859,7 @@ export class TextField extends InteractiveObject
             texture = manager.createTextureFromCanvas(ctx.canvas);
 
             // set cache
-            if ($useCache) {
-                cacheStore.set(cacheKeys, texture);
-            }
+            cacheStore.set(cacheKeys, texture);
 
             // destroy cache
             cacheStore.destroy(ctx);
@@ -3526,7 +3524,7 @@ export class TextField extends InteractiveObject
 
         message.textAreaActive = this._$textAreaActive;
 
-        const bounds = this._$getBounds(null);
+        const bounds: BoundsImpl = this._$getBounds(null);
         message.xMin = bounds.xMin;
         message.yMin = bounds.yMin;
         message.xMax = bounds.xMax;

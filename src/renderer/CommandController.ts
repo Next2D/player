@@ -1,8 +1,12 @@
 import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
-import { $renderPlayer } from "./RenderGlobal";
+import {
+    $renderPlayer,
+    $setSafari
+} from "./RenderGlobal";
 import {
     $MATRIX_ARRAY_IDENTITY,
-    $COLOR_ARRAY_IDENTITY
+    $COLOR_ARRAY_IDENTITY,
+    $OffscreenCanvas
 } from "../player/util/RenderUtil";
 
 /**
@@ -127,6 +131,10 @@ export class CommandController
                     );
                     break;
 
+                case "setSafari":
+                    $setSafari(object.isSafari);
+                    break;
+
                 case "setBackgroundColor":
                     $renderPlayer._$setBackgroundColor(object.backgroundColor);
                     break;
@@ -157,7 +165,7 @@ export class CommandController
 
                         const instance: RenderDisplayObjectImpl<any> = instances.get(object.sourceId);
 
-                        const canvas: OffscreenCanvas = new OffscreenCanvas(
+                        const canvas: OffscreenCanvas = new $OffscreenCanvas(
                             object.width,
                             object.height
                         );

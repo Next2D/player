@@ -1,10 +1,64 @@
-import {RenderDisplayObject} from "./RenderDisplayObject";
+import { RenderDisplayObject } from "./RenderDisplayObject";
+import { Rectangle } from "../player/next2d/geom/Rectangle";
+import type { TextDataImpl } from "../interface/TextDataImpl";
+import type { PropertyTextMessageImpl } from "../interface/PropertyTextMessageImpl";
+import type { TextFieldAutoSizeImpl } from "../interface/TextFieldAutoSizeImpl";
+import type { TextFormatVerticalAlignImpl } from "../interface/TextFormatVerticalAlignImpl";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
+import type { FrameBufferManager } from "../webgl/FrameBufferManager";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { CacheStore } from "../player/util/CacheStore";
+import type { RGBAImpl } from "../interface/RGBAImpl";
+import type { TextFormatImpl } from "../interface/TextFormatImpl";
+import {
+    $isSafari,
+    $renderPlayer,
+    $textFields
+} from "./RenderGlobal";
+import {
+    $boundsMatrix,
+    $clamp,
+    $generateFontStyle,
+    $getArray,
+    $Infinity,
+    $intToRGBA,
+    $Math,
+    $multiplicationColor,
+    $multiplicationMatrix,
+    $Number,
+    $poolArray,
+    $poolBoundsObject,
+    $poolFloat32Array6,
+    $poolFloat32Array8
+} from "../player/util/RenderUtil";
 
 /**
  * @class
  */
 export class RenderTextField extends RenderDisplayObject
 {
+    private _$background: boolean;
+    private _$backgroundColor: number;
+    private _$border: boolean;
+    private _$borderColor: number;
+    private readonly _$textData: TextDataImpl<any>[];
+    private _$textAreaActive: boolean;
+    private _$thickness: number;
+    private _$thicknessColor: number;
+    private _$limitWidth: number;
+    private _$limitHeight: number;
+    private _$autoSize: TextFieldAutoSizeImpl;
+    private readonly _$widthTable: number[];
+    private readonly _$heightTable: number[];
+    private readonly _$objectTable: TextDataImpl<any>[];
+    private readonly _$textHeightTable: number[];
+    private _$scrollV: number;
+    private _$maxScrollV: number | null;
+    private _$textHeight: number;
+    private _$verticalAlign: TextFormatVerticalAlignImpl;
+    private _$wordWrap: boolean;
+
     /**
      * @constructor
      * @public
@@ -42,11 +96,17 @@ export class RenderTextField extends RenderDisplayObject
         this._$borderColor = 0x000000;
 
         /**
-         * @type {array}
-         * @default null
+         * @type {boolean}
+         * @default false
          * @private
          */
-        this._$textData = null;
+        this._$wordWrap = false;
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$textData = $getArray();
 
         /**
          * @type {boolean}
@@ -88,35 +148,35 @@ export class RenderTextField extends RenderDisplayObject
          * @default TextFieldAutoSize.NONE
          * @private
          */
-        this._$autoSize = TextFieldAutoSize.NONE;
+        this._$autoSize = "none";
 
         /**
          * @type {array}
          * @default null
          * @private
          */
-        this._$widthTable = null;
+        this._$widthTable = $getArray();
 
         /**
          * @type {array}
          * @default null
          * @private
          */
-        this._$heightTable = null;
+        this._$heightTable = $getArray();
 
         /**
          * @type {array}
          * @default null
          * @private
          */
-        this._$objectTable = null;
+        this._$objectTable = $getArray();
 
         /**
          * @type {array}
          * @default null
          * @private
          */
-        this._$textHeightTable = null;
+        this._$textHeightTable = $getArray();
 
         /**
          * @type {number}
@@ -155,17 +215,24 @@ export class RenderTextField extends RenderDisplayObject
 
         /**
          * @type {number}
-         * @default null
+         * @default 1
          * @private
          */
-        this._$textHeight = null;
+        this._$scrollV = 1;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$textHeight = 0;
 
         /**
          * @type {string}
          * @default TextFormatVerticalAlign.TOP
          * @private
          */
-        this._$verticalAlign = TextFormatVerticalAlign.TOP;
+        this._$verticalAlign = "top";
     }
 
     /**
@@ -175,15 +242,15 @@ export class RenderTextField extends RenderDisplayObject
      * @member {number}
      * @public
      */
-    get width ()
+    get width (): number
     {
-        const bounds = Util.$boundsMatrix(
+        const bounds: BoundsImpl = $boundsMatrix(
             this._$getBounds(null),
             this._$matrix
         );
 
-        const width = $Math.abs(bounds.xMax - bounds.xMin);
-        Util.$poolBoundsObject(bounds);
+        const width: number = $Math.abs(bounds.xMax - bounds.xMin);
+        $poolBoundsObject(bounds);
 
         switch (true) {
 
@@ -205,17 +272,17 @@ export class RenderTextField extends RenderDisplayObject
      * @member {number}
      * @public
      */
-    get height ()
+    get height (): number
     {
-        const bounds = Util.$boundsMatrix(
+        const bounds: BoundsImpl = $boundsMatrix(
             this._$getBounds(null),
             this._$matrix
         );
 
-        const height = $Math.abs(bounds.yMax - bounds.yMin);
+        const height: number = $Math.abs(bounds.yMax - bounds.yMin);
 
         // object pool
-        Util.$poolBoundsObject(bounds);
+        $poolBoundsObject(bounds);
 
         switch (height) {
 
@@ -238,25 +305,25 @@ export class RenderTextField extends RenderDisplayObject
      * @readonly
      * @public
      */
-    get maxScrollV ()
+    get maxScrollV (): number
     {
         if (this._$maxScrollV === null) {
 
             this._$maxScrollV = 1;
 
-            const length    = this._$textHeightTable.length;
-            const maxHeight = this.height;
+            const length: number    = this._$textHeightTable.length;
+            const maxHeight: number = this.height;
 
             if (maxHeight > this._$textHeight) {
                 return this._$maxScrollV;
             }
 
-            let textHeight = 0;
+            let textHeight: number = 0;
 
-            let idx = 0;
+            let idx: number = 0;
             while (length > idx) {
 
-                textHeight += this._$textHeightTable[idx];
+                textHeight += this._$textHeightTable[idx++];
                 if (textHeight > maxHeight) {
                     break;
                 }
@@ -274,32 +341,35 @@ export class RenderTextField extends RenderDisplayObject
      * @method
      * @private
      */
-    _$clip (context, matrix)
-    {
-        // size
-        const bounds = this._$getBounds();
-        const xMax   = bounds.xMax;
-        const xMin   = bounds.xMin;
-        const yMax   = bounds.yMax;
-        const yMin   = bounds.yMin;
-        Util.$poolBoundsObject(bounds);
+    _$clip (
+        context: CanvasToWebGLContext,
+        matrix: Float32Array
+    ): void {
 
-        let width  = $Math.ceil($Math.abs(xMax - xMin));
-        let height = $Math.ceil($Math.abs(yMax - yMin));
+        // size
+        const bounds: BoundsImpl = this._$getBounds();
+        const xMax: number = bounds.xMax;
+        const xMin: number = bounds.xMin;
+        const yMax: number = bounds.yMax;
+        const yMin: number = bounds.yMin;
+        $poolBoundsObject(bounds);
+
+        const width: number  = $Math.ceil($Math.abs(xMax - xMin));
+        const height: number = $Math.ceil($Math.abs(yMax - yMin));
         if (!width || !height) {
             return;
         }
 
-        let multiMatrix = matrix;
-        const rawMatrix = this._$matrix;
+        let multiMatrix: Float32Array = matrix;
+        const rawMatrix: Float32Array = this._$matrix;
         if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
             || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
             || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
         ) {
-            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
         }
 
-        Util.$resetContext(context);
+        context.reset();
         context.setTransform(
             matrix[0], matrix[1], matrix[2],
             matrix[3], matrix[4], matrix[5]
@@ -310,10 +380,10 @@ export class RenderTextField extends RenderDisplayObject
         context.lineTo(width, height);
         context.lineTo(0, height);
         context.lineTo(0, 0);
-        context.clip(true);
+        context.clip();
 
         if (multiMatrix !== matrix) {
-            Util.$poolFloat32Array6(multiMatrix);
+            $poolFloat32Array6(multiMatrix);
         }
     }
 
@@ -325,8 +395,12 @@ export class RenderTextField extends RenderDisplayObject
      * @method
      * @private
      */
-    _$draw (context, matrix, color_transform)
-    {
+    _$draw (
+        context: CanvasToWebGLContext,
+        matrix: Float32Array,
+        color_transform: Float32Array
+    ): void {
+
         if (!this._$visible || this._$textAreaActive) {
             return ;
         }
@@ -337,45 +411,45 @@ export class RenderTextField extends RenderDisplayObject
             return;
         }
 
-        let multiColor = color_transform;
-        const rawColor = this._$colorTransform;
+        let multiColor: Float32Array = color_transform;
+        const rawColor: Float32Array = this._$colorTransform;
         if (rawColor[0] !== 1 || rawColor[1] !== 1
             || rawColor[2] !== 1 || rawColor[3] !== 1
             || rawColor[4] !== 0 || rawColor[5] !== 0
             || rawColor[6] !== 0 || rawColor[7] !== 0
         ) {
-            multiColor = Util.$multiplicationColor(color_transform, rawColor);
+            multiColor = $multiplicationColor(color_transform, rawColor);
         }
 
-        const alpha = Util.$clamp(multiColor[3] + multiColor[7] / 255, 0 ,1);
+        const alpha: number = $clamp(multiColor[3] + multiColor[7] / 255, 0 ,1);
         if (!alpha) {
             return ;
         }
 
-        let multiMatrix = matrix;
-        const rawMatrix = this._$matrix;
+        let multiMatrix: Float32Array = matrix;
+        const rawMatrix: Float32Array = this._$matrix;
         if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
             || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
             || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
         ) {
-            multiMatrix = Util.$multiplicationMatrix(matrix, rawMatrix);
+            multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
         }
 
-        const baseBounds = this._$getBounds(null);
+        const baseBounds: BoundsImpl = this._$getBounds(null);
         baseBounds.xMin -= this._$thickness;
         baseBounds.xMax += this._$thickness;
         baseBounds.yMin -= this._$thickness;
         baseBounds.yMax += this._$thickness;
 
-        const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
+        const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
         const xMax   = +bounds.xMax;
         const xMin   = +bounds.xMin;
         const yMax   = +bounds.yMax;
         const yMin   = +bounds.yMin;
-        Util.$poolBoundsObject(bounds);
+        $poolBoundsObject(bounds);
 
-        let width  = $Math.ceil($Math.abs(xMax - xMin));
-        let height = $Math.ceil($Math.abs(yMax - yMin));
+        const width: number  = $Math.ceil($Math.abs(xMax - xMin));
+        const height: number = $Math.ceil($Math.abs(yMax - yMin));
         switch (true) {
 
             case width === 0:
@@ -396,48 +470,51 @@ export class RenderTextField extends RenderDisplayObject
         }
 
         // cache current buffer
-        const manager = context._$frameBufferManager;
-        const currentAttachment = manager.currentAttachment;
-        if (xMin > currentAttachment.width
+        const manager: FrameBufferManager = context.frameBuffer;
+        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+        if (!currentAttachment
+            || xMin > currentAttachment.width
             || yMin > currentAttachment.height
         ) {
             return;
         }
 
-        let xScale = +$Math.sqrt(
+        let xScale: number = +$Math.sqrt(
             multiMatrix[0] * multiMatrix[0]
             + multiMatrix[1] * multiMatrix[1]
         );
         if (!$Number.isInteger(xScale)) {
-            const value = xScale.toString();
-            const index = value.indexOf("e");
+            const value: string = xScale.toString();
+            const index: number = value.indexOf("e");
             if (index !== -1) {
                 xScale = +value.slice(0, index);
             }
             xScale = +xScale.toFixed(4);
         }
 
-        let yScale = +$Math.sqrt(
+        let yScale: number = +$Math.sqrt(
             multiMatrix[2] * multiMatrix[2]
             + multiMatrix[3] * multiMatrix[3]
         );
         if (!$Number.isInteger(yScale)) {
-            const value = yScale.toString();
-            const index = value.indexOf("e");
+            const value: string = yScale.toString();
+            const index: number = value.indexOf("e");
             if (index !== -1) {
                 yScale = +value.slice(0, index);
             }
             yScale = +yScale.toFixed(4);
         }
 
-        const filters = this._$filters;
         if (0 > xMin + width || 0 > yMin + height) {
 
-            if (filters && filters.length && this._$canApply(filters)) {
+            if (this._$filters
+                && this._$filters.length
+                && this._$canApply(this._$filters)
+            ) {
 
-                let rect = new Rectangle(0, 0, width, height);
-                for (let idx = 0; idx < filters.length ; ++idx) {
-                    rect = filters[idx]._$generateFilterRect(rect, xScale, yScale);
+                let rect: Rectangle = new Rectangle(0, 0, width, height);
+                for (let idx = 0; idx < this._$filters.length ; ++idx) {
+                    rect = this._$filters[idx]._$generateFilterRect(rect, xScale, yScale);
                 }
 
                 if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
@@ -450,17 +527,17 @@ export class RenderTextField extends RenderDisplayObject
 
         }
 
-        const blendMode = this._$blendMode;
-        const keys = Util.$getArray(xScale, yScale);
+        const keys: number[] = $getArray(xScale, yScale);
 
-        const instanceId = this._$instanceId;
+        const instanceId: number = this._$instanceId;
 
-        const cacheStore = Util.$cacheStore();
-        const cacheKeys  = cacheStore.generateKeys(
+        const cacheStore: CacheStore = $renderPlayer.cacheStore;
+        const cacheKeys: string[] = cacheStore.generateKeys(
             instanceId, keys
         );
+        $poolArray(keys);
 
-        let texture = cacheStore.get(cacheKeys);
+        let texture: WebGLTexture | null = cacheStore.get(cacheKeys);
 
         // texture is small or renew
         if (this._$isUpdated()) {
@@ -471,19 +548,22 @@ export class RenderTextField extends RenderDisplayObject
         if (!texture) {
 
             // resize
-            const lineWidth  = $Math.min(1, $Math.max(xScale, yScale));
-            const baseWidth  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-            const baseHeight = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
+            const lineWidth: number  = $Math.min(1, $Math.max(xScale, yScale));
+            const baseWidth: number  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+            const baseHeight: number = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
 
             // alpha reset
             multiColor[3] = 1;
 
             // new canvas
-            const canvas = new OffscreenCanvas(
+            const canvas: OffscreenCanvas = new OffscreenCanvas(
                 baseWidth  + lineWidth * 2,
                 baseHeight + lineWidth * 2
             );
-            const ctx = canvas.getContext("2d");
+            const ctx: OffscreenCanvasRenderingContext2D | null = canvas.getContext("2d");
+            if (!ctx) {
+                return ;
+            }
 
             // border and background
             if (this._$background || this._$border) {
@@ -497,26 +577,25 @@ export class RenderTextField extends RenderDisplayObject
 
                 if (this._$background) {
 
-                    const rgb   = Util.$intToRGBA(this._$backgroundColor);
-                    const alpha = $Math.max(0, $Math.min(
-                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
+                    const color: RGBAImpl = $intToRGBA(this._$backgroundColor);
+                    const alpha: number = $Math.max(0, $Math.min(
+                        color.A * 255 * color_transform[3] + color_transform[7], 255)
                     ) / 255;
 
-                    ctx.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                    ctx.fillStyle = `rgba(${color.R},${color.G},${color.B},${alpha})`;
                     ctx.fill();
                 }
 
                 if (this._$border) {
 
-                    const rgb   = Util.$intToRGBA(this._$borderColor);
-                    const alpha = $Math.max(0, $Math.min(
-                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
+                    const color: RGBAImpl = $intToRGBA(this._$borderColor);
+                    const alpha: number = $Math.max(0, $Math.min(
+                        color.A * 255 * color_transform[3] + color_transform[7], 255)
                     ) / 255;
 
                     ctx.lineWidth   = lineWidth;
-                    ctx.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                    ctx.strokeStyle = `rgba(${color.R},${color.G},${color.B},${alpha})`;
                     ctx.stroke();
-
                 }
 
             }
@@ -539,44 +618,43 @@ export class RenderTextField extends RenderDisplayObject
             texture = manager.createTextureFromCanvas(ctx.canvas);
 
             // set cache
-            if (Util.$useCache) {
-                cacheStore.set(cacheKeys, texture);
-            }
+            cacheStore.set(cacheKeys, texture);
 
             // destroy cache
             cacheStore.destroy(ctx);
 
         }
 
-        let drawFilter = false;
-        let offsetX = 0;
-        let offsetY = 0;
-        if (filters && filters.length
-            && this._$canApply(filters)
+        let drawFilter: boolean = false;
+        let offsetX: number = 0;
+        let offsetY: number = 0;
+        if (this._$filters
+            && this._$filters.length
+            && this._$canApply(this._$filters)
         ) {
 
             drawFilter = true;
 
             texture = this._$drawFilter(
                 context, texture, multiMatrix,
-                filters, width, height
+                this._$filters, width, height
             );
 
             offsetX = texture._$offsetX;
             offsetY = texture._$offsetY;
         }
 
-        const radianX = $Math.atan2(multiMatrix[1], multiMatrix[0]);
-        const radianY = $Math.atan2(0 - multiMatrix[2], multiMatrix[3]);
+        const radianX: number = $Math.atan2(multiMatrix[1], multiMatrix[0]);
+        const radianY: number = $Math.atan2(0 - multiMatrix[2], multiMatrix[3]);
         if (!drawFilter && (radianX || radianY)) {
 
-            const tx = baseBounds.xMin * xScale;
-            const ty = baseBounds.yMin * yScale;
+            const tx: number = baseBounds.xMin * xScale;
+            const ty: number = baseBounds.yMin * yScale;
 
-            const cosX = $Math.cos(radianX);
-            const sinX = $Math.sin(radianX);
-            const cosY = $Math.cos(radianY);
-            const sinY = $Math.sin(radianY);
+            const cosX: number = $Math.cos(radianX);
+            const sinX: number = $Math.sin(radianX);
+            const cosY: number = $Math.cos(radianY);
+            const sinY: number = $Math.sin(radianY);
 
             context.setTransform(
                 cosX, sinX, 0 - sinY, cosY,
@@ -592,29 +670,27 @@ export class RenderTextField extends RenderDisplayObject
 
         }
 
-        // reset
-        Util.$resetContext(context);
-
         // draw
-        context._$globalAlpha = alpha;
-        context._$imageSmoothingEnabled = true;
-        context._$globalCompositeOperation = blendMode;
+        context.reset();
+        context.globalAlpha = alpha;
+        context.imageSmoothingEnabled = true;
+        context.globalCompositeOperation = this._$blendMode;
 
         context.drawImage(texture,
             0, 0, texture.width, texture.height, multiColor
         );
 
         // get cache
-        Util.$poolArray(cacheKeys);
-        Util.$poolBoundsObject(baseBounds);
+        $poolArray(cacheKeys);
+        $poolBoundsObject(baseBounds);
 
         // pool
         if (multiMatrix !== matrix) {
-            Util.$poolFloat32Array6(multiMatrix);
+            $poolFloat32Array6(multiMatrix);
         }
 
         if (multiColor !== color_transform) {
-            Util.$poolFloat32Array8(multiColor);
+            $poolFloat32Array8(multiColor);
         }
     }
 
@@ -627,31 +703,33 @@ export class RenderTextField extends RenderDisplayObject
      * @method
      * @private
      */
-    _$doDraw (context, matrix, color_transform, width)
-    {
-        // init
-        const textData = this._$textData;
+    _$doDraw (
+        context: OffscreenCanvasRenderingContext2D,
+        matrix: Float32Array,
+        color_transform: Float32Array,
+        width: number
+    ): void {
 
-        const limitWidth  = this.width;
-        const limitHeight = this.height;
+        const limitWidth: number  = this.width;
+        const limitHeight: number = this.height;
 
         // setup
-        let xOffset      = 0;
-        let offsetHeight = 0;
-        let currentV     = 0;
+        let xOffset: number      = 0;
+        let offsetHeight: number = 0;
+        let currentV: number     = 0;
 
-        let yOffset = 0;
-        if (this._$verticalAlign !== TextFormatVerticalAlign.TOP
+        let yOffset: number = 0;
+        if (this._$verticalAlign !== "top"
             && this.height > this._$textHeight
         ) {
 
             switch (this._$verticalAlign) {
 
-                case TextFormatVerticalAlign.MIDDLE:
+                case "middle":
                     yOffset = (this.height - this._$textHeight + 2) / 2;
                     break;
 
-                case TextFormatVerticalAlign.BOTTOM:
+                case "bottom":
                     yOffset = this.height - this._$textHeight + 2;
                     break;
 
@@ -659,46 +737,46 @@ export class RenderTextField extends RenderDisplayObject
 
         }
 
-        const length = textData.length;
-        for (let idx = 0; idx < length; ++idx) {
+        const length: number = this._$textData.length;
+        for (let idx: number = 0; idx < length; ++idx) {
 
-            let obj = textData[idx];
+            const obj: TextDataImpl<any> = this._$textData[idx];
             if (obj.width === 0) {
                 continue;
             }
 
             // check
-            const offsetWidth = xOffset + obj.x;
-            if (this._$autoSize === TextFieldAutoSize.NONE
+            const offsetWidth: number = xOffset + obj.x;
+            if (this._$autoSize === "none"
                 && (offsetHeight > limitHeight || offsetWidth > limitWidth)
             ) {
                 continue;
             }
 
-            let tf = obj.textFormat;
+            const tf: TextFormatImpl = obj.textFormat;
 
             // color
-            const rgb   = Util.$intToRGBA(obj.textFormat._$color);
-            const alpha = $Math.max(0, $Math.min(
-                rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+            const color: RGBAImpl = $intToRGBA(obj.textFormat._$color);
+            const alpha: number = $Math.max(0, $Math.min(
+                color.A * 255 * color_transform[3] + color_transform[7], 255)
             ) / 255;
 
-            context.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+            context.fillStyle = `rgba(${color.R},${color.G},${color.B},${alpha})`;
 
             if (this._$thickness) {
-                const rgb   = Util.$intToRGBA(this._$thicknessColor);
-                const alpha = $Math.max(0, $Math.min(
-                    rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                const color: RGBAImpl = $intToRGBA(this._$thicknessColor);
+                const alpha: number = $Math.max(0, $Math.min(
+                    color.A * 255 * color_transform[3] + color_transform[7], 255)
                 ) / 255;
                 context.lineWidth   = this._$thickness;
-                context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                context.strokeStyle = `rgba(${color.R},${color.G},${color.B},${alpha})`;
             }
 
-            const yIndex = obj.yIndex | 0;
+            const yIndex: number = obj.yIndex;
             switch (obj.mode) {
 
-                case TextMode.BREAK:
-                case TextMode.WRAP:
+                case "break":
+                case "wrap":
 
                     currentV++;
 
@@ -711,15 +789,15 @@ export class RenderTextField extends RenderDisplayObject
                     xOffset = this._$getAlignOffset(this._$objectTable[yIndex], width);
                     if (tf._$underline) {
 
-                        const offset = obj.textFormat._$size / 12;
+                        const offset: number = obj.textFormat._$size / 12;
 
-                        const rgb   = Util.$intToRGBA(tf._$color);
-                        const alpha = $Math.max(0, $Math.min(
-                            rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                        const color: RGBAImpl = $intToRGBA(tf._$color);
+                        const alpha: number = $Math.max(0, $Math.min(
+                            color.A * 255 * color_transform[3] + color_transform[7], 255)
                         ) / 255;
 
                         context.lineWidth   = $Math.max(1, 1 / $Math.min(matrix[0], matrix[3]));
-                        context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                        context.strokeStyle = `rgba(${color.R},${color.G},${color.B},${alpha})`;
 
                         context.beginPath();
                         context.moveTo(xOffset, yOffset + offsetHeight - offset);
@@ -730,20 +808,20 @@ export class RenderTextField extends RenderDisplayObject
 
                     break;
 
-                case TextMode.TEXT:
+                case "text":
                     {
                         if (this._$scrollV > currentV) {
                             continue;
                         }
 
                         let offsetY = offsetHeight - this._$heightTable[0];
-                        if (!Util.$isSafari) {
+                        if (!$isSafari) {
                             offsetY += 2 * (obj.textFormat._$size / 12);
                         }
 
                         context.beginPath();
                         context.textBaseline = "top";
-                        context.font = Util.$generateFontStyle(
+                        context.font = $generateFontStyle(
                             tf._$font, tf._$size, tf._$italic, tf._$bold
                         );
 
@@ -756,7 +834,7 @@ export class RenderTextField extends RenderDisplayObject
                     }
                     break;
 
-                case TextMode.IMAGE:
+                case "image":
 
                     if (!obj.loaded) {
                         continue;
@@ -780,27 +858,30 @@ export class RenderTextField extends RenderDisplayObject
      * @return {number}
      * @private
      */
-    _$getAlignOffset (obj, width)
-    {
+    _$getAlignOffset (
+        obj: TextDataImpl<any>,
+        width: number
+    ): number {
+
         // default
-        const totalWidth = this._$widthTable[obj.yIndex];
-        const textFormat = obj.textFormat;
-        const indent     = textFormat._$blockIndent + textFormat._$leftMargin > 0
+        const totalWidth: number = this._$widthTable[obj.yIndex];
+        const textFormat: TextFormatImpl = obj.textFormat;
+        const indent: number = textFormat._$blockIndent + textFormat._$leftMargin > 0
             ? textFormat._$blockIndent + textFormat._$leftMargin
             : 0;
 
         switch (true) {
 
             // wordWrap case
-            case this._$wordWrap === false && totalWidth > width:
+            case !this._$wordWrap && totalWidth > width:
                 return $Math.max(0, indent);
 
-            case textFormat._$align === TextFormatAlign.CENTER: // format CENTER
-            case this._$autoSize === TextFieldAutoSize.CENTER: // autoSize CENTER
+            case textFormat._$align === "center": // format CENTER
+            case this._$autoSize === "center": // autoSize CENTER
                 return $Math.max(0, width / 2 - indent - textFormat._$rightMargin - totalWidth / 2);
 
-            case textFormat._$align === TextFormatAlign.RIGHT: // format RIGHT
-            case this._$autoSize === TextFieldAutoSize.RIGHT: // autoSize RIGHT
+            case textFormat._$align === "right": // format RIGHT
+            case this._$autoSize === "right": // autoSize RIGHT
                 return $Math.max(0, width - indent - totalWidth - textFormat._$rightMargin - 2);
 
             // autoSize LEFT
@@ -818,19 +899,25 @@ export class RenderTextField extends RenderDisplayObject
      * @method
      * @private
      */
-    _$remove ()
+    _$remove (): void
     {
         this._$xMin     = 0;
         this._$yMin     = 0;
         this._$xMax     = 0;
         this._$yMax     = 0;
-        this._$textData = null;
+
+        // array reset
+        this._$textData.length        = 0;
+        this._$widthTable.length      = 0;
+        this._$heightTable.length     = 0;
+        this._$objectTable.length     = 0;
+        this._$textHeightTable.length = 0;
 
         this._$textAreaActive = false;
 
         super._$remove();
 
-        Util.$textFields.push(this);
+        $textFields.push(this);
     }
 
     /**
@@ -841,33 +928,34 @@ export class RenderTextField extends RenderDisplayObject
      * @method
      * @private
      */
-    _$updateProperty (object)
+    _$updateProperty (object: PropertyTextMessageImpl): void
     {
         // update property
-        this._$textAreaActive = !!object.textAreaActive;
+        this._$textAreaActive = object.textAreaActive;
 
-        this._$textData = object.textData;
-        this._$wordWrap = !!object.wordWrap;
+        // set array
+        this._$textData.push(...object.textData);
+        this._$widthTable.push(...object.widthTable);
+        this._$heightTable.push(...object.heightTable);
+        this._$objectTable.push(...object.objectTable);
+        this._$textHeightTable.push(...object.textHeightTable);
 
         // format
+        this._$wordWrap = object.wordWrap;
         this._$limitWidth      = object.limitWidth;
         this._$limitHeight     = object.limitHeight;
         this._$autoSize        = object.autoSize;
-        this._$widthTable      = object.widthTable;
-        this._$heightTable     = object.heightTable;
-        this._$objectTable     = object.objectTable;
-        this._$textHeightTable = object.textHeightTable;
         this._$scrollV         = object.scrollV;
         this._$textHeight      = object.textHeight;
         this._$verticalAlign   = object.verticalAlign;
 
         // color
-        this._$border = !!object.border;
+        this._$border = object.border;
         if (this._$border) {
             this._$borderColor = object.borderColor;
         }
 
-        this._$background = !!object.background;
+        this._$background = object.background;
         if (this._$background) {
             this._$backgroundColor = object.backgroundColor;
         }
@@ -886,16 +974,16 @@ export class RenderTextField extends RenderDisplayObject
      * @method
      * @private
      */
-    _$update (object)
+    _$update (object: PropertyTextMessageImpl): void
     {
         super._$update(object);
 
-        this._$textAreaActive = !!object.textAreaActive;
+        this._$textAreaActive = object.textAreaActive;
 
-        this._$xMin = object.xMin;
-        this._$yMin = object.yMin;
-        this._$xMax = object.xMax;
-        this._$yMax = object.yMax;
+        this._$xMin = object.xMin as NonNullable<number>;
+        this._$yMin = object.yMin as NonNullable<number>;
+        this._$xMax = object.xMax as NonNullable<number>;
+        this._$yMax = object.yMax as NonNullable<number>;
 
         if (object.textData) {
             this._$updateProperty(object);

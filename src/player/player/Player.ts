@@ -47,7 +47,7 @@ import {
     $hitContext,
     $isTouch,
     $dropTarget,
-    $dragRules
+    $dragRules, $isSafari
 } from "../util/Util";
 import {
     $Math,
@@ -1117,7 +1117,8 @@ export class Player
                 "command": "initialize",
                 "canvas": offscreenCanvas,
                 "samples": this._$getSamples(),
-                "devicePixelRatio": $devicePixelRatio
+                "devicePixelRatio": $devicePixelRatio,
+                "isSafari": $isSafari
             }, [offscreenCanvas]);
 
         } else {

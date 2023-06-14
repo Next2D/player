@@ -1,5 +1,10 @@
 import { RenderDisplayObject } from "./RenderDisplayObject";
+import { Rectangle } from "../player/next2d/geom/Rectangle";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { FrameBufferManager } from "../webgl/FrameBufferManager";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
 import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
+import type { PropertyVideoMessageImpl } from "../interface/PropertyVideoMessageImpl";
 import {
     $boundsMatrix,
     $clamp,
@@ -9,9 +14,13 @@ import {
     $multiplicationMatrix,
     $poolBoundsObject,
     $poolFloat32Array6,
-    $poolFloat32Array8
+    $poolFloat32Array8,
+    $OffscreenCanvas, $getFloat32Array6
 } from "../player/util/RenderUtil";
-import {PropertyVideoMessageImpl} from "../interface/PropertyVideoMessageImpl";
+import {
+    $renderPlayer,
+    $videos
+} from "./RenderGlobal";
 
 /**
  * @class
@@ -19,7 +28,7 @@ import {PropertyVideoMessageImpl} from "../interface/PropertyVideoMessageImpl";
 export class RenderVideo extends RenderDisplayObject
 {
     private _$imageBitmap: ImageBitmap | null;
-    private _$context: CanvasToWebGLContext | null;
+    private _$context: OffscreenCanvasRenderingContext2D | null;
     private _$smoothing: boolean;
 
     /**
@@ -38,7 +47,8 @@ export class RenderVideo extends RenderDisplayObject
         this._$imageBitmap = null;
 
         /**
-         * @type {null}
+         * @type {OffscreenCanvasRenderingContext2D}
+         * @default null
          * @private
          */
         this._$context = null;
@@ -111,7 +121,10 @@ export class RenderVideo extends RenderDisplayObject
         color_transform: Float32Array
     ): void {
 
-        if (!this._$visible || !this._$imageBitmap) {
+        if (!this._$visible
+            || !this._$imageBitmap
+            || !this._$context
+        ) {
             return ;
         }
 
@@ -199,7 +212,8 @@ export class RenderVideo extends RenderDisplayObject
 
                 let rect: Rectangle = new Rectangle(0, 0, width, height);
                 for (let idx: number = 0; idx < this._$filters.length ; ++idx) {
-                    rect = this._$filters[idx]._$generateFilterRect(rect, xScale, yScale);
+                    rect = this._$filters[idx]
+                        ._$generateFilterRect(rect, xScale, yScale);
                 }
 
                 if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
@@ -212,14 +226,10 @@ export class RenderVideo extends RenderDisplayObject
 
         }
 
-        const blendMode = this._$blendMode || this.blendMode;
+        this._$context.drawImage(this._$imageBitmap, 0, 0);
 
-        this
-            ._$context
-            .drawImage(this._$imageBitmap, 0, 0);
-
-        let texture = manager
-            ._$textureManager
+        let texture: WebGLTexture = manager
+            .textureManager
             ._$createFromElement(
                 this._$imageBitmap.width,
                 this._$imageBitmap.height,
@@ -227,47 +237,48 @@ export class RenderVideo extends RenderDisplayObject
                 this._$smoothing
             );
 
-        if (filters && filters.length
-            && this._$canApply(filters)
+        if (this._$filters
+            && this._$filters.length
+            && this._$canApply(this._$filters)
         ) {
 
-            const xScale = +$Math.sqrt(
+            const xScale: number = +$Math.sqrt(
                 multiMatrix[0] * multiMatrix[0]
                 + multiMatrix[1] * multiMatrix[1]
             );
-            const yScale = +$Math.sqrt(
+            const yScale: number = +$Math.sqrt(
                 multiMatrix[2] * multiMatrix[2]
                 + multiMatrix[3] * multiMatrix[3]
             );
 
             if (xScale !== 1 || yScale !== 1) {
-                const currentAttachment = manager.currentAttachment;
+
+                const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
 
                 // create cache buffer
-                const buffer = manager
+                const attachment: AttachmentImpl = manager
                     .createCacheAttachment(width, height, false);
-                context._$bind(buffer);
+                context._$bind(attachment);
 
-                Util.$resetContext(context);
-
-                const parentMatrix = Util.$getFloat32Array6(
+                const parentMatrix: Float32Array = $getFloat32Array6(
                     xScale, 0, 0, yScale,
                     width / 2, height / 2
                 );
 
-                const baseMatrix = Util.$getFloat32Array6(
+                const baseMatrix: Float32Array = $getFloat32Array6(
                     1, 0, 0, 1,
                     0 - texture.width / 2,
                     0 - texture.height / 2
                 );
 
-                const scaleMatrix = Util.$multiplicationMatrix(
+                const scaleMatrix: Float32Array = $multiplicationMatrix(
                     parentMatrix, baseMatrix
                 );
 
-                Util.$poolFloat32Array6(parentMatrix);
-                Util.$poolFloat32Array6(baseMatrix);
+                $poolFloat32Array6(parentMatrix);
+                $poolFloat32Array6(baseMatrix);
 
+                context.reset();
                 context.setTransform(
                     scaleMatrix[0], scaleMatrix[1],
                     scaleMatrix[2], scaleMatrix[3],
@@ -278,12 +289,12 @@ export class RenderVideo extends RenderDisplayObject
                 );
 
                 manager.releaseTexture(texture);
-                Util.$poolFloat32Array6(scaleMatrix);
+                $poolFloat32Array6(scaleMatrix);
 
                 texture = manager.getTextureFromCurrentAttachment();
 
                 // release buffer
-                manager.releaseAttachment(buffer, false);
+                manager.releaseAttachment(attachment, false);
 
                 // end draw and reset current buffer
                 context._$bind(currentAttachment);
@@ -292,43 +303,38 @@ export class RenderVideo extends RenderDisplayObject
             // draw filter
             texture = this._$drawFilter(
                 context, texture, multiMatrix,
-                filters, width, height
+                this._$filters, width, height
             );
 
-            // reset
-            Util.$resetContext(context);
-
             // draw
-            context._$globalAlpha = alpha;
-            context._$imageSmoothingEnabled = this._$smoothing;
-            context._$globalCompositeOperation = blendMode;
+            context.reset();
+            context.globalAlpha = alpha;
+            context.imageSmoothingEnabled = this._$smoothing;
+            context.globalCompositeOperation = this._$blendMode;
 
             // size
-            const baseBounds = this._$getBounds();
-            const bounds = Util.$boundsMatrix(baseBounds, multiMatrix);
+            const baseBounds: BoundsImpl = this._$getBounds();
+            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
+            $poolBoundsObject(baseBounds);
+
             context.setTransform(1, 0, 0, 1,
                 bounds.xMin - texture._$offsetX,
                 bounds.yMin - texture._$offsetY
             );
+            $poolBoundsObject(bounds);
 
             context.drawImage(texture,
                 0, 0, texture.width, texture.height,
                 color_transform
             );
 
-            // pool
-            Util.$poolBoundsObject(bounds);
-            Util.$poolBoundsObject(baseBounds);
-
         } else {
 
-            // reset
-            Util.$resetContext(context);
-
             // draw
-            context._$globalAlpha = alpha;
-            context._$imageSmoothingEnabled = this._$smoothing;
-            context._$globalCompositeOperation = blendMode;
+            context.reset();
+            context.globalAlpha = alpha;
+            context.imageSmoothingEnabled = this._$smoothing;
+            context.globalCompositeOperation = this._$blendMode;
 
             context.setTransform(
                 multiMatrix[0], multiMatrix[1], multiMatrix[2],
@@ -344,11 +350,11 @@ export class RenderVideo extends RenderDisplayObject
         }
 
         if (multiMatrix !== matrix) {
-            Util.$poolFloat32Array6(multiMatrix);
+            $poolFloat32Array6(multiMatrix);
         }
 
         if (multiColor !== color_transform) {
-            Util.$poolFloat32Array8(multiColor);
+            $poolFloat32Array8(multiColor);
         }
     }
 
@@ -365,13 +371,14 @@ export class RenderVideo extends RenderDisplayObject
         this._$yMin        = 0;
         this._$xMax        = 0;
         this._$yMax        = 0;
+        this._$context     = null;
         this._$imageBitmap = null;
-        this.smoothing     = true;
+        this._$smoothing   = true;
 
         super._$remove();
 
-        Util.$renderPlayer._$videos--;
-        Util.$videos.push(this);
+        $renderPlayer._$videos--;
+        $videos.push(this);
     }
 
     /**
@@ -388,11 +395,11 @@ export class RenderVideo extends RenderDisplayObject
         this._$yMin        = object.yMin as NonNullable<number>;
         this._$xMax        = object.xMax as NonNullable<number>;
         this._$yMax        = object.yMax as NonNullable<number>;
-        this._$imageBitmap = object.imageBitmap;
-        this._$smoothing   = object.smoothing;
+        this._$imageBitmap = object.imageBitmap as NonNullable<ImageBitmap>;
+        this._$smoothing   = object.smoothing as NonNullable<boolean>;
 
         if (!this._$context && this._$imageBitmap) {
-            const canvas = new $OffscreenCanvas(
+            const canvas: OffscreenCanvas = new $OffscreenCanvas(
                 this._$imageBitmap.width,
                 this._$imageBitmap.height
             );
@@ -408,7 +415,7 @@ export class RenderVideo extends RenderDisplayObject
      * @method
      * @private
      */
-    _$update (object)
+    _$update (object: PropertyVideoMessageImpl): void
     {
         super._$update(object);
         this._$updateProperty(object);
