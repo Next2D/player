@@ -1,3 +1,5 @@
+"use strict";
+
 import { CommandController } from "./CommandController";
 
 const command: CommandController = new CommandController();

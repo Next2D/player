@@ -1,5 +1,5 @@
 import { FilterArrayImpl } from "./FilterArrayImpl";
-import {BlendModeImpl} from "./BlendModeImpl";
+import { BlendModeImpl } from "./BlendModeImpl";
 
 export interface PreObjectImpl
 {

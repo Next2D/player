@@ -2,8 +2,8 @@ import { CharacterImpl } from "./CharacterImpl";
 import { MovieClipSoundObjectImpl } from "./MovieClipSoundObjectImpl";
 import { MovieClipActionObjectImpl } from "./MovieClipActionObjectImpl";
 import { MovieClipLabelObjectImpl } from "./MovieClipLabelObjectImpl";
-import {PlaceObjectImpl} from "./PlaceObjectImpl";
-import {DictionaryTagImpl} from "./DictionaryTagImpl";
+import { PlaceObjectImpl } from "./PlaceObjectImpl";
+import { DictionaryTagImpl } from "./DictionaryTagImpl";
 
 export interface MovieClipCharacterImpl extends CharacterImpl {
     extends: string;
