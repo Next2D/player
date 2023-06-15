@@ -1,9 +1,0 @@
-
-        // output build version
-        console.log("%c Next2D Player %c ###BUILD_VERSION### %c https://next2d.app",
-        "color: #fff; background: #5f5f5f",
-        "color: #fff; background: #4bc729",
-        "");
-
-    })(window);
-}

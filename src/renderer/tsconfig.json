@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "resolveJsonModule": true,
+    "strictFunctionTypes": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": false,
+    "target": "es6",
+    "lib": ["es6", "dom"],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "outDir": "./"
+  },
+  "include": [
+    "**/*.ts",
+    "../webgl/**/*.ts",
+    "../player/**/*.ts",
+    "../../@types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

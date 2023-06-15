@@ -2,11 +2,6 @@ node_modules
 json
 dist
 coverage
-Footer.build.file
-Header.build.file
-src/util/Util.replaced.js
-src/worker/RenderWorker.js
-src/worker/*.min.js
 *.html
 package-lock.json
 .DS_Store
