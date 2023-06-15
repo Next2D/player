@@ -54,13 +54,6 @@ export const $Number = Number;
 
 /**
  * @shortcut
- * @type {WebGLTexture}
- * @const
- */
-export const $WebGLTexture = WebGLTexture;
-
-/**
- * @shortcut
  * @type {Float32Array}
  * @const
  */
@@ -86,13 +79,6 @@ export const $Int16Array = Int16Array;
  * @const
  */
 export const $OffscreenCanvas = OffscreenCanvas;
-
-/**
- * @shortcut
- * @type {OffscreenCanvasRenderingContext2D}
- * @const
- */
-export const $OffscreenCanvasRenderingContext2D = OffscreenCanvasRenderingContext2D;
 
 /**
  * @shortcut

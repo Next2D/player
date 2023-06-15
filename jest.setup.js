@@ -374,6 +374,19 @@ globalThis.location = {
     "pathname": "/"
 };
 
+globalThis.OffscreenCanvasRenderingContext2D = class OffscreenCanvasRenderingContext2D
+{
+
+};
+
+globalThis.OffscreenCanvas = class OffscreenCanvas
+{
+    getContext ()
+    {
+        return new OffscreenCanvasRenderingContext2D();
+    }
+};
+
 globalThis.history = {
     "pushState": () => {}
 };
@@ -409,6 +422,11 @@ globalThis.document = {
             "children": []
         };
     }
+};
+
+globalThis.cancelAnimationFrame = () =>
+{
+
 };
 
 globalThis.requestAnimationFrame = (callback) =>
