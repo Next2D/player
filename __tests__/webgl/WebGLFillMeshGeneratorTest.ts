@@ -1,9 +1,9 @@
 import { WebGLFillMeshGenerator } from "../../src/webgl/WebGLFillMeshGenerator";
 
-describe("WebGLFillMeshGenerator.js test", function()
+describe("WebGLFillMeshGenerator.js test", () =>
 {
     // ベジェなし
-    it("generate case 1-1", function()
+    it("generate case 1-1", () =>
     {
         const mesh = WebGLFillMeshGenerator.generate([
             [
@@ -32,7 +32,7 @@ describe("WebGLFillMeshGenerator.js test", function()
         expect(mesh.indexRanges).toEqual(actualIndexRanges);
     });
 
-    it("generate case 1-2", function()
+    it("generate case 1-2", () =>
     {
         const mesh = WebGLFillMeshGenerator.generate([
             [
@@ -77,7 +77,7 @@ describe("WebGLFillMeshGenerator.js test", function()
     });
 
     // ベジェあり
-    it("generate case 2-1", function()
+    it("generate case 2-1", () =>
     {
         const mesh = WebGLFillMeshGenerator.generate([
             [
@@ -116,7 +116,7 @@ describe("WebGLFillMeshGenerator.js test", function()
         expect(mesh.indexRanges).toEqual(actualIndexRanges);
     });
 
-    it("generate case 2-2", function()
+    it("generate case 2-2", () =>
     {
         const mesh = WebGLFillMeshGenerator.generate([
             [
@@ -186,7 +186,7 @@ describe("WebGLFillMeshGenerator.js test", function()
     });
 
     // 複合
-    it("generate case 3", function()
+    it("generate case 3", () =>
     {
         const mesh = WebGLFillMeshGenerator.generate([
             [

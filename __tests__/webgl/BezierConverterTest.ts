@@ -1,9 +1,9 @@
 import { BezierConverter } from "../../src/webgl/BezierConverter";
 
-describe("BezierConverter.js test", function()
+describe("BezierConverter.js test", () =>
 {
     // 通常ケース
-    it("cubicToQuad case 1-1", function()
+    it("cubicToQuad case 1-1", () =>
     {
         const bezierConverter = new BezierConverter();
 
@@ -27,7 +27,7 @@ describe("BezierConverter.js test", function()
         expect(Array.from(bezierConverter._$bezierConverterBuffer)).toEqual(actual);
     });
 
-    it("cubicToQuad case 1-2", function()
+    it("cubicToQuad case 1-2", () =>
     {
         const bezierConverter = new BezierConverter();
 
@@ -51,7 +51,7 @@ describe("BezierConverter.js test", function()
         expect(Array.from(bezierConverter._$bezierConverterBuffer)).toEqual(actual);
     });
 
-    it("cubicToQuad case 1-3", function()
+    it("cubicToQuad case 1-3", () =>
     {
         const bezierConverter = new BezierConverter();
 
@@ -76,7 +76,7 @@ describe("BezierConverter.js test", function()
     });
 
     // 全て0
-    it("cubicToQuad case 2", function()
+    it("cubicToQuad case 2", () =>
     {
         const bezierConverter = new BezierConverter();
 
@@ -101,7 +101,7 @@ describe("BezierConverter.js test", function()
     });
 
     // 直線
-    it("cubicToQuad case 3", function()
+    it("cubicToQuad case 3", () =>
     {
         const bezierConverter = new BezierConverter();
 
@@ -126,7 +126,7 @@ describe("BezierConverter.js test", function()
     });
 
     // 始点と制御点1が同じ、かつ、終点と制御点2が同じ
-    it("cubicToQuad case 4", function()
+    it("cubicToQuad case 4", () =>
     {
         const bezierConverter = new BezierConverter();
 
@@ -151,7 +151,7 @@ describe("BezierConverter.js test", function()
     });
 
     // 制御点1と制御点2が同じ
-    it("cubicToQuad case 5", function()
+    it("cubicToQuad case 5", () =>
     {
         const bezierConverter = new BezierConverter();
 

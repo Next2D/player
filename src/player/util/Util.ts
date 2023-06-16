@@ -173,7 +173,7 @@ export const $SCROLL: string = "scroll";
  */
 export const $P_TAG: HTMLParagraphElement = $document.createElement("p");
 
-const div = $document.createElement("div");
+const div: HTMLDivElement = $document.createElement("div");
 div.innerHTML             = "a";
 div.style.display         = "block";
 div.style.position        = "absolute";

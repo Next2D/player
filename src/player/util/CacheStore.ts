@@ -225,18 +225,6 @@ export class CacheStore
     }
 
     /**
-     * @param  {*} id
-     * @param  {*} type
-     * @return {string}
-     * @method
-     * @public
-     */
-    generateLifeKey (id: any, type: any): string
-    {
-        return `${id}:${type}`;
-    }
-
-    /**
      * @param  {array} keys
      * @return {*}
      * @method
@@ -326,11 +314,11 @@ export class CacheStore
      */
     generateKeys (
         unique_key: any,
-        matrix: number[]|null = null,
-        color:Float32Array|null = null
+        matrix: number[] | null = null,
+        color:Float32Array | null = null
     ): string[] {
 
-        let str = "";
+        let str: string = "";
         if (matrix) {
             str += `${matrix.join("_")}`;
         }
@@ -340,7 +328,7 @@ export class CacheStore
             str += this.colorToString(color);
         }
 
-        const keys: any[] = $getArray();
+        const keys: string[] = $getArray();
         keys[1] = str ? this.generateHash(str) : "_0";
         keys[0] = `${unique_key}`;
 
