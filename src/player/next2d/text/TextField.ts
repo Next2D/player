@@ -560,7 +560,7 @@ export class TextField extends InteractiveObject
     set background (background: boolean)
     {
         if (background !== this._$background) {
-            this._$background = background;
+            this._$background = !!background;
             this._$reset();
         }
     }
@@ -604,7 +604,7 @@ export class TextField extends InteractiveObject
     set border (border: boolean)
     {
         if (border !== this._$border) {
-            this._$border = border;
+            this._$border = !!border;
             this._$reset();
         }
     }
@@ -872,7 +872,7 @@ export class TextField extends InteractiveObject
     set multiline (multiline: boolean)
     {
         if (multiline !== this._$multiline) {
-            this._$multiline = multiline;
+            this._$multiline = !!multiline;
             this._$reset();
         }
     }
@@ -1260,7 +1260,7 @@ export class TextField extends InteractiveObject
     set wordWrap (word_wrap: boolean)
     {
         if (this._$wordWrap !== word_wrap) {
-            this._$wordWrap = word_wrap;
+            this._$wordWrap = !!word_wrap;
             this._$reset();
         }
     }

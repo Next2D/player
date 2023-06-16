@@ -1,11 +1,11 @@
 import { Matrix } from "../next2d/geom/Matrix";
 import { ColorTransform } from "../next2d/geom/ColorTransform";
-import { DisplayObjectContainer } from "../next2d/display/DisplayObjectContainer";
 import { URLRequestHeader } from "../next2d/net/URLRequestHeader";
 import { Player } from "../player/Player";
 import { Point } from "../next2d/geom/Point";
 import { Event as Next2DEvent } from "../next2d/events/Event";
 import { Stage } from "../next2d/display/Stage";
+import type { DisplayObjectImpl } from "../../interface/DisplayObjectImpl";
 import type { Sound } from "../next2d/media/Sound";
 import type { DragRulesImpl } from "../../interface/DragRulesImpl";
 import type { AjaxOptionImpl } from "../../interface/AjaxOptionImpl";
@@ -26,7 +26,6 @@ import {
     $clearTimeout,
     $setTimeout
 } from "./RenderUtil";
-
 /**
  * @type {Event}
  */
@@ -944,23 +943,22 @@ export const $initialize = (): Promise<void> =>
                 source._$createWorkerInstance();
                 source._$postProperty();
 
-                const children = source._$needsChildren
+                const children: DisplayObjectImpl<any>[] = source._$needsChildren
                     ? source._$getChildren()
                     : source._$children;
 
-                const childrenIds = $getArray();
+                const childrenIds: number[] = $getArray();
 
-                const length = children.length;
-                for (let idx = 0; idx < length; ++idx) {
+                for (let idx: number = 0; idx < children.length; ++idx) {
 
-                    const instance = children[idx];
+                    const instance: DisplayObjectImpl<any> = children[idx];
                     if (!instance) {
                         continue;
                     }
 
                     childrenIds.push(instance._$instanceId);
 
-                    if (instance instanceof DisplayObjectContainer) {
+                    if ("_$children" in instance) {
                         // @ts-ignore
                         $postContainerWorker(instance);
                         continue;
@@ -985,19 +983,18 @@ export const $initialize = (): Promise<void> =>
             {
                 source._$removeWorkerInstance();
 
-                const children = source._$needsChildren
+                const children: DisplayObjectImpl<any>[] = source._$needsChildren
                     ? source._$getChildren()
                     : source._$children;
 
-                const length = children.length;
-                for (let idx = 0; idx < length; ++idx) {
+                for (let idx: number = 0; idx < children.length; ++idx) {
 
-                    const instance = children[idx];
+                    const instance: DisplayObjectImpl<any> = children[idx];
                     if (!instance) {
                         continue;
                     }
 
-                    if (instance instanceof DisplayObjectContainer) {
+                    if ("_$children" in instance) {
 
                         // @ts-ignore
                         $removeContainerWorker(instance);
@@ -1014,7 +1011,7 @@ export const $initialize = (): Promise<void> =>
                     return ;
                 }
 
-                const sourceId = event.data.sourceId;
+                const sourceId: number = event.data.sourceId;
                 const object: BitmapDrawObjectImpl | void = $bitmapDrawMap.get(sourceId);
                 $bitmapDrawMap.delete(sourceId);
                 if (!object) {
@@ -1022,8 +1019,8 @@ export const $initialize = (): Promise<void> =>
                 }
 
                 // reset
-                const source = object.source;
-                if (source instanceof DisplayObjectContainer) {
+                const source: DisplayObjectImpl<any> = object.source;
+                if ("_$children" in source) {
                     // @ts-ignore
                     $removeContainerWorker(source);
                 } else {
