@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "resolveJsonModule": true,
+    "strictFunctionTypes": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "target": "esnext",
+    "lib": ["es6", "dom"],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "outDir": "./dist/"
+  },
+  "include": [
+    "src/**/*.ts",
+    "@types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/worker",
+    "src/renderer",
+    "__tests__",
+    "dist"
+  ]
+}

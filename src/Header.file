@@ -1,9 +1,0 @@
-/*!
- * licenses: MIT Licenses.
- * version: ###BUILD_VERSION###
- * author: Toshiyuki Ienaga <ienaga@tvon.jp>
- * copyright: (c) 2013-###BUILD_YEAR### Toshiyuki Ienaga.
- */
-if (!("next2d" in window)) {
-    ((window) => {
-        "use strict";

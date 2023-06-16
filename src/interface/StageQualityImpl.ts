@@ -1,0 +1,1 @@
+export type StageQualityImpl = "high" | "low" | "medium";

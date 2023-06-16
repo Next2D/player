@@ -1,0 +1,1 @@
+export type TextModeImpl = "text" | "break" | "wrap" | "image";
