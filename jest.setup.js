@@ -1,5 +1,41 @@
 globalThis.$windowEventMap = new Map();
 globalThis.window = {
+    "document": {
+        "getElementById": (id) =>
+        {
+            return globalThis.$elements.has(id)
+                ? globalThis.$elements.get(id)
+                : null;
+        },
+        "createElement": () =>
+        {
+            const attribute = new Map();
+            return {
+                "getAttribute": (name) =>
+                {
+                    return attribute.has(name)
+                        ? attribute.get(name)
+                        : null;
+                },
+                "setAttribute": (name, value) =>
+                {
+                    attribute.set(name, value);
+                },
+                "insertBefore": (element) =>
+                {
+                    if (element.id) {
+                        globalThis.$elements.set(element.id, element);
+                    }
+                },
+                "getContext": () =>
+                {
+                    return {};
+                },
+                "children": [],
+                "style": {}
+            };
+        }
+    },
     "devicePixelRatio": 2,
     "addEventListener": (type, callback) =>
     {
@@ -388,45 +424,15 @@ globalThis.OffscreenCanvas = class OffscreenCanvas
 };
 
 globalThis.history = {
-    "pushState": () => {}
-};
-
-globalThis.$elements = new Map();
-globalThis.document = {
-    "getElementById": (id) =>
+    "pushState": () =>
     {
-        return globalThis.$elements.has(id)
-            ? globalThis.$elements.get(id)
-            : null;
-    },
-    "createElement": () =>
-    {
-        const attribute = new Map();
-        return {
-            "getAttribute": (name) =>
-            {
-                return attribute.has(name)
-                    ? attribute.get(name)
-                    : null;
-            },
-            "setAttribute": (name, value) =>
-            {
-                attribute.set(name, value);
-            },
-            "insertBefore": (element) =>
-            {
-                if (element.id) {
-                    globalThis.$elements.set(element.id, element);
-                }
-            },
-            "children": []
-        };
+        return undefined;
     }
 };
 
 globalThis.cancelAnimationFrame = () =>
 {
-
+    return undefined;
 };
 
 globalThis.requestAnimationFrame = (callback) =>

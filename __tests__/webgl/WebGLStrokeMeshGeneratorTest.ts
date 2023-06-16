@@ -1,8 +1,8 @@
 import { WebGLStrokeMeshGenerator } from "../../src/webgl/WebGLStrokeMeshGenerator";
 
-describe("WebGLStrokeMeshGenerator.js test", function()
+describe("WebGLStrokeMeshGenerator.js test", () =>
 {
-    it("generate CapsStyle.NONE", function ()
+    it("generate CapsStyle.NONE", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -27,7 +27,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate CapsStyle.ROUND", function ()
+    it("generate CapsStyle.ROUND", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -126,7 +126,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate CapsStyle.SQUARE", function ()
+    it("generate CapsStyle.SQUARE", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -159,7 +159,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate JointStyle.BEVEL case 1", function ()
+    it("generate JointStyle.BEVEL case 1", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -191,7 +191,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate JointStyle.BEVEL case 2", function ()
+    it("generate JointStyle.BEVEL case 2", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -226,7 +226,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate JointStyle.BEVEL case 3", function ()
+    it("generate JointStyle.BEVEL case 3", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -261,7 +261,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate JointStyle.ROUND case 1", function ()
+    it("generate JointStyle.ROUND case 1", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -293,7 +293,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate JointStyle.ROUND case 2", function ()
+    it("generate JointStyle.ROUND case 2", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -362,7 +362,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate JointStyle.ROUND case 3", function ()
+    it("generate JointStyle.ROUND case 3", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -431,7 +431,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate JointStyle.MITER case 1", function ()
+    it("generate JointStyle.MITER case 1", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -463,7 +463,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate JointStyle.MITER case 2", function ()
+    it("generate JointStyle.MITER case 2", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -506,7 +506,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate JointStyle.MITER case 3", function ()
+    it("generate JointStyle.MITER case 3", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -550,7 +550,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
     });
 
     // ベジェ曲線
-    it("generate quadratic curve", function ()
+    it("generate quadratic curve", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [
@@ -666,7 +666,7 @@ describe("WebGLStrokeMeshGenerator.js test", function()
         expect(mesh.indexBufferData).toEqual(actualIndexBufferData);
     });
 
-    it("generate 2 mesh", function ()
+    it("generate 2 mesh", () =>
     {
         const mesh = WebGLStrokeMeshGenerator.generate([
             [

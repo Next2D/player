@@ -9,7 +9,8 @@ Next2D Player
 [![license](https://img.shields.io/github/license/Next2D/Player)](https://github.com/Next2D/Player/blob/main/LICENSE)
 [![Docs](https://img.shields.io/badge/docs-online-blue.svg)](https://next2d.app/docs/player/index.html)
 [![Discord](https://img.shields.io/discord/812136803506716713?label=Discord&logo=discord)](https://discord.gg/6c9rv5Uns5)
-[![Follow us on Twitter](https://img.shields.io/twitter/follow/Next2D?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=Next2D)
+![Twitter Follow](https://img.shields.io/twitter/follow/Next2D?style=social)
+[![Github All Releases](https://img.shields.io/npm/dt/@next2d/player)](https://github.com/Next2D/player/releases)
 
 [English](./README.md) | [简体中文](./README.cn.md)
 
@@ -55,14 +56,14 @@ loader.load(request);
 
 ## オプション設定
 
-| プロパティ名 | 型 | デフォルト値 | 説明 |
-| --- | --- | --- | --- |
-| `base` | string | empty | 相対パスでJSONを取得する場合、ここで設定したURLがrootとして適用されます。絶対パスの場合はここで設定したURLは適用されません。 |
+| プロパティ名 | 型       | デフォルト値 | 説明 |
+| --- |---------| --- | --- |
+| `base` | string  | empty | 相対パスでJSONを取得する場合、ここで設定したURLがrootとして適用されます。絶対パスの場合はここで設定したURLは適用されません。 |
 | `fullScreen` | boolean | false | Stageクラスで設定した幅と高さを超えて画面全体に描画されます。 |
-| `tagId` | string | empty | IDを指定すると、指定したIDのエレメント内で描画を行います。 |
-| `bgColor` | array | empty | 背景色の[R,G,B,A]の配列は0～255で指定できます。falseは無色透明です。 |
+| `tagId` | string  | empty | IDを指定すると、指定したIDのエレメント内で描画を行います。 |
+| `bgColor` | string  | "" | 背景色の[R,G,B,A]の配列は0～255で指定できます。falseは無色透明です。 |
 
-## Related sites
+## 関連サイト
 * [Website](https://next2d.app)
 * [Player API Documentation](https://next2d.app/ja/docs/player)
 * [Next2D NoCode Tool(β version)](https://tool.next2d.app)

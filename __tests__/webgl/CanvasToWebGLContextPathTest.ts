@@ -1,6 +1,6 @@
 import { CanvasToWebGLContextPath } from "../../src/webgl/CanvasToWebGLContextPath";
 
-describe("CanvasToWebGLContextPath.js test", function()
+describe("CanvasToWebGLContextPath.js test", () =>
 {
     it("case 1", function ()
     {

@@ -6,7 +6,7 @@
   "license": "MIT",
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
-  "main": "dist/index.js",
+  "main": "dist/player/index.js",
   "keywords": [
     "Next2D",
     "Next2D Player"

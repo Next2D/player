@@ -5,19 +5,23 @@
     "strictFunctionTypes": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "declaration": false,
+    "declaration": true,
     "target": "esnext",
     "lib": ["es6", "dom"],
     "module": "esnext",
     "moduleResolution": "node",
-    "baseUrl": "./"
+    "baseUrl": ".",
+    "outDir": "./dist/"
   },
   "include": [
-    "**/*.ts",
+    "src/**/*.ts",
     "@types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
+    "src/worker",
+    "src/renderer",
+    "__tests__",
     "dist"
   ]
 }

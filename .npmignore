@@ -3,10 +3,10 @@
 .gitattributes
 .gitignore
 .github
-__test__
-src
-node_modules
+__tests__
 json
+node_modules
+src
 DOCS.md
 DEVELOP.md
 jest.config.js

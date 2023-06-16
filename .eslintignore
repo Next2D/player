@@ -1,2 +1,5 @@
 **/node_modules/*
-src/worker/*
+dist
+json
+.github
+__tests__
