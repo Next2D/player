@@ -289,7 +289,7 @@ export class Video extends DisplayObject
     }
     set loop (loop: boolean)
     {
-        this._$loop = loop;
+        this._$loop = !!loop;
     }
 
     /**
@@ -306,7 +306,7 @@ export class Video extends DisplayObject
     }
     set autoPlay (auto_play: boolean)
     {
-        this._$autoPlay = auto_play;
+        this._$autoPlay = !!auto_play;
     }
 
     /**
@@ -324,7 +324,7 @@ export class Video extends DisplayObject
     }
     set smoothing (smoothing: boolean)
     {
-        this._$smoothing = smoothing;
+        this._$smoothing = !!smoothing;
     }
 
     /**

@@ -228,9 +228,9 @@ export class BevelFilter extends BitmapFilter
     {
         angle %= 360;
         if (angle !== this._$angle) {
+            this._$angle = $clamp(angle, -360, 360, 45);
             this._$doChanged();
         }
-        this._$angle = $clamp(angle, -360, 360, 45);
     }
 
     /**
@@ -283,9 +283,9 @@ export class BevelFilter extends BitmapFilter
     {
         distance = $clamp(+distance, -255, 255, 4);
         if (distance !== this._$distance) {
+            this._$distance = distance;
             this._$doChanged();
         }
-        this._$distance = distance;
     }
 
     /**
@@ -304,9 +304,9 @@ export class BevelFilter extends BitmapFilter
     {
         highlight_alpha = $clamp(+highlight_alpha, 0, 1, 0);
         if (highlight_alpha !== this._$highlightAlpha) {
+            this._$highlightAlpha = highlight_alpha;
             this._$doChanged();
         }
-        this._$highlightAlpha = highlight_alpha;
     }
 
     /**
@@ -327,10 +327,9 @@ export class BevelFilter extends BitmapFilter
             $toColorInt(highlight_color), 0, 0xffffff, 0xffffff
         );
         if (highlight_color !== this._$highlightColor) {
+            this._$highlightColor = highlight_color;
             this._$doChanged();
         }
-
-        this._$highlightColor = highlight_color;
     }
 
     /**
@@ -348,9 +347,9 @@ export class BevelFilter extends BitmapFilter
     set knockout (knockout: boolean)
     {
         if (knockout !== this._$knockout) {
+            this._$knockout = !!knockout;
             this._$doChanged();
         }
-        this._$knockout = knockout;
     }
 
     /**
@@ -386,9 +385,9 @@ export class BevelFilter extends BitmapFilter
     {
         shadow_alpha = $clamp(+shadow_alpha, 0, 1, 0);
         if (shadow_alpha !== this._$shadowAlpha) {
+            this._$shadowAlpha = shadow_alpha;
             this._$doChanged();
         }
-        this._$shadowAlpha = shadow_alpha;
     }
 
     /**
@@ -410,10 +409,9 @@ export class BevelFilter extends BitmapFilter
         );
 
         if (shadow_color !== this._$shadowColor) {
+            this._$shadowColor = shadow_color;
             this._$doChanged();
         }
-
-        this._$shadowColor = shadow_color;
     }
 
     /**
@@ -432,9 +430,9 @@ export class BevelFilter extends BitmapFilter
     {
         strength = $clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
+            this._$strength = strength;
             this._$doChanged();
         }
-        this._$strength = strength;
     }
 
     /**
@@ -453,20 +451,8 @@ export class BevelFilter extends BitmapFilter
     {
         type = `${type}`;
         if (type !== this._$type) {
+            this._$type = type;
             this._$doChanged();
-        }
-
-        switch (type) {
-
-            case "outer":
-            case "inner":
-                this._$type = type;
-                break;
-
-            default:
-                this._$type = "full";
-                break;
-
         }
     }
 

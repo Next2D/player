@@ -154,9 +154,9 @@ export class BlurFilter extends BitmapFilter
     {
         blur_x = $clamp(+blur_x, 0, 255, 0);
         if (blur_x !== this._$blurX) {
+            this._$blurX = blur_x;
             this._$doChanged();
         }
-        this._$blurX = blur_x;
     }
 
     /**
@@ -175,9 +175,9 @@ export class BlurFilter extends BitmapFilter
     {
         blur_y = $clamp(+blur_y, 0, 255, 0);
         if (blur_y !== this._$blurY) {
+            this._$blurY = blur_y;
             this._$doChanged();
         }
-        this._$blurY = blur_y;
     }
 
     /**
@@ -194,10 +194,11 @@ export class BlurFilter extends BitmapFilter
     }
     set quality (quality: FilterQualityImpl)
     {
+        quality = $clamp(quality | 0, 0, 15, 1) as FilterQualityImpl;
         if (quality !== this._$quality) {
+            this._$quality = quality;
             this._$doChanged();
         }
-        this._$quality = quality;
     }
 
     /**
