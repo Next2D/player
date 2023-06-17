@@ -214,17 +214,17 @@ export class GradientGlowFilter extends BitmapFilter
     }
     set alphas (alphas: number[] | null)
     {
-        this._$alphas = alphas;
-        if ($Array.isArray(alphas)) {
-
-            this._$doChanged();
-
-            for (let idx: number = 0; idx < alphas.length; ++idx) {
-                const alpha = alphas[idx];
-                alphas[idx] = $clamp(+alpha, 0, 1, 0);
-            }
-
+        if (alphas !== this._$alphas) {
             this._$alphas = alphas;
+            if ($Array.isArray(alphas)) {
+
+                for (let idx: number = 0; idx < alphas.length; ++idx) {
+                    alphas[idx] = $clamp(+alphas[idx], 0, 1, 0);
+                }
+
+                this._$alphas = alphas;
+            }
+            this._$doChanged();
         }
     }
 
@@ -242,11 +242,11 @@ export class GradientGlowFilter extends BitmapFilter
     }
     set angle (angle: number)
     {
-        angle %= 360;
+        angle = $clamp(angle % 360, -360, 360, 45);
         if (angle !== this._$angle) {
+            this._$angle = angle;
             this._$doChanged();
         }
-        this._$angle = $clamp(angle, -360, 360, 45);
     }
 
     /**
@@ -297,27 +297,19 @@ export class GradientGlowFilter extends BitmapFilter
     }
     set colors (colors: number[] | null)
     {
-        this._$colors = colors;
-        if ($Array.isArray(colors)) {
-
-            this._$doChanged();
-
-            for (let idx: number = 0; idx < colors.length; ++idx) {
-
-                let color = $toColorInt(colors[idx]) | 0;
-
-                if (color < 0) {
-                    color = 0x1000000 - $Math.abs(color) % 0x1000000;
-                }
-
-                if (color > 0xffffff) {
-                    color = color % 0x1000000;
-                }
-
-                colors[idx] = $clamp($Math.abs(color), 0, 0xffffff);
-            }
-
+        if (this._$colors !== colors) {
             this._$colors = colors;
+            if ($Array.isArray(colors)) {
+
+                for (let idx: number = 0; idx < colors.length; ++idx) {
+                    colors[idx] = $clamp(
+                        $toColorInt(colors[idx]), 0, 0xffffff, 0
+                    );
+                }
+
+                this._$colors = colors;
+            }
+            this._$doChanged();
         }
     }
 
@@ -337,9 +329,9 @@ export class GradientGlowFilter extends BitmapFilter
     {
         distance = $clamp(+distance, -255, 255, 4);
         if (distance !== this._$distance) {
+            this._$distance = distance;
             this._$doChanged();
         }
-        this._$distance = distance;
     }
 
     /**
@@ -357,9 +349,9 @@ export class GradientGlowFilter extends BitmapFilter
     set knockout (knockout: boolean)
     {
         if (knockout !== this._$knockout) {
+            this._$knockout = !!knockout;
             this._$doChanged();
         }
-        this._$knockout = knockout;
     }
 
     /**
@@ -394,16 +386,17 @@ export class GradientGlowFilter extends BitmapFilter
     }
     set ratios (ratios: number[] | null)
     {
-        this._$ratios = ratios;
-        if ($Array.isArray(ratios)) {
-
-            this._$doChanged();
-
-            for (let idx: number = 0; idx < ratios.length; ++idx) {
-                ratios[idx] = $clamp(+ratios[idx], 0, 255, 0);
-            }
-
+        if (this._$ratios !== ratios) {
             this._$ratios = ratios;
+            if ($Array.isArray(ratios)) {
+
+                for (let idx: number = 0; idx < ratios.length; ++idx) {
+                    ratios[idx] = $clamp(+ratios[idx], 0, 255, 0);
+                }
+
+                this._$ratios = ratios;
+            }
+            this._$doChanged();
         }
     }
 
@@ -423,9 +416,9 @@ export class GradientGlowFilter extends BitmapFilter
     {
         strength = $clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
+            this._$strength = strength;
             this._$doChanged();
         }
-        this._$strength = strength;
     }
 
     /**
@@ -442,22 +435,9 @@ export class GradientGlowFilter extends BitmapFilter
     }
     set type (type: BitmapFilterTypeImpl)
     {
-        type += "";
         if (type !== this._$type) {
+            this._$type = type;
             this._$doChanged();
-        }
-
-        switch (type) {
-
-            case "outer":
-            case "full":
-                this._$type = type;
-                break;
-
-            default:
-                this._$type = "inner";
-                break;
-
         }
     }
 
