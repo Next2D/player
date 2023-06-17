@@ -260,7 +260,7 @@ export class TextFormat
     }
     set bold (bold: boolean | null)
     {
-        this._$bold = bold;
+        this._$bold = bold !== null ? !!bold : null;
     }
 
     /**
@@ -297,7 +297,7 @@ export class TextFormat
     }
     set font (font: string | null)
     {
-        this._$font = font ? `${font}` : null;
+        this._$font = font !== null ? `${font}` : null;
     }
 
     /**
@@ -332,7 +332,7 @@ export class TextFormat
     }
     set italic (italic: boolean | null)
     {
-        this._$italic = italic;
+        this._$italic = italic !== null ? !!italic : null;
     }
 
     /**
@@ -438,7 +438,7 @@ export class TextFormat
     }
     set underline (underline: boolean | null)
     {
-        this._$underline = underline;
+        this._$underline = underline !== null ? !!underline : null;
     }
 
     /**

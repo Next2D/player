@@ -35,7 +35,7 @@ export class URLRequest
          * @default ""
          * @private
          */
-        this._$url = url;
+        this._$url = `${url}`;
 
         /**
          * @type {string}
@@ -159,11 +159,11 @@ export class URLRequest
      * @member {string}
      * @public
      */
-    get data (): string
+    get data (): any
     {
         return this._$data;
     }
-    set data (data: string)
+    set data (data: any)
     {
         this._$data = data;
     }
