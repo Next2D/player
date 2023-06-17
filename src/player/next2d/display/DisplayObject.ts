@@ -1034,7 +1034,7 @@ export class DisplayObject extends EventDispatcher
     set visible (visible: boolean)
     {
         if (this._$visible !== visible) {
-            this._$visible = visible;
+            this._$visible = !!visible;
             this._$doChanged();
             $doUpdated();
         }
