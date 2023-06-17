@@ -6,6 +6,7 @@ import type { Point } from "../geom/Point";
 import type { Rectangle } from "../geom/Rectangle";
 import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
 import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
+import type { BitmapDataChannelImpl } from "../../../interface/BitmapDataChannelImpl";
 import {
     $clamp,
     $getArray,
@@ -31,8 +32,8 @@ export class DisplacementMapFilter extends BitmapFilter
 {
     private _$mapBitmap: BitmapData | null;
     private _$mapPoint: Point | null;
-    private _$componentX: number;
-    private _$componentY: number;
+    private _$componentX: BitmapDataChannelImpl;
+    private _$componentY: BitmapDataChannelImpl;
     private _$scaleX: number;
     private _$scaleY: number;
     private _$mode: DisplacementMapFilterModeImpl;
@@ -56,7 +57,8 @@ export class DisplacementMapFilter extends BitmapFilter
     constructor (
         map_bitmap: BitmapData | null = null,
         map_point: Point | null = null,
-        component_x: number = 0, component_y: number = 0,
+        component_x: BitmapDataChannelImpl = 0,
+        component_y: BitmapDataChannelImpl = 0,
         scale_x: number = 0, scale_y: number = 0,
         mode: DisplacementMapFilterModeImpl = "wrap",
         color: number = 0, alpha: number = 0
@@ -211,9 +213,9 @@ export class DisplacementMapFilter extends BitmapFilter
     {
         alpha = $clamp(+alpha, 0, 1, 0);
         if (alpha !== this._$alpha) {
+            this._$alpha = alpha;
             this._$doChanged();
         }
-        this._$alpha = alpha;
     }
 
     /**
@@ -235,10 +237,9 @@ export class DisplacementMapFilter extends BitmapFilter
         );
 
         if (color !== this._$color) {
+            this._$color = color;
             this._$doChanged();
         }
-
-        this._$color = color;
     }
 
     /**
@@ -249,30 +250,15 @@ export class DisplacementMapFilter extends BitmapFilter
      * @default 0
      * @public
      */
-    get componentX (): number
+    get componentX (): BitmapDataChannelImpl
     {
         return this._$componentX;
     }
-    set componentX (component_x: number)
+    set componentX (component_x: BitmapDataChannelImpl)
     {
-        component_x |= 0;
         if (component_x !== this._$componentX) {
+            this._$componentX = component_x;
             this._$doChanged();
-        }
-
-        switch (component_x) {
-
-            case 8: // ALPHA
-            case 4: // BLUE
-            case 2: // GREEN
-            case 1: // RED
-                this._$componentX = component_x;
-                break;
-
-            default:
-                this._$componentX = 0;
-                break;
-
         }
     }
 
@@ -284,30 +270,15 @@ export class DisplacementMapFilter extends BitmapFilter
      * @default 0
      * @public
      */
-    get componentY (): number
+    get componentY (): BitmapDataChannelImpl
     {
         return this._$componentY;
     }
-    set componentY (component_y: number)
+    set componentY (component_y: BitmapDataChannelImpl)
     {
-        component_y |= 0;
         if (component_y !== this._$componentY) {
+            this._$componentY = component_y;
             this._$doChanged();
-        }
-
-        switch (component_y) {
-
-            case 8: // ALPHA
-            case 4: // BLUE
-            case 2: // GREEN
-            case 1: // RED
-                this._$componentY = component_y;
-                break;
-
-            default:
-                this._$componentY = 0;
-                break;
-
         }
     }
 
@@ -326,9 +297,9 @@ export class DisplacementMapFilter extends BitmapFilter
     set mapBitmap (map_bitmap: BitmapData | null)
     {
         if (map_bitmap !== this._$mapBitmap) {
+            this._$mapBitmap = map_bitmap;
             this._$doChanged();
         }
-        this._$mapBitmap = map_bitmap;
     }
 
     /**
@@ -348,9 +319,9 @@ export class DisplacementMapFilter extends BitmapFilter
     set mapPoint (map_point: Point | null)
     {
         if (map_point !== this._$mapPoint) {
+            this._$mapPoint = map_point;
             this._$doChanged();
         }
-        this._$mapPoint = map_point;
     }
 
     /**
@@ -368,21 +339,8 @@ export class DisplacementMapFilter extends BitmapFilter
     set mode (mode: DisplacementMapFilterModeImpl)
     {
         if (mode !== this._$mode) {
+            this._$mode = mode;
             this._$doChanged();
-        }
-
-        switch (mode) {
-
-            case "clamp":
-            case "color":
-            case "ignore":
-                this._$mode = mode;
-                break;
-
-            default:
-                this._$mode = "wrap";
-                break;
-
         }
     }
 
@@ -402,9 +360,9 @@ export class DisplacementMapFilter extends BitmapFilter
     {
         scale_x = $clamp(+scale_x, -0xffff, 0xffff, 0);
         if (scale_x !== this._$scaleX) {
+            this._$scaleX = scale_x;
             this._$doChanged();
         }
-        this._$scaleX = scale_x;
     }
 
     /**
@@ -423,9 +381,9 @@ export class DisplacementMapFilter extends BitmapFilter
     {
         scale_y = $clamp(+scale_y, -0xffff, 0xffff, 0);
         if (scale_y !== this._$scaleY) {
+            this._$scaleY = scale_y;
             this._$doChanged();
         }
-        this._$scaleY = scale_y;
     }
 
     /**
