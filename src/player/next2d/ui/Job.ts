@@ -18,7 +18,7 @@ export class Job extends EventDispatcher
     private _$duration: number;
     private _$ease: Function;
     private _$from: any;
-    private _$names: any[]|null;
+    private _$names: any[] | null;
     private _$startTime: number;
     private _$stopFlag: boolean;
     private _$forceStop: boolean;
@@ -40,7 +40,7 @@ export class Job extends EventDispatcher
         target: any,
         from: any = null, to: any = null,
         delay: number = 0, duration: number = 1,
-        ease: Function|null = null
+        ease: Function | null = null
     ) {
 
         super();
@@ -308,23 +308,34 @@ export class Job extends EventDispatcher
     }
 
     /**
-     * @return {void}
+     * @return {Promise}
      * @method
      * @public
      */
-    start (): void
+    start (): Promise<void>
     {
-        if (this._$delay) {
+        return new Promise((resolve): void =>
+        {
+            if (!this.hasEventListener(Event.COMPLETE)) {
+                this.addEventListener(Event.COMPLETE, (event: Event) =>
+                {
+                    this.removeEventListener(Event.COMPLETE, event.listener);
+                    resolve();
+                });
+            }
 
-            $setTimeout(() =>
-            {
-                this.initialize();
-            }, this._$delay * 1000);
+            if (this._$delay) {
 
-            return ;
-        }
+                $setTimeout(() =>
+                {
+                    this.initialize();
+                }, this._$delay * 1000);
 
-        this.initialize();
+                return ;
+            }
+
+            this.initialize();
+        });
     }
 
     /**
@@ -334,12 +345,24 @@ export class Job extends EventDispatcher
      */
     stop ()
     {
-        this._$forceStop = true;
-        this._$stopFlag  = true;
-
         if (this.hasEventListener(Event.STOP)) {
             this.dispatchEvent(new Event(Event.STOP));
         }
+
+        if (this.hasEventListener(Event.ENTER_FRAME)) {
+            this.removeAllEventListener(Event.ENTER_FRAME);
+        }
+
+        if (this.hasEventListener(Event.UPDATE)) {
+            this.removeAllEventListener(Event.UPDATE);
+        }
+
+        if (this.hasEventListener(Event.COMPLETE)) {
+            this.removeAllEventListener(Event.COMPLETE);
+        }
+
+        this._$forceStop = true;
+        this._$stopFlag  = true;
     }
 
     /**
@@ -351,14 +374,13 @@ export class Job extends EventDispatcher
     _$update (event: Event): void
     {
         if (this._$stopFlag) {
-            this.removeEventListener(Event.ENTER_FRAME, event.listener);
             return ;
         }
 
         this._$currentTime = ($performance.now() - this._$startTime) * 0.001;
 
         if (this._$names) {
-            this.updateProperty(
+            this._$updateProperty(
                 this._$target, this._$from, this._$to, this._$names
             );
         }
@@ -384,9 +406,9 @@ export class Job extends EventDispatcher
      * @param  {array}  names
      * @return {void}
      * @method
-     * @public
+     * @private
      */
-    updateProperty (target: any, from: any, to: any, names: any[]): void
+    _$updateProperty (target: any, from: any, to: any, names: any[]): void
     {
         for (let idx = 0; idx < names.length; ++idx) {
 
@@ -396,7 +418,7 @@ export class Job extends EventDispatcher
             const value = values[1];
 
             if (value && typeof value === "object") {
-                this.updateProperty(target[name], from[name], to[name], value);
+                this._$updateProperty(target[name], from[name], to[name], value);
                 continue;
             }
 

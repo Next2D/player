@@ -29,8 +29,19 @@ globalThis.window = {
                 },
                 "getContext": () =>
                 {
-                    return {};
+                    return {
+                        "measureText": () => {
+                            return {
+                                "width": 0
+                            };
+                        }
+                    };
                 },
+                "insertAdjacentHTML": () =>
+                {
+                    return undefined;
+                },
+                "childNodes": [],
                 "children": [],
                 "style": {}
             };
@@ -172,6 +183,15 @@ globalThis.window = {
                 }
             }
         },
+        "player": {
+            "cacheStore": {
+                "removeCache": () =>
+                {
+                    return undefined;
+                }
+            },
+            "base": ""
+        }
     }
 };
 

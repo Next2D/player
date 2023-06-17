@@ -79,7 +79,7 @@ export class Tween
     static add (
         target: any, from: any, to: any,
         delay: number = 0, duration: number = 1,
-        ease: Function|null = null
+        ease: Function | null = null
     ): Job {
         return new Job(target, from, to, delay, duration, ease);
     }

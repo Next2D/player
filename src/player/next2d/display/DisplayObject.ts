@@ -1,8 +1,8 @@
+import { Event as Next2DEvent } from "../events/Event";
 import { EventDispatcher } from "../events/EventDispatcher";
 import { Transform } from "../geom/Transform";
 import { Rectangle } from "../geom/Rectangle";
 import { Point } from "../geom/Point";
-import { Event as Next2DEvent } from "../events/Event";
 import type { Stage } from "./Stage";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Sprite } from "./Sprite";
