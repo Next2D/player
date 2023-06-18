@@ -28,7 +28,7 @@ Webブラウザ上で動作する、NoCode開発を主体としたオーサリ�
   
 Next2Dがお役に立つようでしたら、プロジェクトをご支援いただければ幸いです。  
   
-<div style="text-align: center;">
+<div align="center">
   <a href="https://github.com/sponsors/Next2D" target="_blank">
     <img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86" width=180 alt="GitHub Sponsor" />
   </a>
