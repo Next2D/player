@@ -9,7 +9,8 @@ Next2D Player
 [![license](https://img.shields.io/github/license/Next2D/Player)](https://github.com/Next2D/Player/blob/main/LICENSE)
 [![Docs](https://img.shields.io/badge/docs-online-blue.svg)](https://next2d.app/docs/player/index.html)
 [![Discord](https://img.shields.io/discord/812136803506716713?label=Discord&logo=discord)](https://discord.gg/6c9rv5Uns5)
-[![Follow us on Twitter](https://img.shields.io/twitter/follow/Next2D?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=Next2D)
+![Twitter Follow](https://img.shields.io/twitter/follow/Next2D?style=social)
+[![Github All Releases](https://img.shields.io/npm/dt/@next2d/player)](https://github.com/Next2D/player/releases)
 
 [日本語](./README.ja.md) | [简体中文](./README.cn.md)
 
@@ -34,20 +35,24 @@ const { URLRequest } = next2d.net;
 const { Event }      = next2d.events;
 
 // create root MovieClip
-const root = next2d.createRootMovieClip();
-
-const request = new URLRequest("JSON path");
-const loader  = new Loader(request);
-
-loader
-    .contentLoaderInfo
-    .addEventListener(Event.COMPLETE, (event) =>
+next2d
+    .createRootMovieClip()
+    .then((root) => 
     {
-        root.addChild(event.currentTarget.content);
+        const request = new URLRequest("JSON path");
+        const loader  = new Loader(request);
+        
+        loader
+            .contentLoaderInfo
+            .addEventListener(Event.COMPLETE, (event) =>
+            {
+                root.addChild(event.currentTarget.content);
+            });
+        
+        loader.load(request);
     });
-
-loader.load(request);
 ```
+
 [CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
 @see [API Documentation](https://next2d.app/en/docs/player)
 
