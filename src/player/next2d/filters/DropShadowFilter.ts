@@ -216,9 +216,9 @@ export class DropShadowFilter extends BitmapFilter
     {
         alpha = $clamp(+alpha, 0, 1, 0);
         if (alpha !== this._$alpha) {
+            this._$alpha = alpha;
             this._$doChanged();
         }
-        this._$alpha = alpha;
     }
 
     /**
@@ -237,9 +237,9 @@ export class DropShadowFilter extends BitmapFilter
     {
         angle %= 360;
         if (angle !== this._$angle) {
+            this._$angle = $clamp(angle, -360, 360, 45);
             this._$doChanged();
         }
-        this._$angle = $clamp(angle, -360, 360, 45);
     }
 
     /**
@@ -295,10 +295,9 @@ export class DropShadowFilter extends BitmapFilter
         );
 
         if (color !== this._$color) {
+            this._$color = color;
             this._$doChanged();
         }
-
-        this._$color = color;
     }
 
     /**
@@ -317,9 +316,9 @@ export class DropShadowFilter extends BitmapFilter
     {
         distance = $clamp(+distance, -255, 255, 4);
         if (distance !== this._$distance) {
+            this._$distance = distance;
             this._$doChanged();
         }
-        this._$distance = distance;
     }
 
     /**
@@ -337,9 +336,9 @@ export class DropShadowFilter extends BitmapFilter
     set hideObject (hide_object: boolean)
     {
         if (hide_object !== this._$hideObject) {
+            this._$hideObject = !!hide_object;
             this._$doChanged();
         }
-        this._$hideObject = hide_object;
     }
 
     /**
@@ -357,9 +356,9 @@ export class DropShadowFilter extends BitmapFilter
     set inner (inner: boolean)
     {
         if (inner !== this._$inner) {
+            this._$inner = !!inner;
             this._$doChanged();
         }
-        this._$inner = inner;
     }
 
     /**
@@ -377,9 +376,9 @@ export class DropShadowFilter extends BitmapFilter
     set knockout (knockout: boolean)
     {
         if (knockout !== this._$knockout) {
+            this._$knockout = !!knockout;
             this._$doChanged();
         }
-        this._$knockout = knockout;
     }
 
     /**
@@ -415,9 +414,9 @@ export class DropShadowFilter extends BitmapFilter
     {
         strength = $clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
+            this._$strength = strength;
             this._$doChanged();
         }
-        this._$strength = strength;
     }
 
     /**

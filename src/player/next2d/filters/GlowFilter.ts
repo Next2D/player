@@ -182,9 +182,9 @@ export class GlowFilter extends BitmapFilter
     {
         alpha = $clamp(+alpha, 0, 1, 0);
         if (alpha !== this._$alpha) {
+            this._$alpha = alpha;
             this._$doChanged();
         }
-        this._$alpha = alpha;
     }
 
     /**
@@ -236,12 +236,10 @@ export class GlowFilter extends BitmapFilter
     set color (color: number)
     {
         color = $clamp($toColorInt(color), 0, 0xffffff, 4);
-
         if (color !== this._$color) {
+            this._$color = color;
             this._$doChanged();
         }
-
-        this._$color = color;
     }
 
     /**
@@ -259,9 +257,9 @@ export class GlowFilter extends BitmapFilter
     set inner (inner: boolean)
     {
         if (inner !== this._$inner) {
+            this._$inner = !!inner;
             this._$doChanged();
         }
-        this._$inner = inner;
     }
 
     /**
@@ -279,9 +277,9 @@ export class GlowFilter extends BitmapFilter
     set knockout (knockout: boolean)
     {
         if (knockout !== this._$knockout) {
+            this._$knockout = !!knockout;
             this._$doChanged();
         }
-        this._$knockout = knockout;
     }
 
     /**
@@ -317,9 +315,9 @@ export class GlowFilter extends BitmapFilter
     {
         strength = $clamp(strength | 0, 0, 255, 0);
         if (strength !== this._$strength) {
+            this._$strength = strength;
             this._$doChanged();
         }
-        this._$strength = strength;
     }
 
     /**

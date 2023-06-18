@@ -149,7 +149,7 @@ export class Sprite extends DisplayObjectContainer
     }
     set buttonMode (button_mode: boolean)
     {
-        this._$buttonMode = button_mode;
+        this._$buttonMode = !!button_mode;
     }
 
     /**

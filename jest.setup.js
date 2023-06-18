@@ -188,9 +188,15 @@ globalThis.window = {
                 "removeCache": () =>
                 {
                     return undefined;
+                },
+                "setRemoveTimer": () =>
+                {
+                    return undefined;
                 }
             },
-            "base": ""
+            "base": "",
+            "broadcastEvents": new Map(),
+            "_$actions": []
         }
     }
 };
