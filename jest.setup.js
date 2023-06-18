@@ -195,7 +195,8 @@ globalThis.window = {
                 }
             },
             "base": "",
-            "broadcastEvents": new Map()
+            "broadcastEvents": new Map(),
+            "_$actions": []
         }
     }
 };
