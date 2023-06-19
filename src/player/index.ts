@@ -10,7 +10,7 @@ import { Next2D } from "./player/Next2D";
 
 if (!("next2d" in window)) {
 
-    console.log("%c Next2D Player %c 1.14.9 %c https://next2d.app",
+    console.log("%c Next2D Player %c 1.14.11 %c https://next2d.app",
         "color: #fff; background: #5f5f5f",
         "color: #fff; background: #4bc729",
         "");
@@ -34,7 +34,9 @@ if (!("next2d" in window)) {
                             });
                         }
 
-                        $currentPlayer()._$initializeCanvas();
+                        $currentPlayer()
+                            ._$initializeCanvas();
+
                         resolve();
                     });
             };
@@ -54,7 +56,9 @@ if (!("next2d" in window)) {
                         });
                     }
 
-                    $currentPlayer()._$initializeCanvas();
+                    $currentPlayer()
+                        ._$initializeCanvas();
+
                     resolve();
                 });
 
