@@ -1,6 +1,6 @@
 {
   "name": "@next2d/player",
-  "version": "1.14.8",
+  "version": "1.14.9",
   "description": "Experience the fast and beautiful anti-aliased rendering of WebGL. You can create rich, interactive graphics, cross-platform applications and games without worrying about browser or device compatibility.",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp>",
   "license": "MIT",
@@ -24,10 +24,7 @@
     "jsdoc": "tsc && jsdoc -c jsdoc.conf.js -r dist DOCS.md"
   },
   "types": "dist",
-  "files": [
-    "dist",
-    "@types"
-  ],
+  "files": ["dist"],
   "devDependencies": {
     "@babel/core": "^7.22.5",
     "@babel/preset-env": "^7.22.5",
