@@ -4,31 +4,53 @@ Next2D Player
 
 [![UnitTest](https://github.com/Next2D/Player/actions/workflows/integration.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/integration.yml)
 [![CodeQL](https://github.com/Next2D/Player/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/codeql-analysis.yml)
-[![Lint](https://github.com/Next2D/Player/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/lint.yml) \
+[![Lint](https://github.com/Next2D/Player/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/lint.yml)
+
 [![release](https://img.shields.io/github/v/release/Next2D/Player)](https://github.com/Next2D/Player/releases)
-[![license](https://img.shields.io/github/license/Next2D/Player)](https://github.com/Next2D/Player/blob/main/LICENSE)
-[![Docs](https://img.shields.io/badge/docs-online-blue.svg)](https://next2d.app/docs/player/index.html)
-[![Discord](https://img.shields.io/discord/812136803506716713?label=Discord&logo=discord)](https://discord.gg/6c9rv5Uns5)
-![Twitter Follow](https://img.shields.io/twitter/follow/Next2D?style=social)
 [![Github All Releases](https://img.shields.io/npm/dt/@next2d/player)](https://github.com/Next2D/player/releases)
+[![Discord](https://badgen.net/badge/icon/discord?icon=discord&label)](https://discord.gg/6c9rv5Uns5)
+![Twitter Follow](https://img.shields.io/twitter/follow/Next2D?style=social)
 
 [日本語](./README.ja.md) | [简体中文](./README.cn.md)
 
-## About
-Next2D Player is a project derived from the JavaScript FlashPlayer "swf2js" and aims to provide the fastest 2D engine that works on any device.
+## Next2D Project
 
-It fully supports WebGL and WebGL2, and can be used to create rich and interactive web content, without having to deal with browser or device compatibility. With full support for WebGL and WebGL2, you can create rich, interactive web content and games without having to deal with browser or device compatibility.
+### Player
+Next2D Player supports WebGL and OffscreenCanvas, enabling advanced graphical expression.  
+It can also be used in game production, advertisement production, and other scenes requiring rich expressions without having to deal with browser or device compatibility.
 
-With the Next2D NoCode Tool, you can intuitively create the animations you envision, and the exported JSON data can be easily played and published with the Next2D Player.  
-Next2D NoCode Tool is a web service that does not require installation and can be used immediately by anyone who accesses it.
+### NoCode Tool
+It is an authoring tool that runs in a Web browser and is mainly based on NoCode development. It allows users to intuitively create animations they have imagined, and the exported data can be easily uploaded to the Web and published with Player.  
+[NoCode Tool](https://tool.next2d.app)
 
-## Use Simple Sample
+### Framework
+This framework enables scene management by URL (SPA), which has been difficult with conventional Canvas/WebGL applications, to fix development patterns and simplify readability and shareability.  
+
+Please check [@Next2D](https://twitter.com/Next2D) on Twitter and the [official website](https://next2d.app) for the latest news and technical information.  
+
+If Next2D is useful to you, we hope you will support our project.  
+
+<div align="center">
+  <a href="https://github.com/sponsors/Next2D" target="_blank">
+    <img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86" width=180 alt="GitHub Sponsor" />
+  </a>
+</div>
+
+## 関連サイト
+* [Website](https://next2d.app)
+* [Player API Documentation](https://next2d.app/ja/docs/player)
+* [NoCode Tool](https://tool.next2d.app)
+* [Framework](https://github.com/Next2D/framework)
+
+## Examples
+
+### Use Simple Sample
 ```javascript
 next2d.load("JSON Path...");
 ```
 [CodePen](https://codepen.io/next2d/pen/rNGMrZG)
 
-## Use Program Sample
+### Use Program Sample
 ```javascript
 const { Loader }     = next2d.display;
 const { URLRequest } = next2d.net;
@@ -58,20 +80,12 @@ next2d
 
 ## Option settings
 
-| name | type | default | description |
-| --- | --- | --- | --- |
-| `base` | string | empty | When acquiring JSON by relative path, the URL set here will be applied as the root. For absolute paths, the URL set here will not be applied. |
-| `fullScreen` | boolean | false | It will be drawn on the entire screen beyond the width and height set in the Stage class. |
-| `tagId` | string | empty | When an ID is specified, drawing will be performed within the element with the specified ID. |
-| `bgColor` | array | empty | The [R,G,B,A] array of background colors can be specified from 0 to 255. false is colorless and transparent. |
-
-## Related sites
-* [Website](https://next2d.app)
-* [Player API Documentation](https://next2d.app/en/docs/player)
-* [Next2D NoCode Tool(β version)](https://tool.next2d.app)
-* [Next2D Framework](https://next2d.app/#framework)
-* [Tutorial & Reference.](https://next2d.app/en/reference/player)
-* [Chat Community(Discord)](https://discord.gg/6c9rv5Uns5)
+| name           | type    | default       | description                                                                                                                         |
+|----------------|---------|---------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `base`         | string  | empty         | When JSON is acquired by a relative path, the URL set here is applied as root. For absolute paths, the URL set here is not applied. |
+| `fullScreen`   | boolean | false         | The entire screen is drawn beyond the width and height set in the Stage class.                                                      |
+| `tagId`        | string  | empty         | When an ID is specified, drawing is performed within the element of the specified ID.                                               |
+| `bgColor`      | string  | "transparent" | You can specify a background color in hexadecimal. The default is colorless.                                                        |
 
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.

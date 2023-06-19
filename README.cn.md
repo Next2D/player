@@ -4,35 +4,53 @@ Next2D Player
 
 [![UnitTest](https://github.com/Next2D/Player/actions/workflows/integration.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/integration.yml)
 [![CodeQL](https://github.com/Next2D/Player/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/codeql-analysis.yml)
-[![Lint](https://github.com/Next2D/Player/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/lint.yml) \
+[![Lint](https://github.com/Next2D/Player/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/lint.yml)
+
 [![release](https://img.shields.io/github/v/release/Next2D/Player)](https://github.com/Next2D/Player/releases)
-[![license](https://img.shields.io/github/license/Next2D/Player)](https://github.com/Next2D/Player/blob/main/LICENSE)
-[![Docs](https://img.shields.io/badge/docs-online-blue.svg)](https://next2d.app/docs/player/index.html)
-[![Discord](https://img.shields.io/discord/812136803506716713?label=Discord&logo=discord)](https://discord.gg/6c9rv5Uns5)
-[![Follow us on Twitter](https://img.shields.io/twitter/follow/Next2D?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=Next2D)
+[![Github All Releases](https://img.shields.io/npm/dt/@next2d/player)](https://github.com/Next2D/player/releases)
+[![Discord](https://badgen.net/badge/icon/discord?icon=discord&label)](https://discord.gg/6c9rv5Uns5)
+![Twitter Follow](https://img.shields.io/twitter/follow/Next2D?style=social)
 
 [English](./README.md) | [日本語](./README.ja.md)
 
-## 关于
+## 下一个2D项目
+  
+### Player
+Next2D Player支持WebGL和OffscreenCanvas，实现了先进的图形表达。  
+它还可以用于游戏制作、广告制作和其他需要丰富表达的场景，而不必处理浏览器或设备的兼容性问题。  
+  
+### NoCode Tool
+它是一个在网络浏览器中运行的创作工具，主要基于NoCode开发。它允许用户直观地创建他们所想象的动画，导出的数据可以很容易地上传到网络上，并用播放器发布。
+[NoCode Tool](https://tool.next2d.app)
+  
+### Framework
+这个框架可以通过URL（SPA）实现场景管理，这在传统的Canvas/WebGL应用中是很难做到的，可以固定开发模式，简化可读性和共享性。  
+  
+请在Twitter上查看[@Next2D](https://twitter.com/Next2D)和[官方网站](https://next2d.app)，了解最新的新闻和技术信息。  
 
-Next2D Player 是一个来源于 JavaScript Flash 播放器 "swf2js" 的衍生项目。
-目标是提供一个在任何设备上都工作最快的 2D 引擎。
+如果Next2D对你有用，我们希望你能支持我们的项目。  
 
-它完整提供了 WebGL 和 WebGL2, 可被用于创建丰富、交互式图形、跨平台应用程序和游戏, 而不需要处理浏览器或者设备兼容性问题。
+<div align="center">
+  <a href="https://github.com/sponsors/Next2D" target="_blank">
+    <img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86" width=180 alt="GitHub Sponsor" />
+  </a>
+</div>
 
-通过使用 Next NoCode Tool, 你可以直观地创建想象中的动画, 导出的 JSON 数据可以通过使用 Next2D Player 很容易被播放和发布。
-Next2D NoCode Tool 是一个 web 服务, 不需要下载并且谁都可以立马使用。
+## 関連サイト
+* [Website](https://next2d.app)
+* [Player API Documentation](https://next2d.app/ja/docs/player)
+* [NoCode Tool](https://tool.next2d.app)
+* [Framework](https://github.com/Next2D/framework)
 
-使 2D 娱乐开发更简单! 快速! 舒服!
+## Examples
 
-## 使用之简单示例
-
+### 使用简单的样本
 ```javascript
 next2d.load("JSON Path...");
 ```
 [CodePen](https://codepen.io/next2d/pen/rNGMrZG)
 
-## 使用之程序示例
+### 使用程序样本
 
 ```javascript
 const { Loader }     = next2d.display;
@@ -59,22 +77,12 @@ loader.load(request);
 
 ## 设置选项
 
-| 名称 | 值类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `base` | string | 空值 | 如果在请求时未设置URL，则要设置。 |
-| `fullScreen` | boolean | false | 全屏绘制 |
-| `tagId` | string | 空值 | 值为你希望在 DOM 中绘制位置的容器 ID。 |
-| `bgColor` | array | empty | RGBA 值在 0-255 范围内选择。 |
-
-## 相关站点
-
-* [官网](https://next2d.app)
-* [Player API 文档](https://next2d.app/cn/docs/player)
-* [Next2D NoCode Tool(β version)](https://tool.next2d.app)
-* [Next2D Framework](https://next2d.app/#framework)
-* [教程 & 参考](https://next2d.app/cn/reference/player)
-* [聊天社区(Discord)](https://discord.gg/6c9rv5Uns5)
+| 名称           | 值类型     | 默认值           | 说明                                                |
+|--------------|---------|---------------|---------------------------------------------------|
+| `base`       | string  | empty         | 当JSON是由相对路径获得的，这里设置的URL被应用为根。对于绝对路径，这里设置的URL不被应用。 |
+| `fullScreen` | boolean | false         | 整个屏幕的绘制超出了Stage类中设置的宽度和高度。                        |
+| `tagId`      | string  | empty         | 当一个ID被指定时，在指定ID的元素内进行绘图。                          |
+| `bgColor`    | string  | "transparent" | 你可以指定一个十六进制的背景颜色。默认为无色。                           |
 
 ## 许可证
-
 本项目使用 [MIT License](https://opensource.org/licenses/MIT) 许可证 - 参考 [LICENSE](LICENSE) 文件了解许可证内容。
