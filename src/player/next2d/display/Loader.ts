@@ -131,9 +131,9 @@ export class Loader extends DisplayObjectContainer
      * @readonly
      * @public
      */
-    get contentLoaderInfo (): LoaderInfo | null
+    get contentLoaderInfo (): LoaderInfo
     {
-        return this._$loaderInfo;
+        return this._$loaderInfo as NonNullable<LoaderInfo>;
     }
 
     /**

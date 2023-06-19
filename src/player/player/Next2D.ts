@@ -35,6 +35,7 @@ import {
  */
 export class Next2D
 {
+    private readonly _$promises: Promise<void>[];
     private readonly _$player: Player;
     public readonly display: DisplayImpl;
     public readonly events: EventsImpl;
@@ -44,8 +45,6 @@ export class Next2D
     public readonly net: NetImpl;
     public readonly text: TextImpl;
     public readonly ui: UIImpl;
-    public fw: any;
-    private readonly _$promises: Promise<void>[];
 
     /**
      * @constructor
@@ -112,13 +111,6 @@ export class Next2D
          * @public
          */
         this.ui = ui;
-
-        /**
-         * @type {object}
-         * @default null
-         * @public
-         */
-        this.fw = null;
     }
 
     /**

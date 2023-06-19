@@ -21,6 +21,7 @@
     "node_modules",
     "src/worker",
     "src/renderer",
+    "src/interface",
     "__tests__",
     "dist"
   ]
