@@ -26,7 +26,7 @@ import type { PropertyMessageImpl } from "../../../interface/PropertyMessageImpl
 import { $window } from "../../util/Shortcut";
 import {
     $doUpdated,
-    $getCurrentLoaderInfo,
+    $getCurrentLoaderInfo, $getEvent,
     $getInstanceId
 } from "../../util/Global";
 import {
@@ -34,7 +34,6 @@ import {
     $currentPlayer,
     $poolColorTransform,
     $rendererWorker,
-    $event,
     $poolMatrix,
     $hitContext,
     $variables
@@ -661,7 +660,7 @@ export class DisplayObject extends EventDispatcher
      */
     get mouseX (): number
     {
-        return $event
+        return $getEvent()
             ? this.globalToLocal($currentMousePoint()).x
             : 0;
     }
@@ -677,7 +676,7 @@ export class DisplayObject extends EventDispatcher
      */
     get mouseY (): number
     {
-        return $event
+        return $getEvent()
             ? this.globalToLocal($currentMousePoint()).y
             : 0;
     }

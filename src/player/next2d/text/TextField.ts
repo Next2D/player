@@ -3199,18 +3199,6 @@ export class TextField extends InteractiveObject
             style += `z-index: ${0x7fffffff};`;
             style += "vertical-align: top;";
 
-            if (this._$border) {
-                style += `solid 1px #${this.borderColor.toString(16)};`;
-            } else {
-                style += "border: none;";
-            }
-
-            if (this._$border || this._$background) {
-                style += `background-color: #${this.backgroundColor.toString(16)};`;
-            } else {
-                style += "background-color: top;";
-            }
-
             this._$textarea.setAttribute("style", style);
 
             // add blur event
@@ -3451,6 +3439,19 @@ export class TextField extends InteractiveObject
                 return false;
             }
         });
+
+        const style: CSSStyleDeclaration = this._$textarea.style;
+        if (this._$border) {
+            style.border = `solid 1px #${this.borderColor.toString(16)}`;
+        } else {
+            style.border = "none";
+        }
+
+        if (this._$border || this._$background) {
+            style.backgroundColor = `#${this.backgroundColor.toString(16)}`;
+        } else {
+            style.backgroundColor = "transparent";
+        }
 
         //reset
         this._$textarea.maxLength = this._$maxChars ? this._$maxChars : 0x7fffffff;
