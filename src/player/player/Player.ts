@@ -2111,7 +2111,7 @@ export class Player
         let stageY: number = 0;
 
         if ("changedTouches" in event) {
-            const changedTouche = event.changedTouches[0];
+            const changedTouche: Touch = event.changedTouches[0];
             stageX = changedTouche.pageX;
             stageY = changedTouche.pageY;
         } else if ("pageX" in event) {

@@ -388,15 +388,13 @@ export const $currentMousePoint = (): Point =>
 
     let touchX: number = 0;
     let touchY: number = 0;
-    if (event instanceof MouseEvent) {
-        touchX = event.pageX;
-        touchY = event.pageY;
-    }
-
     if ("changedTouches" in event) {
         const changedTouche: Touch = event.changedTouches[0];
         touchX = changedTouche.pageX;
         touchY = changedTouche.pageY;
+    } else if ("pageX" in event) {
+        touchX = event.pageX;
+        touchY = event.pageY;
     }
 
     const pointX: number = (touchX - x) / player._$scale - player.x / player._$scale / $devicePixelRatio;
