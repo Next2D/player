@@ -27,15 +27,15 @@ Next2D Player通过WebGL硬件加速降低了图形处理负载，通过Offscree
   
 ## Support
 [日本語]  
-最新ニュースや技術情報は、Twitterの[@Next2D](https://twitter.com/Next2D)や公式の[Website](https://next2d.app)で発信していきますので、チェックしてみてください。  
+最新ニュースや技術情報は、Twitterの[@Next2D](https://twitter.com/Next2D)や公式の[Website](https://next2d.app/ja/)で発信していきますので、チェックしてみてください。  
 Next2Dがお役に立つようでしたら、プロジェクトをご支援いただければ幸いです。  
   
 [English]  
-Please check [@Next2D](https://twitter.com/Next2D) on Twitter and the [official website](https://next2d.app) for the latest news and technical information.    
+Please check [@Next2D](https://twitter.com/Next2D) on Twitter and the [official website](https://next2d.app/en/) for the latest news and technical information.    
 If Next2D is useful to you, we hope you will support our project.  
   
 [简体中文]  
-请在Twitter上查看[@Next2D](https://twitter.com/Next2D)和[官方网站](https://next2d.app)，了解最新的新闻和技术信息。  
+请在Twitter上查看[@Next2D](https://twitter.com/Next2D)和[官方网站](https://next2d.app/cn/)，了解最新的新闻和技术信息。  
 如果Next2D对你有用，我们希望你能支持我们的项目。  
   
 <div align="center">
