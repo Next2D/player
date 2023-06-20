@@ -931,6 +931,12 @@ export class RenderTextField extends RenderDisplayObject
         this._$textAreaActive = !!object.textAreaActive;
 
         // set array
+        this._$textData.length        = 0;
+        this._$widthTable.length      = 0;
+        this._$heightTable.length     = 0;
+        this._$objectTable.length     = 0;
+        this._$textHeightTable.length = 0;
+
         this._$textData.push(...object.textData);
         this._$widthTable.push(...object.widthTable);
         this._$heightTable.push(...object.heightTable);
