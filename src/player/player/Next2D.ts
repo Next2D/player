@@ -177,42 +177,45 @@ export class Next2D
                 this._$player._$initialize();
 
                 const loader: Loader = new Loader();
-                const loaderInfo: LoaderInfo = loader.contentLoaderInfo as NonNullable<LoaderInfo>;
 
-                loaderInfo.addEventListener(IOErrorEvent.IO_ERROR, (event: IOErrorEvent) =>
-                {
-                    if (event.target) {
-                        event.target.removeEventListener(IOErrorEvent.IO_ERROR, event.listener);
-                    }
-                    alert("Error: " + event.text);
-                });
+                loader
+                    .contentLoaderInfo
+                    .addEventListener(IOErrorEvent.IO_ERROR, (event: IOErrorEvent) =>
+                    {
+                        if (event.target) {
+                            event.target.removeEventListener(IOErrorEvent.IO_ERROR, event.listener);
+                        }
+                        alert("Error: " + event.text);
+                    });
 
-                loaderInfo.addEventListener(Event.COMPLETE, (event: Event) =>
-                {
-                    const loaderInfo: LoaderInfo = event.target as NonNullable<LoaderInfo>;
-                    const player: Player = this._$player;
+                loader
+                    .contentLoaderInfo
+                    .addEventListener(Event.COMPLETE, (event: Event) =>
+                    {
+                        const loaderInfo: LoaderInfo = event.target as NonNullable<LoaderInfo>;
+                        const player: Player = this._$player;
 
-                    loaderInfo
-                        .removeEventListener(Event.COMPLETE, event.listener);
+                        loaderInfo
+                            .removeEventListener(Event.COMPLETE, event.listener);
 
-                    if (loaderInfo._$data) {
+                        if (loaderInfo._$data) {
 
-                        const stage: StageDataImpl = loaderInfo._$data.stage;
+                            const stage: StageDataImpl = loaderInfo._$data.stage;
 
-                        player.bgColor = stage.bgColor;
-                        player._$setBackgroundColor(stage.bgColor);
+                            player.bgColor = stage.bgColor;
+                            player._$setBackgroundColor(stage.bgColor);
 
-                        player.stage.addChild(loaderInfo.content);
+                            player.stage.addChild(loaderInfo.content);
 
-                        player.width  = stage.width;
-                        player.height = stage.height;
+                            player.width  = stage.width;
+                            player.height = stage.height;
 
-                        // set fps fixed logic
-                        player.stage._$frameRate = $clamp(+stage.fps, 1, 60, 60);
-                    }
+                            // set fps fixed logic
+                            player.stage._$frameRate = $clamp(+stage.fps, 1, 60, 60);
+                        }
 
-                    player._$resize();
-                });
+                        player._$resize();
+                    });
 
                 loader.load(new URLRequest(url));
             });

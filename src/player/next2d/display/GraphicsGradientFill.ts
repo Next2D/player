@@ -6,6 +6,7 @@ import {
     InterpolationMethod
 } from "../../../interface/GradientTypeImpl";
 import {
+    $colorStringToInt,
     $getArray,
     $intToRGBA,
     $Math,
@@ -23,7 +24,7 @@ import {
 export class GraphicsGradientFill
 {
     private readonly _$type: GradientType;
-    private readonly _$colors: number[];
+    private readonly _$colors: number[] | string[];
     private readonly _$alphas: number[];
     private readonly _$ratios: number[];
     private readonly _$matrix: Matrix | null;
@@ -47,7 +48,8 @@ export class GraphicsGradientFill
      */
     constructor (
         type: GradientType,
-        colors: number[], alphas: number[], ratios: number[],
+        colors: number[] | string[],
+        alphas: number[], ratios: number[],
         matrix: Matrix | null = null,
         spread_method: SpreadMethod = "pad",
         interpolation_method: InterpolationMethod = "rgb",
@@ -160,9 +162,13 @@ export class GraphicsGradientFill
 
             for (let idx: number = 0; idx < length; ++idx) {
 
-                const object = $intToRGBA(
-                    this._$colors[idx], this._$alphas[idx]
-                );
+                const value: number | string = this._$colors[idx];
+
+                const color = typeof value === "string"
+                    ? $colorStringToInt(value)
+                    : value;
+
+                const object = $intToRGBA(color, this._$alphas[idx]);
 
                 this._$colorStops[idx] = {
                     "ratio": this._$ratios[idx] / 255,
