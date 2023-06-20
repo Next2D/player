@@ -392,7 +392,8 @@ export const $currentMousePoint = (): Point =>
         touchX = event.pageX;
         touchY = event.pageY;
     }
-    if (event instanceof TouchEvent) {
+
+    if ("changedTouches" in event) {
         const changedTouche: Touch = event.changedTouches[0];
         touchX = changedTouche.pageX;
         touchY = changedTouche.pageY;
