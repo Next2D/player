@@ -296,26 +296,21 @@ export class Sprite extends DisplayObjectContainer
     }
 
     /**
-     * @return {object}
+     * @param  {object} character
+     * @return {void}
      * @method
      * @private
      */
-    _$sync ()
+    _$sync (character: MovieClipCharacterImpl): void
     {
-        const character = super._$sync();
-
         if ($rendererWorker && this._$stage) {
             this._$createWorkerInstance();
         }
 
-        if (character) {
-            this._$controller   = character.controller;
-            this._$dictionary   = character.dictionary;
-            this._$placeMap     = character.placeMap;
-            this._$placeObjects = character.placeObjects;
-        }
-
-        return character;
+        this._$controller   = character.controller;
+        this._$dictionary   = character.dictionary;
+        this._$placeMap     = character.placeMap;
+        this._$placeObjects = character.placeObjects;
     }
 
     /**
