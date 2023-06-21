@@ -32,6 +32,7 @@ import type { BlendModeImpl } from "../../../interface/BlendModeImpl";
 import type { PlayerHitObjectImpl } from "../../../interface/PlayerHitObjectImpl";
 import type { PropertyMessageMapImpl } from "../../../interface/PropertyMessageMapImpl";
 import type { PropertyTextMessageImpl } from "../../../interface/PropertyTextMessageImpl";
+import type { Character } from "../../../interface/Character";
 import { $doUpdated } from "../../util/Global";
 import {
     $currentPlayer,
@@ -2474,7 +2475,7 @@ export class TextField extends InteractiveObject
      * @method
      * @private
      */
-    _$buildCharacter (character: TextCharacterImpl)
+    _$buildCharacter (character: Character<TextCharacterImpl>): void
     {
         const textFormat = this._$defaultTextFormat;
 
@@ -2543,19 +2544,14 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @return {object}
+     * @param  {object} character
+     * @return {void}
      * @method
      * @private
      */
-    _$sync ()
+    _$sync (character: TextCharacterImpl): void
     {
-        const character = super._$sync();
-
-        if (character) {
-            this._$buildCharacter(character);
-        }
-
-        return character;
+        this._$buildCharacter(character);
     }
 
     /**

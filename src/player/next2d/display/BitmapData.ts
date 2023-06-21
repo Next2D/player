@@ -7,6 +7,7 @@ import type { Matrix } from "../geom/Matrix";
 import type { ColorTransform } from "../geom/ColorTransform";
 import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
 import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
+import type { PropertyBitmapDataMessageImpl } from "../../../interface/PropertyBitmapDataMessageImpl";
 import { $getInstanceId } from "../../util/Global";
 import {
     $bitmapDrawMap,
@@ -272,13 +273,18 @@ export class BitmapData
             canvas.width  = this.width;
             canvas.height = this.height;
 
-            const context = canvas.getContext("2d");
+            const context: CanvasRenderingContext2D | null = canvas.getContext("2d");
             if (!context) {
                 throw new Error("the context is null.");
             }
 
-            // @ts-ignore
-            context.drawImage(this._$image || this._$canvas, 0, 0);
+            if (this._$image) {
+                context.drawImage(this._$image, 0, 0);
+            }
+
+            if (this._$canvas) {
+                context.drawImage(this._$canvas, 0, 0);
+            }
 
             bitmapData.canvas = canvas;
 
@@ -374,7 +380,7 @@ export class BitmapData
 
         if (matrix) {
 
-            const matrix = source._$transform.matrix;
+            const matrix: Matrix = source._$transform.matrix;
             matrix.invert();
 
             tMatrix = $multiplicationMatrix(
@@ -423,7 +429,7 @@ export class BitmapData
             });
 
             const options: ArrayBuffer[] = $getArray();
-            const message: any = {
+            const message: PropertyBitmapDataMessageImpl = {
                 "command": "bitmapDraw",
                 "sourceId": instanceId,
                 "width": width,

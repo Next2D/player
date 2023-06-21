@@ -19,14 +19,12 @@ import type { CacheStore } from "../../util/CacheStore";
 import type { CanvasToWebGLContext } from "../../../webgl/CanvasToWebGLContext";
 import type { DisplayObjectImpl } from "../../../interface/DisplayObjectImpl";
 import type { Matrix } from "../geom/Matrix";
-import type { Character } from "../../../interface/Character";
 import type { FrameBufferManager } from "../../../webgl/FrameBufferManager";
 import type { AttachmentImpl } from "../../../interface/AttachmentImpl";
 import type { PropertyMessageImpl } from "../../../interface/PropertyMessageImpl";
-import { $window } from "../../util/Shortcut";
 import {
     $doUpdated,
-    $getCurrentLoaderInfo, $getEvent,
+    $getEvent,
     $getInstanceId
 } from "../../util/Global";
 import {
@@ -1586,44 +1584,6 @@ export class DisplayObject extends EventDispatcher
         }
 
         return this._$placeObject;
-    }
-
-    /**
-     * @return {object}
-     * @method
-     * @private
-     */
-    _$sync ()
-    {
-        const name = this.namespace;
-
-        let loaderInfo: LoaderInfo | null = null;
-        if ($window.next2d.fw && $window.next2d.fw.loaderInfo.has(name)) {
-            loaderInfo = $window.next2d.fw.loaderInfo.get(name)._$loaderInfo;
-        }
-
-        if (!loaderInfo) {
-            loaderInfo = this._$loaderInfo || $getCurrentLoaderInfo();
-        }
-
-        if (!loaderInfo || !loaderInfo._$data) {
-            return null;
-        }
-
-        const characterId: number | void  = loaderInfo._$data.symbols.get(name);
-        if (!characterId) {
-            return null;
-        }
-
-        const character: Character<any> = loaderInfo._$data.characters[characterId];
-        if (!character) {
-            return null;
-        }
-
-        this._$characterId = characterId;
-        this._$loaderInfo  = loaderInfo;
-
-        return character;
     }
 
     /**

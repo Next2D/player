@@ -13,6 +13,7 @@ import type { MovieClipActionObjectImpl } from "../../../interface/MovieClipActi
 import type { MovieClipLabelObjectImpl } from "../../../interface/MovieClipLabelObjectImpl";
 import type { DictionaryTagImpl } from "../../../interface/DictionaryTagImpl";
 import type { SoundTransform } from "../media/SoundTransform";
+import type { Character } from "../../../interface/Character";
 import { $setCurrentLoaderInfo } from "../../util/Global";
 import {
     $currentPlayer,
@@ -1173,19 +1174,15 @@ export class MovieClip extends Sprite
     }
 
     /**
-     * @return {object}
+     * @param  {object} character
+     * @return {void}
      * @method
      * @private
      */
-    _$sync ()
+    _$sync (character: Character<MovieClipCharacterImpl>): void
     {
-        const character = super._$sync();
-
-        if (character) {
-            this._$buildCharacter(character);
-        }
-
-        return character;
+        super._$sync(character);
+        this._$buildCharacter(character);
     }
 
     /**

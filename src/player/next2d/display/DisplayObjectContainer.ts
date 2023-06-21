@@ -25,8 +25,8 @@ import type { PropertyContainerMessageImpl } from "../../../interface/PropertyCo
 import type { Transform } from "../geom/Transform";
 import { $doUpdated } from "../../util/Global";
 import {
+    $createInstance,
     $currentPlayer,
-    $getClass,
     $hitContext,
     $isTouch,
     $MATRIX_HIT_ARRAY_IDENTITY,
@@ -2288,13 +2288,7 @@ export class DisplayObjectContainer extends InteractiveObject
         const character: Character<any> = loaderInfo._$data.characters[tag.characterId];
 
         // symbol class
-        if (!character.class) {
-            character.class = character.symbol
-                ? $getClass(character.symbol) || $getClass(character.extends)
-                : $getClass(character.extends);
-        }
-
-        const instance: DisplayObjectImpl<any> = new character.class();
+        const instance: DisplayObjectImpl<any> = $createInstance(character.extends);
         instance._$build(tag, this);
         instance._$id = index;
 

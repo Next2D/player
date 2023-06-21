@@ -206,7 +206,7 @@ export class Shape extends DisplayObject
      * @private
      */
     _$buildCharacter (
-        character: ShapeCharacterImpl,
+        character: Character<ShapeCharacterImpl>,
         loaderInfo: LoaderInfo
     ): void {
 
@@ -441,19 +441,16 @@ export class Shape extends DisplayObject
     }
 
     /**
-     * @return {object}
+     * @param  {object} character
+     * @return {void}
      * @method
      * @protected
      */
-    _$sync (): ShapeCharacterImpl
+    _$sync (character: ShapeCharacterImpl): void
     {
-        const character: ShapeCharacterImpl = super._$sync();
-
-        if (character && this._$loaderInfo) {
+        if (this._$loaderInfo) {
             this._$buildCharacter(character, this._$loaderInfo);
         }
-
-        return character;
     }
 
     /**
