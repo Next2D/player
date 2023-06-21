@@ -18,7 +18,6 @@ import {
     $unzipQueues,
     $updateUnzipWorkerStatus,
     $getUnzipWorker,
-    $getClass,
     $currentPlayer,
     $useUnzipWorker
 } from "../../util/Util";
@@ -377,16 +376,11 @@ export class Loader extends DisplayObjectContainer
             return ;
         }
 
-        let rootSymbol = null;
         const symbols: Map<string, number> = $getMap();
         if (object.symbols.length) {
-            for (let idx = 0; idx < object.symbols.length; ++idx) {
+            for (let idx: number = 0; idx < object.symbols.length; ++idx) {
 
-                const values = object.symbols[idx];
-
-                if (values[1] === 0) {
-                    rootSymbol = values[0];
-                }
+                const values: any[] = object.symbols[idx];
 
                 symbols.set(values[0], values[1]);
             }
@@ -399,18 +393,7 @@ export class Loader extends DisplayObjectContainer
         };
 
         // setup
-        if (rootSymbol) {
-
-            // TODO
-            const SymbolClass = $getClass(rootSymbol) || MovieClip;
-            // @ts-ignore
-            loaderInfo._$content = new SymbolClass();
-
-        } else {
-
-            loaderInfo._$content = new MovieClip();
-
-        }
+        loaderInfo._$content = new MovieClip();
 
         // build root
         const root: MovieClipCharacterImpl = object.characters[0];

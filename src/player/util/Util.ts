@@ -5,6 +5,11 @@ import { Player } from "../player/Player";
 import { Point } from "../next2d/geom/Point";
 import { Event as Next2DEvent } from "../next2d/events/Event";
 import { Stage } from "../next2d/display/Stage";
+import { Sprite } from "../next2d/display/Sprite";
+import { MovieClip } from "../next2d/display/MovieClip";
+import { TextField } from "../next2d/text/TextField";
+import { Video } from "../next2d/media/Video";
+import { Shape } from "../next2d/display/Shape";
 import type { DisplayObjectImpl } from "../../interface/DisplayObjectImpl";
 import type { Sound } from "../next2d/media/Sound";
 import type { DragRulesImpl } from "../../interface/DragRulesImpl";
@@ -819,28 +824,31 @@ export const $headerToArray = (header: string) =>
 };
 
 /**
- * @param  {string} symbol
- * @return {function}
+ * @param  {string} character_extends
+ * @return {DisplayObject}
  * @method
- * @static
+ * @public
  */
-export const $getClass = (symbol: string) =>
+export const $createInstance = (character_extends: string): DisplayObjectImpl<any> =>
 {
-    const names = symbol.split(".");
+    switch (character_extends) {
 
-    let object = $window;
-    for (let idx: number = 0; idx < names.length; ++idx) {
+        case MovieClip.namespace:
+            return new MovieClip;
 
-        const name = names[idx];
-        if (!(name in object)) {
-            return null;
-        }
+        case Shape.namespace:
+            return new Shape;
 
-        // @ts-ignore
-        object = object[name];
+        case TextField.namespace:
+            return new TextField();
+
+        case Sprite.namespace:
+            return new Sprite;
+
+        case Video.namespace:
+            return new Video();
+
     }
-
-    return object;
 };
 
 /**

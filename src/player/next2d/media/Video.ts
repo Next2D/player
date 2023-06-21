@@ -14,6 +14,7 @@ import type { FilterArrayImpl } from "../../../interface/FilterArrayImpl";
 import type { BlendModeImpl } from "../../../interface/BlendModeImpl";
 import type { PlayerHitObjectImpl } from "../../../interface/PlayerHitObjectImpl";
 import type { PropertyVideoMessageImpl } from "../../../interface/PropertyVideoMessageImpl";
+import type { Character } from "../../../interface/Character";
 import { $document } from "../../util/Shortcut";
 import {
     $audioContext,
@@ -688,7 +689,7 @@ export class Video extends DisplayObject
      * @method
      * @private
      */
-    _$buildCharacter (character: VideoCharacterImpl): void
+    _$buildCharacter (character: Character<VideoCharacterImpl>): void
     {
         if (character.buffer && !character._$buffer) {
             character._$buffer = new Uint8Array(character.buffer);
@@ -721,19 +722,14 @@ export class Video extends DisplayObject
     }
 
     /**
-     * @return {object}
+     * @param  {object} character
+     * @return {void}
      * @method
      * @private
      */
-    _$sync ()
+    _$sync (character: VideoCharacterImpl): void
     {
-        const character = super._$sync();
-
-        if (character) {
-            this._$buildCharacter(character);
-        }
-
-        return character;
+        this._$buildCharacter(character);
     }
 
     /**
