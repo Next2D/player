@@ -382,6 +382,10 @@ export class RenderPlayer
             return ;
         }
 
+        if (this._$canvas.width === width && this._$canvas.height === height) {
+            return ;
+        }
+
         this._$canvas.width  = width;
         this._$canvas.height = height;
 
@@ -500,6 +504,7 @@ export class RenderPlayer
         if (object.characterId) {
             shape._$characterId = object.characterId;
         }
+
         if ("loaderInfoId" in object) {
             shape._$loaderInfoId = object.loaderInfoId || 0;
         }

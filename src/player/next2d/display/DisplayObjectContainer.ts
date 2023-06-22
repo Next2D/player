@@ -1083,6 +1083,39 @@ export class DisplayObjectContainer extends InteractiveObject
 
         child._$transform._$transform();
 
+        // remove all broadcast events
+        if (child.hasEventListener(Next2DEvent.ENTER_FRAME)) {
+            child.removeAllEventListener(Next2DEvent.ENTER_FRAME);
+        }
+
+        if (child.hasEventListener(Next2DEvent.EXIT_FRAME)) {
+            child.removeAllEventListener(Next2DEvent.EXIT_FRAME);
+        }
+
+        if (child.hasEventListener(Next2DEvent.FRAME_CONSTRUCTED)) {
+            child.removeAllEventListener(Next2DEvent.FRAME_CONSTRUCTED);
+        }
+
+        if (child.hasEventListener(Next2DEvent.RENDER)) {
+            child.removeAllEventListener(Next2DEvent.RENDER);
+        }
+
+        if (child.hasEventListener(Next2DEvent.ACTIVATE)) {
+            child.removeAllEventListener(Next2DEvent.ACTIVATE);
+        }
+
+        if (child.hasEventListener(Next2DEvent.DEACTIVATE)) {
+            child.removeAllEventListener(Next2DEvent.DEACTIVATE);
+        }
+
+        if (child.hasEventListener("keyDown")) {
+            child.removeAllEventListener("keyDown");
+        }
+
+        if (child.hasEventListener("keyUp")) {
+            child.removeAllEventListener("keyUp");
+        }
+
         // remove
         const children: DisplayObjectImpl<any>[] = this._$needsChildren
             ? this._$getChildren()
