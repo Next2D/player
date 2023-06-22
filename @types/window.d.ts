@@ -1,7 +1,10 @@
-import { Next2D } from "./next2d";
+import { Next2D } from "../src/player/player/Next2D";
 import { IndexRangeImpl } from "../src/interface/IndexRangeImpl";
 
 declare global {
+
+    // eslint-disable-next-line no-unused-vars
+    const next2d: Next2D;
 
     // eslint-disable-next-line no-unused-vars
     interface Location {
