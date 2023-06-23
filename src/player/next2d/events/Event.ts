@@ -1,5 +1,5 @@
 import { EventPhase } from "./EventPhase";
-import type { EventDispatcher } from "./EventDispatcher";
+import type { EventDispatcherImpl } from "../../../interface/EventDispatcherImpl";
 
 /**
  * Event クラスのメソッドは、イベントリスナー関数で使用してイベントオブジェクトの動作に影響を与えることができます。
@@ -24,8 +24,8 @@ export class Event
     private readonly _$type: string;
     private readonly _$bubbles: boolean;
     private readonly _$cancelable: boolean;
-    private _$target: EventDispatcher | null;
-    private _$currentTarget: EventDispatcher | null;
+    private _$target: EventDispatcherImpl<any> | null;
+    private _$currentTarget: EventDispatcherImpl<any> | null;
     private _$listener: Function | null;
     private _$eventPhase: number;
     public _$stopImmediatePropagation: boolean;
@@ -39,8 +39,12 @@ export class Event
      * @constructor
      * @public
      */
-    constructor (type: string, bubbles: boolean = false, cancelable: boolean = false)
-    {
+    constructor (
+        type: string,
+        bubbles: boolean = false,
+        cancelable: boolean = false
+    ) {
+
         /**
          * @type {string}
          * @private
@@ -527,11 +531,11 @@ export class Event
      * @member {EventDispatcher|null}
      * @public
      */
-    get currentTarget (): EventDispatcher | null
+    get currentTarget (): EventDispatcherImpl<any> | null
     {
         return this._$currentTarget;
     }
-    set currentTarget (current_target: EventDispatcher | null)
+    set currentTarget (current_target: EventDispatcherImpl<any> | null)
     {
         this._$currentTarget = current_target;
     }
@@ -575,11 +579,11 @@ export class Event
      * @member {EventDispatcher|null}
      * @public
      */
-    get target (): any
+    get target (): EventDispatcherImpl<any>
     {
         return this._$target ? this._$target : this._$currentTarget;
     }
-    set target (target: any)
+    set target (target: EventDispatcherImpl<any>)
     {
         this._$target = target;
     }

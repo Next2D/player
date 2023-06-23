@@ -1645,26 +1645,21 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @return {object}
+     * @return {void}
      * @method
      * @private
      */
-    _$doChanged ()
+    _$doChanged (): void
     {
-        if ($rendererWorker && this._$created) {
-            $rendererWorker.postMessage({
-                "command": "doChanged",
-                "instanceId": this._$instanceId
-            });
-        }
-
         this._$posted  = false;
         this._$isNext  = true;
         this._$updated = true;
 
         const parent: ParentImpl<any> | null = this._$parent;
         if (parent) {
-            parent._$doChanged();
+            if (!parent._$updated) {
+                parent._$doChanged();
+            }
         }
     }
 
@@ -2149,12 +2144,20 @@ export class DisplayObject extends EventDispatcher
             "command": "setProperty",
             "instanceId": this._$instanceId,
             "parentId": this._$parent ? this._$parent._$instanceId : -1,
-            "visible": this._$visible,
-            "isMask": this._$isMask,
-            "clipDepth": this._$clipDepth,
-            "depth": this._$placeId,
-            "maskId": -1
+            "visible": this._$visible
         };
+
+        if (this._$placeId > -1) {
+            message.depth = this._$placeId;
+        }
+
+        if (this._$clipDepth) {
+            message.clipDepth = this._$clipDepth;
+        }
+
+        if (this._$isMask) {
+            message.isMask = this._$isMask;
+        }
 
         const mask: DisplayObjectImpl<any> | null = this._$mask;
         if (mask) {
