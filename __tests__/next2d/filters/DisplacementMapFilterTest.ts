@@ -1,7 +1,7 @@
-import { $PREFIX } from "../../../src/player/util/Util";
-import { DisplacementMapFilter } from "../../../src/player/next2d/filters/DisplacementMapFilter";
-import { BitmapData } from "../../../src/player/next2d/display/BitmapData";
-import { Point } from "../../../src/player/next2d/geom/Point";
+import { $PREFIX } from "../../../src/util/Util";
+import { DisplacementMapFilter } from "../../../src/next2d/filters/DisplacementMapFilter";
+import { BitmapData } from "../../../src/next2d/display/BitmapData";
+import { Point } from "../../../src/next2d/geom/Point";
 
 describe("DisplacementMapFilter.js namespace test", () =>
 {

@@ -1,5 +1,5 @@
-import { $PREFIX } from "../../../src/player/util/Util";
-import { Video } from "../../../src/player/next2d/media/Video";
+import { $PREFIX } from "../../../src/util/Util";
+import { Video } from "../../../src/next2d/media/Video";
 
 describe("Video.js namespace test", function()
 {

@@ -7,7 +7,7 @@ import {
     $MATRIX_ARRAY_IDENTITY,
     $COLOR_ARRAY_IDENTITY,
     $OffscreenCanvas
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

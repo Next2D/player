@@ -1,4 +1,4 @@
-import { BlurFilter } from "../../../src/player/next2d/filters/BlurFilter";
+import { BlurFilter } from "../../../src/next2d/filters/BlurFilter";
 
 describe("BlurFilter.js namespace test", () =>
 {

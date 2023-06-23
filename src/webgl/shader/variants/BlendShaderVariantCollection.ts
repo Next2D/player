@@ -4,7 +4,7 @@ import { FragmentShaderSourceTexture } from "../fragment/FragmentShaderSourceTex
 import { FragmentShaderSourceBlend } from "../fragment/FragmentShaderSourceBlend";
 import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 import type { WebGLShaderUniform } from "../WebGLShaderUniform";
-import { $getMap } from "../../../player/util/RenderUtil";
+import { $getMap } from "../../../util/RenderUtil";
 
 /**
  * @class

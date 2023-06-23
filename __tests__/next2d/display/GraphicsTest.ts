@@ -1,4 +1,4 @@
-import { Graphics } from "../../../src/player/next2d/display/Graphics";
+import { Graphics } from "../../../src/next2d/display/Graphics";
 
 describe("Graphics.js toString test", () =>
 {

@@ -3,7 +3,7 @@ import type { VerticesImpl } from "../interface/VerticesImpl";
 import {
     $getArray,
     $poolArray
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

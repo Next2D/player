@@ -8,15 +8,13 @@
     "declaration": false,
     "target": "es6",
     "lib": ["es6", "dom"],
-    "module": "esnext",
+    "module": "es6",
     "moduleResolution": "node",
     "baseUrl": "./",
     "outDir": "./"
   },
   "include": [
-    "**/*.ts",
-    "../webgl/**/*.ts",
-    "../player/**/*.ts",
+    "../src/**/*.ts",
     "../../@types/**/*.ts"
   ],
   "exclude": [

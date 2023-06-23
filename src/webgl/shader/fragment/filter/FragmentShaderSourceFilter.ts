@@ -1,4 +1,4 @@
-import { $Math } from "../../../../player/util/RenderUtil";
+import { $Math } from "../../../../util/RenderUtil";
 import { FragmentShaderLibrary } from "../FragmentShaderLibrary";
 
 /**

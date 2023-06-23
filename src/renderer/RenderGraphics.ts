@@ -1,12 +1,12 @@
 import { RenderDisplayObject } from "./RenderDisplayObject";
-import { Rectangle } from "../player/next2d/geom/Rectangle";
+import { Rectangle } from "../next2d/geom/Rectangle";
 import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
 import type { BlendModeImpl } from "../interface/BlendModeImpl";
 import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
 import type { BoundsImpl } from "../interface/BoundsImpl";
 import type { FrameBufferManager } from "../webgl/FrameBufferManager";
 import type { AttachmentImpl } from "../interface/AttachmentImpl";
-import type { CacheStore } from "../player/util/CacheStore";
+import type { CacheStore } from "../util/CacheStore";
 import type { CanvasGradientToWebGL } from "../webgl/CanvasGradientToWebGL";
 import type { ColorStopImpl } from "../interface/ColorStopImpl";
 import type { SpreadMethod } from "../interface/GradientTypeImpl";
@@ -28,7 +28,7 @@ import {
     $getFloat32Array4,
     $linearGradientXY,
     $getFloat32Array8
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

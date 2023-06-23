@@ -3,7 +3,7 @@ import {
     $getMap,
     $Float32Array,
     $Int32Array
-} from "../../player/util/RenderUtil";
+} from "../../util/RenderUtil";
 
 /**
  * @class

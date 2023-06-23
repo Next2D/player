@@ -3,7 +3,7 @@ import type { AttachmentImpl } from "../../interface/AttachmentImpl";
 import type { GradientLUTShaderVariantCollection } from "./variants/GradientLUTShaderVariantCollection";
 import type { CanvasToWebGLShader } from "./CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./WebGLShaderUniform";
-import { $Math } from "../../player/util/RenderUtil";
+import { $Math } from "../../util/RenderUtil";
 
 /**
  * @class
