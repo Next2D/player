@@ -5,7 +5,7 @@ import {
     $getFloat32Array4,
     $poolFloat32Array4,
     $Float32Array
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

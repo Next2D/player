@@ -1,7 +1,7 @@
-import { Sound } from "../player/next2d/media/Sound";
-import { SoundMixer } from "../player/next2d/media/SoundMixer";
-import { SoundTransform } from "../player/next2d/media/SoundTransform";
-import { Video } from "../player/next2d/media/Video";
+import { Sound } from "../next2d/media/Sound";
+import { SoundMixer } from "../next2d/media/SoundMixer";
+import { SoundTransform } from "../next2d/media/SoundTransform";
+import { Video } from "../next2d/media/Video";
 
 export interface MediaImpl {
     Sound: typeof Sound;

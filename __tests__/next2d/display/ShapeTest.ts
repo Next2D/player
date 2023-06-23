@@ -1,6 +1,6 @@
-import { $PREFIX } from "../../../src/player/util/Util";
-import { Shape } from "../../../src/player/next2d/display/Shape";
-import { Graphics } from "../../../src/player/next2d/display/Graphics";
+import { $PREFIX } from "../../../src/util/Util";
+import { Shape } from "../../../src/next2d/display/Shape";
+import { Graphics } from "../../../src/next2d/display/Graphics";
 
 describe("Shape.js toString test", function()
 {

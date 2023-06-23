@@ -1,5 +1,5 @@
 import { PointImpl } from "./PointImpl";
-import { Rectangle } from "../player/next2d/geom/Rectangle";
+import { Rectangle } from "../next2d/geom/Rectangle";
 
 export interface DragRulesImpl {
     lock: boolean;

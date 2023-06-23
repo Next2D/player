@@ -1,20 +1,20 @@
-import { Rectangle } from "../player/next2d/geom/Rectangle";
-import { BevelFilter } from "../player/next2d/filters/BevelFilter";
-import { BlurFilter } from "../player/next2d/filters/BlurFilter";
-import { ColorMatrixFilter } from "../player/next2d/filters/ColorMatrixFilter";
-import { ConvolutionFilter } from "../player/next2d/filters/ConvolutionFilter";
-import { DisplacementMapFilter } from "../player/next2d/filters/DisplacementMapFilter";
-import { DropShadowFilter } from "../player/next2d/filters/DropShadowFilter";
-import { GlowFilter } from "../player/next2d/filters/GlowFilter";
-import { GradientBevelFilter } from "../player/next2d/filters/GradientBevelFilter";
-import { GradientGlowFilter } from "../player/next2d/filters/GradientGlowFilter";
+import { Rectangle } from "../next2d/geom/Rectangle";
+import { BevelFilter } from "../next2d/filters/BevelFilter";
+import { BlurFilter } from "../next2d/filters/BlurFilter";
+import { ColorMatrixFilter } from "../next2d/filters/ColorMatrixFilter";
+import { ConvolutionFilter } from "../next2d/filters/ConvolutionFilter";
+import { DisplacementMapFilter } from "../next2d/filters/DisplacementMapFilter";
+import { DropShadowFilter } from "../next2d/filters/DropShadowFilter";
+import { GlowFilter } from "../next2d/filters/GlowFilter";
+import { GradientBevelFilter } from "../next2d/filters/GradientBevelFilter";
+import { GradientGlowFilter } from "../next2d/filters/GradientGlowFilter";
 import type { BlendModeImpl } from "../interface/BlendModeImpl";
 import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
 import type { RenderPlayer } from "./RenderPlayer";
 import type { BoundsImpl } from "../interface/BoundsImpl";
 import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
 import type { PropertyMessageMapImpl } from "../interface/PropertyMessageMapImpl";
-import type { CacheStore } from "../player/util/CacheStore";
+import type { CacheStore } from "../util/CacheStore";
 import type { FrameBufferManager } from "../webgl/FrameBufferManager";
 import type { AttachmentImpl } from "../interface/AttachmentImpl";
 import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
@@ -29,7 +29,7 @@ import {
     $boundsMatrix,
     $poolFloat32Array6,
     $getArray
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

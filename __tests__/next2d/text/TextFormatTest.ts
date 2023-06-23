@@ -1,4 +1,4 @@
-import { TextFormat } from "../../../src/player/next2d/text/TextFormat";
+import { TextFormat } from "../../../src/next2d/text/TextFormat";
 
 describe("TextFormat.js toString test", () =>
 {

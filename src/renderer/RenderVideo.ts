@@ -1,5 +1,5 @@
 import { RenderDisplayObject } from "./RenderDisplayObject";
-import { Rectangle } from "../player/next2d/geom/Rectangle";
+import { Rectangle } from "../next2d/geom/Rectangle";
 import type { BoundsImpl } from "../interface/BoundsImpl";
 import type { FrameBufferManager } from "../webgl/FrameBufferManager";
 import type { AttachmentImpl } from "../interface/AttachmentImpl";
@@ -16,7 +16,7 @@ import {
     $poolFloat32Array6,
     $poolFloat32Array8,
     $OffscreenCanvas, $getFloat32Array6
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 import { $videos } from "./RenderGlobal";
 
 /**

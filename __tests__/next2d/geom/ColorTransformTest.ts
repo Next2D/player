@@ -1,4 +1,4 @@
-import { ColorTransform } from "../../../src/player/next2d/geom/ColorTransform";
+import { ColorTransform } from "../../../src/next2d/geom/ColorTransform";
 
 describe("ColorTransform.js toString test", () =>
 {

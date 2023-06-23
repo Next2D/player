@@ -1,6 +1,6 @@
-import { CacheStore } from "../player/util/CacheStore";
+import { CacheStore } from "../util/CacheStore";
 import { RenderDisplayObjectContainer } from "./RenderDisplayObjectContainer";
-import { Rectangle } from "../player/next2d/geom/Rectangle";
+import { Rectangle } from "../next2d/geom/Rectangle";
 import { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
 import type { AttachmentImpl } from "../interface/AttachmentImpl";
 import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
@@ -19,7 +19,7 @@ import {
     $getFloat32Array6,
     $toColorInt,
     $uintToRGBA
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 import {
     $getDisplayObjectContainer,
     $getShape,

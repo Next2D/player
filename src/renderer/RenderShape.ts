@@ -12,7 +12,7 @@ import {
     $poolBoundsObject,
     $poolFloat32Array6,
     $poolFloat32Array8
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

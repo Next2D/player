@@ -1,5 +1,5 @@
 import { RenderGraphics } from "./RenderGraphics";
-import { Rectangle } from "../player/next2d/geom/Rectangle";
+import { Rectangle } from "../next2d/geom/Rectangle";
 import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
 import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
 import type { PreObjectImpl } from "../interface/PreObjectImpl";
@@ -7,7 +7,7 @@ import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
 import type { BlendModeImpl } from "../interface/BlendModeImpl";
 import type { BoundsImpl } from "../interface/BoundsImpl";
 import type { AttachmentImpl } from "../interface/AttachmentImpl";
-import type { CacheStore } from "../player/util/CacheStore";
+import type { CacheStore } from "../util/CacheStore";
 import type { FrameBufferManager } from "../webgl/FrameBufferManager";
 import type { DisplayObjectImpl } from "../interface/DisplayObjectImpl";
 import type { ParentImpl } from "../interface/ParentImpl";
@@ -33,7 +33,7 @@ import {
     $poolFloat32Array6,
     $poolFloat32Array8,
     $poolPreObject
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

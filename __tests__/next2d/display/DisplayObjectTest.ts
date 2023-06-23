@@ -1,17 +1,17 @@
-import { $PREFIX} from "../../../src/player/util/Util";
-import { DisplayObject } from "../../../src/player/next2d/display/DisplayObject";
-import { Stage } from "../../../src/player/next2d/display/Stage";
-import { Shape } from "../../../src/player/next2d/display/Shape";
-import { MovieClip } from "../../../src/player/next2d/display/MovieClip";
+import { $PREFIX} from "../../../src/util/Util";
+import { DisplayObject } from "../../../src/next2d/display/DisplayObject";
+import { Stage } from "../../../src/next2d/display/Stage";
+import { Shape } from "../../../src/next2d/display/Shape";
+import { MovieClip } from "../../../src/next2d/display/MovieClip";
 import {
     $clamp,
     $Infinity,
     $Math,
     $Rad2Deg
-} from "../../../src/player/util/RenderUtil";
-import { Sprite } from "../../../src/player/next2d/display/Sprite";
-import { BlurFilter } from "../../../src/player/next2d/filters/BlurFilter";
-import { Point } from "../../../src/player/next2d/geom/Point";
+} from "../../../src/util/RenderUtil";
+import { Sprite } from "../../../src/next2d/display/Sprite";
+import { BlurFilter } from "../../../src/next2d/filters/BlurFilter";
+import { Point } from "../../../src/next2d/geom/Point";
 import type { DisplayObjectImpl } from "../../../src/interface/DisplayObjectImpl";
 import type { ParentImpl } from "../../../src/interface/ParentImpl";
 

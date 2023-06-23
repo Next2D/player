@@ -1,4 +1,4 @@
-import { Easing } from "../../../src/player/next2d/ui/Easing";
+import { Easing } from "../../../src/next2d/ui/Easing";
 
 describe("Easing.js toString test", function()
 {

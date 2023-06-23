@@ -1,12 +1,12 @@
 {
   "name": "@next2d/player",
-  "version": "1.15.0",
+  "version": "1.14.19",
   "description": "Experience the fast and beautiful anti-aliased rendering of WebGL. You can create rich, interactive graphics, cross-platform applications and games without worrying about browser or device compatibility.",
-  "author": "Toshiyuki Ienaga<ienaga@tvon.jp>",
+  "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
-  "main": "dist/player/index.js",
+  "main": "index.js",
   "keywords": [
     "Next2D",
     "Next2D Player"
@@ -23,10 +23,6 @@
     "test": "jest",
     "jsdoc": "tsc && jsdoc -c jsdoc.conf.js -r dist DOCS.md"
   },
-  "types": "dist",
-  "files": [
-    "dist"
-  ],
   "devDependencies": {
     "@next2d/jsdoc-template": "^1.0.7",
     "@next2d/webpack-worker-loader-plugin": "^1.0.0",

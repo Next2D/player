@@ -4,7 +4,7 @@ import {
     $Float32Array,
     $Int16Array,
     $Math
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

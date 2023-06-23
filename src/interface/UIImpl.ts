@@ -1,6 +1,6 @@
-import { Easing } from "../player/next2d/ui/Easing";
-import { Job } from "../player/next2d/ui/Job";
-import { Tween } from "../player/next2d/ui/Tween";
+import { Easing } from "../next2d/ui/Easing";
+import { Job } from "../next2d/ui/Job";
+import { Tween } from "../next2d/ui/Tween";
 
 export interface UIImpl {
     Easing: typeof Easing;

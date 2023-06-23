@@ -68,7 +68,7 @@ const render_worker = {
 
 const player = {
     "mode": "development",
-    "entry": path.resolve(__dirname, "src/player/index.ts"),
+    "entry": path.resolve(__dirname, "src/index.ts"),
     "output": {
         "filename": "next2d.js",
         "path": __dirname
@@ -82,7 +82,7 @@ const player = {
     ],
     "resolve": {
         "alias": {
-            "@": path.resolve(__dirname, "src/player")
+            "@": path.resolve(__dirname, "src")
         },
         "extensions": [".ts", ".js"]
     },
@@ -92,7 +92,7 @@ const player = {
                 "test": /\.ts$/,
                 "loader": "ts-loader",
                 "options": {
-                    "configFile": path.resolve(__dirname, "src/player/tsconfig.json")
+                    "configFile": path.resolve(__dirname, "src/tsconfig.json")
                 }
             }
         ]

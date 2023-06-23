@@ -8,7 +8,7 @@ import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShader
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { IndexRangeImpl } from "../interface/IndexRangeImpl";
-import { $poolArray } from "../player/util/RenderUtil";
+import { $poolArray } from "../util/RenderUtil";
 
 /**
  * @class

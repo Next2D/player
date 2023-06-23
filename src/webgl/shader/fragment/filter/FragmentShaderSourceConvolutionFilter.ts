@@ -1,5 +1,5 @@
 import { FragmentShaderLibrary } from "../FragmentShaderLibrary";
-import { $Math } from "../../../../player/util/RenderUtil";
+import { $Math } from "../../../../util/RenderUtil";
 
 /**
  * @class

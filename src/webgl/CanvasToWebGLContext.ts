@@ -34,7 +34,7 @@ import {
     $poolFloat32Array9,
     $poolBoundsObject,
     $getBoundsObject
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

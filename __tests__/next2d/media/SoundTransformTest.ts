@@ -1,4 +1,4 @@
-import { SoundTransform } from "../../../src/player/next2d/media/SoundTransform";
+import { SoundTransform } from "../../../src/next2d/media/SoundTransform";
 
 describe("SoundTransform.js namespace test", () =>
 {

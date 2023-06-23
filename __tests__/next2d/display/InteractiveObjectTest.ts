@@ -1,5 +1,5 @@
-import { $PREFIX } from "../../../src/player/util/Util";
-import { InteractiveObject } from "../../../src/player/next2d/display/InteractiveObject";
+import { $PREFIX } from "../../../src/util/Util";
+import { InteractiveObject } from "../../../src/next2d/display/InteractiveObject";
 
 describe("InteractiveObject.js mouseEnabled test", function()
 {

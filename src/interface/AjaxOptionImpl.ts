@@ -1,6 +1,6 @@
 import { URLRequestMethodImpl } from "./URLRequestMethodImpl";
 import { URLLoaderDataFormatImpl } from "./URLLoaderDataFormatImpl";
-import { URLRequestHeader } from "../player/next2d/net/URLRequestHeader";
+import { URLRequestHeader } from "../next2d/net/URLRequestHeader";
 import { AjaxEventImpl } from "./AjaxEventImpl";
 
 export interface AjaxOptionImpl {

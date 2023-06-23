@@ -3,7 +3,7 @@ import { FillMeshImpl } from "../interface/FillMeshImpl";
 import {
     $Float32Array,
     $getArray
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

@@ -1,4 +1,4 @@
-import { LoopConfig } from "../../../src/player/next2d/display/LoopConfig";
+import { LoopConfig } from "../../../src/next2d/display/LoopConfig";
 
 describe("LoopConfig.js toString test", function()
 {
