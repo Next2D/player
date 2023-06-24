@@ -1,8 +1,8 @@
-import { $PREFIX } from "../../../src/player/util/Util";
-import { Event } from "../../../src/player/next2d/events/Event";
-import { DisplayObjectContainer } from "../../../src/player/next2d/display/DisplayObjectContainer";
-import { Sprite } from "../../../src/player/next2d/display/Sprite";
-import { MovieClip } from "../../../src/player/next2d/display/MovieClip";
+import { $PREFIX } from "../../../src/util/Util";
+import { Event } from "../../../src/next2d/events/Event";
+import { DisplayObjectContainer } from "../../../src/next2d/display/DisplayObjectContainer";
+import { Sprite } from "../../../src/next2d/display/Sprite";
+import { MovieClip } from "../../../src/next2d/display/MovieClip";
 
 describe("DisplayObjectContainer.js property test", function()
 {

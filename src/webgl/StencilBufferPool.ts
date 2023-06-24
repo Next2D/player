@@ -1,4 +1,4 @@
-import { $getArray } from "../player/util/RenderUtil";
+import { $getArray } from "../util/RenderUtil";
 
 /**
  * @class

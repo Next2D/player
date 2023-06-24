@@ -1,4 +1,4 @@
-import { $Float32Array } from "../player/util/RenderUtil";
+import { $Float32Array } from "../util/RenderUtil";
 
 /**
  * @class

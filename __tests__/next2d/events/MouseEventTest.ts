@@ -1,4 +1,4 @@
-import { MouseEvent } from "../../../src/player/next2d/events/MouseEvent";
+import { MouseEvent } from "../../../src/next2d/events/MouseEvent";
 
 describe("MouseEvent.js static toString test", () =>
 {

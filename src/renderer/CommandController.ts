@@ -7,7 +7,7 @@ import {
     $MATRIX_ARRAY_IDENTITY,
     $COLOR_ARRAY_IDENTITY,
     $OffscreenCanvas
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class
@@ -75,17 +75,10 @@ export class CommandController
                         if (!instances.has(object.instanceId)) {
                             continue;
                         }
-                        instances.get(object.instanceId)._$children = object.children;
-                    }
-                    break;
+                        const instance: RenderDisplayObjectImpl<any> = instances.get(object.instanceId);
+                        instance._$doChanged();
 
-                case "doChanged":
-                    {
-                        const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
-                        if (!instances.has(object.instanceId)) {
-                            continue;
-                        }
-                        instances.get(object.instanceId)._$updated = true;
+                        instance._$children = object.children;
                     }
                     break;
 
@@ -96,9 +89,7 @@ export class CommandController
                             continue;
                         }
 
-                        const instance = instances.get(object.instanceId);
-                        instance._$remove();
-
+                        instances.get(object.instanceId)._$remove();
                         instances.delete(object.instanceId);
                     }
                     break;

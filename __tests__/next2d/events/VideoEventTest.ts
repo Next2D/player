@@ -1,4 +1,4 @@
-import { VideoEvent } from "../../../src/player/next2d/events/VideoEvent";
+import { VideoEvent } from "../../../src/next2d/events/VideoEvent";
 
 describe("VideoEvent.js toString test", () =>
 {

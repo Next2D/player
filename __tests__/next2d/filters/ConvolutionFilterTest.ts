@@ -1,4 +1,4 @@
-import { ConvolutionFilter } from "../../../src/player/next2d/filters/ConvolutionFilter";
+import { ConvolutionFilter } from "../../../src/next2d/filters/ConvolutionFilter";
 
 describe("ConvolutionFilter.js namespace test", () =>
 {

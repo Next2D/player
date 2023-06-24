@@ -1,5 +1,5 @@
-import { $PREFIX } from "../../../src/player/util/Util";
-import { Sound } from "../../../src/player/next2d/media/Sound";
+import { $PREFIX } from "../../../src/util/Util";
+import { Sound } from "../../../src/next2d/media/Sound";
 
 describe("Sound.js namespace test", () =>
 {

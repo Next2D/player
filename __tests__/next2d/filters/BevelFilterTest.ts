@@ -1,5 +1,5 @@
-import { BevelFilter } from "../../../src/player/next2d/filters/BevelFilter";
-import { BlurFilter } from "../../../src/player/next2d/filters/BlurFilter";
+import { BevelFilter } from "../../../src/next2d/filters/BevelFilter";
+import { BlurFilter } from "../../../src/next2d/filters/BlurFilter";
 
 describe("BevelFilter.js toString test", () =>
 {

@@ -9,7 +9,7 @@ import {
     $clamp,
     $poolFloat32Array4,
     $poolFloat32Array6
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

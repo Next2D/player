@@ -1,4 +1,4 @@
-import { IOErrorEvent } from "../../../src/player/next2d/events/IOErrorEvent";
+import { IOErrorEvent } from "../../../src/next2d/events/IOErrorEvent";
 
 describe("IOErrorEvent.js toString test", () =>
 {

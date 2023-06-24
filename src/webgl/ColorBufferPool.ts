@@ -2,7 +2,7 @@ import {
     $getArray,
     $Math,
     $upperPowerOfTwo
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

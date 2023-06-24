@@ -1,22 +1,23 @@
-import { Rectangle } from "../player/next2d/geom/Rectangle";
-import { BevelFilter } from "../player/next2d/filters/BevelFilter";
-import { BlurFilter } from "../player/next2d/filters/BlurFilter";
-import { ColorMatrixFilter } from "../player/next2d/filters/ColorMatrixFilter";
-import { ConvolutionFilter } from "../player/next2d/filters/ConvolutionFilter";
-import { DisplacementMapFilter } from "../player/next2d/filters/DisplacementMapFilter";
-import { DropShadowFilter } from "../player/next2d/filters/DropShadowFilter";
-import { GlowFilter } from "../player/next2d/filters/GlowFilter";
-import { GradientBevelFilter } from "../player/next2d/filters/GradientBevelFilter";
-import { GradientGlowFilter } from "../player/next2d/filters/GradientGlowFilter";
+import { Rectangle } from "../next2d/geom/Rectangle";
+import { BevelFilter } from "../next2d/filters/BevelFilter";
+import { BlurFilter } from "../next2d/filters/BlurFilter";
+import { ColorMatrixFilter } from "../next2d/filters/ColorMatrixFilter";
+import { ConvolutionFilter } from "../next2d/filters/ConvolutionFilter";
+import { DisplacementMapFilter } from "../next2d/filters/DisplacementMapFilter";
+import { DropShadowFilter } from "../next2d/filters/DropShadowFilter";
+import { GlowFilter } from "../next2d/filters/GlowFilter";
+import { GradientBevelFilter } from "../next2d/filters/GradientBevelFilter";
+import { GradientGlowFilter } from "../next2d/filters/GradientGlowFilter";
 import type { BlendModeImpl } from "../interface/BlendModeImpl";
 import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
 import type { RenderPlayer } from "./RenderPlayer";
 import type { BoundsImpl } from "../interface/BoundsImpl";
 import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
 import type { PropertyMessageMapImpl } from "../interface/PropertyMessageMapImpl";
-import type { CacheStore } from "../player/util/CacheStore";
+import type { CacheStore } from "../util/CacheStore";
 import type { FrameBufferManager } from "../webgl/FrameBufferManager";
 import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
 import { $renderPlayer } from "./RenderGlobal";
 import {
     $getBoundsObject,
@@ -28,7 +29,7 @@ import {
     $boundsMatrix,
     $poolFloat32Array6,
     $getArray
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class
@@ -379,6 +380,31 @@ export class RenderDisplayObject
     }
 
     /**
+     * @description 自身と親の状態をアクティブにする
+     *
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$doChanged (): void
+    {
+        this._$updated = true;
+
+        if (this._$parentId > -1) {
+
+            const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
+            if (!instances.has(this._$parentId)) {
+                return ;
+            }
+
+            const instance = instances.get(this._$parentId);
+            if (!instance._$updated) {
+                instance._$doChanged();
+            }
+        }
+    }
+
+    /**
      * @description 描画情報を更新
      *
      * @param  {object} object
@@ -388,15 +414,27 @@ export class RenderDisplayObject
      */
     _$update (object: PropertyMessageMapImpl<any>): void
     {
-        this._$updated   = true;
-        this._$visible   = object.visible;
-        this._$isMask    = object.isMask;
-        this._$depth     = object.depth;
-        this._$clipDepth = object.clipDepth;
+        this._$doChanged();
 
-        this._$maskId = object.maskId;
-        if (this._$maskId > -1 && object.maskMatrix) {
-            this._$maskMatrix = object.maskMatrix;
+        this._$visible = object.visible;
+
+        if ("depth" in object) {
+            this._$depth = object.depth;
+        }
+
+        if ("isMask" in object) {
+            this._$isMask = object.isMask;
+        }
+
+        if ("clipDepth" in object) {
+            this._$clipDepth = object.clipDepth;
+        }
+
+        if ("maskId" in object) {
+            this._$maskId = object.maskId;
+            if (this._$maskId > -1 && object.maskMatrix) {
+                this._$maskMatrix = object.maskMatrix;
+            }
         }
 
         this._$matrix[0] = "a"  in object ? object.a  : 1;
@@ -523,6 +561,8 @@ export class RenderDisplayObject
      */
     _$remove (): void
     {
+        this._$doChanged();
+
         const player: RenderPlayer = $renderPlayer;
 
         // キャッシュ削除のタイマーをセット
@@ -538,19 +578,18 @@ export class RenderDisplayObject
         player.instances.delete(this._$instanceId);
 
         // reset
-        this._$instanceId     = -1;
-        this._$parentId       = -1;
-        this._$loaderInfoId   = -1;
-        this._$characterId    = -1;
-        this._$updated        = true;
-        this._$blendMode      = "normal";
-        this._$filters        = null;
-        this._$visible        = true;
-        this._$maskId         = -1;
-        this._$isMask         = false;
-        this._$depth          = 0;
-        this._$clipDepth      = 0;
-        this._$scale9Grid     = null;
+        this._$instanceId   = -1;
+        this._$parentId     = -1;
+        this._$loaderInfoId = -1;
+        this._$characterId  = -1;
+        this._$blendMode    = "normal";
+        this._$filters      = null;
+        this._$visible      = true;
+        this._$maskId       = -1;
+        this._$isMask       = false;
+        this._$depth        = 0;
+        this._$clipDepth    = 0;
+        this._$scale9Grid   = null;
     }
 
     /**

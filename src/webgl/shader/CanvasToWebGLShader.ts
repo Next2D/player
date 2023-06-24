@@ -2,7 +2,7 @@ import { WebGLShaderUniform } from "./WebGLShaderUniform";
 import type { CanvasToWebGLContext } from "../CanvasToWebGLContext";
 import type { CanvasToWebGLShaderList } from "./CanvasToWebGLShaderList";
 import type { IndexRangeImpl } from "../../interface/IndexRangeImpl";
-import { $getProgramId } from "../../player/util/RenderUtil";
+import { $getProgramId } from "../../util/RenderUtil";
 
 /**
  * @class

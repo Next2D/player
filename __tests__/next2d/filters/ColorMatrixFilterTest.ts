@@ -1,4 +1,4 @@
-import { ColorMatrixFilter } from "../../../src/player/next2d/filters/ColorMatrixFilter";
+import { ColorMatrixFilter } from "../../../src/next2d/filters/ColorMatrixFilter";
 
 describe("ColorMatrixFilter.js namespace test", () =>
 {

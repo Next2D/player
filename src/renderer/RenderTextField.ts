@@ -1,5 +1,5 @@
 import { RenderDisplayObject } from "./RenderDisplayObject";
-import { Rectangle } from "../player/next2d/geom/Rectangle";
+import { Rectangle } from "../next2d/geom/Rectangle";
 import type { TextDataImpl } from "../interface/TextDataImpl";
 import type { PropertyTextMessageImpl } from "../interface/PropertyTextMessageImpl";
 import type { TextFieldAutoSizeImpl } from "../interface/TextFieldAutoSizeImpl";
@@ -8,7 +8,7 @@ import type { BoundsImpl } from "../interface/BoundsImpl";
 import type { CanvasToWebGLContext } from "../webgl/CanvasToWebGLContext";
 import type { FrameBufferManager } from "../webgl/FrameBufferManager";
 import type { AttachmentImpl } from "../interface/AttachmentImpl";
-import type { CacheStore } from "../player/util/CacheStore";
+import type { CacheStore } from "../util/CacheStore";
 import type { RGBAImpl } from "../interface/RGBAImpl";
 import type { TextFormatImpl } from "../interface/TextFormatImpl";
 import {
@@ -31,7 +31,7 @@ import {
     $poolBoundsObject,
     $poolFloat32Array6,
     $poolFloat32Array8
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

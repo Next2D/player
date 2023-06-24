@@ -1,4 +1,4 @@
-import { TextFormat } from "../player/next2d/text/TextFormat";
+import { TextFormat } from "../next2d/text/TextFormat";
 import { TextObjectModeImpl } from "./TextObjectModeImpl";
 
 export interface TextObjectImpl {

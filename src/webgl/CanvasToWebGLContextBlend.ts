@@ -7,7 +7,7 @@ import {
     $Math,
     $Number,
     $inverseMatrix
-} from "../player/util/RenderUtil";
+} from "../util/RenderUtil";
 
 /**
  * @class

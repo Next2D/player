@@ -5,7 +5,7 @@ import { FragmentShaderSourceGradient } from "../fragment/FragmentShaderSourceGr
 import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 import type { WebGLShaderUniform } from "../WebGLShaderUniform";
 import type { CanvasToWebGLContextGrid } from "../../CanvasToWebGLContextGrid";
-import { $getMap } from "../../../player/util/RenderUtil";
+import { $getMap } from "../../../util/RenderUtil";
 
 /**
  * @class
