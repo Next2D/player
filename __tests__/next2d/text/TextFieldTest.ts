@@ -1,6 +1,6 @@
-import { $PREFIX } from "../../../src/util/Util";
-import { TextField } from "../../../src/next2d/text/TextField";
-import { TextFormat } from "../../../src/next2d/text/TextFormat";
+import { $PREFIX } from "../../../packages/util/Util";
+import { TextField } from "../../../packages/text/src/TextField";
+import { TextFormat } from "../../../packages/text/src/TextFormat";
 
 describe("TextField.js toString test", () =>
 {

@@ -1,4 +1,4 @@
-import { TextFormat } from "../../../src/next2d/text/TextFormat";
+import { TextFormat } from "../../../packages/text/src/TextFormat";
 
 describe("TextFormat.js toString test", () =>
 {

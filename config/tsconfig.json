@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "resolveJsonModule": true,
+    "strictFunctionTypes": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "target": "es6",
+    "module": "es6",
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "@next2d/*": [
+        "packages/*/src"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "../@types/**/*.ts"
+  ]
+}

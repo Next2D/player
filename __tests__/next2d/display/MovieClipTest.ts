@@ -1,6 +1,6 @@
-import { $PREFIX } from "../../../src/util/Util";
-import { MovieClip } from "../../../src/next2d/display/MovieClip";
-import { FrameLabel } from "../../../src/next2d/display/FrameLabel";
+import { $PREFIX } from "../../../packages/util/Util";
+import { MovieClip } from "../../../packages/display/src/MovieClip";
+import { FrameLabel } from "../../../packages/display/src/FrameLabel";
 
 describe("MovieClip.js toString test", () =>
 {

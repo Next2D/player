@@ -1,5 +1,5 @@
-import { $PREFIX } from "../../../src/util/Util";
-import { FrameLabel } from "../../../src/next2d/display/FrameLabel";
+import { $PREFIX } from "../../../packages/util/Util";
+import { FrameLabel } from "../../../packages/display/src/FrameLabel";
 
 describe("FrameLabel.js toString test", function()
 {

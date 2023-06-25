@@ -1,4 +1,4 @@
-import { BitmapFilter } from "../../../src/next2d/filters/BitmapFilter";
+import { BitmapFilter } from "../../../packages/filters/src/BitmapFilter";
 
 describe("BitmapFilter.js toString test", function()
 {

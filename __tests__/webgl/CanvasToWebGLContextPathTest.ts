@@ -1,4 +1,4 @@
-import { CanvasToWebGLContextPath } from "../../src/webgl/CanvasToWebGLContextPath";
+import { CanvasToWebGLContextPath } from "../../packages/webgl/src/CanvasToWebGLContextPath";
 
 describe("CanvasToWebGLContextPath.js test", () =>
 {

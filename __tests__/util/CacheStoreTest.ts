@@ -1,4 +1,4 @@
-import { CacheStore } from "../../src/util/CacheStore";
+import { CacheStore } from "../../packages/util/CacheStore";
 
 describe("CacheStore.js packages test", () =>
 {

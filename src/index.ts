@@ -5,12 +5,12 @@ import {
     $initialize,
     $isSafari,
     $rendererWorker
-} from "./util/Util";
-import { Next2D } from "./player/Next2D";
+} from "@next2d/util";
+import { Next2D } from "@next2d/core";
 
 if (!("next2d" in window)) {
 
-    console.log("%c Next2D Player %c 1.15.0 %c https://next2d.app",
+    console.log("%c Next2D Player %c 1.14.19 %c https://next2d.app",
         "color: #fff; background: #5f5f5f",
         "color: #fff; background: #4bc729",
         "");

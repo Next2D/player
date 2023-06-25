@@ -1,4 +1,4 @@
-import { Event } from "../../../src/next2d/events/Event";
+import { Event } from "../../../packages/events/src/Event";
 
 describe("Event.js toString test", function()
 {

@@ -1,6 +1,6 @@
-import { Rectangle } from "../../../src/next2d/geom/Rectangle";
-import { Point } from "../../../src/next2d/geom/Point";
-import {$SHORT_INT_MAX, $SHORT_INT_MIN} from "../../../src/util/RenderUtil";
+import { Rectangle } from "../../../packages/geom/src/Rectangle";
+import { Point } from "../../../packages/geom/src/Point";
+import {$SHORT_INT_MAX, $SHORT_INT_MIN} from "../../../packages/util/RenderUtil";
 
 describe("Rectangle.js toString test", () =>
 {

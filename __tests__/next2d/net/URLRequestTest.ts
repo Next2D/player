@@ -1,5 +1,5 @@
-import {URLRequest} from "../../../src/next2d/net/URLRequest";
-import {URLRequestHeader} from "../../../src/next2d/net/URLRequestHeader";
+import {URLRequest} from "../../../packages/net/src/URLRequest";
+import {URLRequestHeader} from "../../../packages/net/src/URLRequestHeader";
 
 describe("URLRequest.js toString test", () =>
 {

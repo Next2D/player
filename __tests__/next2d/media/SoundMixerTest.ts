@@ -1,4 +1,4 @@
-import { SoundMixer } from "../../../src/next2d/media/SoundMixer";
+import { SoundMixer } from "../../../packages/media/src/SoundMixer";
 
 describe("SoundMixer.js namespace test", function()
 {

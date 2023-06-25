@@ -1,4 +1,4 @@
-import { DropShadowFilter } from "../../../src/next2d/filters/DropShadowFilter";
+import { DropShadowFilter } from "../../../packages/filters/src/DropShadowFilter";
 
 describe("DropShadowFilter.js namespace test", () =>
 {
