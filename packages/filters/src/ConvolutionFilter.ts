@@ -1,7 +1,7 @@
 import { BitmapFilter } from "./BitmapFilter";
-import { Rectangle } from "@next2d/geom";
-import { AttachmentImpl } from "@next2d/interface";
-import {
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
@@ -421,12 +421,12 @@ export class ConvolutionFilter extends BitmapFilter
     }
 
     /**
-     * @param  {Rectangle} rect
-     * @return {Rectangle}
+     * @param  {object} rect
+     * @return {object}
      * @method
      * @private
      */
-    _$generateFilterRect (rect: Rectangle): Rectangle
+    _$generateFilterRect (rect: BoundsImpl): BoundsImpl
     {
         return rect;
     }

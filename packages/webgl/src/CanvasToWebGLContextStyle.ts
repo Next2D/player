@@ -1,9 +1,7 @@
 import { CanvasGradientToWebGL } from "./CanvasGradientToWebGL";
 import { CanvasPatternToWebGL } from "./CanvasPatternToWebGL";
-import {
-    CapsStyleImpl,
-    JointStyleImpl
-} from "@next2d/interface";
+import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
+import type { JointStyleImpl } from "./interface/JointStyleImpl";
 import {
     $getFloat32Array4,
     $poolFloat32Array4,

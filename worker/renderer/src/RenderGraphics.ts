@@ -1,16 +1,14 @@
 import { RenderDisplayObject } from "./RenderDisplayObject";
-import { Rectangle } from "@next2d/geom";
-import { CanvasToWebGLContext } from "@next2d/webgl";
-import {
-    BlendModeImpl,
-    FilterArrayImpl,
-    BoundsImpl,
-    AttachmentImpl,
-    SpreadMethodImpl,
-    PropertyMessageMapImpl,
-    ColorStopImpl
-} from "@next2d/interface";
-import {
+import type { GridImpl } from "./interface/GridImpl";
+import type { BlendModeImpl } from "./interface/BlendModeImpl";
+import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { SpreadMethodImpl } from "./interface/SpreadMethodImpl";
+import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
+import type { ColorStopImpl } from "./interface/ColorStopImpl";
+import type {
+    CanvasToWebGLContext,
     CanvasGradientToWebGL,
     FrameBufferManager
 } from "@next2d/webgl";
@@ -211,17 +209,25 @@ export class RenderGraphics extends RenderDisplayObject
 
         if (0 > xMin + width || 0 > yMin + height) {
 
-            if (filters && filters.length && this._$canApply(filters)) {
+            if (filters
+                && filters.length
+                && this._$canApply(filters)
+            ) {
 
-                let rect: Rectangle = new Rectangle(0, 0, width, height);
+                let filterBounds = $getBoundsObject(0, width, 0, height);
                 for (let idx: number = 0; idx < filters.length ; ++idx) {
-                    rect = filters[idx]
-                        ._$generateFilterRect(rect, xScale, yScale);
+                    filterBounds = filters[idx]
+                        ._$generateFilterRect(filterBounds, xScale, yScale);
                 }
 
-                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
+                if (0 > filterBounds.xMin + filterBounds.xMax
+                    || 0 > filterBounds.yMin + filterBounds.yMax
+                ) {
+                    $poolBoundsObject(filterBounds);
                     return;
                 }
+
+                $poolBoundsObject(filterBounds);
 
             } else {
                 return;
@@ -314,7 +320,7 @@ export class RenderGraphics extends RenderDisplayObject
 
                 context.grid.enable(
                     parentXMin, parentYMin, parentWidth, parentHeight,
-                    baseBounds, this._$scale9Grid as NonNullable<Rectangle>, mScale,
+                    baseBounds, this._$scale9Grid as NonNullable<GridImpl>, mScale,
                     pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
                     aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
                 );

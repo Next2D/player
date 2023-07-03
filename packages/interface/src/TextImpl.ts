@@ -1,5 +1,7 @@
-import { TextField } from "../../text/src/TextField";
-import { TextFormat } from "../../text/src/TextFormat";
+import {
+    TextField,
+    TextFormat
+} from "@next2d/text";
 
 export interface TextImpl {
     TextField: typeof TextField;

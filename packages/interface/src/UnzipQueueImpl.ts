@@ -1,5 +1,5 @@
 import { NoCodeDataZlibImpl } from "./NoCodeDataZlibImpl";
-import { Loader } from "../../display/src/Loader";
+import { Loader } from "@next2d/display";
 
 export interface UnzipQueueImpl {
     json: NoCodeDataZlibImpl;

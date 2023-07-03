@@ -30,7 +30,6 @@ import {
     FrameBufferManager
 } from "@next2d/webgl";
 import {
-    $doUpdated,
     $getEvent,
     $getInstanceId,
     $currentMousePoint,
@@ -43,6 +42,7 @@ import {
 } from "@next2d/util";
 import {
     CacheStore,
+    $doUpdated,
     $clamp,
     $getArray,
     $boundsMatrix,
@@ -1753,7 +1753,7 @@ export class DisplayObject extends EventDispatcher
             return baseBounds;
         }
 
-        let rect: Rectangle = new Rectangle(
+        let filterBounds: BoundsImpl = $getBoundsObject(
             baseBounds.xMin,
             baseBounds.yMin,
             baseBounds.xMax - baseBounds.xMin,
@@ -1762,14 +1762,17 @@ export class DisplayObject extends EventDispatcher
         $poolBoundsObject(baseBounds);
 
         for (let idx: number = 0; idx < filters.length; ++idx) {
-            rect = filters[idx]
-                ._$generateFilterRect(rect, 0, 0);
+            filterBounds = filters[idx]
+                ._$generateFilterRect(filterBounds, 0, 0);
         }
 
-        return $getBoundsObject(
-            rect.x, rect.x + rect.width,
-            rect.y, rect.y + rect.height
-        );
+        const xMin = filterBounds.xMin;
+        const xMax = filterBounds.xMin + filterBounds.xMax;
+        const yMin = filterBounds.yMin;
+        const yMax = filterBounds.yMin + filterBounds.yMax;
+        $poolBoundsObject(filterBounds);
+
+        return $getBoundsObject(xMin, xMax, yMin, yMax);
     }
 
     /**

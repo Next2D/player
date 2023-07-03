@@ -8,6 +8,11 @@ const cp   = require("child_process");
 
 const execute = () =>
 {
+    const distPath = `${process.cwd()}/dist`;
+    if (fs.existsSync(distPath)) {
+        cp.spawnSync(`rm -rf ${distPath}`, { "shell": true });
+    }
+
     const dirPath = `${process.cwd()}/packages/`;
 
     const files = fs.readdirSync(dirPath);
@@ -17,12 +22,6 @@ const execute = () =>
         return fs.statSync(path.join(dirPath, file)).isDirectory();
     });
 
-    const options = [
-        "--project",
-        path.join(process.cwd(), "config/tsconfig.json"),
-        "--outDir"
-    ];
-
     for (let idx = 0; idx < dirList.length; ++idx) {
 
         const dirName = dirList[idx];
@@ -31,16 +30,8 @@ const execute = () =>
 
         const outDir = path.join(packagePath, "dist");
         if (fs.existsSync(outDir)) {
-            fs.rmdirSync(outDir, { "recursive": true });
+            cp.spawnSync(`rm -rf ${outDir}`, { "shell": true });
         }
-
-        console.log(
-            `npx tsc ${path.join(packagePath, "src/**/*.ts")} ${options.join(" ")} ${outDir}`
-        );
-        cp.spawnSync(
-            `npx tsc ${path.join(packagePath, "src/**/*.ts")} ${options.join(" ")} ${outDir}`,
-            { "shell": true }
-        );
     }
 };
 

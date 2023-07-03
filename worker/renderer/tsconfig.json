@@ -14,10 +14,19 @@
     "module": "es6",
     "moduleResolution": "node",
     "baseUrl": "./",
-    "outDir": "./",
+    "outDir": "./dist",
     "paths": {
-      "@next2d/*": [
-        "../../packages/*/src"
+      "@next2d/share": [
+        "../../packages/share/src"
+      ],
+      "@next2d/webgl": [
+        "../../packages/webgl/src"
+      ],
+      "@next2d/geom": [
+        "../../packages/geom/src"
+      ],
+      "@next2d/filters": [
+        "../../packages/filters/src"
       ]
     }
   },
@@ -26,6 +35,7 @@
     "../../@types/**/*.ts"
   ],
   "exclude": [
+    "../../src",
     "node_modules",
     "dist"
   ]

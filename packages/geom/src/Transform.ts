@@ -22,7 +22,6 @@ import {
     SurfaceFilterImpl
 } from "@next2d/interface";
 import {
-    $doUpdated,
     $getColorTransform,
     $getMatrix
 } from "@next2d/util";
@@ -31,6 +30,7 @@ import {
     $Math,
     $MATRIX_ARRAY_IDENTITY,
     $COLOR_ARRAY_IDENTITY,
+    $doUpdated,
     $getFloat32Array6,
     $getArray,
     $poolArray,

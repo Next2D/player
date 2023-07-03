@@ -1,21 +1,16 @@
 import { RenderDisplayObjectContainer } from "./RenderDisplayObjectContainer";
+import { CanvasToWebGLContext } from "@next2d/webgl";
 import type { RenderShape } from "./RenderShape";
 import type { RenderVideo } from "./RenderVideo";
 import type { RenderTextField } from "./RenderTextField";
-import type { RenderDisplayObjectImpl } from "./RenderDisplayObjectImpl";
-import { Rectangle } from "@next2d/geom";
-import {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
-import {
-    AttachmentImpl,
-    PropertyContainerMessageImpl,
-    PropertyShapeMessageImpl,
-    PropertyTextMessageImpl,
-    PropertyVideoMessageImpl,
-    RGBAImpl
-} from "@next2d/interface";
+import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { PropertyContainerMessageImpl } from "./interface/PropertyContainerMessageImpl";
+import type { PropertyShapeMessageImpl } from "./interface/PropertyShapeMessageImpl";
+import type { PropertyTextMessageImpl } from "./interface/PropertyTextMessageImpl";
+import type { PropertyVideoMessageImpl } from "./interface/PropertyVideoMessageImpl";
+import type { RGBAImpl } from "./interface/RGBAImpl";
+import type { FrameBufferManager } from "@next2d/webgl";
 import {
     CacheStore,
     $COLOR_ARRAY_IDENTITY,
@@ -470,10 +465,7 @@ export class RenderPlayer
         }
 
         if (object.grid) {
-            sprite._$scale9Grid = new Rectangle(
-                object.grid.x, object.grid.y,
-                object.grid.w, object.grid.h
-            );
+            sprite._$scale9Grid = object.grid;
         }
 
         this._$instances.set(sprite._$instanceId, sprite);
@@ -514,10 +506,7 @@ export class RenderPlayer
         }
 
         if (object.grid) {
-            shape._$scale9Grid = new Rectangle(
-                object.grid.x, object.grid.y,
-                object.grid.w, object.grid.h
-            );
+            shape._$scale9Grid = object.grid;
         }
 
         this._$instances.set(shape._$instanceId, shape);

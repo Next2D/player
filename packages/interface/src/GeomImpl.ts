@@ -1,8 +1,10 @@
-import { ColorTransform } from "../../geom/src/ColorTransform";
-import { Matrix } from "../../geom/src/Matrix";
-import { Point } from "../../geom/src/Point";
-import { Rectangle } from "../../geom/src/Rectangle";
-import { Transform } from "../../geom/src/Transform";
+import {
+    ColorTransform,
+    Matrix,
+    Point,
+    Rectangle,
+    Transform
+} from "@next2d/geom";
 
 export interface GeomImpl {
     ColorTransform: typeof ColorTransform;

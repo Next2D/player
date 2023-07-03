@@ -1,8 +1,6 @@
-import {
-    InterpolationMethodImpl,
-    SpreadMethodImpl,
-    GradientTypeImpl
-} from "@next2d/interface";
+import type { InterpolationMethodImpl } from "./interface/InterpolationMethodImpl";
+import type { SpreadMethodImpl } from "./interface/SpreadMethodImpl";
+import type { GradientTypeImpl } from "./interface/GradientTypeImpl";
 import {
     $getFloat32Array6,
     $getArray,

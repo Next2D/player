@@ -1,4 +1,4 @@
-import { CanvasToWebGLContext } from "@next2d/webgl";
+import type { CanvasToWebGLContext } from "@next2d/webgl";
 import {
     $requestAnimationFrame,
     $clearTimeout,

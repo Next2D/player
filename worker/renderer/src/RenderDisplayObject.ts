@@ -1,7 +1,16 @@
 import type { RenderPlayer } from "./RenderPlayer";
-import type { RenderDisplayObjectImpl } from "./RenderDisplayObjectImpl";
+import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
+import type { BlendModeImpl } from "./interface/BlendModeImpl";
+import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { GridImpl } from "../../../packages/display/src/GridImpl";
+import type {
+    CanvasToWebGLContext,
+    FrameBufferManager
+} from "@next2d/webgl";
 import { $renderPlayer } from "./RenderGlobal";
-import { Rectangle } from "@next2d/geom";
 import {
     BevelFilter,
     BlurFilter,
@@ -13,17 +22,6 @@ import {
     GradientBevelFilter,
     GradientGlowFilter
 } from "@next2d/filters";
-import {
-    BlendModeImpl,
-    FilterArrayImpl,
-    BoundsImpl,
-    PropertyMessageMapImpl,
-    AttachmentImpl
-} from "@next2d/interface";
-import {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
 import {
     CacheStore,
     $getBoundsObject,
@@ -61,7 +59,7 @@ export class RenderDisplayObject
     public _$yMin: number;
     public _$xMax: number;
     public _$yMax: number;
-    public _$scale9Grid: Rectangle | null;
+    public _$scale9Grid: GridImpl | null;
     public _$matrixBase: Float32Array | null;
 
     /**
@@ -209,7 +207,7 @@ export class RenderDisplayObject
         this._$yMax = 0;
 
         /**
-         * @type {Rectangle|null}
+         * @type {object|null}
          * @default null
          * @private
          */
@@ -253,22 +251,23 @@ export class RenderDisplayObject
             return baseBounds;
         }
 
-        let rect: Rectangle = new Rectangle(
-            baseBounds.xMin,
-            baseBounds.yMin,
-            baseBounds.xMax - baseBounds.xMin,
-            baseBounds.yMax - baseBounds.yMin
+        let filterBounds = $getBoundsObject(
+            baseBounds.xMin, baseBounds.xMax - baseBounds.xMin,
+            baseBounds.yMin, baseBounds.yMax - baseBounds.yMin
         );
         $poolBoundsObject(baseBounds);
 
         for (let idx: number = 0; idx < filters.length; ++idx) {
-            rect = filters[idx]._$generateFilterRect(rect, 0, 0);
+            filterBounds = filters[idx]
+                ._$generateFilterRect(filterBounds, 0, 0);
         }
 
-        const xMin = rect.x;
-        const xMax = rect.x + rect.width;
-        const yMin = rect.y;
-        const yMax = rect.y + rect.height;
+        const xMin = filterBounds.xMin;
+        const xMax = filterBounds.xMin + filterBounds.xMax;
+        const yMin = filterBounds.yMin;
+        const yMax = filterBounds.yMin + filterBounds.yMax;
+
+        $poolBoundsObject(filterBounds);
 
         return $getBoundsObject(xMin, xMax, yMin, yMax);
     }
@@ -530,10 +529,7 @@ export class RenderDisplayObject
         }
 
         if (object.grid) {
-            this._$scale9Grid = new Rectangle(
-                object.grid.x, object.grid.y,
-                object.grid.w, object.grid.h
-            );
+            this._$scale9Grid = object.grid;
 
             if (object.matrixBase) {
                 this._$matrixBase = object.matrixBase;

@@ -1,4 +1,4 @@
-import { $doUpdated } from "@next2d/util";
+import { $doUpdated } from "@next2d/share";
 
 /**
  * BitmapFilter クラスは、すべてのイメージフィルター効果の基本クラスです。

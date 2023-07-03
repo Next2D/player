@@ -1883,7 +1883,7 @@ export class CanvasToWebGLContext
 
     /**
      * @param  {WebGLTexture} texture
-     * @param  {WebGLTexture} map
+     * @param  {HTMLImageElement} map
      * @param  {number} base_width
      * @param  {number} base_height
      * @param  {PointImpl}  [point=null]
@@ -1901,7 +1901,8 @@ export class CanvasToWebGLContext
      * @private
      */
     _$applyDisplacementMapFilter (
-        texture: WebGLTexture, map: WebGLTexture,
+        texture: WebGLTexture,
+        map: HTMLImageElement,
         base_width: number, base_height: number,
         point: PointImpl | null,
         component_x: number, component_y: number,
@@ -1924,10 +1925,14 @@ export class CanvasToWebGLContext
             point = { "x": 0, "y": 0 };
         }
 
+        const mapTexture: WebGLTexture = this
+            ._$frameBufferManager
+            .createTextureFromImage(map);
+
         this
             ._$frameBufferManager
             .textureManager
-            .bind01(texture, map);
+            .bind01(texture, mapTexture);
 
         const variants: FilterShaderVariantCollection = this
             ._$shaderList
@@ -1947,6 +1952,10 @@ export class CanvasToWebGLContext
         this.blend.reset();
 
         shader._$drawImage();
+
+        this
+            ._$frameBufferManager
+            .releaseTexture(mapTexture);
     }
 
     /**

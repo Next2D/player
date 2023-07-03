@@ -1,18 +1,13 @@
 import { BitmapFilter } from "./BitmapFilter";
-import { BitmapData } from "@next2d/display";
-import {
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
-import {
-    DisplacementMapFilterModeImpl,
-    AttachmentImpl,
-    BitmapDataChannelImpl
-} from "@next2d/interface";
-import {
-    Point,
-    Rectangle
-} from "@next2d/geom";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { DisplacementMapFilterModeImpl } from "./interface/DisplacementMapFilterModeImpl";
+import type { BitmapDataChannelImpl } from "./interface/BitmapDataChannelImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { PointImpl } from "@next2d/interface";
 import {
     $clamp,
     $getArray,
@@ -36,8 +31,8 @@ import {
  */
 export class DisplacementMapFilter extends BitmapFilter
 {
-    private _$mapBitmap: BitmapData | null;
-    private _$mapPoint: Point | null;
+    private _$mapBitmap: HTMLImageElement | null;
+    private _$mapPoint: PointImpl | null;
     private _$componentX: BitmapDataChannelImpl;
     private _$componentY: BitmapDataChannelImpl;
     private _$scaleX: number;
@@ -47,22 +42,22 @@ export class DisplacementMapFilter extends BitmapFilter
     private _$alpha: number;
 
     /**
-     * @param {BitmapData} [map_bitmap = null]
-     * @param {Point}      [map_point = null]
-     * @param {number}     [component_x = 0]
-     * @param {number}     [component_y = 0]
-     * @param {number}     [scale_x = 0.0]
-     * @param {number}     [scale_y = 0.0]
-     * @param {string}     [mode = DisplacementMapFilterMode.WRAP]
-     * @param {number}     [color = 0]
-     * @param {number}     [alpha = 0.0]
+     * @param {HTMLImageElement} [map_bitmap = null]
+     * @param {object} [map_point = null]
+     * @param {number} [component_x = 0]
+     * @param {number} [component_y = 0]
+     * @param {number} [scale_x = 0.0]
+     * @param {number} [scale_y = 0.0]
+     * @param {string} [mode = DisplacementMapFilterMode.WRAP]
+     * @param {number} [color = 0]
+     * @param {number} [alpha = 0.0]
      *
      * @constructor
      * @public
      */
     constructor (
-        map_bitmap: BitmapData | null = null,
-        map_point: Point | null = null,
+        map_bitmap: HTMLImageElement | null = null,
+        map_point: PointImpl | null = null,
         component_x: BitmapDataChannelImpl = 0,
         component_y: BitmapDataChannelImpl = 0,
         scale_x: number = 0, scale_y: number = 0,
@@ -80,7 +75,7 @@ export class DisplacementMapFilter extends BitmapFilter
         this._$mapBitmap = null;
 
         /**
-         * @type {Point}
+         * @type {object}
          * @default null
          * @private
          */
@@ -292,15 +287,15 @@ export class DisplacementMapFilter extends BitmapFilter
      * @description 置き換えマップデータが含まれる BitmapData オブジェクトです。
      *              A BitmapData object containing the displacement map data.
      *
-     * @member  {BitmapData}
+     * @member  {HTMLImageElement}
      * @default null
      * @public
      */
-    get mapBitmap (): BitmapData | null
+    get mapBitmap (): HTMLImageElement | null
     {
         return this._$mapBitmap;
     }
-    set mapBitmap (map_bitmap: BitmapData | null)
+    set mapBitmap (map_bitmap: HTMLImageElement | null)
     {
         if (map_bitmap !== this._$mapBitmap) {
             this._$mapBitmap = map_bitmap;
@@ -314,15 +309,15 @@ export class DisplacementMapFilter extends BitmapFilter
      *              A value that contains the offset of the upper-left corner
      *              of the target display object from the upper-left corner of the map image.
      *
-     * @member  {Point}
+     * @member  {object}
      * @default null
      * @public
      */
-    get mapPoint (): Point | null
+    get mapPoint (): PointImpl | null
     {
         return this._$mapPoint;
     }
-    set mapPoint (map_point: Point | null)
+    set mapPoint (map_point: PointImpl | null)
     {
         if (map_point !== this._$mapPoint) {
             this._$mapPoint = map_point;
@@ -422,14 +417,14 @@ export class DisplacementMapFilter extends BitmapFilter
     }
 
     /**
-     * @param  {Rectangle} rect
-     * @return {Rectangle}
+     * @param  {object} bounds
+     * @return {object}
      * @method
      * @private
      */
-    _$generateFilterRect (rect: Rectangle): Rectangle
+    _$generateFilterRect (bounds: BoundsImpl): BoundsImpl
     {
-        return rect;
+        return bounds;
     }
 
     /**
@@ -475,18 +470,13 @@ export class DisplacementMapFilter extends BitmapFilter
             return texture;
         }
 
-        const mapTexture: WebGLTexture | null = this._$mapBitmap.getTexture();
-        if (!mapTexture) {
-            return texture;
-        }
-
         // matrix to scale
         const xScale: number = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
         const yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
         context._$applyDisplacementMapFilter(
             texture,
-            mapTexture,
+            this._$mapBitmap,
             texture.width  / xScale,
             texture.height / yScale,
             this._$mapPoint,

@@ -1,3 +1,4 @@
+import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
 import {
     $renderPlayer,
     $setSafari
@@ -7,7 +8,6 @@ import {
     $COLOR_ARRAY_IDENTITY,
     $OffscreenCanvas
 } from "@next2d/share";
-import type { RenderDisplayObjectImpl } from "./RenderDisplayObjectImpl";
 
 /**
  * @class

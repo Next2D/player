@@ -1,6 +1,6 @@
 import { TextObjectImpl } from "./TextObjectImpl";
 import { TextObjectModeImpl } from "./TextObjectModeImpl";
-import { TextFormat } from "../../text/src/TextFormat";
+import { TextFormat } from "@next2d/text";
 
 export interface TextBreakObjectImpl extends TextObjectImpl {
     mode: TextObjectModeImpl;

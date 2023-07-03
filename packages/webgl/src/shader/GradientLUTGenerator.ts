@@ -2,7 +2,7 @@ import type { CanvasToWebGLContext } from "../CanvasToWebGLContext";
 import type { GradientLUTShaderVariantCollection } from "./variants/GradientLUTShaderVariantCollection";
 import type { CanvasToWebGLShader } from "./CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./WebGLShaderUniform";
-import { AttachmentImpl } from "@next2d/interface";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
 import { $Math } from "@next2d/share";
 
 /**

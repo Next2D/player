@@ -1,5 +1,7 @@
-import { URLRequest } from "../../net/src/URLRequest";
-import { URLRequestHeader } from "../../net/src/URLRequestHeader";
+import {
+    URLRequest,
+    URLRequestHeader
+} from "@next2d/net";
 
 export interface NetImpl {
     URLRequest: typeof URLRequest;

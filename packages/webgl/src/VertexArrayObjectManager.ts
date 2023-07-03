@@ -1,14 +1,10 @@
 import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
 import { WebGLStrokeMeshGenerator } from "./WebGLStrokeMeshGenerator";
+import type { FillMeshImpl } from "./interface/FillMeshImpl";
+import type { StrokeMethImpl } from "./interface/StrokeMethImpl";
+import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
+import type { JointStyleImpl } from "./interface/JointStyleImpl";
 import {
-    FillMeshImpl,
-    StrokeMethImpl,
-    CapsStyleImpl,
-    JointStyleImpl
-} from "@next2d/interface";
-import {
-    $Float32Array,
-    $getArray,
     $upperPowerOfTwo
 } from "@next2d/share";
 
@@ -47,13 +43,13 @@ export class VertexArrayObjectManager
          * @type {array}
          * @private
          */
-        this._$fillVertexArrayPool = $getArray();
+        this._$fillVertexArrayPool = [];
 
         /**
          * @type {array}
          * @private
          */
-        this._$strokeVertexArrayPool = $getArray();
+        this._$strokeVertexArrayPool = [];
 
         /**
          * @type {WebGLVertexArrayObject}
@@ -109,7 +105,7 @@ export class VertexArrayObjectManager
          * @default 0
          * @private
          */
-        this._$vertexBufferData = new $Float32Array([0, 0, 0, 1, 1, 0, 1, 1]);
+        this._$vertexBufferData = new Float32Array([0, 0, 0, 1, 1, 0, 1, 1]);
 
         /**
          * @type {WebGLVertexArrayObject}

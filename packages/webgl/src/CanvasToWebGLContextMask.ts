@@ -4,13 +4,11 @@ import type { FrameBufferManager } from "./FrameBufferManager";
 import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { ClipObjectImpl } from "./interface/ClipObjectImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
 import { $poolArray } from "@next2d/share";
-import {
-    AttachmentImpl,
-    ClipObjectImpl,
-    BoundsImpl,
-    IndexRangeImpl
-} from "@next2d/interface";
 
 /**
  * @class

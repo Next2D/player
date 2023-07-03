@@ -30,7 +30,6 @@
     "**/dist/**",
     "worker",
     "scripts",
-    "config",
     "__tests__",
     "dist"
   ]

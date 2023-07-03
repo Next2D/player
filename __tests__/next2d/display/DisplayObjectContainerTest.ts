@@ -1,8 +1,10 @@
-import { $PREFIX } from "../../../packages/util/Util";
-import { Event } from "../../../packages/events/src/Event";
-import { DisplayObjectContainer } from "../../../packages/display/src/DisplayObjectContainer";
-import { Sprite } from "../../../packages/display/src/Sprite";
-import { MovieClip } from "../../../packages/display/src/MovieClip";
+import { $PREFIX } from "@next2d/util";
+import { Event } from "@next2d/events";
+import {
+    DisplayObjectContainer,
+    Sprite,
+    MovieClip
+} from "@next2d/display";
 
 describe("DisplayObjectContainer.js property test", function()
 {

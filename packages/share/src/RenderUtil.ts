@@ -1,8 +1,6 @@
-import {
-    BoundsImpl,
-    RGBAImpl,
-    PreObjectImpl
-} from "@next2d/interface";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { RGBAImpl } from "./interface/RGBAImpl";
+import type { PreObjectImpl } from "./interface/PreObjectImpl";
 
 /**
  * @type {number}
@@ -17,6 +15,33 @@ let programId: number = 0;
 export const $getProgramId = (): number =>
 {
     return programId++;
+};
+
+/**
+ * @return {number}
+ * @public
+ */
+let $updated: boolean = false;
+
+/**
+ * @return {boolean}
+ * @method
+ * @public
+ */
+export const $isUpdated = (): boolean =>
+{
+    return $updated;
+};
+
+/**
+ * @param  {boolean} update
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $doUpdated = (update: boolean = true) =>
+{
+    $updated = update;
 };
 
 /**

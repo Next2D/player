@@ -74,18 +74,6 @@ export const $setEvent = (event: MouseEvent | TouchEvent | Event | null = null) 
     $event = event;
 };
 
-let $updated: boolean = false;
-
-export const $isUpdated = (): boolean =>
-{
-    return $updated;
-};
-
-export const $doUpdated = (update: boolean = true) =>
-{
-    $updated = update;
-};
-
 let $soundMixerVolume: number = 1;
 
 export const $getSoundMixerVolume = (): number =>

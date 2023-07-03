@@ -1,0 +1,1 @@
+export type CapsStyleImpl = "none" | "round" | "square";

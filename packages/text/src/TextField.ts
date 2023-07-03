@@ -45,7 +45,6 @@ import {
     FrameBufferManager
 } from "@next2d/webgl";
 import {
-    $doUpdated,
     $currentPlayer,
     $DIV,
     $isSafari,
@@ -65,6 +64,7 @@ import {
 } from "@next2d/util";
 import {
     CacheStore,
+    $doUpdated,
     $clamp,
     $getArray,
     $intToRGBA,
@@ -2758,14 +2758,24 @@ export class TextField extends InteractiveObject
 
             if (filters.length && this._$canApply(filters)) {
 
-                let rect = new Rectangle(0, 0, width, height);
+                let filterBounds: BoundsImpl = $getBoundsObject(
+                    0, width,
+                    0 ,height
+                );
+
                 for (let idx = 0; idx < filters.length ; ++idx) {
-                    rect = filters[idx]._$generateFilterRect(rect, xScale, yScale);
+                    filterBounds = filters[idx]
+                        ._$generateFilterRect(filterBounds, xScale, yScale);
                 }
 
-                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
+                if (0 > filterBounds.xMin + filterBounds.xMax
+                    || 0 > filterBounds.yMin + filterBounds.yMax
+                ) {
+                    $poolBoundsObject(filterBounds);
                     return;
                 }
+
+                $poolBoundsObject(filterBounds);
 
             } else {
                 return;

@@ -1,12 +1,10 @@
 import { BitmapFilter } from "./BitmapFilter";
 import { BlurFilter } from "./BlurFilter";
-import {
-    BitmapFilterTypeImpl,
-    AttachmentImpl,
-    FilterQualityImpl
-} from "@next2d/interface";
-import { Rectangle } from "@next2d/geom";
-import {
+import type { BitmapFilterTypeImpl } from "./interface/BitmapFilterTypeImpl";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { FilterQualityImpl } from "./interface/FilterQualityImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
@@ -18,7 +16,8 @@ import {
     $Deg2Rad,
     $intToR,
     $intToG,
-    $intToB
+    $intToB,
+    $getBoundsObject
 } from "@next2d/share";
 
 /**
@@ -502,20 +501,24 @@ export class BevelFilter extends BitmapFilter
     }
 
     /**
-     * @param  {Rectangle} rect
-     * @param  {number}    [x_scale=null]
-     * @param  {number}    [y_scale=null]
-     * @return {Rectangle}
+     * @param  {object} bounds
+     * @param  {number} [x_scale=null]
+     * @param  {number} [y_scale=null]
+     * @return {object}
      * @method
      * @private
      */
     _$generateFilterRect (
-        rect: Rectangle,
+        bounds: BoundsImpl,
         x_scale: number = 0,
         y_scale: number = 0
-    ): Rectangle {
+    ): BoundsImpl {
 
-        let clone: Rectangle = rect.clone();
+        let clone: BoundsImpl = $getBoundsObject(
+            bounds.xMin, bounds.xMax,
+            bounds.yMin, bounds.yMax
+        );
+
         if (!this._$canApply()) {
             return clone;
         }
@@ -528,10 +531,10 @@ export class BevelFilter extends BitmapFilter
         const x: number      = $Math.abs($Math.cos(radian) * this._$distance);
         const y: number      = $Math.abs($Math.sin(radian) * this._$distance);
 
-        clone.x      += -x;
-        clone.width  += x;
-        clone.y      += -y;
-        clone.height += y * 2;
+        clone.xMin += -x;
+        clone.xMax += x;
+        clone.yMin += -y;
+        clone.yMax += y * 2;
 
         return clone;
     }
@@ -631,7 +634,6 @@ export class BevelFilter extends BitmapFilter
 
         context._$bind(currentAttachment);
 
-        // TODO 後で確認
         manager.releaseAttachment(highlightTextureBaseAttachment, true);
 
         context._$applyBitmapFilter(

@@ -1,7 +1,5 @@
-import {
-    IndexRangeImpl,
-    FillMeshImpl
-} from "@next2d/interface";
+import type { FillMeshImpl } from "./interface/FillMeshImpl";
+import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
 import {
     $Float32Array,
     $getArray

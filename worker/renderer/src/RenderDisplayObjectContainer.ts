@@ -1,16 +1,15 @@
 import { RenderGraphics } from "./RenderGraphics";
-import { Rectangle } from "@next2d/geom";
-import type { RenderDisplayObjectImpl } from "./RenderDisplayObjectImpl";
-import {
+import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
+import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
+import type { BlendModeImpl } from "./interface/BlendModeImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
-import {
+import type {
     PreObjectImpl,
-    FilterArrayImpl,
-    BlendModeImpl,
-    BoundsImpl,
-    AttachmentImpl,
     DisplayObjectImpl,
     ParentImpl
 } from "@next2d/interface";
@@ -505,16 +504,22 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             return $getBoundsObject(xMin, xMax, yMin, yMax);
         }
 
-        let rect: Rectangle = new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
+        let filterBounds = $getBoundsObject(
+            xMin, xMax - xMin,
+            yMin, yMax - yMin
+        );
+
         for (let idx: number = 0; idx < this._$filters.length; ++idx) {
-            rect = this._$filters[idx]
-                ._$generateFilterRect(rect, 0, 0);
+            filterBounds = this._$filters[idx]
+                ._$generateFilterRect(filterBounds, 0, 0);
         }
 
-        xMin = rect.x;
-        xMax = rect.x + rect.width;
-        yMin = rect.y;
-        yMax = rect.y + rect.height;
+        xMin = filterBounds.xMin;
+        xMax = filterBounds.xMin + filterBounds.xMax;
+        yMin = filterBounds.yMin;
+        yMax = filterBounds.yMin + filterBounds.yMax;
+
+        $poolBoundsObject(filterBounds);
 
         return $getBoundsObject(xMin, xMax, yMin, yMax);
     }

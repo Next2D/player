@@ -1,16 +1,13 @@
 import { RenderDisplayObject } from "./RenderDisplayObject";
-import { Rectangle } from "@next2d/geom";
-import {
-    TextDataImpl,
-    PropertyTextMessageImpl,
-    TextFieldAutoSizeImpl,
-    TextFormatVerticalAlignImpl,
-    BoundsImpl,
-    AttachmentImpl,
-    RGBAImpl,
-    TextFormatImpl
-} from "@next2d/interface";
-import {
+import type{ TextDataImpl } from "./interface/TextDataImpl";
+import type{ PropertyTextMessageImpl } from "./interface/PropertyTextMessageImpl";
+import type{ TextFieldAutoSizeImpl } from "./interface/TextFieldAutoSizeImpl";
+import type{ TextFormatVerticalAlignImpl } from "./interface/TextFormatVerticalAlignImpl";
+import type{ BoundsImpl } from "./interface/BoundsImpl";
+import type{ AttachmentImpl } from "./interface/AttachmentImpl";
+import type{ RGBAImpl } from "./interface/RGBAImpl";
+import type{ TextFormatImpl } from "./interface/TextFormatImpl";
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
@@ -34,7 +31,8 @@ import {
     $poolArray,
     $poolBoundsObject,
     $poolFloat32Array6,
-    $poolFloat32Array8
+    $poolFloat32Array8,
+    $getBoundsObject
 } from "@next2d/share";
 
 /**
@@ -516,14 +514,24 @@ export class RenderTextField extends RenderDisplayObject
                 && this._$canApply(this._$filters)
             ) {
 
-                let rect: Rectangle = new Rectangle(0, 0, width, height);
+                let filterBounds = $getBoundsObject(
+                    0, width, 0, height
+                );
+
                 for (let idx = 0; idx < this._$filters.length ; ++idx) {
-                    rect = this._$filters[idx]._$generateFilterRect(rect, xScale, yScale);
+                    filterBounds = this
+                        ._$filters[idx]
+                        ._$generateFilterRect(filterBounds, xScale, yScale);
                 }
 
-                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
+                if (0 > filterBounds.xMin + filterBounds.xMax
+                    || 0 > filterBounds.yMin + filterBounds.yMax
+                ) {
+                    $poolBoundsObject(filterBounds);
                     return;
                 }
+
+                $poolBoundsObject(filterBounds);
 
             } else {
                 return;

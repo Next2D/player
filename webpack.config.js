@@ -110,4 +110,4 @@ const player = {
     }
 };
 
-module.exports = [unzip_worker, render_worker];
+module.exports = [unzip_worker, render_worker, player];

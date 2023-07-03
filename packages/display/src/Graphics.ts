@@ -2,10 +2,7 @@ import { GraphicsBitmapFill } from "./GraphicsBitmapFill";
 import { GraphicsGradientFill } from "./GraphicsGradientFill";
 import { BitmapData } from "./BitmapData";
 import { Player } from "@next2d/core";
-import {
-    Rectangle,
-    Matrix
-} from "@next2d/geom";
+import { Matrix } from "@next2d/geom";
 import {
     GraphicsParentImpl,
     CapsStyleImpl,
@@ -26,12 +23,10 @@ import {
     FrameBufferManager,
     CanvasGradientToWebGL
 } from "@next2d/webgl";
-import {
-    $currentPlayer,
-    $doUpdated
-} from "@next2d/util";
+import { $currentPlayer } from "@next2d/util";
 import {
     CacheStore,
+    $doUpdated,
     $Math,
     $Number,
     $getArray,
@@ -1715,16 +1710,24 @@ export class Graphics
 
         if (0 > xMin + width || 0 > yMin + height) {
 
-            if (filters && filters.length && displayObject._$canApply(filters)) {
+            if (filters && filters.length
+                && displayObject._$canApply(filters)
+            ) {
 
-                let rect: Rectangle = new Rectangle(0, 0, width, height);
+                let filterBounds: BoundsImpl = $getBoundsObject(0 ,width, 0, height);
                 for (let idx: number = 0; idx < filters.length ; ++idx) {
-                    rect = filters[idx]._$generateFilterRect(rect, xScale, yScale);
+                    filterBounds = filters[idx]
+                        ._$generateFilterRect(filterBounds, xScale, yScale);
                 }
 
-                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
+                if (0 > filterBounds.xMin + filterBounds.xMax
+                    || 0 > filterBounds.yMin + filterBounds.yMax
+                ) {
+                    $poolBoundsObject(filterBounds);
                     return;
                 }
+
+                $poolBoundsObject(filterBounds);
 
             } else {
                 return;

@@ -1,13 +1,10 @@
 import { InteractiveObject } from "./InteractiveObject";
+import { Event as Next2DEvent } from "@next2d/events";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Graphics } from "./Graphics";
-import { Player } from "@next2d/core";
-import { Sound } from "@next2d/media";
-import { Event as Next2DEvent } from "@next2d/events";
-import {
-    Rectangle,
-    Transform
-} from "@next2d/geom";
+import type { Player } from "@next2d/core";
+import type { Sound } from "@next2d/media";
+import type { Transform } from "@next2d/geom";
 import {
     DictionaryTagImpl,
     PlaceObjectImpl,
@@ -29,7 +26,6 @@ import {
     FrameBufferManager
 } from "@next2d/webgl";
 import {
-    $doUpdated,
     $createInstance,
     $currentPlayer,
     $hitContext,
@@ -39,6 +35,7 @@ import {
 } from "@next2d/util";
 import {
     CacheStore,
+    $doUpdated,
     $boundsMatrix,
     $clamp,
     $getArray,
@@ -707,18 +704,22 @@ export class DisplayObjectContainer extends InteractiveObject
             return $getBoundsObject(xMin, xMax, yMin, yMax);
         }
 
-        let rect: Rectangle = new Rectangle(
-            xMin, yMin, xMax - xMin, yMax - yMin
+        let filterBounds: BoundsImpl = $getBoundsObject(
+            xMin, xMax - xMin,
+            yMin, yMax - yMin
         );
+
         for (let idx: number = 0; idx < filters.length; ++idx) {
-            rect = filters[idx]
-                ._$generateFilterRect(rect, 0, 0);
+            filterBounds = filters[idx]
+                ._$generateFilterRect(filterBounds, 0, 0);
         }
 
-        xMin = rect.x;
-        xMax = rect.x + rect.width;
-        yMin = rect.y;
-        yMax = rect.y + rect.height;
+        xMin = filterBounds.xMin;
+        xMax = filterBounds.xMin + filterBounds.xMax;
+        yMin = filterBounds.yMin;
+        yMax = filterBounds.yMin + filterBounds.yMax;
+
+        $poolBoundsObject(filterBounds);
 
         return $getBoundsObject(xMin, xMax, yMin, yMax);
     }

@@ -1,22 +1,21 @@
 import { BitmapFilter } from "./BitmapFilter";
 import { BlurFilter } from "./BlurFilter";
-import { Rectangle } from "@next2d/geom";
-import {
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
-import {
-    FilterQualityImpl,
-    AttachmentImpl,
-    BitmapFilterTypeImpl
-} from "@next2d/interface";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { FilterQualityImpl } from "./interface/FilterQualityImpl";
+import type { BitmapFilterTypeImpl } from "./interface/BitmapFilterTypeImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
 import {
     $intToB,
     $intToG,
     $intToR,
     $clamp,
     $toColorInt,
-    $getArray
+    $getArray,
+    $getBoundsObject
 } from "@next2d/share";
 
 /**
@@ -364,20 +363,24 @@ export class GlowFilter extends BitmapFilter
     }
 
     /**
-     * @param  {Rectangle} rect
-     * @param  {number}    [x_scale=0]
-     * @param  {number}    [y_scale=0]
-     * @return {Rectangle}
+     * @param  {object} bounds
+     * @param  {number} [x_scale=0]
+     * @param  {number} [y_scale=0]
+     * @return {object}
      * @method
      * @private
      */
     _$generateFilterRect (
-        rect: Rectangle,
+        bounds: BoundsImpl,
         x_scale: number = 0,
         y_scale: number = 0
-    ): Rectangle {
+    ): BoundsImpl {
 
-        const clone: Rectangle = rect.clone();
+        const clone: BoundsImpl = $getBoundsObject(
+            bounds.xMin, bounds.xMax,
+            bounds.yMin, bounds.yMax
+        );
+
         if (!this._$canApply()) {
             return clone;
         }

@@ -1,17 +1,17 @@
 import { BitmapFilter } from "./BitmapFilter";
-import { Rectangle } from "@next2d/geom";
-import {
-    FilterQualityImpl,
-    AttachmentImpl
-} from "@next2d/interface";
-import {
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { FilterQualityImpl } from "./interface/FilterQualityImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
 import {
     $Math,
     $getArray,
-    $clamp
+    $clamp,
+    $getBoundsObject,
+    $poolBoundsObject
 } from "@next2d/share";
 
 /**
@@ -231,19 +231,22 @@ export class BlurFilter extends BitmapFilter
     }
 
     /**
-     * @param  {Rectangle} rect
-     * @param  {number}    [x_scale=0]
-     * @param  {number}    [y_scale=0]
-     * @return {Rectangle}
+     * @param  {object} bounds
+     * @param  {number} [x_scale=0]
+     * @param  {number} [y_scale=0]
+     * @return {object}
      * @method
      * @private
      */
     _$generateFilterRect (
-        rect: Rectangle,
+        bounds: BoundsImpl,
         x_scale: number = 0, y_scale: number = 0
-    ): Rectangle {
+    ): BoundsImpl {
 
-        const clone = rect.clone();
+        const clone: BoundsImpl = $getBoundsObject(
+            bounds.xMin, bounds.xMax,
+            bounds.yMin, bounds.yMax
+        );
 
         if (!this._$quality) {
             return clone;
@@ -266,10 +269,10 @@ export class BlurFilter extends BitmapFilter
             dy = $Math.round(dy);
         }
 
-        clone.x      -= dx;
-        clone.width  += dx * 2;
-        clone.y      -= dy;
-        clone.height += dy * 2;
+        clone.xMin -= dx;
+        clone.xMax += dx * 2;
+        clone.yMin -= dy;
+        clone.yMax += dy * 2;
 
         return clone;
     }
@@ -321,13 +324,18 @@ export class BlurFilter extends BitmapFilter
         const yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
         // after size
-        const baseRect: Rectangle = new Rectangle(0, 0, baseTexture.width, baseTexture.height);
-        const rect: Rectangle = this._$generateFilterRect(baseRect, xScale, yScale);
+        const baseBounds = $getBoundsObject(
+            0, baseTexture.width,
+            0, baseTexture.height
+        );
+        const filterBounds: BoundsImpl = this
+            ._$generateFilterRect(baseBounds, xScale, yScale);
+        $poolBoundsObject(baseBounds);
 
-        const width: number   = $Math.ceil(rect.width) | 0;
-        const height: number  = $Math.ceil(rect.height) | 0;
-        const offsetX: number = $Math.ceil($Math.abs(rect.x) + $Math.abs(width  - rect.width)  * 0.5);
-        const offsetY: number = $Math.ceil($Math.abs(rect.y) + $Math.abs(height - rect.height) * 0.5);
+        const width: number   = $Math.ceil(filterBounds.xMax) | 0;
+        const height: number  = $Math.ceil(filterBounds.yMax) | 0;
+        const offsetX: number = $Math.ceil($Math.abs(filterBounds.xMin) + $Math.abs(width  - filterBounds.xMax) * 0.5);
+        const offsetY: number = $Math.ceil($Math.abs(filterBounds.yMin) + $Math.abs(height - filterBounds.yMax) * 0.5);
 
         // set offset xy
         context._$offsetX = offsetX + context._$offsetX;

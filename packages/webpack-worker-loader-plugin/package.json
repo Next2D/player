@@ -1,0 +1,26 @@
+{
+  "name": "@next2d/webpack-worker-loader-plugin",
+  "description": "Next2D Framework webpack Worker Loader plugin.",
+  "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
+  "license": "MIT",
+  "main": "index.js",
+  "homepage": "https://next2d.app",
+  "bugs": "https://github.com/Next2D/Player/issues",
+  "exports": {
+    ".": {
+      "import": {
+        "default": "./index.js"
+      },
+      "require": {
+        "default": "./index.js"
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Next2D/Player.git"
+  },
+  "dependencies": {
+    "@types/node": "^16.9.2"
+  }
+}

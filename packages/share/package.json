@@ -31,7 +31,6 @@
     "url": "git+https://github.com/Next2D/Player.git"
   },
   "peerDependencies": {
-    "@next2d/interface": "file:../interface",
     "@next2d/webgl": "file:../webgl"
   }
 }

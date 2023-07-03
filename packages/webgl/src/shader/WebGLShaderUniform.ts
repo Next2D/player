@@ -1,4 +1,4 @@
-import { UniformDataImpl } from "@next2d/interface";
+import type { UniformDataImpl } from "../interface/UniformDataImpl";
 import {
     $getMap,
     $Float32Array,

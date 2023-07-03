@@ -1,8 +1,6 @@
-import {
-    StrokeMethImpl,
-    JointStyleImpl,
-    CapsStyleImpl
-} from "@next2d/interface";
+import type { StrokeMethImpl } from "./interface/StrokeMethImpl";
+import type { JointStyleImpl } from "./interface/JointStyleImpl";
+import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
 import {
     $Float32Array,
     $Int16Array,

@@ -1,6 +1,6 @@
 {
   "name": "@next2d/player",
-  "version": "1.14.19",
+  "version": "1.14.20",
   "description": "Experience the fast and beautiful anti-aliased rendering of WebGL. You can create rich, interactive graphics, cross-platform applications and games without worrying about browser or device compatibility.",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
@@ -21,9 +21,9 @@
   "scripts": {
     "start": "webpack serve",
     "lint": "eslint src/**/*.ts",
-    "publish": "node ./scripts/publish.js",
-    "create": "node ./scripts/create.js",
-    "build": "webpack --mode production",
+    "publish": "tsc",
+    "clean": "node ./scripts/clean.js",
+    "build": "npm run clean && tsc && node ./scripts/build.js && webpack --mode production",
     "test": "jest",
     "jsdoc": "tsc && jsdoc -c jsdoc.conf.js -r dist DOCS.md"
   },
@@ -33,7 +33,6 @@
   },
   "devDependencies": {
     "@next2d/jsdoc-template": "^1.0.7",
-    "@next2d/webpack-worker-loader-plugin": "^1.0.1",
     "@types/jest": "^29.5.2",
     "@typescript-eslint/eslint-plugin": "^5.60.0",
     "@typescript-eslint/parser": "^5.60.0",
@@ -51,18 +50,19 @@
     "webpack-dev-server": "^4.15.1"
   },
   "peerDependencies": {
-    "@next2d/core": "file:../core",
-    "@next2d/display": "file:../display",
-    "@next2d/events": "file:../events",
-    "@next2d/filters": "file:../filters",
-    "@next2d/geom": "file:../geom",
-    "@next2d/interface": "file:../interface",
-    "@next2d/media": "file:../media",
-    "@next2d/net": "file:../net",
-    "@next2d/share": "file:../share",
-    "@next2d/text": "file:../text",
-    "@next2d/ui": "file:../ui",
-    "@next2d/util": "file:../util",
-    "@next2d/webgl": "file:../webgl"
+    "@next2d/core": "file:packages/core",
+    "@next2d/display": "file:packages/display",
+    "@next2d/events": "file:packages/events",
+    "@next2d/filters": "file:packages/filters",
+    "@next2d/geom": "file:packages/geom",
+    "@next2d/interface": "file:packages/interface",
+    "@next2d/media": "file:packages/media",
+    "@next2d/net": "file:packages/net",
+    "@next2d/share": "file:packages/share",
+    "@next2d/text": "file:packages/text",
+    "@next2d/ui": "file:packages/ui",
+    "@next2d/util": "file:packages/util",
+    "@next2d/webgl": "file:packages/webgl",
+    "@next2d/webpack-worker-loader-plugin": "file:packages/webpack-worker-loader-plugin"
   }
 }

@@ -60,14 +60,15 @@ import {
     $getEvent,
     $setEvent,
     $setEventType,
-    $doUpdated,
     $setCurrentLoaderInfo,
     $getEventType,
-    $isUpdated
 } from "@next2d/util";
 import {
     $Math,
     $performance,
+    $COLOR_ARRAY_IDENTITY,
+    $doUpdated,
+    $isUpdated,
     $getArray,
     $getFloat32Array6,
     $getMap,
@@ -76,10 +77,8 @@ import {
     $requestAnimationFrame,
     $cancelAnimationFrame,
     $poolArray,
-    $COLOR_ARRAY_IDENTITY,
     $clamp
 } from "@next2d/share";
-
 
 /**
  * 描画のイベントや設定やコントロールの管理クラス

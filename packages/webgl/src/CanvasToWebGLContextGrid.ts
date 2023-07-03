@@ -1,5 +1,5 @@
-import type { Rectangle } from "@next2d/geom";
-import type { BoundsImpl } from "@next2d/interface";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { GridImpl } from "../../../worker/renderer/src/interface/GridImpl";
 import { $Math } from "@next2d/share";
 
 /**
@@ -269,7 +269,7 @@ export class CanvasToWebGLContextGrid
      * @param  {number} width
      * @param  {number} height
      * @param  {object} bounds
-     * @param  {Rectangle} grid
+     * @param  {object} grid
      * @param  {number} same_scale
      * @param  {number} parentA
      * @param  {number} parentB
@@ -289,7 +289,7 @@ export class CanvasToWebGLContextGrid
      */
     enable (
         x: number, y: number, width: number, height: number,
-        bounds: BoundsImpl, grid: Rectangle, same_scale: number,
+        bounds: BoundsImpl, grid: GridImpl, same_scale: number,
         parentA: number, parentB: number, parentC: number,
         parentD: number, parentE: number, parentF: number,
         ancestorA: number, ancestorB: number, ancestorC: number,
@@ -298,8 +298,8 @@ export class CanvasToWebGLContextGrid
 
         const boundsWidth: number  = bounds.xMax - bounds.xMin;
         const boundsHeight: number = bounds.yMax - bounds.yMin;
-        const gridWidth: number    = grid.width;
-        const gridHeight: number   = grid.height;
+        const gridWidth: number    = grid.w;
+        const gridHeight: number   = grid.h;
 
         const sameWidth: number  = $Math.abs($Math.ceil(boundsWidth  * same_scale));
         const sameHeight: number = $Math.abs($Math.ceil(boundsHeight * same_scale));
@@ -307,8 +307,8 @@ export class CanvasToWebGLContextGrid
         // 等倍サイズでの正規化grid
         const minXST: number = gridWidth  > 0 ? (grid.x - bounds.xMin) / boundsWidth  : 0.00001;
         const minYST: number = gridHeight > 0 ? (grid.y - bounds.yMin) / boundsHeight : 0.00001;
-        const maxXST: number = gridWidth  > 0 ? (grid.x + grid.width  - bounds.xMin) / boundsWidth  : 0.99999;
-        const maxYST: number = gridHeight > 0 ? (grid.y + grid.height - bounds.yMin) / boundsHeight : 0.99999;
+        const maxXST: number = gridWidth  > 0 ? (grid.x + grid.w - bounds.xMin) / boundsWidth  : 0.99999;
+        const maxYST: number = gridHeight > 0 ? (grid.y + grid.h - bounds.yMin) / boundsHeight : 0.99999;
 
         // 現在サイズでの正規化grid
         let minXPQ: number = sameWidth  * minXST / width;

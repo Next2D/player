@@ -1,7 +1,7 @@
 import { RenderGraphics } from "./RenderGraphics";
 import { $shapes } from "./RenderGlobal";
-import { CanvasToWebGLContext } from "@next2d/webgl";
-import { BoundsImpl } from "@next2d/interface";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { CanvasToWebGLContext } from "@next2d/webgl";
 import {
     $boundsMatrix,
     $clamp,
