@@ -19,8 +19,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Next2D/Player.git"
-  },
-  "dependencies": {
-    "@types/node": "^16.9.2"
   }
 }

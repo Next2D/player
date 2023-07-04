@@ -1,4 +1,4 @@
-import { $PREFIX} from "../../../packages/util/Util";
+import { $PREFIX} from "../../../packages/util/src/Util";
 import { DisplayObject } from "../../../packages/display/src/DisplayObject";
 import { Stage } from "../../../packages/display/src/Stage";
 import { Shape } from "../../../packages/display/src/Shape";
@@ -8,7 +8,7 @@ import {
     $Infinity,
     $Math,
     $Rad2Deg
-} from "../../../packages/util/RenderUtil";
+} from "../../../packages/share/src/RenderUtil";
 import { Sprite } from "../../../packages/display/src/Sprite";
 import { BlurFilter } from "../../../packages/filters/src/BlurFilter";
 import { Point } from "../../../packages/geom/src/Point";

@@ -61,7 +61,7 @@ import {
     $setEvent,
     $setEventType,
     $setCurrentLoaderInfo,
-    $getEventType,
+    $getEventType
 } from "@next2d/util";
 import {
     $Math,

@@ -1,4 +1,4 @@
-import { $PREFIX } from "../../../packages/util/Util";
+import { $PREFIX } from "../../../packages/util/src/Util";
 import { InteractiveObject } from "../../../packages/display/src/InteractiveObject";
 
 describe("InteractiveObject.js mouseEnabled test", function()

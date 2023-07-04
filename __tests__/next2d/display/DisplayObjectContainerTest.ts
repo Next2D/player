@@ -1,5 +1,5 @@
-import { $PREFIX } from "@next2d/util";
-import { Event } from "@next2d/events";
+import { $PREFIX } from "../../../packages/util/src/Util";
+import { Event } from "../../../packages/events/src/Event";
 import {
     DisplayObjectContainer,
     Sprite,

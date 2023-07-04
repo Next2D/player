@@ -1,4 +1,4 @@
-import { $PREFIX } from "../../../packages/util/Util";
+import { $PREFIX } from "../../../packages/util/src/Util";
 import { TextField } from "../../../packages/text/src/TextField";
 import { TextFormat } from "../../../packages/text/src/TextFormat";
 

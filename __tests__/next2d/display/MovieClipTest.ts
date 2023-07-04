@@ -1,4 +1,4 @@
-import { $PREFIX } from "../../../packages/util/Util";
+import { $PREFIX } from "../../../packages/util/src/Util";
 import { MovieClip } from "../../../packages/display/src/MovieClip";
 import { FrameLabel } from "../../../packages/display/src/FrameLabel";
 

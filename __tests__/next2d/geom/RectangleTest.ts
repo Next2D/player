@@ -1,6 +1,6 @@
 import { Rectangle } from "../../../packages/geom/src/Rectangle";
 import { Point } from "../../../packages/geom/src/Point";
-import {$SHORT_INT_MAX, $SHORT_INT_MIN} from "../../../packages/util/RenderUtil";
+import {$SHORT_INT_MAX, $SHORT_INT_MIN} from "../../../packages/share/src/RenderUtil";
 
 describe("Rectangle.js toString test", () =>
 {

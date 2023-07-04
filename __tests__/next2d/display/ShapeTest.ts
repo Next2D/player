@@ -1,4 +1,4 @@
-import { $PREFIX } from "../../../packages/util/Util";
+import { $PREFIX } from "../../../packages/util/src/Util";
 import { Shape } from "../../../packages/display/src/Shape";
 import { Graphics } from "../../../packages/display/src/Graphics";
 

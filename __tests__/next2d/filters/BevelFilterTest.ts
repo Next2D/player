@@ -1,5 +1,4 @@
 import { BevelFilter } from "../../../packages/filters/src/BevelFilter";
-import { BlurFilter } from "../../../packages/filters/src/BlurFilter";
 
 describe("BevelFilter.js toString test", () =>
 {

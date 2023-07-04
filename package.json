@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "start": "webpack serve",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint src/**/*.ts packages/**/*.ts worker/**/*.ts",
     "publish": "tsc",
     "clean": "node ./scripts/clean.js",
     "build": "npm run clean && tsc && node ./scripts/build.js && webpack --mode production",
@@ -32,6 +32,9 @@
     "url": "https://github.com/sponsors/Next2D"
   },
   "devDependencies": {
+    "@babel/core": "^7.22.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.22.5",
+    "@babel/preset-env": "^7.22.5",
     "@next2d/jsdoc-template": "^1.0.7",
     "@types/jest": "^29.5.2",
     "@typescript-eslint/eslint-plugin": "^5.60.0",

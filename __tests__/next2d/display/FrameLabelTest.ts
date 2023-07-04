@@ -1,4 +1,4 @@
-import { $PREFIX } from "../../../packages/util/Util";
+import { $PREFIX } from "../../../packages/util/src/Util";
 import { FrameLabel } from "../../../packages/display/src/FrameLabel";
 
 describe("FrameLabel.js toString test", function()

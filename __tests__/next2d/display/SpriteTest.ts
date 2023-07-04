@@ -1,4 +1,4 @@
-import {$currentPlayer, $PREFIX} from "../../../packages/util/Util";
+import {$currentPlayer, $PREFIX} from "../../../packages/util/src/Util";
 import { Sprite } from "../../../packages/display/src/Sprite";
 import {MovieClip} from "../../../packages/display/src/MovieClip";
 

@@ -1,4 +1,4 @@
-import { $PREFIX } from "../../../packages/util/Util";
+import { $PREFIX } from "../../../packages/util/src/Util";
 import { Video } from "../../../packages/media/src/Video";
 
 describe("Video.js namespace test", function()
