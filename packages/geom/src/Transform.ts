@@ -1,6 +1,6 @@
 import { Rectangle } from "./Rectangle";
-import { ColorTransform } from "./ColorTransform";
-import { Matrix } from "./Matrix";
+import type { ColorTransform } from "./ColorTransform";
+import type { Matrix } from "./Matrix";
 import {
     BevelFilter,
     BlurFilter,
@@ -12,7 +12,7 @@ import {
     GradientBevelFilter,
     GradientGlowFilter
 } from "@next2d/filters";
-import {
+import type {
     PlaceObjectImpl,
     DisplayObjectImpl,
     ParentImpl,

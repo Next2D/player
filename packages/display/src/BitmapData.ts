@@ -1,5 +1,18 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
-import { Player } from "@next2d/core";
+import type { Player } from "@next2d/core";
+import type {
+    CanvasToWebGLContext,
+    FrameBufferManager
+} from "@next2d/webgl";
+import type {
+    DisplayObjectImpl,
+    AttachmentImpl,
+    PropertyBitmapDataMessageImpl
+} from "@next2d/interface";
+import type {
+    Matrix,
+    ColorTransform
+} from "@next2d/geom";
 import {
     CacheStore,
     $COLOR_ARRAY_IDENTITY,
@@ -8,19 +21,6 @@ import {
     $multiplicationMatrix,
     $poolArray
 } from "@next2d/share";
-import {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
-import {
-    DisplayObjectImpl,
-    AttachmentImpl,
-    PropertyBitmapDataMessageImpl
-} from "@next2d/interface";
-import {
-    Matrix,
-    ColorTransform
-} from "@next2d/geom";
 import {
     $getInstanceId,
     $bitmapDrawMap,

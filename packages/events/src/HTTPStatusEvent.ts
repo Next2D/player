@@ -1,5 +1,5 @@
 import { Event } from "./Event";
-import { URLRequestHeader } from "@next2d/net";
+import type { URLRequestHeader } from "@next2d/net";
 
 /**
  * ネットワーク要求が HTTP ステータスコードを返すと、アプリケーションによって HTTPStatusEvent オブジェクトが送出されます。

@@ -1,5 +1,5 @@
 import type { BitmapData } from "./BitmapData";
-import { Matrix } from "@next2d/geom";
+import type { Matrix } from "@next2d/geom";
 import { $getArray } from "@next2d/share";
 
 /**

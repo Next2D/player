@@ -1,5 +1,5 @@
 import type { Matrix } from "@next2d/geom";
-import {
+import type {
     ColorStopImpl,
     GradientTypeImpl,
     SpreadMethodImpl,

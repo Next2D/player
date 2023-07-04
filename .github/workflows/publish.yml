@@ -59,4 +59,4 @@ jobs:
       - run: cd ~/work/player/player/dist/src && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player
+      - run: cd ~/work/player/player && npm run clean

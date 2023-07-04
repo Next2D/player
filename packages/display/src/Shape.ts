@@ -1,11 +1,11 @@
-import type { LoaderInfo } from "./LoaderInfo";
 import { DisplayObject } from "./DisplayObject";
 import { Graphics } from "./Graphics";
 import { BitmapData } from "./BitmapData";
 import { Rectangle } from "@next2d/geom";
 import { Event } from "@next2d/events";
-import { CanvasToWebGLContext } from "@next2d/webgl";
-import {
+import type { LoaderInfo } from "./LoaderInfo";
+import type { CanvasToWebGLContext } from "@next2d/webgl";
+import type {
     BoundsImpl,
     ShapeCharacterImpl,
     CapsStyleImpl,
@@ -35,7 +35,8 @@ import {
     $multiplicationColor,
     $clamp,
     $poolFloat32Array8,
-    $Math, $COLOR_ARRAY_IDENTITY
+    $Math,
+    $COLOR_ARRAY_IDENTITY
 } from "@next2d/share";
 
 /**

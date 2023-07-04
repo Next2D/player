@@ -1,9 +1,9 @@
 import { GraphicsBitmapFill } from "./GraphicsBitmapFill";
 import { GraphicsGradientFill } from "./GraphicsGradientFill";
-import { BitmapData } from "./BitmapData";
-import { Player } from "@next2d/core";
-import { Matrix } from "@next2d/geom";
-import {
+import type { BitmapData } from "./BitmapData";
+import type { Player } from "@next2d/core";
+import type { Matrix } from "@next2d/geom";
+import type {
     GraphicsParentImpl,
     CapsStyleImpl,
     JointStyleImpl,
@@ -18,7 +18,7 @@ import {
     GradientTypeImpl,
     InterpolationMethodImpl
 } from "@next2d/interface";
-import {
+import type {
     CanvasToWebGLContext,
     FrameBufferManager,
     CanvasGradientToWebGL

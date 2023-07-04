@@ -1,7 +1,6 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { LoaderInfo } from "./LoaderInfo";
 import { MovieClip } from "./MovieClip";
-import { Player } from "@next2d/core";
 import { URLRequest } from "@next2d/net";
 import { $getMap } from "@next2d/share";
 import {
@@ -10,7 +9,8 @@ import {
     ProgressEvent as Next2DProgressEvent,
     HTTPStatusEvent
 } from "@next2d/events";
-import {
+import type { Player } from "@next2d/core";
+import type {
     NoCodeDataZlibImpl,
     UnzipQueueImpl,
     NoCodeDataImpl,
