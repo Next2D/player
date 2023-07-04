@@ -21,7 +21,7 @@
   "scripts": {
     "start": "webpack serve",
     "lint": "eslint src/**/*.ts packages/**/*.ts worker/**/*.ts",
-    "publish": "tsc",
+    "publish": "npm run clean && tsc && node ./scripts/publish.js",
     "clean": "node ./scripts/clean.js",
     "build": "npm run clean && tsc && node ./scripts/build.js && webpack --mode production",
     "test": "jest",
@@ -31,6 +31,7 @@
     "type": "github",
     "url": "https://github.com/sponsors/Next2D"
   },
+  "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.22.5",
     "@babel/plugin-transform-modules-commonjs": "^7.22.5",

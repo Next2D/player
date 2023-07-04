@@ -1,5 +1,6 @@
 {
   "name": "@next2d/display",
+  "version": "*",
   "description": "Next2D Display Packages",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",

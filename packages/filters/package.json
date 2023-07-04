@@ -1,5 +1,6 @@
 {
   "name": "@next2d/filters",
+  "version": "*",
   "description": "Next2D Filters Packages",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",

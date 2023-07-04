@@ -4,15 +4,12 @@ import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
 import type { BlendModeImpl } from "./interface/BlendModeImpl";
 import type { BoundsImpl } from "./interface/BoundsImpl";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { ParentImpl } from "./interface/ParentImpl";
+import type { PreObjectImpl } from "./interface/PreObjectImpl";
 import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
-import type {
-    PreObjectImpl,
-    DisplayObjectImpl,
-    ParentImpl
-} from "@next2d/interface";
 import {
     $containers,
     $renderPlayer
@@ -273,7 +270,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             }
 
             // mask start
-            const maskInstance: DisplayObjectImpl<any> | null = instance._$maskId > -1 && instances.has(instance._$maskId)
+            const maskInstance: RenderDisplayObjectImpl<any> | null = instance._$maskId > -1 && instances.has(instance._$maskId)
                 ? instances.get(instance._$maskId)
                 : null;
 

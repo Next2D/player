@@ -1,5 +1,6 @@
 {
   "name": "@next2d/media",
+  "version": "*",
   "description": "Next2D Media Packages",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",

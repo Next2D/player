@@ -5,7 +5,7 @@ import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
 import type { BoundsImpl } from "./interface/BoundsImpl";
 import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { GridImpl } from "../../../packages/display/src/GridImpl";
+import type { GridImpl } from "./interface/GridImpl";
 import type {
     CanvasToWebGLContext,
     FrameBufferManager

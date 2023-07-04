@@ -1,5 +1,6 @@
 {
   "name": "@next2d/ui",
+  "version": "*",
   "description": "Next2D UI Packages",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",

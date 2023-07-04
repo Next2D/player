@@ -1,5 +1,5 @@
 import type { BoundsImpl } from "./interface/BoundsImpl";
-import type { GridImpl } from "../../../worker/renderer/src/interface/GridImpl";
+import type { GridImpl } from "./interface/GridImpl";
 import { $Math } from "@next2d/share";
 
 /**

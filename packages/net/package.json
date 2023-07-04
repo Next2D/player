@@ -1,5 +1,6 @@
 {
   "name": "@next2d/net",
+  "version": "*",
   "description": "Next2D Net Packages",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
