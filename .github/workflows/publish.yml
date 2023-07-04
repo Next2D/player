@@ -16,7 +16,10 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: npm install
       - run: npm run clean
-      - run: npm run publish
+      - run: npm run publish:dist
+      - run: cd ~/work/player/player/dist/src && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/core && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
@@ -54,9 +57,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/webgl && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/src && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player && npm run clean
