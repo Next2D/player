@@ -16,6 +16,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: npm install
       - run: npm run publish
+      - run: pwd
       - run: cd ~/ && pwd && ls -al
 #      - run: cd ~/dist/packages/core && npm publish --access public
 #      - run: cd ~/dist/packages/core && npm publish --access public
