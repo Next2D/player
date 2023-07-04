@@ -25,7 +25,7 @@ declare global {
         isNaN: isNaN;
         Math: Math;
         Event: Event;
-        next2d: Next2D;
+        next2d?: Next2D;
     }
 
     // eslint-disable-next-line no-unused-vars

@@ -1,5 +1,5 @@
 import { EventPhase } from "./EventPhase";
-import { EventDispatcherImpl } from "@next2d/interface";
+import type { EventDispatcherImpl } from "@next2d/interface";
 
 /**
  * Event クラスのメソッドは、イベントリスナー関数で使用してイベントオブジェクトの動作に影響を与えることができます。

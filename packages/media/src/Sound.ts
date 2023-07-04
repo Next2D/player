@@ -7,11 +7,11 @@ import {
     IOErrorEvent,
     ProgressEvent as Next2DProgressEvent
 } from "@next2d/events";
-import {
+import type {
     DisplayObjectContainer,
     LoaderInfo
 } from "@next2d/display";
-import {
+import type {
     SoundTagImpl,
     SoundCharacterImpl,
     Character

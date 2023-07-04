@@ -1,6 +1,6 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
-import { Player } from "@next2d/core";
-import { DisplayObjectImpl } from "@next2d/interface";
+import type { Player } from "@next2d/core";
+import type { DisplayObjectImpl } from "@next2d/interface";
 import { $devicePixelRatio } from "@next2d/util";
 import {
     $clamp,

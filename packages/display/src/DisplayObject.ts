@@ -1,7 +1,7 @@
 import type { Stage } from "./Stage";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Sprite } from "./Sprite";
-import { Player } from "@next2d/core";
+import type { Player } from "@next2d/core";
 import {
     Event as Next2DEvent,
     EventDispatcher
@@ -13,7 +13,7 @@ import {
     ColorTransform,
     Matrix
 } from "@next2d/geom";
-import {
+import type {
     FilterArrayImpl,
     BlendModeImpl,
     ParentImpl,
@@ -25,7 +25,7 @@ import {
     AttachmentImpl,
     PropertyMessageImpl
 } from "@next2d/interface";
-import {
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";

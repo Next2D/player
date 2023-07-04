@@ -1,12 +1,10 @@
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Event } from "@next2d/events";
-import { Player } from "@next2d/core";
-import {
-    Sound,
-    SoundTransform
-} from "@next2d/media";
-import {
+import { Sound } from "@next2d/media";
+import type { SoundTransform } from "@next2d/media";
+import type { Player } from "@next2d/core";
+import type {
     PlaceObjectImpl,
     LoopConfigImpl,
     DisplayObjectImpl,

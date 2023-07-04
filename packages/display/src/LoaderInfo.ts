@@ -1,6 +1,6 @@
 import { EventDispatcher } from "@next2d/events";
 import { $getLoaderInfoId } from "@next2d/util";
-import {
+import type {
     URLLoaderDataFormatImpl,
     ParentImpl,
     LoaderInfoDataImpl

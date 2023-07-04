@@ -1,9 +1,8 @@
 import { SoundMixer } from "./SoundMixer";
 import { DisplayObject } from "@next2d/display";
 import { VideoEvent } from "@next2d/events";
-import { Rectangle } from "@next2d/geom";
-import { Player } from "@next2d/core";
-import {
+import type { Player } from "@next2d/core";
+import type {
     BoundsImpl,
     VideoCharacterImpl,
     DictionaryTagImpl,
@@ -15,7 +14,7 @@ import {
     PropertyVideoMessageImpl,
     Character
 } from "@next2d/interface";
-import {
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
@@ -893,15 +892,20 @@ export class Video extends DisplayObject
                     + multiMatrix[3] * multiMatrix[3]
                 );
 
-                let rect: Rectangle = new Rectangle(0, 0, width, height);
+                let filterBounds: BoundsImpl = $getBoundsObject(0, width, 0, height);
                 for (let idx: number = 0; idx < filters.length ; ++idx) {
-                    // @ts-ignore
-                    rect = filters[idx]._$generateFilterRect(rect, xScale, yScale);
+                    filterBounds = filters[idx]
+                        ._$generateFilterRect(filterBounds, xScale, yScale);
                 }
 
-                if (0 > rect.x + rect.width || 0 > rect.y + rect.height) {
+                if (0 > filterBounds.xMin + filterBounds.xMax
+                    || 0 > filterBounds.yMin + filterBounds.yMax
+                ) {
+                    $poolBoundsObject(filterBounds);
                     return;
                 }
+
+                $poolBoundsObject(filterBounds);
 
             } else {
                 return;
