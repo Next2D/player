@@ -1,8 +1,8 @@
-import { Point } from "../../../src/next2d/geom/Point";
+import { Point } from "../../../packages/geom/src/Point";
 import {
     $SHORT_INT_MAX,
     $SHORT_INT_MIN
-} from "../../../src/util/RenderUtil";
+} from "../../../packages/share/src/RenderUtil";
 
 describe("Point.js toString test", () =>
 {

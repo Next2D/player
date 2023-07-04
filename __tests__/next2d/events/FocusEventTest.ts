@@ -1,4 +1,4 @@
-import { FocusEvent } from "../../../src/next2d/events/FocusEvent";
+import { FocusEvent } from "../../../packages/events/src/FocusEvent";
 
 describe("FocusEvent.js static toString test", () =>
 {

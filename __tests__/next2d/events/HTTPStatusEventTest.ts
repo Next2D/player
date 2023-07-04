@@ -1,4 +1,4 @@
-import { HTTPStatusEvent } from "../../../src/next2d/events/HTTPStatusEvent";
+import { HTTPStatusEvent } from "../../../packages/events/src/HTTPStatusEvent";
 
 
 describe("HTTPStatusEvent.js toString test", () =>

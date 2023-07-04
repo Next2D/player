@@ -1,0 +1,42 @@
+{
+  "name": "@next2d/geom",
+  "version": "*",
+  "description": "Next2D Geom Packages",
+  "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
+  "license": "MIT",
+  "homepage": "https://next2d.app",
+  "bugs": "https://github.com/Next2D/Player/issues",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "keywords": [
+    "Next2D",
+    "Next2D Geom"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Next2D/Player.git"
+  },
+  "peerDependencies": {
+    "@next2d/interface": "file:../interface",
+    "@next2d/display": "file:../display",
+    "@next2d/core": "file:../core",
+    "@next2d/util": "file:../util",
+    "@next2d/filters": "file:../filters",
+    "@next2d/share": "file:../share"
+  }
+}

@@ -1,4 +1,4 @@
-import { EventPhase } from "../../../src/next2d/events/EventPhase";
+import { EventPhase } from "../../../packages/events/src/EventPhase";
 
 describe("EventPhase.js toString test", () =>
 {

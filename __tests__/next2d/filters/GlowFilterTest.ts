@@ -1,4 +1,4 @@
-import { GlowFilter } from "../../../src/next2d/filters/GlowFilter";
+import { GlowFilter } from "../../../packages/filters/src/GlowFilter";
 
 describe("GlowFilter.js namespace test", () =>
 {

@@ -1,10 +1,10 @@
-import { $currentPlayer } from "../../../src/util/Util";
-import { Event } from "../../../src/next2d/events/Event";
-import { EventDispatcher } from "../../../src/next2d/events/EventDispatcher";
-import { MovieClip } from "../../../src/next2d/display/MovieClip";
-import {Sprite} from "../../../src/next2d/display/Sprite";
-import {Stage} from "../../../src/next2d/display/Stage";
-import {EventPhase} from "../../../src/next2d/events/EventPhase";
+import { $currentPlayer } from "../../../packages/util/src/Util";
+import { Event } from "../../../packages/events/src/Event";
+import { EventDispatcher } from "../../../packages/events/src/EventDispatcher";
+import { MovieClip } from "../../../packages/display/src/MovieClip";
+import { Sprite } from "../../../packages/display/src/Sprite";
+import { Stage } from "../../../packages/display/src/Stage";
+import { EventPhase } from "../../../packages/events/src/EventPhase";
 
 describe("EventDispatcher.js toString test", function()
 {

@@ -1,4 +1,4 @@
-import { BezierConverter } from "../../src/webgl/BezierConverter";
+import { BezierConverter } from "../../packages/webgl/src/BezierConverter";
 
 describe("BezierConverter.js test", () =>
 {

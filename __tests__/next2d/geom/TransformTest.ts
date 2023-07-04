@@ -1,7 +1,7 @@
-import { Transform } from "../../../src/next2d/geom/Transform";
-import { MovieClip } from "../../../src/next2d/display/MovieClip";
-import { Sprite } from "../../../src/next2d/display/Sprite";
-import { ColorTransform } from "../../../src/next2d/geom/ColorTransform";
+import { Transform } from "../../../packages/geom/src/Transform";
+import { MovieClip } from "../../../packages/display/src/MovieClip";
+import { Sprite } from "../../../packages/display/src/Sprite";
+import { ColorTransform } from "../../../packages/geom/src/ColorTransform";
 
 describe("Transform.js toString test", () =>
 {

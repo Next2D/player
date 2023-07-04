@@ -1,5 +1,5 @@
-import { Next2D } from "../src/player/Next2D";
-import { IndexRangeImpl } from "../src/interface/IndexRangeImpl";
+import { Next2D } from "../src/Next2D";
+import { IndexRangeImpl } from "@next2d/interface";
 
 declare global {
 

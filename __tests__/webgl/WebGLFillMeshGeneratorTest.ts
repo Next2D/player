@@ -1,4 +1,4 @@
-import { WebGLFillMeshGenerator } from "../../src/webgl/WebGLFillMeshGenerator";
+import { WebGLFillMeshGenerator } from "../../packages/webgl/src/WebGLFillMeshGenerator";
 
 describe("WebGLFillMeshGenerator.js test", () =>
 {

@@ -4,10 +4,10 @@ const WebpackWorkerLoaderPlugin = require("@next2d/webpack-worker-loader-plugin"
 
 const unzip_worker = {
     "mode": "production",
-    "entry": path.resolve(__dirname, "src/worker/index.ts"),
+    "entry": path.resolve(__dirname, "worker/unzip/src/index.ts"),
     "output": {
         "filename": "UnzipWorker.min.js",
-        "path": path.resolve(__dirname, "src/worker")
+        "path": path.resolve(__dirname, "worker/unzip")
     },
     "plugins": [
         new ESLintPlugin({
@@ -21,7 +21,7 @@ const unzip_worker = {
                 "test": /\.ts$/,
                 "loader": "ts-loader",
                 "options": {
-                    "configFile": path.resolve(__dirname, "src/worker/tsconfig.json")
+                    "configFile": path.resolve(__dirname, "worker/unzip/tsconfig.json")
                 }
             }
         ]
@@ -33,10 +33,10 @@ const unzip_worker = {
 
 const render_worker = {
     "mode": "production",
-    "entry": path.resolve(__dirname, "src/renderer/index.ts"),
+    "entry": path.resolve(__dirname, "worker/renderer/src/index.ts"),
     "output": {
         "filename": "RendererWorker.min.js",
-        "path": path.resolve(__dirname, "src/renderer")
+        "path": path.resolve(__dirname, "worker/renderer")
     },
     "plugins": [
         new ESLintPlugin({
@@ -46,7 +46,7 @@ const render_worker = {
     ],
     "resolve": {
         "alias": {
-            "@": path.resolve(__dirname, "src/renderer")
+            "@": path.resolve(__dirname, "worker/renderer")
         },
         "extensions": [".ts", ".js"]
     },
@@ -56,7 +56,7 @@ const render_worker = {
                 "test": /\.ts$/,
                 "loader": "ts-loader",
                 "options": {
-                    "configFile": path.resolve(__dirname, "src/renderer/tsconfig.json")
+                    "configFile": path.resolve(__dirname, "worker/renderer/tsconfig.json")
                 }
             }
         ]

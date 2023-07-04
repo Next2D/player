@@ -15,11 +15,9 @@ jobs:
           node-version: "18.x"
           registry-url: "https://registry.npmjs.org"
       - run: npm install
-      - run: npm run build
       - run: npm run publish
-      - run: cp -r LICENSE ./dist
-      - run: cp -r package.json ./dist
-      - run: cp -r README.md ./dist
-      - run: cd dist && npm publish --access public
+      - run: cd ~/ && pwd && ls -al
+#      - run: cd ~/dist/packages/core && npm publish --access public
+#      - run: cd ~/dist/packages/core && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
