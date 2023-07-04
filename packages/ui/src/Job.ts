@@ -424,6 +424,10 @@ export class Job extends EventDispatcher
                 continue;
             }
 
+            if (!target.hasOwnProperty(name)) {
+                continue;
+            }
+
             // update
             const fromValue = from[name];
             if (this._$duration > this._$currentTime) {
