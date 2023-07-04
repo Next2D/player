@@ -416,9 +416,15 @@ export class Job extends EventDispatcher
 
             const values = names[idx];
 
-            const name  = values[0];
-            const value = values[1];
+            const name = values[0];
+            if (name === "__proto__"
+                || name === "constructor"
+                || name === "prototype"
+            ) {
+                continue;
+            }
 
+            const value = values[1];
             if (value && typeof value === "object") {
                 this._$updateProperty(target[name], from[name], to[name], value);
                 continue;
