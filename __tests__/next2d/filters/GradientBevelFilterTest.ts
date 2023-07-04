@@ -1,4 +1,4 @@
-import { GradientBevelFilter } from "../../../src/next2d/filters/GradientBevelFilter";
+import { GradientBevelFilter } from "../../../packages/filters/src/GradientBevelFilter";
 
 describe("GradientBevelFilter.js namespace test", () =>
 {

@@ -1,9 +1,9 @@
-import { Matrix } from "../../../src/next2d/geom/Matrix";
-import { Point } from "../../../src/next2d/geom/Point";
+import { Matrix } from "../../../packages/geom/src/Matrix";
+import { Point } from "../../../packages/geom/src/Point";
 import {
     $SHORT_INT_MAX,
     $SHORT_INT_MIN
-} from "../../../src/util/RenderUtil";
+} from "../../../packages/share/src/RenderUtil";
 
 describe("Matrix.js toString test", () =>
 {

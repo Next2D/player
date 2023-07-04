@@ -1,4 +1,4 @@
-import { WebGLStrokeMeshGenerator } from "../../src/webgl/WebGLStrokeMeshGenerator";
+import { WebGLStrokeMeshGenerator } from "../../packages/webgl/src/WebGLStrokeMeshGenerator";
 
 describe("WebGLStrokeMeshGenerator.js test", () =>
 {

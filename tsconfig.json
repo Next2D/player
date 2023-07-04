@@ -8,19 +8,28 @@
     "declaration": true,
     "target": "es6",
     "module": "es6",
+    "lib": [
+      "es6",
+      "dom"
+    ],
     "moduleResolution": "node",
     "baseUrl": ".",
-    "outDir": "./dist/"
+    "outDir": "./dist",
+    "paths": {
+      "@next2d/*": [
+        "packages/*/src"
+      ]
+    }
   },
   "include": [
-    "src/**/*.ts",
+    "src/index.ts",
     "@types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "src/worker",
-    "src/renderer",
-    "src/interface",
+    "**/dist/**",
+    "worker",
+    "scripts",
     "__tests__",
     "dist"
   ]

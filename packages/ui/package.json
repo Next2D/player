@@ -1,0 +1,38 @@
+{
+  "name": "@next2d/ui",
+  "version": "*",
+  "description": "Next2D UI Packages",
+  "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
+  "license": "MIT",
+  "homepage": "https://next2d.app",
+  "bugs": "https://github.com/Next2D/Player/issues",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "keywords": [
+    "Next2D",
+    "Next2D UI"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Next2D/Player.git"
+  },
+  "peerDependencies": {
+    "@next2d/events": "file:../events",
+    "@next2d/share": "file:../share"
+  }
+}

@@ -6,16 +6,23 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": false,
-    "target": "esnext",
-    "lib": ["es6", "dom"],
-    "module": "esnext",
+    "target": "es6",
+    "module": "es6",
+    "lib": [
+      "es6",
+      "dom"
+    ],
     "moduleResolution": "node",
     "baseUrl": "./",
-    "outDir": "./dist/"
+    "outDir": "./dist/",
+    "paths": {
+      "@next2d/*": [
+        "../packages/*/src"
+      ]
+    }
   },
   "include": [
-    "**/*.ts",
-    "webgl/**/*.ts",
+    "index.ts",
     "../@types/**/*.ts"
   ],
   "exclude": [

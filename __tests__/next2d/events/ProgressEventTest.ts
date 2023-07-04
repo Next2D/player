@@ -1,4 +1,4 @@
-import { ProgressEvent } from "../../../src/next2d/events/ProgressEvent";
+import { ProgressEvent } from "../../../packages/events/src/ProgressEvent";
 
 describe("ProgressEvent.js toString test", () =>
 {

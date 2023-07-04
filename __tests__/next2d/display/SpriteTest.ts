@@ -1,6 +1,6 @@
-import {$currentPlayer, $PREFIX} from "../../../src/util/Util";
-import { Sprite } from "../../../src/next2d/display/Sprite";
-import {MovieClip} from "../../../src/next2d/display/MovieClip";
+import {$currentPlayer, $PREFIX} from "../../../packages/util/src/Util";
+import { Sprite } from "../../../packages/display/src/Sprite";
+import {MovieClip} from "../../../packages/display/src/MovieClip";
 
 describe("Sprite.js toString test", function()
 {

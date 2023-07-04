@@ -1,4 +1,4 @@
-import { GradientGlowFilter } from "../../../src/next2d/filters/GradientGlowFilter";
+import { GradientGlowFilter } from "../../../packages/filters/src/GradientGlowFilter";
 
 describe("GradientGlowFilter.js namespace test", () =>
 {
