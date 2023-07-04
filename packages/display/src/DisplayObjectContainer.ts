@@ -5,7 +5,7 @@ import type { Graphics } from "./Graphics";
 import type { Player } from "@next2d/core";
 import type { Sound } from "@next2d/media";
 import type { Transform } from "@next2d/geom";
-import {
+import type {
     DictionaryTagImpl,
     PlaceObjectImpl,
     DisplayObjectImpl,
@@ -21,7 +21,7 @@ import {
     PropertyContainerMessageImpl,
     Character
 } from "@next2d/interface";
-import {
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";

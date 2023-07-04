@@ -1,11 +1,11 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { Graphics } from "./Graphics";
 import { SoundTransform } from "@next2d/media";
-import {
+import type {
     Rectangle,
     Point
 } from "@next2d/geom";
-import {
+import type {
     SpriteImpl,
     DropTargetImpl,
     DictionaryTagImpl,

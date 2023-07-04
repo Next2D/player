@@ -1,8 +1,8 @@
 import { Event } from "./Event";
 import { EventPhase } from "./EventPhase";
-import { Player } from "@next2d/core";
-import { EventListenerImpl } from "@next2d/interface";
-import { DisplayObjectContainer } from "@next2d/display";
+import type { Player } from "@next2d/core";
+import type { EventListenerImpl } from "@next2d/interface";
+import type { DisplayObjectContainer } from "@next2d/display";
 import {
     $setCurrentLoaderInfo,
     $currentPlayer

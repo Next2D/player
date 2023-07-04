@@ -1,5 +1,5 @@
 import { URLRequestHeader } from "./URLRequestHeader";
-import {
+import type {
     URLRequestMethodImpl,
     URLLoaderDataFormatImpl
 } from "@next2d/interface";
