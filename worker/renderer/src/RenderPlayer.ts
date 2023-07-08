@@ -282,19 +282,9 @@ export class RenderPlayer
 
         source._$draw(context, matrix, color_transform);
 
-        const manager: FrameBufferManager = context.frameBuffer;
-        const texture: WebGLTexture = manager.getTextureFromCurrentAttachment();
-
-        manager.unbind();
-
-        // reset and draw to main canvas
-        context.reset();
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.clearRect(0, 0, this._$width, this._$height);
-        context.drawImage(texture, 0, 0, this._$width, this._$height);
-
-        // re bind
-        context._$bind(this._$attachment);
+        context
+            .frameBuffer
+            .transferToMainTexture();
 
         const ctx: OffscreenCanvasRenderingContext2D | null = canvas.getContext("2d");
         if (ctx && this._$canvas) {
@@ -342,19 +332,9 @@ export class RenderPlayer
         // stage end
         this._$stage._$updated = false;
 
-        const manager: FrameBufferManager = context.frameBuffer;
-        const texture: WebGLTexture = manager.getTextureFromCurrentAttachment();
-
-        manager.unbind();
-
-        // reset and draw to main canvas
-        context.reset();
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.clearRect(0, 0, this._$width, this._$height);
-        context.drawImage(texture, 0, 0, this._$width, this._$height);
-
-        // re bind
-        context._$bind(this._$attachment);
+        context
+            .frameBuffer
+            .transferToMainTexture();
     }
 
     /**

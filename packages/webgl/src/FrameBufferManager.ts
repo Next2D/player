@@ -334,6 +334,60 @@ export class FrameBufferManager
     }
 
     /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    transferToMainTexture (): void
+    {
+        if (!this._$currentAttachment) {
+            throw new Error("the current attachment is null.");
+        }
+
+        const width: number   = this._$currentAttachment.width;
+        const height: number  = this._$currentAttachment.height;
+
+        const texture: WebGLTexture | null = this._$currentAttachment.texture;
+        if (!texture) {
+            throw new Error("the texture is null.");
+        }
+
+        texture.dirty = false;
+
+        this._$gl.bindFramebuffer(
+            this._$gl.DRAW_FRAMEBUFFER,
+            this._$frameBufferTexture
+        );
+
+        this._$textureManager.bind0(texture);
+
+        this._$gl.framebufferTexture2D(
+            this._$gl.FRAMEBUFFER, this._$gl.COLOR_ATTACHMENT0,
+            this._$gl.TEXTURE_2D, texture, 0
+        );
+
+        // use main Framebuffer
+        this._$gl.bindFramebuffer(
+            this._$gl.DRAW_FRAMEBUFFER,
+            null
+        );
+
+        // execute
+        this._$gl.blitFramebuffer(
+            0, 0, width, height,
+            0, 0, width, height,
+            this._$gl.COLOR_BUFFER_BIT,
+            this._$gl.NEAREST
+        );
+
+        // reset
+        this._$gl.bindFramebuffer(
+            this._$gl.DRAW_FRAMEBUFFER,
+            this._$frameBuffer
+        );
+    }
+
+    /**
      * @return {WebGLTexture}
      * @method
      * @public

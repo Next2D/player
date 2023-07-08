@@ -1356,6 +1356,11 @@ export class Player
             width  *= $devicePixelRatio;
             height *= $devicePixelRatio;
 
+            // no resize
+            if (this._$width === width && this._$height === height) {
+                return ;
+            }
+
             // params
             this._$scale  = scale;
             this._$width  = width;
@@ -1489,7 +1494,7 @@ export class Player
             }
 
             this._$attachment = manager
-                .createCacheAttachment(width, height, false);
+                .createCacheAttachment(width, height, true);
 
             // update cache max size
             context.setMaxSize(width, height);
@@ -2009,20 +2014,9 @@ export class Player
         // stage end
         this._$stage._$updated = false;
 
-        const manager: FrameBufferManager = context.frameBuffer;
-        const texture: WebGLTexture = manager
-            .getTextureFromCurrentAttachment();
-
-        manager.unbind();
-
-        // reset and draw to main canvas
-        context.reset();
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.clearRect(0, 0, this._$width, this._$height);
-        context.drawImage(texture, 0, 0, this._$width, this._$height);
-
-        // re bind
-        context._$bind(this._$attachment);
+        context
+            .frameBuffer
+            .transferToMainTexture();
     }
 
     /**

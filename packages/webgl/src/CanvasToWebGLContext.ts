@@ -15,18 +15,16 @@ import type { GradientShapeShaderVariantCollection } from "./shader/variants/Gra
 import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { FilterShaderVariantCollection } from "./shader/variants/FilterShaderVariantCollection";
-import {
-    AttachmentImpl,
-    BoundsImpl,
-    BlendModeImpl,
-    IndexRangeImpl,
-    PointImpl,
-    VerticesImpl,
-    InterpolationMethodImpl,
-    SpreadMethodImpl,
-    CapsStyleImpl,
-    JointStyleImpl
-} from "@next2d/interface";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { BlendModeImpl } from "./interface/BlendModeImpl";
+import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
+import type { PointImpl } from "./interface/PointImpl";
+import type { VerticesImpl } from "./interface/VerticesImpl";
+import type { InterpolationMethodImpl } from "./interface/InterpolationMethodImpl";
+import type { SpreadMethodImpl } from "./interface/SpreadMethodImpl";
+import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
+import type { JointStyleImpl } from "./interface/JointStyleImpl";
 import {
     $Math,
     $getFloat32Array9,
