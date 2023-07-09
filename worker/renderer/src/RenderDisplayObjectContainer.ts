@@ -162,7 +162,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             return ;
         }
 
-        let preMatrix: Float32Array = preObject.matrix as NonNullable<Float32Array>;
+        const preMatrix: Float32Array = preObject.matrix as NonNullable<Float32Array>;
         const preColorTransform: Float32Array = preObject.isFilter && preObject.color
             ? preObject.color
             : multiColor;
@@ -176,10 +176,8 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         let shouldClip: boolean = true;
         let clipDepth: number   = 0;
 
-        const clipMatrix: Float32Array[]     = $getArray();
-        const instanceMatrix: Float32Array[] = $getArray();
-        const clipStack: number[]            = $getArray();
-        const shouldClips: boolean[]         = $getArray();
+        const clipStack: number[]    = $getArray();
+        const shouldClips: boolean[] = $getArray();
 
         // draw children
         const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
@@ -208,22 +206,13 @@ export class RenderDisplayObjectContainer extends RenderGraphics
 
             // mask end
             if (clipDepth
-                && (instance._$placeId > clipDepth || instance._$clipDepth > 0)
+                && (instance._$depth > clipDepth || instance._$clipDepth > 0)
             ) {
 
                 context.restore();
 
                 if (shouldClip) {
                     context._$leaveClip();
-
-                    if (clipMatrix.length) {
-                        const matrix: Float32Array | void = clipMatrix.pop();
-                        if (matrix) {
-                            $poolFloat32Array6(preMatrix);
-                            preMatrix = matrix;
-                        }
-                    }
-
                 }
 
                 // clear
@@ -250,20 +239,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
                 clipDepth  = instance._$clipDepth;
                 shouldClip = instance._$shouldClip(preMatrix);
                 if (shouldClip) {
-
-                    const adjMatrix: Float32Array | boolean | null
-                        = instance._$startClip(context, preMatrix);
-
-                    if (adjMatrix === false) { // fixed
-                        shouldClip = false;
-                        continue;
-                    }
-
-                    if (adjMatrix instanceof Float32Array) {
-                        clipMatrix.push(preMatrix);
-                        preMatrix = adjMatrix;
-                    }
-
+                    shouldClip = instance._$startClip(context, preMatrix);
                 }
 
                 continue;
@@ -314,43 +290,20 @@ export class RenderDisplayObjectContainer extends RenderGraphics
                         maskMatrix[4] -= currentPosition.xMin;
                         maskMatrix[5] -= currentPosition.yMin;
                     }
-
-                    if (context.cacheBounds) {
-                        maskMatrix[4] -= context.cacheBounds.xMin;
-                        maskMatrix[5] -= context.cacheBounds.yMin;
-                    }
                 }
 
                 if (!maskInstance._$shouldClip(maskMatrix)) {
                     continue;
                 }
 
-                const adjMatrix: Float32Array | boolean | null = maskInstance._$startClip(context, maskMatrix);
+                const result: boolean = maskInstance._$startClip(context, maskMatrix);
 
                 context.save();
 
-                if (adjMatrix === false) { // fixed
+                if (!result) { // fixed
                     context.restore();
                     continue;
                 }
-
-                if (adjMatrix instanceof Float32Array) {
-
-                    instanceMatrix.push(preMatrix);
-
-                    if (this !== maskInstance._$parent) {
-                        const rawMatrix: Float32Array = this._$matrix;
-                        adjMatrix[0] = $Math.abs(preMatrix[0]) * $Math.sign(rawMatrix[0]);
-                        adjMatrix[1] = $Math.abs(preMatrix[1]) * $Math.sign(rawMatrix[1]);
-                        adjMatrix[2] = $Math.abs(preMatrix[2]) * $Math.sign(rawMatrix[2]);
-                        adjMatrix[3] = $Math.abs(preMatrix[3]) * $Math.sign(rawMatrix[3]);
-                        adjMatrix[4] = preMatrix[4] - context.cacheBounds.xMin;
-                        adjMatrix[5] = preMatrix[5] - context.cacheBounds.yMin;
-                    }
-
-                    preMatrix = adjMatrix;
-                }
-
             }
 
             instance._$draw(context, preMatrix, preColorTransform);
@@ -358,19 +311,8 @@ export class RenderDisplayObjectContainer extends RenderGraphics
 
             // mask end
             if (maskInstance) {
-
                 context.restore();
-
                 context._$leaveClip();
-
-                if (instanceMatrix.length) {
-                    const matrix: Float32Array | void = instanceMatrix.pop();
-                    if (matrix) {
-                        $poolFloat32Array6(preMatrix);
-                        preMatrix = matrix;
-                    }
-                }
-
             }
         }
 
@@ -386,8 +328,6 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         }
 
         // object pool
-        $poolArray(clipMatrix);
-        $poolArray(instanceMatrix);
         $poolArray(clipStack);
         $poolArray(shouldClips);
 
@@ -780,9 +720,6 @@ export class RenderDisplayObjectContainer extends RenderGraphics
                 object.canApply, object.basePosition.x, object.basePosition.y
             );
 
-            // current mask cache
-            context._$saveCurrentMask();
-
             if (updated) {
                 context._$saveAttachment(
                     $Math.ceil(layerWidth),
@@ -949,9 +886,6 @@ export class RenderDisplayObjectContainer extends RenderGraphics
 
         // end blend
         context._$endLayer();
-
-        // reset
-        context._$restoreCurrentMask();
 
         // object pool
         if (object.baseMatrix !== matrix) {
