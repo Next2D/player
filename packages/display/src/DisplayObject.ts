@@ -2051,48 +2051,25 @@ export class DisplayObject extends EventDispatcher
     /**
      * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array} matrix
-     * @return {Float32Array|boolean|null}
+     * @return {boolean}
      * @method
      * @private
      */
     _$startClip (
         context: CanvasToWebGLContext,
         matrix: Float32Array
-    ): Float32Array | boolean | null {
+    ): boolean {
 
-        let clipMatrix: Float32Array | null = null;
+        // マスクの描画反映を限定
+        const bounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
+            ? this._$getBounds(matrix) as BoundsImpl
+            : $getBoundsObject();
 
-        // ネストしてない初回のマスクだけ実行
-        // ネストしてる場合は初回に作られたbufferを流用
-        if (!context.cacheAttachment) {
+        const result = context._$startClip(bounds);
+        $poolBoundsObject(bounds);
 
-            let multiMatrix: Float32Array = matrix;
-            const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-            ) {
-                multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
-            }
-
-            const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-                ? this._$getBounds() as BoundsImpl
-                : $getBoundsObject();
-
-            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
-            $poolBoundsObject(baseBounds);
-
-            clipMatrix = context._$startClip(matrix, bounds);
-            $poolBoundsObject(bounds);
-
-            if (multiMatrix !== matrix) {
-                $poolFloat32Array6(multiMatrix);
-            }
-
-            if (!clipMatrix) {
-                return false;
-            }
-
+        if (!result) {
+            return false;
         }
 
         // start clip
@@ -2108,7 +2085,7 @@ export class DisplayObject extends EventDispatcher
         }
 
         // @ts-ignore
-        this._$clip(context, clipMatrix || matrix);
+        this._$clip(context, matrix);
         this._$updated = false;
 
         // container clip
@@ -2124,7 +2101,7 @@ export class DisplayObject extends EventDispatcher
         // mask end
         context._$endClipDef();
 
-        return clipMatrix;
+        return true;
     }
 
     /**

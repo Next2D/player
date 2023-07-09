@@ -1,10 +1,8 @@
 import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
 import type { FrameBufferManager } from "./FrameBufferManager";
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
-import {
-    BlendModeImpl,
-    AttachmentImpl
-} from "@next2d/interface";
+import type { BlendModeImpl } from "./interface/BlendModeImpl";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import {
     $Math,
     $Number,

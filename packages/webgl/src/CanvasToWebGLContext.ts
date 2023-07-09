@@ -32,7 +32,6 @@ import {
     $clamp,
     $poolArray,
     $inverseMatrix,
-    $getFloat32Array6,
     $poolFloat32Array9,
     $poolBoundsObject,
     $getBoundsObject
@@ -72,8 +71,7 @@ export class CanvasToWebGLContext
     private readonly _$vao: VertexArrayObjectManager;
     private readonly _$mask: CanvasToWebGLContextMask;
     private readonly _$blend: CanvasToWebGLContextBlend;
-    private readonly _$maskBufferArray: Array<AttachmentImpl|null>;
-    private readonly _$maskBoundsArray: BoundsImpl[];
+    private readonly _$maskBounds: BoundsImpl[];
     private readonly _$attachmentArray: Array<AttachmentImpl|null>;
 
     /**
@@ -286,19 +284,25 @@ export class CanvasToWebGLContext
          * @type {array}
          * @private
          */
-        this._$maskBufferArray = [];
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$maskBoundsArray = [];
-
-        /**
-         * @type {array}
-         * @private
-         */
         this._$attachmentArray = [];
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$maskBounds = [];
+    }
+
+    /**
+     * @return {object}
+     * @method
+     * @public
+     */
+    getMaskBounds (): BoundsImpl | null
+    {
+        return this._$maskBounds.length
+            ? this._$maskBounds[this._$maskBounds.length - 1]
+            : null;
     }
 
     /**
@@ -766,23 +770,32 @@ export class CanvasToWebGLContext
     }
 
     /**
-     * @param  {number} x
-     * @param  {number} y
-     * @param  {number} w
-     * @param  {number} h
      * @return {void}
      * @method
      * @public
      */
-    _$clearRectStencil (
-        x: number, y: number,
-        w: number, h: number
-    ): void {
+    _$clearRectStencil (): void
+    {
+        // stencilを終了
         this._$mask._$onClearRect();
-        this._$gl.enable(this._$gl.SCISSOR_TEST);
-        this._$gl.scissor(x, y, w, h);
-        this._$gl.clear(this._$gl.STENCIL_BUFFER_BIT);
-        this._$gl.disable(this._$gl.SCISSOR_TEST);
+
+        // マスクの描画領域に限定してstencil情報をクリア
+        const bounds: BoundsImpl | void = this._$maskBounds.pop();
+        if (bounds) {
+            this._$gl.enable(this._$gl.SCISSOR_TEST);
+            this._$gl.scissor(
+                bounds.xMin,
+                bounds.yMin,
+                bounds.xMax,
+                bounds.yMax
+            );
+            this._$gl.clear(this._$gl.STENCIL_BUFFER_BIT);
+            this._$gl.disable(this._$gl.SCISSOR_TEST);
+        }
+
+        if (this._$maskBounds.length) {
+            this._$mask._$onBind(true);
+        }
     }
 
     /**
@@ -1105,79 +1118,45 @@ export class CanvasToWebGLContext
      * @description マスク処理の開始関数
      *              Mask processing start function
      *
-     * @param  {Float32Array} matrix
      * @param  {object} bounds
-     * @return {Float32Array}
+     * @return {void}
      * @method
      * @public
      */
-    _$startClip (matrix: Float32Array, bounds: BoundsImpl): Float32Array | null
+    _$startClip (bounds: BoundsImpl): boolean
     {
-        let x: number      = bounds.xMin;
-        let y: number      = bounds.yMin;
-        let width: number  = Math.abs(bounds.xMax - bounds.xMin);
-        let height: number = Math.abs(bounds.yMax - bounds.yMin);
+        const x: number      = bounds.xMin;
+        const y: number      = bounds.yMin;
+        const width: number  = Math.abs(bounds.xMax - bounds.xMin);
+        const height: number = Math.abs(bounds.yMax - bounds.yMin);
 
         // resize
         const manager: FrameBufferManager = this._$frameBufferManager;
         const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-        if (!currentAttachment || !currentAttachment.texture) {
+        if (!currentAttachment) {
             throw new Error("the current Attachment is null.");
         }
 
         if (x > currentAttachment.width
             || y > currentAttachment.height
         ) {
-            return null;
+            return false;
         }
 
-        if (width + x > currentAttachment.width) {
-            width = currentAttachment.width - x;
+        if (0 > x && 0 >= width + x) {
+            return false;
         }
 
-        if (height + y > currentAttachment.height) {
-            height = currentAttachment.height - y;
+        if (0 > y && 0 >= height + y) {
+            return false;
         }
 
-        if (0 > x) {
-            width += x;
-            x = 0;
-        }
+        this._$maskBounds.push($getBoundsObject(
+            x, width,
+            y, height
+        ));
 
-        if (0 > y) {
-            height += y;
-            y = 0;
-        }
-
-        if (0 >= width || 0 >= height) {
-            return null;
-        }
-
-        width  = $Math.ceil(width);
-        height = $Math.ceil(height);
-
-        this._$cacheBounds.xMin = x;
-        this._$cacheBounds.yMin = y;
-        this._$cacheBounds.xMax = width;
-        this._$cacheBounds.yMax = height;
-        this._$cacheAttachment  = currentAttachment;
-
-        // create new buffer
-        this._$bind(
-            manager.createCacheAttachment(width, height, true)
-        );
-
-        // draw background
-        const texture: WebGLTexture = currentAttachment.texture;
-        this.reset();
-        this.setTransform(1, 0, 0, 1, 0, 0);
-        this.drawImage(texture, -x, -y, texture.width, texture.height);
-
-        return $getFloat32Array6(
-            matrix[0], matrix[1], matrix[2], matrix[3],
-            matrix[4] - bounds.xMin,
-            matrix[5] - bounds.yMin
-        );
+        return true;
     }
 
     /**
@@ -1985,28 +1964,6 @@ export class CanvasToWebGLContext
     }
 
     /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$saveCurrentMask (): void
-    {
-        this._$maskBufferArray.push(
-            this._$cacheAttachment
-        );
-
-        this._$cacheAttachment = null;
-
-        const bounds: BoundsImpl = this._$cacheBounds;
-        this._$maskBoundsArray.push(
-            $getBoundsObject(
-                bounds.xMin, bounds.xMax,
-                bounds.yMin, bounds.yMax
-            )
-        );
-    }
-
-    /**
      * @param  {number} width
      * @param  {number} height
      * @param  {boolean} [multisample=false]
@@ -2046,17 +2003,6 @@ export class CanvasToWebGLContext
         this._$bind(
             this._$attachmentArray.pop()
         );
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$restoreCurrentMask (): void
-    {
-        this._$cacheAttachment = this._$maskBufferArray.pop() || null;
-        this._$cacheBounds     = this._$maskBoundsArray.pop() || $getBoundsObject();
     }
 
     /**
