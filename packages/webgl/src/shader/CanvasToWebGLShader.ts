@@ -200,8 +200,7 @@ export class CanvasToWebGLShader
         // draw fill
         const indexRanges: IndexRangeImpl[] = vertex_array_object.indexRanges;
         const range: IndexRangeImpl = indexRanges[indexRanges.length - 1];
-        const count = range.first + range.count;
-        this._$gl.drawArrays(this._$gl.TRIANGLES, 0, count);
+        this._$gl.drawArrays(this._$gl.TRIANGLES, 0, range.first + range.count);
     }
 
     /**
