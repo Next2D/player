@@ -1,3 +1,5 @@
+import type { CachePositionImpl } from "./interface/CachePositionImpl";
+
 /**
  * @class
  */
@@ -10,6 +12,7 @@ export class TextureManager
     private _$activeTexture: number;
     public _$maxWidth: number;
     public _$maxHeight: number;
+    private readonly _$atlasTextures: WebGLTexture[];
 
     /**
      * @param {WebGL2RenderingContext} gl
@@ -66,6 +69,64 @@ export class TextureManager
 
         this._$gl.pixelStorei(this._$gl.UNPACK_ALIGNMENT, 1);
         this._$gl.pixelStorei(this._$gl.UNPACK_FLIP_Y_WEBGL, true);
+
+        this._$atlasTextures = [];
+        this.createTextureAtlas();
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    createTextureAtlas (): void
+    {
+        const texture: WebGLTexture = this._$gl.createTexture() as NonNullable<WebGLTexture>;
+        texture.width  = 4096;
+        texture.height = 4096;
+
+        this._$gl.activeTexture(this._$gl.TEXTURE3 + this._$atlasTextures.length);
+        this._$gl.bindTexture(this._$gl.TEXTURE_2D, texture);
+
+        this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_WRAP_S, this._$gl.CLAMP_TO_EDGE);
+        this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_WRAP_T, this._$gl.CLAMP_TO_EDGE);
+        this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MIN_FILTER, this._$gl.NEAREST);
+        this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MAG_FILTER, this._$gl.NEAREST);
+
+        this._$gl.texStorage2D(this._$gl.TEXTURE_2D, 1, this._$gl.RGBA8, 4096, 4096);
+
+        this._$atlasTextures.push(texture);
+    }
+
+    /**
+     * @param  {number} index
+     * @return {WebGLTexture}
+     * @method
+     * @public
+     */
+    getActiveTexture (index: number): WebGLTexture
+    {
+        this._$activeTexture = 3 + index;
+        this._$gl.activeTexture(this._$gl.TEXTURE3 + index);
+        return this._$atlasTextures[index];
+    }
+
+    /**
+     * @param  {number} width
+     * @param  {number} height
+     * @return {object}
+     * @method
+     * @public
+     */
+    createCachePosition (width: number, height: number): CachePositionImpl
+    {
+        return {
+            "index": 0,
+            "x": 0,
+            "y": 0,
+            "w": width,
+            "h": height
+        };
     }
 
     /**

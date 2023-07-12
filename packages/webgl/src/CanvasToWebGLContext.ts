@@ -71,7 +71,7 @@ export class CanvasToWebGLContext
     private readonly _$vao: VertexArrayObjectManager;
     private readonly _$mask: CanvasToWebGLContextMask;
     private readonly _$blend: CanvasToWebGLContextBlend;
-    private readonly _$maskBounds: BoundsImpl[];
+    private readonly _$maskBounds: BoundsImpl;
     private readonly _$attachmentArray: Array<AttachmentImpl|null>;
 
     /**
@@ -287,22 +287,10 @@ export class CanvasToWebGLContext
         this._$attachmentArray = [];
 
         /**
-         * @type {array}
+         * @type {object}
          * @private
          */
-        this._$maskBounds = [];
-    }
-
-    /**
-     * @return {object}
-     * @method
-     * @public
-     */
-    getMaskBounds (): BoundsImpl | null
-    {
-        return this._$maskBounds.length
-            ? this._$maskBounds[this._$maskBounds.length - 1]
-            : null;
+        this._$maskBounds = $getBoundsObject(0, 0, 0, 0);
     }
 
     /**
@@ -780,22 +768,15 @@ export class CanvasToWebGLContext
         this._$mask._$onClearRect();
 
         // マスクの描画領域に限定してstencil情報をクリア
-        const bounds: BoundsImpl | void = this._$maskBounds.pop();
-        if (bounds) {
-            this._$gl.enable(this._$gl.SCISSOR_TEST);
-            this._$gl.scissor(
-                bounds.xMin,
-                bounds.yMin,
-                bounds.xMax,
-                bounds.yMax
-            );
-            this._$gl.clear(this._$gl.STENCIL_BUFFER_BIT);
-            this._$gl.disable(this._$gl.SCISSOR_TEST);
-        }
-
-        if (this._$maskBounds.length) {
-            this._$mask._$onBind(true);
-        }
+        this._$gl.enable(this._$gl.SCISSOR_TEST);
+        this._$gl.scissor(
+            this._$maskBounds.xMin,
+            this._$maskBounds.yMin,
+            this._$maskBounds.xMax,
+            this._$maskBounds.yMax
+        );
+        this._$gl.clear(this._$gl.STENCIL_BUFFER_BIT);
+        this._$gl.disable(this._$gl.SCISSOR_TEST);
     }
 
     /**
@@ -1151,10 +1132,10 @@ export class CanvasToWebGLContext
             return false;
         }
 
-        this._$maskBounds.push($getBoundsObject(
-            x, width,
-            y, height
-        ));
+        this._$maskBounds.xMin = $Math.max(0, $Math.min(this._$maskBounds.xMin, x));
+        this._$maskBounds.yMin = $Math.max(0, $Math.min(this._$maskBounds.yMin, y));
+        this._$maskBounds.xMax = $Math.min(currentAttachment.width,  $Math.min(this._$maskBounds.xMax, width));
+        this._$maskBounds.yMax = $Math.min(currentAttachment.height, $Math.min(this._$maskBounds.yMax, height));
 
         return true;
     }

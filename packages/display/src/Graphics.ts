@@ -45,6 +45,7 @@ import {
     $getFloat32Array4,
     $linearGradientXY
 } from "@next2d/share";
+import {CachePositionImpl} from "@next2d/webgl/src/interface/CachePositionImpl";
 
 /**
  * Graphics クラスには、ベクターシェイプの作成に使用できる一連のメソッドがあります。
@@ -96,6 +97,7 @@ export class Graphics
     public _$recode: any[] | null;
     private _$fills: any[] | null;
     private _$lines: any[] | null;
+    private _$cacheKey: string;
 
     /**
      * @param {DisplayObject} src
@@ -328,6 +330,13 @@ export class Graphics
          * @private
          */
         this._$lines = null;
+
+        /**
+         * @type {string}
+         * @default ""
+         * @private
+         */
+        this._$cacheKey = "";
     }
 
     /**
@@ -1737,24 +1746,27 @@ export class Graphics
 
         // get cache
         const keys: number[] = $getArray(xScale, yScale);
-
-        let uniqueId: string = `${displayObject._$instanceId}`;
-        if (!hasGrid
-            && displayObject._$loaderInfo
-            && displayObject._$characterId
-        ) {
-            uniqueId = `${displayObject._$loaderInfo._$id}@${displayObject._$characterId}`;
+        if (this._$cacheKey === "") {
+            if (!hasGrid
+                && displayObject._$loaderInfo
+                && displayObject._$characterId
+            ) {
+                this._$cacheKey = `${displayObject._$loaderInfo._$id}@${displayObject._$characterId}`;
+            } else {
+                this._$createCacheKey();
+            }
         }
 
         const player: Player = $currentPlayer();
         const cacheStore: CacheStore = player.cacheStore;
         const cacheKeys: string[] = cacheStore.generateKeys(
-            uniqueId, keys, color_transform
+            this._$cacheKey, keys, color_transform
         );
 
         $poolArray(keys);
 
         let texture: WebGLTexture | void = cacheStore.get(cacheKeys);
+        // let cachePosition: CachePositionImpl | void = cacheStore.get(cacheKeys);
         if (!texture) {
 
             const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
@@ -1844,6 +1856,9 @@ export class Graphics
                 context.grid.disable();
             }
 
+            // cachePosition = manager.createCachePosition(width, height);
+
+            // manager.cacheTexture(cachePosition);
             texture = manager.getTextureFromCurrentAttachment();
 
             // set cache
@@ -1856,25 +1871,25 @@ export class Graphics
             context._$bind(currentAttachment);
         }
 
-        let drawFilter: boolean = false;
-        let offsetX: number = 0;
-        let offsetY: number = 0;
-        if (filters && filters.length
-            && displayObject._$canApply(filters)
-        ) {
-
-            drawFilter = true;
-
-            texture = displayObject._$drawFilter(
-                context, texture, matrix,
-                filters, width, height
-            );
-
-            if (texture) {
-                offsetX = texture._$offsetX;
-                offsetY = texture._$offsetY;
-            }
-        }
+        const drawFilter: boolean = false;
+        const offsetX: number = 0;
+        const offsetY: number = 0;
+        // if (filters && filters.length
+        //     && displayObject._$canApply(filters)
+        // ) {
+        //
+        //     drawFilter = true;
+        //
+        //     texture = displayObject._$drawFilter(
+        //         context, texture, matrix,
+        //         filters, width, height
+        //     );
+        //
+        //     if (texture) {
+        //         offsetX = texture._$offsetX;
+        //         offsetY = texture._$offsetY;
+        //     }
+        // }
 
         const radianX: number = $Math.atan2(matrix[1], matrix[0]);
         const radianY: number = $Math.atan2(-matrix[2], matrix[3]);
@@ -1910,8 +1925,13 @@ export class Graphics
             context.imageSmoothingEnabled = true;
             context.globalCompositeOperation = blend_mode;
 
+            // const texture = manager
+            //     .textureManager
+            //     .getActiveTexture(cachePosition.index);
+
             context.drawImage(texture,
-                0, 0, texture.width, texture.height, color_transform
+                0, 0, texture.width, texture.height,
+                color_transform
             );
         }
 
@@ -1995,7 +2015,8 @@ export class Graphics
         if (this._$displayObject) {
 
             this._$displayObject._$posted = false;
-            this._$buffer = null;
+            this._$buffer   = null;
+            this._$cacheKey = "";
 
             if (!this._$displayObject._$isUpdated()) {
 
@@ -2211,6 +2232,41 @@ export class Graphics
         }
 
         $poolArray(data);
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$createCacheKey (): void
+    {
+        if (this._$doLine) {
+            this.endLine();
+        }
+
+        // fixed logic
+        if (this._$doFill) {
+            this.endFill();
+        }
+
+        if (!this._$recode) {
+            return ;
+        }
+
+        const recodes: Float32Array = this._$getRecodes();
+        this._$cacheKey = recodes.join("");
+
+        // let hash = 0;
+        // for (let idx = 1; idx < numberString.length; ++idx) {
+        //
+        //     const charCode: number = numberString.charCodeAt(idx);
+        //
+        //     hash  = (hash << 5) - hash + charCode;
+        //     hash |= 0;
+        // }
+        //
+        // this._$cacheKey = `${hash}`;
     }
 
     /**

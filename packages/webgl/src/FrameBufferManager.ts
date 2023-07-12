@@ -1,7 +1,8 @@
 import { TextureManager } from "./TextureManager";
 import { StencilBufferPool } from "./StencilBufferPool";
 import { ColorBufferPool } from "./ColorBufferPool";
-import { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { CachePositionImpl } from "./interface/CachePositionImpl";
 
 /**
  * @class
@@ -352,7 +353,7 @@ export class FrameBufferManager
             throw new Error("the texture is null.");
         }
 
-        texture.dirty = false;
+        // texture.dirty = false;
 
         this._$gl.bindFramebuffer(
             this._$gl.DRAW_FRAMEBUFFER,
@@ -385,6 +386,54 @@ export class FrameBufferManager
             this._$gl.DRAW_FRAMEBUFFER,
             this._$frameBuffer
         );
+    }
+
+    /**
+     * @param  {number} width
+     * @param  {number} height
+     * @return {object}
+     * @method
+     * @public
+     */
+    createCachePosition (width: number, height: number): CachePositionImpl
+    {
+        return this
+            ._$textureManager
+            .createCachePosition(width, height);
+    }
+
+    /**
+     * @param  {object} cachePosition
+     * @return {void}
+     * @method
+     * @public
+     */
+    cacheTexture (cachePosition: CachePositionImpl): void
+    {
+        this._$gl.bindFramebuffer(
+            this._$gl.DRAW_FRAMEBUFFER,
+            this._$frameBufferTexture
+        );
+
+        const texture: WebGLTexture = this
+            ._$textureManager
+            .getActiveTexture(cachePosition.index);
+
+        this._$gl.framebufferTexture2D(
+            this._$gl.FRAMEBUFFER, this._$gl.COLOR_ATTACHMENT0,
+            this._$gl.TEXTURE_2D, texture, 0
+        );
+
+        this._$gl.blitFramebuffer(
+            0, 0,
+            cachePosition.w, cachePosition.h,
+            cachePosition.x, cachePosition.y,
+            cachePosition.w, cachePosition.h,
+            this._$gl.COLOR_BUFFER_BIT,
+            this._$gl.NEAREST
+        );
+
+        this._$gl.bindFramebuffer(this._$gl.FRAMEBUFFER, this._$frameBuffer);
     }
 
     /**

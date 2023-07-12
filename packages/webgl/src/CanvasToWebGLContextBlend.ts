@@ -282,7 +282,9 @@ export class CanvasToWebGLContextBlend
 
                     const shader: CanvasToWebGLShader = variants.getNormalBlendShader(withCT);
                     variants.setNormalBlendUniform(
-                        shader.uniform, x, y, w, h, matrix, renderWidth, renderHeight,
+                        shader.uniform,
+                        x, y, image.width, image.height,
+                        matrix, renderWidth, renderHeight,
                         withCT, ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
                     );
 
@@ -333,7 +335,6 @@ export class CanvasToWebGLContextBlend
                         const sy: number = $Math.max(0, y + ty);
                         const sw: number = $Math.min($Math.max(0, renderWidth  - sx), w);
                         const sh: number = $Math.min($Math.max(0, renderHeight - sy), h);
-
                         if (!sw || !sh) {
                             return ;
                         }

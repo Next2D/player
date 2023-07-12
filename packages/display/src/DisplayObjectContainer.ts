@@ -849,6 +849,9 @@ export class DisplayObjectContainer extends InteractiveObject
                         `${instance._$loaderInfo._$id}@${instance._$characterId}`
                     );
                 }
+                if (instance._$graphics) {
+                    cacheStore.setRemoveTimer(instance._$graphics._$cacheKey);
+                }
 
                 // remove event
                 if (instance.willTrigger(Next2DEvent.REMOVED)) {
@@ -1169,6 +1172,9 @@ export class DisplayObjectContainer extends InteractiveObject
                     `${child._$loaderInfo._$id}@${child._$characterId}`
                 );
             }
+            if (child._$graphics) {
+                cacheStore.setRemoveTimer(child._$graphics._$cacheKey);
+            }
 
             // reset params
             if (child instanceof DisplayObjectContainer) {
@@ -1255,6 +1261,9 @@ export class DisplayObjectContainer extends InteractiveObject
                 cacheStore.setRemoveTimer(
                     `${instance._$loaderInfo._$id}@${instance._$characterId}`
                 );
+            }
+            if (instance._$graphics) {
+                cacheStore.setRemoveTimer(instance._$graphics._$cacheKey);
             }
 
             if (instance instanceof DisplayObjectContainer) {
@@ -1809,9 +1818,6 @@ export class DisplayObjectContainer extends InteractiveObject
         let shouldClip: boolean = true;
         let clipDepth: number   = 0;
 
-        const clipStack: number[]    = $getArray();
-        const shouldClips: boolean[] = $getArray();
-
         const player: Player = $currentPlayer();
 
         // draw children
@@ -1850,8 +1856,8 @@ export class DisplayObjectContainer extends InteractiveObject
                 }
 
                 // clear
-                clipDepth  = clipStack.length ? clipStack.pop() || 0 : 0;
-                shouldClip = !!shouldClips.pop();
+                clipDepth  = 0;
+                shouldClip = true;
             }
 
             // mask size 0
@@ -1862,17 +1868,11 @@ export class DisplayObjectContainer extends InteractiveObject
             // mask start
             if (instance._$clipDepth > 0) {
 
-                context.save();
-
-                if (clipDepth) {
-                    clipStack.push(clipDepth);
-                }
-
-                shouldClips.push(shouldClip);
-
                 clipDepth  = instance._$clipDepth;
                 shouldClip = instance._$shouldClip(preMatrix);
+
                 if (shouldClip) {
+                    context.save();
                     shouldClip = instance._$startClip(context, preMatrix);
                 }
 
@@ -1951,18 +1951,12 @@ export class DisplayObjectContainer extends InteractiveObject
 
         // end mask
         if (clipDepth) {
-
             context.restore();
 
-            if (shouldClips.pop()) {
+            if (shouldClip) {
                 context._$leaveClip();
             }
-
         }
-
-        // object pool
-        $poolArray(clipStack);
-        $poolArray(shouldClips);
 
         // filter and blend
         if (preObject.isFilter) {

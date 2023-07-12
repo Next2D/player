@@ -9,9 +9,15 @@ const unzip_worker = {
         "filename": "UnzipWorker.min.js",
         "path": path.resolve(__dirname, "worker/unzip")
     },
+    "cache": {
+        "type": "filesystem",
+        "buildDependencies": {
+            "config": [__filename]
+        }
+    },
     "plugins": [
         new ESLintPlugin({
-            "extensions": [".ts", ".js"],
+            "extensions": [".ts"],
             "exclude": "node_modules"
         })
     ],
@@ -38,9 +44,15 @@ const render_worker = {
         "filename": "RendererWorker.min.js",
         "path": path.resolve(__dirname, "worker/renderer")
     },
+    "cache": {
+        "type": "filesystem",
+        "buildDependencies": {
+            "config": [__filename]
+        }
+    },
     "plugins": [
         new ESLintPlugin({
-            "extensions": [".ts", ".js"],
+            "extensions": [".ts"],
             "exclude": "node_modules"
         })
     ],
@@ -73,12 +85,18 @@ const player = {
         "filename": "next2d.js",
         "path": __dirname
     },
+    "cache": {
+        "type": "filesystem",
+        "buildDependencies": {
+            "config": [__filename]
+        }
+    },
     "plugins": [
         new ESLintPlugin({
-            "extensions": [".ts", ".js"],
+            "extensions": [".ts"],
             "exclude": "node_modules"
         }),
-        new WebpackWorkerLoaderPlugin()
+        // new WebpackWorkerLoaderPlugin()
     ],
     "resolve": {
         "alias": {
@@ -110,4 +128,5 @@ const player = {
     }
 };
 
-module.exports = [unzip_worker, render_worker, player];
+// module.exports = [unzip_worker, render_worker, player];
+module.exports = [player];

@@ -19,7 +19,7 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "webpack serve",
+    "start": "tsc && node ./scripts/build.js && webpack serve",
     "lint": "eslint src/**/*.ts packages/**/*.ts worker/**/*.ts",
     "publish:dist": "tsc && node ./scripts/publish.js",
     "clean": "node ./scripts/clean.js",
