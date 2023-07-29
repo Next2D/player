@@ -2882,23 +2882,23 @@ export class TextField extends InteractiveObject
             cacheStore.destroy(ctx);
         }
 
-        let drawFilter: boolean = false;
-        let offsetX: number = 0;
-        let offsetY: number = 0;
-        if (filters && filters.length
-            && this._$canApply(filters)
-        ) {
+        const drawFilter: boolean = false;
+        const offsetX: number = 0;
+        const offsetY: number = 0;
+        // if (filters && filters.length
+        //     && this._$canApply(filters)
+        // ) {
 
-            drawFilter = true;
+        //     drawFilter = true;
 
-            texture = this._$drawFilter(
-                context, texture, multiMatrix,
-                filters, width, height
-            );
+        //     texture = this._$drawFilter(
+        //         context, texture, multiMatrix,
+        //         filters, width, height
+        //     );
 
-            offsetX = texture._$offsetX;
-            offsetY = texture._$offsetY;
-        }
+        //     offsetX = texture._$offsetX;
+        //     offsetY = texture._$offsetY;
+        // }
 
         const radianX: number = $Math.atan2(multiMatrix[1], multiMatrix[0]);
         const radianY: number = $Math.atan2(-multiMatrix[2], multiMatrix[3]);

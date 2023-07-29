@@ -23,7 +23,8 @@ import type {
     PropertyMessageMapImpl,
     DisplayObjectImpl,
     AttachmentImpl,
-    PropertyMessageImpl
+    PropertyMessageImpl,
+    CachePositionImpl
 } from "@next2d/interface";
 import type {
     CanvasToWebGLContext,
@@ -387,16 +388,27 @@ export class DisplayObject extends EventDispatcher
     {
         alpha = $clamp(alpha, 0, 1, 0);
 
+        const transform: Transform = this._$transform;
+
         // clone
-        const colorTransform: ColorTransform = this
-            ._$transform
-            .colorTransform;
+        if (!transform._$colorTransform) {
+            const colorTransform: ColorTransform = transform.colorTransform;
 
-        colorTransform._$colorTransform[3] = alpha;
-        colorTransform._$colorTransform[7] = 0;
+            colorTransform._$colorTransform[3] = alpha;
+            colorTransform._$colorTransform[7] = 0;
 
-        this._$transform.colorTransform = colorTransform;
-        $poolColorTransform(colorTransform);
+            transform.colorTransform = colorTransform;
+            $poolColorTransform(colorTransform);
+
+        } else {
+            const colorTransform: ColorTransform = transform._$colorTransform;
+
+            colorTransform._$colorTransform[3] = alpha;
+            colorTransform._$colorTransform[7] = 0;
+
+            this._$doChanged();
+            $doUpdated();
+        }
     }
 
     /**
@@ -439,7 +451,14 @@ export class DisplayObject extends EventDispatcher
     }
     set blendMode (blend_mode: BlendModeImpl)
     {
-        this._$transform._$transform(null, null, null, blend_mode);
+        const transform: Transform = this._$transform;
+        if (!transform._$blendMode) {
+            transform._$transform(null, null, null, blend_mode);
+        } else {
+            transform._$blendMode = blend_mode;
+            this._$doChanged();
+            $doUpdated();
+        }
         this._$blendMode = blend_mode;
     }
 
@@ -569,7 +588,7 @@ export class DisplayObject extends EventDispatcher
                 : $getBoundsObject();
 
             const rotation: number = this.rotation;
-            const bounds = rotation
+            const bounds: BoundsImpl = rotation
                 ? $boundsMatrix(baseBounds, this._$transform._$rawMatrix())
                 : baseBounds;
 
@@ -577,7 +596,7 @@ export class DisplayObject extends EventDispatcher
                 $poolBoundsObject(baseBounds);
             }
 
-            const exHeight = $Math.abs(bounds.yMax - bounds.yMin);
+            const exHeight: number = $Math.abs(bounds.yMax - bounds.yMin);
             $poolBoundsObject(bounds);
 
             switch (exHeight) {
@@ -772,7 +791,12 @@ export class DisplayObject extends EventDispatcher
         }
 
         const transform: Transform = this._$transform;
-        const matrix: Matrix = transform.matrix;
+
+        const hasMatrix: boolean = transform._$matrix !== null;
+
+        const matrix: Matrix = hasMatrix
+            ? transform._$matrix as NonNullable<Matrix>
+            : transform.matrix;
 
         const scaleX: number = $Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
         const scaleY: number = $Math.sqrt(matrix.c * matrix.c + matrix.d * matrix.d);
@@ -807,8 +831,13 @@ export class DisplayObject extends EventDispatcher
             }
         }
 
-        transform.matrix = matrix;
-        $poolMatrix(matrix);
+        if (hasMatrix) {
+            this._$doChanged();
+            $doUpdated();
+        } else {
+            transform.matrix = matrix;
+            $poolMatrix(matrix);
+        }
 
         this._$rotation = rotation;
     }
@@ -884,7 +913,13 @@ export class DisplayObject extends EventDispatcher
         }
 
         const transform: Transform = this._$transform;
-        const matrix: Matrix = transform.matrix;
+
+        const hasMatrix: boolean = transform._$matrix !== null;
+
+        const matrix: Matrix = hasMatrix
+            ? transform._$matrix as NonNullable<Matrix>
+            : transform.matrix;
+
         if (matrix.b === 0 || $isNaN(matrix.b)) {
 
             matrix.a = scale_x;
@@ -901,8 +936,13 @@ export class DisplayObject extends EventDispatcher
 
         }
 
-        transform.matrix = matrix;
-        $poolMatrix(matrix);
+        if (hasMatrix) {
+            this._$doChanged();
+            $doUpdated();
+        } else {
+            transform.matrix = matrix;
+            $poolMatrix(matrix);
+        }
 
         this._$scaleX = scale_x;
     }
@@ -959,7 +999,12 @@ export class DisplayObject extends EventDispatcher
         }
 
         const transform: Transform = this._$transform;
-        const matrix: Matrix = transform.matrix;
+
+        const hasMatrix: boolean = transform._$matrix !== null;
+
+        const matrix: Matrix = hasMatrix
+            ? transform._$matrix as NonNullable<Matrix>
+            : transform.matrix;
 
         if (matrix.c === 0 || $isNaN(matrix.c)) {
 
@@ -976,8 +1021,13 @@ export class DisplayObject extends EventDispatcher
 
         }
 
-        transform.matrix = matrix;
-        $poolMatrix(matrix);
+        if (hasMatrix) {
+            this._$doChanged();
+            $doUpdated();
+        } else {
+            transform.matrix = matrix;
+            $poolMatrix(matrix);
+        }
 
         this._$scaleY = scale_y;
     }
@@ -1133,12 +1183,16 @@ export class DisplayObject extends EventDispatcher
     {
         const transform: Transform = this._$transform;
 
-        const matrix: Matrix = transform.matrix;
-
-        matrix.tx = x;
-
-        transform.matrix = matrix;
-        $poolMatrix(matrix);
+        if (!transform._$matrix) {
+            const matrix: Matrix = transform.matrix;
+            matrix.tx = x;
+            transform.matrix = matrix;
+            $poolMatrix(matrix);
+        } else {
+            transform._$matrix.tx = x;
+            this._$doChanged();
+            $doUpdated();
+        }
     }
 
     /**
@@ -1159,12 +1213,17 @@ export class DisplayObject extends EventDispatcher
     {
         const transform: Transform = this._$transform;
 
-        const matrix = transform.matrix;
+        if (!transform._$matrix) {
+            const matrix = transform.matrix;
+            matrix.ty = y;
 
-        matrix.ty = y;
-
-        transform.matrix = matrix;
-        $poolMatrix(matrix);
+            transform.matrix = matrix;
+            $poolMatrix(matrix);
+        } else {
+            transform._$matrix.ty = y;
+            this._$doChanged();
+            $doUpdated();
+        }
     }
 
     /**
@@ -1671,66 +1730,72 @@ export class DisplayObject extends EventDispatcher
 
     /**
      * @param  {CanvasToWebGLContext} context
-     * @param  {WebGLTexture}         target_texture
      * @param  {Float32Array}         matrix
      * @param  {array}                filters
-     * @param  {number}               width
-     * @param  {number}               height
-     * @return {WebGLTexture}
+     * @param  {number}               layer_width
+     * @param  {number}               layer_height
+     * @return {object}
      * @method
      * @private
      */
     _$drawFilter (
         context: CanvasToWebGLContext,
-        target_texture: WebGLTexture,
         matrix: Float32Array,
         filters: FilterArrayImpl,
-        width: number, height: number
-    ): WebGLTexture {
+        width: number,
+        height: number
+    ): CachePositionImpl {
 
         const player: Player = $currentPlayer();
         const cacheStore: CacheStore = player.cacheStore;
 
         const cacheKeys: any[] = [this._$instanceId, "f"];
-        const cache: WebGLTexture | void = cacheStore.get(cacheKeys);
+        let position: CachePositionImpl | void = cacheStore.get(cacheKeys);
 
         const updated: boolean = this._$isFilterUpdated(
             width, height, matrix, filters, true
         );
 
-        if (cache && !updated) {
-            return cache;
+        if (position && !updated) {
+            context.cachePosition = position;
+            return position;
         }
 
         // cache clear
-        if (cache) {
-
+        if (position) {
             cacheStore.set(cacheKeys, null);
-            cache.layerWidth     = 0;
-            cache.layerHeight    = 0;
-            cache._$offsetX      = 0;
-            cache._$offsetY      = 0;
-            cache.matrix         = null;
-            cache.colorTransform = null;
-
-            context
-                .frameBuffer
-                .releaseTexture(cache);
         }
 
-        if (!cache || updated) {
+        const manager: FrameBufferManager = context.frameBuffer;
 
-            const texture = this._$applyFilter(
-                context, filters, target_texture,
-                matrix, width, height
-            );
+        const bounds: BoundsImpl = this._$getLayerBounds(matrix);
+        position = manager.createCachePosition(
+            $Math.ceil($Math.abs(bounds.xMax - bounds.xMin)),
+            $Math.ceil($Math.abs(bounds.yMax - bounds.yMin))
+        );
+        $poolBoundsObject(bounds);
 
-            cacheStore.set(cacheKeys, texture);
+        const targetTexture: WebGLTexture = context.getTextureFromRect(
+            context.cachePosition as NonNullable<CachePositionImpl>
+        );
 
-            return texture;
-        }
+        const texture: WebGLTexture = this._$applyFilter(
+            context, filters, targetTexture,
+            matrix, width, height
+        );
+        manager.textureManager.release(targetTexture);
 
-        return cache;
+        position.filterState = true;
+        position.matrix      = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}_0_0`;
+        position.offsetY     = texture._$offsetY;
+        position.offsetY     = texture._$offsetY;
+
+        context.drawTextureFromRect(texture, position);
+        manager.textureManager.release(texture);
+
+        cacheStore.set(cacheKeys, position);
+
+        return position;
     }
 
     /**
@@ -1755,8 +1820,8 @@ export class DisplayObject extends EventDispatcher
 
         let filterBounds: BoundsImpl = $getBoundsObject(
             baseBounds.xMin,
-            baseBounds.yMin,
             baseBounds.xMax - baseBounds.xMin,
+            baseBounds.yMin,
             baseBounds.yMax - baseBounds.yMin
         );
         $poolBoundsObject(baseBounds);
@@ -1766,13 +1831,9 @@ export class DisplayObject extends EventDispatcher
                 ._$generateFilterRect(filterBounds, 0, 0);
         }
 
-        const xMin = filterBounds.xMin;
-        const xMax = filterBounds.xMin + filterBounds.xMax;
-        const yMin = filterBounds.yMin;
-        const yMax = filterBounds.yMin + filterBounds.yMax;
-        $poolBoundsObject(filterBounds);
-
-        return $getBoundsObject(xMin, xMax, yMin, yMax);
+        filterBounds.xMax += filterBounds.xMin;
+        filterBounds.yMax += filterBounds.yMin;
+        return filterBounds;
     }
 
     /**
@@ -1872,7 +1933,8 @@ export class DisplayObject extends EventDispatcher
         matrix: Float32Array,
         filters: FilterArrayImpl | null = null,
         can_apply: boolean = false,
-        position_x: number = 0, position_y: number = 0
+        position_x: number = 0,
+        position_y: number = 0
     ): boolean {
 
         // cache flag
@@ -1896,13 +1958,13 @@ export class DisplayObject extends EventDispatcher
 
         // check status
         const player: Player = $currentPlayer();
-        const cache: WebGLTexture = player.cacheStore.get([this._$instanceId, "f"]);
+        const cache: CachePositionImpl = player.cacheStore.get([this._$instanceId, "f"]);
         switch (true) {
 
             case cache === null:
             case cache.filterState !== can_apply:
-            case cache.layerWidth  !== $Math.ceil(width):
-            case cache.layerHeight !== $Math.ceil(height):
+            case cache.w !== $Math.ceil(width):
+            case cache.h !== $Math.ceil(height):
             case cache.matrix !==
             matrix[0] + "_" + matrix[1] + "_" + matrix[2] + "_" + matrix[3] + "_" +
             position_x + "_" + position_y:
@@ -1931,7 +1993,8 @@ export class DisplayObject extends EventDispatcher
         filters: FilterArrayImpl,
         target_texture: WebGLTexture,
         matrix: Float32Array,
-        width: number, height: number
+        width: number,
+        height: number
     ): WebGLTexture {
 
         const xScale: number = +$Math.sqrt(
@@ -2013,15 +2076,6 @@ export class DisplayObject extends EventDispatcher
         texture._$offsetX = offsetX;
         texture._$offsetY = offsetY;
 
-        // cache texture
-        texture.matrix =
-              matrix[0] + "_" + matrix[1] + "_"
-            + matrix[2] + "_" + matrix[3];
-
-        texture.filterState = true;
-        texture.layerWidth  = width;
-        texture.layerHeight = height;
-
         context._$bind(currentAttachment);
         manager.releaseAttachment(attachment, false);
 
@@ -2059,6 +2113,8 @@ export class DisplayObject extends EventDispatcher
         context: CanvasToWebGLContext,
         matrix: Float32Array
     ): boolean {
+
+        context.drawInstacedArray();
 
         // マスクの描画反映を限定
         const bounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"

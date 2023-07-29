@@ -1656,12 +1656,6 @@ export class DisplayObjectContainer extends InteractiveObject
 
                 // reset cache params
                 cacheStore.set(cacheKeys, null);
-                cache.layerWidth     = 0;
-                cache.layerHeight    = 0;
-                cache._$offsetX      = 0;
-                cache._$offsetY      = 0;
-                cache.matrix         = null;
-                cache.colorTransform = null;
                 manager.releaseTexture(cache);
             }
 
@@ -1693,19 +1687,19 @@ export class DisplayObjectContainer extends InteractiveObject
         }
 
         // update cache params
-        if (object.isUpdated) {
+        // if (object.isUpdated) {
 
-            texture.filterState = object.canApply;
+        //     texture.filterState = object.canApply;
 
-            // cache texture
-            const matrix: Float32Array | null = object.baseMatrix;
-            if (matrix) {
-                texture.matrix = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}`;
-            }
+        //     // cache texture
+        //     const matrix: Float32Array | null = object.baseMatrix;
+        //     if (matrix) {
+        //         texture.matrix = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}`;
+        //     }
 
-            texture.layerWidth  = object.layerWidth;
-            texture.layerHeight = object.layerHeight;
-        }
+        //     texture.layerWidth  = object.layerWidth;
+        //     texture.layerHeight = object.layerHeight;
+        // }
 
         // cache texture
         cacheStore.set(cacheKeys, texture);

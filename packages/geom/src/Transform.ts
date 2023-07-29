@@ -71,8 +71,8 @@ import {
 export class Transform
 {
     private readonly _$displayObject: DisplayObjectImpl<any>;
-    private _$matrix: Matrix|null;
-    private _$colorTransform: ColorTransform|null;
+    public _$matrix: Matrix|null;
+    public _$colorTransform: ColorTransform|null;
     public _$blendMode: BlendModeImpl|null;
     public _$filters: FilterArrayImpl|null;
 

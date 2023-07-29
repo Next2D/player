@@ -981,10 +981,10 @@ export class Video extends DisplayObject
             }
 
             // draw filter
-            texture = this._$drawFilter(
-                context, texture, multiMatrix,
-                filters, width, height
-            );
+            // texture = this._$drawFilter(
+            //     context, texture, multiMatrix,
+            //     filters, width, height
+            // );
 
             // reset
             context.reset();

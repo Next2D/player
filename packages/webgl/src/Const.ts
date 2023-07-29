@@ -2,4 +2,4 @@
  * @type {number}
  * @public
  */
-export const $TEXTURE_SIZE = 4096;
+export const $RENDER_SIZE = 4096;

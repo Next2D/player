@@ -1302,10 +1302,6 @@ export class Player
 
         if (div) {
 
-            // cache reset
-            this._$stage._$doChanged();
-            this._$cacheStore.reset();
-
             const parent: HTMLElement | null = div.parentElement;
             if (!parent) {
                 throw new Error("the parentElement is null.");
@@ -1360,6 +1356,10 @@ export class Player
             if (this._$width === width && this._$height === height) {
                 return ;
             }
+
+            // cache reset
+            this._$stage._$doChanged();
+            this._$cacheStore.reset();
 
             // params
             this._$scale  = scale;
@@ -1482,6 +1482,8 @@ export class Player
                 return ;
             }
 
+            context.clearInstacedArray();
+
             this._$canvas.width  = width;
             this._$canvas.height = height;
 
@@ -1498,6 +1500,9 @@ export class Player
 
             // update cache max size
             context.setMaxSize(width, height);
+            manager.clearCache();
+
+            context._$bind(this._$attachment);
         }
     }
 
@@ -1997,8 +2002,6 @@ export class Player
             return ;
         }
 
-        context._$bind(this._$attachment);
-
         // reset
         context.reset();
         context.setTransform(1, 0, 0, 1, 0, 0);
@@ -2014,6 +2017,7 @@ export class Player
         // stage end
         this._$stage._$updated = false;
 
+        context.drawInstacedArray();
         context
             .frameBuffer
             .transferToMainTexture();

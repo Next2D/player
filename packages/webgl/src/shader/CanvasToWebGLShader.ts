@@ -1,4 +1,5 @@
 import { WebGLShaderUniform } from "./WebGLShaderUniform";
+import { WebGLShaderInstance } from "./WebGLShaderInstance";
 import type { CanvasToWebGLContext } from "../CanvasToWebGLContext";
 import type { CanvasToWebGLShaderList } from "./CanvasToWebGLShaderList";
 import type { IndexRangeImpl } from "../interface/IndexRangeImpl";
@@ -13,19 +14,23 @@ export class CanvasToWebGLShader
     private readonly _$context: CanvasToWebGLContext;
     private readonly _$program: WebGLProgram;
     private readonly _$uniform: WebGLShaderUniform;
+    private _$instance: WebGLShaderInstance | null;
 
     /**
-     * @param   {WebGL2RenderingContext} gl
-     * @param   {CanvasToWebGLContext}  context
-     * @param   {string} vertex_source
-     * @param   {string} fragment_source
+     * @param {WebGL2RenderingContext} gl
+     * @param {CanvasToWebGLContext} context
+     * @param {string} vertex_source
+     * @param {string} fragment_source
      * @constructor
      * @public
      */
     constructor (
-        gl: WebGL2RenderingContext, context: CanvasToWebGLContext,
-        vertex_source: string, fragment_source: string
+        gl: WebGL2RenderingContext,
+        context: CanvasToWebGLContext,
+        vertex_source: string,
+        fragment_source: string
     ) {
+
         /**
          * @type {WebGL2RenderingContext}
          * @private
@@ -49,6 +54,26 @@ export class CanvasToWebGLShader
          * @private
          */
         this._$uniform = new WebGLShaderUniform(gl, this._$program);
+
+        /**
+         * @type {WebGLShaderInstance}
+         * @default null
+         * @private
+         */
+        this._$instance = null;
+    }
+
+    /**
+     * @return {WebGLShaderInstance}
+     * @readonly
+     * @public
+     */
+    get instance (): WebGLShaderInstance
+    {
+        if (!this._$instance) {
+            this._$instance = new WebGLShaderInstance();
+        }
+        return this._$instance;
     }
 
     /**
@@ -70,27 +95,16 @@ export class CanvasToWebGLShader
      */
     _$createProgram (vertex_source: string, fragment_source: string): WebGLProgram
     {
-        const program: WebGLProgram|null = this._$gl.createProgram();
-        if (!program) {
-            throw new Error("WebGL program error");
-        }
+        const program: WebGLProgram = this._$gl.createProgram() as NonNullable<WebGLProgram>;
 
         // control number
         program.id = $getProgramId();
 
-        const vertexShader: WebGLShader|null = this._$gl.createShader(this._$gl.VERTEX_SHADER);
-        if (!vertexShader) {
-            throw new Error("WebGL vertex shader error");
-        }
-
+        const vertexShader: WebGLShader = this._$gl.createShader(this._$gl.VERTEX_SHADER) as NonNullable<WebGLShader>;
         this._$gl.shaderSource(vertexShader, vertex_source);
         this._$gl.compileShader(vertexShader);
 
-        const fragmentShader: WebGLShader|null = this._$gl.createShader(this._$gl.FRAGMENT_SHADER);
-        if (!fragmentShader) {
-            throw new Error("WebGL fragment shader error");
-        }
-
+        const fragmentShader: WebGLShader = this._$gl.createShader(this._$gl.FRAGMENT_SHADER) as NonNullable<WebGLShader>;
         this._$gl.shaderSource(fragmentShader, fragment_source);
         this._$gl.compileShader(fragmentShader);
 
@@ -119,6 +133,23 @@ export class CanvasToWebGLShader
             shaderList.currentProgramId = this._$program.id;
             this._$gl.useProgram(this._$program);
         }
+    }
+
+    /**
+     * @param  {WebGLShaderInstance} instance
+     * @method
+     * @public
+     */
+    drawArraysInstanced (instance: WebGLShaderInstance): void
+    {
+        // setup
+        this._$attachProgram();
+
+        // bind data
+        this._$context.vao.bindInstnceArray(instance);
+
+        // draw
+        this._$gl.drawArraysInstanced(this._$gl.TRIANGLE_STRIP, 0, 4, instance.count);
     }
 
     /**

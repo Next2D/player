@@ -16,7 +16,8 @@ import type {
     ColorStopImpl,
     SpreadMethodImpl,
     GradientTypeImpl,
-    InterpolationMethodImpl
+    InterpolationMethodImpl,
+    CachePositionImpl
 } from "@next2d/interface";
 import type {
     CanvasToWebGLContext,
@@ -45,7 +46,6 @@ import {
     $getFloat32Array4,
     $linearGradientXY
 } from "@next2d/share";
-import {CachePositionImpl} from "@next2d/webgl/src/interface/CachePositionImpl";
 
 /**
  * Graphics クラスには、ベクターシェイプの作成に使用できる一連のメソッドがあります。
@@ -1069,8 +1069,8 @@ export class Graphics
         width  = +width  || 0;
         height = +height || 0;
 
-        const xMax = x + width;
-        const yMax = y + height;
+        const xMax = $Math.ceil(x + width);
+        const yMax = $Math.ceil(y + height);
 
         return this
             .moveTo(x,    y)
@@ -1658,10 +1658,10 @@ export class Graphics
         // size
         const baseBounds: BoundsImpl = this._$getBounds();
         const bounds: BoundsImpl = $boundsMatrix(baseBounds, matrix);
-        const xMax: number   = bounds.xMax;
-        const xMin: number   = bounds.xMin;
-        const yMax: number   = bounds.yMax;
-        const yMin: number   = bounds.yMin;
+        const xMax: number = bounds.xMax;
+        const xMin: number = bounds.xMin;
+        const yMax: number = bounds.yMax;
+        const yMin: number = bounds.yMin;
         $poolBoundsObject(bounds);
 
         const width: number  = $Math.ceil($Math.abs(xMax - xMin));
@@ -1765,11 +1765,14 @@ export class Graphics
 
         $poolArray(keys);
 
-        let texture: WebGLTexture | void = cacheStore.get(cacheKeys);
-        // let cachePosition: CachePositionImpl | void = cacheStore.get(cacheKeys);
-        if (!texture) {
+        context.cachePosition = cacheStore.get(cacheKeys);
+        if (!context.cachePosition) {
 
             const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+
+            if (currentAttachment && currentAttachment.mask) {
+                context.stopStencil();
+            }
 
             // resize
             let width: number  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
@@ -1780,10 +1783,9 @@ export class Graphics
                 height *= textureScale;
             }
 
-            // create cache buffer
-            const attachment: AttachmentImpl = manager
-                .createCacheAttachment(width, height, true);
-            context._$bind(attachment);
+            // create cache position
+            context.cachePosition = manager.createCachePosition(width, height);
+            context.bindRenderBuffer(context.cachePosition);
 
             // reset
             context.reset();
@@ -1856,40 +1858,40 @@ export class Graphics
                 context.grid.disable();
             }
 
-            // cachePosition = manager.createCachePosition(width, height);
-
-            // manager.cacheTexture(cachePosition);
-            texture = manager.getTextureFromCurrentAttachment();
+            manager.transferTexture(context.cachePosition);
 
             // set cache
-            cacheStore.set(cacheKeys, texture);
-
-            // release buffer
-            manager.releaseAttachment(attachment, false);
+            cacheStore.set(cacheKeys, context.cachePosition);
 
             // end draw and reset current buffer
             context._$bind(currentAttachment);
         }
 
-        const drawFilter: boolean = false;
-        const offsetX: number = 0;
-        const offsetY: number = 0;
-        // if (filters && filters.length
-        //     && displayObject._$canApply(filters)
-        // ) {
-        //
-        //     drawFilter = true;
-        //
-        //     texture = displayObject._$drawFilter(
-        //         context, texture, matrix,
-        //         filters, width, height
-        //     );
-        //
-        //     if (texture) {
-        //         offsetX = texture._$offsetX;
-        //         offsetY = texture._$offsetY;
-        //     }
-        // }
+        let drawFilter: boolean = false;
+        let offsetX: number = 0;
+        let offsetY: number = 0;
+        if (filters && filters.length
+            && displayObject._$canApply(filters)
+        ) {
+
+            drawFilter = true;
+
+            const position: CachePositionImpl = displayObject._$drawFilter(
+                context, matrix, filters,
+                width, height
+            );
+
+            if (position.offsetX) {
+                offsetX = position.offsetX;
+            }
+
+            if (position.offsetY) {
+                offsetY = position.offsetY;
+            }
+
+            // update
+            context.cachePosition = position;
+        }
 
         const radianX: number = $Math.atan2(matrix[1], matrix[0]);
         const radianY: number = $Math.atan2(-matrix[2], matrix[3]);
@@ -1919,20 +1921,38 @@ export class Graphics
         }
 
         // draw
-        if (texture) {
+        if (context.cachePosition) {
+
             context.reset();
+
             context.globalAlpha = alpha;
             context.imageSmoothingEnabled = true;
             context.globalCompositeOperation = blend_mode;
 
-            // const texture = manager
-            //     .textureManager
-            //     .getActiveTexture(cachePosition.index);
+            // instance draw
+            switch (blend_mode) {
 
-            context.drawImage(texture,
-                0, 0, texture.width, texture.height,
-                color_transform
-            );
+                case "normal":
+                case "layer":
+                case "add":
+                case "screen":
+                case "alpha":
+                case "erase":
+                case "copy":
+                    context.drawInstance(color_transform);
+                    break;
+
+                default:
+                    context.drawInstanceBlend(
+                        manager.textureManager.getAtlasTexture(context.cachePosition.index),
+                        xMin, yMin, xMax, yMax,
+                        color_transform
+                    );
+                    break;
+            }
+
+            // cache position clear
+            context.cachePosition = null;
         }
 
         // pool
@@ -3047,25 +3067,12 @@ export class Graphics
                             break;
                         }
 
-                        if (!repeat
-                            && bitmapData.width  === this._$xMax - this._$xMin
-                            && bitmapData.height === this._$yMax - this._$yMin
-                        ) {
+                        context.fillStyle = context.createPattern(
+                            texture, repeat, color_transform
+                        );
 
-                            context.drawImage(texture,
-                                0, 0, bitmapData.width, bitmapData.height
-                            );
-
-                        } else {
-
-                            context.fillStyle = context.createPattern(
-                                texture, repeat, color_transform
-                            );
-
-                            context.imageSmoothingEnabled = smooth;
-                            context.fill();
-
-                        }
+                        context.imageSmoothingEnabled = smooth;
+                        context.fill();
 
                         // restore
                         context.restore();

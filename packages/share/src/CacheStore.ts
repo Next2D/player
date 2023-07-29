@@ -7,6 +7,7 @@ import {
     $poolMap,
     $getArray
 } from "./RenderUtil";
+import type { CachePositionImpl } from "./interface/CachePositionImpl";
 
 /**
  * @class
@@ -84,7 +85,7 @@ export class CacheStore
      * @public
      */
     destroy (
-        object: CanvasRenderingContext2D | WebGLTexture | null = null
+        object: CanvasRenderingContext2D | WebGLTexture | CachePositionImpl |null = null
     ): void {
 
         if (!object) {
@@ -120,6 +121,14 @@ export class CacheStore
 
             // pool
             this._$pool.push(canvas);
+        }
+
+        if (this._$context && "index" in object) {
+            this
+                ._$context
+                .frameBuffer
+                .textureManager
+                .releasePosition(object);
         }
     }
 

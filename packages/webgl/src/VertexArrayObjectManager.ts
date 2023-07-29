@@ -4,6 +4,7 @@ import type { FillMeshImpl } from "./interface/FillMeshImpl";
 import type { StrokeMethImpl } from "./interface/StrokeMethImpl";
 import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
 import type { JointStyleImpl } from "./interface/JointStyleImpl";
+import type { WebGLShaderInstance } from "./shader/WebGLShaderInstance";
 import {
     $upperPowerOfTwo
 } from "@next2d/share";
@@ -16,7 +17,7 @@ export class VertexArrayObjectManager
     private _$gl: WebGL2RenderingContext;
     private readonly _$fillVertexArrayPool: WebGLVertexArrayObject[];
     private readonly _$strokeVertexArrayPool: WebGLVertexArrayObject[];
-    private _$boundVertexArray: WebGLVertexArrayObject|null;
+    private _$boundVertexArray: WebGLVertexArrayObject | null;
     private readonly _$fillAttrib_vertex: number;
     private readonly _$fillAttrib_bezier: number;
     private readonly _$strokeAttrib_vertex: number;
@@ -25,6 +26,8 @@ export class VertexArrayObjectManager
     private readonly _$strokeAttrib_type: number;
     private readonly _$vertexBufferData: Float32Array;
     private readonly _$commonVertexArray: WebGLVertexArrayObject;
+    private readonly _$instanceVertexArray: WebGLVertexArrayObject;
+    private _$colorTramsform: boolean;
 
     /**
      * @param {WebGL2RenderingContext} gl
@@ -111,7 +114,51 @@ export class VertexArrayObjectManager
          * @type {WebGLVertexArrayObject}
          * @private
          */
+        this._$instanceVertexArray = this._$getCommonVertexArray();
+
+        /**
+         * @type {WebGLVertexArrayObject}
+         * @private
+         */
         this._$commonVertexArray = this._$getVertexArray(0, 1);
+
+        /**
+         * @type {boolean}
+         * @private
+         */
+        this._$colorTramsform = false;
+    }
+
+    /**
+     * @param  {number} begin
+     * @param  {number} end
+     * @return {WebGLVertexArrayObject}
+     * @method
+     * @private
+     */
+    _$getCommonVertexArray (): WebGLVertexArrayObject
+    {
+        const vertexArray: WebGLVertexArrayObject = this._$gl.createVertexArray() as NonNullable<WebGLVertexArrayObject>;
+        this.bind(vertexArray);
+
+        const vertexBuffer: WebGLBuffer = this._$gl.createBuffer() as NonNullable<WebGLBuffer>;
+        this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, vertexBuffer);
+        this._$gl.bufferData(this._$gl.ARRAY_BUFFER, new Float32Array([0, 0, 0, 1, 1, 0, 1, 1]), this._$gl.STATIC_DRAW);
+
+        this._$gl.enableVertexAttribArray(0);
+        this._$gl.vertexAttribPointer(0, 2, this._$gl.FLOAT, false, 0, 0);
+
+        this._$gl.enableVertexAttribArray(1);
+        this._$gl.enableVertexAttribArray(2);
+        this._$gl.enableVertexAttribArray(3);
+        this._$gl.enableVertexAttribArray(4);
+
+        this._$gl.vertexAttribDivisor(1, 1);
+        this._$gl.vertexAttribDivisor(2, 1);
+        this._$gl.vertexAttribDivisor(3, 1);
+        this._$gl.vertexAttribDivisor(4, 1);
+
+        return vertexArray;
     }
 
     /**
@@ -123,14 +170,10 @@ export class VertexArrayObjectManager
      */
     _$getVertexArray (begin: number, end: number): WebGLVertexArrayObject
     {
-        const vertexArray: WebGLVertexArrayObject | null = this._$gl.createVertexArray();
-        if (!vertexArray) {
-            throw new Error("the WebGLVertexArrayObject is null.");
-        }
-
+        const vertexArray: WebGLVertexArrayObject = this._$gl.createVertexArray() as NonNullable<WebGLVertexArrayObject>;
         this.bind(vertexArray);
 
-        const vertexBuffer: WebGLBuffer|null = this._$gl.createBuffer();
+        const vertexBuffer: WebGLBuffer = this._$gl.createBuffer() as NonNullable<WebGLBuffer>;
         this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, vertexBuffer);
 
         this._$vertexBufferData[0] = begin;
@@ -159,18 +202,10 @@ export class VertexArrayObjectManager
             }
         }
 
-        const vertexArray: WebGLVertexArrayObject | null = this._$gl.createVertexArray();
-        if (!vertexArray) {
-            throw new Error("the WebGLVertexArrayObject is null.");
-        }
-
+        const vertexArray: WebGLVertexArrayObject = this._$gl.createVertexArray() as NonNullable<WebGLVertexArrayObject>;
         this.bind(vertexArray);
 
-        const vertexBuffer: WebGLBuffer | null = this._$gl.createBuffer();
-        if (!vertexBuffer) {
-            throw new Error("the WebGLBuffer is null.");
-        }
-
+        const vertexBuffer: WebGLBuffer = this._$gl.createBuffer() as NonNullable<WebGLBuffer>;
         vertexArray.vertexBuffer = vertexBuffer;
         vertexArray.vertexLength = 0;
         this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, vertexBuffer);
@@ -197,26 +232,15 @@ export class VertexArrayObjectManager
             }
         }
 
-        const vertexArray: WebGLVertexArrayObject | null = this._$gl.createVertexArray();
-        if (!vertexArray) {
-            throw new Error("the WebGLVertexArrayObject is null.");
-        }
-
+        const vertexArray: WebGLVertexArrayObject = this._$gl.createVertexArray() as NonNullable<WebGLVertexArrayObject>;
         this.bind(vertexArray);
 
-        const vertexBuffer: WebGLBuffer | null = this._$gl.createBuffer();
-        if (!vertexBuffer) {
-            throw new Error("the WebGLBuffer is null.");
-        }
-
+        const vertexBuffer: WebGLBuffer = this._$gl.createBuffer() as NonNullable<WebGLBuffer>;
         vertexArray.vertexBuffer = vertexBuffer;
         vertexArray.vertexLength = 0;
         this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, vertexBuffer);
 
-        const indexBuffer: WebGLBuffer | null = this._$gl.createBuffer();
-        if (!indexBuffer) {
-            throw new Error("the WebGLBuffer is null.");
-        }
+        const indexBuffer: WebGLBuffer = this._$gl.createBuffer() as NonNullable<WebGLBuffer>;
 
         vertexArray.indexBuffer = indexBuffer;
         vertexArray.indexLength  = 0;
@@ -339,6 +363,97 @@ export class VertexArrayObjectManager
         this._$boundVertexArray = vertex_array;
 
         this._$gl.bindVertexArray(vertex_array);
+    }
+
+    /**
+     * @param  {WebGLShaderInstance} instance
+     * @return {void}
+     * @method
+     * @public
+     */
+    bindInstnceArray (instance: WebGLShaderInstance): void
+    {
+        // bind vao
+        this.bind(this._$instanceVertexArray);
+
+        // texture rect
+        this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, this._$gl.createBuffer());
+        this._$gl.bufferData(
+            this._$gl.ARRAY_BUFFER,
+            new Float32Array(instance.rect),
+            this._$gl.DYNAMIC_DRAW
+        );
+        this._$gl.vertexAttribPointer(1, 4, this._$gl.FLOAT, false, 0, 0);
+
+        // texture and viewport width and height
+        this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, this._$gl.createBuffer());
+        this._$gl.bufferData(
+            this._$gl.ARRAY_BUFFER,
+            new Float32Array(instance.size),
+            this._$gl.DYNAMIC_DRAW
+        );
+        this._$gl.vertexAttribPointer(2, 4, this._$gl.FLOAT, false, 0, 0);
+
+        // matrix x,y offset
+        this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, this._$gl.createBuffer());
+        this._$gl.bufferData(
+            this._$gl.ARRAY_BUFFER,
+            new Float32Array(instance.offset),
+            this._$gl.DYNAMIC_DRAW
+        );
+        this._$gl.vertexAttribPointer(3, 2, this._$gl.FLOAT, false, 0, 0);
+
+        // matrix scale0, rotate0, scale1 rotate1
+        this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, this._$gl.createBuffer());
+        this._$gl.bufferData(
+            this._$gl.ARRAY_BUFFER,
+            new Float32Array(instance.matrix),
+            this._$gl.DYNAMIC_DRAW
+        );
+        this._$gl.vertexAttribPointer(4, 4, this._$gl.FLOAT, false, 0, 0);
+
+        // color transform
+        if (instance.addColor.length) {
+
+            this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, this._$gl.createBuffer());
+            this._$gl.bufferData(
+                this._$gl.ARRAY_BUFFER,
+                new Float32Array(instance.mulColor),
+                this._$gl.DYNAMIC_DRAW
+            );
+
+            if (!this._$colorTramsform) {
+                this._$gl.enableVertexAttribArray(5);
+                this._$gl.vertexAttribDivisor(5, 1);
+            }
+
+            this._$gl.vertexAttribPointer(5, 4, this._$gl.FLOAT, false, 0, 0);
+
+            this._$gl.bindBuffer(this._$gl.ARRAY_BUFFER, this._$gl.createBuffer());
+            this._$gl.bufferData(
+                this._$gl.ARRAY_BUFFER,
+                new Float32Array(instance.addColor),
+                this._$gl.DYNAMIC_DRAW
+            );
+
+            if (!this._$colorTramsform) {
+                this._$gl.enableVertexAttribArray(6);
+                this._$gl.vertexAttribDivisor(6, 1);
+            }
+
+            this._$gl.vertexAttribPointer(6, 4, this._$gl.FLOAT, false, 0, 0);
+
+            this._$colorTramsform = true;
+
+        } else {
+
+            if (this._$colorTramsform) {
+                this._$gl.disableVertexAttribArray(5);
+                this._$gl.disableVertexAttribArray(6);
+                this._$colorTramsform = false;
+            }
+
+        }
     }
 
     /**

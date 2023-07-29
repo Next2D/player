@@ -23,15 +23,17 @@ export class VertexShaderSourceFill
             ? this.ATTRIBUTE_BEZIER_ON()
             : "";
 
-        const uvVarying: string =
-              for_mask ? this.VARYING_BEZIER_ON()
-                  : with_uv  ? this.VARYING_UV_ON()
-                      : "";
+        const uvVarying: string = for_mask
+            ? this.VARYING_BEZIER_ON()
+            : with_uv
+                ? this.VARYING_UV_ON()
+                : "";
 
-        const uvStatement: string =
-              for_mask ? this.STATEMENT_BEZIER_ON()
-                  : with_uv  ? this.STATEMENT_UV_ON()
-                      : "";
+        const uvStatement: string = for_mask
+            ? this.STATEMENT_BEZIER_ON()
+            : with_uv
+                ? this.STATEMENT_UV_ON()
+                : "";
 
         const gridFunction: string = has_grid
             ? VertexShaderLibrary.FUNCTION_GRID_ON(with_uv ? 5 : 0)
