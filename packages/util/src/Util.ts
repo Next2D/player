@@ -30,15 +30,15 @@ import {
 import { $getEvent } from "./Global";
 import {
     $document,
-    $window,
-    $devicePixelRatio
+    $window
 } from "./Shortcut";
 import {
     $getArray,
     $poolArray,
     $Math,
     $clearTimeout,
-    $setTimeout
+    $setTimeout,
+    $devicePixelRatio
 } from "@next2d/share";
 
 /**

@@ -17,14 +17,14 @@ import {
     $Float32Array,
     $getFloat32Array6,
     $toColorInt,
-    $uintToRGBA
+    $uintToRGBA,
+    $setDevicePixelRatio
 } from "@next2d/share";
 import {
     $getDisplayObjectContainer,
     $getShape,
     $getTextField,
-    $getVideo,
-    $setDevicePixelRatio
+    $getVideo
 } from "./RenderGlobal";
 
 /**

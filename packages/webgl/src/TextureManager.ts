@@ -395,15 +395,19 @@ export class TextureManager
             return ;
         }
 
+        // 先頭にrootとして再登録
         this
             ._$atlasNodes
             .get(position.index)
-            ?.push(this.getNode(
+            ?.unshift(this.getNode(
                 position.x,
                 position.y,
                 position.w,
                 position.y
             ));
+
+        // pool
+        this._$positionObjectArray.push(position);
     }
 
     /**

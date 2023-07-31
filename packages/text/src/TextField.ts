@@ -38,7 +38,8 @@ import {
     PlayerHitObjectImpl,
     PropertyMessageMapImpl,
     PropertyTextMessageImpl,
-    Character
+    Character,
+    CachePositionImpl
 } from "@next2d/interface";
 import {
     CanvasToWebGLContext,
@@ -58,7 +59,6 @@ import {
     $textContext,
     $TOUCH_END,
     $TOUCH_START,
-    $devicePixelRatio,
     $document,
     $RegExp
 } from "@next2d/util";
@@ -83,6 +83,7 @@ import {
     $poolArray,
     $poolFloat32Array8,
     $generateFontStyle,
+    $devicePixelRatio,
     $getBoundsObject
 } from "@next2d/share";
 
@@ -2794,28 +2795,28 @@ export class TextField extends InteractiveObject
             instanceId, keys
         );
 
-        let texture: WebGLTexture | null = cacheStore.get(cacheKeys);
+        context.cachePosition = cacheStore.get(cacheKeys);
 
         // texture is small or renew
         if (this._$isUpdated()) {
             cacheStore.removeCache(instanceId);
-            texture = null;
+            context.cachePosition = null;
         }
 
-        if (!texture) {
+        if (!context.cachePosition) {
 
             // resize
             const lineWidth: number  = $Math.min(1, $Math.max(xScale, yScale));
-            const baseWidth: number  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-            const baseHeight: number = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
+            const width: number  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+            const height: number = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
 
             // alpha reset
             multiColor[3] = 1;
 
             // new canvas
             const canvas: HTMLCanvasElement = cacheStore.getCanvas();
-            canvas.width  = baseWidth  + lineWidth * 2;
-            canvas.height = baseHeight + lineWidth * 2;
+            canvas.width  = width  + lineWidth * 2;
+            canvas.height = height + lineWidth * 2;
 
             const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
             if (!ctx) {
@@ -2827,9 +2828,9 @@ export class TextField extends InteractiveObject
 
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
-                ctx.lineTo(baseWidth, 0);
-                ctx.lineTo(baseWidth, baseHeight);
-                ctx.lineTo(0, baseHeight);
+                ctx.lineTo(width, 0);
+                ctx.lineTo(width, height);
+                ctx.lineTo(0, height);
                 ctx.lineTo(0, 0);
 
                 if (this._$background) {
@@ -2862,43 +2863,58 @@ export class TextField extends InteractiveObject
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(2, 2);
-            ctx.lineTo(baseWidth - 2, 2);
-            ctx.lineTo(baseWidth - 2, baseHeight - 2);
-            ctx.lineTo(2, baseHeight - 2);
+            ctx.lineTo(width - 2, 2);
+            ctx.lineTo(width - 2, height - 2);
+            ctx.lineTo(2, height - 2);
             ctx.lineTo(2, 2);
             ctx.clip();
 
             ctx.beginPath();
             ctx.setTransform(xScale, 0, 0, yScale, 0, 0);
-            this._$doDraw(ctx, matrix, multiColor, baseWidth / xScale);
+            this._$doDraw(ctx, matrix, multiColor, width / xScale);
             ctx.restore();
 
-            texture = manager.createTextureFromCanvas(ctx.canvas);
+            const position: CachePositionImpl = manager
+                .createCachePosition(width, height);
+
+            const texture: WebGLTexture = manager
+                .createTextureFromCanvas(ctx.canvas);
+
+            context.drawTextureFromRect(texture, position);
 
             // set cache
-            cacheStore.set(cacheKeys, texture);
+            context.cachePosition = position;
+            cacheStore.set(cacheKeys, position);
 
             // destroy cache
             cacheStore.destroy(ctx);
         }
 
-        const drawFilter: boolean = false;
-        const offsetX: number = 0;
-        const offsetY: number = 0;
-        // if (filters && filters.length
-        //     && this._$canApply(filters)
-        // ) {
+        let drawFilter: boolean = false;
+        let offsetX: number = 0;
+        let offsetY: number = 0;
+        if (filters && filters.length
+            && this._$canApply(filters)
+        ) {
 
-        //     drawFilter = true;
+            drawFilter = true;
 
-        //     texture = this._$drawFilter(
-        //         context, texture, multiMatrix,
-        //         filters, width, height
-        //     );
+            const position: CachePositionImpl = this._$drawFilter(
+                context, multiMatrix, filters,
+                width, height
+            );
 
-        //     offsetX = texture._$offsetX;
-        //     offsetY = texture._$offsetY;
-        // }
+            if (position.offsetX) {
+                offsetX = position.offsetX;
+            }
+
+            if (position.offsetY) {
+                offsetY = position.offsetY;
+            }
+
+            // update
+            context.cachePosition = position;
+        }
 
         const radianX: number = $Math.atan2(multiMatrix[1], multiMatrix[0]);
         const radianY: number = $Math.atan2(-multiMatrix[2], multiMatrix[3]);
@@ -2927,14 +2943,22 @@ export class TextField extends InteractiveObject
         }
 
         // draw
-        context.reset();
-        context.globalAlpha = alpha;
-        context.imageSmoothingEnabled = true;
-        context.globalCompositeOperation = blendMode;
+        if (context.cachePosition) {
 
-        context.drawImage(texture,
-            0, 0, texture.width, texture.height, multiColor
-        );
+            context.reset();
+
+            context.globalAlpha = alpha;
+            context.imageSmoothingEnabled = true;
+            context.globalCompositeOperation = blendMode;
+
+            context.drawInstance(
+                xMin - offsetX, yMin - offsetY, xMax, yMax,
+                color_transform
+            );
+
+            // cache position clear
+            context.cachePosition = null;
+        }
 
         // get cache
         $poolArray(cacheKeys);

@@ -62,7 +62,8 @@ import {
     $poolFloat32Array6,
     $getMap,
     $poolMap,
-    $getFloat32Array6
+    $getFloat32Array6,
+    $devicePixelRatio
 } from "@next2d/share";
 
 /**
@@ -1732,8 +1733,10 @@ export class DisplayObject extends EventDispatcher
      * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array}         matrix
      * @param  {array}                filters
-     * @param  {number}               layer_width
-     * @param  {number}               layer_height
+     * @param  {number}               cache_width
+     * @param  {number}               cache_height
+     * @param  {number}               width
+     * @param  {number}               height
      * @return {object}
      * @method
      * @private
@@ -1767,14 +1770,6 @@ export class DisplayObject extends EventDispatcher
         }
 
         const manager: FrameBufferManager = context.frameBuffer;
-
-        const bounds: BoundsImpl = this._$getLayerBounds(matrix);
-        position = manager.createCachePosition(
-            $Math.ceil($Math.abs(bounds.xMax - bounds.xMin)),
-            $Math.ceil($Math.abs(bounds.yMax - bounds.yMin))
-        );
-        $poolBoundsObject(bounds);
-
         const targetTexture: WebGLTexture = context.getTextureFromRect(
             context.cachePosition as NonNullable<CachePositionImpl>
         );
@@ -1785,9 +1780,16 @@ export class DisplayObject extends EventDispatcher
         );
         manager.textureManager.release(targetTexture);
 
+        const bounds: BoundsImpl = this._$getLayerBounds(matrix);
+        position = manager.createCachePosition(
+            $Math.ceil(bounds.xMax - bounds.xMin),
+            $Math.ceil(bounds.yMax - bounds.yMin)
+        );
+        $poolBoundsObject(bounds);
+
         position.filterState = true;
         position.matrix      = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}_0_0`;
-        position.offsetY     = texture._$offsetY;
+        position.offsetX     = texture._$offsetX;
         position.offsetY     = texture._$offsetY;
 
         context.drawTextureFromRect(texture, position);
@@ -1819,20 +1821,33 @@ export class DisplayObject extends EventDispatcher
         }
 
         let filterBounds: BoundsImpl = $getBoundsObject(
-            baseBounds.xMin,
-            baseBounds.xMax - baseBounds.xMin,
-            baseBounds.yMin,
-            baseBounds.yMax - baseBounds.yMin
+            0,
+            $Math.abs(baseBounds.xMax - baseBounds.xMin),
+            0,
+            $Math.abs(baseBounds.yMax - baseBounds.yMin)
         );
         $poolBoundsObject(baseBounds);
 
+        let xScale: number = +$Math.sqrt(
+            matrix[0] * matrix[0]
+            + matrix[1] * matrix[1]
+        );
+        let yScale: number = +$Math.sqrt(
+            matrix[2] * matrix[2]
+            + matrix[3] * matrix[3]
+        );
+
+        xScale /= $devicePixelRatio;
+        yScale /= $devicePixelRatio;
+
+        xScale *= 2;
+        yScale *= 2;
+
         for (let idx: number = 0; idx < filters.length; ++idx) {
             filterBounds = filters[idx]
-                ._$generateFilterRect(filterBounds, 0, 0);
+                ._$generateFilterRect(filterBounds, xScale, yScale);
         }
 
-        filterBounds.xMax += filterBounds.xMin;
-        filterBounds.yMax += filterBounds.yMin;
         return filterBounds;
     }
 
@@ -1983,6 +1998,8 @@ export class DisplayObject extends EventDispatcher
      * @param  {array} filters
      * @param  {WebGLTexture} target_texture
      * @param  {Float32Array} matrix
+     * @param  {number} cache_width
+     * @param  {number} cache_height
      * @param  {number} width
      * @param  {number} height
      * @return {WebGLTexture}

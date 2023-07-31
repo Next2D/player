@@ -450,6 +450,8 @@ export class CanvasToWebGLContextBlend
         matrix: Float32Array, smoothing: boolean
     ): void {
 
+        this.drawInstacedArray();
+
         const manager: FrameBufferManager = this._$context.frameBuffer;
         const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
 
@@ -514,6 +516,7 @@ export class CanvasToWebGLContextBlend
 
         const width: number  = $Math.abs(x_max - x_min);
         const height: number = $Math.abs(y_max - y_min);
+
         this._$gl.enable(this._$gl.SCISSOR_TEST);
         this._$gl.scissor(x_min, render_height - (y_min + height), width, height);
 

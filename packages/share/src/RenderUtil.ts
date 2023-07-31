@@ -4,6 +4,22 @@ import type { PreObjectImpl } from "./interface/PreObjectImpl";
 
 /**
  * @type {number}
+ * @public
+ */
+export let $devicePixelRatio = 1;
+
+/**
+ * @param {number} device_pixel_ratio
+ * @method
+ * @public
+ */
+export const $setDevicePixelRatio = (device_pixel_ratio: number): void =>
+{
+    $devicePixelRatio = device_pixel_ratio;
+};
+
+/**
+ * @type {number}
  */
 let programId: number = 0;
 

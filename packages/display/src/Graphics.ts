@@ -1929,27 +1929,10 @@ export class Graphics
             context.imageSmoothingEnabled = true;
             context.globalCompositeOperation = blend_mode;
 
-            // instance draw
-            switch (blend_mode) {
-
-                case "normal":
-                case "layer":
-                case "add":
-                case "screen":
-                case "alpha":
-                case "erase":
-                case "copy":
-                    context.drawInstance(color_transform);
-                    break;
-
-                default:
-                    context.drawInstanceBlend(
-                        manager.textureManager.getAtlasTexture(context.cachePosition.index),
-                        xMin, yMin, xMax, yMax,
-                        color_transform
-                    );
-                    break;
-            }
+            context.drawInstance(
+                xMin - offsetX, yMin - offsetY, xMax, yMax,
+                color_transform
+            );
 
             // cache position clear
             context.cachePosition = null;

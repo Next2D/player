@@ -35,7 +35,6 @@ import {
     Rectangle
 } from "@next2d/geom";
 import {
-    $devicePixelRatio,
     $document,
     $window,
     $rendererWorker,
@@ -77,7 +76,9 @@ import {
     $requestAnimationFrame,
     $cancelAnimationFrame,
     $poolArray,
-    $clamp
+    $clamp,
+    $devicePixelRatio,
+    $setDevicePixelRatio
 } from "@next2d/share";
 
 /**
@@ -144,6 +145,9 @@ export class Player
      */
     constructor ()
     {
+        // init
+        $setDevicePixelRatio(window.devicePixelRatio);
+
         /**
          * @type {Stage}
          * @private
@@ -2021,6 +2025,8 @@ export class Player
         context
             .frameBuffer
             .transferToMainTexture();
+
+        // context.debug();
     }
 
     /**

@@ -846,13 +846,53 @@ export class CanvasToWebGLContext
         this._$matrix[7] = e * a01 + f * a11 + a21;
     }
 
+    debug ()
+    {
+        const manager: FrameBufferManager = this._$frameBufferManager;
+        const atlasTexture: WebGLTexture = manager.textureManager.getAtlasTexture(0);
+
+        const currentAttachment = manager.currentAttachment;
+
+        const attachment: AttachmentImpl = manager.createTextureAttachmentFrom(atlasTexture);
+        this._$bind(attachment);
+
+        const pixels = new Uint8Array(atlasTexture.width * atlasTexture.height * 4);
+        this._$gl.readPixels(
+            0, 0, atlasTexture.width, atlasTexture.height,
+            this._$gl.RGBA, this._$gl.UNSIGNED_BYTE, pixels
+        );
+
+        const canvas  = document.createElement("canvas");
+        canvas.width  = atlasTexture.width;
+        canvas.height = atlasTexture.height;
+        const ctx = canvas.getContext("2d");
+
+        const imageData = new ImageData(atlasTexture.width, atlasTexture.height);
+        for (let idx = 0; idx < pixels.length; ++idx) {
+            imageData.data[idx] = pixels[idx];
+        }
+
+        ctx?.putImageData(imageData, 0, 0);
+        console.log(canvas.toDataURL());
+
+        this._$bind(currentAttachment);
+        manager.releaseAttachment(attachment);
+    }
+
     /**
-     * @param {Float32Array} color_transform
+     * @param  {number} x_min
+     * @param  {number} y_min
+     * @param  {number} x_max
+     * @param  {number} y_max
+     * @param  {Float32Array} color_transform
+     * @return {void}
      * @method
      * @public
      */
-    drawInstance (color_transform: Float32Array): void
-    {
+    drawInstance (
+        x_min: number, y_min: number, x_max: number, y_max: number,
+        color_transform: Float32Array
+    ): void {
 
         let ct0: number = 1;
         let ct1: number = 1;
@@ -875,66 +915,46 @@ export class CanvasToWebGLContext
 
         const position: CachePositionImpl | null = this.cachePosition;
         if (position) {
-            this.blend.drawInstance(
-                position,
-                ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
-                this._$globalCompositeOperation,
-                this._$viewportWidth, this._$viewportHeight,
-                this._$matrix,
-                this._$imageSmoothingEnabled
-            );
-        }
-    }
 
-    /**
-     * @param  {WebGLTexture} texture
-     * @param  {number} x
-     * @param  {number} y
-     * @param  {number} w
-     * @param  {number} h
-     * @param  {Float32Array} [color_transform=null]
-     * @return {void}
-     * @method
-     * @public
-     */
-    drawInstanceBlend (
-        atlas_texture: WebGLTexture,
-        x_min: number, y_min: number, x_max: number, y_max: number,
-        color_transform: Float32Array | null = null
-    ): void {
+            switch (this._$globalCompositeOperation) {
 
-        this.drawInstacedArray();
+                case "normal":
+                case "layer":
+                case "add":
+                case "screen":
+                case "alpha":
+                case "erase":
+                case "copy":
+                    this.blend.drawInstance(
+                        position,
+                        ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
+                        this._$globalCompositeOperation,
+                        this._$viewportWidth, this._$viewportHeight,
+                        this._$matrix,
+                        this._$imageSmoothingEnabled
+                    );
+                    break;
 
-        let ct0: number = 1;
-        let ct1: number = 1;
-        let ct2: number = 1;
-        let ct4: number = 0;
-        let ct5: number = 0;
-        let ct6: number = 0;
+                default:
+                    {
+                        const atlasTexture: WebGLTexture = this
+                            ._$frameBufferManager
+                            .textureManager
+                            .getAtlasTexture(position.index);
 
-        const ct3: number = this._$globalAlpha;
-        const ct7: number = 0;
+                        this.blend.drawInstanceBlend(
+                            atlasTexture, x_min, y_min, x_max, y_max,
+                            ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
+                            position,
+                            this._$globalCompositeOperation,
+                            this._$viewportWidth, this._$viewportHeight,
+                            this._$matrix,
+                            this._$imageSmoothingEnabled
+                        );
+                    }
+                    break;
 
-        if (color_transform) {
-            ct0 = color_transform[0];
-            ct1 = color_transform[1];
-            ct2 = color_transform[2];
-            ct4 = color_transform[4] / 255;
-            ct5 = color_transform[5] / 255;
-            ct6 = color_transform[6] / 255;
-        }
-
-        const cachePosition = this._$cachePosition;
-        if (cachePosition) {
-            this.blend.drawInstanceBlend(
-                atlas_texture, x_min, y_min, x_max, y_max,
-                ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
-                cachePosition,
-                this._$globalCompositeOperation,
-                this._$viewportWidth, this._$viewportHeight,
-                this._$matrix,
-                this._$imageSmoothingEnabled
-            );
+            }
         }
     }
 

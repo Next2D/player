@@ -8,14 +8,6 @@ export const $window: Window = window;
 
 /**
  * @shortcut
- * @type {number}
- * @const
- * @static
- */
-export const $devicePixelRatio: number = $window.devicePixelRatio;
-
-/**
- * @shortcut
  * @type {Document}
  * @const
  * @static
