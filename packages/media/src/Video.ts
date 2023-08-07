@@ -12,7 +12,8 @@ import type {
     BlendModeImpl,
     PlayerHitObjectImpl,
     PropertyVideoMessageImpl,
-    Character
+    Character,
+    CachePositionImpl
 } from "@next2d/interface";
 import type {
     CanvasToWebGLContext,
@@ -40,9 +41,11 @@ import {
     $poolFloat32Array8,
     $Infinity,
     $poolBoundsObject,
-    $getFloat32Array6,
     $getArray,
-    $poolArray
+    $Number,
+    $poolArray,
+    CacheStore,
+    $getFloat32Array6
 } from "@next2d/share";
 
 /**
@@ -867,170 +870,186 @@ export class Video extends DisplayObject
 
         }
 
+        let xScale: number = +$Math.sqrt(
+            multiMatrix[0] * multiMatrix[0]
+            + multiMatrix[1] * multiMatrix[1]
+        );
+        if (!$Number.isInteger(xScale)) {
+            const value: string = xScale.toString();
+            const index: number = value.indexOf("e");
+            if (index !== -1) {
+                xScale = +value.slice(0, index);
+            }
+            xScale = +xScale.toFixed(4);
+        }
+
+        let yScale: number = +$Math.sqrt(
+            multiMatrix[2] * multiMatrix[2]
+            + multiMatrix[3] * multiMatrix[3]
+        );
+        if (!$Number.isInteger(yScale)) {
+            const value: string = yScale.toString();
+            const index: number = value.indexOf("e");
+            if (index !== -1) {
+                yScale = +value.slice(0, index);
+            }
+            yScale = +yScale.toFixed(4);
+        }
+
+        const filters: FilterArrayImpl = this._$filters || this.filters;
+        const canApply: boolean = filters && filters.length > 0 && this._$canApply(filters);
+
+        let filterBounds: BoundsImpl = $getBoundsObject(0, width, 0, height);
+        if (canApply) {
+            for (let idx: number = 0; idx < filters.length ; ++idx) {
+                filterBounds = filters[idx]
+                    ._$generateFilterRect(filterBounds, xScale, yScale);
+            }
+        }
+
         // cache current buffer
         const manager: FrameBufferManager = context.frameBuffer;
         const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
         if (!currentAttachment
-            || xMin > currentAttachment.width
-            || yMin > currentAttachment.height
+            || xMin - filterBounds.xMin > currentAttachment.width
+            || yMin - filterBounds.yMin > currentAttachment.height
         ) {
+            $poolBoundsObject(filterBounds);
             return;
         }
 
-        const filters: FilterArrayImpl = this._$filters || this.filters;
-        if (0 > xMin + width || 0 > yMin + height) {
-
-            if (filters && filters.length && this._$canApply(filters)) {
-
-                const xScale: number = +$Math.sqrt(
-                    multiMatrix[0] * multiMatrix[0]
-                    + multiMatrix[1] * multiMatrix[1]
-                );
-
-                const yScale: number = +$Math.sqrt(
-                    multiMatrix[2] * multiMatrix[2]
-                    + multiMatrix[3] * multiMatrix[3]
-                );
-
-                let filterBounds: BoundsImpl = $getBoundsObject(0, width, 0, height);
-                for (let idx: number = 0; idx < filters.length ; ++idx) {
-                    filterBounds = filters[idx]
-                        ._$generateFilterRect(filterBounds, xScale, yScale);
-                }
-
-                if (0 > filterBounds.xMin + filterBounds.xMax
-                    || 0 > filterBounds.yMin + filterBounds.yMax
-                ) {
-                    $poolBoundsObject(filterBounds);
-                    return;
-                }
-
-                $poolBoundsObject(filterBounds);
-
-            } else {
-                return;
-            }
-
+        if (0 > xMin + filterBounds.xMax || 0 > yMin + filterBounds.yMax) {
+            $poolBoundsObject(filterBounds);
+            return;
         }
+        $poolBoundsObject(filterBounds);
 
         const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
+        const keys: number[] = $getArray(xScale, yScale);
 
-        let texture: WebGLTexture = manager.createTextureFromVideo(
+        const player: Player = $currentPlayer();
+        const cacheStore: CacheStore = player.cacheStore;
+        const cacheKeys: string[] = cacheStore.generateKeys(
+            this._$instanceId, keys
+        );
+        $poolArray(keys);
+
+        context.cachePosition = cacheStore.get(cacheKeys);
+        if (!context.cachePosition) {
+
+            const width: number  = $Math.ceil($Math.abs(this._$bounds.xMax - this._$bounds.xMin));
+            const height: number = $Math.ceil($Math.abs(this._$bounds.yMax - this._$bounds.yMin));
+
+            const position: CachePositionImpl = manager
+                .createCachePosition(width, height);
+
+            context.cachePosition = position;
+            cacheStore.set(cacheKeys, position);
+        }
+
+        const texture: WebGLTexture = manager.createTextureFromVideo(
             this._$video, this._$smoothing
         );
 
-        if (filters && filters.length
-            && this._$canApply(filters)
-        ) {
+        let offsetX: number = 0;
+        let offsetY: number = 0;
+        if (canApply) {
 
-            const xScale: number = +$Math.sqrt(
-                multiMatrix[0] * multiMatrix[0]
-                + multiMatrix[1] * multiMatrix[1]
-            );
-            const yScale: number = +$Math.sqrt(
-                multiMatrix[2] * multiMatrix[2]
-                + multiMatrix[3] * multiMatrix[3]
-            );
+            const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
 
-            if (xScale !== 1 || yScale !== 1) {
-                const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+            const attachment: AttachmentImpl = manager
+                .createCacheAttachment(width, height);
 
-                // create cache buffer
-                const attachment: AttachmentImpl = manager
-                    .createCacheAttachment(width, height, false);
-                context._$bind(attachment);
+            context._$bind(attachment);
 
-                const parentMatrix: Float32Array = $getFloat32Array6(
-                    xScale, 0, 0, yScale,
-                    width / 2, height / 2
-                );
-
-                const baseMatrix: Float32Array = $getFloat32Array6(
-                    1, 0, 0, 1,
-                    -texture.width / 2,
-                    -texture.height / 2
-                );
-
-                const scaleMatrix = $multiplicationMatrix(
-                    parentMatrix, baseMatrix
-                );
-
-                $poolFloat32Array6(parentMatrix);
-                $poolFloat32Array6(baseMatrix);
-
-                context.reset();
-                context.setTransform(
-                    scaleMatrix[0], scaleMatrix[1],
-                    scaleMatrix[2], scaleMatrix[3],
-                    scaleMatrix[4], scaleMatrix[5]
-                );
-                context.drawImage(texture,
-                    0, 0, texture.width, texture.height
-                );
-
-                manager.releaseTexture(texture);
-                $poolFloat32Array6(scaleMatrix);
-
-                texture = manager.getTextureFromCurrentAttachment();
-
-                // release buffer
-                manager.releaseAttachment(attachment, false);
-
-                // end draw and reset current buffer
-                context._$bind(currentAttachment);
-            }
-
-            // draw filter
-            // texture = this._$drawFilter(
-            //     context, texture, multiMatrix,
-            //     filters, width, height
-            // );
-
-            // reset
             context.reset();
 
-            // draw
-            context.globalAlpha = alpha;
-            context.imageSmoothingEnabled = this._$smoothing;
-            context.globalCompositeOperation = blendMode;
+            const parentMatrix: Float32Array = $getFloat32Array6(
+                xScale, 0, 0, yScale,
+                width / 2, height / 2
+            );
 
-            // size
-            const bounds: BoundsImpl = $boundsMatrix(this._$bounds, multiMatrix);
+            const baseMatrix: Float32Array = $getFloat32Array6(
+                1, 0, 0, 1,
+                -texture.width / 2,
+                -texture.height / 2
+            );
+
+            const scaleMatrix = $multiplicationMatrix(
+                parentMatrix, baseMatrix
+            );
+            $poolFloat32Array6(parentMatrix);
+            $poolFloat32Array6(baseMatrix);
+
+            context.setTransform(
+                scaleMatrix[0], scaleMatrix[1],
+                scaleMatrix[2], scaleMatrix[3],
+                scaleMatrix[4], scaleMatrix[5]
+            );
+
+            context.drawImage(texture, 0, 0, texture.width, texture.height);
+
+            const videoTexture: WebGLTexture = manager.getTextureFromCurrentAttachment();
+            context._$bind(currentAttachment);
+
+            manager.releaseAttachment(attachment);
+
+            // release
+            context.drawTextureFromRect(texture, context.cachePosition);
+
+            const position: CachePositionImpl = this._$drawFilter(
+                context, multiMatrix, filters,
+                width, height, videoTexture
+            );
+
+            if (position.offsetX) {
+                offsetX = position.offsetX;
+            }
+
+            if (position.offsetY) {
+                offsetY = position.offsetY;
+            }
+
+            // update
+            context.cachePosition = position;
+
             context.setTransform(1, 0, 0, 1,
-                bounds.xMin - texture._$offsetX,
-                bounds.yMin - texture._$offsetY
+                xMin - offsetX, yMin - offsetY
             );
-
-            context.drawImage(texture,
-                0, 0, texture.width, texture.height,
-                multiColor
-            );
-
-            // pool
-            $poolBoundsObject(bounds);
 
         } else {
 
-            // reset
-            context.reset();
+            context.drawTextureFromRect(texture, context.cachePosition);
+
             context.setTransform(
                 multiMatrix[0], multiMatrix[1], multiMatrix[2],
                 multiMatrix[3], multiMatrix[4], multiMatrix[5]
             );
 
-            // draw
-            context.globalAlpha = alpha;
-            context.imageSmoothingEnabled = this._$smoothing;
-            context.globalCompositeOperation = blendMode;
-
-            context.drawImage(texture,
-                0, 0, texture.width, texture.height,
-                multiColor
-            );
-
-            manager.releaseTexture(texture);
         }
 
+        // draw
+        if (context.cachePosition) {
+
+            context.reset();
+
+            context.globalAlpha = alpha;
+            context.imageSmoothingEnabled = true;
+            context.globalCompositeOperation = blendMode;
+
+            context.drawInstance(
+                xMin - offsetX, yMin - offsetY, xMax, yMax,
+                color_transform
+            );
+
+            // cache position clear
+            context.cachePosition = null;
+        }
+
+        // get cache
+        $poolArray(cacheKeys);
+
+        // pool
         if (multiMatrix !== matrix) {
             $poolFloat32Array6(multiMatrix);
         }
@@ -1121,12 +1140,14 @@ export class Video extends DisplayObject
 
             let multiMatrix: Float32Array = matrix;
             const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-            if (rawMatrix !== $MATRIX_ARRAY_IDENTITY) {
+            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+            ) {
                 multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
             }
 
             const bounds: BoundsImpl = $boundsMatrix(this._$bounds, multiMatrix);
-
             if (multiMatrix !== matrix) {
                 $poolFloat32Array6(multiMatrix);
             }

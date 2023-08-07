@@ -48,10 +48,10 @@ export class BitmapData
     private readonly _$instanceId: number;
     private _$width: number;
     private _$height: number;
-    _$buffer: Uint8Array|null;
-    private _$image: HTMLImageElement|null;
-    private _$canvas: HTMLCanvasElement|null;
-    private _$pixelBuffer: WebGLBuffer|null;
+    _$buffer: Uint8Array | null;
+    private _$image: HTMLImageElement | null;
+    private _$canvas: HTMLCanvasElement | null;
+    private _$texture: WebGLTexture | null;
 
     /**
      * @param {number} [width=0]
@@ -104,11 +104,11 @@ export class BitmapData
         this._$canvas = null;
 
         /**
-         * @type {WebGLBuffer}
+         * @type {WebGLTexture}
          * @type {null}
          * @private
          */
-        this._$pixelBuffer = null;
+        this._$texture = null;
     }
 
     /**
@@ -168,6 +168,19 @@ export class BitmapData
     }
 
     /**
+     * @description ビットマップイメージのID
+     *              Bitmap image ID.
+     *
+     * @return  {number}
+     * @readonly
+     * @public
+     */
+    get instanceId (): number
+    {
+        return this._$instanceId;
+    }
+
+    /**
      * @description ビットマップイメージの高さ（ピクセル単位）です。
      *              The height of the bitmap image in pixels.
      *
@@ -193,7 +206,19 @@ export class BitmapData
     }
     set buffer (buffer: Uint8Array | null)
     {
+        this._$canvas = null;
+        this._$image  = null;
         this._$buffer = buffer;
+
+        if (this._$texture) {
+            const player: Player = $currentPlayer();
+            const context: CanvasToWebGLContext | null = player.context;
+            if (context) {
+                context.frameBuffer.releaseTexture(this._$texture);
+            }
+
+            this._$texture = null;
+        }
     }
 
     /**
@@ -210,7 +235,18 @@ export class BitmapData
     set image (image: HTMLImageElement|null)
     {
         this._$canvas = null;
+        this._$buffer = null;
         this._$image  = image;
+
+        if (this._$texture) {
+            const player: Player = $currentPlayer();
+            const context: CanvasToWebGLContext | null = player.context;
+            if (context) {
+                context.frameBuffer.releaseTexture(this._$texture);
+            }
+
+            this._$texture = null;
+        }
 
         if (!image) {
             return ;
@@ -234,7 +270,17 @@ export class BitmapData
     set canvas (canvas: HTMLCanvasElement|null)
     {
         this._$image  = null;
+        this._$buffer = null;
         this._$canvas = canvas;
+
+        if (this._$texture) {
+            const player: Player = $currentPlayer();
+            const context: CanvasToWebGLContext | null = player.context;
+            if (context) {
+                context.frameBuffer.releaseTexture(this._$texture);
+            }
+            this._$texture = null;
+        }
 
         if (!canvas) {
             return ;
@@ -321,27 +367,31 @@ export class BitmapData
             throw new Error("the context is null.");
         }
 
+        if (this._$texture !== null) {
+            return this._$texture;
+        }
+
         if (this._$image !== null) {
-            return context
+            this._$texture = context
                 .frameBuffer
                 .createTextureFromImage(this._$image);
         }
 
         if (this._$canvas !== null) {
-            return context
+            this._$texture = context
                 .frameBuffer
                 .createTextureFromCanvas(this._$canvas);
         }
 
         if (this._$buffer !== null) {
-            return context
+            this._$texture = context
                 .frameBuffer
                 .createTextureFromPixels(
                     width, height, this._$buffer, true
                 );
         }
 
-        return null;
+        return this._$texture;
     }
 
     /**

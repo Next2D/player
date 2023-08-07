@@ -322,8 +322,8 @@ export class RenderVideo extends RenderDisplayObject
             $poolBoundsObject(baseBounds);
 
             context.setTransform(1, 0, 0, 1,
-                bounds.xMin - texture._$offsetX,
-                bounds.yMin - texture._$offsetY
+                bounds.xMin - texture.offsetX,
+                bounds.yMin - texture.offsetY
             );
             $poolBoundsObject(bounds);
 

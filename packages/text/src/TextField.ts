@@ -2714,20 +2714,6 @@ export class TextField extends InteractiveObject
 
         }
 
-        if (0 > xMin + width || 0 > yMin + height) {
-            return;
-        }
-
-        // cache current buffer
-        const manager: FrameBufferManager = context.frameBuffer;
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-        if (!currentAttachment
-            || xMin > currentAttachment.width
-            || yMin > currentAttachment.height
-        ) {
-            return;
-        }
-
         let xScale: number = +$Math.sqrt(
             multiMatrix[0] * multiMatrix[0]
             + multiMatrix[1] * multiMatrix[1]
@@ -2755,34 +2741,35 @@ export class TextField extends InteractiveObject
         }
 
         const filters: FilterArrayImpl = this._$filters || this.filters;
-        if (0 > xMin + width || 0 > yMin + height) {
+        const canApply: boolean = filters !== null
+            && filters.length > 0
+            && this._$canApply(filters);
 
-            if (filters.length && this._$canApply(filters)) {
-
-                let filterBounds: BoundsImpl = $getBoundsObject(
-                    0, width,
-                    0 ,height
-                );
-
-                for (let idx = 0; idx < filters.length ; ++idx) {
-                    filterBounds = filters[idx]
-                        ._$generateFilterRect(filterBounds, xScale, yScale);
-                }
-
-                if (0 > filterBounds.xMin + filterBounds.xMax
-                    || 0 > filterBounds.yMin + filterBounds.yMax
-                ) {
-                    $poolBoundsObject(filterBounds);
-                    return;
-                }
-
-                $poolBoundsObject(filterBounds);
-
-            } else {
-                return;
+        let filterBounds: BoundsImpl = $getBoundsObject(0, width, 0, height);
+        if (canApply && filters) {
+            for (let idx: number = 0; idx < filters.length ; ++idx) {
+                filterBounds = filters[idx]
+                    ._$generateFilterRect(filterBounds, xScale, yScale);
             }
-
         }
+
+        // cache current buffer
+        const manager: FrameBufferManager = context.frameBuffer;
+        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+        if (!currentAttachment
+            || xMin - filterBounds.xMin > currentAttachment.width
+            || yMin - filterBounds.yMin > currentAttachment.height
+        ) {
+            $poolBoundsObject(filterBounds);
+            return;
+        }
+
+        if (0 > xMin + filterBounds.xMax || 0 > yMin + filterBounds.yMax) {
+            $poolBoundsObject(filterBounds);
+            return;
+        }
+
+        $poolBoundsObject(filterBounds);
 
         const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
         const keys: number[] = $getArray(xScale, yScale);
@@ -2810,9 +2797,6 @@ export class TextField extends InteractiveObject
             const width: number  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
             const height: number = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
 
-            // alpha reset
-            multiColor[3] = 1;
-
             // new canvas
             const canvas: HTMLCanvasElement = cacheStore.getCanvas();
             canvas.width  = width  + lineWidth * 2;
@@ -2837,7 +2821,7 @@ export class TextField extends InteractiveObject
 
                     const rgb: RGBAImpl = $intToRGBA(this._$backgroundColor);
                     const alpha: number = $Math.max(0, $Math.min(
-                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
+                        rgb.A * 255 + multiColor[7], 255)
                     ) / 255;
 
                     ctx.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
@@ -2848,7 +2832,7 @@ export class TextField extends InteractiveObject
 
                     const rgb: RGBAImpl = $intToRGBA(this._$borderColor);
                     const alpha: number = $Math.max(0, $Math.min(
-                        rgb.A * 255 * multiColor[3] + multiColor[7], 255)
+                        rgb.A * 255 + multiColor[7], 255)
                     ) / 255;
 
                     ctx.lineWidth   = lineWidth;
@@ -3040,7 +3024,7 @@ export class TextField extends InteractiveObject
             // color
             const rgb: RGBAImpl = $intToRGBA(tf.color || 0);
             const alpha: number = $Math.max(0, $Math.min(
-                rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                rgb.A * 255 + color_transform[7], 255)
             ) / 255;
 
             context.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
@@ -3048,7 +3032,7 @@ export class TextField extends InteractiveObject
             if (this._$thickness) {
                 const rgb: RGBAImpl = $intToRGBA(this._$thicknessColor);
                 const alpha: number = $Math.max(0, $Math.min(
-                    rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                    rgb.A * 255 + color_transform[7], 255)
                 ) / 255;
                 context.lineWidth   = this._$thickness;
                 context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
@@ -3075,7 +3059,7 @@ export class TextField extends InteractiveObject
 
                         const rgb: RGBAImpl = $intToRGBA(tf.color || 0);
                         const alpha: number = $Math.max(0, $Math.min(
-                            rgb.A * 255 * color_transform[3] + color_transform[7], 255)
+                            rgb.A * 255 + color_transform[7], 255)
                         ) / 255;
 
                         context.lineWidth   = $Math.max(1, 1 / $Math.min(matrix[0], matrix[3]));

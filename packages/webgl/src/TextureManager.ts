@@ -135,11 +135,32 @@ export class TextureManager
         }
 
         // init array
-        this._$atlasNodes.set(this._$atlasTextures.length, []);
-        this._$atlasCacheMap.set(this._$atlasTextures.length, []);
+        const index: number = this._$atlasTextures.length;
+        this._$atlasNodes.set(index, []);
+        this._$atlasCacheMap.set(index, []);
 
         this._$atlasTextures.push(texture);
 
+        if (index) {
+            window.next2d.player.context.debug(index - 1);
+
+            const canvas  = document.createElement("canvas");
+            canvas.width  = $RENDER_SIZE;
+            canvas.height = $RENDER_SIZE;
+            const ctx = canvas.getContext("2d") as NonNullable<CanvasRenderingContext2D>;
+
+            const nodes = this._$atlasNodes.get(index - 1);
+            if (nodes) {
+                for (let idx = 0; idx < nodes?.length; ++idx) {
+                    const node = nodes[idx];
+                    ctx.beginPath();
+                    ctx.strokeRect(
+                        node.x, node.y, node.w, node.h
+                    );
+                }
+                console.log(canvas.toDataURL());
+            }
+        }
         console.log(this);
     }
 
@@ -403,7 +424,7 @@ export class TextureManager
                 position.x,
                 position.y,
                 position.w,
-                position.y
+                position.h
             ));
 
         // pool
@@ -418,11 +439,9 @@ export class TextureManager
     clearCache (): void
     {
         for (const caches of this._$atlasCacheMap.values()) {
-            this._$positionObjectArray.push(...caches);
             caches.length = 0;
         }
         for (const caches of this._$atlasNodes.values()) {
-            this._$nodeObjectArray.push(...caches);
             caches.length = 0;
         }
     }

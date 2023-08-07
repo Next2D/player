@@ -363,8 +363,8 @@ export class RenderGraphics extends RenderDisplayObject
                 filters, width, height
             );
 
-            offsetX = texture._$offsetX;
-            offsetY = texture._$offsetY;
+            offsetX = texture.offsetX;
+            offsetY = texture.offsetY;
         }
 
         const radianX: number = $Math.atan2(matrix[1], matrix[0]);

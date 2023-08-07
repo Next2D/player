@@ -792,13 +792,13 @@ export class RenderDisplayObjectContainer extends RenderGraphics
 
         // blend only
         if (!object.canApply) {
-            texture._$offsetX = 0;
-            texture._$offsetY = 0;
+            texture.offsetX = 0;
+            texture.offsetY = 0;
         }
 
         // set cache offset
-        let offsetX = texture._$offsetX;
-        let offsetY = texture._$offsetY;
+        let offsetX = texture.offsetX;
+        let offsetY = texture.offsetY;
 
         // execute filter
         if (object.isUpdated && object.canApply) {
@@ -809,12 +809,9 @@ export class RenderDisplayObjectContainer extends RenderGraphics
 
                 // reset cache params
                 cacheStore.set(cacheKeys, null);
-                cache.layerWidth     = 0;
-                cache.layerHeight    = 0;
-                cache._$offsetX      = 0;
-                cache._$offsetY      = 0;
-                cache.matrix         = null;
-                cache.colorTransform = null;
+                cache.offsetX      = 0;
+                cache.offsetY      = 0;
+                cache.matrix       = "";
                 manager.releaseTexture(cache);
             }
 

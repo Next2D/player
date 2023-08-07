@@ -742,8 +742,8 @@ export class RenderDisplayObject
         context._$offsetY = 0;
 
         // set offset
-        texture._$offsetX = offsetX;
-        texture._$offsetY = offsetY;
+        texture.offsetX = offsetX;
+        texture.offsetY = offsetY;
 
         // cache texture
         texture.matrix =
@@ -751,8 +751,6 @@ export class RenderDisplayObject
             + matrix[2] + "_" + matrix[3];
 
         texture.filterState = true;
-        texture.layerWidth  = width;
-        texture.layerHeight = height;
 
         context._$bind(currentAttachment);
         manager.releaseAttachment(attachment, false);

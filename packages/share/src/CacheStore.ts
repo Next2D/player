@@ -276,7 +276,13 @@ export class CacheStore
         }
 
         const data: Map<string, any> = this._$store.get(id);
-        if (!value) {
+        if (value === null) {
+
+            if (!data.has(type)) {
+                return ;
+            }
+
+            this.destroy(data.get(type));
 
             data.delete(type);
 
@@ -287,11 +293,6 @@ export class CacheStore
 
             return ;
 
-        }
-
-        const oldValue: any = data.get(type);
-        if (oldValue && oldValue !== value) {
-            this.destroy(oldValue);
         }
 
         // set cache
@@ -324,16 +325,16 @@ export class CacheStore
     generateKeys (
         unique_key: any,
         matrix: number[] | null = null,
-        color:Float32Array | null = null
+        color: Float32Array | null = null
     ): string[] {
 
         let str: string = "";
-        if (matrix) {
+        if (matrix && matrix.length) {
             str += `${matrix.join("_")}`;
         }
 
         // color
-        if (color) {
+        if (color && color.length) {
             str += this.colorToString(color);
         }
 

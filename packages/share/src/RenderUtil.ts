@@ -329,7 +329,7 @@ export const $getBoundsObject = (
  * @method
  * @static
  */
-export const $poolBoundsObject = (bounds: BoundsImpl) =>
+export const $poolBoundsObject = (bounds: BoundsImpl): void =>
 {
     $bounds.push(bounds);
 };
@@ -863,19 +863,15 @@ export const $getPreObject = (): PreObjectImpl =>
 {
     return $preObjects.pop() ||
         {
-            "isFilter":     false,
-            "isUpdated":    null,
-            "canApply":     null,
-            "matrix":       null,
-            "color":        null,
-            "basePosition": { "x": 0, "y": 0 },
-            "position":     { "dx": 0, "dy": 0 },
-            "baseMatrix":   null,
-            "baseColor":    null,
-            "blendMode":    "normal",
-            "filters":      null,
-            "layerWidth":   0,
-            "layerHeight":  0
+            "isLayer":   false,
+            "isUpdated": null,
+            "canApply":  null,
+            "matrix":    null,
+            "color":     null,
+            "blendMode": "normal",
+            "filters":   null,
+            "sw":        0,
+            "sh":        0
         };
 };
 
@@ -892,15 +888,15 @@ export const $poolPreObject = (object: PreObjectImpl): void =>
     }
 
     // reset
-    object.isFilter    = false;
+    object.isLayer     = false;
     object.isUpdated   = null;
     object.canApply    = null;
     object.matrix      = null;
     object.color       = null;
-    object.baseMatrix  = null;
-    object.baseColor   = null;
     object.filters     = null;
     object.blendMode   = "normal";
+    object.sw          = 0;
+    object.sh          = 0;
 
     // pool
     $preObjects.push(object);

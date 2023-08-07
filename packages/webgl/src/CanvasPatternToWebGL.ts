@@ -47,19 +47,6 @@ export class CanvasPatternToWebGL
     }
 
     /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    dispose (): void
-    {
-        this
-            ._$context
-            .frameBuffer
-            .releaseTexture(this._$texture);
-    }
-
-    /**
      * @member {WebGLTexture}
      * @readonly
      * @public

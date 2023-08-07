@@ -15,6 +15,7 @@ import type { GradientShapeShaderVariantCollection } from "./shader/variants/Gra
 import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { FilterShaderVariantCollection } from "./shader/variants/FilterShaderVariantCollection";
+import type { BlendShaderVariantCollection } from "./shader/variants/BlendShaderVariantCollection";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { BoundsImpl } from "./interface/BoundsImpl";
 import type { BlendModeImpl } from "./interface/BlendModeImpl";
@@ -675,6 +676,37 @@ export class CanvasToWebGLContext
     }
 
     /**
+     * @param  {WebGLTexture} texture
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawBitmap (texture: WebGLTexture): void
+    {
+        const variants: BlendShaderVariantCollection = this
+            ._$shaderList
+            .blendShaderVariants;
+
+        const shader: CanvasToWebGLShader = variants
+            .getNormalBlendShader(false);
+
+        variants.setNormalBlendUniform(
+            shader.uniform, 0, 0, texture.width, texture.height,
+            this._$matrix,
+            this._$viewportWidth, this._$viewportHeight,
+            false, 1, 1, 1, 1, 0, 0, 0, 0
+        );
+
+        this
+            ._$frameBufferManager
+            .textureManager
+            .bind0(texture, this._$imageSmoothingEnabled);
+
+        this.blend.toOperation("normal");
+        shader._$drawImage();
+    }
+
+    /**
      * @return {void}
      * @method
      * @public
@@ -683,16 +715,17 @@ export class CanvasToWebGLContext
     {
         const manager: FrameBufferManager = this._$frameBufferManager;
 
+        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+
         this.bindRenderBuffer(position);
         manager.transferTexture(position);
-
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
 
         const atlasTexture: WebGLTexture = manager
             .textureManager
             .getAtlasTexture(position.index);
 
-        const attachment: AttachmentImpl = manager.createTextureAttachmentFrom(atlasTexture);
+        const attachment: AttachmentImpl = manager
+            .createTextureAttachmentFrom(atlasTexture);
         this._$bind(attachment);
 
         this._$gl.enable(this._$gl.SCISSOR_TEST);
@@ -709,7 +742,8 @@ export class CanvasToWebGLContext
         this.reset();
         this.drawImage(
             texture,
-            position.x, atlasTexture.height - position.h - position.y, texture.width, texture.height
+            position.x, atlasTexture.height - position.h - position.y,
+            texture.width, texture.height
         );
 
         this.restore();
@@ -846,10 +880,12 @@ export class CanvasToWebGLContext
         this._$matrix[7] = e * a01 + f * a11 + a21;
     }
 
-    debug ()
+    debug (index: number = 0)
     {
         const manager: FrameBufferManager = this._$frameBufferManager;
-        const atlasTexture: WebGLTexture = manager.textureManager.getAtlasTexture(0);
+        const atlasTexture: WebGLTexture = manager
+            .textureManager
+            .getAtlasTexture(index);
 
         const currentAttachment = manager.currentAttachment;
 
@@ -913,7 +949,7 @@ export class CanvasToWebGLContext
             ct6 = color_transform[6] / 255;
         }
 
-        const position: CachePositionImpl | null = this.cachePosition;
+        const position: CachePositionImpl | null = this._$cachePosition;
         if (position) {
 
             switch (this._$globalCompositeOperation) {
@@ -2263,15 +2299,14 @@ export class CanvasToWebGLContext
     }
 
     /**
+     * @param  {boolean} [release_texture = false]
      * @return {void}
      * @method
      * @private
      */
-    _$restoreAttachment (release_texture = false): void
+    _$restoreAttachment (release_texture: boolean = false): void
     {
-        this.drawInstacedArray();
-
-        const manager = this._$frameBufferManager;
+        const manager: FrameBufferManager = this._$frameBufferManager;
 
         manager.releaseAttachment(
             manager.currentAttachment, release_texture

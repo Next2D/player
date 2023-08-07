@@ -332,7 +332,7 @@ export class MovieClip extends Sprite
             return this._$loopConfig;
         }
 
-        const place: PlaceObjectImpl | null = this._$getPlaceObject();
+        const place: PlaceObjectImpl | null = this._$placeObject || this._$getPlaceObject();
         if (!place || !place.loop) {
             return null;
         }
@@ -1131,7 +1131,7 @@ export class MovieClip extends Sprite
      * @method
      * @private
      */
-    _$buildCharacter (character: MovieClipCharacterImpl)
+    _$buildCharacter (character: MovieClipCharacterImpl): void
     {
         if (character.sounds) {
             for (let idx: number = 0; idx < character.sounds.length; ++idx) {

@@ -649,8 +649,8 @@ export class RenderTextField extends RenderDisplayObject
                 this._$filters, width, height
             );
 
-            offsetX = texture._$offsetX;
-            offsetY = texture._$offsetY;
+            offsetX = texture.offsetX;
+            offsetY = texture.offsetY;
         }
 
         const radianX: number = $Math.atan2(multiMatrix[1], multiMatrix[0]);

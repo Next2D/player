@@ -35,8 +35,10 @@ declare global {
         area: number;
         dirty: boolean;
         smoothing: boolean;
-        _$offsetX: number;
-        _$offsetY: number;
+        filterState: boolean;
+        matrix: string;
+        offsetX: number;
+        offsetY: number;
     }
 
     // eslint-disable-next-line no-unused-vars

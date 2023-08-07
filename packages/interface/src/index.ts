@@ -84,3 +84,4 @@ export * from "./SpreadMethodImpl";
 export * from "./InterpolationMethodImpl";
 export * from "./SpriteImpl";
 export * from "./CachePositionImpl";
+export * from "./ShapeModeImpl";

@@ -451,6 +451,28 @@ export class BlendShaderVariantCollection
         }
     }
 
+    /**
+     * @param  {WebGLShaderUniform} uniform
+     * @param  {number} x
+     * @param  {number} y
+     * @param  {number} w
+     * @param  {number} h
+     * @param  {Float32Array} matrix
+     * @param  {number} render_width
+     * @param  {number} render_height
+     * @param  {Float32Array} with_color_transform
+     * @param  {number} ct0
+     * @param  {number} ct1
+     * @param  {number} ct2
+     * @param  {number} ct3
+     * @param  {number} ct4
+     * @param  {number} ct5
+     * @param  {number} ct6
+     * @param  {number} ct7
+     * @return {void}
+     * @method
+     * @public
+     */
     setBlendUniform (
         uniform: WebGLShaderUniform,
         x: number, y: number, w: number, h: number,
