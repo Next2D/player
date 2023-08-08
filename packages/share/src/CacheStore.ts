@@ -330,49 +330,31 @@ export class CacheStore
 
         let str: string = "";
         if (matrix && matrix.length) {
-            str += `${matrix.join("_")}`;
+            str += `${matrix[0]}_${matrix[1]}`;
         }
 
         // color
         if (color && color.length) {
-            str += this.colorToString(color);
+            str += color[7] === 0 ? "" : `_${color[7]}`;
         }
 
         const keys: string[] = $getArray();
-        keys[1] = str ? this.generateHash(str) : "_0";
+        if (str) {
+            let hash = 0;
+            const length: number = str.length;
+            for (let idx: number = 0; idx < length; idx++) {
+
+                const chr: number = str.charCodeAt(idx);
+
+                hash  = (hash << 5) - hash + chr;
+                hash |= 0;
+            }
+            keys[1] = `_${hash}`;
+        } else {
+            keys[1] = "_0";
+        }
         keys[0] = `${unique_key}`;
 
         return keys;
-    }
-
-    /**
-     * @param  {Float32Array} color
-     * @return {string}
-     * @method
-     * @public
-     */
-    colorToString (color: Float32Array): string
-    {
-        return color[7] === 0 ? "" : `_${color[7]}`;
-    }
-
-    /**
-     * @param  {string} str
-     * @return {string}
-     * @method
-     * @public
-     */
-    generateHash (str: string): string
-    {
-        let hash = 0;
-        const length: number = str.length;
-        for (let idx: number = 0; idx < length; idx++) {
-
-            const chr: number = str.charCodeAt(idx);
-
-            hash  = (hash << 5) - hash + chr;
-            hash |= 0;
-        }
-        return `_${hash}`;
     }
 }

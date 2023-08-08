@@ -75,6 +75,8 @@ export class Video extends DisplayObject
     private _$volume: number;
     private _$ready: boolean;
     private _$context: OffscreenCanvasRenderingContext2D|null;
+    private _$cacheKeys: string[];
+    private _$cacheParams: number[];
 
     /**
      * @param {number} [width = 0]
@@ -169,6 +171,18 @@ export class Video extends DisplayObject
          * @private
          */
         this._$context = null;
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$cacheKeys = $getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$cacheParams = $getArray(0, 0, 0);
     }
 
     /**
@@ -632,6 +646,9 @@ export class Video extends DisplayObject
      */
     _$initializeVideo (): HTMLVideoElement
     {
+        // clear cache key
+        this._$cacheKeys.length = 0;
+
         const video = $document.createElement("video");
 
         video.autoplay    = false;
@@ -678,7 +695,7 @@ export class Video extends DisplayObject
      * @method
      * @private
      */
-    _$createContext ()
+    _$createContext (): void
     {
         if ($rendererWorker) {
             const canvas = new $OffscreenCanvas(
@@ -924,17 +941,31 @@ export class Video extends DisplayObject
         }
         $poolBoundsObject(filterBounds);
 
-        const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
-        const keys: number[] = $getArray(xScale, yScale);
-
         const player: Player = $currentPlayer();
         const cacheStore: CacheStore = player.cacheStore;
-        const cacheKeys: string[] = cacheStore.generateKeys(
-            this._$instanceId, keys
-        );
-        $poolArray(keys);
 
-        context.cachePosition = cacheStore.get(cacheKeys);
+        if (!this._$cacheKeys.length
+            || this._$cacheParams[0] !== xScale
+            || this._$cacheParams[1] !== yScale
+            || this._$cacheParams[2] !== color_transform[7]
+        ) {
+            const keys: number[] = $getArray();
+            keys[0] = xScale;
+            keys[1] = yScale;
+
+            this._$cacheKeys = cacheStore.generateKeys(
+                this._$instanceId, keys, color_transform
+            );
+
+            $poolArray(keys);
+
+            this._$cacheParams[0] = xScale;
+            this._$cacheParams[1] = yScale;
+            this._$cacheParams[2] = color_transform[7];
+        }
+
+        const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
+        context.cachePosition = cacheStore.get(this._$cacheKeys);
         if (!context.cachePosition) {
 
             const width: number  = $Math.ceil($Math.abs(this._$bounds.xMax - this._$bounds.xMin));
@@ -944,7 +975,7 @@ export class Video extends DisplayObject
                 .createCachePosition(width, height);
 
             context.cachePosition = position;
-            cacheStore.set(cacheKeys, position);
+            cacheStore.set(this._$cacheKeys, position);
         }
 
         const texture: WebGLTexture = manager.createTextureFromVideo(
@@ -1031,8 +1062,6 @@ export class Video extends DisplayObject
         // draw
         if (context.cachePosition) {
 
-            context.reset();
-
             context.globalAlpha = alpha;
             context.imageSmoothingEnabled = true;
             context.globalCompositeOperation = blendMode;
@@ -1045,9 +1074,6 @@ export class Video extends DisplayObject
             // cache position clear
             context.cachePosition = null;
         }
-
-        // get cache
-        $poolArray(cacheKeys);
 
         // pool
         if (multiMatrix !== matrix) {

@@ -145,6 +145,8 @@ export class TextField extends InteractiveObject
     private _$thicknessColor: number;
     private _$verticalAlign: TextFormatVerticalAlignImpl;
     private _$createdTextData: boolean;
+    private _$cacheKeys: string[];
+    private _$cacheParams: number[];
 
     /**
      * @constructor
@@ -459,6 +461,18 @@ export class TextField extends InteractiveObject
          * @private
          */
         this._$heightCache = $getMap();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$cacheKeys = $getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$cacheParams = $getArray(0, 0, 0);
     }
 
     /**
@@ -2771,25 +2785,34 @@ export class TextField extends InteractiveObject
 
         $poolBoundsObject(filterBounds);
 
-        const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
-        const keys: number[] = $getArray(xScale, yScale);
-
-        const instanceId: number = this._$instanceId;
-
         const player: Player = $currentPlayer();
         const cacheStore: CacheStore = player.cacheStore;
-        const cacheKeys: string[] = cacheStore.generateKeys(
-            instanceId, keys
-        );
-
-        context.cachePosition = cacheStore.get(cacheKeys);
 
         // texture is small or renew
         if (this._$isUpdated()) {
-            cacheStore.removeCache(instanceId);
+            cacheStore.removeCache(this._$instanceId);
             context.cachePosition = null;
+            this._$cacheKeys.length = 0;
         }
 
+        if (!this._$cacheKeys.length
+            || this._$cacheParams[0] !== xScale
+            || this._$cacheParams[1] !== yScale
+            || this._$cacheParams[2] !== color_transform[7]
+        ) {
+            const keys: number[] = $getArray(xScale, yScale);
+            this._$cacheKeys = cacheStore.generateKeys(
+                this._$instanceId, keys
+            );
+            $poolArray(keys);
+
+            this._$cacheParams[0] = xScale;
+            this._$cacheParams[1] = yScale;
+            this._$cacheParams[2] = color_transform[7];
+        }
+
+        const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
+        context.cachePosition = cacheStore.get(this._$cacheKeys);
         if (!context.cachePosition) {
 
             // resize
@@ -2868,7 +2891,7 @@ export class TextField extends InteractiveObject
 
             // set cache
             context.cachePosition = position;
-            cacheStore.set(cacheKeys, position);
+            cacheStore.set(this._$cacheKeys, position);
 
             // destroy cache
             cacheStore.destroy(ctx);
@@ -2929,8 +2952,6 @@ export class TextField extends InteractiveObject
         // draw
         if (context.cachePosition) {
 
-            context.reset();
-
             context.globalAlpha = alpha;
             context.imageSmoothingEnabled = true;
             context.globalCompositeOperation = blendMode;
@@ -2945,7 +2966,6 @@ export class TextField extends InteractiveObject
         }
 
         // get cache
-        $poolArray(cacheKeys);
         $poolBoundsObject(baseBounds);
 
         // pool

@@ -98,7 +98,9 @@ export class Graphics
     public _$recode: any[] | null;
     private _$fills: any[] | null;
     private _$lines: any[] | null;
-    private _$cacheKey: string;
+    private _$uniqueKey: string;
+    private _$cacheKeys: string[];
+    private _$cacheParams: number[];
     public _$bitmapId: number;
     public _$mode: ShapeModeImpl;
 
@@ -339,7 +341,19 @@ export class Graphics
          * @default ""
          * @private
          */
-        this._$cacheKey = "";
+        this._$uniqueKey = "";
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$cacheKeys = $getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$cacheParams = $getArray(0, 0, 0);
 
         /**
          * @type {number}
@@ -807,6 +821,11 @@ export class Graphics
         this._$fills  = null;
         this._$lines  = null;
 
+        // cache clear
+        this._$cacheKeys.length = 0;
+        this._$uniqueKey        = "";
+        this._$cacheParams.fill(0);
+
         // restart
         this._$restart();
 
@@ -1088,8 +1107,8 @@ export class Graphics
         width  = +width  || 0;
         height = +height || 0;
 
-        const xMax = $Math.ceil(x + width);
-        const yMax = $Math.ceil(y + height);
+        const xMax = $Math.round(x + width);
+        const yMax = $Math.round(y + height);
 
         return this
             .moveTo(x,    y)
@@ -1757,33 +1776,51 @@ export class Graphics
         $poolBoundsObject(filterBounds);
 
         // get cache
-        if (this._$cacheKey === "") {
+        if (this._$uniqueKey === "") {
             if (!hasGrid
                 && displayObject._$loaderInfo
                 && displayObject._$characterId
             ) {
-                this._$cacheKey = `${displayObject._$loaderInfo._$id}@${this._$bitmapId || displayObject._$characterId}`;
+                this._$uniqueKey = `${displayObject._$loaderInfo._$id}@${this._$bitmapId || displayObject._$characterId}`;
             } else {
-                this._$createCacheKey();
+                this._$uniqueKey = this._$createCacheKey();
             }
         }
 
         const player: Player = $currentPlayer();
         const cacheStore: CacheStore = player.cacheStore;
 
-        const keys: number[] = $getArray();
-        if (this._$mode === "shape") {
-            keys[0] = xScale;
-            keys[1] = yScale;
+        if (this._$mode === "bitmap") {
+
+            if (!this._$cacheKeys.length) {
+                this._$cacheKeys = cacheStore.generateKeys(this._$uniqueKey);
+            }
+
+        } else {
+
+            if (!this._$cacheKeys.length
+                || this._$cacheParams[0] !== xScale
+                || this._$cacheParams[1] !== yScale
+                || this._$cacheParams[2] !== color_transform[7]
+            ) {
+
+                const keys: number[] = $getArray();
+                keys[0] = xScale;
+                keys[1] = yScale;
+
+                this._$cacheKeys = cacheStore.generateKeys(
+                    this._$uniqueKey, keys, color_transform
+                );
+
+                $poolArray(keys);
+
+                this._$cacheParams[0] = xScale;
+                this._$cacheParams[1] = yScale;
+                this._$cacheParams[2] = color_transform[7];
+            }
         }
 
-        const cacheKeys: string[] = cacheStore.generateKeys(
-            this._$cacheKey, keys, color_transform
-        );
-
-        $poolArray(keys);
-
-        context.cachePosition = cacheStore.get(cacheKeys);
+        context.cachePosition = cacheStore.get(this._$cacheKeys);
         if (!context.cachePosition) {
 
             const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
@@ -1897,7 +1934,7 @@ export class Graphics
             manager.transferTexture(context.cachePosition);
 
             // set cache
-            cacheStore.set(cacheKeys, context.cachePosition);
+            cacheStore.set(this._$cacheKeys, context.cachePosition);
 
             // end draw and reset current buffer
             context._$bind(currentAttachment);
@@ -1970,8 +2007,6 @@ export class Graphics
         // draw
         if (context.cachePosition) {
 
-            context.reset();
-
             context.globalAlpha = alpha;
             context.imageSmoothingEnabled = this._$mode === "shape";
             context.globalCompositeOperation = blend_mode;
@@ -1986,7 +2021,6 @@ export class Graphics
         }
 
         // pool
-        $poolArray(cacheKeys);
         $poolBoundsObject(baseBounds);
     }
 
@@ -2130,9 +2164,8 @@ export class Graphics
     {
         if (this._$displayObject) {
 
+            // reset
             this._$displayObject._$posted = false;
-            this._$buffer   = null;
-            this._$cacheKey = "";
 
             if (!this._$displayObject._$isUpdated()) {
 
@@ -2351,11 +2384,11 @@ export class Graphics
     }
 
     /**
-     * @return {void}
+     * @return {string}
      * @method
      * @private
      */
-    _$createCacheKey (): void
+    _$createCacheKey (): string
     {
         if (this._$doLine) {
             this.endLine();
@@ -2367,22 +2400,21 @@ export class Graphics
         }
 
         if (!this._$recode) {
-            return ;
+            return "";
         }
 
         const recodes: Float32Array = this._$getRecodes();
-        this._$cacheKey = recodes.join("");
 
-        // let hash = 0;
-        // for (let idx = 1; idx < numberString.length; ++idx) {
-        //
-        //     const charCode: number = numberString.charCodeAt(idx);
-        //
-        //     hash  = (hash << 5) - hash + charCode;
-        //     hash |= 0;
-        // }
-        //
-        // this._$cacheKey = `${hash}`;
+        let hash = 0;
+        for (let idx: number = 0; idx < recodes.length; idx++) {
+
+            const chr: number = recodes[idx];
+
+            hash  = (hash << 5) - hash + chr;
+            hash |= 0;
+        }
+
+        return `${hash}`;
     }
 
     /**
