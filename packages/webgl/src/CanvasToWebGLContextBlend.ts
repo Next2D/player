@@ -414,7 +414,7 @@ export class CanvasToWebGLContextBlend
             shader.instance,
             position.x, position.y, position.w, position.h,
             matrix, render_width, render_height,
-            withCT, ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
+            ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
         );
     }
 

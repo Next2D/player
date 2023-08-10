@@ -274,7 +274,6 @@ export class BlendShaderVariantCollection
      * @param  {Float32Array} matrix
      * @param  {number}  render_width
      * @param  {number}  render_height
-     * @param  {boolean} with_color_transform
      * @param  {number}  ct0
      * @param  {number}  ct1
      * @param  {number}  ct2
@@ -291,34 +290,26 @@ export class BlendShaderVariantCollection
         instance: WebGLShaderInstance,
         x: number, y: number, w: number, h: number,
         matrix: Float32Array, render_width: number, render_height: number,
-        with_color_transform: boolean,
         ct0: number = 1, ct1: number = 1, ct2: number = 1, ct3: number = 1,
         ct4: number = 0, ct5: number = 0, ct6: number = 0, ct7: number = 0
     ): void {
 
         // texture rectangle
-        instance.rect.push(
+        instance.attributes.push(
+            // texture rectangle
             x / $RENDER_SIZE, y / $RENDER_SIZE,
-            w / $RENDER_SIZE, h / $RENDER_SIZE
+            w / $RENDER_SIZE, h / $RENDER_SIZE,
+            // texture width, height and viewport width, height
+            w, h, render_width, render_height,
+            // matrix tx, ty
+            matrix[6], matrix[7],
+            // matrix scale0, rotate0, scale1, rotate1
+            matrix[0], matrix[1], matrix[3], matrix[4],
+            // mulColor
+            ct0, ct1, ct2, ct3,
+            // addColor
+            ct4, ct5, ct6, ct7
         );
-
-        // texture width, height and viewport width, height
-        instance.size.push(w, h, render_width, render_height);
-
-        // matrix tx, ty
-        instance.offset.push(matrix[6], matrix[7]);
-
-        // matrix scale0, rotate0, scale1, rotate1
-        instance.matrix.push(
-            matrix[0], matrix[1],
-            matrix[3], matrix[4]
-        );
-
-        // color transform params
-        if (with_color_transform) {
-            instance.mulColor.push(ct0, ct1, ct2, ct3);
-            instance.addColor.push(ct4, ct5, ct6, ct7);
-        }
 
         instance.count++;
     }

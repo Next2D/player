@@ -534,6 +534,8 @@ export class BitmapData
 
             source._$draw(context, tMatrix, colorTransform);
 
+            context.drawInstacedArray();
+
             const texture: WebGLTexture = manager
                 .getTextureFromCurrentAttachment();
 

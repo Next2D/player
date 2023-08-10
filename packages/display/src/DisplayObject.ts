@@ -120,6 +120,7 @@ export class DisplayObject extends EventDispatcher
     protected _$placeId: number;
     protected _$startFrame: number;
     protected _$endFrame: number;
+    protected _$postArray: Float32Array | null;
 
     /**
      * @constructor
@@ -223,6 +224,13 @@ export class DisplayObject extends EventDispatcher
          * @private
          */
         this._$posted = false;
+
+        /**
+         * @type {Float32Array}
+         * @default null
+         * @private
+         */
+        this._$postArray = null;
 
         /**
          * @type {number}
