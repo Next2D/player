@@ -306,16 +306,14 @@ export class RenderPlayer
             return ;
         }
 
-        // if (!this._$stage._$updated) {
-        //     return ;
-        // }
+        if (!this._$stage._$updated) {
+            return ;
+        }
 
         const context: CanvasToWebGLContext | null = this._$context;
         if (!context) {
             return ;
         }
-
-        context._$bind(this._$attachment);
 
         // reset
         context.reset();
@@ -332,6 +330,7 @@ export class RenderPlayer
         // stage end
         this._$stage._$updated = false;
 
+        context.drawInstacedArray();
         context
             .frameBuffer
             .transferToMainTexture();
@@ -365,13 +364,23 @@ export class RenderPlayer
             return ;
         }
 
-        this._$canvas.width  = width;
-        this._$canvas.height = height;
-
         const context = this._$context;
         if (!context) {
             return ;
         }
+
+        this._$matrix[0] = scale;
+        this._$matrix[3] = scale;
+        this._$matrix[4] = tx;
+        this._$matrix[5] = ty;
+
+        this._$stage._$updated = true;
+        this._$cacheStore.reset();
+
+        context.clearInstacedArray();
+
+        this._$canvas.width  = width;
+        this._$canvas.height = height;
 
         context._$gl.viewport(0, 0, width, height);
 
@@ -382,18 +391,13 @@ export class RenderPlayer
         }
 
         this._$attachment = manager
-            .createCacheAttachment(width, height, false);
-
-        this._$matrix[0] = scale;
-        this._$matrix[3] = scale;
-        this._$matrix[4] = tx;
-        this._$matrix[5] = ty;
+            .createCacheAttachment(width, height, true);
 
         // update cache max size
-        manager.setMaxSize(width, height);
+        context.setMaxSize(width, height);
+        manager.clearCache();
 
-        this._$stage._$updated = true;
-        this._$cacheStore.reset();
+        context._$bind(this._$attachment);
     }
 
     /**

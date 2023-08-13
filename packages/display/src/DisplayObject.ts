@@ -1742,10 +1742,9 @@ export class DisplayObject extends EventDispatcher
      * @param  {CanvasToWebGLContext} context
      * @param  {Float32Array}         matrix
      * @param  {array}                filters
-     * @param  {number}               cache_width
-     * @param  {number}               cache_height
      * @param  {number}               width
      * @param  {number}               height
+     * @param  {WebGLTexture}         [target_texture = null]
      * @return {object}
      * @method
      * @private

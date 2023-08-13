@@ -942,7 +942,7 @@ export const $initialize = (): Promise<void> =>
             ? new Worker(URL.createObjectURL(new Blob([$renderURL], { "type": "text/javascript" })))
             : null;
 
-        $rendererWorker = null;
+        // $rendererWorker = null;
         if ($rendererWorker) {
 
             /**
@@ -1018,34 +1018,34 @@ export const $initialize = (): Promise<void> =>
                 }
             };
 
-            // $rendererWorker.onmessage = (event: MessageEvent) =>
-            // {
-            //     if (event.data.command !== "bitmapDraw") {
-            //         return ;
-            //     }
-            //
-            //     const sourceId: number = event.data.sourceId;
-            //     const object: BitmapDrawObjectImpl | void = $bitmapDrawMap.get(sourceId);
-            //     $bitmapDrawMap.delete(sourceId);
-            //     if (!object) {
-            //         return ;
-            //     }
-            //
-            //     // reset
-            //     const source: DisplayObjectImpl<any> = object.source;
-            //     if ("_$children" in source) {
-            //         // @ts-ignore
-            //         $removeContainerWorker(source);
-            //     } else {
-            //         source._$removeWorkerInstance();
-            //     }
-            //
-            //     if (object.callback) {
-            //         const context = object.context;
-            //         context.drawImage(event.data.imageBitmap, 0, 0);
-            //         object.callback(context.canvas);
-            //     }
-            // };
+            $rendererWorker.onmessage = (event: MessageEvent) =>
+            {
+                if (event.data.command !== "bitmapDraw") {
+                    return ;
+                }
+
+                const sourceId: number = event.data.sourceId;
+                const object: BitmapDrawObjectImpl | void = $bitmapDrawMap.get(sourceId);
+                $bitmapDrawMap.delete(sourceId);
+                if (!object) {
+                    return ;
+                }
+
+                // reset
+                const source: DisplayObjectImpl<any> = object.source;
+                if ("_$children" in source) {
+                    // @ts-ignore
+                    $removeContainerWorker(source);
+                } else {
+                    source._$removeWorkerInstance();
+                }
+
+                if (object.callback) {
+                    const context = object.context;
+                    context.drawImage(event.data.imageBitmap, 0, 0);
+                    object.callback(context.canvas);
+                }
+            };
         }
     }
 

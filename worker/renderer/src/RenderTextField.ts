@@ -7,6 +7,8 @@ import type{ BoundsImpl } from "./interface/BoundsImpl";
 import type{ AttachmentImpl } from "./interface/AttachmentImpl";
 import type{ RGBAImpl } from "./interface/RGBAImpl";
 import type{ TextFormatImpl } from "./interface/TextFormatImpl";
+import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
+import type { CachePositionImpl } from "./interface/CachePositionImpl";
 import type {
     CanvasToWebGLContext,
     FrameBufferManager
@@ -60,6 +62,8 @@ export class RenderTextField extends RenderDisplayObject
     private _$textHeight: number;
     private _$verticalAlign: TextFormatVerticalAlignImpl;
     private _$wordWrap: boolean;
+    private _$cacheKeys: string[];
+    private _$cacheParams: number[];
 
     /**
      * @constructor
@@ -235,6 +239,18 @@ export class RenderTextField extends RenderDisplayObject
          * @private
          */
         this._$verticalAlign = "top";
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$cacheKeys = $getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$cacheParams = $getArray(0, 0, 0);
     }
 
     /**
@@ -456,8 +472,8 @@ export class RenderTextField extends RenderDisplayObject
 
             case width === 0:
             case height === 0:
-            case width === 0 - $Infinity:
-            case height === 0 - $Infinity:
+            case width === -$Infinity:
+            case height === -$Infinity:
             case width === $Infinity:
             case height === $Infinity:
                 return;
@@ -465,20 +481,6 @@ export class RenderTextField extends RenderDisplayObject
             default:
                 break;
 
-        }
-
-        if (0 > xMin + width || 0 > yMin + height) {
-            return;
-        }
-
-        // cache current buffer
-        const manager: FrameBufferManager = context.frameBuffer;
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-        if (!currentAttachment
-            || xMin > currentAttachment.width
-            || yMin > currentAttachment.height
-        ) {
-            return;
         }
 
         let xScale: number = +$Math.sqrt(
@@ -507,57 +509,64 @@ export class RenderTextField extends RenderDisplayObject
             yScale = +yScale.toFixed(4);
         }
 
-        if (0 > xMin + width || 0 > yMin + height) {
+        const filters: FilterArrayImpl | null = this._$filters;
+        const canApply: boolean = filters !== null
+            && filters.length > 0
+            && this._$canApply(filters);
 
-            if (this._$filters
-                && this._$filters.length
-                && this._$canApply(this._$filters)
-            ) {
-
-                let filterBounds = $getBoundsObject(
-                    0, width, 0, height
-                );
-
-                for (let idx = 0; idx < this._$filters.length ; ++idx) {
-                    filterBounds = this
-                        ._$filters[idx]
-                        ._$generateFilterRect(filterBounds, xScale, yScale);
-                }
-
-                if (0 > filterBounds.xMin + filterBounds.xMax
-                    || 0 > filterBounds.yMin + filterBounds.yMax
-                ) {
-                    $poolBoundsObject(filterBounds);
-                    return;
-                }
-
-                $poolBoundsObject(filterBounds);
-
-            } else {
-                return;
+        let filterBounds: BoundsImpl = $getBoundsObject(0, width, 0, height);
+        if (canApply && filters) {
+            for (let idx: number = 0; idx < filters.length ; ++idx) {
+                filterBounds = filters[idx]
+                    ._$generateFilterRect(filterBounds, xScale, yScale);
             }
-
         }
 
-        const keys: number[] = $getArray(xScale, yScale);
+        // cache current buffer
+        const manager: FrameBufferManager = context.frameBuffer;
+        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+        if (!currentAttachment
+            || xMin - filterBounds.xMin > currentAttachment.width
+            || yMin - filterBounds.yMin > currentAttachment.height
+        ) {
+            $poolBoundsObject(filterBounds);
+            return;
+        }
 
-        const instanceId: number = this._$instanceId;
+        if (0 > xMin + filterBounds.xMax || 0 > yMin + filterBounds.yMax) {
+            $poolBoundsObject(filterBounds);
+            return;
+        }
+
+        $poolBoundsObject(filterBounds);
 
         const cacheStore: CacheStore = $renderPlayer.cacheStore;
-        const cacheKeys: string[] = cacheStore.generateKeys(
-            instanceId, keys
-        );
-        $poolArray(keys);
-
-        let texture: WebGLTexture | null = cacheStore.get(cacheKeys);
 
         // texture is small or renew
         if (this._$isUpdated()) {
-            cacheStore.removeCache(instanceId);
-            texture = null;
+            cacheStore.removeCache(this._$instanceId);
+            context.cachePosition = null;
+            this._$cacheKeys.length = 0;
         }
 
-        if (!texture) {
+        if (!this._$cacheKeys.length
+            || this._$cacheParams[0] !== xScale
+            || this._$cacheParams[1] !== yScale
+            || this._$cacheParams[2] !== color_transform[7]
+        ) {
+            const keys: number[] = $getArray(xScale, yScale);
+            this._$cacheKeys = cacheStore.generateKeys(
+                this._$instanceId, keys
+            );
+            $poolArray(keys);
+
+            this._$cacheParams[0] = xScale;
+            this._$cacheParams[1] = yScale;
+            this._$cacheParams[2] = color_transform[7];
+        }
+
+        context.cachePosition = cacheStore.get(this._$cacheKeys);
+        if (!context.cachePosition) {
 
             // resize
             const lineWidth: number  = $Math.min(1, $Math.max(xScale, yScale));
@@ -627,34 +636,47 @@ export class RenderTextField extends RenderDisplayObject
             this._$doDraw(ctx, matrix, color_transform, baseWidth / xScale);
             ctx.restore();
 
-            texture = manager.createTextureFromCanvas(ctx.canvas);
+            const position: CachePositionImpl = manager
+                .createCachePosition(width, height);
+
+            const texture: WebGLTexture = manager
+                .createTextureFromCanvas(ctx.canvas);
+
+            context.drawTextureFromRect(texture, position);
 
             // set cache
-            cacheStore.set(cacheKeys, texture);
-
+            context.cachePosition = position;
+            cacheStore.set(this._$cacheKeys, position);
         }
 
         let drawFilter: boolean = false;
         let offsetX: number = 0;
         let offsetY: number = 0;
-        if (this._$filters
-            && this._$filters.length
-            && this._$canApply(this._$filters)
+        if (filters && filters.length
+            && this._$canApply(filters)
         ) {
 
             drawFilter = true;
 
-            texture = this._$drawFilter(
-                context, texture, multiMatrix,
-                this._$filters, width, height
+            const position: CachePositionImpl = this._$drawFilter(
+                context, multiMatrix, filters,
+                width, height
             );
 
-            offsetX = texture.offsetX;
-            offsetY = texture.offsetY;
+            if (position.offsetX) {
+                offsetX = position.offsetX;
+            }
+
+            if (position.offsetY) {
+                offsetY = position.offsetY;
+            }
+
+            // update
+            context.cachePosition = position;
         }
 
         const radianX: number = $Math.atan2(multiMatrix[1], multiMatrix[0]);
-        const radianY: number = $Math.atan2(0 - multiMatrix[2], multiMatrix[3]);
+        const radianY: number = $Math.atan2(-multiMatrix[2], multiMatrix[3]);
         if (!drawFilter && (radianX || radianY)) {
 
             const tx: number = baseBounds.xMin * xScale;
@@ -666,7 +688,7 @@ export class RenderTextField extends RenderDisplayObject
             const sinY: number = $Math.sin(radianY);
 
             context.setTransform(
-                cosX, sinX, 0 - sinY, cosY,
+                cosX, sinX, -sinY, cosY,
                 tx * cosX - ty * sinY + multiMatrix[4],
                 tx * sinX + ty * cosY + multiMatrix[5]
             );
@@ -680,17 +702,22 @@ export class RenderTextField extends RenderDisplayObject
         }
 
         // draw
-        context.reset();
-        context.globalAlpha = alpha;
-        context.imageSmoothingEnabled = true;
-        context.globalCompositeOperation = this._$blendMode;
+        if (context.cachePosition) {
 
-        context.drawImage(texture,
-            0, 0, texture.width, texture.height, multiColor
-        );
+            context.globalAlpha = alpha;
+            context.imageSmoothingEnabled = true;
+            context.globalCompositeOperation = this._$blendMode;
+
+            context.drawInstance(
+                xMin - offsetX, yMin - offsetY, xMax, yMax,
+                color_transform
+            );
+
+            // cache position clear
+            context.cachePosition = null;
+        }
 
         // get cache
-        $poolArray(cacheKeys);
         $poolBoundsObject(baseBounds);
 
         // pool

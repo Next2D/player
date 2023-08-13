@@ -6,7 +6,7 @@ import type { PreObjectImpl } from "./interface/PreObjectImpl";
  * @type {number}
  * @public
  */
-export let $devicePixelRatio = 1;
+export let $devicePixelRatio: number = 1;
 
 /**
  * @param {number} device_pixel_ratio

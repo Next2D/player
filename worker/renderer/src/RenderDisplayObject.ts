@@ -6,11 +6,12 @@ import type { BoundsImpl } from "./interface/BoundsImpl";
 import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { GridImpl } from "./interface/GridImpl";
+import type { CachePositionImpl } from "./interface/CachePositionImpl";
+import { $renderPlayer } from "./RenderGlobal";
 import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
-import { $renderPlayer } from "./RenderGlobal";
 import {
     BevelFilter,
     BlurFilter,
@@ -32,7 +33,9 @@ import {
     $multiplicationMatrix,
     $boundsMatrix,
     $poolFloat32Array6,
-    $getArray
+    $devicePixelRatio,
+    $getArray,
+    $poolArray
 } from "@next2d/share";
 
 /**
@@ -238,38 +241,51 @@ export class RenderDisplayObject
     }
 
     /**
-     * @param   {Float32Array}  [matrix=null]
+     * @param   {Float32Array} multi_matrix
      * @returns {object}
      * @private
      */
-    _$getLayerBounds (matrix: Float32Array | null = null): BoundsImpl
+    _$getLayerBounds (multi_matrix: Float32Array): BoundsImpl
     {
-        const baseBounds: BoundsImpl = this._$getBounds(matrix);
+        const baseBounds: BoundsImpl = this._$getBounds();
+
+        const bounds: BoundsImpl = $boundsMatrix(baseBounds, multi_matrix);
+        $poolBoundsObject(baseBounds);
 
         const filters: FilterArrayImpl | null = this._$filters;
         if (!filters || !filters.length) {
-            return baseBounds;
+            return bounds;
         }
 
-        let filterBounds = $getBoundsObject(
-            baseBounds.xMin, baseBounds.xMax - baseBounds.xMin,
-            baseBounds.yMin, baseBounds.yMax - baseBounds.yMin
+        let filterBounds: BoundsImpl = $getBoundsObject(
+            0,
+            $Math.abs(bounds.xMax - bounds.xMin),
+            0,
+            $Math.abs(bounds.yMax - bounds.yMin)
         );
-        $poolBoundsObject(baseBounds);
+        $poolBoundsObject(bounds);
+
+        let xScale: number = +$Math.sqrt(
+            multi_matrix[0] * multi_matrix[0]
+            + multi_matrix[1] * multi_matrix[1]
+        );
+        let yScale: number = +$Math.sqrt(
+            multi_matrix[2] * multi_matrix[2]
+            + multi_matrix[3] * multi_matrix[3]
+        );
+
+        xScale /= $devicePixelRatio;
+        yScale /= $devicePixelRatio;
+
+        xScale *= 2;
+        yScale *= 2;
 
         for (let idx: number = 0; idx < filters.length; ++idx) {
             filterBounds = filters[idx]
-                ._$generateFilterRect(filterBounds, 0, 0);
+                ._$generateFilterRect(filterBounds, xScale, yScale);
         }
 
-        const xMin = filterBounds.xMin;
-        const xMax = filterBounds.xMin + filterBounds.xMax;
-        const yMin = filterBounds.yMin;
-        const yMax = filterBounds.yMin + filterBounds.yMax;
-
-        $poolBoundsObject(filterBounds);
-
-        return $getBoundsObject(xMin, xMax, yMin, yMax);
+        return filterBounds;
     }
 
     /**
@@ -320,8 +336,8 @@ export class RenderDisplayObject
         matrix: Float32Array
     ): boolean {
 
-        // ネストしてない初回のマスクだけ実行
-        // ネストしてる場合は初回に作られたbufferを流用
+        context.drawInstacedArray();
+
         const bounds: BoundsImpl = this._$getBounds(matrix);
         const result = context._$startClip(bounds);
         $poolBoundsObject(bounds);
@@ -594,10 +610,9 @@ export class RenderDisplayObject
      * @private
      */
     _$isFilterUpdated (
-        width: number, height: number, matrix: Float32Array,
+        matrix: Float32Array,
         filters: FilterArrayImpl | null = null,
-        can_apply: boolean = false,
-        position_x: number = 0, position_y: number = 0
+        can_apply: boolean = false
     ): boolean {
 
         // cache flag
@@ -606,7 +621,7 @@ export class RenderDisplayObject
         }
 
         // check filter data
-        if (filters && can_apply) {
+        if (can_apply && filters) {
 
             for (let idx: number = 0; idx < filters.length; ++idx) {
 
@@ -620,7 +635,7 @@ export class RenderDisplayObject
         }
 
         // check status
-        const cache: WebGLTexture | null = $renderPlayer
+        const cache: CachePositionImpl = $renderPlayer
             .cacheStore
             .get([this._$instanceId, "f"]);
 
@@ -628,23 +643,15 @@ export class RenderDisplayObject
             return true;
         }
 
-        switch (true) {
-
-            case cache.filterState !== can_apply:
-            case cache.layerWidth  !== $Math.ceil(width):
-            case cache.layerHeight !== $Math.ceil(height):
-            case cache.matrix !== matrix[0] + "_"
-                + matrix[1] + "_"
-                + matrix[2] + "_"
-                + matrix[3] + "_"
-                + position_x + "_"
-                + position_y:
-                return true;
-
-            default:
-                return false;
-
+        if (cache.filterState !== can_apply) {
+            return true;
         }
+
+        if (cache.matrix !== `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}`) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -760,64 +767,72 @@ export class RenderDisplayObject
 
     /**
      * @param  {CanvasToWebGLContext} context
-     * @param  {WebGLTexture}         target_texture
      * @param  {Float32Array}         matrix
      * @param  {array}                filters
      * @param  {number}               width
      * @param  {number}               height
-     * @return {WebGLTexture}
+     * @param  {WebGLTexture}         [target_texture = null]
+     * @return {object}
      * @method
      * @private
      */
     _$drawFilter (
         context: CanvasToWebGLContext,
-        target_texture: WebGLTexture,
         matrix: Float32Array,
         filters: FilterArrayImpl,
-        width: number, height: number
-    ): WebGLTexture {
+        width: number,
+        height: number,
+        target_texture: WebGLTexture | null = null
+    ): CachePositionImpl {
 
         const cacheStore: CacheStore = $renderPlayer.cacheStore;
 
-        const cacheKeys: any[] = [this._$instanceId, "f"];
-        const cache: WebGLTexture | void = cacheStore.get(cacheKeys);
+        const cacheKeys: any[] = $getArray(this._$instanceId, "f");
+        let position: CachePositionImpl | void = cacheStore.get(cacheKeys);
 
-        const updated: boolean = this._$isFilterUpdated(
-            width, height, matrix, filters, true
-        );
+        const updated: boolean = this._$isFilterUpdated(matrix, filters, true);
 
-        if (cache && !updated) {
-            return cache;
+        if (position && !updated) {
+            context.cachePosition = position;
+            return position;
         }
 
         // cache clear
-        if (cache) {
-
+        if (position) {
             cacheStore.set(cacheKeys, null);
-            cache.layerWidth     = 0;
-            cache.layerHeight    = 0;
-            cache._$offsetX      = 0;
-            cache._$offsetY      = 0;
-            cache.matrix         = null;
-            cache.colorTransform = null;
-
-            context
-                .frameBuffer
-                .releaseTexture(cache);
         }
 
-        if (!cache || updated) {
-
-            const texture = this._$applyFilter(
-                context, filters, target_texture,
-                matrix, width, height
+        const manager: FrameBufferManager = context.frameBuffer;
+        const targetTexture: WebGLTexture = target_texture
+            ? target_texture
+            : context.getTextureFromRect(
+                context.cachePosition as NonNullable<CachePositionImpl>
             );
 
-            cacheStore.set(cacheKeys, texture);
+        const texture: WebGLTexture = this._$applyFilter(
+            context, filters, targetTexture,
+            matrix, width, height
+        );
+        manager.textureManager.release(targetTexture);
 
-            return texture;
-        }
+        const bounds: BoundsImpl = this._$getLayerBounds(matrix);
+        position = manager.createCachePosition(
+            $Math.ceil($Math.abs(bounds.xMax - bounds.xMin)),
+            $Math.ceil($Math.abs(bounds.yMax - bounds.yMin))
+        );
 
-        return cache;
+        $poolBoundsObject(bounds);
+        position.filterState = true;
+        position.matrix      = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}_0_0`;
+        position.offsetX     = texture.offsetX;
+        position.offsetY     = texture.offsetY;
+
+        // 関数先でtextureがreleaseされる
+        context.drawTextureFromRect(texture, position);
+
+        cacheStore.set(cacheKeys, position);
+        $poolArray(cacheKeys);
+
+        return position;
     }
 }

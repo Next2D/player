@@ -7,6 +7,8 @@ import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { SpreadMethodImpl } from "./interface/SpreadMethodImpl";
 import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
 import type { ColorStopImpl } from "./interface/ColorStopImpl";
+import type { CachePositionImpl } from "./interface/CachePositionImpl";
+import type { ShapeModeImpl } from "./interface/ShapeModeImpl";
 import type {
     CanvasToWebGLContext,
     CanvasGradientToWebGL,
@@ -40,6 +42,11 @@ export class RenderGraphics extends RenderDisplayObject
     public _$recodes: Float32Array | null;
     public _$maxAlpha: number;
     public _$canDraw: boolean;
+    private _$uniqueKey: string;
+    private _$cacheKeys: string[];
+    private _$cacheParams: number[];
+    public _$bitmapId: number;
+    public _$mode: ShapeModeImpl;
 
     /**
      * @constructor
@@ -69,6 +76,39 @@ export class RenderGraphics extends RenderDisplayObject
          * @private
          */
         this._$canDraw = false;
+
+        /**
+         * @type {string}
+         * @default ""
+         * @private
+         */
+        this._$uniqueKey = "";
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$cacheKeys = $getArray();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$cacheParams = $getArray(0, 0, 0);
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$bitmapId = 0;
+
+        /**
+         * @type {string}
+         * @default "shape"
+         * @private
+         */
+        this._$mode = "shape";
     }
 
     /**
@@ -87,6 +127,32 @@ export class RenderGraphics extends RenderDisplayObject
             return ;
         }
 
+        // size
+        const baseBounds: BoundsImpl = this._$getBounds();
+
+        const bounds: BoundsImpl = $boundsMatrix(baseBounds, matrix);
+        $poolBoundsObject(baseBounds);
+
+        const width: number    = $Math.ceil($Math.abs(bounds.xMax - bounds.xMin));
+        const height: number   = $Math.ceil($Math.abs(bounds.yMax - bounds.yMin));
+        $poolBoundsObject(bounds);
+
+        switch (true) {
+
+            case width === 0:
+            case height === 0:
+            case width === -$Infinity:
+            case height === -$Infinity:
+            case width === $Infinity:
+            case height === $Infinity:
+                return;
+
+            default:
+                break;
+
+        }
+
+        context.reset();
         context.setTransform(
             matrix[0], matrix[1], matrix[2],
             matrix[3], matrix[4], matrix[5]
@@ -95,6 +161,95 @@ export class RenderGraphics extends RenderDisplayObject
         this._$runCommand(context, this._$recodes, null, true);
 
         context.clip();
+    }
+
+    /**
+     * @return {string}
+     * @method
+     * @private
+     */
+    _$createCacheKey (): string
+    {
+        if (!this._$recodes) {
+            return "";
+        }
+
+        let hash = 0;
+        for (let idx: number = 0; idx < this._$recodes.length; idx++) {
+
+            const chr: number = this._$recodes[idx];
+
+            hash  = (hash << 5) - hash + chr;
+            hash |= 0;
+        }
+
+        return `${hash}`;
+    }
+
+    /**
+     * @return {WebGLTexture | null}
+     * @method
+     * @private
+     */
+    _$createBitmapTexture (
+        context: CanvasToWebGLContext,
+        position: CachePositionImpl,
+        x_scale: number,
+        y_scale: number,
+        width: number,
+        height: number
+    ): WebGLTexture | null {
+
+        if (this._$mode !== "bitmap") {
+            return null;
+        }
+
+        context.drawInstacedArray();
+
+        const manager: FrameBufferManager = context.frameBuffer;
+        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+
+        const attachment: AttachmentImpl = manager
+            .createCacheAttachment(width, height);
+
+        context._$bind(attachment);
+
+        context.reset();
+
+        const parentMatrix: Float32Array = $getFloat32Array6(
+            x_scale, 0, 0, y_scale,
+            width / 2, height / 2
+        );
+
+        const texture: WebGLTexture = context.getTextureFromRect(position);
+
+        const baseMatrix: Float32Array = $getFloat32Array6(
+            1, 0, 0, 1,
+            -texture.width / 2,
+            -texture.height / 2
+        );
+
+        const scaleMatrix = $multiplicationMatrix(
+            parentMatrix, baseMatrix
+        );
+        $poolFloat32Array6(parentMatrix);
+        $poolFloat32Array6(baseMatrix);
+
+        context.setTransform(
+            scaleMatrix[0], scaleMatrix[1],
+            scaleMatrix[2], scaleMatrix[3],
+            scaleMatrix[4], scaleMatrix[5]
+        );
+
+        context.drawImage(texture, 0, 0, texture.width, texture.height);
+
+        const bitmapTexture: WebGLTexture = manager.getTextureFromCurrentAttachment();
+        context._$bind(currentAttachment);
+
+        manager.releaseAttachment(attachment);
+        manager.textureManager.release(texture);
+
+        return bitmapTexture;
     }
 
     /**
@@ -148,10 +303,10 @@ export class RenderGraphics extends RenderDisplayObject
         );
 
         const bounds: BoundsImpl = $boundsMatrix(baseBounds, matrix);
-        const xMax: number   = bounds.xMax;
-        const xMin: number   = bounds.xMin;
-        const yMax: number   = bounds.yMax;
-        const yMin: number   = bounds.yMin;
+        const xMax: number = bounds.xMax;
+        const xMin: number = bounds.xMin;
+        const yMax: number = bounds.yMax;
+        const yMin: number = bounds.yMin;
         $poolBoundsObject(bounds);
 
         const width: number  = $Math.ceil($Math.abs(xMax - xMin));
@@ -169,16 +324,6 @@ export class RenderGraphics extends RenderDisplayObject
             default:
                 break;
 
-        }
-
-        // cache current buffer
-        const manager: FrameBufferManager = context.frameBuffer;
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-        if (!currentAttachment
-            || xMin > currentAttachment.width
-            || yMin > currentAttachment.height
-        ) {
-            return;
         }
 
         let xScale: number = +$Math.sqrt(
@@ -207,76 +352,127 @@ export class RenderGraphics extends RenderDisplayObject
             yScale = +yScale.toFixed(4);
         }
 
-        if (0 > xMin + width || 0 > yMin + height) {
+        const canApply: boolean = filters !== null
+            && filters.length > 0
+            && this._$canApply(filters);
 
-            if (filters
-                && filters.length
-                && this._$canApply(filters)
-            ) {
-
-                let filterBounds = $getBoundsObject(0, width, 0, height);
-                for (let idx: number = 0; idx < filters.length ; ++idx) {
-                    filterBounds = filters[idx]
-                        ._$generateFilterRect(filterBounds, xScale, yScale);
-                }
-
-                if (0 > filterBounds.xMin + filterBounds.xMax
-                    || 0 > filterBounds.yMin + filterBounds.yMax
-                ) {
-                    $poolBoundsObject(filterBounds);
-                    return;
-                }
-
-                $poolBoundsObject(filterBounds);
-
-            } else {
-                return;
+        let filterBounds: BoundsImpl = $getBoundsObject(0, width, 0, height);
+        if (canApply && filters) {
+            for (let idx: number = 0; idx < filters.length ; ++idx) {
+                filterBounds = filters[idx]
+                    ._$generateFilterRect(filterBounds, xScale, yScale);
             }
-
         }
 
-        // get cache
-        const keys: any[] = $getArray(xScale, yScale);
-
-        let uniqueId: string = `${this._$instanceId}`;
-        if (!hasGrid
-            && this._$loaderInfoId > -1
-            && this._$characterId > -1
+        // cache current buffer
+        const manager: FrameBufferManager = context.frameBuffer;
+        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+        if (!currentAttachment
+            || xMin - filterBounds.xMin > currentAttachment.width
+            || yMin - filterBounds.yMin > currentAttachment.height
         ) {
-            uniqueId = `${this._$loaderInfoId}@${this._$characterId}`;
+            $poolBoundsObject(filterBounds);
+            return;
+        }
+
+        if (0 > xMin + filterBounds.xMax || 0 > yMin + filterBounds.yMax) {
+            $poolBoundsObject(filterBounds);
+            return;
+        }
+
+        $poolBoundsObject(filterBounds);
+
+        // get cache
+        if (this._$uniqueKey === "") {
+            if (!hasGrid
+                && this._$loaderInfoId > -1
+                && this._$characterId > -1
+            ) {
+                this._$uniqueKey = `${this._$loaderInfoId}@${this._$characterId}`;
+            } else {
+                this._$uniqueKey = this._$createCacheKey();
+            }
         }
 
         const cacheStore: CacheStore = $renderPlayer.cacheStore;
-        const cacheKeys: string[] = cacheStore.generateKeys(
-            uniqueId, keys, color_transform
-        );
+        if (this._$mode === "bitmap") {
 
-        $poolArray(keys);
-
-        let texture: WebGLTexture | null = cacheStore.get(cacheKeys);
-        if (!texture) {
-
-            // resize
-            let width: number  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-            let height: number = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
-            const textureScale = context._$getTextureScale(width, height);
-            if (textureScale < 1) {
-                width  *= textureScale;
-                height *= textureScale;
+            if (!this._$cacheKeys.length) {
+                this._$cacheKeys = cacheStore.generateKeys(this._$uniqueKey);
             }
 
-            // create cache buffer
-            const attachment: AttachmentImpl = manager
-                .createCacheAttachment(width, height, true);
-            context._$bind(attachment);
+        } else {
+
+            if (!this._$cacheKeys.length
+                || this._$cacheParams[0] !== xScale
+                || this._$cacheParams[1] !== yScale
+                || this._$cacheParams[2] !== color_transform[7]
+            ) {
+
+                const keys: number[] = $getArray();
+                keys[0] = xScale;
+                keys[1] = yScale;
+
+                this._$cacheKeys = cacheStore.generateKeys(
+                    this._$uniqueKey, keys, color_transform
+                );
+
+                $poolArray(keys);
+
+                this._$cacheParams[0] = xScale;
+                this._$cacheParams[1] = yScale;
+                this._$cacheParams[2] = color_transform[7];
+            }
+        }
+
+        context.cachePosition = cacheStore.get(this._$cacheKeys);
+        if (!context.cachePosition) {
+
+            const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+
+            if (currentAttachment && currentAttachment.mask) {
+                context.stopStencil();
+            }
+
+            let width: number  = 0;
+            let height: number = 0;
+            if (this._$mode === "shape") {
+
+                width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+                height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
+
+                // resize
+                const textureScale: number = context._$getTextureScale(width, height);
+                if (textureScale < 1) {
+                    width  *= textureScale;
+                    height *= textureScale;
+                }
+
+            } else {
+                width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin));
+                height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin));
+            }
+
+            // create cache position
+            context.cachePosition = manager.createCachePosition(width, height);
+            context.bindRenderBuffer(context.cachePosition);
 
             // reset
             context.reset();
-            context.setTransform(
-                xScale, 0, 0, yScale,
-                0 - baseBounds.xMin * xScale,
-                0 - baseBounds.yMin * yScale
-            );
+
+            if (this._$mode === "shape") {
+                context.setTransform(
+                    xScale, 0, 0, yScale,
+                    -baseBounds.xMin * xScale,
+                    -baseBounds.yMin * yScale
+                );
+            } else {
+                context.setTransform(
+                    1, 0, 0, 1,
+                    -baseBounds.xMin,
+                    -baseBounds.yMin
+                );
+            }
 
             if (hasGrid) {
 
@@ -329,82 +525,102 @@ export class RenderGraphics extends RenderDisplayObject
                 $poolFloat32Array6(aMatrix);
             }
 
-            // plain alpha
-            color_transform[3] = 1;
             this._$runCommand(context, this._$recodes, color_transform, false);
 
             if (hasGrid) {
                 context.grid.disable();
             }
 
-            texture = manager.getTextureFromCurrentAttachment();
+            manager.transferTexture(context.cachePosition);
 
             // set cache
-            cacheStore.set(cacheKeys, texture);
-
-            // release buffer
-            manager.releaseAttachment(attachment, false);
+            cacheStore.set(this._$cacheKeys, context.cachePosition);
 
             // end draw and reset current buffer
             context._$bind(currentAttachment);
         }
 
-        let drawFilter: boolean = false;
         let offsetX: number = 0;
         let offsetY: number = 0;
-        if (filters && filters.length
-            && this._$canApply(filters)
-        ) {
+        if (canApply && filters) {
 
-            drawFilter = true;
-
-            texture = this._$drawFilter(
-                context, texture, matrix,
-                filters, width, height
+            const bitmapTexture: WebGLTexture | null = this._$createBitmapTexture(
+                context, context.cachePosition,
+                xScale, yScale, width, height
             );
 
-            offsetX = texture.offsetX;
-            offsetY = texture.offsetY;
+            const position: CachePositionImpl = this._$drawFilter(
+                context, matrix, filters,
+                width, height, bitmapTexture
+            );
+
+            if (position.offsetX) {
+                offsetX = position.offsetX;
+            }
+
+            if (position.offsetY) {
+                offsetY = position.offsetY;
+            }
+
+            // update
+            context.cachePosition = position;
         }
 
-        const radianX: number = $Math.atan2(matrix[1], matrix[0]);
-        const radianY: number = $Math.atan2(0 - matrix[2], matrix[3]);
-        if (!drawFilter && (radianX || radianY)) {
-
-            const tx: number = baseBounds.xMin * xScale;
-            const ty: number = baseBounds.yMin * yScale;
-
-            const cosX: number = $Math.cos(radianX);
-            const sinX: number = $Math.sin(radianX);
-            const cosY: number = $Math.cos(radianY);
-            const sinY: number = $Math.sin(radianY);
+        if (!canApply && this._$mode === "bitmap") {
 
             context.setTransform(
-                cosX, sinX, 0 - sinY, cosY,
-                tx * cosX - ty * sinY + matrix[4],
-                tx * sinX + ty * cosY + matrix[5]
+                matrix[0], matrix[1],
+                matrix[2], matrix[3],
+                baseBounds.xMin * matrix[0] + baseBounds.yMin * matrix[2] + matrix[4],
+                baseBounds.xMin * matrix[1] + baseBounds.yMin * matrix[3] + matrix[5]
             );
 
         } else {
 
-            context.setTransform(1, 0, 0, 1,
-                xMin - offsetX, yMin - offsetY
-            );
+            const radianX: number = $Math.atan2(matrix[1], matrix[0]);
+            const radianY: number = $Math.atan2(-matrix[2], matrix[3]);
+            if (!canApply && (radianX || radianY)) {
 
+                const tx: number = baseBounds.xMin * xScale;
+                const ty: number = baseBounds.yMin * yScale;
+
+                const cosX: number = $Math.cos(radianX);
+                const sinX: number = $Math.sin(radianX);
+                const cosY: number = $Math.cos(radianY);
+                const sinY: number = $Math.sin(radianY);
+
+                context.setTransform(
+                    cosX, sinX, -sinY, cosY,
+                    tx * cosX - ty * sinY + matrix[4],
+                    tx * sinX + ty * cosY + matrix[5]
+                );
+
+            } else {
+
+                context.setTransform(1, 0, 0, 1,
+                    xMin - offsetX, yMin - offsetY
+                );
+
+            }
         }
 
         // draw
-        context.reset();
-        context.globalAlpha = alpha;
-        context.imageSmoothingEnabled = true;
-        context.globalCompositeOperation = blend_mode;
+        if (context.cachePosition) {
 
-        context.drawImage(texture,
-            0, 0, texture.width, texture.height, color_transform
-        );
+            context.globalAlpha = alpha;
+            context.imageSmoothingEnabled = this._$mode === "shape";
+            context.globalCompositeOperation = blend_mode;
+
+            context.drawInstance(
+                xMin - offsetX, yMin - offsetY, xMax, yMax,
+                color_transform
+            );
+
+            // cache position clear
+            context.cachePosition = null;
+        }
 
         // pool
-        $poolArray(cacheKeys);
         $poolBoundsObject(baseBounds);
     }
 

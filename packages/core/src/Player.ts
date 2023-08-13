@@ -2025,8 +2025,6 @@ export class Player
         context
             .frameBuffer
             .transferToMainTexture();
-
-        // context.debug();
     }
 
     /**
