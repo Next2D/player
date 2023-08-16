@@ -95,7 +95,7 @@ export class CacheStore
         object: CanvasRenderingContext2D | WebGLTexture | CachePositionImpl |null = null
     ): void {
 
-        if (!object) {
+        if (!object || typeof object !== "object") {
             return ;
         }
 
