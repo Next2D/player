@@ -44,7 +44,7 @@ import {
     $getArray,
     $Number,
     $poolArray,
-    CacheStore,
+    $cacheStore,
     $getFloat32Array6
 } from "@next2d/share";
 
@@ -941,9 +941,6 @@ export class Video extends DisplayObject
         }
         $poolBoundsObject(filterBounds);
 
-        const player: Player = $currentPlayer();
-        const cacheStore: CacheStore = player.cacheStore;
-
         if (!this._$cacheKeys.length
             || this._$cacheParams[0] !== xScale
             || this._$cacheParams[1] !== yScale
@@ -953,7 +950,7 @@ export class Video extends DisplayObject
             keys[0] = xScale;
             keys[1] = yScale;
 
-            this._$cacheKeys = cacheStore.generateKeys(
+            this._$cacheKeys = $cacheStore.generateKeys(
                 this._$instanceId, keys, color_transform
             );
 
@@ -965,7 +962,7 @@ export class Video extends DisplayObject
         }
 
         const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
-        context.cachePosition = cacheStore.get(this._$cacheKeys);
+        context.cachePosition = $cacheStore.get(this._$cacheKeys);
         if (!context.cachePosition) {
 
             const width: number  = $Math.ceil($Math.abs(this._$bounds.xMax - this._$bounds.xMin));
@@ -975,7 +972,7 @@ export class Video extends DisplayObject
                 .createCachePosition(width, height);
 
             context.cachePosition = position;
-            cacheStore.set(this._$cacheKeys, position);
+            $cacheStore.set(this._$cacheKeys, position);
         }
 
         const texture: WebGLTexture = manager.createTextureFromVideo(

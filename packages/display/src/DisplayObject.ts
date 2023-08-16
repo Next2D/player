@@ -42,7 +42,6 @@ import {
     $variables
 } from "@next2d/util";
 import {
-    CacheStore,
     $doUpdated,
     $clamp,
     $getArray,
@@ -64,7 +63,8 @@ import {
     $poolMap,
     $getFloat32Array6,
     $devicePixelRatio,
-    $poolArray
+    $poolArray,
+    $cacheStore
 } from "@next2d/share";
 
 /**
@@ -1758,11 +1758,8 @@ export class DisplayObject extends EventDispatcher
         target_texture: WebGLTexture | null = null
     ): CachePositionImpl {
 
-        const player: Player = $currentPlayer();
-        const cacheStore: CacheStore = player.cacheStore;
-
         const cacheKeys: any[] = $getArray(this._$instanceId, "f");
-        let position: CachePositionImpl | void = cacheStore.get(cacheKeys);
+        let position: CachePositionImpl | void = $cacheStore.get(cacheKeys);
 
         const updated: boolean = this._$isFilterUpdated(matrix, filters, true);
 
@@ -1773,7 +1770,7 @@ export class DisplayObject extends EventDispatcher
 
         // cache clear
         if (position) {
-            cacheStore.set(cacheKeys, null);
+            $cacheStore.set(cacheKeys, null);
         }
 
         const manager: FrameBufferManager = context.frameBuffer;
@@ -1804,7 +1801,7 @@ export class DisplayObject extends EventDispatcher
         // 関数先でtextureがreleaseされる
         context.drawTextureFromRect(texture, position);
 
-        cacheStore.set(cacheKeys, position);
+        $cacheStore.set(cacheKeys, position);
         $poolArray(cacheKeys);
 
         return position;
@@ -1976,8 +1973,7 @@ export class DisplayObject extends EventDispatcher
         }
 
         // check status
-        const player: Player = $currentPlayer();
-        const cache: CachePositionImpl = player.cacheStore.get([this._$instanceId, "f"]);
+        const cache: CachePositionImpl = $cacheStore.get([this._$instanceId, "f"]);
         if (!cache) {
             return true;
         }

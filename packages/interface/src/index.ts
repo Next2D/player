@@ -75,7 +75,6 @@ export * from "./TextObjectModeImpl";
 export * from "./TextStringObjectImpl";
 export * from "./UIImpl";
 export * from "./UniformDataImpl";
-export * from "./UnzipQueueImpl";
 export * from "./URLLoaderDataFormatImpl";
 export * from "./URLRequestMethodImpl";
 export * from "./VerticesImpl";

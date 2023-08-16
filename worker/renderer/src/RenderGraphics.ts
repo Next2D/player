@@ -16,7 +16,7 @@ import type {
 } from "@next2d/webgl";
 import { $renderPlayer } from "./RenderGlobal";
 import {
-    CacheStore,
+    $cacheStore,
     $clamp,
     $getBoundsObject,
     $boundsMatrix,
@@ -394,11 +394,10 @@ export class RenderGraphics extends RenderDisplayObject
             }
         }
 
-        const cacheStore: CacheStore = $renderPlayer.cacheStore;
         if (this._$mode === "bitmap") {
 
             if (!this._$cacheKeys.length) {
-                this._$cacheKeys = cacheStore.generateKeys(this._$uniqueKey);
+                this._$cacheKeys = $cacheStore.generateKeys(this._$uniqueKey);
             }
 
         } else {
@@ -413,7 +412,7 @@ export class RenderGraphics extends RenderDisplayObject
                 keys[0] = xScale;
                 keys[1] = yScale;
 
-                this._$cacheKeys = cacheStore.generateKeys(
+                this._$cacheKeys = $cacheStore.generateKeys(
                     this._$uniqueKey, keys, color_transform
                 );
 
@@ -425,7 +424,7 @@ export class RenderGraphics extends RenderDisplayObject
             }
         }
 
-        context.cachePosition = cacheStore.get(this._$cacheKeys);
+        context.cachePosition = $cacheStore.get(this._$cacheKeys);
         if (!context.cachePosition) {
 
             const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
@@ -534,7 +533,7 @@ export class RenderGraphics extends RenderDisplayObject
             manager.transferTexture(context.cachePosition);
 
             // set cache
-            cacheStore.set(this._$cacheKeys, context.cachePosition);
+            $cacheStore.set(this._$cacheKeys, context.cachePosition);
 
             // end draw and reset current buffer
             context._$bind(currentAttachment);
@@ -1162,13 +1161,12 @@ export class RenderGraphics extends RenderDisplayObject
             this._$maxAlpha = object.maxAlpha;
             this._$canDraw  = object.canDraw;
 
-            const cacheStore: CacheStore = $renderPlayer.cacheStore;
-            cacheStore.removeCache(this._$instanceId);
+            $cacheStore.removeCache(this._$instanceId);
 
             if (this._$loaderInfoId > -1
                 && this._$characterId > -1
             ) {
-                cacheStore.removeCache(
+                $cacheStore.removeCache(
                     `${this._$loaderInfoId}@${this._$characterId}`
                 );
             }

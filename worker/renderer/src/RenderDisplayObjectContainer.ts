@@ -15,7 +15,7 @@ import {
     $renderPlayer
 } from "./RenderGlobal";
 import {
-    CacheStore,
+    $cacheStore,
     $boundsMatrix,
     $clamp,
     $getArray,
@@ -382,7 +382,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             const instance = instances.get(id);
 
             let multiMatrix = multi_matrix;
-            const rawMatrix: Float32Array = instance._$transform._$rawMatrix();
+            const rawMatrix: Float32Array = instance._$matrix;
             if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
                 || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
                 || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
@@ -735,19 +735,18 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         // cache
         const cacheKeys: any[] = $getArray(this._$instanceId, "f");
 
-        const cacheStore: CacheStore = $renderPlayer.cacheStore;
         const manager: FrameBufferManager = context.frameBuffer;
         const multiMatrix: Float32Array = object.matrix as NonNullable<Float32Array>;
 
         let offsetX: number = 0;
         let offsetY: number = 0;
-        let texture: WebGLTexture | null = cacheStore.get(cacheKeys);
+        let texture: WebGLTexture | null = $cacheStore.get(cacheKeys);
 
         if (!texture || object.isUpdated) {
 
             // remove
             if (texture) {
-                cacheStore.set(cacheKeys, null);
+                $cacheStore.set(cacheKeys, null);
             }
 
             texture = manager
@@ -781,7 +780,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             texture.offsetX = offsetX;
             texture.offsetY = offsetY;
 
-            cacheStore.set(cacheKeys, texture);
+            $cacheStore.set(cacheKeys, texture);
 
             context._$restoreAttachment();
         }

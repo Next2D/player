@@ -1,4 +1,5 @@
 import { $RENDER_SIZE } from "./Const";
+import { $cacheStore } from "@next2d/share";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
 import type { GridImpl } from "./interface/GridImpl";
 
@@ -140,28 +141,6 @@ export class TextureManager
         this._$atlasCacheMap.set(index, []);
 
         this._$atlasTextures.push(texture);
-
-        if (index) {
-            window.next2d.player.context.debug(index - 1);
-
-            const canvas  = document.createElement("canvas");
-            canvas.width  = $RENDER_SIZE;
-            canvas.height = $RENDER_SIZE;
-            const ctx = canvas.getContext("2d") as NonNullable<CanvasRenderingContext2D>;
-
-            const nodes = this._$atlasNodes.get(index - 1);
-            if (nodes) {
-                for (let idx = 0; idx < nodes?.length; ++idx) {
-                    const node = nodes[idx];
-                    ctx.beginPath();
-                    ctx.strokeRect(
-                        node.x, node.y, node.w, node.h
-                    );
-                }
-                console.log(canvas.toDataURL());
-            }
-        }
-        console.log(this);
     }
 
     /**
@@ -355,6 +334,12 @@ export class TextureManager
 
         // ヒットしない場合は新しいtextureを生成
         const index: number = this._$atlasTextures.length;
+        if (index) {
+            $cacheStore.reset();
+            return this.createCachePosition(width, height);
+        }
+
+        // new texture
         this.createTextureAtlas();
 
         const nodes: GridImpl[] = this._$atlasNodes.get(index) as NonNullable<GridImpl[]>;
@@ -517,7 +502,7 @@ export class TextureManager
      */
     create (
         width: number, height: number,
-        pixels: Uint8Array|null = null,
+        pixels: Uint8Array | null = null,
         premultiplied_alpha: boolean = false,
         flip_y: boolean = true
     ): WebGLTexture {

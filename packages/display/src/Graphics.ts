@@ -27,7 +27,7 @@ import type {
 } from "@next2d/webgl";
 import { $currentPlayer } from "@next2d/util";
 import {
-    CacheStore,
+    $cacheStore,
     $doUpdated,
     $Math,
     $Number,
@@ -1788,12 +1788,11 @@ export class Graphics
         }
 
         const player: Player = $currentPlayer();
-        const cacheStore: CacheStore = player.cacheStore;
 
         if (this._$mode === "bitmap") {
 
             if (!this._$cacheKeys.length) {
-                this._$cacheKeys = cacheStore.generateKeys(this._$uniqueKey);
+                this._$cacheKeys = $cacheStore.generateKeys(this._$uniqueKey);
             }
 
         } else {
@@ -1808,7 +1807,7 @@ export class Graphics
                 keys[0] = xScale;
                 keys[1] = yScale;
 
-                this._$cacheKeys = cacheStore.generateKeys(
+                this._$cacheKeys = $cacheStore.generateKeys(
                     this._$uniqueKey, keys, color_transform
                 );
 
@@ -1820,7 +1819,7 @@ export class Graphics
             }
         }
 
-        context.cachePosition = cacheStore.get(this._$cacheKeys);
+        context.cachePosition = $cacheStore.get(this._$cacheKeys);
         if (!context.cachePosition) {
 
             const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
@@ -1934,7 +1933,7 @@ export class Graphics
             manager.transferTexture(context.cachePosition);
 
             // set cache
-            cacheStore.set(this._$cacheKeys, context.cachePosition);
+            $cacheStore.set(this._$cacheKeys, context.cachePosition);
 
             // end draw and reset current buffer
             context._$bind(currentAttachment);
@@ -2172,13 +2171,10 @@ export class Graphics
                 this._$displayObject._$doChanged();
                 $doUpdated();
 
-                const player: Player = $currentPlayer();
-                const cacheStore: CacheStore = player.cacheStore;
-
-                cacheStore.removeCache(this._$displayObject._$instanceId);
+                $cacheStore.removeCache(this._$displayObject._$instanceId);
 
                 if (this._$displayObject._$characterId) {
-                    cacheStore.removeCache(this._$displayObject._$characterId);
+                    $cacheStore.removeCache(this._$displayObject._$characterId);
                 }
             }
         }
@@ -2676,10 +2672,7 @@ export class Graphics
                             let buffer: Uint8Array;
                             if (bitmapData.image !== null || bitmapData.canvas !== null) {
 
-                                const player: Player = $currentPlayer();
-                                const cacheStore: CacheStore = player.cacheStore;
-
-                                const canvas: HTMLCanvasElement = cacheStore.getCanvas();
+                                const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
 
                                 const width: number  = bitmapData.width;
                                 const height: number = bitmapData.height;
@@ -2698,7 +2691,7 @@ export class Graphics
                                     context.getImageData(0, 0, width, height).data
                                 );
 
-                                cacheStore.destroy(context);
+                                $cacheStore.destroy(context);
 
                             } else if (bitmapData._$buffer !== null) {
                                 buffer = bitmapData._$buffer;
@@ -2783,10 +2776,7 @@ export class Graphics
                             let buffer: Uint8Array;
                             if (bitmapData.image !== null || bitmapData.canvas !== null) {
 
-                                const player: Player = $currentPlayer();
-                                const cacheStore: CacheStore = player.cacheStore;
-
-                                const canvas: HTMLCanvasElement = cacheStore.getCanvas();
+                                const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
 
                                 const width: number  = bitmapData.width;
                                 const height: number = bitmapData.height;
@@ -2805,7 +2795,7 @@ export class Graphics
                                     context.getImageData(0, 0, width, height).data
                                 );
 
-                                cacheStore.destroy(context);
+                                $cacheStore.destroy(context);
 
                             } else if (bitmapData._$buffer !== null) {
                                 buffer = bitmapData._$buffer;

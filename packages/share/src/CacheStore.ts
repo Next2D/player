@@ -76,6 +76,13 @@ export class CacheStore
         }
 
         this._$store.clear();
+
+        if (this._$context) {
+            this
+                ._$context
+                .frameBuffer
+                .clearCache();
+        }
     }
 
     /**
@@ -108,7 +115,9 @@ export class CacheStore
             return ;
         }
 
-        if (object instanceof CanvasRenderingContext2D) {
+        if ("canvas" in object
+            && object instanceof CanvasRenderingContext2D
+        ) {
 
             const canvas: HTMLCanvasElement = object.canvas;
             const width: number  = canvas.width;
@@ -358,3 +367,5 @@ export class CacheStore
         return keys;
     }
 }
+
+export const $cacheStore: CacheStore = new CacheStore();

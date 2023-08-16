@@ -1,4 +1,3 @@
-import { CacheStore } from "@next2d/share";
 import {
     Stage,
     MovieClip
@@ -78,7 +77,9 @@ import {
     $poolArray,
     $clamp,
     $devicePixelRatio,
-    $setDevicePixelRatio
+    $setDevicePixelRatio,
+    $cacheStore,
+    CacheStore
 } from "@next2d/share";
 
 /**
@@ -90,7 +91,6 @@ import {
 export class Player
 {
     private readonly _$stage: Stage;
-    private readonly _$cacheStore: CacheStore;
     private _$mode: PlayerModeImpl;
     public _$actionOffset: number;
     public _$actions: MovieClip[];
@@ -104,7 +104,6 @@ export class Player
     public _$stopFlag: boolean;
     private _$startTime: number;
     private _$fps: number;
-    private _$isLoad: boolean;
     public _$loadStatus: number;
     public _$width: number;
     public _$height: number;
@@ -154,12 +153,6 @@ export class Player
          */
         this._$stage = new Stage();
         this._$stage._$player = this;
-
-        /**
-         * @type {CacheStore}
-         * @private
-         */
-        this._$cacheStore = new CacheStore();
 
         /**
          * @type {string}
@@ -242,13 +235,6 @@ export class Player
          * @private
          */
         this._$fps = 16;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$isLoad = false;
 
         /**
          * @type {number}
@@ -507,6 +493,16 @@ export class Player
     }
 
     /**
+     * @return {CacheStore}
+     * @readonly
+     * @public
+     */
+    get cacheStore (): CacheStore
+    {
+        return $cacheStore;
+    }
+
+    /**
      * @type {HTMLCanvasElement}
      * @readonly
      * @public
@@ -524,17 +520,6 @@ export class Player
     get broadcastEvents (): Map<string, EventListenerImpl[]>
     {
         return this._$broadcastEvents;
-    }
-
-    /**
-     * @member {CacheStore}
-     * @return {CacheStore}
-     * @readonly
-     * @public
-     */
-    get cacheStore (): CacheStore
-    {
-        return this._$cacheStore;
     }
 
     /**
@@ -745,7 +730,7 @@ export class Player
         this._$timerId  = -1;
 
         SoundMixer.stopAll();
-        this._$cacheStore.reset();
+        $cacheStore.reset();
 
         if ($rendererWorker) {
             $rendererWorker.postMessage({
@@ -762,7 +747,7 @@ export class Player
      */
     removeCache (id: string): void
     {
-        this._$cacheStore.removeCache(id);
+        $cacheStore.removeCache(id);
         if ($rendererWorker) {
             $rendererWorker.postMessage({
                 "command": "removeCache",
@@ -1138,7 +1123,7 @@ export class Player
                     gl, this._$getSamples()
                 );
 
-                this._$cacheStore.context = this._$context;
+                $cacheStore.context = this._$context;
 
             } else {
                 alert("WebGL setting is off. Please turn the setting on.");
@@ -1363,7 +1348,7 @@ export class Player
 
             // cache reset
             this._$stage._$doChanged();
-            this._$cacheStore.reset();
+            $cacheStore.reset();
 
             // params
             this._$scale  = scale;
@@ -1481,7 +1466,7 @@ export class Player
 
         } else {
 
-            const context = this._$context;
+            const context: CanvasToWebGLContext | null = this._$context;
             if (!context) { // unit test
                 return ;
             }
@@ -1504,7 +1489,6 @@ export class Player
 
             // update cache max size
             context.setMaxSize(width, height);
-            manager.clearCache();
 
             context._$bind(this._$attachment);
         }

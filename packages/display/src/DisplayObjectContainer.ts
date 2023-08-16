@@ -34,7 +34,7 @@ import {
     $rendererWorker
 } from "@next2d/util";
 import {
-    CacheStore,
+    $cacheStore,
     $doUpdated,
     $boundsMatrix,
     $clamp,
@@ -767,8 +767,6 @@ export class DisplayObjectContainer extends InteractiveObject
                 return currentChildren;
             }
 
-            const player: Player = $currentPlayer();
-            const cacheStore: CacheStore = player.cacheStore;
             const useWorker  = !!$rendererWorker && !!this._$stage;
 
             const skipIds: Map<number, boolean> = $getMap();
@@ -841,14 +839,14 @@ export class DisplayObjectContainer extends InteractiveObject
                     instance._$removeWorkerInstance();
                 }
 
-                cacheStore.setRemoveTimer(instanceId);
+                $cacheStore.setRemoveTimer(instanceId);
                 if (instance._$loaderInfo && instance._$characterId) {
-                    cacheStore.setRemoveTimer(
+                    $cacheStore.setRemoveTimer(
                         `${instance._$loaderInfo._$id}@${instance._$characterId}`
                     );
                 }
                 if (instance._$graphics) {
-                    cacheStore.setRemoveTimer(instance._$graphics._$cacheKey);
+                    $cacheStore.setRemoveTimer(instance._$graphics._$cacheKey);
                 }
 
                 // remove event
@@ -1162,16 +1160,14 @@ export class DisplayObjectContainer extends InteractiveObject
                 }
             }
 
-            const player: Player = $currentPlayer();
-            const cacheStore: CacheStore = player.cacheStore;
-            cacheStore.setRemoveTimer(child._$instanceId);
+            $cacheStore.setRemoveTimer(child._$instanceId);
             if (child._$loaderInfo && child._$characterId) {
-                cacheStore.setRemoveTimer(
+                $cacheStore.setRemoveTimer(
                     `${child._$loaderInfo._$id}@${child._$characterId}`
                 );
             }
             if (child._$graphics) {
-                cacheStore.setRemoveTimer(child._$graphics._$cacheKey);
+                $cacheStore.setRemoveTimer(child._$graphics._$cacheKey);
             }
 
             // reset params
@@ -1248,20 +1244,18 @@ export class DisplayObjectContainer extends InteractiveObject
             ? this._$getChildren()
             : this._$children;
 
-        const player: Player = $currentPlayer();
-        const cacheStore: CacheStore = player.cacheStore;
         for (let idx: number = 0; idx < children.length; ++idx) {
 
             const instance: DisplayObjectImpl<any> = children[idx];
 
-            cacheStore.setRemoveTimer(instance._$instanceId);
+            $cacheStore.setRemoveTimer(instance._$instanceId);
             if (instance._$loaderInfo && instance._$characterId) {
-                cacheStore.setRemoveTimer(
+                $cacheStore.setRemoveTimer(
                     `${instance._$loaderInfo._$id}@${instance._$characterId}`
                 );
             }
             if (instance._$graphics) {
-                cacheStore.setRemoveTimer(instance._$graphics._$cacheKey);
+                $cacheStore.setRemoveTimer(instance._$graphics._$cacheKey);
             }
 
             if (instance instanceof DisplayObjectContainer) {
@@ -1600,20 +1594,18 @@ export class DisplayObjectContainer extends InteractiveObject
         // cache
         const cacheKeys: any[] = $getArray(this._$instanceId, "f");
 
-        const player: Player = $currentPlayer();
-        const cacheStore: CacheStore = player.cacheStore;
         const manager: FrameBufferManager = context.frameBuffer;
         const multiMatrix: Float32Array = object.matrix as NonNullable<Float32Array>;
 
         let offsetX: number = 0;
         let offsetY: number = 0;
-        let texture: WebGLTexture | null = cacheStore.get(cacheKeys);
+        let texture: WebGLTexture | null = $cacheStore.get(cacheKeys);
 
         if (!texture || object.isUpdated) {
 
             // remove
             if (texture) {
-                cacheStore.set(cacheKeys, null);
+                $cacheStore.set(cacheKeys, null);
             }
 
             texture = manager
@@ -1647,7 +1639,7 @@ export class DisplayObjectContainer extends InteractiveObject
             texture.offsetX = offsetX;
             texture.offsetY = offsetY;
 
-            cacheStore.set(cacheKeys, texture);
+            $cacheStore.set(cacheKeys, texture);
 
             context._$restoreAttachment();
         }

@@ -15,11 +15,10 @@ import type {
 } from "@next2d/webgl";
 import {
     $isSafari,
-    $renderPlayer,
     $textFields
 } from "./RenderGlobal";
 import {
-    CacheStore,
+    $cacheStore,
     $boundsMatrix,
     $clamp,
     $generateFontStyle,
@@ -540,11 +539,9 @@ export class RenderTextField extends RenderDisplayObject
 
         $poolBoundsObject(filterBounds);
 
-        const cacheStore: CacheStore = $renderPlayer.cacheStore;
-
         // texture is small or renew
         if (this._$isUpdated()) {
-            cacheStore.removeCache(this._$instanceId);
+            $cacheStore.removeCache(this._$instanceId);
             context.cachePosition = null;
             this._$cacheKeys.length = 0;
         }
@@ -555,7 +552,7 @@ export class RenderTextField extends RenderDisplayObject
             || this._$cacheParams[2] !== color_transform[7]
         ) {
             const keys: number[] = $getArray(xScale, yScale);
-            this._$cacheKeys = cacheStore.generateKeys(
+            this._$cacheKeys = $cacheStore.generateKeys(
                 this._$instanceId, keys
             );
             $poolArray(keys);
@@ -565,7 +562,7 @@ export class RenderTextField extends RenderDisplayObject
             this._$cacheParams[2] = color_transform[7];
         }
 
-        context.cachePosition = cacheStore.get(this._$cacheKeys);
+        context.cachePosition = $cacheStore.get(this._$cacheKeys);
         if (!context.cachePosition) {
 
             // resize
@@ -646,7 +643,7 @@ export class RenderTextField extends RenderDisplayObject
 
             // set cache
             context.cachePosition = position;
-            cacheStore.set(this._$cacheKeys, position);
+            $cacheStore.set(this._$cacheKeys, position);
         }
 
         let drawFilter: boolean = false;

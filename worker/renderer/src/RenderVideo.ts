@@ -1,5 +1,5 @@
 import { RenderDisplayObject } from "./RenderDisplayObject";
-import { $renderPlayer, $videos } from "./RenderGlobal";
+import { $videos } from "./RenderGlobal";
 import type { BoundsImpl } from "./interface/BoundsImpl";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { PropertyVideoMessageImpl } from "./interface/PropertyVideoMessageImpl";
@@ -22,7 +22,7 @@ import {
     $OffscreenCanvas,
     $getBoundsObject,
     $getArray,
-    CacheStore,
+    $cacheStore,
     $Number,
     $poolArray,
     $getFloat32Array6
@@ -259,7 +259,6 @@ export class RenderVideo extends RenderDisplayObject
         }
         $poolBoundsObject(filterBounds);
 
-        const cacheStore: CacheStore = $renderPlayer.cacheStore;
         if (!this._$cacheKeys.length
             || this._$cacheParams[0] !== xScale
             || this._$cacheParams[1] !== yScale
@@ -269,7 +268,7 @@ export class RenderVideo extends RenderDisplayObject
             keys[0] = xScale;
             keys[1] = yScale;
 
-            this._$cacheKeys = cacheStore.generateKeys(
+            this._$cacheKeys = $cacheStore.generateKeys(
                 this._$instanceId, keys, color_transform
             );
 
@@ -280,7 +279,7 @@ export class RenderVideo extends RenderDisplayObject
             this._$cacheParams[2] = color_transform[7];
         }
 
-        context.cachePosition = cacheStore.get(this._$cacheKeys);
+        context.cachePosition = $cacheStore.get(this._$cacheKeys);
         if (!context.cachePosition) {
 
             const width: number  = $Math.ceil($Math.abs(this._$xMax - this._$xMin));
@@ -290,7 +289,7 @@ export class RenderVideo extends RenderDisplayObject
                 .createCachePosition(width, height);
 
             context.cachePosition = position;
-            cacheStore.set(this._$cacheKeys, position);
+            $cacheStore.set(this._$cacheKeys, position);
         }
 
         this._$context.drawImage(this._$imageBitmap, 0, 0);

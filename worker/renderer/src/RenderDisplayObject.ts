@@ -24,7 +24,7 @@ import {
     GradientGlowFilter
 } from "@next2d/filters";
 import {
-    CacheStore,
+    $cacheStore,
     $getBoundsObject,
     $poolBoundsObject,
     $getFloat32Array6,
@@ -562,11 +562,10 @@ export class RenderDisplayObject
         const player: RenderPlayer = $renderPlayer;
 
         // キャッシュ削除のタイマーをセット
-        const cacheStore: CacheStore = player.cacheStore;
-        cacheStore.setRemoveTimer(this._$instanceId);
+        $cacheStore.setRemoveTimer(this._$instanceId);
 
         if (this._$loaderInfoId > -1 && this._$characterId) {
-            cacheStore.setRemoveTimer(
+            $cacheStore.setRemoveTimer(
                 `${this._$loaderInfoId}@${this._$characterId}`
             );
         }
@@ -635,9 +634,7 @@ export class RenderDisplayObject
         }
 
         // check status
-        const cache: CachePositionImpl = $renderPlayer
-            .cacheStore
-            .get([this._$instanceId, "f"]);
+        const cache: CachePositionImpl = $cacheStore.get([this._$instanceId, "f"]);
 
         if (!cache) {
             return true;
@@ -785,10 +782,8 @@ export class RenderDisplayObject
         target_texture: WebGLTexture | null = null
     ): CachePositionImpl {
 
-        const cacheStore: CacheStore = $renderPlayer.cacheStore;
-
         const cacheKeys: any[] = $getArray(this._$instanceId, "f");
-        let position: CachePositionImpl | void = cacheStore.get(cacheKeys);
+        let position: CachePositionImpl | void = $cacheStore.get(cacheKeys);
 
         const updated: boolean = this._$isFilterUpdated(matrix, filters, true);
 
@@ -799,7 +794,7 @@ export class RenderDisplayObject
 
         // cache clear
         if (position) {
-            cacheStore.set(cacheKeys, null);
+            $cacheStore.set(cacheKeys, null);
         }
 
         const manager: FrameBufferManager = context.frameBuffer;
@@ -830,7 +825,7 @@ export class RenderDisplayObject
         // 関数先でtextureがreleaseされる
         context.drawTextureFromRect(texture, position);
 
-        cacheStore.set(cacheKeys, position);
+        $cacheStore.set(cacheKeys, position);
         $poolArray(cacheKeys);
 
         return position;

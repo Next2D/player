@@ -12,7 +12,7 @@ import type { PropertyVideoMessageImpl } from "./interface/PropertyVideoMessageI
 import type { RGBAImpl } from "./interface/RGBAImpl";
 import type { FrameBufferManager } from "@next2d/webgl";
 import {
-    CacheStore,
+    $cacheStore,
     $COLOR_ARRAY_IDENTITY,
     $Float32Array,
     $getFloat32Array6,
@@ -33,7 +33,6 @@ import {
 export class RenderPlayer
 {
     private readonly _$instances: Map<number, RenderDisplayObjectImpl<any>>;
-    private readonly _$cacheStore: CacheStore;
     private readonly _$matrix: Float32Array;
     private readonly _$colorTransform: Float32Array;
     private _$context: CanvasToWebGLContext | null;
@@ -55,12 +54,6 @@ export class RenderPlayer
          * @private
          */
         this._$instances = new Map();
-
-        /**
-         * @type {CacheStore}
-         * @private
-         */
-        this._$cacheStore = new CacheStore();
 
         /**
          * @type {Float32Array}
@@ -137,16 +130,6 @@ export class RenderPlayer
     }
 
     /**
-     * @return {CacheStore}
-     * @readonly
-     * @public
-     */
-    get cacheStore (): CacheStore
-    {
-        return this._$cacheStore;
-    }
-
-    /**
      * @return {CanvasToWebGLContext}
      * @readonly
      * @public
@@ -175,7 +158,7 @@ export class RenderPlayer
      */
     stop (): void
     {
-        this._$cacheStore.reset();
+        $cacheStore.reset();
     }
 
     /**
@@ -211,7 +194,7 @@ export class RenderPlayer
         if (gl) {
             const context: CanvasToWebGLContext = new CanvasToWebGLContext(gl, samples);
             this._$context = context;
-            this._$cacheStore.context = context;
+            $cacheStore.context = context;
         }
     }
 
@@ -375,7 +358,7 @@ export class RenderPlayer
         this._$matrix[5] = ty;
 
         this._$stage._$updated = true;
-        this._$cacheStore.reset();
+        $cacheStore.reset();
 
         context.clearInstacedArray();
 

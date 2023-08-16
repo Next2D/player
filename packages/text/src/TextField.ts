@@ -63,7 +63,7 @@ import {
     $RegExp
 } from "@next2d/util";
 import {
-    CacheStore,
+    $cacheStore,
     $doUpdated,
     $clamp,
     $getArray,
@@ -2303,8 +2303,7 @@ export class TextField extends InteractiveObject
         $doUpdated();
 
         // cache clear
-        const player: Player = $currentPlayer();
-        player.cacheStore.removeCache(this._$instanceId);
+        $cacheStore.removeCache(this._$instanceId);
     }
 
     /**
@@ -2785,12 +2784,9 @@ export class TextField extends InteractiveObject
 
         $poolBoundsObject(filterBounds);
 
-        const player: Player = $currentPlayer();
-        const cacheStore: CacheStore = player.cacheStore;
-
         // texture is small or renew
         if (this._$isUpdated()) {
-            cacheStore.removeCache(this._$instanceId);
+            $cacheStore.removeCache(this._$instanceId);
             context.cachePosition = null;
             this._$cacheKeys.length = 0;
         }
@@ -2801,7 +2797,7 @@ export class TextField extends InteractiveObject
             || this._$cacheParams[2] !== color_transform[7]
         ) {
             const keys: number[] = $getArray(xScale, yScale);
-            this._$cacheKeys = cacheStore.generateKeys(
+            this._$cacheKeys = $cacheStore.generateKeys(
                 this._$instanceId, keys
             );
             $poolArray(keys);
@@ -2812,7 +2808,7 @@ export class TextField extends InteractiveObject
         }
 
         const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
-        context.cachePosition = cacheStore.get(this._$cacheKeys);
+        context.cachePosition = $cacheStore.get(this._$cacheKeys);
         if (!context.cachePosition) {
 
             // resize
@@ -2821,7 +2817,7 @@ export class TextField extends InteractiveObject
             const height: number = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
 
             // new canvas
-            const canvas: HTMLCanvasElement = cacheStore.getCanvas();
+            const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
             canvas.width  = width  + lineWidth * 2;
             canvas.height = height + lineWidth * 2;
 
@@ -2891,10 +2887,10 @@ export class TextField extends InteractiveObject
 
             // set cache
             context.cachePosition = position;
-            cacheStore.set(this._$cacheKeys, position);
+            $cacheStore.set(this._$cacheKeys, position);
 
             // destroy cache
-            cacheStore.destroy(ctx);
+            $cacheStore.destroy(ctx);
         }
 
         let drawFilter: boolean = false;

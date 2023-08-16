@@ -144,7 +144,7 @@ ${lower}`
             fs.writeFileSync(
                 utilPath,
                 `${top}
-const $unzipURL = URL.createObjectURL(new Blob(["${worker}"], { "type": "text/javascript" }));
+const $unzipURL: string = URL.createObjectURL(new Blob(["${worker}"], { "type": "text/javascript" }));
 ${lower}`
             );
         }
