@@ -1,7 +1,6 @@
 import type { Stage } from "./Stage";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Sprite } from "./Sprite";
-import type { Player } from "@next2d/core";
 import {
     Event as Next2DEvent,
     EventDispatcher
@@ -34,7 +33,6 @@ import {
     $getEvent,
     $getInstanceId,
     $currentMousePoint,
-    $currentPlayer,
     $poolColorTransform,
     $rendererWorker,
     $poolMatrix,
