@@ -44,13 +44,12 @@ import {
  */
 export class CanvasToWebGLContext
 {
+    public _$offsetX: number;
+    public _$offsetY: number;
     public readonly _$gl: WebGL2RenderingContext;
-    private readonly _$maxTextureSize: number;
-    private readonly _$contextStyle: CanvasToWebGLContextStyle;
     private _$cacheBounds: BoundsImpl;
     private _$matrix: Float32Array;
     private _$cacheAttachment: AttachmentImpl|null;
-    private readonly _$stack: Float32Array[];
     private _$globalAlpha: number;
     private _$imageSmoothingEnabled: boolean;
     private _$globalCompositeOperation: BlendModeImpl;
@@ -60,14 +59,16 @@ export class CanvasToWebGLContext
     private _$clearColorA: number;
     private _$viewportWidth: number;
     private _$viewportHeight: number;
+    private _$cachePosition: CachePositionImpl | null;
+    private _$isLayer: boolean;
+    private readonly _$maxTextureSize: number;
+    private readonly _$contextStyle: CanvasToWebGLContextStyle;
+    private readonly _$stack: Float32Array[];
+    private readonly _$blends: boolean[];
+    private readonly _$positions: BoundsImpl[];
     private readonly _$frameBufferManager: FrameBufferManager;
     private readonly _$path: CanvasToWebGLContextPath;
     private readonly _$grid: CanvasToWebGLContextGrid;
-    public _$offsetX: number;
-    public _$offsetY: number;
-    private readonly _$blends: boolean[];
-    private readonly _$positions: BoundsImpl[];
-    private _$isLayer: boolean;
     private readonly _$shaderList: CanvasToWebGLShaderList;
     private readonly _$gradientLUT: GradientLUTGenerator;
     private readonly _$vao: VertexArrayObjectManager;
@@ -75,7 +76,6 @@ export class CanvasToWebGLContext
     private readonly _$blend: CanvasToWebGLContextBlend;
     private readonly _$maskBounds: BoundsImpl;
     private readonly _$attachmentArray: Array<AttachmentImpl|null>;
-    private _$cachePosition: CachePositionImpl | null;
 
     /**
      * @param {WebGL2RenderingContext} gl
@@ -95,7 +95,7 @@ export class CanvasToWebGLContext
          * @type {number}
          * @private
          */
-        const samples = $Math.min(
+        const samples: number = $Math.min(
             sample,
             gl.getParameter(gl.MAX_SAMPLES)
         );
@@ -206,7 +206,7 @@ export class CanvasToWebGLContext
          * @type {FrameBufferManager}
          * @private
          */
-        this._$frameBufferManager = new FrameBufferManager(gl, samples);
+        this._$frameBufferManager = new FrameBufferManager(gl, this, samples);
 
         /**
          * @type {CanvasToWebGLContextPath}

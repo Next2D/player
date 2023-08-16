@@ -5,6 +5,7 @@ import { $Math } from "@next2d/share";
 import { $RENDER_SIZE } from "./Const";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
+import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
 
 /**
  * @class
@@ -13,11 +14,11 @@ export class FrameBufferManager
 {
     private _$gl: WebGL2RenderingContext;
     private _$objectPool: AttachmentImpl[];
-    private readonly _$frameBuffer: WebGLFramebuffer | null;
-    private readonly _$frameBufferTexture: WebGLFramebuffer | null;
     private _$currentAttachment: AttachmentImpl | null;
     private _$isBinding: boolean;
     private _$isRenderBinding: boolean;
+    private readonly _$frameBuffer: WebGLFramebuffer | null;
+    private readonly _$frameBufferTexture: WebGLFramebuffer | null;
     private readonly _$textureManager: TextureManager;
     private readonly _$stencilBufferPool: StencilBufferPool;
     private readonly _$colorBufferPool: ColorBufferPool;
@@ -29,8 +30,11 @@ export class FrameBufferManager
      * @param {number} samples
      * @constructor
      */
-    constructor (gl: WebGL2RenderingContext, samples: number)
-    {
+    constructor (
+        gl: WebGL2RenderingContext,
+        context: CanvasToWebGLContext,
+        samples: number
+    ) {
         /**
          * @type {WebGL2RenderingContext}
          * @private
@@ -74,7 +78,7 @@ export class FrameBufferManager
          * @type {TextureManager}
          * @private
          */
-        this._$textureManager = new TextureManager(gl);
+        this._$textureManager = new TextureManager(gl, context);
 
         /**
          * @type {StencilBufferPool}

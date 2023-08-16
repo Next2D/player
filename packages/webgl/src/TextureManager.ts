@@ -2,19 +2,21 @@ import { $RENDER_SIZE } from "./Const";
 import { $cacheStore } from "@next2d/share";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
 import type { GridImpl } from "./interface/GridImpl";
+import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
 
 /**
  * @class
  */
 export class TextureManager
 {
+    public _$maxWidth: number;
+    public _$maxHeight: number;
+    private _$objectPoolArea: number;
+    private _$activeTexture: number;
     private readonly _$gl: WebGL2RenderingContext;
     private readonly _$objectPool: WebGLTexture[];
     private readonly _$boundTextures: Array<WebGLTexture | null>;
-    private _$objectPoolArea: number;
-    private _$activeTexture: number;
-    public _$maxWidth: number;
-    public _$maxHeight: number;
+    private readonly _$context: CanvasToWebGLContext;
     private readonly _$atlasNodes: Map<number, GridImpl[]>;
     private readonly _$atlasTextures: WebGLTexture[];
     private readonly _$positionObjectArray: CachePositionImpl[];
@@ -26,8 +28,11 @@ export class TextureManager
      * @constructor
      * @public
      */
-    constructor (gl: WebGL2RenderingContext)
-    {
+    constructor (
+        gl: WebGL2RenderingContext,
+        context: CanvasToWebGLContext
+    ) {
+
         // init setting
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -37,6 +42,12 @@ export class TextureManager
          * @private
          */
         this._$gl = gl;
+
+        /**
+         * @type {CanvasToWebGLContext}
+         * @private
+         */
+        this._$context = context;
 
         /**
          * @type {array}
@@ -335,6 +346,7 @@ export class TextureManager
         // ヒットしない場合は新しいtextureを生成
         const index: number = this._$atlasTextures.length;
         if (index) {
+            this._$context.drawInstacedArray();
             $cacheStore.reset();
             return this.createCachePosition(width, height);
         }
