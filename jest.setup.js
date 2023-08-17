@@ -441,6 +441,16 @@ globalThis.OffscreenCanvasRenderingContext2D = class OffscreenCanvasRenderingCon
 
 };
 
+globalThis.WebGLTexture = class WebGLTexture
+{
+
+};
+
+globalThis.CanvasRenderingContext2D = class CanvasRenderingContext2D
+{
+
+};
+
 globalThis.OffscreenCanvas = class OffscreenCanvas
 {
     getContext ()

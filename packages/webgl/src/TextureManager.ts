@@ -1,15 +1,24 @@
+import { $RENDER_SIZE } from "./Const";
+import type { CachePositionImpl } from "./interface/CachePositionImpl";
+import type { GridImpl } from "./interface/GridImpl";
+
 /**
  * @class
  */
 export class TextureManager
 {
+    public _$maxWidth: number;
+    public _$maxHeight: number;
+    private _$objectPoolArea: number;
+    private _$activeTexture: number;
     private readonly _$gl: WebGL2RenderingContext;
     private readonly _$objectPool: WebGLTexture[];
     private readonly _$boundTextures: Array<WebGLTexture | null>;
-    private _$objectPoolArea: number;
-    private _$activeTexture: number;
-    public _$maxWidth: number;
-    public _$maxHeight: number;
+    private readonly _$atlasNodes: Map<number, GridImpl[]>;
+    private readonly _$atlasTextures: WebGLTexture[];
+    private readonly _$positionObjectArray: CachePositionImpl[];
+    private readonly _$nodeObjectArray: GridImpl[];
+    private readonly _$atlasCacheMap: Map<number, CachePositionImpl[]>;
 
     /**
      * @param {WebGL2RenderingContext} gl
@@ -18,6 +27,11 @@ export class TextureManager
      */
     constructor (gl: WebGL2RenderingContext)
     {
+
+        // init setting
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
         /**
          * @type {WebGL2RenderingContext}
          * @private
@@ -64,8 +78,351 @@ export class TextureManager
          */
         this._$maxHeight = 0;
 
-        this._$gl.pixelStorei(this._$gl.UNPACK_ALIGNMENT, 1);
-        this._$gl.pixelStorei(this._$gl.UNPACK_FLIP_Y_WEBGL, true);
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$atlasTextures = [];
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$atlasCacheMap = new Map();
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$positionObjectArray = [];
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$nodeObjectArray = [];
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$atlasNodes = new Map();
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    createTextureAtlas (): void
+    {
+        const texture: WebGLTexture = this._$gl.createTexture() as NonNullable<WebGLTexture>;
+        texture.width  = $RENDER_SIZE;
+        texture.height = $RENDER_SIZE;
+
+        this._$gl.activeTexture(this._$gl.TEXTURE3);
+        this._$gl.bindTexture(this._$gl.TEXTURE_2D, texture);
+
+        this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_WRAP_S, this._$gl.CLAMP_TO_EDGE);
+        this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_WRAP_T, this._$gl.CLAMP_TO_EDGE);
+        this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MIN_FILTER, this._$gl.NEAREST);
+        this._$gl.texParameteri(this._$gl.TEXTURE_2D, this._$gl.TEXTURE_MAG_FILTER, this._$gl.NEAREST);
+
+        this._$gl.texStorage2D(this._$gl.TEXTURE_2D, 1, this._$gl.RGBA8, $RENDER_SIZE, $RENDER_SIZE);
+        this._$gl.bindTexture(this._$gl.TEXTURE_2D, null);
+
+        if (this._$activeTexture > -1) {
+            this._$gl.activeTexture(this._$activeTexture);
+        }
+
+        // init array
+        const index: number = this._$atlasTextures.length;
+        this._$atlasNodes.set(index, []);
+        this._$atlasCacheMap.set(index, []);
+
+        this._$atlasTextures.push(texture);
+    }
+
+    /**
+     * @param  {number} index
+     * @return {WebGLTexture}
+     * @method
+     * @public
+     */
+    getAtlasTexture (index: number): WebGLTexture
+    {
+        return this._$atlasTextures[index];
+    }
+
+    /**
+     * @param  {number} x
+     * @param  {number} y
+     * @param  {number} w
+     * @param  {number} h
+     * @return {object}
+     * @method
+     * @public
+     */
+    getNode (x: number, y: number, w: number, h: number): GridImpl
+    {
+        const node = this._$nodeObjectArray.length
+            ? this._$nodeObjectArray.pop() as NonNullable<GridImpl>
+            : {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+            };
+
+        node.x = x;
+        node.y = y;
+        node.w = w;
+        node.h = h;
+
+        return node;
+    }
+
+    /**
+     * @param  {number} width
+     * @param  {number} height
+     * @return {object}
+     * @method
+     * @public
+     */
+    createCachePosition (width: number, height: number): CachePositionImpl
+    {
+        const object: CachePositionImpl = this._$positionObjectArray.length
+            ? this._$positionObjectArray.pop() as NonNullable<CachePositionImpl>
+            : {
+                "index": 0,
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+            };
+
+        // init
+        object.x = object.y = 0;
+        object.w = width;
+        object.h = height;
+
+        // search
+        for (const [index, nodes] of this._$atlasNodes) {
+
+            // root node
+            if (!nodes.length) {
+
+                if (width > height) {
+
+                    if ($RENDER_SIZE - width - 1 > 0) {
+                        nodes.push(this.getNode(
+                            width + 1,
+                            0,
+                            $RENDER_SIZE - width - 1,
+                            height
+                        ));
+                    }
+
+                    if ($RENDER_SIZE - height - 1 > 0) {
+                        nodes.push(this.getNode(
+                            0,
+                            height + 1,
+                            $RENDER_SIZE,
+                            $RENDER_SIZE - height - 1
+                        ));
+                    }
+
+                } else {
+                    if ($RENDER_SIZE - height - 1 > 0) {
+                        nodes.push(this.getNode(
+                            0,
+                            height + 1,
+                            width,
+                            $RENDER_SIZE - height - 1
+                        ));
+                    }
+
+                    if ($RENDER_SIZE - width - 1 > 0) {
+                        nodes.push(this.getNode(
+                            width + 1,
+                            0,
+                            $RENDER_SIZE - width - 1,
+                            $RENDER_SIZE
+                        ));
+                    }
+                }
+
+                object.index = index;
+
+                const caches = this._$atlasCacheMap.get(object.index) as NonNullable<CachePositionImpl[]>;
+                caches.push(object);
+
+                return object;
+            }
+
+            const length: number = nodes.length;
+            for (let idx = 0; idx < length; ++idx) {
+
+                const node = nodes[idx];
+
+                // no hit
+                if (width > node.w || height > node.h) {
+                    continue;
+                }
+
+                object.index = index;
+                object.x = node.x;
+                object.y = node.y;
+
+                const caches = this._$atlasCacheMap.get(object.index) as NonNullable<CachePositionImpl[]>;
+                caches.push(object);
+
+                // division
+                if (node.w !== width || node.h !== height) {
+
+                    if (width > height) {
+
+                        if (node.h - height - 1 > 0) {
+                            nodes.push(this.getNode(
+                                node.x,
+                                node.y + height + 1,
+                                node.w,
+                                node.h - height - 1
+                            ));
+                        }
+
+                        if (node.w - width - 1 > 0) {
+                            node.x = node.x + width + 1;
+                            node.w = node.w - width - 1;
+                            node.h = height;
+                        } else {
+                            nodes.splice(idx, 1);
+                            this._$nodeObjectArray.push(node);
+                        }
+
+                    } else {
+
+                        if (node.w - width - 1 > 0) {
+                            nodes.push(this.getNode(
+                                node.x + width + 1,
+                                node.y,
+                                node.w - width - 1,
+                                node.h
+                            ));
+                        }
+
+                        if (node.h - height - 1 > 0) {
+                            node.y = node.y + height + 1;
+                            node.w = width;
+                            node.h = node.h - height - 1;
+                        } else {
+                            nodes.splice(idx, 1);
+                            this._$nodeObjectArray.push(node);
+                        }
+                    }
+
+                } else {
+
+                    nodes.splice(idx, 1);
+                    this._$nodeObjectArray.push(node);
+
+                }
+
+                return object;
+            }
+        }
+
+        // ヒットしない場合は新しいtextureを生成
+        const index: number = this._$atlasTextures.length;
+        this.createTextureAtlas();
+
+        const nodes: GridImpl[] = this._$atlasNodes.get(index) as NonNullable<GridImpl[]>;
+        if (width > height) {
+
+            if ($RENDER_SIZE - width - 1 > 0) {
+                nodes.push(this.getNode(
+                    width + 1,
+                    0,
+                    $RENDER_SIZE - width - 1,
+                    height
+                ));
+            }
+
+            if ($RENDER_SIZE - height - 1 > 0) {
+                nodes.push(this.getNode(
+                    0,
+                    height + 1,
+                    $RENDER_SIZE,
+                    $RENDER_SIZE - height - 1
+                ));
+            }
+
+        } else {
+            if ($RENDER_SIZE - height - 1 > 0) {
+                nodes.push(this.getNode(
+                    0,
+                    height + 1,
+                    width,
+                    $RENDER_SIZE - height - 1
+                ));
+            }
+
+            if ($RENDER_SIZE - width - 1 > 0) {
+                nodes.push(this.getNode(
+                    width + 1,
+                    0,
+                    $RENDER_SIZE - width - 1,
+                    $RENDER_SIZE
+                ));
+            }
+        }
+
+        object.index = index;
+        const caches: CachePositionImpl[] = this._$atlasCacheMap.get(object.index) as NonNullable<CachePositionImpl[]>;
+        caches.push(object);
+
+        return object;
+    }
+
+    /**
+     * @param {object}
+     * @method
+     * @public
+     */
+    releasePosition (position: CachePositionImpl): void
+    {
+        if (!this._$atlasNodes.has(position.index)) {
+            return ;
+        }
+
+        // 先頭にrootとして再登録
+        this
+            ._$atlasNodes
+            .get(position.index)
+            ?.unshift(this.getNode(
+                position.x,
+                position.y,
+                position.w,
+                position.h
+            ));
+
+        // pool
+        this._$positionObjectArray.push(position);
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    clearCache (): void
+    {
+        for (const caches of this._$atlasCacheMap.values()) {
+            caches.length = 0;
+        }
+        for (const caches of this._$atlasNodes.values()) {
+            caches.length = 0;
+        }
     }
 
     /**
@@ -84,8 +441,6 @@ export class TextureManager
         texture.area      = 0;
         texture.dirty     = true;
         texture.smoothing = true;
-        texture._$offsetX = 0;
-        texture._$offsetY = 0;
 
         this.bind0(texture, false);
 
@@ -141,7 +496,7 @@ export class TextureManager
      */
     create (
         width: number, height: number,
-        pixels: Uint8Array|null = null,
+        pixels: Uint8Array | null = null,
         premultiplied_alpha: boolean = false,
         flip_y: boolean = true
     ): WebGLTexture {

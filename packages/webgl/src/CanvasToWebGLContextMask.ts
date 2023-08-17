@@ -1,12 +1,10 @@
 import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
 import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
-import type { FrameBufferManager } from "./FrameBufferManager";
 import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { ClipObjectImpl } from "./interface/ClipObjectImpl";
-import type { BoundsImpl } from "./interface/BoundsImpl";
 import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
 import { $poolArray } from "@next2d/share";
 
@@ -140,41 +138,6 @@ export class CanvasToWebGLContextMask
      * @method
      * @private
      */
-    _$endClip (): void
-    {
-        const manager: FrameBufferManager = this._$context.frameBuffer;
-
-        const currentAttachment: AttachmentImpl = manager.currentAttachment as NonNullable<AttachmentImpl>;
-        const texture: WebGLTexture = manager.getTextureFromCurrentAttachment();
-
-        this._$context._$bind(this._$context.cacheAttachment);
-        this._$context.cacheAttachment = null;
-
-        // blend off
-        this._$context.blend.disable();
-
-        const cacheBounds: BoundsImpl = this._$context.cacheBounds;
-
-        this._$context.reset();
-        this._$context.setTransform(1, 0, 0, 1, 0, 0);
-        this._$context.drawImage(
-            texture,
-            cacheBounds.xMin, cacheBounds.yMin,
-            texture.width, texture.height
-        );
-
-        // blend restart
-        this._$context.blend.enable();
-
-        // pool
-        manager.releaseAttachment(currentAttachment, true);
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
     _$enterClip ()
     {
         if (!this._$currentClip) {
@@ -192,7 +155,7 @@ export class CanvasToWebGLContextMask
             throw new Error("mask currentAttachment is null.");
         }
 
-        currentAttachment.mask  = true;
+        currentAttachment.mask = true;
         ++currentAttachment.clipLevel;
     }
 
@@ -270,14 +233,7 @@ export class CanvasToWebGLContextMask
 
         // end clip
         if (!currentAttachment.clipLevel) {
-
-            this._$context._$clearRectStencil(
-                0, 0, currentAttachment.width, currentAttachment.height
-            );
-
-            if (this._$context.cacheAttachment) {
-                this._$endClip();
-            }
+            this._$context._$clearRectStencil();
             return;
         }
 

@@ -86,6 +86,11 @@ export class GradientLUTGenerator
             .frameBuffer
             .currentAttachment;
 
+        const cachePosition = this._$context.cachePosition;
+        if (cachePosition) {
+            this._$gl.disable(this._$gl.SCISSOR_TEST);
+        }
+
         this._$context._$bind(this._$attachment);
 
         const stopsLength: number = stops.length;
@@ -122,6 +127,10 @@ export class GradientLUTGenerator
 
         if (!this._$attachment.texture) {
             throw new Error("the texture is null.");
+        }
+
+        if (cachePosition) {
+            this._$context.bindRenderBuffer(cachePosition);
         }
 
         return this._$attachment.texture;

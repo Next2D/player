@@ -1,12 +1,8 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import type { Player } from "@next2d/core";
-import type {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
+import type { CanvasToWebGLContext } from "@next2d/webgl";
 import type {
     DisplayObjectImpl,
-    AttachmentImpl,
     PropertyBitmapDataMessageImpl
 } from "@next2d/interface";
 import type {
@@ -14,12 +10,12 @@ import type {
     ColorTransform
 } from "@next2d/geom";
 import {
-    CacheStore,
     $COLOR_ARRAY_IDENTITY,
     $getArray,
     $MATRIX_ARRAY_IDENTITY,
     $multiplicationMatrix,
-    $poolArray
+    $poolArray,
+    $cacheStore
 } from "@next2d/share";
 import {
     $getInstanceId,
@@ -48,10 +44,10 @@ export class BitmapData
     private readonly _$instanceId: number;
     private _$width: number;
     private _$height: number;
-    _$buffer: Uint8Array|null;
-    private _$image: HTMLImageElement|null;
-    private _$canvas: HTMLCanvasElement|null;
-    private _$pixelBuffer: WebGLBuffer|null;
+    _$buffer: Uint8Array | null;
+    private _$image: HTMLImageElement | null;
+    private _$canvas: HTMLCanvasElement | null;
+    private _$texture: WebGLTexture | null;
 
     /**
      * @param {number} [width=0]
@@ -104,11 +100,11 @@ export class BitmapData
         this._$canvas = null;
 
         /**
-         * @type {WebGLBuffer}
+         * @type {WebGLTexture}
          * @type {null}
          * @private
          */
-        this._$pixelBuffer = null;
+        this._$texture = null;
     }
 
     /**
@@ -168,6 +164,19 @@ export class BitmapData
     }
 
     /**
+     * @description ビットマップイメージのID
+     *              Bitmap image ID.
+     *
+     * @return  {number}
+     * @readonly
+     * @public
+     */
+    get instanceId (): number
+    {
+        return this._$instanceId;
+    }
+
+    /**
      * @description ビットマップイメージの高さ（ピクセル単位）です。
      *              The height of the bitmap image in pixels.
      *
@@ -193,7 +202,19 @@ export class BitmapData
     }
     set buffer (buffer: Uint8Array | null)
     {
+        this._$canvas = null;
+        this._$image  = null;
         this._$buffer = buffer;
+
+        if (this._$texture) {
+            const player: Player = $currentPlayer();
+            const context: CanvasToWebGLContext | null = player.context;
+            if (context) {
+                context.frameBuffer.releaseTexture(this._$texture);
+            }
+
+            this._$texture = null;
+        }
     }
 
     /**
@@ -210,7 +231,18 @@ export class BitmapData
     set image (image: HTMLImageElement|null)
     {
         this._$canvas = null;
+        this._$buffer = null;
         this._$image  = image;
+
+        if (this._$texture) {
+            const player: Player = $currentPlayer();
+            const context: CanvasToWebGLContext | null = player.context;
+            if (context) {
+                context.frameBuffer.releaseTexture(this._$texture);
+            }
+
+            this._$texture = null;
+        }
 
         if (!image) {
             return ;
@@ -234,7 +266,17 @@ export class BitmapData
     set canvas (canvas: HTMLCanvasElement|null)
     {
         this._$image  = null;
+        this._$buffer = null;
         this._$canvas = canvas;
+
+        if (this._$texture) {
+            const player: Player = $currentPlayer();
+            const context: CanvasToWebGLContext | null = player.context;
+            if (context) {
+                context.frameBuffer.releaseTexture(this._$texture);
+            }
+            this._$texture = null;
+        }
 
         if (!canvas) {
             return ;
@@ -272,10 +314,7 @@ export class BitmapData
         const bitmapData: BitmapData = new BitmapData(this.width, this.height);
         if (this._$image !== null || this._$canvas !== null) {
 
-            const player: Player = $currentPlayer();
-            const cacheStore: CacheStore = player.cacheStore;
-
-            const canvas: HTMLCanvasElement = cacheStore.getCanvas();
+            const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
             canvas.width  = this.width;
             canvas.height = this.height;
 
@@ -321,27 +360,31 @@ export class BitmapData
             throw new Error("the context is null.");
         }
 
+        if (this._$texture !== null) {
+            return this._$texture;
+        }
+
         if (this._$image !== null) {
-            return context
+            this._$texture = context
                 .frameBuffer
                 .createTextureFromImage(this._$image);
         }
 
         if (this._$canvas !== null) {
-            return context
+            this._$texture = context
                 .frameBuffer
                 .createTextureFromCanvas(this._$canvas);
         }
 
         if (this._$buffer !== null) {
-            return context
+            this._$texture = context
                 .frameBuffer
                 .createTextureFromPixels(
                     width, height, this._$buffer, true
                 );
         }
 
-        return null;
+        return this._$texture;
     }
 
     /**
@@ -397,7 +440,7 @@ export class BitmapData
         }
 
         if (!canvas) {
-            canvas = player.cacheStore.getCanvas();
+            canvas = $cacheStore.getCanvas();
         }
 
         if ($rendererWorker) {
@@ -470,12 +513,6 @@ export class BitmapData
                 throw new Error("the context is null.");
             }
 
-            const manager: FrameBufferManager = context.frameBuffer;
-
-            const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-
-            context._$bind(player._$attachment);
-
             // reset
             context.reset();
             context.setTransform(1, 0, 0, 1, 0, 0);
@@ -484,18 +521,10 @@ export class BitmapData
 
             source._$draw(context, tMatrix, colorTransform);
 
-            const texture: WebGLTexture = manager
-                .getTextureFromCurrentAttachment();
-
-            // reset and draw to main canvas
-            manager.unbind();
-
-            context.reset();
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context.clearRect(0, 0, texture.width + 1, texture.height + 1);
-            context.drawImage(texture,
-                0, 0, texture.width, texture.height
-            );
+            context.drawInstacedArray();
+            context
+                .frameBuffer
+                .transferToMainTexture();
 
             canvas.width  = width;
             canvas.height = height;
@@ -507,10 +536,6 @@ export class BitmapData
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, width, height);
             ctx.drawImage(player.canvas, 0, 0);
-
-            if (currentAttachment) {
-                context._$bind(currentAttachment);
-            }
 
             if (callback) {
                 callback(canvas);

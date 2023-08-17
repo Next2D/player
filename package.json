@@ -1,6 +1,6 @@
 {
   "name": "@next2d/player",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "description": "Experience the fast and beautiful anti-aliased rendering of WebGL. You can create rich, interactive graphics, cross-platform applications and games without worrying about browser or device compatibility.",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
@@ -19,7 +19,7 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "webpack serve",
+    "start": "tsc && node ./scripts/build.js && webpack serve",
     "lint": "eslint src/**/*.ts packages/**/*.ts worker/**/*.ts",
     "publish:dist": "tsc && node ./scripts/publish.js",
     "clean": "node ./scripts/clean.js",

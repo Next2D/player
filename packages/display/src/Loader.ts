@@ -12,7 +12,6 @@ import {
 import type { Player } from "@next2d/core";
 import type {
     NoCodeDataZlibImpl,
-    UnzipQueueImpl,
     NoCodeDataImpl,
     ParentImpl,
     MovieClipCharacterImpl
@@ -229,16 +228,14 @@ export class Loader extends DisplayObjectContainer
         if (199 < target.status && 400 > target.status) {
 
             if (loaderInfo.format === "json") {
+
                 const json: NoCodeDataZlibImpl | NoCodeDataImpl = target.response;
 
                 if (json.type === "zlib") {
 
                     if ($useUnzipWorker()) {
 
-                        $unzipQueues.push({
-                            "json": json,
-                            "scope": this
-                        });
+                        $unzipQueues.push(json);
 
                         return ;
                     }
@@ -248,7 +245,7 @@ export class Loader extends DisplayObjectContainer
                     const unzipWorker = $getUnzipWorker();
 
                     const buffer: Uint8Array = new Uint8Array(json.buffer);
-                    unzipWorker.onmessage = async (event: MessageEvent) =>
+                    unzipWorker.onmessage = (event: MessageEvent) =>
                     {
                         this._$unzipHandler(event);
                     };
@@ -262,7 +259,12 @@ export class Loader extends DisplayObjectContainer
 
             } else {
 
-                throw new Error("LoaderInfo format is `json`");
+                if (loaderInfo.willTrigger(IOErrorEvent.IO_ERROR)) {
+                    loaderInfo.dispatchEvent(new IOErrorEvent(
+                        IOErrorEvent.IO_ERROR, false, false,
+                        "LoaderInfo format is `json`"
+                    ));
+                }
 
             }
 
@@ -291,18 +293,18 @@ export class Loader extends DisplayObjectContainer
 
         if ($unzipQueues.length) {
 
-            const object: UnzipQueueImpl | void = $unzipQueues.pop();
+            const object: NoCodeDataZlibImpl | void = $unzipQueues.pop();
             if (!object) {
                 return ;
             }
 
-            const buffer: Uint8Array = new Uint8Array(object.json.buffer);
+            const buffer: Uint8Array = new Uint8Array(object.buffer);
 
             const unzipWorker = $getUnzipWorker();
 
             unzipWorker.onmessage = (event: MessageEvent) =>
             {
-                object.scope._$unzipHandler(event);
+                this._$unzipHandler(event);
             };
             unzipWorker.postMessage(buffer, [buffer.buffer]);
 

@@ -71,8 +71,8 @@ import {
 export class Transform
 {
     private readonly _$displayObject: DisplayObjectImpl<any>;
-    private _$matrix: Matrix|null;
-    private _$colorTransform: ColorTransform|null;
+    public _$matrix: Matrix|null;
+    public _$colorTransform: ColorTransform|null;
     public _$blendMode: BlendModeImpl|null;
     public _$filters: FilterArrayImpl|null;
 
@@ -189,9 +189,8 @@ export class Transform
             return this._$colorTransform._$clone();
         }
 
-        const placeObject: PlaceObjectImpl | null = this
-            ._$displayObject
-            ._$getPlaceObject();
+        const displayObject = this._$displayObject;
+        const placeObject: PlaceObjectImpl | null = displayObject._$placeObject || displayObject._$getPlaceObject();
 
         if (placeObject && placeObject.colorTransform) {
             const buffer: number[] | Float32Array = placeObject.colorTransform;
@@ -262,9 +261,8 @@ export class Transform
             return this._$matrix._$clone();
         }
 
-        const placeObject: PlaceObjectImpl | null = this
-            ._$displayObject
-            ._$getPlaceObject();
+        const displayObject = this._$displayObject;
+        const placeObject: PlaceObjectImpl | null = displayObject._$placeObject || displayObject._$getPlaceObject();
 
         if (placeObject && placeObject.matrix) {
             const buffer: number[] | Float32Array = placeObject.matrix;
@@ -364,9 +362,8 @@ export class Transform
             return this._$matrix._$matrix;
         }
 
-        const placeObject: PlaceObjectImpl | null = this
-            ._$displayObject
-            ._$getPlaceObject();
+        const displayObject = this._$displayObject;
+        const placeObject: PlaceObjectImpl | null = displayObject._$placeObject || displayObject._$getPlaceObject();
 
         if (placeObject && placeObject.matrix) {
             if ($Array.isArray(placeObject.matrix)) {
@@ -397,9 +394,8 @@ export class Transform
             return this._$colorTransform._$colorTransform;
         }
 
-        const placeObject: PlaceObjectImpl | null = this
-            ._$displayObject
-            ._$getPlaceObject();
+        const displayObject = this._$displayObject;
+        const placeObject: PlaceObjectImpl | null = displayObject._$placeObject || displayObject._$getPlaceObject();
 
         if (placeObject && placeObject.colorTransform) {
             if ($Array.isArray(placeObject.colorTransform)) {
@@ -434,9 +430,8 @@ export class Transform
         blend_mode: BlendModeImpl | "" = ""
     ): void {
 
-        const placeObject: PlaceObjectImpl | null = this
-            ._$displayObject
-            ._$getPlaceObject();
+        const displayObject = this._$displayObject;
+        const placeObject: PlaceObjectImpl | null = displayObject._$placeObject || displayObject._$getPlaceObject();
 
         // Matrix
         this._$setMatrix(matrix, placeObject);

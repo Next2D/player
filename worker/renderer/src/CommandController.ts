@@ -6,7 +6,8 @@ import {
 import {
     $MATRIX_ARRAY_IDENTITY,
     $COLOR_ARRAY_IDENTITY,
-    $OffscreenCanvas
+    $OffscreenCanvas,
+    $cacheStore
 } from "@next2d/share";
 
 /**
@@ -45,7 +46,7 @@ export class CommandController
      * @method
      * @public
      */
-    execute ()
+    execute (): void
     {
         this.state = "active";
 
@@ -143,7 +144,7 @@ export class CommandController
                     break;
 
                 case "removeCache":
-                    $renderPlayer.cacheStore.removeCache(object.id);
+                    $cacheStore.removeCache(object.id);
                     break;
 
                 case "bitmapDraw":

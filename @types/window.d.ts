@@ -35,13 +35,10 @@ declare global {
         area: number;
         dirty: boolean;
         smoothing: boolean;
-        layerWidth: number;
-        layerHeight: number;
-        matrix: string | null;
-        colorTransform: string | null;
-        filterState: boolean | null;
-        _$offsetX: number;
-        _$offsetY: number;
+        filterState: boolean;
+        matrix: string;
+        offsetX: number;
+        offsetY: number;
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -57,6 +54,11 @@ declare global {
         height: number;
         area: number;
         dirty: boolean;
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    interface WebGLBuffer {
+        length: number;
     }
 
     // eslint-disable-next-line no-unused-vars

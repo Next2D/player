@@ -152,7 +152,6 @@ export class CanvasToWebGLContextStyle
         }
 
         if (this._$fillStyle instanceof CanvasPatternToWebGL) {
-            this._$fillStyle.dispose();
             this._$fillStyle = $getFloat32Array4(1, 1, 1, 1);
             return ;
         }
@@ -174,7 +173,6 @@ export class CanvasToWebGLContextStyle
         }
 
         if (this._$strokeStyle instanceof CanvasPatternToWebGL) {
-            this._$strokeStyle.dispose();
             this._$strokeStyle = $getFloat32Array4(1, 1, 1, 1);
             return ;
         }

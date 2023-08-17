@@ -1,4 +1,3 @@
-import { CacheStore } from "@next2d/share";
 import {
     Stage,
     MovieClip
@@ -35,7 +34,6 @@ import {
     Rectangle
 } from "@next2d/geom";
 import {
-    $devicePixelRatio,
     $document,
     $window,
     $rendererWorker,
@@ -77,7 +75,11 @@ import {
     $requestAnimationFrame,
     $cancelAnimationFrame,
     $poolArray,
-    $clamp
+    $clamp,
+    $devicePixelRatio,
+    $setDevicePixelRatio,
+    $cacheStore,
+    CacheStore
 } from "@next2d/share";
 
 /**
@@ -89,7 +91,6 @@ import {
 export class Player
 {
     private readonly _$stage: Stage;
-    private readonly _$cacheStore: CacheStore;
     private _$mode: PlayerModeImpl;
     public _$actionOffset: number;
     public _$actions: MovieClip[];
@@ -103,7 +104,6 @@ export class Player
     public _$stopFlag: boolean;
     private _$startTime: number;
     private _$fps: number;
-    private _$isLoad: boolean;
     public _$loadStatus: number;
     public _$width: number;
     public _$height: number;
@@ -144,18 +144,15 @@ export class Player
      */
     constructor ()
     {
+        // init
+        $setDevicePixelRatio(window.devicePixelRatio);
+
         /**
          * @type {Stage}
          * @private
          */
         this._$stage = new Stage();
         this._$stage._$player = this;
-
-        /**
-         * @type {CacheStore}
-         * @private
-         */
-        this._$cacheStore = new CacheStore();
 
         /**
          * @type {string}
@@ -238,13 +235,6 @@ export class Player
          * @private
          */
         this._$fps = 16;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$isLoad = false;
 
         /**
          * @type {number}
@@ -503,6 +493,16 @@ export class Player
     }
 
     /**
+     * @return {CacheStore}
+     * @readonly
+     * @public
+     */
+    get cacheStore (): CacheStore
+    {
+        return $cacheStore;
+    }
+
+    /**
      * @type {HTMLCanvasElement}
      * @readonly
      * @public
@@ -520,17 +520,6 @@ export class Player
     get broadcastEvents (): Map<string, EventListenerImpl[]>
     {
         return this._$broadcastEvents;
-    }
-
-    /**
-     * @member {CacheStore}
-     * @return {CacheStore}
-     * @readonly
-     * @public
-     */
-    get cacheStore (): CacheStore
-    {
-        return this._$cacheStore;
     }
 
     /**
@@ -741,7 +730,7 @@ export class Player
         this._$timerId  = -1;
 
         SoundMixer.stopAll();
-        this._$cacheStore.reset();
+        $cacheStore.reset();
 
         if ($rendererWorker) {
             $rendererWorker.postMessage({
@@ -758,7 +747,7 @@ export class Player
      */
     removeCache (id: string): void
     {
-        this._$cacheStore.removeCache(id);
+        $cacheStore.removeCache(id);
         if ($rendererWorker) {
             $rendererWorker.postMessage({
                 "command": "removeCache",
@@ -1134,7 +1123,7 @@ export class Player
                     gl, this._$getSamples()
                 );
 
-                this._$cacheStore.context = this._$context;
+                $cacheStore.context = this._$context;
 
             } else {
                 alert("WebGL setting is off. Please turn the setting on.");
@@ -1302,10 +1291,6 @@ export class Player
 
         if (div) {
 
-            // cache reset
-            this._$stage._$doChanged();
-            this._$cacheStore.reset();
-
             const parent: HTMLElement | null = div.parentElement;
             if (!parent) {
                 throw new Error("the parentElement is null.");
@@ -1355,6 +1340,15 @@ export class Player
 
             width  *= $devicePixelRatio;
             height *= $devicePixelRatio;
+
+            // no resize
+            if (this._$width === width && this._$height === height) {
+                return ;
+            }
+
+            // cache reset
+            this._$stage._$doChanged();
+            $cacheStore.reset();
 
             // params
             this._$scale  = scale;
@@ -1472,10 +1466,12 @@ export class Player
 
         } else {
 
-            const context = this._$context;
+            const context: CanvasToWebGLContext | null = this._$context;
             if (!context) { // unit test
                 return ;
             }
+
+            context.clearInstacedArray();
 
             this._$canvas.width  = width;
             this._$canvas.height = height;
@@ -1489,10 +1485,12 @@ export class Player
             }
 
             this._$attachment = manager
-                .createCacheAttachment(width, height, false);
+                .createCacheAttachment(width, height, true);
 
             // update cache max size
             context.setMaxSize(width, height);
+
+            context._$bind(this._$attachment);
         }
     }
 
@@ -1992,8 +1990,6 @@ export class Player
             return ;
         }
 
-        context._$bind(this._$attachment);
-
         // reset
         context.reset();
         context.setTransform(1, 0, 0, 1, 0, 0);
@@ -2009,20 +2005,10 @@ export class Player
         // stage end
         this._$stage._$updated = false;
 
-        const manager: FrameBufferManager = context.frameBuffer;
-        const texture: WebGLTexture = manager
-            .getTextureFromCurrentAttachment();
-
-        manager.unbind();
-
-        // reset and draw to main canvas
-        context.reset();
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.clearRect(0, 0, this._$width, this._$height);
-        context.drawImage(texture, 0, 0, this._$width, this._$height);
-
-        // re bind
-        context._$bind(this._$attachment);
+        context.drawInstacedArray();
+        context
+            .frameBuffer
+            .transferToMainTexture();
     }
 
     /**

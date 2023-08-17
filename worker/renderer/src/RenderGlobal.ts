@@ -5,22 +5,6 @@ import { RenderDisplayObjectContainer } from "./RenderDisplayObjectContainer";
 import { RenderVideo } from "./RenderVideo";
 
 /**
- * @type {number}
- * @public
- */
-export let $devicePixelRatio = 2;
-
-/**
- * @param {number} device_pixel_ratio
- * @method
- * @public
- */
-export const $setDevicePixelRatio = (device_pixel_ratio: number): void =>
-{
-    $devicePixelRatio = device_pixel_ratio;
-};
-
-/**
  * @type {boolean}
  * @public
  */

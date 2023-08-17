@@ -10,23 +10,24 @@ import { CanvasToWebGLContextBlend } from "./CanvasToWebGLContextBlend";
 import { CanvasPatternToWebGL } from "./CanvasPatternToWebGL";
 import { CanvasGradientToWebGL } from "./CanvasGradientToWebGL";
 import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
+import { $setRenderSize } from "./Const";
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import type { GradientShapeShaderVariantCollection } from "./shader/variants/GradientShapeShaderVariantCollection";
 import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { FilterShaderVariantCollection } from "./shader/variants/FilterShaderVariantCollection";
-import {
-    AttachmentImpl,
-    BoundsImpl,
-    BlendModeImpl,
-    IndexRangeImpl,
-    PointImpl,
-    VerticesImpl,
-    InterpolationMethodImpl,
-    SpreadMethodImpl,
-    CapsStyleImpl,
-    JointStyleImpl
-} from "@next2d/interface";
+import type { BlendShaderVariantCollection } from "./shader/variants/BlendShaderVariantCollection";
+import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { BlendModeImpl } from "./interface/BlendModeImpl";
+import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
+import type { PointImpl } from "./interface/PointImpl";
+import type { VerticesImpl } from "./interface/VerticesImpl";
+import type { InterpolationMethodImpl } from "./interface/InterpolationMethodImpl";
+import type { SpreadMethodImpl } from "./interface/SpreadMethodImpl";
+import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
+import type { JointStyleImpl } from "./interface/JointStyleImpl";
+import type { CachePositionImpl } from "./interface/CachePositionImpl";
 import {
     $Math,
     $getFloat32Array9,
@@ -34,7 +35,6 @@ import {
     $clamp,
     $poolArray,
     $inverseMatrix,
-    $getFloat32Array6,
     $poolFloat32Array9,
     $poolBoundsObject,
     $getBoundsObject
@@ -45,13 +45,12 @@ import {
  */
 export class CanvasToWebGLContext
 {
+    public _$offsetX: number;
+    public _$offsetY: number;
     public readonly _$gl: WebGL2RenderingContext;
-    private readonly _$maxTextureSize: number;
-    private readonly _$contextStyle: CanvasToWebGLContextStyle;
     private _$cacheBounds: BoundsImpl;
     private _$matrix: Float32Array;
     private _$cacheAttachment: AttachmentImpl|null;
-    private readonly _$stack: Float32Array[];
     private _$globalAlpha: number;
     private _$imageSmoothingEnabled: boolean;
     private _$globalCompositeOperation: BlendModeImpl;
@@ -61,21 +60,22 @@ export class CanvasToWebGLContext
     private _$clearColorA: number;
     private _$viewportWidth: number;
     private _$viewportHeight: number;
+    private _$cachePosition: CachePositionImpl | null;
+    private _$isLayer: boolean;
+    private readonly _$maxTextureSize: number;
+    private readonly _$contextStyle: CanvasToWebGLContextStyle;
+    private readonly _$stack: Float32Array[];
+    private readonly _$blends: boolean[];
+    private readonly _$positions: BoundsImpl[];
     private readonly _$frameBufferManager: FrameBufferManager;
     private readonly _$path: CanvasToWebGLContextPath;
     private readonly _$grid: CanvasToWebGLContextGrid;
-    public _$offsetX: number;
-    public _$offsetY: number;
-    private readonly _$blends: boolean[];
-    private readonly _$positions: BoundsImpl[];
-    private _$isLayer: boolean;
     private readonly _$shaderList: CanvasToWebGLShaderList;
     private readonly _$gradientLUT: GradientLUTGenerator;
     private readonly _$vao: VertexArrayObjectManager;
     private readonly _$mask: CanvasToWebGLContextMask;
     private readonly _$blend: CanvasToWebGLContextBlend;
-    private readonly _$maskBufferArray: Array<AttachmentImpl|null>;
-    private readonly _$maskBoundsArray: BoundsImpl[];
+    private readonly _$maskBounds: BoundsImpl;
     private readonly _$attachmentArray: Array<AttachmentImpl|null>;
 
     /**
@@ -86,6 +86,8 @@ export class CanvasToWebGLContext
      */
     constructor (gl: WebGL2RenderingContext, sample: number)
     {
+        $setRenderSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
+
         /**
          * @type {WebGL2RenderingContext}
          * @private
@@ -96,7 +98,7 @@ export class CanvasToWebGLContext
          * @type {number}
          * @private
          */
-        const samples = $Math.min(
+        const samples: number = $Math.min(
             sample,
             gl.getParameter(gl.MAX_SAMPLES)
         );
@@ -276,7 +278,7 @@ export class CanvasToWebGLContext
          * @type {CanvasToWebGLContextMask}
          * @private
          */
-        this._$mask  = new CanvasToWebGLContextMask(this, gl);
+        this._$mask = new CanvasToWebGLContextMask(this, gl);
 
         /**
          * @type {CanvasToWebGLContextBlend}
@@ -288,19 +290,33 @@ export class CanvasToWebGLContext
          * @type {array}
          * @private
          */
-        this._$maskBufferArray = [];
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$maskBoundsArray = [];
-
-        /**
-         * @type {array}
-         * @private
-         */
         this._$attachmentArray = [];
+
+        /**
+         * @type {object}
+         * @private
+         */
+        this._$maskBounds = $getBoundsObject(0, 0, 0, 0);
+
+        /**
+         * @type {object}
+         * @default null
+         * @private
+         */
+        this._$cachePosition = null;
+    }
+
+    /**
+     * @member {object}
+     * @public
+     */
+    get cachePosition (): CachePositionImpl | null
+    {
+        return this._$cachePosition;
+    }
+    set cachePosition (cache_position: CachePositionImpl | null)
+    {
+        this._$cachePosition = cache_position;
     }
 
     /**
@@ -567,6 +583,192 @@ export class CanvasToWebGLContext
     }
 
     /**
+     * @description 描画用のbufferをbind
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawInstacedArray (): void
+    {
+        this.blend.drawInstacedArray();
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    clearInstacedArray (): void
+    {
+        this.blend.clearInstacedArray();
+    }
+
+    /**
+     * @description 描画用のbufferをbind
+     *
+     * @param  {object} position
+     * @return {void}
+     * @method
+     * @public
+     */
+    bindRenderBuffer (position: CachePositionImpl): void
+    {
+        this
+            ._$frameBufferManager
+            .bindRenderBuffer();
+
+        // 初期化
+        this._$gl.clearColor(0, 0, 0, 0);
+        this._$gl.clear(this._$gl.COLOR_BUFFER_BIT | this._$gl.STENCIL_BUFFER_BIT);
+
+        // 描画領域をあらためて設定
+        this._$viewportWidth  = position.w;
+        this._$viewportHeight = position.h;
+        this._$gl.viewport(position.x, position.y, position.w, position.h);
+
+        this._$gl.enable(this._$gl.SCISSOR_TEST);
+        this._$gl.scissor(
+            position.x, position.y,
+            position.w, position.h
+        );
+    }
+
+    /**
+     * @param  {object} position
+     * @return {WebGLTexture}
+     * @method
+     * @public
+     */
+    getTextureFromRect (position: CachePositionImpl): WebGLTexture
+    {
+        const manager: FrameBufferManager = this._$frameBufferManager;
+
+        const atlasTexture: WebGLTexture = manager
+            .textureManager
+            .getAtlasTexture(position.index);
+
+        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+
+        const attachment: AttachmentImpl = manager
+            .createTextureAttachment(
+                position.w, position.h
+            );
+
+        this._$bind(attachment);
+
+        this.save();
+        this.setTransform(1, 0, 0, 1, 0, 0);
+
+        this.reset();
+        this.drawImage(
+            atlasTexture,
+            -position.x, -atlasTexture.height + position.h + position.y,
+            atlasTexture.width, atlasTexture.height
+        );
+
+        this.restore();
+
+        const texture: WebGLTexture = attachment.texture as NonNullable<WebGLTexture>;
+        manager.releaseAttachment(attachment);
+
+        // reset
+        this._$bind(currentAttachment);
+
+        return texture;
+    }
+
+    /**
+     * @param  {WebGLTexture} texture
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawBitmap (texture: WebGLTexture): void
+    {
+        const variants: BlendShaderVariantCollection = this
+            ._$shaderList
+            .blendShaderVariants;
+
+        const shader: CanvasToWebGLShader = variants
+            .getNormalBlendShader(false);
+
+        variants.setNormalBlendUniform(
+            shader.uniform, 0, 0, texture.width, texture.height,
+            this._$matrix,
+            this._$viewportWidth, this._$viewportHeight,
+            false, 1, 1, 1, 1, 0, 0, 0, 0
+        );
+
+        this
+            ._$frameBufferManager
+            .textureManager
+            .bind0(texture, this._$imageSmoothingEnabled);
+
+        this.blend.toOperation("normal");
+        shader._$drawImage();
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawTextureFromRect (texture: WebGLTexture, position: CachePositionImpl): void
+    {
+        const manager: FrameBufferManager = this._$frameBufferManager;
+
+        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
+
+        this.bindRenderBuffer(position);
+        manager.transferTexture(position);
+
+        const atlasTexture: WebGLTexture = manager
+            .textureManager
+            .getAtlasTexture(position.index);
+
+        const attachment: AttachmentImpl = manager
+            .createTextureAttachmentFrom(atlasTexture);
+        this._$bind(attachment);
+
+        this._$gl.enable(this._$gl.SCISSOR_TEST);
+        this._$gl.scissor(
+            position.x, position.y,
+            position.w, position.h
+        );
+        this._$gl.clearColor(0, 0, 0, 0);
+        this._$gl.disable(this._$gl.SCISSOR_TEST);
+
+        this.save();
+        this.setTransform(1, 0, 0, 1, 0, 0);
+
+        this.reset();
+        this.drawImage(
+            texture,
+            position.x, atlasTexture.height - position.h - position.y,
+            texture.width, texture.height
+        );
+
+        this.restore();
+        manager.releaseAttachment(attachment);
+
+        // reset
+        this._$bind(currentAttachment);
+
+        manager.textureManager.release(texture);
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    stopStencil (): void
+    {
+        this._$mask._$onClearRect();
+    }
+
+    /**
      * @param  {object} [attachment = null]
      * @return {void}
      * @method
@@ -681,6 +883,120 @@ export class CanvasToWebGLContext
         this._$matrix[7] = e * a01 + f * a11 + a21;
     }
 
+    debug (index: number = 0)
+    {
+        const manager: FrameBufferManager = this._$frameBufferManager;
+        const atlasTexture: WebGLTexture = manager
+            .textureManager
+            .getAtlasTexture(index);
+
+        const currentAttachment = manager.currentAttachment;
+
+        const attachment: AttachmentImpl = manager.createTextureAttachmentFrom(atlasTexture);
+        this._$bind(attachment);
+
+        const pixels = new Uint8Array(atlasTexture.width * atlasTexture.height * 4);
+        this._$gl.readPixels(
+            0, 0, atlasTexture.width, atlasTexture.height,
+            this._$gl.RGBA, this._$gl.UNSIGNED_BYTE, pixels
+        );
+
+        const canvas  = document.createElement("canvas");
+        canvas.width  = atlasTexture.width;
+        canvas.height = atlasTexture.height;
+        const ctx = canvas.getContext("2d");
+
+        const imageData = new ImageData(atlasTexture.width, atlasTexture.height);
+        for (let idx = 0; idx < pixels.length; ++idx) {
+            imageData.data[idx] = pixels[idx];
+        }
+
+        ctx?.putImageData(imageData, 0, 0);
+        console.log(canvas.toDataURL());
+
+        this._$bind(currentAttachment);
+        manager.releaseAttachment(attachment);
+    }
+
+    /**
+     * @param  {number} x_min
+     * @param  {number} y_min
+     * @param  {number} x_max
+     * @param  {number} y_max
+     * @param  {Float32Array} color_transform
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawInstance (
+        x_min: number, y_min: number, x_max: number, y_max: number,
+        color_transform: Float32Array
+    ): void {
+
+        let ct0: number = 1;
+        let ct1: number = 1;
+        let ct2: number = 1;
+        let ct4: number = 0;
+        let ct5: number = 0;
+        let ct6: number = 0;
+
+        const ct3: number = this._$globalAlpha;
+        const ct7: number = 0;
+
+        if (color_transform) {
+            ct0 = color_transform[0];
+            ct1 = color_transform[1];
+            ct2 = color_transform[2];
+            ct4 = color_transform[4] / 255;
+            ct5 = color_transform[5] / 255;
+            ct6 = color_transform[6] / 255;
+        }
+
+        const position: CachePositionImpl | null = this._$cachePosition;
+        if (position) {
+
+            switch (this._$globalCompositeOperation) {
+
+                case "normal":
+                case "layer":
+                case "add":
+                case "screen":
+                case "alpha":
+                case "erase":
+                case "copy":
+                    this.blend.drawInstance(
+                        position,
+                        ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
+                        this._$globalCompositeOperation,
+                        this._$viewportWidth, this._$viewportHeight,
+                        this._$matrix,
+                        this._$imageSmoothingEnabled
+                    );
+                    break;
+
+                default:
+                    {
+                        const atlasTexture: WebGLTexture = this
+                            ._$frameBufferManager
+                            .textureManager
+                            .getAtlasTexture(position.index);
+
+                        this.blend.drawInstanceBlend(
+                            atlasTexture, x_min, y_min, x_max, y_max,
+                            ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
+                            position,
+                            this._$globalCompositeOperation,
+                            this._$viewportWidth, this._$viewportHeight,
+                            this._$matrix,
+                            this._$imageSmoothingEnabled
+                        );
+                    }
+                    break;
+
+            }
+        }
+    }
+
     /**
      * @param  {WebGLTexture} image
      * @param  {number} x
@@ -768,21 +1084,23 @@ export class CanvasToWebGLContext
     }
 
     /**
-     * @param  {number} x
-     * @param  {number} y
-     * @param  {number} w
-     * @param  {number} h
      * @return {void}
      * @method
      * @public
      */
-    _$clearRectStencil (
-        x: number, y: number,
-        w: number, h: number
-    ): void {
+    _$clearRectStencil (): void
+    {
+        // stencilを終了
         this._$mask._$onClearRect();
+
+        // マスクの描画領域に限定してstencil情報をクリア
         this._$gl.enable(this._$gl.SCISSOR_TEST);
-        this._$gl.scissor(x, y, w, h);
+        this._$gl.scissor(
+            this._$maskBounds.xMin,
+            this._$maskBounds.yMin,
+            this._$maskBounds.xMax,
+            this._$maskBounds.yMax
+        );
         this._$gl.clear(this._$gl.STENCIL_BUFFER_BIT);
         this._$gl.disable(this._$gl.SCISSOR_TEST);
     }
@@ -908,6 +1226,10 @@ export class CanvasToWebGLContext
                 ._$frameBufferManager
                 .textureManager
                 .bind0(texture, true);
+
+            this
+                ._$frameBufferManager
+                .bindRenderBuffer();
 
             variants = this
                 ._$shaderList
@@ -1107,79 +1429,45 @@ export class CanvasToWebGLContext
      * @description マスク処理の開始関数
      *              Mask processing start function
      *
-     * @param  {Float32Array} matrix
      * @param  {object} bounds
-     * @return {Float32Array}
+     * @return {void}
      * @method
      * @public
      */
-    _$startClip (matrix: Float32Array, bounds: BoundsImpl): Float32Array | null
+    _$startClip (bounds: BoundsImpl): boolean
     {
-        let x: number      = bounds.xMin;
-        let y: number      = bounds.yMin;
-        let width: number  = Math.abs(bounds.xMax - bounds.xMin);
-        let height: number = Math.abs(bounds.yMax - bounds.yMin);
+        const x: number      = bounds.xMin;
+        const y: number      = bounds.yMin;
+        const width: number  = Math.abs(bounds.xMax - bounds.xMin);
+        const height: number = Math.abs(bounds.yMax - bounds.yMin);
 
         // resize
         const manager: FrameBufferManager = this._$frameBufferManager;
         const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-        if (!currentAttachment || !currentAttachment.texture) {
+        if (!currentAttachment) {
             throw new Error("the current Attachment is null.");
         }
 
         if (x > currentAttachment.width
             || y > currentAttachment.height
         ) {
-            return null;
+            return false;
         }
 
-        if (width + x > currentAttachment.width) {
-            width = currentAttachment.width - x;
+        if (0 > x && 0 >= width + x) {
+            return false;
         }
 
-        if (height + y > currentAttachment.height) {
-            height = currentAttachment.height - y;
+        if (0 > y && 0 >= height + y) {
+            return false;
         }
 
-        if (0 > x) {
-            width += x;
-            x = 0;
-        }
+        this._$maskBounds.xMin = $Math.max(0, $Math.min(this._$maskBounds.xMin, x));
+        this._$maskBounds.yMin = $Math.max(0, $Math.min(this._$maskBounds.yMin, y));
+        this._$maskBounds.xMax = $Math.min(currentAttachment.width,  $Math.min(this._$maskBounds.xMax, width));
+        this._$maskBounds.yMax = $Math.min(currentAttachment.height, $Math.min(this._$maskBounds.yMax, height));
 
-        if (0 > y) {
-            height += y;
-            y = 0;
-        }
-
-        if (0 >= width || 0 >= height) {
-            return null;
-        }
-
-        width  = $Math.ceil(width);
-        height = $Math.ceil(height);
-
-        this._$cacheBounds.xMin = x;
-        this._$cacheBounds.yMin = y;
-        this._$cacheBounds.xMax = width;
-        this._$cacheBounds.yMax = height;
-        this._$cacheAttachment  = currentAttachment;
-
-        // create new buffer
-        this._$bind(
-            manager.createCacheAttachment(width, height, true)
-        );
-
-        // draw background
-        const texture: WebGLTexture = currentAttachment.texture;
-        this.reset();
-        this.setTransform(1, 0, 0, 1, 0, 0);
-        this.drawImage(texture, -x, -y, texture.width, texture.height);
-
-        return $getFloat32Array6(
-            matrix[0], matrix[1], matrix[2], matrix[3],
-            matrix[4] - bounds.xMin,
-            matrix[5] - bounds.yMin
-        );
+        return true;
     }
 
     /**
@@ -1199,6 +1487,7 @@ export class CanvasToWebGLContext
      */
     _$leaveClip (): void
     {
+        this.drawInstacedArray();
         this._$mask._$leaveClip();
     }
 
@@ -1987,28 +2276,6 @@ export class CanvasToWebGLContext
     }
 
     /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$saveCurrentMask (): void
-    {
-        this._$maskBufferArray.push(
-            this._$cacheAttachment
-        );
-
-        this._$cacheAttachment = null;
-
-        const bounds: BoundsImpl = this._$cacheBounds;
-        this._$maskBoundsArray.push(
-            $getBoundsObject(
-                bounds.xMin, bounds.xMax,
-                bounds.yMin, bounds.yMax
-            )
-        );
-    }
-
-    /**
      * @param  {number} width
      * @param  {number} height
      * @param  {boolean} [multisample=false]
@@ -2020,6 +2287,8 @@ export class CanvasToWebGLContext
         width: number, height: number,
         multisample: boolean = false
     ): void {
+
+        this.drawInstacedArray();
 
         const manager: FrameBufferManager = this._$frameBufferManager;
 
@@ -2033,13 +2302,14 @@ export class CanvasToWebGLContext
     }
 
     /**
+     * @param  {boolean} [release_texture = false]
      * @return {void}
      * @method
      * @private
      */
-    _$restoreAttachment (release_texture = false): void
+    _$restoreAttachment (release_texture: boolean = false): void
     {
-        const manager = this._$frameBufferManager;
+        const manager: FrameBufferManager = this._$frameBufferManager;
 
         manager.releaseAttachment(
             manager.currentAttachment, release_texture
@@ -2048,17 +2318,6 @@ export class CanvasToWebGLContext
         this._$bind(
             this._$attachmentArray.pop()
         );
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$restoreCurrentMask (): void
-    {
-        this._$cacheAttachment = this._$maskBufferArray.pop() || null;
-        this._$cacheBounds     = this._$maskBoundsArray.pop() || $getBoundsObject();
     }
 
     /**

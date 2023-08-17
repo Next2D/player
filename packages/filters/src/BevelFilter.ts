@@ -17,7 +17,8 @@ import {
     $intToR,
     $intToG,
     $intToB,
-    $getBoundsObject
+    $getBoundsObject,
+    $devicePixelRatio
 } from "@next2d/share";
 
 /**
@@ -528,13 +529,26 @@ export class BevelFilter extends BitmapFilter
             ._$generateFilterRect(clone, x_scale, y_scale);
 
         const radian: number = this._$angle * $Deg2Rad;
-        const x: number      = $Math.abs($Math.cos(radian) * this._$distance);
-        const y: number      = $Math.abs($Math.sin(radian) * this._$distance);
 
-        clone.xMin += -x;
-        clone.xMax += x;
-        clone.yMin += -y;
-        clone.yMax += y * 2;
+        let x: number = $Math.abs($Math.cos(radian) * this._$distance);
+        let y: number = $Math.abs($Math.sin(radian) * this._$distance);
+
+        if (x_scale) {
+            x *= x_scale;
+        }
+
+        if (y_scale) {
+            y *= y_scale;
+        }
+
+        clone.xMin = $Math.min(clone.xMin, x);
+        if (x > 0) {
+            clone.xMax += x;
+        }
+        clone.yMin = $Math.min(clone.yMin, y);
+        if (y > 0) {
+            clone.yMax += y;
+        }
 
         return clone;
     }
@@ -588,8 +602,14 @@ export class BevelFilter extends BitmapFilter
         const baseOffsetY: number = context._$offsetY;
 
         // matrix to scale
-        const xScale: number = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        const yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        let xScale: number = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        let yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+
+        xScale /= $devicePixelRatio;
+        yScale /= $devicePixelRatio;
+
+        xScale *= 2;
+        yScale *= 2;
 
         // pointer
         const radian: number = this._$angle * $Deg2Rad;
