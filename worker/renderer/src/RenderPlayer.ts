@@ -289,9 +289,9 @@ export class RenderPlayer
             return ;
         }
 
-        if (!this._$stage._$updated) {
-            return ;
-        }
+        // if (!this._$stage._$updated) {
+        //     return ;
+        // }
 
         const context: CanvasToWebGLContext | null = this._$context;
         if (!context) {

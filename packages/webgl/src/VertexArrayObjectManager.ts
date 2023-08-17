@@ -408,7 +408,10 @@ export class VertexArrayObjectManager
             );
         }
         this._$attributeBuffer.set(instance.attributes);
-        this._$gl.bufferSubData(this._$gl.ARRAY_BUFFER, 0, this._$attributeBuffer);
+        this._$gl.bufferSubData(
+            this._$gl.ARRAY_BUFFER, 0,
+            this._$attributeBuffer.subarray(0, instance.attributes.length)
+        );
     }
 
     /**

@@ -40,34 +40,33 @@ void main() {
     }
 
     /**
-     * @param  {boolean} with_color_transform
      * @return {string}
      * @method
      * @static
      */
-    static INSTANCE_TEMPLATE (with_color_transform: boolean): string
+    static INSTANCE_TEMPLATE (): string
     {
-        const colorTransformUniform: string = with_color_transform
-            ? `
-in vec4 mul;
-in vec4 add;`
-            : "";
-
-        const colorTransformStatement: string = with_color_transform
-            ? FragmentShaderLibrary.STATEMENT_INSTANCED_COLOR_TRANSFORM_ON()
-            : "";
-
         return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_texture;
-${colorTransformUniform}
+
+in vec4 mul;
+in vec4 add;
 in vec2 v_coord;
 out vec4 o_color;
 
 void main() {
     vec4 src = texture(u_texture, v_coord);
-    ${colorTransformStatement}
+
+    if (mul.x != 1.0 || mul.y != 1.0 || mul.z != 1.0 || mul.w != 1.0
+        || add.x != 0.0 || add.y != 0.0 || add.z != 0.0 || add.w != 0.0
+    ) {
+        src.rgb /= max(0.0001, src.a);
+        src = clamp(src * mul + add, 0.0, 1.0);
+        src.rgb *= src.a;
+    }
+    
     o_color = src;
 }
 

@@ -10,6 +10,7 @@ import { CanvasToWebGLContextBlend } from "./CanvasToWebGLContextBlend";
 import { CanvasPatternToWebGL } from "./CanvasPatternToWebGL";
 import { CanvasGradientToWebGL } from "./CanvasGradientToWebGL";
 import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
+import { $setRenderSize } from "./Const";
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import type { GradientShapeShaderVariantCollection } from "./shader/variants/GradientShapeShaderVariantCollection";
 import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
@@ -85,6 +86,8 @@ export class CanvasToWebGLContext
      */
     constructor (gl: WebGL2RenderingContext, sample: number)
     {
+        $setRenderSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
+
         /**
          * @type {WebGL2RenderingContext}
          * @private
@@ -206,7 +209,7 @@ export class CanvasToWebGLContext
          * @type {FrameBufferManager}
          * @private
          */
-        this._$frameBufferManager = new FrameBufferManager(gl, this, samples);
+        this._$frameBufferManager = new FrameBufferManager(gl, samples);
 
         /**
          * @type {CanvasToWebGLContextPath}

@@ -99,31 +99,12 @@ void main() {
     }
 
     /**
-     * @param  {boolean} [with_color_transform = false]
      * @return {string}
      * @method
      * @static
      */
-    static INSTANCE (with_color_transform: boolean = false): string
+    static INSTANCE (): string
     {
-        const colorTransformAttributes = with_color_transform
-            ? `
-layout (location = 5) in vec4 a_mul;
-layout (location = 6) in vec4 a_add;`
-            : "";
-
-        const colorTransformOut = with_color_transform
-            ? `
-out vec4 mul;
-out vec4 add;`
-            : "";
-
-        const colorTransformSet = with_color_transform
-            ? `
-    mul = a_mul;
-    add = a_add;`
-            : "";
-
         return `#version 300 es
 
 layout (location = 0) in vec2 a_vertex;
@@ -131,14 +112,17 @@ layout (location = 1) in vec4 a_rect;
 layout (location = 2) in vec4 a_size;
 layout (location = 3) in vec2 a_offset;
 layout (location = 4) in vec4 a_matrix;
-${colorTransformAttributes}
+layout (location = 5) in vec4 a_mul;
+layout (location = 6) in vec4 a_add;
 
 out vec2 v_coord;
-${colorTransformOut}
+out vec4 mul;
+out vec4 add;
 
 void main() {
     v_coord = a_vertex * a_rect.zw + a_rect.xy;
-    ${colorTransformSet}
+    mul = a_mul;
+    add = a_add;
 
     vec2 position = vec2(a_vertex.x, 1.0 - a_vertex.y);
     position = position * a_size.xy;

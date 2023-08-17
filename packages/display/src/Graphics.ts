@@ -1031,6 +1031,7 @@ export class Graphics
         x      = +x || 0;
         y      = +y || 0;
         radius = +radius || 0;
+        radius = $Math.round(radius);
 
         this._$setBounds(x - radius, y - radius);
         this._$setBounds(x + radius, y + radius);
@@ -1067,6 +1068,9 @@ export class Graphics
         y = +y || 0;
         width  = +width  || 0;
         height = +height || 0;
+
+        width  = $Math.round(width);
+        height = $Math.round(height);
 
         const hw = width  / 2; // half width
         const hh = height / 2; // half height
@@ -1146,6 +1150,11 @@ export class Graphics
 
         ellipse_width  = +ellipse_width  || 0;
         ellipse_height = +ellipse_height || ellipse_width;
+
+        width  = $Math.round(width);
+        height = $Math.round(height);
+        ellipse_width  = $Math.round(ellipse_width);
+        ellipse_height = $Math.round(ellipse_height);
 
         const hew = ellipse_width  / 2;
         const heh = ellipse_height / 2;

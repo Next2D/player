@@ -30,11 +30,8 @@ export class FrameBufferManager
      * @param {number} samples
      * @constructor
      */
-    constructor (
-        gl: WebGL2RenderingContext,
-        context: CanvasToWebGLContext,
-        samples: number
-    ) {
+    constructor (gl: WebGL2RenderingContext, samples: number) 
+    {
         /**
          * @type {WebGL2RenderingContext}
          * @private
@@ -78,7 +75,7 @@ export class FrameBufferManager
          * @type {TextureManager}
          * @private
          */
-        this._$textureManager = new TextureManager(gl, context);
+        this._$textureManager = new TextureManager(gl);
 
         /**
          * @type {StencilBufferPool}

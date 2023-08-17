@@ -367,11 +367,6 @@ export class CanvasToWebGLContextBlend
         matrix: Float32Array, smoothing: boolean
     ): void {
 
-        const withCT: boolean =
-            ct0 !== 1 || ct1 !== 1 || ct2 !== 1 || ct3 !== 1 ||
-            ct4 !== 0 || ct5 !== 0 || ct6 !== 0 || ct7 !== 0
-        ;
-
         const variants: BlendShaderVariantCollection = this
             ._$context
             .shaderList
@@ -381,9 +376,8 @@ export class CanvasToWebGLContextBlend
             this._$currentOperation = operation;
         }
 
-        const shader: CanvasToWebGLShader = variants.getInstanceShader(withCT);
         if (!this._$currentShader) {
-            this._$currentShader = shader;
+            this._$currentShader = variants.getInstanceShader();
         }
 
         if (this._$currentIndex === -1) {
@@ -394,8 +388,7 @@ export class CanvasToWebGLContextBlend
             this._$currentSmoothing = smoothing;
         }
 
-        if (this._$currentShader !== shader
-            || this._$currentOperation !== operation
+        if (this._$currentOperation !== operation
             || this._$currentIndex !== position.index
             || this._$currentSmoothing !== smoothing
         ) {
@@ -404,14 +397,13 @@ export class CanvasToWebGLContextBlend
             this.drawInstacedArray();
 
             // update
-            this._$currentShader    = shader;
             this._$currentOperation = operation;
             this._$currentIndex     = position.index;
             this._$currentSmoothing = smoothing;
         }
 
         variants.pushNormalBlend(
-            shader.instance,
+            this._$currentShader.instance,
             position.x, position.y, position.w, position.h,
             matrix, render_width, render_height,
             ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7

@@ -1,5 +1,4 @@
 import { $RENDER_SIZE } from "./Const";
-import { $cacheStore } from "@next2d/share";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
 import type { GridImpl } from "./interface/GridImpl";
 import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
@@ -16,7 +15,6 @@ export class TextureManager
     private readonly _$gl: WebGL2RenderingContext;
     private readonly _$objectPool: WebGLTexture[];
     private readonly _$boundTextures: Array<WebGLTexture | null>;
-    private readonly _$context: CanvasToWebGLContext;
     private readonly _$atlasNodes: Map<number, GridImpl[]>;
     private readonly _$atlasTextures: WebGLTexture[];
     private readonly _$positionObjectArray: CachePositionImpl[];
@@ -28,10 +26,8 @@ export class TextureManager
      * @constructor
      * @public
      */
-    constructor (
-        gl: WebGL2RenderingContext,
-        context: CanvasToWebGLContext
-    ) {
+    constructor (gl: WebGL2RenderingContext)
+    {
 
         // init setting
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -42,12 +38,6 @@ export class TextureManager
          * @private
          */
         this._$gl = gl;
-
-        /**
-         * @type {CanvasToWebGLContext}
-         * @private
-         */
-        this._$context = context;
 
         /**
          * @type {array}
@@ -345,13 +335,6 @@ export class TextureManager
 
         // ヒットしない場合は新しいtextureを生成
         const index: number = this._$atlasTextures.length;
-        if (index) {
-            this._$context.drawInstacedArray();
-            $cacheStore.reset();
-            return this.createCachePosition(width, height);
-        }
-
-        // new texture
         this.createTextureAtlas();
 
         const nodes: GridImpl[] = this._$atlasNodes.get(index) as NonNullable<GridImpl[]>;

@@ -45,14 +45,13 @@ export class BlendShaderVariantCollection
     }
 
     /**
-     * @param  {boolean} with_color_transform
      * @return {CanvasToWebGLShader}
      * @method
      * @public
      */
-    getInstanceShader (with_color_transform: boolean): CanvasToWebGLShader
+    getInstanceShader (): CanvasToWebGLShader
     {
-        const key: string = `i${with_color_transform ? "y" : "n"}`;
+        const key: string = "i";
 
         if (this._$collection.has(key)) {
             const shader: CanvasToWebGLShader | void = this._$collection.get(key);
@@ -63,8 +62,8 @@ export class BlendShaderVariantCollection
 
         const shader: CanvasToWebGLShader = new CanvasToWebGLShader(
             this._$gl, this._$context,
-            VertexShaderSource.INSTANCE(with_color_transform),
-            FragmentShaderSourceTexture.INSTANCE_TEMPLATE(with_color_transform)
+            VertexShaderSource.INSTANCE(),
+            FragmentShaderSourceTexture.INSTANCE_TEMPLATE()
         );
 
         this._$collection.set(key, shader);
@@ -301,7 +300,7 @@ export class BlendShaderVariantCollection
             w / $RENDER_SIZE, h / $RENDER_SIZE,
             // texture width, height and viewport width, height
             w, h, render_width, render_height,
-            // matrix tx, ty
+            // matrix tx, ty and with_color_transform
             matrix[6], matrix[7],
             // matrix scale0, rotate0, scale1, rotate1
             matrix[0], matrix[1], matrix[3], matrix[4],
