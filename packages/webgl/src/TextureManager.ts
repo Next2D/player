@@ -1,7 +1,6 @@
 import { $RENDER_SIZE } from "./Const";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
 import type { GridImpl } from "./interface/GridImpl";
-import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
 
 /**
  * @class

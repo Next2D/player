@@ -5,7 +5,6 @@ import { $Math } from "@next2d/share";
 import { $RENDER_SIZE } from "./Const";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
-import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
 
 /**
  * @class
