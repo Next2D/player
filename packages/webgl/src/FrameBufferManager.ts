@@ -29,7 +29,7 @@ export class FrameBufferManager
      * @param {number} samples
      * @constructor
      */
-    constructor (gl: WebGL2RenderingContext, samples: number) 
+    constructor (gl: WebGL2RenderingContext, samples: number)
     {
         /**
          * @type {WebGL2RenderingContext}

@@ -22,10 +22,11 @@ export class CanvasToWebGLContextBlend
     private readonly _$gl: WebGL2RenderingContext;
     private _$enabled: boolean;
     private _$funcCode: number;
-    private _$currentShader: CanvasToWebGLShader | null;
     private _$currentOperation: BlendModeImpl;
     private _$currentIndex: number;
     private _$currentSmoothing: boolean | null;
+    private _$variants: BlendShaderVariantCollection;
+    private _$instanceShader: CanvasToWebGLShader;
 
     /**
      * @param {CanvasToWebGLContext} context
@@ -62,13 +63,6 @@ export class CanvasToWebGLContextBlend
         this._$funcCode = 600;
 
         /**
-         * @type {CanvasToWebGLShader}
-         * @default null
-         * @private
-         */
-        this._$currentShader = null;
-
-        /**
          * @type {string}
          * @private
          */
@@ -88,18 +82,20 @@ export class CanvasToWebGLContextBlend
          */
         this._$currentSmoothing = null;
 
+        /**
+         * @type {BlendShaderVariantCollection}
+         * @private
+         */
+        this._$variants = context.shaderList.blendShaderVariants;
+
+        /**
+         * @type {CanvasToWebGLShader}
+         * @private
+         */
+        this._$instanceShader = this._$variants.getInstanceShader();
+
         // start
         this.enable();
-    }
-
-    /**
-     * @member {CanvasToWebGLShader | null}
-     * @readonly
-     * @public
-     */
-    get currentShader (): CanvasToWebGLShader | null
-    {
-        return this._$currentShader;
     }
 
     /**
@@ -294,11 +290,7 @@ export class CanvasToWebGLContextBlend
      */
     clearInstacedArray (): void
     {
-        if (!this._$currentShader) {
-            return ;
-        }
-
-        const instance: WebGLShaderInstance = this._$currentShader.instance;
+        const instance: WebGLShaderInstance = this._$instanceShader.instance;
         if (!instance.count) {
             return ;
         }
@@ -313,11 +305,7 @@ export class CanvasToWebGLContextBlend
      */
     drawInstacedArray (): void
     {
-        if (!this._$currentShader) {
-            return ;
-        }
-
-        const instance: WebGLShaderInstance = this._$currentShader.instance;
+        const instance: WebGLShaderInstance = this._$instanceShader.instance;
         if (!instance.count) {
             return ;
         }
@@ -333,7 +321,7 @@ export class CanvasToWebGLContextBlend
 
         this.toOperation(this._$currentOperation);
         this
-            ._$currentShader
+            ._$instanceShader
             .drawArraysInstanced(instance);
 
         instance.clear();
@@ -367,17 +355,8 @@ export class CanvasToWebGLContextBlend
         matrix: Float32Array, smoothing: boolean
     ): void {
 
-        const variants: BlendShaderVariantCollection = this
-            ._$context
-            .shaderList
-            .blendShaderVariants;
-
         if (!this._$currentOperation) {
             this._$currentOperation = operation;
-        }
-
-        if (!this._$currentShader) {
-            this._$currentShader = variants.getInstanceShader();
         }
 
         if (this._$currentIndex === -1) {
@@ -402,8 +381,8 @@ export class CanvasToWebGLContextBlend
             this._$currentSmoothing = smoothing;
         }
 
-        variants.pushNormalBlend(
-            this._$currentShader.instance,
+        this._$variants.pushNormalBlend(
+            this._$instanceShader.instance,
             position.x, position.y, position.w, position.h,
             matrix, render_width, render_height,
             ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
@@ -452,11 +431,6 @@ export class CanvasToWebGLContextBlend
             ct4 !== 0 || ct5 !== 0 || ct6 !== 0 || ct7 !== 0
         ;
 
-        const variants: BlendShaderVariantCollection = this
-            ._$context
-            .shaderList
-            .blendShaderVariants;
-
         const texture: WebGLTexture = manager
             .getTextureFromCurrentAttachment();
 
@@ -473,9 +447,9 @@ export class CanvasToWebGLContextBlend
             .textureManager
             .bind0(texture);
 
-        const clipShader: CanvasToWebGLShader = variants.getClipShader();
+        const clipShader: CanvasToWebGLShader = this._$variants.getClipShader();
         const clipUniform: WebGLShaderUniform = clipShader.uniform;
-        variants.setClipUniform(
+        this._$variants.setClipUniform(
             clipUniform, 0, 0, cache_position.w, cache_position.h,
             $inverseMatrix(matrix), render_width, render_height
         );
@@ -492,10 +466,11 @@ export class CanvasToWebGLContextBlend
             .textureManager
             .bind01(backTexture, atlas_texture, smoothing);
 
-        const shader: CanvasToWebGLShader = variants
+        const shader: CanvasToWebGLShader = this
+            ._$variants
             .getInstanceBlendShader(operation, withCT);
 
-        variants.setInstanceBlendUniform(
+        this._$variants.setInstanceBlendUniform(
             shader.uniform,
             cache_position.x / atlas_texture.width,
             cache_position.y / atlas_texture.height,
@@ -562,11 +537,6 @@ export class CanvasToWebGLContextBlend
             ct4 !== 0 || ct5 !== 0 || ct6 !== 0 || ct7 !== 0
         ;
 
-        const variants: BlendShaderVariantCollection = this
-            ._$context
-            .shaderList
-            .blendShaderVariants;
-
         switch (operation) {
 
             case "normal":
@@ -579,8 +549,8 @@ export class CanvasToWebGLContextBlend
                 {
                     manager.textureManager.bind0(image, imageSmoothingEnabled);
 
-                    const shader: CanvasToWebGLShader = variants.getNormalBlendShader(withCT);
-                    variants.setNormalBlendUniform(
+                    const shader: CanvasToWebGLShader = this._$variants.getNormalBlendShader(withCT);
+                    this._$variants.setNormalBlendUniform(
                         shader.uniform, x, y, w, h, matrix, renderWidth, renderHeight,
                         withCT, ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
                     );
@@ -669,9 +639,9 @@ export class CanvasToWebGLContextBlend
                     this._$context._$bind(backTextureAttachment);
                     manager.textureManager.bind0(texture);
 
-                    const clipShader: CanvasToWebGLShader = variants.getClipShader();
+                    const clipShader: CanvasToWebGLShader = this._$variants.getClipShader();
                     const clipUniform: WebGLShaderUniform = clipShader.uniform;
-                    variants.setClipUniform(
+                    this._$variants.setClipUniform(
                         clipUniform, x, y, w, h,
                         $inverseMatrix(matrix), renderWidth, renderHeight
                     );
@@ -686,10 +656,11 @@ export class CanvasToWebGLContextBlend
 
                     manager.textureManager.bind01(backTexture, image, imageSmoothingEnabled);
 
-                    const shader: CanvasToWebGLShader = variants
+                    const shader: CanvasToWebGLShader = this
+                        ._$variants
                         .getBlendShader(operation, withCT);
 
-                    variants.setBlendUniform(
+                    this._$variants.setBlendUniform(
                         shader.uniform, x, y, w, h,
                         matrix, renderWidth, renderHeight,
                         withCT, ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
