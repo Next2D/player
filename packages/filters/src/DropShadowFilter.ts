@@ -17,7 +17,8 @@ import {
     $intToR,
     $intToG,
     $intToB,
-    $getBoundsObject
+    $getBoundsObject,
+    $devicePixelRatio
 } from "@next2d/share";
 
 /**
@@ -491,13 +492,26 @@ export class DropShadowFilter extends BitmapFilter
             ._$generateFilterRect(clone, x_scale, y_scale);
 
         const radian = this._$angle * $Deg2Rad;
-        const x      = $Math.cos(radian) * this._$distance * 2;
-        const y      = $Math.sin(radian) * this._$distance * 2;
+
+        let x = $Math.cos(radian) * this._$distance;
+        let y = $Math.sin(radian) * this._$distance;
+
+        if (x_scale) {
+            x *= x_scale;
+        }
+
+        if (y_scale) {
+            y *= y_scale;
+        }
 
         clone.xMin = $Math.min(clone.xMin, x);
-        clone.xMax += $Math.abs(x);
+        if (x > 0) {
+            clone.xMax += x;
+        }
         clone.yMin = $Math.min(clone.yMin, y);
-        clone.yMax += $Math.abs(y);
+        if (y > 0) {
+            clone.yMax += y;
+        }
 
         return clone;
     }
@@ -552,8 +566,14 @@ export class DropShadowFilter extends BitmapFilter
         const offsetDiffX: number = blurOffsetX - baseOffsetX;
         const offsetDiffY: number = blurOffsetY - baseOffsetY;
 
-        const xScale: number = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        const yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        let xScale: number = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        let yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+
+        xScale /= $devicePixelRatio;
+        yScale /= $devicePixelRatio;
+
+        xScale *= 2;
+        yScale *= 2;
 
         // shadow point
         const radian: number = this._$angle * $Deg2Rad;

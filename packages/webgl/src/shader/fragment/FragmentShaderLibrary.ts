@@ -20,6 +20,20 @@ float isInside(in vec2 uv) {
     }
 
     /**
+     * @return {string}
+     * @method
+     * @static
+     */
+    static STATEMENT_INSTANCED_COLOR_TRANSFORM_ON (): string
+    {
+        return `
+    src.rgb /= max(0.0001, src.a);
+    src = clamp(src * mul + add, 0.0, 1.0);
+    src.rgb *= src.a;
+`;
+    }
+
+    /**
      * @param  {number} mediump_index
      * @return {string}
      * @method
@@ -30,10 +44,7 @@ float isInside(in vec2 uv) {
         return `
     vec4 mul = u_mediump[${mediump_index}];
     vec4 add = u_mediump[${mediump_index + 1}];
-
-    src.rgb /= max(0.0001, src.a);
-    src = clamp(src * mul + add, 0.0, 1.0);
-    src.rgb *= src.a;
+${FragmentShaderLibrary.STATEMENT_INSTANCED_COLOR_TRANSFORM_ON()}
 `;
     }
 }

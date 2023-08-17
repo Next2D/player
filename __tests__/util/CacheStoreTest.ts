@@ -3,22 +3,6 @@ import { CacheStore } from "../../packages/share/src/CacheStore";
 describe("CacheStore.js packages test", () =>
 {
 
-    it("generateHash test case1", () =>
-    {
-        const cacheStore = new CacheStore();
-        expect(cacheStore.generateHash("test")).toBe("_3556498");
-    });
-
-    it("colorToString test case1", () =>
-    {
-        const cacheStore = new CacheStore();
-        expect(cacheStore.colorToString(new Float32Array([1,1,1,1,0,0,0,0])))
-            .toBe("");
-
-        expect(cacheStore.colorToString(new Float32Array([1,1,1,1,0,0,0,10])))
-            .toBe("_10");
-    });
-
     it("generateKeys test case1", () =>
     {
         const cacheStore = new CacheStore();

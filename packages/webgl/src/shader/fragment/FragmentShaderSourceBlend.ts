@@ -85,6 +85,86 @@ void main() {
     }
 
     /**
+     * @param  {string}  operation
+     * @param  {boolean} with_color_transform
+     * @return {string}
+     * @method
+     * @static
+     */
+    static INSTANCE_TEMPLATE (operation: string, with_color_transform: boolean): string
+    {
+        let blendFunction: string;
+        switch (operation) {
+
+            case "subtract":
+                blendFunction = this.FUNCTION_SUBTRACT();
+                break;
+
+            case "multiply":
+                blendFunction = this.FUNCTION_MULTIPLY();
+                break;
+
+            case "lighten":
+                blendFunction = this.FUNCTION_LIGHTEN();
+                break;
+
+            case "darken":
+                blendFunction = this.FUNCTION_DARKEN();
+                break;
+
+            case "overlay":
+                blendFunction = this.FUNCTION_OVERLAY();
+                break;
+
+            case "hardlight":
+                blendFunction = this.FUNCTION_HARDLIGHT();
+                break;
+
+            case "difference":
+                blendFunction = this.FUNCTION_DIFFERENCE();
+                break;
+
+            case "invert":
+                blendFunction = this.FUNCTION_INVERT();
+                break;
+
+            default:
+                blendFunction = this.FUNCTION_NORMAL();
+                break;
+
+        }
+
+        const colorTransformUniform: string = with_color_transform
+            ? "uniform vec4 u_mediump[2];"
+            : "";
+
+        const colorTransformStatement: string = with_color_transform
+            ? FragmentShaderLibrary.STATEMENT_COLOR_TRANSFORM_ON(0)
+            : "";
+
+        return `#version 300 es
+precision mediump float;
+
+uniform sampler2D u_textures[2];
+${colorTransformUniform}
+
+in vec2 v_src_coord;
+in vec2 v_dst_coord;
+out vec4 o_color;
+
+${blendFunction}
+
+void main() {
+    vec4 dst = texture(u_textures[0], v_dst_coord);
+    vec4 src = texture(u_textures[1], v_src_coord);
+    ${colorTransformStatement}
+    o_color = blend(src, dst);
+}
+
+`;
+    }
+
+    /**
      * @return {string}
      * @method
      * @static

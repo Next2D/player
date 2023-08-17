@@ -1,11 +1,11 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import type { Player } from "@next2d/core";
 import type { DisplayObjectImpl } from "@next2d/interface";
-import { $devicePixelRatio } from "@next2d/util";
 import {
     $clamp,
     $toColorInt,
-    $uintToRGBA
+    $uintToRGBA,
+    $devicePixelRatio
 } from "@next2d/share";
 
 /**

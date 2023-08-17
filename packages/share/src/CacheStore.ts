@@ -7,6 +7,7 @@ import {
     $poolMap,
     $getArray
 } from "./RenderUtil";
+import type { CachePositionImpl } from "./interface/CachePositionImpl";
 
 /**
  * @class
@@ -75,6 +76,13 @@ export class CacheStore
         }
 
         this._$store.clear();
+
+        if (this._$context) {
+            this
+                ._$context
+                .frameBuffer
+                .clearCache();
+        }
     }
 
     /**
@@ -84,10 +92,10 @@ export class CacheStore
      * @public
      */
     destroy (
-        object: CanvasRenderingContext2D | WebGLTexture | null = null
+        object: CanvasRenderingContext2D | WebGLTexture | CachePositionImpl |null = null
     ): void {
 
-        if (!object) {
+        if (!object || typeof object !== "object") {
             return ;
         }
 
@@ -107,7 +115,9 @@ export class CacheStore
             return ;
         }
 
-        if (object instanceof CanvasRenderingContext2D) {
+        if ("canvas" in object
+            && object instanceof CanvasRenderingContext2D
+        ) {
 
             const canvas: HTMLCanvasElement = object.canvas;
             const width: number  = canvas.width;
@@ -120,6 +130,14 @@ export class CacheStore
 
             // pool
             this._$pool.push(canvas);
+        }
+
+        if (this._$context && "index" in object) {
+            this
+                ._$context
+                .frameBuffer
+                .textureManager
+                .releasePosition(object);
         }
     }
 
@@ -267,7 +285,13 @@ export class CacheStore
         }
 
         const data: Map<string, any> = this._$store.get(id);
-        if (!value) {
+        if (value === null) {
+
+            if (!data.has(type)) {
+                return ;
+            }
+
+            this.destroy(data.get(type));
 
             data.delete(type);
 
@@ -278,11 +302,6 @@ export class CacheStore
 
             return ;
 
-        }
-
-        const oldValue: any = data.get(type);
-        if (oldValue && oldValue !== value) {
-            this.destroy(oldValue);
         }
 
         // set cache
@@ -315,54 +334,38 @@ export class CacheStore
     generateKeys (
         unique_key: any,
         matrix: number[] | null = null,
-        color:Float32Array | null = null
+        color: Float32Array | null = null
     ): string[] {
 
         let str: string = "";
-        if (matrix) {
-            str += `${matrix.join("_")}`;
+        if (matrix && matrix.length) {
+            str += `${matrix[0]}_${matrix[1]}`;
         }
 
         // color
-        if (color) {
-            str += this.colorToString(color);
+        if (color && color.length) {
+            str += color[7] === 0 ? "" : `_${color[7]}`;
         }
 
         const keys: string[] = $getArray();
-        keys[1] = str ? this.generateHash(str) : "_0";
+        if (str) {
+            let hash = 0;
+            const length: number = str.length;
+            for (let idx: number = 0; idx < length; idx++) {
+
+                const chr: number = str.charCodeAt(idx);
+
+                hash  = (hash << 5) - hash + chr;
+                hash |= 0;
+            }
+            keys[1] = `_${hash}`;
+        } else {
+            keys[1] = "_0";
+        }
         keys[0] = `${unique_key}`;
 
         return keys;
     }
-
-    /**
-     * @param  {Float32Array} color
-     * @return {string}
-     * @method
-     * @public
-     */
-    colorToString (color: Float32Array): string
-    {
-        return color[7] === 0 ? "" : `_${color[7]}`;
-    }
-
-    /**
-     * @param  {string} str
-     * @return {string}
-     * @method
-     * @public
-     */
-    generateHash (str: string): string
-    {
-        let hash = 0;
-        const length: number = str.length;
-        for (let idx: number = 0; idx < length; idx++) {
-
-            const chr: number = str.charCodeAt(idx);
-
-            hash  = (hash << 5) - hash + chr;
-            hash |= 0;
-        }
-        return `_${hash}`;
-    }
 }
+
+export const $cacheStore: CacheStore = new CacheStore();

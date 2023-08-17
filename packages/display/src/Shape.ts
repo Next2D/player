@@ -52,8 +52,6 @@ import {
 export class Shape extends DisplayObject
 {
     private _$graphics: Graphics | null;
-    private _$bounds: BoundsImpl | null;
-    private _$bitmapId: number;
     private _$src: string;
 
     /**
@@ -70,20 +68,6 @@ export class Shape extends DisplayObject
          * @private
          */
         this._$graphics = null;
-
-        /**
-         * @type {object}
-         * @default null
-         * @private
-         */
-        this._$bounds = null;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bitmapId = 0;
 
         /**
          * @type {string}
@@ -180,6 +164,10 @@ export class Shape extends DisplayObject
     }
     set src (src: string)
     {
+        if (!src) {
+            return ;
+        }
+
         const image: HTMLImageElement = new Image();
         image.addEventListener("load", () =>
         {
@@ -200,6 +188,7 @@ export class Shape extends DisplayObject
         });
 
         this._$src = image.src = src;
+        this.graphics._$mode = "bitmap";
     }
 
     /**
@@ -226,8 +215,6 @@ export class Shape extends DisplayObject
 
                 case character.bitmapId > 0:
                     {
-                        this._$bitmapId = character.bitmapId;
-
                         const bitmap: Character<ShapeCharacterImpl> = loaderInfo
                             ._$data
                             .characters[character.bitmapId];
@@ -249,6 +236,13 @@ export class Shape extends DisplayObject
 
                         // setup
                         graphics._$recode = $getArray();
+
+                        if (width === character.bounds.xMax - character.bounds.xMin
+                            && height === character.bounds.yMax - character.bounds.yMin
+                        ) {
+                            graphics._$bitmapId = character.bitmapId;
+                            graphics._$mode     = "bitmap";
+                        }
 
                         // clone
                         const recodes: any[] = character.recodes;
@@ -327,6 +321,13 @@ export class Shape extends DisplayObject
                                 matrix[0], matrix[1], matrix[2],
                                 matrix[3], matrix[4], matrix[5]
                             );
+
+                            if (value.width === character.bounds.xMax - character.bounds.xMin
+                                && value.height === character.bounds.yMax - character.bounds.yMin
+                            ) {
+                                graphics._$bitmapId = character.bitmapId;
+                                graphics._$mode     = "bitmap";
+                            }
                         }
                     }
                     break;
@@ -338,6 +339,8 @@ export class Shape extends DisplayObject
             }
 
         } else {
+
+            graphics._$mode = "bitmap";
 
             const width: number  = $Math.abs(character.bounds.xMax - character.bounds.xMin);
             const height: number = $Math.abs(character.bounds.yMax - character.bounds.yMin);

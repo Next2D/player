@@ -12,19 +12,19 @@ import type { PropertyVideoMessageImpl } from "./interface/PropertyVideoMessageI
 import type { RGBAImpl } from "./interface/RGBAImpl";
 import type { FrameBufferManager } from "@next2d/webgl";
 import {
-    CacheStore,
+    $cacheStore,
     $COLOR_ARRAY_IDENTITY,
     $Float32Array,
     $getFloat32Array6,
     $toColorInt,
-    $uintToRGBA
+    $uintToRGBA,
+    $setDevicePixelRatio
 } from "@next2d/share";
 import {
     $getDisplayObjectContainer,
     $getShape,
     $getTextField,
-    $getVideo,
-    $setDevicePixelRatio
+    $getVideo
 } from "./RenderGlobal";
 
 /**
@@ -33,7 +33,6 @@ import {
 export class RenderPlayer
 {
     private readonly _$instances: Map<number, RenderDisplayObjectImpl<any>>;
-    private readonly _$cacheStore: CacheStore;
     private readonly _$matrix: Float32Array;
     private readonly _$colorTransform: Float32Array;
     private _$context: CanvasToWebGLContext | null;
@@ -55,12 +54,6 @@ export class RenderPlayer
          * @private
          */
         this._$instances = new Map();
-
-        /**
-         * @type {CacheStore}
-         * @private
-         */
-        this._$cacheStore = new CacheStore();
 
         /**
          * @type {Float32Array}
@@ -137,16 +130,6 @@ export class RenderPlayer
     }
 
     /**
-     * @return {CacheStore}
-     * @readonly
-     * @public
-     */
-    get cacheStore (): CacheStore
-    {
-        return this._$cacheStore;
-    }
-
-    /**
      * @return {CanvasToWebGLContext}
      * @readonly
      * @public
@@ -175,7 +158,7 @@ export class RenderPlayer
      */
     stop (): void
     {
-        this._$cacheStore.reset();
+        $cacheStore.reset();
     }
 
     /**
@@ -211,7 +194,7 @@ export class RenderPlayer
         if (gl) {
             const context: CanvasToWebGLContext = new CanvasToWebGLContext(gl, samples);
             this._$context = context;
-            this._$cacheStore.context = context;
+            $cacheStore.context = context;
         }
     }
 
@@ -282,19 +265,9 @@ export class RenderPlayer
 
         source._$draw(context, matrix, color_transform);
 
-        const manager: FrameBufferManager = context.frameBuffer;
-        const texture: WebGLTexture = manager.getTextureFromCurrentAttachment();
-
-        manager.unbind();
-
-        // reset and draw to main canvas
-        context.reset();
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.clearRect(0, 0, this._$width, this._$height);
-        context.drawImage(texture, 0, 0, this._$width, this._$height);
-
-        // re bind
-        context._$bind(this._$attachment);
+        context
+            .frameBuffer
+            .transferToMainTexture();
 
         const ctx: OffscreenCanvasRenderingContext2D | null = canvas.getContext("2d");
         if (ctx && this._$canvas) {
@@ -325,8 +298,6 @@ export class RenderPlayer
             return ;
         }
 
-        context._$bind(this._$attachment);
-
         // reset
         context.reset();
         context.setTransform(1, 0, 0, 1, 0, 0);
@@ -342,19 +313,10 @@ export class RenderPlayer
         // stage end
         this._$stage._$updated = false;
 
-        const manager: FrameBufferManager = context.frameBuffer;
-        const texture: WebGLTexture = manager.getTextureFromCurrentAttachment();
-
-        manager.unbind();
-
-        // reset and draw to main canvas
-        context.reset();
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.clearRect(0, 0, this._$width, this._$height);
-        context.drawImage(texture, 0, 0, this._$width, this._$height);
-
-        // re bind
-        context._$bind(this._$attachment);
+        context.drawInstacedArray();
+        context
+            .frameBuffer
+            .transferToMainTexture();
     }
 
     /**
@@ -385,13 +347,23 @@ export class RenderPlayer
             return ;
         }
 
-        this._$canvas.width  = width;
-        this._$canvas.height = height;
-
         const context = this._$context;
         if (!context) {
             return ;
         }
+
+        this._$matrix[0] = scale;
+        this._$matrix[3] = scale;
+        this._$matrix[4] = tx;
+        this._$matrix[5] = ty;
+
+        this._$stage._$updated = true;
+        $cacheStore.reset();
+
+        context.clearInstacedArray();
+
+        this._$canvas.width  = width;
+        this._$canvas.height = height;
 
         context._$gl.viewport(0, 0, width, height);
 
@@ -402,18 +374,13 @@ export class RenderPlayer
         }
 
         this._$attachment = manager
-            .createCacheAttachment(width, height, false);
-
-        this._$matrix[0] = scale;
-        this._$matrix[3] = scale;
-        this._$matrix[4] = tx;
-        this._$matrix[5] = ty;
+            .createCacheAttachment(width, height, true);
 
         // update cache max size
-        manager.setMaxSize(width, height);
+        context.setMaxSize(width, height);
+        manager.clearCache();
 
-        this._$stage._$updated = true;
-        this._$cacheStore.reset();
+        context._$bind(this._$attachment);
     }
 
     /**

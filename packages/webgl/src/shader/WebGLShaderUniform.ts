@@ -43,19 +43,13 @@ export class WebGLShaderUniform
         const activeUniforms: number = this._$gl.getProgramParameter(program, this._$gl.ACTIVE_UNIFORMS);
         for (let i: number = 0; i < activeUniforms; i++) {
 
-            const info: WebGLActiveInfo|null = this._$gl.getActiveUniform(program, i);
-            if (!info) {
-                throw new Error("the WebGLActiveInfo is null.");
-            }
+            const info: WebGLActiveInfo = this._$gl.getActiveUniform(program, i) as NonNullable<WebGLActiveInfo>;
 
             const name: string = info.name.endsWith("[0]")
                 ? info.name.slice(0, -3)
                 : info.name;
 
-            const location: WebGLUniformLocation | null = this._$gl.getUniformLocation(program, name);
-            if (!location) {
-                throw new Error("the WebGLUniformLocation is null.");
-            }
+            const location: WebGLUniformLocation = this._$gl.getUniformLocation(program, name) as NonNullable<WebGLUniformLocation>;
 
             // WebGLの仕様でuniformのint型のデフォルト値は0に設定されるため、
             // sampler2D（size=1）の値の更新は不要
@@ -112,9 +106,9 @@ export class WebGLShaderUniform
      * @method
      * @public
      */
-    getArray (name: string): Int32Array|Float32Array
+    getArray (name: string): Int32Array | Float32Array
     {
-        const data: UniformDataImpl|void = this._$map.get(name);
+        const data: UniformDataImpl | void = this._$map.get(name);
         if (!data || !data.array) {
             throw new Error("the UniformData is null.");
         }
@@ -126,9 +120,9 @@ export class WebGLShaderUniform
      * @readonly
      * @public
      */
-    get textures (): Int32Array|Float32Array
+    get textures (): Int32Array | Float32Array
     {
-        const data: UniformDataImpl|void = this._$map.get("u_textures");
+        const data: UniformDataImpl | void = this._$map.get("u_textures");
         if (!data || !data.array) {
             throw new Error("the UniformData is null.");
         }
@@ -140,9 +134,9 @@ export class WebGLShaderUniform
      * @readonly
      * @public
      */
-    get highp (): Int32Array|Float32Array
+    get highp (): Int32Array | Float32Array
     {
-        const data: UniformDataImpl|void = this._$map.get("u_highp");
+        const data: UniformDataImpl | void = this._$map.get("u_highp");
         if (!data || !data.array) {
             throw new Error("the UniformData is null.");
         }
@@ -154,9 +148,9 @@ export class WebGLShaderUniform
      * @readonly
      * @public
      */
-    get mediump (): Int32Array|Float32Array
+    get mediump (): Int32Array | Float32Array
     {
-        const data: UniformDataImpl|void = this._$map.get("u_mediump");
+        const data: UniformDataImpl | void = this._$map.get("u_mediump");
         if (!data || !data.array) {
             throw new Error("the UniformData is null.");
         }

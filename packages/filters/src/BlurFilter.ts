@@ -11,7 +11,8 @@ import {
     $getArray,
     $clamp,
     $getBoundsObject,
-    $poolBoundsObject
+    $poolBoundsObject,
+    $devicePixelRatio
 } from "@next2d/share";
 
 /**
@@ -320,8 +321,14 @@ export class BlurFilter extends BitmapFilter
         }
 
         // matrix to scale
-        const xScale: number = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        const yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        let xScale: number = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        let yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+
+        xScale /= $devicePixelRatio;
+        yScale /= $devicePixelRatio;
+
+        xScale *= 2;
+        yScale *= 2;
 
         // after size
         const baseBounds = $getBoundsObject(
