@@ -8,7 +8,7 @@ import { RenderVideo } from "./media/RenderVideo";
  * @type {boolean}
  * @public
  */
-export let $isSafari = false;
+export let $isSafari: boolean = false;
 
 /**
  * @param {boolean} is_safari
