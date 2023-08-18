@@ -1,4 +1,3 @@
-import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
 import {
     $renderPlayer,
     $setSafari
@@ -9,6 +8,8 @@ import {
     $OffscreenCanvas,
     $cacheStore
 } from "@next2d/share";
+import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
+import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
 
 /**
  * @class
@@ -16,7 +17,7 @@ import {
 export class CommandController
 {
     public state: string;
-    public queue: any[];
+    public queue: PropertyMessageMapImpl<any>[];
 
     /**
      * @constructor
@@ -50,9 +51,15 @@ export class CommandController
     {
         this.state = "active";
 
+        const options: ArrayBuffer[] = [];
         while (this.queue.length) {
 
-            const object: any = this.queue.shift();
+            const object: PropertyMessageMapImpl<any> | void = this.queue.shift();
+            if (!object) {
+                continue;
+            }
+
+            options.length = 0;
             switch (object.command) {
 
                 case "draw":
@@ -100,7 +107,19 @@ export class CommandController
                     break;
 
                 case "createDisplayObjectContainer":
-                    $renderPlayer._$createDisplayObjectContainer(object);
+                    $renderPlayer
+                        ._$createDisplayObjectContainer(
+                            object.buffer,
+                            object.recodes
+                        );
+
+                    options.push(object.buffer.buffer);
+                    globalThis.postMessage({
+                        "command": "renderBuffer",
+                        "buffer": object.buffer
+                    // @ts-ignore
+                    }, options);
+
                     break;
 
                 case "createTextField":

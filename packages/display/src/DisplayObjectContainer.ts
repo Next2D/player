@@ -28,6 +28,7 @@ import type {
 import {
     $createInstance,
     $currentPlayer,
+    $getRenderBufferArray,
     $hitContext,
     $isTouch,
     $MATRIX_HIT_ARRAY_IDENTITY,
@@ -2252,12 +2253,17 @@ export class DisplayObjectContainer extends InteractiveObject
 
         this._$created = true;
 
+        let index: number = 0;
+        const buffer: Float32Array = $getRenderBufferArray();
+
         const options: ArrayBuffer[] = $getArray();
         const message: PropertyContainerMessageImpl = {
             "command": "createDisplayObjectContainer",
-            "instanceId": this._$instanceId,
-            "parentId": this._$parent ? this._$parent._$instanceId : -1
+            "buffer": buffer
         };
+
+        buffer[index++] = this._$instanceId;
+        buffer[index++] = this._$parent ? this._$parent._$instanceId : -1;
 
         const graphics: Graphics | null = "_$graphics" in this
             ? this._$graphics as Graphics | null
@@ -2265,19 +2271,19 @@ export class DisplayObjectContainer extends InteractiveObject
 
         if (graphics) {
 
-            const recodes: Float32Array = graphics._$getRecodes();
-            options.push(recodes.buffer);
+            message.recodes = graphics._$getRecodes();
+            options.push(message.recodes.buffer);
 
-            message.recodes  = recodes;
-            message.maxAlpha = graphics._$maxAlpha;
-            message.canDraw  = graphics._$canDraw;
-            message.xMin     = graphics._$xMin;
-            message.yMin     = graphics._$yMin;
-            message.xMax     = graphics._$xMax;
-            message.yMax     = graphics._$yMax;
+            buffer[index++] = graphics._$maxAlpha;
+            buffer[index++] = +graphics._$canDraw;
+            buffer[index++] = graphics._$xMin;
+            buffer[index++] = graphics._$yMin;
+            buffer[index++] = graphics._$xMax;
+            buffer[index++] = graphics._$yMax;
 
         }
 
+        options.push(buffer.buffer);
         $rendererWorker.postMessage(message, options);
     }
 

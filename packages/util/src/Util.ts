@@ -376,7 +376,7 @@ export const $getRenderBufferArray = (): Float32Array =>
 {
     return $renderBufferArray.length
         ? $renderBufferArray.pop() as NonNullable<Float32Array>
-        : new Float32Array(100);
+        : new Float32Array(30);
 };
 
 /**
@@ -970,7 +970,7 @@ export const $initialize = (): Promise<void> =>
             ? new Worker(URL.createObjectURL(new Blob([$renderURL], { "type": "text/javascript" })))
             : null;
 
-        $rendererWorker = null;
+        // $rendererWorker = null;
         if ($rendererWorker) {
 
             /**
@@ -1046,38 +1046,48 @@ export const $initialize = (): Promise<void> =>
                 }
             };
 
-            // $rendererWorker.onmessage = (event: MessageEvent) =>
-            // {
-            //     // if (event.data instanceof Float32Array) {
+            $rendererWorker.onmessage = (event: MessageEvent) =>
+            {
 
-            //     // }
+                switch (event.data.command) {
 
-            //     if (event.data.command !== "bitmapDraw") {
-            //         return ;
-            //     }
+                    case "renderBuffer":
+                        $poolRenderBufferArray(event.data.buffer);
+                        break;
 
-            //     const sourceId: number = event.data.sourceId;
-            //     const object: BitmapDrawObjectImpl | void = $bitmapDrawMap.get(sourceId);
-            //     $bitmapDrawMap.delete(sourceId);
-            //     if (!object) {
-            //         return ;
-            //     }
+                    case "bitmapDraw":
+                        {
+                            const sourceId: number = event.data.sourceId;
+                            const object: BitmapDrawObjectImpl | void = $bitmapDrawMap
+                                .get(sourceId);
 
-            //     // reset
-            //     const source: DisplayObjectImpl<any> = object.source;
-            //     if ("_$children" in source) {
-            //         // @ts-ignore
-            //         $removeContainerWorker(source);
-            //     } else {
-            //         source._$removeWorkerInstance();
-            //     }
+                            $bitmapDrawMap.delete(sourceId);
+                            if (!object) {
+                                return ;
+                            }
 
-            //     if (object.callback) {
-            //         const context = object.context;
-            //         context.drawImage(event.data.imageBitmap, 0, 0);
-            //         object.callback(context.canvas);
-            //     }
-            // };
+                            // reset
+                            const source: DisplayObjectImpl<any> = object.source;
+                            if ("_$children" in source) {
+                                // @ts-ignore
+                                $removeContainerWorker(source);
+                            } else {
+                                source._$removeWorkerInstance();
+                            }
+
+                            if (object.callback) {
+                                const context = object.context;
+                                context.drawImage(event.data.imageBitmap, 0, 0);
+                                object.callback(context.canvas);
+                            }
+                        }
+                        break;
+
+                    default:
+                        break;
+
+                }
+            };
         }
     }
 

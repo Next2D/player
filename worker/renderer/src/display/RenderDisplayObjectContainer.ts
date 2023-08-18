@@ -1,11 +1,11 @@
 import { RenderGraphics } from "./RenderGraphics";
-import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
-import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
-import type { BlendModeImpl } from "./interface/BlendModeImpl";
-import type { BoundsImpl } from "./interface/BoundsImpl";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { ParentImpl } from "./interface/ParentImpl";
-import type { PreObjectImpl } from "./interface/PreObjectImpl";
+import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
+import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
+import type { BlendModeImpl } from "../interface/BlendModeImpl";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { ParentImpl } from "../interface/ParentImpl";
+import type { PreObjectImpl } from "../interface/PreObjectImpl";
 import type {
     CanvasToWebGLContext,
     FrameBufferManager
@@ -13,7 +13,7 @@ import type {
 import {
     $containers,
     $renderPlayer
-} from "./RenderGlobal";
+} from "../RenderGlobal";
 import {
     $cacheStore,
     $boundsMatrix,

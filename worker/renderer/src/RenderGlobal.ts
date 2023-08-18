@@ -1,8 +1,8 @@
 import { RenderPlayer } from "./RenderPlayer";
-import { RenderShape } from "./RenderShape";
-import { RenderTextField } from "./RenderTextField";
-import { RenderDisplayObjectContainer } from "./RenderDisplayObjectContainer";
-import { RenderVideo } from "./RenderVideo";
+import { RenderShape } from "./display/RenderShape";
+import { RenderTextField } from "./text/RenderTextField";
+import { RenderDisplayObjectContainer } from "./display/RenderDisplayObjectContainer";
+import { RenderVideo } from "./media/RenderVideo";
 
 /**
  * @type {boolean}

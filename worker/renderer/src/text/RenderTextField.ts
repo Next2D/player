@@ -1,14 +1,14 @@
-import { RenderDisplayObject } from "./RenderDisplayObject";
-import type{ TextDataImpl } from "./interface/TextDataImpl";
-import type{ PropertyTextMessageImpl } from "./interface/PropertyTextMessageImpl";
-import type{ TextFieldAutoSizeImpl } from "./interface/TextFieldAutoSizeImpl";
-import type{ TextFormatVerticalAlignImpl } from "./interface/TextFormatVerticalAlignImpl";
-import type{ BoundsImpl } from "./interface/BoundsImpl";
-import type{ AttachmentImpl } from "./interface/AttachmentImpl";
-import type{ RGBAImpl } from "./interface/RGBAImpl";
-import type{ TextFormatImpl } from "./interface/TextFormatImpl";
-import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
-import type { CachePositionImpl } from "./interface/CachePositionImpl";
+import { RenderDisplayObject } from "../display/RenderDisplayObject";
+import type{ TextDataImpl } from "../interface/TextDataImpl";
+import type{ PropertyTextMessageImpl } from "../interface/PropertyTextMessageImpl";
+import type{ TextFieldAutoSizeImpl } from "../interface/TextFieldAutoSizeImpl";
+import type{ TextFormatVerticalAlignImpl } from "../interface/TextFormatVerticalAlignImpl";
+import type{ BoundsImpl } from "../interface/BoundsImpl";
+import type{ AttachmentImpl } from "../interface/AttachmentImpl";
+import type{ RGBAImpl } from "../interface/RGBAImpl";
+import type{ TextFormatImpl } from "../interface/TextFormatImpl";
+import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
+import type { CachePositionImpl } from "../interface/CachePositionImpl";
 import type {
     CanvasToWebGLContext,
     FrameBufferManager
@@ -16,7 +16,7 @@ import type {
 import {
     $isSafari,
     $textFields
-} from "./RenderGlobal";
+} from "../RenderGlobal";
 import {
     $cacheStore,
     $boundsMatrix,

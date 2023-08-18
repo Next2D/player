@@ -1,11 +1,10 @@
-import { RenderDisplayObjectContainer } from "./RenderDisplayObjectContainer";
+import { RenderDisplayObjectContainer } from "./display/RenderDisplayObjectContainer";
 import { CanvasToWebGLContext } from "@next2d/webgl";
-import type { RenderShape } from "./RenderShape";
-import type { RenderVideo } from "./RenderVideo";
-import type { RenderTextField } from "./RenderTextField";
+import type { RenderShape } from "./display/RenderShape";
+import type { RenderVideo } from "./media/RenderVideo";
+import type { RenderTextField } from "./text/RenderTextField";
 import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { PropertyContainerMessageImpl } from "./interface/PropertyContainerMessageImpl";
 import type { PropertyShapeMessageImpl } from "./interface/PropertyShapeMessageImpl";
 import type { PropertyTextMessageImpl } from "./interface/PropertyTextMessageImpl";
 import type { PropertyVideoMessageImpl } from "./interface/PropertyVideoMessageImpl";
@@ -14,7 +13,6 @@ import type { FrameBufferManager } from "@next2d/webgl";
 import {
     $cacheStore,
     $COLOR_ARRAY_IDENTITY,
-    $Float32Array,
     $getFloat32Array6,
     $toColorInt,
     $uintToRGBA,
@@ -34,10 +32,8 @@ export class RenderPlayer
 {
     private readonly _$instances: Map<number, RenderDisplayObjectImpl<any>>;
     private readonly _$matrix: Float32Array;
-    private readonly _$colorTransform: Float32Array;
     private _$context: CanvasToWebGLContext | null;
     private _$canvas: OffscreenCanvas | null;
-    private _$samples: number;
     private _$width: number;
     private _$height: number;
     private readonly _$stage: RenderDisplayObjectContainer;
@@ -63,13 +59,6 @@ export class RenderPlayer
         this._$matrix = $getFloat32Array6(1, 0, 0, 1, 0, 0);
 
         /**
-         * @type {Float32Array}
-         * @default null
-         * @private
-         */
-        this._$colorTransform = new $Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
-
-        /**
          * @type {number}
          * @default 0
          * @private
@@ -89,13 +78,6 @@ export class RenderPlayer
          * @private
          */
         this._$stage = new RenderDisplayObjectContainer();
-
-        /**
-         * @type {number}
-         * @default 4
-         * @private
-         */
-        this._$samples = 4;
 
         /**
          * @type {OffscreenCanvas}
@@ -180,8 +162,7 @@ export class RenderPlayer
         // update
         $setDevicePixelRatio(device_pixel_ratio);
 
-        this._$samples = samples;
-        this._$canvas  = canvas;
+        this._$canvas = canvas;
 
         const gl: WebGL2RenderingContext | null = canvas.getContext("webgl2", {
             "stencil": true,
@@ -378,7 +359,6 @@ export class RenderPlayer
 
         // update cache max size
         context.setMaxSize(width, height);
-        manager.clearCache();
 
         context._$bind(this._$attachment);
     }
@@ -415,25 +395,30 @@ export class RenderPlayer
      * @method
      * @private
      */
-    _$createDisplayObjectContainer (object: PropertyContainerMessageImpl): void
-    {
+    _$createDisplayObjectContainer (
+        buffer: Float32Array,
+        recodes: Float32Array | null = null
+    ): void {
+
         const sprite: RenderDisplayObjectContainer = $getDisplayObjectContainer();
 
-        sprite._$instanceId = object.instanceId;
+        let index = 0;
+        sprite._$instanceId = buffer[index++];
+        sprite._$parentId   = buffer[index++];
 
-        if (object.recodes) {
-            sprite._$recodes  = object.recodes;
-            sprite._$maxAlpha = object.maxAlpha || 1;
-            sprite._$canDraw  = object.canDraw || true;
-            sprite._$xMin     = object.xMin || 0;
-            sprite._$yMin     = object.yMin || 0;
-            sprite._$xMax     = object.xMax || 0;
-            sprite._$yMax     = object.yMax || 0;
+        if (recodes) {
+            sprite._$recodes  = recodes;
+            sprite._$maxAlpha = buffer[index++];
+            sprite._$canDraw  = buffer[index++] === 1;
+            sprite._$xMin     = buffer[index++];
+            sprite._$yMin     = buffer[index++];
+            sprite._$xMax     = buffer[index++];
+            sprite._$yMax     = buffer[index++];
         }
 
-        if (object.grid) {
-            sprite._$scale9Grid = object.grid;
-        }
+        // if (object.grid) {
+        //     sprite._$scale9Grid = object.grid;
+        // }
 
         this._$instances.set(sprite._$instanceId, sprite);
     }
@@ -450,8 +435,8 @@ export class RenderPlayer
     {
         const shape: RenderShape = $getShape();
 
-        shape._$instanceId = object.instanceId;
-        shape._$parentId   = object.parentId;
+        // shape._$instanceId = object.instanceId;
+        // shape._$parentId   = object.parentId;
         if (object.recodes) {
             shape._$recodes = object.recodes;
         }
@@ -491,7 +476,7 @@ export class RenderPlayer
     {
         const video: RenderVideo = $getVideo();
 
-        video._$instanceId = object.instanceId;
+        // video._$instanceId = object.instanceId;
 
         if (object.characterId) {
             video._$characterId = object.characterId;
@@ -517,7 +502,7 @@ export class RenderPlayer
     {
         const textField: RenderTextField = $getTextField();
 
-        textField._$instanceId = object.instanceId;
+        // textField._$instanceId = object.instanceId;
 
         // bounds
         textField._$xMin = object.xMin || 0;

@@ -1,10 +1,10 @@
-import { RenderDisplayObject } from "./RenderDisplayObject";
-import { $videos } from "./RenderGlobal";
-import type { BoundsImpl } from "./interface/BoundsImpl";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { PropertyVideoMessageImpl } from "./interface/PropertyVideoMessageImpl";
-import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
-import type { CachePositionImpl } from "./interface/CachePositionImpl";
+import { RenderDisplayObject } from "../display/RenderDisplayObject";
+import { $videos } from "../RenderGlobal";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { PropertyVideoMessageImpl } from "../interface/PropertyVideoMessageImpl";
+import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
+import type { CachePositionImpl } from "../interface/CachePositionImpl";
 import type {
     CanvasToWebGLContext,
     FrameBufferManager

@@ -400,6 +400,7 @@ export class Shape extends DisplayObject
 
         const message: PropertyShapeMessageImpl = {
             "command": "createShape",
+            "buffer": new Float32Array(),
             "instanceId": this._$instanceId,
             "parentId": this._$parent ? this._$parent._$instanceId : -1,
             "maxAlpha": 0,
