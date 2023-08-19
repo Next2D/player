@@ -5,7 +5,6 @@ import type { RenderVideo } from "./media/RenderVideo";
 import type { RenderTextField } from "./text/RenderTextField";
 import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { PropertyShapeMessageImpl } from "./interface/PropertyShapeMessageImpl";
 import type { PropertyTextMessageImpl } from "./interface/PropertyTextMessageImpl";
 import type { PropertyVideoMessageImpl } from "./interface/PropertyVideoMessageImpl";
 import type { RGBAImpl } from "./interface/RGBAImpl";
@@ -14,15 +13,17 @@ import {
     $cacheStore,
     $COLOR_ARRAY_IDENTITY,
     $getFloat32Array6,
-    $toColorInt,
     $uintToRGBA,
-    $setDevicePixelRatio
+    $setDevicePixelRatio,
+    $blendToString,
+    $poolFloat32Array6
 } from "@next2d/share";
 import {
     $getDisplayObjectContainer,
     $getShape,
     $getTextField,
-    $getVideo
+    $getVideo,
+    $setSafari
 } from "./RenderGlobal";
 
 /**
@@ -146,21 +147,25 @@ export class RenderPlayer
     /**
      * @description WebGLを起動
      *
+     * @param  {Float32Array} buffer
      * @param  {OffscreenCanvas} canvas
-     * @param  {number} [samples=4]
-     * @param  {number} [device_pixel_ratio=2]
      * @return {void}
      * @method
      * @public
      */
     _$initialize (
-        canvas: OffscreenCanvas,
-        samples: number = 4,
-        device_pixel_ratio: number = 2
+        buffer: Float32Array,
+        canvas: OffscreenCanvas
     ): void {
 
+        let index = 0;
+
+        // set stage
+        this._$setStage(buffer[index++]);
+
         // update
-        $setDevicePixelRatio(device_pixel_ratio);
+        $setSafari(buffer[index++] === 1);
+        $setDevicePixelRatio(buffer[index++]);
 
         this._$canvas = canvas;
 
@@ -173,7 +178,7 @@ export class RenderPlayer
         });
 
         if (gl) {
-            const context: CanvasToWebGLContext = new CanvasToWebGLContext(gl, samples);
+            const context: CanvasToWebGLContext = new CanvasToWebGLContext(gl, buffer[index++]);
             this._$context = context;
             $cacheStore.context = context;
         }
@@ -182,26 +187,25 @@ export class RenderPlayer
     /**
      * @description 背景色をセット
      *
-     * @param  {string} [background_color="transparent"]
+     * @param  {Float32Array} buffer
      * @return {void}
      * @method
      * @public
      */
-    _$setBackgroundColor (background_color = "transparent"): void
+    _$setBackgroundColor (buffer: Float32Array): void
     {
         if (!this._$context) {
             return ;
         }
 
-        if (background_color === "transparent") {
+        const backgroundColor: number = buffer[0];
+        if (backgroundColor === -1) {
 
             this._$context._$setColor(0, 0, 0, 0);
 
         } else {
 
-            const color: RGBAImpl = $uintToRGBA(
-                $toColorInt(background_color)
-            );
+            const color: RGBAImpl = $uintToRGBA(backgroundColor);
 
             this._$context._$setColor(
                 color.R / 255,
@@ -312,10 +316,12 @@ export class RenderPlayer
      * @method
      * @private
      */
-    _$resize (
-        width: number, height: number,
-        scale: number, tx: number = 0, ty: number = 0
-    ): void {
+    _$resize (buffer: Float32Array): void
+    {
+
+        let index: number = 0;
+        const width: number  = buffer[index++];
+        const height: number = buffer[index++];
 
         this._$width  = width;
         this._$height = height;
@@ -328,15 +334,16 @@ export class RenderPlayer
             return ;
         }
 
-        const context = this._$context;
+        const context: CanvasToWebGLContext | null = this._$context;
         if (!context) {
             return ;
         }
 
+        const scale: number = buffer[index++];
         this._$matrix[0] = scale;
         this._$matrix[3] = scale;
-        this._$matrix[4] = tx;
-        this._$matrix[5] = ty;
+        this._$matrix[4] = buffer[index++];
+        this._$matrix[5] = buffer[index++];
 
         this._$stage._$updated = true;
         $cacheStore.reset();
@@ -424,44 +431,138 @@ export class RenderPlayer
     }
 
     /**
-     * @description Shapeクラスを生成
+     * @description Shapeの描画レコードを登録
      *
-     * @param  {object} object
+     * @param  {number} instance_id
+     * @param  {Float32Array} recodes
      * @return {void}
      * @method
      * @private
      */
-    _$createShape (object: PropertyShapeMessageImpl): void
+    _$registerShapeRecodes (instance_id: number, recodes: Float32Array): void
     {
-        const shape: RenderShape = $getShape();
-
-        // shape._$instanceId = object.instanceId;
-        // shape._$parentId   = object.parentId;
-        if (object.recodes) {
-            shape._$recodes = object.recodes;
+        if (!this._$instances.has(instance_id)) {
+            this._$instances.set(instance_id, $getShape());
         }
 
-        shape._$maxAlpha = object.maxAlpha || 1;
-        shape._$canDraw  = object.canDraw || true;
+        const shape: RenderShape = this._$instances.get(instance_id);
+        shape._$recodes = recodes;
+    }
 
-        shape._$xMin = object.xMin || 0;
-        shape._$yMin = object.yMin || 0;
-        shape._$xMax = object.xMax || 0;
-        shape._$yMax = object.yMax || 0;
+    /**
+     * @description Shapeクラスを生成
+     *
+     * @param  {Float32Array} buffer
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$createShape (buffer: Float32Array): void
+    {
+        let index = 0;
+        const instanceId = buffer[index++];
 
-        if (object.characterId) {
-            shape._$characterId = object.characterId;
+        if (!this._$instances.has(instanceId)) {
+            this._$instances.set(instanceId, $getShape());
         }
+        const shape: RenderShape = this._$instances.get(instanceId);
 
-        if ("loaderInfoId" in object) {
-            shape._$loaderInfoId = object.loaderInfoId || 0;
+        shape._$instanceId = instanceId;
+        shape._$parentId   = buffer[index++];
+        shape._$maxAlpha   = buffer[index++];
+        shape._$canDraw    = buffer[index++] === 1;
+
+        shape._$xMin = buffer[index++];
+        shape._$yMin = buffer[index++];
+        shape._$xMax = buffer[index++];
+        shape._$yMax = buffer[index++];
+
+        shape._$characterId  = buffer[index++];
+        shape._$loaderInfoId = buffer[index++];
+
+        if (buffer[index++]) {
+
+            // visible
+            shape._$visible = buffer[index++] === 1;
+
+            // depth
+            shape._$depth = buffer[index++];
+
+            // clip depth
+            shape._$clipDepth = buffer[index++];
+
+            // isMask
+            shape._$isMask = buffer[index++] === 1;
+
+            const mask: boolean = buffer[index++] === 1;
+            if (mask) {
+
+                shape._$maskId = buffer[index++];
+
+                if (!shape._$maskMatrix) {
+                    shape._$maskMatrix = $getFloat32Array6();
+                }
+
+                shape._$maskMatrix[0] = buffer[index++];
+                shape._$maskMatrix[1] = buffer[index++];
+                shape._$maskMatrix[2] = buffer[index++];
+                shape._$maskMatrix[3] = buffer[index++];
+                shape._$maskMatrix[4] = buffer[index++];
+                shape._$maskMatrix[5] = buffer[index++];
+
+            } else {
+
+                shape._$maskId = -1;
+                if (shape._$maskMatrix) {
+                    $poolFloat32Array6(shape._$maskMatrix);
+                    shape._$maskMatrix = null;
+                }
+                index += 7;
+
+            }
+
+            if (shape._$visible) {
+
+                // matrix
+                shape._$matrix[0] = buffer[index++];
+                shape._$matrix[1] = buffer[index++];
+                shape._$matrix[2] = buffer[index++];
+                shape._$matrix[3] = buffer[index++];
+                shape._$matrix[4] = buffer[index++];
+                shape._$matrix[5] = buffer[index++];
+
+                // colorTransform
+                shape._$colorTransform[0] = buffer[index++];
+                shape._$colorTransform[1] = buffer[index++];
+                shape._$colorTransform[2] = buffer[index++];
+                shape._$colorTransform[3] = buffer[index++];
+                shape._$colorTransform[4] = buffer[index++];
+                shape._$colorTransform[5] = buffer[index++];
+                shape._$colorTransform[6] = buffer[index++];
+                shape._$colorTransform[7] = buffer[index++];
+
+            } else {
+
+                index += 6; // matrix
+                index += 8; // colorTransform
+
+            }
+
+            // blend mode
+            shape._$blendMode = $blendToString(buffer[index++]);
+
+            // scale9Grid
+            if (buffer[index++]) {
+                shape._$scale9Grid = {
+                    "x": buffer[index++],
+                    "y": buffer[index++],
+                    "w": buffer[index++],
+                    "h": buffer[index++]
+                };
+            } else {
+                shape._$scale9Grid = null;
+            }
         }
-
-        if (object.grid) {
-            shape._$scale9Grid = object.grid;
-        }
-
-        this._$instances.set(shape._$instanceId, shape);
     }
 
     /**

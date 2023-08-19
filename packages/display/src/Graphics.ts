@@ -103,6 +103,7 @@ export class Graphics
     private _$cacheParams: number[];
     public _$bitmapId: number;
     public _$mode: ShapeModeImpl;
+    public _$posted: boolean;
 
     /**
      * @param {DisplayObject} src
@@ -368,6 +369,13 @@ export class Graphics
          * @private
          */
         this._$mode = "shape";
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$posted = false;
     }
 
     /**
@@ -775,6 +783,7 @@ export class Graphics
         this._$canDraw      = false;
         this._$bitmapId     = 0;
         this._$mode         = "shape";
+        this._$posted       = false;
 
         // fill
         this._$fillType     = 0;

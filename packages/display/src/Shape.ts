@@ -17,10 +17,14 @@ import type {
     PlayerHitObjectImpl,
     PropertyMessageMapImpl,
     PropertyShapeMessageImpl,
-    Character
+    Character,
+    PropertyMessageImpl
 } from "@next2d/interface";
 import {
     $MATRIX_HIT_ARRAY_IDENTITY,
+    $getRenderBufferArray,
+    $getRenderMessageObject,
+    $poolRenderMessageObject,
     $rendererWorker
 } from "@next2d/util";
 import {
@@ -393,59 +397,72 @@ export class Shape extends DisplayObject
         if (this._$created || !$rendererWorker) {
             return ;
         }
+
+        // update flag
         this._$created = true;
 
-        const options: ArrayBuffer[] = $getArray();
-        const bounds: BoundsImpl     = this._$getBounds();
+        const buffer: Float32Array = $getRenderBufferArray();
 
-        const message: PropertyShapeMessageImpl = {
-            "command": "createShape",
-            "buffer": new Float32Array(),
-            "instanceId": this._$instanceId,
-            "parentId": this._$parent ? this._$parent._$instanceId : -1,
-            "maxAlpha": 0,
-            "canDraw": false,
-            "xMin": bounds.xMin,
-            "yMin": bounds.yMin,
-            "xMax": bounds.xMax,
-            "yMax": bounds.yMax
-        };
+        let index: number = 0;
+        buffer[index++] = this._$instanceId;
+        buffer[index++] = this._$parent ? this._$parent._$instanceId : -1;
+        buffer[index++] = 0; // maxAlpha
+        buffer[index++] = 0; // canDraw
 
+        // graphics
         const graphics: Graphics | null = this._$graphics;
-        if (graphics) {
+        if (graphics
+            && !graphics._$posted
+            && graphics._$maxAlpha > 0
+            && graphics._$canDraw
+        ) {
 
+            graphics._$posted = true;
+
+            const message: PropertyMessageImpl = $getRenderMessageObject();
             const recodes: Float32Array = graphics._$getRecodes();
 
-            if (recodes.length
-                && graphics._$maxAlpha > 0
-                && graphics._$canDraw
-            ) {
-                message.maxAlpha = graphics._$maxAlpha;
-                message.canDraw  = graphics._$canDraw;
-                message.recodes  = recodes;
-                options.push(recodes.buffer);
-            }
+            message.command = `shapeRecodes@${this._$instanceId}`;
+            message.buffer  = recodes;
 
+            const options: ArrayBuffer[] = $getArray(recodes.buffer);
+            $rendererWorker.postMessage(message, options);
+
+            $poolRenderMessageObject(message);
+            $poolArray(options);
+
+            buffer[2] = graphics._$maxAlpha;
+            buffer[3] = +graphics._$canDraw;
         }
 
-        if (this._$characterId > -1) {
-            message.characterId = this._$characterId;
+        // bounds
+        const bounds: BoundsImpl = this._$getBounds();
+        buffer[index++] = bounds.xMin;
+        buffer[index++] = bounds.yMin;
+        buffer[index++] = bounds.xMax;
+        buffer[index++] = bounds.yMax;
+
+        // characterId
+        buffer[index++] = this._$characterId > -1 ? this._$characterId : -1;
+
+        // loaderInfoId
+        buffer[index++] = this._$loaderInfo ? this._$loaderInfo._$id : -1;
+
+        // parent flag
+        buffer[index++] = +(this._$parent !== null);
+        if (this._$parent) {
+            this._$registerProperty(buffer, index);
         }
 
-        if (this._$loaderInfo) {
-            message.loaderInfoId = this._$loaderInfo._$id;
-        }
+        const message: PropertyMessageMapImpl<PropertyShapeMessageImpl> = $getRenderMessageObject();
+        message.command = "createShape";
+        message.buffer  = buffer;
 
-        if (this._$scale9Grid) {
-            message.grid = {
-                "x": this._$scale9Grid.x,
-                "y": this._$scale9Grid.y,
-                "w": this._$scale9Grid.width,
-                "h": this._$scale9Grid.height
-            };
-        }
-
+        const options: ArrayBuffer[] = $getArray(buffer.buffer);
         $rendererWorker.postMessage(message, options);
+
+        $poolRenderMessageObject(message);
+        $poolArray(options);
     }
 
     /**
@@ -697,14 +714,14 @@ export class Shape extends DisplayObject
      */
     _$postProperty (): void
     {
-        if (!$rendererWorker) {
+        if (!$rendererWorker || !this._$created) {
             return ;
         }
 
         const message: PropertyMessageMapImpl<PropertyShapeMessageImpl> = this._$createMessage();
 
         const graphics: Graphics | null = this._$graphics;
-        if (graphics && !graphics._$buffer) {
+        if (graphics && !graphics._$posted) {
 
             message.maxAlpha = graphics._$maxAlpha;
             message.canDraw  = graphics._$canDraw;

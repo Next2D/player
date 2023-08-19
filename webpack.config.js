@@ -96,7 +96,7 @@ const player = {
             "extensions": [".ts"],
             "exclude": "node_modules"
         }),
-        // new WebpackWorkerLoaderPlugin()
+        new WebpackWorkerLoaderPlugin()
     ],
     "resolve": {
         "alias": {

@@ -37,7 +37,8 @@ import {
     $rendererWorker,
     $poolMatrix,
     $hitContext,
-    $variables
+    $variables,
+    $blendToNumber
 } from "@next2d/util";
 import {
     $doUpdated,
@@ -2174,7 +2175,7 @@ export class DisplayObject extends EventDispatcher
      * @method
      * @private
      */
-    _$removeWorkerInstance ()
+    _$removeWorkerInstance (): void
     {
         if ($rendererWorker) {
             $rendererWorker.postMessage({
@@ -2182,6 +2183,105 @@ export class DisplayObject extends EventDispatcher
                 "instanceId": this._$instanceId
             });
         }
+    }
+
+    /**
+     * @param  {Float32Array} buffer
+     * @param  {number} [index = 0]
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$registerProperty (buffer: Float32Array, index: number = 0): void
+    {
+        // visible
+        buffer[index++] = +this._$visible;
+
+        // depth
+        buffer[index++] = this._$placeId;
+
+        // clip depth
+        buffer[index++] = this._$clipDepth;
+
+        // isMask
+        buffer[index++] = +this._$isMask;
+
+        const mask: DisplayObjectImpl<any> | null = this._$mask;
+        buffer[index++] = +(mask !== null);
+        if (mask) {
+
+            // mask id
+            buffer[index++] = mask._$instanceId;
+
+            let maskMatrix: Float32Array = $MATRIX_ARRAY_IDENTITY;
+            let parent: ParentImpl<any> | null = mask._$parent;
+            while (parent) {
+
+                maskMatrix = $multiplicationMatrix(
+                    parent._$transform._$rawMatrix(),
+                    maskMatrix
+                );
+
+                parent = parent._$parent;
+            }
+
+            // mask matrix
+            buffer[index++] = maskMatrix[0];
+            buffer[index++] = maskMatrix[1];
+            buffer[index++] = maskMatrix[2];
+            buffer[index++] = maskMatrix[3];
+            buffer[index++] = maskMatrix[4];
+            buffer[index++] = maskMatrix[5];
+        } else {
+            index += 7;
+        }
+
+        if (this._$visible) {
+            const transform: Transform = this._$transform;
+
+            // matrix
+            const matrix: Float32Array = transform._$rawMatrix();
+            buffer[index++] = matrix[0];
+            buffer[index++] = matrix[1];
+            buffer[index++] = matrix[2];
+            buffer[index++] = matrix[3];
+            buffer[index++] = matrix[4];
+            buffer[index++] = matrix[5];
+
+            // colorTransform
+            const colorTransform = transform._$rawColorTransform();
+            buffer[index++] = colorTransform[0];
+            buffer[index++] = colorTransform[1];
+            buffer[index++] = colorTransform[2];
+            buffer[index++] = colorTransform[3];
+            buffer[index++] = colorTransform[4];
+            buffer[index++] = colorTransform[5];
+            buffer[index++] = colorTransform[6];
+            buffer[index++] = colorTransform[7];
+
+        } else {
+            index += 6; // matrix
+            index += 8; // colorTransform
+        }
+
+        // blend mode
+        const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
+        buffer[index++] = $blendToNumber(blendMode);
+
+        // scale9Grid
+        const scale9Grid: Rectangle | null  = this._$scale9Grid;
+        buffer[index++] = +(scale9Grid !== null);
+
+        if (scale9Grid) {
+            buffer[index++] = scale9Grid.x;
+            buffer[index++] = scale9Grid.y;
+            buffer[index++] = scale9Grid.width;
+            buffer[index++] = scale9Grid.height;
+        } else {
+            index += 4;
+        }
+
+        // filter
     }
 
     /**

@@ -1,7 +1,6 @@
 import { InteractiveObject } from "./InteractiveObject";
 import { Event as Next2DEvent } from "@next2d/events";
 import type { LoaderInfo } from "./LoaderInfo";
-import type { Graphics } from "./Graphics";
 import type { Player } from "@next2d/core";
 import type { Sound } from "@next2d/media";
 import type { Transform } from "@next2d/geom";
@@ -29,9 +28,11 @@ import {
     $createInstance,
     $currentPlayer,
     $getRenderBufferArray,
+    $getRenderMessageObject,
     $hitContext,
     $isTouch,
     $MATRIX_HIT_ARRAY_IDENTITY,
+    $poolRenderMessageObject,
     $rendererWorker
 } from "@next2d/util";
 import {
@@ -553,16 +554,12 @@ export class DisplayObjectContainer extends InteractiveObject
             }
         }
 
-        const graphics: Graphics | null = "_$graphics" in this
-            ? this._$graphics as Graphics | null
-            : null;
-
         const children: DisplayObjectImpl<any>[] = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
         // size zero
-        if (!children.length && !graphics) {
+        if (!children.length) {
 
             const bounds: BoundsImpl = $getBoundsObject(
                 multiMatrix[4], -multiMatrix[4],
@@ -582,19 +579,6 @@ export class DisplayObjectContainer extends InteractiveObject
         let xMax = -no;
         let yMin = no;
         let yMax = -no;
-
-        if (graphics) {
-            const baseBounds: BoundsImpl = graphics._$getBounds();
-            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
-            $poolBoundsObject(baseBounds);
-
-            xMin   = bounds.xMin;
-            xMax   = bounds.xMax;
-            yMin   = bounds.yMin;
-            yMax   = bounds.yMax;
-            $poolBoundsObject(bounds);
-        }
-
         for (let idx: number = 0; idx < children.length; ++idx) {
 
             const bounds: BoundsImpl = children[idx]._$getBounds(multiMatrix);
@@ -623,16 +607,13 @@ export class DisplayObjectContainer extends InteractiveObject
      */
     _$getLayerBounds (multi_matrix: Float32Array): BoundsImpl
     {
-        const graphics: Graphics | null = "_$graphics" in this
-            ? this._$graphics as Graphics | null
-            : null;
 
         const children: DisplayObjectImpl<any>[] = this._$needsChildren
             ? this._$getChildren()
             : this._$children;
 
         // size zero
-        if (!children.length && !graphics) {
+        if (!children.length) {
             return $getBoundsObject(0, 0, 0, 0);
         }
 
@@ -642,20 +623,6 @@ export class DisplayObjectContainer extends InteractiveObject
         let xMax: number = -no;
         let yMin: number = no;
         let yMax: number = -no;
-
-        if (graphics) {
-
-            const baseBounds: BoundsImpl = graphics._$getBounds();
-            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multi_matrix);
-            $poolBoundsObject(baseBounds);
-
-            xMin   = +bounds.xMin;
-            xMax   = +bounds.xMax;
-            yMin   = +bounds.yMin;
-            yMax   = +bounds.yMax;
-            $poolBoundsObject(bounds);
-        }
-
         for (let idx: number = 0; idx < children.length; ++idx) {
 
             const instance = children[idx];
@@ -768,7 +735,7 @@ export class DisplayObjectContainer extends InteractiveObject
                 return currentChildren;
             }
 
-            const useWorker  = !!$rendererWorker && !!this._$stage;
+            const useWorker: boolean = !!$rendererWorker && !!this._$stage;
 
             const skipIds: Map<number, boolean> = $getMap();
             const poolInstances: Map<number, DisplayObjectImpl<any>> = $getMap();
@@ -847,7 +814,7 @@ export class DisplayObjectContainer extends InteractiveObject
                     );
                 }
                 if (instance._$graphics) {
-                    $cacheStore.setRemoveTimer(instance._$graphics._$cacheKey);
+                    $cacheStore.setRemoveTimer(instance._$graphics._$uniqueKey);
                 }
 
                 // remove event
@@ -985,10 +952,7 @@ export class DisplayObjectContainer extends InteractiveObject
             }
 
             if ($rendererWorker) {
-
                 child._$createWorkerInstance();
-                child._$postProperty();
-
                 this._$postChildrenIds();
             }
         }
@@ -1052,7 +1016,6 @@ export class DisplayObjectContainer extends InteractiveObject
 
                 if ($rendererWorker) {
                     instance._$createWorkerInstance();
-                    instance._$postProperty();
                 }
 
                 if (instance.willTrigger(Next2DEvent.ADDED_TO_STAGE)) {
@@ -1168,7 +1131,7 @@ export class DisplayObjectContainer extends InteractiveObject
                 );
             }
             if (child._$graphics) {
-                $cacheStore.setRemoveTimer(child._$graphics._$cacheKey);
+                $cacheStore.setRemoveTimer(child._$graphics._$uniqueKey);
             }
 
             // reset params
@@ -1256,7 +1219,7 @@ export class DisplayObjectContainer extends InteractiveObject
                 );
             }
             if (instance._$graphics) {
-                $cacheStore.setRemoveTimer(instance._$graphics._$cacheKey);
+                $cacheStore.setRemoveTimer(instance._$graphics._$uniqueKey);
             }
 
             if (instance instanceof DisplayObjectContainer) {
@@ -1362,14 +1325,6 @@ export class DisplayObjectContainer extends InteractiveObject
             || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
         ) {
             multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
-        }
-
-        const graphics: Graphics | null  = "_$graphics" in this
-            ? this._$graphics as Graphics | null
-            : null;
-
-        if (graphics && graphics._$canDraw) {
-            graphics._$clip(context, multiMatrix);
         }
 
         const children: DisplayObjectImpl<any>[] = this._$getChildren();
@@ -1725,11 +1680,7 @@ export class DisplayObjectContainer extends InteractiveObject
         // not draw
         const children: DisplayObjectImpl<any>[] = this._$getChildren();
         const length: number = children.length;
-        const graphics: Graphics | null = "_$graphics" in this
-            ? this._$graphics as Graphics | null
-            : null;
-
-        if (!length && (!graphics || !graphics._$canDraw)) {
+        if (!length) {
             return ;
         }
 
@@ -1750,11 +1701,6 @@ export class DisplayObjectContainer extends InteractiveObject
         const preColorTransform: Float32Array = preObject.isLayer && preObject.color
             ? preObject.color
             : multiColor;
-
-        // if graphics draw
-        if (graphics && graphics._$canDraw) {
-            graphics._$draw(context, preMatrix, preColorTransform);
-        }
 
         // init clip params
         let shouldClip: boolean = true;
@@ -2103,19 +2049,6 @@ export class DisplayObjectContainer extends InteractiveObject
         $poolArray(targets);
         $poolMap(clipIndexes);
 
-        // graphics
-        if (!hit) {
-
-            const graphics: Graphics | null = "_$graphics" in this
-                ? this._$graphics as Graphics | null
-                : null;
-
-            if (graphics) {
-                hit = graphics._$hit(context, multiMatrix, options);
-            }
-
-        }
-
         if (multiMatrix !== matrix) {
             $poolFloat32Array6(multiMatrix);
         }
@@ -2160,21 +2093,11 @@ export class DisplayObjectContainer extends InteractiveObject
 
         }
 
-        let hit: boolean = false;
-
-        const graphics: Graphics | null  = "_$graphics" in this
-            ? this._$graphics as Graphics | null
-            : null;
-
-        if (graphics) {
-            hit = graphics._$hit(context, multiMatrix, options);
-        }
-
         if (multiMatrix !== matrix) {
             $poolFloat32Array6(multiMatrix);
         }
 
-        return hit;
+        return false;
     }
 
     /**
@@ -2255,44 +2178,26 @@ export class DisplayObjectContainer extends InteractiveObject
 
         let index: number = 0;
         const buffer: Float32Array = $getRenderBufferArray();
-
-        const options: ArrayBuffer[] = $getArray();
-        const message: PropertyContainerMessageImpl = {
-            "command": "createDisplayObjectContainer",
-            "buffer": buffer
-        };
-
         buffer[index++] = this._$instanceId;
         buffer[index++] = this._$parent ? this._$parent._$instanceId : -1;
 
-        const graphics: Graphics | null = "_$graphics" in this
-            ? this._$graphics as Graphics | null
-            : null;
+        const message: PropertyMessageMapImpl<any> = $getRenderMessageObject();
+        message.command = "createDisplayObjectContainer";
+        message.buffer  = buffer;
 
-        if (graphics) {
-
-            message.recodes = graphics._$getRecodes();
-            options.push(message.recodes.buffer);
-
-            buffer[index++] = graphics._$maxAlpha;
-            buffer[index++] = +graphics._$canDraw;
-            buffer[index++] = graphics._$xMin;
-            buffer[index++] = graphics._$yMin;
-            buffer[index++] = graphics._$xMax;
-            buffer[index++] = graphics._$yMax;
-
-        }
-
-        options.push(buffer.buffer);
+        const options: ArrayBuffer[] = $getArray(buffer.buffer);
         $rendererWorker.postMessage(message, options);
+
+        $poolRenderMessageObject(message);
+        $poolArray(options);
     }
 
     /**
-     * @return {object}
+     * @return {void}
      * @method
      * @private
      */
-    _$postProperty ()
+    _$postProperty (): void
     {
         if (!$rendererWorker) {
             return ;
@@ -2302,26 +2207,6 @@ export class DisplayObjectContainer extends InteractiveObject
 
         const options: ArrayBuffer[] = $getArray();
         const message: PropertyMessageMapImpl<PropertyContainerMessageImpl> = this._$createMessage();
-
-        const graphics: Graphics | null = "_$graphics" in this
-            ? this._$graphics as Graphics | null
-            : null;
-
-        if (graphics && !graphics._$buffer) {
-
-            message.maxAlpha = graphics._$maxAlpha;
-            message.canDraw  = graphics._$canDraw;
-
-            const recodes = graphics._$getRecodes();
-            message.recodes = recodes;
-            options.push(recodes.buffer);
-
-            const bounds = this._$getBounds();
-            message.xMin = bounds.xMin;
-            message.yMin = bounds.yMin;
-            message.xMax = bounds.xMax;
-            message.yMax = bounds.yMax;
-        }
 
         $rendererWorker
             .postMessage(message, options);
@@ -2340,10 +2225,11 @@ export class DisplayObjectContainer extends InteractiveObject
      */
     _$postChildrenIds (childrenIds: number[] | null = null): void
     {
-        if (!$rendererWorker) {
+        if (!$rendererWorker || !this._$created) {
             return ;
         }
 
+        let poolIds = false;
         if (!childrenIds) {
 
             const children: DisplayObjectImpl<any>[] = this._$getChildren();
@@ -2353,22 +2239,25 @@ export class DisplayObjectContainer extends InteractiveObject
                 childrenIds.push(children[idx]._$instanceId);
             }
 
-            $rendererWorker.postMessage({
-                "command": "setChildren",
-                "instanceId": this._$instanceId,
-                "children": childrenIds
-            });
+            poolIds = true;
+        }
 
+        const buffer: Int32Array = new Int32Array(childrenIds.length + 1);
+        buffer[0] = this._$instanceId;
+        buffer.set(childrenIds, 1);
+
+        const message: PropertyMessageMapImpl<any> = $getRenderMessageObject();
+        message.command = "setChildren";
+        message.buffer  = buffer;
+
+        const options: ArrayBuffer[] = $getArray(buffer.buffer);
+        $rendererWorker.postMessage(message, options);
+
+        $poolRenderMessageObject(message);
+        $poolArray(options);
+
+        if (poolIds) {
             $poolArray(childrenIds);
-
-        } else {
-
-            $rendererWorker.postMessage({
-                "command": "setChildren",
-                "instanceId": this._$instanceId,
-                "children": childrenIds
-            });
-
         }
     }
 }

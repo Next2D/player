@@ -2,6 +2,7 @@ import { TextFormat } from "./TextFormat";
 import { Player } from "@next2d/core";
 import {
     InteractiveObject,
+    Shape,
     Sprite
 } from "@next2d/display";
 import {
@@ -2415,11 +2416,16 @@ export class TextField extends InteractiveObject
 
             if (this._$scrollEnabled && !this._$scrollSprite) {
                 this._$scrollSprite = new Sprite();
-                this._$scrollSprite
+
+                const shape: Shape = new Shape();
+                
+                shape
                     .graphics
                     .beginFill("#000", 0.3)
                     .drawRoundRect(0, 0, 3, 3, 3);
-                this._$scrollSprite.scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
+                shape.scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
+
+                this._$scrollSprite.addChild(shape);
             }
         }
     }

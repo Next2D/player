@@ -40,7 +40,7 @@ import {
  */
 export class RenderDisplayObjectContainer extends RenderGraphics
 {
-    private readonly _$children: number[];
+    private _$children: Int32Array;
 
     /**
      * @constructor
@@ -51,10 +51,10 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         super();
 
         /**
-         * @type {array}
+         * @type {Int32Array}
          * @private
          */
-        this._$children = $getArray();
+        this._$children = new Int32Array();
     }
 
     /**
@@ -83,7 +83,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         }
 
         const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
-        const children: number[] = this._$children;
+        const children: Int32Array = this._$children;
         for (let idx: number = 0; idx < this._$children.length; ++idx) {
 
             const id: number = children[idx];
@@ -144,7 +144,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         }
 
         // not draw
-        const children: number[] = this._$children;
+        const children: Int32Array = this._$children;
         const length: number = children.length;
         if (!length && (!this._$recodes || !this._$canDraw)) {
             return ;
@@ -339,9 +339,9 @@ export class RenderDisplayObjectContainer extends RenderGraphics
      */
     _$getLayerBounds (multi_matrix: Float32Array): BoundsImpl
     {
-        const isGraphics: boolean = !!this._$recodes;
-        const children: number[]  = this._$children;
-        const length: number      = children.length;
+        const isGraphics: boolean  = !!this._$recodes;
+        const children: Int32Array = this._$children;
+        const length: number       = children.length;
 
         // size zero
         if (!length && !isGraphics) {
@@ -464,9 +464,9 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             }
         }
 
-        const isGraphics: boolean = !!this._$recodes;
-        const children: number[]  = this._$children;
-        const length: number      = children.length;
+        const isGraphics: boolean  = !!this._$recodes;
+        const children: Int32Array = this._$children;
+        const length: number       = children.length;
 
         // size zero
         if (!length && !isGraphics) {
@@ -837,8 +837,8 @@ export class RenderDisplayObjectContainer extends RenderGraphics
     _$remove (): void
     {
         // reset
-        this._$children.length = 0;
-        this._$recodes = null;
+        this._$children = new Int32Array();
+        this._$recodes  = null;
 
         super._$remove();
 
