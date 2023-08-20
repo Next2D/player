@@ -78,7 +78,7 @@ export class CommandController
                             continue;
                         }
 
-                        instances.get(object.instanceId)._$update(object);
+                        // instances.get(object.instanceId)._$update(object);
                     }
                     break;
 
@@ -97,7 +97,6 @@ export class CommandController
                         instance._$doChanged();
 
                         instance._$children = buffer.subarray(1);
-                        console.log(instance);
                     }
                     break;
 
@@ -120,10 +119,7 @@ export class CommandController
                 case "createDisplayObjectContainer":
 
                     $renderPlayer
-                        ._$createDisplayObjectContainer(
-                            object.buffer,
-                            object.recodes
-                        );
+                        ._$createDisplayObjectContainer(object.buffer);
 
                     break;
 

@@ -2175,11 +2175,15 @@ export class DisplayObjectContainer extends InteractiveObject
         }
 
         this._$created = true;
+        this._$posted  = true;
+        this._$updated = false;
 
         let index: number = 0;
         const buffer: Float32Array = $getRenderBufferArray();
         buffer[index++] = this._$instanceId;
         buffer[index++] = this._$parent ? this._$parent._$instanceId : -1;
+
+        this._$registerProperty(buffer, index);
 
         const message: PropertyMessageMapImpl<any> = $getRenderMessageObject();
         message.command = "createDisplayObjectContainer";
@@ -2190,6 +2194,8 @@ export class DisplayObjectContainer extends InteractiveObject
 
         $poolRenderMessageObject(message);
         $poolArray(options);
+
+        this._$postChildrenIds();
     }
 
     /**

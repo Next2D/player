@@ -397,37 +397,133 @@ export class RenderPlayer
     /**
      * @description DisplayObjectContainerクラスを生成
      *
-     * @param  {object} object
+     * @param  {Float32Array} buffer
      * @return {void}
      * @method
      * @private
      */
-    _$createDisplayObjectContainer (
-        buffer: Float32Array,
-        recodes: Float32Array | null = null
-    ): void {
-
+    _$createDisplayObjectContainer (buffer: Float32Array): void
+    {
         const sprite: RenderDisplayObjectContainer = $getDisplayObjectContainer();
 
         let index = 0;
         sprite._$instanceId = buffer[index++];
         sprite._$parentId   = buffer[index++];
 
-        if (recodes) {
-            sprite._$recodes  = recodes;
-            sprite._$maxAlpha = buffer[index++];
-            sprite._$canDraw  = buffer[index++] === 1;
-            sprite._$xMin     = buffer[index++];
-            sprite._$yMin     = buffer[index++];
-            sprite._$xMax     = buffer[index++];
-            sprite._$yMax     = buffer[index++];
-        }
-
-        // if (object.grid) {
-        //     sprite._$scale9Grid = object.grid;
-        // }
+        this._$setProperty(sprite, buffer, index);
 
         this._$instances.set(sprite._$instanceId, sprite);
+    }
+
+    /**
+     * @param  {object} instance
+     * @param  {Float32Array} buffer
+     * @param  {number} index
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$setProperty (
+        instance: RenderDisplayObjectImpl<any>,
+        buffer: Float32Array,
+        index: number
+    ): void {
+
+        // visible
+        instance._$visible = buffer[index++] === 1;
+
+        // depth
+        instance._$depth = buffer[index++];
+
+        // clip depth
+        instance._$clipDepth = buffer[index++];
+
+        // isMask
+        instance._$isMask = buffer[index++] === 1;
+
+        const mask: boolean = buffer[index++] === 1;
+        if (mask) {
+
+            instance._$maskId = buffer[index++];
+
+            if (!instance._$maskMatrix) {
+                instance._$maskMatrix = $getFloat32Array6();
+            }
+
+            instance._$maskMatrix[0] = buffer[index++];
+            instance._$maskMatrix[1] = buffer[index++];
+            instance._$maskMatrix[2] = buffer[index++];
+            instance._$maskMatrix[3] = buffer[index++];
+            instance._$maskMatrix[4] = buffer[index++];
+            instance._$maskMatrix[5] = buffer[index++];
+
+        } else {
+
+            instance._$maskId = -1;
+            if (instance._$maskMatrix) {
+                $poolFloat32Array6(instance._$maskMatrix);
+                instance._$maskMatrix = null;
+            }
+            index += 7;
+
+        }
+
+        if (instance._$visible) {
+
+            // matrix
+            instance._$matrix[0] = buffer[index++];
+            instance._$matrix[1] = buffer[index++];
+            instance._$matrix[2] = buffer[index++];
+            instance._$matrix[3] = buffer[index++];
+            instance._$matrix[4] = buffer[index++];
+            instance._$matrix[5] = buffer[index++];
+
+            // colorTransform
+            instance._$colorTransform[0] = buffer[index++];
+            instance._$colorTransform[1] = buffer[index++];
+            instance._$colorTransform[2] = buffer[index++];
+            instance._$colorTransform[3] = buffer[index++];
+            instance._$colorTransform[4] = buffer[index++];
+            instance._$colorTransform[5] = buffer[index++];
+            instance._$colorTransform[6] = buffer[index++];
+            instance._$colorTransform[7] = buffer[index++];
+
+        } else {
+
+            index += 6; // matrix
+            index += 8; // colorTransform
+
+        }
+
+        // blend mode
+        instance._$blendMode = $blendToString(buffer[index++]);
+
+        // scale9Grid
+        if (buffer[index++]) {
+            instance._$scale9Grid = {
+                "x": buffer[index++],
+                "y": buffer[index++],
+                "w": buffer[index++],
+                "h": buffer[index++]
+            };
+        } else {
+            instance._$scale9Grid = null;
+        }
+
+        // blend mode
+        instance._$blendMode = $blendToString(buffer[index++]);
+
+        // scale9Grid
+        if (buffer[index++]) {
+            instance._$scale9Grid = {
+                "x": buffer[index++],
+                "y": buffer[index++],
+                "w": buffer[index++],
+                "h": buffer[index++]
+            };
+        } else {
+            instance._$scale9Grid = null;
+        }
     }
 
     /**
@@ -480,89 +576,7 @@ export class RenderPlayer
         shape._$characterId  = buffer[index++];
         shape._$loaderInfoId = buffer[index++];
 
-        if (buffer[index++]) {
-
-            // visible
-            shape._$visible = buffer[index++] === 1;
-
-            // depth
-            shape._$depth = buffer[index++];
-
-            // clip depth
-            shape._$clipDepth = buffer[index++];
-
-            // isMask
-            shape._$isMask = buffer[index++] === 1;
-
-            const mask: boolean = buffer[index++] === 1;
-            if (mask) {
-
-                shape._$maskId = buffer[index++];
-
-                if (!shape._$maskMatrix) {
-                    shape._$maskMatrix = $getFloat32Array6();
-                }
-
-                shape._$maskMatrix[0] = buffer[index++];
-                shape._$maskMatrix[1] = buffer[index++];
-                shape._$maskMatrix[2] = buffer[index++];
-                shape._$maskMatrix[3] = buffer[index++];
-                shape._$maskMatrix[4] = buffer[index++];
-                shape._$maskMatrix[5] = buffer[index++];
-
-            } else {
-
-                shape._$maskId = -1;
-                if (shape._$maskMatrix) {
-                    $poolFloat32Array6(shape._$maskMatrix);
-                    shape._$maskMatrix = null;
-                }
-                index += 7;
-
-            }
-
-            if (shape._$visible) {
-
-                // matrix
-                shape._$matrix[0] = buffer[index++];
-                shape._$matrix[1] = buffer[index++];
-                shape._$matrix[2] = buffer[index++];
-                shape._$matrix[3] = buffer[index++];
-                shape._$matrix[4] = buffer[index++];
-                shape._$matrix[5] = buffer[index++];
-
-                // colorTransform
-                shape._$colorTransform[0] = buffer[index++];
-                shape._$colorTransform[1] = buffer[index++];
-                shape._$colorTransform[2] = buffer[index++];
-                shape._$colorTransform[3] = buffer[index++];
-                shape._$colorTransform[4] = buffer[index++];
-                shape._$colorTransform[5] = buffer[index++];
-                shape._$colorTransform[6] = buffer[index++];
-                shape._$colorTransform[7] = buffer[index++];
-
-            } else {
-
-                index += 6; // matrix
-                index += 8; // colorTransform
-
-            }
-
-            // blend mode
-            shape._$blendMode = $blendToString(buffer[index++]);
-
-            // scale9Grid
-            if (buffer[index++]) {
-                shape._$scale9Grid = {
-                    "x": buffer[index++],
-                    "y": buffer[index++],
-                    "w": buffer[index++],
-                    "h": buffer[index++]
-                };
-            } else {
-                shape._$scale9Grid = null;
-            }
-        }
+        this._$setProperty(shape, buffer, index);
     }
 
     /**

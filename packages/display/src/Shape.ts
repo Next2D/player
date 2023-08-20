@@ -388,84 +388,6 @@ export class Shape extends DisplayObject
     }
 
     /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$createWorkerInstance (): void
-    {
-        if (this._$created || !$rendererWorker) {
-            return ;
-        }
-
-        // update flag
-        this._$created = true;
-
-        const buffer: Float32Array = $getRenderBufferArray();
-
-        let index: number = 0;
-        buffer[index++] = this._$instanceId;
-        buffer[index++] = this._$parent ? this._$parent._$instanceId : -1;
-        buffer[index++] = 0; // maxAlpha
-        buffer[index++] = 0; // canDraw
-
-        // graphics
-        const graphics: Graphics | null = this._$graphics;
-        if (graphics
-            && !graphics._$posted
-            && graphics._$maxAlpha > 0
-            && graphics._$canDraw
-        ) {
-
-            graphics._$posted = true;
-
-            const message: PropertyMessageImpl = $getRenderMessageObject();
-            const recodes: Float32Array = graphics._$getRecodes();
-
-            message.command = `shapeRecodes@${this._$instanceId}`;
-            message.buffer  = recodes;
-
-            const options: ArrayBuffer[] = $getArray(recodes.buffer);
-            $rendererWorker.postMessage(message, options);
-
-            $poolRenderMessageObject(message);
-            $poolArray(options);
-
-            buffer[2] = graphics._$maxAlpha;
-            buffer[3] = +graphics._$canDraw;
-        }
-
-        // bounds
-        const bounds: BoundsImpl = this._$getBounds();
-        buffer[index++] = bounds.xMin;
-        buffer[index++] = bounds.yMin;
-        buffer[index++] = bounds.xMax;
-        buffer[index++] = bounds.yMax;
-
-        // characterId
-        buffer[index++] = this._$characterId > -1 ? this._$characterId : -1;
-
-        // loaderInfoId
-        buffer[index++] = this._$loaderInfo ? this._$loaderInfo._$id : -1;
-
-        // parent flag
-        buffer[index++] = +(this._$parent !== null);
-        if (this._$parent) {
-            this._$registerProperty(buffer, index);
-        }
-
-        const message: PropertyMessageMapImpl<PropertyShapeMessageImpl> = $getRenderMessageObject();
-        message.command = "createShape";
-        message.buffer  = buffer;
-
-        const options: ArrayBuffer[] = $getArray(buffer.buffer);
-        $rendererWorker.postMessage(message, options);
-
-        $poolRenderMessageObject(message);
-        $poolArray(options);
-    }
-
-    /**
      * @param  {object} character
      * @return {void}
      * @method
@@ -712,9 +634,86 @@ export class Shape extends DisplayObject
      * @method
      * @private
      */
+    _$createWorkerInstance (): void
+    {
+        if (this._$created || !$rendererWorker) {
+            return ;
+        }
+
+        // update flag
+        this._$created = true;
+        this._$posted  = true;
+        this._$updated = false;
+
+        const buffer: Float32Array = $getRenderBufferArray();
+
+        let index: number = 0;
+        buffer[index++] = this._$instanceId;
+        buffer[index++] = this._$parent ? this._$parent._$instanceId : -1;
+        buffer[index++] = 0; // maxAlpha
+        buffer[index++] = 0; // canDraw
+
+        // graphics
+        const graphics: Graphics | null = this._$graphics;
+        if (graphics
+            && !graphics._$posted
+            && graphics._$maxAlpha > 0
+            && graphics._$canDraw
+        ) {
+
+            graphics._$posted = true;
+
+            const message: PropertyMessageImpl = $getRenderMessageObject();
+            const recodes: Float32Array = graphics._$getRecodes();
+
+            message.command = `shapeRecodes@${this._$instanceId}`;
+            message.buffer  = recodes;
+
+            const options: ArrayBuffer[] = $getArray(recodes.buffer);
+            $rendererWorker.postMessage(message, options);
+
+            $poolRenderMessageObject(message);
+            $poolArray(options);
+
+            buffer[2] = graphics._$maxAlpha;
+            buffer[3] = +graphics._$canDraw;
+        }
+
+        // bounds
+        const bounds: BoundsImpl = this._$getBounds();
+        buffer[index++] = bounds.xMin;
+        buffer[index++] = bounds.yMin;
+        buffer[index++] = bounds.xMax;
+        buffer[index++] = bounds.yMax;
+
+        // characterId
+        buffer[index++] = this._$characterId > -1 ? this._$characterId : -1;
+
+        // loaderInfoId
+        buffer[index++] = this._$loaderInfo ? this._$loaderInfo._$id : -1;
+
+        // property
+        this._$registerProperty(buffer, index);
+
+        const message: PropertyMessageMapImpl<PropertyShapeMessageImpl> = $getRenderMessageObject();
+        message.command = "createShape";
+        message.buffer  = buffer;
+
+        const options: ArrayBuffer[] = $getArray(buffer.buffer);
+        $rendererWorker.postMessage(message, options);
+
+        $poolRenderMessageObject(message);
+        $poolArray(options);
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
     _$postProperty (): void
     {
-        if (!$rendererWorker || !this._$created) {
+        if (!this._$created || !$rendererWorker) {
             return ;
         }
 

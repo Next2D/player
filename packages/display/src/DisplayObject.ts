@@ -1698,7 +1698,7 @@ export class DisplayObject extends EventDispatcher
      * @method
      * @private
      */
-    _$isUpdated ()
+    _$isUpdated (): boolean
     {
         return this._$updated;
     }
@@ -1708,7 +1708,7 @@ export class DisplayObject extends EventDispatcher
      * @method
      * @private
      */
-    _$updateState ()
+    _$updateState (): void
     {
         this._$isNext = true;
 
