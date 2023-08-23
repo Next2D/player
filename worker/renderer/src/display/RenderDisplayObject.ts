@@ -1,13 +1,13 @@
-import type { RenderPlayer } from "./RenderPlayer";
-import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
-import type { BlendModeImpl } from "./interface/BlendModeImpl";
-import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
-import type { BoundsImpl } from "./interface/BoundsImpl";
-import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { GridImpl } from "./interface/GridImpl";
-import type { CachePositionImpl } from "./interface/CachePositionImpl";
-import { $renderPlayer } from "./RenderGlobal";
+import type { RenderPlayer } from "../RenderPlayer";
+import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
+import type { BlendModeImpl } from "../interface/BlendModeImpl";
+import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { PropertyMessageMapImpl } from "../interface/PropertyMessageMapImpl";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { GridImpl } from "../interface/GridImpl";
+import type { CachePositionImpl } from "../interface/CachePositionImpl";
+import { $renderPlayer } from "../RenderGlobal";
 import type {
     CanvasToWebGLContext,
     FrameBufferManager

@@ -1,11 +1,11 @@
-import { RenderGraphics } from "./RenderGraphics";
-import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
-import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
-import type { BlendModeImpl } from "./interface/BlendModeImpl";
-import type { BoundsImpl } from "./interface/BoundsImpl";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { ParentImpl } from "./interface/ParentImpl";
-import type { PreObjectImpl } from "./interface/PreObjectImpl";
+import { RenderDisplayObject } from "./RenderDisplayObject";
+import type { RenderDisplayObjectImpl } from "../interface/RenderDisplayObjectImpl";
+import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
+import type { BlendModeImpl } from "../interface/BlendModeImpl";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { ParentImpl } from "../interface/ParentImpl";
+import type { PreObjectImpl } from "../interface/PreObjectImpl";
 import type {
     CanvasToWebGLContext,
     FrameBufferManager
@@ -13,7 +13,7 @@ import type {
 import {
     $containers,
     $renderPlayer
-} from "./RenderGlobal";
+} from "../RenderGlobal";
 import {
     $cacheStore,
     $boundsMatrix,
@@ -38,9 +38,9 @@ import {
 /**
  * @class
  */
-export class RenderDisplayObjectContainer extends RenderGraphics
+export class RenderDisplayObjectContainer extends RenderDisplayObject
 {
-    private readonly _$children: number[];
+    private _$children: Int32Array;
 
     /**
      * @constructor
@@ -51,10 +51,10 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         super();
 
         /**
-         * @type {array}
+         * @type {Int32Array}
          * @private
          */
-        this._$children = $getArray();
+        this._$children = new Int32Array();
     }
 
     /**
@@ -78,12 +78,8 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
         }
 
-        if (this._$recodes && this._$canDraw) {
-            super._$clip(context, multiMatrix);
-        }
-
         const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
-        const children: number[] = this._$children;
+        const children: Int32Array = this._$children;
         for (let idx: number = 0; idx < this._$children.length; ++idx) {
 
             const id: number = children[idx];
@@ -144,9 +140,9 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         }
 
         // not draw
-        const children: number[] = this._$children;
+        const children: Int32Array = this._$children;
         const length: number = children.length;
-        if (!length && (!this._$recodes || !this._$canDraw)) {
+        if (!length) {
             return ;
         }
 
@@ -166,11 +162,6 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         const preColorTransform: Float32Array = preObject.isLayer && preObject.color
             ? preObject.color
             : multiColor;
-
-        // if graphics draw
-        if (this._$recodes && this._$canDraw && this._$maxAlpha > 0) {
-            super._$draw(context, preMatrix, preColorTransform);
-        }
 
         // init clip params
         let shouldClip: boolean = true;
@@ -339,12 +330,11 @@ export class RenderDisplayObjectContainer extends RenderGraphics
      */
     _$getLayerBounds (multi_matrix: Float32Array): BoundsImpl
     {
-        const isGraphics: boolean = !!this._$recodes;
-        const children: number[]  = this._$children;
-        const length: number      = children.length;
+        const children: Int32Array = this._$children;
+        const length: number       = children.length;
 
         // size zero
-        if (!length && !isGraphics) {
+        if (!length) {
             return $getBoundsObject(0, 0, 0, 0);
         }
 
@@ -354,22 +344,6 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         let xMax: number = -no;
         let yMin: number = no;
         let yMax: number = -no;
-
-        if (isGraphics) {
-
-            const baseBounds: BoundsImpl = $getBoundsObject(
-                this._$xMin, this._$xMax,
-                this._$yMin, this._$yMax
-            );
-            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multi_matrix);
-            $poolBoundsObject(baseBounds);
-
-            xMin   = +bounds.xMin;
-            xMax   = +bounds.xMax;
-            yMin   = +bounds.yMin;
-            yMax   = +bounds.yMax;
-            $poolBoundsObject(bounds);
-        }
 
         const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
         for (let idx: number = 0; idx < children.length; ++idx) {
@@ -464,12 +438,11 @@ export class RenderDisplayObjectContainer extends RenderGraphics
             }
         }
 
-        const isGraphics: boolean = !!this._$recodes;
-        const children: number[]  = this._$children;
-        const length: number      = children.length;
+        const children: Int32Array = this._$children;
+        const length: number       = children.length;
 
         // size zero
-        if (!length && !isGraphics) {
+        if (!length) {
 
             const bounds: BoundsImpl = $getBoundsObject(
                 multiMatrix[4], -multiMatrix[4],
@@ -489,22 +462,6 @@ export class RenderDisplayObjectContainer extends RenderGraphics
         let xMax = -no;
         let yMin = no;
         let yMax = -no;
-
-        if (isGraphics) {
-
-            const baseBounds: BoundsImpl = $getBoundsObject(
-                this._$xMin, this._$xMax,
-                this._$yMin, this._$yMax
-            );
-            $poolBoundsObject(baseBounds);
-
-            const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
-            xMin = bounds.xMin;
-            xMax = bounds.xMax;
-            yMin = bounds.yMin;
-            yMax = bounds.yMax;
-            $poolBoundsObject(bounds);
-        }
 
         const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
         for (let idx: number = 0; idx < children.length; ++idx) {
@@ -837,8 +794,7 @@ export class RenderDisplayObjectContainer extends RenderGraphics
     _$remove (): void
     {
         // reset
-        this._$children.length = 0;
-        this._$recodes = null;
+        this._$children = new Int32Array();
 
         super._$remove();
 

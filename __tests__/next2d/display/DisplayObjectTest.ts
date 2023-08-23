@@ -879,8 +879,12 @@ describe("DisplayObject.js hitTestObject test", () =>
 
     function createContainer(x: number, y: number, w: number, h: number) {
         const sp = new Sprite();
-        sp.graphics.lineStyle(0, 1);
-        sp.graphics.drawRect(0, 0, w, h);
+
+        // const shape = new Shape();
+        // shape.graphics.lineStyle(0, 1);
+        // shape.graphics.drawRect(0, 0, w, h);
+        // sp.addChild(shape);
+        
         sp.x = x;
         sp.y = y;
         return sp;
@@ -914,7 +918,7 @@ describe("DisplayObject.js hitTestObject test", () =>
     }
 
     function createBound(x: number, y: number, w: number, h: number) {
-        const sp = new Sprite();
+        const sp = new Shape();
         sp.graphics.beginFill(0, 0.5);
         sp.graphics.drawRect(-w * 0.5, - h * 0.5, w, h);
         sp.x = x;

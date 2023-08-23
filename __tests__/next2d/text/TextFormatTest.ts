@@ -44,11 +44,9 @@ describe("TextFormat.js property test", () =>
     {
         let textFormat = new TextFormat();
         expect(textFormat.align).toBe(null);
-        expect(textFormat.blockIndent).toBe(null);
         expect(textFormat.bold).toBe(null);
         expect(textFormat.color).toBe(null);
         expect(textFormat.font).toBe(null);
-        expect(textFormat.indent).toBe(null);
         expect(textFormat.italic).toBe(null);
         expect(textFormat.leading).toBe(null);
         expect(textFormat.leftMargin).toBe(null);
@@ -71,21 +69,6 @@ describe("TextFormat.js property test", () =>
         let textFormat = new TextFormat();
         textFormat.align = null;
         expect(textFormat.align).toBe(null);
-    });
-
-    // blockIndent
-    it("blockIndent test success case1", function ()
-    {
-        let textFormat = new TextFormat();
-        textFormat.blockIndent = 10;
-        expect(textFormat.blockIndent).toBe(10);
-    });
-
-    it("blockIndent test valid case1", function ()
-    {
-        let textFormat = new TextFormat();
-        textFormat.blockIndent = null;
-        expect(textFormat.blockIndent).toBe(null);
     });
 
     // bold
@@ -133,21 +116,6 @@ describe("TextFormat.js property test", () =>
         let textFormat = new TextFormat();
         textFormat.font = "ゴシック";
         expect(textFormat.font).toBe("ゴシック");
-    });
-
-    // indent
-    it("indent test success case1", function ()
-    {
-        let textFormat = new TextFormat();
-        textFormat.indent = 10;
-        expect(textFormat.indent).toBe(10);
-    });
-
-    it("indent test valid case1", function ()
-    {
-        let textFormat = new TextFormat();
-        textFormat.indent = null;
-        expect(textFormat.indent).toBe(null);
     });
 
     // italic

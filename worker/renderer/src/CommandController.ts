@@ -1,14 +1,12 @@
-import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
-import {
-    $renderPlayer,
-    $setSafari
-} from "./RenderGlobal";
+import { $renderPlayer } from "./RenderGlobal";
 import {
     $MATRIX_ARRAY_IDENTITY,
     $COLOR_ARRAY_IDENTITY,
     $OffscreenCanvas,
     $cacheStore
 } from "@next2d/share";
+import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
+import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
 
 /**
  * @class
@@ -16,7 +14,8 @@ import {
 export class CommandController
 {
     public state: string;
-    public queue: any[];
+    public queue: PropertyMessageMapImpl<any>[];
+    private readonly _$options: ArrayBuffer[];
 
     /**
      * @constructor
@@ -36,6 +35,12 @@ export class CommandController
          * @public
          */
         this.queue = [];
+
+        /**
+         * @type {array}
+         * @private
+         */
+        this._$options = [];
     }
 
     /**
@@ -50,9 +55,16 @@ export class CommandController
     {
         this.state = "active";
 
+        let returnBuffer = true;
         while (this.queue.length) {
 
-            const object: any = this.queue.shift();
+            const object: PropertyMessageMapImpl<any> | void = this.queue.shift();
+            console.log(object);
+            if (!object) {
+                continue;
+            }
+
+            returnBuffer = true;
             switch (object.command) {
 
                 case "draw":
@@ -66,20 +78,25 @@ export class CommandController
                             continue;
                         }
 
-                        instances.get(object.instanceId)._$update(object);
+                        // instances.get(object.instanceId)._$update(object);
                     }
                     break;
 
                 case "setChildren":
                     {
+                        returnBuffer = false;
+
+                        const buffer: Float32Array = object.buffer;
+
                         const instances: Map<number, RenderDisplayObjectImpl<any>> = $renderPlayer.instances;
-                        if (!instances.has(object.instanceId)) {
+                        if (!instances.has(buffer[0])) {
                             continue;
                         }
-                        const instance: RenderDisplayObjectImpl<any> = instances.get(object.instanceId);
+
+                        const instance: RenderDisplayObjectImpl<any> = instances.get(buffer[0]);
                         instance._$doChanged();
 
-                        instance._$children = object.children;
+                        instance._$children = buffer.subarray(1);
                     }
                     break;
 
@@ -96,11 +113,14 @@ export class CommandController
                     break;
 
                 case "createShape":
-                    $renderPlayer._$createShape(object);
+                    $renderPlayer._$createShape(object.buffer);
                     break;
 
                 case "createDisplayObjectContainer":
-                    $renderPlayer._$createDisplayObjectContainer(object);
+
+                    $renderPlayer
+                        ._$createDisplayObjectContainer(object.buffer);
+
                     break;
 
                 case "createTextField":
@@ -112,31 +132,17 @@ export class CommandController
                     break;
 
                 case "resize":
-                    $renderPlayer._$resize(
-                        object.width,
-                        object.height,
-                        object.scale,
-                        object.tx,
-                        object.ty
-                    );
+                    $renderPlayer._$resize(object.buffer);
                     break;
 
                 case "initialize":
                     $renderPlayer._$initialize(
-                        object.canvas, object.samples, object.devicePixelRatio
+                        object.buffer, object.canvas
                     );
                     break;
 
-                case "setSafari":
-                    $setSafari(object.isSafari);
-                    break;
-
                 case "setBackgroundColor":
-                    $renderPlayer._$setBackgroundColor(object.backgroundColor);
-                    break;
-
-                case "setStage":
-                    $renderPlayer._$setStage(object.instanceId);
+                    $renderPlayer._$setBackgroundColor(object.buffer);
                     break;
 
                 case "stop":
@@ -180,8 +186,26 @@ export class CommandController
                     break;
 
                 default:
+                    if (object.command.indexOf("shapeRecodes") > -1) {
+                        returnBuffer = false;
+                        const instanceId: number = +object.command.split("@")[1];
+                        $renderPlayer._$registerShapeRecodes(instanceId, object.buffer);
+                    }
                     break;
 
+            }
+
+            if (object.buffer && returnBuffer) {
+                // this._$options.push(object.buffer.buffer);
+
+                // globalThis.postMessage({
+                //     "command": "renderBuffer",
+                //     "buffer": object.buffer
+                // // @ts-ignore
+                // }, this._$options);
+
+                // reset
+                this._$options.length = 0;
             }
         }
 

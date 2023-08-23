@@ -1,5 +1,4 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
-import { Graphics } from "./Graphics";
 import { SoundTransform } from "@next2d/media";
 import type {
     Rectangle,
@@ -36,7 +35,6 @@ export class Sprite extends DisplayObjectContainer
     protected _$buttonMode: boolean;
     protected _$hitArea: SpriteImpl<any> | null;
     protected _$soundTransform: SoundTransform | null;
-    protected _$graphics: Graphics | null;
     protected _$useHandCursor: boolean;
 
     /**
@@ -74,13 +72,6 @@ export class Sprite extends DisplayObjectContainer
          * @private
          */
         this._$useHandCursor = true;
-
-        /**
-         * @type {Graphics|null}
-         * @default null
-         * @private
-         */
-        this._$graphics = null;
     }
 
     /**
@@ -168,23 +159,6 @@ export class Sprite extends DisplayObjectContainer
     get dropTarget (): DropTargetImpl
     {
         return $dropTarget;
-    }
-
-    /**
-     * @description ベクターの描画コマンドが発生するこのスプライトに属する Graphics オブジェクトを指定します。
-     *              Specifies the Graphics object that belongs to this sprite
-     *              where vector drawing commands can occur.
-     *
-     * @member  {Graphics}
-     * @readonly
-     * @public
-     */
-    get graphics (): Graphics
-    {
-        if (!this._$graphics) {
-            this._$graphics = new Graphics(this);
-        }
-        return this._$graphics;
     }
 
     /**

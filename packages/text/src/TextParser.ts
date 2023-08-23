@@ -331,10 +331,6 @@ const _$parseTag = (
                 tf.italic = true;
                 break;
 
-            case "U": // underline
-                tf.underline = true;
-                break;
-
             case "FONT": // FONT tag
             case "SPAN": // SPAN tag
                 _$setAttributes(node.attributes, tf, options);
@@ -398,28 +394,29 @@ export const parsePlainText = (
         : [text.replace("\n", "")];
 
     const textData: TextData = new TextData();
+
+    // clone
+    const textFormat: TextFormat = text_format._$clone();
+
+    _$createNewLine(textData, textFormat);
     for (let idx: number = 0; idx < lineText.length; ++idx) {
 
-        const line: number = options.wordWrap || options.multiline
-            ? textData.heightTable.length
-            : 0;
-
-        if (options.subFontSize && options.subFontSize > 0 && text_format.size
+        if (options.subFontSize && options.subFontSize > 0 && textFormat.size
         ) {
-            text_format.size -= options.subFontSize;
-            if (1 > text_format.size) {
-                text_format.size = 1;
+            textFormat.size -= options.subFontSize;
+            if (1 > textFormat.size) {
+                textFormat.size = 1;
             }
         }
 
-        // clone
-        const textFormat: TextFormat = text_format._$clone();
-        _$createNewLine(textData, textFormat);
+        if (options.wordWrap || options.multiline) {
+            _$createNewLine(textData, textFormat);
+        }
 
         const texts: string = lineText[idx];
         if (texts) {
             $currentWidth = 0;
-            _$parseText(texts, textFormat, textData, options);
+            _$parseText(texts, text_format, textData, options);
         }
     }
 

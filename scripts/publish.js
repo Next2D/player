@@ -84,6 +84,12 @@ const execute = () =>
         JSON.stringify(basePackageJson, null, 2)
     );
 
+    // minify
+    cp.spawnSync(
+        `cp -r ${process.cwd()}/next2d.js ${process.cwd()}/dist/src/dist/next2d.min.js`,
+        { "shell": true }
+    );
+
     // LICENSE
     cp.spawnSync(
         `cp -r ${process.cwd()}/LICENSE ${process.cwd()}/dist/src/LICENSE`,
