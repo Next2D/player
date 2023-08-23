@@ -5,12 +5,8 @@ import { TextFieldAutoSizeImpl } from "./TextFieldAutoSizeImpl";
 
 export interface PropertyTextMessageImpl extends PropertyMessageImpl {
     textAreaActive?: boolean;
-    textData: TextDataImpl<any>[];
+    textData?: TextDataImpl<any>[];
     scrollV: number;
-    widthTable: number[];
-    heightTable: number[];
-    textHeightTable: number[];
-    objectTable: TextDataImpl<any>[];
     limitWidth: number;
     limitHeight: number;
     textHeight: number;

@@ -34,6 +34,8 @@
   "peerDependencies": {
     "@next2d/interface": "file:../interface",
     "@next2d/core": "file:../core",
+    "@next2d/ui": "file:../ui",
+    "@next2d/text": "file:../text",
     "@next2d/geom": "file:../geom",
     "@next2d/util": "file:../util",
     "@next2d/share": "file:../share",

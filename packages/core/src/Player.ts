@@ -1,6 +1,7 @@
 import {
     Stage,
-    MovieClip
+    MovieClip,
+    TextField
 } from "@next2d/display";
 import {
     Event as Next2DEvent,
@@ -16,7 +17,6 @@ import {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
-import { TextField } from "@next2d/text";
 import {
     StageQualityImpl,
     PlayerOptionsImpl,
