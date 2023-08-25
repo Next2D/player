@@ -101,66 +101,8 @@ const _$parseText = (
             text_data.heightTable[line] = 0;
             text_data.ascentTable[line] = 0;
 
-            let checkText: string    = text;
-            let chunkLength: number  = 0;
-            let isSeparated: boolean = true;
-
-            const pattern = /[0-9a-zA-Z?!;:.,？！。、；：〜]/g;
-            const length = text_data.textTable.length;
-            while (checkText.match(pattern)) {
-
-                ++chunkLength;
-
-                const prevObj: TextObjectImpl = text_data.textTable[length - chunkLength];
-
-                if (prevObj.mode !== "text") {
-                    isSeparated = false;
-                    break;
-                }
-
-                checkText = prevObj.text || "";
-            }
-
-            if (chunkLength > 1) {
-                const text: string = text_data.textTable[text_data.textTable.length - chunkLength + 1].text || "";
-                if (text.match(/[0-9a-zA-Z]/g)) {
-                    --chunkLength;
-                }
-            }
-
-            if (chunkLength > 0 && isSeparated) {
-
-                const insertIdx: number = text_data.textTable.length - chunkLength;
-                text_data.textTable.splice(insertIdx, 0, wrapObject);
-
-                // prev line
-                let offset: number = 1;
-                let targetObj: TextObjectImpl = text_data.textTable[insertIdx - offset];
-
-                const prevLine = line - 1;
-
-                // reset
-                text_data.widthTable[prevLine]  = 0;
-                text_data.heightTable[prevLine] = 0;
-                text_data.ascentTable[prevLine] = 0;
-
-                // update
-                while (targetObj.mode === "text") {
-
-                    text_data.widthTable[prevLine]  += targetObj.w;
-                    text_data.heightTable[prevLine]  = Math.max(text_data.heightTable[prevLine], targetObj.h);
-                    text_data.ascentTable[prevLine]  = Math.max(text_data.ascentTable[prevLine], targetObj.y);
-
-                    ++offset;
-                    targetObj = text_data.textTable[insertIdx - offset];
-                }
-
-            } else {
-
-                text_data.textTable.push(wrapObject);
-
-            }
-
+            text_data.textTable.push(wrapObject);
+            text_data.lineTable.push(wrapObject);
         }
 
         if (!breakCode) {
@@ -397,17 +339,17 @@ export const parsePlainText = (
 
     // clone
     const textFormat: TextFormat = text_format._$clone();
+    if (options.subFontSize
+        && options.subFontSize > 0 && textFormat.size
+    ) {
+        textFormat.size -= options.subFontSize;
+        if (1 > textFormat.size) {
+            textFormat.size = 1;
+        }
+    }
 
     _$createNewLine(textData, textFormat);
     for (let idx: number = 0; idx < lineText.length; ++idx) {
-
-        if (options.subFontSize && options.subFontSize > 0 && textFormat.size
-        ) {
-            textFormat.size -= options.subFontSize;
-            if (1 > textFormat.size) {
-                textFormat.size = 1;
-            }
-        }
 
         if (options.wordWrap || options.multiline) {
             _$createNewLine(textData, textFormat);
@@ -416,7 +358,7 @@ export const parsePlainText = (
         const texts: string = lineText[idx];
         if (texts) {
             $currentWidth = 0;
-            _$parseText(texts, text_format, textData, options);
+            _$parseText(texts, textFormat, textData, options);
         }
     }
 
@@ -448,17 +390,18 @@ export const parseHtmlText = (
 
     const textData: TextData = new TextData();
 
-    if (options.subFontSize && options.subFontSize > 0 && text_format.size) {
-        text_format.size -= options.subFontSize;
-        if (1 > text_format.size) {
-            text_format.size = 1;
+    const textFormat: TextFormat = text_format._$clone();
+    if (options.subFontSize && options.subFontSize > 0 && textFormat.size) {
+        textFormat.size -= options.subFontSize;
+        if (1 > textFormat.size) {
+            textFormat.size = 1;
         }
     }
 
     const document: any = parseDocument(htmlText);
-    _$createNewLine(textData, text_format);
+    _$createNewLine(textData, textFormat);
 
-    _$parseTag(document, text_format, textData, options);
+    _$parseTag(document, textFormat, textData, options);
 
     _$adjustmentHeight(textData);
 

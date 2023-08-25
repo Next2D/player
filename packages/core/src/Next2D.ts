@@ -265,7 +265,7 @@ export class Next2D
                 player._$loadStatus = Player.LOAD_END;
                 player.play();
 
-                return Promise.resolve(root);
+                return root;
             });
     }
 }

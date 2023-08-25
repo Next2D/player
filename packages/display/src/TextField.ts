@@ -1,8 +1,7 @@
 import { Player } from "@next2d/core";
 import {
     InteractiveObject,
-    Shape,
-    Sprite
+    Shape
 } from "@next2d/display";
 import {
     FocusEvent,
@@ -11,7 +10,8 @@ import {
 } from "@next2d/events";
 import {
     Tween,
-    Job
+    Job,
+    Easing
 } from "@next2d/ui";
 import {
     TextData,
@@ -109,10 +109,8 @@ export class TextField extends InteractiveObject
     private _$multiline: boolean;
     private _$text: string;
     private _$wordWrap: boolean;
-    private _$scrollH: number;
-    private _$scrollV: number;
-    private _$maxScrollV: number | null;
-    private _$maxScrollH: number | null;
+    private _$scrollX: number;
+    private _$scrollY: number;
     private _$maxChars: number;
     private _$defaultTextFormat: TextFormat;
     private _$rawHtmlText: string;
@@ -123,7 +121,8 @@ export class TextField extends InteractiveObject
     private _$autoFontSize: boolean;
     private _$textAreaActive: boolean;
     private _$scrollEnabled: boolean;
-    private _$scrollSprite: Sprite | null;
+    private _$xScrollShape: Shape | null;
+    private _$yScrollShape: Shape | null;
     private _$type: TextFieldTypeImpl;
     private _$focus: boolean;
     private _$isComposing: boolean;
@@ -202,28 +201,14 @@ export class TextField extends InteractiveObject
          * @default 0
          * @private
          */
-        this._$scrollH = 0;
+        this._$scrollX = 0;
 
         /**
          * @type {number}
-         * @default 1
+         * @default 0
          * @private
          */
-        this._$scrollV = 1;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$maxScrollV = null;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$maxScrollH = null;
+        this._$scrollY = 0;
 
         /**
          * @type {number}
@@ -327,11 +312,18 @@ export class TextField extends InteractiveObject
         this._$scrollEnabled = true;
 
         /**
-         * @type {Sprite}
+         * @type {Shape}
          * @default null
          * @private
          */
-        this._$scrollSprite = null;
+        this._$xScrollShape = null;
+
+        /**
+         * @type {Shape}
+         * @default null
+         * @private
+         */
+        this._$yScrollShape = null;
 
         /**
          * @type {string}
@@ -736,66 +728,6 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * TODO
-     * @description scrollH の最大値です。
-     *              The maximum value of scrollH.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get maxScrollH (): number
-    {
-        if (this._$maxScrollH === null) {
-            this._$maxScrollH = 0;
-        }
-        return this._$maxScrollH;
-    }
-
-    /**
-     * @description scrollV の最大値です。
-     *              The maximum value of scrollV.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get maxScrollV (): number
-    {
-        if (this._$maxScrollV === null) {
-
-            this._$maxScrollV = 1;
-
-            const textData: TextData = this.getTextData();
-
-            if (!textData.heightTable.length) {
-                return this._$maxScrollV;
-            }
-
-            const length: number = textData.heightTable.length;
-            const maxHeight = this.height;
-
-            if (maxHeight > this.textHeight) {
-                return this._$maxScrollV;
-            }
-
-            let textHeight = 0;
-
-            let idx: number = 0;
-            while (length > idx) {
-
-                textHeight += textData.heightTable[idx++];
-                if (textHeight > maxHeight) {
-                    break;
-                }
-
-                this._$maxScrollV++;
-            }
-        }
-        return this._$maxScrollV;
-    }
-
-    /**
      * @description フィールドが複数行テキストフィールドであるかどうかを示します。
      *              Indicates whether field is a multiline text field.
      *
@@ -863,98 +795,180 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * TODO
-     * @description 現在の水平スクロール位置です。
-     *              The current horizontal scrolling position.
+     * @description テキストフィールドのスクロール垂直位置です。
+     *              The scroll vertical position of the text field.
      *
      * @member {number}
      * @public
      */
-    get scrollH (): number
+    get scrollX (): number
     {
-        return this._$scrollH;
+        return this._$scrollX;
     }
-    set scrollH (scroll_h: number)
+    set scrollX (scroll_x: number)
     {
-        scroll_h = $clamp(scroll_h | 0, 0, this.maxScrollH);
+        if (!this._$scrollEnabled
+            || this._$autoSize !== "none"
+        ) {
+            return ;
+        }
 
-        if (this._$scrollH !== scroll_h) {
+        // check y animation
+        if (this._$yScrollShape
+            && this._$yScrollShape.hasLocalVariable("job")
+        ) {
+            return ;
+        }
 
-            this._$scrollH = scroll_h;
+        scroll_x = $clamp(scroll_x, 0, this.width, 0);
+        if (this._$scrollX !== scroll_x) {
 
-            this._$reset();
+            const width: number = this.width;
+            if (this._$xScrollShape && this.textWidth > width) {
+
+                this._$doChanged();
+
+                this._$scrollX = scroll_x;
+
+                this._$xScrollShape.width = width * width / this.textWidth;
+                const parent: ParentImpl<any> = this._$parent;
+                if (parent) {
+
+                    // view start
+                    Tween.add(this._$xScrollShape,
+                        { "alpha" : 0 },
+                        { "alpha" : 0.8 },
+                        0, 0.3, Easing.outQuad
+                    );
+
+                    // set position
+                    this._$xScrollShape.x = this.x + 1
+                        + (width - 1 - this._$xScrollShape.width)
+                        / (width - 1)
+                        * (this._$scrollX - 1);
+                    this._$xScrollShape.y = this.y + this.height - this._$xScrollShape.height - 0.5;
+
+                    // added sprite
+                    parent.addChildAt(
+                        this._$xScrollShape,
+                        parent.getChildIndex(this) + 1
+                    );
+
+                    // start animation
+                    if (this._$xScrollShape.hasLocalVariable("job")) {
+                        this._$xScrollShape.getLocalVariable("job").stop();
+                    }
+
+                    const job: Job = Tween.add(this._$xScrollShape,
+                        { "alpha" : 0.8 },
+                        { "alpha" : 0 },
+                        0.2, 0.6, Easing.outQuad
+                    );
+
+                    job.addEventListener(Next2DEvent.COMPLETE, (event: Next2DEvent) =>
+                    {
+                        const shape: Shape = event.target.target;
+                        shape.deleteLocalVariable("job");
+                        if (shape.parent) {
+                            shape.parent.removeChild(shape);
+                        }
+                    });
+                    job.start();
+
+                    this._$xScrollShape.setLocalVariable("job", job);
+                }
+
+            }
 
             if (this.willTrigger(Next2DEvent.SCROLL)) {
                 this.dispatchEvent(new Next2DEvent(Next2DEvent.SCROLL, true));
             }
         }
     }
-
     /**
-     * @description テキストフィールドのテキストの垂直位置です。
-     *              The vertical position of text in a text field.
+     * @description テキストフィールドのスクロール垂直位置です。
+     *              The scroll vertical position of the text field.
      *
      * @member {number}
      * @public
      */
-    get scrollV (): number
+    get scrollY (): number
     {
-        return this._$scrollV;
+        return this._$scrollY;
     }
-    set scrollV (scroll_v: number)
+    set scrollY (scroll_y: number)
     {
-        scroll_v = $clamp(scroll_v | 0, 1, this.maxScrollV);
+        if (!this._$scrollEnabled
+            || this._$autoSize !== "none"
+            || !this._$multiline && !this._$wordWrap
+        ) {
+            return ;
+        }
 
-        if (this._$scrollV !== scroll_v) {
+        // check x animation
+        if (this._$xScrollShape
+            && this._$xScrollShape.hasLocalVariable("job")
+        ) {
+            return ;
+        }
 
-            this._$scrollV = $Math.max(1, scroll_v);
+        scroll_y = $clamp(scroll_y, 0, this.height, 0);
+        if (this._$scrollY !== scroll_y) {
 
-            this._$reset();
+            const height: number = this.height;
+            if (this._$yScrollShape && this.textHeight > height) {
 
-            if (this._$scrollSprite && this.textHeight > this.height) {
+                this._$doChanged();
 
-                this._$scrollSprite.height = this.height * this.height / this.textHeight - 1;
+                this._$scrollY = scroll_y;
+
+                this._$yScrollShape.height = height * height / this.textHeight;
 
                 const parent: ParentImpl<any> = this._$parent;
                 if (parent) {
+
                     // view start
-                    this._$scrollSprite.alpha = 1;
+                    Tween.add(this._$yScrollShape,
+                        { "alpha" : 0 },
+                        { "alpha" : 0.8 },
+                        0, 0.3, Easing.outQuad
+                    );
 
                     // set position
-                    this._$scrollSprite.x = this.x + this.width - this._$scrollSprite.width - 0.5;
-                    this._$scrollSprite.y = this.y + 0.5
-                        + (this.height - 1 - this._$scrollSprite.height)
-                        / (this.maxScrollV - 1)
-                        * (this._$scrollV - 1);
+                    this._$yScrollShape.x = this.x + this.width - this._$yScrollShape.width - 0.5;
+                    this._$yScrollShape.y = this.y + 0.5
+                        + (height - 1 - this._$yScrollShape.height)
+                        / (height - 1)
+                        * (this._$scrollY - 1);
 
                     // added sprite
                     parent.addChildAt(
-                        this._$scrollSprite,
+                        this._$yScrollShape,
                         parent.getChildIndex(this) + 1
                     );
 
                     // start animation
-                    if (this._$scrollSprite.hasLocalVariable("job")) {
-                        this._$scrollSprite.getLocalVariable("job").stop();
+                    if (this._$yScrollShape.hasLocalVariable("job")) {
+                        this._$yScrollShape.getLocalVariable("job").stop();
                     }
 
-                    const job: Job = Tween.add(this._$scrollSprite,
-                        { "alpha" : 1 },
+                    const job: Job = Tween.add(this._$yScrollShape,
+                        { "alpha" : 0.8 },
                         { "alpha" : 0 },
-                        1
+                        0.2, 0.6, Easing.outQuad
                     );
 
                     job.addEventListener(Next2DEvent.COMPLETE, (event: Next2DEvent) =>
                     {
-                        const sprite: Sprite = event.target.target;
-                        sprite.deleteLocalVariable("job");
-                        if (sprite.parent) {
-                            sprite.parent.removeChild(sprite);
+                        const shape: Shape = event.target.target;
+                        shape.deleteLocalVariable("job");
+                        if (shape.parent) {
+                            shape.parent.removeChild(shape);
                         }
                     });
                     job.start();
 
-                    this._$scrollSprite.setLocalVariable("job", job);
+                    this._$yScrollShape.setLocalVariable("job", job);
                 }
             }
 
@@ -962,6 +976,7 @@ export class TextField extends InteractiveObject
                 this.dispatchEvent(new Next2DEvent(Next2DEvent.SCROLL, true));
             }
         }
+
     }
 
     /**
@@ -1420,9 +1435,7 @@ export class TextField extends InteractiveObject
      */
     _$reset (): void
     {
-        this._$textData   = null;
-        this._$maxScrollH = null;
-        this._$maxScrollV = null;
+        this._$textData = null;
 
         this._$doChanged();
         $doUpdated();
@@ -1524,19 +1537,37 @@ export class TextField extends InteractiveObject
             this._$bounds.yMax = this.textHeight + this._$originBounds.yMin;
 
         } else {
+            if (this._$scrollEnabled) {
 
-            if (this._$scrollEnabled && !this._$scrollSprite) {
-                this._$scrollSprite = new Sprite();
+                if (!this._$xScrollShape) {
 
-                const shape: Shape = new Shape();
+                    this._$xScrollShape = new Shape();
 
-                shape
-                    .graphics
-                    .beginFill("#000", 0.3)
-                    .drawRoundRect(0, 0, 3, 3, 3);
-                shape.scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
+                    this
+                        ._$xScrollShape
+                        .graphics
+                        .beginFill("#000", 0.3)
+                        .drawRoundRect(0, 0, 3, 3, 3);
 
-                this._$scrollSprite.addChild(shape);
+                    this
+                        ._$xScrollShape
+                        .scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
+                }
+
+                if (!this._$yScrollShape) {
+
+                    this._$yScrollShape = new Shape();
+
+                    this
+                        ._$yScrollShape
+                        .graphics
+                        .beginFill("#000", 0.3)
+                        .drawRoundRect(0, 0, 3, 3, 3);
+
+                    this
+                        ._$yScrollShape
+                        .scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
+                }
             }
         }
     }
@@ -1988,8 +2019,21 @@ export class TextField extends InteractiveObject
             ctx.lineTo(2, 2);
             ctx.clip();
 
+            let ty = 2;
+            if (this._$scrollY > 0) {
+                const scaleY: number = (this.textHeight - this.height) / this.height;
+                ty += -this._$scrollY * scaleY;
+            }
+
+            let tx = 2;
+            if (this._$scrollX > 0) {
+                const scaleX: number = (this.textWidth - this.width) / this.width;
+                tx += -this._$scrollX * scaleX;
+            }
+
+            ctx.setTransform(xScale, 0, 0, yScale, tx * xScale, ty * yScale);
+
             ctx.beginPath();
-            ctx.setTransform(xScale, 0, 0, yScale, 2 * xScale, 2 * yScale);
             this._$doDraw(ctx, multiColor, width / xScale, lineWidth);
             ctx.restore();
 
@@ -2109,19 +2153,35 @@ export class TextField extends InteractiveObject
         // init
         const textData: TextData = this.getTextData();
 
-        const limitWidth: number  = this.width;
-        const limitHeight: number = this.height;
+        const tw: number = this.width;
+        let scrollX = 0;
+        if (this._$scrollX > 0) {
+            const scaleX: number = (this.textWidth - tw) / tw;
+            scrollX = this._$scrollX * scaleX;
+        }
+        const limitWidth: number  = tw + scrollX;
+
+        const th: number = this.height;
+        let scrollY = 0;
+        if (this._$scrollY > 0) {
+            const scaleY: number = (this.textHeight - th) / th;
+            scrollY = this._$scrollY * scaleY;
+        }
+        const limitHeight: number = th + scrollY;
 
         // setup
         let offsetWidth: number   = 0;
         let offsetHeight: number  = 0;
         let offsetAlign: number   = 0;
         let verticalAlign: number = 0;
-        let currentV: number      = 0;
 
+        let skip = false;
         for (let idx: number = 0; idx < textData.textTable.length; ++idx) {
 
             const textObject: TextObjectImpl = textData.textTable[idx];
+            if (skip && textObject.mode === "text") {
+                continue;
+            }
 
             const textFormat: TextFormat = textObject.textFormat;
             const letterSpacing: number = textFormat.letterSpacing || 0;
@@ -2134,11 +2194,13 @@ export class TextField extends InteractiveObject
                     break;
                 }
 
-                if (textObject.mode === "text"
-                    && offsetWidth + offsetX > limitWidth
-                ) {
-                    offsetWidth += offsetX;
-                    continue;
+                if (textObject.mode === "text") {
+                    if (scrollX > offsetWidth + offsetX
+                        || offsetWidth > limitWidth
+                    ) {
+                        offsetWidth += offsetX;
+                        continue;
+                    }
                 }
 
             }
@@ -2166,29 +2228,26 @@ export class TextField extends InteractiveObject
                 case "break":
                 case "wrap":
 
-                    currentV++;
-
-                    if (this.scrollV > currentV) {
-                        continue;
-                    }
-
                     // reset width
                     offsetWidth = 0;
                     if (line) {
                         offsetHeight += textData.heightTable[line - 1] + 1;
                     }
 
+                    if (scrollY > offsetHeight + textData.heightTable[line]) {
+                        skip = true;
+                        continue;
+                    }
+
                     verticalAlign = textData.ascentTable[line];
-                    offsetAlign   = this._$getAlignOffset(textData.lineTable[line], width);
+                    offsetAlign   = this._$getAlignOffset(textObject, width);
+
+                    skip = false;
 
                     break;
 
                 case "text":
                     {
-                        if (this.scrollV > currentV) {
-                            continue;
-                        }
-
                         context.beginPath();
                         context.font = $generateFontStyle(
                             textFormat.font || "", textFormat.size || 0, !!textFormat.italic, !!textFormat.bold
@@ -2493,7 +2552,7 @@ export class TextField extends InteractiveObject
             // add mousewheel event
             this._$textarea.addEventListener($MOUSE_WHEEL, (event: WheelEvent) =>
             {
-                this.scrollV += event.deltaY;
+                this.scrollY += event.deltaY;
             });
 
             // add scroll event
@@ -2501,9 +2560,7 @@ export class TextField extends InteractiveObject
             {
                 const element: HTMLTextAreaElement = event.target as HTMLTextAreaElement;
 
-                this.scrollV = element.scrollTop
-                    / (element.scrollHeight - element.clientHeight)
-                    * this.maxScrollV + 1;
+                this.scrollY = element.scrollTop;
             });
 
             // down event
@@ -2627,7 +2684,6 @@ export class TextField extends InteractiveObject
             "yMin": bounds.yMin,
             "xMax": bounds.xMax,
             "yMax": bounds.yMax,
-            "scrollV": this.scrollV,
             "limitWidth": this.width,
             "limitHeight": this.height,
             "textHeight": this.textHeight,
@@ -2695,7 +2751,6 @@ export class TextField extends InteractiveObject
 
         if (this._$isUpdated()) {
 
-            message.scrollV         = this.scrollV;
             message.limitWidth      = this.width;
             message.limitHeight     = this.height;
             message.textHeight      = this.textHeight;

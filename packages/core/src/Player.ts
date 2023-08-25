@@ -2546,10 +2546,18 @@ export class Player
                             );
                         }
 
-                        if ("deltaY" in event && instance.scrollEnabled) {
-                            // @ts-ignore
-                            instance.scrollV += $clamp(event.deltaY, -1, 1, 0);
+                        if (instance.scrollEnabled) {
+                            if ("deltaX" in event) {
+                                // @ts-ignore
+                                instance.scrollX += event.deltaX / (instance.textWidth / instance.width);
+                            }
+
+                            if ("deltaY" in event) {
+                                // @ts-ignore
+                                instance.scrollY += event.deltaY / (instance.textHeight / instance.height);
+                            }
                         }
+
                         break;
 
                     case $DOUBLE_CLICK:
