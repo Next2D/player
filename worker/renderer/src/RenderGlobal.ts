@@ -1,6 +1,6 @@
 import { RenderPlayer } from "./RenderPlayer";
 import { RenderShape } from "./display/RenderShape";
-import { RenderTextField } from "./text/RenderTextField";
+import { RenderTextField } from "./display/RenderTextField";
 import { RenderDisplayObjectContainer } from "./display/RenderDisplayObjectContainer";
 import { RenderVideo } from "./media/RenderVideo";
 

@@ -11,7 +11,8 @@ import {
     MovieClip,
     Shape,
     Sprite,
-    Stage
+    Stage,
+    TextField
 } from "@next2d/display";
 export interface DisplayImpl {
     DisplayObject: typeof DisplayObject;
@@ -27,4 +28,5 @@ export interface DisplayImpl {
     Shape: typeof Shape;
     Sprite: typeof Sprite;
     Stage: typeof Stage;
+    TextField: typeof TextField;
 }

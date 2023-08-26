@@ -2,7 +2,7 @@ import { RenderDisplayObjectContainer } from "./display/RenderDisplayObjectConta
 import { CanvasToWebGLContext } from "@next2d/webgl";
 import type { RenderShape } from "./display/RenderShape";
 import type { RenderVideo } from "./media/RenderVideo";
-import type { RenderTextField } from "./text/RenderTextField";
+import type { RenderTextField } from "./display/RenderTextField";
 import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { PropertyTextMessageImpl } from "./interface/PropertyTextMessageImpl";

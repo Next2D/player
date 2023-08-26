@@ -1,4 +1,4 @@
-import { TextFormat } from "@next2d/text";
+import { TextFormat } from "../TextFormat";
 import { TextObjectModeImpl } from "./TextObjectModeImpl";
 
 export interface TextObjectImpl {

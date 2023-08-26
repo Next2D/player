@@ -12,7 +12,7 @@ import {
     MovieClip,
     Shape
 } from "@next2d/display";
-import { TextField } from "@next2d/text";
+import { TextField } from "@next2d/display";
 import {
     Video,
     Sound
@@ -177,29 +177,6 @@ export const $KEY_UP: string = "keyup";
 export const $SCROLL: string = "scroll";
 
 /**
- * @type {HTMLParagraphElement}
- * @const
- * @static
- */
-export const $P_TAG: HTMLParagraphElement = $document.createElement("p");
-
-const div: HTMLDivElement = $document.createElement("div");
-div.innerHTML             = "a";
-div.style.display         = "block";
-div.style.position        = "absolute";
-div.style.top             = "-9999px";
-div.style.left            = "-9999px";
-div.style.padding         = "0";
-div.style.margin          = "0";
-div.style.padding         = "0";
-div.style.border          = "0";
-div.style.outline         = "0";
-div.style.verticalAlign   = "bottom";
-div.style.lineHeight      = "100%";
-
-export const $DIV: HTMLDivElement = div;
-
-/**
  * @type {number}
  * @static
  */
@@ -326,25 +303,6 @@ export let $isAndroid: boolean = false;
 export let $isiOS: boolean = false;
 // eslint-disable-next-line
 export let $isTouch: boolean = false;
-
-/**
- * @type {HTMLCanvasElement}
- * @const
- */
-const textCanvas: HTMLCanvasElement = $document.createElement("canvas");
-textCanvas.width  = 1;
-textCanvas.height = 1;
-
-/**
- * @type {CanvasRenderingContext2D}
- * @const
- * @static
- */
-export const $textContext: CanvasRenderingContext2D | null = textCanvas.getContext("2d");
-if ($textContext) {
-    $textContext.globalAlpha = 0;
-    $textContext.imageSmoothingEnabled = false;
-}
 
 /**
  * @type {HTMLCanvasElement}
@@ -1021,8 +979,6 @@ const $renderURL: string = "(()=>{\"use strict\";let t=1,e=0,i=!1;const s=1/0,r=
  */
 export const $initialize = (): Promise<void> =>
 {
-    $document.body.appendChild($DIV);
-
     if ("OffscreenCanvas" in window) {
 
         const offscreen: OffscreenCanvas = new OffscreenCanvas(0, 0);
@@ -1037,7 +993,7 @@ export const $initialize = (): Promise<void> =>
             ? new Worker(URL.createObjectURL(new Blob([$renderURL], { "type": "text/javascript" })))
             : null;
 
-        // $rendererWorker = null;
+        $rendererWorker = null;
         if ($rendererWorker) {
 
             /**
@@ -1113,48 +1069,48 @@ export const $initialize = (): Promise<void> =>
                 }
             };
 
-            $rendererWorker.onmessage = (event: MessageEvent) =>
-            {
+            // $rendererWorker.onmessage = (event: MessageEvent) =>
+            // {
 
-                switch (event.data.command) {
+            //     switch (event.data.command) {
 
-                    case "renderBuffer":
-                        $poolRenderBufferArray(event.data.buffer);
-                        break;
+            //         case "renderBuffer":
+            //             $poolRenderBufferArray(event.data.buffer);
+            //             break;
 
-                    case "bitmapDraw":
-                        {
-                            const sourceId: number = event.data.sourceId;
-                            const object: BitmapDrawObjectImpl | void = $bitmapDrawMap
-                                .get(sourceId);
+            //         case "bitmapDraw":
+            //             {
+            //                 const sourceId: number = event.data.sourceId;
+            //                 const object: BitmapDrawObjectImpl | void = $bitmapDrawMap
+            //                     .get(sourceId);
 
-                            $bitmapDrawMap.delete(sourceId);
-                            if (!object) {
-                                return ;
-                            }
+            //                 $bitmapDrawMap.delete(sourceId);
+            //                 if (!object) {
+            //                     return ;
+            //                 }
 
-                            // reset
-                            const source: DisplayObjectImpl<any> = object.source;
-                            if ("_$children" in source) {
-                                // @ts-ignore
-                                $removeContainerWorker(source);
-                            } else {
-                                source._$removeWorkerInstance();
-                            }
+            //                 // reset
+            //                 const source: DisplayObjectImpl<any> = object.source;
+            //                 if ("_$children" in source) {
+            //                     // @ts-ignore
+            //                     $removeContainerWorker(source);
+            //                 } else {
+            //                     source._$removeWorkerInstance();
+            //                 }
 
-                            if (object.callback) {
-                                const context = object.context;
-                                context.drawImage(event.data.imageBitmap, 0, 0);
-                                object.callback(context.canvas);
-                            }
-                        }
-                        break;
+            //                 if (object.callback) {
+            //                     const context = object.context;
+            //                     context.drawImage(event.data.imageBitmap, 0, 0);
+            //                     object.callback(context.canvas);
+            //                 }
+            //             }
+            //             break;
 
-                    default:
-                        break;
+            //         default:
+            //             break;
 
-                }
-            };
+            //     }
+            // };
         }
     }
 

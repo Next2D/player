@@ -1,4 +1,4 @@
-import { RenderDisplayObject } from "../display/RenderDisplayObject";
+import { RenderDisplayObject } from "./RenderDisplayObject";
 import type{ TextDataImpl } from "../interface/TextDataImpl";
 import type{ PropertyTextMessageImpl } from "../interface/PropertyTextMessageImpl";
 import type{ TextFieldAutoSizeImpl } from "../interface/TextFieldAutoSizeImpl";

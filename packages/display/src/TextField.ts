@@ -1,9 +1,7 @@
-import { TextFormat } from "./TextFormat";
 import { Player } from "@next2d/core";
 import {
     InteractiveObject,
-    Shape,
-    Sprite
+    Shape
 } from "@next2d/display";
 import {
     FocusEvent,
@@ -12,8 +10,15 @@ import {
 } from "@next2d/events";
 import {
     Tween,
-    Job
+    Job,
+    Easing
 } from "@next2d/ui";
+import {
+    TextData,
+    TextFormat,
+    parsePlainText,
+    parseHtmlText
+} from "@next2d/text";
 import {
     Rectangle,
     Matrix
@@ -24,13 +29,8 @@ import {
     TextFormatVerticalAlignImpl,
     TextFieldAutoSizeImpl,
     RGBAImpl,
-    TextObjectImpl,
     ParentImpl,
-    TextObjectModeImpl,
-    TextDataImpl,
-    TextImageObjectImpl,
-    TextStringObjectImpl,
-    TextBreakObjectImpl,
+    TextObjectImpl,
     DictionaryTagImpl,
     TextCharacterImpl,
     AttachmentImpl,
@@ -48,16 +48,12 @@ import {
 } from "@next2d/webgl";
 import {
     $currentPlayer,
-    $DIV,
-    $isSafari,
     $MOUSE_DOWN,
     $MOUSE_UP,
     $MOUSE_WHEEL,
-    $P_TAG,
     $PREFIX,
     $rendererWorker,
     $SCROLL,
-    $textContext,
     $TOUCH_END,
     $TOUCH_START,
     $document,
@@ -73,7 +69,6 @@ import {
     $Math,
     $requestAnimationFrame,
     $toColorInt,
-    $getMap,
     $poolFloat32Array6,
     $boundsMatrix,
     $multiplicationMatrix,
@@ -105,14 +100,7 @@ export class TextField extends InteractiveObject
 {
     private readonly _$bounds: BoundsImpl;
     private readonly _$originBounds: BoundsImpl;
-    private readonly _$textData: TextDataImpl<any>[];
-    private readonly _$widthTable: number[];
-    private readonly _$heightTable: number[];
-    private readonly _$textFormatTable: TextFormat[];
-    private readonly _$objectTable: TextDataImpl<any>[];
-    private readonly _$imageData: TextDataImpl<any>[];
-    private readonly _$textHeightTable: number[];
-    private readonly _$heightCache: Map<string, number>;
+    private _$textData: TextData | null;
     private _$background: boolean;
     private _$backgroundColor: number;
     private _$border: boolean;
@@ -121,31 +109,26 @@ export class TextField extends InteractiveObject
     private _$multiline: boolean;
     private _$text: string;
     private _$wordWrap: boolean;
-    private _$scrollH: number;
-    private _$scrollV: number;
-    private _$maxScrollV: number | null;
-    private _$maxScrollH: number | null;
+    private _$scrollX: number;
+    private _$scrollY: number;
     private _$maxChars: number;
     private _$defaultTextFormat: TextFormat;
     private _$rawHtmlText: string;
     private _$restrict: string;
     private _$isHTML: boolean;
-    private _$textHeight: number | null;
-    private _$textWidth: number | null;
     private _$textarea: HTMLTextAreaElement | null;
     private _$autoSize: TextFieldAutoSizeImpl;
     private _$autoFontSize: boolean;
     private _$textAreaActive: boolean;
-    private _$totalWidth: number;
     private _$scrollEnabled: boolean;
-    private _$scrollSprite: Sprite | null;
+    private _$xScrollShape: Shape | null;
+    private _$yScrollShape: Shape | null;
     private _$type: TextFieldTypeImpl;
     private _$focus: boolean;
     private _$isComposing: boolean;
     private _$thickness: number;
     private _$thicknessColor: number;
     private _$verticalAlign: TextFormatVerticalAlignImpl;
-    private _$createdTextData: boolean;
     private _$cacheKeys: string[];
     private _$cacheParams: number[];
 
@@ -218,28 +201,14 @@ export class TextField extends InteractiveObject
          * @default 0
          * @private
          */
-        this._$scrollH = 0;
+        this._$scrollX = 0;
 
         /**
          * @type {number}
-         * @default 1
+         * @default 0
          * @private
          */
-        this._$scrollV = 1;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$maxScrollV = null;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$maxScrollH = null;
+        this._$scrollY = 0;
 
         /**
          * @type {number}
@@ -302,37 +271,10 @@ export class TextField extends InteractiveObject
         this._$isHTML = false;
 
         /**
-         * @type {boolean}
-         * @default false
+         * @type {TextData}
          * @private
          */
-        this._$createdTextData = false;
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$textData = $getArray();
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$textHeight = null;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$textWidth = null;
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$widthTable = $getArray();
+        this._$textData = null;
 
         /**
          * @type {HTMLTextAreaElement}
@@ -356,43 +298,11 @@ export class TextField extends InteractiveObject
         this._$autoFontSize = false;
 
         /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$heightTable = $getArray();
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$textFormatTable = $getArray();
-
-        /**
          * @type {boolean}
          * @default false
          * @private
          */
         this._$textAreaActive = false;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$totalWidth = 0;
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$objectTable = $getArray();
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$imageData = $getArray();
 
         /**
          * @type {boolean}
@@ -402,11 +312,18 @@ export class TextField extends InteractiveObject
         this._$scrollEnabled = true;
 
         /**
-         * @type {Sprite}
+         * @type {Shape}
          * @default null
          * @private
          */
-        this._$scrollSprite = null;
+        this._$xScrollShape = null;
+
+        /**
+         * @type {Shape}
+         * @default null
+         * @private
+         */
+        this._$yScrollShape = null;
 
         /**
          * @type {string}
@@ -414,13 +331,6 @@ export class TextField extends InteractiveObject
          * @private
          */
         this._$type = "static";
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$textHeightTable = $getArray();
 
         /**
          * @type {boolean}
@@ -452,16 +362,10 @@ export class TextField extends InteractiveObject
 
         /**
          * @type {string}
-         * @default TextFormatVerticalAlign.TOP
+         * @default "bottom"
          * @private
          */
-        this._$verticalAlign = "top";
-
-        /**
-         * @type {Map}
-         * @private
-         */
-        this._$heightCache = $getMap();
+        this._$verticalAlign = "bottom";
 
         /**
          * @type {array}
@@ -784,11 +688,10 @@ export class TextField extends InteractiveObject
     set htmlText (html_text: string)
     {
         if (this._$htmlText !== html_text) {
-            this._$htmlText        = `${html_text}`;
-            this._$rawHtmlText     = "";
-            this._$text            = "";
-            this._$isHTML          = true;
-            this._$textFormatTable.length = 0;
+            this._$htmlText    = `${html_text}`;
+            this._$rawHtmlText = "";
+            this._$text        = "";
+            this._$isHTML      = true;
             this._$reload();
         }
     }
@@ -825,66 +728,6 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * TODO
-     * @description scrollH の最大値です。
-     *              The maximum value of scrollH.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get maxScrollH (): number
-    {
-        if (this._$maxScrollH === null) {
-            this._$maxScrollH = 0;
-        }
-        return this._$maxScrollH;
-    }
-
-    /**
-     * @description scrollV の最大値です。
-     *              The maximum value of scrollV.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get maxScrollV (): number
-    {
-        if (this._$maxScrollV === null) {
-
-            this._$maxScrollV = 1;
-
-            this._$getTextData();
-
-            if (!this._$textHeightTable.length) {
-                return this._$maxScrollV;
-            }
-
-            const length: number = this._$textHeightTable.length;
-            const maxHeight = this.height;
-
-            if (maxHeight > this.textHeight) {
-                return this._$maxScrollV;
-            }
-
-            let textHeight = 0;
-
-            let idx: number = 0;
-            while (length > idx) {
-
-                textHeight += this._$textHeightTable[idx++];
-                if (textHeight > maxHeight) {
-                    break;
-                }
-
-                this._$maxScrollV++;
-            }
-        }
-        return this._$maxScrollV;
-    }
-
-    /**
      * @description フィールドが複数行テキストフィールドであるかどうかを示します。
      *              Indicates whether field is a multiline text field.
      *
@@ -914,10 +757,7 @@ export class TextField extends InteractiveObject
      */
     get numLines (): number
     {
-        if (!this._$createdTextData) {
-            this._$getTextData();
-        }
-        return this._$objectTable.length;
+        return this.getTextData().lineTable.length;
     }
 
     /**
@@ -955,98 +795,180 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * TODO
-     * @description 現在の水平スクロール位置です。
-     *              The current horizontal scrolling position.
+     * @description テキストフィールドのスクロール垂直位置です。
+     *              The scroll vertical position of the text field.
      *
      * @member {number}
      * @public
      */
-    get scrollH (): number
+    get scrollX (): number
     {
-        return this._$scrollH;
+        return this._$scrollX;
     }
-    set scrollH (scroll_h: number)
+    set scrollX (scroll_x: number)
     {
-        scroll_h = $clamp(scroll_h | 0, 0, this.maxScrollH);
+        if (!this._$scrollEnabled
+            || this._$autoSize !== "none"
+        ) {
+            return ;
+        }
 
-        if (this._$scrollH !== scroll_h) {
+        // check y animation
+        if (this._$yScrollShape
+            && this._$yScrollShape.hasLocalVariable("job")
+        ) {
+            return ;
+        }
 
-            this._$scrollH = scroll_h;
+        scroll_x = $clamp(scroll_x, 0, this.width, 0);
+        if (this._$scrollX !== scroll_x) {
 
-            this._$reset();
+            const width: number = this.width;
+            if (this._$xScrollShape && this.textWidth > width) {
+
+                this._$doChanged();
+
+                this._$scrollX = scroll_x;
+
+                this._$xScrollShape.width = width * width / this.textWidth;
+                const parent: ParentImpl<any> = this._$parent;
+                if (parent) {
+
+                    // view start
+                    Tween.add(this._$xScrollShape,
+                        { "alpha" : 0 },
+                        { "alpha" : 0.8 },
+                        0, 0.3, Easing.outQuad
+                    );
+
+                    // set position
+                    this._$xScrollShape.x = this.x + 1
+                        + (width - 1 - this._$xScrollShape.width)
+                        / (width - 1)
+                        * (this._$scrollX - 1);
+                    this._$xScrollShape.y = this.y + this.height - this._$xScrollShape.height - 0.5;
+
+                    // added sprite
+                    parent.addChildAt(
+                        this._$xScrollShape,
+                        parent.getChildIndex(this) + 1
+                    );
+
+                    // start animation
+                    if (this._$xScrollShape.hasLocalVariable("job")) {
+                        this._$xScrollShape.getLocalVariable("job").stop();
+                    }
+
+                    const job: Job = Tween.add(this._$xScrollShape,
+                        { "alpha" : 0.8 },
+                        { "alpha" : 0 },
+                        0.2, 0.6, Easing.outQuad
+                    );
+
+                    job.addEventListener(Next2DEvent.COMPLETE, (event: Next2DEvent) =>
+                    {
+                        const shape: Shape = event.target.target;
+                        shape.deleteLocalVariable("job");
+                        if (shape.parent) {
+                            shape.parent.removeChild(shape);
+                        }
+                    });
+                    job.start();
+
+                    this._$xScrollShape.setLocalVariable("job", job);
+                }
+
+            }
 
             if (this.willTrigger(Next2DEvent.SCROLL)) {
                 this.dispatchEvent(new Next2DEvent(Next2DEvent.SCROLL, true));
             }
         }
     }
-
     /**
-     * @description テキストフィールドのテキストの垂直位置です。
-     *              The vertical position of text in a text field.
+     * @description テキストフィールドのスクロール垂直位置です。
+     *              The scroll vertical position of the text field.
      *
      * @member {number}
      * @public
      */
-    get scrollV (): number
+    get scrollY (): number
     {
-        return this._$scrollV;
+        return this._$scrollY;
     }
-    set scrollV (scroll_v: number)
+    set scrollY (scroll_y: number)
     {
-        scroll_v = $clamp(scroll_v | 0, 1, this.maxScrollV);
+        if (!this._$scrollEnabled
+            || this._$autoSize !== "none"
+            || !this._$multiline && !this._$wordWrap
+        ) {
+            return ;
+        }
 
-        if (this._$scrollV !== scroll_v) {
+        // check x animation
+        if (this._$xScrollShape
+            && this._$xScrollShape.hasLocalVariable("job")
+        ) {
+            return ;
+        }
 
-            this._$scrollV = $Math.max(1, scroll_v);
+        scroll_y = $clamp(scroll_y, 0, this.height, 0);
+        if (this._$scrollY !== scroll_y) {
 
-            this._$reset();
+            const height: number = this.height;
+            if (this._$yScrollShape && this.textHeight > height) {
 
-            if (this._$scrollSprite && this.textHeight > this.height) {
+                this._$doChanged();
 
-                this._$scrollSprite.height = this.height * this.height / this.textHeight - 1;
+                this._$scrollY = scroll_y;
+
+                this._$yScrollShape.height = height * height / this.textHeight;
 
                 const parent: ParentImpl<any> = this._$parent;
                 if (parent) {
+
                     // view start
-                    this._$scrollSprite.alpha = 1;
+                    Tween.add(this._$yScrollShape,
+                        { "alpha" : 0 },
+                        { "alpha" : 0.8 },
+                        0, 0.3, Easing.outQuad
+                    );
 
                     // set position
-                    this._$scrollSprite.x = this.x + this.width - this._$scrollSprite.width - 0.5;
-                    this._$scrollSprite.y = this.y + 0.5
-                        + (this.height - 1 - this._$scrollSprite.height)
-                        / (this.maxScrollV - 1)
-                        * (this._$scrollV - 1);
+                    this._$yScrollShape.x = this.x + this.width - this._$yScrollShape.width - 0.5;
+                    this._$yScrollShape.y = this.y + 0.5
+                        + (height - 1 - this._$yScrollShape.height)
+                        / (height - 1)
+                        * (this._$scrollY - 1);
 
                     // added sprite
                     parent.addChildAt(
-                        this._$scrollSprite,
+                        this._$yScrollShape,
                         parent.getChildIndex(this) + 1
                     );
 
                     // start animation
-                    if (this._$scrollSprite.hasLocalVariable("job")) {
-                        this._$scrollSprite.getLocalVariable("job").stop();
+                    if (this._$yScrollShape.hasLocalVariable("job")) {
+                        this._$yScrollShape.getLocalVariable("job").stop();
                     }
 
-                    const job: Job = Tween.add(this._$scrollSprite,
-                        { "alpha" : 1 },
+                    const job: Job = Tween.add(this._$yScrollShape,
+                        { "alpha" : 0.8 },
                         { "alpha" : 0 },
-                        1
+                        0.2, 0.6, Easing.outQuad
                     );
 
                     job.addEventListener(Next2DEvent.COMPLETE, (event: Next2DEvent) =>
                     {
-                        const sprite: Sprite = event.target.target;
-                        sprite.deleteLocalVariable("job");
-                        if (sprite.parent) {
-                            sprite.parent.removeChild(sprite);
+                        const shape: Shape = event.target.target;
+                        shape.deleteLocalVariable("job");
+                        if (shape.parent) {
+                            shape.parent.removeChild(shape);
                         }
                     });
                     job.start();
 
-                    this._$scrollSprite.setLocalVariable("job", job);
+                    this._$yScrollShape.setLocalVariable("job", job);
                 }
             }
 
@@ -1054,6 +976,7 @@ export class TextField extends InteractiveObject
                 this.dispatchEvent(new Next2DEvent(Next2DEvent.SCROLL, true));
             }
         }
+
     }
 
     /**
@@ -1076,10 +999,10 @@ export class TextField extends InteractiveObject
 
         let text: string = "";
 
-        const textData: TextDataImpl<any>[] = this._$getTextData();
-        for (let idx: number = 1; idx < textData.length; ++idx) {
+        const textData: TextData = this.getTextData();
+        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-            const object: TextDataImpl<TextStringObjectImpl> = textData[idx];
+            const object: TextObjectImpl = textData.textTable[idx];
             switch (object.mode) {
 
                 case "text":
@@ -1108,7 +1031,6 @@ export class TextField extends InteractiveObject
             this._$text     = text;
             this._$htmlText = "";
             this._$isHTML   = false;
-            this._$textFormatTable.length = 0;
             this._$reload();
         }
     }
@@ -1140,28 +1062,7 @@ export class TextField extends InteractiveObject
      */
     get textHeight (): number
     {
-        if (this.text === "") {
-            return 0;
-        }
-
-        if (this._$textHeight === null) {
-
-            // setup
-            this._$textHeight = 2;
-            this._$getTextData();
-
-            const length: number = this._$textHeightTable.length;
-            if (length === 1) {
-                this._$textHeight += this._$defaultTextFormat.leading || 0;
-            }
-
-            for (let idx: number = 0; idx < length; ++idx) {
-                this._$textHeight += this._$textHeightTable[idx];
-            }
-
-        }
-
-        return this._$textHeight;
+        return this.getTextData().textHeight;
     }
 
     /**
@@ -1174,18 +1075,7 @@ export class TextField extends InteractiveObject
      */
     get textWidth ()
     {
-        if (this._$textWidth === null) {
-
-            // setup
-            this._$textWidth = 0;
-            this._$getTextData();
-
-            for (let idx: number = 0; idx < this._$widthTable.length; ++idx) {
-                this._$textWidth = $Math.max(this._$textWidth, this._$widthTable[idx]);
-            }
-        }
-
-        return this._$textWidth;
+        return this.getTextData().textWidth;
     }
 
     /**
@@ -1257,7 +1147,7 @@ export class TextField extends InteractiveObject
      *              This property specifies the vertical alignment position.
      *
      * @member {string}
-     * @default TextFormatVerticalAlign.TOP
+     * @default "bottom"
      * @public
      */
     get verticalAlign (): TextFormatVerticalAlignImpl
@@ -1412,64 +1302,6 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @description beginIndex パラメーターと endIndex パラメーターで指定された範囲の
-     *              テキストのフォーマット情報を含む TextFormat オブジェクトを返します。
-     *              Returns a TextFormat object that contains formatting information
-     *              for the range of text that the beginIndex and endIndex parameters specify.
-     *
-     * @param  {int} [begin_index=-1]
-     * @param  {int} [end_index=-1]
-     * @return {TextFormat}
-     * @method
-     * @public
-     */
-    getTextFormat (
-        begin_index: number = -1,
-        end_index: number = -1
-    ): TextFormat {
-
-        begin_index |= 0;
-        end_index   |= 0;
-
-        const data: TextDataImpl<any>[] = this._$getTextData();
-        const length: number = end_index > -1 ? end_index : data.length;
-
-        let init: boolean = false;
-        let textFormat: TextFormat = new TextFormat();
-        let idx: number = begin_index > -1 ? begin_index : 0;
-        for ( ; idx < length; ++idx) {
-
-            if (data[idx].mode === "break") {
-                continue;
-            }
-
-            const tf: TextFormat = data[idx].textFormat;
-            if (!init) {
-                init = true;
-                textFormat = tf._$clone();
-                continue;
-            }
-
-            textFormat.align         = textFormat.align         !== tf.align         ? null : tf.align;
-            textFormat.blockIndent   = textFormat.blockIndent   !== tf.blockIndent   ? null : tf.blockIndent;
-            textFormat.bold          = textFormat.bold          !== tf.bold          ? null : tf.bold;
-            textFormat.color         = textFormat.color         !== tf.color         ? null : tf.color;
-            textFormat.font          = textFormat.font          !== tf.font          ? null : tf.font;
-            textFormat.indent        = textFormat.indent        !== tf.indent        ? null : tf.indent;
-            textFormat.italic        = textFormat.italic        !== tf.italic        ? null : tf.italic;
-            textFormat.leading       = textFormat.leading       !== tf.leading       ? null : tf.leading;
-            textFormat.leftMargin    = textFormat.leftMargin    !== tf.leftMargin    ? null : tf.leftMargin;
-            textFormat.letterSpacing = textFormat.letterSpacing !== tf.letterSpacing ? null : tf.letterSpacing;
-            textFormat.rightMargin   = textFormat.rightMargin   !== tf.rightMargin   ? null : tf.rightMargin;
-            textFormat.size          = textFormat.size          !== tf.size          ? null : tf.size;
-            textFormat.underline     = textFormat.underline     !== tf.underline     ? null : tf.underline;
-
-        }
-
-        return textFormat;
-    }
-
-    /**
      * @description lineIndex パラメーターで指定された行のテキストを返します。
      *              Returns the text of the line specified by the lineIndex parameter.
      *
@@ -1484,25 +1316,26 @@ export class TextField extends InteractiveObject
         }
 
         line_index |= 0;
+
         let lineText: string = "";
-        const textData: TextDataImpl<any>[] = this._$getTextData();
-        for (let idx: number = 0; idx < textData.length; idx++) {
+        const textData: TextData = this.getTextData();
+        for (let idx: number = 0; idx < textData.textTable.length; idx++) {
 
-            const obj: TextDataImpl<TextStringObjectImpl> = textData[idx];
+            const textObject: TextObjectImpl = textData.textTable[idx];
 
-            if (obj.yIndex > line_index) {
+            if (textObject.line > line_index) {
                 break;
             }
 
-            if (obj.yIndex !== line_index) {
+            if (textObject.line !== line_index) {
                 continue;
             }
 
-            if (obj.mode !== "text") {
+            if (textObject.mode !== "text") {
                 continue;
             }
 
-            lineText += obj.text;
+            lineText += textObject.text;
         }
 
         return lineText;
@@ -1550,733 +1383,49 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @description format パラメーターで指定したテキストフォーマットを、
-     *              テキストフィールド内の指定されたテキストに適用します。
-     *              Applies the text formatting that the format parameter specifies
-     *              to the specified text in a text field.
+     * @description text、htmlTextに登録したテキスト情報をTextDataクラスで返却
+     *              Return text information registered in text and htmlText with TextData class.
      *
-     * @param  {TextFormat} text_format
-     * @param  {number}     [begin_index=-1]
-     * @param  {number}     [end_index=-1]
-     * @return {void}
+     * @param  {number} [sub_font_size = 0]
+     * @return {array}
      * @method
      * @public
      */
-    setTextFormat (
-        text_format: TextFormat,
-        begin_index: number = -1,
-        end_index: number = -1
-    ): void {
-
-        // setup
-        begin_index |= 0;
-        end_index   |= 0;
-
-        const textData: TextDataImpl<any>[] = this._$getTextData();
-
-        this._$reset();
-
-        switch (true) {
-
-            case begin_index === -1 && end_index === -1:
-                for (let idx: number = 0; idx < textData.length; ++idx) {
-                    this._$textFormatTable[idx] = text_format._$clone();
-                }
-                break;
-
-            case begin_index > -1 && end_index === -1:
-                {
-                    let idx: number = begin_index + 1;
-                    let obj: TextDataImpl<TextObjectImpl> = textData[idx];
-                    if (obj.mode === "wrap") {
-                        obj = textData[++idx];
-                    }
-                    this._$textFormatTable[idx] = text_format._$clone();
-                }
-                break;
-
-            case begin_index > -1 && end_index > -1 && end_index > begin_index:
-                {
-                    let offset: number = 0;
-                    for (let idx: number = begin_index; idx < end_index; ++idx) {
-
-                        const obj: TextObjectImpl = textData[idx];
-                        if (!obj) {
-                            continue;
-                        }
-
-                        if (obj.mode === "wrap" || obj.mode === "break") {
-                            ++end_index;
-                            --offset;
-                            continue;
-                        }
-
-                        this._$textFormatTable[idx + offset] = text_format._$clone();
-
-                    }
-                }
-                break;
-
+    getTextData (sub_font_size: number = 0): TextData
+    {
+        if (this._$textData !== null) {
+            return this._$textData;
         }
 
-        this._$getTextData();
-        this._$resize();
-    }
+        if (!this._$isHTML) {
 
-    /**
-     * @return {array}
-     * @method
-     * @private
-     */
-    _$getTextData (): TextDataImpl<any>[]
-    {
-        if (!this._$createdTextData) {
-
-            this._$createdTextData = true;
-
-            // reset
-            this._$textData.length        = 0;
-            this._$imageData.length       = 0;
-            this._$heightTable.length     = 0;
-            this._$textHeightTable.length = 0;
-            this._$objectTable.length     = 0;
-            this._$widthTable.length      = 0;
-            this._$heightCache.clear();
-
-            let tfCopyOffset: number = -1;
-            if (this._$isHTML) {
-
-                // html text
-                let htmlText: string = this._$htmlText;
-
-                const index: number = htmlText.search(/(< .*>|<>)/g);
-                if (index > -1) {
-                    htmlText = htmlText.slice(0, index);
+            this._$textData = parsePlainText(
+                this._$text,
+                this._$defaultTextFormat,
+                {
+                    "width": this.width,
+                    "multiline": this._$multiline,
+                    "wordWrap": this._$wordWrap,
+                    "subFontSize": sub_font_size
                 }
+            );
 
-                htmlText = htmlText.replace(/\r\n/g, "\r\r");
-                if ($P_TAG.innerHTML !== htmlText) {
-                    $P_TAG.textContent = "";
-                    $P_TAG.insertAdjacentHTML("afterbegin", htmlText);
+        } else {
+
+            this._$textData = parseHtmlText(
+                this._$htmlText,
+                this._$defaultTextFormat,
+                {
+                    "width": this.width,
+                    "multiline": this._$multiline,
+                    "wordWrap": this._$wordWrap,
+                    "subFontSize": sub_font_size
                 }
+            );
 
-                // setup
-                let tf: TextFormat = this._$defaultTextFormat;
-                if (this._$textData.length in this._$textFormatTable) {
-                    const tft: TextFormat = this._$textFormatTable[this._$textData.length]._$clone();
-                    tft._$merge(tf);
-                    tf = tft;
-                }
-
-                // init
-                this._$totalWidth         = 0;
-                this._$heightTable[0]     = 0;
-                this._$textHeightTable[0] = this._$getTextHeight(tf);
-                this._$widthTable[0]      = 0;
-
-                const obj: TextBreakObjectImpl = {
-                    "mode"       : "break",
-                    "x"          : 0,
-                    "yIndex"     : 0,
-                    "textFormat" : tf._$clone()
-                };
-
-                this._$objectTable[0] = obj;
-                this._$textData[0]    = obj;
-
-                this._$parseTag($P_TAG, tf._$clone(), tfCopyOffset);
-
-            } else {
-
-                // plain text
-                const texts: string[] = this._$multiline
-                    ? this._$text.split("\n")
-                    : [this._$text.replace("\n", "")];
-
-                for (let idx: number = 0; idx < texts.length; ++idx) {
-
-                    // reset
-                    this._$totalWidth = 0;
-
-                    let tf: TextFormat = this.defaultTextFormat;
-
-                    const yIndex: number = this._$wordWrap || this._$multiline
-                        ? this._$heightTable.length
-                        : 0;
-
-                    this._$heightTable[yIndex]     = 0;
-                    this._$textHeightTable[yIndex] = this._$getTextHeight(tf);
-                    this._$widthTable[yIndex]      = 0;
-
-                    if (yIndex) {
-                        this._$heightTable[yIndex]     = this._$heightTable[yIndex - 1];
-                        this._$textHeightTable[yIndex] = this._$textHeightTable[yIndex - 1];
-                    }
-
-                    if (this._$textData.length in this._$textFormatTable) {
-                        const tft: TextFormat = this._$textFormatTable[this._$textData.length]._$clone();
-                        tft._$merge(tf);
-                        tf = tft;
-                    }
-
-                    const obj: TextBreakObjectImpl = {
-                        "mode"       : "break",
-                        "x"          : 0,
-                        "yIndex"     : yIndex,
-                        "textFormat" : tf._$clone()
-                    };
-
-                    tf = this.defaultTextFormat;
-
-                    this._$objectTable[yIndex] = obj;
-                    this._$textData[this._$textData.length] = obj;
-
-                    // parse text data
-                    const text: string = texts[idx];
-                    if (text) {
-                        tfCopyOffset = this._$parseText(text, tf, tfCopyOffset);
-                    }
-                }
-            }
-
-            // clear
-            this._$heightCache.clear();
         }
 
         return this._$textData;
-    }
-
-    /**
-     * @param  {Element}    tag
-     * @param  {TextFormat} text_format
-     * @param  {number}     tf_copy_offset
-     * @return {void}
-     * @private
-     */
-    _$parseTag (
-        tag: HTMLElement,
-        text_format: TextFormat,
-        tf_copy_offset: number
-    ): void {
-
-        const childNodes = tag.childNodes as NodeListOf<HTMLElement>;
-        const length: number = childNodes.length;
-        for (let idx: number = 0; idx < length; ++idx) {
-
-            let tf: TextFormat = text_format._$clone();
-
-            const node: HTMLElement = childNodes[idx];
-            if (node.nodeType === 3) {
-
-                tf_copy_offset = this._$parseText(
-                    node.nodeValue || "", tf, tf_copy_offset
-                );
-
-                continue;
-
-            }
-
-            switch (node.nodeName) {
-
-                case "P":
-                    {
-                        if (node.hasAttribute("align")) {
-                            const align: string | null = node.getAttribute("align");
-                            if (align === "center" || align === "left" || align === "right") {
-                                tf.align = align;
-                                if (this._$textData.length === 1) {
-                                    this._$textData[0].textFormat.align = tf.align;
-                                }
-                            }
-                        }
-
-                        this._$parseTag(node, tf, tf_copy_offset);
-
-                        if (!this._$multiline) {
-                            break;
-                        }
-
-                        // reset
-                        this._$totalWidth = this._$getImageOffsetX();
-
-                        const yIndex: number = this._$heightTable.length;
-
-                        this._$heightTable[yIndex]     = 0;
-                        this._$textHeightTable[yIndex] = 0;
-                        this._$widthTable[yIndex]      = 0;
-
-                        if (yIndex) {
-                            this._$heightTable[yIndex]     = this._$heightTable[yIndex - 1];
-                            this._$textHeightTable[yIndex] = this._$textHeightTable[yIndex - 1];
-                        }
-
-                        if (this._$textData.length in this._$textFormatTable) {
-                            const tft: TextFormat = this._$textFormatTable[this._$textData.length]._$clone();
-                            tft._$merge(tf);
-                            tf = tft;
-                        }
-
-                        const obj: TextBreakObjectImpl = {
-                            "mode"      : "break",
-                            "x"         : 0,
-                            "yIndex"    : yIndex,
-                            "textFormat": tf
-                        };
-
-                        this._$objectTable[yIndex] = obj;
-                        this._$textData.push(obj);
-                    }
-                    break;
-
-                case "B": // bold
-                    tf.bold = true;
-                    this._$parseTag(node, tf, tf_copy_offset);
-                    break;
-
-                case "I": // italic
-                    tf.italic = true;
-                    this._$parseTag(node, tf, tf_copy_offset);
-                    break;
-
-                case "U": // underline
-                    tf.underline = true;
-                    this._$parseTag(node, tf, tf_copy_offset);
-                    break;
-
-                case "FONT": // FONT
-                    if (node.hasAttribute("face")) {
-                        tf.font = node.getAttribute("face");
-                    }
-
-                    if (node.hasAttribute("size")) {
-                        const size: string | null = node.getAttribute("size");
-                        if (size) {
-                            tf.size = +size;
-                        }
-                    }
-
-                    if (node.hasAttribute("color")) {
-                        tf.color = $toColorInt(node.getAttribute("color"));
-                    }
-
-                    if (node.hasAttribute("letterSpacing")) {
-                        const letterSpacing: string | null = node.getAttribute("size");
-                        if (letterSpacing) {
-                            tf.letterSpacing = +letterSpacing;
-                        }
-                    }
-
-                    this._$parseTag(node, tf, tf_copy_offset);
-                    break;
-
-                case "BR": // br
-                    {
-                        if (!this._$multiline) {
-                            break;
-                        }
-
-                        // add y index
-                        const yIndex: number = this._$heightTable.length;
-
-                        this._$heightTable[yIndex]     = this._$heightTable[yIndex - 1];
-                        this._$textHeightTable[yIndex] = this._$textHeightTable[yIndex - 1];
-                        this._$widthTable[yIndex]      = 0;
-
-                        // reset
-                        this._$totalWidth = this._$getImageOffsetX();
-
-                        // new clone
-                        tf.indent = 0;
-
-                        // set x offset
-                        const obj: TextBreakObjectImpl = {
-                            "mode"      : "break",
-                            "x"         : 0,
-                            "yIndex"    : yIndex,
-                            "textFormat": tf
-                        };
-
-                        this._$objectTable[yIndex]              = obj;
-                        this._$textData[this._$textData.length] = obj;
-                    }
-                    break;
-
-                case "IMG":
-                    {
-                        if (!node.hasAttribute("src")) {
-                            break;
-                        }
-
-                        const src: string | null = node.getAttribute("src");
-                        if (!src) {
-                            break;
-                        }
-
-                        let width: number = 0;
-                        if (node.hasAttribute("width")) {
-                            const attribute: string | null = node.getAttribute("width");
-                            if (attribute) {
-                                width = +attribute;
-                            }
-                        }
-
-                        let height: number = 0;
-                        if (node.hasAttribute("height")) {
-                            const attribute: string | null = node.getAttribute("height");
-                            if (attribute) {
-                                height = +attribute;
-                            }
-                        }
-
-                        let vspace: number = 8;
-                        if (node.hasAttribute("vspace")) {
-                            const attribute: string | null = node.getAttribute("vspace");
-                            if (attribute) {
-                                vspace = +attribute;
-                            }
-                        }
-
-                        let hspace: number = 8;
-                        if (node.hasAttribute("hspace")) {
-                            const attribute: string | null = node.getAttribute("hspace");
-                            if (attribute) {
-                                hspace = +attribute;
-                            }
-                        }
-
-                        let totalTextHeight: number = 0;
-                        for (let idx: number = 0; idx < this._$textHeightTable.length; idx++) {
-                            totalTextHeight += this._$textHeightTable[idx];
-                        }
-
-                        const image = new Image();
-                        const obj: TextImageObjectImpl = {
-                            "mode"      : "image",
-                            "image"     : image,
-                            "src"       : src,
-                            "loaded"    : false,
-                            "x"         : 0,
-                            "y"         : totalTextHeight,
-                            "width"     : width,
-                            "height"    : height,
-                            "hspace"    : hspace,
-                            "vspace"    : vspace,
-                            "textFormat": tf._$clone()
-                        };
-
-                        image.crossOrigin = "anonymous";
-                        image.addEventListener("load", () =>
-                        {
-                            if (!obj.width) {
-                                obj.width = image.width;
-                            }
-
-                            if (!obj.height) {
-                                obj.height = image.height;
-                            }
-
-                            obj.loaded = true;
-
-                            this._$reload();
-                        });
-                        image.src = src;
-
-                        if (this._$imageData.length > 0) {
-                            const prevImage: TextImageObjectImpl = this._$imageData[this._$imageData.length - 1];
-                            const imageBottom: number = prevImage.y + prevImage.height + prevImage.vspace * 2;
-
-                            obj.y = $Math.max(totalTextHeight, imageBottom);
-                        }
-
-                        this._$textData[this._$textData.length]   = obj;
-                        this._$imageData[this._$imageData.length] = obj;
-                    }
-                    break;
-
-                default:
-                    this._$parseTag(node, tf, tf_copy_offset);
-                    break;
-
-            }
-        }
-    }
-
-    /**
-     * @param   {string} text
-     * @param   {TextFormat} text_format
-     * @param   {number} tf_copy_offset
-     * @returns {number}
-     * @method
-     * @private
-     */
-    _$parseText (
-        text: string,
-        text_format: TextFormat,
-        tf_copy_offset: number
-    ): number {
-
-        let yIndex: number = this._$heightTable.length - 1;
-
-        // new format
-        let tf: TextFormat = text_format._$clone();
-
-        const matrix: Float32Array = this._$transform.concatenatedMatrix._$matrix;
-
-        const boundsWidth: number = (this._$originBounds.xMax - this._$originBounds.xMin)
-            * (matrix[0] / matrix[3]);
-
-        $poolFloat32Array6(matrix);
-
-        const maxWidth: number = boundsWidth - tf._$widthMargin() - 4;
-        for (let idx: number = 0; idx < text.length; ++idx) {
-
-            tf = text_format._$clone();
-            if (this._$textData.length + tf_copy_offset in this._$textFormatTable) {
-                const tft: TextFormat = this._$textFormatTable[this._$textData.length + tf_copy_offset]._$clone();
-                tft._$merge(tf);
-                tf = tft;
-            }
-
-            // reset object
-            const obj: TextStringObjectImpl = {
-                "mode"       : "text",
-                "text"       : text[idx],
-                "x"          : 0,
-                "width"      : 0,
-                "height"     : 0,
-                "yIndex"     : yIndex,
-                "textFormat" : tf
-            };
-
-            let breakCode: boolean = false;
-            if (this._$multiline) {
-                breakCode = obj.text === "\n" || obj.text === "\r" || obj.text === "\n\r";
-            }
-
-            const leading: number = yIndex ? tf.leading || 0 : 0;
-            let width: number = 0;
-            let height: number = 0;
-            let textHeight: number = 0;
-            let wrapObj: TextBreakObjectImpl;
-
-            if (!$textContext) {
-                continue;
-            }
-
-            $textContext.font = tf._$generateFontStyle();
-            width = $textContext.measureText(obj.text || "").width;
-            width += tf.letterSpacing || 0;
-
-            height     = this._$getTextHeight(tf);
-            textHeight = height + leading;
-            obj.height = height;
-
-            if (breakCode ||
-                this._$wordWrap && this._$totalWidth + width > maxWidth
-            ) {
-
-                // add y index
-                this._$widthTable[++yIndex] = 0;
-
-                obj.yIndex = yIndex;
-
-                this._$heightTable[yIndex]     = this._$heightTable[yIndex - 1];
-                this._$textHeightTable[yIndex] = this._$textHeightTable[yIndex - 1];
-
-                // reset
-                this._$totalWidth = this._$getImageOffsetX();
-
-                // new clone
-                tf = tf._$clone();
-                tf.indent = 0;
-
-                // set x offset
-                const mode: TextObjectModeImpl = breakCode ? "break" : "wrap";
-                wrapObj = {
-                    "mode"      : mode,
-                    "x"         : 0,
-                    "yIndex"    : yIndex,
-                    "textFormat": tf
-                };
-
-                this._$objectTable[yIndex] = wrapObj;
-
-                if (!breakCode) {
-                    --tf_copy_offset;
-                }
-
-                let text: string = obj.text || "";
-                let chunkLength: number = 0;
-                let isSeparated: boolean = true;
-                const pattern = /[0-9a-zA-Z?!;:.,？！。、；：〜]/g;
-
-                while (text.match(pattern)) {
-
-                    ++chunkLength;
-
-                    const prevObj: TextStringObjectImpl = this._$textData[this._$textData.length - chunkLength];
-
-                    if (prevObj.mode !== "text") {
-                        isSeparated = false;
-                        break;
-                    }
-
-                    text = prevObj.text || "";
-                }
-
-                if (chunkLength > 1 && this._$textData) {
-                    const text: string = this._$textData[this._$textData.length - chunkLength + 1].text || "";
-                    if (text.match(/[0-9a-zA-Z]/g)) {
-                        --chunkLength;
-                    }
-                }
-
-                if (chunkLength > 0 && isSeparated) {
-
-                    const insertIdx: number = this._$textData.length - chunkLength;
-                    this._$textData.splice(insertIdx, 0, wrapObj);
-
-                    // prev line
-                    let offset: number = 1;
-                    let targetObj: TextStringObjectImpl = this._$textData[insertIdx - offset];
-
-                    this._$widthTable[yIndex - 1]      = 0;
-                    this._$heightTable[yIndex - 1]     = 0;
-                    this._$textHeightTable[yIndex - 1] = 0;
-
-                    while (targetObj.mode === "text") {
-
-                        height     = this._$getTextHeight(targetObj.textFormat);
-                        textHeight = height + leading;
-
-                        this._$widthTable[yIndex - 1]     += targetObj.width || 0;
-                        this._$heightTable[yIndex - 1]     = $Math.max(this._$heightTable[yIndex - 1], height);
-                        this._$textHeightTable[yIndex - 1] = $Math.max(this._$textHeightTable[yIndex - 1], textHeight);
-
-                        ++offset;
-                        targetObj = this._$textData[insertIdx - offset];
-                    }
-
-                    // new line
-                    offset = 1;
-                    while (this._$textData.length > insertIdx + offset) {
-
-                        targetObj = this._$textData[insertIdx + offset];
-                        ++offset;
-
-                        height     = this._$getTextHeight(targetObj.textFormat);
-                        textHeight = height + leading;
-
-                        this._$heightTable[yIndex]     = $Math.max(this._$heightTable[yIndex], height);
-                        this._$textHeightTable[yIndex] = $Math.max(this._$textHeightTable[yIndex], textHeight);
-
-                        targetObj.x      = this._$totalWidth;
-                        targetObj.yIndex = yIndex;
-
-                        this._$totalWidth += targetObj.width || 0;
-                    }
-
-                } else {
-
-                    this._$textData[this._$textData.length] = wrapObj;
-
-                }
-            }
-
-            if (!breakCode) {
-
-                // width data
-                obj.width          = width;
-                obj.x              = this._$totalWidth;
-                this._$totalWidth += width;
-
-                if (this._$widthTable) {
-                    this._$widthTable[yIndex] = $Math.max(this._$widthTable[yIndex], this._$totalWidth);
-                }
-
-                // height data
-                this._$heightTable[yIndex] = $Math.max(this._$heightTable[yIndex], height);
-                this._$textHeightTable[yIndex] = $Math.max(this._$textHeightTable[yIndex], textHeight);
-                this._$textData[this._$textData.length] = obj;
-            }
-
-        }
-
-        return tf_copy_offset;
-    }
-
-    /**
-     * @param  {TextFormat} text_format
-     * @return {number}
-     * @private
-     */
-    _$getTextHeight (text_format: TextFormat): number
-    {
-        const size   = text_format.size || 0;
-        const font   = text_format.font || "";
-        const weight = text_format.bold ? "bold" : "normal";
-
-        // use cache
-        const key = `${size}_${font}_${weight}`;
-        if (this._$heightCache.has(key)) {
-            return this._$heightCache.get(key) || 0;
-        }
-
-        // update dom data
-        const style: CSSStyleDeclaration = $DIV.style;
-
-        const fontSize = `${size}px`;
-        if (style.fontSize !== fontSize) {
-            style.fontSize = fontSize;
-        }
-        if (style.fontFamily !== font) {
-            style.fontFamily = font;
-        }
-        if (style.fontWeight !== weight) {
-            style.fontWeight = weight;
-        }
-
-        const height: number = 10 > size
-            ? $DIV.clientHeight * size * 0.1
-            : $DIV.clientHeight;
-
-        // cache
-        this._$heightCache.set(key, height);
-
-        return height;
-    }
-
-    /**
-     * @return {number}
-     * @private
-     */
-    _$getImageOffsetX (): number
-    {
-        if (!this._$imageData.length) {
-            return 0;
-        }
-
-        let totalTextHeight: number = 0;
-        for (let idx: number = 0; idx < this._$textHeightTable.length; ++idx) {
-            totalTextHeight += this._$textHeightTable[idx];
-        }
-
-        if (this._$imageData) {
-            for (let idx: number = 0; idx < this._$imageData.length; ++idx) {
-
-                const image: TextDataImpl<TextImageObjectImpl> = this._$imageData[idx];
-
-                const imageHeight = image.height + image.vspace * 2;
-
-                if (image.y <= totalTextHeight
-                    && totalTextHeight < image.y + imageHeight
-                ) {
-                    return image.width + image.hspace * 2;
-                }
-            }
-        }
-
-        return 0;
     }
 
     /**
@@ -2286,19 +1435,7 @@ export class TextField extends InteractiveObject
      */
     _$reset (): void
     {
-        this._$createdTextData        = false;
-        this._$textData.length        = 0;
-        this._$imageData.length       = 0;
-        this._$heightTable.length     = 0;
-        this._$textHeightTable.length = 0;
-        this._$widthTable.length      = 0;
-        this._$objectTable.length     = 0;
-
-        this._$textHeight      = null;
-        this._$textWidth       = null;
-        this._$totalWidth      = 0;
-        this._$maxScrollH      = null;
-        this._$maxScrollV      = null;
+        this._$textData = null;
 
         this._$doChanged();
         $doUpdated();
@@ -2315,51 +1452,39 @@ export class TextField extends InteractiveObject
     _$reload (): void
     {
         this._$reset();
-        this._$getTextData();
+        this.getTextData();
 
         if (this._$autoSize === "none" && this._$autoFontSize) {
 
-            let fontSize: number = this._$defaultTextFormat.size || 0;
+            let maxFontSize: number = 0;
+            const textData: TextData = this.getTextData();
+            for (let idx = 0; idx < textData.textTable.length; ++idx) {
+                const textObject: TextObjectImpl = textData.textTable[idx];
+                maxFontSize = $Math.max(maxFontSize, textObject.textFormat.size || 0);
+            }
 
-            const cacheSize: number = fontSize;
-            if (this.width && this.textWidth
-                && this.textWidth > this.width
-            ) {
+            let subSize: number = 1;
+            if (this.width && this.textWidth) {
 
-                while (this.textWidth > this.width) {
-
-                    this._$defaultTextFormat.size = fontSize--;
-                    if (1 > fontSize) {
-                        this._$defaultTextFormat.size = 1;
-                        break;
-                    }
-
+                while (maxFontSize > subSize
+                    && this.textWidth + 4 > this.width
+                ) {
                     this._$reset();
-                    this._$getTextData();
+                    this.getTextData(subSize++);
                 }
 
             }
 
-            if (this.height && this.textHeight
-                && this.textHeight > this.height
-            ) {
+            if (this.height && this.textHeight) {
 
-                while (this.textHeight > this.height) {
-
-                    this._$defaultTextFormat.size = fontSize--;
-                    if (1 > fontSize) {
-                        this._$defaultTextFormat.size = 1;
-                        break;
-                    }
-
+                while (maxFontSize > subSize
+                    && this.textHeight + 4 > this.height
+                ) {
                     this._$reset();
-                    this._$getTextData();
+                    this.getTextData(subSize++);
                 }
 
             }
-
-            // restore
-            this._$defaultTextFormat.size = cacheSize;
         }
 
         this._$resize();
@@ -2409,65 +1534,81 @@ export class TextField extends InteractiveObject
             }
 
             // set height
-            this._$bounds.yMax = this.textHeight
-                + 4 + this._$originBounds.yMin;
+            this._$bounds.yMax = this.textHeight + this._$originBounds.yMin;
 
         } else {
+            if (this._$scrollEnabled) {
 
-            if (this._$scrollEnabled && !this._$scrollSprite) {
-                this._$scrollSprite = new Sprite();
+                if (!this._$xScrollShape) {
 
-                const shape: Shape = new Shape();
-                
-                shape
-                    .graphics
-                    .beginFill("#000", 0.3)
-                    .drawRoundRect(0, 0, 3, 3, 3);
-                shape.scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
+                    this._$xScrollShape = new Shape();
 
-                this._$scrollSprite.addChild(shape);
+                    this
+                        ._$xScrollShape
+                        .graphics
+                        .beginFill("#000", 0.3)
+                        .drawRoundRect(0, 0, 3, 3, 3);
+
+                    this
+                        ._$xScrollShape
+                        .scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
+                }
+
+                if (!this._$yScrollShape) {
+
+                    this._$yScrollShape = new Shape();
+
+                    this
+                        ._$yScrollShape
+                        .graphics
+                        .beginFill("#000", 0.3)
+                        .drawRoundRect(0, 0, 3, 3, 3);
+
+                    this
+                        ._$yScrollShape
+                        .scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
+                }
             }
         }
     }
 
     /**
-     * @param  {object} obj
+     * @param  {object} text_object
      * @param  {number} width
      * @return {number}
+     * @method
      * @private
      */
-    _$getAlignOffset (obj: TextDataImpl<any>, width: number): number
+    _$getAlignOffset (text_object: TextObjectImpl, width: number): number
     {
-
         // default
-        const totalWidth: number = this._$widthTable[obj.yIndex];
-        const textFormat: TextFormat = obj.textFormat;
+        const lineWidth: number = this
+            .getTextData()
+            .getLineWidth(text_object.line);
 
-        let indent = 0;
-        indent += textFormat.blockIndent || 0;
-        indent += textFormat.leftMargin || 0;
+        const textFormat: TextFormat = text_object.textFormat;
+
+        const leftMargin: number  = textFormat.leftMargin  || 0;
+        if (!this._$wordWrap && lineWidth > width) {
+            return $Math.max(0, leftMargin);
+        }
 
         const rightMargin: number = textFormat.rightMargin || 0;
-        switch (true) {
-
-            // wordWrap case
-            case !this._$wordWrap && totalWidth > width:
-                return $Math.max(0, indent);
-
-            case textFormat.align === "center": // format CENTER
-            case this._$autoSize === "center": // autoSize CENTER
-                return $Math.max(0, width / 2 - indent - rightMargin - totalWidth / 2);
-
-            case textFormat.align === "right": // format RIGHT
-            case this._$autoSize === "right": // autoSize RIGHT
-                return $Math.max(0, width - indent - totalWidth - rightMargin - 2);
-
-            // autoSize LEFT
-            // format LEFT
-            default:
-                return $Math.max(0, indent + 2);
-
+        if (textFormat.align === "center" // format CENTER
+            || this._$autoSize === "center" // autoSize CENTER
+        ) {
+            return $Math.max(0, width / 2 - leftMargin - rightMargin - lineWidth / 2 - 2);
         }
+
+        if (textFormat.align === "right" // format RIGHT
+            || this._$autoSize === "right" // autoSize RIGHT
+        ) {
+            return $Math.max(0, width - leftMargin - lineWidth - rightMargin - 4);
+        }
+
+        // autoSize LEFT
+        // format LEFT
+        return $Math.max(0, leftMargin);
     }
 
     /**
@@ -2818,7 +1959,7 @@ export class TextField extends InteractiveObject
         if (!context.cachePosition) {
 
             // resize
-            const lineWidth: number  = $Math.min(1, $Math.max(xScale, yScale));
+            const lineWidth: number = $Math.min(1, $Math.max(xScale, yScale));
             const width: number  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
             const height: number = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
 
@@ -2878,9 +2019,22 @@ export class TextField extends InteractiveObject
             ctx.lineTo(2, 2);
             ctx.clip();
 
+            let ty = 2;
+            if (this._$scrollY > 0) {
+                const scaleY: number = (this.textHeight - this.height) / this.height;
+                ty += -this._$scrollY * scaleY;
+            }
+
+            let tx = 2;
+            if (this._$scrollX > 0) {
+                const scaleX: number = (this.textWidth - this.width) / this.width;
+                tx += -this._$scrollX * scaleX;
+            }
+
+            ctx.setTransform(xScale, 0, 0, yScale, tx * xScale, ty * yScale);
+
             ctx.beginPath();
-            ctx.setTransform(xScale, 0, 0, yScale, 0, 0);
-            this._$doDraw(ctx, matrix, multiColor, width / xScale);
+            this._$doDraw(ctx, multiColor, width / xScale, lineWidth);
             ctx.restore();
 
             const position: CachePositionImpl = manager
@@ -2982,69 +2136,77 @@ export class TextField extends InteractiveObject
 
     /**
      * @param  {CanvasRenderingContext2D} context
-     * @param  {Float32Array} matrix
      * @param  {Float32Array} color_transform
      * @param  {number} width
+     * @param  {number} line_width
      * @return {void}
      * @method
      * @private
      */
     _$doDraw (
         context: CanvasRenderingContext2D,
-        matrix: Float32Array,
         color_transform: Float32Array,
-        width: number
+        width: number,
+        line_width: number
     ): void {
 
         // init
-        const textData: TextDataImpl<any>[] = this._$getTextData();
+        const textData: TextData = this.getTextData();
 
-        const limitWidth: number  = this.width;
-        const limitHeight: number = this.height;
+        const tw: number = this.width;
+        let scrollX = 0;
+        if (this._$scrollX > 0) {
+            const scaleX: number = (this.textWidth - tw) / tw;
+            scrollX = this._$scrollX * scaleX;
+        }
+        const limitWidth: number  = tw + scrollX;
+
+        const th: number = this.height;
+        let scrollY = 0;
+        if (this._$scrollY > 0) {
+            const scaleY: number = (this.textHeight - th) / th;
+            scrollY = this._$scrollY * scaleY;
+        }
+        const limitHeight: number = th + scrollY;
 
         // setup
-        let xOffset: number      = 0;
-        let offsetHeight: number = 0;
-        let currentV: number     = 0;
+        let offsetWidth: number   = 0;
+        let offsetHeight: number  = 0;
+        let offsetAlign: number   = 0;
+        let verticalAlign: number = 0;
 
-        let yOffset: number = 0;
-        if (this._$verticalAlign !== "top"
-            && this.height > this.textHeight
-        ) {
+        let skip = false;
+        for (let idx: number = 0; idx < textData.textTable.length; ++idx) {
 
-            switch (this._$verticalAlign) {
-
-                case "middle":
-                    yOffset = (this.height - this.textHeight + 2) / 2;
-                    break;
-
-                case "bottom":
-                    yOffset = this.height - this.textHeight + 2;
-                    break;
-
-            }
-
-        }
-
-        for (let idx: number = 0; idx < textData.length; ++idx) {
-
-            const obj: TextDataImpl<any> = textData[idx];
-            if (obj.width === 0) {
+            const textObject: TextObjectImpl = textData.textTable[idx];
+            if (skip && textObject.mode === "text") {
                 continue;
             }
+
+            const textFormat: TextFormat = textObject.textFormat;
+            const letterSpacing: number = textFormat.letterSpacing || 0;
+            const offsetX: number = textObject.w + letterSpacing;
 
             // check
-            const offsetWidth = xOffset + obj.x;
-            if (this._$autoSize === "none"
-                && (offsetHeight > limitHeight || offsetWidth > limitWidth)
-            ) {
-                continue;
+            if (this._$autoSize === "none") {
+
+                if (offsetHeight > limitHeight) {
+                    break;
+                }
+
+                if (textObject.mode === "text") {
+                    if (scrollX > offsetWidth + offsetX
+                        || offsetWidth > limitWidth
+                    ) {
+                        offsetWidth += offsetX;
+                        continue;
+                    }
+                }
+
             }
 
-            const tf: TextFormat = obj.textFormat;
-
-            // color
-            const rgb: RGBAImpl = $intToRGBA(tf.color || 0);
+            // color setting
+            const rgb: RGBAImpl = $intToRGBA(textFormat.color || 0);
             const alpha: number = $Math.max(0, $Math.min(
                 rgb.A * 255 + color_transform[7], 255)
             ) / 255;
@@ -3060,81 +2222,79 @@ export class TextField extends InteractiveObject
                 context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
             }
 
-            const yIndex: number = obj.yIndex | 0;
-            switch (obj.mode) {
+            const line: number = textObject.line | 0;
+            switch (textObject.mode) {
 
                 case "break":
                 case "wrap":
 
-                    currentV++;
+                    // reset width
+                    offsetWidth = 0;
+                    if (line) {
+                        offsetHeight += textData.heightTable[line - 1] + 1;
+                    }
 
-                    if (this.scrollV > currentV) {
+                    if (scrollY > offsetHeight + textData.heightTable[line]) {
+                        skip = true;
                         continue;
                     }
 
-                    offsetHeight += this._$textHeightTable[yIndex];
+                    verticalAlign = textData.ascentTable[line];
+                    offsetAlign   = this._$getAlignOffset(textObject, width);
 
-                    xOffset = this._$getAlignOffset(this._$objectTable[yIndex], width);
-                    if (tf.underline) {
-
-                        const offset: number = tf.size ? tf.size / 12 : 0;
-
-                        const rgb: RGBAImpl = $intToRGBA(tf.color || 0);
-                        const alpha: number = $Math.max(0, $Math.min(
-                            rgb.A * 255 + color_transform[7], 255)
-                        ) / 255;
-
-                        context.lineWidth   = $Math.max(1, 1 / $Math.min(matrix[0], matrix[3]));
-                        context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-
-                        context.beginPath();
-                        context.moveTo(xOffset, yOffset + offsetHeight - offset);
-                        context.lineTo(xOffset + this._$widthTable[yIndex], yOffset + offsetHeight - offset);
-                        context.stroke();
-
-                    }
+                    skip = false;
 
                     break;
 
                 case "text":
                     {
-                        if (this.scrollV > currentV) {
-                            continue;
-                        }
-
-                        let offsetY: number = offsetHeight - this._$heightTable[0];
-                        if (!$isSafari && tf.size) {
-                            offsetY += $devicePixelRatio * (tf.size / 12);
-                        }
-
                         context.beginPath();
-                        context.textBaseline = "top";
                         context.font = $generateFontStyle(
-                            tf.font || "", tf.size || 0, !!tf.italic, !!tf.bold
+                            textFormat.font || "", textFormat.size || 0, !!textFormat.italic, !!textFormat.bold
                         );
 
-                        if (this._$thickness) {
-                            context.strokeText(obj.text, offsetWidth, yOffset + offsetY);
+                        const x: number = offsetWidth + offsetAlign;
+                        const y: number = offsetHeight + verticalAlign;
+                        if (textFormat.underline) {
+
+                            const rgb: RGBAImpl = $intToRGBA(textFormat.color || 0);
+                            const alpha: number = $Math.max(0, $Math.min(
+                                rgb.A * 255 + color_transform[7], 255)
+                            ) / 255;
+
+                            context.lineWidth   = line_width;
+                            context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+
+                            context.beginPath();
+                            context.moveTo(x, y + 1);
+                            context.lineTo(x + offsetX, y + 1);
+                            context.stroke();
+
                         }
 
-                        context.fillText(obj.text, offsetWidth, yOffset + offsetY);
+                        if (this._$thickness) {
+                            context.strokeText(textObject.text, x, y);
+                        }
 
+                        context.fillText(textObject.text, x, y);
+
+                        offsetWidth += offsetX;
                     }
                     break;
 
-                case "image":
+                // case "image":
 
-                    if (!obj.loaded) {
-                        continue;
-                    }
+                //     if (!obj.loaded) {
+                //         continue;
+                //     }
 
-                    context.beginPath();
-                    context.drawImage(obj.image,
-                        obj.hspace, yOffset + obj.y,
-                        obj.width, obj.height
-                    );
+                //     context.beginPath();
+                //     context.drawImage(obj.image,
+                //         obj.hspace, obj.y,
+                //         obj.width, obj.height
+                //     );
 
-                    break;
+                //     break;
 
             }
         }
@@ -3392,7 +2552,7 @@ export class TextField extends InteractiveObject
             // add mousewheel event
             this._$textarea.addEventListener($MOUSE_WHEEL, (event: WheelEvent) =>
             {
-                this.scrollV += event.deltaY;
+                this.scrollY += event.deltaY;
             });
 
             // add scroll event
@@ -3400,9 +2560,7 @@ export class TextField extends InteractiveObject
             {
                 const element: HTMLTextAreaElement = event.target as HTMLTextAreaElement;
 
-                this.scrollV = element.scrollTop
-                    / (element.scrollHeight - element.clientHeight)
-                    * this.maxScrollV + 1;
+                this.scrollY = element.scrollTop;
             });
 
             // down event
@@ -3526,12 +2684,6 @@ export class TextField extends InteractiveObject
             "yMin": bounds.yMin,
             "xMax": bounds.xMax,
             "yMax": bounds.yMax,
-            "textData": this._$getTextData(),
-            "scrollV": this.scrollV,
-            "widthTable": this._$widthTable,
-            "heightTable": this._$heightTable,
-            "textHeightTable": this._$textHeightTable,
-            "objectTable": this._$objectTable,
             "limitWidth": this.width,
             "limitHeight": this.height,
             "textHeight": this.textHeight,
@@ -3599,12 +2751,6 @@ export class TextField extends InteractiveObject
 
         if (this._$isUpdated()) {
 
-            message.textData        = this._$getTextData();
-            message.scrollV         = this.scrollV;
-            message.widthTable      = this._$widthTable;
-            message.heightTable     = this._$heightTable;
-            message.textHeightTable = this._$textHeightTable;
-            message.objectTable     = this._$objectTable;
             message.limitWidth      = this.width;
             message.limitHeight     = this.height;
             message.textHeight      = this.textHeight;
