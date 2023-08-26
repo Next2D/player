@@ -127,7 +127,6 @@ export class Player
     private _$base: string;
     private _$fullScreen: boolean;
     private _$textField: TextField | null;
-    private _$touchY: number;
     private _$timerId: number;
     private _$loadId: number;
     private _$deltaX: number;
@@ -417,13 +416,6 @@ export class Player
          * @private
          */
         this._$textField = null;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$touchY = 0;
 
         /**
          * @type {number}
@@ -1165,7 +1157,6 @@ export class Player
             $setEventType($TOUCH_START);
 
             // start position
-            this._$touchY = event.changedTouches[0].pageY;
             this._$hitTest();
         });
 
@@ -1186,11 +1177,6 @@ export class Player
         // mouse wheel
         this._$canvas.addEventListener($TOUCH_MOVE, (event: TouchEvent) =>
         {
-            // update
-            const pageY   = event.changedTouches[0].pageY;
-            this._$deltaY = this._$touchY - pageY;
-            this._$touchY = pageY;
-
             $setEvent(event);
             $setEventType($TOUCH_MOVE);
 
@@ -2122,21 +2108,20 @@ export class Player
             y += rect.top;
         }
 
-        let stageX: number = 0;
-        let stageY: number = 0;
-
+        let pageX: number = 0;
+        let pageY: number = 0;
         if ("changedTouches" in event) {
             const changedTouche: Touch = event.changedTouches[0];
-            stageX = changedTouche.pageX;
-            stageY = changedTouche.pageY;
+            pageX = changedTouche.pageX;
+            pageY = changedTouche.pageY;
         } else if ("pageX" in event) {
-            stageX = event.pageX;
-            stageY = event.pageY;
+            pageX = event.pageX;
+            pageY = event.pageY;
         }
 
         // drop point
-        stageX = (stageX - x) / this._$scale;
-        stageY = (stageY - y) / this._$scale;
+        const stageX: number = (pageX - x) / this._$scale;
+        const stageY: number = (pageY - y) / this._$scale;
 
         // update
         this._$stageX = stageX;
@@ -2200,10 +2185,28 @@ export class Player
 
                 }
 
+                if (this._$clickTarget
+                    && "_$text" in this._$clickTarget
+                    && this._$clickTarget.scrollEnabled
+                ) {
+                    const deltaX: number = this._$deltaX - pageX;
+                    const deltaY: number = this._$deltaY - pageY;
+
+                    // @ts-ignore
+                    this._$clickTarget.scrollX += deltaX / (this._$clickTarget.textWidth / this._$clickTarget.width);
+
+                    // @ts-ignore
+                    this._$clickTarget.scrollY += deltaY / (this._$clickTarget.textHeight / this._$clickTarget.height);
+                }
+
+                this._$deltaX = pageX;
+                this._$deltaY = pageY;
                 break;
 
             case $TOUCH_START:
             case $MOUSE_DOWN:
+                this._$deltaX = pageX;
+                this._$deltaY = pageY;
                 this._$state  = "down";
                 canPointer    = this._$canvas.style.cursor === "pointer";
                 staticPointer = true;
@@ -2212,6 +2215,8 @@ export class Player
             case $TOUCH_END:
             case $MOUSE_UP:
             case $DOUBLE_CLICK:
+                this._$deltaX = 0;
+                this._$deltaY = 0;
                 this._$state = "up";
                 break;
 
@@ -2476,21 +2481,6 @@ export class Player
                     case $TOUCH_START:
                     case $MOUSE_DOWN:
 
-                        // TextField focus out
-                        if (this._$textField
-                            && instance !== this._$textField
-                            && "_$text" in this._$textField
-                        ) {
-                            this._$textField.focus = false;
-                            this._$textField       = null;
-                        }
-
-                        // TextField focus out
-                        if ("_$text" in instance) {
-                            instance.focus   = true;
-                            this._$textField = instance;
-                        }
-
                         // (3) mouseDown
                         if (instance.willTrigger(Next2DMouseEvent.MOUSE_DOWN)) {
                             instance.dispatchEvent(new Next2DMouseEvent(
@@ -2514,6 +2504,12 @@ export class Player
                         ) {
                             this._$textField.focus = false;
                             this._$textField       = null;
+                        }
+
+                        // TextField focus out
+                        if ("_$text" in instance) {
+                            instance.focus   = true;
+                            this._$textField = instance;
                         }
 
                         // (1) mouseUp
