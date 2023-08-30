@@ -65,15 +65,15 @@ const _$parseText = (
         }
 
         let height: number = mesure.fontBoundingBoxAscent + mesure.fontBoundingBoxDescent;
-        if (line && text_format.leading) {
+        if (text_format.leading) {
             height += text_format.leading;
         }
 
         // setup
-        object.x = mesure.actualBoundingBoxLeft;
-        object.y = mesure.actualBoundingBoxAscent;
-        object.w = width;
-        object.h = height;
+        object.x  = mesure.actualBoundingBoxLeft;
+        object.y  = mesure.actualBoundingBoxAscent;
+        object.w  = width;
+        object.h  = height;
 
         $currentWidth += width;
         if (breakCode || options.wordWrap && $currentWidth > maxWidth) {
@@ -348,7 +348,6 @@ export const parsePlainText = (
         }
     }
 
-    _$createNewLine(textData, textFormat);
     for (let idx: number = 0; idx < lineText.length; ++idx) {
 
         if (options.wordWrap || options.multiline) {
@@ -364,7 +363,6 @@ export const parsePlainText = (
 
     _$adjustmentHeight(textData);
 
-    console.log(textData);
     return textData;
 };
 
@@ -405,6 +403,5 @@ export const parseHtmlText = (
 
     _$adjustmentHeight(textData);
 
-    console.log(textData);
     return textData;
 };
