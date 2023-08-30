@@ -350,7 +350,7 @@ export const parsePlainText = (
 
     for (let idx: number = 0; idx < lineText.length; ++idx) {
 
-        if (options.wordWrap || options.multiline) {
+        if (idx === 0 || options.wordWrap || options.multiline) {
             _$createNewLine(textData, textFormat);
         }
 
