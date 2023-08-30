@@ -185,6 +185,9 @@ export class Loader extends DisplayObjectContainer
     }
 
     /**
+     * @description NoCodeToolのJSONを直接読み込む
+     *              Read JSON directly from NoCodeTool
+     *
      * @param  {string} json
      * @return {void}
      * @method
@@ -203,7 +206,7 @@ export class Loader extends DisplayObjectContainer
 
             $updateUnzipWorkerStatus(true);
 
-            const unzipWorker = $getUnzipWorker();
+            const unzipWorker: Worker = $getUnzipWorker();
 
             const buffer: Uint8Array = new Uint8Array(json.buffer);
             unzipWorker.onmessage = (event: MessageEvent) =>
