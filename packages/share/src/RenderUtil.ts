@@ -1,6 +1,7 @@
 import type { BoundsImpl } from "./interface/BoundsImpl";
 import type { RGBAImpl } from "./interface/RGBAImpl";
 import type { PreObjectImpl } from "./interface/PreObjectImpl";
+import { BlendModeImpl } from "./interface/BlendModeImpl";
 
 /**
  * @type {number}
@@ -65,56 +66,56 @@ export const $doUpdated = (update: boolean = true) =>
  * @type {number}
  * @const
  */
-export const $Infinity = Infinity;
+export const $Infinity: number = Infinity;
 
 /**
  * @shortcut
  * @type {Math}
  * @const
  */
-export const $Math = Math;
+export const $Math: Math = Math;
 
 /**
  * @shortcut
  * @type {ArrayConstructor}
  * @const
  */
-export const $Array = Array;
+export const $Array: ArrayConstructor = Array;
 
 /**
  * @shortcut
  * @type {MapConstructor}
  * @const
  */
-export const $Map = Map;
+export const $Map: MapConstructor = Map;
 
 /**
  * @shortcut
  * @type {NumberConstructor}
  * @const
  */
-export const $Number = Number;
+export const $Number: NumberConstructor = Number;
 
 /**
  * @shortcut
  * @type {Float32Array}
  * @const
  */
-export const $Float32Array = Float32Array;
+export const $Float32Array: Float32ArrayConstructor = Float32Array;
 
 /**
  * @shortcut
  * @type {Int32Array}
  * @const
  */
-export const $Int32Array = Int32Array;
+export const $Int32Array: Int32ArrayConstructor = Int32Array;
 
 /**
  * @shortcut
  * @type {Int16Array}
  * @const
  */
-export const $Int16Array = Int16Array;
+export const $Int16Array: Int16ArrayConstructor = Int16Array;
 
 /**
  * @shortcut
@@ -900,4 +901,35 @@ export const $poolPreObject = (object: PreObjectImpl): void =>
 
     // pool
     $preObjects.push(object);
+};
+
+/**
+ * @type {Map}
+ * @private
+ */
+const blendMap: Map<number, BlendModeImpl> = new Map([
+    [1, "normal"],
+    [2, "layer"],
+    [3, "multiply"],
+    [4, "screen"],
+    [5, "lighten"],
+    [6, "darken"],
+    [7, "difference"],
+    [8, "add"],
+    [9, "subtract"],
+    [10, "invert"],
+    [11, "alpha"],
+    [12, "erase"],
+    [13, "overlay"],
+    [14, "hardlight"]
+]);
+
+/**
+ * @return {string}
+ * @method
+ * @public
+ */
+export const $blendToString = (number: number): BlendModeImpl =>
+{
+    return blendMap.has(number) ? blendMap.get(number) || "normal" : "normal";
 };

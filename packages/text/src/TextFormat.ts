@@ -25,9 +25,7 @@ export class TextFormat
     private _$align: TextFormatAlignImpl | null;
     private _$leftMargin: number | null;
     private _$rightMargin: number | null;
-    private _$indent: number | null;
     private _$leading: number | null;
-    private _$blockIndent: number | null;
     private _$letterSpacing: number | null;
 
     /**
@@ -40,9 +38,7 @@ export class TextFormat
      * @param {string}  [align=null]
      * @param {number}  [left_margin=null]
      * @param {number}  [right_margin=null]
-     * @param {number}  [indent=null]
      * @param {number}  [leading=null]
-     * @param {number}  [block_indent=null]
      *
      * @constructor
      * @public
@@ -57,9 +53,7 @@ export class TextFormat
         align: TextFormatAlignImpl | null = null,
         left_margin: number | null = null,
         right_margin: number | null = null,
-        indent: number | null = null,
-        leading: number | null = null,
-        block_indent: number | null = null
+        leading: number | null = null
     ) {
 
         /**
@@ -132,21 +126,7 @@ export class TextFormat
          * @default null
          * @private
          */
-        this._$indent = indent;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
         this._$leading = leading;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$blockIndent   = block_indent;
 
         /**
          * @type {number}
@@ -230,23 +210,6 @@ export class TextFormat
     }
 
     /**
-     * @description ブロックのインデントをピクセル単位で示します。
-     *              Indicates the block indentation in pixels.
-     *
-     * @member {number}
-     * @default null
-     * @public
-     */
-    get blockIndent (): number | null
-    {
-        return this._$blockIndent;
-    }
-    set blockIndent (block_indent: number | null)
-    {
-        this._$blockIndent = block_indent;
-    }
-
-    /**
      * @description テキストをボールドにするかどうかを指定します。
      *              Specifies whether the text is boldface.
      *
@@ -298,24 +261,6 @@ export class TextFormat
     set font (font: string | null)
     {
         this._$font = font !== null ? `${font}` : null;
-    }
-
-    /**
-     * @description 左インデントから段落の先頭文字までのインデントを示します。
-     *              Indicates the indentation from the left margin
-     *              to the first character in the paragraph.
-     *
-     * @member {number}
-     * @default null
-     * @public
-     */
-    get indent (): number | null
-    {
-        return this._$indent;
-    }
-    set indent (indent: number | null)
-    {
-        this._$indent = indent;
     }
 
     /**
@@ -451,8 +396,7 @@ export class TextFormat
         const textFormat = new TextFormat(
             this._$font, this._$size, this._$color, this._$bold,
             this._$italic, this._$underline, this._$align,
-            this._$leftMargin, this._$rightMargin,
-            this._$indent, this._$leading, this._$blockIndent
+            this._$leftMargin, this._$rightMargin, this._$leading
         );
 
         textFormat._$letterSpacing = this._$letterSpacing;
@@ -468,11 +412,9 @@ export class TextFormat
     _$setDefault (): void
     {
         this._$align         = "left";
-        this._$blockIndent   = 0;
         this._$bold          = false;
         this._$color         = 0;
         this._$font          = "Times New Roman";
-        this._$indent        = 0;
         this._$italic        = false;
         this._$leading       = 0;
         this._$leftMargin    = 0;
@@ -494,10 +436,6 @@ export class TextFormat
             this._$align = text_format._$align;
         }
 
-        if (this._$blockIndent === null) {
-            this._$blockIndent = text_format._$blockIndent;
-        }
-
         if (this._$bold === null) {
             this._$bold = text_format._$bold;
         }
@@ -508,10 +446,6 @@ export class TextFormat
 
         if (this._$font === null) {
             this._$font = text_format._$font;
-        }
-
-        if (this._$indent === null) {
-            this._$indent = text_format._$indent;
         }
 
         if (this._$italic === null) {
@@ -551,9 +485,6 @@ export class TextFormat
     _$widthMargin (): number
     {
         let width = 0;
-        if (this._$indent) {
-            width += this._$indent;
-        }
 
         if (this._$leftMargin) {
             width += this._$leftMargin;
@@ -581,6 +512,6 @@ export class TextFormat
             fontStyle += "bold ";
         }
 
-        return `${fontStyle}${this._$size}px '${this._$font}','sans-serif'`;
+        return `${fontStyle}${this._$size}px '${this._$font}',sans-serif`;
     }
 }

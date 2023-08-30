@@ -15,6 +15,7 @@ jobs:
           node-version: "18.x"
           registry-url: "https://registry.npmjs.org"
       - run: npm install
+      - run: npm run build
       - run: npm run clean
       - run: npm run publish:dist
       - run: cd ~/work/player/player/dist/src && npm publish --access public

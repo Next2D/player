@@ -12,7 +12,8 @@ import {
     Loader,
     LoaderInfo,
     Shape,
-    Stage
+    Stage,
+    TextField
 } from "@next2d/display";
 
 const display: DisplayImpl = {
@@ -28,7 +29,8 @@ const display: DisplayImpl = {
     Loader,
     LoaderInfo,
     Shape,
-    Stage
+    Stage,
+    TextField
 };
 
 Object.entries(display).forEach(([key, DisplayClass]) =>

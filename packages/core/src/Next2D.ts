@@ -239,7 +239,7 @@ export class Next2D
      * @method
      * @public
      */
-    createRootMovieClip (
+    async createRootMovieClip (
         width: number = 240, height: number = 240,
         fps: number = 24, options: PlayerOptionsImpl|null = null
     ): Promise<Sprite> {
@@ -265,7 +265,7 @@ export class Next2D
                 player._$loadStatus = Player.LOAD_END;
                 player.play();
 
-                return Promise.resolve(root);
+                return root;
             });
     }
 }

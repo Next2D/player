@@ -2,15 +2,13 @@
 
 import {
     $currentPlayer,
-    $initialize,
-    $isSafari,
-    $rendererWorker
+    $initialize
 } from "@next2d/util";
 import { Next2D } from "@next2d/core";
 
 if (!("next2d" in window)) {
 
-    console.log("%c Next2D Player %c 1.16.0 %c https://next2d.app",
+    console.log("%c Next2D Player %c 1.17.0 %c https://next2d.app",
         "color: #fff; background: #5f5f5f",
         "color: #fff; background: #4bc729",
         "");
@@ -26,13 +24,6 @@ if (!("next2d" in window)) {
                 $initialize()
                     .then((): void =>
                     {
-                        if ($rendererWorker) {
-                            $rendererWorker.postMessage({
-                                "command": "setSafari",
-                                "isSafari": $isSafari
-                            });
-                        }
-
                         $currentPlayer()
                             ._$initializeCanvas();
 
@@ -40,7 +31,6 @@ if (!("next2d" in window)) {
                     });
             };
 
-            // @ts-ignore
             window.addEventListener("DOMContentLoaded", initialize);
 
         } else {
@@ -48,13 +38,6 @@ if (!("next2d" in window)) {
             $initialize()
                 .then((): void =>
                 {
-                    if ($rendererWorker) {
-                        $rendererWorker.postMessage({
-                            "command": "setSafari",
-                            "isSafari": $isSafari
-                        });
-                    }
-
                     $currentPlayer()
                         ._$initializeCanvas();
 

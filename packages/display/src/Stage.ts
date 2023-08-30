@@ -301,8 +301,12 @@ export class Stage extends DisplayObjectContainer
      */
     _$addChild (child: DisplayObjectImpl<any>): DisplayObjectImpl<any>
     {
-        child._$stage = this;
-        child._$root  = child;
+        child._$stage  = this;
+        child._$root   = child;
+
+        // worker flag updated
+        this._$created = true;
+
         return super._$addChild(child);
     }
 }

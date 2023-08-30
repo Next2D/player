@@ -185,6 +185,44 @@ export class Loader extends DisplayObjectContainer
     }
 
     /**
+     * @description NoCodeToolのJSONを直接読み込む
+     *              Read JSON directly from NoCodeTool
+     *
+     * @param  {string} json
+     * @return {void}
+     * @method
+     * @public
+     */
+    loadJSON (json: NoCodeDataZlibImpl | NoCodeDataImpl): void
+    {
+        if (json.type === "zlib") {
+
+            if ($useUnzipWorker()) {
+
+                $unzipQueues.push(json);
+
+                return ;
+            }
+
+            $updateUnzipWorkerStatus(true);
+
+            const unzipWorker: Worker = $getUnzipWorker();
+
+            const buffer: Uint8Array = new Uint8Array(json.buffer);
+            unzipWorker.onmessage = (event: MessageEvent) =>
+            {
+                this._$unzipHandler(event);
+            };
+            unzipWorker.postMessage(buffer, [buffer.buffer]);
+
+        } else {
+
+            this._$build(json);
+
+        }
+    }
+
+    /**
      * @param  {ProgressEvent} event
      * @return {void}
      * @method
@@ -229,33 +267,7 @@ export class Loader extends DisplayObjectContainer
 
             if (loaderInfo.format === "json") {
 
-                const json: NoCodeDataZlibImpl | NoCodeDataImpl = target.response;
-
-                if (json.type === "zlib") {
-
-                    if ($useUnzipWorker()) {
-
-                        $unzipQueues.push(json);
-
-                        return ;
-                    }
-
-                    $updateUnzipWorkerStatus(true);
-
-                    const unzipWorker = $getUnzipWorker();
-
-                    const buffer: Uint8Array = new Uint8Array(json.buffer);
-                    unzipWorker.onmessage = (event: MessageEvent) =>
-                    {
-                        this._$unzipHandler(event);
-                    };
-                    unzipWorker.postMessage(buffer, [buffer.buffer]);
-
-                } else {
-
-                    this._$build(json);
-
-                }
+                this.loadJSON(target.response);
 
             } else {
 

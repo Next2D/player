@@ -3,8 +3,9 @@ import { GridImpl } from "./GridImpl";
 
 export interface PropertyMessageImpl {
     command: string;
-    instanceId: number;
-    parentId: number;
+    buffer: Float32Array;
+    instanceId?: number;
+    parentId?: number;
     visible?: boolean;
     isMask?: boolean;
     clipDepth?: number;

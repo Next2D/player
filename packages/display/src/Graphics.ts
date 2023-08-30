@@ -2,7 +2,7 @@ import { GraphicsBitmapFill } from "./GraphicsBitmapFill";
 import { GraphicsGradientFill } from "./GraphicsGradientFill";
 import type { BitmapData } from "./BitmapData";
 import type { Player } from "@next2d/core";
-import type { Matrix } from "@next2d/geom";
+import type { Matrix, Rectangle } from "@next2d/geom";
 import type {
     GraphicsParentImpl,
     CapsStyleImpl,
@@ -18,7 +18,8 @@ import type {
     GradientTypeImpl,
     InterpolationMethodImpl,
     CachePositionImpl,
-    ShapeModeImpl
+    ShapeModeImpl,
+    GridImpl
 } from "@next2d/interface";
 import type {
     CanvasToWebGLContext,
@@ -103,6 +104,7 @@ export class Graphics
     private _$cacheParams: number[];
     public _$bitmapId: number;
     public _$mode: ShapeModeImpl;
+    public _$posted: boolean;
 
     /**
      * @param {DisplayObject} src
@@ -368,6 +370,13 @@ export class Graphics
          * @private
          */
         this._$mode = "shape";
+
+        /**
+         * @type {boolean}
+         * @default false
+         * @private
+         */
+        this._$posted = false;
     }
 
     /**
@@ -775,6 +784,7 @@ export class Graphics
         this._$canDraw      = false;
         this._$bitmapId     = 0;
         this._$mode         = "shape";
+        this._$posted       = false;
 
         // fill
         this._$fillType     = 0;
@@ -1896,13 +1906,13 @@ export class Graphics
                     ._$transform
                     .concatenatedMatrix
                     ._$matrix;
-                $poolFloat32Array6(aMatrixBase);
 
                 const aMatrix: Float32Array = $getFloat32Array6(
                     aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
                     aMatrixBase[4] * mScale - xMin,
                     aMatrixBase[5] * mScale - yMin
                 );
+                $poolFloat32Array6(aMatrixBase);
 
                 const apMatrix: Float32Array = $multiplicationMatrix(
                     aMatrix, pMatrix
@@ -1921,9 +1931,17 @@ export class Graphics
 
                 $poolBoundsObject(parentBounds);
 
+                const scale9Grid: Rectangle = displayObject._$scale9Grid as NonNullable<Rectangle>;
+                const grid: GridImpl = {
+                    "x": scale9Grid.x,
+                    "y": scale9Grid.y,
+                    "w": scale9Grid.width,
+                    "h": scale9Grid.height
+                };
+
                 context.grid.enable(
                     parentXMin, parentYMin, parentWidth, parentHeight,
-                    baseBounds, displayObject._$scale9Grid, mScale,
+                    baseBounds, grid, mScale,
                     pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
                     aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
                 );
