@@ -57,7 +57,8 @@ import {
     $TOUCH_END,
     $TOUCH_START,
     $document,
-    $RegExp
+    $RegExp,
+    $poolMatrix
 } from "@next2d/util";
 import {
     $cacheStore,
@@ -80,7 +81,8 @@ import {
     $poolFloat32Array8,
     $generateFontStyle,
     $devicePixelRatio,
-    $getBoundsObject
+    $getBoundsObject,
+    $getFloat32Array6
 } from "@next2d/share";
 
 /**
@@ -93,7 +95,7 @@ import {
  * and use the methods and properties of the TextField class to manipulate it with JavaScript.
  *
  * @class
- * @memberOf next2d.text
+ * @memberOf next2d.display
  * @extends  InteractiveObject
  */
 export class TextField extends InteractiveObject
@@ -399,13 +401,13 @@ export class TextField extends InteractiveObject
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.text.TextField
+     * @default next2d.display.TextField
      * @const
      * @static
      */
     static get namespace (): string
     {
-        return "next2d.text.TextField";
+        return "next2d.display.TextField";
     }
 
     /**
@@ -427,13 +429,13 @@ export class TextField extends InteractiveObject
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.text.TextField
+     * @default next2d.display.TextField
      * @const
      * @public
      */
     get namespace (): string
     {
-        return "next2d.text.TextField";
+        return "next2d.display.TextField";
     }
 
     /**
@@ -599,59 +601,60 @@ export class TextField extends InteractiveObject
             return ;
         }
 
+        if (this._$type !== "input") {
+            return ;
+        }
+
         this._$focus = focus;
         if (this._$focus) {
 
-            if (this._$type === "input") {
+            const player: Player = $currentPlayer();
 
-                const player: Player = $currentPlayer();
+            const div: HTMLElement | null = $document
+                .getElementById(player.contentElementId);
 
-                const div: HTMLElement | null = $document
-                    .getElementById(player.contentElementId);
+            if (!div) {
+                return;
+            }
 
-                if (!div) {
-                    return;
-                }
+            this._$createTextAreaElement(player._$scale);
 
-                this._$createTextAreaElement(player._$scale);
+            // setup
+            const element: HTMLTextAreaElement | null = this._$textarea;
+            if (!element) {
+                return;
+            }
 
-                // setup
-                const element: HTMLTextAreaElement | null = this._$textarea;
-                if (!element) {
-                    return;
-                }
+            const matrix: Matrix = this._$transform.concatenatedMatrix;
+            const bounds: BoundsImpl = this._$getBounds(null);
 
-                const matrix: Matrix = this._$transform.concatenatedMatrix;
-                const bounds: BoundsImpl = this._$getBounds(null);
+            const color: RGBAImpl = $intToRGBA(
+                $toColorInt(this._$defaultTextFormat.color), 100
+            );
 
-                const color: RGBAImpl = $intToRGBA(
-                    $toColorInt(this._$defaultTextFormat.color), 100
-                );
+            element.style.color  = `rgb(${color.R},${color.G},${color.B})`;
+            element.style.left   = `${(matrix.tx + bounds.xMin + player.x / player._$scale / $devicePixelRatio) * player._$scale}px`;
+            element.style.top    = `${(matrix.ty + bounds.yMin + player.y / player._$scale / $devicePixelRatio) * player._$scale}px`;
+            element.style.width  = `${$Math.ceil(this.width  * player._$scale)}px`;
+            element.style.height = `${$Math.ceil(this.height * player._$scale)}px`;
 
-                element.style.color  = `rgb(${color.R},${color.G},${color.B})`;
-                element.style.left   = `${(matrix.tx + bounds.xMin + player.x / player._$scale / $devicePixelRatio) * player._$scale}px`;
-                element.style.top    = `${(matrix.ty + bounds.yMin + player.y / player._$scale / $devicePixelRatio) * player._$scale}px`;
-                element.style.width  = `${$Math.ceil((this.width  - 1) * player._$scale)}px`;
-                element.style.height = `${$Math.ceil((this.height - 1) * player._$scale)}px`;
+            // set text
+            element.value = this.text;
 
-                // set text
-                element.value = this.text;
+            div.appendChild(element);
 
-                div.appendChild(element);
+            $requestAnimationFrame(() =>
+            {
+                element.focus();
+            });
 
-                $requestAnimationFrame(() =>
-                {
-                    element.focus();
-                });
+            this._$doChanged();
+            $doUpdated();
+            this._$textAreaActive = true;
 
-                this._$doChanged();
-                $doUpdated();
-                this._$textAreaActive = true;
-
-                // focus in event
-                if (this.willTrigger(FocusEvent.FOCUS_IN)) {
-                    this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_IN));
-                }
+            // focus in event
+            if (this.willTrigger(FocusEvent.FOCUS_IN)) {
+                this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_IN));
             }
 
         } else {
@@ -2184,8 +2187,6 @@ export class TextField extends InteractiveObject
             }
 
             const textFormat: TextFormat = textObject.textFormat;
-            const letterSpacing: number = textFormat.letterSpacing || 0;
-            const offsetX: number = textObject.w + letterSpacing;
 
             // check
             if (this._$autoSize === "none") {
@@ -2195,10 +2196,10 @@ export class TextField extends InteractiveObject
                 }
 
                 if (textObject.mode === "text") {
-                    if (scrollX > offsetWidth + offsetX
+                    if (scrollX > offsetWidth + textObject.w
                         || offsetWidth > limitWidth
                     ) {
-                        offsetWidth += offsetX;
+                        offsetWidth += textObject.w;
                         continue;
                     }
                 }
@@ -2267,7 +2268,7 @@ export class TextField extends InteractiveObject
 
                             context.beginPath();
                             context.moveTo(x, y + 1);
-                            context.lineTo(x + offsetX, y + 1);
+                            context.lineTo(x + textObject.w, y + 1);
                             context.stroke();
 
                         }
@@ -2278,7 +2279,7 @@ export class TextField extends InteractiveObject
 
                         context.fillText(textObject.text, x, y);
 
-                        offsetWidth += offsetX;
+                        offsetWidth += textObject.w;
                     }
                     break;
 

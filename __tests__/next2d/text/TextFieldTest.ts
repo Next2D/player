@@ -28,12 +28,12 @@ describe("TextField.js namespace test", () =>
 
     it("namespace test public", () =>
     {
-        expect(new TextField().namespace).toBe("next2d.text.TextField");
+        expect(new TextField().namespace).toBe("next2d.display.TextField");
     });
 
     it("namespace test static", () =>
     {
-        expect(TextField.namespace).toBe("next2d.text.TextField");
+        expect(TextField.namespace).toBe("next2d.display.TextField");
     });
 
 });
