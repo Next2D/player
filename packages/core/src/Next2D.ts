@@ -244,28 +244,24 @@ export class Next2D
         fps: number = 24, options: PlayerOptionsImpl|null = null
     ): Promise<Sprite> {
 
-        return Promise
-            .all(this._$promises)
-            .then(() =>
-            {
-                $poolArray(this._$promises);
+        await Promise.all(this._$promises);
+        $poolArray(this._$promises);
 
-                const player: Player = this._$player;
+        const player: Player = this._$player;
 
-                // setup
-                player.width  = width | 0;
-                player.height = height | 0;
-                player.mode   = "create";
-                player.stage._$frameRate = fps | 0;
-                player.setOptions(options);
-                player._$initialize();
+        // setup
+        player.width  = width | 0;
+        player.height = height | 0;
+        player.mode   = "create";
+        player.stage._$frameRate = fps | 0;
+        player.setOptions(options);
+        player._$initialize();
 
-                const root: Sprite = player.stage.addChild(new Sprite());
+        const root: Sprite = player.stage.addChild(new Sprite());
 
-                player._$loadStatus = Player.LOAD_END;
-                player.play();
+        player._$loadStatus = Player.LOAD_END;
+        player.play();
 
-                return root;
-            });
+        return root;
     }
 }
