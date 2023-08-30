@@ -33,7 +33,7 @@
     "url": "https://github.com/sponsors/Next2D"
   },
   "dependencies": {
-    "htmlparser2": "^9.0.0",
+    "htmlparser2": "^9.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.22.11",
