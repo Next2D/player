@@ -57,8 +57,7 @@ import {
     $TOUCH_END,
     $TOUCH_START,
     $document,
-    $RegExp,
-    $poolMatrix
+    $RegExp
 } from "@next2d/util";
 import {
     $cacheStore,
@@ -81,8 +80,7 @@ import {
     $poolFloat32Array8,
     $generateFontStyle,
     $devicePixelRatio,
-    $getBoundsObject,
-    $getFloat32Array6
+    $getBoundsObject
 } from "@next2d/share";
 
 /**
