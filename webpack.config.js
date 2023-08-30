@@ -128,4 +128,4 @@ const player = {
     }
 };
 
-module.exports = [player];
+module.exports = [render_worker, player];

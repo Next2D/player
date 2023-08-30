@@ -1,11 +1,7 @@
 import { TextImpl } from "@next2d/interface";
-import {
-    TextField,
-    TextFormat
-} from "@next2d/text";
+import { TextFormat } from "@next2d/text";
 
 const text: TextImpl = {
-    TextField,
     TextFormat
 };
 

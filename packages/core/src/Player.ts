@@ -1,6 +1,7 @@
 import {
     Stage,
-    MovieClip
+    MovieClip,
+    TextField
 } from "@next2d/display";
 import {
     Event as Next2DEvent,
@@ -16,7 +17,6 @@ import {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
-import { TextField } from "@next2d/text";
 import {
     StageQualityImpl,
     PlayerOptionsImpl,
@@ -27,7 +27,8 @@ import {
     DisplayObjectImpl,
     EventDispatcherImpl,
     ParentImpl,
-    RGBAImpl
+    RGBAImpl,
+    PropertyMessageMapImpl
 } from "@next2d/interface";
 import {
     Point,
@@ -59,7 +60,10 @@ import {
     $setEvent,
     $setEventType,
     $setCurrentLoaderInfo,
-    $getEventType
+    $getEventType,
+    $getRenderBufferArray,
+    $getRenderMessageObject,
+    $poolRenderMessageObject
 } from "@next2d/util";
 import {
     $Math,
@@ -90,53 +94,52 @@ import {
  */
 export class Player
 {
-    private readonly _$stage: Stage;
-    private _$mode: PlayerModeImpl;
+    public _$stopFlag: boolean;
     public _$actionOffset: number;
     public _$actions: MovieClip[];
     public _$loaders: EventDispatcherImpl<any>[];
     public _$sounds: Map<any, MovieClip>;
-    private _$context: CanvasToWebGLContext|null;
-    private readonly _$hitObject: PlayerHitObjectImpl;
-    private _$rollOverObject: DisplayObjectImpl<any> | null;
-    private _$mouseOverTarget: DisplayObjectImpl<any> | null;
-    private readonly _$ratio: number;
-    public _$stopFlag: boolean;
-    private _$startTime: number;
-    private _$fps: number;
     public _$loadStatus: number;
     public _$width: number;
     public _$height: number;
+    public _$scale: number;
+    public _$state: "up" | "down";
+    public _$attachment: AttachmentImpl | null;
+    public readonly _$videos: Video[];
+    public readonly _$sources: Sound[];
+    private _$mode: PlayerModeImpl;
+    private _$context: CanvasToWebGLContext|null;
+    private _$rollOverObject: DisplayObjectImpl<any> | null;
+    private _$mouseOverTarget: DisplayObjectImpl<any> | null;
+    private _$startTime: number;
+    private _$fps: number;
     private _$baseWidth: number;
     private _$baseHeight: number;
-    public _$scale: number;
-    private readonly _$matrix: Float32Array;
     private _$tx: number;
     private _$ty: number;
-    public _$state: "up" | "down";
     private _$hitTestStart: boolean;
     private _$stageX: number;
     private _$stageY: number;
-    private readonly _$broadcastEvents: Map<any, any>;
     private _$optionWidth: number;
     private _$optionHeight: number;
     private _$tagId: string;
     private _$bgColor: string;
     private _$base: string;
-    public readonly _$videos: Video[];
-    public readonly _$sources: Sound[];
     private _$fullScreen: boolean;
-    private readonly _$quality: StageQualityImpl;
     private _$textField: TextField | null;
-    private _$touchY: number;
     private _$timerId: number;
     private _$loadId: number;
-    public _$attachment: AttachmentImpl | null;
-    private readonly _$canvas: HTMLCanvasElement;
     private _$deltaX: number;
     private _$deltaY: number;
     private _$clickTarget: ParentImpl<any> | null;
     private _$actionProcess: boolean;
+    private readonly _$stage: Stage;
+    private readonly _$hitObject: PlayerHitObjectImpl;
+    private readonly _$ratio: number;
+    private readonly _$matrix: Float32Array;
+    private readonly _$broadcastEvents: Map<any, any>;
+    private readonly _$quality: StageQualityImpl;
+    private readonly _$canvas: HTMLCanvasElement;
 
     /**
      * @constructor
@@ -413,13 +416,6 @@ export class Player
          * @private
          */
         this._$textField = null;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$touchY = 0;
 
         /**
          * @type {number}
@@ -761,7 +757,7 @@ export class Player
      * @return {void}
      * @public
      */
-    setOptions (options: PlayerOptionsImpl|null = null): void
+    setOptions (options: PlayerOptionsImpl | null = null): void
     {
         if (options) {
             this._$optionWidth  = options.width   || this._$optionWidth;
@@ -895,16 +891,6 @@ export class Player
      */
     _$initialize (): void
     {
-        if ($document.readyState === "loading") {
-
-            $window.addEventListener("DOMContentLoaded", () =>
-            {
-                this._$initialize();
-            });
-
-            return ;
-        }
-
         const contentElementId: string = this.contentElementId;
         if (!this._$tagId) {
 
@@ -1089,25 +1075,28 @@ export class Player
 
         if ($rendererWorker) {
 
-            $rendererWorker.postMessage({
-                "command": "setStage",
-                "instanceId": this._$stage._$instanceId
-            });
-
             const offscreenCanvas: OffscreenCanvas = this
                 ._$canvas
                 .transferControlToOffscreen();
 
+            const buffer: Float32Array = $getRenderBufferArray();
+
+            let index: number = 0;
+            buffer[index++] = this._$stage._$instanceId;
+            buffer[index++] = +$isSafari;
+            buffer[index++] = $devicePixelRatio;
+            buffer[index++] = this._$getSamples();
+
+            const options: ArrayBuffer[] = $getArray(offscreenCanvas, buffer.buffer);
             $rendererWorker.postMessage({
                 "command": "initialize",
                 "canvas": offscreenCanvas,
-                "samples": this._$getSamples(),
-                "devicePixelRatio": $devicePixelRatio,
-                "isSafari": $isSafari
-            }, [offscreenCanvas]);
+                "buffer": buffer
+            }, options);
+
+            $poolArray(options);
 
         } else {
-
             // create gl context
             const gl: WebGL2RenderingContext | null = this._$canvas.getContext("webgl2", {
                 "stencil": true,
@@ -1168,7 +1157,6 @@ export class Player
             $setEventType($TOUCH_START);
 
             // start position
-            this._$touchY = event.changedTouches[0].pageY;
             this._$hitTest();
         });
 
@@ -1189,11 +1177,6 @@ export class Player
         // mouse wheel
         this._$canvas.addEventListener($TOUCH_MOVE, (event: TouchEvent) =>
         {
-            // update
-            const pageY   = event.changedTouches[0].pageY;
-            this._$deltaY = this._$touchY - pageY;
-            this._$touchY = pageY;
-
             $setEvent(event);
             $setEventType($TOUCH_MOVE);
 
@@ -1400,14 +1383,26 @@ export class Player
      * @method
      * @public
      */
-    _$setBackgroundColor (background_color = "transparent"): void
+    _$setBackgroundColor (background_color: string = "transparent"): void
     {
         if ($rendererWorker) {
 
-            $rendererWorker.postMessage({
-                "command": "setBackgroundColor",
-                "backgroundColor": background_color
-            });
+            const buffer: Float32Array = $getRenderBufferArray();
+
+            buffer[0] = background_color === "transparent"
+                ? -1
+                : $toColorInt(background_color);
+
+            const message: PropertyMessageMapImpl<any> = $getRenderMessageObject();
+            message.command = "setBackgroundColor";
+            message.buffer  = buffer;
+
+            const options: ArrayBuffer[] = $getArray(buffer.buffer);
+
+            $rendererWorker.postMessage(message, options);
+
+            $poolRenderMessageObject(message);
+            $poolArray(options);
 
         } else {
 
@@ -1455,14 +1450,25 @@ export class Player
 
         if ($rendererWorker) {
 
-            $rendererWorker.postMessage({
-                "command": "resize",
-                "width": width,
-                "height": height,
-                "scale": scale,
-                "tx": tx,
-                "ty": ty
-            });
+            const buffer: Float32Array = $getRenderBufferArray();
+
+            let index: number = 0;
+            buffer[index++] = width;
+            buffer[index++] = height;
+            buffer[index++] = scale;
+            buffer[index++] = tx;
+            buffer[index++] = ty;
+
+            const message: PropertyMessageMapImpl<any> = $getRenderMessageObject();
+            const options: ArrayBuffer[] = $getArray(buffer.buffer);
+
+            message.command = "resize";
+            message.buffer  = buffer;
+            $rendererWorker.postMessage(message, options);
+
+            // reset
+            $poolRenderMessageObject(message);
+            $poolArray(options);
 
         } else {
 
@@ -1627,7 +1633,7 @@ export class Player
      * @method
      * @private
      */
-    _$pointerCheck ()
+    _$pointerCheck (): void
     {
         const stageX: number = this._$stageX;
         const stageY: number = this._$stageY;
@@ -1877,7 +1883,7 @@ export class Player
      * @method
      * @private
      */
-    _$action ()
+    _$action (): void
     {
 
         if (this._$stopFlag) {
@@ -1969,9 +1975,13 @@ export class Player
      * @returns void
      * @private
      */
-    _$draw ()
+    _$draw (): void
     {
         if (!this._$width || !this._$height) {
+            return ;
+        }
+
+        if (!this._$stage._$isUpdated()) {
             return ;
         }
 
@@ -1979,10 +1989,6 @@ export class Player
             $rendererWorker.postMessage({
                 "command": "draw"
             });
-        }
-
-        if (!this._$stage._$isUpdated()) {
-            return ;
         }
 
         const context: CanvasToWebGLContext | null = this._$context;
@@ -2102,21 +2108,20 @@ export class Player
             y += rect.top;
         }
 
-        let stageX: number = 0;
-        let stageY: number = 0;
-
+        let pageX: number = 0;
+        let pageY: number = 0;
         if ("changedTouches" in event) {
             const changedTouche: Touch = event.changedTouches[0];
-            stageX = changedTouche.pageX;
-            stageY = changedTouche.pageY;
+            pageX = changedTouche.pageX;
+            pageY = changedTouche.pageY;
         } else if ("pageX" in event) {
-            stageX = event.pageX;
-            stageY = event.pageY;
+            pageX = event.pageX;
+            pageY = event.pageY;
         }
 
         // drop point
-        stageX = (stageX - x) / this._$scale;
-        stageY = (stageY - y) / this._$scale;
+        const stageX: number = (pageX - x) / this._$scale;
+        const stageY: number = (pageY - y) / this._$scale;
 
         // update
         this._$stageX = stageX;
@@ -2180,10 +2185,28 @@ export class Player
 
                 }
 
+                if (this._$clickTarget
+                    && "_$text" in this._$clickTarget
+                    && this._$clickTarget.scrollEnabled
+                ) {
+                    const deltaX: number = this._$deltaX - pageX;
+                    const deltaY: number = this._$deltaY - pageY;
+
+                    // @ts-ignore
+                    this._$clickTarget.scrollX += deltaX / (this._$clickTarget.textWidth / this._$clickTarget.width);
+
+                    // @ts-ignore
+                    this._$clickTarget.scrollY += deltaY / (this._$clickTarget.textHeight / this._$clickTarget.height);
+                }
+
+                this._$deltaX = pageX;
+                this._$deltaY = pageY;
                 break;
 
             case $TOUCH_START:
             case $MOUSE_DOWN:
+                this._$deltaX = pageX;
+                this._$deltaY = pageY;
                 this._$state  = "down";
                 canPointer    = this._$canvas.style.cursor === "pointer";
                 staticPointer = true;
@@ -2192,6 +2215,8 @@ export class Player
             case $TOUCH_END:
             case $MOUSE_UP:
             case $DOUBLE_CLICK:
+                this._$deltaX = 0;
+                this._$deltaY = 0;
                 this._$state = "up";
                 break;
 
@@ -2456,21 +2481,6 @@ export class Player
                     case $TOUCH_START:
                     case $MOUSE_DOWN:
 
-                        // TextField focus out
-                        if (this._$textField
-                            && instance !== this._$textField
-                            && "_$text" in this._$textField
-                        ) {
-                            this._$textField.focus = false;
-                            this._$textField       = null;
-                        }
-
-                        // TextField focus out
-                        if ("_$text" in instance) {
-                            instance.focus   = true;
-                            this._$textField = instance;
-                        }
-
                         // (3) mouseDown
                         if (instance.willTrigger(Next2DMouseEvent.MOUSE_DOWN)) {
                             instance.dispatchEvent(new Next2DMouseEvent(
@@ -2494,6 +2504,12 @@ export class Player
                         ) {
                             this._$textField.focus = false;
                             this._$textField       = null;
+                        }
+
+                        // TextField focus out
+                        if ("_$text" in instance) {
+                            instance.focus   = true;
+                            this._$textField = instance;
                         }
 
                         // (1) mouseUp
@@ -2526,10 +2542,18 @@ export class Player
                             );
                         }
 
-                        if ("deltaY" in event && instance.scrollEnabled) {
-                            // @ts-ignore
-                            instance.scrollV += $clamp(event.deltaY, -1, 1, 0);
+                        if (instance.scrollEnabled) {
+                            if ("deltaX" in event) {
+                                // @ts-ignore
+                                instance.scrollX += event.deltaX / (instance.textWidth / instance.width);
+                            }
+
+                            if ("deltaY" in event) {
+                                // @ts-ignore
+                                instance.scrollY += event.deltaY / (instance.textHeight / instance.height);
+                            }
                         }
+
                         break;
 
                     case $DOUBLE_CLICK:

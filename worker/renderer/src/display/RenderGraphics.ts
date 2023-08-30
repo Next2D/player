@@ -1,20 +1,20 @@
 import { RenderDisplayObject } from "./RenderDisplayObject";
-import type { GridImpl } from "./interface/GridImpl";
-import type { BlendModeImpl } from "./interface/BlendModeImpl";
-import type { FilterArrayImpl } from "./interface/FilterArrayImpl";
-import type { BoundsImpl } from "./interface/BoundsImpl";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { SpreadMethodImpl } from "./interface/SpreadMethodImpl";
-import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
-import type { ColorStopImpl } from "./interface/ColorStopImpl";
-import type { CachePositionImpl } from "./interface/CachePositionImpl";
-import type { ShapeModeImpl } from "./interface/ShapeModeImpl";
+import type { GridImpl } from "../interface/GridImpl";
+import type { BlendModeImpl } from "../interface/BlendModeImpl";
+import type { FilterArrayImpl } from "../interface/FilterArrayImpl";
+import type { BoundsImpl } from "../interface/BoundsImpl";
+import type { AttachmentImpl } from "../interface/AttachmentImpl";
+import type { SpreadMethodImpl } from "../interface/SpreadMethodImpl";
+import type { PropertyMessageMapImpl } from "../interface/PropertyMessageMapImpl";
+import type { ColorStopImpl } from "../interface/ColorStopImpl";
+import type { CachePositionImpl } from "../interface/CachePositionImpl";
+import type { ShapeModeImpl } from "../interface/ShapeModeImpl";
 import type {
     CanvasToWebGLContext,
     CanvasGradientToWebGL,
     FrameBufferManager
 } from "@next2d/webgl";
-import { $renderPlayer } from "./RenderGlobal";
+import { $renderPlayer } from "../RenderGlobal";
 import {
     $cacheStore,
     $clamp,

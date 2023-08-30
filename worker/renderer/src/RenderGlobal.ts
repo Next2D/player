@@ -1,14 +1,14 @@
 import { RenderPlayer } from "./RenderPlayer";
-import { RenderShape } from "./RenderShape";
-import { RenderTextField } from "./RenderTextField";
-import { RenderDisplayObjectContainer } from "./RenderDisplayObjectContainer";
-import { RenderVideo } from "./RenderVideo";
+import { RenderShape } from "./display/RenderShape";
+import { RenderTextField } from "./display/RenderTextField";
+import { RenderDisplayObjectContainer } from "./display/RenderDisplayObjectContainer";
+import { RenderVideo } from "./media/RenderVideo";
 
 /**
  * @type {boolean}
  * @public
  */
-export let $isSafari = false;
+export let $isSafari: boolean = false;
 
 /**
  * @param {boolean} is_safari

@@ -2,6 +2,7 @@ import { Transform } from "../../../packages/geom/src/Transform";
 import { MovieClip } from "../../../packages/display/src/MovieClip";
 import { Sprite } from "../../../packages/display/src/Sprite";
 import { ColorTransform } from "../../../packages/geom/src/ColorTransform";
+import { Shape } from "@next2d/display";
 
 describe("Transform.js toString test", () =>
 {
@@ -78,16 +79,16 @@ describe("Transform.js concatenatedMatrix test", () =>
         mc.y = 100;
         root.addChild(mc);
 
-        let sprite = mc.addChild(new Sprite());
-        sprite
+        let shape = mc.addChild(new Shape());
+        shape
             .graphics
             .beginFill(0xff0000, 1)
             .drawRect(100, 100, 100, 100);
 
-        sprite.x = 100;
-        sprite.rotation = 45;
+        shape.x = 100;
+        shape.rotation = 45;
 
-        expect(sprite.transform.concatenatedMatrix.toString()).toBe(
+        expect(shape.transform.concatenatedMatrix.toString()).toBe(
             "(a=0.7071067690849304, b=0.7071067690849304, c=-0.7071067690849304, d=0.7071067690849304, tx=100, ty=100)"
         );
     });
@@ -102,15 +103,15 @@ describe("Transform.js concatenatedTransform test", () =>
         let root = new Sprite();
         root.transform.colorTransform = new ColorTransform(1,1,1,1,0,200,0,0);
 
-        let sprite = new Sprite();
-        sprite.graphics.beginFill(0xff0000, 1);
-        sprite.graphics.drawRect(100, 100, 100, 100);
-        root.addChild(sprite);
+        let shape = new Shape();
+        shape.graphics.beginFill(0xff0000, 1);
+        shape.graphics.drawRect(100, 100, 100, 100);
+        root.addChild(shape);
 
-        sprite.x = 100;
-        sprite.rotation = 45;
+        shape.x = 100;
+        shape.rotation = 45;
 
-        expect(sprite.transform.concatenatedColorTransform.toString()).toBe(
+        expect(shape.transform.concatenatedColorTransform.toString()).toBe(
             "(redMultiplier=1, greenMultiplier=1, blueMultiplier=1, alphaMultiplier=1, redOffset=0, greenOffset=200, blueOffset=0, alphaOffset=0)"
         );
     });

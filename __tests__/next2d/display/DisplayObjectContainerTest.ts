@@ -67,12 +67,7 @@ describe("DisplayObjectContainer.js addChild test", function()
         let container2 = new Sprite();
 
         let circle1 = new Sprite();
-        circle1.graphics.beginFill(0xFFCC00);
-        circle1.graphics.drawCircle(40, 40, 40);
-
         let circle2 = new Sprite();
-        circle2.graphics.beginFill(0x00CCFF);
-        circle2.graphics.drawCircle(80, 40, 40);
 
         container2.addChild(container1);
         container1.addChild(circle1);
@@ -242,12 +237,7 @@ describe("DisplayObjectContainer.js removeChild test", function()
         let container = new Sprite();
 
         let circle1 = new Sprite();
-        circle1.graphics.beginFill(0xFFCC00);
-        circle1.graphics.drawCircle(40, 40, 40);
-
         let circle2 = new Sprite();
-        circle2.graphics.beginFill(0x00CCFF);
-        circle2.graphics.drawCircle(120, 40, 40);
 
         container.addChild(circle1);
         container.addChild(circle2);

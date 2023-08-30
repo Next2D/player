@@ -15,3 +15,4 @@ export * from "./MovieClip";
 export * from "./Shape";
 export * from "./Sprite";
 export * from "./Stage";
+export * from "./TextField";
