@@ -96,13 +96,76 @@ const _$parseText = (
                 "textFormat" : text_format._$clone()
             };
 
+            let chunkLength: number  = 1;
+            let isSeparated: boolean = true;
+            const pattern: RegExp    = /[0-9a-zA-Z?!;:.,？！。、；：〜]/g;
+
+            for (;;) {
+
+                const index: number = text_data.textTable.length - chunkLength;
+                if (0 >= index) {
+                    isSeparated = false;
+                    chunkLength = 0;
+                    break;
+                }
+
+                const prevObj: TextObjectImpl = text_data.textTable[index];
+                if (!prevObj) {
+                    isSeparated = false;
+                    chunkLength = 0;
+                    break;
+                }
+
+                if (prevObj.mode !== "text") {
+                    isSeparated = false;
+                    break;
+                }
+
+                if (prevObj.text === " ") {
+                    chunkLength--;
+                    break;
+                }
+
+                if (!prevObj.text.match(pattern)) {
+                    break;
+                }
+
+                chunkLength++;
+            }
+
             // new line
             text_data.widthTable[line]  = 0;
             text_data.heightTable[line] = 0;
             text_data.ascentTable[line] = 0;
 
-            text_data.textTable.push(wrapObject);
-            text_data.lineTable.push(wrapObject);
+            if (chunkLength > 0 && isSeparated) {
+
+                const insertIdx: number = text_data.textTable.length - chunkLength;
+                text_data.textTable.splice(insertIdx, 0, wrapObject);
+                text_data.lineTable.push(wrapObject);
+
+                const prevLine: number = line - 1;
+
+                // reset
+                text_data.widthTable[prevLine]  = 0;
+                text_data.heightTable[prevLine] = 0;
+                text_data.ascentTable[prevLine] = 0;
+
+                for (let idx: number = 0; idx < insertIdx; ++idx) {
+                    const textObject: TextObjectImpl = text_data.textTable[idx];
+                    if (textObject.line !== prevLine) {
+                        continue;
+                    }
+
+                    text_data.widthTable[prevLine] += textObject.w;
+                    text_data.heightTable[prevLine] = Math.max(text_data.heightTable[prevLine], textObject.h);
+                    text_data.ascentTable[prevLine] = Math.max(text_data.ascentTable[prevLine], textObject.y);
+                }
+
+            } else {
+                text_data.textTable.push(wrapObject);
+                text_data.lineTable.push(wrapObject);
+            }
         }
 
         if (!breakCode) {
