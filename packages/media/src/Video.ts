@@ -70,13 +70,13 @@ export class Video extends DisplayObject
     private _$bytesLoaded: number;
     private _$bytesTotal: number;
     private _$timerId: number;
-    public _$video: HTMLVideoElement|null;
+    public _$video: HTMLVideoElement | null;
     private _$stop: boolean;
     private _$volume: number;
     private _$ready: boolean;
-    private _$context: OffscreenCanvasRenderingContext2D|null;
+    private _$context: OffscreenCanvasRenderingContext2D | null;
     private _$cacheKeys: string[];
-    private _$cacheParams: number[];
+    private readonly _$cacheParams: number[];
 
     /**
      * @param {number} [width = 0]

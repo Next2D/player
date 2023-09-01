@@ -162,6 +162,13 @@ const _$parseText = (
                     text_data.ascentTable[prevLine] = Math.max(text_data.ascentTable[prevLine], textObject.y);
                 }
 
+                // reset
+                $currentWidth = 0;
+                for (let idx: number = insertIdx + 1; idx < text_data.textTable.length; ++idx) {
+                    const textObject: TextObjectImpl = text_data.textTable[idx];
+                    $currentWidth += textObject.w;
+                }
+
             } else {
                 text_data.textTable.push(wrapObject);
                 text_data.lineTable.push(wrapObject);

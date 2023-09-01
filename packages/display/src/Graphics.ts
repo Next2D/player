@@ -101,7 +101,7 @@ export class Graphics
     private _$lines: any[] | null;
     private _$uniqueKey: string;
     private _$cacheKeys: string[];
-    private _$cacheParams: number[];
+    private readonly _$cacheParams: number[];
     public _$bitmapId: number;
     public _$mode: ShapeModeImpl;
     public _$posted: boolean;

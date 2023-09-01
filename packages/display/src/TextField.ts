@@ -130,7 +130,8 @@ export class TextField extends InteractiveObject
     private _$thicknessColor: number;
     private _$verticalAlign: TextFormatVerticalAlignImpl;
     private _$cacheKeys: string[];
-    private _$cacheParams: number[];
+    private readonly _$cacheParams: number[];
+    private _$stopIndex: number;
 
     /**
      * @constructor
@@ -216,6 +217,13 @@ export class TextField extends InteractiveObject
          * @private
          */
         this._$maxChars = 0;
+
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$stopIndex = -1;
 
         // TextFormat
         const textFormat: TextFormat = new TextFormat();
@@ -565,6 +573,29 @@ export class TextField extends InteractiveObject
     }
 
     /**
+     * @description テキストの任意の表示終了位置の設定
+     *              Setting an arbitrary display end position for text.
+     *
+     * @member {number}
+     * @default -1
+     * @public
+     */
+    get stopIndex (): number
+    {
+        return this._$stopIndex;
+    }
+    set stopIndex (index: number)
+    {
+        index |= 0;
+        if (this._$stopIndex === index) {
+            return ;
+        }
+
+        this._$stopIndex = index;
+        this._$doChanged();
+    }
+
+    /**
      * @description テキストに適用するフォーマットを指定します。
      *              Specifies the formatting to be applied to the text.
      *
@@ -835,12 +866,13 @@ export class TextField extends InteractiveObject
                 const parent: ParentImpl<any> = this._$parent;
                 if (parent) {
 
+                    // start animation
+                    if (this._$xScrollShape.hasLocalVariable("job")) {
+                        this._$xScrollShape.getLocalVariable("job").stop();
+                    }
+
                     // view start
-                    Tween.add(this._$xScrollShape,
-                        { "alpha" : 0 },
-                        { "alpha" : 0.8 },
-                        0, 0.3, Easing.outQuad
-                    );
+                    this._$xScrollShape.alpha = 0.9;
 
                     // set position
                     this._$xScrollShape.x = this.x + 1
@@ -855,15 +887,10 @@ export class TextField extends InteractiveObject
                         parent.getChildIndex(this) + 1
                     );
 
-                    // start animation
-                    if (this._$xScrollShape.hasLocalVariable("job")) {
-                        this._$xScrollShape.getLocalVariable("job").stop();
-                    }
-
                     const job: Job = Tween.add(this._$xScrollShape,
-                        { "alpha" : 0.8 },
+                        { "alpha" : 0.9 },
                         { "alpha" : 0 },
-                        0.2, 0.6, Easing.outQuad
+                        2, 0.2, Easing.outQuad
                     );
 
                     job.addEventListener(Next2DEvent.COMPLETE, (event: Next2DEvent) =>
@@ -928,12 +955,13 @@ export class TextField extends InteractiveObject
                 const parent: ParentImpl<any> = this._$parent;
                 if (parent) {
 
+                    // start animation
+                    if (this._$yScrollShape.hasLocalVariable("job")) {
+                        this._$yScrollShape.getLocalVariable("job").stop();
+                    }
+
                     // view start
-                    Tween.add(this._$yScrollShape,
-                        { "alpha" : 0 },
-                        { "alpha" : 0.8 },
-                        0, 0.3, Easing.outQuad
-                    );
+                    this._$yScrollShape.alpha = 0.9;
 
                     // set position
                     this._$yScrollShape.x = this.x + this.width - this._$yScrollShape.width - 0.5;
@@ -948,15 +976,10 @@ export class TextField extends InteractiveObject
                         parent.getChildIndex(this) + 1
                     );
 
-                    // start animation
-                    if (this._$yScrollShape.hasLocalVariable("job")) {
-                        this._$yScrollShape.getLocalVariable("job").stop();
-                    }
-
                     const job: Job = Tween.add(this._$yScrollShape,
-                        { "alpha" : 0.8 },
+                        { "alpha" : 0.9 },
                         { "alpha" : 0 },
-                        0.2, 0.6, Easing.outQuad
+                        2, 0.2, Easing.outQuad
                     );
 
                     job.addEventListener(Next2DEvent.COMPLETE, (event: Next2DEvent) =>
@@ -2177,11 +2200,19 @@ export class TextField extends InteractiveObject
         let verticalAlign: number = 0;
 
         let skip = false;
+        let currentIndex = 0;
         for (let idx: number = 0; idx < textData.textTable.length; ++idx) {
 
             const textObject: TextObjectImpl = textData.textTable[idx];
-            if (skip && textObject.mode === "text") {
-                continue;
+            if (textObject.mode === "text") {
+                currentIndex++;
+                if (skip) {
+                    continue;
+                }
+
+                if (this._$stopIndex > -1 && currentIndex > this._$stopIndex) {
+                    break;
+                }
             }
 
             const textFormat: TextFormat = textObject.textFormat;
