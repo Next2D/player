@@ -122,7 +122,7 @@ export const $Int16Array: Int16ArrayConstructor = Int16Array;
  * @type {OffscreenCanvas}
  * @const
  */
-export const $OffscreenCanvas = OffscreenCanvas;
+export const $OffscreenCanvas: typeof OffscreenCanvas = OffscreenCanvas;
 
 /**
  * @shortcut
@@ -140,24 +140,24 @@ export const $isNaN: typeof isNaN = isNaN;
 
 /**
  * @shortcut
- * @type {(callback: FrameRequestCallback) => number}
+ * @type {function}
  * @const
  */
-export const $requestAnimationFrame = requestAnimationFrame;
+export const $requestAnimationFrame: typeof requestAnimationFrame = requestAnimationFrame;
 
 /**
  * @shortcut
- * @type {(handle: number) => void}
+ * @type {function}
  * @const
  */
-export const $cancelAnimationFrame = cancelAnimationFrame;
+export const $cancelAnimationFrame: typeof cancelAnimationFrame = cancelAnimationFrame;
 
 /**
  * @shortcut
  * @type {Performance}
  * @const
  */
-export const $performance = performance;
+export const $performance: Performance = performance;
 
 /**
  * @shortcut
@@ -165,7 +165,7 @@ export const $performance = performance;
  * @const
  * @static
  */
-export const $setTimeout = setTimeout;
+export const $setTimeout: typeof setTimeout = setTimeout;
 
 /**
  * @shortcut
@@ -173,14 +173,14 @@ export const $setTimeout = setTimeout;
  * @const
  * @static
  */
-export const $clearTimeout = clearTimeout;
+export const $clearTimeout: typeof clearTimeout = clearTimeout;
 
 /**
  * @type {Float32Array}
  * @const
  * @static
  */
-export const $MATRIX_ARRAY_IDENTITY = new $Float32Array([1, 0, 0, 1, 0, 0]);
+export const $MATRIX_ARRAY_IDENTITY: Float32Array = new $Float32Array([1, 0, 0, 1, 0, 0]);
 
 /**
  * @type {Float32Array}

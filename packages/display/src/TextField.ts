@@ -21,12 +21,12 @@ import {
 } from "@next2d/text";
 import {
     Rectangle,
-    Matrix
+    Matrix,
+    Point
 } from "@next2d/geom";
 import {
     BoundsImpl,
     TextFieldTypeImpl,
-    TextFormatVerticalAlignImpl,
     TextFieldAutoSizeImpl,
     RGBAImpl,
     ParentImpl,
@@ -57,7 +57,10 @@ import {
     $TOUCH_END,
     $TOUCH_START,
     $document,
-    $RegExp
+    $RegExp,
+    $getEventType,
+    $TOUCH_MOVE,
+    $MOUSE_MOVE
 } from "@next2d/util";
 import {
     $cacheStore,
@@ -67,7 +70,6 @@ import {
     $intToRGBA,
     $isNaN,
     $Math,
-    $requestAnimationFrame,
     $toColorInt,
     $poolFloat32Array6,
     $boundsMatrix,
@@ -80,7 +82,9 @@ import {
     $poolFloat32Array8,
     $generateFontStyle,
     $devicePixelRatio,
-    $getBoundsObject
+    $getBoundsObject,
+    $setTimeout,
+    $clearTimeout
 } from "@next2d/share";
 
 /**
@@ -119,16 +123,18 @@ export class TextField extends InteractiveObject
     private _$textarea: HTMLTextAreaElement | null;
     private _$autoSize: TextFieldAutoSizeImpl;
     private _$autoFontSize: boolean;
-    private _$textAreaActive: boolean;
     private _$scrollEnabled: boolean;
     private _$xScrollShape: Shape | null;
     private _$yScrollShape: Shape | null;
     private _$type: TextFieldTypeImpl;
     private _$focus: boolean;
+    private _$focusVisible: boolean;
+    private _$timerId: number;
+    private _$focusIndex: number;
+    private _$selectIndex: number;
     private _$isComposing: boolean;
     private _$thickness: number;
     private _$thicknessColor: number;
-    private _$verticalAlign: TextFormatVerticalAlignImpl;
     private _$cacheKeys: string[];
     private readonly _$cacheParams: number[];
     private _$stopIndex: number;
@@ -307,10 +313,31 @@ export class TextField extends InteractiveObject
 
         /**
          * @type {boolean}
-         * @default false
+         * @default true
          * @private
          */
-        this._$textAreaActive = false;
+        this._$focusVisible = false;
+
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$timerId = -1;
+
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$focusIndex = -1;
+
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$selectIndex = -1;
 
         /**
          * @type {boolean}
@@ -367,13 +394,6 @@ export class TextField extends InteractiveObject
          * @private
          */
         this._$thicknessColor = 0;
-
-        /**
-         * @type {string}
-         * @default "bottom"
-         * @private
-         */
-        this._$verticalAlign = "bottom";
 
         /**
          * @type {array}
@@ -634,75 +654,25 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        this._$focus = focus;
-        if (this._$focus) {
+        this._$focus = !!focus;
 
-            const player: Player = $currentPlayer();
+        const name = this._$focus
+            ? FocusEvent.FOCUS_IN
+            : FocusEvent.FOCUS_OUT;
 
-            const div: HTMLElement | null = $document
-                .getElementById(player.contentElementId);
-
-            if (!div) {
-                return;
-            }
-
-            this._$createTextAreaElement(player._$scale);
-
-            // setup
-            const element: HTMLTextAreaElement | null = this._$textarea;
-            if (!element) {
-                return;
-            }
-
-            const matrix: Matrix = this._$transform.concatenatedMatrix;
-            const bounds: BoundsImpl = this._$getBounds(null);
-
-            const color: RGBAImpl = $intToRGBA(
-                $toColorInt(this._$defaultTextFormat.color), 100
-            );
-
-            element.style.color  = `rgb(${color.R},${color.G},${color.B})`;
-            element.style.left   = `${(matrix.tx + bounds.xMin + player.x / player._$scale / $devicePixelRatio) * player._$scale}px`;
-            element.style.top    = `${(matrix.ty + bounds.yMin + player.y / player._$scale / $devicePixelRatio) * player._$scale}px`;
-            element.style.width  = `${$Math.ceil(this.width  * player._$scale)}px`;
-            element.style.height = `${$Math.ceil(this.height * player._$scale)}px`;
-
-            // set text
-            element.value = this.text;
-
-            div.appendChild(element);
-
-            $requestAnimationFrame(() =>
-            {
-                element.focus();
-            });
-
-            this._$doChanged();
-            $doUpdated();
-            this._$textAreaActive = true;
-
-            // focus in event
-            if (this.willTrigger(FocusEvent.FOCUS_IN)) {
-                this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_IN));
-            }
-
-        } else {
-
-            // execute
-            if (this._$textarea) {
-
-                this._$textarea.dispatchEvent(
-                    new Event(`${$PREFIX}_blur`)
-                );
-
-                if (this.willTrigger(FocusEvent.FOCUS_OUT)) {
-                    this.dispatchEvent(new FocusEvent(FocusEvent.FOCUS_OUT));
-                }
-
-                this._$textarea.remove();
-            }
-
+        if (this.willTrigger(name)) {
+            this.dispatchEvent(new FocusEvent(name));
         }
+
+        if (!this._$focus) {
+            this._$focusIndex   = -1;
+            this._$selectIndex  = -1;
+            this._$focusVisible = false;
+            $clearTimeout(this._$timerId);
+        }
+
+        this._$doChanged();
+        $doUpdated();
     }
 
     /**
@@ -1052,9 +1022,10 @@ export class TextField extends InteractiveObject
 
         text = `${text}`;
         if (text !== this._$text) {
-            this._$text     = text;
-            this._$htmlText = "";
-            this._$isHTML   = false;
+            this._$text        = text;
+            this._$htmlText    = "";
+            this._$rawHtmlText = "";
+            this._$isHTML      = false;
             this._$reload();
         }
     }
@@ -1163,26 +1134,6 @@ export class TextField extends InteractiveObject
         this._$type = type;
         if (type === "static") {
             this._$textarea = null;
-        }
-    }
-
-    /**
-     * @description 縦方向の揃え位置を指定するプロパティです。
-     *              This property specifies the vertical alignment position.
-     *
-     * @member {string}
-     * @default "bottom"
-     * @public
-     */
-    get verticalAlign (): TextFormatVerticalAlignImpl
-    {
-        return this._$verticalAlign;
-    }
-    set verticalAlign (vertical_align: TextFormatVerticalAlignImpl)
-    {
-        if (vertical_align !== this._$verticalAlign) {
-            this._$verticalAlign = vertical_align;
-            this._$reset();
         }
     }
 
@@ -1519,6 +1470,245 @@ export class TextField extends InteractiveObject
      * @method
      * @private
      */
+    _$blinking (): void
+    {
+        this._$focusVisible = !this._$focusVisible;
+        this._$doChanged();
+        $doUpdated();
+
+        this._$timerId = +$setTimeout(() =>
+        {
+            this._$blinking();
+        }, 500);
+
+        this._$timerId |= 0;
+    }
+
+    /**
+     * @param  {number} stage_x
+     * @param  {number} stage_y
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$setIndex (stage_x: number, stage_y: number): void
+    {
+        const eventType: string  = $getEventType();
+        const textData: TextData = this.getTextData();
+
+        let tx: number = 0;
+        if (this._$scrollX > 0) {
+            const width: number = this.width;
+            tx += this._$scrollX * (this.textWidth - width) / width;
+        }
+
+        let ty: number = 0;
+        if (this._$scrollY) {
+            const height: number = this.height;
+            ty += this._$scrollY * (this.textHeight - height) / height;
+        }
+
+        const point: Point = this.globalToLocal(new Point(stage_x, stage_y));
+        const x: number = point.x + tx;
+        const y: number = point.y + ty;
+
+        let w: number    = 2;
+        let yMin: number = 2;
+        let yMax: number = yMin + textData.heightTable[0];
+        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+
+            switch (textObject.mode) {
+
+                case "break":
+                case "wrap":
+                    if (x > w && y > yMin
+                        && yMax > y
+                        && this.width > x
+                    ) {
+                        const index: number = idx;
+                        switch (eventType) {
+
+                            case $TOUCH_MOVE:
+                            case $MOUSE_MOVE:
+                                if (this._$selectIndex !== index) {
+                                    this._$selectIndex = index;
+
+                                    this._$focusVisible = false;
+                                    $clearTimeout(this._$timerId);
+
+                                    this._$doChanged();
+                                    $doUpdated();
+                                }
+                                break;
+
+                            default:
+                                if (this._$focusIndex !== index || this._$selectIndex > -1) {
+                                    this._$focusIndex   = index;
+                                    this._$focusVisible = true;
+                                    this._$selectIndex  = -1;
+
+                                    this._$doChanged();
+                                    $doUpdated();
+
+                                    $clearTimeout(this._$timerId);
+                                    this._$timerId = +$setTimeout(() =>
+                                    {
+                                        this._$blinking();
+                                    }, 500);
+                                    this._$timerId |= 0;
+                                }
+                                break;
+                        }
+
+                        return ;
+                    }
+
+                    w = 2;
+                    yMin += textData.heightTable[textObject.line - 1];
+                    yMax = yMin + textData.heightTable[textObject.line];
+                    break;
+
+                case "text":
+                    if (idx === textData.textTable.length - 1
+                        && x > w && y > yMin && yMax > y
+                        && this.width > x
+                    ) {
+
+                        const index: number = textData.textTable.length;
+                        switch (eventType) {
+
+                            case $TOUCH_MOVE:
+                            case $MOUSE_MOVE:
+                                if (this._$selectIndex !== index) {
+                                    this._$selectIndex = index;
+
+                                    this._$focusVisible = false;
+                                    $clearTimeout(this._$timerId);
+
+                                    this._$doChanged();
+                                    $doUpdated();
+                                }
+                                break;
+
+                            default:
+                                if (this._$focusIndex !== index || this._$selectIndex > -1) {
+                                    this._$focusIndex   = index;
+                                    this._$focusVisible = true;
+                                    this._$selectIndex  = -1;
+
+                                    this._$doChanged();
+                                    $doUpdated();
+
+                                    $clearTimeout(this._$timerId);
+                                    this._$timerId = +$setTimeout(() =>
+                                    {
+                                        this._$blinking();
+                                    }, 500);
+                                    this._$timerId |= 0;
+                                }
+                                break;
+
+                        }
+
+                        return ;
+                    }
+
+                    if (x > w && y > yMin
+                        && yMax > y
+                        && w + textObject.w > x
+                    ) {
+
+                        let index: number = idx;
+                        switch (eventType) {
+                            case $TOUCH_MOVE:
+                            case $MOUSE_MOVE:
+
+                                if (this._$focusIndex > index) { // left
+                                    if (this._$focusIndex === index + 1) {
+                                        if (w + textObject.w / 2 < x) {
+                                            index = -1;
+                                        }
+                                    } else {
+                                        if (w + textObject.w / 2 < x) {
+                                            index += 1;
+                                        }
+                                    }
+                                } else { // right
+                                    if (this._$focusIndex === index) {
+                                        if (w + textObject.w / 2 > x) {
+                                            index = -1;
+                                        }
+                                    } else {
+                                        if (w + textObject.w / 2 > x) {
+                                            index -= 1;
+                                        }
+                                    }
+                                }
+
+                                if (this._$selectIndex !== index) {
+                                    this._$selectIndex = index;
+
+                                    if (this._$selectIndex > -1) {
+                                        this._$focusVisible = false;
+                                        $clearTimeout(this._$timerId);
+                                    }
+
+                                    this._$doChanged();
+                                    $doUpdated();
+                                }
+                                break;
+
+                            default:
+
+                                if (w + textObject.w / 2 < x) {
+                                    const textObject: TextObjectImpl = textData.textTable[index + 1];
+                                    if (!textObject || textObject.mode === "text") {
+                                        index += 1;
+                                    }
+                                }
+
+                                if (this._$focusIndex !== index || this._$selectIndex > -1) {
+                                    this._$focusIndex   = index;
+                                    this._$focusVisible = true;
+                                    this._$selectIndex  = -1;
+
+                                    this._$doChanged();
+                                    $doUpdated();
+
+                                    $clearTimeout(this._$timerId);
+                                    this._$timerId = +$setTimeout(() =>
+                                    {
+                                        this._$blinking();
+                                    }, 500);
+                                    this._$timerId |= 0;
+                                }
+                                break;
+
+                        }
+                        return ;
+                    }
+
+                    w += textObject.w;
+                    break;
+
+                default:
+                    break;
+
+            }
+        }
+
+        // reset
+        this._$focusIndex  = -1;
+        this._$selectIndex = -1;
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
     _$resize (): void
     {
         // update bounds
@@ -1836,7 +2026,7 @@ export class TextField extends InteractiveObject
         color_transform: Float32Array
     ): void {
 
-        if (!this._$visible || this._$textAreaActive) {
+        if (!this._$visible) {
             return ;
         }
 
@@ -2043,16 +2233,16 @@ export class TextField extends InteractiveObject
             ctx.lineTo(2, 2);
             ctx.clip();
 
-            let ty = 2;
-            if (this._$scrollY > 0) {
-                const scaleY: number = (this.textHeight - this.height) / this.height;
-                ty += -this._$scrollY * scaleY;
-            }
-
             let tx = 2;
             if (this._$scrollX > 0) {
                 const scaleX: number = (this.textWidth - this.width) / this.width;
                 tx += -this._$scrollX * scaleX;
+            }
+
+            let ty = 2;
+            if (this._$scrollY > 0) {
+                const scaleY: number = (this.textHeight - this.height) / this.height;
+                ty += -this._$scrollY * scaleY;
             }
 
             ctx.setTransform(xScale, 0, 0, yScale, tx * xScale, ty * yScale);
@@ -2176,6 +2366,71 @@ export class TextField extends InteractiveObject
 
         // init
         const textData: TextData = this.getTextData();
+        if (this._$selectIndex > -1 && this._$focusIndex > -1) {
+
+            const range: number  = textData.textTable.length - 1;
+            let minIndex: number = 0;
+            let maxIndex: number = 0;
+            if (this._$focusIndex <= this._$selectIndex) {
+                minIndex = $Math.min(this._$focusIndex, range);
+                maxIndex = $Math.min(this._$selectIndex, range);
+            } else {
+                minIndex = $Math.min(this._$selectIndex, range);
+                maxIndex = $Math.min(this._$focusIndex - 1, range);
+            }
+
+            const textObject: TextObjectImpl = textData.textTable[minIndex];
+            const lineObject: TextObjectImpl = textData.lineTable[textObject.line];
+            const offsetAlign: number = this._$getAlignOffset(lineObject, width);
+
+            let x: number = 0;
+            if (minIndex && textObject.mode === "text") {
+                let idx: number = minIndex;
+                while (idx) {
+                    const textObject: TextObjectImpl = textData.textTable[--idx];
+                    if (textObject.mode !== "text") {
+                        break;
+                    }
+                    x += textObject.w;
+                }
+            }
+
+            context.fillStyle = "#b4d7ff";
+
+            let w: number = 0;
+            for (let idx: number = minIndex; idx <= maxIndex; ++idx) {
+
+                const textObject: TextObjectImpl = textData.textTable[idx];
+                if (textObject.mode === "text") {
+
+                    w += textObject.w;
+
+                    if (idx !== maxIndex) {
+                        continue;
+                    }
+                }
+
+                let y: number = 0;
+                const line: number = textObject.mode === "text"
+                    ? textObject.line
+                    : textObject.line - 1;
+
+                for (let idx: number = 0; idx < line; ++idx) {
+                    y += textData.heightTable[idx];
+                }
+
+                context.beginPath();
+                context.rect(
+                    x, y,
+                    w + offsetAlign,
+                    textData.heightTable[line]
+                );
+                context.fill();
+
+                x = 0;
+                w = 0;
+            }
+        }
 
         const tw: number = this.width;
         let scrollX = 0;
@@ -2243,6 +2498,36 @@ export class TextField extends InteractiveObject
 
             context.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
 
+            // focus line
+            if (this._$focusVisible && this._$focusIndex === idx) {
+
+                context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+
+                const x: number = offsetWidth + offsetAlign - 0.1;
+
+                let line: number = textObject.line;
+                let h: number    = textObject.y;
+                if (textObject.mode !== "text") {
+                    const textObject: TextObjectImpl = textData.textTable[idx - 1];
+
+                    line = textObject.line;
+                    h    = textObject.y;
+
+                    const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
+                    context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                }
+
+                let y: number = textData.ascentTable[line];
+                for (let idx: number = 0; idx < line; ++idx) {
+                    y += textData.heightTable[idx];
+                }
+
+                context.beginPath();
+                context.moveTo(x, y);
+                context.lineTo(x, y - h);
+                context.stroke();
+            }
+
             if (this._$thickness) {
                 const rgb: RGBAImpl = $intToRGBA(this._$thicknessColor);
                 const alpha: number = $Math.max(0, $Math.min(
@@ -2261,7 +2546,7 @@ export class TextField extends InteractiveObject
                     // reset width
                     offsetWidth = 0;
                     if (line) {
-                        offsetHeight += textData.heightTable[line - 1] + 1;
+                        offsetHeight += textData.heightTable[line - 1];
                     }
 
                     if (scrollY > offsetHeight + textData.heightTable[line]) {
@@ -2296,8 +2581,8 @@ export class TextField extends InteractiveObject
                             context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
 
                             context.beginPath();
-                            context.moveTo(x, y + 1);
-                            context.lineTo(x + textObject.w, y + 1);
+                            context.moveTo(x, y + 2);
+                            context.lineTo(x + textObject.w, y + 2);
                             context.stroke();
 
                         }
@@ -2327,6 +2612,26 @@ export class TextField extends InteractiveObject
                 //     break;
 
             }
+        }
+
+        if (this._$focusVisible && this._$focusIndex >= textData.textTable.length) {
+
+            const textObject: TextObjectImpl = textData.textTable[this._$focusIndex - 1];
+
+            const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
+            const alpha: number = $Math.max(0, $Math.min(
+                rgb.A * 255 + color_transform[7], 255)
+            ) / 255;
+
+            context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+
+            const x: number = offsetWidth + offsetAlign - 0.1;
+            const y: number = offsetHeight + verticalAlign;
+
+            context.beginPath();
+            context.moveTo(x, y - textObject.y);
+            context.lineTo(x, y);
+            context.stroke();
         }
     }
 
@@ -2479,7 +2784,6 @@ export class TextField extends InteractiveObject
 
                 this.text = value;
                 this._$focus = false;
-                this._$textAreaActive = false;
 
                 this._$doChanged();
                 $doUpdated();
@@ -2717,7 +3021,6 @@ export class TextField extends InteractiveObject
             "limitWidth": this.width,
             "limitHeight": this.height,
             "textHeight": this.textHeight,
-            "verticalAlign": this._$verticalAlign,
             "autoSize": this._$autoSize,
             "wordWrap": this._$wordWrap,
             "border": this._$border,
@@ -2770,8 +3073,6 @@ export class TextField extends InteractiveObject
 
         const message: PropertyMessageMapImpl<PropertyTextMessageImpl> = this._$createMessage();
 
-        message.textAreaActive = this._$textAreaActive;
-
         const bounds: BoundsImpl = this._$getBounds(null);
         message.xMin = bounds.xMin;
         message.yMin = bounds.yMin;
@@ -2784,7 +3085,6 @@ export class TextField extends InteractiveObject
             message.limitWidth      = this.width;
             message.limitHeight     = this.height;
             message.textHeight      = this.textHeight;
-            message.verticalAlign   = this._$verticalAlign;
             message.autoSize        = this._$autoSize;
             message.wordWrap        = this._$wordWrap;
 

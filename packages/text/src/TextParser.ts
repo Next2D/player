@@ -70,8 +70,8 @@ const _$parseText = (
         }
 
         // setup
-        object.x  = mesure.actualBoundingBoxLeft;
-        object.y  = mesure.actualBoundingBoxAscent;
+        object.x  = 0;
+        object.y  = mesure.fontBoundingBoxAscent;
         object.w  = width;
         object.h  = height;
 
@@ -166,6 +166,7 @@ const _$parseText = (
                 $currentWidth = 0;
                 for (let idx: number = insertIdx + 1; idx < text_data.textTable.length; ++idx) {
                     const textObject: TextObjectImpl = text_data.textTable[idx];
+                    textObject.line = line;
                     $currentWidth += textObject.w;
                 }
 
@@ -185,6 +186,96 @@ const _$parseText = (
 };
 
 /**
+ * @param  {string} value
+ * @param  {TextFormat} text_format
+ * @return {void}
+ * @method
+ * @private
+ */
+const _$parseStyle = (
+    value: string,
+    text_format: TextFormat,
+    options: OptionsImpl
+): void => {
+
+    const values: string[] = value
+        .trim()
+        .replace(/ /g, "")
+        .split(";");
+
+    const attributes: any[] = [];
+    for (let idx: number = 0; idx < values.length; ++idx) {
+
+        const styleValue: string = values[idx];
+        if (!styleValue) {
+            continue;
+        }
+
+        const styles: any[] = styleValue.split(":");
+        const name: string = styles[0];
+        switch (name) {
+
+            case "font-size":
+                attributes.push({
+                    "name": "size",
+                    "value": parseFloat(styles[1])
+                });
+                break;
+
+            case "font-family":
+                attributes.push({
+                    "name": "face",
+                    "value": styles[1]
+                });
+                break;
+
+            case "letter-spacing":
+                attributes.push({
+                    "name": "letterSpacing",
+                    "value": styles[1]
+                });
+                break;
+
+            case "line-height":
+                attributes.push({
+                    "name": "leading",
+                    "value": parseFloat(styles[1])
+                });
+                break;
+
+            case "margin-left":
+                attributes.push({
+                    "name": "leftMargin",
+                    "value": parseFloat(styles[1])
+                });
+                break;
+
+            case "margin-right":
+                attributes.push({
+                    "name": "rightMargin",
+                    "value": parseFloat(styles[1])
+                });
+                break;
+
+            case "color":
+            case "align":
+                attributes.push({
+                    "name": name,
+                    "value": styles[1]
+                });
+                break;
+
+            default:
+                break;
+
+        }
+    }
+
+    // eslint-disable-next-line no-use-before-define
+    _$setAttributes(attributes, text_format, options);
+};
+
+/**
  * @param  {array} attributes
  * @param  {TextFormat} text_format
  * @param  {object} options
@@ -201,6 +292,10 @@ const _$setAttributes = (
     for (let idx = 0; idx < attributes.length; ++idx) {
         const object: any = attributes[idx];
         switch (object.name) {
+
+            case "style":
+                _$parseStyle(object.value, text_format, options);
+                break;
 
             case "align":
                 text_format.align = object.value;

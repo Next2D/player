@@ -2293,12 +2293,6 @@ export class Player
                     case $TOUCH_END:
                     case $MOUSE_UP:
 
-                        // TextField focus out
-                        if (this._$textField) {
-                            this._$textField.focus = false;
-                            this._$textField = null;
-                        }
-
                         if (this._$stage.hasEventListener(Next2DMouseEvent.CLICK)) {
                             this._$stage.dispatchEvent(new Next2DMouseEvent(
                                 Next2DMouseEvent.CLICK, true, false
@@ -2473,6 +2467,10 @@ export class Player
                         // click reset
                         if (this._$state === "up") {
                             this._$clickTarget = null;
+                        } else {
+                            if (this._$textField) {
+                                this._$textField._$setIndex(stageX, stageY);
+                            }
                         }
 
                         break;
@@ -2480,6 +2478,20 @@ export class Player
                     // down event
                     case $TOUCH_START:
                     case $MOUSE_DOWN:
+
+                        if (this._$textField
+                            && instance !== this._$textField
+                        ) {
+                            this._$textField.focus = false;
+                            this._$textField       = null;
+                        }
+
+                        // TextField focus out
+                        if ("_$text" in instance) {
+                            instance.focus   = true;
+                            instance._$setIndex(stageX, stageY);
+                            this._$textField = instance;
+                        }
 
                         // (3) mouseDown
                         if (instance.willTrigger(Next2DMouseEvent.MOUSE_DOWN)) {
@@ -2496,21 +2508,6 @@ export class Player
                     // up event
                     case $TOUCH_END:
                     case $MOUSE_UP:
-
-                        // TextField focus out
-                        if (this._$textField
-                            && instance !== this._$textField
-                            && "_$text" in this._$textField
-                        ) {
-                            this._$textField.focus = false;
-                            this._$textField       = null;
-                        }
-
-                        // TextField focus out
-                        if ("_$text" in instance) {
-                            instance.focus   = true;
-                            this._$textField = instance;
-                        }
 
                         // (1) mouseUp
                         if (instance.willTrigger(Next2DMouseEvent.MOUSE_UP)) {
