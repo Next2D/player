@@ -1,12 +1,10 @@
-import { Player } from "@next2d/core";
 import {
     InteractiveObject,
     Shape
 } from "@next2d/display";
 import {
     FocusEvent,
-    Event as Next2DEvent,
-    MouseEvent as Next2DMouseEvent
+    Event as Next2DEvent
 } from "@next2d/events";
 import {
     Tween,
@@ -24,7 +22,8 @@ import {
     Matrix,
     Point
 } from "@next2d/geom";
-import {
+import type { Player } from "@next2d/core";
+import type {
     BoundsImpl,
     TextFieldTypeImpl,
     TextFieldAutoSizeImpl,
@@ -42,25 +41,18 @@ import {
     Character,
     CachePositionImpl
 } from "@next2d/interface";
-import {
+import type {
     CanvasToWebGLContext,
     FrameBufferManager
 } from "@next2d/webgl";
 import {
-    $currentPlayer,
-    $MOUSE_DOWN,
-    $MOUSE_UP,
-    $MOUSE_WHEEL,
-    $PREFIX,
-    $rendererWorker,
-    $SCROLL,
-    $TOUCH_END,
-    $TOUCH_START,
     $document,
-    $RegExp,
+    $rendererWorker,
     $getEventType,
     $TOUCH_MOVE,
-    $MOUSE_MOVE
+    $MOUSE_MOVE,
+    $textArea,
+    $currentPlayer
 } from "@next2d/util";
 import {
     $cacheStore,
@@ -81,7 +73,6 @@ import {
     $poolArray,
     $poolFloat32Array8,
     $generateFontStyle,
-    $devicePixelRatio,
     $getBoundsObject,
     $setTimeout,
     $clearTimeout
@@ -118,9 +109,9 @@ export class TextField extends InteractiveObject
     private _$maxChars: number;
     private _$defaultTextFormat: TextFormat;
     private _$rawHtmlText: string;
+    private _$textFormats: TextFormat[] | null;
     private _$restrict: string;
     private _$isHTML: boolean;
-    private _$textarea: HTMLTextAreaElement | null;
     private _$autoSize: TextFieldAutoSizeImpl;
     private _$autoFontSize: boolean;
     private _$scrollEnabled: boolean;
@@ -132,12 +123,13 @@ export class TextField extends InteractiveObject
     private _$timerId: number;
     private _$focusIndex: number;
     private _$selectIndex: number;
-    private _$isComposing: boolean;
     private _$thickness: number;
     private _$thicknessColor: number;
     private _$cacheKeys: string[];
     private readonly _$cacheParams: number[];
     private _$stopIndex: number;
+    private _$compositionStartIndex: number;
+    private _$compositionEndIndex: number;
 
     /**
      * @constructor
@@ -231,6 +223,20 @@ export class TextField extends InteractiveObject
          */
         this._$stopIndex = -1;
 
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$compositionStartIndex = -1;
+
+        /**
+         * @type {number}
+         * @default -1
+         * @private
+         */
+        this._$compositionEndIndex = -1;
+
         // TextFormat
         const textFormat: TextFormat = new TextFormat();
         textFormat._$setDefault();
@@ -289,13 +295,6 @@ export class TextField extends InteractiveObject
          * @private
          */
         this._$textData = null;
-
-        /**
-         * @type {HTMLTextAreaElement}
-         * @default null
-         * @private
-         */
-        this._$textarea = null;
 
         /**
          * @type {string}
@@ -375,13 +374,6 @@ export class TextField extends InteractiveObject
         this._$focus = false;
 
         /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$isComposing = false;
-
-        /**
          * @type {number}
          * @default 0
          * @private
@@ -394,6 +386,13 @@ export class TextField extends InteractiveObject
          * @private
          */
         this._$thicknessColor = 0;
+
+        /**
+         * @type {array}
+         * @default null
+         * @private
+         */
+        this._$textFormats = null;
 
         /**
          * @type {array}
@@ -612,6 +611,84 @@ export class TextField extends InteractiveObject
         }
 
         this._$stopIndex = index;
+
+        const textData: TextData = this.getTextData();
+        if (!textData.textTable.length) {
+            return ;
+        }
+
+        let currentTextWidth: number = 2;
+        let targetIndex: number = 0;
+        for (let idx = 0; idx < textData.textTable.length; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+
+            let countUp = false;
+            if (textObject.mode === "text") {
+                countUp = true;
+                currentTextWidth += textObject.w;
+            }
+
+            if (targetIndex >= index) {
+                targetIndex = idx;
+                break;
+            }
+
+            if (textObject.mode === "break") {
+                countUp = true;
+                // reset
+                this._$scrollX   = 0;
+                currentTextWidth = 2;
+            }
+
+            if (countUp) {
+                targetIndex++;
+            }
+
+        }
+
+        const textObject: TextObjectImpl = textData.textTable[targetIndex];
+
+        const line: number = textObject.line;
+
+        let currentTextHeight: number = 0;
+        for (let idx = 0; idx <= line; ++idx) {
+            currentTextHeight += textData.heightTable[idx];
+        }
+
+        const height: number = this.height;
+        let viewTextHeight: number = 0;
+        for (let idx = line; idx > -1; --idx) {
+            const lineHeight: number = textData.heightTable[idx];
+            if (height < viewTextHeight + lineHeight) {
+                break;
+            }
+            viewTextHeight += lineHeight;
+        }
+
+        if (currentTextHeight > height) {
+            const scaleY: number = (this.textHeight - height) / height;
+            this._$scrollY = $Math.min((currentTextHeight - viewTextHeight) / scaleY, height);
+        }
+
+        const width: number = this.width;
+        let viewTextWidth: number = 0;
+        for (let idx = targetIndex; idx > 0; --idx) {
+            const textObject: TextObjectImpl = textData.textTable[idx];
+            if (textObject.mode !== "text") {
+                continue;
+            }
+
+            if (width < viewTextWidth + textObject.w) {
+                break;
+            }
+            viewTextWidth += textObject.w;
+        }
+
+        if (currentTextWidth > width) {
+            const scaleX: number = (this.textWidth - width) / width;
+            this._$scrollX = $Math.min((currentTextWidth - viewTextWidth) / scaleX, width + 0.5);
+        }
         this._$doChanged();
     }
 
@@ -664,11 +741,15 @@ export class TextField extends InteractiveObject
             this.dispatchEvent(new FocusEvent(name));
         }
 
-        if (!this._$focus) {
+        $textArea.value = "";
+        if (this._$focus) {
+            $textArea.focus();
+        } else {
             this._$focusIndex   = -1;
             this._$selectIndex  = -1;
             this._$focusVisible = false;
             $clearTimeout(this._$timerId);
+            $textArea.blur();
         }
 
         this._$doChanged();
@@ -685,7 +766,58 @@ export class TextField extends InteractiveObject
      */
     get htmlText (): string
     {
-        return this._$htmlText;
+        if (this._$htmlText) {
+            return this._$htmlText;
+        }
+
+        const textData: TextData = this.getTextData();
+
+        let prevTextFormat: TextFormat = textData.textTable[0].textFormat;
+
+        let htmlText = "<span";
+        const style: string = prevTextFormat._$toStyleString();
+        if (style) {
+            htmlText += ` style="${style}"`;
+        }
+        htmlText += ">";
+
+        for (let idx = 1; idx < textData.textTable.length; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+            if (textObject.mode === "wrap") {
+                continue;
+            }
+
+            if (textObject.mode === "break") {
+                htmlText += "<br>";
+                continue;
+            }
+
+            const textFormat: TextFormat = textObject.textFormat;
+            if (!prevTextFormat._$isSame(textFormat)) {
+
+                htmlText += "</span><span";
+
+                const style: string = textFormat._$toStyleString();
+                if (style) {
+                    htmlText += ` style="${style}"`;
+                }
+
+                htmlText += ">";
+
+                // change
+                prevTextFormat = textFormat;
+            }
+
+            if (textObject.mode === "text") {
+                htmlText += textObject.text;
+            }
+        }
+
+        htmlText += "</span>";
+        this._$htmlText = htmlText;
+
+        return htmlText;
     }
     set htmlText (html_text: string)
     {
@@ -797,6 +929,19 @@ export class TextField extends InteractiveObject
     }
 
     /**
+     * @description テキストの選択位置を返す
+     *              Returns the text selection position
+     *
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get selectIndex (): number
+    {
+        return this._$selectIndex;
+    }
+
+    /**
      * @description テキストフィールドのスクロール垂直位置です。
      *              The scroll vertical position of the text field.
      *
@@ -822,7 +967,7 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        scroll_x = $clamp(scroll_x, 0, this.width, 0);
+        scroll_x = $clamp(scroll_x, 0, this.width + 0.5, 0);
         if (this._$scrollX !== scroll_x) {
 
             const width: number = this.width;
@@ -860,7 +1005,7 @@ export class TextField extends InteractiveObject
                     const job: Job = Tween.add(this._$xScrollShape,
                         { "alpha" : 0.9 },
                         { "alpha" : 0 },
-                        2, 0.2, Easing.outQuad
+                        0.5, 0.2, Easing.outQuad
                     );
 
                     job.addEventListener(Next2DEvent.COMPLETE, (event: Next2DEvent) =>
@@ -949,7 +1094,7 @@ export class TextField extends InteractiveObject
                     const job: Job = Tween.add(this._$yScrollShape,
                         { "alpha" : 0.9 },
                         { "alpha" : 0 },
-                        2, 0.2, Easing.outQuad
+                        0.5, 0.2, Easing.outQuad
                     );
 
                     job.addEventListener(Next2DEvent.COMPLETE, (event: Next2DEvent) =>
@@ -996,16 +1141,19 @@ export class TextField extends InteractiveObject
         const textData: TextData = this.getTextData();
         for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-            const object: TextObjectImpl = textData.textTable[idx];
-            switch (object.mode) {
+            const textObject: TextObjectImpl = textData.textTable[idx];
+            switch (textObject.mode) {
 
                 case "text":
-                    text += object.text;
+                    text += textObject.text;
                     break;
 
                 case "break":
                     text += "\r";
                     break;
+
+                default:
+                    continue;
 
             }
         }
@@ -1132,9 +1280,6 @@ export class TextField extends InteractiveObject
     set type (type: TextFieldTypeImpl)
     {
         this._$type = type;
-        if (type === "static") {
-            this._$textarea = null;
-        }
     }
 
     /**
@@ -1381,7 +1526,8 @@ export class TextField extends InteractiveObject
                     "width": this.width,
                     "multiline": this._$multiline,
                     "wordWrap": this._$wordWrap,
-                    "subFontSize": sub_font_size
+                    "subFontSize": sub_font_size,
+                    "textFormats": this._$textFormats
                 }
             );
 
@@ -1394,13 +1540,378 @@ export class TextField extends InteractiveObject
                     "width": this.width,
                     "multiline": this._$multiline,
                     "wordWrap": this._$wordWrap,
-                    "subFontSize": sub_font_size
+                    "subFontSize": sub_font_size,
+                    "textFormats": this._$textFormats
                 }
             );
 
         }
 
         return this._$textData;
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    arrowRight (): void
+    {
+        if (this._$focusIndex === -1) {
+            return ;
+        }
+
+        const textData: TextData = this.getTextData();
+        if (textData.textTable.length === this._$focusIndex) {
+            return ;
+        }
+
+        this._$focusIndex++;
+        this._$focusVisible = true;
+        this._$selectIndex  = -1;
+
+        $clearTimeout(this._$timerId);
+        this._$timerId = +$setTimeout(() =>
+        {
+            this._$blinking();
+        }, 500);
+        this._$timerId |= 0;
+
+        this._$doChanged();
+        $doUpdated();
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    arrowLeft (): void
+    {
+        if (2 > this._$focusIndex) {
+            return ;
+        }
+
+        this._$focusIndex--;
+        this._$focusVisible = true;
+        this._$selectIndex  = -1;
+
+        $clearTimeout(this._$timerId);
+        this._$timerId = +$setTimeout(() =>
+        {
+            this._$blinking();
+        }, 500);
+        this._$timerId |= 0;
+
+        this._$doChanged();
+        $doUpdated();
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    deleteText (): void
+    {
+        if (this._$compositionStartIndex > -1) {
+            return ;
+        }
+
+        let minIndex: number = 0;
+        let maxIndex: number = 0;
+        if (this._$selectIndex > -1) {
+            minIndex = $Math.min(this._$focusIndex, this._$selectIndex);
+            maxIndex = $Math.max(this._$focusIndex, this._$selectIndex) + 1;
+            this._$focusIndex = minIndex;
+        } else {
+            if (2 > this._$focusIndex) {
+                return ;
+            }
+
+            this._$focusIndex--;
+        }
+
+        const textData: TextData = this.getTextData();
+        const textFormats: TextFormat[] = $getArray();
+
+        let newText: string = "";
+        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+
+            if (this._$focusIndex === idx || minIndex <= idx && maxIndex > idx) {
+                continue;
+            }
+
+            switch (textObject.mode) {
+
+                case "break":
+                    textFormats.push(textObject.textFormat);
+                    newText += "\n";
+                    break;
+
+                case "text":
+                    textFormats.push(textObject.textFormat);
+                    newText += textObject.text;
+                    break;
+
+                default:
+                    continue;
+
+            }
+        }
+
+        if (textData.textTable.length === this._$focusIndex) {
+            textFormats.pop();
+            newText = newText.slice(0, -1);
+        }
+
+        this._$selectIndex = -1;
+        this._$textFormats = textFormats;
+        this.text = newText;
+
+        // reset
+        this._$textFormats = null;
+        $poolArray(textFormats);
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    compositionStart (): void
+    {
+        this._$compositionStartIndex = this._$focusIndex;
+    }
+
+    /**
+     * @param  {string} texts
+     * @return {void}
+     * @method
+     * @public
+     */
+    compositionUpdate (texts: string): void
+    {
+
+        if (this._$compositionEndIndex > -1) {
+            const cacheIndex: number = this._$compositionStartIndex;
+            this._$focusIndex  = this._$compositionStartIndex;
+            this._$selectIndex = this._$compositionEndIndex - 1;
+
+            this._$compositionStartIndex = -1;
+            this.deleteText();
+
+            // reset
+            this._$compositionStartIndex = cacheIndex;
+            this._$selectIndex = -1;
+        }
+
+        let textData: TextData = this.getTextData();
+        const textFormats: TextFormat[] = $getArray();
+
+        const length: number = texts.length;
+        let newText: string  = "";
+        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+
+            if (this._$compositionStartIndex === idx) {
+                for (let idx: number = 0; idx < length; ++idx) {
+                    textFormats.push(textObject.textFormat._$clone());
+                    newText += texts[idx];
+                }
+            }
+
+            switch (textObject.mode) {
+
+                case "break":
+                    textFormats.push(textObject.textFormat);
+                    newText += "\n";
+                    break;
+
+                case "text":
+                    textFormats.push(textObject.textFormat);
+                    newText += textObject.text;
+                    break;
+
+                default:
+                    continue;
+
+            }
+        }
+
+        // update
+        this._$textFormats = textFormats;
+        this.text = newText;
+
+        // reset
+        this._$textFormats = null;
+        $poolArray(textFormats);
+
+        textData = this.getTextData();
+        let index: number = this._$compositionStartIndex + length;
+        for (let idx: number = this._$compositionStartIndex; idx < index; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+
+            textObject.textFormat.underline = true;
+            if (textObject.mode === "wrap") {
+                index++;
+            }
+        }
+
+        this._$compositionEndIndex = this._$focusIndex = index;
+
+        // move textarea element
+        const player: Player = $currentPlayer();
+
+        const textObject: TextObjectImpl = textData.textTable[this._$compositionEndIndex];
+        const line: number = textObject.line;
+
+        let offsetHeight: number = 0;
+        for (let idx = 0; idx < line; ++idx) {
+            offsetHeight += textData.heightTable[idx];
+        }
+
+        const verticalAlign: number = textData.ascentTable[line];
+
+        let offsetWidth: number = 0;
+        let targetIndex: number = this._$compositionEndIndex;
+        for (;;) {
+
+            const textObject: TextObjectImpl = textData.textTable[targetIndex--];
+            if (!textObject || textObject.line !== line) {
+                break;
+            }
+
+            offsetWidth += textObject.w;
+        }
+
+        const lineObject: TextObjectImpl = textData.lineTable[line];
+        const offsetAlign: number = this._$getAlignOffset(lineObject, this.width);
+
+        const point: Point = this.localToGlobal(new Point(
+            offsetWidth + offsetAlign,
+            offsetHeight + verticalAlign
+        ));
+
+        const div: HTMLElement | null = $document
+            .getElementById(player.contentElementId);
+
+        let left: number = point.x * player._$scale;
+        let top: number  = point.y * player._$scale;
+        if (div) {
+            const rect: DOMRect = div.getBoundingClientRect();
+            left += rect.left;
+            top += rect.top;
+        }
+
+        $textArea.style.left = `${left}px`;
+        $textArea.style.top  = `${top}px`;
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    compositionEnd (): void
+    {
+        if (this._$compositionEndIndex > -1) {
+            const textData: TextData = this.getTextData();
+            for (let idx: number = this._$compositionStartIndex; idx < this._$compositionEndIndex; ++idx) {
+                const textObject: TextObjectImpl = textData.textTable[idx];
+                textObject.textFormat.underline = false;
+            }
+            this._$focusIndex = this._$compositionEndIndex;
+        }
+
+        $textArea.blur();
+        $textArea.value = "";
+        if (this._$focus) {
+            $textArea.focus();
+        }
+
+        this._$selectIndex           = -1;
+        this._$compositionStartIndex = -1;
+        this._$compositionEndIndex   = -1;
+    }
+
+    /**
+     * @param  {string} text
+     * @return {void}
+     * @method
+     * @public
+     */
+    insertText (text: string): void
+    {
+        if (this._$focusIndex === -1
+            || this._$compositionStartIndex > -1
+        ) {
+            return ;
+        }
+
+        if (this._$selectIndex > -1) {
+            this.deleteText();
+        }
+
+        let textData: TextData = this.getTextData();
+        const textFormats: TextFormat[] = $getArray();
+
+        let newText: string = "";
+        for (let idx = 1; idx < textData.textTable.length; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+
+            if (this._$focusIndex === idx) {
+                textFormats.push(textObject.textFormat);
+                newText += text;
+            }
+
+            switch (textObject.mode) {
+
+                case "break":
+                    textFormats.push(textObject.textFormat);
+                    newText += "\n";
+                    break;
+
+                case "text":
+                    textFormats.push(textObject.textFormat);
+                    newText += textObject.text;
+                    break;
+
+                default:
+                    continue;
+
+            }
+        }
+
+        if (textData.textTable.length === this._$focusIndex) {
+            const textObject: TextObjectImpl = textData.textTable[textData.textTable.length - 1];
+            textFormats.push(textObject.textFormat);
+            newText += text;
+        }
+
+        // update
+        this._$textFormats = textFormats;
+        this.text = newText;
+
+        // reset
+        this._$textFormats = null;
+        $poolArray(textFormats);
+
+        textData = this.getTextData();
+        const textObject: TextObjectImpl = textData.textTable[this._$focusIndex];
+        if (textObject.mode === "wrap") {
+            this._$focusIndex++;
+        }
+
+        this._$focusIndex++;
+        this._$selectIndex = -1;
+
+        $textArea.value = "";
     }
 
     /**
@@ -1493,6 +2004,10 @@ export class TextField extends InteractiveObject
      */
     _$setIndex (stage_x: number, stage_y: number): void
     {
+        if (this._$type !== "input") {
+            return ;
+        }
+
         const eventType: string  = $getEventType();
         const textData: TextData = this.getTextData();
 
@@ -2455,19 +2970,19 @@ export class TextField extends InteractiveObject
         let verticalAlign: number = 0;
 
         let skip = false;
-        let currentIndex = 0;
+        let currentIndex = -1;
         for (let idx: number = 0; idx < textData.textTable.length; ++idx) {
 
             const textObject: TextObjectImpl = textData.textTable[idx];
-            if (textObject.mode === "text") {
+            if (textObject.mode === "text" || textObject.mode === "break") {
                 currentIndex++;
-                if (skip) {
-                    continue;
-                }
-
                 if (this._$stopIndex > -1 && currentIndex > this._$stopIndex) {
                     break;
                 }
+            }
+
+            if (skip && textObject.mode === "text") {
+                continue;
             }
 
             const textFormat: TextFormat = textObject.textFormat;
@@ -2509,12 +3024,12 @@ export class TextField extends InteractiveObject
                 let h: number    = textObject.y;
                 if (textObject.mode !== "text") {
                     const textObject: TextObjectImpl = textData.textTable[idx - 1];
-
-                    line = textObject.line;
-                    h    = textObject.y;
-
-                    const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
-                    context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                    if (textObject) {
+                        line = textObject.line;
+                        h    = textObject.y;
+                        const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
+                        context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                    }
                 }
 
                 let y: number = textData.ascentTable[line];
@@ -2617,21 +3132,22 @@ export class TextField extends InteractiveObject
         if (this._$focusVisible && this._$focusIndex >= textData.textTable.length) {
 
             const textObject: TextObjectImpl = textData.textTable[this._$focusIndex - 1];
+            if (textObject) {
+                const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
+                const alpha: number = $Math.max(0, $Math.min(
+                    rgb.A * 255 + color_transform[7], 255)
+                ) / 255;
 
-            const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
-            const alpha: number = $Math.max(0, $Math.min(
-                rgb.A * 255 + color_transform[7], 255)
-            ) / 255;
+                context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
 
-            context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                const x: number = offsetWidth + offsetAlign - 0.1;
+                const y: number = offsetHeight + verticalAlign;
 
-            const x: number = offsetWidth + offsetAlign - 0.1;
-            const y: number = offsetHeight + verticalAlign;
-
-            context.beginPath();
-            context.moveTo(x, y - textObject.y);
-            context.lineTo(x, y);
-            context.stroke();
+                context.beginPath();
+                context.moveTo(x, y - textObject.y);
+                context.lineTo(x, y);
+                context.stroke();
+            }
         }
     }
 
@@ -2705,294 +3221,6 @@ export class TextField extends InteractiveObject
         }
 
         return context.isPointInPath(options.x, options.y);
-    }
-
-    /**
-     * @param  {number} scale
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$createTextAreaElement (scale: number): void
-    {
-        // new text area
-        if (!this._$textarea) {
-
-            this._$textarea = $document.createElement("textarea");
-            this._$textarea.value = this.text;
-            this._$textarea.id    = `${$PREFIX}_TextField_${this._$instanceId}`;
-
-            if (!this._$wordWrap) {
-                this._$textarea.wrap = "off";
-            }
-
-            const textFormat: TextFormat = this._$defaultTextFormat;
-
-            // setup
-            let style = "";
-            style += "position: absolute;";
-            style += "outline: 0;";
-            style += `padding: 2px 2px 2px ${$Math.max(3, textFormat.leftMargin || 0)}px;`;
-            style += "margin: 0;";
-            style += "appearance: none;";
-            style += "resize: none;";
-            style += "overflow: hidden;";
-            style += `z-index: ${0x7fffffff};`;
-            style += "vertical-align: top;";
-
-            this._$textarea.setAttribute("style", style);
-
-            // add blur event
-            this._$textarea.addEventListener(`${$PREFIX}_blur`, (event: Event) =>
-            {
-                // set new text
-                const element: HTMLTextAreaElement = event.target as HTMLTextAreaElement;
-
-                let value: string = element.value;
-                if (value && this._$restrict) {
-
-                    let pattern: string = this._$restrict;
-
-                    if (pattern[0] !== "[") {
-                        pattern = "[" + pattern;
-                    }
-
-                    if (pattern[pattern.length - 1] !== "]") {
-                        pattern += "]";
-                    }
-
-                    const found: RegExpMatchArray | null = value.match(new $RegExp(pattern, "gm"));
-                    value = found ? found.join("") : "";
-                }
-
-                const player: Player = $currentPlayer();
-
-                const div:HTMLElement | null = $document.getElementById(
-                    player.contentElementId
-                );
-
-                if (div) {
-
-                    const element = $document.getElementById(
-                        `${$PREFIX}_TextField_${this._$instanceId}`
-                    );
-
-                    if (element) {
-                        element.remove();
-                    }
-                }
-
-                this.text = value;
-                this._$focus = false;
-
-                this._$doChanged();
-                $doUpdated();
-            });
-
-            // input event
-            this._$textarea.addEventListener("input", (event: InputEvent) =>
-            {
-                // set new text
-                const element: HTMLTextAreaElement = event.target as HTMLTextAreaElement;
-
-                const player: Player = $currentPlayer();
-
-                let value: string = element.value;
-
-                // SafariではInputEvent.isComposingがundefined
-                if (this._$restrict && !this._$isComposing && value) {
-
-                    let pattern: string = this._$restrict;
-
-                    if (pattern[0] !== "[") {
-                        pattern = "[" + pattern;
-                    }
-
-                    if (pattern[pattern.length - 1] !== "]") {
-                        pattern += "]";
-                    }
-
-                    const found: RegExpMatchArray | null = value.match(new $RegExp(pattern, "gm"));
-                    value = found ? found.join("") : "";
-                }
-
-                if (!this._$isComposing && this.text !== value) {
-
-                    // update
-                    this.text = value;
-                    element.value = value;
-
-                    if (this.willTrigger(Next2DEvent.CHANGE)) {
-                        this.dispatchEvent(new Next2DEvent(Next2DEvent.CHANGE, true));
-                    }
-
-                    // setup
-                    // const element = this._$textarea;
-                    const matrix: Matrix = this._$transform.concatenatedMatrix;
-                    const bounds: BoundsImpl = this._$getBounds(null);
-
-                    element.style.left   = `${$Math.floor((matrix.tx + bounds.xMin + player.x / player._$scale / $devicePixelRatio) * player._$scale)}px`;
-                    element.style.top    = `${$Math.floor((matrix.ty + bounds.yMin + player.y / player._$scale / $devicePixelRatio) * player._$scale)}px`;
-                    element.style.width  = `${$Math.ceil((this.width  - 1) * player._$scale)}px`;
-                    element.style.height = `${$Math.ceil((this.height - 1) * player._$scale)}px`;
-                }
-
-            });
-
-            // IME入力開始時のevent
-            this._$textarea.addEventListener("compositionstart", () =>
-            {
-                this._$isComposing = true;
-            });
-
-            // IME入力確定時のevent
-            this._$textarea.addEventListener("compositionend", (event: Event) =>
-            {
-                this._$isComposing = false;
-
-                const element: HTMLTextAreaElement = event.target as HTMLTextAreaElement;
-
-                let value = element.value;
-                if (!this._$restrict || !value) {
-                    return;
-                }
-
-                let pattern: string = this._$restrict;
-
-                if (pattern[0] !== "[") {
-                    pattern = "[" + pattern;
-                }
-
-                if (pattern[pattern.length - 1] !== "]") {
-                    pattern += "]";
-                }
-
-                const found: RegExpMatchArray | null = value.match(new $RegExp(pattern, "gm"));
-                value = found ? found.join("") : "";
-
-                // update
-                this.text = value;
-                element.value = value;
-            });
-
-            // add click event
-            this._$textarea.addEventListener("click", () =>
-            {
-                if (this.willTrigger(Next2DMouseEvent.CLICK)) {
-                    this.dispatchEvent(new Next2DMouseEvent(Next2DMouseEvent.CLICK));
-                }
-            });
-
-            // add mousewheel event
-            this._$textarea.addEventListener($MOUSE_WHEEL, (event: WheelEvent) =>
-            {
-                this.scrollY += event.deltaY;
-            });
-
-            // add scroll event
-            this._$textarea.addEventListener($SCROLL, (event: Event) =>
-            {
-                const element: HTMLTextAreaElement = event.target as HTMLTextAreaElement;
-
-                this.scrollY = element.scrollTop;
-            });
-
-            // down event
-            this._$textarea.addEventListener($TOUCH_START, () =>
-            {
-                const player: Player = $currentPlayer();
-                player._$state = "down";
-            });
-
-            // up event
-            this._$textarea.addEventListener($TOUCH_END, () =>
-            {
-                const player: Player = $currentPlayer();
-                player._$state = "up";
-            });
-
-            // down event
-            this._$textarea.addEventListener($MOUSE_DOWN, () =>
-            {
-                const player: Player = $currentPlayer();
-                player._$state = "down";
-            });
-
-            // up event
-            this._$textarea.addEventListener($MOUSE_UP, () =>
-            {
-                const player: Player = $currentPlayer();
-                player._$state = "up";
-            });
-
-        }
-
-        // change style
-        const tf: TextFormat = this._$defaultTextFormat;
-
-        const fontSize: number = tf.size
-            ? $Math.ceil(tf.size * scale * this._$transform.concatenatedMatrix.d)
-            : 0;
-
-        this._$textarea.style.fontSize   = `${fontSize}px`;
-        this._$textarea.style.fontFamily = tf.font || "Times New Roman";
-        this._$textarea.style.lineHeight = `${(fontSize + $Math.max(0, tf.leading || 0)) / fontSize}em`;
-
-        if (this._$autoSize !== "none") {
-            this._$textarea.style.textAlign = "center";
-        } else {
-            this._$textarea.style.textAlign = tf.align || "none";
-        }
-
-        this._$textarea.addEventListener("keydown", (event: KeyboardEvent) =>
-        {
-            const element: HTMLTextAreaElement = event.target as HTMLTextAreaElement;
-            let value: string = element.value;
-
-            // SafariではInputEvent.isComposingがundefined
-            if (this._$restrict && !this._$isComposing && value) {
-
-                let pattern: string = this._$restrict;
-
-                if (pattern[0] !== "[") {
-                    pattern = "[" + pattern;
-                }
-
-                if (pattern[pattern.length - 1] !== "]") {
-                    pattern += "]";
-                }
-
-                const found: RegExpMatchArray | null = value.match(new $RegExp(pattern, "gm"));
-                value = found ? found.join("") : "";
-            }
-
-            // update
-            if (!this._$isComposing) {
-                this.text = value;
-                element.value = value;
-            }
-
-            // enter off
-            if (event.code === "Enter" && !this._$multiline) {
-                return false;
-            }
-        });
-
-        const style: CSSStyleDeclaration = this._$textarea.style;
-        if (this._$border) {
-            style.border = `solid 1px #${this.borderColor.toString(16)}`;
-        } else {
-            style.border = "none";
-        }
-
-        if (this._$border || this._$background) {
-            style.backgroundColor = `#${this.backgroundColor.toString(16)}`;
-        } else {
-            style.backgroundColor = "transparent";
-        }
-
-        //reset
-        this._$textarea.maxLength = this._$maxChars ? this._$maxChars : 0x7fffffff;
     }
 
     /**

@@ -86,11 +86,7 @@ const execute = () =>
 
     // minify
     cp.spawnSync(
-        `mkdir -p ${process.cwd()}/dist/src/dist`,
-        { "shell": true }
-    );
-    cp.spawnSync(
-        `cp -r ${process.cwd()}/next2d.js ${process.cwd()}/dist/src/dist/next2d.min.js`,
+        `cp -r ${process.cwd()}/next2d.js ${process.cwd()}/dist/src/next2d.min.js`,
         { "shell": true }
     );
 

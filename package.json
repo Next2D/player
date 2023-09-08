@@ -7,7 +7,7 @@
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
   "main": "index.js",
-  "bundle": "dist/next2d.min.js",
+  "bundle": "next2d.min.js",
   "keywords": [
     "Next2D",
     "Next2D Player"

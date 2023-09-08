@@ -63,7 +63,8 @@ import {
     $getEventType,
     $getRenderBufferArray,
     $getRenderMessageObject,
-    $poolRenderMessageObject
+    $poolRenderMessageObject,
+    $textArea
 } from "@next2d/util";
 import {
     $Math,
@@ -105,6 +106,7 @@ export class Player
     public _$scale: number;
     public _$state: "up" | "down";
     public _$attachment: AttachmentImpl | null;
+    public _$textField: TextField | null;
     public readonly _$videos: Video[];
     public readonly _$sources: Sound[];
     private _$mode: PlayerModeImpl;
@@ -126,7 +128,6 @@ export class Player
     private _$bgColor: string;
     private _$base: string;
     private _$fullScreen: boolean;
-    private _$textField: TextField | null;
     private _$timerId: number;
     private _$loadId: number;
     private _$deltaX: number;
@@ -833,6 +834,7 @@ export class Player
 
             // append canvas
             element.appendChild(this._$canvas);
+            element.appendChild($textArea);
 
             // stage init action
             this._$stage._$prepareActions();
@@ -2188,6 +2190,7 @@ export class Player
                 if (this._$clickTarget
                     && "_$text" in this._$clickTarget
                     && this._$clickTarget.scrollEnabled
+                    && this._$clickTarget.selectIndex === -1
                 ) {
                     const deltaX: number = this._$deltaX - pageX;
                     const deltaY: number = this._$deltaY - pageY;
@@ -2277,16 +2280,15 @@ export class Player
 
                     case $TOUCH_START:
                     case $MOUSE_DOWN:
+                        if (this._$textField && "focus" in this._$textField) {
+                            this._$textField.focus = false;
+                            this._$textField       = null;
+                        }
+
                         if (this._$stage.hasEventListener(Next2DMouseEvent.MOUSE_DOWN)) {
                             this._$stage.dispatchEvent(new Next2DMouseEvent(
                                 Next2DMouseEvent.MOUSE_DOWN, true, false
                             ));
-                        }
-
-                        // TextField focus out
-                        if (this._$textField) {
-                            this._$textField.focus = false;
-                            this._$textField = null;
                         }
                         break;
 
@@ -2491,6 +2493,10 @@ export class Player
                             instance.focus   = true;
                             instance._$setIndex(stageX, stageY);
                             this._$textField = instance;
+
+                            // move text area element
+                            $textArea.style.left = `${pageX}px`;
+                            $textArea.style.top  = `${pageY}px`;
                         }
 
                         // (3) mouseDown
