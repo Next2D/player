@@ -46,6 +46,7 @@ import {
     $getBoundsObject,
     $Float32Array,
     $getFloat32Array4,
+    $getInt32Array4,
     $linearGradientXY
 } from "@next2d/share";
 
@@ -3085,7 +3086,7 @@ export class Graphics
                                 }
                             }
 
-                            css.addColorStop(color.ratio, $getFloat32Array4(
+                            css.addColorStop(color.ratio, $getInt32Array4(
                                 color.R, color.G, color.B, alpha
                             ));
 
@@ -3162,7 +3163,7 @@ export class Graphics
                                 }
                             }
 
-                            css.addColorStop(color.ratio, $getFloat32Array4(
+                            css.addColorStop(color.ratio, $getInt32Array4(
                                 color.R, color.G, color.B, alpha
                             ));
 
