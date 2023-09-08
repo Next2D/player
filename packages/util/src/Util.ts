@@ -305,6 +305,96 @@ export let $isiOS: boolean = false;
 export let $isTouch: boolean = false;
 
 /**
+ * @type {HTMLTextAreaElement}
+ * @const
+ */
+export const $textArea: HTMLTextAreaElement = $document.createElement("textarea");
+
+let style = "";
+style += "position: fixed;";
+style += "top: 0;";
+style += "left: 0;";
+style += "font-size: 16px;";
+style += "border: 0;";
+style += "resize: none;";
+style += "opacity: 0;";
+style += "z-index: -1;";
+style += "pointer-events: none;";
+$textArea.setAttribute("style", style);
+
+$textArea.tabIndex = -1;
+
+$textArea.addEventListener("compositionstart", () =>
+{
+    const player: Player = $window.next2d.player;
+    const textField: TextField | null =  player._$textField;
+    if (textField) {
+        textField.compositionStart();
+    }
+});
+
+$textArea.addEventListener("compositionupdate", (event: CompositionEvent) =>
+{
+    const player: Player = $window.next2d.player;
+    const textField: TextField | null =  player._$textField;
+    if (textField) {
+        textField.compositionUpdate(event.data);
+    }
+});
+
+$textArea.addEventListener("compositionend", () =>
+{
+    const player: Player = $window.next2d.player;
+    const textField: TextField | null =  player._$textField;
+    if (textField) {
+        textField.compositionEnd();
+    }
+});
+
+$textArea.addEventListener("input", (event: InputEvent) =>
+{
+    if (!event.data) {
+        return ;
+    }
+
+    const player: Player = $window.next2d.player;
+    const textField: TextField | null =  player._$textField;
+    if (textField) {
+        textField.insertText(event.data);
+    }
+});
+
+$textArea.addEventListener("keydown", (event: KeyboardEvent) =>
+{
+    const player: Player = $window.next2d.player;
+    const textField: TextField | null =  player._$textField;
+    if (!textField) {
+        return ;
+    }
+
+    switch (event.key) {
+
+        case "Backspace":
+        case "Delete":
+            textField.deleteText();
+            break;
+
+        case "Enter":
+            textField.insertText("\n");
+            break;
+
+        case "ArrowLeft":
+            textField.arrowLeft();
+            break;
+
+        case "ArrowRight":
+            textField.arrowRight();
+            break;
+
+    }
+});
+
+/**
  * @type {HTMLCanvasElement}
  * @const
  */

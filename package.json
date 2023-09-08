@@ -1,13 +1,13 @@
 {
   "name": "@next2d/player",
-  "version": "1.17.5",
+  "version": "1.17.6",
   "description": "Experience the fast and beautiful anti-aliased rendering of WebGL. You can create rich, interactive graphics, cross-platform applications and games without worrying about browser or device compatibility.",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
   "main": "index.js",
-  "bundle": "dist/next2d.min.js",
+  "bundle": "next2d.min.js",
   "keywords": [
     "Next2D",
     "Next2D Player"
