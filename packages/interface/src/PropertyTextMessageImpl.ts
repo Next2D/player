@@ -1,15 +1,12 @@
 import { PropertyMessageImpl } from "./PropertyMessageImpl";
 import { TextDataImpl } from "./TextDataImpl";
-import { TextFormatVerticalAlignImpl } from "./TextFormatVerticalAlignImpl";
 import { TextFieldAutoSizeImpl } from "./TextFieldAutoSizeImpl";
 
 export interface PropertyTextMessageImpl extends PropertyMessageImpl {
-    textAreaActive?: boolean;
     textData?: TextDataImpl<any>[];
     limitWidth: number;
     limitHeight: number;
     textHeight: number;
-    verticalAlign: TextFormatVerticalAlignImpl;
     autoSize: TextFieldAutoSizeImpl;
     wordWrap: boolean;
     border: boolean;

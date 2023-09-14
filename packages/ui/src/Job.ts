@@ -345,7 +345,7 @@ export class Job extends EventDispatcher
      * @method
      * @public
      */
-    stop ()
+    stop (): void
     {
         if (this.hasEventListener(Event.STOP)) {
             this.dispatchEvent(new Event(Event.STOP));
@@ -430,7 +430,7 @@ export class Job extends EventDispatcher
                 continue;
             }
 
-            if (!target.hasOwnProperty(name)) {
+            if (!(name in target)) {
                 continue;
             }
 
