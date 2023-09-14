@@ -27,9 +27,10 @@ import {
     $getArray,
     $poolArray,
     $getFloat32Array6,
+    $getFloat32Array4,
     $multiplicationMatrix,
     $poolFloat32Array6,
-    $getFloat32Array4,
+    $getInt32Array4,
     $linearGradientXY,
     $getFloat32Array8
 } from "@next2d/share";
@@ -753,7 +754,7 @@ export class RenderGraphics extends RenderDisplayObject
                 }
             }
 
-            css.addColorStop(color.ratio, $getFloat32Array4(
+            css.addColorStop(color.ratio, $getInt32Array4(
                 color.R, color.G, color.B, alpha
             ));
         }

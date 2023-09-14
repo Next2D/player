@@ -731,7 +731,8 @@ export class Graphics
     beginGradientFill (
         type: GradientTypeImpl,
         colors: number[] | string[],
-        alphas: number[], ratios: number[],
+        alphas: number[],
+        ratios: number[],
         matrix: Matrix | null = null,
         spread_method: SpreadMethodImpl = "pad",
         interpolation_method: InterpolationMethodImpl = "rgb",

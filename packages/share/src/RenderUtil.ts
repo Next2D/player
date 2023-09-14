@@ -630,12 +630,12 @@ export const $upperPowerOfTwo = (v: number): number =>
  */
 export const $linearGradientXY = (matrix: Float32Array): Float32Array =>
 {
-    const x0: number = (0 - 819.2) * matrix[0] - 819.2 * matrix[2] + matrix[4];
+    const x0: number = -819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
     const x1: number =  819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
-    const x2: number = (0 - 819.2) * matrix[0] + 819.2 * matrix[2] + matrix[4];
-    const y0: number = (0 - 819.2) * matrix[1] - 819.2 * matrix[3] + matrix[5];
+    const x2: number = -819.2 * matrix[0] + 819.2 * matrix[2] + matrix[4];
+    const y0: number = -819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
     const y1: number =  819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
-    const y2: number = (0 - 819.2) * matrix[1] + 819.2 * matrix[3] + matrix[5];
+    const y2: number = -819.2 * matrix[1] + 819.2 * matrix[3] + matrix[5];
 
     let vx2: number = x2 - x0;
     let vy2: number = y2 - y0;

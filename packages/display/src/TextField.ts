@@ -1165,7 +1165,12 @@ export class TextField extends InteractiveObject
     set text (text: string | null)
     {
         if (text === null) {
-            text = "";
+            this._$text        = "";
+            this._$htmlText    = "";
+            this._$rawHtmlText = "";
+            this._$isHTML      = false;
+            this._$reload();
+            return ;
         }
 
         text = `${text}`;
@@ -1555,30 +1560,174 @@ export class TextField extends InteractiveObject
      * @method
      * @public
      */
-    arrowRight (): void
+    selectAll (): void
+    {
+        const textData: TextData = this.getTextData();
+        if (!textData.textTable.length) {
+            return ;
+        }
+
+        this._$selectIndex = 1;
+        this._$focusIndex  = textData.textTable.length;
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    arrowUp (): void
     {
         if (this._$focusIndex === -1) {
             return ;
         }
 
         const textData: TextData = this.getTextData();
-        if (textData.textTable.length === this._$focusIndex) {
+        if (!textData.textTable.length) {
             return ;
         }
 
-        this._$focusIndex++;
-        this._$focusVisible = true;
-        this._$selectIndex  = -1;
+        const index = textData.textTable.length === this._$focusIndex
+            ? this._$focusIndex - 1
+            : this._$focusIndex;
 
+        const textObject: TextObjectImpl = textData.textTable[index];
+        if (!textObject.line) {
+            return ;
+        }
+
+        const line: number = textObject.mode === "text"
+            ? textObject.line
+            : textObject.line - 1;
+
+        let currentWidth: number = 2;
+        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+            if (this._$focusIndex === idx) {
+                if (textObject.mode === "text") {
+                    currentWidth +=  textObject.w / 2;
+                }
+                break;
+            }
+
+            if (textObject.line > line) {
+                break;
+            }
+
+            if (textObject.line !== line || textObject.mode !== "text") {
+                continue;
+            }
+
+            currentWidth += textObject.w;
+        }
+
+        let textWidth: number = 2;
+        const targetLine: number = line - 1;
+        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+            if (textObject.line > targetLine) {
+                this._$focusIndex  = textObject.mode === "text" ? idx - 1 : idx;
+                this._$selectIndex = -1;
+                $clearTimeout(this._$timerId);
+                this._$blinking();
+                return ;
+            }
+
+            if (textObject.line !== targetLine || textObject.mode !== "text") {
+                continue;
+            }
+
+            textWidth += textObject.w;
+            if (textWidth > currentWidth) {
+                this._$focusIndex  = idx;
+                this._$selectIndex = -1;
+                $clearTimeout(this._$timerId);
+                this._$blinking();
+                return ;
+            }
+        }
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    arrowDown (): void
+    {
+        if (this._$focusIndex === -1) {
+            return ;
+        }
+
+        const textData: TextData = this.getTextData();
+        if (!textData.textTable.length) {
+            return ;
+        }
+
+        const textObject: TextObjectImpl = textData.textTable[this._$focusIndex];
+        const line: number = textObject.mode === "text"
+            ? textObject.line
+            : textObject.line - 1;
+
+        if (line === textData.lineTable.length - 1) {
+            return ;
+        }
+
+        let currentWidth: number = 2;
+        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+            if (this._$focusIndex === idx) {
+                if (textObject.mode === "text") {
+                    currentWidth +=  textObject.w / 2;
+                }
+                break;
+            }
+
+            if (textObject.line > line) {
+                break;
+            }
+
+            if (textObject.line !== line || textObject.mode !== "text") {
+                continue;
+            }
+
+            currentWidth += textObject.w;
+        }
+
+        let textWidth: number = 2;
+        const targetLine: number = line + 1;
+        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+
+            const textObject: TextObjectImpl = textData.textTable[idx];
+            if (textObject.line > targetLine) {
+                this._$focusIndex  = textObject.mode === "text" ? idx - 1 : idx;
+                this._$selectIndex = -1;
+                $clearTimeout(this._$timerId);
+                this._$blinking();
+                return ;
+            }
+
+            if (textObject.line !== targetLine || textObject.mode !== "text") {
+                continue;
+            }
+
+            textWidth += textObject.w;
+            if (textWidth > currentWidth) {
+                this._$focusIndex  = idx;
+                this._$selectIndex = -1;
+                $clearTimeout(this._$timerId);
+                this._$blinking();
+                return ;
+            }
+        }
+
+        this._$focusIndex  = textData.textTable.length;
+        this._$selectIndex = -1;
         $clearTimeout(this._$timerId);
-        this._$timerId = +$setTimeout(() =>
-        {
-            this._$blinking();
-        }, 500);
-        this._$timerId |= 0;
-
-        this._$doChanged();
-        $doUpdated();
+        this._$blinking();
     }
 
     /**
@@ -1588,23 +1737,38 @@ export class TextField extends InteractiveObject
      */
     arrowLeft (): void
     {
-        if (2 > this._$focusIndex) {
+        if (!this._$focusIndex) {
+            return ;
+        }
+
+        const textData: TextData = this.getTextData();
+        if (textData.textTable.length && this._$focusIndex < 2) {
+            this._$focusIndex = 1;
             return ;
         }
 
         this._$focusIndex--;
-        this._$focusVisible = true;
-        this._$selectIndex  = -1;
-
+        this._$selectIndex = -1;
         $clearTimeout(this._$timerId);
-        this._$timerId = +$setTimeout(() =>
-        {
-            this._$blinking();
-        }, 500);
-        this._$timerId |= 0;
+        this._$blinking();
+    }
 
-        this._$doChanged();
-        $doUpdated();
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    arrowRight (): void
+    {
+        const textData: TextData = this.getTextData();
+        if (textData.textTable.length === this._$focusIndex) {
+            return ;
+        }
+
+        this._$focusIndex++;
+        this._$selectIndex = -1;
+        $clearTimeout(this._$timerId);
+        this._$blinking();
     }
 
     /**
@@ -1633,6 +1797,11 @@ export class TextField extends InteractiveObject
         }
 
         const textData: TextData = this.getTextData();
+        const textObject: TextObjectImpl = textData.textTable[this._$focusIndex];
+        if (textObject && textObject.mode === "wrap") {
+            this._$focusIndex--;
+        }
+
         const textFormats: TextFormat[] = $getArray();
 
         let newText: string = "";
@@ -1668,12 +1837,68 @@ export class TextField extends InteractiveObject
         }
 
         this._$selectIndex = -1;
-        this._$textFormats = textFormats;
-        this.text = newText;
+        if (!newText) {
+            // reset
+            this.text = null;
 
-        // reset
-        this._$textFormats = null;
-        $poolArray(textFormats);
+            this._$scrollX = 0;
+            this._$scrollY = 0;
+
+            this._$focusIndex = 0;
+        } else {
+
+            const beforeTextWidth: number   = this.textWidth;
+            const beforeTextHeight : number = this.textHeight;
+
+            this._$textFormats = textFormats;
+            this.text = newText;
+
+            if (this._$scrollX > 0) {
+                const textWidth: number = this.textWidth;
+                const width: number = this.width;
+
+                switch (true) {
+
+                    case width > textWidth:
+                        this._$scrollY = 0;
+                        break;
+
+                    case beforeTextWidth !== textWidth:
+                        this._$scrollY -= (beforeTextWidth - textWidth)
+                            / (textWidth / width);
+                        break;
+
+                    default:
+                        break;
+
+                }
+            }
+
+            if (this._$scrollY > 0) {
+                const textHeight: number = this.textHeight;
+                const height: number = this.height;
+
+                switch (true) {
+
+                    case height > textHeight:
+                        this._$scrollY = 0;
+                        break;
+
+                    case beforeTextHeight !== textHeight:
+                        this._$scrollY -= (beforeTextHeight - textHeight)
+                            / (textHeight / height);
+                        break;
+
+                    default:
+                        break;
+
+                }
+            }
+
+            // reset
+            this._$textFormats = null;
+            $poolArray(textFormats);
+        }
     }
 
     /**
@@ -1694,7 +1919,6 @@ export class TextField extends InteractiveObject
      */
     compositionUpdate (texts: string): void
     {
-
         if (this._$compositionEndIndex > -1) {
             const cacheIndex: number = this._$compositionStartIndex;
             this._$focusIndex  = this._$compositionStartIndex;
@@ -1713,37 +1937,54 @@ export class TextField extends InteractiveObject
 
         const length: number = texts.length;
         let newText: string  = "";
-        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+        if (!textData.textTable.length) {
+            newText = texts;
+            this._$focusIndex = 1;
+            this._$compositionStartIndex = 1;
+        } else {
+            for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+                const textObject: TextObjectImpl = textData.textTable[idx];
 
-            if (this._$compositionStartIndex === idx) {
+                if (this._$compositionStartIndex === idx) {
+                    for (let idx: number = 0; idx < length; ++idx) {
+                        textFormats.push(textObject.textFormat._$clone());
+                        newText += texts[idx];
+                    }
+                }
+
+                switch (textObject.mode) {
+
+                    case "break":
+                        textFormats.push(textObject.textFormat);
+                        newText += "\n";
+                        break;
+
+                    case "text":
+                        textFormats.push(textObject.textFormat);
+                        newText += textObject.text;
+                        break;
+
+                    default:
+                        continue;
+
+                }
+            }
+
+            // last text
+            if (this._$compositionStartIndex === textData.textTable.length ) {
+                const textObject: TextObjectImpl = textData.textTable[this._$compositionStartIndex - 1];
                 for (let idx: number = 0; idx < length; ++idx) {
                     textFormats.push(textObject.textFormat._$clone());
                     newText += texts[idx];
                 }
             }
-
-            switch (textObject.mode) {
-
-                case "break":
-                    textFormats.push(textObject.textFormat);
-                    newText += "\n";
-                    break;
-
-                case "text":
-                    textFormats.push(textObject.textFormat);
-                    newText += textObject.text;
-                    break;
-
-                default:
-                    continue;
-
-            }
         }
 
         // update
-        this._$textFormats = textFormats;
+        if (textFormats.length) {
+            this._$textFormats = textFormats;
+        }
         this.text = newText;
 
         // reset
@@ -1755,10 +1996,33 @@ export class TextField extends InteractiveObject
         for (let idx: number = this._$compositionStartIndex; idx < index; ++idx) {
 
             const textObject: TextObjectImpl = textData.textTable[idx];
+            if (!textObject) {
+                break;
+            }
 
             textObject.textFormat.underline = true;
             if (textObject.mode === "wrap") {
-                index++;
+                if (idx === this._$compositionStartIndex) {
+                    let subIndex = 1;
+                    for (;;) {
+                        const textObject: TextObjectImpl = textData.textTable[idx - subIndex];
+
+                        if (!textObject) {
+                            break;
+                        }
+
+                        if (textObject.mode === "text") {
+                            textObject.textFormat.underline = true;
+                            break;
+                        }
+
+                        subIndex++;
+                    }
+                }
+
+                if (idx > this._$compositionStartIndex) {
+                    index++;
+                }
             }
         }
 
@@ -1767,49 +2031,52 @@ export class TextField extends InteractiveObject
         // move textarea element
         const player: Player = $currentPlayer();
 
-        const textObject: TextObjectImpl = textData.textTable[this._$compositionEndIndex];
-        const line: number = textObject.line;
+        const lastIndex = $Math.min(textData.textTable.length - 1, this._$compositionEndIndex);
+        const textObject: TextObjectImpl = textData.textTable[lastIndex];
+        if (textObject) {
+            const line: number = textObject.line;
 
-        let offsetHeight: number = 0;
-        for (let idx = 0; idx < line; ++idx) {
-            offsetHeight += textData.heightTable[idx];
-        }
-
-        const verticalAlign: number = textData.ascentTable[line];
-
-        let offsetWidth: number = 0;
-        let targetIndex: number = this._$compositionEndIndex;
-        for (;;) {
-
-            const textObject: TextObjectImpl = textData.textTable[targetIndex--];
-            if (!textObject || textObject.line !== line) {
-                break;
+            let offsetHeight: number = 0;
+            for (let idx = 0; idx < line; ++idx) {
+                offsetHeight += textData.heightTable[idx];
             }
 
-            offsetWidth += textObject.w;
+            const verticalAlign: number = textData.ascentTable[line];
+
+            let offsetWidth: number = 0;
+            let targetIndex: number = this._$compositionEndIndex;
+            for (;;) {
+
+                const textObject: TextObjectImpl = textData.textTable[targetIndex--];
+                if (!textObject || textObject.line !== line) {
+                    break;
+                }
+
+                offsetWidth += textObject.w;
+            }
+
+            const lineObject: TextObjectImpl = textData.lineTable[line];
+            const offsetAlign: number = this._$getAlignOffset(lineObject, this.width);
+
+            const point: Point = this.localToGlobal(new Point(
+                offsetWidth + offsetAlign,
+                offsetHeight + verticalAlign
+            ));
+
+            const div: HTMLElement | null = $document
+                .getElementById(player.contentElementId);
+
+            let left: number = point.x * player._$scale;
+            let top: number  = point.y * player._$scale;
+            if (div) {
+                const rect: DOMRect = div.getBoundingClientRect();
+                left += rect.left;
+                top += rect.top;
+            }
+
+            $textArea.style.left = `${left}px`;
+            $textArea.style.top  = `${top}px`;
         }
-
-        const lineObject: TextObjectImpl = textData.lineTable[line];
-        const offsetAlign: number = this._$getAlignOffset(lineObject, this.width);
-
-        const point: Point = this.localToGlobal(new Point(
-            offsetWidth + offsetAlign,
-            offsetHeight + verticalAlign
-        ));
-
-        const div: HTMLElement | null = $document
-            .getElementById(player.contentElementId);
-
-        let left: number = point.x * player._$scale;
-        let top: number  = point.y * player._$scale;
-        if (div) {
-            const rect: DOMRect = div.getBoundingClientRect();
-            left += rect.left;
-            top += rect.top;
-        }
-
-        $textArea.style.left = `${left}px`;
-        $textArea.style.top  = `${top}px`;
     }
 
     /**
@@ -1857,7 +2124,7 @@ export class TextField extends InteractiveObject
             this.deleteText();
         }
 
-        let textData: TextData = this.getTextData();
+        const textData: TextData = this.getTextData();
         const textFormats: TextFormat[] = $getArray();
 
         let newText: string = "";
@@ -1889,8 +2156,13 @@ export class TextField extends InteractiveObject
         }
 
         if (textData.textTable.length === this._$focusIndex) {
-            const textObject: TextObjectImpl = textData.textTable[textData.textTable.length - 1];
-            textFormats.push(textObject.textFormat);
+            if (textData.textTable.length) {
+                const textObject: TextObjectImpl = textData.textTable[textData.textTable.length - 1];
+                textFormats.push(textObject.textFormat);
+            } else {
+                textFormats.push(this.defaultTextFormat);
+                this._$focusIndex++;
+            }
             newText += text;
         }
 
@@ -1901,12 +2173,6 @@ export class TextField extends InteractiveObject
         // reset
         this._$textFormats = null;
         $poolArray(textFormats);
-
-        textData = this.getTextData();
-        const textObject: TextObjectImpl = textData.textTable[this._$focusIndex];
-        if (textObject.mode === "wrap") {
-            this._$focusIndex++;
-        }
 
         this._$focusIndex++;
         this._$selectIndex = -1;
@@ -2008,21 +2274,28 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        const eventType: string  = $getEventType();
         const textData: TextData = this.getTextData();
+        if (!textData.textTable.length) {
+            this._$focusIndex  = 0;
+            this._$selectIndex = -1;
+            this.setBlinkingTimer();
+            return ;
+        }
+
+        const width: number  = this.width;
+        const height: number = this.height;
 
         let tx: number = 0;
         if (this._$scrollX > 0) {
-            const width: number = this.width;
             tx += this._$scrollX * (this.textWidth - width) / width;
         }
 
         let ty: number = 0;
         if (this._$scrollY) {
-            const height: number = this.height;
             ty += this._$scrollY * (this.textHeight - height) / height;
         }
 
+        const eventType: string  = $getEventType();
         const point: Point = this.globalToLocal(new Point(stage_x, stage_y));
         const x: number = point.x + tx;
         const y: number = point.y + ty;
@@ -2040,39 +2313,31 @@ export class TextField extends InteractiveObject
                 case "wrap":
                     if (x > w && y > yMin
                         && yMax > y
-                        && this.width > x
+                        && width > x
                     ) {
                         const index: number = idx;
                         switch (eventType) {
 
                             case $TOUCH_MOVE:
                             case $MOUSE_MOVE:
-                                if (this._$selectIndex !== index) {
+                                if (this._$selectIndex !== index && this._$focusIndex === index) {
                                     this._$selectIndex = index;
 
-                                    this._$focusVisible = false;
-                                    $clearTimeout(this._$timerId);
+                                    if (this._$focusIndex !== index) {
+                                        this._$focusVisible = false;
+                                        $clearTimeout(this._$timerId);
 
-                                    this._$doChanged();
-                                    $doUpdated();
+                                        this._$doChanged();
+                                        $doUpdated();
+                                    }
                                 }
                                 break;
 
                             default:
                                 if (this._$focusIndex !== index || this._$selectIndex > -1) {
-                                    this._$focusIndex   = index;
-                                    this._$focusVisible = true;
-                                    this._$selectIndex  = -1;
-
-                                    this._$doChanged();
-                                    $doUpdated();
-
-                                    $clearTimeout(this._$timerId);
-                                    this._$timerId = +$setTimeout(() =>
-                                    {
-                                        this._$blinking();
-                                    }, 500);
-                                    this._$timerId |= 0;
+                                    this._$focusIndex  = index;
+                                    this._$selectIndex = -1;
+                                    this.setBlinkingTimer();
                                 }
                                 break;
                         }
@@ -2088,7 +2353,7 @@ export class TextField extends InteractiveObject
                 case "text":
                     if (idx === textData.textTable.length - 1
                         && x > w && y > yMin && yMax > y
-                        && this.width > x
+                        && width > x
                     ) {
 
                         const index: number = textData.textTable.length;
@@ -2099,29 +2364,21 @@ export class TextField extends InteractiveObject
                                 if (this._$selectIndex !== index) {
                                     this._$selectIndex = index;
 
-                                    this._$focusVisible = false;
-                                    $clearTimeout(this._$timerId);
+                                    if (this._$focusIndex !== index) {
+                                        this._$focusVisible = false;
+                                        $clearTimeout(this._$timerId);
 
-                                    this._$doChanged();
-                                    $doUpdated();
+                                        this._$doChanged();
+                                        $doUpdated();
+                                    }
                                 }
                                 break;
 
                             default:
                                 if (this._$focusIndex !== index || this._$selectIndex > -1) {
-                                    this._$focusIndex   = index;
-                                    this._$focusVisible = true;
-                                    this._$selectIndex  = -1;
-
-                                    this._$doChanged();
-                                    $doUpdated();
-
-                                    $clearTimeout(this._$timerId);
-                                    this._$timerId = +$setTimeout(() =>
-                                    {
-                                        this._$blinking();
-                                    }, 500);
-                                    this._$timerId |= 0;
+                                    this._$focusIndex  = index;
+                                    this._$selectIndex = -1;
+                                    this.setBlinkingTimer();
                                 }
                                 break;
 
@@ -2185,19 +2442,9 @@ export class TextField extends InteractiveObject
                                 }
 
                                 if (this._$focusIndex !== index || this._$selectIndex > -1) {
-                                    this._$focusIndex   = index;
-                                    this._$focusVisible = true;
-                                    this._$selectIndex  = -1;
-
-                                    this._$doChanged();
-                                    $doUpdated();
-
-                                    $clearTimeout(this._$timerId);
-                                    this._$timerId = +$setTimeout(() =>
-                                    {
-                                        this._$blinking();
-                                    }, 500);
-                                    this._$timerId |= 0;
+                                    this._$focusIndex  = index;
+                                    this._$selectIndex = -1;
+                                    this.setBlinkingTimer();
                                 }
                                 break;
 
@@ -2214,9 +2461,42 @@ export class TextField extends InteractiveObject
             }
         }
 
-        // reset
-        this._$focusIndex  = -1;
-        this._$selectIndex = -1;
+        switch (eventType) {
+
+            case $TOUCH_MOVE:
+            case $MOUSE_MOVE:
+                // reset
+                this._$focusIndex  = -1;
+                this._$selectIndex = -1;
+                break;
+
+            default:
+                this._$focusIndex  = textData.textTable.length;
+                this._$selectIndex = -1;
+                this.setBlinkingTimer();
+                break;
+
+        }
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @private
+     */
+    setBlinkingTimer (): void
+    {
+        this._$focusVisible = false;
+
+        this._$doChanged();
+        $doUpdated();
+
+        $clearTimeout(this._$timerId);
+        this._$timerId = +$setTimeout(() =>
+        {
+            this._$blinking();
+        }, 500);
+        this._$timerId |= 0;
     }
 
     /**
@@ -2317,7 +2597,7 @@ export class TextField extends InteractiveObject
 
         const textFormat: TextFormat = text_object.textFormat;
 
-        const leftMargin: number  = textFormat.leftMargin  || 0;
+        const leftMargin: number = textFormat.leftMargin || 0;
         if (!this._$wordWrap && lineWidth > width) {
             return $Math.max(0, leftMargin);
         }
@@ -2545,7 +2825,11 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        if (!this._$background && !this._$border && !this.text) {
+        if (this._$focusIndex === -1
+            && !this._$background
+            && !this._$border
+            && !this.text
+        ) {
             return;
         }
 
@@ -2881,6 +3165,27 @@ export class TextField extends InteractiveObject
 
         // init
         const textData: TextData = this.getTextData();
+        if (!textData.textTable.length
+            && this._$focusIndex > -1
+            && this._$focusVisible
+        ) {
+
+            const textFormat: TextFormat = this._$defaultTextFormat;
+
+            const rgb: RGBAImpl = $intToRGBA(textFormat.color || 0);
+            const alpha: number = $Math.max(0, $Math.min(
+                rgb.A * 255 + color_transform[7], 255)
+            ) / 255;
+
+            context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+            context.beginPath();
+            context.moveTo(0, 0);
+            context.lineTo(0, 0 + (textFormat.size || 12));
+            context.stroke();
+
+            return ;
+        }
+
         if (this._$selectIndex > -1 && this._$focusIndex > -1) {
 
             const range: number  = textData.textTable.length - 1;
@@ -3016,27 +3321,29 @@ export class TextField extends InteractiveObject
             // focus line
             if (this._$focusVisible && this._$focusIndex === idx) {
 
-                context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-
-                const x: number = offsetWidth + offsetAlign - 0.1;
-
+                const x: number = offsetWidth + offsetAlign + 0.1;
                 let line: number = textObject.line;
-                let h: number    = textObject.y;
+
+                let h: number = textObject.y;
+                let y: number = textData.ascentTable[line];
                 if (textObject.mode !== "text") {
-                    const textObject: TextObjectImpl = textData.textTable[idx - 1];
-                    if (textObject) {
+                    h = textObject.mode === "break"
+                        ? textObject.h
+                        : textData.ascentTable[line - 1];
+                    if (line > 0 && !textData.ascentTable[line - 1]) {
                         line = textObject.line;
-                        h    = textObject.y;
-                        const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
-                        context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
+                        y = textData.ascentTable[line - 1];
+                    } else {
+                        line = textObject.line - 1;
+                        y = textData.ascentTable[line];
                     }
                 }
 
-                let y: number = textData.ascentTable[line];
                 for (let idx: number = 0; idx < line; ++idx) {
                     y += textData.heightTable[idx];
                 }
 
+                context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
                 context.beginPath();
                 context.moveTo(x, y);
                 context.lineTo(x, y - h);
@@ -3080,10 +3387,13 @@ export class TextField extends InteractiveObject
                     {
                         context.beginPath();
                         context.font = $generateFontStyle(
-                            textFormat.font || "", textFormat.size || 0, !!textFormat.italic, !!textFormat.bold
+                            textFormat.font || "",
+                            textFormat.size || 0,
+                            !!textFormat.italic,
+                            !!textFormat.bold
                         );
 
-                        const x: number = offsetWidth + offsetAlign;
+                        const x: number = offsetWidth  + offsetAlign;
                         const y: number = offsetHeight + verticalAlign;
                         if (textFormat.underline) {
 
@@ -3130,7 +3440,6 @@ export class TextField extends InteractiveObject
         }
 
         if (this._$focusVisible && this._$focusIndex >= textData.textTable.length) {
-
             const textObject: TextObjectImpl = textData.textTable[this._$focusIndex - 1];
             if (textObject) {
                 const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
@@ -3140,12 +3449,17 @@ export class TextField extends InteractiveObject
 
                 context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
 
-                const x: number = offsetWidth + offsetAlign - 0.1;
+                const x: number = offsetWidth + offsetAlign + 0.1;
                 const y: number = offsetHeight + verticalAlign;
 
                 context.beginPath();
-                context.moveTo(x, y - textObject.y);
-                context.lineTo(x, y);
+                if (textObject.mode === "text") {
+                    context.moveTo(x, y - textObject.y);
+                    context.lineTo(x, y);
+                } else {
+                    context.moveTo(x, y + textObject.h);
+                    context.lineTo(x, y);
+                }
                 context.stroke();
             }
         }
