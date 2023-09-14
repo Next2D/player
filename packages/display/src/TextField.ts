@@ -123,6 +123,7 @@ export class TextField extends InteractiveObject
     private _$timerId: number;
     private _$focusIndex: number;
     private _$selectIndex: number;
+    private _$copyText: string;
     private _$thickness: number;
     private _$thicknessColor: number;
     private _$cacheKeys: string[];
@@ -372,6 +373,13 @@ export class TextField extends InteractiveObject
          * @private
          */
         this._$focus = false;
+
+        /**
+         * @type {string}
+         * @default ""
+         * @private
+         */
+        this._$copyText = "";
 
         /**
          * @type {number}
@@ -1576,6 +1584,58 @@ export class TextField extends InteractiveObject
      * @method
      * @public
      */
+    copy (): void
+    {
+        if (this._$focusIndex === -1 || this._$selectIndex === -1) {
+            return ;
+        }
+
+        let text: string = "";
+        const minIndex: number = $Math.min(this._$focusIndex, this._$selectIndex);
+        const maxIndex: number = $Math.max(this._$focusIndex, this._$selectIndex) + 1;
+
+        const textData: TextData = this.getTextData();
+        for (let idx = minIndex; idx < maxIndex; ++idx) {
+            const textObject: TextObjectImpl = textData.textTable[idx];
+            if (!textObject || textObject.mode === "wrap") {
+                continue;
+            }
+
+            switch (textObject.mode) {
+
+                case "text":
+                    text += textObject.text;
+                    break;
+
+                case "break":
+                    text += "\n";
+                    break;
+
+            }
+        }
+
+        this._$copyText = text;
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
+    paste (): void
+    {
+        if (!this._$copyText || this._$focusIndex === -1) {
+            return ;
+        }
+
+        this.insertText(this._$copyText);
+    }
+
+    /**
+     * @return {void}
+     * @method
+     * @public
+     */
     arrowUp (): void
     {
         if (this._$focusIndex === -1) {
@@ -2112,7 +2172,7 @@ export class TextField extends InteractiveObject
      * @method
      * @public
      */
-    insertText (text: string): void
+    insertText (texts: string): void
     {
         if (this._$focusIndex === -1
             || this._$compositionStartIndex > -1
@@ -2133,8 +2193,10 @@ export class TextField extends InteractiveObject
             const textObject: TextObjectImpl = textData.textTable[idx];
 
             if (this._$focusIndex === idx) {
-                textFormats.push(textObject.textFormat);
-                newText += text;
+                for (let idx = 0; idx < texts.length; ++idx) {
+                    textFormats.push(textObject.textFormat);
+                    newText += texts[idx];
+                }
             }
 
             switch (textObject.mode) {
@@ -2156,14 +2218,19 @@ export class TextField extends InteractiveObject
         }
 
         if (textData.textTable.length === this._$focusIndex) {
+            let textFormat: TextFormat;
             if (textData.textTable.length) {
                 const textObject: TextObjectImpl = textData.textTable[textData.textTable.length - 1];
-                textFormats.push(textObject.textFormat);
+                textFormat = textObject.textFormat._$clone();
             } else {
-                textFormats.push(this.defaultTextFormat);
+                textFormat = this.defaultTextFormat;
                 this._$focusIndex++;
             }
-            newText += text;
+
+            for (let idx = 0; idx < texts.length; ++idx) {
+                textFormats.push(textFormat._$clone());
+                newText += texts[idx];
+            }
         }
 
         // update
@@ -2174,7 +2241,7 @@ export class TextField extends InteractiveObject
         this._$textFormats = null;
         $poolArray(textFormats);
 
-        this._$focusIndex++;
+        this._$focusIndex += texts.length;
         this._$selectIndex = -1;
 
         $textArea.value = "";

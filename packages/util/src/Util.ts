@@ -324,7 +324,7 @@ $textArea.setAttribute("style", style);
 
 $textArea.tabIndex = -1;
 
-$textArea.addEventListener("compositionstart", () =>
+$textArea.addEventListener("compositionstart", (): void =>
 {
     const player: Player = $window.next2d.player;
     const textField: TextField | null =  player._$textField;
@@ -333,7 +333,7 @@ $textArea.addEventListener("compositionstart", () =>
     }
 });
 
-$textArea.addEventListener("compositionupdate", (event: CompositionEvent) =>
+$textArea.addEventListener("compositionupdate", (event: CompositionEvent): void =>
 {
     const player: Player = $window.next2d.player;
     const textField: TextField | null =  player._$textField;
@@ -342,7 +342,7 @@ $textArea.addEventListener("compositionupdate", (event: CompositionEvent) =>
     }
 });
 
-$textArea.addEventListener("compositionend", () =>
+$textArea.addEventListener("compositionend", (): void =>
 {
     const player: Player = $window.next2d.player;
     const textField: TextField | null =  player._$textField;
@@ -351,7 +351,7 @@ $textArea.addEventListener("compositionend", () =>
     }
 });
 
-$textArea.addEventListener("input", (event: InputEvent) =>
+$textArea.addEventListener("input", (event: InputEvent): void =>
 {
     if (!event.data) {
         return ;
@@ -364,7 +364,7 @@ $textArea.addEventListener("input", (event: InputEvent) =>
     }
 });
 
-$textArea.addEventListener("keydown", (event: KeyboardEvent) =>
+$textArea.addEventListener("keydown", (event: KeyboardEvent): void =>
 {
     const player: Player = $window.next2d.player;
     const textField: TextField | null =  player._$textField;
@@ -401,16 +401,23 @@ $textArea.addEventListener("keydown", (event: KeyboardEvent) =>
 
         case "a":
             if (event.metaKey || event.ctrlKey) {
+                event.preventDefault();
                 textField.selectAll();
             }
             break;
 
         case "v":
-            // TODO
+            if (event.metaKey || event.ctrlKey) {
+                event.preventDefault();
+                textField.paste();
+            }
             break;
 
         case "c":
-            // TODO
+            if (event.metaKey || event.ctrlKey) {
+                event.preventDefault();
+                textField.copy();
+            }
             break;
 
     }
