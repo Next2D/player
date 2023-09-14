@@ -78,6 +78,8 @@ const execute = () =>
         delete basePackageJson.peerDependencies;
     }
 
+    basePackageJson.main = "next2d.min.js";
+
     // write package.json
     fs.writeFileSync(
         path.join(process.cwd(), "dist/src/package.json"),
