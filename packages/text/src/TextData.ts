@@ -89,9 +89,6 @@ export class TextData
             this._$textHeight = 0;
             for (let idx: number = 0; idx < this._$heightTable.length; ++idx) {
                 this._$textHeight += this._$heightTable[idx];
-                if (idx) {
-                    this._$textHeight += 1;
-                }
             }
         }
         return this._$textHeight;

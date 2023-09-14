@@ -1,6 +1,7 @@
 import { TextFormatAlignImpl } from "@next2d/interface";
 import {
     $clamp,
+    $intToRGBA,
     $toColorInt
 } from "@next2d/share";
 
@@ -384,6 +385,120 @@ export class TextFormat
     set underline (underline: boolean | null)
     {
         this._$underline = underline !== null ? !!underline : null;
+    }
+
+    /**
+     * @return {string}
+     * @method
+     * @private
+     */
+    _$toStyleString (): string
+    {
+        let style: string = "";
+
+        if (this._$font) {
+            style += `font-family: ${this._$font};`;
+        }
+
+        if (this._$size) {
+            style += `font-size: ${this._$size}px;`;
+        }
+
+        if (this._$color) {
+            const color = $intToRGBA($toColorInt(this._$color));
+            const R: string = color.R.toString(16).padStart(2, "0");
+            const G: string = color.G.toString(16).padStart(2, "0");
+            const B: string = color.B.toString(16).padStart(2, "0");
+            style += `color: #${R}${G}${B};`;
+        }
+
+        if (this._$bold) {
+            style += "font-weight: bold;";
+        }
+
+        if (this._$italic) {
+            style += "font-style: italic;";
+        }
+
+        if (this._$underline) {
+            style += "text-decoration: underline;";
+        }
+
+        if (this._$align) {
+            style += `text-align: ${this._$align};`;
+        }
+
+        if (this._$leftMargin) {
+            style += `margin-left: ${this._$leftMargin}px;`;
+        }
+
+        if (this._$rightMargin) {
+            style += `margin-right: ${this._$rightMargin}px;`;
+        }
+
+        if (this._$leading) {
+            style += `margin-bottom: ${this._$leading}px;`;
+        }
+
+        if (this._$letterSpacing) {
+            style += `letter-spacing: ${this._$letterSpacing}px;`;
+        }
+
+        return style;
+    }
+
+    /**
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$isSame (text_format: TextFormat): boolean
+    {
+        if (this._$font !== text_format.font) {
+            return false;
+        }
+
+        if (this._$size !== text_format.size) {
+            return false;
+        }
+
+        if (this._$color !== text_format.color) {
+            return false;
+        }
+
+        if (this._$bold !== text_format.bold) {
+            return false;
+        }
+
+        if (this._$italic !== text_format.italic) {
+            return false;
+        }
+
+        if (this._$underline !== text_format.underline) {
+            return false;
+        }
+
+        if (this._$align !== text_format.align) {
+            return false;
+        }
+
+        if (this._$leftMargin !== text_format.leftMargin) {
+            return false;
+        }
+
+        if (this._$rightMargin !== text_format.rightMargin) {
+            return false;
+        }
+
+        if (this._$leading !== text_format.leading) {
+            return false;
+        }
+
+        if (this._$letterSpacing !== text_format.letterSpacing) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

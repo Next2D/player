@@ -43,7 +43,11 @@ globalThis.window = {
                 },
                 "childNodes": [],
                 "children": [],
-                "style": {}
+                "style": {},
+                "addEventListener": () =>
+                {
+                    return undefined;
+                }
             };
         }
     },

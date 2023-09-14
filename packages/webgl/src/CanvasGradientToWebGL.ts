@@ -5,7 +5,7 @@ import {
     $getFloat32Array6,
     $getArray,
     $clamp,
-    $poolFloat32Array4,
+    $poolInt32Array4,
     $poolFloat32Array6
 } from "@next2d/share";
 
@@ -77,7 +77,7 @@ export class CanvasGradientToWebGL
     {
         const stops = this._$stops;
         for (let idx: number = 0; idx < stops.length; ++idx) {
-            $poolFloat32Array4(stops[idx][1]);
+            $poolInt32Array4(stops[idx][1]);
         }
         $poolFloat32Array6(this._$points);
     }
@@ -232,12 +232,12 @@ export class CanvasGradientToWebGL
 
     /**
      * @param  {number} offset
-     * @param  {Float32Array} color
+     * @param  {Int32Array} color
      * @return {void}
      * @method
      * @public
      */
-    addColorStop (offset: number, color: Float32Array): void
+    addColorStop (offset: number, color: Int32Array): void
     {
         this._$stops.push($getArray(offset, color));
     }

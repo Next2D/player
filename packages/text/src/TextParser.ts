@@ -38,6 +38,10 @@ const _$parseText = (
 
     for (let idx: number = 0; idx < texts.length; ++idx) {
 
+        const textFormat: TextFormat = options.textFormats === null
+            ? text_format
+            : options.textFormats.shift() as NonNullable<TextFormat>;
+
         const text: string = texts[idx];
 
         const object: TextObjectImpl = {
@@ -48,35 +52,30 @@ const _$parseText = (
             "w"          : 0,
             "h"          : 0,
             "line"       : line,
-            "textFormat" : text_format._$clone()
+            "textFormat" : textFormat._$clone()
         };
 
-        const breakCode: boolean = options.multiline
-            && text === "\n"
-            || text === "\r"
-            || text === "\n\r";
-
-        $context.font = text_format._$generateFontStyle();
+        $context.font = textFormat._$generateFontStyle();
         const mesure: TextMetrics = $context.measureText(text || "");
 
         let width: number = mesure.width;
-        if (text_format.letterSpacing) {
-            width += text_format.letterSpacing;
+        if (textFormat.letterSpacing) {
+            width += textFormat.letterSpacing;
         }
 
         let height: number = mesure.fontBoundingBoxAscent + mesure.fontBoundingBoxDescent;
-        if (text_format.leading) {
-            height += text_format.leading;
+        if (textFormat.leading) {
+            height += textFormat.leading;
         }
 
         // setup
-        object.x  = mesure.actualBoundingBoxLeft;
-        object.y  = mesure.actualBoundingBoxAscent;
+        object.x  = 0;
+        object.y  = mesure.fontBoundingBoxAscent;
         object.w  = width;
         object.h  = height;
 
         $currentWidth += width;
-        if (breakCode || options.wordWrap && $currentWidth > maxWidth) {
+        if (options.wordWrap && $currentWidth > maxWidth) {
 
             $currentWidth = width;
 
@@ -86,32 +85,205 @@ const _$parseText = (
 
             // break object
             const wrapObject: TextObjectImpl = {
-                "mode"       : breakCode ? "break" : "wrap",
+                "mode"       : "wrap",
                 "text"       : "",
                 "x"          : 0,
                 "y"          : 0,
                 "w"          : 0,
                 "h"          : 0,
                 "line"       : line,
-                "textFormat" : text_format._$clone()
+                "textFormat" : textFormat._$clone()
             };
+
+            let chunkLength: number  = 1;
+            let isSeparated: boolean = true;
+            const pattern: RegExp    = /[0-9a-zA-Z?!;:.,？！。、；：〜]/g;
+
+            for (;;) {
+
+                const index: number = text_data.textTable.length - chunkLength;
+                if (0 >= index) {
+                    isSeparated = false;
+                    chunkLength = 0;
+                    break;
+                }
+
+                const prevObj: TextObjectImpl = text_data.textTable[index];
+                if (!prevObj) {
+                    isSeparated = false;
+                    chunkLength = 0;
+                    break;
+                }
+
+                if (prevObj.mode !== "text") {
+                    isSeparated = false;
+                    break;
+                }
+
+                if (prevObj.text === " ") {
+                    chunkLength--;
+                    break;
+                }
+
+                if (!prevObj.text.match(pattern)) {
+                    chunkLength--;
+                    break;
+                }
+
+                chunkLength++;
+            }
 
             // new line
             text_data.widthTable[line]  = 0;
             text_data.heightTable[line] = 0;
             text_data.ascentTable[line] = 0;
 
-            text_data.textTable.push(wrapObject);
-            text_data.lineTable.push(wrapObject);
+            if (chunkLength > 0 && isSeparated) {
+
+                const insertIdx: number = text_data.textTable.length - chunkLength;
+                text_data.textTable.splice(insertIdx, 0, wrapObject);
+                text_data.lineTable.push(wrapObject);
+
+                const prevLine: number = line - 1;
+
+                // reset
+                text_data.widthTable[prevLine]  = 0;
+                text_data.heightTable[prevLine] = 0;
+                text_data.ascentTable[prevLine] = 0;
+
+                for (let idx: number = 0; idx < insertIdx; ++idx) {
+                    const textObject: TextObjectImpl = text_data.textTable[idx];
+                    if (textObject.line !== prevLine) {
+                        continue;
+                    }
+
+                    if (textObject.mode !== "text") {
+                        continue;
+                    }
+
+                    text_data.widthTable[prevLine] += textObject.w;
+                    text_data.heightTable[prevLine] = Math.max(text_data.heightTable[prevLine], textObject.h);
+                    text_data.ascentTable[prevLine] = Math.max(text_data.ascentTable[prevLine], textObject.y);
+                }
+
+                // reset
+                $currentWidth = 0;
+                for (let idx: number = insertIdx + 1; idx < text_data.textTable.length; ++idx) {
+                    const textObject: TextObjectImpl = text_data.textTable[idx];
+                    textObject.line = line;
+                    $currentWidth += textObject.w;
+                }
+
+            } else {
+                text_data.textTable.push(wrapObject);
+                text_data.lineTable.push(wrapObject);
+            }
         }
 
-        if (!breakCode) {
-            text_data.widthTable[line]  = $currentWidth;
-            text_data.heightTable[line] = Math.max(text_data.heightTable[line], height);
-            text_data.ascentTable[line] = Math.max(text_data.ascentTable[line], object.y);
-            text_data.textTable.push(object);
+        text_data.widthTable[line]  = $currentWidth;
+        text_data.heightTable[line] = Math.max(text_data.heightTable[line], height);
+        text_data.ascentTable[line] = Math.max(text_data.ascentTable[line], object.y);
+        text_data.textTable.push(object);
+    }
+};
+
+/**
+ * @param  {string} value
+ * @param  {TextFormat} text_format
+ * @return {void}
+ * @method
+ * @private
+ */
+const _$parseStyle = (
+    value: string,
+    text_format: TextFormat,
+    options: OptionsImpl
+): void => {
+
+    const values: string[] = value
+        .trim()
+        .split(";");
+
+    const attributes: any[] = [];
+    for (let idx: number = 0; idx < values.length; ++idx) {
+
+        const styleValue: string = values[idx];
+        if (!styleValue) {
+            continue;
+        }
+
+        const styles: any[] = styleValue.split(":");
+        const name: string  = styles[0].trim();
+        const value: string = styles[1].trim();
+        switch (name) {
+
+            case "font-size":
+                attributes.push({
+                    "name": "size",
+                    "value": parseFloat(value)
+                });
+                break;
+
+            case "font-family":
+                attributes.push({
+                    "name": "face",
+                    "value": value.replace(/'|"/g, "")
+                });
+                break;
+
+            case "letter-spacing":
+                attributes.push({
+                    "name": "letterSpacing",
+                    "value": value
+                });
+                break;
+
+            case "margin-bottom":
+                attributes.push({
+                    "name": "leading",
+                    "value": parseFloat(value)
+                });
+                break;
+
+            case "margin-left":
+                attributes.push({
+                    "name": "leftMargin",
+                    "value": parseFloat(value)
+                });
+                break;
+
+            case "margin-right":
+                attributes.push({
+                    "name": "rightMargin",
+                    "value": parseFloat(value)
+                });
+                break;
+
+            case "color":
+            case "align":
+                attributes.push({
+                    "name": name,
+                    "value": value
+                });
+                break;
+
+            case "text-decoration":
+            case "font-weight":
+            case "font-style":
+                attributes.push({
+                    "name": value,
+                    "value": true
+                });
+                break;
+
+            default:
+                break;
+
         }
     }
+
+    // eslint-disable-next-line no-use-before-define
+    _$setAttributes(attributes, text_format, options);
 };
 
 /**
@@ -131,6 +303,10 @@ const _$setAttributes = (
     for (let idx = 0; idx < attributes.length; ++idx) {
         const object: any = attributes[idx];
         switch (object.name) {
+
+            case "style":
+                _$parseStyle(object.value, text_format, options);
+                break;
 
             case "align":
                 text_format.align = object.value;
@@ -168,6 +344,18 @@ const _$setAttributes = (
 
             case "rightMargin":
                 text_format.rightMargin = +object.value;
+                break;
+
+            case "underline":
+                text_format.underline = true;
+                break;
+
+            case "bold":
+                text_format.bold = true;
+                break;
+
+            case "italic":
+                text_format.italic = true;
                 break;
 
             default:
@@ -331,24 +519,32 @@ export const parsePlainText = (
     options: OptionsImpl
 ): TextData => {
 
+    const textData: TextData = new TextData();
+    if (!text) {
+        return textData;
+    }
+
     const lineText: string[] = options.multiline
         ? text.split("\n")
         : [text.replace("\n", "")];
 
-    const textData: TextData = new TextData();
-
-    // clone
-    const textFormat: TextFormat = text_format._$clone();
-    if (options.subFontSize
-        && options.subFontSize > 0 && textFormat.size
-    ) {
-        textFormat.size -= options.subFontSize;
-        if (1 > textFormat.size) {
-            textFormat.size = 1;
-        }
-    }
-
     for (let idx: number = 0; idx < lineText.length; ++idx) {
+
+        let textFormat: TextFormat = text_format._$clone();
+        if (options.textFormats) {
+            textFormat = idx === 0
+                ? options.textFormats[0]
+                : options.textFormats.shift() as NonNullable<TextFormat>;
+        }
+
+        if (options.subFontSize
+            && options.subFontSize > 0 && textFormat.size
+        ) {
+            textFormat.size -= options.subFontSize;
+            if (1 > textFormat.size) {
+                textFormat.size = 1;
+            }
+        }
 
         if (idx === 0 || options.wordWrap || options.multiline) {
             _$createNewLine(textData, textFormat);
@@ -381,12 +577,15 @@ export const parseHtmlText = (
     options: OptionsImpl
 ): TextData => {
 
+    const textData: TextData = new TextData();
+    if (!html_text) {
+        return textData;
+    }
+
     const htmlText: string = html_text
         .trim()
         .replace(/\r?\n/g, "")
         .replace(/\t/g, "");
-
-    const textData: TextData = new TextData();
 
     const textFormat: TextFormat = text_format._$clone();
     if (options.subFontSize && options.subFontSize > 0 && textFormat.size) {

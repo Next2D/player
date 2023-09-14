@@ -46,6 +46,7 @@ import {
     $getBoundsObject,
     $Float32Array,
     $getFloat32Array4,
+    $getInt32Array4,
     $linearGradientXY
 } from "@next2d/share";
 
@@ -101,7 +102,7 @@ export class Graphics
     private _$lines: any[] | null;
     private _$uniqueKey: string;
     private _$cacheKeys: string[];
-    private _$cacheParams: number[];
+    private readonly _$cacheParams: number[];
     public _$bitmapId: number;
     public _$mode: ShapeModeImpl;
     public _$posted: boolean;
@@ -730,7 +731,8 @@ export class Graphics
     beginGradientFill (
         type: GradientTypeImpl,
         colors: number[] | string[],
-        alphas: number[], ratios: number[],
+        alphas: number[],
+        ratios: number[],
         matrix: Matrix | null = null,
         spread_method: SpreadMethodImpl = "pad",
         interpolation_method: InterpolationMethodImpl = "rgb",
@@ -3085,7 +3087,7 @@ export class Graphics
                                 }
                             }
 
-                            css.addColorStop(color.ratio, $getFloat32Array4(
+                            css.addColorStop(color.ratio, $getInt32Array4(
                                 color.R, color.G, color.B, alpha
                             ));
 
@@ -3162,7 +3164,7 @@ export class Graphics
                                 }
                             }
 
-                            css.addColorStop(color.ratio, $getFloat32Array4(
+                            css.addColorStop(color.ratio, $getInt32Array4(
                                 color.R, color.G, color.B, alpha
                             ));
 

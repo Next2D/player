@@ -163,7 +163,7 @@ export class GradientShapeShaderVariantCollection
         grid: CanvasToWebGLContextGrid,
         is_radial: boolean, points: Float32Array,
         focal_point_ratio: number
-    ) {
+    ): void {
 
         const highp: Float32Array | Int32Array = uniform.highp;
 
