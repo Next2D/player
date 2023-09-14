@@ -36,7 +36,7 @@
     "htmlparser2": "^9.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.22.18",
+    "@babel/core": "^7.22.19",
     "@babel/plugin-transform-modules-commonjs": "^7.22.15",
     "@babel/preset-env": "^7.22.15",
     "@next2d/jsdoc-template": "^1.0.7",
