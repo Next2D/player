@@ -226,6 +226,16 @@ export const $Rad2Deg = 180 / $Math.PI;
 export const $preObjects: PreObjectImpl[] = [];
 
 /**
+ * 使用済みになったInt32Arrayをプール、サイズは4固定
+ * Pool used Int32Array, size fixed at 4.
+ *
+ * @type {Int32Array[]}
+ * @const
+ * @static
+ */
+export const $int32Array4: Int32Array[] = [];
+
+/**
  * 使用済みになったFloat32Arrayをプール、サイズは4固定
  * Pool used Float32Array, size fixed at 4.
  *
@@ -368,6 +378,41 @@ export const $getFloat32Array4 = (
 export const $poolFloat32Array4 = (array: Float32Array): void =>
 {
     $float32Array4.push(array);
+};
+
+/**
+ * @param  {number} [f0=0]
+ * @param  {number} [f1=0]
+ * @param  {number} [f2=0]
+ * @param  {number} [f3=0]
+ * @return {Float32Array}
+ * @method
+ * @static
+ */
+export const $getInt32Array4 = (
+    f0: number = 0, f1: number = 0,
+    f2: number = 0, f3: number = 0
+): Int32Array => {
+
+    const array: Int32Array = $int32Array4.pop() || new $Int32Array(4);
+
+    array[0] = f0;
+    array[1] = f1;
+    array[2] = f2;
+    array[3] = f3;
+
+    return array;
+};
+
+/**
+ * @param  {Float32Array} array
+ * @return {void}
+ * @method
+ * @static
+ */
+export const $poolInt32Array4 = (array: Int32Array): void =>
+{
+    $int32Array4.push(array);
 };
 
 /**
@@ -585,12 +630,12 @@ export const $upperPowerOfTwo = (v: number): number =>
  */
 export const $linearGradientXY = (matrix: Float32Array): Float32Array =>
 {
-    const x0: number = (0 - 819.2) * matrix[0] - 819.2 * matrix[2] + matrix[4];
+    const x0: number = -819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
     const x1: number =  819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
-    const x2: number = (0 - 819.2) * matrix[0] + 819.2 * matrix[2] + matrix[4];
-    const y0: number = (0 - 819.2) * matrix[1] - 819.2 * matrix[3] + matrix[5];
+    const x2: number = -819.2 * matrix[0] + 819.2 * matrix[2] + matrix[4];
+    const y0: number = -819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
     const y1: number =  819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
-    const y2: number = (0 - 819.2) * matrix[1] + 819.2 * matrix[3] + matrix[5];
+    const y2: number = -819.2 * matrix[1] + 819.2 * matrix[3] + matrix[5];
 
     let vx2: number = x2 - x0;
     let vy2: number = y2 - y0;
