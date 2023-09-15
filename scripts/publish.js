@@ -78,8 +78,6 @@ const execute = () =>
         delete basePackageJson.peerDependencies;
     }
 
-    basePackageJson.main = "next2d.min.js";
-
     // write package.json
     fs.writeFileSync(
         path.join(process.cwd(), "dist/src/package.json"),
@@ -88,7 +86,7 @@ const execute = () =>
 
     // minify
     cp.spawnSync(
-        `cp -r ${process.cwd()}/next2d.js ${process.cwd()}/dist/src/next2d.min.js`,
+        `cp -r ${process.cwd()}/next2d.js ${process.cwd()}/dist/src/dist/next2d.min.js`,
         { "shell": true }
     );
 
