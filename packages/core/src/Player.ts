@@ -624,6 +624,26 @@ export class Player
     }
 
     /**
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get tx (): number
+    {
+        return this._$matrix[4];
+    }
+
+    /**
+     * @member {number}
+     * @readonly
+     * @public
+     */
+    get ty (): number
+    {
+        return this._$matrix[5];
+    }
+
+    /**
      * @member {string}
      * @public
      */
