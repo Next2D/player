@@ -630,7 +630,7 @@ export class Player
      */
     get tx (): number
     {
-        return this._$matrix[4];
+        return this._$matrix[4] / this._$scale / $devicePixelRatio;
     }
 
     /**
@@ -640,7 +640,7 @@ export class Player
      */
     get ty (): number
     {
-        return this._$matrix[5];
+        return this._$matrix[5] / this._$scale / $devicePixelRatio;
     }
 
     /**
