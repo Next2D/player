@@ -2192,6 +2192,7 @@ export class Player
                     && this._$clickTarget.scrollEnabled
                     && this._$clickTarget.selectIndex === -1
                 ) {
+
                     const deltaX: number = this._$deltaX - pageX;
                     const deltaY: number = this._$deltaY - pageY;
 
@@ -2471,7 +2472,10 @@ export class Player
                             this._$clickTarget = null;
                         } else {
                             if (this._$textField) {
-                                this._$textField._$setIndex(stageX, stageY);
+                                this._$textField._$setIndex(
+                                    stageX - $MATRIX_HIT_ARRAY_IDENTITY[4],
+                                    stageY - $MATRIX_HIT_ARRAY_IDENTITY[5]
+                                );
                             }
                         }
 
@@ -2491,7 +2495,10 @@ export class Player
                         // TextField focus out
                         if ("_$text" in instance) {
                             instance.focus   = true;
-                            instance._$setIndex(stageX, stageY);
+                            instance._$setIndex(
+                                stageX - $MATRIX_HIT_ARRAY_IDENTITY[4],
+                                stageY - $MATRIX_HIT_ARRAY_IDENTITY[5]
+                            );
                             this._$textField = instance;
 
                             // move text area element
