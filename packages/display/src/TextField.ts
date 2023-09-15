@@ -2119,8 +2119,8 @@ export class TextField extends InteractiveObject
             const offsetAlign: number = this._$getAlignOffset(lineObject, this.width);
 
             const point: Point = this.localToGlobal(new Point(
-                offsetWidth + offsetAlign - player.tx,
-                offsetHeight + verticalAlign - player.ty
+                offsetWidth + offsetAlign + player.tx,
+                offsetHeight + verticalAlign + player.ty
             ));
 
             const div: HTMLElement | null = $document
