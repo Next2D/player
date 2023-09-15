@@ -2119,8 +2119,8 @@ export class TextField extends InteractiveObject
             const offsetAlign: number = this._$getAlignOffset(lineObject, this.width);
 
             const point: Point = this.localToGlobal(new Point(
-                offsetWidth + offsetAlign,
-                offsetHeight + verticalAlign
+                offsetWidth + offsetAlign - player.tx,
+                offsetHeight + verticalAlign - player.ty
             ));
 
             const div: HTMLElement | null = $document
@@ -2610,7 +2610,7 @@ export class TextField extends InteractiveObject
             }
 
             // set height
-            this._$bounds.yMax = this.textHeight + this._$originBounds.yMin;
+            this._$bounds.yMax = this.textHeight + this._$originBounds.yMin + 4;
 
         } else {
             if (this._$scrollEnabled) {
