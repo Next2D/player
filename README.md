@@ -115,6 +115,8 @@ next2d
 | `tagId`      | string  | empty         | 当一个ID被指定时，在指定ID的元素内进行绘图。                          |
 | `bgColor`    | string  | "transparent" | 你可以指定一个十六进制的背景颜色。默认为无色。                           |
 
+##  Flowchart
+![Flowchart](./drawing_flow_chart.svg)
 
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.
