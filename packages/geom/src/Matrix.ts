@@ -358,7 +358,25 @@ export class Matrix
         rotation: number = 0,
         tx: number = 0, ty: number = 0
     ): void {
-        this.createBox(width / 1638.4, height / 1638.4, rotation, tx + width / 2, ty + height / 2);
+
+        this.a = width  / 1638.4;
+        this.d = height / 1638.4;
+
+        if (rotation) {
+            const cos = $Math.cos(rotation);
+            const sin = $Math.sin(rotation);
+
+            this.b =  sin * this.d;
+            this.c = -sin * this.a;
+            this.a *= cos;
+            this.d *= cos;
+        } else {
+            this.b = 0;
+            this.c = 0;
+        }
+
+        this.tx = tx + width / 2;
+        this.ty = ty + height / 2;
     }
 
     /**
