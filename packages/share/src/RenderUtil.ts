@@ -187,29 +187,21 @@ export const $MATRIX_ARRAY_IDENTITY: Float32Array = new $Float32Array([1, 0, 0, 
  * @const
  * @static
  */
-export const $COLOR_ARRAY_IDENTITY = new $Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
+export const $COLOR_ARRAY_IDENTITY: Float32Array = new $Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 /**
  * @type {number}
  * @const
  * @static
  */
-export const $SHORT_INT_MIN = 0 - 32768;
+export const $SHORT_INT_MIN: number = -32768;
 
 /**
  * @type {number}
  * @const
  * @static
  */
-export const $SHORT_INT_MAX = 32767;
-
-/**
- * @shortcut
- * @type {number}
- * @const
- * @static
- */
-export const $Deg2Rad = $Math.PI / 180;
+export const $SHORT_INT_MAX: number = 32767;
 
 /**
  * @shortcut
@@ -217,7 +209,15 @@ export const $Deg2Rad = $Math.PI / 180;
  * @const
  * @static
  */
-export const $Rad2Deg = 180 / $Math.PI;
+export const $Deg2Rad: number = $Math.PI / 180;
+
+/**
+ * @shortcut
+ * @type {number}
+ * @const
+ * @static
+ */
+export const $Rad2Deg: number = 180 / $Math.PI;
 
 /**
  * @type {array}

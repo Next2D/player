@@ -2888,7 +2888,8 @@ export class Graphics
         color_transform: Float32Array | null = null,
         is_clip: boolean = false,
         options: PlayerHitObjectImpl | null = null
-    ) {
+    ): boolean {
+
         // fixed logic
         if (this._$doLine) {
             this.endLine();
@@ -2904,8 +2905,8 @@ export class Graphics
         }
 
         const recode: any[] = this._$recode;
-        const length = recode.length;
-        for (let idx = 0; idx < length; ) {
+        const length: number = recode.length;
+        for (let idx: number = 0; idx < length; ) {
             switch (recode[idx++]) {
 
                 case Graphics.BEGIN_PATH:

@@ -54,7 +54,7 @@ If Next2D is useful to you, we hope you will support our project.
 
 ### Use Simple Sample
 ```javascript
-next2d.load("JSON Path...");
+next2d.load("Path to JSON output from NoCode Tool");
 ```
 [CodePen](https://codepen.io/next2d/pen/rNGMrZG)
 
@@ -65,23 +65,27 @@ const { URLRequest } = next2d.net;
 const { Event }      = next2d.events;
 
 // create root MovieClip
-next2d
-    .createRootMovieClip()
-    .then((root) => 
-    {
-        const request = new URLRequest("JSON path");
-        const loader  = new Loader(request);
-        
-        loader
-            .contentLoaderInfo
-            .addEventListener(Event.COMPLETE, (event) =>
-            {
-                root.addChild(event.currentTarget.content);
-            });
-        
-        loader.load(request);
-    });
+const start = async () => 
+{
+    const root = await next2d.createRootMovieClip();
+
+    const request = new URLRequest("JSON path");
+    const loader  = new Loader(request);
+    
+    loader
+        .contentLoaderInfo
+        .addEventListener(Event.COMPLETE, (event) =>
+        {
+            root.addChild(event.currentTarget.content);
+        });
+    
+    loader.load(request);
+};
+
+start();
 ```
+
+### Use Program Sample
 
 [CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
 @see [API Documentation](https://next2d.app/en/docs/player)
@@ -115,6 +119,8 @@ next2d
 | `tagId`      | string  | empty         | 当一个ID被指定时，在指定ID的元素内进行绘图。                          |
 | `bgColor`    | string  | "transparent" | 你可以指定一个十六进制的背景颜色。默认为无色。                           |
 
+##  Flowchart
+![Flowchart](./drawing_flow_chart.svg)
 
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.
