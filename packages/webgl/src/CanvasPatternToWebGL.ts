@@ -1,11 +1,8 @@
-import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
-
 /**
  * @class
  */
 export class CanvasPatternToWebGL
 {
-    private readonly _$context: CanvasToWebGLContext;
     private readonly _$texture: WebGLTexture;
     private readonly _$repeat: boolean;
     private readonly _$colorTransform: Float32Array;
@@ -15,17 +12,10 @@ export class CanvasPatternToWebGL
      * @public
      */
     constructor (
-        context: CanvasToWebGLContext,
         texture: WebGLTexture,
         repeat: boolean,
         color_transform: Float32Array
     ) {
-
-        /**
-         * @type {CanvasToWebGLContext}
-         * @private
-         */
-        this._$context = context;
 
         /**
          * @type {WebGLTexture}
