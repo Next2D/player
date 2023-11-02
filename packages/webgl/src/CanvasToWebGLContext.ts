@@ -1824,7 +1824,7 @@ export class CanvasToWebGLContext
         repeat: boolean,
         color_transform: Float32Array
     ): CanvasPatternToWebGL {
-        return new CanvasPatternToWebGL(this, texture, repeat, color_transform);
+        return new CanvasPatternToWebGL(texture, repeat, color_transform);
     }
 
     /**

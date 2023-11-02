@@ -51,7 +51,6 @@ export class MovieClip extends Sprite
     public _$currentFrame: number;
     public _$stopFlag: boolean;
     public _$canAction: boolean;
-    private _$childRemove: boolean;
     public _$canSound: boolean;
     public _$actionProcess: boolean;
     public _$actions: Map<number, Function[]>;
@@ -85,13 +84,6 @@ export class MovieClip extends Sprite
          * @private
          */
         this._$canAction = true;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$childRemove = false;
 
         /**
          * @type {boolean}
