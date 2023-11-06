@@ -5,7 +5,8 @@ import {
 } from "@next2d/events";
 import {
     $setTimeout,
-    $performance
+    $performance,
+    $cancelAnimationFrame
 } from "@next2d/share";
 
 /**
@@ -26,6 +27,7 @@ export class Job extends EventDispatcher
     private _$forceStop: boolean;
     private _$to: any;
     private _$currentTime: number;
+    private _$timerId: number;
 
     /**
      * @param {object}   target
@@ -122,6 +124,13 @@ export class Job extends EventDispatcher
          * @private
          */
         this._$currentTime = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$timerId = 0;
     }
 
     /**
@@ -313,6 +322,12 @@ export class Job extends EventDispatcher
      */
     start (): void
     {
+        if (this._$timerId) {
+            $cancelAnimationFrame(this._$timerId);
+        }
+
+        this._$forceStop = false;
+
         if (this._$delay) {
 
             $setTimeout((): void =>
@@ -333,19 +348,16 @@ export class Job extends EventDispatcher
      */
     stop (): void
     {
+        if (this._$timerId) {
+            $cancelAnimationFrame(this._$timerId);
+        }
+
         if (this.hasEventListener(Event.STOP)) {
             this.dispatchEvent(new Event(Event.STOP));
             this.removeAllEventListener(Event.STOP);
         }
 
-        if (this.hasEventListener(Event.UPDATE)) {
-            this.removeAllEventListener(Event.UPDATE);
-        }
-
-        if (this.hasEventListener(Event.COMPLETE)) {
-            this.removeAllEventListener(Event.COMPLETE);
-        }
-
+        this._$names     = null;
         this._$forceStop = true;
         this._$stopFlag  = true;
     }
@@ -381,7 +393,7 @@ export class Job extends EventDispatcher
                 this.dispatchEvent(new Event(Event.COMPLETE));
             }
         } else {
-            requestAnimationFrame(() => {
+            this._$timerId = requestAnimationFrame(() => {
                 this._$update();
             });
         }
