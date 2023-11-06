@@ -277,22 +277,19 @@ export class Job extends EventDispatcher
         this._$stopFlag  = false;
         this._$startTime = $performance.now();
 
-        this._$names = this.entries(this._$from);
+        this._$names = this._$entries(this._$from);
 
-        // add event
-        this.addEventListener(Event.ENTER_FRAME, (event: Event) =>
-        {
-            this._$update(event);
-        });
+        // start
+        this._$update();
     }
 
     /**
      * @param  {object} object
      * @return {array}
      * @method
-     * @public
+     * @private
      */
-    entries (object: any): any[]
+    _$entries (object: any): any[]
     {
         const entries: any[] = Object.entries(object);
 
@@ -302,7 +299,7 @@ export class Job extends EventDispatcher
 
             const value: any = values[1];
             if (value && typeof value === "object") {
-                values[1] = this.entries(value);
+                values[1] = this._$entries(value);
             }
         }
 
@@ -310,34 +307,23 @@ export class Job extends EventDispatcher
     }
 
     /**
-     * @return {Promise}
+     * @return {void}
      * @method
      * @public
      */
-    start (): Promise<void>
+    start (): void
     {
-        return new Promise((resolve): void =>
-        {
-            if (!this.hasEventListener(Event.COMPLETE)) {
-                this.addEventListener(Event.COMPLETE, (event: Event) =>
-                {
-                    this.removeEventListener(Event.COMPLETE, event.listener);
-                    resolve();
-                });
-            }
+        if (this._$delay) {
 
-            if (this._$delay) {
+            $setTimeout((): void =>
+            {
+                this.initialize();
+            }, this._$delay * 1000);
 
-                $setTimeout(() =>
-                {
-                    this.initialize();
-                }, this._$delay * 1000);
+            return ;
+        }
 
-                return ;
-            }
-
-            this.initialize();
-        });
+        this.initialize();
     }
 
     /**
@@ -349,10 +335,7 @@ export class Job extends EventDispatcher
     {
         if (this.hasEventListener(Event.STOP)) {
             this.dispatchEvent(new Event(Event.STOP));
-        }
-
-        if (this.hasEventListener(Event.ENTER_FRAME)) {
-            this.removeAllEventListener(Event.ENTER_FRAME);
+            this.removeAllEventListener(Event.STOP);
         }
 
         if (this.hasEventListener(Event.UPDATE)) {
@@ -368,36 +351,39 @@ export class Job extends EventDispatcher
     }
 
     /**
-     * @param  {Event} event
      * @return {void}
      * @method
      * @private
      */
-    _$update (event: Event): void
+    _$update (): void
     {
         if (this._$stopFlag) {
             return ;
         }
 
+        if (!this._$names) {
+            return this.stop();
+        }
+
+        // update current time
         this._$currentTime = ($performance.now() - this._$startTime) * 0.001;
 
-        if (this._$names) {
-            this._$updateProperty(
-                this._$target, this._$from, this._$to, this._$names
-            );
-        }
+        this._$updateProperty(
+            this._$target, this._$from, this._$to, this._$names
+        );
 
         if (this.hasEventListener(Event.UPDATE)) {
             this.dispatchEvent(new Event(Event.UPDATE));
         }
 
         if (this._$currentTime >= this._$duration) {
-
-            this.removeEventListener(Event.ENTER_FRAME, event.listener);
-
             if (this.hasEventListener(Event.COMPLETE)) {
                 this.dispatchEvent(new Event(Event.COMPLETE));
             }
+        } else {
+            requestAnimationFrame(() => {
+                this._$update();
+            });
         }
     }
 
