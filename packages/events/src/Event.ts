@@ -444,7 +444,7 @@ export class Event
      * @const
      * @static
      */
-    static get OPEN ()
+    static get OPEN (): string
     {
         return "open";
     }
@@ -645,7 +645,7 @@ export class Event
      * @method
      * @public
      */
-    stopImmediatePropagation ()
+    stopImmediatePropagation (): void
     {
         this._$stopImmediatePropagation = true;
     }
@@ -660,7 +660,7 @@ export class Event
      * @method
      * @public
      */
-    stopPropagation ()
+    stopPropagation (): void
     {
         this._$stopPropagation = true;
     }
