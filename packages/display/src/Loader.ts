@@ -188,12 +188,12 @@ export class Loader extends DisplayObjectContainer
      * @description NoCodeToolのJSONを直接読み込む
      *              Read JSON directly from NoCodeTool
      *
-     * @param  {string} json
+     * @param  {object} json
      * @return {void}
      * @method
      * @public
      */
-    loadJSON (json: NoCodeDataZlibImpl | NoCodeDataImpl): void
+    loadJSON (json: any): void
     {
         if (json.type === "zlib") {
 
