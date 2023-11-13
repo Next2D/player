@@ -28,6 +28,8 @@ export class Job extends EventDispatcher
     private _$to: any;
     private _$currentTime: number;
     private _$timerId: number;
+    // eslint-disable-next-line no-use-before-define
+    private _$nextJob: Job | null;
 
     /**
      * @param {object}   target
@@ -131,6 +133,13 @@ export class Job extends EventDispatcher
          * @private
          */
         this._$timerId = 0;
+
+        /**
+         * @type {Job}
+         * @default null
+         * @private
+         */
+        this._$nextJob = null;
     }
 
     /**
@@ -272,6 +281,20 @@ export class Job extends EventDispatcher
     }
 
     /**
+     * @description 指定したjobを次に開始します。nullで解消
+     *              Starts the next specified job, resolved by null
+     *
+     * @member {Job | null}
+     * @default null
+     * @public
+     */
+    chain (job: Job | null): Job | null
+    {
+        this._$nextJob = job;
+        return job;
+    }
+
+    /**
      * @return {void}
      * @method
      * @public
@@ -391,6 +414,10 @@ export class Job extends EventDispatcher
         if (this._$currentTime >= this._$duration) {
             if (this.hasEventListener(Event.COMPLETE)) {
                 this.dispatchEvent(new Event(Event.COMPLETE));
+            }
+
+            if (this._$nextJob) {
+                this._$nextJob.start();
             }
         } else {
             this._$timerId = requestAnimationFrame(() => {
