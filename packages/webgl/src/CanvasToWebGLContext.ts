@@ -339,7 +339,7 @@ export class CanvasToWebGLContext
      * @return {boolean}
      * @public
      */
-    get isLayer ()
+    get isLayer (): boolean
     {
         return this._$isLayer;
     }
@@ -349,7 +349,7 @@ export class CanvasToWebGLContext
      * @return {HTMLCanvasElement}
      * @public
      */
-    get canvas ()
+    get canvas (): HTMLCanvasElement | OffscreenCanvas
     {
         return this._$gl.canvas;
     }
@@ -591,7 +591,7 @@ export class CanvasToWebGLContext
      */
     drawInstacedArray (): void
     {
-        this.blend.drawInstacedArray();
+        this._$blend.drawInstacedArray();
     }
 
     /**
@@ -601,7 +601,7 @@ export class CanvasToWebGLContext
      */
     clearInstacedArray (): void
     {
-        this.blend.clearInstacedArray();
+        this._$blend.clearInstacedArray();
     }
 
     /**
@@ -705,7 +705,7 @@ export class CanvasToWebGLContext
             .textureManager
             .bind0(texture, this._$imageSmoothingEnabled);
 
-        this.blend.toOperation("normal");
+        this._$blend.toOperation("normal");
         shader._$drawImage();
     }
 
@@ -964,7 +964,7 @@ export class CanvasToWebGLContext
                 case "alpha":
                 case "erase":
                 case "copy":
-                    this.blend.drawInstance(
+                    this._$blend.drawInstance(
                         position,
                         ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
                         this._$globalCompositeOperation,
@@ -981,7 +981,7 @@ export class CanvasToWebGLContext
                             .textureManager
                             .getAtlasTexture(position.index);
 
-                        this.blend.drawInstanceBlend(
+                        this._$blend.drawInstanceBlend(
                             atlasTexture, x_min, y_min, x_max, y_max,
                             ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
                             position,
@@ -1033,7 +1033,7 @@ export class CanvasToWebGLContext
             ct6 = color_transform[6] / 255;
         }
 
-        this.blend.drawImage(
+        this._$blend.drawImage(
             image, x, y, w, h,
             ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7,
             this._$globalCompositeOperation,
@@ -2055,15 +2055,15 @@ export class CanvasToWebGLContext
 
         if (!isInner) {
 
-            this.blend.toOneZero();
+            this._$blend.toOneZero();
 
         } else if (knockout) {
 
-            this.blend.toSourceIn();
+            this._$blend.toSourceIn();
 
         } else {
 
-            this.blend.toSourceAtop();
+            this._$blend.toSourceAtop();
 
         }
 
@@ -2104,7 +2104,7 @@ export class CanvasToWebGLContext
                 shader.uniform, matrix
             );
 
-        this.blend.reset();
+        this._$blend.reset();
 
         shader._$drawImage();
     }
@@ -2165,7 +2165,7 @@ export class CanvasToWebGLContext
             color_r, color_g, color_b, color_a
         );
 
-        this.blend.reset();
+        this._$blend.reset();
 
         shader._$drawImage();
     }
@@ -2238,7 +2238,7 @@ export class CanvasToWebGLContext
             color_r, color_g, color_b, color_a
         );
 
-        this.blend.reset();
+        this._$blend.reset();
 
         shader._$drawImage();
 
