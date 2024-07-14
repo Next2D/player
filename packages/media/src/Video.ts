@@ -485,7 +485,7 @@ export class Video extends DisplayObject
      * @method
      * @public
      */
-    play ()
+    play (): void
     {
         if (this._$video && this._$stop) {
 

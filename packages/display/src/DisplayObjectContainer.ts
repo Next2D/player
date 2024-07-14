@@ -716,7 +716,12 @@ export class DisplayObjectContainer extends InteractiveObject
 
                     for (let idx: number = 0; idx < controller.length; ++idx) {
 
-                        const instance: DisplayObjectImpl<any> = this._$createInstance(controller[idx]);
+                        const dictionaryId = controller[idx];
+                        if (typeof dictionaryId !== "number") {
+                            continue;
+                        }
+
+                        const instance: DisplayObjectImpl<any> = this._$createInstance(dictionaryId);
                         instance._$placeId = idx;
 
                         const loopConfig: LoopConfigImpl | null = instance.loopConfig;
@@ -852,14 +857,14 @@ export class DisplayObjectContainer extends InteractiveObject
 
                 for (let idx: number = 0; idx < controller.length; ++idx) {
 
-                    const id: number = controller[idx];
-                    if (skipIds.has(id)) {
+                    const dictionaryId: number = controller[idx];
+                    if (typeof dictionaryId !== "number" ||  skipIds.has(dictionaryId)) {
                         continue;
                     }
 
-                    const instance: DisplayObjectImpl<any> = poolInstances.has(id)
-                        ? poolInstances.get(id)
-                        : this._$createInstance(id);
+                    const instance: DisplayObjectImpl<any> = poolInstances.has(dictionaryId)
+                        ? poolInstances.get(dictionaryId)
+                        : this._$createInstance(dictionaryId);
 
                     instance._$placeId = idx;
 
