@@ -516,6 +516,7 @@ export class BitmapData
             // reset
             context.reset();
             context.setTransform(1, 0, 0, 1, 0, 0);
+            context._$setColor(0, 0, 0, 0);
             context.clearRect(0, 0, player._$width, player._$height);
             context.beginPath();
 
