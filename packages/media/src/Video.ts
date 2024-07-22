@@ -607,8 +607,8 @@ export class Video extends DisplayObject
         if (!this._$ready) {
             await this._$video.play();
             this._$video.pause();
-            this._$video.currentTime = 0;  
-            this._$ready = true;  
+            this._$video.currentTime = 0;
+            this._$ready = true;
         }
 
         if (this._$autoPlay) {
