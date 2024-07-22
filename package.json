@@ -44,6 +44,7 @@
     "htmlparser2": "^9.1.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.14.11",
     "@typescript-eslint/eslint-plugin": "^7.16.1",
     "@typescript-eslint/parser": "^7.16.1",
@@ -51,6 +52,7 @@
     "eslint": "^8.52.0",
     "eslint-plugin-unused-imports": "^3.2.0",
     "fflate": "^0.8.2",
+    "jsdom": "^24.1.1",
     "typescript": "^5.5.3",
     "vite": "^5.3.4",
     "vitest": "^2.0.3"

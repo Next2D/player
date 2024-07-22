@@ -1,31 +1,20 @@
 import { Point } from "./Point";
-import {
-    $Math,
-    $clamp,
-    $SHORT_INT_MIN,
-    $SHORT_INT_MAX
-} from "@next2d/share";
 
 /**
- * Rectangle オブジェクトは、その位置（左上隅のポイント (x, y) で示される)、および幅と高さで定義される領域です。
- * Rectangle クラスの x、y、width、および height の各プロパティは、互いに独立しているため、
- * あるプロパティの値を変更しても、他のプロパティに影響はありません。
- * ただし、right プロパティと bottom プロパティはこれら 4 つのプロパティと不可分に関連しています。
- * 例えば、right プロパティの値を変更すると width プロパティの値も変更されます。
- * bottom プロパティの値を変更すると、height プロパティの値も変更されます。
+ * @description Rectangle オブジェクトは、その位置（左上隅のポイント (x, y) で示される)、および幅と高さで定義される領域です。
+ *              Rectangle クラスの x、y、width、および height の各プロパティは、互いに独立しているため、
+ *              あるプロパティの値を変更しても、他のプロパティに影響はありません。
+ *              ただし、right プロパティと bottom プロパティはこれら 4 つのプロパティと不可分に関連しています。
+ *              例えば、right プロパティの値を変更すると width プロパティの値も変更されます。
+ *              bottom プロパティの値を変更すると、height プロパティの値も変更されます。
  *
- * A Rectangle object is an area defined by its position,
- * as indicated by its top-left corner point (x, y) and by its width and its height.
- * The x, y, width, and height properties of the Rectangle class are independent of each other;
- * changing the value of one property has no effect on the others. However,
- * the right and bottom properties are integrally related to those four properties.
- * For example, if you change the value of the right property, the value of the width property changes;
- * if you change the bottom property, the value of the height property changes.
- *
- * @example <caption>Example usage of Rectangle.</caption>
- * // new Rectangle
- * const {Rectangle} = next2d.geom;
- * const rectangle   = new Rectangle(0, 0, 100, 100);
+ *              A Rectangle object is an area defined by its position,
+ *              as indicated by its top-left corner point (x, y) and by its width and its height.
+ *              The x, y, width, and height properties of the Rectangle class are independent of each other;
+ *              changing the value of one property has no effect on the others. However,
+ *              the right and bottom properties are integrally related to those four properties.
+ *              For example, if you change the value of the right property, the value of the width property changes;
+ *              if you change the bottom property, the value of the height property changes.
  *
  * @class
  * @memberOf next2d.geom
@@ -55,31 +44,28 @@ export class Rectangle
          * @default 0
          * @private
          */
-        this._$x = 0;
+        this._$x = x;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$y = 0;
+        this._$y = y;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$width = 0;
+        this._$width = width;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$height = 0;
-
-        // init
-        this.setTo(x, y, width, height);
+        this._$height = height;
     }
 
     /**
@@ -87,7 +73,7 @@ export class Rectangle
      * Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class Rectangle]
+     * @default "[class Rectangle]"
      * @method
      * @static
      */
@@ -101,7 +87,7 @@ export class Rectangle
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.geom.Rectangle
+     * @default "next2d.geom.Rectangle"
      * @const
      * @static
      */
@@ -128,7 +114,7 @@ export class Rectangle
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.geom.Rectangle
+     * @default "next2d.geom.Rectangle"
      * @const
      * @public
      */
@@ -146,11 +132,11 @@ export class Rectangle
      */
     get bottom (): number
     {
-        return this.y + this.height;
+        return this._$y + this._$height;
     }
     set bottom (bottom: number)
     {
-        this.height = +bottom - this.y;
+        this._$height = bottom - this._$y;
     }
 
     /**
@@ -185,7 +171,7 @@ export class Rectangle
     }
     set height (height: number)
     {
-        this._$height = $clamp(+height, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$height = height;
     }
 
     /**
@@ -197,12 +183,12 @@ export class Rectangle
      */
     get left (): number
     {
-        return this.x;
+        return this._$x;
     }
     set left (left: number)
     {
-        this.width = this.right - +left;
-        this.x     = left;
+        this._$width = this.right - left;
+        this._$x     = left;
     }
 
     /**
@@ -214,11 +200,11 @@ export class Rectangle
      */
     get right (): number
     {
-        return this.x + this.width;
+        return this._$x + this.width;
     }
     set right (right: number)
     {
-        this.width = +right - this.x;
+        this._$width = right - this._$x;
     }
 
     /**
@@ -232,12 +218,12 @@ export class Rectangle
      */
     get size (): Point
     {
-        return new Point(this.width, this.height);
+        return new Point(this._$width, this._$height);
     }
     set size (point: Point)
     {
-        this.width  = point.x;
-        this.height = point.y;
+        this._$width  = point.x;
+        this._$height = point.y;
     }
 
     /**
@@ -249,12 +235,12 @@ export class Rectangle
      */
     get top (): number
     {
-        return this.y;
+        return this._$y;
     }
     set top (top: number)
     {
-        this.height = +(this.bottom - +top);
-        this.y      = top;
+        this._$height = this.bottom - top;
+        this._$y      = top;
     }
 
     /**
@@ -268,7 +254,7 @@ export class Rectangle
      */
     get topLeft (): Point
     {
-        return new Point(this.x, this.y);
+        return new Point(this._$x, this._$y);
     }
     set topLeft (point: Point)
     {
@@ -289,7 +275,7 @@ export class Rectangle
     }
     set width (width: number)
     {
-        this._$width = $clamp(+width, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$width = width;
     }
 
     /**
@@ -305,7 +291,7 @@ export class Rectangle
     }
     set x (x: number)
     {
-        this._$x = $clamp(+x, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$x = x;
     }
 
     /**
@@ -321,7 +307,7 @@ export class Rectangle
     }
     set y (y: number)
     {
-        this._$y = $clamp(+y, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$y = y;
     }
 
     /**
@@ -336,7 +322,7 @@ export class Rectangle
      */
     clone (): Rectangle
     {
-        return new Rectangle(this.x, this.y, this.width, this.height);
+        return new Rectangle(this._$x, this._$y, this._$width, this._$height);
     }
 
     /**
@@ -352,7 +338,7 @@ export class Rectangle
      */
     contains (x: number, y: number): boolean
     {
-        return this.x <= x && this.y <= y && this.right > x && this.bottom > y;
+        return this._$x <= x && this._$y <= y && this.right > x && this.bottom > y;
     }
 
     /**
@@ -367,7 +353,7 @@ export class Rectangle
      */
     containsPoint (point: Point): boolean
     {
-        return this.x <= point.x && this.y <= point.y &&
+        return this._$x <= point.x && this._$y <= point.y &&
             this.right > point.x && this.bottom > point.y;
     }
 
@@ -383,7 +369,7 @@ export class Rectangle
      */
     containsRect (rect: Rectangle): boolean
     {
-        return this.x <= rect.x && this.y <= rect.y &&
+        return this._$x <= rect.x && this._$y <= rect.y &&
             this.right >= rect.right && this.bottom >= rect.bottom;
     }
 
@@ -400,10 +386,10 @@ export class Rectangle
      */
     copyFrom (source_rect: Rectangle): void
     {
-        this.x      = source_rect.x;
-        this.y      = source_rect.y;
-        this.width  = source_rect.width;
-        this.height = source_rect.height;
+        this._$x      = source_rect.x;
+        this._$y      = source_rect.y;
+        this._$width  = source_rect.width;
+        this._$height = source_rect.height;
     }
 
     /**
@@ -419,8 +405,8 @@ export class Rectangle
      */
     equals (to_compare: Rectangle): boolean
     {
-        return this.x === to_compare.x && this.y === to_compare.y &&
-            this.width === to_compare.width && this.height === to_compare.height;
+        return this._$x === to_compare.x && this._$y === to_compare.y &&
+            this._$width === to_compare.width && this._$height === to_compare.height;
     }
 
     /**
@@ -435,11 +421,11 @@ export class Rectangle
      */
     inflate (dx: number, dy: number): void
     {
-        this.x      = this.x - +dx;
-        this.width  = this.width + 2 * +dx;
+        this._$x      = this._$x - dx;
+        this._$width  = this._$width + 2 * dx;
 
-        this.y      = this.y - +dy;
-        this.height = this.height + 2 * +dy;
+        this._$y      = this._$y - dy;
+        this._$height = this._$height + 2 * dy;
     }
 
     /**
@@ -453,11 +439,11 @@ export class Rectangle
      */
     inflatePoint (point: Point): void
     {
-        this.x      = this.x - point.x;
-        this.width  = this.width + 2 * point.x;
+        this._$x      = this._$x - point.x;
+        this._$width  = this._$width + 2 * point.x;
 
-        this.y      = this.y - point.y;
-        this.height = this.height + 2 * point.y;
+        this._$y      = this._$y - point.y;
+        this._$height = this._$height + 2 * point.y;
     }
 
     /**
@@ -473,10 +459,10 @@ export class Rectangle
      */
     intersection (to_intersect: Rectangle): Rectangle
     {
-        const sx = $Math.max(this.x, to_intersect.x);
-        const sy = $Math.max(this.y, to_intersect.y);
-        const ex = $Math.min(this.right,  to_intersect.right);
-        const ey = $Math.min(this.bottom, to_intersect.bottom);
+        const sx = Math.max(this._$x, to_intersect.x);
+        const sy = Math.max(this._$y, to_intersect.y);
+        const ex = Math.min(this.right,  to_intersect.right);
+        const ey = Math.min(this.bottom, to_intersect.bottom);
 
         const w = ex - sx;
         const h = ey - sy;
@@ -496,10 +482,10 @@ export class Rectangle
      */
     intersects (to_intersect: Rectangle): boolean
     {
-        const sx = $Math.max(this.x, to_intersect.x);
-        const sy = $Math.max(this.y, to_intersect.y);
-        const ex = $Math.min(this.right,  to_intersect.right);
-        const ey = $Math.min(this.bottom, to_intersect.bottom);
+        const sx = Math.max(this._$x, to_intersect.x);
+        const sy = Math.max(this._$y, to_intersect.y);
+        const ex = Math.min(this.right,  to_intersect.right);
+        const ey = Math.min(this.bottom, to_intersect.bottom);
         return ex - sx > 0 && ey - sy > 0;
     }
 
@@ -513,7 +499,7 @@ export class Rectangle
      */
     isEmpty (): boolean
     {
-        return this.width <= 0 || this.height <= 0;
+        return this._$width <= 0 || this._$height <= 0;
     }
 
     /**
@@ -529,8 +515,8 @@ export class Rectangle
      */
     offset (dx: number ,dy: number): void
     {
-        this.x += dx;
-        this.y += dy;
+        this._$x += dx;
+        this._$y += dy;
     }
 
     /**
@@ -544,8 +530,8 @@ export class Rectangle
      */
     offsetPoint (point: Point): void
     {
-        this.x += point.x;
-        this.y += point.y;
+        this._$x += point.x;
+        this._$y += point.y;
     }
 
     /**
@@ -578,10 +564,10 @@ export class Rectangle
      */
     setTo (x: number, y: number, width: number, height: number): void
     {
-        this.x      = x;
-        this.y      = y;
-        this.width  = width;
-        this.height = height;
+        this._$x      = x;
+        this._$y      = y;
+        this._$width  = width;
+        this._$height = height;
     }
 
     /**
@@ -606,10 +592,10 @@ export class Rectangle
         }
 
         return new Rectangle(
-            $Math.min(this.x, to_union.x),
-            $Math.min(this.y, to_union.y),
-            $Math.max(this.right - to_union.left, to_union.right - this.left),
-            $Math.max(this.bottom - to_union.top, to_union.bottom - this.top)
+            Math.min(this._$x, to_union.x),
+            Math.min(this._$y, to_union.y),
+            Math.max(this.right - to_union.left, to_union.right - this.left),
+            Math.max(this.bottom - to_union.top, to_union.bottom - this.top)
         );
     }
 }

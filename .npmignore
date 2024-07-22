@@ -3,12 +3,10 @@
 .gitattributes
 .gitignore
 .github
-__tests__
 json
 node_modules
 src
 DOCS.md
 DEVELOP.md
-tsconfig.eslint.json
 next2d.js
 vite.config.ts

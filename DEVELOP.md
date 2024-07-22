@@ -3,7 +3,7 @@
 ## Version 
 Middleware required for development and supported versions
 ```
-node >= v17.x
+node >= v20.x
 ```
 
 ## Initial Settings
@@ -26,11 +26,6 @@ npm test
 ## ESLint
 ```
 npm run lint
-```
-
-## Export minify
-```
-npm run build
 ```
 
 ## License

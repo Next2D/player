@@ -1,5 +1,6 @@
 /// <reference types="vitest" />
 /// <reference types="vite/client" />
+/// <reference types="vitest/config" />
 
 import { defineConfig } from "vite";
 import path from "path";
@@ -29,6 +30,6 @@ export default defineConfig({
         "globals": true,
         "environment": "jsdom",
         "setupFiles": ["@vitest/web-worker"],
-        "include": ["src/**/*.test.ts"]
+        "include": ["packages/**/*.test.ts"]
     }
 });

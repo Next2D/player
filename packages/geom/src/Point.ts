@@ -1,21 +1,8 @@
-import {
-    $Math,
-    $clamp,
-    $SHORT_INT_MIN,
-    $SHORT_INT_MAX
-} from "@next2d/share";
-
 /**
- * Point オブジェクトは 2 次元の座標系の位置を表します。
- * x は水平方向の軸を表し、y は垂直方向の軸を表します。
- *
- * The Point object represents a location in a two-dimensional coordinate system,
- * where x represents the horizontal axis and y represents the vertical axis.
- *
- * @example <caption>Example usage of Point.</caption>
- * // new Point
- * const {Point} = next2d.geom;
- * const point   = new Point();
+ * @description Point オブジェクトは 2 次元の座標系の位置を表します。
+ *              x は水平方向の軸を表し、y は垂直方向の軸を表します。
+ *              The Point object represents a location in a two-dimensional coordinate system,
+ *              where x represents the horizontal axis and y represents the vertical axis.
  *
  * @class
  * @memberOf next2d.geom
@@ -26,9 +13,8 @@ export class Point
     private _$y: number;
 
     /**
-     * @param {number} [x=0]
-     * @param {number} [y=0]
-     *
+     * @param {number} [x = 0]
+     * @param {number} [y = 0]
      * @constructor
      * @public
      */
@@ -39,18 +25,14 @@ export class Point
          * @default 0
          * @private
          */
-        this._$x = 0;
+        this._$x = x;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$y = 0;
-
-        // setup
-        this.x = x;
-        this.y = y;
+        this._$y = y;
     }
 
     /**
@@ -58,7 +40,7 @@ export class Point
      * Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class Point]
+     * @default "[class Point]"
      * @method
      * @static
      */
@@ -72,7 +54,7 @@ export class Point
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.geom.Point
+     * @default "next2d.geom.Point"
      * @const
      * @static
      */
@@ -91,7 +73,7 @@ export class Point
      */
     toString (): string
     {
-        return `(x=${this.x}, y=${this.y})`;
+        return `(x=${this._$x}, y=${this._$y})`;
     }
 
     /**
@@ -119,7 +101,7 @@ export class Point
      */
     get length (): number
     {
-        return $Math.sqrt($Math.pow(this.x, 2) + $Math.pow(this.y, 2));
+        return Math.sqrt(Math.pow(this._$x, 2) + Math.pow(this._$y, 2));
     }
 
     /**
@@ -136,7 +118,7 @@ export class Point
     }
     set x (x: number)
     {
-        this._$x = $clamp(+x, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$x = x;
     }
 
     /**
@@ -153,7 +135,7 @@ export class Point
     }
     set y (y: number)
     {
-        this._$y = $clamp(+y, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$y = y;
     }
 
     /**
@@ -161,14 +143,14 @@ export class Point
      *              Adds the coordinates of another point
      *              to the coordinates of this point to create a new point.
      *
-     * @param   {Point} v
+     * @param   {Point} point
      * @returns {Point}
      * @method
      * @public
      */
-    add (v: Point): Point
+    add (point: Point): Point
     {
-        return new Point(this.x + v.x, this.y + v.y);
+        return new Point(this._$x + point.x, this._$y + point.y);
     }
 
     /**
@@ -181,7 +163,7 @@ export class Point
      */
     clone (): Point
     {
-        return new Point(this.x, this.y);
+        return new Point(this._$x, this._$y);
     }
 
     /**
@@ -190,14 +172,14 @@ export class Point
      *              Copies all of the point data from
      *              the source Point object into the calling Point object.
      *
-     * @param   {Point} source_point
+     * @param   {Point} point
      * @returns void
      * @public
      */
-    copyFrom (source_point: Point): void
+    copyFrom (point: Point): void
     {
-        this._$x = source_point._$x;
-        this._$y = source_point._$y;
+        this._$x = point.x;
+        this._$y = point.y;
     }
 
     /**
@@ -212,9 +194,9 @@ export class Point
      */
     static distance (point1: Point, point2: Point): number
     {
-        return $Math.sqrt(
-            $Math.pow(point1._$x - point2._$x, 2)
-            + $Math.pow(point1._$y - point2._$y, 2)
+        return Math.sqrt(
+            Math.pow(point1._$x - point2._$x, 2)
+            + Math.pow(point1._$y - point2._$y, 2)
         );
     }
 
@@ -262,8 +244,8 @@ export class Point
     normalize (thickness: number): void
     {
         const length = this.length;
-        this.x = this.x * thickness / length;
-        this.y = this.y * thickness / length;
+        this._$x = this._$x * thickness / length;
+        this._$y = this._$y * thickness / length;
     }
 
     /**
@@ -276,41 +258,41 @@ export class Point
      * @method
      * @public
      */
-    offset (dx: number, dy: number)
+    offset (dx: number, dy: number): void
     {
-        this.x += dx;
-        this.y += dy;
+        this._$x += dx;
+        this._$y += dy;
     }
 
     /**
      * @description 極座標ペアを直交点座標に変換します。
      *              Converts a pair of polar coordinates to a Cartesian point coordinate.
      *
-     * @param  {number} len
+     * @param  {number} length
      * @param  {number} angle
      * @return {Point}
      * @method
      * @static
      */
-    static polar (len: number, angle: number): Point
+    static polar (length: number, angle: number): Point
     {
-        return new Point(len * $Math.cos(angle), len * $Math.sin(angle));
+        return new Point(length * Math.cos(angle), length * Math.sin(angle));
     }
 
     /**
      * @description Point のメンバーを指定の値に設定します。
      *              Sets the members of Point to the specified values
      *
-     * @param  {number} xa
-     * @param  {number} ya
+     * @param  {number} x
+     * @param  {number} y
      * @return {void}
      * @method
      * @public
      */
-    setTo (xa: number, ya: number): void
+    setTo (x: number, y: number): void
     {
-        this.x = xa;
-        this.y = ya;
+        this._$x = x;
+        this._$y = y;
     }
 
     /**
@@ -318,13 +300,13 @@ export class Point
      *              Subtracts the coordinates of another point
      *              from the coordinates of this point to create a new point.
      *
-     * @param  {Point} v
+     * @param  {Point} point
      * @return {Point}
      * @method
      * @public
      */
-    subtract (v: Point): Point
+    subtract (point: Point): Point
     {
-        return new Point(this.x - v.x, this.y - v.y);
+        return new Point(this._$x - point.x, this._$y - point.y);
     }
 }

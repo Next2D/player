@@ -3,4 +3,3 @@ dist
 json
 @types
 .github
-__tests__
