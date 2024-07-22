@@ -351,6 +351,7 @@ $textArea.addEventListener("compositionend", (): void =>
     }
 });
 
+// @ts-ignore
 $textArea.addEventListener("input", (event: InputEvent): void =>
 {
     if (!event.data) {

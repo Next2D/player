@@ -1,14 +1,27 @@
 {
   "env": {
-    "es6": true
+    "browser": true,
+    "es2021": true
   },
   "parserOptions": {
     "sourceType": "module",
-    "ecmaVersion": 2017
+    "ecmaVersion": "latest"
   },
   "extends": "plugin:@typescript-eslint/eslint-recommended",
   "parser": "@typescript-eslint/parser",
+  "plugins": ["unused-imports"],
   "rules": {
+    "no-unused-vars": "off", // or "@typescript-eslint/no-unused-vars": "off",
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": [
+        "warn",
+        {
+            "vars": "all",
+            "varsIgnorePattern": "^_",
+            "args": "after-used",
+            "argsIgnorePattern": "^_"
+        }
+    ],
     "no-var": "error",
     "semi": ["error", "always", { "omitLastInOneLineBlock": true }],
     "block-spacing": "error",
@@ -26,7 +39,6 @@
     "arrow-spacing": "error",
     "no-undef": "off",
     "comma-dangle": "warn",
-    "no-unused-vars": ["error", { "vars": "local", "args": "all" }],
     "no-use-before-define": "error",
     "no-const-assign": "error",
     "space-before-blocks": "error",

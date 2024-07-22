@@ -15,25 +15,15 @@ import {
 } from "@next2d/share";
 
 /**
- * EventDispatcher クラスは、イベントを送出するすべてのクラスの基本クラスです。
- *
- * The EventDispatcher class is the base class for all classes that dispatch events.
- *
- * @example <caption>Example usage of EventDispatcher.</caption>
- * // new ColorTransform
- * const {EventDispatcher} = next2d.events;
- * const eventDispatcher   = new EventDispatcher();
- * eventDispatcher.addEventListener(Event.ENTER_FRAME, function (event)
- * {
- *     // more...
- * });
+ * @description EventDispatcher クラスは、イベントを送出するすべてのクラスの基本クラスです。
+ *              The EventDispatcher class is the base class for all classes that dispatch events.
  *
  * @class
  * @memberOf next2d.events
  */
 export class EventDispatcher
 {
-    public _$events: Map<string, EventListenerImpl[]>|null;
+    public _$events: Map<string, EventListenerImpl[]> | null;
 
     /**
      * @constructor
@@ -64,11 +54,11 @@ export class EventDispatcher
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
+     * @description クラスの空間名を返します。
+     *              Returns the space name of the class.
      *
      * @member  {string}
-     * @default next2d.events.EventDispatcher
+     * @default "next2d.events.EventDispatcher"
      * @const
      * @static
      */
@@ -78,9 +68,10 @@ export class EventDispatcher
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
+     * @description オブジェクトのストリングを返します。
+     *              Returns the string representation of the object.
      *
+     * @default "[object EventDispatcher]"
      * @return {string}
      * @method
      * @public
@@ -91,11 +82,11 @@ export class EventDispatcher
     }
 
     /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
+     * @description オブジェクトの空間名を返します。
+     *              Returns the space name of the object.
      *
      * @member  {string}
-     * @default next2d.events.EventDispatcher
+     * @default "next2d.events.EventDispatcher"
      * @const
      * @public
      */
@@ -112,8 +103,8 @@ export class EventDispatcher
      *
      * @param  {string}   type
      * @param  {function} listener
-     * @param  {boolean}  [use_capture=false]
-     * @param  {number}   [priority=0]
+     * @param  {boolean}  [use_capture = false]
+     * @param  {number}   [priority = 0]
      * @return {void}
      * @method
      * @public
@@ -244,7 +235,7 @@ export class EventDispatcher
      * @method
      * @public
      */
-    dispatchEvent (event: Event)
+    dispatchEvent (event: Event): boolean
     {
         switch (event.type) {
 
@@ -848,7 +839,7 @@ export class EventDispatcher
      * @method
      * @public
      */
-    willTrigger (type :string): boolean
+    willTrigger (type: string): boolean
     {
         if (this.hasEventListener(type)) {
             return true;

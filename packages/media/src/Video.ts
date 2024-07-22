@@ -513,8 +513,6 @@ export class Video extends DisplayObject
                     if (player._$videos.indexOf(this) === -1) {
                         player._$videos.push(this);
                     }
-
-                    this._$ready = true;
                 });
         }
     }
@@ -531,7 +529,7 @@ export class Video extends DisplayObject
     seek (offset: number): void
     {
         if (this._$video) {
-            this._$video.currentTime = offset;
+            this._$video.currentTime = $Math.min(this._$video.duration, offset);
 
             if (this.hasEventListener(VideoEvent.SEEK)) {
                 this.dispatchEvent(new VideoEvent(
@@ -591,11 +589,11 @@ export class Video extends DisplayObject
     }
 
     /**
-     * @return {void}
+     * @return {Promise}
      * @method
      * @private
      */
-    _$start ()
+    async _$start (): Promise<void>
     {
         if (!this._$video) {
             return ;
@@ -605,35 +603,36 @@ export class Video extends DisplayObject
         this._$bounds.yMax = this._$video.videoHeight;
         this._$bytesTotal  = this._$video.duration;
 
-        const player = $currentPlayer();
+        // init play and stop, reset
+        if (!this._$ready) {
+            await this._$video.play();
+            this._$video.pause();
+            this._$video.currentTime = 0;  
+            this._$ready = true;  
+        }
+
         if (this._$autoPlay) {
 
             this._$stop = false;
-            this
-                ._$video
-                .play()
-                .then(() =>
-                {
-                    if (player._$videos.indexOf(this) === -1) {
-                        player._$videos.push(this);
-                    }
 
-                    if (this.hasEventListener(VideoEvent.PLAY_START)) {
-                        this.dispatchEvent(new VideoEvent(
-                            VideoEvent.PLAY_START, false, false,
-                            this._$bytesLoaded, this._$bytesTotal
-                        ));
-                    }
+            const player = $currentPlayer();
+            if (player._$videos.indexOf(this) === -1) {
+                player._$videos.push(this);
+            }
 
-                    this._$timerId = $requestAnimationFrame(() =>
-                    {
-                        this._$update();
-                    });
+            if (this.hasEventListener(VideoEvent.PLAY_START)) {
+                this.dispatchEvent(new VideoEvent(
+                    VideoEvent.PLAY_START, false, false,
+                    this._$bytesLoaded, this._$bytesTotal
+                ));
+            }
 
-                    this._$ready = true;
+            this._$timerId = $requestAnimationFrame(() =>
+            {
+                this._$update();
+            });
 
-                    this._$doChanged();
-                });
+            this._$doChanged();
         }
 
         this._$createContext();
@@ -662,9 +661,9 @@ export class Video extends DisplayObject
             video.setAttribute("playsinline", "");
         }
 
-        video.addEventListener("canplaythrough", () =>
+        video.addEventListener("canplaythrough", async (): Promise<void> =>
         {
-            this._$start();
+            await this._$start();
         });
 
         video.addEventListener("ended", () =>
@@ -864,10 +863,10 @@ export class Video extends DisplayObject
 
         // default bounds
         const bounds: BoundsImpl = $boundsMatrix(this._$bounds, multiMatrix);
-        const xMax   = +bounds.xMax;
-        const xMin   = +bounds.xMin;
-        const yMax   = +bounds.yMax;
-        const yMin   = +bounds.yMin;
+        const xMax = +bounds.xMax;
+        const xMin = +bounds.xMin;
+        const yMax = +bounds.yMax;
+        const yMin = +bounds.yMin;
         $poolBoundsObject(bounds);
 
         const width: number  = $Math.ceil($Math.abs(xMax - xMin));
@@ -1198,7 +1197,7 @@ export class Video extends DisplayObject
 
         const message: PropertyVideoMessageImpl = {
             "command": "createVideo",
-            "buffer": new Float32Array(),
+            "buffer": new Float32Array(0),
             "instanceId": this._$instanceId,
             "parentId": this._$parent ? this._$parent._$instanceId : -1,
             "smoothing": this._$smoothing,

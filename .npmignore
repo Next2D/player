@@ -9,10 +9,6 @@ node_modules
 src
 DOCS.md
 DEVELOP.md
-jest.config.js
-jest.setup.js
-webpack.config.js
-babel.config.js
-jsdoc.conf.js
 tsconfig.eslint.json
 next2d.js
+vite.config.ts

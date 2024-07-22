@@ -3,7 +3,6 @@ json
 dist
 coverage
 *.html
-package-lock.json
 .DS_Store
 .idea
 Thumbs.db

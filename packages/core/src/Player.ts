@@ -1172,7 +1172,7 @@ export class Player
         // @ts-ignore
         this._$canvas.addEventListener($MOUSE_UP, loadWebAudio);
 
-        // touch event
+        // @ts-ignore
         this._$canvas.addEventListener($TOUCH_START, (event: TouchEvent) =>
         {
             $setEvent(event);
@@ -1182,6 +1182,7 @@ export class Player
             this._$hitTest();
         });
 
+        // @ts-ignore
         this._$canvas.addEventListener($TOUCH_MOVE, (event: TouchEvent) =>
         {
             $setEvent(event);
@@ -1189,6 +1190,7 @@ export class Player
             this._$hitTest();
         });
 
+        // @ts-ignore
         this._$canvas.addEventListener($TOUCH_END, (event: TouchEvent) =>
         {
             $setEvent(event);
@@ -1196,7 +1198,7 @@ export class Player
             this._$hitTest();
         });
 
-        // mouse wheel
+        // @ts-ignore
         this._$canvas.addEventListener($TOUCH_MOVE, (event: TouchEvent) =>
         {
             $setEvent(event);
@@ -1205,7 +1207,7 @@ export class Player
             this._$hitTest();
         }, { "passive": false });
 
-        // mouse event
+        // @ts-ignore
         this._$canvas.addEventListener($MOUSE_DOWN, (event: MouseEvent) =>
         {
             $setEvent(event);
@@ -1216,6 +1218,7 @@ export class Player
             }
         });
 
+        // @ts-ignore
         this._$canvas.addEventListener($DOUBLE_CLICK, (event: MouseEvent) =>
         {
             $setEvent(event);
@@ -1226,6 +1229,7 @@ export class Player
             }
         });
 
+        // @ts-ignore
         this._$canvas.addEventListener($MOUSE_LEAVE, (event: MouseEvent) =>
         {
             $setEvent(event);
@@ -1238,6 +1242,7 @@ export class Player
             this._$stageY = -1;
         });
 
+        // @ts-ignore
         this._$canvas.addEventListener($MOUSE_UP, (event: MouseEvent) =>
         {
             $setEvent(event);
@@ -1248,6 +1253,7 @@ export class Player
             }
         });
 
+        // @ts-ignore
         this._$canvas.addEventListener($MOUSE_MOVE, (event: MouseEvent) =>
         {
             $setEvent(event);
@@ -1256,7 +1262,7 @@ export class Player
             this._$hitTest();
         });
 
-        // mouse wheel
+        // @ts-ignore
         this._$canvas.addEventListener($MOUSE_WHEEL, (event: MouseEvent) =>
         {
             if (!event.defaultPrevented) {
