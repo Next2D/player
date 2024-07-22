@@ -24,13 +24,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Next2D/Player.git"
-  },
-  "peerDependencies": {
-    "@next2d/interface": "file:../interface",
-    "@next2d/display": "file:../display",
-    "@next2d/core": "file:../core",
-    "@next2d/util": "file:../util",
-    "@next2d/filters": "file:../filters",
-    "@next2d/share": "file:../share"
   }
 }

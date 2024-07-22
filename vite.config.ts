@@ -10,7 +10,7 @@ export default defineConfig({
         "open": "index.html"
     },
     "build": {
-        "outDir": "docs",
+        "outDir": "build",
         "target": "esnext",
         "modulePreload": {
             "polyfill": false

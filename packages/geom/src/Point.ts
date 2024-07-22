@@ -1,3 +1,15 @@
+import { execute as pointAddService } from "./Point/service/PointAddService";
+import { execute as pointCloneService } from "./Point/service/PointCloneService";
+import { execute as pointCopyFromService } from "./Point/service/PointCopyFromService";
+import { execute as pointDistanceService } from "./Point/service/PointDistanceService";
+import { execute as pointEqualsService } from "./Point/service/PointEqualsService";
+import { execute as pointInterpolateService } from "./Point/service/PointInterpolateService";
+import { execute as pointNormalizeService } from "./Point/service/PointNormalizeService";
+import { execute as pointOffsetService } from "./Point/service/PointOffsetService";
+import { execute as pointPolarService } from "./Point/service/PointPolarService";
+import { execute as pointSetToService } from "./Point/service/PointSetToService";
+import { execute as pointSubtractService } from "./Point/service/PointSubtractService";
+
 /**
  * @description Point オブジェクトは 2 次元の座標系の位置を表します。
  *              x は水平方向の軸を表し、y は垂直方向の軸を表します。
@@ -150,7 +162,7 @@ export class Point
      */
     add (point: Point): Point
     {
-        return new Point(this._$x + point.x, this._$y + point.y);
+        return pointAddService(this, point);
     }
 
     /**
@@ -163,7 +175,7 @@ export class Point
      */
     clone (): Point
     {
-        return new Point(this._$x, this._$y);
+        return pointCloneService(this);
     }
 
     /**
@@ -174,12 +186,12 @@ export class Point
      *
      * @param   {Point} point
      * @returns void
+     * @method
      * @public
      */
     copyFrom (point: Point): void
     {
-        this._$x = point.x;
-        this._$y = point.y;
+        pointCopyFromService(this, point);
     }
 
     /**
@@ -194,24 +206,21 @@ export class Point
      */
     static distance (point1: Point, point2: Point): number
     {
-        return Math.sqrt(
-            Math.pow(point1._$x - point2._$x, 2)
-            + Math.pow(point1._$y - point2._$y, 2)
-        );
+        return pointDistanceService(point1, point2);
     }
 
     /**
      * @description 2 つのポイントが等しいかどうかを判別します。
      *              Determines whether two points are equal.
      *
-     * @param  {Point} to_compare
+     * @param  {Point} point
      * @return {boolean}
      * @method
      * @public
      */
-    equals (to_compare: Point): boolean
+    equals (point: Point): boolean
     {
-        return this._$x === to_compare._$x && this._$y === to_compare._$y;
+        return pointEqualsService(this, point);
     }
 
     /**
@@ -222,14 +231,12 @@ export class Point
      * @param  {Point}  point2
      * @param  {number} f
      * @return {Point}
+     * @method
      * @static
      */
     static interpolate (point1: Point, point2: Point, f: number): Point
     {
-        return new Point(
-            point1.x + (point2.x - point1.x) * (1 - f),
-            point1.y + (point2.y - point1.y) * (1 - f)
-        );
+        return pointInterpolateService(point1, point2, f);
     }
 
     /**
@@ -243,9 +250,7 @@ export class Point
      */
     normalize (thickness: number): void
     {
-        const length = this.length;
-        this._$x = this._$x * thickness / length;
-        this._$y = this._$y * thickness / length;
+        pointNormalizeService(this, thickness);
     }
 
     /**
@@ -254,14 +259,13 @@ export class Point
      *
      * @param  {number} dx
      * @param  {number} dy
-     * @return {Point}
+     * @return {void}
      * @method
      * @public
      */
     offset (dx: number, dy: number): void
     {
-        this._$x += dx;
-        this._$y += dy;
+        pointOffsetService(this, dx, dy);
     }
 
     /**
@@ -276,7 +280,7 @@ export class Point
      */
     static polar (length: number, angle: number): Point
     {
-        return new Point(length * Math.cos(angle), length * Math.sin(angle));
+        return pointPolarService(length, angle);
     }
 
     /**
@@ -291,8 +295,7 @@ export class Point
      */
     setTo (x: number, y: number): void
     {
-        this._$x = x;
-        this._$y = y;
+        pointSetToService(this, x, y);
     }
 
     /**
@@ -307,6 +310,6 @@ export class Point
      */
     subtract (point: Point): Point
     {
-        return new Point(this._$x - point.x, this._$y - point.y);
+        return pointSubtractService(this, point);
     }
 }

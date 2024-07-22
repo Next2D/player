@@ -34,6 +34,7 @@
     "test": "vitest",
     "clean": "node ./scripts/clean.js",
     "build": "tsc && node ./scripts/build.js",
+    "build:vite": "vite build",
     "publish:dist": "tsc && node ./scripts/publish.js"
   },
   "funding": {
