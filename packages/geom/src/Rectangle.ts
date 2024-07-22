@@ -1,4 +1,20 @@
 import { Point } from "./Point";
+import { execute as rectangleCloneService } from "../src/Rectangle/service/RectangleCloneService";
+import { execute as rectangleContainsService } from "../src/Rectangle/service/RectangleContainsService";
+import { execute as rectangleContainsPointService } from "../src/Rectangle/service/RectangleContainsPointService";
+import { execute as rectangleContainsRectService } from "../src/Rectangle/service/RectangleContainsRectService";
+import { execute as rectangleCopyFromService } from "../src/Rectangle/service/RectangleCopyFromService";
+import { execute as rectangleEqualsService } from "../src/Rectangle/service/RectangleEqualsService";
+import { execute as rectangleInflateService } from "../src/Rectangle/service/RectangleInflateService";
+import { execute as rectangleInflatePointService } from "../src/Rectangle/service/RectangleInflatePointService";
+import { execute as rectangleIntersectionService } from "../src/Rectangle/service/RectangleIntersectionService";
+import { execute as rectangleIntersectsService } from "../src/Rectangle/service/RectangleIntersectsService";
+import { execute as rectangleIsEmptyService } from "../src/Rectangle/service/RectangleIsEmptyService";
+import { execute as rectangleOffsetService } from "../src/Rectangle/service/RectangleOffsetService";
+import { execute as rectangleOffsetPointService } from "../src/Rectangle/service/RectangleOffsetPointService";
+import { execute as rectangleSetEmptyService } from "../src/Rectangle/service/RectangleSetEmptyService";
+import { execute as rectangleSetToService } from "../src/Rectangle/service/RectangleSetToService";
+import { execute as rectangleUnionService } from "../src/Rectangle/service/RectangleUnionService";
 
 /**
  * @description Rectangle オブジェクトは、その位置（左上隅のポイント (x, y) で示される)、および幅と高さで定義される領域です。
@@ -106,7 +122,7 @@ export class Rectangle
      */
     toString (): string
     {
-        return `(x=${this.x}, y=${this.y}, w=${this.width}, h=${this.height})`;
+        return `(x=${this._$x}, y=${this._$y}, w=${this._$width}, h=${this._$height})`;
     }
 
     /**
@@ -322,7 +338,7 @@ export class Rectangle
      */
     clone (): Rectangle
     {
-        return new Rectangle(this._$x, this._$y, this._$width, this._$height);
+        return rectangleCloneService(this);
     }
 
     /**
@@ -338,7 +354,7 @@ export class Rectangle
      */
     contains (x: number, y: number): boolean
     {
-        return this._$x <= x && this._$y <= y && this.right > x && this.bottom > y;
+        return rectangleContainsService(this, x, y);
     }
 
     /**
@@ -353,8 +369,7 @@ export class Rectangle
      */
     containsPoint (point: Point): boolean
     {
-        return this._$x <= point.x && this._$y <= point.y &&
-            this.right > point.x && this.bottom > point.y;
+        return rectangleContainsPointService(this, point);
     }
 
     /**
@@ -362,15 +377,14 @@ export class Rectangle
      *              Determines whether the Rectangle object specified by
      *              the rect parameter is contained within this Rectangle object.
      *
-     * @param  {Rectangle} rect
+     * @param  {Rectangle} rectangle
      * @return {boolean}
      * @method
      * @public
      */
-    containsRect (rect: Rectangle): boolean
+    containsRect (rectangle: Rectangle): boolean
     {
-        return this._$x <= rect.x && this._$y <= rect.y &&
-            this.right >= rect.right && this.bottom >= rect.bottom;
+        return rectangleContainsRectService(this, rectangle);
     }
 
     /**
@@ -379,17 +393,14 @@ export class Rectangle
      *              Copies all of rectangle data from
      *              the source Rectangle object into the calling Rectangle object.
      *
-     * @param  {Rectangle} source_rect
+     * @param  {Rectangle} rectangle
      * @return {void}
      * @method
      * @public
      */
-    copyFrom (source_rect: Rectangle): void
+    copyFrom (rectangle: Rectangle): void
     {
-        this._$x      = source_rect.x;
-        this._$y      = source_rect.y;
-        this._$width  = source_rect.width;
-        this._$height = source_rect.height;
+        rectangleCopyFromService(this, rectangle);
     }
 
     /**
@@ -398,15 +409,14 @@ export class Rectangle
      *              Determines whether the object specified
      *              in the toCompare parameter is equal to this Rectangle object.
      *
-     * @param  {Rectangle} to_compare
+     * @param  {Rectangle} rectangle
      * @return {boolean}
      * @method
      * @public
      */
-    equals (to_compare: Rectangle): boolean
+    equals (rectangle: Rectangle): boolean
     {
-        return this._$x === to_compare.x && this._$y === to_compare.y &&
-            this._$width === to_compare.width && this._$height === to_compare.height;
+        return rectangleEqualsService(this, rectangle);
     }
 
     /**
@@ -415,17 +425,13 @@ export class Rectangle
      *
      * @param  {number} dx
      * @param  {number} dy
-     * @return void
+     * @return {void}
      * @method
      * @public
      */
     inflate (dx: number, dy: number): void
     {
-        this._$x      = this._$x - dx;
-        this._$width  = this._$width + 2 * dx;
-
-        this._$y      = this._$y - dy;
-        this._$height = this._$height + 2 * dy;
+        rectangleInflateService(this, dx, dy);
     }
 
     /**
@@ -439,11 +445,7 @@ export class Rectangle
      */
     inflatePoint (point: Point): void
     {
-        this._$x      = this._$x - point.x;
-        this._$width  = this._$width + 2 * point.x;
-
-        this._$y      = this._$y - point.y;
-        this._$height = this._$height + 2 * point.y;
+        rectangleInflatePointService(this, point);
     }
 
     /**
@@ -452,21 +454,14 @@ export class Rectangle
      *              If the Rectangle object specified in the toIntersect parameter intersects
      *              with this Rectangle object, returns the area of intersection as a Rectangle object.
      *
-     * @param  {Rectangle} to_intersect
+     * @param  {Rectangle} rectangle
      * @return {Rectangle}
      * @method
      * @public
      */
-    intersection (to_intersect: Rectangle): Rectangle
+    intersection (rectangle: Rectangle): Rectangle
     {
-        const sx = Math.max(this._$x, to_intersect.x);
-        const sy = Math.max(this._$y, to_intersect.y);
-        const ex = Math.min(this.right,  to_intersect.right);
-        const ey = Math.min(this.bottom, to_intersect.bottom);
-
-        const w = ex - sx;
-        const h = ey - sy;
-        return w > 0 && h > 0 ? new Rectangle(sx, sy, w, h) : new Rectangle(0, 0, 0, 0);
+        return rectangleIntersectionService(this, rectangle);
     }
 
     /**
@@ -475,18 +470,14 @@ export class Rectangle
      *              Determines whether the object specified
      *              in the toIntersect parameter intersects with this Rectangle object.
      *
-     * @param  {Rectangle} to_intersect
+     * @param  {Rectangle} rectangle
      * @return {boolean}
      * @method
      * @public
      */
-    intersects (to_intersect: Rectangle): boolean
+    intersects (rectangle: Rectangle): boolean
     {
-        const sx = Math.max(this._$x, to_intersect.x);
-        const sy = Math.max(this._$y, to_intersect.y);
-        const ex = Math.min(this.right,  to_intersect.right);
-        const ey = Math.min(this.bottom, to_intersect.bottom);
-        return ex - sx > 0 && ey - sy > 0;
+        return rectangleIntersectsService(this, rectangle);
     }
 
     /**
@@ -499,7 +490,7 @@ export class Rectangle
      */
     isEmpty (): boolean
     {
-        return this._$width <= 0 || this._$height <= 0;
+        return rectangleIsEmptyService(this);
     }
 
     /**
@@ -515,8 +506,7 @@ export class Rectangle
      */
     offset (dx: number ,dy: number): void
     {
-        this._$x += dx;
-        this._$y += dy;
+        rectangleOffsetService(this, dx, dy);
     }
 
     /**
@@ -530,8 +520,7 @@ export class Rectangle
      */
     offsetPoint (point: Point): void
     {
-        this._$x += point.x;
-        this._$y += point.y;
+        rectangleOffsetPointService(this, point);
     }
 
     /**
@@ -544,10 +533,7 @@ export class Rectangle
      */
     setEmpty (): void
     {
-        this._$x      = 0;
-        this._$y      = 0;
-        this._$width  = 0;
-        this._$height = 0;
+        rectangleSetEmptyService(this);
     }
 
     /**
@@ -564,10 +550,7 @@ export class Rectangle
      */
     setTo (x: number, y: number, width: number, height: number): void
     {
-        this._$x      = x;
-        this._$y      = y;
-        this._$width  = width;
-        this._$height = height;
+        rectangleSetToService(this, x, y, width, height);
     }
 
     /**
@@ -576,26 +559,13 @@ export class Rectangle
      *              Adds two rectangles together to create a new Rectangle object,
      *              by filling in the horizontal and vertical space between the two rectangles.
      *
-     * @param  {Rectangle} to_union
+     * @param  {Rectangle} rectangle
      * @return {Rectangle}
      * @method
      * @public
      */
-    union (to_union: Rectangle): Rectangle
+    union (rectangle: Rectangle): Rectangle
     {
-        if (this.isEmpty()) {
-            return to_union.clone();
-        }
-
-        if (to_union.isEmpty()) {
-            return this.clone();
-        }
-
-        return new Rectangle(
-            Math.min(this._$x, to_union.x),
-            Math.min(this._$y, to_union.y),
-            Math.max(this.right - to_union.left, to_union.right - this.left),
-            Math.max(this.bottom - to_union.top, to_union.bottom - this.top)
-        );
+        return rectangleUnionService(this, rectangle);
     }
 }
