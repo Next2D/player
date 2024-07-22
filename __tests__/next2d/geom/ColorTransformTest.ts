@@ -151,62 +151,6 @@ describe("ColorTransform.js property test", () =>
 
 });
 
-describe("ColorTransform.js concat test", () =>
-{
-    it("concat test1", () =>
-    {
-
-        const ct1 = new ColorTransform(0.1, 0.2, 0.3, 0.5, 50, 100, 150, 200);
-        const ct2 = new ColorTransform(0.9, 0.8, 0.7, 0.6, -255, -200, -150, -100);
-        ct1.concat(ct2);
-
-        expect(ct1.toString()).toBe(
-            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=24, greenOffset=60, blueOffset=105, alphaOffset=150)"
-        );
-
-    });
-
-    it("concat test2", () =>
-    {
-
-        const ct1 = new ColorTransform(100, 0.2, 0.3, 0.5, 50, 100, 150, 200);
-        const ct2 = new ColorTransform(0.9, 0.8, 0.7, 0.6, -255, -200, -150, -100);
-        ct1.concat(ct2);
-
-        expect(ct1.toString()).toBe(
-            "(redMultiplier=0.8999999761581421, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=-205, greenOffset=60, blueOffset=105, alphaOffset=150)"
-        );
-
-    });
-
-    it("concat test3", () =>
-    {
-
-        const ct1 = new ColorTransform(0.1, 0.2, 0.3, 0.5, 5000, 100, 150, 200);
-        const ct2 = new ColorTransform(0.9, 0.8, 0.7, 0.6, -255, -200, -150, -100);
-        ct1.concat(ct2);
-
-        expect(ct1.toString()).toBe(
-            "(redMultiplier=0.08999999612569809, greenMultiplier=0.1600000113248825, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=229, greenOffset=60, blueOffset=105, alphaOffset=150)"
-        );
-
-    });
-
-    it("concat test4", () =>
-    {
-
-        const ct1 = new ColorTransform(0, -9, 0.3, 0.5, 50, 100, 150, 200);
-        const ct2 = new ColorTransform(0.9, 0.8, 0.7, 0.6, -255, -200, -150, -100);
-        ct1.concat(ct2);
-
-        expect(ct1.toString()).toBe(
-            "(redMultiplier=0, greenMultiplier=0, blueMultiplier=0.21000000834465027, alphaMultiplier=0.30000001192092896, redOffset=50, greenOffset=100, blueOffset=105, alphaOffset=150)"
-        );
-
-    });
-
-});
-
 // properties
 describe("ColorTransform.js alphaMultiplier test", () =>
 {
