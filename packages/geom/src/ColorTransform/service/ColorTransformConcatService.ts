@@ -12,7 +12,7 @@ import type { ColorTransform } from "../../ColorTransform";
  */
 export const execute = (src: ColorTransform, dst: ColorTransform): void =>
 {
-    const multiColor = src._$multiplicationColor(
+    const multiColor = src._$multiplication(
         src._$colorTransform,
         dst._$colorTransform
     );

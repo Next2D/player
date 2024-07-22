@@ -71,10 +71,10 @@ import {
 export class Transform
 {
     private readonly _$displayObject: DisplayObjectImpl<any>;
-    public _$matrix: Matrix|null;
-    public _$colorTransform: ColorTransform|null;
-    public _$blendMode: BlendModeImpl|null;
-    public _$filters: FilterArrayImpl|null;
+    public _$matrix: Matrix | null;
+    public _$colorTransform: ColorTransform | null;
+    public _$blendMode: BlendModeImpl | null;
+    public _$filters: FilterArrayImpl | null;
 
     /**
      * @param {DisplayObject} src

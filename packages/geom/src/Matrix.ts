@@ -1,33 +1,68 @@
 import { Point } from "./Point";
-import { $getMatrix } from "@next2d/util";
-import {
-    $getFloat32Array6,
-    $clamp,
-    $Math,
-    $SHORT_INT_MIN,
-    $SHORT_INT_MAX
-} from "@next2d/share";
+import { execute as matrixCloneService } from "../src/Matrix/service/MatrixCloneService";
 
 /**
- * Matrix クラスは、2 つの座標空間の間におけるポイントのマッピング方法を決定する変換マトリックスを表します。
- * Matrix オブジェクトのプロパティを設定し、Matrix オブジェクトを Transform オブジェクトの matrix プロパティに適用し、
- * 次に Transform オブジェクトを表示オブジェクトの transform プロパティとして適用することで、表示オブジェクトに対する各種グラフィック変換を実行できます。
- * これらの変換機能には、平行移動（x と y の位置変更）、回転、拡大 / 縮小、傾斜などが含まれます。
+ * @type {Float32Array[]}
+ * @private
+ */
+const $objectPool: Float32Array[] = [];
+
+/**
+ * @description オブジェクトプールから Float32Array オブジェクトを取得します。
+ *              Get a Float32Array object from the object pool.
  *
- * The Matrix class represents a transformation matrix that determines how to map points from one coordinate space to another.
- * You can perform various graphical transformations on a display object by setting the properties of a Matrix object,
- * applying that Matrix object to the matrix property of a Transform object,
- * and then applying that Transform object as the transform property of the display object.
- * These transformation functions include translation (x and y repositioning), rotation, scaling, and skewing.
+ * @param  {number} [f0=0]
+ * @param  {number} [f1=0]
+ * @param  {number} [f2=0]
+ * @param  {number} [f3=0]
+ * @param  {number} [f4=0]
+ * @param  {number} [f5=0]
+ * @return {Float32Array}
+ * @method
+ * @private
+ */
+const $getFloat32Array = (
+    f0: number = 1, f1: number = 0,
+    f2: number = 0, f3: number = 1,
+    f4: number = 0, f5: number = 0
+): Float32Array => {
+
+    const array: Float32Array = $objectPool.pop() || new Float32Array(6);
+
+    array[0] = f0;
+    array[1] = f1;
+    array[2] = f2;
+    array[3] = f3;
+    array[4] = f4;
+    array[5] = f5;
+
+    return array;
+};
+
+/**
+ * @description 再利用する為に、オブジェクトプールに Float32Array オブジェクトを追加します。
+ *              Add a Float32Array object to the object pool for reuse.
  *
- * @example <caption>Example usage of Matrix.</caption>
- * // new Matrix
- * const {Matrix} = next2d.geom;
- * const matrix   = new Matrix();
- * // set new Matrix
- * const {MovieClip} = next2d.display;
- * const movieClip   = new MovieClip();
- * movieClip.transform.matrix = matrix;
+ * @param {Float32Array} array
+ * @method
+ * @private
+ */
+const $poolFloat32Array = (array: Float32Array): void =>
+{
+    $objectPool.push(array);
+};
+
+/**
+ * @description Matrix クラスは、2 つの座標空間の間におけるポイントのマッピング方法を決定する変換マトリックスを表します。
+ *              Matrix オブジェクトのプロパティを設定し、Matrix オブジェクトを Transform オブジェクトの matrix プロパティに適用し、
+ *              次に Transform オブジェクトを表示オブジェクトの transform プロパティとして適用することで、表示オブジェクトに対する各種グラフィック変換を実行できます。
+ *              これらの変換機能には、平行移動（x と y の位置変更）、回転、拡大 / 縮小、傾斜などが含まれます。
+ *
+ *              The Matrix class represents a transformation matrix that determines how to map points from one coordinate space to another.
+ *              You can perform various graphical transformations on a display object by setting the properties of a Matrix object,
+ *              applying that Matrix object to the matrix property of a Transform object,
+ *              and then applying that Transform object as the transform property of the display object.
+ *              These transformation functions include translation (x and y repositioning), rotation, scaling, and skewing.
  *
  * @class
  * @memberOf next2d.geom
@@ -56,15 +91,7 @@ export class Matrix
          * @type {Float32Array}
          * @private
          */
-        this._$matrix = $getFloat32Array6(1, 0, 0, 1, 0, 0);
-
-        // setup
-        this.a  = a;
-        this.b  = b;
-        this.c  = c;
-        this.d  = d;
-        this.tx = tx;
-        this.ty = ty;
+        this._$matrix = $getFloat32Array(a, b, c, d, tx, ty);
     }
 
     /**
@@ -72,7 +99,7 @@ export class Matrix
      * Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class Matrix]
+     * @default "[class Matrix]"
      * @method
      * @static
      */
@@ -86,7 +113,7 @@ export class Matrix
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.geom.Matrix
+     * @default "next2d.geom.Matrix"
      * @const
      * @static
      */
@@ -113,7 +140,7 @@ export class Matrix
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.geom.Matrix
+     * @default "next2d.geom.Matrix"
      * @const
      * @public
      */
@@ -137,7 +164,7 @@ export class Matrix
     }
     set a (a: number)
     {
-        this._$matrix[0] = $clamp(+a, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[0] = a;
     }
 
     /**
@@ -155,7 +182,7 @@ export class Matrix
     }
     set b (b: number)
     {
-        this._$matrix[1] = $clamp(+b, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[1] = b;
     }
 
     /**
@@ -173,7 +200,7 @@ export class Matrix
     }
     set c (c: number)
     {
-        this._$matrix[2] = $clamp(+c, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[2] = c;
     }
 
     /**
@@ -191,7 +218,7 @@ export class Matrix
     }
     set d (d: number)
     {
-        this._$matrix[3] = $clamp(+d, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[3] = d;
     }
 
     /**
@@ -208,7 +235,7 @@ export class Matrix
     }
     set tx (tx: number)
     {
-        this._$matrix[4] = $clamp(+tx, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[4] = tx;
     }
 
     /**
@@ -225,7 +252,7 @@ export class Matrix
     }
     set ty (ty: number)
     {
-        this._$matrix[5] = $clamp(+ty, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[5] = ty;
     }
 
     /**
@@ -235,7 +262,7 @@ export class Matrix
      */
     _$clone (): Matrix
     {
-        return this.clone();
+        return matrixCloneService(this);
     }
 
     /**
@@ -250,11 +277,7 @@ export class Matrix
      */
     clone (): Matrix
     {
-        return $getMatrix(
-            this._$matrix[0], this._$matrix[1],
-            this._$matrix[2], this._$matrix[3],
-            this._$matrix[4], this._$matrix[5]
-        );
+        return matrixCloneService(this);
     }
 
     /**
@@ -289,12 +312,12 @@ export class Matrix
             ty += matrix[4] * target[1];
         }
 
-        this.a  = a;
-        this.b  = b;
-        this.c  = c;
-        this.d  = d;
-        this.tx = tx;
-        this.ty = ty;
+        this._$matrix[0] = a;
+        this._$matrix[1] = b;
+        this._$matrix[2] = c;
+        this._$matrix[3] = d;
+        this._$matrix[4] = tx;
+        this._$matrix[5] = ty;
     }
 
     /**
@@ -307,12 +330,12 @@ export class Matrix
      */
     copyFrom (source_matrix: Matrix): void
     {
-        this.a  = source_matrix.a;
-        this.b  = source_matrix.b;
-        this.c  = source_matrix.c;
-        this.d  = source_matrix.d;
-        this.tx = source_matrix.tx;
-        this.ty = source_matrix.ty;
+        this._$matrix[0] = source_matrix.a;
+        this._$matrix[1] = source_matrix.b;
+        this._$matrix[2] = source_matrix.c;
+        this._$matrix[3] = source_matrix.d;
+        this._$matrix[4] = source_matrix.tx;
+        this._$matrix[5] = source_matrix.ty;
     }
 
     /**
@@ -363,8 +386,8 @@ export class Matrix
         this.d = height / 1638.4;
 
         if (rotation) {
-            const cos = $Math.cos(rotation);
-            const sin = $Math.sin(rotation);
+            const cos = Math.cos(rotation);
+            const sin = Math.sin(rotation);
 
             this.b =  sin * this.d;
             this.c = -sin * this.a;
@@ -479,12 +502,12 @@ export class Matrix
         const tx = this._$matrix[4];
         const ty = this._$matrix[5];
 
-        this.a  = a  * $Math.cos(rotation) - b  * $Math.sin(rotation);
-        this.b  = a  * $Math.sin(rotation) + b  * $Math.cos(rotation);
-        this.c  = c  * $Math.cos(rotation) - d  * $Math.sin(rotation);
-        this.d  = c  * $Math.sin(rotation) + d  * $Math.cos(rotation);
-        this.tx = tx * $Math.cos(rotation) - ty * $Math.sin(rotation);
-        this.ty = tx * $Math.sin(rotation) + ty * $Math.cos(rotation);
+        this.a  = a  * Math.cos(rotation) - b  * Math.sin(rotation);
+        this.b  = a  * Math.sin(rotation) + b  * Math.cos(rotation);
+        this.c  = c  * Math.cos(rotation) - d  * Math.sin(rotation);
+        this.d  = c  * Math.sin(rotation) + d  * Math.cos(rotation);
+        this.tx = tx * Math.cos(rotation) - ty * Math.sin(rotation);
+        this.ty = tx * Math.sin(rotation) + ty * Math.cos(rotation);
     }
 
     /**
@@ -569,5 +592,36 @@ export class Matrix
     {
         this.tx += dx;
         this.ty += dy;
+    }
+
+    /**
+     * @param  {Float32Array} a
+     * @param  {Float32Array} b
+     * @return {Float32Array}
+     * @method
+     * @private
+     */
+    _$multiplication (a: Float32Array, b: Float32Array): Float32Array
+    {
+        return $getFloat32Array(
+            a[0] * b[0] + a[2] * b[1],
+            a[1] * b[0] + a[3] * b[1],
+            a[0] * b[2] + a[2] * b[3],
+            a[1] * b[2] + a[3] * b[3],
+            a[0] * b[4] + a[2] * b[5] + a[4],
+            a[1] * b[4] + a[3] * b[5] + a[5]
+        );
+    }
+    /**
+     * @param {Float32Array} buffer
+     * @method
+     * @private
+     */
+    _$poolBuffer (buffer: Float32Array): void
+    {
+        if ($objectPool.length > 10) {
+            return ;
+        }
+        $poolFloat32Array(buffer);
     }
 }

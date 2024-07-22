@@ -348,7 +348,7 @@ export class ColorTransform
      * @method
      * @private
      */
-    _$multiplicationColor (a: Float32Array, b: Float32Array): Float32Array
+    _$multiplication (a: Float32Array, b: Float32Array): Float32Array
     {
         return $getFloat32Array(
             a[0] * b[0],
