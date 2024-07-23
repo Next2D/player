@@ -1,4 +1,4 @@
-import { Matrix } from "../../Matrix";
+import type { Matrix } from "../../Matrix";
 
 /**
  * @description 指定のMatrixオブジェクトの値をコピー

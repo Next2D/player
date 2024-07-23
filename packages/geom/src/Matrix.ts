@@ -1,6 +1,17 @@
 import { Point } from "./Point";
 import { execute as matrixCloneService } from "../src/Matrix/service/MatrixCloneService";
 import { execute as matirxConcatService } from "../src/Matrix/service/MatirxConcatService";
+import { execute as matrixCopyFromService } from "../src/Matrix/service/MatrixCopyFromService";
+import { execute as matrixCreateBoxService } from "../src/Matrix/service/MatrixCreateBoxService";
+import { execute as matrixCreateGradientBoxService } from "../src/Matrix/service/MatrixCreateGradientBoxService";
+import { execute as matrixDeltaTransformPointService } from "../src/Matrix/service/MatrixDeltaTransformPointService";
+import { execute as matrixIdentityService } from "../src/Matrix/service/MatrixIdentityService";
+import { execute as matrixInvertService } from "../src/Matrix/service/MatrixInvertService";
+import { execute as matrixRotateService } from "../src/Matrix/service/MatrixRotateService";
+import { execute as matrixScaleService } from "../src/Matrix/service/MatrixScaleService";
+import { execute as matrixSetToService } from "../src/Matrix/service/MatrixSetToService";
+import { execute as matrixTransformPointService } from "../src/Matrix/service/MatrixTransformPointService";
+import { execute as matrixTranslateService } from "../src/Matrix/service/MatrixTranslateService";
 
 /**
  * @type {Float32Array[]}
@@ -301,18 +312,13 @@ export class Matrix
      * @description すべてのマトリックスデータを、ソース Matrix オブジェクトから、
      *              呼び出し元の Matrix オブジェクトにコピーします。
      *
-     * @param  {Matrix} source_matrix
+     * @param  {Matrix} matrix
      * @method
      * @return {void}
      */
-    copyFrom (source_matrix: Matrix): void
+    copyFrom (matrix: Matrix): void
     {
-        this._$matrix[0] = source_matrix.a;
-        this._$matrix[1] = source_matrix.b;
-        this._$matrix[2] = source_matrix.c;
-        this._$matrix[3] = source_matrix.d;
-        this._$matrix[4] = source_matrix.tx;
-        this._$matrix[5] = source_matrix.ty;
+        matrixCopyFromService(this, matrix);
     }
 
     /**
@@ -333,10 +339,7 @@ export class Matrix
         rotation: number = 0,
         tx: number = 0, ty: number = 0
     ): void {
-        this.identity();
-        this.rotate(rotation);
-        this.scale(scale_x, scale_y);
-        this.translate(tx, ty);
+        matrixCreateBoxService(this, scale_x, scale_y, rotation, tx, ty);
     }
 
     /**
@@ -358,25 +361,7 @@ export class Matrix
         rotation: number = 0,
         tx: number = 0, ty: number = 0
     ): void {
-
-        this.a = width  / 1638.4;
-        this.d = height / 1638.4;
-
-        if (rotation) {
-            const cos = Math.cos(rotation);
-            const sin = Math.sin(rotation);
-
-            this.b =  sin * this.d;
-            this.c = -sin * this.a;
-            this.a *= cos;
-            this.d *= cos;
-        } else {
-            this.b = 0;
-            this.c = 0;
-        }
-
-        this.tx = tx + width / 2;
-        this.ty = ty + height / 2;
+        matrixCreateGradientBoxService(this, width, height, rotation, tx, ty);
     }
 
     /**
@@ -391,10 +376,7 @@ export class Matrix
      */
     deltaTransformPoint (point: Point): Point
     {
-        return new Point(
-            point.x * this._$matrix[0] + point.y * this._$matrix[2],
-            point.x * this._$matrix[1] + point.y * this._$matrix[3]
-        );
+        return matrixDeltaTransformPointService(this, point);
     }
 
     /**
@@ -407,12 +389,7 @@ export class Matrix
      */
     identity (): void
     {
-        this._$matrix[0] = 1;
-        this._$matrix[1] = 0;
-        this._$matrix[2] = 0;
-        this._$matrix[3] = 1;
-        this._$matrix[4] = 0;
-        this._$matrix[5] = 0;
+        matrixIdentityService(this);
     }
 
     /**
@@ -425,40 +402,7 @@ export class Matrix
      */
     invert (): void
     {
-        const a: number  = this._$matrix[0];
-        const b: number  = this._$matrix[1];
-        const c: number  = this._$matrix[2];
-        const d: number  = this._$matrix[3];
-        const tx: number = this._$matrix[4];
-        const ty: number = this._$matrix[5];
-
-        if (b === 0 && c === 0) {
-
-            this.a  = 1 / a;
-            this.b  = 0;
-            this.c  = 0;
-            this.d  = 1 / d;
-            this.tx = -this.a * tx;
-            this.ty = -this.d * ty;
-
-        } else {
-
-            const det = a * d - b * c;
-
-            if (det) {
-
-                const rdet: number = 1 / det;
-
-                this.a  = d  * rdet;
-                this.b  = -b * rdet;
-                this.c  = -c * rdet;
-                this.d  = a  * rdet;
-                this.tx = -(this.a * tx + this.c * ty);
-                this.ty = -(this.b * tx + this.d * ty);
-
-            }
-
-        }
+        matrixInvertService(this);
     }
 
     /**
@@ -472,40 +416,22 @@ export class Matrix
      */
     rotate (rotation: number): void
     {
-        const a  = this._$matrix[0];
-        const b  = this._$matrix[1];
-        const c  = this._$matrix[2];
-        const d  = this._$matrix[3];
-        const tx = this._$matrix[4];
-        const ty = this._$matrix[5];
-
-        this.a  = a  * Math.cos(rotation) - b  * Math.sin(rotation);
-        this.b  = a  * Math.sin(rotation) + b  * Math.cos(rotation);
-        this.c  = c  * Math.cos(rotation) - d  * Math.sin(rotation);
-        this.d  = c  * Math.sin(rotation) + d  * Math.cos(rotation);
-        this.tx = tx * Math.cos(rotation) - ty * Math.sin(rotation);
-        this.ty = tx * Math.sin(rotation) + ty * Math.cos(rotation);
+        matrixRotateService(this, rotation);
     }
 
     /**
      * @description 行列に拡大 / 縮小の変換を適用します。
      *              Applies a scaling transformation to the matrix.
      *
-     * @param  {number} sx
-     * @param  {number} sy
+     * @param  {number} scale_x
+     * @param  {number} scale_y
      * @return {void}
      * @method
      * @public
      */
-    scale (sx: number, sy: number): void
+    scale (scale_x: number, scale_y: number): void
     {
-        this.a  *= sx;
-        this.c  *= sx;
-        this.tx *= sx;
-
-        this.b  *= sy;
-        this.d  *= sy;
-        this.ty *= sy;
+        matrixScaleService(this, scale_x, scale_y);
     }
 
     /**
@@ -527,12 +453,7 @@ export class Matrix
         c: number, d: number,
         tx: number, ty: number
     ): void {
-        this.a  = a;
-        this.b  = b;
-        this.c  = c;
-        this.d  = d;
-        this.tx = tx;
-        this.ty = ty;
+        matrixSetToService(this, a, b, c, d, tx, ty);
     }
 
     /**
@@ -547,10 +468,7 @@ export class Matrix
      */
     transformPoint (point: Point): Point
     {
-        return new Point(
-            point.x * this._$matrix[0] + point.y * this._$matrix[2] + this._$matrix[4],
-            point.x * this._$matrix[1] + point.y * this._$matrix[3] + this._$matrix[5]
-        );
+        return matrixTransformPointService(this, point);
     }
 
     /**
@@ -567,8 +485,7 @@ export class Matrix
      */
     translate (dx: number, dy: number): void
     {
-        this.tx += dx;
-        this.ty += dy;
+        matrixTranslateService(this, dx, dy);
     }
 
     /**
