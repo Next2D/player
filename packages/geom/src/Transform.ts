@@ -27,9 +27,6 @@ import {
 } from "@next2d/util";
 import {
     $Array,
-    $Math,
-    $MATRIX_ARRAY_IDENTITY,
-    $COLOR_ARRAY_IDENTITY,
     $doUpdated,
     $getFloat32Array6,
     $getArray,
@@ -41,29 +38,36 @@ import {
 } from "@next2d/share";
 
 /**
- * Transform クラスは、表示オブジェクトに適用されるカラー調整プロパティと 2 次元の変換オブジェクトへのアクセスを提供します。
- * 変換時に、表示オブジェクトのカラーまたは方向と位置が、現在の値または座標から新しい値または座標に調整（オフセット）されます。
- * Transform クラスは、表示オブジェクトおよびすべての親オブジェクトに適用されるカラー変換と 2 次元マトリックス変換に関するデータも収集します。
- * concatenatedColorTransform プロパティと concatenatedMatrix プロパティを使用して、これらの結合された変換にアクセスできます。
- * カラー変換を適用するには、ColorTransform オブジェクトを作成し、オブジェクトのメソッドとプロパティを使用してカラー調整を設定した後、
- * colorTransformation プロパティ（表示オブジェクトの transform プロパティの）を新しい ColorTransformation オブジェクトに割り当てます。
- * 2 次元変換を適用するには、Matrix オブジェクトを作成し、マトリックスの 2 次元変換を設定した後、表示オブジェクトの transform.matrix プロパティを新しい Matrix オブジェクトに割り当てます。
+ * @type {Float32Array}
+ * @private
+ */
+const $MATRIX_ARRAY_IDENTITY: Float32Array = new Float32Array([1, 0, 0, 1, 0, 0]);
+
+/**
+ * @type {Float32Array}
+ * @private
+ */
+const $COLOR_ARRAY_IDENTITY: Float32Array = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
+
+/**
+ * @description Transform クラスは、表示オブジェクトに適用されるカラー調整プロパティと 2 次元の変換オブジェクトへのアクセスを提供します。
+ *              変換時に、表示オブジェクトのカラーまたは方向と位置が、現在の値または座標から新しい値または座標に調整（オフセット）されます。
+ *              Transform クラスは、表示オブジェクトおよびすべての親オブジェクトに適用されるカラー変換と 2 次元マトリックス変換に関するデータも収集します。
+ *              concatenatedColorTransform プロパティと concatenatedMatrix プロパティを使用して、これらの結合された変換にアクセスできます。
+ *              カラー変換を適用するには、ColorTransform オブジェクトを作成し、オブジェクトのメソッドとプロパティを使用してカラー調整を設定した後、
+ *              colorTransformation プロパティ（表示オブジェクトの transform プロパティの）を新しい ColorTransformation オブジェクトに割り当てます。
+ *              2 次元変換を適用するには、Matrix オブジェクトを作成し、マトリックスの 2 次元変換を設定した後、表示オブジェクトの transform.matrix プロパティを新しい Matrix オブジェクトに割り当てます。
  *
- * The Transform class provides access to color adjustment properties and two--dimensional transformation objects that can be applied to a display object.
- * During the transformation, the color or the orientation and position of a display object is adjusted (offset) from the current values or coordinates to new values or coordinates.
- * The Transform class also collects data about color and two-dimensional matrix transformations that are applied to a display object and all of its parent objects.
- * You can access these combined transformations through the concatenatedColorTransform and concatenatedMatrix properties.
- * To apply color transformations: create a ColorTransform object,
- * set the color adjustments using the object's methods and properties,
- * and then assign the colorTransformation property of the transform property of the display object to the new ColorTransformation object.
- * To apply two-dimensional transformations: create a Matrix object,
- * set the matrix's two-dimensional transformation,
- * and then assign the transform.matrix property of the display object to the new Matrix object.
- *
- * @example <caption>Example usage of Transform.</caption>
- * // new Transform
- * const {Transform} = next2d.geom;
- * const transform   = new Transform(displayObject);
+ *              The Transform class provides access to color adjustment properties and two--dimensional transformation objects that can be applied to a display object.
+ *              During the transformation, the color or the orientation and position of a display object is adjusted (offset) from the current values or coordinates to new values or coordinates.
+ *              The Transform class also collects data about color and two-dimensional matrix transformations that are applied to a display object and all of its parent objects.
+ *              You can access these combined transformations through the concatenatedColorTransform and concatenatedMatrix properties.
+ *              To apply color transformations: create a ColorTransform object,
+ *              set the color adjustments using the object's methods and properties,
+ *              and then assign the colorTransformation property of the transform property of the display object to the new ColorTransformation object.
+ *              To apply two-dimensional transformations: create a Matrix object,
+ *              set the matrix's two-dimensional transformation,
+ *              and then assign the transform.matrix property of the display object to the new Matrix object.
  *
  * @class
  * @memberOf next2d.geom
@@ -82,7 +86,7 @@ export class Transform
      * @constructor
      * @public
      */
-    constructor (src: DisplayObjectImpl<any>)
+    constructor (src: DisplayObjectImpl<any> = null)
     {
         /**
          * @type {DisplayObject}
@@ -124,7 +128,7 @@ export class Transform
      * Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class Transform]
+     * @default "[class Transform]"
      * @method
      * @static
      */
@@ -138,7 +142,7 @@ export class Transform
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.geom.Transform
+     * @default "next2d.geom.Transform"
      * @const
      * @static
      */
@@ -152,6 +156,7 @@ export class Transform
      *              Returns the string representation of the specified object.
      *
      * @return {string}
+     * @default "[object Transform]"
      * @method
      * @public
      */
@@ -165,7 +170,7 @@ export class Transform
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.geom.Transform
+     * @default "next2d.geom.Transform"
      * @const
      * @public
      */
@@ -339,8 +344,8 @@ export class Transform
         const rectangle: Rectangle = new Rectangle(
             bounds.xMin,
             bounds.yMin,
-            +$Math.abs(bounds.xMax - bounds.xMin),
-            +$Math.abs(bounds.yMax - bounds.yMin)
+            +Math.abs(bounds.xMax - bounds.xMin),
+            +Math.abs(bounds.yMax - bounds.yMin)
         );
 
         $poolBoundsObject(bounds);
