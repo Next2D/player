@@ -4,12 +4,12 @@ import type { Rectangle } from "../../Rectangle";
  * @description 指定のRectangleが空かどうかを返す
  *              Returns whether the specified Rectangle is empty
  *
- * @param  {Rectangle} src
+ * @param  {Rectangle} rectangle
  * @return {boolean}
  * @method
  * @public
  */
-export const execute = (src: Rectangle): boolean =>
+export const execute = (rectangle: Rectangle): boolean =>
 {
-    return src.width <= 0 || src.height <= 0;
+    return rectangle.width <= 0 || rectangle.height <= 0;
 };

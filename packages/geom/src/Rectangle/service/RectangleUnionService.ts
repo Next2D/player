@@ -10,20 +10,20 @@ import { Rectangle } from "../../Rectangle";
  * @method
  * @public
  */
-export const execute = (src: Rectangle, dst: Rectangle): Rectangle =>
+export const execute = (rectangle1: Rectangle, rectangle2: Rectangle): Rectangle =>
 {
-    if (src.isEmpty()) {
-        return dst.clone();
+    if (rectangle1.isEmpty()) {
+        return rectangle2.clone();
     }
 
-    if (dst.isEmpty()) {
-        return src.clone();
+    if (rectangle2.isEmpty()) {
+        return rectangle1.clone();
     }
 
     return new Rectangle(
-        Math.min(src.x, dst.x),
-        Math.min(src.y, dst.y),
-        Math.max(src.right - dst.left, dst.right - src.left),
-        Math.max(src.bottom - dst.top, dst.bottom - src.top)
+        Math.min(rectangle1.x, rectangle2.x),
+        Math.min(rectangle1.y, rectangle2.y),
+        Math.max(rectangle1.right - rectangle2.left, rectangle2.right - rectangle1.left),
+        Math.max(rectangle1.bottom - rectangle2.top, rectangle2.bottom - rectangle1.top)
     );
 };

@@ -4,12 +4,12 @@ import type { Rectangle } from "../../Rectangle";
  * @description 矩形を空にする
  *              Make the rectangle empty
  *
- * @param  {Rectangle} src
+ * @param  {Rectangle} rectangle
  * @return {void}
  * @method
  * @public
  */
-export const execute = (src: Rectangle): void =>
+export const execute = (rectangle: Rectangle): void =>
 {
-    src.x = src.y = src.width = src.height = 0;
+    rectangle.x = rectangle.y = rectangle.width = rectangle.height = 0;
 };

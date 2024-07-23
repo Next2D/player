@@ -5,16 +5,16 @@ import type { Point } from "../../Point";
  * @description 指定の座標がRectangle内に含まれるかを判定
  *              Determines whether the specified coordinates are within the Rectangle
  *
- * @param  {Rectangle} src
+ * @param  {Rectangle} rectangle
  * @param  {Point} point
  * @return {boolean}
  * @method
  * @public
  */
-export const execute = (src: Rectangle, point: Point): boolean =>
+export const execute = (rectangle: Rectangle, point: Point): boolean =>
 {
-    return src.x <= point.x
-        && src.y <= point.y
-        && src.right > point.x
-        && src.bottom > point.y;
+    return rectangle.x <= point.x
+        && rectangle.y <= point.y
+        && rectangle.right > point.x
+        && rectangle.bottom > point.y;
 };

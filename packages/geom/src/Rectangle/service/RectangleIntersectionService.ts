@@ -4,18 +4,18 @@ import { Rectangle } from "../../Rectangle";
  * @description 指定のRectangleの交差部分を取得
  *              Get the intersection of the specified Rectangle
  *
- * @param  {Rectangle} src
- * @param  {Rectangle} dst
+ * @param  {Rectangle} rectangle1
+ * @param  {Rectangle} rectangle2
  * @return {Rectangle}
  * @method
  * @public
  */
-export const execute = (src: Rectangle, dst: Rectangle): Rectangle =>
+export const execute = (rectangle1: Rectangle, rectangle2: Rectangle): Rectangle =>
 {
-    const sx = Math.max(src.x, dst.x);
-    const sy = Math.max(src.y, dst.y);
-    const ex = Math.min(src.right,  dst.right);
-    const ey = Math.min(src.bottom, dst.bottom);
+    const sx = Math.max(rectangle1.x, rectangle2.x);
+    const sy = Math.max(rectangle1.y, rectangle2.y);
+    const ex = Math.min(rectangle1.right,  rectangle2.right);
+    const ey = Math.min(rectangle1.bottom, rectangle2.bottom);
 
     const w = ex - sx;
     const h = ey - sy;

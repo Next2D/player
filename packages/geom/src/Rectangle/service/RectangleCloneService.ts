@@ -4,12 +4,12 @@ import { Rectangle } from "../../Rectangle";
  * @description 指定のRectangleを複製を返却
  *              Returns a duplicate of the specified Rectangle
  *
- * @param  {Rectangle} src
+ * @param  {Rectangle} rectangle
  * @return {Rectangle}
  * @method
  * @public
  */
-export const execute = (src: Rectangle): Rectangle =>
+export const execute = (rectangle: Rectangle): Rectangle =>
 {
-    return new Rectangle(src.x, src.y, src.width, src.height);
+    return new Rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 };

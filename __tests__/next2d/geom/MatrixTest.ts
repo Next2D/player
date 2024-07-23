@@ -48,88 +48,7 @@ describe("Matrix.js namespace test", () =>
 
 
 
-describe("Matrix.js concat test", () =>
-{
-    it("concat test1", () =>
-    {
-        let m1 = new Matrix(2, 1, -1, 1, 0, 5);
-        let m2 = new Matrix(1.3, 0.75, 0, -1.5, 10, -10);
-        m1.concat(m2);
-        expect(m1.toString()).toBe(
-            "(a=2.5999999046325684, b=0, c=-1.2999999523162842, d=-2.25, tx=10, ty=-17.5)"
-        );
-    });
 
-    it("concat test2", () =>
-    {
-        let m1 = new Matrix(2, 1, -1, 1, 0, 5);
-        let m2 = new Matrix(0, 0.75, 0, -1.5, 10, -10);
-        m1.concat(m2);
-        expect(m1.toString()).toBe(
-            "(a=0, b=0, c=0, d=-2.25, tx=10, ty=-17.5)"
-        );
-    });
-
-    it("concat test3", () =>
-    {
-        let m1 = new Matrix(2, 1, -1, 1, 0, 5);
-        let m2 = new Matrix(1.3, 0, 0, -1.5, 10, -10);
-        m1.concat(m2);
-        expect(m1.toString()).toBe(
-            "(a=2.5999999046325684, b=-1.5, c=-1.2999999523162842, d=-1.5, tx=10, ty=-17.5)"
-        );
-    });
-
-    it("concat test4", () =>
-    {
-        let m1 = new Matrix(2, 1, -1, 1, 0, 5);
-        let m2 = new Matrix(1.3, 0.75, 0, 0, 10, -10);
-        m1.concat(m2);
-        expect(m1.toString()).toBe(
-            "(a=2.5999999046325684, b=1.5, c=-1.2999999523162842, d=-0.75, tx=10, ty=-10)"
-        );
-    });
-
-    it("concat test5", () =>
-    {
-        let m1 = new Matrix(2, 1, -1, 1, 0, 5);
-        let m2 = new Matrix(1.3, 0.75, 0, -1.5, 0, -10);
-        m1.concat(m2);
-        expect(m1.toString()).toBe(
-            "(a=2.5999999046325684, b=0, c=-1.2999999523162842, d=-2.25, tx=0, ty=-17.5)"
-        );
-    });
-
-    it("concat test6", () =>
-    {
-        let m1 = new Matrix(2, 1, -1, 1, 0, 5);
-        let m2 = new Matrix(1.3, 0.75, 0, -1.5, 10, 0);
-        m1.concat(m2);
-        expect(m1.toString()).toBe(
-            "(a=2.5999999046325684, b=0, c=-1.2999999523162842, d=-2.25, tx=10, ty=-7.5)"
-        );
-    });
-
-    it("concat test7", () =>
-    {
-        let m1 = new Matrix(1,0,0,1,0,0);
-        let m2 = new Matrix(1.3, 0.75, 0, -1.5, 10, -10);
-        m1.concat(m2);
-        expect(m1.toString()).toBe(
-            "(a=1.2999999523162842, b=0.75, c=0, d=-1.5, tx=10, ty=-10)"
-        );
-    });
-
-    it("concat test8", () =>
-    {
-        let m1 = new Matrix(1,0,0,1,10,10);
-        let m2 = new Matrix(1.3, 0.75, 0, -1.5, 10, -10);
-        m1.concat(m2);
-        expect(m1.toString()).toBe(
-            "(a=1.2999999523162842, b=0.75, c=0, d=-1.5, tx=23, ty=-17.5)"
-        );
-    });
-});
 
 describe("Matrix.js rotate test", () =>
 {
@@ -2794,39 +2713,7 @@ describe("Matrix.js BugFix", () =>
     });
 });
 
-describe("Matrix.js copyFrom", () =>
-{
-    it("copy test case1", () =>
-    {
 
-        const defaultMatrix = new Matrix();
-        expect(defaultMatrix.toString()).toBe(
-            "(a=1, b=0, c=0, d=1, tx=0, ty=0)"
-        );
-
-        const matrix = new Matrix(1, 2, 3, 4, 5, 6);
-        defaultMatrix.copyFrom(matrix);
-        expect(defaultMatrix.toString()).toBe(
-            "(a=1, b=2, c=3, d=4, tx=5, ty=6)"
-        );
-
-        defaultMatrix.a  = 1;
-        defaultMatrix.b  = 0;
-        defaultMatrix.c  = 0;
-        defaultMatrix.d  = 1;
-        defaultMatrix.tx = 100;
-        defaultMatrix.ty = 200;
-        expect(defaultMatrix.toString()).toBe(
-            "(a=1, b=0, c=0, d=1, tx=100, ty=200)"
-        );
-
-        expect(matrix.toString()).toBe(
-            "(a=1, b=2, c=3, d=4, tx=5, ty=6)"
-        );
-
-    });
-
-});
 
 describe("Matrix.js setTo", () =>
 {

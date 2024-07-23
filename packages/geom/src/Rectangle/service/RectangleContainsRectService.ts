@@ -4,16 +4,16 @@ import type { Rectangle } from "../../Rectangle";
  * @description 指定のRectangleがRectangle内に含まれるかを判定
  *              Determines whether the specified Rectangle is within the Rectangle
  *
- * @param  {Rectangle} src
- * @param  {Rectangle} dst
+ * @param  {Rectangle} rectangle1
+ * @param  {Rectangle} rectangle2
  * @return {boolean}
  * @method
  * @public
  */
-export const execute = (src: Rectangle, dst: Rectangle): boolean =>
+export const execute = (rectangle1: Rectangle, rectangle2: Rectangle): boolean =>
 {
-    return src.x <= dst.x
-        && src.y <= dst.y
-        && src.right >= dst.right
-        && src.bottom >= dst.bottom;
+    return rectangle1.x <= rectangle2.x
+        && rectangle1.y <= rectangle2.y
+        && rectangle1.right >= rectangle2.right
+        && rectangle1.bottom >= rectangle2.bottom;
 };

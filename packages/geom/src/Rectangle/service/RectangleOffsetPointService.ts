@@ -5,14 +5,14 @@ import type { Rectangle } from "../../Rectangle";
  * @description 矩形を指定された量だけオフセットする。
  *              Offset the Rectangle by the given amount.
  *
- * @param  {Rectangle} src
+ * @param  {Rectangle} rectangle
  * @param  {Point} point
  * @return {void}
  * @method
  * @public
  */
-export const execute = (src: Rectangle, point: Point): void =>
+export const execute = (rectangle: Rectangle, point: Point): void =>
 {
-    src.x += point.x;
-    src.y += point.y;
+    rectangle.x += point.x;
+    rectangle.y += point.y;
 };

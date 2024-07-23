@@ -1,5 +1,6 @@
 import { Point } from "./Point";
 import { execute as matrixCloneService } from "../src/Matrix/service/MatrixCloneService";
+import { execute as matirxConcatService } from "../src/Matrix/service/MatirxConcatService";
 
 /**
  * @type {Float32Array[]}
@@ -286,38 +287,14 @@ export class Matrix
      *              Concatenates a matrix with the current matrix,
      *              effectively combining the geometric effects of the two.
      *
-     * @param  {Matrix} m
+     * @param  {Matrix} matrix
      * @return {void}
      * @method
      * @public
      */
-    concat (m: Matrix): void
+    concat (matrix: Matrix): void
     {
-        const matrix = this._$matrix;
-        const target = m._$matrix;
-
-        let a =  matrix[0] * target[0];
-        let b =  0.0;
-        let c =  0.0;
-        let d =  matrix[3] * target[3];
-        let tx = matrix[4] * target[0] + target[4];
-        let ty = matrix[5] * target[3] + target[5];
-
-        if (matrix[1] || matrix[2] || target[1] || target[2]) {
-            a  += matrix[1] * target[2];
-            d  += matrix[2] * target[1];
-            b  += matrix[0] * target[1] + matrix[1] * target[3];
-            c  += matrix[2] * target[0] + matrix[3] * target[2];
-            tx += matrix[5] * target[2];
-            ty += matrix[4] * target[1];
-        }
-
-        this._$matrix[0] = a;
-        this._$matrix[1] = b;
-        this._$matrix[2] = c;
-        this._$matrix[3] = d;
-        this._$matrix[4] = tx;
-        this._$matrix[5] = ty;
+        matirxConcatService(this, matrix);
     }
 
     /**
