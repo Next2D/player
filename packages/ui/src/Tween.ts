@@ -1,4 +1,5 @@
 import { Job } from "./Job";
+import type { ObjectImpl } from "./interface/ObjectImpl";
 
 /**
  * @class
@@ -11,7 +12,7 @@ export class Tween
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class Tween]
+     * @default "[class Tween]"
      * @method
      * @static
      */
@@ -25,7 +26,7 @@ export class Tween
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.ui.Tween
+     * @default "next2d.ui.Tween"
      * @const
      * @static
      */
@@ -39,7 +40,7 @@ export class Tween
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object Tween]
+     * @default "[object Tween]"
      * @method
      * @public
      */
@@ -53,7 +54,7 @@ export class Tween
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.ui.Tween
+     * @default "next2d.ui.Tween"
      * @const
      * @public
      */
@@ -77,7 +78,7 @@ export class Tween
      * @static
      */
     static add (
-        target: any, from: any, to: any,
+        target: any, from: ObjectImpl, to: ObjectImpl,
         delay: number = 0, duration: number = 1,
         ease: Function | null = null
     ): Job {

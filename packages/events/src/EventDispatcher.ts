@@ -1,18 +1,12 @@
 import { Event } from "./Event";
 import { EventPhase } from "./EventPhase";
-import type { Player } from "@next2d/core";
-import type { EventListenerImpl } from "@next2d/interface";
-import type { DisplayObjectContainer } from "@next2d/display";
+import type { EventListenerImpl } from "./interface/EventListenerImpl";
+import type { EventDispatcherImpl } from "./interface/EventDispatcherImpl";
 import {
-    $setCurrentLoaderInfo,
-    $currentPlayer
-} from "@next2d/util";
-import {
-    $getMap,
-    $poolMap,
+    $broadcastEvents,
     $getArray,
     $poolArray
-} from "@next2d/share";
+} from "./EventUtil";
 
 /**
  * @description EventDispatcher クラスは、イベントを送出するすべてのクラスの基本クラスです。
@@ -115,10 +109,7 @@ export class EventDispatcher
         priority: number = 0
     ): void {
 
-        const player: Player = $currentPlayer();
-
         let events: EventListenerImpl[];
-        let isBroadcast: boolean = false;
 
         type = `${type}`;
         switch (type) {
@@ -133,15 +124,13 @@ export class EventDispatcher
             case "keyDown":
             case "keyUp":
 
-                if (!player.broadcastEvents.size
-                    || !player.broadcastEvents.has(type)
+                if (!$broadcastEvents.size
+                    || !$broadcastEvents.has(type)
                 ) {
-                    player.broadcastEvents.set(type, $getArray());
+                    $broadcastEvents.set(type, $getArray());
                 }
 
-                events = player.broadcastEvents.get(type) || $getArray();
-
-                isBroadcast = true;
+                events = $broadcastEvents.get(type) as NonNullable<EventListenerImpl[]>;
 
                 break;
 
@@ -150,14 +139,14 @@ export class EventDispatcher
 
                 // init
                 if (!this._$events) {
-                    this._$events = $getMap();
+                    this._$events = new Map();
                 }
 
                 if (!this._$events.size || !this._$events.has(type)) {
                     this._$events.set(type, $getArray());
                 }
 
-                events = this._$events.get(type) || $getArray();
+                events = this._$events.get(type) as NonNullable<EventListenerImpl[]>;
 
                 break;
 
@@ -176,10 +165,12 @@ export class EventDispatcher
                 continue;
             }
 
-            if (event.listener === listener) {
-                length = idx;
+            if (event.listener !== listener) {
+                continue;
             }
 
+            length = idx;
+            break;
         }
 
         // add or overwrite
@@ -210,20 +201,6 @@ export class EventDispatcher
             });
 
         }
-
-        // set new event
-        if (isBroadcast) {
-
-            player.broadcastEvents.set(type, events);
-
-        } else {
-
-            if (!this._$events) {
-                this._$events = $getMap();
-            }
-
-            this._$events.set(type, events);
-        }
     }
 
     /**
@@ -247,49 +224,44 @@ export class EventDispatcher
             case Event.DEACTIVATE:
             case "keyDown":
             case "keyUp":
-                {
-                    const player = $currentPlayer();
+                if ($broadcastEvents.size
+                    && $broadcastEvents.has(event.type)
+                ) {
 
-                    if (player && player.broadcastEvents.size
-                        && player.broadcastEvents.has(event.type)
-                    ) {
+                    const events = $broadcastEvents.get(event.type) as NonNullable<EventListenerImpl[]>;
+                    for (let idx: number = 0; idx < events.length; ++idx) {
 
-                        const events: EventListenerImpl[] = player.broadcastEvents.get(event.type) as NonNullable<EventListenerImpl[]>;
-                        for (let idx: number = 0; idx < events.length; ++idx) {
-
-                            const obj: EventListenerImpl = events[idx];
-                            if (obj.target !== this) {
-                                continue;
-                            }
-
-                            // start target
-                            event.eventPhase = EventPhase.AT_TARGET;
-
-                            // event execute
-                            event.currentTarget = obj.target;
-
-                            try {
-
-                                event.listener = obj.listener;
-                                obj.listener.call(null, event);
-
-                            } catch (e) {
-
-                                console.error(e);
-
-                                return false;
-
-                            }
+                        const obj: EventListenerImpl = events[idx];
+                        if (obj.target !== this) {
+                            continue;
                         }
 
-                        return true;
+                        // start target
+                        event.eventPhase = EventPhase.AT_TARGET;
+
+                        // event execute
+                        event.currentTarget = obj.target;
+
+                        try {
+
+                            event.listener = obj.listener;
+                            obj.listener.call(null, event);
+
+                        } catch (e) {
+
+                            console.error(e);
+
+                            return false;
+
+                        }
                     }
+
+                    return true;
                 }
                 break;
 
             default:
                 {
-
                     let events: EventListenerImpl[] | null = null;
                     if (this._$events
                         && this._$events.size
@@ -309,14 +281,14 @@ export class EventDispatcher
                     const parentEvents = $getArray();
                     if ("parent" in this) {
 
-                        let parent: DisplayObjectContainer | null = this.parent as NonNullable<DisplayObjectContainer | null>;
+                        let parent = this.parent as EventDispatcherImpl<any> | null;
                         while (parent) {
 
                             if (parent.hasEventListener(event.type)) {
 
-                                const events: EventListenerImpl[] | void = parent._$events
-                                    ? parent._$events.get(event.type)
-                                    : undefined;
+                                const events: EventListenerImpl[] | null = parent._$events && parent._$events.has(event.type)
+                                    ? parent._$events.get(event.type) as NonNullable<EventListenerImpl[]>
+                                    : null;
 
                                 if (events) {
                                     parentEvents.push(events);
@@ -359,9 +331,6 @@ export class EventDispatcher
 
                                             // event execute
                                             event.currentTarget = obj.target;
-                                            $setCurrentLoaderInfo(
-                                                obj.target.loaderInfo
-                                            );
 
                                             try {
 
@@ -409,11 +378,6 @@ export class EventDispatcher
 
                                 // event execute
                                 event.currentTarget = obj.target;
-
-                                $setCurrentLoaderInfo(
-                                    obj.target.loaderInfo
-                                );
-
                                 try {
 
                                     event.listener = obj.listener;
@@ -457,10 +421,6 @@ export class EventDispatcher
 
                                         // event execute
                                         event.currentTarget = obj.target;
-                                        $setCurrentLoaderInfo(
-                                            obj.target.loaderInfo
-                                        );
-
                                         try {
 
                                             event.listener = obj.listener;
@@ -528,14 +488,11 @@ export class EventDispatcher
             case "keyDown":
             case "keyUp":
             {
-                const player = $currentPlayer();
-
-                if (player
-                    && player.broadcastEvents.size
-                    && player.broadcastEvents.has(type)
+                if ($broadcastEvents.size
+                    && $broadcastEvents.has(type)
                 ) {
 
-                    const events: EventListenerImpl[] = player.broadcastEvents.get(type) || $getArray();
+                    const events: EventListenerImpl[] = $broadcastEvents.get(type) || $getArray();
 
                     for (let idx: number = 0; idx < events.length; idx++) {
                         if (events[idx].target === this) {
@@ -579,8 +536,6 @@ export class EventDispatcher
             return;
         }
 
-        const player: Player = $currentPlayer();
-
         let events: EventListenerImpl[] | null = null;
 
         let isBroadcast: boolean = false;
@@ -595,13 +550,8 @@ export class EventDispatcher
             case Event.DEACTIVATE:
             case "keyDown":
             case "keyUp":
-
                 isBroadcast = true;
-
-                if (player) {
-                    events = player.broadcastEvents.get(type) || $getArray();
-                }
-
+                events = $broadcastEvents.get(type) || $getArray();
                 break;
 
             default:
@@ -638,7 +588,7 @@ export class EventDispatcher
 
             if (isBroadcast) {
 
-                player.broadcastEvents.delete(type);
+                $broadcastEvents.delete(type);
 
             } else {
 
@@ -649,7 +599,6 @@ export class EventDispatcher
                 this._$events.delete(type);
 
                 if (!this._$events.size) {
-                    $poolMap(this._$events);
                     this._$events = null;
                 }
 
@@ -681,12 +630,12 @@ export class EventDispatcher
 
         if (isBroadcast) {
 
-            player.broadcastEvents.set(type, events);
+            $broadcastEvents.set(type, events);
 
         } else {
 
             if (!this._$events) {
-                this._$events = $getMap();
+                this._$events = new Map();
             }
 
             this._$events.set(type, events);
@@ -714,8 +663,6 @@ export class EventDispatcher
             return;
         }
 
-        const player = $currentPlayer();
-
         let events: EventListenerImpl[] | null = null;
 
         let isBroadcast: boolean = false;
@@ -730,13 +677,8 @@ export class EventDispatcher
             case Event.DEACTIVATE:
             case "keyDown":
             case "keyUp":
-
                 isBroadcast = true;
-
-                if (player) {
-                    events = player.broadcastEvents.get(type) || $getArray();
-                }
-
+                events = $broadcastEvents.get(type) || $getArray();
                 break;
 
             default:
@@ -772,7 +714,7 @@ export class EventDispatcher
 
             if (isBroadcast) {
 
-                player.broadcastEvents.delete(type);
+                $broadcastEvents.delete(type);
 
             } else {
 
@@ -783,7 +725,6 @@ export class EventDispatcher
                 this._$events.delete(type);
 
                 if (!this._$events.size) {
-                    $poolMap(this._$events);
                     this._$events = null;
                 }
             }
@@ -814,12 +755,12 @@ export class EventDispatcher
 
         if (isBroadcast) {
 
-            player.broadcastEvents.set(type, results);
+            $broadcastEvents.set(type, results);
 
         } else {
 
             if (!this._$events) {
-                this._$events = $getMap();
+                this._$events = new Map();
             }
 
             this._$events.set(type, results);
@@ -847,7 +788,7 @@ export class EventDispatcher
 
         if ("parent" in this) {
 
-            let parent: DisplayObjectContainer | null = this.parent as NonNullable<DisplayObjectContainer | null>;
+            let parent = this.parent as EventDispatcherImpl<any> | null;
             while (parent) {
 
                 if (parent.hasEventListener(type)) {

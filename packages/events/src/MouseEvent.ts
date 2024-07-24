@@ -1,5 +1,5 @@
 import { Event } from "./Event";
-import { $getEvent } from "@next2d/util";
+import { $getEvent } from "./EventUtil";
 
 /**
  * MouseEvent オブジェクトは、マウスイベントが発生するたびにイベントフローに送出されます。

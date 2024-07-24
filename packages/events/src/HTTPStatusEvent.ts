@@ -1,5 +1,5 @@
 import { Event } from "./Event";
-import type { URLRequestHeader } from "@next2d/net";
+import type { URLRequestHeaderImpl } from "./interface/URLRequestHeaderImpl";
 
 /**
  * ネットワーク要求が HTTP ステータスコードを返すと、アプリケーションによって HTTPStatusEvent オブジェクトが送出されます。
@@ -13,7 +13,7 @@ import type { URLRequestHeader } from "@next2d/net";
 export class HTTPStatusEvent extends Event
 {
     private readonly _$status: number;
-    private readonly _$responseHeaders: URLRequestHeader[];
+    private readonly _$responseHeaders: URLRequestHeaderImpl[];
     private readonly _$responseURL: string;
 
     /**
@@ -30,7 +30,7 @@ export class HTTPStatusEvent extends Event
     constructor (
         type: string, bubbles: boolean = false, cancelable: boolean = false,
         status: number = 0, response_url: string = "",
-        response_headers: URLRequestHeader[] = []
+        response_headers: URLRequestHeaderImpl[] = []
     ) {
 
         super(type, bubbles, cancelable);
@@ -141,7 +141,7 @@ export class HTTPStatusEvent extends Event
      * @readonly
      * @public
      */
-    get responseHeaders (): URLRequestHeader[]
+    get responseHeaders (): URLRequestHeaderImpl[]
     {
         return this._$responseHeaders;
     }

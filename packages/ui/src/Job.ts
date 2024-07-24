@@ -1,13 +1,9 @@
 import { Easing } from "./Easing";
+import type { ObjectImpl } from "./interface/ObjectImpl";
 import {
     EventDispatcher,
     Event
 } from "@next2d/events";
-import {
-    $setTimeout,
-    $performance,
-    $cancelAnimationFrame
-} from "@next2d/share";
 
 /**
  * @class
@@ -44,7 +40,7 @@ export class Job extends EventDispatcher
      */
     constructor (
         target: any,
-        from: any = null, to: any = null,
+        from: ObjectImpl, to: ObjectImpl,
         delay: number = 0, duration: number = 1,
         ease: Function | null = null
     ) {
@@ -147,7 +143,7 @@ export class Job extends EventDispatcher
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class Job]
+     * @default "[class Job]"
      * @method
      * @static
      */
@@ -161,7 +157,7 @@ export class Job extends EventDispatcher
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.ui.Job
+     * @default "next2d.ui.Job"
      * @const
      * @static
      */
@@ -175,7 +171,7 @@ export class Job extends EventDispatcher
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object Job]
+     * @default "[object Job]"
      * @method
      * @public
      */
@@ -189,7 +185,7 @@ export class Job extends EventDispatcher
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.ui.Job
+     * @default "next2d.ui.Job"
      * @const
      * @public
      */
@@ -244,28 +240,26 @@ export class Job extends EventDispatcher
 
     /**
      * @member {object}
-     * @default null
      * @public
      */
-    get from (): any
+    get from (): ObjectImpl
     {
         return this._$from;
     }
-    set from (from: any)
+    set from (from: ObjectImpl)
     {
         this._$from = from;
     }
 
     /**
      * @member {object}
-     * @default null
      * @public
      */
-    get to (): any
+    get to (): ObjectImpl
     {
         return this._$to;
     }
-    set to (to: any)
+    set to (to: ObjectImpl)
     {
         this._$to = to;
     }
@@ -307,7 +301,7 @@ export class Job extends EventDispatcher
 
         // setup
         this._$stopFlag  = false;
-        this._$startTime = $performance.now();
+        this._$startTime = performance.now();
 
         this._$names = this._$entries(this._$from);
 
@@ -346,14 +340,14 @@ export class Job extends EventDispatcher
     start (): void
     {
         if (this._$timerId) {
-            $cancelAnimationFrame(this._$timerId);
+            cancelAnimationFrame(this._$timerId);
         }
 
         this._$forceStop = false;
 
         if (this._$delay) {
 
-            $setTimeout((): void =>
+            setTimeout((): void =>
             {
                 this.initialize();
             }, this._$delay * 1000);
@@ -372,12 +366,11 @@ export class Job extends EventDispatcher
     stop (): void
     {
         if (this._$timerId) {
-            $cancelAnimationFrame(this._$timerId);
+            cancelAnimationFrame(this._$timerId);
         }
 
         if (this.hasEventListener(Event.STOP)) {
             this.dispatchEvent(new Event(Event.STOP));
-            this.removeAllEventListener(Event.STOP);
         }
 
         this._$names     = null;
@@ -401,7 +394,7 @@ export class Job extends EventDispatcher
         }
 
         // update current time
-        this._$currentTime = ($performance.now() - this._$startTime) * 0.001;
+        this._$currentTime = (performance.now() - this._$startTime) * 0.001;
 
         this._$updateProperty(
             this._$target, this._$from, this._$to, this._$names
