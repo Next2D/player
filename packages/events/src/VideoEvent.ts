@@ -1,9 +1,9 @@
 import { Event } from "./Event";
+import { execute as eventFormatToStringService } from "./Event/EventFormatToStringService";
 
 /**
- * ビデオを再生または停止すると、VideoEvent オブジェクトを送出します。
- *
- * When a video is played or stopped, it sends out a VideoEvent object.
+ * @description ビデオを再生または停止すると、VideoEvent オブジェクトを送出します。
+ *              When a video is played or stopped, it sends out a VideoEvent object.
  *
  * @class
  * @memberOf next2d.events
@@ -51,7 +51,7 @@ export class VideoEvent extends Event
      * Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class VideoEvent]
+     * @default "[class VideoEvent]"
      * @method
      * @static
      */
@@ -65,7 +65,7 @@ export class VideoEvent extends Event
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events.VideoEvent
+     * @default "next2d.events.VideoEvent"
      * @const
      * @static
      */
@@ -84,7 +84,7 @@ export class VideoEvent extends Event
      */
     toString (): string
     {
-        return this.formatToString(
+        return eventFormatToStringService(this,
             "VideoEvent",
             "type", "bubbles", "cancelable",
             "eventPhase", "bytesLoaded", "bytesTotal"
@@ -96,7 +96,7 @@ export class VideoEvent extends Event
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events.VideoEvent
+     * @default "next2d.events.VideoEvent"
      * @const
      * @public
      */
@@ -110,7 +110,7 @@ export class VideoEvent extends Event
      *              Defines the value of the type property of a progress event object.
      *
      * @return {string}
-     * @default progress
+     * @default "progress"
      * @const
      * @static
      */
@@ -124,7 +124,7 @@ export class VideoEvent extends Event
      *              Defines the value of the type property of a play event object.
      *
      * @return {string}
-     * @default play
+     * @default "play"
      * @const
      * @static
      */
@@ -138,7 +138,7 @@ export class VideoEvent extends Event
      *              Defines the value of the type property of a playStart event object.
      *
      * @return {string}
-     * @default playStart
+     * @default "playStart"
      * @const
      * @static
      */
@@ -152,7 +152,7 @@ export class VideoEvent extends Event
      *              Defines the value of the type property of a playEnd event object.
      *
      * @return {string}
-     * @default playEnd
+     * @default "playEnd"
      * @const
      * @static
      */
@@ -166,7 +166,7 @@ export class VideoEvent extends Event
      *              Defines the value of the type property of a pause event object.
      *
      * @return {string}
-     * @default pause
+     * @default "pause"
      * @const
      * @static
      */
@@ -180,7 +180,7 @@ export class VideoEvent extends Event
      *              Defines the value of the type property of a seek event object.
      *
      * @return {string}
-     * @default seek
+     * @default "seek"
      * @const
      * @static
      */

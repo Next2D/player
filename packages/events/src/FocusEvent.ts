@@ -1,18 +1,14 @@
 import { Event } from "./Event";
+import { execute as eventFormatToStringService } from "./Event/EventFormatToStringService";
 
 /**
- * FocusEvent オブジェクトは、ユーザーが表示リストの1つのオブジェクトから
- * 別のオブジェクトにフォーカスを変更したときにオブジェクトによって送出されます。
- * 次の2種類のフォーカスイベントがあります。
+ * @description FocusEvent オブジェクトは、ユーザーが表示リストの1つのオブジェクトから
+ *              別のオブジェクトにフォーカスを変更したときにオブジェクトによって送出されます。
+ *              次の2種類のフォーカスイベントがあります。
  *
- * An object dispatches a FocusEvent object when the user changes
- * the focus from one object in the display list to another.
- * There are two types of focus events:
- *
- * <ul>
- *     <li>FocusEvent.FOCUS_IN</li>
- *     <li>FocusEvent.FOCUS_OUT</li>
- * </ul>
+ *              An object dispatches a FocusEvent object when the user changes
+ *              the focus from one object in the display list to another.
+ *              There are two types of focus events:
  *
  * @class
  * @memberOf next2d.events
@@ -38,7 +34,7 @@ export class FocusEvent extends Event
      * Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class FocusEvent]
+     * @default "[class FocusEvent]"
      * @method
      * @static
      */
@@ -52,7 +48,7 @@ export class FocusEvent extends Event
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events.FocusEvent
+     * @default "next2d.events.FocusEvent"
      * @const
      * @static
      */
@@ -71,7 +67,7 @@ export class FocusEvent extends Event
      */
     toString (): string
     {
-        return this.formatToString(
+        return eventFormatToStringService(this,
             "FocusEvent", "type", "bubbles", "cancelable", "eventPhase"
         );
     }
@@ -81,7 +77,7 @@ export class FocusEvent extends Event
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events.FocusEvent
+     * @default "next2d.events.FocusEvent"
      * @const
      * @public
      */

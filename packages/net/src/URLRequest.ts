@@ -1,11 +1,8 @@
-import { URLRequestHeader } from "./URLRequestHeader";
-import type {
-    URLRequestMethodImpl,
-    URLLoaderDataFormatImpl
-} from "@next2d/interface";
+import type { URLRequestHeaderImpl } from "./interface/URLRequestHeaderImpl";
+import type { URLLoaderDataFormatImpl } from "./interface/URLLoaderDataFormatImpl";
+import type { URLRequestMethodImpl } from "./interface/URLRequestMethodImpl";
 import type { Player } from "@next2d/core";
 import { $currentPlayer } from "@next2d/util";
-import { $getArray } from "@next2d/share";
 
 /**
  * URLRequestクラスは、外部へのリクエストを管理するクラスです
@@ -20,7 +17,7 @@ export class URLRequest
     private _$contentType: string;
     private _$data: string;
     private _$method: URLRequestMethodImpl;
-    private readonly _$requestHeaders: URLRequestHeader[];
+    private readonly _$requestHeaders: URLRequestHeaderImpl[];
     private _$responseDataFormat: URLLoaderDataFormatImpl;
     private _$withCredentials: boolean;
 
@@ -64,7 +61,7 @@ export class URLRequest
          * @type {array}
          * @private
          */
-        this._$requestHeaders = $getArray();
+        this._$requestHeaders = [];
 
         /**
          * @type {string}
@@ -86,7 +83,7 @@ export class URLRequest
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class URLRequest]
+     * @default "[class URLRequest]"
      * @method
      * @static
      */
@@ -100,7 +97,7 @@ export class URLRequest
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.net.URLRequest
+     * @default "next2d.net.URLRequest"
      * @const
      * @static
      */
@@ -114,7 +111,7 @@ export class URLRequest
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object URLRequest]
+     * @default "[object URLRequest]"
      * @method
      * @public
      */
@@ -128,7 +125,7 @@ export class URLRequest
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.net.URLRequest
+     * @default "next2d.net.URLRequest"
      * @const
      * @public
      */
@@ -142,7 +139,7 @@ export class URLRequest
      *              The MIME content type of the content in the the data property.
      *
      * @member {string}
-     * @default application/json
+     * @default "application/json"
      * @public
      */
     get contentType (): string
@@ -158,7 +155,7 @@ export class URLRequest
      * @description URL リクエストで送信されるデータを含むオブジェクトです。
      *              An object containing data to be transmitted with the URL request.
      *
-     * @member {string}
+     * @member {any}
      * @public
      */
     get data (): any
@@ -191,14 +188,14 @@ export class URLRequest
      * @description HTTP リクエストヘッダーの配列が HTTP リクエストに追加されます。
      *              The array of HTTP request headers to be appended to the HTTP request.
      *
-     * @member {URLRequestHeader[]}
+     * @member {URLRequestHeaderImpl[]}
      * @public
      */
-    get requestHeaders (): URLRequestHeader[]
+    get requestHeaders (): URLRequestHeaderImpl[]
     {
         return this._$requestHeaders;
     }
-    set requestHeaders (request_headers: URLRequestHeader[])
+    set requestHeaders (request_headers: URLRequestHeaderImpl[])
     {
         this._$requestHeaders.length = 0;
         this._$requestHeaders.push(...request_headers);
@@ -276,10 +273,13 @@ export class URLRequest
      * @readonly
      * @public
      */
-    get headers (): URLRequestHeader[]
+    get headers (): URLRequestHeaderImpl[]
     {
-        const headers = $getArray();
-        headers.push(new URLRequestHeader("Content-Type", `${this._$contentType}`));
+        const headers = [];
+        headers.push({
+            "name": "Content-Type",
+            "value": this._$contentType
+        });
         if (this._$requestHeaders.length) {
             headers.push(...this._$requestHeaders);
         }

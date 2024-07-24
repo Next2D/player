@@ -1,7 +1,6 @@
 /**
- * EventPhase クラスは、Event クラスの eventPhase プロパティの値を提供します。
- *
- * The EventPhase class provides values for the eventPhase property of the Event class.
+ * @description EventPhase クラスは、Event クラスの eventPhase プロパティの値を提供します。
+ *              The EventPhase class provides values for the eventPhase property of the Event class.
  *
  * @class
  * @memberOf next2d.events
@@ -13,7 +12,7 @@ export class EventPhase
      * Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class EventPhase]
+     * @default "[class EventPhase]"
      * @method
      * @static
      */
@@ -27,7 +26,7 @@ export class EventPhase
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events.EventPhase
+     * @default "next2d.events.EventPhase"
      * @const
      * @static
      */
@@ -40,8 +39,8 @@ export class EventPhase
      * @description 指定されたオブジェクトのストリングを返します。
      *              Returns the string representation of the specified object.
      *
-     * @return {string}
-     * @default [object EventPhase]
+     * @return  {string}
+     * @default "[object EventPhase]"
      * @method
      * @public
      */
@@ -55,7 +54,7 @@ export class EventPhase
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events.EventPhase
+     * @default "next2d.events.EventPhase"
      * @const
      * @public
      */

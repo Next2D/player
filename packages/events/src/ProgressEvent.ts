@@ -1,11 +1,11 @@
 import { Event } from "./Event";
+import { execute as eventFormatToStringService } from "./Event/EventFormatToStringService";
 
 /**
- * ProgressEvent オブジェクトは、ロード処理が開始されたとき、またはソケットがデータを受信したときに送出されます。
- * これらのイベントは通常、JSON ファイル、イメージまたはデータがアプリケーションにロードされるときに生成されます。
- *
- * A ProgressEvent object is dispatched when a load operation has begun or a socket has received data.
- * These events are usually generated when JSON files, images or data are loaded into an application.
+ * @description ProgressEvent オブジェクトは、ロード処理が開始されたとき、またはソケットがデータを受信したときに送出されます。
+ *              これらのイベントは通常、JSON ファイル、イメージまたはデータがアプリケーションにロードされるときに生成されます。
+ *              A ProgressEvent object is dispatched when a load operation has begun or a socket has received data.
+ *              These events are usually generated when JSON files, images or data are loaded into an application.
  *
  * @class
  * @memberOf next2d.events
@@ -53,7 +53,7 @@ export class ProgressEvent extends Event
      * Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class ProgressEvent]
+     * @default "[class ProgressEvent]"
      * @method
      * @static
      */
@@ -67,7 +67,7 @@ export class ProgressEvent extends Event
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events.ProgressEvent
+     * @default "next2d.events.ProgressEvent"
      * @const
      * @static
      */
@@ -86,7 +86,7 @@ export class ProgressEvent extends Event
      */
     toString (): string
     {
-        return this.formatToString(
+        return eventFormatToStringService(this,
             "ProgressEvent",
             "type", "bubbles", "cancelable",
             "eventPhase", "bytesLoaded", "bytesTotal"
@@ -98,7 +98,7 @@ export class ProgressEvent extends Event
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events.ProgressEvent
+     * @default "next2d.events.ProgressEvent"
      * @const
      * @public
      */
@@ -112,7 +112,7 @@ export class ProgressEvent extends Event
      *              Defines the value of the type property of a progress event object.
      *
      * @return {string}
-     * @default progress
+     * @default "progress"
      * @const
      * @static
      */

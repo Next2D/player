@@ -1,10 +1,10 @@
 import { Event } from "./Event";
 import type { URLRequestHeaderImpl } from "./interface/URLRequestHeaderImpl";
+import { execute as eventFormatToStringService } from "./Event/EventFormatToStringService";
 
 /**
- * ネットワーク要求が HTTP ステータスコードを返すと、アプリケーションによって HTTPStatusEvent オブジェクトが送出されます。
- *
- * The application dispatches HTTPStatusEvent objects when a network request returns an HTTP status code.
+ * @description ネットワーク要求が HTTP ステータスコードを返すと、アプリケーションによって HTTPStatusEvent オブジェクトが送出されます。
+ *              The application dispatches HTTPStatusEvent objects when a network request returns an HTTP status code.
  *
  * @class
  * @memberOf next2d.events
@@ -58,11 +58,11 @@ export class HTTPStatusEvent extends Event
     }
 
     /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
+     * @description 指定されたクラスのストリングを返します。
+     *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class HTTPStatusEvent]
+     * @default "[class HTTPStatusEvent]"
      * @method
      * @static
      */
@@ -76,7 +76,7 @@ export class HTTPStatusEvent extends Event
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events.HTTPStatusEvent
+     * @default "next2d.events.HTTPStatusEvent"
      * @const
      * @static
      */
@@ -95,7 +95,7 @@ export class HTTPStatusEvent extends Event
      */
     toString (): string
     {
-        return this.formatToString(
+        return eventFormatToStringService(this,
             "HTTPStatusEvent",
             "type", "bubbles", "cancelable",
             "eventPhase", "status", "responseURL"
@@ -107,7 +107,7 @@ export class HTTPStatusEvent extends Event
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events.HTTPStatusEvent
+     * @default "next2d.events.HTTPStatusEvent"
      * @const
      * @public
      */
@@ -123,7 +123,7 @@ export class HTTPStatusEvent extends Event
      *              of the type property of a httpStatus event object.
      *
      * @return {string}
-     * @default httpStatus
+     * @default "httpStatus"
      * @const
      * @static
      */

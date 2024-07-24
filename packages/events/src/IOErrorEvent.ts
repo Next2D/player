@@ -1,9 +1,9 @@
 import { Event } from "./Event";
+import { execute as eventFormatToStringService } from "./Event/EventFormatToStringService";
 
 /**
- * IOErrorEvent オブジェクトは、エラーが発生して入力操作または出力操作が失敗したときに送出されます。
- *
- * An IOErrorEvent object is dispatched when an error causes input or output operations to fail.
+ * @description IOErrorEvent オブジェクトは、エラーが発生して入力操作または出力操作が失敗したときに送出されます。
+ *              An IOErrorEvent object is dispatched when an error causes input or output operations to fail.
  *
  * @class
  * @memberOf next2d.events
@@ -44,7 +44,7 @@ export class IOErrorEvent extends Event
      * Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class IOErrorEvent]
+     * @default "[class IOErrorEvent]"
      * @method
      * @static
      */
@@ -58,7 +58,7 @@ export class IOErrorEvent extends Event
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events.IOErrorEvent
+     * @default "next2d.events.IOErrorEvent"
      * @const
      * @static
      */
@@ -77,7 +77,7 @@ export class IOErrorEvent extends Event
      */
     toString (): string
     {
-        return this.formatToString(
+        return eventFormatToStringService(this,
             "IOErrorEvent",
             "type", "bubbles", "cancelable",
             "eventPhase", "text"
@@ -89,7 +89,7 @@ export class IOErrorEvent extends Event
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events.IOErrorEvent
+     * @default "next2d.events.IOErrorEvent"
      * @const
      * @public
      */
@@ -103,7 +103,7 @@ export class IOErrorEvent extends Event
      *              Defines the value of the type property of an ioError event object.
      *
      * @return {string}
-     * @default ioError
+     * @default "ioError"
      * @const
      * @static
      */

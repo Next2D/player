@@ -1,20 +1,21 @@
 import { EventPhase } from "./EventPhase";
 import type { EventDispatcherImpl } from "./interface/EventDispatcherImpl";
+import { execute as eventFormatToStringService } from "./Event/EventFormatToStringService";
 
 /**
- * Event クラスのメソッドは、イベントリスナー関数で使用してイベントオブジェクトの動作に影響を与えることができます。
- * 一部のイベントにはデフォルトの動作が関連付けられています。
- * 例えば、doubleClick イベントには、イベント時にマウスポインター位置の単語がハイライト表示されるというデフォルトの動作が関連付けられています。
- * イベントリスナーで preventDefault() メソッドを呼び出してこの動作をキャンセルできます。
- * また、stopPropagation() メソッドまたは stopImmediatePropagation() メソッドを呼び出すと、
- * 現在のイベントリスナーを、イベントを処理する最後のイベントリスナーにすることができます。
+ * @description Event クラスのメソッドは、イベントリスナー関数で使用してイベントオブジェクトの動作に影響を与えることができます。
+ *              一部のイベントにはデフォルトの動作が関連付けられています。
+ *              例えば、doubleClick イベントには、イベント時にマウスポインター位置の単語がハイライト表示されるというデフォルトの動作が関連付けられています。
+ *              イベントリスナーで preventDefault() メソッドを呼び出してこの動作をキャンセルできます。
+ *              また、stopPropagation() メソッドまたは stopImmediatePropagation() メソッドを呼び出すと、
+ *              現在のイベントリスナーを、イベントを処理する最後のイベントリスナーにすることができます。
  *
- * The methods of the Event class can be used in event listener functions to affect the behavior of the event object.
- * Some events have an associated default behavior. For example,
- * the doubleClick event has an associated default behavior that highlights the word under the mouse pointer at the time of the event.
- * Your event listener can cancel this behavior by calling the preventDefault() method.
- * You can also make the current event listener the last one to process
- * an event by calling the stopPropagation() or stopImmediatePropagation() method.
+ *              The methods of the Event class can be used in event listener functions to affect the behavior of the event object.
+ *              Some events have an associated default behavior. For example,
+ *              the doubleClick event has an associated default behavior that highlights the word under the mouse pointer at the time of the event.
+ *              Your event listener can cancel this behavior by calling the preventDefault() method.
+ *              You can also make the current event listener the last one to process
+ *              an event by calling the stopPropagation() or stopImmediatePropagation() method.
  *
  * @class
  * @memberOf next2d.events
@@ -77,7 +78,7 @@ export class Event
         this._$currentTarget = null;
 
         /**
-         * @type    {number}
+         * @type {number}
          * @default EventPhase.AT_TARGET
          * @private
          */
@@ -109,8 +110,8 @@ export class Event
      * 指定されたクラスのストリングを返します。
      * Returns the string representation of the specified class.
      *
-     * @return  {string}
-     * @default [class Event]
+     * @return {string}
+     * @default "[class Event]"
      * @method
      * @static
      */
@@ -124,7 +125,7 @@ export class Event
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default next2d.events.Event
+     * @default "next2d.events.Event"
      * @const
      * @static
      */
@@ -143,7 +144,7 @@ export class Event
      */
     toString (): string
     {
-        return this.formatToString("Event", "type", "bubbles", "cancelable", "eventPhase");
+        return eventFormatToStringService(this, "Event", "type", "bubbles", "cancelable", "eventPhase");
     }
 
     /**
@@ -151,7 +152,7 @@ export class Event
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default next2d.events.Event
+     * @default "next2d.events.Event"
      * @const
      * @public
      */
@@ -165,8 +166,7 @@ export class Event
      *              The ACTIVATE constant defines the value
      *              of the type property of an activate event object.
      *
-     * @return  {string}
-     * @default activate
+     * @return {string}
      * @const
      * @static
      */
@@ -180,8 +180,7 @@ export class Event
      *              The Event.ADDED constant defines the value
      *              of the type property of an added event object.
      *
-     * @return  {string}
-     * @default added
+     * @return {string}
      * @const
      * @static
      */
@@ -195,8 +194,7 @@ export class Event
      *              The Event.ADDED_TO_STAGE constant defines the value
      *              of the type property of an addedToStage event object.
      *
-     * @return  {string}
-     * @default addedToStage
+     * @return {string}
      * @const
      * @static
      */
@@ -210,8 +208,7 @@ export class Event
      *              The Event.CHANGE constant defines the value
      *              of the type property of a change event object.
      *
-     * @return  {string}
-     * @default change
+     * @return {string}
      * @const
      * @static
      */
@@ -225,8 +222,7 @@ export class Event
      *              The Event.COMPLETE constant defines the value
      *              of the type property of a complete event object.
      *
-     * @return  {string}
-     * @default complete
+     * @return {string}
      * @const
      * @static
      */
@@ -240,8 +236,7 @@ export class Event
      *              The Event.DEACTIVATE constant defines the value
      *              of the type property of a deactivate event object.
      *
-     * @return  {string}
-     * @default deactivate
+     * @return {string}
      * @const
      * @static
      */
@@ -255,8 +250,7 @@ export class Event
      *              The Event.ENTER_FRAME constant defines the value
      *              of the type property of an enterFrame event object.
      *
-     * @return  {string}
-     * @default enterFrame
+     * @return {string}
      * @const
      * @static
      */
@@ -270,8 +264,7 @@ export class Event
      *              The Event.EXIT_FRAME constant defines the value
      *              of the type property of an exitFrame event object.
      *
-     * @return  {string}
-     * @default exitFrame
+     * @return {string}
      * @const
      * @static
      */
@@ -285,8 +278,7 @@ export class Event
      *              The Event.FRAME_CONSTRUCTED constant defines the value
      *              of the type property of an frameConstructed event object.
      *
-     * @return  {string}
-     * @default frameConstructed
+     * @return {string}
      * @const
      * @static
      */
@@ -300,8 +292,7 @@ export class Event
      *              The Event.FRAME_LABEL constant defines the value
      *              of the type property of an frameLabel event object.
      *
-     * @return  {string}
-     * @default frameLabel
+     * @return {string}
      * @const
      * @static
      */
@@ -315,8 +306,7 @@ export class Event
      *              The Event.INIT constant defines the value
      *              of the type property of an init event object.
      *
-     * @return  {string}
-     * @default frameConstructed
+     * @return {string}
      * @const
      * @static
      */
@@ -330,8 +320,7 @@ export class Event
      *              The Event.LOAD constant defines the value
      *              of the type property of an load event object.
      *
-     * @return  {string}
-     * @default frameConstructed
+     * @return {string}
      * @const
      * @static
      */
@@ -345,8 +334,7 @@ export class Event
      *              The Event.MOUSE_LEAVE constant defines the value
      *              of the type property of a mouseLeave event object.
      *
-     * @return  {string}
-     * @default mouseLeave
+     * @return {string}
      * @const
      * @static
      */
@@ -360,8 +348,7 @@ export class Event
      *              The Event.REMOVED constant defines the value
      *              of the type property of a removed event object.
      *
-     * @return  {string}
-     * @default removed
+     * @return {string}
      * @const
      * @static
      */
@@ -375,8 +362,7 @@ export class Event
      *              The Event.REMOVED_FROM_STAGE constant defines the value
      *              of the type property of a removedFromStage event object.
      *
-     * @return  {string}
-     * @default removedFromStage
+     * @return {string}
      * @const
      * @static
      */
@@ -392,7 +378,6 @@ export class Event
      *              of the type property of a render event object.
      *
      * @return {string}
-     * @default render
      * @const
      * @static
      */
@@ -408,7 +393,6 @@ export class Event
      *              of the type property of a resize event object.
      *
      * @return {string}
-     * @default resize
      * @const
      * @static
      */
@@ -424,7 +408,6 @@ export class Event
      *              of the type property of a render event object.
      *
      * @return {string}
-     * @default scroll
      * @const
      * @static
      */
@@ -440,7 +423,6 @@ export class Event
      *              of the type property of a render event object.
      *
      * @return {string}
-     * @default open
      * @const
      * @static
      */
@@ -456,7 +438,6 @@ export class Event
      *              of the type property of a render event object.
      *
      * @return {string}
-     * @default stop
      * @const
      * @static
      */
@@ -471,7 +452,6 @@ export class Event
      *              of the type property of a soundComplete event object.
      *
      * @return {string}
-     * @default render
      * @const
      * @static
      */
@@ -487,7 +467,6 @@ export class Event
      *              of the type property of a render event object.
      *
      * @return {string}
-     * @default update
      * @const
      * @static
      */
@@ -501,6 +480,7 @@ export class Event
      *              Indicates whether an event is a bubbling event.
      *
      * @member {boolean}
+     * @default false
      * @readonly
      * @public
      */
@@ -515,6 +495,7 @@ export class Event
      *              with the event can be prevented.
      *
      * @member {boolean}
+     * @default false
      * @readonly
      * @public
      */
@@ -529,6 +510,7 @@ export class Event
      *              with an event listener.
      *
      * @member {EventDispatcher|null}
+     * @default null
      * @public
      */
     get currentTarget (): EventDispatcherImpl<any>
@@ -545,6 +527,7 @@ export class Event
      *              The current phase in the event flow.
      *
      * @member {number}
+     * @default EventPhase.AT_TARGET
      * @public
      */
     get eventPhase (): number
@@ -561,6 +544,7 @@ export class Event
      *              Function currently being called.
      *
      * @member {function}
+     * @default null
      * @public
      */
     get listener (): Function | null
@@ -599,40 +583,6 @@ export class Event
     get type (): string
     {
         return this._$type;
-    }
-
-    /**
-     * @description カスタム ActionScript 3.0 Event クラスに
-     *              toString() メソッドを実装するためのユーティリティ関数です。
-     *              A utility function for implementing the toString() method
-     *              in custom ActionScript 3.0 Event classes.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    formatToString (...args: string[]): string
-    {
-        let str = `[${args[0]}`;
-
-        for (let idx:number = 1; idx < args.length; ++idx) {
-
-            // eslint-disable-next-line prefer-rest-params
-            const name = args[idx];
-
-            str += ` ${name}=`;
-
-            // @ts-ignore
-            const value = this[name];
-            if (typeof value === "string") {
-                str += `"${value}"`;
-            } else {
-                str += `${value}`;
-            }
-
-        }
-
-        return `${str}]`;
     }
 
     /**
