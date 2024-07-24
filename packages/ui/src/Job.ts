@@ -1,5 +1,8 @@
-import { Easing } from "./Easing";
 import type { ObjectImpl } from "./interface/ObjectImpl";
+import type { EntriesObjectImpl } from "./interface/EntriesObjectImpl";
+import { Easing } from "./Easing";
+import { execute as jobEntriesService } from "./Job/JobEntriesService";
+import { execute as jobUpdateFrameService } from "./Job/JobUpdateFrameService";
 import {
     EventDispatcher,
     Event
@@ -16,12 +19,11 @@ export class Job extends EventDispatcher
     private _$delay: number;
     private _$duration: number;
     private _$ease: Function;
-    private _$from: any;
-    private _$names: any[] | null;
+    private _$from: ObjectImpl;
+    private _$to: ObjectImpl;
+    private _$entries: EntriesObjectImpl[] | null;
     private _$startTime: number;
     private _$stopFlag: boolean;
-    private _$forceStop: boolean;
-    private _$to: any;
     private _$currentTime: number;
     private _$timerId: number;
     // eslint-disable-next-line no-use-before-define
@@ -86,7 +88,7 @@ export class Job extends EventDispatcher
          * @default null
          * @private
          */
-        this._$names = null;
+        this._$entries = null;
 
         /**
          * @type {number}
@@ -101,13 +103,6 @@ export class Job extends EventDispatcher
          * @private
          */
         this._$stopFlag = false;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$forceStop = false;
 
         /**
          * @type {object}
@@ -125,10 +120,10 @@ export class Job extends EventDispatcher
 
         /**
          * @type {number}
-         * @default 0
+         * @default -1
          * @private
          */
-        this._$timerId = 0;
+        this._$timerId = -1;
 
         /**
          * @type {Job}
@@ -195,6 +190,10 @@ export class Job extends EventDispatcher
     }
 
     /**
+     * @description イージングの計算関数を返します。
+     *              Returns the calculation function of the easing.
+     *
+     * @see Easing
      * @member {function}
      * @default Easing.linear
      * @public
@@ -205,12 +204,13 @@ export class Job extends EventDispatcher
     }
     set ease (ease: Function)
     {
-        if (typeof ease === "function") {
-            this._$ease = ease;
-        }
+        this._$ease = ease;
     }
 
     /**
+     * @description イージングの開始までの遅延時間を返します。
+     *              Returns the delay time until the start of the easing.
+     *
      * @member {number}
      * @default 0
      * @public
@@ -225,6 +225,9 @@ export class Job extends EventDispatcher
     }
 
     /**
+     * @description イージング完了時間を返します。
+     *              Returns the easing completion time.
+     *
      * @member {number}
      * @default 1
      * @public
@@ -239,7 +242,11 @@ export class Job extends EventDispatcher
     }
 
     /**
+     * @description イージングの開始オブジェクトを返します。
+     *              Returns the start object of the easing.
+     *
      * @member {object}
+     * @default null
      * @public
      */
     get from (): ObjectImpl
@@ -252,7 +259,11 @@ export class Job extends EventDispatcher
     }
 
     /**
+     * @description イージングの終了オブジェクトを返します。
+     *              Returns the end object of the easing.
+     *
      * @member {object}
+     * @default null
      * @public
      */
     get to (): ObjectImpl
@@ -265,7 +276,28 @@ export class Job extends EventDispatcher
     }
 
     /**
+     * @description イージングの現在時間を返します。
+     *              Returns the current time of the easing.
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    get currentTime (): number
+    {
+        return this._$currentTime;
+    }
+    set currentTime (time: number)
+    {
+        this._$currentTime = time;
+    }
+
+    /**
+     * @description イージングの対象オブジェクトを返します（読み取り専用）
+     *              Returns the target object of the easing (read-only)
+     *
      * @member {object}
+     * @default null
      * @readonly
      * @public
      */
@@ -275,11 +307,67 @@ export class Job extends EventDispatcher
     }
 
     /**
-     * @description 指定したjobを次に開始します。nullで解消
-     *              Starts the next specified job, resolved by null
+     * @description イージングのエントリーオブジェクトを返します。
+     *              Returns the entry object of the easing.
+     *
+     * @member {array | null}
+     * @default null
+     * @readonly
+     * @public
+     */
+    get entries (): EntriesObjectImpl[] | null
+    {
+        return this._$entries;
+    }
+
+    /**
+     * @description イージングの次のjobを返します。
+     *              Returns the next job of the easing.
      *
      * @member {Job | null}
      * @default null
+     * @readonly
+     * @public
+     */
+    get nextJob (): Job | null
+    {
+        return this._$nextJob;
+    }
+
+    /**
+     * @description イージングの強制停止フラグを返します。
+     *              Returns the forced stop flag of the easing.
+     *
+     * @member {boolean}
+     * @default false
+     * @readonly
+     * @public
+     */
+    get stopFlag (): boolean
+    {
+        return this._$stopFlag;
+    }
+
+    /**
+     * @description イージングの開始時間を返します。
+     *              Returns the start time of the easing.
+     *
+     * @member {number}
+     * @default 0
+     * @readonly
+     * @public
+     */
+    get startTime (): number
+    {
+        return this._$startTime;
+    }
+
+    /**
+     * @description 指定したjobを次に開始します。nullで解消
+     *              Starts the next specified job, resolved by null
+     *
+     * @return {Job | null}
+     * @method
      * @public
      */
     chain (job: Job | null): Job | null
@@ -289,184 +377,74 @@ export class Job extends EventDispatcher
     }
 
     /**
-     * @return {void}
-     * @method
-     * @public
-     */
-    initialize (): void
-    {
-        if (this._$forceStop) {
-            return ;
-        }
-
-        // setup
-        this._$stopFlag  = false;
-        this._$startTime = performance.now();
-
-        this._$names = this._$entries(this._$from);
-
-        // start
-        this._$update();
-    }
-
-    /**
-     * @param  {object} object
-     * @return {array}
-     * @method
-     * @private
-     */
-    _$entries (object: any): any[]
-    {
-        const entries: any[] = Object.entries(object);
-
-        for (let idx = 0; idx < entries.length; ++idx) {
-
-            const values = entries[idx];
-
-            const value: any = values[1];
-            if (value && typeof value === "object") {
-                values[1] = this._$entries(value);
-            }
-        }
-
-        return entries;
-    }
-
-    /**
+     * @description イージングを開始します。
+     *              Starts the easing.
+     *
      * @return {void}
      * @method
      * @public
      */
     start (): void
     {
-        if (this._$timerId) {
-            cancelAnimationFrame(this._$timerId);
-        }
+        // stop job
+        cancelAnimationFrame(this._$timerId);
 
-        this._$forceStop = false;
+        // reset
+        this._$stopFlag = false;
 
+        /**
+         * @description イージングの起動関数
+         *              Easing boot function
+         *
+         * @return {void}
+         * @method
+         * @private
+         */
+        const boot = (): void =>
+        {
+            if (this._$stopFlag) {
+                return ;
+            }
+
+            // create entries
+            this._$entries = jobEntriesService(this._$from);
+            if (!this._$entries) {
+                return ;
+            }
+
+            // setup
+            this._$startTime = performance.now();
+
+            // start
+            this._$timerId = jobUpdateFrameService(this, this._$startTime);
+        };
+
+        // delayed start
         if (this._$delay) {
-
-            setTimeout((): void =>
-            {
-                this.initialize();
-            }, this._$delay * 1000);
-
-            return ;
+            setTimeout(boot, this._$delay * 1000);
+        } else {
+            boot();
         }
-
-        this.initialize();
     }
 
     /**
+     * @description イージングを停止します。
+     *              Stops the easing.
+     *
      * @return {void}
      * @method
      * @public
      */
     stop (): void
     {
-        if (this._$timerId) {
-            cancelAnimationFrame(this._$timerId);
-        }
+        cancelAnimationFrame(this._$timerId);
 
         if (this.hasEventListener(Event.STOP)) {
             this.dispatchEvent(new Event(Event.STOP));
         }
 
-        this._$names     = null;
-        this._$forceStop = true;
-        this._$stopFlag  = true;
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$update (): void
-    {
-        if (this._$stopFlag) {
-            return ;
-        }
-
-        if (!this._$names) {
-            return this.stop();
-        }
-
-        // update current time
-        this._$currentTime = (performance.now() - this._$startTime) * 0.001;
-
-        this._$updateProperty(
-            this._$target, this._$from, this._$to, this._$names
-        );
-
-        if (this.hasEventListener(Event.UPDATE)) {
-            this.dispatchEvent(new Event(Event.UPDATE));
-        }
-
-        if (this._$currentTime >= this._$duration) {
-            if (this.hasEventListener(Event.COMPLETE)) {
-                this.dispatchEvent(new Event(Event.COMPLETE));
-            }
-
-            if (this._$nextJob) {
-                this._$nextJob.start();
-            }
-        } else {
-            this._$timerId = requestAnimationFrame(() => {
-                this._$update();
-            });
-        }
-    }
-
-    /**
-     * @param  {object} target
-     * @param  {object} from
-     * @param  {object} to
-     * @param  {array}  names
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$updateProperty (target: any, from: any, to: any, names: any[]): void
-    {
-        for (let idx = 0; idx < names.length; ++idx) {
-
-            const values = names[idx];
-
-            const name = values[0];
-            if (name === "__proto__"
-                || name === "constructor"
-                || name === "prototype"
-            ) {
-                continue;
-            }
-
-            const value = values[1];
-            if (value && typeof value === "object") {
-                this._$updateProperty(target[name], from[name], to[name], value);
-                continue;
-            }
-
-            if (!(name in target)) {
-                continue;
-            }
-
-            // update
-            const fromValue = from[name];
-            if (this._$duration > this._$currentTime) {
-
-                target[name] = this._$ease(
-                    this._$currentTime,
-                    fromValue, to[name] - fromValue,
-                    this._$duration
-                );
-
-            } else {
-
-                target[name] = to[name];
-
-            }
-        }
+        // reset
+        this._$entries  = null;
+        this._$stopFlag = true;
     }
 }

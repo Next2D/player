@@ -1,9 +1,9 @@
 import { Easing } from "../../Easing";
 import { describe, expect, it } from "vitest";
 
-describe("Easing.js method test", function()
+describe("Easing.js method test", () =>
 {
-    it("inBounce method test", function()
+    it("inBounce method test", () =>
     {
         expect(Easing.inBounce(0.1, 0.5, 0.5, 1)).toBe(0.5059375);
     });

@@ -1,3 +1,3 @@
 export interface ObjectImpl {
-    [key: string]: { value: number | ObjectImpl }
+    [key: string]: number | ObjectImpl
 }
