@@ -1,12 +1,11 @@
-import { Event } from "./Event";
-import { EventPhase } from "./EventPhase";
 import type { EventListenerImpl } from "./interface/EventListenerImpl";
-import type { EventDispatcherImpl } from "./interface/EventDispatcherImpl";
-import {
-    $broadcastEvents,
-    $getArray,
-    $poolArray
-} from "./EventUtil";
+import { Event } from "./Event";
+import { execute as eventDispatcherAddEventListenerService } from "./EventDispatcher/EventDispatcherAddEventListenerService";
+import { execute as eventDispatcherHasEventListenerService } from "./EventDispatcher/EventDispatcherHasEventListenerService";
+import { execute as eventDispatcherRemoveEventListenerService } from "./EventDispatcher/EventDispatcherRemoveEventListenerService";
+import { execute as eventDispatcherRemoveAllEventListenerService } from "./EventDispatcher/EventDispatcherRemoveAllEventListenerService";
+import { execute as eventDispatcherWillTriggerService } from "./EventDispatcher/EventDispatcherWillTriggerService";
+import { execute as eventDispatcherDispatchEventService } from "./EventDispatcher/EventDispatcherDispatchEventService";
 
 /**
  * @description EventDispatcher クラスは、イベントを送出するすべてのクラスの基本クラスです。
@@ -38,7 +37,7 @@ export class EventDispatcher
      * Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class EventDispatcher]
+     * @default "[class EventDispatcher]"
      * @method
      * @static
      */
@@ -108,99 +107,9 @@ export class EventDispatcher
         use_capture: boolean = false,
         priority: number = 0
     ): void {
-
-        let events: EventListenerImpl[];
-
-        type = `${type}`;
-        switch (type) {
-
-            // broadcast event
-            case Event.ENTER_FRAME:
-            case Event.EXIT_FRAME:
-            case Event.FRAME_CONSTRUCTED:
-            case Event.RENDER:
-            case Event.ACTIVATE:
-            case Event.DEACTIVATE:
-            case "keyDown":
-            case "keyUp":
-
-                if (!$broadcastEvents.size
-                    || !$broadcastEvents.has(type)
-                ) {
-                    $broadcastEvents.set(type, $getArray());
-                }
-
-                events = $broadcastEvents.get(type) as NonNullable<EventListenerImpl[]>;
-
-                break;
-
-            // normal event
-            default:
-
-                // init
-                if (!this._$events) {
-                    this._$events = new Map();
-                }
-
-                if (!this._$events.size || !this._$events.has(type)) {
-                    this._$events.set(type, $getArray());
-                }
-
-                events = this._$events.get(type) as NonNullable<EventListenerImpl[]>;
-
-                break;
-
-        }
-
-        // duplicate check
-        let length: number = events.length;
-        for (let idx: number = 0; idx < length; ++idx) {
-
-            const event: EventListenerImpl = events[idx];
-            if (use_capture !== event.useCapture) {
-                continue;
-            }
-
-            if (event.target !== this) {
-                continue;
-            }
-
-            if (event.listener !== listener) {
-                continue;
-            }
-
-            length = idx;
-            break;
-        }
-
-        // add or overwrite
-        events[length] = {
-            "listener":   listener,
-            "priority":   priority,
-            "useCapture": use_capture,
-            "target":     this
-        };
-
-        if (events.length > 1) {
-
-            // sort(DESC)
-            events.sort(function (a: EventListenerImpl, b: EventListenerImpl)
-            {
-                switch (true) {
-
-                    case a.priority > b.priority:
-                        return -1;
-
-                    case a.priority < b.priority:
-                        return 1;
-
-                    default:
-                        return 0;
-
-                }
-            });
-
-        }
+        eventDispatcherAddEventListenerService(
+            this, type, listener, use_capture, priority
+        );
     }
 
     /**
@@ -214,255 +123,7 @@ export class EventDispatcher
      */
     dispatchEvent (event: Event): boolean
     {
-        switch (event.type) {
-
-            case Event.ENTER_FRAME:
-            case Event.EXIT_FRAME:
-            case Event.FRAME_CONSTRUCTED:
-            case Event.RENDER:
-            case Event.ACTIVATE:
-            case Event.DEACTIVATE:
-            case "keyDown":
-            case "keyUp":
-                if ($broadcastEvents.size
-                    && $broadcastEvents.has(event.type)
-                ) {
-
-                    const events = $broadcastEvents.get(event.type) as NonNullable<EventListenerImpl[]>;
-                    for (let idx: number = 0; idx < events.length; ++idx) {
-
-                        const obj: EventListenerImpl = events[idx];
-                        if (obj.target !== this) {
-                            continue;
-                        }
-
-                        // start target
-                        event.eventPhase = EventPhase.AT_TARGET;
-
-                        // event execute
-                        event.currentTarget = obj.target;
-
-                        try {
-
-                            event.listener = obj.listener;
-                            obj.listener.call(null, event);
-
-                        } catch (e) {
-
-                            console.error(e);
-
-                            return false;
-
-                        }
-                    }
-
-                    return true;
-                }
-                break;
-
-            default:
-                {
-                    let events: EventListenerImpl[] | null = null;
-                    if (this._$events
-                        && this._$events.size
-                        && this._$events.has(event.type)
-                    ) {
-                        events = this._$events.get(event.type) as NonNullable<EventListenerImpl[]>;
-                        if (events) {
-                            events = events.slice(0);
-                        }
-                    }
-
-                    if (!events) {
-                        events = $getArray();
-                    }
-
-                    // parent
-                    const parentEvents = $getArray();
-                    if ("parent" in this) {
-
-                        let parent = this.parent as EventDispatcherImpl<any> | null;
-                        while (parent) {
-
-                            if (parent.hasEventListener(event.type)) {
-
-                                const events: EventListenerImpl[] | null = parent._$events && parent._$events.has(event.type)
-                                    ? parent._$events.get(event.type) as NonNullable<EventListenerImpl[]>
-                                    : null;
-
-                                if (events) {
-                                    parentEvents.push(events);
-                                }
-                            }
-
-                            parent = parent.parent;
-
-                        }
-
-                    }
-
-                    event.target = this;
-                    if (events.length || parentEvents.length) {
-
-                        // start capture
-                        event.eventPhase = EventPhase.CAPTURING_PHASE;
-
-                        // stage => parent... end
-                        if (parentEvents.length) {
-
-                            switch (true) {
-
-                                case event._$stopImmediatePropagation:
-                                case event._$stopPropagation:
-                                    break;
-
-                                default:
-
-                                    parentEvents.reverse();
-                                    for (let idx: number = 0; idx < parentEvents.length; ++idx) {
-
-                                        const targets: EventListenerImpl[] = parentEvents[idx];
-                                        for (let idx: number = 0; idx < targets.length; ++idx) {
-
-                                            const obj: EventListenerImpl = targets[idx];
-                                            if (!obj.useCapture) {
-                                                continue;
-                                            }
-
-                                            // event execute
-                                            event.currentTarget = obj.target;
-
-                                            try {
-
-                                                event.listener = obj.listener;
-                                                obj.listener.call(null, event);
-
-                                            } catch (e) {
-
-                                                console.error(e);
-
-                                                return false;
-                                            }
-
-                                            if (event._$stopImmediatePropagation) {
-                                                break;
-                                            }
-
-                                        }
-
-                                        if (event._$stopImmediatePropagation) {
-                                            break;
-                                        }
-
-                                    }
-                                    parentEvents.reverse();
-
-                                    break;
-                            }
-
-                        }
-
-                        // start target
-                        event.eventPhase = EventPhase.AT_TARGET;
-                        if (!event._$stopImmediatePropagation
-                            && !event._$stopPropagation
-                        ) {
-
-                            const length: number = events.length;
-                            for (let idx: number = 0; idx < length; ++idx) {
-
-                                const obj: EventListenerImpl = events[idx];
-                                if (obj.useCapture) {
-                                    continue;
-                                }
-
-                                // event execute
-                                event.currentTarget = obj.target;
-                                try {
-
-                                    event.listener = obj.listener;
-                                    obj.listener.call(null, event);
-
-                                } catch (e) {
-
-                                    console.error(e);
-
-                                    return false;
-                                }
-
-                                if (event._$stopImmediatePropagation) {
-                                    break;
-                                }
-
-                            }
-                        }
-
-                        // start bubbling
-                        event.eventPhase = EventPhase.BUBBLING_PHASE;
-                        switch (true) {
-
-                            case event._$stopImmediatePropagation:
-                            case event._$stopPropagation:
-                            case !event.bubbles:
-                                break;
-
-                            default:
-
-                                // this => parent... => stage end
-                                for (let idx: number = 0; idx < parentEvents.length; ++idx) {
-
-                                    const targets: EventListenerImpl[] = parentEvents[idx];
-                                    for (let idx: number = 0; idx < targets.length; ++idx) {
-
-                                        const obj: EventListenerImpl = targets[idx];
-                                        if (obj.useCapture) {
-                                            continue;
-                                        }
-
-                                        // event execute
-                                        event.currentTarget = obj.target;
-                                        try {
-
-                                            event.listener = obj.listener;
-                                            obj.listener.call(null, event);
-
-                                        } catch (e) {
-
-                                            console.error(e);
-
-                                            return false;
-                                        }
-
-                                        if (event._$stopImmediatePropagation) {
-                                            break;
-                                        }
-                                    }
-
-                                    if (event._$stopImmediatePropagation) {
-                                        break;
-                                    }
-
-                                }
-
-                                break;
-
-                        }
-
-                        $poolArray(events);
-                        $poolArray(parentEvents);
-
-                        return true;
-
-                    }
-
-                    $poolArray(events);
-                    $poolArray(parentEvents);
-                }
-                break;
-
-        }
-
-        return false;
+        return eventDispatcherDispatchEventService(this, event);
     }
 
     /**
@@ -476,39 +137,7 @@ export class EventDispatcher
      */
     hasEventListener (type: string): boolean
     {
-        type = `${type}`;
-        switch (type) {
-
-            case Event.ENTER_FRAME:
-            case Event.EXIT_FRAME:
-            case Event.FRAME_CONSTRUCTED:
-            case Event.RENDER:
-            case Event.ACTIVATE:
-            case Event.DEACTIVATE:
-            case "keyDown":
-            case "keyUp":
-            {
-                if ($broadcastEvents.size
-                    && $broadcastEvents.has(type)
-                ) {
-
-                    const events: EventListenerImpl[] = $broadcastEvents.get(type) || $getArray();
-
-                    for (let idx: number = 0; idx < events.length; idx++) {
-                        if (events[idx].target === this) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
-
-            default:
-                return !!(this._$events
-                    && this._$events.size
-                    && this._$events.has(type));
-
-        }
+        return eventDispatcherHasEventListenerService(this, type);
     }
 
     /**
@@ -516,139 +145,28 @@ export class EventDispatcher
      *              Removes a listener from the EventDispatcher object.
      *
      * @param  {string}   type
-     * @param  {function} [listener = null]
+     * @param  {function} listener
      * @param  {boolean}  [use_capture = false]
      * @return {void}
      * @method
      * @public
      */
     removeEventListener (
-        type: string, listener: Function | null,
+        type: string,
+        listener: Function,
         use_capture: boolean = false
     ): void {
-
-        if (!listener) {
-            return;
-        }
-
-        type = `${type}`;
-        if (!this.hasEventListener(type)) {
-            return;
-        }
-
-        let events: EventListenerImpl[] | null = null;
-
-        let isBroadcast: boolean = false;
-
-        switch (type) {
-
-            case Event.ENTER_FRAME:
-            case Event.EXIT_FRAME:
-            case Event.FRAME_CONSTRUCTED:
-            case Event.RENDER:
-            case Event.ACTIVATE:
-            case Event.DEACTIVATE:
-            case "keyDown":
-            case "keyUp":
-                isBroadcast = true;
-                events = $broadcastEvents.get(type) || $getArray();
-                break;
-
-            default:
-                if (this._$events
-                    && this._$events.size
-                    && this._$events.has(type)
-                ) {
-                    events = this._$events.get(type) || $getArray();
-                }
-
-                break;
-
-        }
-
-        if (!events) {
-            return ;
-        }
-
-        // remove listener
-        for (let idx: number = 0; idx < events.length; ++idx) {
-
-            // event object
-            const obj: EventListenerImpl = events[idx];
-            if (use_capture === obj.useCapture
-                && obj.listener === listener
-            ) {
-                events.splice(idx, 1);
-                break;
-            }
-
-        }
-
-        if (!events.length) {
-
-            if (isBroadcast) {
-
-                $broadcastEvents.delete(type);
-
-            } else {
-
-                if (!this._$events) {
-                    return ;
-                }
-
-                this._$events.delete(type);
-
-                if (!this._$events.size) {
-                    this._$events = null;
-                }
-
-            }
-
-            return ;
-        }
-
-        if (events.length > 1) {
-
-            // event sort(DESC)
-            events.sort(function (a: EventListenerImpl, b: EventListenerImpl)
-            {
-                switch (true) {
-
-                    case a.priority > b.priority:
-                        return -1;
-
-                    case a.priority < b.priority:
-                        return 1;
-
-                    default:
-                        return 0;
-
-                }
-            });
-
-        }
-
-        if (isBroadcast) {
-
-            $broadcastEvents.set(type, events);
-
-        } else {
-
-            if (!this._$events) {
-                this._$events = new Map();
-            }
-
-            this._$events.set(type, events);
-
-        }
+        eventDispatcherRemoveEventListenerService(
+            this, type, listener, use_capture
+        );
     }
 
     /**
      * @description EventDispatcherオブジェクトから指定したタイプのリスナーを全て削除します。
      *              Removes all listeners of the specified type from the EventDispatcher object.
      *
-     * @param  {string}   type
-     * @param  {boolean}  [use_capture=false]
+     * @param  {string}  type
+     * @param  {boolean} [use_capture=false]
      * @return {void}
      * @method
      * @public
@@ -657,114 +175,9 @@ export class EventDispatcher
         type: string,
         use_capture: boolean = false
     ): void {
-
-        type = `${type}`;
-        if (!this.hasEventListener(type)) {
-            return;
-        }
-
-        let events: EventListenerImpl[] | null = null;
-
-        let isBroadcast: boolean = false;
-
-        switch (type) {
-
-            case Event.ENTER_FRAME:
-            case Event.EXIT_FRAME:
-            case Event.FRAME_CONSTRUCTED:
-            case Event.RENDER:
-            case Event.ACTIVATE:
-            case Event.DEACTIVATE:
-            case "keyDown":
-            case "keyUp":
-                isBroadcast = true;
-                events = $broadcastEvents.get(type) || $getArray();
-                break;
-
-            default:
-                if (this._$events
-                    && this._$events.size
-                    && this._$events.has(type)
-                ) {
-                    events = this._$events.get(type) || $getArray();
-                }
-
-                break;
-
-        }
-
-        if (!events) {
-            return ;
-        }
-
-        // remove listener
-        const results: EventListenerImpl[] = $getArray();
-
-        for (let idx = 0; idx < events.length; ++idx) {
-
-            // event object
-            const obj: EventListenerImpl = events[idx];
-            if (use_capture !== obj.useCapture) {
-                results.push(obj);
-            }
-
-        }
-
-        if (!results.length) {
-
-            if (isBroadcast) {
-
-                $broadcastEvents.delete(type);
-
-            } else {
-
-                if (!this._$events) {
-                    return ;
-                }
-
-                this._$events.delete(type);
-
-                if (!this._$events.size) {
-                    this._$events = null;
-                }
-            }
-
-            return ;
-        }
-
-        if (results.length > 1) {
-
-            // event sort (DESC)
-            results.sort(function (a: EventListenerImpl, b: EventListenerImpl)
-            {
-                switch (true) {
-
-                    case a.priority > b.priority:
-                        return -1;
-
-                    case a.priority < b.priority:
-                        return 1;
-
-                    default:
-                        return 0;
-
-                }
-            });
-
-        }
-
-        if (isBroadcast) {
-
-            $broadcastEvents.set(type, results);
-
-        } else {
-
-            if (!this._$events) {
-                this._$events = new Map();
-            }
-
-            this._$events.set(type, results);
-        }
+        eventDispatcherRemoveAllEventListenerService(
+            this, type, use_capture
+        );
     }
 
     /**
@@ -775,30 +188,13 @@ export class EventDispatcher
      *              with this EventDispatcher object or
      *              any of its ancestors for the specified event type.
      *
-     * @param  {string}  type
+     * @param  {string} type
      * @return {boolean}
      * @method
      * @public
      */
     willTrigger (type: string): boolean
     {
-        if (this.hasEventListener(type)) {
-            return true;
-        }
-
-        if ("parent" in this) {
-
-            let parent = this.parent as EventDispatcherImpl<any> | null;
-            while (parent) {
-
-                if (parent.hasEventListener(type)) {
-                    return true;
-                }
-
-                parent = parent.parent;
-            }
-        }
-
-        return false;
+        return eventDispatcherWillTriggerService(this, type);
     }
 }
