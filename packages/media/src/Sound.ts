@@ -32,12 +32,11 @@ import {
 } from "@next2d/util";
 
 /**
- * Sound クラスを使用すると、アプリケーション内のサウンドを処理することができます。
- * Sound クラスを使用すると、Sound オブジェクトの作成や、外部 MP3 ファイルのオブジェクトへのロードと再生ができます。
- *
- * The Sound class lets you work with sound in an application.
- * The Sound class lets you create a Sound object,
- * load and play an external MP3 file into that object.
+ * @description Sound クラスを使用すると、アプリケーション内のサウンドを処理することができます。
+ *              Sound クラスを使用すると、Sound オブジェクトの作成や、外部 MP3 ファイルのオブジェクトへのロードと再生ができます。
+ *              The Sound class lets you work with sound in an application.
+ *              The Sound class lets you create a Sound object,
+ *              load and play an external MP3 file into that object.
  *
  * @class
  * @memberOf next2d.media
@@ -148,7 +147,7 @@ export class Sound extends EventDispatcher
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class Sound]
+     * @default "[class Sound]"
      * @method
      * @static
      */
@@ -162,7 +161,7 @@ export class Sound extends EventDispatcher
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.media.Sound
+     * @default "next2d.media.Sound"
      * @const
      * @static
      */
@@ -176,7 +175,7 @@ export class Sound extends EventDispatcher
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object Sound]
+     * @default "[object Sound]"
      * @method
      * @public
      */
@@ -190,7 +189,7 @@ export class Sound extends EventDispatcher
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.media.Sound
+     * @default "next2d.media.Sound"
      * @const
      * @public
      */

@@ -1,12 +1,10 @@
 import type { URLRequestHeaderImpl } from "./interface/URLRequestHeaderImpl";
 import type { URLLoaderDataFormatImpl } from "./interface/URLLoaderDataFormatImpl";
 import type { URLRequestMethodImpl } from "./interface/URLRequestMethodImpl";
-import type { Player } from "@next2d/core";
-import { $currentPlayer } from "@next2d/util";
 
 /**
- * URLRequestクラスは、外部へのリクエストを管理するクラスです
- * The URLRequest class is a class that manages external requests
+ * @description URLRequestクラスは、外部へのリクエストを管理するクラスです
+ *              The URLRequest class is a class that manages external requests
  *
  * @class
  * @memberOf next2d.net
@@ -15,7 +13,7 @@ export class URLRequest
 {
     private _$url: string;
     private _$contentType: string;
-    private _$data: string;
+    private _$data: any;
     private _$method: URLRequestMethodImpl;
     private readonly _$requestHeaders: URLRequestHeaderImpl[];
     private _$responseDataFormat: URLLoaderDataFormatImpl;
@@ -44,11 +42,11 @@ export class URLRequest
         this._$contentType = "application/json";
 
         /**
-         * @type {string}
-         * @default ""
+         * @type {any}
+         * @default null
          * @private
          */
-        this._$data = "";
+        this._$data = null;
 
         /**
          * @type {string}
@@ -210,19 +208,6 @@ export class URLRequest
      */
     get url (): string
     {
-        if (this._$url && this._$url.indexOf("//") === -1) {
-
-            const urls: string [] = this._$url.split("/");
-            if (urls[0] === "" || urls[0] === ".") {
-                urls.shift();
-            }
-
-            const player: Player = $currentPlayer();
-            if (player) {
-                return `${player.base}${urls.join("/")}`;
-            }
-        }
-
         return this._$url;
     }
     set url (url: string)

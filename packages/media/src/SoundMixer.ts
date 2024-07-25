@@ -12,6 +12,12 @@ import {
 } from "@next2d/share";
 
 /**
+ * @type {number}
+ * @private
+ */
+let $volume: number = 1;
+
+/**
  * SoundMixer クラスには、静的プロパティやアプリケーションのグローバルサウンドコントロールのメソッドが含まれます。
  * SoundMixer クラスは、アプリケーションの埋め込みおよびストリーミングサウンド、及び、Video クラスの音声を制御します。
  *
@@ -25,7 +31,7 @@ export class SoundMixer
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class SoundMixer]
+     * @default "[class SoundMixer]"
      * @method
      * @static
      */
@@ -39,7 +45,7 @@ export class SoundMixer
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.media.SoundMixer
+     * @default "next2d.media.SoundMixer"
      * @const
      * @static
      */
@@ -53,7 +59,7 @@ export class SoundMixer
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object SoundMixer]
+     * @default "[object SoundMixer]"
      * @method
      * @public
      */
@@ -67,7 +73,7 @@ export class SoundMixer
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.media.SoundMixer
+     * @default "next2d.media.SoundMixer"
      * @const
      * @public
      */
@@ -86,13 +92,11 @@ export class SoundMixer
      */
     static get volume (): number
     {
-        return $getSoundMixerVolume();
+        return $volume;
     }
     static set volume (volume: number)
     {
-        $setSoundMixerVolume($clamp(volume, 0, 1, 1));
-
-        const soundMixerVolume = $getSoundMixerVolume();
+        $volume = Math.min(Math.max(0, volume), 1);
 
         const player: Player = $currentPlayer();
 
@@ -107,7 +111,7 @@ export class SoundMixer
 
                 if (source._$gainNode) {
                     source._$gainNode.gain.value = $Math.min(
-                        soundMixerVolume,
+                        $volume,
                         source._$volume
                     );
                 }
@@ -122,7 +126,7 @@ export class SoundMixer
 
             if (video._$video) {
                 video._$video.volume = $Math.min(
-                    soundMixerVolume,
+                    $volume,
                     video.volume
                 );
             }

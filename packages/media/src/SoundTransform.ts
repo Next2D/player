@@ -1,9 +1,6 @@
-import { $clamp } from "@next2d/share";
-
 /**
- * SoundTransform クラスにはボリュームとループのプロパティが含まれます。
- *
- * The SoundTransform class contains properties for volume and loop.
+ * @description SoundTransform クラスにはボリュームとループのプロパティが含まれます。
+ *              The SoundTransform class contains properties for volume and loop.
  *
  * @class
  * @memberOf next2d.media
@@ -28,17 +25,14 @@ export class SoundTransform
          * @private
          */
         this._$volume = 1;
+        this.volume = volume;
 
         /**
          * @type {boolean}
          * @default false
          * @private
          */
-        this._$loop = false;
-
-        // setup
-        this.volume = volume;
-        this.loop   = loop;
+        this._$loop = !!loop;
     }
 
     /**
@@ -46,7 +40,7 @@ export class SoundTransform
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class SoundTransform]
+     * @default "[class SoundTransform]"
      * @method
      * @static
      */
@@ -60,7 +54,7 @@ export class SoundTransform
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.media.SoundTransform
+     * @default "next2d.media.SoundTransform"
      * @const
      * @static
      */
@@ -74,7 +68,7 @@ export class SoundTransform
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object SoundTransform]
+     * @default "[object SoundTransform]"
      * @method
      * @public
      */
@@ -88,7 +82,7 @@ export class SoundTransform
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.media.SoundTransform
+     * @default "next2d.media.SoundTransform"
      * @const
      * @public
      */
@@ -111,7 +105,7 @@ export class SoundTransform
     }
     set loop (loop: boolean)
     {
-        this._$loop = loop;
+        this._$loop = !!loop;
     }
 
     /**
@@ -128,6 +122,6 @@ export class SoundTransform
     }
     set volume (volume: number)
     {
-        this._$volume = $clamp(+volume, 0, 1, 0);
+        this._$volume = Math.min(Math.max(0, volume), 1);
     }
 }
