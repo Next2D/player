@@ -1,15 +1,7 @@
 import type { Sound } from "./Sound";
 import type { Video } from "./Video";
 import type { Player } from "@next2d/core";
-import {
-    $currentPlayer,
-    $getSoundMixerVolume,
-    $setSoundMixerVolume
-} from "@next2d/util";
-import {
-    $clamp,
-    $Math
-} from "@next2d/share";
+import { $currentPlayer } from "@next2d/util";
 
 /**
  * @type {number}
@@ -110,7 +102,7 @@ export class SoundMixer
                 const source: AudioBufferSourceNode = sound._$sources[idx];
 
                 if (source._$gainNode) {
-                    source._$gainNode.gain.value = $Math.min(
+                    source._$gainNode.gain.value = Math.min(
                         $volume,
                         source._$volume
                     );
@@ -125,7 +117,7 @@ export class SoundMixer
             const video: Video = videos[idx];
 
             if (video._$video) {
-                video._$video.volume = $Math.min(
+                video._$video.volume = Math.min(
                     $volume,
                     video.volume
                 );

@@ -39,6 +39,7 @@
   "exclude": [
     "node_modules",
     "**/dist/**",
+    "**/build/**",
     "worker",
     "scripts",
     "__tests__",
