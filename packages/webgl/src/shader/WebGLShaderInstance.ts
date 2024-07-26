@@ -7,7 +7,6 @@ export class WebGLShaderInstance
     private _$count: number;
 
     /**
-     * @param {WebGL2RenderingContext} gl
      * @constructor
      * @public
      */

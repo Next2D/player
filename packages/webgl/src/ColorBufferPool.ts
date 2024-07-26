@@ -1,8 +1,7 @@
 import {
     $getArray,
-    $Math,
     $upperPowerOfTwo
-} from "@next2d/share";
+} from "./WebGLUtil";
 
 /**
  * @class
@@ -103,8 +102,8 @@ export class ColorBufferPool
     ): WebGLRenderbuffer {
 
         // 128以下で描画崩れが発生する場合がある？ため、256を最小サイズにする
-        width  = $Math.max(256, $upperPowerOfTwo(width));
-        height = $Math.max(256, $upperPowerOfTwo(height));
+        width  = Math.max(256, $upperPowerOfTwo(width));
+        height = Math.max(256, $upperPowerOfTwo(height));
 
         const colorBuffer: WebGLRenderbuffer = this._$getColorBuffer(width * height);
 
@@ -117,8 +116,8 @@ export class ColorBufferPool
             || colorBuffer.samples !== samples
         ) {
 
-            width  = $Math.max(width,  colorBuffer.width);
-            height = $Math.max(height, colorBuffer.height);
+            width  = Math.max(width,  colorBuffer.width);
+            height = Math.max(height, colorBuffer.height);
 
             colorBuffer.samples = samples;
             colorBuffer.width   = width;
@@ -173,8 +172,8 @@ export class ColorBufferPool
         let ng: number = -1;
         let ok: number = this._$objectPool.length;
 
-        while ($Math.abs(ok - ng) > 1) {
-            const mid: number = $Math.floor((ok + ng) / 2);
+        while (Math.abs(ok - ng) > 1) {
+            const mid: number = Math.floor((ok + ng) / 2);
             if (area <= this._$objectPool[mid].area) {
                 ok = mid;
             } else {

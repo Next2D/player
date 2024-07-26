@@ -7,7 +7,7 @@ import {
     $clamp,
     $poolInt32Array4,
     $poolFloat32Array6
-} from "@next2d/share";
+} from "./WebGLUtil";
 
 /**
  * @class

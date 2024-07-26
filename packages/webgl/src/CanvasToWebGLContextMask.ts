@@ -1,4 +1,3 @@
-import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
 import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
 import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
@@ -6,7 +5,8 @@ import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { ClipObjectImpl } from "./interface/ClipObjectImpl";
 import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
-import { $poolArray } from "@next2d/share";
+import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
+import { $poolArray } from "./WebGLUtil";
 
 /**
  * @class

@@ -5,7 +5,6 @@ import { FragmentShaderSource } from "../fragment/FragmentShaderSource";
 import type { WebGLShaderUniform } from "../WebGLShaderUniform";
 import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 import type { CanvasToWebGLContextGrid } from "../../CanvasToWebGLContextGrid";
-import { $getMap } from "@next2d/share";
 
 /**
  * @class
@@ -40,7 +39,7 @@ export class ShapeShaderVariantCollection
          * @type {Map}
          * @private
          */
-        this._$collection = $getMap();
+        this._$collection = new Map();
     }
 
     /**

@@ -1,5 +1,3 @@
-import { $getArray } from "@next2d/share";
-
 /**
  * @class
  */
@@ -27,7 +25,7 @@ export class StencilBufferPool
          * @type {array}
          * @private
          */
-        this._$objectPool = $getArray();
+        this._$objectPool = [];
 
         /**
          * @type {number}

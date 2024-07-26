@@ -5,9 +5,7 @@ import type { StrokeMethImpl } from "./interface/StrokeMethImpl";
 import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
 import type { JointStyleImpl } from "./interface/JointStyleImpl";
 import type { WebGLShaderInstance } from "./shader/WebGLShaderInstance";
-import {
-    $upperPowerOfTwo
-} from "@next2d/share";
+import { $upperPowerOfTwo } from "./WebGLUtil";
 
 /**
  * @class

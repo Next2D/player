@@ -4,9 +4,8 @@ import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
 import type { JointStyleImpl } from "./interface/JointStyleImpl";
 import {
     $getFloat32Array4,
-    $poolFloat32Array4,
-    $Float32Array
-} from "@next2d/share";
+    $poolFloat32Array4
+} from "./WebGLUtil";
 
 /**
  * @class
@@ -100,7 +99,7 @@ export class CanvasToWebGLContextStyle
     }
     set fillStyle (style: Float32Array|CanvasGradientToWebGL|CanvasPatternToWebGL)
     {
-        if (this._$fillStyle instanceof $Float32Array) {
+        if (this._$fillStyle instanceof Float32Array) {
             $poolFloat32Array4(this._$fillStyle);
         }
         this._$fillStyle = style;
@@ -116,7 +115,7 @@ export class CanvasToWebGLContextStyle
     }
     set strokeStyle (style: Float32Array|CanvasGradientToWebGL|CanvasPatternToWebGL)
     {
-        if (this._$strokeStyle instanceof $Float32Array) {
+        if (this._$strokeStyle instanceof Float32Array) {
             $poolFloat32Array4(this._$strokeStyle);
         }
         this._$strokeStyle = style;

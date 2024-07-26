@@ -10,7 +10,6 @@ import { CanvasToWebGLContextBlend } from "./CanvasToWebGLContextBlend";
 import { CanvasPatternToWebGL } from "./CanvasPatternToWebGL";
 import { CanvasGradientToWebGL } from "./CanvasGradientToWebGL";
 import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
-import { $setRenderSize } from "./Const";
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import type { GradientShapeShaderVariantCollection } from "./shader/variants/GradientShapeShaderVariantCollection";
 import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
@@ -29,16 +28,14 @@ import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
 import type { JointStyleImpl } from "./interface/JointStyleImpl";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
 import {
-    $Math,
+    $setRenderSize,
     $getFloat32Array9,
     $getArray,
     $clamp,
     $poolArray,
     $inverseMatrix,
-    $poolFloat32Array9,
-    $poolBoundsObject,
-    $getBoundsObject
-} from "@next2d/share";
+    $poolFloat32Array9
+} from "./WebGLUtil";
 
 /**
  * @class
@@ -98,7 +95,7 @@ export class CanvasToWebGLContext
          * @type {number}
          * @private
          */
-        const samples: number = $Math.min(
+        const samples: number = Math.min(
             sample,
             gl.getParameter(gl.MAX_SAMPLES)
         );
@@ -107,7 +104,7 @@ export class CanvasToWebGLContext
          * @type {number}
          * @private
          */
-        this._$maxTextureSize = $Math.min(8192,
+        this._$maxTextureSize = Math.min(8192,
             gl.getParameter(gl.MAX_TEXTURE_SIZE)
         ) - 2;
 
@@ -121,7 +118,12 @@ export class CanvasToWebGLContext
          * @type {BoundsImpl}
          * @private
          */
-        this._$cacheBounds = $getBoundsObject();
+        this._$cacheBounds = {
+            "xMin": 0,
+            "yMin": 0,
+            "xMax": 0,
+            "yMax": 0
+        };
 
         /**
          * @type {Float32Array}
@@ -296,7 +298,12 @@ export class CanvasToWebGLContext
          * @type {object}
          * @private
          */
-        this._$maskBounds = $getBoundsObject(0, 0, 0, 0);
+        this._$maskBounds = {
+            "xMin": 0,
+            "yMin": 0,
+            "xMax": 0,
+            "yMax": 0
+        };
 
         /**
          * @type {object}
@@ -575,7 +582,7 @@ export class CanvasToWebGLContext
      */
     _$getTextureScale (width: number, height: number): number
     {
-        const maxSize = $Math.max(width, height);
+        const maxSize = Math.max(width, height);
         if (maxSize > this._$maxTextureSize) {
             return this._$maxTextureSize / maxSize;
         }
@@ -1462,10 +1469,10 @@ export class CanvasToWebGLContext
             return false;
         }
 
-        this._$maskBounds.xMin = $Math.max(0, $Math.min(this._$maskBounds.xMin, x));
-        this._$maskBounds.yMin = $Math.max(0, $Math.min(this._$maskBounds.yMin, y));
-        this._$maskBounds.xMax = $Math.min(currentAttachment.width,  $Math.min(this._$maskBounds.xMax, width));
-        this._$maskBounds.yMax = $Math.min(currentAttachment.height, $Math.min(this._$maskBounds.yMax, height));
+        this._$maskBounds.xMin = Math.max(0, Math.min(this._$maskBounds.xMin, x));
+        this._$maskBounds.yMin = Math.max(0, Math.min(this._$maskBounds.yMin, y));
+        this._$maskBounds.xMax = Math.min(currentAttachment.width,  Math.min(this._$maskBounds.xMax, width));
+        this._$maskBounds.yMax = Math.min(currentAttachment.height, Math.min(this._$maskBounds.yMax, height));
 
         return true;
     }
@@ -1550,9 +1557,9 @@ export class CanvasToWebGLContext
 
         const strokeStyle: Float32Array|CanvasGradientToWebGL|CanvasPatternToWebGL = this.strokeStyle;
 
-        let face: number = $Math.sign(matrix[0] * matrix[4]);
+        let face: number = Math.sign(matrix[0] * matrix[4]);
         if (face > 0 && matrix[1] !== 0 && matrix[3] !== 0) {
-            face = -$Math.sign(matrix[1] * matrix[3]);
+            face = -Math.sign(matrix[1] * matrix[3]);
         }
 
         let lineWidth: number = this.lineWidth * 0.5;
@@ -1560,17 +1567,17 @@ export class CanvasToWebGLContext
         let scaleY: number;
         if (this._$grid.enabled) {
             // lineWidth *= $getSameScaleBase();
-            scaleX = $Math.abs(this._$grid.ancestorMatrixA + this._$grid.ancestorMatrixD);
-            scaleY = $Math.abs(this._$grid.ancestorMatrixB + this._$grid.ancestorMatrixE);
+            scaleX = Math.abs(this._$grid.ancestorMatrixA + this._$grid.ancestorMatrixD);
+            scaleY = Math.abs(this._$grid.ancestorMatrixB + this._$grid.ancestorMatrixE);
         } else {
-            scaleX = $Math.abs(matrix[0] + matrix[3]);
-            scaleY = $Math.abs(matrix[1] + matrix[4]);
+            scaleX = Math.abs(matrix[0] + matrix[3]);
+            scaleY = Math.abs(matrix[1] + matrix[4]);
         }
 
-        const scaleMin: number = $Math.min(scaleX, scaleY);
-        const scaleMax: number = $Math.max(scaleX, scaleY);
-        lineWidth *= scaleMax * (1 - 0.3 * $Math.cos($Math.PI * 0.5 * (scaleMin / scaleMax)));
-        lineWidth = $Math.max(1, lineWidth);
+        const scaleMin: number = Math.min(scaleX, scaleY);
+        const scaleMax: number = Math.max(scaleX, scaleY);
+        lineWidth *= scaleMax * (1 - 0.3 * Math.cos(Math.PI * 0.5 * (scaleMin / scaleMax)));
+        lineWidth = Math.max(1, lineWidth);
 
         const hasGrid: boolean = this._$grid.enabled;
 
@@ -1903,7 +1910,7 @@ export class CanvasToWebGLContext
             .textureManager
             .bind0(texture, true);
 
-        const halfBlur: number = $Math.ceil(blur * 0.5);
+        const halfBlur: number = Math.ceil(blur * 0.5);
         const fraction: number = 1 - (halfBlur - blur * 0.5);
         const samples: number  = 1 + blur;
 
@@ -2267,11 +2274,7 @@ export class CanvasToWebGLContext
      */
     _$endLayer (): void
     {
-        const bounds: BoundsImpl | void = this._$positions.pop();
-        if (bounds) {
-            $poolBoundsObject(bounds);
-        }
-
+        this._$positions.pop();
         this._$isLayer = !!this._$blends.pop();
     }
 
@@ -2340,7 +2343,7 @@ export class CanvasToWebGLContext
      */
     textureScale (width: number, height: number): number
     {
-        const maxSize = $Math.max(width, height);
+        const maxSize = Math.max(width, height);
         if (maxSize > this._$maxTextureSize) {
             return this._$maxTextureSize / maxSize;
         }

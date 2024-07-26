@@ -1,9 +1,9 @@
-import { WebGLShaderUniform } from "./WebGLShaderUniform";
-import { WebGLShaderInstance } from "./WebGLShaderInstance";
 import type { CanvasToWebGLContext } from "../CanvasToWebGLContext";
 import type { CanvasToWebGLShaderList } from "./CanvasToWebGLShaderList";
 import type { IndexRangeImpl } from "../interface/IndexRangeImpl";
-import { $getProgramId } from "@next2d/share";
+import { WebGLShaderUniform } from "./WebGLShaderUniform";
+import { WebGLShaderInstance } from "./WebGLShaderInstance";
+import { $getProgramId } from "../WebGLUtil";
 
 /**
  * @class

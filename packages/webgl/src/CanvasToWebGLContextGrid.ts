@@ -1,6 +1,5 @@
 import type { BoundsImpl } from "./interface/BoundsImpl";
 import type { GridImpl } from "./interface/GridImpl";
-import { $Math } from "@next2d/share";
 
 /**
  * @class
@@ -301,8 +300,8 @@ export class CanvasToWebGLContextGrid
         const gridWidth: number    = grid.w;
         const gridHeight: number   = grid.h;
 
-        const sameWidth: number  = $Math.abs($Math.ceil(boundsWidth  * same_scale));
-        const sameHeight: number = $Math.abs($Math.ceil(boundsHeight * same_scale));
+        const sameWidth: number  = Math.abs(Math.ceil(boundsWidth  * same_scale));
+        const sameHeight: number = Math.abs(Math.ceil(boundsHeight * same_scale));
 
         // 等倍サイズでの正規化grid
         const minXST: number = gridWidth  > 0 ? (grid.x - bounds.xMin) / boundsWidth  : 0.00001;
@@ -318,14 +317,14 @@ export class CanvasToWebGLContextGrid
 
         if (minXPQ >= maxXPQ) {
             const m: number = minXST / (minXST + (1 - maxXST));
-            minXPQ = $Math.max(m - 0.00001, 0);
-            maxXPQ = $Math.min(m + 0.00001, 1);
+            minXPQ = Math.max(m - 0.00001, 0);
+            maxXPQ = Math.min(m + 0.00001, 1);
         }
 
         if (minYPQ >= maxYPQ) {
             const m: number = minYST / (minYST + (1 - maxYST));
-            minYPQ = $Math.max(m - 0.00001, 0);
-            maxYPQ = $Math.min(m + 0.00001, 1);
+            minYPQ = Math.max(m - 0.00001, 0);
+            maxYPQ = Math.min(m + 0.00001, 1);
         }
 
         this.enabled = true;

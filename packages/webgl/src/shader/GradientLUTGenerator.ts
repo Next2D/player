@@ -3,7 +3,6 @@ import type { GradientLUTShaderVariantCollection } from "./variants/GradientLUTS
 import type { CanvasToWebGLShader } from "./CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./WebGLShaderUniform";
 import type { AttachmentImpl } from "../interface/AttachmentImpl";
-import { $Math } from "@next2d/share";
 
 /**
  * @class
@@ -49,7 +48,7 @@ export class GradientLUTGenerator
          * @type {number}
          * @private
          */
-        this._$maxLength = $Math.floor(gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) * 0.75);
+        this._$maxLength = Math.floor(gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) * 0.75);
 
         /**
          * @type {Float32Array}
@@ -65,7 +64,7 @@ export class GradientLUTGenerator
 
         for (let i: number = 0; i < 256; i++) {
             const t: number = i / 255;
-            this._$rgbToLinearTable[i] = $Math.pow(t, 2.23333333);
+            this._$rgbToLinearTable[i] = Math.pow(t, 2.23333333);
             this._$rgbIdentityTable[i] = t;
         }
     }
@@ -108,7 +107,7 @@ export class GradientLUTGenerator
 
         for (let begin: number = 0; begin < stopsLength; begin += this._$maxLength - 1) {
 
-            const end: number = $Math.min(begin + this._$maxLength, stopsLength);
+            const end: number = Math.min(begin + this._$maxLength, stopsLength);
 
             const shader: CanvasToWebGLShader = variants
                 .getGradientLUTShader(end - begin, is_linear_space);
@@ -168,7 +167,7 @@ export class GradientLUTGenerator
 
         for (let begin: number = 0; begin < stopsLength; begin += this._$maxLength - 1) {
 
-            const end: number = $Math.min(begin + this._$maxLength, stopsLength);
+            const end: number = Math.min(begin + this._$maxLength, stopsLength);
 
             const shader: CanvasToWebGLShader = variants
                 .getGradientLUTShader(end - begin, false);

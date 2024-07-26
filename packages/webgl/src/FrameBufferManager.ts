@@ -1,8 +1,7 @@
 import { TextureManager } from "./TextureManager";
 import { StencilBufferPool } from "./StencilBufferPool";
 import { ColorBufferPool } from "./ColorBufferPool";
-import { $Math } from "@next2d/share";
-import { $RENDER_SIZE } from "./Const";
+import { $RENDER_SIZE } from "./WebGLUtil";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
 
@@ -506,10 +505,10 @@ export class FrameBufferManager
             this._$gl.TEXTURE_2D, texture, 0
         );
 
-        const x0: number = $Math.max(0, position.x - 1);
-        const y0: number = $Math.max(0, position.y - 1);
-        const x1: number = $Math.min($RENDER_SIZE, position.x + position.w + 1);
-        const y1: number = $Math.min($RENDER_SIZE, position.y + position.h + 1);
+        const x0: number = Math.max(0, position.x - 1);
+        const y0: number = Math.max(0, position.y - 1);
+        const x1: number = Math.min($RENDER_SIZE, position.x + position.w + 1);
+        const y1: number = Math.min($RENDER_SIZE, position.y + position.h + 1);
 
         this._$gl.blitFramebuffer(
             x0, y0, x1, y1,

@@ -5,7 +5,6 @@ import { FragmentShaderSourceGradient } from "../fragment/FragmentShaderSourceGr
 import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 import type { WebGLShaderUniform } from "../WebGLShaderUniform";
 import type { CanvasToWebGLContextGrid } from "../../CanvasToWebGLContextGrid";
-import { $getMap } from "@next2d/share";
 
 /**
  * @class
@@ -40,7 +39,7 @@ export class GradientShapeShaderVariantCollection
          * @type {Map}
          * @private
          */
-        this._$collection = $getMap();
+        this._$collection = new Map();
     }
 
     /**

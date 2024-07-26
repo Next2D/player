@@ -1,5 +1,3 @@
-import { $Float32Array } from "@next2d/share";
-
 /**
  * @class
  */
@@ -13,7 +11,7 @@ export class BezierConverter
      */
     constructor ()
     {
-        this._$bezierConverterBuffer = new $Float32Array(32);
+        this._$bezierConverterBuffer = new Float32Array(32);
     }
 
     /**

@@ -5,8 +5,7 @@ import { FragmentShaderSourceBlend } from "../fragment/FragmentShaderSourceBlend
 import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 import type { WebGLShaderUniform } from "../WebGLShaderUniform";
 import type { WebGLShaderInstance } from "../WebGLShaderInstance";
-import { $getMap } from "@next2d/share";
-import { $RENDER_SIZE } from "../../Const";
+import { $RENDER_SIZE } from "../../WebGLUtil";
 
 /**
  * @class
@@ -41,7 +40,7 @@ export class BlendShaderVariantCollection
          * @type {Map}
          * @private
          */
-        this._$collection = $getMap();
+        this._$collection = new Map();
     }
 
     /**

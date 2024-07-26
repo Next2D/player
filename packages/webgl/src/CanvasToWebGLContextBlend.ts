@@ -7,11 +7,7 @@ import type { BlendShaderVariantCollection } from "./shader/variants/BlendShader
 import type { BlendModeImpl } from "./interface/BlendModeImpl";
 import type { AttachmentImpl } from "./interface/AttachmentImpl";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
-import {
-    $Math,
-    $Number,
-    $inverseMatrix
-} from "@next2d/share";
+import { $inverseMatrix } from "./WebGLUtil";
 
 /**
  * @class
@@ -481,8 +477,8 @@ export class CanvasToWebGLContextBlend
             withCT, ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
         );
 
-        const width: number  = $Math.abs(x_max - x_min);
-        const height: number = $Math.abs(y_max - y_min);
+        const width: number  = Math.abs(x_max - x_min);
+        const height: number = Math.abs(y_max - y_min);
 
         this._$gl.enable(this._$gl.SCISSOR_TEST);
         this._$gl.scissor(x_min, render_height - (y_min + height), width, height);
@@ -578,37 +574,37 @@ export class CanvasToWebGLContextBlend
                         const y2: number = +(left  * b + bottom * d + ty);
                         const y3: number = +(left  * b + top    * d + ty);
 
-                        const no: number = $Number.MAX_VALUE;
-                        const xMin: number = +$Math.min($Math.min($Math.min($Math.min( no, x0), x1), x2), x3);
-                        const xMax: number = +$Math.max($Math.max($Math.max($Math.max(-no, x0), x1), x2), x3);
-                        const yMin: number = +$Math.min($Math.min($Math.min($Math.min( no, y0), y1), y2), y3);
-                        const yMax: number = +$Math.max($Math.max($Math.max($Math.max(-no, y0), y1), y2), y3);
+                        const no: number = Number.MAX_VALUE;
+                        const xMin: number = +Math.min(Math.min(Math.min(Math.min( no, x0), x1), x2), x3);
+                        const xMax: number = +Math.max(Math.max(Math.max(Math.max(-no, x0), x1), x2), x3);
+                        const yMin: number = +Math.min(Math.min(Math.min(Math.min( no, y0), y1), y2), y3);
+                        const yMax: number = +Math.max(Math.max(Math.max(Math.max(-no, y0), y1), y2), y3);
 
-                        const sx: number = $Math.max(0, xMin);
-                        const sy: number = $Math.max(0, yMin);
-                        const sw: number = $Math.min($Math.max(0, renderWidth  - sx), $Math.ceil($Math.abs(xMax - xMin)));
-                        const sh: number = $Math.min($Math.max(0, renderHeight - sy), $Math.ceil($Math.abs(yMax - yMin)));
+                        const sx: number = Math.max(0, xMin);
+                        const sy: number = Math.max(0, yMin);
+                        const sw: number = Math.min(Math.max(0, renderWidth  - sx), Math.ceil(Math.abs(xMax - xMin)));
+                        const sh: number = Math.min(Math.max(0, renderHeight - sy), Math.ceil(Math.abs(yMax - yMin)));
 
                         if (!sw || !sh) {
                             return ;
                         }
 
                         this._$gl.enable(this._$gl.SCISSOR_TEST);
-                        this._$gl.scissor(sx, $Math.max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
+                        this._$gl.scissor(sx, Math.max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
 
                     } else {
 
-                        const sx: number = $Math.max(0, x + tx);
-                        const sy: number = $Math.max(0, y + ty);
-                        const sw: number = $Math.min($Math.max(0, renderWidth  - sx), w);
-                        const sh: number = $Math.min($Math.max(0, renderHeight - sy), h);
+                        const sx: number = Math.max(0, x + tx);
+                        const sy: number = Math.max(0, y + ty);
+                        const sw: number = Math.min(Math.max(0, renderWidth  - sx), w);
+                        const sh: number = Math.min(Math.max(0, renderHeight - sy), h);
 
                         if (!sw || !sh) {
                             return ;
                         }
 
                         this._$gl.enable(this._$gl.SCISSOR_TEST);
-                        this._$gl.scissor(sx, $Math.max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
+                        this._$gl.scissor(sx, Math.max(0, renderHeight - (sy + sh)), sw + 1, sh + 1);
                     }
 
                     this.toOperation(operation);
@@ -620,10 +616,10 @@ export class CanvasToWebGLContextBlend
 
             default:
                 {
-                    const sx: number = $Math.max(0, x + matrix[6]);
-                    const sy: number = $Math.max(0, y + matrix[7]);
-                    const sw: number = $Math.min($Math.max(0, renderWidth  - sx), w);
-                    const sh: number = $Math.min($Math.max(0, renderHeight - sy), h);
+                    const sx: number = Math.max(0, x + matrix[6]);
+                    const sy: number = Math.max(0, y + matrix[7]);
+                    const sw: number = Math.min(Math.max(0, renderWidth  - sx), w);
+                    const sh: number = Math.min(Math.max(0, renderHeight - sy), h);
 
                     if (!sw || !sh) {
                         return ;
@@ -667,7 +663,7 @@ export class CanvasToWebGLContextBlend
                     );
 
                     this._$gl.enable(this._$gl.SCISSOR_TEST);
-                    this._$gl.scissor(sx, $Math.max(0, renderHeight - (sy + sh)), sw, sh);
+                    this._$gl.scissor(sx, Math.max(0, renderHeight - (sy + sh)), sw, sh);
 
                     this.toOneZero();
                     shader._$drawImage();

@@ -1,9 +1,4 @@
 import type { UniformDataImpl } from "../interface/UniformDataImpl";
-import {
-    $getMap,
-    $Float32Array,
-    $Int32Array
-} from "@next2d/share";
 
 /**
  * @class
@@ -38,7 +33,7 @@ export class WebGLShaderUniform
          * @type {Map}
          * @private
          */
-        this._$map = $getMap();
+        this._$map = new Map();
 
         const activeUniforms: number = this._$gl.getProgramParameter(program, this._$gl.ACTIVE_UNIFORMS);
         for (let i: number = 0; i < activeUniforms; i++) {
@@ -64,13 +59,13 @@ export class WebGLShaderUniform
                 // 可能な限りFloat32Arrayに値をパックして転送するようにする
                 case this._$gl.FLOAT_VEC4:
                     data.method = this._$gl.uniform4fv.bind(this._$gl, location);
-                    data.array  = new $Float32Array(4 * info.size);
+                    data.array  = new Float32Array(4 * info.size);
                     data.assign = -1;
                     break;
 
                 case this._$gl.INT_VEC4:
                     data.method = this._$gl.uniform4iv.bind(this._$gl, location);
-                    data.array  = new $Int32Array(4 * info.size);
+                    data.array  = new Int32Array(4 * info.size);
                     data.assign = -1;
                     break;
 
@@ -78,7 +73,7 @@ export class WebGLShaderUniform
                 // sampler2Dは一度だけ設定するようにする
                 case this._$gl.SAMPLER_2D:
                     data.method = this._$gl.uniform1iv.bind(this._$gl, location);
-                    data.array  = new $Int32Array(info.size);
+                    data.array  = new Int32Array(info.size);
                     data.assign = 1;
                     break;
 

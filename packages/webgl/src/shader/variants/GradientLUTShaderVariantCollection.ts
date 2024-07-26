@@ -3,10 +3,6 @@ import { FragmentShaderSourceGradientLUT } from "../fragment/FragmentShaderSourc
 import { CanvasToWebGLShader } from "../CanvasToWebGLShader";
 import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 import type { WebGLShaderUniform } from "../WebGLShaderUniform";
-import {
-    $Math,
-    $getMap
-} from "@next2d/share";
 
 /**
  * @class
@@ -41,7 +37,7 @@ export class GradientLUTShaderVariantCollection
          * @type {Map}
          * @private
          */
-        this._$collection = $getMap();
+        this._$collection = new Map();
     }
 
     /**
@@ -67,7 +63,7 @@ export class GradientLUTShaderVariantCollection
             }
         }
 
-        const mediumpLength: number = $Math.ceil(stops_length * 5 / 4);
+        const mediumpLength: number = Math.ceil(stops_length * 5 / 4);
 
         const shader: CanvasToWebGLShader = new CanvasToWebGLShader(
             this._$gl, this._$context,

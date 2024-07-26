@@ -7,10 +7,6 @@ import { FragmentShaderSourceConvolutionFilter } from "../fragment/filter/Fragme
 import { FragmentShaderSourceDisplacementMapFilter } from "../fragment/filter/FragmentShaderSourceDisplacementMapFilter";
 import type { WebGLShaderUniform } from "../WebGLShaderUniform";
 import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
-import {
-    $Math,
-    $getMap
-} from "@next2d/share";
 
 /**
  * @class
@@ -45,7 +41,7 @@ export class FilterShaderVariantCollection
          * @type {Map}
          * @private
          */
-        this._$collection = $getMap();
+        this._$collection = new Map();
     }
 
     /**
@@ -121,7 +117,7 @@ export class FilterShaderVariantCollection
             mediumpLength += is_glow ? 4 : 8;
         }
 
-        mediumpLength = $Math.ceil(mediumpLength / 4);
+        mediumpLength = Math.ceil(mediumpLength / 4);
 
         const shader: CanvasToWebGLShader = new CanvasToWebGLShader(
             this._$gl, this._$context,
@@ -193,7 +189,7 @@ export class FilterShaderVariantCollection
             }
         }
 
-        const mediumpLength: number = (clamp ? 1 : 2) + $Math.ceil(x * y / 4);
+        const mediumpLength: number = (clamp ? 1 : 2) + Math.ceil(x * y / 4);
 
         const shader: CanvasToWebGLShader = new CanvasToWebGLShader(
             this._$gl, this._$context,

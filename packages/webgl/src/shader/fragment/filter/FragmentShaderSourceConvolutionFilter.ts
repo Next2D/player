@@ -1,5 +1,4 @@
 import { FragmentShaderLibrary } from "../FragmentShaderLibrary";
-import { $Math } from "@next2d/share";
 
 /**
  * @class
@@ -22,15 +21,15 @@ export class FragmentShaderSourceConvolutionFilter
         preserve_alpha: boolean, clamp: boolean
     ): string {
 
-        const halfX: number = $Math.floor(x * 0.5);
-        const halfY: number = $Math.floor(y * 0.5);
+        const halfX: number = Math.floor(x * 0.5);
+        const halfY: number = Math.floor(y * 0.5);
         const size: number  = x * y;
 
         let matrixStatement: string = "";
         const matrixIndex: number = clamp ? 1 : 2;
         for (let idx: number = 0; idx < size; ++idx) {
 
-            const index: number = matrixIndex + $Math.floor(idx / 4);
+            const index: number = matrixIndex + Math.floor(idx / 4);
 
             const component: number = idx % 4;
 

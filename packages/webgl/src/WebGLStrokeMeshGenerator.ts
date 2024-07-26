@@ -1,11 +1,6 @@
 import type { StrokeMethImpl } from "./interface/StrokeMethImpl";
 import type { JointStyleImpl } from "./interface/JointStyleImpl";
 import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
-import {
-    $Float32Array,
-    $Int16Array,
-    $Math
-} from "@next2d/share";
 
 /**
  * @class
@@ -33,7 +28,7 @@ export class WebGLStrokeMeshGenerator
         line_join: JointStyleImpl
     ): StrokeMethImpl {
 
-        this._$vertexBufferData = this._$vertexBufferData || new $Float32Array(1024);
+        this._$vertexBufferData = this._$vertexBufferData || new Float32Array(1024);
         this._$vertexBufferPos = 0;
 
         this._$indexBufferData = this._$indexBufferData || new Int16Array(256);
@@ -68,7 +63,7 @@ export class WebGLStrokeMeshGenerator
     static _$expandVertexBufferIfNeeded (delta_length: number): void
     {
         if (this._$vertexBufferPos + delta_length > this._$vertexBufferData.length) {
-            const biggerBuffer: Float32Array = new $Float32Array(this._$vertexBufferData.length * 2);
+            const biggerBuffer: Float32Array = new Float32Array(this._$vertexBufferData.length * 2);
             biggerBuffer.set(this._$vertexBufferData);
             this._$vertexBufferData = biggerBuffer;
         }
@@ -84,7 +79,7 @@ export class WebGLStrokeMeshGenerator
     static _$expandIndexBufferIfNeeded(delta_length: number): void
     {
         if (this._$indexBufferPos + delta_length > this._$indexBufferData.length) {
-            const biggerBuffer: Int16Array = new $Int16Array(this._$indexBufferData.length * 2);
+            const biggerBuffer: Int16Array = new Int16Array(this._$indexBufferData.length * 2);
             biggerBuffer.set(this._$indexBufferData);
             this._$indexBufferData = biggerBuffer;
         }
@@ -306,7 +301,7 @@ export class WebGLStrokeMeshGenerator
         const bx: number = x3 - x2;
         const by: number = y3 - y2;
         const det: number = this._$cross(ax, ay, bx, by);
-        if ($Math.abs(det) < 0.0001) {
+        if (Math.abs(det) < 0.0001) {
             return ;
         }
 

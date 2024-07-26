@@ -1,4 +1,4 @@
-import { $RENDER_SIZE } from "./Const";
+import { $RENDER_SIZE } from "./WebGLUtil";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
 import type { GridImpl } from "./interface/GridImpl";
 

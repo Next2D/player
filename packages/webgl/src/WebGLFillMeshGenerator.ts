@@ -1,9 +1,6 @@
 import type { FillMeshImpl } from "./interface/FillMeshImpl";
 import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
-import {
-    $Float32Array,
-    $getArray
-} from "@next2d/share";
+import { $getArray } from "./WebGLUtil";
 
 /**
  * @class
@@ -37,7 +34,7 @@ export class WebGLFillMeshGenerator
             vertexBufferLen += (vertices[idx].length / 3 - 2) * 12;
         }
 
-        this._$vertexBufferData = new $Float32Array(vertexBufferLen);
+        this._$vertexBufferData = new Float32Array(vertexBufferLen);
         this._$indexRanges      = $getArray();
         this._$currentIndex     = 0;
 

@@ -3,7 +3,7 @@ import type { VerticesImpl } from "./interface/VerticesImpl";
 import {
     $getArray,
     $poolArray
-} from "@next2d/share";
+} from "./WebGLUtil";
 
 /**
  * @class

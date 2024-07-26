@@ -1,4 +1,3 @@
-import { $Math } from "@next2d/share";
 import { FragmentShaderLibrary } from "../FragmentShaderLibrary";
 
 /**
@@ -187,7 +186,7 @@ void main() {
      */
     static STATEMENT_GLOW_STRENGTH (offset: number): string
     {
-        const index: number     = $Math.floor(offset / 4);
+        const index: number     = Math.floor(offset / 4);
         const component: number = offset % 4;
         return `
     float strength = u_mediump[${index}][${component}];
@@ -294,7 +293,7 @@ void main() {
      */
     static STATEMENT_BEVEL_STRENGTH (offset: number): string
     {
-        const index: number     = $Math.floor(offset / 4);
+        const index: number     = Math.floor(offset / 4);
         const component: number = offset % 4;
 
         return `

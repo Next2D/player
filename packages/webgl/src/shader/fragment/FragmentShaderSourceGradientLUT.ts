@@ -1,5 +1,3 @@
-import { $Math } from "@next2d/share";
-
 /**
  * @class
  */
@@ -24,8 +22,8 @@ export class FragmentShaderSourceGradientLUT
 
             const i0: number = i - 1;
             const i1: number = i;
-            const t0: string = `u_mediump[${stops_length + $Math.floor(i0 / 4)}][${i0 % 4}]`;
-            const t1: string = `u_mediump[${stops_length + $Math.floor(i1 / 4)}][${i1 % 4}]`;
+            const t0: string = `u_mediump[${stops_length + Math.floor(i0 / 4)}][${i0 % 4}]`;
+            const t1: string = `u_mediump[${stops_length + Math.floor(i1 / 4)}][${i1 % 4}]`;
             const c0: string = `u_mediump[${i0}]`;
             const c1: string = `u_mediump[${i1}]`;
 
