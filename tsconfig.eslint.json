@@ -9,6 +9,8 @@
   "exclude": [
     "node_modules",
     "dist",
+    "worker/**/*.test.ts",
+    "packages/**/*.test.ts",
     "src/**/*.test.ts",
   ]
 }
