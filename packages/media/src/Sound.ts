@@ -40,7 +40,7 @@ export class Sound extends EventDispatcher
     private _$src: string;
     private _$loopCount: number;
     private _$stopFlag: boolean;
-    
+
     /**
      * @constructor
      * @public

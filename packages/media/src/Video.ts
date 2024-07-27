@@ -385,7 +385,10 @@ export class Video extends DisplayObject
             this._$videoElement.pause();
         }
 
+        cancelAnimationFrame(this._$timerId);
+
         // reset
+        this._$stop         = true;
         this._$currentTime  = 0;
         this._$duration     = 0;
         this._$volume       = 0;

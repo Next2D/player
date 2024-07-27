@@ -11,8 +11,9 @@ import type { AjaxOptionImpl } from "./interface/AjaxOptionImpl";
  */
 export const $clamp = (
     value: number,
-    min: number, max: number,
-    default_value: number|null = null
+    min: number,
+    max: number,
+    default_value: number | null = null
 ): number => {
 
     const number: number = +value;

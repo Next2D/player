@@ -30,7 +30,7 @@ export const execute = (volume: number): void =>
             continue;
         }
 
-        sound.volume = Math.min(volume, sound.volume);
+        sound.volume = volume;
     }
 
     const videos: Video[] = $getVideos();
@@ -41,6 +41,6 @@ export const execute = (volume: number): void =>
             continue;
         }
 
-        video.volume = Math.min(volume, video.volume);
+        video.volume = volume;
     }
 };
