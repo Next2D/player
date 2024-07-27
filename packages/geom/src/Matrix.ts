@@ -12,57 +12,10 @@ import { execute as matrixScaleService } from "../src/Matrix/service/MatrixScale
 import { execute as matrixSetToService } from "../src/Matrix/service/MatrixSetToService";
 import { execute as matrixTransformPointService } from "../src/Matrix/service/MatrixTransformPointService";
 import { execute as matrixTranslateService } from "../src/Matrix/service/MatrixTranslateService";
-
-/**
- * @type {Float32Array[]}
- * @private
- */
-const $objectPool: Float32Array[] = [];
-
-/**
- * @description オブジェクトプールから Float32Array オブジェクトを取得します。
- *              Get a Float32Array object from the object pool.
- *
- * @param  {number} [f0=0]
- * @param  {number} [f1=0]
- * @param  {number} [f2=0]
- * @param  {number} [f3=0]
- * @param  {number} [f4=0]
- * @param  {number} [f5=0]
- * @return {Float32Array}
- * @method
- * @private
- */
-const $getFloat32Array = (
-    f0: number = 1, f1: number = 0,
-    f2: number = 0, f3: number = 1,
-    f4: number = 0, f5: number = 0
-): Float32Array => {
-
-    const array: Float32Array = $objectPool.pop() || new Float32Array(6);
-
-    array[0] = f0;
-    array[1] = f1;
-    array[2] = f2;
-    array[3] = f3;
-    array[4] = f4;
-    array[5] = f5;
-
-    return array;
-};
-
-/**
- * @description 再利用する為に、オブジェクトプールに Float32Array オブジェクトを追加します。
- *              Add a Float32Array object to the object pool for reuse.
- *
- * @param {Float32Array} array
- * @method
- * @private
- */
-const $poolFloat32Array = (array: Float32Array): void =>
-{
-    $objectPool.push(array);
-};
+import {
+    $getFloat32Array6,
+    $poolFloat32Array6
+} from "./GeomUtil";
 
 /**
  * @description Matrix クラスは、2 つの座標空間の間におけるポイントのマッピング方法を決定する変換マトリックスを表します。
@@ -103,7 +56,7 @@ export class Matrix
          * @type {Float32Array}
          * @private
          */
-        this._$matrix = $getFloat32Array(a, b, c, d, tx, ty);
+        this._$matrix = $getFloat32Array6(a, b, c, d, tx, ty);
     }
 
     /**
@@ -497,7 +450,7 @@ export class Matrix
      */
     _$multiplication (a: Float32Array, b: Float32Array): Float32Array
     {
-        return $getFloat32Array(
+        return $getFloat32Array6(
             a[0] * b[0] + a[2] * b[1],
             a[1] * b[0] + a[3] * b[1],
             a[0] * b[2] + a[2] * b[3],
@@ -506,16 +459,14 @@ export class Matrix
             a[1] * b[4] + a[3] * b[5] + a[5]
         );
     }
+
     /**
-     * @param {Float32Array} buffer
+     * @param {Float32Array} array
      * @method
      * @private
      */
-    _$poolBuffer (buffer: Float32Array): void
+    _$poolBuffer (array: Float32Array): void
     {
-        if ($objectPool.length > 10) {
-            return ;
-        }
-        $poolFloat32Array(buffer);
+        $poolFloat32Array6(array);
     }
 }

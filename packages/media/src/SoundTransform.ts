@@ -1,4 +1,4 @@
-import { $clamp } from "../../../common/Util";
+import { $clamp } from "./MediaUtil";
 
 /**
  * @description SoundTransform クラスにはボリュームとループのプロパティが含まれます。

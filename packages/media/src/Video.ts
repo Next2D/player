@@ -2,10 +2,12 @@ import { SoundMixer } from "./SoundMixer";
 import { DisplayObject } from "@next2d/display";
 import { VideoEvent } from "@next2d/events";
 import type { BoundsImpl } from "./interface/BoundsImpl";
-import { $clamp } from "../../../common/Util";
 import { execute as videoCreateElementService } from "./Video/VideoCreateElementService";
 import { execute as videoPlayEventService } from "./Video/VideoPlayEventService";
-import { $getVideos } from "./MediaUtil";
+import {
+    $clamp,
+    $getVideos
+} from "./MediaUtil";
 
 /**
  * @description サーバーまたはローカルに保存された録画済みビデオファイルを再生する Video オブジェクトです。

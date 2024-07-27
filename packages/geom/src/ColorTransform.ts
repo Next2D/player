@@ -1,60 +1,8 @@
 import { execute as colorTransformConcatService } from "../src/ColorTransform/service/ColorTransformConcatService";
-
-/**
- * @type {Float32Array[]}
- * @private
- */
-const $objectPool: Float32Array[] = [];
-
-/**
- * @description オブジェクトプールから Float32Array オブジェクトを取得します。
- *              Get a Float32Array object from the object pool.
- *
- * @param  {number} [f0=0]
- * @param  {number} [f1=0]
- * @param  {number} [f2=0]
- * @param  {number} [f3=0]
- * @param  {number} [f4=0]
- * @param  {number} [f5=0]
- * @param  {number} [f6=0]
- * @param  {number} [f7=0]
- * @return {Float32Array}
- * @method
- * @private
- */
-const $getFloat32Array = (
-    f0: number = 1, f1: number = 1,
-    f2: number = 1, f3: number = 1,
-    f4: number = 0, f5: number = 0,
-    f6: number = 0, f7: number = 0
-): Float32Array => {
-
-    const array: Float32Array = $objectPool.pop() || new Float32Array(8);
-
-    array[0] = f0;
-    array[1] = f1;
-    array[2] = f2;
-    array[3] = f3;
-    array[4] = f4;
-    array[5] = f5;
-    array[6] = f6;
-    array[7] = f7;
-
-    return array;
-};
-
-/**
- * @description 再利用する為に、オブジェクトプールに Float32Array オブジェクトを追加します。
- *              Add a Float32Array object to the object pool for reuse.
- *
- * @param {Float32Array} array
- * @method
- * @private
- */
-const $poolFloat32Array = (array: Float32Array): void =>
-{
-    $objectPool.push(array);
-};
+import {
+    $getFloat32Array8,
+    $poolFloat32Array8
+} from "./GeomUtil";
 
 /**
  * @description ColorTransform クラスを使用すると、表示オブジェクトのカラー値を調整することができます。
@@ -110,7 +58,7 @@ export class ColorTransform
          * @type {Float32Array}
          * @private
          */
-        this._$colorTransform = $getFloat32Array(
+        this._$colorTransform = $getFloat32Array8(
             red_multiplier, green_multiplier, blue_multiplier, alpha_multiplier,
             red_offset, green_offset, blue_offset, alpha_offset
         );
@@ -350,7 +298,7 @@ export class ColorTransform
      */
     _$multiplication (a: Float32Array, b: Float32Array): Float32Array
     {
-        return $getFloat32Array(
+        return $getFloat32Array8(
             a[0] * b[0],
             a[1] * b[1],
             a[2] * b[2],
@@ -373,15 +321,12 @@ export class ColorTransform
     }
 
     /**
-     * @param {Float32Array} buffer
+     * @param {Float32Array} array
      * @method
      * @private
      */
-    _$poolBuffer (buffer: Float32Array): void
+    _$poolBuffer (array: Float32Array): void
     {
-        if ($objectPool.length > 10) {
-            return ;
-        }
-        $poolFloat32Array(buffer);
+        $poolFloat32Array8(array);
     }
 }

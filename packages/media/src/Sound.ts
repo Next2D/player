@@ -7,14 +7,12 @@ import { execute as soundLoadendEventService } from "./Sound/SoundLoadendEventSe
 import { execute as soundEndedEventService } from "./Sound/SoundEndedEventService";
 import { execute as soundDecodeService } from "./Sound/SoundDecodeService";
 import {
-    $clamp,
-    $ajax
-} from "../../../common/Util";
-import {
     Event,
     EventDispatcher
 } from "@next2d/events";
 import {
+    $clamp,
+    $ajax,
     $audioContext,
     $getSounds
 } from "./MediaUtil";

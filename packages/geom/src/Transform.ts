@@ -354,8 +354,10 @@ export class Transform
     }
 
     /**
-     * matrix プロパティから取得される Matrix の Matrix._$matrix と同じ値を返しますが、matrix プロパティと異なり Matrix を複製しません。
-     * 返される値は一時的に使用することのみできます。返される値の要素を直接更新してはいけません。返される値をプール（Util.$poolFloat32Array）してはいけません。
+     * @description matrix プロパティから取得される Matrix の Matrix._$matrix と同じ値を返しますが、matrix プロパティと異なり Matrix を複製しません。
+     *              返される値は一時的に使用することのみできます。返される値の要素を直接更新してはいけません。
+     *              Returns the same value as Matrix._$matrix of Matrix obtained from the matrix property, but unlike the matrix property, does not duplicate Matrix.
+     *              The returned value may only be used temporarily. Elements of the returned value must not be updated directly.
      *
      * @return {Float32Array}
      * @method
