@@ -1,5 +1,4 @@
 import type { Video } from "../Video";
-import { Event } from "@next2d/events";
 import { execute } from "./VideoCreateElementService";
 import { describe, expect, it, vi } from "vitest";
 

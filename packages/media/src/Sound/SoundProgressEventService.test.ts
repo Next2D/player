@@ -35,6 +35,8 @@ describe("SoundProgressEventService.js test", () =>
         execute(sound, new MockEvent());
 
         expect(openState).toBe(Next2DProgressEvent.PROGRESS);
+        expect(loaded).toBe(1);
+        expect(total).toBe(10);
 
     });
 });
