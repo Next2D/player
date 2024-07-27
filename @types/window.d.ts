@@ -1,5 +1,5 @@
-import { Next2D } from "../src/Next2D";
-import { IndexRangeImpl } from "@next2d/interface";
+import type { Next2D } from "../src/Next2D";
+import type { IndexRangeImpl } from "@next2d/interface";
 
 declare global {
 
@@ -69,11 +69,5 @@ declare global {
         indexLength: number;
         indexRanges: IndexRangeImpl[];
         indexCount: number;
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    interface AudioBufferSourceNode {
-        _$gainNode: GainNode | null;
-        _$volume: number;
     }
 }

@@ -1,3 +1,5 @@
+import { $clamp } from "../../../common/Util";
+
 /**
  * @description SoundTransform クラスにはボリュームとループのプロパティが含まれます。
  *              The SoundTransform class contains properties for volume and loop.
@@ -24,8 +26,7 @@ export class SoundTransform
          * @default 1
          * @private
          */
-        this._$volume = 1;
-        this.volume = volume;
+        this._$volume = $clamp(volume, 0, 1, 1);
 
         /**
          * @type {boolean}
@@ -122,6 +123,6 @@ export class SoundTransform
     }
     set volume (volume: number)
     {
-        this._$volume = Math.min(Math.max(0, volume), 1);
+        this._$volume = $clamp(volume, 0, 1);
     }
 }

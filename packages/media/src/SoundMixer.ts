@@ -1,13 +1,6 @@
-import type { Sound } from "./Sound";
-import type { Video } from "./Video";
-import type { Player } from "@next2d/core";
-import { $currentPlayer } from "@next2d/util";
-
-/**
- * @type {number}
- * @private
- */
-let $volume: number = 1;
+import { execute as soundMixerUpdateVolumeService } from "./SoundMixer/SoundMixerUpdateVolumeService";
+import { execute as soundMixerStopAllService } from "./SoundMixer/SoundMixerStopAllService";
+import { $getVolume } from "./MediaUtil";
 
 /**
  * SoundMixer クラスには、静的プロパティやアプリケーションのグローバルサウンドコントロールのメソッドが含まれます。
@@ -84,46 +77,11 @@ export class SoundMixer
      */
     static get volume (): number
     {
-        return $volume;
+        return $getVolume();
     }
     static set volume (volume: number)
     {
-        $volume = Math.min(Math.max(0, volume), 1);
-
-        const player: Player = $currentPlayer();
-
-        const sounds: Sound[] = player._$sources;
-        for (let idx: number = 0; idx < sounds.length; ++idx) {
-
-            const sound: Sound = sounds[idx];
-
-            for (let idx: number = 0; idx < sound._$sources.length; ++idx) {
-
-                const source: AudioBufferSourceNode = sound._$sources[idx];
-
-                if (source._$gainNode) {
-                    source._$gainNode.gain.value = Math.min(
-                        $volume,
-                        source._$volume
-                    );
-                }
-
-            }
-        }
-
-        const videos: Video[] = player._$videos;
-        for (let idx: number = 0; idx < videos.length; ++idx) {
-
-            const video: Video = videos[idx];
-
-            if (video._$video) {
-                video._$video.volume = Math.min(
-                    $volume,
-                    video.volume
-                );
-            }
-        }
-
+        soundMixerUpdateVolumeService(volume);
     }
 
     /**
@@ -136,20 +94,6 @@ export class SoundMixer
      */
     static stopAll (): void
     {
-        const player: Player = $currentPlayer();
-
-        // sounds
-        const sources: Sound[] = player._$sources;
-        for (let idx: number = 0; idx < sources.length; ++idx) {
-            sources[idx].stop();
-        }
-
-        const videos = player._$videos;
-        for (let idx: number = 0; idx < videos.length; ++idx) {
-            videos[idx].pause();
-        }
-
-        player._$sources.length = 0;
-        player._$videos.length  = 0;
+        soundMixerStopAllService();
     }
 }

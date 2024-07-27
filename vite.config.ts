@@ -4,6 +4,7 @@
 
 import { defineConfig } from "vite";
 import path from "path";
+console.log(path.resolve(process.cwd(), "./"));
 
 export default defineConfig({
     "server": {
@@ -23,7 +24,7 @@ export default defineConfig({
     },
     "resolve": {
         "alias": {
-            "@": path.resolve(process.cwd(), "./src/js")
+            "@": path.resolve(process.cwd(), "/")
         }
     },
     "test": {

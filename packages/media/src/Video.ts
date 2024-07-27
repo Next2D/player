@@ -1,61 +1,19 @@
 import { SoundMixer } from "./SoundMixer";
 import { DisplayObject } from "@next2d/display";
 import { VideoEvent } from "@next2d/events";
-import type { Player } from "@next2d/core";
-import type {
-    BoundsImpl,
-    VideoCharacterImpl,
-    DictionaryTagImpl,
-    ParentImpl,
-    AttachmentImpl,
-    FilterArrayImpl,
-    BlendModeImpl,
-    PlayerHitObjectImpl,
-    PropertyVideoMessageImpl,
-    Character,
-    CachePositionImpl
-} from "@next2d/interface";
-import type {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
-import {
-    $document,
-    $audioContext,
-    $currentPlayer,
-    $isTouch,
-    $rendererWorker
-} from "@next2d/util";
-import {
-    $Math,
-    $cancelAnimationFrame,
-    $requestAnimationFrame,
-    $getBoundsObject,
-    $boundsMatrix,
-    $clamp,
-    $multiplicationMatrix,
-    $poolFloat32Array6,
-    $MATRIX_ARRAY_IDENTITY,
-    $OffscreenCanvas,
-    $multiplicationColor,
-    $poolFloat32Array8,
-    $Infinity,
-    $poolBoundsObject,
-    $getArray,
-    $Number,
-    $poolArray,
-    $cacheStore,
-    $getFloat32Array6
-} from "@next2d/share";
+import type { BoundsImpl } from "./interface/BoundsImpl";
+import { $clamp } from "../../../common/Util";
+import { execute as videoCreateElementService } from "./Video/VideoCreateElementService";
+import { execute as videoPlayEventService } from "./Video/VideoPlayEventService";
+import { $getVideos } from "./MediaUtil";
 
 /**
- * サーバーまたはローカルに保存された録画済みビデオファイルを再生する Video オブジェクトです。
- * ビデオストリームを再生するには、attachNetStream() を使用して、ビデオを Video オブジェクトに関連付けます。
- * 次に、addChild() を使用して、Video オブジェクトを表示リストに追加します。
- *
- * A Video object that plays a recorded video file stored on a server or locally.
- * To play a video stream, use attachNetStream() to attach the video to the Video object.
- * Then, add the Video object to the display list using addChild().
+ * @description サーバーまたはローカルに保存された録画済みビデオファイルを再生する Video オブジェクトです。
+ *              ビデオストリームを再生するには、attachNetStream() を使用して、ビデオを Video オブジェクトに関連付けます。
+ *              次に、addChild() を使用して、Video オブジェクトを表示リストに追加します。
+ *              A Video object that plays a recorded video file stored on a server or locally.
+ *              To play a video stream, use attachNetStream() to attach the video to the Video object.
+ *              Then, add the Video object to the display list using addChild().
  *
  * @class
  * @memberOf next2d.media
@@ -67,16 +25,16 @@ export class Video extends DisplayObject
     private _$loop: boolean;
     private _$autoPlay: boolean;
     private readonly _$bounds: BoundsImpl;
-    private _$bytesLoaded: number;
-    private _$bytesTotal: number;
     private _$timerId: number;
-    public _$video: HTMLVideoElement | null;
+    private _$videoElement: HTMLVideoElement | null;
     private _$stop: boolean;
     private _$volume: number;
     private _$ready: boolean;
-    private _$context: OffscreenCanvasRenderingContext2D | null;
     private _$cacheKeys: string[];
     private readonly _$cacheParams: number[];
+    private _$duration: number;
+    private _$currentTime: number;
+    private _$src: string;
 
     /**
      * @param {number} [width = 0]
@@ -111,24 +69,36 @@ export class Video extends DisplayObject
         this._$autoPlay = true;
 
         /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$duration = 0;
+
+        /**
+         * @type {number}
+         * @default 0
+         * @private
+         */
+        this._$currentTime = 0;
+
+        /**
+         * @type {string}
+         * @default ""
+         * @private
+         */
+        this._$src = "";
+
+        /**
          * @type {object}
          * @private
          */
-        this._$bounds = $getBoundsObject(0, width, 0, height);
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bytesLoaded = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bytesTotal = 0;
+        this._$bounds = {
+            "xMin": 0,
+            "xMax": width,
+            "yMin": 0,
+            "yMax": height
+        };
 
         /**
          * @type {number}
@@ -142,7 +112,7 @@ export class Video extends DisplayObject
          * @default null
          * @private
          */
-        this._$video = null;
+        this._$videoElement = null;
 
         /**
          * @type {boolean}
@@ -166,23 +136,16 @@ export class Video extends DisplayObject
         this._$volume = 1;
 
         /**
-         * @type {CanvasRenderingContext2D}
-         * @default null
+         * @type {array}
          * @private
          */
-        this._$context = null;
+        this._$cacheKeys = [];
 
         /**
          * @type {array}
          * @private
          */
-        this._$cacheKeys = $getArray();
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$cacheParams = $getArray(0, 0, 0);
+        this._$cacheParams = [0, 0, 0];
     }
 
     /**
@@ -190,7 +153,7 @@ export class Video extends DisplayObject
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class Video]
+     * @default "[class Video]"
      * @method
      * @static
      */
@@ -204,7 +167,7 @@ export class Video extends DisplayObject
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.media.Video
+     * @default "next2d.media.Video"
      * @const
      * @static
      */
@@ -218,7 +181,7 @@ export class Video extends DisplayObject
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object Video]
+     * @default "[object Video]"
      * @method
      * @public
      */
@@ -232,7 +195,7 @@ export class Video extends DisplayObject
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.media.Video
+     * @default "next2d.media.Video"
      * @const
      * @public
      */
@@ -242,45 +205,20 @@ export class Video extends DisplayObject
     }
 
     /**
-     * @description 既にアプリケーションにロードされているデータのバイト数です。
-     *              The number of bytes of data that have been loaded into the application.
-     *
-     * @member {number}
-     * @default 0
-     * @readonly
-     * @public
-     */
-    get bytesLoaded (): number
-    {
-        return this._$bytesLoaded;
-    }
-
-    /**
-     * @description アプリケーションにロードされるファイルの総バイト数。
-     *              The total size in bytes of the file being loaded into the application.
-     *
-     * @member {number}
-     * @default 0
-     * @readonly
-     * @public
-     */
-    get bytesTotal (): number
-    {
-        return this._$bytesTotal;
-    }
-
-    /**
      * @description 現在のキーフレーム
      *              Current keyframe
      *
      *
      * @member {number}
-     * @readonly
      * @public
      */
     get currentTime (): number
     {
-        return this._$video ? this._$video.currentTime : 0;
+        return this._$currentTime;
+    }
+    set currentTime (current_time: number)
+    {
+        this._$currentTime = Math.min(this._$duration, current_time);
     }
 
     /**
@@ -288,12 +226,15 @@ export class Video extends DisplayObject
      *              Total number of keyframes
      *
      * @member {number}
-     * @readonly
      * @public
      */
     get duration (): number
     {
-        return this._$video ? this._$video.duration : 0;
+        return this._$duration;
+    }
+    set duration (duration: number)
+    {
+        this._$duration = duration;
     }
 
     /**
@@ -358,16 +299,23 @@ export class Video extends DisplayObject
      */
     get src (): string
     {
-        return this._$video ? this._$video.src : "";
+        return this._$src;
     }
     set src (src: string)
     {
-        if (!this._$video) {
-            this._$video = this._$initializeVideo();
+        if (this._$src === src) {
+            return ;
         }
 
-        this._$video.src = src;
-        this._$video.load();
+        // reset
+        this._$cacheKeys.length = 0;
+        this._$currentTime = 0;
+
+        this._$videoElement = null;
+        this._$videoElement = videoCreateElementService(this, this._$bounds);
+
+        this._$src = this._$videoElement.src = src;
+        this._$videoElement.load();
     }
 
     /**
@@ -381,7 +329,7 @@ export class Video extends DisplayObject
      */
     get videoHeight (): number
     {
-        return this._$video ? this._$video.videoHeight : this._$bounds.yMax;
+        return this._$bounds.yMax;
     }
 
     /**
@@ -395,7 +343,7 @@ export class Video extends DisplayObject
      */
     get videoWidth (): number
     {
-        return this._$video ? this._$video.videoWidth : this._$bounds.xMax;
+        return this._$bounds.xMax;
     }
 
     /**
@@ -412,13 +360,13 @@ export class Video extends DisplayObject
     }
     set volume (volume: number)
     {
-        this._$volume = $clamp($Math.min(
+        this._$volume = $clamp(Math.min(
             SoundMixer.volume,
             volume
         ), 0, 1, 1);
 
-        if (this._$video) {
-            this._$video.volume = this._$volume;
+        if (this._$videoElement) {
+            this._$videoElement.volume = this._$volume;
         }
     }
 
@@ -433,14 +381,17 @@ export class Video extends DisplayObject
      */
     clear (): void
     {
-        if (this._$video) {
-            this._$video.pause();
+        if (this._$videoElement) {
+            this._$videoElement.pause();
         }
 
         // reset
-        this._$video       = null;
-        this._$bounds.xMax = 0;
-        this._$bounds.yMax = 0;
+        this._$currentTime  = 0;
+        this._$duration     = 0;
+        this._$volume       = 0;
+        this._$videoElement = null;
+        this._$bounds.xMax  = 0;
+        this._$bounds.yMax  = 0;
 
         this._$doChanged();
     }
@@ -455,25 +406,22 @@ export class Video extends DisplayObject
      */
     pause (): void
     {
-        if (this._$video && !this._$stop) {
+        if (this._$videoElement && !this._$stop) {
 
             this._$stop = true;
-            this._$video.pause();
+            this._$videoElement.pause();
 
-            $cancelAnimationFrame(this._$timerId);
-            this._$timerId = -1;
+            cancelAnimationFrame(this._$timerId);
 
-            if (this.hasEventListener(VideoEvent.PAUSE)) {
-                this.dispatchEvent(new VideoEvent(
-                    VideoEvent.PAUSE, false, false,
-                    this._$bytesLoaded, this._$bytesTotal
-                ));
+            if (this.willTrigger(VideoEvent.PAUSE)) {
+                this.dispatchEvent(new VideoEvent(VideoEvent.PAUSE));
             }
 
-            const player: Player = $currentPlayer();
-            player._$videos.splice(
-                player._$videos.indexOf(this), 1
-            );
+            const videos = $getVideos();
+            const index = videos.indexOf(this);
+            if (index > -1) {
+                videos.splice(index, 1);
+            }
         }
     }
 
@@ -485,35 +433,28 @@ export class Video extends DisplayObject
      * @method
      * @public
      */
-    play (): void
+    async play (): Promise<void>
     {
-        if (this._$video && this._$stop) {
+        if (this._$videoElement && this._$stop) {
 
             this._$stop = false;
 
-            this._$video.volume = $Math.min(this._$volume, SoundMixer.volume);
-            this
-                ._$video
-                .play()
-                .then(() =>
-                {
-                    this._$timerId = $requestAnimationFrame(() =>
-                    {
-                        this._$update();
-                    });
+            this._$videoElement.volume = this._$volume;
+            await this._$videoElement.play();
 
-                    if (this.hasEventListener(VideoEvent.PLAY)) {
-                        this.dispatchEvent(new VideoEvent(
-                            VideoEvent.PLAY, false, false,
-                            this._$bytesLoaded, this._$bytesTotal
-                        ));
-                    }
+            this._$timerId = videoPlayEventService(this);
 
-                    const player = $currentPlayer();
-                    if (player._$videos.indexOf(this) === -1) {
-                        player._$videos.push(this);
-                    }
-                });
+            if (this.hasEventListener(VideoEvent.PLAY_START)) {
+                this.dispatchEvent(new VideoEvent(VideoEvent.PLAY_START));
+            }
+
+            const videos = $getVideos();
+            const index = videos.indexOf(this);
+            if (index > -1) {
+                videos.splice(index, 1);
+            }
+
+            videos.push(this);
         }
     }
 
@@ -528,180 +469,12 @@ export class Video extends DisplayObject
      */
     seek (offset: number): void
     {
-        if (this._$video) {
-            this._$video.currentTime = $Math.min(this._$video.duration, offset);
+        if (this._$videoElement) {
+            this._$currentTime = this._$videoElement.currentTime = Math.min(this._$duration, offset);
 
-            if (this.hasEventListener(VideoEvent.SEEK)) {
-                this.dispatchEvent(new VideoEvent(
-                    VideoEvent.SEEK, false, false,
-                    this._$bytesLoaded, this._$bytesTotal
-                ));
+            if (this.willTrigger(VideoEvent.SEEK)) {
+                this.dispatchEvent(new VideoEvent(VideoEvent.SEEK));
             }
-        }
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$update (): void
-    {
-        const player: Player = $currentPlayer();
-        if (!this.stage || !this._$video) {
-
-            if (this._$video) {
-                this._$video.pause();
-            }
-
-            $cancelAnimationFrame(this._$timerId);
-            this._$timerId = -1;
-
-            player._$videos.splice(
-                player._$videos.indexOf(this), 1
-            );
-
-            return ;
-        }
-
-        if ($rendererWorker) {
-            this._$postProperty();
-        }
-
-        // update
-        this._$bytesLoaded = this._$video.currentTime;
-        if (this._$video.currentTime) {
-
-            if (this.hasEventListener(VideoEvent.PROGRESS)) {
-                this.dispatchEvent(new VideoEvent(
-                    VideoEvent.PROGRESS, false, false,
-                    this._$bytesLoaded, this._$bytesTotal
-                ));
-            }
-
-            this._$doChanged();
-        }
-
-        this._$timerId = $requestAnimationFrame(() =>
-        {
-            this._$update();
-        });
-    }
-
-    /**
-     * @return {Promise}
-     * @method
-     * @private
-     */
-    async _$start (): Promise<void>
-    {
-        if (!this._$video) {
-            return ;
-        }
-
-        this._$bounds.xMax = this._$video.videoWidth;
-        this._$bounds.yMax = this._$video.videoHeight;
-        this._$bytesTotal  = this._$video.duration;
-
-        // init play and stop, reset
-        if (!this._$ready) {
-            await this._$video.play();
-            this._$video.pause();
-            this._$video.currentTime = 0;
-            this._$ready = true;
-        }
-
-        if (this._$autoPlay) {
-
-            this._$stop = false;
-
-            const player = $currentPlayer();
-            if (player._$videos.indexOf(this) === -1) {
-                player._$videos.push(this);
-            }
-
-            if (this.hasEventListener(VideoEvent.PLAY_START)) {
-                this.dispatchEvent(new VideoEvent(
-                    VideoEvent.PLAY_START, false, false,
-                    this._$bytesLoaded, this._$bytesTotal
-                ));
-            }
-
-            this._$timerId = $requestAnimationFrame(() =>
-            {
-                this._$update();
-            });
-
-            this._$doChanged();
-        }
-
-        this._$createContext();
-    }
-
-    /**
-     * @return {HTMLVideoElement}
-     * @method
-     * @private
-     */
-    _$initializeVideo (): HTMLVideoElement
-    {
-        // clear cache key
-        this._$cacheKeys.length = 0;
-
-        const video = $document.createElement("video");
-
-        video.autoplay    = false;
-        video.crossOrigin = "anonymous";
-
-        if (!$audioContext) {
-            video.muted = true;
-        }
-
-        if ($isTouch) {
-            video.setAttribute("playsinline", "");
-        }
-
-        video.addEventListener("canplaythrough", async (): Promise<void> =>
-        {
-            await this._$start();
-        });
-
-        video.addEventListener("ended", () =>
-        {
-            if (this._$loop) {
-                video.currentTime = 0;
-                return ;
-            }
-
-            if (this.hasEventListener(VideoEvent.PLAY_END)) {
-                this.dispatchEvent(new VideoEvent(
-                    VideoEvent.PLAY_END, false, false,
-                    this._$bytesLoaded, this._$bytesTotal
-                ));
-            }
-
-            $cancelAnimationFrame(this._$timerId);
-
-            this._$timerId = -1;
-
-        });
-
-        return video;
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$createContext (): void
-    {
-        if ($rendererWorker) {
-            const canvas = new $OffscreenCanvas(
-                this._$bounds.xMax,
-                this._$bounds.yMax
-            );
-            this._$context = canvas.getContext("2d");
         }
     }
 
@@ -725,18 +498,18 @@ export class Video extends DisplayObject
         this._$bounds.xMax = character.bounds.xMax;
         this._$bounds.yMax = character.bounds.yMax;
 
-        if (!this._$video) {
-            this._$video = this._$initializeVideo();
+        if (!this._$videoElement) {
+            this._$videoElement = videoCreateElementService(this);
         }
 
-        this._$video.src = URL.createObjectURL(new Blob(
+        this._$videvideoElemento.src = URL.createObjectURL(new Blob(
             [character._$buffer],
             { "type": "video/mp4" }
         ));
 
         // setup
-        this._$video.volume = $Math.min(character.volume, SoundMixer.volume);
-        this._$video.load();
+        this._$videoElement.volume = Math.min(character.volume, SoundMixer.volume);
+        this._$videoElement.load();
 
         if ($rendererWorker && this._$stage) {
             this._$createWorkerInstance();
@@ -830,7 +603,7 @@ export class Video extends DisplayObject
         color_transform: Float32Array
     ): void {
 
-        if (!this._$visible || !this._$video || !this._$ready) {
+        if (!this._$visible || !this._$videoElement || !this._$ready) {
             return ;
         }
 
@@ -869,8 +642,8 @@ export class Video extends DisplayObject
         const yMin = +bounds.yMin;
         $poolBoundsObject(bounds);
 
-        const width: number  = $Math.ceil($Math.abs(xMax - xMin));
-        const height: number = $Math.ceil($Math.abs(yMax - yMin));
+        const width: number  = Math.ceil(Math.abs(xMax - xMin));
+        const height: number = Math.ceil(Math.abs(yMax - yMin));
         switch (true) {
 
             case width === 0:
@@ -886,7 +659,7 @@ export class Video extends DisplayObject
 
         }
 
-        let xScale: number = +$Math.sqrt(
+        let xScale: number = +Math.sqrt(
             multiMatrix[0] * multiMatrix[0]
             + multiMatrix[1] * multiMatrix[1]
         );
@@ -899,7 +672,7 @@ export class Video extends DisplayObject
             xScale = +xScale.toFixed(4);
         }
 
-        let yScale: number = +$Math.sqrt(
+        let yScale: number = +Math.sqrt(
             multiMatrix[2] * multiMatrix[2]
             + multiMatrix[3] * multiMatrix[3]
         );
@@ -964,8 +737,8 @@ export class Video extends DisplayObject
         context.cachePosition = $cacheStore.get(this._$cacheKeys);
         if (!context.cachePosition) {
 
-            const width: number  = $Math.ceil($Math.abs(this._$bounds.xMax - this._$bounds.xMin));
-            const height: number = $Math.ceil($Math.abs(this._$bounds.yMax - this._$bounds.yMin));
+            const width: number  = Math.ceil(Math.abs(this._$bounds.xMax - this._$bounds.xMin));
+            const height: number = Math.ceil(Math.abs(this._$bounds.yMax - this._$bounds.yMin));
 
             const position: CachePositionImpl = manager
                 .createCachePosition(width, height);
@@ -975,7 +748,7 @@ export class Video extends DisplayObject
         }
 
         const texture: WebGLTexture = manager.createTextureFromVideo(
-            this._$video, this._$smoothing
+            this._$videoElement, this._$smoothing
         );
 
         let offsetX: number = 0;
@@ -1132,8 +905,8 @@ export class Video extends DisplayObject
         $poolBoundsObject(bounds);
         $poolBoundsObject(baseBounds);
 
-        const width: number  = $Math.ceil($Math.abs(xMax - xMin));
-        const height: number = $Math.ceil($Math.abs(yMax - yMin));
+        const width: number  = Math.ceil(Math.abs(xMax - xMin));
+        const height: number = Math.ceil(Math.abs(yMax - yMin));
 
         context.setTransform(1, 0, 0, 1, xMin, yMin);
         context.beginPath();
@@ -1183,85 +956,85 @@ export class Video extends DisplayObject
         );
     }
 
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$createWorkerInstance (): void
-    {
-        if (!$rendererWorker || this._$created) {
-            return ;
-        }
-        this._$created = true;
+    // /**
+    //  * @return {void}
+    //  * @method
+    //  * @private
+    //  */
+    // _$createWorkerInstance (): void
+    // {
+    //     if (!$rendererWorker || this._$created) {
+    //         return ;
+    //     }
+    //     this._$created = true;
 
-        const message: PropertyVideoMessageImpl = {
-            "command": "createVideo",
-            "buffer": new Float32Array(0),
-            "instanceId": this._$instanceId,
-            "parentId": this._$parent ? this._$parent._$instanceId : -1,
-            "smoothing": this._$smoothing,
-            "xMin": this._$bounds.xMin,
-            "yMin": this._$bounds.yMin,
-            "xMax": this._$bounds.xMax,
-            "yMax": this._$bounds.yMax
-        };
+    //     const message: PropertyVideoMessageImpl = {
+    //         "command": "createVideo",
+    //         "buffer": new Float32Array(0),
+    //         "instanceId": this._$instanceId,
+    //         "parentId": this._$parent ? this._$parent._$instanceId : -1,
+    //         "smoothing": this._$smoothing,
+    //         "xMin": this._$bounds.xMin,
+    //         "yMin": this._$bounds.yMin,
+    //         "xMax": this._$bounds.xMax,
+    //         "yMax": this._$bounds.yMax
+    //     };
 
-        if (this._$characterId > -1) {
-            message.characterId = this._$characterId;
-        }
+    //     if (this._$characterId > -1) {
+    //         message.characterId = this._$characterId;
+    //     }
 
-        if (this._$loaderInfo) {
-            message.loaderInfoId = this._$loaderInfo._$id;
-        }
+    //     if (this._$loaderInfo) {
+    //         message.loaderInfoId = this._$loaderInfo._$id;
+    //     }
 
-        if (this._$scale9Grid) {
-            message.grid = {
-                "x": this._$scale9Grid.x,
-                "y": this._$scale9Grid.y,
-                "w": this._$scale9Grid.width,
-                "h": this._$scale9Grid.height
-            };
-        }
+    //     if (this._$scale9Grid) {
+    //         message.grid = {
+    //             "x": this._$scale9Grid.x,
+    //             "y": this._$scale9Grid.y,
+    //             "w": this._$scale9Grid.width,
+    //             "h": this._$scale9Grid.height
+    //         };
+    //     }
 
-        $rendererWorker.postMessage(message);
-    }
+    //     $rendererWorker.postMessage(message);
+    // }
 
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$postProperty (): void
-    {
-        if (!$rendererWorker) {
-            return ;
-        }
+    // /**
+    //  * @return {void}
+    //  * @method
+    //  * @private
+    //  */
+    // _$postProperty (): void
+    // {
+    //     if (!$rendererWorker) {
+    //         return ;
+    //     }
 
-        const message: PropertyVideoMessageImpl = this._$createMessage();
-        message.smoothing = this._$smoothing;
+    //     const message: PropertyVideoMessageImpl = this._$createMessage();
+    //     message.smoothing = this._$smoothing;
 
-        const options = $getArray();
-        const context = this._$context;
-        if (context && this._$video) {
+    //     const options = $getArray();
+    //     const context = this._$context;
+    //     if (context && this._$video) {
 
-            message.xMin = this._$bounds.xMin;
-            message.yMin = this._$bounds.yMin;
-            message.xMax = this._$bounds.xMax;
-            message.yMax = this._$bounds.yMax;
+    //         message.xMin = this._$bounds.xMin;
+    //         message.yMin = this._$bounds.yMin;
+    //         message.xMax = this._$bounds.xMax;
+    //         message.yMax = this._$bounds.yMax;
 
-            context.drawImage(this._$video, 0, 0);
+    //         context.drawImage(this._$video, 0, 0);
 
-            const imageBitmap = context.canvas.transferToImageBitmap();
-            message.imageBitmap = imageBitmap;
-            options.push(imageBitmap);
-        }
+    //         const imageBitmap = context.canvas.transferToImageBitmap();
+    //         message.imageBitmap = imageBitmap;
+    //         options.push(imageBitmap);
+    //     }
 
-        $rendererWorker.postMessage(message, options);
+    //     $rendererWorker.postMessage(message, options);
 
-        $poolArray(options);
+    //     $poolArray(options);
 
-        this._$posted  = true;
-        this._$updated = false;
-    }
+    //     this._$posted  = true;
+    //     this._$updated = false;
+    // }
 }

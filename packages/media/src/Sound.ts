@@ -1,35 +1,23 @@
-import { SoundMixer } from "./SoundMixer";
+import type { SoundTagImpl } from "./interface/SoundTagImpl";
 import { URLRequest } from "@next2d/net";
-import { Player } from "@next2d/core";
+import { SoundMixer } from "./SoundMixer";
+import { execute as soundLoadStartEventService } from "./Sound/SoundLoadStartEventService";
+import { execute as soundProgressEventService } from "./Sound/SoundProgressEventService";
+import { execute as soundLoadendEventService } from "./Sound/SoundLoadendEventService";
+import { execute as soundEndedEventService } from "./Sound/SoundEndedEventService";
+import { execute as soundDecodeService } from "./Sound/SoundDecodeService";
 import {
-    EventDispatcher,
-    Event as Next2DEvent,
-    IOErrorEvent,
-    ProgressEvent as Next2DProgressEvent
-} from "@next2d/events";
-import type {
-    DisplayObjectContainer,
-    LoaderInfo
-} from "@next2d/display";
-import type {
-    SoundTagImpl,
-    SoundCharacterImpl,
-    Character
-} from "@next2d/interface";
-import {
-    $Math,
-    $performance,
-    $requestAnimationFrame,
     $clamp,
-    $getArray
-} from "@next2d/share";
+    $ajax
+} from "../../../common/Util";
 import {
-    $ajax,
+    Event,
+    EventDispatcher
+} from "@next2d/events";
+import {
     $audioContext,
-    $audios,
-    $currentPlayer,
-    $decodeAudioData
-} from "@next2d/util";
+    $getSounds
+} from "./MediaUtil";
 
 /**
  * @description Sound クラスを使用すると、アプリケーション内のサウンドを処理することができます。
@@ -44,67 +32,22 @@ import {
  */
 export class Sound extends EventDispatcher
 {
-    public readonly _$sources: AudioBufferSourceNode[];
-    private _$bytesLoaded: number;
-    private _$bytesTotal: number;
+    private _$source: AudioBufferSourceNode | null;
+    private _$gain: GainNode | null;
+    private _$audioBuffer: AudioBuffer | null;
     private _$volume: number;
     private _$currentCount: number;
     private _$src: string;
     private _$loopCount: number;
     private _$stopFlag: boolean;
-    public _$character: Character<SoundCharacterImpl> | null;
-    public _$audioBuffer: AudioBuffer | null;
-    public _$arrayBuffer: ArrayBuffer | null;
-
+    
     /**
      * @constructor
      * @public
      */
     constructor ()
     {
-
         super();
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bytesLoaded = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bytesTotal  = 0;
-
-        /**
-         * @type {AudioBuffer}
-         * @default null
-         * @private
-         */
-        this._$arrayBuffer = null;
-
-        /**
-         * @type {Uint8Array}
-         * @default null
-         * @private
-         */
-        this._$audioBuffer = null;
-
-        /**
-         * @type {object}
-         * @default null
-         * @private
-         */
-        this._$character = null;
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$sources = $getArray();
 
         /**
          * @type {number}
@@ -140,6 +83,27 @@ export class Sound extends EventDispatcher
          * @private
          */
         this._$src = "";
+
+        /**
+         * @type {AudioBufferSourceNode}
+         * @default null
+         * @private
+         */
+        this._$source = null;
+
+        /**
+         * @type {GainNode}
+         * @default null
+         * @private
+         */
+        this._$gain = null;
+
+        /**
+         * @type {AudioBuffer}
+         * @default null
+         * @private
+         */
+        this._$audioBuffer = null;
     }
 
     /**
@@ -199,34 +163,6 @@ export class Sound extends EventDispatcher
     }
 
     /**
-     * @description 既にアプリケーションにロードされているデータのバイト数です。
-     *              The number of bytes of data that have been loaded into the application.
-     *
-     * @member {number}
-     * @default 0
-     * @readonly
-     * @public
-     */
-    get bytesLoaded (): number
-    {
-        return this._$bytesLoaded;
-    }
-
-    /**
-     * @description アプリケーションにロードされるファイルの総バイト数。
-     *              The total size in bytes of the file being loaded into the application.
-     *
-     * @member {number}
-     * @default 0
-     * @readonly
-     * @public
-     */
-    get bytesTotal (): number
-    {
-        return this._$bytesTotal;
-    }
-
-    /**
      * @description ループ回数の設定
      *              Loop count setting.
      *
@@ -257,6 +193,9 @@ export class Sound extends EventDispatcher
     }
     set src (url: string)
     {
+        if (this._$src === url) {
+            return ;
+        }
         this.load(new URLRequest(url));
     }
 
@@ -274,23 +213,40 @@ export class Sound extends EventDispatcher
     }
     set volume (volume: number)
     {
-        this._$volume = $Math.min(
-            SoundMixer.volume,
-            $clamp(volume, 0, 1, 1)
-        );
-
-        const length: number = this._$sources.length;
-        if (length && $audioContext) {
-            for (let idx: number = 0; idx < length; ++idx) {
-
-                const source: AudioBufferSourceNode = this._$sources[idx];
-
-                if (source._$gainNode) {
-                    source._$gainNode.gain.value = this._$volume;
-                    source._$volume = this._$volume;
-                }
-            }
+        this._$volume = $clamp(volume, 0, 1, 1);
+        if (this._$gain) {
+            this._$gain.gain.value = this._$volume;
         }
+    }
+
+    /**
+     * @description サウンドがループするかどうかを示します。
+     *              Indicates whether the sound loops.
+     *
+     * @member {boolean}
+     * @readonly
+     * @public
+     */
+    get canLoop (): boolean
+    {
+        return !this._$stopFlag && this._$loopCount >= this._$currentCount;
+    }
+
+    /**
+     * @description AudioBuffer
+     *              AudioBuffer
+     *
+     * @member {AudioBuffer}
+     * @default null
+     * @public
+     */
+    get audioBuffer (): AudioBuffer | null
+    {
+        return this._$audioBuffer;
+    }
+    set audioBuffer (audio_buffer: AudioBuffer | null)
+    {
+        this._$audioBuffer = audio_buffer;
     }
 
     /**
@@ -303,17 +259,10 @@ export class Sound extends EventDispatcher
      */
     clone (): Sound
     {
-        const sound  = new Sound();
-        sound.volume = this.volume;
-
-        sound._$loopCount = this._$loopCount;
-
-        if (this._$character) {
-            sound._$character = this._$character;
-        } else {
-            sound._$audioBuffer = this._$audioBuffer;
-        }
-
+        const sound = new Sound();
+        sound.volume      = this._$volume;
+        sound.loopCount   = this._$loopCount;
+        sound.audioBuffer = this._$audioBuffer;
         return sound;
     }
 
@@ -321,132 +270,41 @@ export class Sound extends EventDispatcher
      * @description 指定した URL から外部 MP3 ファイルのロードを開始します。
      *              Initiates loading of an external MP3 file from the specified URL.
      *
-     * @param {URLRequest} request
-     * @return {void}
+     * @param  {URLRequest} request
+     * @return {Promise}
      * @method
      * @public
      */
-    load (request: URLRequest): void
+    load (request: URLRequest): Promise<void>
     {
         this._$src = request.url;
 
-        $ajax({
-            "format": "arraybuffer",
-            "url": request.url,
-            "method": request.method,
-            "data": request.data,
-            "headers": request.headers,
-            "withCredentials": request.withCredentials,
-            "event": {
-                "loadstart": (event: ProgressEvent) =>
-                {
-                    this._$loadStart(event);
-                },
-                "progress": (event: ProgressEvent) =>
-                {
-                    this._$progress(event);
-                },
-                "loadend": (event: ProgressEvent) =>
-                {
-                    this._$loadEnd(event);
-                }
-            }
-        });
-    }
-
-    /**
-     * @param  {ProgressEvent} event
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$loadStart (event: ProgressEvent): void
-    {
-        this._$bytesLoaded = event.loaded;
-        this._$bytesTotal  = event.total;
-
-        if (this.willTrigger(Next2DEvent.OPEN)) {
-            this.dispatchEvent(new Next2DEvent(Next2DEvent.OPEN));
-        }
-
-        if (this.willTrigger(Next2DProgressEvent.PROGRESS)) {
-            this.dispatchEvent(new Next2DProgressEvent(
-                Next2DProgressEvent.PROGRESS, false, false,
-                event.loaded, event.total
-            ));
-        }
-    }
-
-    /**
-     * @param  {ProgressEvent} event
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$progress (event: ProgressEvent): void
-    {
-        this._$bytesLoaded = event.loaded;
-        this._$bytesTotal  = event.total;
-
-        if (this.willTrigger(Next2DProgressEvent.PROGRESS)) {
-            this.dispatchEvent(new Next2DProgressEvent(
-                Next2DProgressEvent.PROGRESS, false, false,
-                event.loaded, event.total
-            ));
-        }
-    }
-
-    /**
-     * @param  {ProgressEvent} event
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$loadEnd (event: ProgressEvent): void
-    {
-        this._$bytesLoaded = event.loaded;
-        this._$bytesTotal  = event.total;
-
-        if (this.willTrigger(Next2DProgressEvent.PROGRESS)) {
-            this.dispatchEvent(new Next2DProgressEvent(
-                Next2DProgressEvent.PROGRESS, false, false,
-                event.loaded, event.total
-            ));
-        }
-
-        const target: any = event.target;
-        if (!target) {
-            throw new Error("the Sound target is null.");
-        }
-
-        if (199 < target.status && 400 > target.status) {
-
-            this._$arrayBuffer = target.response;
-
-            if ($audioContext) {
-                $decodeAudioData(this)
-                    .then((sound) =>
+        return new Promise((resolve): void =>
+        {
+            $ajax({
+                "format": "arraybuffer",
+                "url": request.url,
+                "method": request.method,
+                "data": request.data,
+                "headers": request.headers,
+                "withCredentials": request.withCredentials,
+                "event": {
+                    "loadstart": (event: ProgressEvent): void =>
                     {
-                        if (sound.hasEventListener(Next2DEvent.INIT)
-                            || sound.hasEventListener(Next2DEvent.COMPLETE)
-                        ) {
-                            const player: Player = $currentPlayer();
-                            player._$loaders.push(sound);
-                        }
-                    });
-            } else {
-                $audios.push(this);
-            }
-
-        } else {
-
-            if (this.willTrigger(IOErrorEvent.IO_ERROR)) {
-                this.dispatchEvent(new IOErrorEvent(
-                    IOErrorEvent.IO_ERROR, false, false, target.statusText
-                ));
-            }
-
-        }
+                        soundLoadStartEventService(this, event);
+                    },
+                    "progress": (event: ProgressEvent): void =>
+                    {
+                        soundProgressEventService(this, event);
+                    },
+                    "loadend": async (event: ProgressEvent): Promise<void> =>
+                    {
+                        await soundLoadendEventService(this, event);
+                        resolve();
+                    }
+                }
+            });
+        });
     }
 
     /**
@@ -460,37 +318,33 @@ export class Sound extends EventDispatcher
      */
     play (start_time: number = 0): void
     {
-        const buffer: AudioBuffer | null = this._$character
-            ? this._$character.audioBuffer
-            : this._$audioBuffer;
-
-        // execute
-        if (!$audioContext || !buffer) {
-
-            const now: number = $performance.now();
-            const wait = () =>
-            {
-                const buffer = this._$character
-                    ? this._$character.audioBuffer
-                    : this._$audioBuffer;
-
-                if (buffer !== null && $audioContext !== null) {
-                    const offset = ($performance.now() - now) / 1000;
-                    this._$createBufferSource(start_time, offset);
-                    return ;
-                }
-
-                $requestAnimationFrame(wait);
-
-            };
-
-            $requestAnimationFrame(wait);
-
-        } else {
-
-            this._$createBufferSource(start_time);
-
+        if (!this._$audioBuffer || !$audioContext) {
+            return ;
         }
+
+        this._$gain = $audioContext.createGain();
+        this._$gain.connect($audioContext.destination);
+        this._$gain.gain.value = Math.min(SoundMixer.volume, this._$volume);
+
+        this._$source = $audioContext.createBufferSource();
+        this._$source.addEventListener("ended", (): void =>
+        {
+            soundEndedEventService(this);
+        });
+
+        this._$source.buffer = this._$audioBuffer;
+        this._$source.connect(this._$gain);
+        this._$source.start(start_time);
+
+        this._$stopFlag = false;
+        this._$currentCount++;
+
+        const sounds = $getSounds();
+        const index = sounds.indexOf(this);
+        if (index > -1) {
+            sounds.splice(index, 1);
+        }
+        sounds.push(this);
     }
 
     /**
@@ -504,33 +358,23 @@ export class Sound extends EventDispatcher
     stop (): void
     {
         this._$stopFlag = true;
-        const length: number = this._$sources.length;
-        if (length) {
+        this._$currentCount = 0;
 
-            const player = $currentPlayer();
-            if ($audioContext) {
+        if (this._$source) {
+            this._$source.disconnect();
+            this._$source = null;
+        }
 
-                for (let idx: number = 0; idx < length; ++idx) {
+        if (this._$gain) {
+            this._$gain.gain.value = 0;
+            this._$gain.disconnect();
+            this._$gain = null;
+        }
 
-                    const source: AudioBufferSourceNode = this._$sources[idx];
-
-                    if (source._$gainNode) {
-                        source._$gainNode.gain.value = 0;
-                        source._$gainNode.disconnect();
-                        source._$gainNode = null;
-                    }
-
-                    source.onended = null;
-                    source.disconnect();
-                }
-            }
-
-            player._$sources.splice(
-                player._$sources.indexOf(this), 1
-            );
-
-            this._$currentCount   = 0;
-            this._$sources.length = 0;
+        const sounds = $getSounds();
+        const index = sounds.indexOf(this);
+        if (index > -1) {
+            sounds.splice(index, 1);
         }
     }
 
@@ -541,141 +385,36 @@ export class Sound extends EventDispatcher
      * @method
      * @private
      */
-    _$build (
+    async _$build (
         tag: SoundTagImpl,
-        parent: DisplayObjectContainer
-    ) {
+        parent: any
+    ): Promise<void> {
 
-        const loaderInfo: LoaderInfo | null = parent.loaderInfo;
+        const loaderInfo: any = parent.loaderInfo;
         if (!loaderInfo || !loaderInfo._$data) {
             throw new Error("the loaderInfo or data is null.");
         }
 
-        this._$character = loaderInfo
+        const character = loaderInfo
             ._$data
             .characters[tag.characterId];
 
-        if (!this._$character) {
+        if (!character) {
             throw new Error("character is null.");
         }
 
-        // load AudioBuffer
-        if (!this._$character.audioBuffer) {
-            if ($audioContext) {
-                $decodeAudioData(this)
-                    .then((sound) =>
-                    {
-                        if (sound.hasEventListener(Next2DEvent.INIT)
-                            || sound.hasEventListener(Next2DEvent.COMPLETE)
-                        ) {
-                            const player: Player = $currentPlayer();
-                            player._$loaders.push(sound);
-                        }
-                    });
-            } else {
-                $audios.push(this);
-            }
-        }
-
         this._$loopCount = tag.loopCount | 0;
-        this._$volume = $Math.min(SoundMixer.volume, tag.volume);
-    }
+        this._$volume = Math.min(SoundMixer.volume, tag.volume);
 
-    /**
-     * @param  {number}  [start_time=0]
-     * @param  {number}  [offset=0]
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$createBufferSource (start_time = 0, offset = 0)
-    {
-        if (!$audioContext) {
-            throw new Error("the Audio Context is null.");
-        }
-
-        // setup
-        const source: AudioBufferSourceNode = $audioContext.createBufferSource();
-
-        source.onended = (event: Event): void =>
-        {
-            return this._$endEventHandler(event);
-        };
-
-        // main
-        source.buffer = this._$character
-            ? this._$character.audioBuffer
-            : this._$audioBuffer;
-
-        source._$gainNode = $audioContext.createGain();
-        source._$gainNode.connect($audioContext.destination);
-
-        const volume = $Math.min(SoundMixer.volume, this._$volume);
-
-        source._$gainNode.gain.value = volume;
-        source._$volume = volume;
-
-        source.connect(source._$gainNode);
-        source.start(start_time | 0, offset);
-
-        const player = $currentPlayer();
-        if (player._$sources.indexOf(this) === -1) {
-            player._$sources.push(this);
-        }
-
-        this._$sources.push(source);
-
-        this._$stopFlag = false;
-    }
-
-    /**
-     * @param  {Event} event
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$endEventHandler (event: Event): void
-    {
-        const source: any = event.target;
-
-        this._$sources.splice(
-            this._$sources.indexOf(source), 1
-        );
-
-        if (!this._$stopFlag && this._$loopCount > this._$currentCount) {
-
-            this._$createBufferSource();
-
-            this._$currentCount++;
-
-        } else {
-
-            this._$currentCount = 0;
-
-            if ($audioContext) {
-
-                if (source._$gainNode) {
-                    source._$gainNode.gain.value = 0;
-                    source._$gainNode.disconnect();
-                    source._$gainNode = null;
+        // load AudioBuffer
+        if (!character.audioBuffer) {
+            const audioBuffer = await soundDecodeService(character.buffer.buffer);
+            if (audioBuffer) {
+                this._$audioBuffer = character.audioBuffer = audioBuffer;
+                if (this.hasEventListener(Event.COMPLETE)) {
+                    this.dispatchEvent(new Event(Event.COMPLETE));
                 }
-
-                // Firefoxにて、disconnectした時にonendedが呼び出されるのを回避
-                source.onended = null;
-                source.disconnect();
             }
-
-            if (!this._$sources.length) {
-                const player = $currentPlayer();
-                player._$sources.splice(
-                    player._$sources.indexOf(this), 1
-                );
-            }
-
-            if (this.willTrigger(Next2DEvent.SOUND_COMPLETE)) {
-                this.dispatchEvent(new Next2DEvent(Next2DEvent.SOUND_COMPLETE));
-            }
-
         }
     }
 }

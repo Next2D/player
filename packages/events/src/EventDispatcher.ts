@@ -1,5 +1,5 @@
 import type { EventListenerImpl } from "./interface/EventListenerImpl";
-import { Event } from "./Event";
+import type { EventImpl } from "./interface/EventImpl";
 import { execute as eventDispatcherAddEventListenerService } from "./EventDispatcher/EventDispatcherAddEventListenerService";
 import { execute as eventDispatcherHasEventListenerService } from "./EventDispatcher/EventDispatcherHasEventListenerService";
 import { execute as eventDispatcherRemoveEventListenerService } from "./EventDispatcher/EventDispatcherRemoveEventListenerService";
@@ -121,7 +121,7 @@ export class EventDispatcher
      * @method
      * @public
      */
-    dispatchEvent (event: Event): boolean
+    dispatchEvent (event: EventImpl<any>): boolean
     {
         return eventDispatcherDispatchEventService(this, event);
     }

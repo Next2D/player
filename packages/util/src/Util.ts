@@ -1,4 +1,3 @@
-import { URLRequestHeader } from "@next2d/net";
 import { Player } from "@next2d/core";
 import { Event as Next2DEvent } from "@next2d/events";
 import {
@@ -938,7 +937,7 @@ export const $ajax = (option: AjaxOptionImpl) =>
 
     // set request header
     for (let idx: number = 0; idx < option.headers.length; ++idx) {
-        const header: URLRequestHeader = option.headers[idx];
+        const header = option.headers[idx];
         xmlHttpRequest.setRequestHeader(header.name, header.value);
     }
 
@@ -951,7 +950,7 @@ export const $ajax = (option: AjaxOptionImpl) =>
  */
 export const $headerToArray = (header: string) =>
 {
-    const results: URLRequestHeader[] = $getArray();
+    const results = $getArray();
     if (header) {
 
         const headers = header.trim().split("\n");

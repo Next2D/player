@@ -6,7 +6,7 @@ describe("VideoEvent.js toString test", () =>
     it("toString test success", () =>
     {
         const videoEvent = new VideoEvent("");
-        expect(videoEvent.toString()).toBe("[VideoEvent type=\"\" bubbles=false cancelable=false eventPhase=2 bytesLoaded=0 bytesTotal=0]");
+        expect(videoEvent.toString()).toBe("[VideoEvent type=\"\" bubbles=false cancelable=false eventPhase=2]");
     });
 });
 
@@ -42,11 +42,6 @@ describe("VideoEvent.js property test", () =>
     it("PLAY test", () =>
     {
         expect(VideoEvent.PLAY).toBe("play");
-    });
-
-    it("PROGRESS test", () =>
-    {
-        expect(VideoEvent.PROGRESS).toBe("progress");
     });
 
     it("PLAY_END test", () =>
