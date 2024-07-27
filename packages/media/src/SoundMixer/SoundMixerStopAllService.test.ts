@@ -4,9 +4,9 @@ import { $getSounds, $getVideos } from "../MediaUtil";
 import { execute } from "./SoundMixerStopAllService";
 import { describe, expect, it, vi } from "vitest";
 
-describe("SoundMixerStopAllService.js namespace test", () =>
+describe("SoundMixerStopAllService.js test", () =>
 {
-    it("namespace test case1", () =>
+    it("execute test case1", () =>
     {
         let soundState = "";
         const MockSound = vi.fn().mockImplementation(() =>

@@ -10,6 +10,7 @@ import { execute as videoEndedEventService } from "./VideoEndedEventService";
  *              Create an HTMLVideoElement and set various events
  *
  * @param  {Video} video
+ * @param  {object} bounds
  * @return {HTMLVideoElement}
  * @method
  * @protected

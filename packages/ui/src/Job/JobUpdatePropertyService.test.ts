@@ -3,9 +3,9 @@ import { execute as jobEntriesService } from "./JobEntriesService";
 import { Job } from "../Job";
 import { describe, expect, it } from "vitest";
 
-describe("JobUpdatePropertyService.js method test", () =>
+describe("JobUpdatePropertyService.js test", () =>
 {
-    it("test case1", () =>
+    it("execute test case1", () =>
     {
         const target = { "a": 1, "b": 2 };
         const from = { "a": 0, "b": 0 };
@@ -19,7 +19,7 @@ describe("JobUpdatePropertyService.js method test", () =>
         expect(target.b).toBe(0);
     });
 
-    it("test case2", () =>
+    it("execute test case2", () =>
     {
         const target = { "a": 1, "b": 2 };
         const from = { "a": 0, "b": 0 };
@@ -34,7 +34,7 @@ describe("JobUpdatePropertyService.js method test", () =>
         expect(target.b).toBe(20);
     });
 
-    it("test case3", () =>
+    it("execute test case3", () =>
     {
         const target = {
             "a": 1,

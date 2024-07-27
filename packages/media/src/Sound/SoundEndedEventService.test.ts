@@ -3,9 +3,9 @@ import { Event } from "@next2d/events";
 import { execute } from "./SoundEndedEventService";
 import { describe, expect, it, vi } from "vitest";
 
-describe("SoundEndedEventService.js namespace test", () =>
+describe("SoundEndedEventService.js test", () =>
 {
-    it("namespace test case1", () =>
+    it("execute test case1", () =>
     {
         let state = "";
         const MockSound = vi.fn().mockImplementation(() =>
@@ -24,7 +24,7 @@ describe("SoundEndedEventService.js namespace test", () =>
         expect(state).toBe("play");
     });
 
-    it("namespace test case2", () =>
+    it("execute test case2", () =>
     {
         let state = "";
         let type = "";

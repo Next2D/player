@@ -2,9 +2,9 @@ import { Event } from "../Event";
 import { execute } from "./EventFormatToStringService";
 import { describe, expect, it } from "vitest";
 
-describe("EventFormatToStringService.js toString test", function()
+describe("EventFormatToStringService.js toString test", () =>
 {
-    it("toString test case", function()
+    it("toString test case", () =>
     {
         const event = new Event("test");
         expect(execute(event, "Event", "type", "bubbles", "cancelable", "eventPhase"))

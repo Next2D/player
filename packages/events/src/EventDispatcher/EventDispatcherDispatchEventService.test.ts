@@ -4,7 +4,7 @@ import { EventPhase } from "../EventPhase";
 import { $broadcastEvents } from "../EventUtil";
 import { describe, expect, it } from "vitest";
 
-describe("EventDispatcher.js dispatchEvent test", function()
+describe("EventDispatcher.js dispatchEvent test", () =>
 {
     it("dispatchEvent test case1", () =>
     {

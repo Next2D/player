@@ -29,6 +29,11 @@ export const execute = (job: Job, timestamp: number): number =>
         job.entries as EntriesObjectImpl[]
     );
 
+    // update event
+    if (job.hasEventListener(Event.UPDATE)) {
+        job.dispatchEvent(new Event(Event.UPDATE));
+    }
+
     // complete logic
     if (job.currentTime >= job.duration) {
 
@@ -43,11 +48,6 @@ export const execute = (job: Job, timestamp: number): number =>
         }
 
         return -1;
-    }
-
-    // update event
-    if (job.hasEventListener(Event.UPDATE)) {
-        job.dispatchEvent(new Event(Event.UPDATE));
     }
 
     return requestAnimationFrame((timestamp: number): void =>

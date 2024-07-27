@@ -6,9 +6,9 @@ import {
 } from "@next2d/events";
 import { describe, expect, it, vi } from "vitest";
 
-describe("SoundLoadStartEventService.js namespace test", () =>
+describe("SoundLoadStartEventService.js test", () =>
 {
-    it("namespace open event test case1", () =>
+    it("execute test case1", () =>
     {
         const sound = new Sound();
 
@@ -35,7 +35,7 @@ describe("SoundLoadStartEventService.js namespace test", () =>
 
     });
 
-    it("namespace progress event test case1", () =>
+    it("execute test case2", () =>
     {
         const sound = new Sound();
 

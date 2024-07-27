@@ -1,7 +1,7 @@
 import { EventDispatcher } from "../EventDispatcher";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-describe("EventDispatcher.js willTrigger test", function()
+describe("EventDispatcher.js willTrigger test", () =>
 {
     it("willTrigger test success case1", () =>
     {
@@ -25,7 +25,7 @@ describe("EventDispatcher.js willTrigger test", function()
         }
         const child = new Child(parent1);
 
-        parent1.addEventListener("test", () => {});
+        parent1.addEventListener("test", vi.fn());
 
         expect(parent2.willTrigger("test")).toBe(false);
         expect(parent1.willTrigger("test")).toBe(true);
@@ -54,7 +54,7 @@ describe("EventDispatcher.js willTrigger test", function()
         const child1 = new Child(parent);
         const child2 = new Child(parent);
 
-        parent.addEventListener("test", () => {});
+        parent.addEventListener("test", vi.fn());
 
         expect(parent.willTrigger("test")).toBe(true);
         expect(child1.willTrigger("test")).toBe(true);

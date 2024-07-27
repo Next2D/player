@@ -5,6 +5,7 @@ import type { Video } from "../Video";
  * @description Videoオブジェクトの幅と高さを更新する
  *              Update the width and height of the Video object
  *
+ * @param  {Video} video
  * @param  {HTMLVideoElement} element
  * @param  {object} bounds
  * @return {void}

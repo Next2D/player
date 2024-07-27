@@ -3,9 +3,9 @@ import { Event } from "@next2d/events";
 import { execute } from "./VideoCanplaythroughEventService";
 import { describe, expect, it, vi } from "vitest";
 
-describe("SoundMixerUpdateVolumeService.js namespace test", () =>
+describe("VideoCanplaythroughEventService.js test", () =>
 {
-    it("namespace test case1", async () =>
+    it("execute test case1", async () =>
     {
         let playState = "stop";
         let eventState = "";
@@ -46,7 +46,7 @@ describe("SoundMixerUpdateVolumeService.js namespace test", () =>
         expect(state).toBe("changed");
     });
 
-    it("namespace test case2", async () =>
+    it("execute test case2", async () =>
     {
         let eventState = "";
         let state = "";

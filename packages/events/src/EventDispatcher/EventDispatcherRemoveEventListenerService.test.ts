@@ -4,7 +4,7 @@ import { EventDispatcher } from "../EventDispatcher";
 import { EventListenerImpl } from "../interface/EventListenerImpl";
 import { describe, expect, it } from "vitest";
 
-describe("EventDispatcher.js removeEventListener test", function()
+describe("EventDispatcher.js removeEventListener test", () =>
 {
     it("removeEventListener test case1", () =>
     {

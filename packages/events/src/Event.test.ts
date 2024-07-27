@@ -1,9 +1,9 @@
 import { Event } from "./Event";
 import { describe, expect, it } from "vitest";
 
-describe("Event.js toString test", function()
+describe("Event.js toString test", () =>
 {
-    it("toString test case1", function()
+    it("toString test case1", () =>
     {
         const event = new Event("test");
         expect(event.toString())
@@ -11,29 +11,29 @@ describe("Event.js toString test", function()
     });
 });
 
-describe("Event.js static toString test", function()
+describe("Event.js static toString test", () =>
 {
-    it("static toString test", function()
+    it("static toString test", () =>
     {
         expect(Event.toString()).toBe("[class Event]");
     });
 });
 
-describe("Event.js namespace test", function()
+describe("Event.js namespace test", () =>
 {
-    it("namespace test public", function()
+    it("namespace test public", () =>
     {
         const event = new Event("test");
         expect(event.namespace).toBe("next2d.events.Event");
     });
 
-    it("namespace test static", function()
+    it("namespace test static", () =>
     {
         expect(Event.namespace).toBe("next2d.events.Event");
     });
 });
 
-describe("Event.js property test", function()
+describe("Event.js property test", () =>
 {
 
     it("ACTIVATE test", () =>

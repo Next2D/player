@@ -3,9 +3,9 @@ import { execute } from "./SoundProgressEventService";
 import { ProgressEvent as Next2DProgressEvent } from "@next2d/events";
 import { describe, expect, it, vi } from "vitest";
 
-describe("SoundProgressEventService.js namespace test", () =>
+describe("SoundProgressEventService.js test", () =>
 {
-    it("namespace progress event test case1", () =>
+    it("execute test case1", () =>
     {
         const sound = new Sound();
 

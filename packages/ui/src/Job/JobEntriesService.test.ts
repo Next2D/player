@@ -2,9 +2,9 @@ import type { EntriesObjectImpl } from "../interface/EntriesObjectImpl";
 import { execute } from "./JobEntriesService";
 import { describe, expect, it } from "vitest";
 
-describe("JobEntriesService.js method test", () =>
+describe("JobEntriesService.js test", () =>
 {
-    it("test case1", () =>
+    it("execute test case1", () =>
     {
         const entries = execute({ "x": 100, "y": 200 });
         expect(entries.length).toBe(2);
@@ -14,7 +14,7 @@ describe("JobEntriesService.js method test", () =>
         expect(entries[1].value).toBe(200);
     });
 
-    it("test case2", () =>
+    it("execute test case2", () =>
     {
         const entries = execute({
             "x": 100,
@@ -38,7 +38,7 @@ describe("JobEntriesService.js method test", () =>
         expect(matrix[1].value).toBe(2);
     });
 
-    it("test case2", () =>
+    it("execute test case3", () =>
     {
         const entries = execute({
             "x": 100,
