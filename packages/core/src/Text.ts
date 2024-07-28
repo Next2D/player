@@ -1,4 +1,4 @@
-import { TextImpl } from "@next2d/interface";
+import type { TextImpl } from "./interface/TextImpl";
 import { TextFormat } from "@next2d/text";
 
 const text: TextImpl = {

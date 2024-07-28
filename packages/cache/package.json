@@ -1,7 +1,7 @@
 {
-  "name": "@next2d/core",
+  "name": "@next2d/cache",
   "version": "*",
-  "description": "Next2D Core Packages",
+  "description": "Next2D Cache Packages",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
   "homepage": "https://next2d.app",
@@ -19,20 +19,10 @@
   },
   "keywords": [
     "Next2D",
-    "Next2D Core"
+    "Next2D Cache"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Next2D/Player.git"
-  },
-  "peerDependencies": {
-    "@next2d/webgl": "file:../webgl",
-    "@next2d/display": "file:../display",
-    "@next2d/core": "file:../core",
-    "@next2d/net": "file:../net",
-    "@next2d/events": "file:../events",
-    "@next2d/media": "file:../media",
-    "@next2d/text": "file:../text",
-    "@next2d/geom": "file:../geom"
   }
 }

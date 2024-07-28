@@ -1,3 +1,13 @@
+import type { DisplayImpl } from "./interface/DisplayImpl";
+import type { EventsImpl } from "./interface/EventsImpl";
+import type { FiltersImpl } from "./interface/FiltersImpl";
+import type { GeomImpl } from "./interface/GeomImpl";
+import type { MediaImpl } from "./interface/MediaImpl";
+import type { NetImpl } from "./interface/NetImpl";
+import type { TextImpl } from "./interface/TextImpl";
+import type { UIImpl } from "./interface/UIImpl";
+import type { PlayerOptionsImpl } from "./interface/PlayerOptionsImpl";
+import type { Sprite } from "@next2d/display";
 import { events } from "./Events";
 import { display } from "./Display";
 import { filters } from "./Filters";
@@ -6,43 +16,20 @@ import { media } from "./Media";
 import { net } from "./Net";
 import { text } from "./Text";
 import { ui } from "./UI";
-import { Player } from "@next2d/core";
-import { URLRequest } from "@next2d/net";
-import {
-    Loader,
-    Sprite,
-    LoaderInfo
-} from "@next2d/display";
-import {
-    Event,
-    IOErrorEvent
-} from "@next2d/events";
-import {
-    PlayerOptionsImpl,
-    DisplayImpl,
-    EventsImpl,
-    FiltersImpl,
-    GeomImpl,
-    MediaImpl,
-    NetImpl,
-    TextImpl,
-    UIImpl,
-    StageDataImpl
-} from "@next2d/interface";
-import {
-    $clamp,
-    $poolArray
-} from "@next2d/share";
+import { Player } from "./Player";
+import { execute as loadService } from "./Next2D/LoadService";
+import { execute as createRootMovieClip } from "./Next2D/CreateRootMovieClip";
 
 /**
- * playerの起動管理クラス
- * player startup management class
+ * @description playerの起動管理クラス
+ *              player startup management class
+ *
  * @class
+ * @public
  */
 export class Next2D
 {
-    private readonly _$promises: Promise<void>[];
-    private readonly _$player: Player;
+    public readonly player: Player;
     public readonly display: DisplayImpl;
     public readonly events: EventsImpl;
     public readonly filters: FiltersImpl;
@@ -51,24 +38,19 @@ export class Next2D
     public readonly net: NetImpl;
     public readonly text: TextImpl;
     public readonly ui: UIImpl;
+    private readonly _$promise: Promise<void>;
 
     /**
      * @constructor
      * @public
      */
-    constructor (promises: Promise<void>[])
+    constructor ()
     {
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$promises = promises;
-
         /**
          * @type {Player}
          * @private
          */
-        this._$player = new Player();
+        this.player = new Player();
 
         /**
          * @type {DisplayImpl}
@@ -117,16 +99,19 @@ export class Next2D
          * @public
          */
         this.ui = ui;
-    }
 
-    /**
-     * @member {Player}
-     * @readonly
-     * @return {Player}
-     */
-    get player (): Player
-    {
-        return this._$player;
+        /**
+         * @type {Promise}
+         * @private
+         */
+        this._$promise = new Promise((resolve): void =>
+        {
+            if (document.readyState === "loading") {
+                window.addEventListener("DOMContentLoaded", (): void => resolve(), { "once": true });
+            } else {
+                resolve();
+            }
+        });
     }
 
     /**
@@ -146,85 +131,10 @@ export class Next2D
      * @method
      * @public
      */
-    load (url: string, options: PlayerOptionsImpl): void
+    async load (url: string, options: PlayerOptionsImpl): Promise<void>
     {
-        Promise
-            .all(this._$promises)
-            .then(() =>
-            {
-                $poolArray(this._$promises);
-
-                if (url === "develop") {
-                    const path: string = location
-                        .search
-                        .slice(1)
-                        .split("&")[0];
-
-                    if (!path) {
-                        return ;
-                    }
-                    url = `${location.origin}/${path}`;
-                }
-
-                if (!url) {
-                    return ;
-                }
-
-                if (url.charAt(1) === "/") {
-                    url = url.slice(1);
-                }
-
-                // base set
-                if ((!options || !("base" in options)) && url.indexOf("//") > -1) {
-                    this._$player.base = url;
-                }
-
-                this._$player.setOptions(options);
-                this._$player._$initialize();
-
-                const loader: Loader = new Loader();
-
-                loader
-                    .contentLoaderInfo
-                    .addEventListener(IOErrorEvent.IO_ERROR, (event: IOErrorEvent) =>
-                    {
-                        if (event.target) {
-                            event.target.removeEventListener(IOErrorEvent.IO_ERROR, event.listener);
-                        }
-                        alert("Error: " + event.text);
-                    });
-
-                loader
-                    .contentLoaderInfo
-                    .addEventListener(Event.COMPLETE, (event: Event) =>
-                    {
-                        const loaderInfo: LoaderInfo = event.target as NonNullable<LoaderInfo>;
-                        const player: Player = this._$player;
-
-                        loaderInfo
-                            .removeEventListener(Event.COMPLETE, event.listener);
-
-                        if (loaderInfo._$data) {
-
-                            const stage: StageDataImpl = loaderInfo._$data.stage;
-
-                            player.bgColor = stage.bgColor;
-                            player._$setBackgroundColor(stage.bgColor);
-
-                            player.stage.addChild(loaderInfo.content);
-
-                            player.width  = stage.width;
-                            player.height = stage.height;
-
-                            // set fps fixed logic
-                            player.stage._$frameRate = $clamp(+stage.fps, 1, 60, 60);
-                        }
-
-                        player._$resize();
-                    });
-
-                loader.load(new URLRequest(url));
-            });
+        await this._$promise;
+        await loadService(this.player, url, options);
     }
 
     /**
@@ -240,28 +150,14 @@ export class Next2D
      * @public
      */
     async createRootMovieClip (
-        width: number = 240, height: number = 240,
-        fps: number = 24, options: PlayerOptionsImpl|null = null
+        width: number = 240,
+        height: number = 240,
+        fps: number = 24,
+        options: PlayerOptionsImpl | null = null
     ): Promise<Sprite> {
-
-        await Promise.all(this._$promises);
-        $poolArray(this._$promises);
-
-        const player: Player = this._$player;
-
-        // setup
-        player.width  = width | 0;
-        player.height = height | 0;
-        player.mode   = "create";
-        player.stage._$frameRate = fps | 0;
-        player.setOptions(options);
-        player._$initialize();
-
-        const root: Sprite = player.stage.addChild(new Sprite());
-
-        player._$loadStatus = Player.LOAD_END;
-        player.play();
-
-        return root;
+        await this._$promise;
+        return await createRootMovieClip(
+            this.player, width, height, fps, options
+        );
     }
 }

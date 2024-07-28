@@ -9,8 +9,6 @@ import {
     EventPhase
 } from "@next2d/events";
 import {
-    Video,
-    Sound,
     SoundMixer
 } from "@next2d/media";
 import {
@@ -73,7 +71,6 @@ import {
     $doUpdated,
     $isUpdated,
     $getArray,
-    $getFloat32Array6,
     $getMap,
     $uintToRGBA,
     $toColorInt,
@@ -83,15 +80,24 @@ import {
     $clamp,
     $devicePixelRatio,
     $setDevicePixelRatio,
-    $cacheStore,
-    CacheStore
+    $cacheStore
 } from "@next2d/share";
 
+// @ts-ignore
+import RendererWorker from "../../../worker/renderer/src/index?worker&inline";
+
 /**
- * 描画のイベントや設定やコントロールの管理クラス
- * Management classes for drawing events, settings and controls
+ * @type {Worker}
+ * @private
+ */
+const worker: Worker = new RendererWorker();
+
+/**
+ * @description Next2Dの描画、イベント、設定、コントロールの管理クラスです。
+ *              This class manages Next2D drawings, events, settings, and controls.
  *
  * @class
+ * @public
  */
 export class Player
 {
@@ -107,8 +113,6 @@ export class Player
     public _$state: "up" | "down";
     public _$attachment: AttachmentImpl | null;
     public _$textField: TextField | null;
-    public readonly _$videos: Video[];
-    public readonly _$sources: Sound[];
     private _$mode: PlayerModeImpl;
     private _$context: CanvasToWebGLContext|null;
     private _$rollOverObject: DisplayObjectImpl<any> | null;
@@ -126,7 +130,6 @@ export class Player
     private _$optionHeight: number;
     private _$tagId: string;
     private _$bgColor: string;
-    private _$base: string;
     private _$fullScreen: boolean;
     private _$timerId: number;
     private _$loadId: number;
@@ -138,7 +141,6 @@ export class Player
     private readonly _$hitObject: PlayerHitObjectImpl;
     private readonly _$ratio: number;
     private readonly _$matrix: Float32Array;
-    private readonly _$broadcastEvents: Map<any, any>;
     private readonly _$quality: StageQualityImpl;
     private readonly _$canvas: HTMLCanvasElement;
 
@@ -286,7 +288,7 @@ export class Player
          * @type {Float32Array}
          * @private
          */
-        this._$matrix = $getFloat32Array6(1, 0, 0, 1, 0, 0); // fixed size 6
+        this._$matrix = new Float32Array([1, 0, 0, 1, 0, 0]);
 
         /**
          * @type {number}
@@ -345,12 +347,6 @@ export class Player
         this._$deltaY = 0;
 
         /**
-         * @type {Map}
-         * @private
-         */
-        this._$broadcastEvents = $getMap();
-
-        /**
          * @type {number}
          * @default 0
          * @private
@@ -379,13 +375,6 @@ export class Player
         this._$bgColor = "transparent";
 
         /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$base = "";
-
-        /**
          * @type {boolean}
          * @default false
          * @private
@@ -398,18 +387,6 @@ export class Player
          * @private
          */
         this._$quality = "high";
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$sources = $getArray();
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$videos = $getArray();
 
         /**
          * @type {TextField}
@@ -490,16 +467,6 @@ export class Player
     }
 
     /**
-     * @return {CacheStore}
-     * @readonly
-     * @public
-     */
-    get cacheStore (): CacheStore
-    {
-        return $cacheStore;
-    }
-
-    /**
      * @type {HTMLCanvasElement}
      * @readonly
      * @public
@@ -507,16 +474,6 @@ export class Player
     get canvas (): HTMLCanvasElement
     {
         return this._$canvas;
-    }
-
-    /**
-     * @return {Map}
-     * @readonly
-     * @public
-     */
-    get broadcastEvents (): Map<string, EventListenerImpl[]>
-    {
-        return this._$broadcastEvents;
     }
 
     /**
@@ -531,46 +488,6 @@ export class Player
     set context (context: CanvasToWebGLContext|null)
     {
         this._$context = context;
-    }
-
-    /**
-     * @member {string}
-     * @default ""
-     * @public
-     */
-    get base (): string
-    {
-        return this._$base;
-    }
-    set base (base: string)
-    {
-        if (base.indexOf("//") === -1) {
-
-            const urls = base.split("/");
-            if (urls[0] === "" || urls[0] === ".") {
-                urls.shift();
-            }
-            urls.pop();
-
-            this._$base = `${location.origin}/`;
-            if (urls.length) {
-                this._$base += `${urls.join("/")}/`;
-            }
-
-        } else {
-
-            if (base.indexOf("?") === -1) {
-
-                this._$base = base.slice(-1) === "/" ? base : `${base}/`;
-
-            } else {
-
-                const path  = base.split("?")[0];
-                this._$base = path.slice(-1) === "/" ? path : `${path}/`;
-
-            }
-
-        }
     }
 
     /**
@@ -784,7 +701,6 @@ export class Player
             this._$optionWidth  = options.width   || this._$optionWidth;
             this._$optionHeight = options.height  || this._$optionHeight;
             this._$tagId        = options.tagId   || this._$tagId;
-            this.base           = options.base    || this._$base;
             this._$bgColor      = options.bgColor || this._$bgColor;
             this._$fullScreen   = !!options.fullScreen;
         }
@@ -1141,36 +1057,6 @@ export class Player
             }
 
         }
-
-        /**
-         * @return {void}
-         * @method
-         * @private
-         */
-        const loadWebAudio = (): void =>
-        {
-            this._$canvas.removeEventListener($MOUSE_UP,  loadWebAudio);
-            this._$canvas.removeEventListener($TOUCH_END, loadWebAudio);
-
-            if (!$audioContext) {
-                $loadAudioData();
-
-                for (let idx = 0; idx < this._$videos.length; ++idx) {
-                    const video: Video = this._$videos[idx];
-                    if (!video._$video) {
-                        continue;
-                    }
-
-                    video._$video.muted = false;
-                }
-            }
-        };
-
-        // @ts-ignore
-        this._$canvas.addEventListener($TOUCH_END, loadWebAudio);
-
-        // @ts-ignore
-        this._$canvas.addEventListener($MOUSE_UP, loadWebAudio);
 
         // @ts-ignore
         this._$canvas.addEventListener($TOUCH_START, (event: TouchEvent) =>
@@ -1639,12 +1525,6 @@ export class Player
                 && $getEvent()
             ) {
                 this._$pointerCheck();
-            }
-
-        } else {
-
-            if (this._$videos.length && !$rendererWorker) {
-                this._$draw();
             }
 
         }

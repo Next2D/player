@@ -21,6 +21,9 @@ jobs:
       - run: cd ~/work/player/player/dist/src && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+      - run: cd ~/work/player/player/dist/packages/cache && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/core && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
@@ -36,25 +39,16 @@ jobs:
       - run: cd ~/work/player/player/dist/packages/geom && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/packages/interface && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/media && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/net && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/packages/share && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/text && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/ui && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/packages/util && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/webgl && npm publish --access public

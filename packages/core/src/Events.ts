@@ -1,4 +1,4 @@
-import { EventsImpl } from "@next2d/interface";
+import type { EventsImpl } from "./interface/EventsImpl";
 import {
     Event,
     EventDispatcher,

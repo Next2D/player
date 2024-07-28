@@ -5,12 +5,20 @@ import { CommandController } from "./CommandController";
 const command: CommandController = new CommandController();
 
 /**
+ * @description OffscreenCanvasのメッセージイベント
+ *              OffscreenCanvas message event
+ *
+ * @params {MessageEvent} event
+ * @return {void}
+ * @method
  * @public
  */
-self.addEventListener("message", async (event: MessageEvent) =>
+self.addEventListener("message", async (event: MessageEvent): Promise<void> =>
 {
     command.queue.push(event.data);
     if (command.state === "deactivate") {
-        command.execute();
+        await command.execute();
     }
 });
+
+export default {};

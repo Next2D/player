@@ -1,4 +1,4 @@
-import { GeomImpl } from "@next2d/interface";
+import type { GeomImpl } from "./interface/GeomImpl";
 import {
     ColorTransform,
     Matrix,

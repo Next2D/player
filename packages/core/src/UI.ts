@@ -1,4 +1,4 @@
-import { UIImpl } from "@next2d/interface";
+import type { UIImpl } from "./interface/UIImpl";
 import {
     Easing,
     Tween

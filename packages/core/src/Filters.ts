@@ -1,4 +1,4 @@
-import type { FiltersImpl } from "@next2d/interface";
+import type { FiltersImpl } from "./interface/FiltersImpl";
 import {
     BevelFilter,
     BlurFilter,

@@ -1,4 +1,4 @@
-import type { DisplayImpl } from "@next2d/interface";
+import type { DisplayImpl } from "./interface/DisplayImpl";
 import {
     DisplayObject,
     InteractiveObject,

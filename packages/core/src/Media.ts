@@ -1,4 +1,4 @@
-import { MediaImpl } from "@next2d/interface";
+import type { MediaImpl } from "./interface/MediaImpl";
 import {
     Sound,
     SoundMixer,
