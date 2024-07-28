@@ -1,4 +1,4 @@
-import type { CacheStore } from "../CacheStore";
+import { CacheStore } from "../CacheStore";
 import { $poolMap } from "../CacheUtil";
 
 /**

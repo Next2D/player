@@ -45,7 +45,7 @@
     "htmlparser2": "^9.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.12",
+    "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^7.17.0",
     "@typescript-eslint/parser": "^7.17.0",
     "@vitest/web-worker": "^2.0.4",
@@ -58,6 +58,7 @@
     "vitest": "^2.0.4"
   },
   "peerDependencies": {
+    "@next2d/cache": "file:packages/cache",
     "@next2d/core": "file:packages/core",
     "@next2d/display": "file:packages/display",
     "@next2d/events": "file:packages/events",

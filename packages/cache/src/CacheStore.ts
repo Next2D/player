@@ -14,7 +14,7 @@ import { execute as cacheStoreGenerateKeysService } from "./CacheStore/CacheStor
  * @class
  * @private
  */
-class CacheStore
+export class CacheStore
 {
     private readonly _$pool: HTMLCanvasElement[];
     private readonly _$store: Map<string, any>;

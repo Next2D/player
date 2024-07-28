@@ -83,15 +83,6 @@ import {
     $cacheStore
 } from "@next2d/share";
 
-// @ts-ignore
-import RendererWorker from "../../../worker/renderer/src/index?worker&inline";
-
-/**
- * @type {Worker}
- * @private
- */
-const worker: Worker = new RendererWorker();
-
 /**
  * @description Next2Dの描画、イベント、設定、コントロールの管理クラスです。
  *              This class manages Next2D drawings, events, settings, and controls.

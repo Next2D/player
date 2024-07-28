@@ -17,9 +17,7 @@ export const execute = (
         return ;
     }
 
-    if ("canvas" in object
-        && object instanceof CanvasRenderingContext2D
-    ) {
+    if ("canvas" in object) {
 
         const canvas: HTMLCanvasElement = object.canvas;
         const width: number  = canvas.width;
