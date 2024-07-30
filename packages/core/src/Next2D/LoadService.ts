@@ -1,7 +1,6 @@
 import type { PlayerOptionsImpl } from "../interface/PlayerOptionsImpl";
 import type { StageDataImpl } from "../interface/StageDataImpl";
-import type { Player } from "../Player";
-import { URLRequest } from "@next2d/net";
+import { $player } from "../Player";
 import { $clamp } from "../CoreUtil";
 import {
     Event,
@@ -9,7 +8,8 @@ import {
 } from "@next2d/events";
 import {
     Loader,
-    LoaderInfo
+    LoaderInfo,
+    $stage
 } from "@next2d/display";
 
 /**
@@ -22,7 +22,7 @@ import {
  * @method
  * @protected
  */
-export const execute = (player: Player, url: string, options: PlayerOptionsImpl): Promise<void> =>
+export const execute = (url: string, options: PlayerOptionsImpl): Promise<void> =>
 {
     return new Promise((resolve: Function) =>
     {
@@ -46,8 +46,9 @@ export const execute = (player: Player, url: string, options: PlayerOptionsImpl)
             url = url.slice(1);
         }
 
-        player.setOptions(options);
-        player._$initialize();
+        $player
+            .setOptions(options)
+            .boot();
 
         const loader: Loader = new Loader();
 
@@ -74,23 +75,23 @@ export const execute = (player: Player, url: string, options: PlayerOptionsImpl)
 
                     const stage: StageDataImpl = loaderInfo._$data.stage;
 
-                    player.bgColor = stage.bgColor;
-                    player._$setBackgroundColor(stage.bgColor);
+                    $player.bgColor = stage.bgColor;
+                    // $player._$setBackgroundColor(stage.bgColor);
 
-                    player.stage.addChild(loaderInfo.content);
+                    $stage.addChild(loaderInfo.content);
 
-                    player.width  = stage.width;
-                    player.height = stage.height;
+                    $player.width  = stage.width;
+                    $player.height = stage.height;
 
                     // set fps fixed logic
-                    player.stage._$frameRate = $clamp(+stage.fps, 1, 60, 60);
+                    $player.frameRate = $clamp(+stage.fps, 1, 60, 60);
                 }
 
-                player._$resize();
+                // $player._$resize();
 
                 resolve();
             });
 
-        loader.load(new URLRequest(url));
+        // loader.load(new URLRequest(url));
     });
 };

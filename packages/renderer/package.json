@@ -1,7 +1,7 @@
 {
-  "name": "@next2d/core",
+  "name": "@next2d/renderer",
   "version": "*",
-  "description": "Next2D Core Packages",
+  "description": "Next2D Renderer Packages",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
   "homepage": "https://next2d.app",
@@ -19,23 +19,13 @@
   },
   "keywords": [
     "Next2D",
-    "Next2D Core"
+    "Next2D Renderer"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Next2D/Player.git"
   },
   "peerDependencies": {
-    "@next2d/core": "file:../core",
-    "@next2d/display": "file:../display",
-    "@next2d/events": "file:../events",
-    "@next2d/filters": "file:../filters",
-    "@next2d/geom": "file:../geom",
-    "@next2d/media": "file:../media",
-    "@next2d/net": "file:../net",
-    "@next2d/renderer": "file:../renderer",
-    "@next2d/text": "file:../text",
-    "@next2d/ui": "file:../ui",
     "@next2d/webgl": "file:../webgl"
   }
 }

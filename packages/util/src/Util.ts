@@ -865,12 +865,12 @@ const $resizeExecute = (): void =>
 /**
  * added resize event
  */
-$window.addEventListener("resize", (): void =>
-{
-    $clearTimeout($resizeTimerId);
-    // @ts-ignore
-    $resizeTimerId = $setTimeout($resizeExecute, 300);
-});
+// $window.addEventListener("resize", (): void =>
+// {
+//     $clearTimeout($resizeTimerId);
+//     // @ts-ignore
+//     $resizeTimerId = $setTimeout($resizeExecute, 300);
+// });
 
 /**
  * @param  {AjaxOptionImpl} option

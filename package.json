@@ -64,13 +64,11 @@
     "@next2d/events": "file:packages/events",
     "@next2d/filters": "file:packages/filters",
     "@next2d/geom": "file:packages/geom",
-    "@next2d/interface": "file:packages/interface",
     "@next2d/media": "file:packages/media",
     "@next2d/net": "file:packages/net",
-    "@next2d/share": "file:packages/share",
+    "@next2d/renderer": "file:packages/renderer",
     "@next2d/text": "file:packages/text",
     "@next2d/ui": "file:packages/ui",
-    "@next2d/util": "file:packages/util",
     "@next2d/webgl": "file:packages/webgl"
   }
 }

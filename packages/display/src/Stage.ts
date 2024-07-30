@@ -1,16 +1,9 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
-import type { Player } from "@next2d/core";
 import type { DisplayObjectImpl } from "@next2d/interface";
-import {
-    $clamp,
-    $toColorInt,
-    $uintToRGBA,
-    $devicePixelRatio
-} from "@next2d/share";
 
 /**
- * Stage クラスはメイン描画領域を表します。
- * The Stage class represents the main drawing area.
+ * @description Stage クラスはメイン描画領域を表します。
+ *              The Stage class represents the main drawing area.
  *
  * @class
  * @memberOf next2d.display
@@ -18,10 +11,7 @@ import {
  */
 export class Stage extends DisplayObjectContainer
 {
-    public _$player: Player | null;
     public _$invalidate: boolean;
-    private _$color: number;
-    public _$frameRate: number;
 
     /**
      * @constructor
@@ -30,13 +20,6 @@ export class Stage extends DisplayObjectContainer
     constructor ()
     {
         super();
-
-        /**
-         * @type {Player}
-         * @default null
-         * @private
-         */
-        this._$player = null;
 
         /**
          * @type {Stage}
@@ -56,20 +39,6 @@ export class Stage extends DisplayObjectContainer
          * @private
          */
         this._$invalidate = true;
-
-        /**
-         * @type {number}
-         * @default 0xffffffff
-         * @private
-         */
-        this._$color = 0xffffffff;
-
-        /**
-         * @type {number}
-         * @default 60
-         * @private
-         */
-        this._$frameRate = 60;
     }
 
     /**
@@ -77,7 +46,7 @@ export class Stage extends DisplayObjectContainer
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class Stage]
+     * @default "[class Stage]"
      * @method
      * @static
      */
@@ -91,7 +60,7 @@ export class Stage extends DisplayObjectContainer
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display.Stage
+     * @default "next2d.display.Stage"
      * @const
      * @static
      */
@@ -105,7 +74,7 @@ export class Stage extends DisplayObjectContainer
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object Stage]
+     * @default "[object Stage]"
      * @method
      * @public
      */
@@ -119,160 +88,13 @@ export class Stage extends DisplayObjectContainer
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display.Stage
+     * @default "next2d.display.Stage"
      * @const
      * @public
      */
     get namespace (): string
     {
         return "next2d.display.Stage";
-    }
-
-    /**
-     * @description 背景色です。
-     *              background color.
-     *
-     * @member {number}
-     * @public
-     */
-    get color (): number
-    {
-        return this._$color;
-    }
-    set color (color: number)
-    {
-        this._$color = $clamp($toColorInt(color), 0, 0xffffff, 0xffffff);
-        const player: Player | null = this._$player;
-        if (player && player.context) {
-            const rgba = $uintToRGBA(this._$color);
-            player
-                .context
-                ._$setColor(
-                    rgba.R / 255,
-                    rgba.G / 255,
-                    rgba.B / 255,
-                    rgba.A / 255
-                );
-        }
-    }
-
-    /**
-     * @description ステージのフレームレートを取得または設定します。
-     *              Gets and sets the frame rate of the stage.
-     *
-     * @member {number}
-     * @public
-     */
-    get frameRate ()
-    {
-        return this._$frameRate;
-    }
-    set frameRate (frame_rate)
-    {
-        this._$frameRate = $clamp(+frame_rate, 1, 60, 60);
-        if (this._$player && !this._$player._$stopFlag) {
-            this._$player.stop();
-            this._$player.play();
-        }
-    }
-
-    /**
-     * @description Player オブジェクトを返します。
-     *              Returns a Player object.
-     *
-     * @member {Player}
-     * @readonly
-     * @public
-     */
-    get player (): Player | null
-    {
-        return this._$player;
-    }
-
-    /**
-     * @description 現在のCanvasの高さをピクセル単位で指定します。
-     *              Specifies the height of the current Canvas in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get canvasHeight (): number
-    {
-        return this._$player
-            ? this._$player._$height / $devicePixelRatio
-            : 0;
-    }
-
-    /**
-     * @description 現在のCanvasの幅をピクセル単位で指定します。
-     *              Specifies the width of the current Canvas in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get canvasWidth (): number
-    {
-        return this._$player
-            ? this._$player._$width / $devicePixelRatio
-            : 0;
-    }
-
-    /**
-     * @description 現在のStageの高さをピクセル単位で指定します。
-     *              Specifies the height of the current Stage in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get currentStageHeight (): number
-    {
-        return this._$player
-            ? this._$player.height * this._$player._$scale
-            : 0;
-    }
-
-    /**
-     * @description 現在のStageの幅をピクセル単位で指定します。
-     *              Specifies the width of the current Stage in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get currentStageWidth (): number
-    {
-        return this._$player
-            ? this._$player.width * this._$player._$scale
-            : 0;
-    }
-
-    /**
-     * @description 初期設定したステージの高さをピクセル単位で指定します。
-     *              Specifies the height of the initially set stage in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get stageHeight (): number
-    {
-        return this._$player ? this._$player.height : 0;
-    }
-
-    /**
-     * @description 初期設定したステージの幅をピクセル単位で指定します。
-     *              Specifies the width of the initially set stage in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get stageWidth (): number
-    {
-        return this._$player ? this._$player.width : 0;
     }
 
     /**
@@ -310,3 +132,5 @@ export class Stage extends DisplayObjectContainer
         return super._$addChild(child);
     }
 }
+
+export const $stage = new Stage();

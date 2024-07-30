@@ -1,4 +1,37 @@
 /**
+ * @type {number}
+ * @const
+ */
+export const $LOAD_START: number = 1;
+
+/**
+ * @type {number}
+ * @const
+ */
+export const $LOAD_END: number = 2;
+
+/**
+ * @type {string}
+ * @const
+ */
+export const $PREFIX: string = "__next2d__";
+
+/**
+ * @type {number}
+ * @const
+ */
+export const $devicePixelRatio: number = window.devicePixelRatio;
+
+// @ts-ignore
+import RendererWorker from "@next2d/renderer?worker&inline";
+
+/**
+ * @type {Worker}
+ * @public
+ */
+export const $rendererWorker: Worker = new RendererWorker();
+
+/**
  * @param  {number} value
  * @param  {number} min
  * @param  {number} max
@@ -20,3 +53,4 @@ export const $clamp = (
         ? default_value
         : Math.min(Math.max(min, isNaN(number) ? 0 : number), max);
 };
+

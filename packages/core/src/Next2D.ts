@@ -16,20 +16,18 @@ import { media } from "./Media";
 import { net } from "./Net";
 import { text } from "./Text";
 import { ui } from "./UI";
-import { Player } from "./Player";
 import { execute as loadService } from "./Next2D/LoadService";
 import { execute as createRootMovieClip } from "./Next2D/CreateRootMovieClip";
 
 /**
- * @description playerの起動管理クラス
- *              player startup management class
+ * @description Next2Dの起動管理クラス
+ *              Boot management class of Next2D
  *
  * @class
  * @public
  */
 export class Next2D
 {
-    public readonly player: Player;
     public readonly display: DisplayImpl;
     public readonly events: EventsImpl;
     public readonly filters: FiltersImpl;
@@ -46,12 +44,6 @@ export class Next2D
      */
     constructor ()
     {
-        /**
-         * @type {Player}
-         * @private
-         */
-        this.player = new Player();
-
         /**
          * @type {DisplayImpl}
          * @public
@@ -133,8 +125,8 @@ export class Next2D
      */
     async load (url: string, options: PlayerOptionsImpl): Promise<void>
     {
-        await this._$promise;
-        await loadService(this.player, url, options);
+        await Promise.all([this._$promise]);
+        await loadService(url, options);
     }
 
     /**
@@ -155,9 +147,9 @@ export class Next2D
         fps: number = 24,
         options: PlayerOptionsImpl | null = null
     ): Promise<Sprite> {
-        await this._$promise;
+        await Promise.all([this._$promise]);
         return await createRootMovieClip(
-            this.player, width, height, fps, options
+            width, height, fps, options
         );
     }
 }
