@@ -9,6 +9,7 @@ import { Loader } from "@next2d/display";
 import { execute as playerResizeEventService } from "../Player/PlayerResizeEventService";
 import { execute as playerRemoveLoadingElementService } from "../Player/PlayerRemoveLoadingElementService";
 import { execute as playerAppendCanvasElementService } from "../Player/PlayerAppendCanvasElementService";
+import { execute as playerReadyCompleteService } from "../Player/PlayerReadyCompleteService";
 
 /**
  * @description 指定のURLからJSONファイルを読み込みます。
@@ -69,9 +70,10 @@ export const execute = async (url: string, options: PlayerOptionsImpl): Promise<
     // $stage.addChild(loaderInfo.content);
 
     // resize
-    playerResizeEventService($player);
+    playerResizeEventService();
 
     // load complete
     playerRemoveLoadingElementService();
     playerAppendCanvasElementService();
+    playerReadyCompleteService();
 };

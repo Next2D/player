@@ -1,6 +1,7 @@
 import { Loader } from "../Loader";
 import { execute } from "./LoaderLoadEndEventService";
 import {
+    Event,
     IOErrorEvent,
     ProgressEvent as Next2DProgressEvent
 } from "@next2d/events";
@@ -8,7 +9,7 @@ import { describe, expect, it, vi } from "vitest";
 
 describe("LoaderLoadEndEventService.js test", () =>
 {
-    it("execute test case1", () =>
+    it("execute test case1", async () =>
     {
         const loader = new Loader();
 
@@ -24,6 +25,15 @@ describe("LoaderLoadEndEventService.js test", () =>
                 total = event.bytesTotal;
             });
 
+        let completeState = "";
+        loader
+            .contentLoaderInfo
+            .addEventListener(Event.COMPLETE, (event: Event): void =>
+            {
+                completeState = event.type;
+            });
+
+        expect(completeState).toBe("");
         expect(openState).toBe("");
         expect(loaded).toBe(0);
         expect(total).toBe(0);
@@ -36,7 +46,11 @@ describe("LoaderLoadEndEventService.js test", () =>
                 "fps": 60,
                 "bgColor": "#ffffff"
             },
-            "characters": [],
+            "characters": [
+                {
+                    "controller": [1,2,3]
+                }
+            ],
             "symbols": []
         };
 
@@ -54,8 +68,9 @@ describe("LoaderLoadEndEventService.js test", () =>
             } as unknown as ProgressEvent;
         });
 
-        execute(loader.contentLoaderInfo, new MockEvent());
+        await execute(loader, new MockEvent());
 
+        expect(completeState).toBe(Event.COMPLETE);
         expect(openState).toBe(Next2DProgressEvent.PROGRESS);
     });
 
@@ -86,7 +101,7 @@ describe("LoaderLoadEndEventService.js test", () =>
             } as unknown as ProgressEvent;
         });
 
-        execute(loader.contentLoaderInfo, new MockEvent());
+        execute(loader, new MockEvent());
 
         expect(openState).toBe(IOErrorEvent.IO_ERROR);
     });

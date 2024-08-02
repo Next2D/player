@@ -5,13 +5,13 @@ import {
     BitmapData,
     BlendMode,
     DisplayObject,
+    DisplayObjectContainer,
     FrameLabel,
     Graphics,
     InteractiveObject,
     Loader,
     Shape,
-    Stage,
-    TextField
+    Stage
 } from "@next2d/display";
 
 const display: DisplayImpl = {
@@ -20,13 +20,13 @@ const display: DisplayImpl = {
     BitmapData,
     BlendMode,
     DisplayObject,
+    DisplayObjectContainer,
     FrameLabel,
     Graphics,
     InteractiveObject,
     Loader,
     Shape,
-    Stage,
-    TextField
+    Stage
 };
 
 Object.entries(display).forEach(([key, DisplayClass]) =>

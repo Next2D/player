@@ -1,4 +1,4 @@
-import { $clamp } from "@next2d/share";
+// import { $clamp } from "./DisplayObjectUtil";
 
 /**
  * LoopConfig クラスで、MovieClipのフレームヘッダーの移動方法を指定できます。

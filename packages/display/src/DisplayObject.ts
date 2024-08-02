@@ -576,20 +576,20 @@ export class DisplayObject extends EventDispatcher
     //     }
     // }
 
-    // /**
-    //  * @description この表示オブジェクトが属するファイルの読み込み情報を含む LoaderInfo オブジェクトを返します。
-    //  *              Returns a LoaderInfo object containing information
-    //  *              about loading the file to which this display object belongs.
-    //  *
-    //  * @member  {LoaderInfo}
-    //  * @default null
-    //  * @readonly
-    //  * @public
-    //  */
-    // get loaderInfo (): LoaderInfo | null
-    // {
-    //     return this._$loaderInfo;
-    // }
+    /**
+     * @description この表示オブジェクトが属するファイルの読み込み情報を含む LoaderInfo オブジェクトを返します。
+     *              Returns a LoaderInfo object containing information
+     *              about loading the file to which this display object belongs.
+     *
+     * @member  {LoaderInfo}
+     * @default null
+     * @readonly
+     * @public
+     */
+    get loaderInfo (): LoaderInfo | null
+    {
+        return this._$loaderInfo;
+    }
 
     // /**
     //  * @description 呼び出し元の表示オブジェクトは、指定された mask オブジェクトによってマスクされます。

@@ -1,4 +1,4 @@
-import type { SoundTagImpl } from "./interface/SoundTagImpl";
+import type { Character } from "./interface/Character";
 import { URLRequest } from "@next2d/net";
 import { SoundMixer } from "./SoundMixer";
 import { execute as soundLoadStartEventService } from "./Sound/SoundLoadStartEventService";
@@ -6,17 +6,13 @@ import { execute as soundProgressEventService } from "./Sound/SoundProgressEvent
 import { execute as soundLoadEndEventService } from "./Sound/SoundLoadEndEventService";
 import { execute as soundEndedEventService } from "./Sound/SoundEndedEventService";
 import { execute as soundDecodeService } from "./Sound/SoundDecodeService";
-import {
-    Event,
-    EventDispatcher
-} from "@next2d/events";
+import { EventDispatcher } from "@next2d/events";
 import {
     $clamp,
     $ajax,
     $audioContext,
     $getSounds
 } from "./MediaUtil";
-import { LoaderInfo } from "packages/display/src/LoaderInfo";
 
 /**
  * @description Sound クラスを使用すると、アプリケーション内のサウンドを処理することができます。
@@ -274,11 +270,11 @@ export class Sound extends EventDispatcher
      * @method
      * @public
      */
-    load (request: URLRequest): Promise<void>
+    async load (request: URLRequest): Promise<void>
     {
         this._$src = request.url;
 
-        return new Promise((resolve): void =>
+        await new Promise<void>((resolve): void =>
         {
             $ajax({
                 "format": "arraybuffer",
@@ -378,42 +374,26 @@ export class Sound extends EventDispatcher
     }
 
     /**
-     * @param  {object} tag
-     * @param  {MovieClip} parent
+     * @description Character DataからSoundを作成
+     *              Create Sound from Character Data
+     *
+     * @param  {Character} character
      * @return {void}
      * @method
      * @private
      */
-    async _$build (
-        tag: SoundTagImpl,
-        parent: any
-    ): Promise<void> {
-
-        const loaderInfo: LoaderInfo | null = parent.loaderInfo;
-        if (!loaderInfo || !loaderInfo.data) {
-            throw new Error("the loaderInfo or data is null.");
-        }
-
-        const character = loaderInfo
-            .data
-            .characters[tag.characterId];
-
-        if (!character) {
-            throw new Error("character is null.");
-        }
-
-        this._$loopCount = tag.loopCount | 0;
-        this._$volume = Math.min(SoundMixer.volume, tag.volume);
-
+    async build (character: Character<any>): Promise<void>
+    {
         // load AudioBuffer
         if (!character.audioBuffer) {
             const audioBuffer = await soundDecodeService(character.buffer.buffer);
-            if (audioBuffer) {
-                this._$audioBuffer = character.audioBuffer = audioBuffer;
-                if (this.hasEventListener(Event.COMPLETE)) {
-                    this.dispatchEvent(new Event(Event.COMPLETE));
-                }
+            if (!audioBuffer) {
+                return ;
             }
+
+            character.audioBuffer = audioBuffer;
         }
+
+        this._$audioBuffer = character.audioBuffer;
     }
 }

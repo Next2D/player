@@ -582,17 +582,18 @@ export class Player
 
         this._$stopFlag = false;
 
-        // if (this._$timerId > -1) {
-        //     cancelAnimationFrame(this._$timerId);
-        // }
+        if (this._$timerId > -1) {
+            cancelAnimationFrame(this._$timerId);
+        }
 
-        // this._$fps = 1000 / this._$frameRate | 0;
+        this._$fps = 1000 / this._$frameRate | 0;
 
-        // this._$startTime = performance.now();
-        // this._$timerId = requestAnimationFrame(async (timestamp: number): Promise<void> =>
-        // {
-        //     await this._$run(timestamp);
-        // });
+        this._$startTime = performance.now();
+        this._$timerId = requestAnimationFrame(async (timestamp: number): Promise<void> =>
+        {
+            // todo
+            // await this._$run(timestamp);
+        });
     }
 
     /**
@@ -684,29 +685,6 @@ export class Player
     //  * @method
     //  * @private
     //  */
-    // _$updateLoadStatus (): void
-    // {
-    //     if (this._$loadStatus === $LOAD_END) {
-    //         if (this._$loadId > -1) {
-    //             $cancelAnimationFrame(this._$loadId);
-    //         }
-
-    //         this._$loadId = -1;
-    //         this._$loaded();
-    //         return ;
-    //     }
-
-    //     this._$loadId = $requestAnimationFrame(() =>
-    //     {
-    //         this._$updateLoadStatus();
-    //     });
-    // }
-
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
     // _$loaded (): void
     // {
     //     const element: HTMLElement | null = $document
@@ -772,100 +750,6 @@ export class Player
     //         this.play();
     //     }
 
-    // }
-
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$initialize (): void
-    // {
-    //     if (!this._$tagId) {
-
-    //         $document
-    //             .body
-    //             .insertAdjacentHTML(
-    //                 "beforeend", `<div id="${$PREFIX}" tabindex="-1"></div>`
-    //             );
-
-    //     } else {
-
-    //         const container: HTMLElement | null = $document.getElementById(this._$tagId);
-    //         if (!container) {
-    //             alert("Not Found Tag ID:" + this._$tagId);
-    //             return ;
-    //         }
-
-    //         const div: HTMLElement | null = $document.getElementById($PREFIX);
-    //         if (!div) {
-
-    //             const element: HTMLDivElement = $document.createElement("div");
-    //             element.id       = $PREFIX;
-    //             element.tabIndex = -1;
-    //             container.appendChild(element);
-
-    //         } else {
-
-    //             this._$deleteNode();
-
-    //         }
-
-    //     }
-
-    //     const element: HTMLElement | null = $document.getElementById($PREFIX);
-    //     if (!element) {
-    //         throw new Error("the content element is null.");
-    //     }
-
-    //     const parent: HTMLElement | null = element.parentElement;
-    //     if (parent) {
-
-    //         this._$initStyle(element);
-    //         this._$buildWait();
-
-    //         const width: number = this._$fixedWidth
-    //             ? this._$fixedWidth
-    //             : parent.tagName === "BODY"
-    //                 ? window.innerWidth
-    //                 : parent.clientWidth;
-
-    //         const height: number = this._$fixedHeight
-    //             ? this._$fixedHeight
-    //             : parent.tagName === "BODY"
-    //                 ? window.innerHeight
-    //                 : parent.clientHeight;
-
-    //         // set center
-    //         if (this._$mode === "loader" && width && height) {
-    //             this._$baseWidth  = width;
-    //             this._$baseHeight = height;
-    //             this._$resize();
-    //         }
-    //     }
-
-    //     if (this._$mode === "loader") {
-    //         this._$loadStatus = $LOAD_START;
-    //         this._$updateLoadStatus();
-    //     } else {
-    //         this._$resize();
-    //         this._$loaded();
-    //     }
-    // }
-
-    // /**
-    //  * @returns {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$deleteNode (): void
-    // {
-    //     const element: HTMLElement | null = $document.getElementById($PREFIX);
-    //     if (element) {
-    //         while (element.childNodes.length) {
-    //             element.removeChild(element.childNodes[0]);
-    //         }
-    //     }
     // }
 
     //     // @ts-ignore
@@ -969,169 +853,6 @@ export class Player
     //             this._$hitTest();
     //         }
     //     }, { "passive": false });
-    // }
-
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$resize (): void
-    // {
-    //     const div: HTMLElement | null = $document
-    //         .getElementById($PREFIX);
-
-    //     if (div) {
-
-    //         const parent: HTMLElement | null = div.parentElement;
-    //         if (!parent) {
-    //             throw new Error("the parentElement is null.");
-    //         }
-
-    //         const innerWidth: number = this._$fixedWidth
-    //             ? this._$fixedWidth
-    //             : parent.tagName === "BODY"
-    //                 ? window.innerWidth
-    //                 : parent.clientWidth;
-
-    //         const innerHeight: number = this._$fixedHeight
-    //             ? this._$fixedHeight
-    //             : parent.tagName === "BODY"
-    //                 ? window.innerHeight
-    //                 : parent.clientHeight;
-
-    //         const screenWidth: number = parent.tagName === "BODY"
-    //             ? $window.innerWidth
-    //             : parent.offsetWidth;
-
-    //         const scale: number = $Math.min(
-    //             innerWidth  / this._$baseWidth,
-    //             innerHeight / this._$baseHeight
-    //         );z
-
-    //         let width: number = this._$fullScreen
-    //             ? innerWidth
-    //             : this._$baseWidth * scale | 0;
-
-    //         let height: number = this._$fullScreen
-    //             ? innerHeight
-    //             : this._$baseHeight * scale | 0;
-
-    //         // div
-    //         const style: CSSStyleDeclaration  = div.style;
-    //         style.width  = `${width}px`;
-    //         style.height = `${height}px`;
-    //         style.top    = "0";
-    //         style.left   = this._$fullScreen
-    //             ? "0"
-    //             : `${screenWidth / 2 - width / 2}px`;
-
-    //         width  *= $devicePixelRatio;
-    //         height *= $devicePixelRatio;
-
-    //         // no resize
-    //         if (this._$width === width && this._$height === height) {
-    //             return ;
-    //         }
-
-    //         // cache reset
-    //         this._$stage._$doChanged();
-    //         $cacheStore.reset();
-
-    //         // params
-    //         this._$scale  = scale;
-    //         this._$width  = width;
-    //         this._$height = height;
-
-    //         const mScale: number = this._$scale * $devicePixelRatio;
-    //         this._$matrix[0] = mScale;
-    //         this._$matrix[3] = mScale;
-
-    //         if (this._$fullScreen) {
-
-    //             const tx = (width -
-    //                 this._$baseWidth
-    //                 * scale
-    //                 * $devicePixelRatio) / 2;
-
-    //             const ty = (height -
-    //                 this._$baseHeight
-    //                 * scale
-    //                 * $devicePixelRatio) / 2;
-
-    //             this._$matrix[4] = tx;
-    //             this._$matrix[5] = ty;
-
-    //         }
-
-    //         // main canvas resize
-    //         this._$resizeCanvas(width, height, mScale, this._$matrix[4], this._$matrix[5]);
-
-    //         if (div.children.length > 1) {
-    //             div.children[1].dispatchEvent(
-    //                 new Event(`${$PREFIX}_blur`)
-    //             );
-    //         }
-    //     }
-    // }
-
-    // /**
-    //  * @description 表示用のcanvasを更新
-    //  *              Update canvas for display
-    //  *
-    //  * @param  {string} [background_color=transparent]
-    //  * @return {void}
-    //  * @method
-    //  * @public
-    //  */
-    // _$setBackgroundColor (background_color: string = "transparent"): void
-    // {
-    //     if ($rendererWorker) {
-
-    //         const buffer: Float32Array = $getRenderBufferArray();
-
-    //         buffer[0] = background_color === "transparent"
-    //             ? -1
-    //             : $toColorInt(background_color);
-
-    //         const message: PropertyMessageMapImpl<any> = $getRenderMessageObject();
-    //         message.command = "setBackgroundColor";
-    //         message.buffer  = buffer;
-
-    //         const options: ArrayBuffer[] = $getArray(buffer.buffer);
-
-    //         $rendererWorker.postMessage(message, options);
-
-    //         $poolRenderMessageObject(message);
-    //         $poolArray(options);
-
-    //     } else {
-
-    //         const context: CanvasToWebGLContext | null = this._$context;
-    //         if (!context) {
-    //             return ;
-    //         }
-
-    //         if (background_color === "transparent") {
-
-    //             context._$setColor(0, 0, 0, 0);
-
-    //         } else {
-
-    //             const color: RGBAImpl = $uintToRGBA(
-    //                 $toColorInt(background_color)
-    //             );
-
-    //             context._$setColor(
-    //                 color.R / 255,
-    //                 color.G / 255,
-    //                 color.B / 255,
-    //                 1
-    //             );
-
-    //         }
-
-    //     }
     // }
 
     // /**

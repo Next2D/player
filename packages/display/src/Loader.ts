@@ -1,5 +1,7 @@
 import type { ParentImpl } from "./interface/ParentImpl";
 import type { Sprite } from "./Sprite";
+import type { NoCodeDataImpl } from "./interface/NoCodeDataImpl";
+import type { NoCodeDataZlibImpl } from "./interface/NoCodeDataZlibImpl";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { LoaderInfo } from "./LoaderInfo";
 import { MovieClip } from "./MovieClip";
@@ -162,7 +164,7 @@ export class Loader extends DisplayObjectContainer
                     },
                     "loadend": async (event: ProgressEvent): Promise<void> =>
                     {
-                        await loaderLoadEndEventService(loaderInfo, event);
+                        await loaderLoadEndEventService(this, event);
                         resolve();
                     }
                 }
@@ -174,15 +176,14 @@ export class Loader extends DisplayObjectContainer
      * @description NoCodeToolのJSONを直接読み込む
      *              Read JSON directly from NoCodeTool
      *
-     * @param  {string} json
+     * @param  {object} json
      * @return {void}
      * @method
      * @public
      */
-    async loadJSON (json: string): Promise<void>
+    async loadJSON (json: NoCodeDataImpl | NoCodeDataZlibImpl): Promise<void>
     {
-        const loaderInfo = this._$loaderInfo as NonNullable<LoaderInfo>;
-        await loaderLoadJsonService(loaderInfo, json);
+        await loaderLoadJsonService(this, json);
     }
 
     /**

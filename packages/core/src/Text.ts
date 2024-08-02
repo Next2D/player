@@ -1,8 +1,9 @@
 import type { TextImpl } from "./interface/TextImpl";
-import { TextFormat } from "@next2d/text";
+import { TextFormat, TextField } from "@next2d/text";
 
 const text: TextImpl = {
-    TextFormat
+    TextFormat,
+    TextField
 };
 
 Object.entries(text).forEach(([key, TextClass]) =>

@@ -11,7 +11,7 @@ import {
     MovieClip,
     Shape
 } from "@next2d/display";
-import { TextField } from "@next2d/display";
+import { TextField } from "@next2d/text";
 import {
     Video,
     Sound

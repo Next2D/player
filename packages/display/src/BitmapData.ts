@@ -2,30 +2,9 @@ import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import type { Player } from "@next2d/core";
 import type { CanvasToWebGLContext } from "@next2d/webgl";
 import type {
-    DisplayObjectImpl,
-    PropertyBitmapDataMessageImpl
-} from "@next2d/interface";
-import type {
     Matrix,
     ColorTransform
 } from "@next2d/geom";
-import {
-    $COLOR_ARRAY_IDENTITY,
-    $getArray,
-    $MATRIX_ARRAY_IDENTITY,
-    $multiplicationMatrix,
-    $poolArray,
-    $cacheStore
-} from "@next2d/share";
-import {
-    $getInstanceId,
-    $bitmapDrawMap,
-    $currentPlayer,
-    $poolColorTransform,
-    $poolMatrix,
-    $postContainerWorker,
-    $rendererWorker
-} from "@next2d/util";
 
 /**
  * BitmapData クラスを使用すると、Bitmap オブジェクトのデータ (ピクセル) を処理できます。

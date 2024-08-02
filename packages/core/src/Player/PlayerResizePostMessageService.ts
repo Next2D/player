@@ -1,5 +1,5 @@
-import type { Player } from "../Player";
 import type { ResizeMessageImpl } from "../interface/ResizeMessageImpl";
+import { $player } from "../Player";
 import { $rendererWorker } from "../CoreUtil";
 
 /**
@@ -27,21 +27,20 @@ const options: Transferable[] = [];
  * @description 画面リサイズ情報をworkerに送る
  *              Send screen resize information to worker
  *
- * @param  {Player} player
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (player: Player): void =>
+export const execute = (): void =>
 {
     // postMessage
     message.buffer = new Float32Array([
-        player.rendererScale,
-        player.rendererWidth,
-        player.rendererHeight,
-        player.stageWidth,
-        player.stageHeight,
-        player.fullScreen ? 1 : 0
+        $player.rendererScale,
+        $player.rendererWidth,
+        $player.rendererHeight,
+        $player.stageWidth,
+        $player.stageHeight,
+        $player.fullScreen ? 1 : 0
     ]);
 
     options[0] = message.buffer.buffer;

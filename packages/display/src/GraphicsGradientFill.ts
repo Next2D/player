@@ -1,17 +1,4 @@
 import type { Matrix } from "@next2d/geom";
-import type {
-    ColorStopImpl,
-    GradientTypeImpl,
-    SpreadMethodImpl,
-    InterpolationMethodImpl
-} from "@next2d/interface";
-import {
-    $colorStringToInt,
-    $getArray,
-    $intToRGBA,
-    $Math,
-    $MATRIX_ARRAY_IDENTITY
-} from "@next2d/share";
 
 /**
  * グラデーション塗りを定義します。

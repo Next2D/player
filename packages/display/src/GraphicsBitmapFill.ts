@@ -1,6 +1,5 @@
 import type { BitmapData } from "./BitmapData";
 import type { Matrix } from "@next2d/geom";
-import { $getArray } from "@next2d/share";
 
 /**
  * ビットマップ塗りを定義します。ビットマップは、スムージング、繰り返し、

@@ -2,6 +2,7 @@ import type {
     BitmapData,
     BlendMode,
     DisplayObject,
+    DisplayObjectContainer,
     FrameLabel,
     Graphics,
     InteractiveObject,
@@ -9,13 +10,13 @@ import type {
     MovieClip,
     Shape,
     Sprite,
-    Stage,
-    TextField
+    Stage
 } from "@next2d/display";
 export interface DisplayImpl {
     BitmapData: typeof BitmapData;
     BlendMode: typeof BlendMode;
     DisplayObject: typeof DisplayObject;
+    DisplayObjectContainer: typeof DisplayObjectContainer;
     FrameLabel: typeof FrameLabel;
     Graphics: typeof Graphics;
     InteractiveObject: typeof InteractiveObject;
@@ -24,5 +25,4 @@ export interface DisplayImpl {
     Shape: typeof Shape;
     Sprite: typeof Sprite;
     Stage: typeof Stage;
-    TextField: typeof TextField;
 }

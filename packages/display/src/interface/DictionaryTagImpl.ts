@@ -3,5 +3,6 @@ export interface DictionaryTagImpl {
     name: string;
     startFrame: number;
     endFrame: number;
+    depth: number;
     clipDepth: number;
 }
