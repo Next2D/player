@@ -21,7 +21,7 @@ export const execute = async (loader_info: LoaderInfo, object: NoCodeDataImpl): 
 
     // setup
     // loader_info.content = new MovieClip();
-    console.log(object);
+    // console.log(object);
 
     // build root
     // const root: MovieClipCharacterImpl = object.characters[0];

@@ -4,25 +4,19 @@ import {
     $PREFIX,
     $devicePixelRatio
 } from "../CoreUtil";
+import { $canvas } from "../Canvas";
 
 /**
  * @description 画面リサイズ時にcanvasのリサイズを行う
  *              Resize the canvas when resizing the screen
  *
  * @param  {Player} player
- * @param  {number} initial_width
- * @param  {number} initial_height
- * @param  {boolean} full_screen
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (
-    player: Player,
-    initial_width: number,
-    initial_height: number,
-    full_screen: boolean
-): void => {
+export const execute = (player: Player): void =>
+{
 
     const element: HTMLElement | null = document
         .getElementById($PREFIX);
@@ -36,11 +30,11 @@ export const execute = (
         return ;
     }
 
-    const screenWidth: number = full_screen || parent.tagName === "BODY"
+    const screenWidth: number = player.fullScreen || parent.tagName === "BODY"
         ? window.innerWidth
         : parent.clientWidth;
 
-    const screenHeight: number = full_screen || parent.tagName === "BODY"
+    const screenHeight: number = player.fullScreen || parent.tagName === "BODY"
         ? window.innerHeight
         : parent.clientHeight;
 
@@ -48,18 +42,22 @@ export const execute = (
     style.width  = `${screenWidth}px`;
     style.height = `${screenHeight}px`;
 
+    if (!player.stageWidth || !player.stageHeight) {
+        return ;
+    }
+
     const scale: number = Math.min(
-        screenWidth  / initial_width,
-        screenHeight / initial_height
+        screenWidth  / player.stageWidth,
+        screenHeight / player.stageHeight
     );
 
-    const width: number = full_screen
+    const width: number = player.fullScreen
         ? window.innerWidth * $devicePixelRatio
-        : initial_width * scale * $devicePixelRatio | 0;
+        : player.stageWidth * scale * $devicePixelRatio | 0;
 
-    const height: number = full_screen
+    const height: number = player.fullScreen
         ? window.innerHeight * $devicePixelRatio
-        : initial_height * scale * $devicePixelRatio | 0;
+        : player.stageHeight * scale * $devicePixelRatio | 0;
 
     // 同じサイズの場合は、ここれで終了
     if (width === player.rendererWidth

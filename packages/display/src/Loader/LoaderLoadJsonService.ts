@@ -1,4 +1,5 @@
 import type { NoCodeDataImpl } from "../interface/NoCodeDataImpl";
+import type { NoCodeDataZlibImpl } from "../interface/NoCodeDataZlibImpl";
 import type { LoaderInfo } from "../LoaderInfo";
 import { execute as loaderBuildService } from "./LoaderBuildService";
 
@@ -16,14 +17,14 @@ const worker: Worker = new ZlibInflateWorker();
  *              If the JSON object is zlib compressed, decompress it with a worker, otherwise execute the build process
  *
  * @param  {LoaderInfo} loader_info
- * @param  {object} json
+ * @param  {object} object
  * @return {Promise}
  * @method
  * @public
  */
-export const execute = async (loader_info: LoaderInfo, json: any): Promise<void> =>
+export const execute = async (loader_info: LoaderInfo, object: NoCodeDataImpl | NoCodeDataZlibImpl): Promise<void> =>
 {
-    if (json.type === "zlib") {
+    if (object.type === "zlib") {
         await new Promise<void>((resolve): void =>
         {
             worker.onmessage = async (event: MessageEvent): Promise<void> =>
@@ -32,10 +33,10 @@ export const execute = async (loader_info: LoaderInfo, json: any): Promise<void>
                 resolve();
             };
 
-            const buffer: Uint8Array = new Uint8Array(json.buffer);
+            const buffer: Uint8Array = new Uint8Array(object.buffer);
             worker.postMessage(buffer, [buffer.buffer]);
         });
     } else {
-        await loaderBuildService(loader_info, json as NoCodeDataImpl);
+        await loaderBuildService(loader_info, object as NoCodeDataImpl);
     }
 };

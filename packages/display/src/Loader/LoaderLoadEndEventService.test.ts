@@ -28,7 +28,7 @@ describe("LoaderLoadEndEventService.js test", () =>
         expect(loaded).toBe(0);
         expect(total).toBe(0);
 
-        const json = {
+        const object = {
             "type": "json",
             "stage": {
                 "width": 240,
@@ -47,7 +47,7 @@ describe("LoaderLoadEndEventService.js test", () =>
                 "target": {
                     "status": 200,
                     "statusText": "OK",
-                    "response": JSON.stringify(json)
+                    "response": object
                 },
                 "loaded": 1,
                 "total": 10

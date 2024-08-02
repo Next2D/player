@@ -20,6 +20,7 @@ import { execute as playerApplyContainerElementStyleService } from "./Player/Pla
 import { execute as playerLoadingAnimationService } from "./Player/PlayerLoadingAnimationService";
 import { execute as playerResizeEventService } from "./Player/PlayerResizeEventService";
 import { execute as playerResizeRegisterService } from "./Player/PlayerResizeRegisterService";
+import { execute as playerUpdateBackgroundColorPostMessageService } from "./Player/PlayerUpdateBackgroundColorPostMessageService";
 
 /**
  * @description Next2Dの描画、イベント、設定、コントロールの管理クラスです。
@@ -38,8 +39,8 @@ export class Player
     private _$rendererWidth: number;
     private _$rendererHeight: number;
     private _$rendererScale: number;
-    private _$initialWidth: number;
-    private _$initialHeight: number;
+    private _$stageWidth: number;
+    private _$stageHeight: number;
     private _$fixedWidth: number;
     private _$fixedHeight: number;
     private _$frameRate: number;
@@ -175,14 +176,14 @@ export class Player
          * @default 0
          * @private
          */
-        this._$initialWidth = 0;
+        this._$stageWidth = 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$initialHeight = 0;
+        this._$stageHeight = 0;
 
         /**
          * @type {number}
@@ -500,12 +501,7 @@ export class Player
         this._$fullScreen = full_screen;
 
         // display resize
-        playerResizeEventService(
-            this,
-            this._$initialWidth,
-            this._$initialHeight,
-            this._$fullScreen
-        );
+        playerResizeEventService(this);
     }
 
     /**
@@ -518,7 +514,12 @@ export class Player
     }
     set bgColor (bg_color: string)
     {
+        if (this._$bgColor === bg_color) {
+            return ;
+        }
+
         this._$bgColor = `${bg_color}`;
+        playerUpdateBackgroundColorPostMessageService(this._$bgColor);
     }
 
     /**
@@ -532,6 +533,40 @@ export class Player
     set frameRate (frame_rate: number)
     {
         this._$frameRate = frame_rate;
+    }
+
+    /**
+     * @description ステージの幅
+     *              Stage width
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    get stageWidth (): number
+    {
+        return this._$stageWidth;
+    }
+    set stageWidth (stage_width: number)
+    {
+        this._$stageWidth = stage_width;
+    }
+
+    /**
+     * @description ステージの高さ
+     *              Stage height
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    get stageHeight (): number
+    {
+        return this._$stageHeight;
+    }
+    set stageHeight (stage_height: number)
+    {
+        this._$stageHeight = stage_height;
     }
 
     /**
@@ -575,13 +610,6 @@ export class Player
         this._$timerId  = -1;
 
         SoundMixer.stopAll();
-        $cacheStore.reset();
-
-        // if ($rendererWorker) {
-        //     $rendererWorker.postMessage({
-        //         "command": "stop"
-        //     });
-        // }
     }
 
     // /**
@@ -639,29 +667,16 @@ export class Player
             element, this._$fixedWidth, this._$fixedHeight
         );
 
-        this._$initialWidth  = element.clientWidth;
-        this._$initialHeight = element.clientHeight;
-
         // start loading
         playerLoadingAnimationService(element);
 
+        // register resize event
         if (!this._$fixedWidth && !this._$fixedHeight) {
-            // register resize event
-            playerResizeRegisterService(
-                this,
-                this._$initialWidth,
-                this._$initialHeight,
-                this._$fullScreen
-            );
+            playerResizeRegisterService(this);
         }
 
         // initialize resize
-        playerResizeEventService(
-            this,
-            this._$initialWidth,
-            this._$initialHeight,
-            this._$fullScreen
-        );
+        playerResizeEventService(this);
     }
 
     // /**

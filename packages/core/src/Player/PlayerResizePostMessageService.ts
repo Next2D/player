@@ -1,10 +1,6 @@
 import type { Player } from "../Player";
 import type { ResizeMessageImpl } from "../interface/ResizeMessageImpl";
-import {
-    $rendererWorker,
-    $stageWidth,
-    $stageHeight
-} from "../CoreUtil";
+import { $rendererWorker } from "../CoreUtil";
 
 /**
  * @description リサイズメッセージ
@@ -43,8 +39,8 @@ export const execute = (player: Player): void =>
         player.rendererScale,
         player.rendererWidth,
         player.rendererHeight,
-        $stageWidth,
-        $stageHeight,
+        player.stageWidth,
+        player.stageHeight,
         player.fullScreen ? 1 : 0
     ]);
 

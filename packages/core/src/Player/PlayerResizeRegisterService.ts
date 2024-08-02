@@ -15,23 +15,14 @@ let timerId: number = -1;
  * @method
  * @protected
  */
-export const execute = (
-    player: Player,
-    initial_width: number,
-    initial_height: number,
-    full_screen: boolean
-): void => {
+export const execute = (player: Player): void =>
+{
     window.addEventListener("resize", (): void =>
     {
         cancelAnimationFrame(timerId);
         timerId = requestAnimationFrame((): void =>
         {
-            playerResizeEventService(
-                player,
-                initial_width,
-                initial_height,
-                full_screen
-            );
+            playerResizeEventService(player);
         });
     });
 };

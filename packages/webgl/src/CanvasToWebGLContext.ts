@@ -1108,7 +1108,7 @@ export class CanvasToWebGLContext
      * @method
      * @public
      */
-    _$setColor (
+    updateBackgroundColor (
         r: number = 0, g: number = 0,
         b: number = 0, a: number = 0
     ): void {

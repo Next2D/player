@@ -1,7 +1,6 @@
 import {
     $canvas,
-    $setRendererHeight,
-    $setRendererWidth,
+    $setRendererSize,
     $rendererMatrix,
     $devicePixelRatio,
     $gl,
@@ -40,8 +39,7 @@ export const execute = (
     }
 
     // resize
-    $setRendererWidth(renderer_width);
-    $setRendererHeight(renderer_height);
+    $setRendererSize(renderer_width, renderer_height);
 
     // update canvas size
     $canvas.width  = renderer_width;

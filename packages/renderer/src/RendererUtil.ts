@@ -100,36 +100,24 @@ export const $setWebGL2RenderingContext = (gl: WebGL2RenderingContext): void =>
 export let $rendererWidth: number = 0;
 
 /**
- * @description 描画エリアの幅を設定
- *              Set the width of the drawing area
- *
- * @param  {number} width
- * @return {void}
- * @method
- * @public
- */
-export const $setRendererWidth = (width: number): void =>
-{
-    $rendererWidth = width;
-};
-
-/**
  * @type {number}
  * @public
  */
 export let $rendererHeight: number = 0;
 
 /**
- * @description 描画エリアの高さを設定
- *              Set the height of the drawing area
+ * @description 描画エリアの幅を設定
+ *              Set the width of the drawing area
  *
+ * @param  {number} width
  * @param  {number} height
  * @return {void}
  * @method
  * @public
  */
-export const $setRendererHeight = (height: number): void =>
+export const $setRendererSize = (width: number, height: number): void =>
 {
+    $rendererWidth  = width;
     $rendererHeight = height;
 };
 

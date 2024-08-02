@@ -1,4 +1,4 @@
 export interface ResizeMessageImpl {
-    command: string;
+    command: "resize";
     buffer: Float32Array | null;
 }

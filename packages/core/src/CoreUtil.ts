@@ -54,29 +54,11 @@ export const $clamp = (
         : Math.min(Math.max(min, isNaN(number) ? 0 : number), max);
 };
 
-/**
- * @type {number}
- * @public
- */
-export let $stageWidth: number = 0;
+const canvas = document.createElement("canvas");
+canvas.width = canvas.height = 1;
 
 /**
- * @type {number}
- * @public
+ * @type {CanvasRenderingContext2D}
+ * @const
  */
-export let $stageHeight: number = 0;
-
-/**
- * @description ステージサイズを設定
- *              Set stage size
- *
- * @param  {number} width
- * @return {void}
- * @method
- * @public
- */
-export const $setStageSize = (width: number, height: number): void =>
-{
-    $stageWidth  = width;
-    $stageHeight = height;
-};
+export const $hitContext: CanvasRenderingContext2D = canvas.getContext("2d") as NonNullable<CanvasRenderingContext2D>;
