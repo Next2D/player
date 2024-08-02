@@ -29,12 +29,14 @@ import type { JointStyleImpl } from "./interface/JointStyleImpl";
 import type { CachePositionImpl } from "./interface/CachePositionImpl";
 import {
     $setRenderSize,
+    $setWebGL2RenderingContext,
     $getFloat32Array9,
     $getArray,
     $clamp,
     $poolArray,
     $inverseMatrix,
-    $poolFloat32Array9
+    $poolFloat32Array9,
+    $gl
 } from "./WebGLUtil";
 
 /**
@@ -44,7 +46,6 @@ export class CanvasToWebGLContext
 {
     public _$offsetX: number;
     public _$offsetY: number;
-    public readonly _$gl: WebGL2RenderingContext;
     private _$cacheBounds: BoundsImpl;
     private _$matrix: Float32Array;
     private _$cacheAttachment: AttachmentImpl|null;
@@ -74,6 +75,7 @@ export class CanvasToWebGLContext
     private readonly _$blend: CanvasToWebGLContextBlend;
     private readonly _$maskBounds: BoundsImpl;
     private readonly _$attachmentArray: Array<AttachmentImpl|null>;
+    private _$mainAttachment: AttachmentImpl | null;
 
     /**
      * @param {WebGL2RenderingContext} gl
@@ -83,13 +85,8 @@ export class CanvasToWebGLContext
      */
     constructor (gl: WebGL2RenderingContext, sample: number)
     {
+        $setWebGL2RenderingContext(gl);
         $setRenderSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
-
-        /**
-         * @type {WebGL2RenderingContext}
-         * @private
-         */
-        this._$gl = gl;
 
         /**
          * @type {number}
@@ -311,6 +308,58 @@ export class CanvasToWebGLContext
          * @private
          */
         this._$cachePosition = null;
+
+        /**
+         * @type {object}
+         * @default null
+         * @private
+         */
+        this._$mainAttachment = null;
+    }
+
+    /**
+     * @description 描画のメインとなるAttachmentを設定
+     *              Set the main Attachment for drawing
+     *
+     * @member {AttachmentImpl | null}
+     * @public
+     */
+    get mainAttachment (): AttachmentImpl | null
+    {
+        return this._$mainAttachment;
+    }
+    set mainAttachment (attachment: AttachmentImpl | null)
+    {
+        this._$mainAttachment = attachment;
+    }
+
+    /**
+     * @description 描画サイズのリサイズ処理
+     *              Resize processing of drawing size
+     *
+     * @param  {number} width
+     * @param  {number} height
+     * @return {void}
+     * @method
+     * @public
+     */
+    resize (width: number, height: number): void
+    {
+        this.clearInstacedArray();
+
+        const manager: FrameBufferManager = this.frameBuffer;
+        if (this._$mainAttachment) {
+            manager.unbind();
+            manager.releaseAttachment(this._$mainAttachment, true);
+        }
+
+        this._$mainAttachment = manager
+            .createCacheAttachment(width, height, true);
+
+        this.bind(this._$mainAttachment);
+
+        // update cache max size
+        this.setMaxSize(width, height);
     }
 
     /**
@@ -358,7 +407,7 @@ export class CanvasToWebGLContext
      */
     get canvas (): HTMLCanvasElement | OffscreenCanvas
     {
-        return this._$gl.canvas;
+        return $gl.canvas;
     }
 
     /**
@@ -626,16 +675,16 @@ export class CanvasToWebGLContext
             .bindRenderBuffer();
 
         // 初期化
-        this._$gl.clearColor(0, 0, 0, 0);
-        this._$gl.clear(this._$gl.COLOR_BUFFER_BIT | this._$gl.STENCIL_BUFFER_BIT);
+        $gl.clearColor(0, 0, 0, 0);
+        $gl.clear($gl.COLOR_BUFFER_BIT | $gl.STENCIL_BUFFER_BIT);
 
         // 描画領域をあらためて設定
         this._$viewportWidth  = position.w;
         this._$viewportHeight = position.h;
-        this._$gl.viewport(position.x, position.y, position.w, position.h);
+        $gl.viewport(position.x, position.y, position.w, position.h);
 
-        this._$gl.enable(this._$gl.SCISSOR_TEST);
-        this._$gl.scissor(
+        $gl.enable($gl.SCISSOR_TEST);
+        $gl.scissor(
             position.x, position.y,
             position.w, position.h
         );
@@ -662,7 +711,7 @@ export class CanvasToWebGLContext
                 position.w, position.h
             );
 
-        this._$bind(attachment);
+        this.bind(attachment);
 
         this.save();
         this.setTransform(1, 0, 0, 1, 0, 0);
@@ -680,7 +729,7 @@ export class CanvasToWebGLContext
         manager.releaseAttachment(attachment);
 
         // reset
-        this._$bind(currentAttachment);
+        this.bind(currentAttachment);
 
         return texture;
     }
@@ -736,15 +785,15 @@ export class CanvasToWebGLContext
 
         const attachment: AttachmentImpl = manager
             .createTextureAttachmentFrom(atlasTexture);
-        this._$bind(attachment);
+        this.bind(attachment);
 
-        this._$gl.enable(this._$gl.SCISSOR_TEST);
-        this._$gl.scissor(
+        $gl.enable($gl.SCISSOR_TEST);
+        $gl.scissor(
             position.x, position.y,
             position.w, position.h
         );
-        this._$gl.clearColor(0, 0, 0, 0);
-        this._$gl.disable(this._$gl.SCISSOR_TEST);
+        $gl.clearColor(0, 0, 0, 0);
+        $gl.disable($gl.SCISSOR_TEST);
 
         this.save();
         this.setTransform(1, 0, 0, 1, 0, 0);
@@ -760,7 +809,7 @@ export class CanvasToWebGLContext
         manager.releaseAttachment(attachment);
 
         // reset
-        this._$bind(currentAttachment);
+        this.bind(currentAttachment);
 
         manager.textureManager.release(texture);
     }
@@ -781,7 +830,7 @@ export class CanvasToWebGLContext
      * @method
      * @public
      */
-    _$bind (attachment: AttachmentImpl | null = null): void
+    bind (attachment: AttachmentImpl | null = null): void
     {
         if (!attachment) {
             return;
@@ -798,7 +847,7 @@ export class CanvasToWebGLContext
         if (this._$viewportWidth !== width || this._$viewportHeight !== height) {
             this._$viewportWidth  = width;
             this._$viewportHeight = height;
-            this._$gl.viewport(0, 0, width, height);
+            $gl.viewport(0, 0, width, height);
         }
 
         // カラーバッファorステンシルバッファが、未初期化の場合はクリアする
@@ -814,9 +863,9 @@ export class CanvasToWebGLContext
                 stencilBuffer.dirty = false;
             }
 
-            this._$gl.clearColor(0, 0, 0, 0);
+            $gl.clearColor(0, 0, 0, 0);
             this.clearRect(0, 0, this._$viewportWidth, this._$viewportHeight);
-            this._$gl.clearColor(this._$clearColorR, this._$clearColorG, this._$clearColorB, this._$clearColorA);
+            $gl.clearColor(this._$clearColorR, this._$clearColorG, this._$clearColorB, this._$clearColorA);
 
             this._$mask._$onClear(attachment.mask);
         }
@@ -900,12 +949,12 @@ export class CanvasToWebGLContext
         const currentAttachment = manager.currentAttachment;
 
         const attachment: AttachmentImpl = manager.createTextureAttachmentFrom(atlasTexture);
-        this._$bind(attachment);
+        this.bind(attachment);
 
         const pixels = new Uint8Array(atlasTexture.width * atlasTexture.height * 4);
-        this._$gl.readPixels(
+        $gl.readPixels(
             0, 0, atlasTexture.width, atlasTexture.height,
-            this._$gl.RGBA, this._$gl.UNSIGNED_BYTE, pixels
+            $gl.RGBA, $gl.UNSIGNED_BYTE, pixels
         );
 
         const canvas  = document.createElement("canvas");
@@ -921,7 +970,7 @@ export class CanvasToWebGLContext
         ctx?.putImageData(imageData, 0, 0);
         console.log(canvas.toDataURL());
 
-        this._$bind(currentAttachment);
+        this.bind(currentAttachment);
         manager.releaseAttachment(attachment);
     }
 
@@ -1067,10 +1116,13 @@ export class CanvasToWebGLContext
         this._$clearColorG = g;
         this._$clearColorB = b;
         this._$clearColorA = a;
-        this._$gl.clearColor(r, g, b, a);
+        $gl.clearColor(r, g, b, a);
     }
 
     /**
+     * @description 指定範囲の描画をクリア
+     *              Clear the drawing in the specified range
+     *
      * @param  {number} x
      * @param  {number} y
      * @param  {number} w
@@ -1084,10 +1136,10 @@ export class CanvasToWebGLContext
         w: number, h: number
     ): void {
         this._$mask._$onClearRect();
-        this._$gl.enable(this._$gl.SCISSOR_TEST);
-        this._$gl.scissor(x, y, w, h);
-        this._$gl.clear(this._$gl.COLOR_BUFFER_BIT | this._$gl.STENCIL_BUFFER_BIT);
-        this._$gl.disable(this._$gl.SCISSOR_TEST);
+        $gl.enable($gl.SCISSOR_TEST);
+        $gl.scissor(x, y, w, h);
+        $gl.clear($gl.COLOR_BUFFER_BIT | $gl.STENCIL_BUFFER_BIT);
+        $gl.disable($gl.SCISSOR_TEST);
     }
 
     /**
@@ -1101,15 +1153,15 @@ export class CanvasToWebGLContext
         this._$mask._$onClearRect();
 
         // マスクの描画領域に限定してstencil情報をクリア
-        this._$gl.enable(this._$gl.SCISSOR_TEST);
-        this._$gl.scissor(
+        $gl.enable($gl.SCISSOR_TEST);
+        $gl.scissor(
             this._$maskBounds.xMin,
             this._$maskBounds.yMin,
             this._$maskBounds.xMax,
             this._$maskBounds.yMax
         );
-        this._$gl.clear(this._$gl.STENCIL_BUFFER_BIT);
-        this._$gl.disable(this._$gl.SCISSOR_TEST);
+        $gl.clear($gl.STENCIL_BUFFER_BIT);
+        $gl.disable($gl.SCISSOR_TEST);
     }
 
     /**
@@ -1356,25 +1408,25 @@ export class CanvasToWebGLContext
         );
 
         // mask on
-        this._$gl.enable(this._$gl.STENCIL_TEST);
-        this._$gl.stencilMask(0xff);
+        $gl.enable($gl.STENCIL_TEST);
+        $gl.stencilMask(0xff);
 
         // draw shape
-        this._$gl.enable(this._$gl.SAMPLE_ALPHA_TO_COVERAGE);
-        this._$gl.stencilFunc(this._$gl.ALWAYS, 0, 0xff);
-        this._$gl.stencilOp(this._$gl.KEEP, this._$gl.INVERT, this._$gl.INVERT);
-        this._$gl.colorMask(false, false, false, false);
+        $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
+        $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
+        $gl.stencilOp($gl.KEEP, $gl.INVERT, $gl.INVERT);
+        $gl.colorMask(false, false, false, false);
         coverageShader._$fill(fillVertexArrayObject);
-        this._$gl.disable(this._$gl.SAMPLE_ALPHA_TO_COVERAGE);
+        $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
 
         // draw shape range
-        this._$gl.stencilFunc(this._$gl.NOTEQUAL, 0, 0xff);
-        this._$gl.stencilOp(this._$gl.KEEP, this._$gl.ZERO, this._$gl.ZERO);
-        this._$gl.colorMask(true, true, true, true);
+        $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
+        $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
+        $gl.colorMask(true, true, true, true);
         shader._$fill(fillVertexArrayObject);
 
         // mask off
-        this._$gl.disable(this._$gl.STENCIL_TEST);
+        $gl.disable($gl.STENCIL_TEST);
 
         // release vertex array
         this.releaseFillVertexArray(fillVertexArrayObject);
@@ -2019,7 +2071,7 @@ export class CanvasToWebGLContext
                 ._$frameBufferManager
                 .createTextureAttachment(width, height);
 
-            this._$bind(targetTextureAttachment);
+            this.bind(targetTextureAttachment);
 
             if (isGradient && lut) {
 
@@ -2150,7 +2202,7 @@ export class CanvasToWebGLContext
             ._$frameBufferManager
             .createTextureAttachment(width, height);
 
-        this._$bind(targetTextureAttachment);
+        this.bind(targetTextureAttachment);
 
         this
             ._$frameBufferManager
@@ -2215,7 +2267,7 @@ export class CanvasToWebGLContext
             ._$frameBufferManager
             .createTextureAttachment(width, height);
 
-        this._$bind(targetTextureAttachment);
+        this.bind(targetTextureAttachment);
 
         if (!point) {
             point = { "x": 0, "y": 0 };
@@ -2299,7 +2351,7 @@ export class CanvasToWebGLContext
             ._$attachmentArray
             .push(manager.currentAttachment);
 
-        this._$bind(
+        this.bind(
             manager.createCacheAttachment(width, height, multisample)
         );
     }
@@ -2318,7 +2370,7 @@ export class CanvasToWebGLContext
             manager.currentAttachment, release_texture
         );
 
-        this._$bind(
+        this.bind(
             this._$attachmentArray.pop()
         );
     }

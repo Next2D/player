@@ -6,7 +6,8 @@
 //     $cacheStore
 // } from "@next2d/share";
 import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
-import type { RenderDisplayObjectImpl } from "./interface/RenderDisplayObjectImpl";
+import { execute as commandInitializeContextService } from "./Command/CommandInitializeContextService";
+import { execute as commandResizeService } from "./Command/CommandResizeService";
 
 /**
  * @class
@@ -55,7 +56,7 @@ export class CommandController
     {
         this.state = "active";
 
-        let returnBuffer = true;
+        // let returnBuffer = true;
         while (this.queue.length) {
 
             const object: PropertyMessageMapImpl<any> | void = this.queue.shift();
@@ -63,7 +64,7 @@ export class CommandController
                 continue;
             }
 
-            returnBuffer = true;
+            // returnBuffer = true;
             switch (object.command) {
 
                 // case "draw":
@@ -131,18 +132,25 @@ export class CommandController
                 //     break;
 
                 case "resize":
-                    $renderPlayer._$resize(object.buffer);
-                    break;
-
-                case "initialize":
-                    $renderPlayer._$initialize(
-                        object.buffer, object.canvas
+                    commandResizeService(
+                        object.buffer[0] as number,
+                        object.buffer[1] as number,
+                        object.buffer[2] as number,
+                        object.buffer[3] as number,
+                        object.buffer[4] as number,
+                        !!object.buffer[5]
                     );
                     break;
 
-                case "setBackgroundColor":
-                    $renderPlayer._$setBackgroundColor(object.buffer);
+                case "initialize":
+                    commandInitializeContextService(
+                        object.canvas, object.buffer[0] as number
+                    );
                     break;
+
+                // case "setBackgroundColor":
+                //     $renderPlayer._$setBackgroundColor(object.buffer);
+                //     break;
 
                 // case "stop":
                 //     $renderPlayer.stop();
@@ -194,18 +202,18 @@ export class CommandController
 
             }
 
-            if (object.buffer && returnBuffer) {
-                // this._$options.push(object.buffer.buffer);
+            // if (object.buffer && returnBuffer) {
+            //     // this._$options.push(object.buffer.buffer);
 
-                // globalThis.postMessage({
-                //     "command": "renderBuffer",
-                //     "buffer": object.buffer
-                // // @ts-ignore
-                // }, this._$options);
+            //     // globalThis.postMessage({
+            //     //     "command": "renderBuffer",
+            //     //     "buffer": object.buffer
+            //     // // @ts-ignore
+            //     // }, this._$options);
 
-                // reset
-                this._$options.length = 0;
-            }
+            //     // reset
+            //     this._$options.length = 0;
+            // }
         }
 
         this.state = "deactivate";

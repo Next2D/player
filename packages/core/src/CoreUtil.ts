@@ -1,3 +1,12 @@
+// @ts-ignore
+import RendererWorker from "@next2d/renderer?worker&inline";
+
+/**
+ * @type {Worker}
+ * @public
+ */
+export const $rendererWorker: Worker = new RendererWorker();
+
 /**
  * @type {number}
  * @const
@@ -22,15 +31,6 @@ export const $PREFIX: string = "__next2d__";
  */
 export const $devicePixelRatio: number = window.devicePixelRatio;
 
-// @ts-ignore
-import RendererWorker from "@next2d/renderer?worker&inline";
-
-/**
- * @type {Worker}
- * @public
- */
-export const $rendererWorker: Worker = new RendererWorker();
-
 /**
  * @param  {number} value
  * @param  {number} min
@@ -54,3 +54,29 @@ export const $clamp = (
         : Math.min(Math.max(min, isNaN(number) ? 0 : number), max);
 };
 
+/**
+ * @type {number}
+ * @public
+ */
+export let $stageWidth: number = 0;
+
+/**
+ * @type {number}
+ * @public
+ */
+export let $stageHeight: number = 0;
+
+/**
+ * @description ステージサイズを設定
+ *              Set stage size
+ *
+ * @param  {number} width
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $setStageSize = (width: number, height: number): void =>
+{
+    $stageWidth  = width;
+    $stageHeight = height;
+};

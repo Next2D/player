@@ -1,6 +1,10 @@
 import type { Player } from "../Player";
 import type { ResizeMessageImpl } from "../interface/ResizeMessageImpl";
-import { $rendererWorker } from "../CoreUtil";
+import {
+    $rendererWorker,
+    $stageWidth,
+    $stageHeight
+} from "../CoreUtil";
 
 /**
  * @description リサイズメッセージ
@@ -38,7 +42,10 @@ export const execute = (player: Player): void =>
     message.buffer = new Float32Array([
         player.rendererScale,
         player.rendererWidth,
-        player.rendererHeight
+        player.rendererHeight,
+        $stageWidth,
+        $stageHeight,
+        player.fullScreen ? 1 : 0
     ]);
 
     options[0] = message.buffer.buffer;

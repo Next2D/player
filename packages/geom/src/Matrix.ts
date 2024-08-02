@@ -221,6 +221,19 @@ export class Matrix
     }
 
     /**
+     * @description Matrixの内部Float32Arrayデータを返却
+     *              Returns the internal Float32Array data of Matrix
+     *
+     * @member {Float32Array}
+     * @readonly
+     * @public
+     */
+    get rawData (): Float32Array
+    {
+        return this._$matrix;
+    }
+
+    /**
      * @return {Matrix}
      * @method
      * @private

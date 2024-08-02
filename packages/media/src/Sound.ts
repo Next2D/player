@@ -3,7 +3,7 @@ import { URLRequest } from "@next2d/net";
 import { SoundMixer } from "./SoundMixer";
 import { execute as soundLoadStartEventService } from "./Sound/SoundLoadStartEventService";
 import { execute as soundProgressEventService } from "./Sound/SoundProgressEventService";
-import { execute as soundLoadendEventService } from "./Sound/SoundLoadendEventService";
+import { execute as soundLoadEndEventService } from "./Sound/SoundLoadEndEventService";
 import { execute as soundEndedEventService } from "./Sound/SoundEndedEventService";
 import { execute as soundDecodeService } from "./Sound/SoundDecodeService";
 import {
@@ -16,6 +16,7 @@ import {
     $audioContext,
     $getSounds
 } from "./MediaUtil";
+import { LoaderInfo } from "packages/display/src/LoaderInfo";
 
 /**
  * @description Sound クラスを使用すると、アプリケーション内のサウンドを処理することができます。
@@ -297,7 +298,7 @@ export class Sound extends EventDispatcher
                     },
                     "loadend": async (event: ProgressEvent): Promise<void> =>
                     {
-                        await soundLoadendEventService(this, event);
+                        await soundLoadEndEventService(this, event);
                         resolve();
                     }
                 }
@@ -388,13 +389,13 @@ export class Sound extends EventDispatcher
         parent: any
     ): Promise<void> {
 
-        const loaderInfo: any = parent.loaderInfo;
-        if (!loaderInfo || !loaderInfo._$data) {
+        const loaderInfo: LoaderInfo | null = parent.loaderInfo;
+        if (!loaderInfo || !loaderInfo.data) {
             throw new Error("the loaderInfo or data is null.");
         }
 
         const character = loaderInfo
-            ._$data
+            .data
             .characters[tag.characterId];
 
         if (!character) {

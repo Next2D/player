@@ -1,39 +1,21 @@
+import type { ParentImpl } from "./interface/ParentImpl";
+import type { Sprite } from "./Sprite";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { LoaderInfo } from "./LoaderInfo";
 import { MovieClip } from "./MovieClip";
 import { URLRequest } from "@next2d/net";
-import { $getMap } from "@next2d/share";
-import {
-    IOErrorEvent,
-    Event,
-    ProgressEvent as Next2DProgressEvent,
-    HTTPStatusEvent
-} from "@next2d/events";
-import type { Player } from "@next2d/core";
-import type {
-    NoCodeDataZlibImpl,
-    NoCodeDataImpl,
-    ParentImpl,
-    MovieClipCharacterImpl
-} from "@next2d/interface";
-import {
-    $ajax,
-    $headerToArray,
-    $unzipQueues,
-    $updateUnzipWorkerStatus,
-    $getUnzipWorker,
-    $currentPlayer,
-    $useUnzipWorker
-} from "@next2d/util";
+import { $ajax } from "./DisplayObjectUtil";
+import { execute as loaderLoadstartEventService } from "./Loader/LoaderLoadStartEventService";
+import { execute as loaderProgressEventService } from "./Loader/LoaderProgressEventService";
+import { execute as loaderLoadEndEventService } from "./Loader/LoaderLoadEndEventService";
+import { execute as loaderLoadJsonService } from "./Loader/LoaderLoadJsonService";
 
 /**
- * Loader クラスは、JSON ファイルまたはイメージ（JPEG、PNG、または GIF）ファイルを読み込むために使用します。
- * 読み込みを開始するには load() メソッドを使用します。
- * 読み込まれた表示オブジェクトは Loader オブジェクトの子として追加されます。
+ * @description Loader クラスは、JSON ファイルを読み込むために使用します。
+ *              外部からの読み込みを開始するには load() メソッドを使用し、ローカルのJSONを読み込むには loadJSON() メソッドを使用します。
  *
- * The Loader class is used to load JSON files or image (JPEG, PNG, or GIF) files.
- * Use the load() method to initiate loading.
- * The loaded display object is added as a child of the Loader object.
+ *              The Loader class is used to load JSON files.
+ *              To start loading from an external source, use the load() method, and to load local JSON, use the loadJSON() method.
  *
  * @class
  * @memberOf next2d.display
@@ -61,7 +43,7 @@ export class Loader extends DisplayObjectContainer
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class Loader]
+     * @default "[class Loader]"
      * @method
      * @static
      */
@@ -75,7 +57,7 @@ export class Loader extends DisplayObjectContainer
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display.Loader
+     * @default "next2d.display.Loader"
      * @const
      * @static
      */
@@ -89,7 +71,7 @@ export class Loader extends DisplayObjectContainer
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object Loader]
+     * @default "[object Loader]"
      * @method
      * @public
      */
@@ -103,7 +85,7 @@ export class Loader extends DisplayObjectContainer
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display.Loader
+     * @default "next2d.display.Loader"
      * @const
      * @public
      */
@@ -120,9 +102,9 @@ export class Loader extends DisplayObjectContainer
      * @readonly
      * @public
      */
-    get content (): ParentImpl<any> | null
+    get content (): ParentImpl<MovieClip | Sprite> | null
     {
-        return this._$loaderInfo ? this._$loaderInfo.content : null;
+        return (this._$loaderInfo as NonNullable<LoaderInfo>).content;
     }
 
     /**
@@ -146,41 +128,45 @@ export class Loader extends DisplayObjectContainer
      *              are loaded into the content property in the same way with loadImage.
      *
      * @param   {URLRequest} request
-     * @returns {void}
+     * @returns {Promise}
      * @method
      * @public
      */
-    load (request: URLRequest): void
+    async load (request: URLRequest): Promise<void>
     {
-        const loaderInfo: LoaderInfo | null = this._$loaderInfo;
-        if (!loaderInfo) {
-            return ;
-        }
-
+        const loaderInfo  = this._$loaderInfo as NonNullable<LoaderInfo>;
         loaderInfo.url    = request.url;
         loaderInfo.format = request.responseDataFormat;
 
-        $ajax({
-            "format": request.responseDataFormat,
-            "url": request.url,
-            "method": request.method,
-            "data": request.data,
-            "headers": request.headers,
-            "withCredentials": request.withCredentials,
-            "event": {
-                "loadstart": (event: ProgressEvent) =>
-                {
-                    this._$loadstart(event);
-                },
-                "progress": (event: ProgressEvent) =>
-                {
-                    this._$progress(event);
-                },
-                "loadend": (event: ProgressEvent) =>
-                {
-                    this._$loadend(event);
+        if (loaderInfo.format !== "json") {
+            throw new Error("The only format that can be loaded by this function is `json` format.");
+        }
+
+        await new Promise<void>((resolve): void =>
+        {
+            $ajax({
+                "format": request.responseDataFormat,
+                "url": request.url,
+                "method": request.method,
+                "data": request.data,
+                "headers": request.headers,
+                "withCredentials": request.withCredentials,
+                "event": {
+                    "loadstart": (event: ProgressEvent): void =>
+                    {
+                        loaderLoadstartEventService(loaderInfo, event);
+                    },
+                    "progress": (event: ProgressEvent): void =>
+                    {
+                        loaderProgressEventService(loaderInfo, event);
+                    },
+                    "loadend": async (event: ProgressEvent): Promise<void> =>
+                    {
+                        await loaderLoadEndEventService(loaderInfo, event);
+                        resolve();
+                    }
                 }
-            }
+            });
         });
     }
 
@@ -188,197 +174,15 @@ export class Loader extends DisplayObjectContainer
      * @description NoCodeToolのJSONを直接読み込む
      *              Read JSON directly from NoCodeTool
      *
-     * @param  {object} json
+     * @param  {string} json
      * @return {void}
      * @method
      * @public
      */
-    loadJSON (json: any): void
+    async loadJSON (json: string): Promise<void>
     {
-        if (json.type === "zlib") {
-
-            if ($useUnzipWorker()) {
-
-                $unzipQueues.push(json);
-
-                return ;
-            }
-
-            $updateUnzipWorkerStatus(true);
-
-            const unzipWorker: Worker = $getUnzipWorker();
-
-            const buffer: Uint8Array = new Uint8Array(json.buffer);
-            unzipWorker.onmessage = (event: MessageEvent) =>
-            {
-                this._$unzipHandler(event);
-            };
-            unzipWorker.postMessage(buffer, [buffer.buffer]);
-
-        } else {
-
-            this._$build(json);
-
-        }
-    }
-
-    /**
-     * @param  {ProgressEvent} event
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$loadend (event: ProgressEvent): void
-    {
-        const loaderInfo: LoaderInfo | null = this._$loaderInfo;
-        if (!loaderInfo) {
-            return ;
-        }
-
-        // set
-        loaderInfo.bytesLoaded = event.loaded;
-        loaderInfo.bytesTotal  = event.total;
-
-        // progress event
-        if (loaderInfo.willTrigger(Next2DProgressEvent.PROGRESS)) {
-            loaderInfo.dispatchEvent(new Next2DProgressEvent(
-                Next2DProgressEvent.PROGRESS,
-                false, false, event.loaded, event.total
-            ));
-        }
-
-        const target: any = event.target;
-
-        // http status event
-        if (loaderInfo.willTrigger(HTTPStatusEvent.HTTP_STATUS)) {
-
-            const responseHeaders = $headerToArray(
-                target.getAllResponseHeaders()
-            );
-
-            loaderInfo.dispatchEvent(new HTTPStatusEvent(
-                HTTPStatusEvent.HTTP_STATUS, false, false,
-                target.status, target.responseURL,
-                responseHeaders
-            ));
-        }
-
-        if (199 < target.status && 400 > target.status) {
-
-            if (loaderInfo.format === "json") {
-
-                this.loadJSON(target.response);
-
-            } else {
-
-                if (loaderInfo.willTrigger(IOErrorEvent.IO_ERROR)) {
-                    loaderInfo.dispatchEvent(new IOErrorEvent(
-                        IOErrorEvent.IO_ERROR, false, false,
-                        "LoaderInfo format is `json`"
-                    ));
-                }
-
-            }
-
-        } else {
-
-            if (loaderInfo.willTrigger(IOErrorEvent.IO_ERROR)) {
-                loaderInfo.dispatchEvent(new IOErrorEvent(
-                    IOErrorEvent.IO_ERROR, false, false,
-                    target.statusText
-                ));
-            }
-
-        }
-
-    }
-
-    /**
-     * @param  {MessageEvent} event
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$unzipHandler (event: MessageEvent): void
-    {
-        this._$build(event.data);
-
-        if ($unzipQueues.length) {
-
-            const object: NoCodeDataZlibImpl | void = $unzipQueues.pop();
-            if (!object) {
-                return ;
-            }
-
-            const buffer: Uint8Array = new Uint8Array(object.buffer);
-
-            const unzipWorker = $getUnzipWorker();
-
-            unzipWorker.onmessage = (event: MessageEvent) =>
-            {
-                this._$unzipHandler(event);
-            };
-            unzipWorker.postMessage(buffer, [buffer.buffer]);
-
-        } else {
-
-            $updateUnzipWorkerStatus(false);
-
-        }
-    }
-
-    /**
-     * @param  {ProgressEvent} event
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$loadstart (event: ProgressEvent): void
-    {
-        const loaderInfo: LoaderInfo | null = this._$loaderInfo;
-        if (!loaderInfo) {
-            return ;
-        }
-
-        loaderInfo.bytesLoaded = event.loaded;
-        loaderInfo.bytesTotal  = event.total;
-
-        if (loaderInfo.willTrigger(Event.OPEN)) {
-            loaderInfo.dispatchEvent(new Event(Event.OPEN));
-        }
-
-        if (loaderInfo.willTrigger(Next2DProgressEvent.PROGRESS)) {
-            loaderInfo.dispatchEvent(new Next2DProgressEvent(
-                Next2DProgressEvent.PROGRESS,
-                false, false, event.loaded, event.total
-            ));
-        }
-    }
-
-    /**
-     * @param  {ProgressEvent} event
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$progress (event: ProgressEvent): void
-    {
-        const loaderInfo: LoaderInfo | null = this._$loaderInfo;
-        if (!loaderInfo) {
-            return ;
-        }
-
-        // set
-        loaderInfo.bytesLoaded = event.loaded;
-        loaderInfo.bytesTotal  = event.total;
-
-        // progress event
-        if (loaderInfo.willTrigger(Next2DProgressEvent.PROGRESS)) {
-            loaderInfo.dispatchEvent(new Next2DProgressEvent(
-                Next2DProgressEvent.PROGRESS,
-                false, false, event.loaded, event.total
-            ));
-        }
+        const loaderInfo = this._$loaderInfo as NonNullable<LoaderInfo>;
+        await loaderLoadJsonService(loaderInfo, json);
     }
 
     /**
@@ -387,56 +191,56 @@ export class Loader extends DisplayObjectContainer
      * @method
      * @private
      */
-    _$build (object: NoCodeDataImpl): void
-    {
-        const loaderInfo: LoaderInfo | null = this._$loaderInfo;
-        if (!loaderInfo) {
-            return ;
-        }
+    // _$build (object: NoCodeDataImpl): void
+    // {
+    //     const loaderInfo: LoaderInfo | null = this._$loaderInfo;
+    //     if (!loaderInfo) {
+    //         return ;
+    //     }
 
-        const symbols: Map<string, number> = $getMap();
-        if (object.symbols.length) {
-            for (let idx: number = 0; idx < object.symbols.length; ++idx) {
+    //     const symbols: Map<string, number> = $getMap();
+    //     if (object.symbols.length) {
+    //         for (let idx: number = 0; idx < object.symbols.length; ++idx) {
 
-                const values: any[] = object.symbols[idx];
+    //             const values: any[] = object.symbols[idx];
 
-                symbols.set(values[0], values[1]);
-            }
-        }
+    //             symbols.set(values[0], values[1]);
+    //         }
+    //     }
 
-        loaderInfo._$data = {
-            "stage": object.stage,
-            "characters": object.characters,
-            "symbols": symbols
-        };
+    //     loaderInfo._$data = {
+    //         "stage": object.stage,
+    //         "characters": object.characters,
+    //         "symbols": symbols
+    //     };
 
-        // setup
-        loaderInfo._$content = new MovieClip();
+    //     // setup
+    //     loaderInfo._$content = new MovieClip();
 
-        // build root
-        const root: MovieClipCharacterImpl = object.characters[0];
-        loaderInfo._$content._$build({
-            "characterId": 0,
-            "clipDepth": 0,
-            "depth": 0,
-            "endFrame": root.controller.length,
-            "startFrame": 1
-        }, this);
+    //     // build root
+    //     const root: MovieClipCharacterImpl = object.characters[0];
+    //     loaderInfo._$content._$build({
+    //         "characterId": 0,
+    //         "clipDepth": 0,
+    //         "depth": 0,
+    //         "endFrame": root.controller.length,
+    //         "startFrame": 1
+    //     }, this);
 
-        // fixed logic
-        loaderInfo._$content._$parent = null;
-        this.addChild(loaderInfo._$content);
+    //     // fixed logic
+    //     loaderInfo._$content._$parent = null;
+    //     this.addChild(loaderInfo._$content);
 
-        // fixed logic
-        loaderInfo._$content._$added      = false;
-        loaderInfo._$content._$addedStage = false;
+    //     // fixed logic
+    //     loaderInfo._$content._$added      = false;
+    //     loaderInfo._$content._$addedStage = false;
 
-        // to event
-        const player: Player = $currentPlayer();
-        player._$loaders.push(loaderInfo);
+    //     // to event
+    //     const player: Player = $currentPlayer();
+    //     player._$loaders.push(loaderInfo);
 
-        if (player._$loadStatus === 1) { // LOAD_START
-            player._$loadStatus = 2; // LOAD_END
-        }
-    }
+    //     if (player._$loadStatus === 1) { // LOAD_START
+    //         player._$loadStatus = 2; // LOAD_END
+    //     }
+    // }
 }

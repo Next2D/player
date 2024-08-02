@@ -480,6 +480,35 @@ export class Player
     }
 
     /**
+     * @description フルスクリーンモードの設定
+     *              Full screen mode setting
+     *
+     * @member {boolean}
+     * @default false
+     * @public
+     */
+    get fullScreen (): boolean
+    {
+        return this._$fullScreen;
+    }
+    set fullScreen (full_screen: boolean)
+    {
+        if (this._$fullScreen === full_screen) {
+            return ;
+        }
+
+        this._$fullScreen = full_screen;
+
+        // display resize
+        playerResizeEventService(
+            this,
+            this._$initialWidth,
+            this._$initialHeight,
+            this._$fullScreen
+        );
+    }
+
+    /**
      * @member {string}
      * @public
      */
@@ -555,32 +584,32 @@ export class Player
         // }
     }
 
-    /**
-     * @param  {string} id
-     * @return {void}
-     * @method
-     * @public
-     */
-    removeCache (id: string): void
-    {
-        $cacheStore.removeCache(id);
-        if ($rendererWorker) {
-            $rendererWorker.postMessage({
-                "command": "removeCache",
-                "id": id
-            });
-        }
-    }
+    // /**
+    //  * @param  {string} id
+    //  * @return {void}
+    //  * @method
+    //  * @public
+    //  */
+    // removeCache (id: string): void
+    // {
+    //     $cacheStore.removeCache(id);
+    //     if ($rendererWorker) {
+    //         $rendererWorker.postMessage({
+    //             "command": "removeCache",
+    //             "id": id
+    //         });
+    //     }
+    // }
 
     /**
      * @param  {object} [options=null]
-     * @return {Player}
+     * @return {void}
      * @public
      */
-    setOptions (options: PlayerOptionsImpl | null = null): Player
+    setOptions (options: PlayerOptionsImpl | null = null): void
     {
         if (!options) {
-            return this;
+            return ;
         }
 
         this._$fixedWidth  = options.width   || this._$fixedWidth;
@@ -588,8 +617,6 @@ export class Player
         this._$tagId       = options.tagId   || this._$tagId;
         this._$bgColor     = options.bgColor || this._$bgColor;
         this._$fullScreen  = !!options.fullScreen;
-
-        return this;
     }
 
     /**
@@ -600,8 +627,10 @@ export class Player
      * @method
      * @public
      */
-    boot (): void
+    boot (options: PlayerOptionsImpl | null = null): void
     {
+        this.setOptions(options);
+
         // create element
         const element = playerCreateContainerElementService();
 
@@ -615,9 +644,6 @@ export class Player
 
         // start loading
         playerLoadingAnimationService(element);
-
-        // initialize worker
-        
 
         if (!this._$fixedWidth && !this._$fixedHeight) {
             // register resize event
@@ -638,179 +664,179 @@ export class Player
         );
     }
 
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$updateLoadStatus (): void
-    {
-        if (this._$loadStatus === $LOAD_END) {
-            if (this._$loadId > -1) {
-                $cancelAnimationFrame(this._$loadId);
-            }
+    // /**
+    //  * @return {void}
+    //  * @method
+    //  * @private
+    //  */
+    // _$updateLoadStatus (): void
+    // {
+    //     if (this._$loadStatus === $LOAD_END) {
+    //         if (this._$loadId > -1) {
+    //             $cancelAnimationFrame(this._$loadId);
+    //         }
 
-            this._$loadId = -1;
-            this._$loaded();
-            return ;
-        }
+    //         this._$loadId = -1;
+    //         this._$loaded();
+    //         return ;
+    //     }
 
-        this._$loadId = $requestAnimationFrame(() =>
-        {
-            this._$updateLoadStatus();
-        });
-    }
+    //     this._$loadId = $requestAnimationFrame(() =>
+    //     {
+    //         this._$updateLoadStatus();
+    //     });
+    // }
 
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$loaded (): void
-    {
-        const element: HTMLElement | null = $document
-            .getElementById($PREFIX);
+    // /**
+    //  * @return {void}
+    //  * @method
+    //  * @private
+    //  */
+    // _$loaded (): void
+    // {
+    //     const element: HTMLElement | null = $document
+    //         .getElementById($PREFIX);
 
-        if (element) {
+    //     if (element) {
 
-            // background color
-            this._$setBackgroundColor(this._$bgColor);
+    //         // background color
+    //         this._$setBackgroundColor(this._$bgColor);
 
-            // DOM
-            this._$deleteNode();
+    //         // DOM
+    //         this._$deleteNode();
 
-            // append canvas
-            element.appendChild(this._$canvas);
-            element.appendChild($textArea);
+    //         // append canvas
+    //         element.appendChild(this._$canvas);
+    //         element.appendChild($textArea);
 
-            // stage init action
-            this._$stage._$prepareActions();
+    //         // stage init action
+    //         this._$stage._$prepareActions();
 
-            // constructed event
-            if (this._$broadcastEvents.has(Next2DEvent.FRAME_CONSTRUCTED)) {
-                this._$dispatchEvent(new Next2DEvent(Next2DEvent.FRAME_CONSTRUCTED));
-            }
+    //         // constructed event
+    //         if (this._$broadcastEvents.has(Next2DEvent.FRAME_CONSTRUCTED)) {
+    //             this._$dispatchEvent(new Next2DEvent(Next2DEvent.FRAME_CONSTRUCTED));
+    //         }
 
-            // frame1 action
-            this._$doAction();
+    //         // frame1 action
+    //         this._$doAction();
 
-            // exit event
-            if (this._$broadcastEvents.has(Next2DEvent.EXIT_FRAME)) {
-                this._$dispatchEvent(new Next2DEvent(Next2DEvent.EXIT_FRAME));
-            }
+    //         // exit event
+    //         if (this._$broadcastEvents.has(Next2DEvent.EXIT_FRAME)) {
+    //             this._$dispatchEvent(new Next2DEvent(Next2DEvent.EXIT_FRAME));
+    //         }
 
-            // loader events
-            const length: number = this._$loaders.length;
-            for (let idx: number = 0; idx < length; ++idx) {
+    //         // loader events
+    //         const length: number = this._$loaders.length;
+    //         for (let idx: number = 0; idx < length; ++idx) {
 
-                const loader: EventDispatcherImpl<any> = this._$loaders.shift();
+    //             const loader: EventDispatcherImpl<any> = this._$loaders.shift();
 
-                // init event
-                if (loader.hasEventListener(Next2DEvent.INIT)) {
-                    loader.dispatchEvent(new Next2DEvent(Next2DEvent.INIT));
-                }
+    //             // init event
+    //             if (loader.hasEventListener(Next2DEvent.INIT)) {
+    //                 loader.dispatchEvent(new Next2DEvent(Next2DEvent.INIT));
+    //             }
 
-                // complete event
-                if (loader.hasEventListener(Next2DEvent.COMPLETE)) {
-                    loader.dispatchEvent(new Next2DEvent(Next2DEvent.COMPLETE));
-                }
-            }
+    //             // complete event
+    //             if (loader.hasEventListener(Next2DEvent.COMPLETE)) {
+    //                 loader.dispatchEvent(new Next2DEvent(Next2DEvent.COMPLETE));
+    //             }
+    //         }
 
-            // activate event
-            if (this._$broadcastEvents.has(Next2DEvent.ACTIVATE)) {
-                this._$dispatchEvent(new Next2DEvent(Next2DEvent.ACTIVATE));
-            }
+    //         // activate event
+    //         if (this._$broadcastEvents.has(Next2DEvent.ACTIVATE)) {
+    //             this._$dispatchEvent(new Next2DEvent(Next2DEvent.ACTIVATE));
+    //         }
 
-            // frame action
-            this._$doAction();
+    //         // frame action
+    //         this._$doAction();
 
-            // render
-            this._$draw();
+    //         // render
+    //         this._$draw();
 
-            // start
-            this.play();
-        }
+    //         // start
+    //         this.play();
+    //     }
 
-    }
+    // }
 
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$initialize (): void
-    {
-        if (!this._$tagId) {
+    // /**
+    //  * @return {void}
+    //  * @method
+    //  * @private
+    //  */
+    // _$initialize (): void
+    // {
+    //     if (!this._$tagId) {
 
-            $document
-                .body
-                .insertAdjacentHTML(
-                    "beforeend", `<div id="${$PREFIX}" tabindex="-1"></div>`
-                );
+    //         $document
+    //             .body
+    //             .insertAdjacentHTML(
+    //                 "beforeend", `<div id="${$PREFIX}" tabindex="-1"></div>`
+    //             );
 
-        } else {
+    //     } else {
 
-            const container: HTMLElement | null = $document.getElementById(this._$tagId);
-            if (!container) {
-                alert("Not Found Tag ID:" + this._$tagId);
-                return ;
-            }
+    //         const container: HTMLElement | null = $document.getElementById(this._$tagId);
+    //         if (!container) {
+    //             alert("Not Found Tag ID:" + this._$tagId);
+    //             return ;
+    //         }
 
-            const div: HTMLElement | null = $document.getElementById($PREFIX);
-            if (!div) {
+    //         const div: HTMLElement | null = $document.getElementById($PREFIX);
+    //         if (!div) {
 
-                const element: HTMLDivElement = $document.createElement("div");
-                element.id       = $PREFIX;
-                element.tabIndex = -1;
-                container.appendChild(element);
+    //             const element: HTMLDivElement = $document.createElement("div");
+    //             element.id       = $PREFIX;
+    //             element.tabIndex = -1;
+    //             container.appendChild(element);
 
-            } else {
+    //         } else {
 
-                this._$deleteNode();
+    //             this._$deleteNode();
 
-            }
+    //         }
 
-        }
+    //     }
 
-        const element: HTMLElement | null = $document.getElementById($PREFIX);
-        if (!element) {
-            throw new Error("the content element is null.");
-        }
+    //     const element: HTMLElement | null = $document.getElementById($PREFIX);
+    //     if (!element) {
+    //         throw new Error("the content element is null.");
+    //     }
 
-        const parent: HTMLElement | null = element.parentElement;
-        if (parent) {
+    //     const parent: HTMLElement | null = element.parentElement;
+    //     if (parent) {
 
-            this._$initStyle(element);
-            this._$buildWait();
+    //         this._$initStyle(element);
+    //         this._$buildWait();
 
-            const width: number = this._$fixedWidth
-                ? this._$fixedWidth
-                : parent.tagName === "BODY"
-                    ? window.innerWidth
-                    : parent.clientWidth;
+    //         const width: number = this._$fixedWidth
+    //             ? this._$fixedWidth
+    //             : parent.tagName === "BODY"
+    //                 ? window.innerWidth
+    //                 : parent.clientWidth;
 
-            const height: number = this._$fixedHeight
-                ? this._$fixedHeight
-                : parent.tagName === "BODY"
-                    ? window.innerHeight
-                    : parent.clientHeight;
+    //         const height: number = this._$fixedHeight
+    //             ? this._$fixedHeight
+    //             : parent.tagName === "BODY"
+    //                 ? window.innerHeight
+    //                 : parent.clientHeight;
 
-            // set center
-            if (this._$mode === "loader" && width && height) {
-                this._$baseWidth  = width;
-                this._$baseHeight = height;
-                this._$resize();
-            }
-        }
+    //         // set center
+    //         if (this._$mode === "loader" && width && height) {
+    //             this._$baseWidth  = width;
+    //             this._$baseHeight = height;
+    //             this._$resize();
+    //         }
+    //     }
 
-        if (this._$mode === "loader") {
-            this._$loadStatus = $LOAD_START;
-            this._$updateLoadStatus();
-        } else {
-            this._$resize();
-            this._$loaded();
-        }
-    }
+    //     if (this._$mode === "loader") {
+    //         this._$loadStatus = $LOAD_START;
+    //         this._$updateLoadStatus();
+    //     } else {
+    //         this._$resize();
+    //         this._$loaded();
+    //     }
+    // }
 
     // /**
     //  * @returns {void}

@@ -28,9 +28,7 @@ export const execute = async (
     $player.height    = height | 0;
     $player.frameRate = fps | 0;
 
-    $player
-        .setOptions(options)
-        .boot();
+    $player.boot(options);
 
     const root: Sprite = $stage.addChild(new Sprite());
 

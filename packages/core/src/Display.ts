@@ -1,33 +1,29 @@
 import type { DisplayImpl } from "./interface/DisplayImpl";
 import {
-    DisplayObject,
-    InteractiveObject,
-    DisplayObjectContainer,
     Sprite,
     MovieClip,
     BitmapData,
     BlendMode,
+    DisplayObject,
     FrameLabel,
     Graphics,
+    InteractiveObject,
     Loader,
-    LoaderInfo,
     Shape,
     Stage,
     TextField
 } from "@next2d/display";
 
 const display: DisplayImpl = {
-    DisplayObject,
-    InteractiveObject,
-    DisplayObjectContainer,
     Sprite,
     MovieClip,
     BitmapData,
     BlendMode,
+    DisplayObject,
     FrameLabel,
     Graphics,
+    InteractiveObject,
     Loader,
-    LoaderInfo,
     Shape,
     Stage,
     TextField

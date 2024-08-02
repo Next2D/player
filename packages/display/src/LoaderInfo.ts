@@ -1,20 +1,17 @@
+import type { MovieClip } from "./MovieClip";
+import type { Sprite } from "./Sprite";
+import type { ParentImpl } from "./interface/ParentImpl";
+import type { URLLoaderDataFormatImpl } from "./interface/URLLoaderDataFormatImpl";
+import type { LoaderInfoDataImpl } from "./interface/LoaderInfoDataImpl";
 import { EventDispatcher } from "@next2d/events";
-import { $getLoaderInfoId } from "@next2d/util";
-import type {
-    URLLoaderDataFormatImpl,
-    ParentImpl,
-    LoaderInfoDataImpl
-} from "@next2d/interface";
+import { $getInstanceId } from "./DisplayObjectUtil";
 
 /**
- * LoaderInfo クラスは、読み込まれる JSON ファイルやイメージファイル（JPEG、GIF、PNG ファイルなど）に関する情報を提供します。
- * LoaderInfo オブジェクトは、すべての表示オブジェクトで使用できます。
- * 提供される情報には、読み込みの進行状況、読み込む側と読み込まれたコンテンツの URL、メディアの総バイト数、メディアの規格高さと幅などが含まれます。
+ * @description LoaderInfo クラスは、読み込まれる JSON ファイルに関する情報を提供します。
+ *              LoaderInfo オブジェクトは、すべての表示オブジェクトで使用できます。
  *
- * The LoaderInfo class provides information about a loaded JSON file or a loaded image file (JPEG, GIF, or PNG).
- * LoaderInfo objects are available for any display object.
- * The information provided includes load progress, the URLs of the loader and loaded content,
- * the number of bytes total for the media, and the nominal height and width of the media.
+ *              The LoaderInfo class provides information about the JSON file to be loaded.
+ *              The LoaderInfo object can be used with all display objects.
  *
  * @class
  * @memberOf next2d.display
@@ -22,11 +19,9 @@ import type {
  */
 export class LoaderInfo extends EventDispatcher
 {
-    public readonly _$id: number;
-    public _$content: ParentImpl<any> | null;
-    public _$data: LoaderInfoDataImpl | null;
-    private _$bytesLoaded: number;
-    private _$bytesTotal: number;
+    private readonly _$id: number;
+    private _$content: ParentImpl<MovieClip | Sprite> | null;
+    private _$data: LoaderInfoDataImpl | null;
     private _$url: string;
     private _$format: URLLoaderDataFormatImpl;
 
@@ -42,21 +37,7 @@ export class LoaderInfo extends EventDispatcher
          * @type {number}
          * @private
          */
-        this._$id = $getLoaderInfoId();
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bytesLoaded = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bytesTotal = 0;
+        this._$id = $getInstanceId();
 
         /**
          * @type {string}
@@ -66,7 +47,7 @@ export class LoaderInfo extends EventDispatcher
         this._$url = "";
 
         /**
-         * @type {DisplayObject}
+         * @type {Sprite}
          * @default null
          * @private
          */
@@ -92,7 +73,7 @@ export class LoaderInfo extends EventDispatcher
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class LoaderInfo]
+     * @default "[class LoaderInfo]"
      * @method
      * @static
      */
@@ -106,7 +87,7 @@ export class LoaderInfo extends EventDispatcher
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display.LoaderInfo
+     * @default "next2d.display.LoaderInfo"
      * @const
      * @static
      */
@@ -120,7 +101,7 @@ export class LoaderInfo extends EventDispatcher
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object LoaderInfo]
+     * @default "[object LoaderInfo]"
      * @method
      * @public
      */
@@ -134,7 +115,7 @@ export class LoaderInfo extends EventDispatcher
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display.LoaderInfo
+     * @default "next2d.display.LoaderInfo"
      * @const
      * @public
      */
@@ -144,51 +125,46 @@ export class LoaderInfo extends EventDispatcher
     }
 
     /**
-     * @description そのメディアのロード済みのバイト数です。
-     *              The uint of bytes that are loaded for the media.
+     * @description LoaderInfoのユニークIDを返却
+     *              Returns the unique ID of LoaderInfo
      *
      * @member {number}
-     * @default 0
+     * @readonly
      * @public
      */
-    get bytesLoaded (): number
+    get id (): number
     {
-        return this._$bytesLoaded;
-    }
-    set bytesLoaded (bytes_loaded: number)
-    {
-        this._$bytesLoaded = bytes_loaded | 0;
+        return this._$id;
     }
 
     /**
-     * @description メディアファイル全体のバイト数です。
-     *              The number of bytes in the entire media file.
+     * @description Loaderで読み込まれたデータオブジェクトを返却
+     *              Returns the data object loaded by the Loader
      *
-     * @member {number}
-     * @default 0
+     * @member {object}
      * @public
      */
-    get bytesTotal (): number
+    get data (): LoaderInfoDataImpl | null
     {
-        return this._$bytesTotal;
+        return this._$data;
     }
-    set bytesTotal (bytes_total: number)
+    set data (data: LoaderInfoDataImpl | null)
     {
-        this._$bytesTotal = bytes_total | 0;
+        this._$data = data;
     }
 
     /**
      * @description LoaderInfo オブジェクトに関係したロードされたオブジェクトです。
      *              The loaded object associated with this LoaderInfo object.
      *
-     * @member {DisplayObject}
+     * @member {MovieClip | Sprite | null}
      * @public
      */
-    get content (): ParentImpl<any>
+    get content (): ParentImpl<MovieClip | Sprite> | null
     {
         return this._$content;
     }
-    set content (content: ParentImpl<any>)
+    set content (content: ParentImpl<MovieClip | Sprite>)
     {
         this._$content = content;
     }

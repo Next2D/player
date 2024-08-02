@@ -7,8 +7,8 @@ import {
 } from "@next2d/events";
 
 /**
- * @description サウンドデータのローディング中のイベント実行関数
- *              Event execution function during sound data loading
+ * @description サウンドデータのローディング完了イベントの実行関数
+ *              Execution function for sound data loading completion event
  *
  * @param  {Sound} sound
  * @param  {ProgressEvent} event

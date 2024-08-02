@@ -1,25 +1,16 @@
 import { EventDispatcher } from "@next2d/events";
 
 /**
- * FrameLabel オブジェクトには、フレーム番号および対応するラベル名を指定するプロパティがあります。
- * MovieClip クラスには、currentLabels プロパティがあります。
- * これは、現在のシーンの FrameLabel オブジェクトの配列です。
- * MovieClip インスタンスがシーンを使用していない場合、配列には MovieClip インスタンス全体のすべてのフレームラベルが含まれます。
+ * @description FrameLabel オブジェクトには、フレーム番号および対応するラベル名を指定するプロパティがあります。
+ *              MovieClip クラスには、currentLabels プロパティがあります。
+ *              これは、現在のシーンの FrameLabel オブジェクトの配列です。
+ *              MovieClip インスタンスがシーンを使用していない場合、配列には MovieClip インスタンス全体のすべてのフレームラベルが含まれます。
  *
- * The FrameLabel object contains properties that specify a frame number and the corresponding label name.
- * The MovieClip class includes a currentLabels property,
- * which is an Array of FrameLabel objects for the current scene.
- * If the MovieClip instance does not use scenes,
- * the Array includes all frame labels from the entire MovieClip instance.
- *
- * @example <caption>Example usage of FrameLabel.</caption>
- * // static BlendMode
- * const {FrameLabel} = next2d.display;
- * const frameLabel = new FrameLabel();
- * frameLabel.addEventListener(Event.FRAME_LABEL, (event) =>
- * {
- *     // more...
- * }
+ *              The FrameLabel object contains properties that specify a frame number and the corresponding label name.
+ *              The MovieClip class includes a currentLabels property,
+ *              which is an Array of FrameLabel objects for the current scene.
+ *              If the MovieClip instance does not use scenes,
+ *              the Array includes all frame labels from the entire MovieClip instance.
  *
  * @class
  * @memberOf next2d.display
@@ -59,7 +50,7 @@ export class FrameLabel extends EventDispatcher
      *              Returns the string representation of the specified class.
      *
      * @return  {string}
-     * @default [class FrameLabel]
+     * @default "[class FrameLabel]"
      * @method
      * @static
      */
@@ -73,7 +64,7 @@ export class FrameLabel extends EventDispatcher
      *              Returns the space name of the specified class.
      *
      * @return  {string}
-     * @default next2d.display.FrameLabel
+     * @default "next2d.display.FrameLabel"
      * @const
      * @static
      */
@@ -87,7 +78,7 @@ export class FrameLabel extends EventDispatcher
      *              Returns the string representation of the specified object.
      *
      * @return  {string}
-     * @default [object FrameLabel]
+     * @default "[object FrameLabel]"
      * @method
      * @public
      */
@@ -101,7 +92,7 @@ export class FrameLabel extends EventDispatcher
      *              Returns the space name of the specified object.
      *
      * @return  {string}
-     * @default next2d.display.FrameLabel
+     * @default "next2d.display.FrameLabel"
      * @const
      * @public
      */

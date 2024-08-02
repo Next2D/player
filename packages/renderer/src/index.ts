@@ -1,8 +1,8 @@
 "use strict";
 
-// import { CommandController } from "./CommandController";
+import { CommandController } from "./CommandController";
 
-// const command: CommandController = new CommandController();
+const command: CommandController = new CommandController();
 
 /**
  * @description OffscreenCanvasのメッセージイベント
@@ -16,10 +16,10 @@
 self.addEventListener("message", async (event: MessageEvent): Promise<void> =>
 {
     console.log(event.data);
-    // command.queue.push(event.data);
-    // if (command.state === "deactivate") {
-    //     await command.execute();
-    // }
+    command.queue.push(event.data);
+    if (command.state === "deactivate") {
+        await command.execute();
+    }
 });
 
 export default {};

@@ -16,6 +16,26 @@ export const $setRenderSize = (size: number): void =>
 };
 
 /**
+ * @type {WebGL2RenderingContext}
+ * @public
+ */
+export let $gl: WebGL2RenderingContext;
+
+/**
+ * @description WebGL2のコンテキストをセット
+ *              Set WebGL2 context
+ *
+ * @param  {WebGL2RenderingContext} gl
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $setWebGL2RenderingContext = (gl: WebGL2RenderingContext): void =>
+{
+    $gl = gl;
+};
+
+/**
  * @type {number}
  */
 let programId: number = 0;

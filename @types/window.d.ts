@@ -7,24 +7,7 @@ declare global {
     const next2d: Next2D;
 
     // eslint-disable-next-line no-unused-vars
-    interface Location {
-        search: string;
-        origin: string;
-    }
-
-    // eslint-disable-next-line no-unused-vars
     interface Window {
-        performance: Performance;
-        navigator: Navigator;
-        setTimeout: setTimeout;
-        Map: Map;
-        Number: Number;
-        Array: Array;
-        document: Document;
-        location: Location;
-        isNaN: isNaN;
-        Math: Math;
-        Event: Event;
         next2d?: Next2D;
     }
 
