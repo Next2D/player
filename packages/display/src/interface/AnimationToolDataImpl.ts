@@ -1,6 +1,6 @@
 import { StageDataImpl } from "./StageDataImpl";
 
-export interface NoCodeDataImpl {
+export interface AnimationToolDataImpl {
     type: "json";
     stage: StageDataImpl;
     characters: any[]; // todo

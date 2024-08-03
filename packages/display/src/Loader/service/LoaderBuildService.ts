@@ -1,10 +1,10 @@
-import type { NoCodeDataImpl } from "../../interface/NoCodeDataImpl";
+import type { AnimationToolDataImpl } from "../../interface/AnimationToolDataImpl";
 import type { Loader } from "../../Loader";
 import { MovieClip } from "../../MovieClip";
 
 /**
- * @description 読み込んだJSONオブジェクトからMovieClipを作成
- *              Create a MovieClip from a loaded JSON object
+ * @description 読み込んだJSONオブジェクトからrootのMovieClipを構築
+ *              Build the root MovieClip from the loaded JSON object
  *
  * @param  {Loader} loader
  * @param  {object} object
@@ -12,7 +12,7 @@ import { MovieClip } from "../../MovieClip";
  * @method
  * @protected
  */
-export const execute = async (loader: Loader, object: NoCodeDataImpl): Promise<void> =>
+export const execute = async (loader: Loader, object: AnimationToolDataImpl): Promise<void> =>
 {
     const symbols: Map<string, number> = new Map();
     if (object.symbols.length) {
@@ -44,5 +44,4 @@ export const execute = async (loader: Loader, object: NoCodeDataImpl): Promise<v
     }, loader);
 
     loaderInfo.content = movieClip;
-    console.log(movieClip);
 };

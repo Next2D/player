@@ -1,5 +1,5 @@
-import type { NoCodeDataImpl } from "../../interface/NoCodeDataImpl";
-import type { NoCodeDataZlibImpl } from "../../interface/NoCodeDataZlibImpl";
+import type { AnimationToolDataImpl } from "../../interface/AnimationToolDataImpl";
+import type { AnimationToolDataZlibImpl } from "../../interface/AnimationToolDataZlibImpl";
 import type { Loader } from "../../Loader";
 import { execute as loaderBuildService } from "./LoaderBuildService";
 
@@ -22,14 +22,14 @@ const worker: Worker = new ZlibInflateWorker();
  * @method
  * @public
  */
-export const execute = async (loader: Loader, object: NoCodeDataImpl | NoCodeDataZlibImpl): Promise<void> =>
+export const execute = async (loader: Loader, object: AnimationToolDataImpl | AnimationToolDataZlibImpl): Promise<void> =>
 {
     if (object.type === "zlib") {
         await new Promise<void>((resolve): void =>
         {
             worker.onmessage = async (event: MessageEvent): Promise<void> =>
             {
-                await loaderBuildService(loader, event.data as NoCodeDataImpl);
+                await loaderBuildService(loader, event.data as AnimationToolDataImpl);
                 resolve();
             };
 
@@ -37,6 +37,6 @@ export const execute = async (loader: Loader, object: NoCodeDataImpl | NoCodeDat
             worker.postMessage(buffer, [buffer.buffer]);
         });
     } else {
-        await loaderBuildService(loader, object as NoCodeDataImpl);
+        await loaderBuildService(loader, object as AnimationToolDataImpl);
     }
 };

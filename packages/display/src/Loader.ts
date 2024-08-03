@@ -1,7 +1,7 @@
 import type { ParentImpl } from "./interface/ParentImpl";
 import type { Sprite } from "./Sprite";
-import type { NoCodeDataImpl } from "./interface/NoCodeDataImpl";
-import type { NoCodeDataZlibImpl } from "./interface/NoCodeDataZlibImpl";
+import type { AnimationToolDataImpl } from "./interface/AnimationToolDataImpl";
+import type { AnimationToolDataZlibImpl } from "./interface/AnimationToolDataZlibImpl";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { LoaderInfo } from "./LoaderInfo";
 import { MovieClip } from "./MovieClip";
@@ -151,7 +151,7 @@ export class Loader extends DisplayObjectContainer
      * @method
      * @public
      */
-    async loadJSON (json: NoCodeDataImpl | NoCodeDataZlibImpl): Promise<void>
+    async loadJSON (json: AnimationToolDataImpl | AnimationToolDataZlibImpl): Promise<void>
     {
         await loaderLoadJsonService(this, json);
     }
