@@ -58,7 +58,7 @@ next2d.load("Path to JSON output from NoCode Tool");
 ```
 [CodePen](https://codepen.io/next2d/pen/rNGMrZG)
 
-### Use Program Sample Case1
+### Use Program Sample For JavaScript
 ```javascript
 const { Loader }     = next2d.display;
 const { URLRequest } = next2d.net;
@@ -78,7 +78,7 @@ const start = async () =>
 start();
 ```
 
-### Use Program Sample Case2
+### Use Program Sample For TypeScript
 ```typescript
 import { Loader } from "@next2d/display";
 import { URLRequest } from "@next2d/net";
