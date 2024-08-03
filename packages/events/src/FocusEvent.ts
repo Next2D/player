@@ -48,8 +48,7 @@ export class FocusEvent extends Event
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
-     * @default "next2d.events.FocusEvent"
+     * @member {string}
      * @const
      * @static
      */
@@ -62,8 +61,7 @@ export class FocusEvent extends Event
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
-     * @default "next2d.events.FocusEvent"
+     * @member {string}
      * @const
      * @public
      */
@@ -77,7 +75,6 @@ export class FocusEvent extends Event
      *              Defines the value of the type property of a focusIn event object.
      *
      * @return {string}
-     * @default "focusin"
      * @const
      * @static
      */
@@ -91,7 +88,6 @@ export class FocusEvent extends Event
      *              Defines the value of the type property of a focusOut event object.
      *
      * @return {string}
-     * @default "focusout"
      * @const
      * @static
      */

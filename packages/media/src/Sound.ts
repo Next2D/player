@@ -1,11 +1,11 @@
-import type { Character } from "./interface/Character";
+import type { SoundCharacterImpl } from "./interface/SoundCharacterImpl";
 import { URLRequest } from "@next2d/net";
 import { SoundMixer } from "./SoundMixer";
-import { execute as soundLoadStartEventService } from "./Sound/SoundLoadStartEventService";
-import { execute as soundProgressEventService } from "./Sound/SoundProgressEventService";
-import { execute as soundLoadEndEventService } from "./Sound/SoundLoadEndEventService";
-import { execute as soundEndedEventService } from "./Sound/SoundEndedEventService";
-import { execute as soundDecodeService } from "./Sound/SoundDecodeService";
+import { execute as soundLoadStartEventService } from "./Sound/service/SoundLoadStartEventService";
+import { execute as soundProgressEventService } from "./Sound/service/SoundProgressEventService";
+import { execute as soundLoadEndEventService } from "./Sound/service/SoundLoadEndEventService";
+import { execute as soundEndedEventService } from "./Sound/service/SoundEndedEventService";
+import { execute as soundDecodeService } from "./Sound/service/SoundDecodeService";
 import { EventDispatcher } from "@next2d/events";
 import {
     $clamp,
@@ -112,8 +112,7 @@ export class Sound extends EventDispatcher
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @return  {string}
-     * @default "next2d.media.Sound"
+     * @return {string}
      * @const
      * @static
      */
@@ -126,8 +125,7 @@ export class Sound extends EventDispatcher
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @return  {string}
-     * @default "next2d.media.Sound"
+     * @return {string}
      * @const
      * @public
      */
@@ -334,11 +332,12 @@ export class Sound extends EventDispatcher
      * @method
      * @private
      */
-    async _$build (character: Character<any>): Promise<void>
+    async _$build (character: SoundCharacterImpl): Promise<void>
     {
         // load AudioBuffer
         if (!character.audioBuffer) {
-            const audioBuffer = await soundDecodeService(character.buffer.buffer);
+            const buffer = new Uint8Array(character.buffer as number[]);
+            const audioBuffer = await soundDecodeService(buffer.buffer);
             if (!audioBuffer) {
                 return ;
             }

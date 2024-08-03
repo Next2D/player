@@ -2,7 +2,9 @@ import type { Stage } from "./Stage";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Sprite } from "./Sprite";
 import type { ParentImpl } from "./interface/ParentImpl";
-
+import type { CharacterImpl } from "./interface/CharacterImpl";
+import type { DisplayObjectContainer } from "./DisplayObjectContainer";
+import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
 import {
     Event as Next2DEvent,
     EventDispatcher
@@ -21,7 +23,6 @@ import {
 import {
     $getInstanceId
 } from "./DisplayObjectUtil";
-
 
 /**
  * @description DisplayObject クラスは、表示リストに含めることのできるすべてのオブジェクトに関する基本クラスです。
@@ -2125,4 +2126,36 @@ export class DisplayObject extends EventDispatcher
     //     return true;
     // }
 
+    /**
+     * @description 指定されたタグ情報を元に、表示オブジェクトを構築します。
+     *              Based on the specified tag information, the display object is constructed.
+     *
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {object}
+     * @method
+     * @protected
+     */
+    _$baseBuild<C extends CharacterImpl, P extends DisplayObjectContainer> (tag: DictionaryTagImpl, parent: P): C
+    {
+        const loaderInfo = parent._$loaderInfo as LoaderInfo;
+        if (!loaderInfo || !loaderInfo.data) {
+            throw new Error("the loaderInfo or data is nul.");
+        }
+
+        // set parent data
+        this._$parent     = parent;
+        this._$root       = parent._$root;
+        this._$stage      = parent._$stage;
+        this._$loaderInfo = loaderInfo;
+
+        // bind tag data
+        this._$characterId = tag.characterId | 0;
+        this._$clipDepth   = tag.clipDepth | 0;
+        this._$startFrame  = tag.startFrame | 0;
+        this._$endFrame    = tag.endFrame | 0;
+        this._$name        = tag.name || "";
+
+        return loaderInfo.data.characters[tag.characterId];
+    }
 }

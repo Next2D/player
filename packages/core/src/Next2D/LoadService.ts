@@ -75,8 +75,12 @@ export const execute = async (url: string, options: PlayerOptionsImpl | null = n
     // resize
     playerResizeEventService();
 
-    // load complete
+    // remove loading
     playerRemoveLoadingElementService();
+
+    // append canvas
     playerAppendCanvasElementService();
+
+    // TODO: ready complete
     playerReadyCompleteService();
 };

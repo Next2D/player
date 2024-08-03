@@ -1,5 +1,5 @@
-import { execute as soundMixerUpdateVolumeService } from "./SoundMixer/SoundMixerUpdateVolumeService";
-import { execute as soundMixerStopAllService } from "./SoundMixer/SoundMixerStopAllService";
+import { execute as soundMixerUpdateVolumeService } from "./SoundMixer/service/SoundMixerUpdateVolumeService";
+import { execute as soundMixerStopAllService } from "./SoundMixer/service/SoundMixerStopAllService";
 import { $getVolume } from "./MediaUtil";
 
 /**
@@ -15,8 +15,7 @@ export class SoundMixer
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @return  {string}
-     * @default "next2d.media.SoundMixer"
+     * @return {string}
      * @const
      * @static
      */
@@ -29,8 +28,7 @@ export class SoundMixer
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @return  {string}
-     * @default "next2d.media.SoundMixer"
+     * @return {string}
      * @const
      * @public
      */

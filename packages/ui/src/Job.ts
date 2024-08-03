@@ -1,8 +1,8 @@
 import type { ObjectImpl } from "./interface/ObjectImpl";
 import type { EntriesObjectImpl } from "./interface/EntriesObjectImpl";
 import { Easing } from "./Easing";
-import { execute as jobEntriesService } from "./Job/JobEntriesService";
-import { execute as jobUpdateFrameService } from "./Job/JobUpdateFrameService";
+import { execute as jobEntriesService } from "./Job/service/JobEntriesService";
+import { execute as jobUpdateFrameService } from "./Job/service/JobUpdateFrameService";
 import {
     EventDispatcher,
     JobEvent
@@ -158,8 +158,7 @@ export class Job extends EventDispatcher
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @return  {string}
-     * @default "next2d.ui.Job"
+     * @return {string}
      * @const
      * @static
      */
@@ -172,8 +171,7 @@ export class Job extends EventDispatcher
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @return  {string}
-     * @default "next2d.ui.Job"
+     * @return {string}
      * @const
      * @public
      */

@@ -13,19 +13,3 @@ describe("LoaderInfo.js namespace test", () =>
         expect(LoaderInfo.namespace).toBe("next2d.display.LoaderInfo");
     });
 });
-
-describe("LoaderInfo.js toString test", () =>
-{
-    it("toString test success", () =>
-    {
-        expect(new LoaderInfo().toString()).toBe("[object LoaderInfo]");
-    });
-});
-
-describe("LoaderInfo.js static toString test", () =>
-{
-    it("static toString test", () =>
-    {
-        expect(LoaderInfo.toString()).toBe("[class LoaderInfo]");
-    });
-});

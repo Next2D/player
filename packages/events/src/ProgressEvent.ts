@@ -50,8 +50,7 @@ export class ProgressEvent extends Event
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
-     * @default "next2d.events.ProgressEvent"
+     * @member {string}
      * @const
      * @static
      */
@@ -64,8 +63,7 @@ export class ProgressEvent extends Event
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
-     * @default "next2d.events.ProgressEvent"
+     * @member {string}
      * @const
      * @public
      */
@@ -79,7 +77,6 @@ export class ProgressEvent extends Event
      *              Defines the value of the type property of a progress event object.
      *
      * @return {string}
-     * @default "progress"
      * @const
      * @static
      */

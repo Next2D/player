@@ -7,10 +7,10 @@ import { LoaderInfo } from "./LoaderInfo";
 import { MovieClip } from "./MovieClip";
 import { URLRequest } from "@next2d/net";
 import { $ajax } from "./DisplayObjectUtil";
-import { execute as loaderLoadstartEventService } from "./Loader/LoaderLoadStartEventService";
-import { execute as loaderProgressEventService } from "./Loader/LoaderProgressEventService";
-import { execute as loaderLoadEndEventService } from "./Loader/LoaderLoadEndEventService";
-import { execute as loaderLoadJsonService } from "./Loader/LoaderLoadJsonService";
+import { execute as loaderLoadstartEventService } from "./Loader/service/LoaderLoadStartEventService";
+import { execute as loaderProgressEventService } from "./Loader/service/LoaderProgressEventService";
+import { execute as loaderLoadEndEventService } from "./Loader/service/LoaderLoadEndEventService";
+import { execute as loaderLoadJsonService } from "./Loader/service/LoaderLoadJsonService";
 
 /**
  * @description Loader クラスは、JSON ファイルを読み込むために使用します。
@@ -41,25 +41,10 @@ export class Loader extends DisplayObjectContainer
     }
 
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class Loader]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Loader]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @return  {string}
-     * @default "next2d.display.Loader"
+     * @return {string}
      * @const
      * @static
      */
@@ -69,25 +54,10 @@ export class Loader extends DisplayObjectContainer
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object Loader]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Loader]";
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @return  {string}
-     * @default "next2d.display.Loader"
+     * @return {string}
      * @const
      * @public
      */

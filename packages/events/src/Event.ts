@@ -38,11 +38,8 @@ export class Event
      * @constructor
      * @public
      */
-    constructor (
-        type: string,
-        bubbles: boolean = false
-    ) {
-
+    constructor (type: string, bubbles: boolean = false) 
+    {
         /**
          * @type {string}
          * @private
@@ -103,7 +100,7 @@ export class Event
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
+     * @member {string}
      * @const
      * @static
      */
@@ -116,7 +113,7 @@ export class Event
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
+     * @member {string}
      * @const
      * @public
      */

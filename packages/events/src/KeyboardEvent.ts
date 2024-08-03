@@ -43,8 +43,7 @@ export class KeyboardEvent extends Event
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
-     * @default "next2d.events.KeyboardEvent"
+     * @member {string}
      * @const
      * @static
      */
@@ -57,8 +56,7 @@ export class KeyboardEvent extends Event
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
-     * @default "next2d.events.KeyboardEvent"
+     * @member {string}
      * @const
      * @public
      */
@@ -72,7 +70,6 @@ export class KeyboardEvent extends Event
      *              Occurs each time a key is pressed on the keyboard.
      *
      * @return {string}
-     * @default "dblclick"
      * @const
      * @static
      */
@@ -86,7 +83,6 @@ export class KeyboardEvent extends Event
      *              Occurs when a key on the keyboard is released.
      *
      * @return {string}
-     * @default "dblclick"
      * @const
      * @static
      */

@@ -11,8 +11,7 @@ export class EventPhase
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
-     * @default "next2d.events.EventPhase"
+     * @member {string}
      * @const
      * @static
      */
@@ -25,8 +24,7 @@ export class EventPhase
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
-     * @default "next2d.events.EventPhase"
+     * @member {string}
      * @const
      * @public
      */

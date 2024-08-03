@@ -1,10 +1,12 @@
-import type { MovieClipCharacterImpl } from "./interface/MovieClipCharacterImpl";
 import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
-import type { ParentImpl } from "./interface/ParentImpl";
+import type { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
-import { execute as movieClipBuildService } from "./MovieClip/MovieClipBuildService";
+import { MovieClipCharacterImpl } from "./interface/MovieClipCharacterImpl";
+import { execute as movieClipAddActionsService } from "./MovieClip/service/MovieClipAddActionsService";
+import { execute as movieClipAddLabelsService } from "./MovieClip/service/MovieClipAddLabelsService";
+import { execute as movieClipBuildSoundsService } from "./MovieClip/service/MovieClipBuildSoundsService";
 
 /**
  * @description MovieClip クラスは、Sprite、DisplayObjectContainer、InteractiveObject、DisplayObject
@@ -152,20 +154,6 @@ export class MovieClip extends Sprite
     }
 
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class MovieClip]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class MovieClip]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
@@ -177,20 +165,6 @@ export class MovieClip extends Sprite
     static get namespace (): string
     {
         return "next2d.display.MovieClip";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object MovieClip]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object MovieClip]";
     }
 
     /**
@@ -1108,4 +1082,47 @@ export class MovieClip extends Sprite
 
     //     this._$canSound = false;
     // }
+
+    /**
+     * @description 指定タグからキャラクターを取得して、MovieClipを構築
+     *              Get character from specified tag and build MovieClip
+     *
+     * @param  {object} tag
+     * @param  {DisplayObjectContainer} parent
+     * @return {Promise}
+     * @method
+     * @protected
+     */
+    async _$build <P extends DisplayObjectContainer> (tag: DictionaryTagImpl, parent: P): Promise<void>
+    {
+        const character = this._$baseBuild<MovieClipCharacterImpl, P>(tag, parent);
+
+        this._$controller   = character.controller;
+        this._$dictionary   = character.dictionary;
+        this._$placeMap     = character.placeMap;
+        this._$placeObjects = character.placeObjects;
+
+        if (character.actions) {
+            if (!this._$actions) {
+                this._$actions = new Map();
+            }
+            movieClipAddActionsService(this._$actions, character.actions);
+        }
+
+        if (character.sounds) {
+            if (!this._$sounds) {
+                this._$sounds = new Map();
+            }
+            movieClipBuildSoundsService(this, this._$sounds, character.sounds);
+        }
+
+        if (character.labels) {
+            if (!this._$labels) {
+                this._$labels = new Map();
+            }
+            movieClipAddLabelsService(this._$labels, character.labels);
+        }
+
+        this._$totalFrames = character.totalFrame || 1;
+    }
 }

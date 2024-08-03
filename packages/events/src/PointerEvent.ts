@@ -46,8 +46,7 @@ export class PointerEvent extends Event
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
-     * @default "next2d.events.PointerEvent"
+     * @member {string}
      * @const
      * @static
      */
@@ -60,8 +59,7 @@ export class PointerEvent extends Event
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
-     * @default "next2d.events.PointerEvent"
+     * @member {string}
      * @const
      * @public
      */
@@ -75,7 +73,6 @@ export class PointerEvent extends Event
      *              Occurs when a button is pressed continuously.
      *
      * @return {string}
-     * @default "dblclick"
      * @const
      * @static
      */
@@ -89,7 +86,6 @@ export class PointerEvent extends Event
      *              Occurs when one or more buttons are pressed from the state where no buttons are pressed.
      *
      * @return {string}
-     * @default "pointerdown"
      * @const
      * @static
      */
@@ -103,7 +99,6 @@ export class PointerEvent extends Event
      *              Occurs when the pointer coordinates change and the pointer is not canceled by a touch operation.
      *
      * @return {string}
-     * @default "pointermove"
      * @const
      * @static
      */
@@ -117,7 +112,6 @@ export class PointerEvent extends Event
      *              Occurs when the hit test boundary is exited. Does not occur on devices that do not support hover.
      *
      * @return {string}
-     * @default "pointerout"
      * @const
      * @static
      */
@@ -131,7 +125,6 @@ export class PointerEvent extends Event
      *              Occurs when the pointing device moves into the hit test boundary of an element.
      *
      * @return {string}
-     * @default "mouseOver"
      * @const
      * @static
      */
@@ -145,7 +138,6 @@ export class PointerEvent extends Event
      *              Occurs when the pointer is no longer active.
      *
      * @return {string}
-     * @default "pointerup"
      * @const
      * @static
      */
@@ -159,7 +151,6 @@ export class PointerEvent extends Event
      *              Occurs when the wheel button of a pointing device (usually a mouse) is rotated.
      *
      * @return {string}
-     * @default "wheel"
      * @const
      * @static
      */

@@ -2,8 +2,8 @@ import { SoundMixer } from "./SoundMixer";
 import { DisplayObject } from "@next2d/display";
 import { VideoEvent } from "@next2d/events";
 import type { BoundsImpl } from "./interface/BoundsImpl";
-import { execute as videoCreateElementService } from "./Video/VideoCreateElementService";
-import { execute as videoPlayEventService } from "./Video/VideoPlayEventService";
+import { execute as videoCreateElementService } from "./Video/service/VideoCreateElementService";
+import { execute as videoPlayEventService } from "./Video/service/VideoPlayEventService";
 import {
     $clamp,
     $getVideos
@@ -154,8 +154,7 @@ export class Video extends DisplayObject
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @return  {string}
-     * @default "next2d.media.Video"
+     * @return {string}
      * @const
      * @static
      */
@@ -168,8 +167,7 @@ export class Video extends DisplayObject
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @return  {string}
-     * @default "next2d.media.Video"
+     * @return {string}
      * @const
      * @public
      */
@@ -421,8 +419,8 @@ export class Video extends DisplayObject
 
             this._$timerId = videoPlayEventService(this);
 
-            if (this.hasEventListener(VideoEvent.PLAY_START)) {
-                this.dispatchEvent(new VideoEvent(VideoEvent.PLAY_START));
+            if (this.hasEventListener(VideoEvent.PLAY)) {
+                this.dispatchEvent(new VideoEvent(VideoEvent.PLAY));
             }
 
             const videos = $getVideos();

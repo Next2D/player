@@ -10,7 +10,16 @@ import { $clamp } from "./MediaUtil";
 export class SoundTransform
 {
     private _$volume: number;
-    private _$loop: boolean;
+
+    /**
+     * @description ループ設定です。
+     *              loop setting.
+     *
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public loop: boolean;
 
     /**
      * @param {number}  [volume=1]
@@ -33,15 +42,14 @@ export class SoundTransform
          * @default false
          * @private
          */
-        this._$loop = !!loop;
+        this.loop = !!loop;
     }
 
     /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @return  {string}
-     * @default "next2d.media.SoundTransform"
+     * @return {string}
      * @const
      * @static
      */
@@ -54,31 +62,13 @@ export class SoundTransform
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @return  {string}
-     * @default "next2d.media.SoundTransform"
+     * @return {string}
      * @const
      * @public
      */
     get namespace (): string
     {
         return "next2d.media.SoundTransform";
-    }
-
-    /**
-     * @description ループ設定です。
-     *              loop setting.
-     *
-     * @member {boolean}
-     * @default false
-     * @public
-     */
-    get loop (): boolean
-    {
-        return this._$loop;
-    }
-    set loop (loop: boolean)
-    {
-        this._$loop = !!loop;
     }
 
     /**

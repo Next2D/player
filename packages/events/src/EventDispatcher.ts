@@ -36,8 +36,7 @@ export class EventDispatcher
      * @description クラスの空間名を返します。
      *              Returns the space name of the class.
      *
-     * @member  {string}
-     * @default "next2d.events.EventDispatcher"
+     * @member {string}
      * @const
      * @static
      */
@@ -50,8 +49,7 @@ export class EventDispatcher
      * @description オブジェクトの空間名を返します。
      *              Returns the space name of the object.
      *
-     * @member  {string}
-     * @default "next2d.events.EventDispatcher"
+     * @member {string}
      * @const
      * @public
      */

@@ -59,8 +59,7 @@ export class HTTPStatusEvent extends Event
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
-     * @default "next2d.events.HTTPStatusEvent"
+     * @member {string}
      * @const
      * @static
      */
@@ -73,8 +72,7 @@ export class HTTPStatusEvent extends Event
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
-     * @default "next2d.events.HTTPStatusEvent"
+     * @member {string}
      * @const
      * @public
      */

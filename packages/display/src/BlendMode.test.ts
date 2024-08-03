@@ -1,30 +1,11 @@
 import { BlendMode } from "./BlendMode";
 import { describe, expect, it } from "vitest";
 
-describe("BlendMode.js toString test", () =>
-{
-    it("toString test case1", () =>
-    {
-        const blendMode = new BlendMode();
-        expect(blendMode.toString())
-            .toBe("[object BlendMode]");
-    });
-});
-
-describe("BlendMode.js static toString test", () =>
-{
-    it("static toString test", () =>
-    {
-        expect(BlendMode.toString()).toBe("[class BlendMode]");
-    });
-});
-
 describe("BlendMode.js namespace test", () =>
 {
     it("namespace test public", () =>
     {
-        const blendMode = new BlendMode();
-        expect(blendMode.namespace).toBe("next2d.display.BlendMode");
+        expect(new BlendMode().namespace).toBe("next2d.display.BlendMode");
     });
 
     it("namespace test static", () =>

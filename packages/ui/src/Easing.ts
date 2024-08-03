@@ -43,8 +43,7 @@ export class Easing
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @return  {string}
-     * @default "next2d.ui.Easing"
+     * @return {string}
      * @const
      * @static
      */
@@ -57,8 +56,7 @@ export class Easing
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @return  {string}
-     * @default "next2d.ui.Easing"
+     * @return {string}
      * @const
      * @public
      */

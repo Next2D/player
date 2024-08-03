@@ -159,11 +159,11 @@ export class DisplayObjectContainer extends InteractiveObject
      */
     addChild<T extends DisplayObject> (display_object: T): T
     {
-        // if (child._$parent) {
-        //     child._$parent._$remove(child,
-        //         !(child._$parent._$instanceId === this._$instanceId)
-        //     );
-        // }
+        if (display_object._$parent) {
+            child._$parent._$remove(child,
+                !(child._$parent._$instanceId === this._$instanceId)
+            );
+        }
 
         // this._$getChildren().push(child);
 
@@ -1007,26 +1007,6 @@ export class DisplayObjectContainer extends InteractiveObject
     //     // remove all broadcast events
     //     if (child.hasEventListener(Next2DEvent.ENTER_FRAME)) {
     //         child.removeAllEventListener(Next2DEvent.ENTER_FRAME);
-    //     }
-
-    //     if (child.hasEventListener(Next2DEvent.EXIT_FRAME)) {
-    //         child.removeAllEventListener(Next2DEvent.EXIT_FRAME);
-    //     }
-
-    //     if (child.hasEventListener(Next2DEvent.FRAME_CONSTRUCTED)) {
-    //         child.removeAllEventListener(Next2DEvent.FRAME_CONSTRUCTED);
-    //     }
-
-    //     if (child.hasEventListener(Next2DEvent.RENDER)) {
-    //         child.removeAllEventListener(Next2DEvent.RENDER);
-    //     }
-
-    //     if (child.hasEventListener(Next2DEvent.ACTIVATE)) {
-    //         child.removeAllEventListener(Next2DEvent.ACTIVATE);
-    //     }
-
-    //     if (child.hasEventListener(Next2DEvent.DEACTIVATE)) {
-    //         child.removeAllEventListener(Next2DEvent.DEACTIVATE);
     //     }
 
     //     if (child.hasEventListener("keyDown")) {

@@ -9,21 +9,6 @@
  */
 export class BlendMode
 {
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class BlendMode]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class BlendMode]";
-    }
-
     /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
@@ -36,20 +21,6 @@ export class BlendMode
     static get namespace (): string
     {
         return "next2d.display.BlendMode";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object BlendMode]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object BlendMode]";
     }
 
     /**

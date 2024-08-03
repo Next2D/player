@@ -14,8 +14,7 @@ export class JobEvent extends Event
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
-     * @default "next2d.events.JobEvent"
+     * @member {string}
      * @const
      * @static
      */
@@ -28,8 +27,7 @@ export class JobEvent extends Event
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
-     * @default "next2d.events.JobEvent"
+     * @member {string}
      * @const
      * @public
      */
@@ -43,7 +41,6 @@ export class JobEvent extends Event
      *              Occurs when the Job property is updated.
      *
      * @return {string}
-     * @default "jobupdate"
      * @const
      * @static
      */
@@ -57,7 +54,6 @@ export class JobEvent extends Event
      *              Occurs when the Tween Job is stopped.
      *
      * @return {string}
-     * @default "jobstop"
      * @const
      * @static
      */
