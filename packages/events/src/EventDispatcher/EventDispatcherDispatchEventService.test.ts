@@ -315,29 +315,4 @@ describe("EventDispatcher.js dispatchEvent test", () =>
         expect(resultCaseB).toBe("stage1ABC");
 
     });
-
-    it("dispatchEvent test single dispatchEvent", () =>
-    {
-        const eventDispatcher1 = new EventDispatcher();
-        const eventDispatcher2 = new EventDispatcher();
-
-        $broadcastEvents.clear();
-        expect($broadcastEvents.size).toBe(0);
-
-        let result = "";
-        eventDispatcher1.addEventListener(Event.ENTER_FRAME, () =>
-        {
-            result += "eventDispatcher1";
-        });
-
-        eventDispatcher2.addEventListener(Event.ENTER_FRAME, () =>
-        {
-            result += "eventDispatcher2";
-        });
-
-        expect($broadcastEvents.size).toBe(1);
-        eventDispatcher1.dispatchEvent(new Event(Event.ENTER_FRAME));
-        expect(result).toBe("eventDispatcher1");
-    });
-
 });

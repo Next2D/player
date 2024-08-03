@@ -22,7 +22,7 @@ export const execute = (sound: Sound, event: ProgressEvent): void =>
 
     if (sound.willTrigger(Next2DProgressEvent.PROGRESS)) {
         sound.dispatchEvent(new Next2DProgressEvent(
-            Next2DProgressEvent.PROGRESS, false, false,
+            Next2DProgressEvent.PROGRESS, false,
             event.loaded, event.total
         ));
     }

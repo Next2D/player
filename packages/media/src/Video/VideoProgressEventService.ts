@@ -14,8 +14,8 @@ export const execute = (video: Video, event: ProgressEvent): void =>
 {
     if (video.willTrigger(Next2DProgressEvent.PROGRESS)) {
         video.dispatchEvent(new Next2DProgressEvent(
-            Next2DProgressEvent.PROGRESS,
-            false, false, event.loaded, event.total
+            Next2DProgressEvent.PROGRESS,false,
+            event.loaded, event.total
         ));
     }
 };

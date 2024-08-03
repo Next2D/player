@@ -1,20 +1,15 @@
-import { Event } from "./Event";
 import { $activeEvent } from "./EventUtil";
+import { Event } from "./Event";
 
 /**
- * @description FocusEvent オブジェクトは、ユーザーが表示リストの1つのオブジェクトから
- *              別のオブジェクトにフォーカスを変更したときにオブジェクトによって送出されます。
- *              次の2種類のフォーカスイベントがあります。
- *
- *              An object dispatches a FocusEvent object when the user changes
- *              the focus from one object in the display list to another.
- *              There are two types of focus events:
+ * @description キーボードによるユーザーの操作を示します。
+ *              Indicates user operation via keyboard.
  *
  * @class
  * @memberOf next2d.events
  * @extends  Event
  */
-export class FocusEvent extends Event
+export class KeyboardEvent extends Event
 {
     /**
      * @param {string}  type
@@ -49,13 +44,13 @@ export class FocusEvent extends Event
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default "next2d.events.FocusEvent"
+     * @default "next2d.events.KeyboardEvent"
      * @const
      * @static
      */
     static get namespace (): string
     {
-        return "next2d.events.FocusEvent";
+        return "next2d.events.KeyboardEvent";
     }
 
     /**
@@ -63,40 +58,40 @@ export class FocusEvent extends Event
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default "next2d.events.FocusEvent"
+     * @default "next2d.events.KeyboardEvent"
      * @const
      * @public
      */
     get namespace (): string
     {
-        return "next2d.events.FocusEvent";
+        return "next2d.events.KeyboardEvent";
     }
 
     /**
-     * @description focusIn イベントオブジェクトの type プロパティ値を定義します。
-     *              Defines the value of the type property of a focusIn event object.
+     * @description キーボードのキーが押される度に発生します。
+     *              Occurs each time a key is pressed on the keyboard.
      *
      * @return {string}
-     * @default "focusin"
+     * @default "dblclick"
      * @const
      * @static
      */
-    static get FOCUS_IN (): string
+    static get KEY_DOWN (): string
     {
-        return "focusin";
+        return "keydown";
     }
 
     /**
-     * @description focusOut イベントオブジェクトの type プロパティ値を定義します。
-     *              Defines the value of the type property of a focusOut event object.
+     * @description キーボードのキーが離されたときに発生します。
+     *              Occurs when a key on the keyboard is released.
      *
      * @return {string}
-     * @default "focusout"
+     * @default "dblclick"
      * @const
      * @static
      */
-    static get FOCUS_OUT (): string
+    static get KEY_UP (): string
     {
-        return "focusout";
+        return "keyup";
     }
 }

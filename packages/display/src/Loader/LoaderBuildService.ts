@@ -1,6 +1,6 @@
-import { DictionaryTagImpl } from "../interface/DictionaryTagImpl";
 import type { NoCodeDataImpl } from "../interface/NoCodeDataImpl";
 import type { Loader } from "../Loader";
+import { MovieClip } from "../MovieClip";
 import { execute as movieClipBuildService } from "../MovieClip/MovieClipBuildService";
 
 /**
@@ -9,7 +9,7 @@ import { execute as movieClipBuildService } from "../MovieClip/MovieClipBuildSer
  *
  * @param  {Loader} loader
  * @param  {object} object
- * @return {Promise<void>}
+ * @return {Promise}
  * @method
  * @protected
  */
@@ -33,7 +33,8 @@ export const execute = async (loader: Loader, object: NoCodeDataImpl): Promise<v
     };
 
     // build root content
-    loaderInfo.content = await movieClipBuildService({
+    const movieClip = new MovieClip();
+    await movieClipBuildService(movieClip, {
         "characterId": 0,
         "name": "main",
         "clipDepth": 0,
@@ -41,5 +42,6 @@ export const execute = async (loader: Loader, object: NoCodeDataImpl): Promise<v
         "endFrame": object.characters[0].controller.length,
         "startFrame": 1
     }, loader);
-    console.log(loaderInfo);
+
+    loaderInfo.content = movieClip;
 };

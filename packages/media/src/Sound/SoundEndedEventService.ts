@@ -20,8 +20,8 @@ export const execute = (sound: Sound): void =>
 
         sound.stop();
 
-        if (sound.willTrigger(Event.SOUND_COMPLETE)) {
-            sound.dispatchEvent(new Event(Event.SOUND_COMPLETE));
+        if (sound.willTrigger(Event.COMPLETE)) {
+            sound.dispatchEvent(new Event(Event.COMPLETE));
         }
     }
 };

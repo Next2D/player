@@ -1,8 +1,8 @@
-import type { DisplayObjectImpl } from "../interface/DisplayObjectImpl";
 import type { DictionaryTagImpl } from "../interface/DictionaryTagImpl";
-import type { ParentImpl } from "../interface/ParentImpl";
 import type { Character } from "../interface/Character";
 import type { LoaderInfo } from "../LoaderInfo";
+import type { DisplayObject } from "../DisplayObject";
+import type { DisplayObjectContainer } from "../DisplayObjectContainer";
 
 /**
  * @description DisplayObjectの基礎となる情報を設定、個別のCharacterを返却
@@ -15,10 +15,10 @@ import type { LoaderInfo } from "../LoaderInfo";
  * @method
  * @public
  */
-export const execute = (
-    display_object: DisplayObjectImpl<any>,
+export const execute = <D extends DisplayObject, P extends DisplayObjectContainer>(
+    display_object: D,
     tag: DictionaryTagImpl,
-    parent: ParentImpl<any>
+    parent: P
 ): Character<any> => {
 
     const loaderInfo = parent._$loaderInfo as LoaderInfo;

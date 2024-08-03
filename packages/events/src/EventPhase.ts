@@ -8,20 +8,6 @@
 export class EventPhase
 {
     /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class EventPhase]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class EventPhase]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
@@ -33,20 +19,6 @@ export class EventPhase
     static get namespace (): string
     {
         return "next2d.events.EventPhase";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object EventPhase]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object EventPhase]";
     }
 
     /**

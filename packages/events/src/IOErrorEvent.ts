@@ -1,5 +1,4 @@
 import { Event } from "./Event";
-import { execute as eventFormatToStringService } from "./Event/EventFormatToStringService";
 
 /**
  * @description IOErrorEvent オブジェクトは、エラーが発生して入力操作または出力操作が失敗したときに送出されます。
@@ -16,7 +15,6 @@ export class IOErrorEvent extends Event
     /**
      * @param {string}  type
      * @param {boolean} [bubbles=true]
-     * @param {boolean} [cancelable=false]
      * @param {string}  [text=""]
      *
      * @constructor
@@ -25,11 +23,10 @@ export class IOErrorEvent extends Event
     constructor (
         type: string,
         bubbles: boolean = false,
-        cancelable: boolean = false,
         text: string = ""
     ) {
 
-        super(type, bubbles, cancelable);
+        super(type, bubbles);
 
         /**
          * @type {string}
@@ -37,20 +34,6 @@ export class IOErrorEvent extends Event
          * @private
          */
         this._$text = `${text}`;
-    }
-
-    /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class IOErrorEvent]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class IOErrorEvent]";
     }
 
     /**
@@ -65,23 +48,6 @@ export class IOErrorEvent extends Event
     static get namespace (): string
     {
         return "next2d.events.IOErrorEvent";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return eventFormatToStringService(this,
-            "IOErrorEvent",
-            "type", "bubbles", "cancelable",
-            "eventPhase", "text"
-        );
     }
 
     /**

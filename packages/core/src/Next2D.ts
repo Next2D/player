@@ -123,7 +123,7 @@ export class Next2D
      * @method
      * @public
      */
-    async load (url: string, options: PlayerOptionsImpl): Promise<void>
+    async load (url: string, options: PlayerOptionsImpl | null = null): Promise<void>
     {
         await Promise.all([this._$promise]);
         await loadService(url, options);

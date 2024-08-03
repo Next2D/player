@@ -41,21 +41,7 @@ export const $poolArray = (array: any[]): void =>
  * @type {Event}
  * @private
  */
-let $activeEvent: PointerEvent | null = null;
-
-/**
- * @description アクティブなイベントオブジェクを返却
- *              Returns the active event object
- *
- * @return {PointerEvent | null}
- * @default null
- * @method
- * @protected
- */
-export const $getEvent = (): PointerEvent | null =>
-{
-    return $activeEvent;
-};
+export let $activeEvent: PointerEvent | null = null;
 
 /**
  * @description アクティブなイベントオブジェクをセット

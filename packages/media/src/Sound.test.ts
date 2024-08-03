@@ -13,19 +13,3 @@ describe("Sound.js namespace test", () =>
         expect(Sound.namespace).toBe("next2d.media.Sound");
     });
 });
-
-describe("Sound.js toString test", () =>
-{
-    it("toString test success", () =>
-    {
-        expect(new Sound().toString()).toBe("[object Sound]");
-    });
-});
-
-describe("Sound.js static toString test", () =>
-{
-    it("static toString test", () =>
-    {
-        expect(Sound.toString()).toBe("[class Sound]");
-    });
-});

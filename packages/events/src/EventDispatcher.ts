@@ -1,5 +1,5 @@
+import type { Event } from "./Event";
 import type { EventListenerImpl } from "./interface/EventListenerImpl";
-import type { EventImpl } from "./interface/EventImpl";
 import { execute as eventDispatcherAddEventListenerService } from "./EventDispatcher/EventDispatcherAddEventListenerService";
 import { execute as eventDispatcherHasEventListenerService } from "./EventDispatcher/EventDispatcherHasEventListenerService";
 import { execute as eventDispatcherRemoveEventListenerService } from "./EventDispatcher/EventDispatcherRemoveEventListenerService";
@@ -33,20 +33,6 @@ export class EventDispatcher
     }
 
     /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class EventDispatcher]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class EventDispatcher]";
-    }
-
-    /**
      * @description クラスの空間名を返します。
      *              Returns the space name of the class.
      *
@@ -58,20 +44,6 @@ export class EventDispatcher
     static get namespace (): string
     {
         return "next2d.events.EventDispatcher";
-    }
-
-    /**
-     * @description オブジェクトのストリングを返します。
-     *              Returns the string representation of the object.
-     *
-     * @default "[object EventDispatcher]"
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object EventDispatcher]";
     }
 
     /**
@@ -103,10 +75,15 @@ export class EventDispatcher
      * @public
      */
     addEventListener (
-        type: string, listener: Function,
+        type: string,
+        listener: Function,
         use_capture: boolean = false,
         priority: number = 0
     ): void {
+        if (!this._$events) {
+            this._$events = new Map();
+        }
+
         eventDispatcherAddEventListenerService(
             this, type, listener, use_capture, priority
         );
@@ -121,7 +98,7 @@ export class EventDispatcher
      * @method
      * @public
      */
-    dispatchEvent (event: EventImpl<any>): boolean
+    dispatchEvent (event: Event): boolean
     {
         return eventDispatcherDispatchEventService(this, event);
     }

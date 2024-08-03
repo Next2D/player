@@ -151,20 +151,6 @@ export class Video extends DisplayObject
     }
 
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class Video]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Video]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
@@ -176,20 +162,6 @@ export class Video extends DisplayObject
     static get namespace (): string
     {
         return "next2d.media.Video";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object Video]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Video]";
     }
 
     /**
@@ -398,7 +370,7 @@ export class Video extends DisplayObject
         this._$bounds.xMax  = 0;
         this._$bounds.yMax  = 0;
 
-        this._$doChanged();
+        this.doChanged();
     }
 
     /**

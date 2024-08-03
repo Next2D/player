@@ -28,7 +28,7 @@ export const execute = async (loader: Loader, event: ProgressEvent): Promise<voi
     const loaderInfo = loader.contentLoaderInfo;
     if (loaderInfo.willTrigger(Next2DProgressEvent.PROGRESS)) {
         loaderInfo.dispatchEvent(new Next2DProgressEvent(
-            Next2DProgressEvent.PROGRESS, false, false,
+            Next2DProgressEvent.PROGRESS, false,
             event.loaded, event.total
         ));
     }
@@ -41,7 +41,7 @@ export const execute = async (loader: Loader, event: ProgressEvent): Promise<voi
         );
 
         loaderInfo.dispatchEvent(new HTTPStatusEvent(
-            HTTPStatusEvent.HTTP_STATUS, false, false,
+            HTTPStatusEvent.HTTP_STATUS, false,
             target.status, target.responseURL,
             responseHeaders
         ));
@@ -56,7 +56,7 @@ export const execute = async (loader: Loader, event: ProgressEvent): Promise<voi
     } else {
         if (loaderInfo.willTrigger(IOErrorEvent.IO_ERROR)) {
             loaderInfo.dispatchEvent(new IOErrorEvent(
-                IOErrorEvent.IO_ERROR, false, false, target.statusText
+                IOErrorEvent.IO_ERROR, false, target.statusText
             ));
         }
     }

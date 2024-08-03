@@ -1,15 +1,8 @@
 import { InteractiveObject } from "./InteractiveObject";
-// import { Event as Next2DEvent } from "@next2d/events";
-// import type { LoaderInfo } from "./LoaderInfo";
-// import type { Sound } from "@next2d/media";
-// import type { Transform } from "@next2d/geom";
+import type { DisplayObject } from "./DisplayObject";
 import type { PlaceObjectImpl } from "./interface/PlaceObjectImpl";
 import type { DisplayObjectImpl } from "./interface/DisplayObjectImpl";
 import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
-// import type {
-//     CanvasToWebGLContext,
-//     FrameBufferManager
-// } from "@next2d/webgl";
 import {
     $getArray
 } from "./DisplayObjectUtil";
@@ -155,31 +148,31 @@ export class DisplayObjectContainer extends InteractiveObject
     //         : this._$children.length;
     // }
 
-    // /**
-    //  * @description この DisplayObjectContainer インスタンスに子 DisplayObject インスタンスを追加します。
-    //  *              Adds a child DisplayObject instance to this DisplayObjectContainer instance.
-    //  *
-    //  * @param  {DisplayObject} child
-    //  * @return {DisplayObject}
-    //  * @method
-    //  * @public
-    //  */
-    // addChild (child: DisplayObjectImpl<any>): DisplayObjectImpl<any>
-    // {
-    //     if (child._$parent) {
-    //         child._$parent._$remove(child,
-    //             !(child._$parent._$instanceId === this._$instanceId)
-    //         );
-    //     }
+    /**
+     * @description この DisplayObjectContainer インスタンスに子 DisplayObject インスタンスを追加します。
+     *              Adds a child DisplayObject instance to this DisplayObjectContainer instance.
+     *
+     * @param  {DisplayObject} display_object
+     * @return {DisplayObject}
+     * @method
+     * @public
+     */
+    addChild<T extends DisplayObject> (display_object: T): T
+    {
+        // if (child._$parent) {
+        //     child._$parent._$remove(child,
+        //         !(child._$parent._$instanceId === this._$instanceId)
+        //     );
+        // }
 
-    //     this._$getChildren().push(child);
+        // this._$getChildren().push(child);
 
-    //     if (child._$name) {
-    //         this._$names.set(child._$name, child);
-    //     }
+        // if (child._$name) {
+        //     this._$names.set(child._$name, child);
+        // }
 
-    //     return this._$addChild(child);
-    // }
+        return display_object;//this._$addChild(child);
+    }
 
     // /**
     //  * @description この DisplayObjectContainer インスタンスに子 DisplayObject インスタンスを追加します。

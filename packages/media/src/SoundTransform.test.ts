@@ -15,22 +15,6 @@ describe("SoundTransform.js namespace test", () =>
     });
 });
 
-describe("SoundTransform.js toString test", () =>
-{
-    it("toString test success", () =>
-    {
-        expect(new SoundTransform().toString()).toBe("[object SoundTransform]");
-    });
-});
-
-describe("SoundTransform.js static toString test", () =>
-{
-    it("static toString test", () =>
-    {
-        expect(SoundTransform.toString()).toBe("[class SoundTransform]");
-    });
-});
-
 describe("SoundTransform.js property test", () =>
 {
     it("volume test case1", () =>

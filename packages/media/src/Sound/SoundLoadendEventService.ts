@@ -25,7 +25,7 @@ export const execute = async (sound: Sound, event: ProgressEvent): Promise<Audio
 
     if (sound.willTrigger(Next2DProgressEvent.PROGRESS)) {
         sound.dispatchEvent(new Next2DProgressEvent(
-            Next2DProgressEvent.PROGRESS, false, false,
+            Next2DProgressEvent.PROGRESS, false,
             event.loaded, event.total
         ));
     }
@@ -41,7 +41,7 @@ export const execute = async (sound: Sound, event: ProgressEvent): Promise<Audio
     } else {
         if (sound.willTrigger(IOErrorEvent.IO_ERROR)) {
             sound.dispatchEvent(new IOErrorEvent(
-                IOErrorEvent.IO_ERROR, false, false, target.statusText
+                IOErrorEvent.IO_ERROR, false, target.statusText
             ));
         }
     }

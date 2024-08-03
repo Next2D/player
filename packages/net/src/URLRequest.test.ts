@@ -1,28 +1,11 @@
 import { URLRequest } from "./URLRequest";
 import { describe, expect, it } from "vitest";
 
-describe("URLRequest.js toString test", () =>
-{
-    it("toString test success", () =>
-    {
-        expect(new URLRequest().toString()).toBe("[object URLRequest]");
-    });
-});
-
-describe("URLRequest.js static toString test", () =>
-{
-    it("static toString test", () =>
-    {
-        expect(`${URLRequest}`).toBe("[class URLRequest]");
-    });
-});
-
 describe("URLRequest.js namespace test", () =>
 {
     it("namespace test public", () =>
     {
-        const object = new URLRequest();
-        expect(object.namespace).toBe("next2d.net.URLRequest");
+        expect(new URLRequest().namespace).toBe("next2d.net.URLRequest");
     });
 
     it("namespace test static", () =>

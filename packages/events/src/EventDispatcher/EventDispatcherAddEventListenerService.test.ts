@@ -113,26 +113,27 @@ describe("EventDispatcher.js addEventListener test", () =>
         expect(name).toBe("ng");
     });
 
-    it("addEventListener test duplicate case4", () =>
+    it("addEventListener test duplicate case3", () =>
     {
         const eventDispatcher1 = new EventDispatcher();
         const eventDispatcher2 = new EventDispatcher();
 
-        let target = null;
-        const enterFrame = (event: Event) => { target = event.currentTarget };
+        let result = "";
 
         $broadcastEvents.clear();
         expect($broadcastEvents.size).toBe(0);
-        eventDispatcher1.addEventListener(Event.ENTER_FRAME, enterFrame);
-        eventDispatcher2.addEventListener(Event.ENTER_FRAME, enterFrame);
+        eventDispatcher1.addEventListener(Event.ENTER_FRAME, () => { result += "A" });
+        eventDispatcher2.addEventListener(Event.ENTER_FRAME, () => { result += "B" });
 
         expect($broadcastEvents.size).toBe(1);
         expect($broadcastEvents.get(Event.ENTER_FRAME)?.length).toBe(2);
 
         eventDispatcher1.dispatchEvent(new Event(Event.ENTER_FRAME));
-        expect(target).toBe(eventDispatcher1);
+        expect(result).toBe("AB");
 
+        result = "";
+        expect(result).toBe("");
         eventDispatcher2.dispatchEvent(new Event(Event.ENTER_FRAME));
-        expect(target).toBe(eventDispatcher2);
+        expect(result).toBe("AB");
     });
 });

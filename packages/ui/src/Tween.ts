@@ -8,20 +8,6 @@ import type { ObjectImpl } from "./interface/ObjectImpl";
 export class Tween
 {
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class Tween]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Tween]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
@@ -33,20 +19,6 @@ export class Tween
     static get namespace (): string
     {
         return "next2d.ui.Tween";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object Tween]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Tween]";
     }
 
     /**

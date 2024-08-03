@@ -14,19 +14,3 @@ describe("SoundMixer.js namespace test", () =>
         expect(SoundMixer.namespace).toBe("next2d.media.SoundMixer");
     });
 });
-
-describe("SoundMixer.js toString test", () =>
-{
-    it("toString test success", () =>
-    {
-        expect(new SoundMixer().toString()).toBe("[object SoundMixer]");
-    });
-});
-
-describe("SoundMixer.js static toString test", () =>
-{
-    it("static toString test", () =>
-    {
-        expect(SoundMixer.toString()).toBe("[class SoundMixer]");
-    });
-});

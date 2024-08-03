@@ -1,7 +1,10 @@
+import type { MovieClipCharacterImpl } from "./interface/MovieClipCharacterImpl";
+import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
+import type { ParentImpl } from "./interface/ParentImpl";
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
-import type { SoundTransform } from "@next2d/media";
+import { execute as movieClipBuildService } from "./MovieClip/MovieClipBuildService";
 
 /**
  * @description MovieClip クラスは、Sprite、DisplayObjectContainer、InteractiveObject、DisplayObject
@@ -21,19 +24,19 @@ import type { SoundTransform } from "@next2d/media";
  */
 export class MovieClip extends Sprite
 {
-    private _$labels: Map<number, FrameLabel> | null;
-    public _$currentFrame: number;
-    public _$stopFlag: boolean;
-    public _$canAction: boolean;
-    public _$canSound: boolean;
-    public _$actionProcess: boolean;
-    public _$actions: Map<number, Function[]>;
-    public _$frameCache: Map<string, any>;
-    public _$sounds: Map<number, Sound[]>;
-    public _$actionOffset: number;
-    public _$actionLimit: number;
-    public _$totalFrames: number;
-    public _$isPlaying: boolean;
+    protected _$labels: Map<number, FrameLabel> | null;
+    protected _$currentFrame: number;
+    protected _$stopFlag: boolean;
+    protected _$canAction: boolean;
+    protected _$canSound: boolean;
+    protected _$actionProcess: boolean;
+    protected _$actions: Map<number, Function[]> | null;
+    protected _$frameCache: Map<string, any> | null;
+    protected _$sounds: Map<number, Sound[]> | null;
+    protected _$actionOffset: number;
+    protected _$actionLimit: number;
+    protected _$totalFrames: number;
+    protected _$isPlaying: boolean;
     // public _$loopConfig: LoopConfigImpl | null;
     // private _$tweenFrame: number;
 
@@ -77,13 +80,13 @@ export class MovieClip extends Sprite
          * @type {Map}
          * @private
          */
-        this._$actions = new Map();
+        this._$actions = null;
 
         /**
          * @type {Map}
          * @private
          */
-        this._$frameCache = new Map();
+        this._$frameCache = null;
 
         /**
          * @type {Map}
@@ -96,7 +99,7 @@ export class MovieClip extends Sprite
          * @type {Map}
          * @private
          */
-        this._$sounds = new Map();
+        this._$sounds = null;
 
         /**
          * @type {number}
@@ -417,28 +420,22 @@ export class MovieClip extends Sprite
         this._$isPlaying = false;
     }
 
-    // /**
-    //  * @description タイムラインに対して動的にLabelを追加できます。
-    //  *              Labels can be added dynamically to the timeline.
-    //  *
-    //  * @example <caption>Example1 usage of addFrameLabel.</caption>
-    //  * // case 1
-    //  * const {MovieClip, FrameLabel} = next2d.display;
-    //  * const movieClip = new MovieClip();
-    //  * movieClip.addFrameLabel(new FrameLabel(1, "start"));
-    //  *
-    //  * @param  {FrameLabel} frame_label
-    //  * @return {void}
-    //  * @public
-    //  */
-    // addFrameLabel (frame_label: FrameLabel): void
-    // {
-    //     if (!this._$labels) {
-    //         this._$labels = $getMap();
-    //     }
+    /**
+     * @description タイムラインに対して動的にLabelを追加できます。
+     *              Labels can be added dynamically to the timeline.
+     *
+     * @param  {FrameLabel} frame_label
+     * @return {void}
+     * @public
+     */
+    addFrameLabel (frame_label: FrameLabel): void
+    {
+        if (!this._$labels) {
+            this._$labels = new Map();
+        }
 
-    //     this._$labels.set(frame_label.frame, frame_label);
-    // }
+        this._$labels.set(frame_label.frame, frame_label);
+    }
 
     // /**
     //  * @description 指定のフレームのアクションを追加できます
@@ -526,28 +523,6 @@ export class MovieClip extends Sprite
     //     }
 
     //     return 0;
-    // }
-
-    // /**
-    //  * @param  {number}   frame
-    //  * @param  {function} script
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$addAction (frame: number, script: Function): void
-    // {
-    //     if (frame) {
-    //         if (!this._$actions.has(frame)) {
-    //             this._$actions.set(frame, $getArray());
-    //         }
-
-    //         const actions: Function[] | void = this._$actions.get(frame);
-    //         if (actions) {
-    //             actions.push(script);
-    //         }
-
-    //     }
     // }
 
     // /**
@@ -1089,88 +1064,6 @@ export class MovieClip extends Sprite
     //     }
 
     //     return frame;
-    // }
-
-    // /**
-    //  * @param  {object} character
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$buildCharacter (character: MovieClipCharacterImpl): void
-    // {
-    //     if (character.sounds) {
-    //         for (let idx: number = 0; idx < character.sounds.length; ++idx) {
-
-    //             const object: MovieClipSoundObjectImpl = character.sounds[idx];
-
-    //             const sounds: Sound[] = $getArray();
-    //             for (let idx: number = 0; idx < object.sound.length; ++idx) {
-
-    //                 const sound: Sound = new Sound();
-    //                 sound._$build(object.sound[idx], this);
-
-    //                 sounds.push(sound);
-    //             }
-
-    //             this._$sounds.set(object.frame, sounds);
-    //         }
-    //     }
-
-    //     if (character.actions) {
-    //         for (let idx: number = 0; idx < character.actions.length; ++idx) {
-
-    //             const object: MovieClipActionObjectImpl = character.actions[idx];
-    //             if (!object.script) {
-    //                 object.script = Function(object.action);
-    //             }
-
-    //             this._$addAction(object.frame, object.script);
-    //         }
-    //     }
-
-    //     if (character.labels) {
-    //         for (let idx: number = 0; idx < character.labels.length; ++idx) {
-
-    //             const label: MovieClipLabelObjectImpl = character.labels[idx];
-
-    //             this.addFrameLabel(new FrameLabel(label.name, label.frame));
-
-    //         }
-    //     }
-
-    //     this._$totalFrames = character.totalFrame || 1;
-    // }
-
-    // /**
-    //  * @param  {object} character
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$sync (character: Character<MovieClipCharacterImpl>): void
-    // {
-    //     super._$sync(character);
-    //     this._$buildCharacter(character);
-    // }
-
-    // /**
-    //  * @param  {object} tag
-    //  * @param  {DisplayObjectContainer} parent
-    //  * @return {object}
-    //  * @method
-    //  * @private
-    //  */
-    // _$build (
-    //     tag: DictionaryTagImpl,
-    //     parent: ParentImpl<any>
-    // ): MovieClipCharacterImpl {
-
-    //     const character: MovieClipCharacterImpl = super._$build(tag, parent);
-
-    //     this._$buildCharacter(character);
-
-    //     return character;
     // }
 
     // /**

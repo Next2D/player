@@ -1,9 +1,9 @@
+import type { MovieClipCharacterImpl } from "./interface/MovieClipCharacterImpl";
+import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
+import type { ParentImpl } from "./interface/ParentImpl";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { SoundTransform } from "@next2d/media";
-import type {
-    Rectangle,
-    Point
-} from "@next2d/geom";
+import { execute as displayObjectBaseBuildService } from "./DisplayObject/DisplayObjectBaseBuildService";
 
 /**
  * @description Sprite クラスは、表示リストの基本的要素です。
@@ -171,24 +171,24 @@ export class Sprite extends DisplayObjectContainer
     //     }
     // }
 
-    // /**
-    //  * @description このスプライト内のサウンドを制御します。
-    //  *              Controls sound within this sprite.
-    //  *
-    //  * @member  {SoundTransform}
-    //  * @public
-    //  */
-    // get soundTransform (): SoundTransform
-    // {
-    //     if (!this._$soundTransform) {
-    //         this._$soundTransform = new SoundTransform();
-    //     }
-    //     return this._$soundTransform;
-    // }
-    // set soundTransform (sound_transform: SoundTransform | null)
-    // {
-    //     this._$soundTransform = sound_transform;
-    // }
+    /**
+     * @description このスプライト内のサウンドを制御します。
+     *              Controls sound within this sprite.
+     *
+     * @member  {SoundTransform}
+     * @public
+     */
+    get soundTransform (): SoundTransform
+    {
+        if (!this._$soundTransform) {
+            this._$soundTransform = new SoundTransform();
+        }
+        return this._$soundTransform;
+    }
+    set soundTransform (sound_transform: SoundTransform | null)
+    {
+        this._$soundTransform = sound_transform;
+    }
 
     /**
      * @description buttonMode プロパティが true に設定されたスプライト上にポインターが移動したときに、
@@ -275,33 +275,6 @@ export class Sprite extends DisplayObjectContainer
     //     this._$dictionary   = character.dictionary;
     //     this._$placeMap     = character.placeMap;
     //     this._$placeObjects = character.placeObjects;
-    // }
-
-    // /**
-    //  * @param  {object} tag
-    //  * @param  {DisplayObjectContainer} parent
-    //  * @return {object}
-    //  * @method
-    //  * @private
-    //  */
-    // _$build (
-    //     tag: DictionaryTagImpl,
-    //     parent: ParentImpl<any>
-    // ): MovieClipCharacterImpl {
-
-    //     const character: MovieClipCharacterImpl = this
-    //         ._$baseBuild<MovieClipCharacterImpl>(tag, parent);
-
-    //     if ($rendererWorker && this._$stage) {
-    //         this._$createWorkerInstance();
-    //     }
-
-    //     this._$controller   = character.controller;
-    //     this._$dictionary   = character.dictionary;
-    //     this._$placeMap     = character.placeMap;
-    //     this._$placeObjects = character.placeObjects;
-
-    //     return character;
     // }
 
     // /**

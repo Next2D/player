@@ -1,5 +1,4 @@
 import { Event } from "./Event";
-import { execute as eventFormatToStringService } from "./Event/EventFormatToStringService";
 
 /**
  * @description ProgressEvent オブジェクトは、ロード処理が開始されたとき、またはソケットがデータを受信したときに送出されます。
@@ -19,7 +18,6 @@ export class ProgressEvent extends Event
     /**
      * @param {string}  type
      * @param {boolean} [bubbles=true]
-     * @param {boolean} [cancelable=false]
      * @param {number}  [bytes_loaded=0]
      * @param {number}  [bytes_total=0]
      *
@@ -27,11 +25,11 @@ export class ProgressEvent extends Event
      * @public
      */
     constructor (
-        type: string, bubbles: boolean = false, cancelable: boolean = false,
+        type: string, bubbles: boolean = false,
         bytes_loaded: number = 0, bytes_total: number = 0
     ) {
 
-        super(type, bubbles, cancelable);
+        super(type, bubbles);
 
         /**
          * @type {number}
@@ -49,20 +47,6 @@ export class ProgressEvent extends Event
     }
 
     /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class ProgressEvent]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class ProgressEvent]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
@@ -74,23 +58,6 @@ export class ProgressEvent extends Event
     static get namespace (): string
     {
         return "next2d.events.ProgressEvent";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return eventFormatToStringService(this,
-            "ProgressEvent",
-            "type", "bubbles", "cancelable",
-            "eventPhase", "bytesLoaded", "bytesTotal"
-        );
     }
 
     /**

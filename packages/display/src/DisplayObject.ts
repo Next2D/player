@@ -1,6 +1,8 @@
 import type { Stage } from "./Stage";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Sprite } from "./Sprite";
+import type { ParentImpl } from "./interface/ParentImpl";
+
 import {
     Event as Next2DEvent,
     EventDispatcher
@@ -19,6 +21,7 @@ import {
 import {
     $getInstanceId
 } from "./DisplayObjectUtil";
+
 
 /**
  * @description DisplayObject クラスは、表示リストに含めることのできるすべてのオブジェクトに関する基本クラスです。
@@ -59,7 +62,7 @@ export class DisplayObject extends EventDispatcher
     protected _$name: string;
     protected _$mask: DisplayObjectImpl<any> | null;
     protected _$visible: boolean;
-    protected _$root: ParentImpl<any> | null;
+    protected _$root: T | null;
     protected _$loaderInfo: LoaderInfo | null;
     protected _$scaleX: number | null;
     protected _$scaleY: number | null;
@@ -2122,263 +2125,4 @@ export class DisplayObject extends EventDispatcher
     //     return true;
     // }
 
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$removeWorkerInstance (): void
-    // {
-    //     if ($rendererWorker) {
-    //         $rendererWorker.postMessage({
-    //             "command": "remove",
-    //             "instanceId": this._$instanceId
-    //         });
-    //     }
-    // }
-
-    // /**
-    //  * @param  {Float32Array} buffer
-    //  * @param  {number} [index = 0]
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$registerProperty (buffer: Float32Array, index: number = 0): void
-    // {
-    //     // visible
-    //     buffer[index++] = +this._$visible;
-
-    //     // depth
-    //     buffer[index++] = this._$placeId;
-
-    //     // clip depth
-    //     buffer[index++] = this._$clipDepth;
-
-    //     // isMask
-    //     buffer[index++] = +this._$isMask;
-
-    //     const mask: DisplayObjectImpl<any> | null = this._$mask;
-    //     buffer[index++] = +(mask !== null);
-    //     if (mask) {
-
-    //         // mask id
-    //         buffer[index++] = mask._$instanceId;
-
-    //         let maskMatrix: Float32Array = $MATRIX_ARRAY_IDENTITY;
-    //         let parent: ParentImpl<any> | null = mask._$parent;
-    //         while (parent) {
-
-    //             maskMatrix = $multiplicationMatrix(
-    //                 parent._$transform._$rawMatrix(),
-    //                 maskMatrix
-    //             );
-
-    //             parent = parent._$parent;
-    //         }
-
-    //         // mask matrix
-    //         buffer[index++] = maskMatrix[0];
-    //         buffer[index++] = maskMatrix[1];
-    //         buffer[index++] = maskMatrix[2];
-    //         buffer[index++] = maskMatrix[3];
-    //         buffer[index++] = maskMatrix[4];
-    //         buffer[index++] = maskMatrix[5];
-    //     } else {
-    //         index += 7;
-    //     }
-
-    //     if (this._$visible) {
-    //         const transform: Transform = this._$transform;
-
-    //         // matrix
-    //         const matrix: Float32Array = transform._$rawMatrix();
-    //         buffer[index++] = matrix[0];
-    //         buffer[index++] = matrix[1];
-    //         buffer[index++] = matrix[2];
-    //         buffer[index++] = matrix[3];
-    //         buffer[index++] = matrix[4];
-    //         buffer[index++] = matrix[5];
-
-    //         // colorTransform
-    //         const colorTransform = transform._$rawColorTransform();
-    //         buffer[index++] = colorTransform[0];
-    //         buffer[index++] = colorTransform[1];
-    //         buffer[index++] = colorTransform[2];
-    //         buffer[index++] = colorTransform[3];
-    //         buffer[index++] = colorTransform[4];
-    //         buffer[index++] = colorTransform[5];
-    //         buffer[index++] = colorTransform[6];
-    //         buffer[index++] = colorTransform[7];
-
-    //     } else {
-    //         index += 6; // matrix
-    //         index += 8; // colorTransform
-    //     }
-
-    //     // blend mode
-    //     const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
-    //     buffer[index++] = $blendToNumber(blendMode);
-
-    //     // scale9Grid
-    //     const scale9Grid: Rectangle | null  = this._$scale9Grid;
-    //     buffer[index++] = +(scale9Grid !== null);
-
-    //     if (scale9Grid) {
-    //         buffer[index++] = scale9Grid.x;
-    //         buffer[index++] = scale9Grid.y;
-    //         buffer[index++] = scale9Grid.width;
-    //         buffer[index++] = scale9Grid.height;
-    //     } else {
-    //         index += 4;
-    //     }
-
-    //     // filter
-    // }
-
-    // /**
-    //  * @return {object}
-    //  * @method
-    //  * @private
-    //  */
-    // _$createMessage (): PropertyMessageMapImpl<any>
-    // {
-    //     const message: PropertyMessageImpl = {
-    //         "command": "setProperty",
-    //         "buffer": new Float32Array(),
-    //         "instanceId": this._$instanceId,
-    //         "parentId": this._$parent ? this._$parent._$instanceId : -1,
-    //         "visible": this._$visible
-    //     };
-
-    //     if (this._$placeId > -1) {
-    //         message.depth = this._$placeId;
-    //     }
-
-    //     if (this._$clipDepth) {
-    //         message.clipDepth = this._$clipDepth;
-    //     }
-
-    //     if (this._$isMask) {
-    //         message.isMask = this._$isMask;
-    //     }
-
-    //     const mask: DisplayObjectImpl<any> | null = this._$mask;
-    //     if (mask) {
-    //         message.maskId = mask._$instanceId;
-
-    //         let maskMatrix: Float32Array = $MATRIX_ARRAY_IDENTITY;
-    //         let parent: ParentImpl<any> | null = mask._$parent;
-    //         while (parent) {
-
-    //             maskMatrix = $multiplicationMatrix(
-    //                 parent._$transform._$rawMatrix(),
-    //                 maskMatrix
-    //             );
-
-    //             parent = parent._$parent;
-    //         }
-
-    //         message.maskMatrix = maskMatrix;
-    //     }
-
-    //     if (this._$visible) {
-
-    //         const transform: Transform = this._$transform;
-
-    //         const matrix: Float32Array = transform._$rawMatrix();
-    //         if (matrix[0] !== 1) {
-    //             message.a = matrix[0];
-    //         }
-
-    //         if (matrix[1] !== 0) {
-    //             message.b = matrix[1];
-    //         }
-
-    //         if (matrix[2] !== 0) {
-    //             message.c = matrix[2];
-    //         }
-
-    //         if (matrix[3] !== 1) {
-    //             message.d = matrix[3];
-    //         }
-
-    //         if (matrix[4] !== 0) {
-    //             message.tx = matrix[4];
-    //         }
-
-    //         if (matrix[5] !== 0) {
-    //             message.ty = matrix[5];
-    //         }
-
-    //         const colorTransform = transform._$rawColorTransform();
-    //         if (colorTransform[0] !== 1) {
-    //             message.f0 = colorTransform[0];
-    //         }
-
-    //         if (colorTransform[1] !== 1) {
-    //             message.f1 = colorTransform[1];
-    //         }
-
-    //         if (colorTransform[2] !== 1) {
-    //             message.f2 = colorTransform[2];
-    //         }
-
-    //         if (colorTransform[3] !== 1) {
-    //             message.f3 = colorTransform[3];
-    //         }
-
-    //         if (colorTransform[4] !== 0) {
-    //             message.f4 = colorTransform[4];
-    //         }
-
-    //         if (colorTransform[5] !== 0) {
-    //             message.f5 = colorTransform[5];
-    //         }
-
-    //         if (colorTransform[6] !== 0) {
-    //             message.f6 = colorTransform[6];
-    //         }
-
-    //         if (colorTransform[7] !== 0) {
-    //             message.f7 = colorTransform[7];
-    //         }
-
-    //         const filters: FilterArrayImpl | null = this._$filters || this.filters;
-    //         if (filters && filters.length) {
-    //             const parameters: any[] = $getArray();
-    //             for (let idx: number = 0; idx < filters.length; ++idx) {
-    //                 parameters.push(filters[idx]._$toArray());
-    //             }
-
-    //             message.filters = parameters;
-    //         }
-
-    //         const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
-    //         if (blendMode !== "normal") {
-    //             message.blendMode = blendMode;
-    //         }
-
-    //         const scale9Grid: Rectangle | null = this._$scale9Grid;
-    //         if (scale9Grid && this._$isUpdated()) {
-
-    //             const baseMatrix: Matrix = this
-    //                 ._$parent
-    //                 ._$transform
-    //                 .concatenatedMatrix;
-
-    //             message.matrixBase = baseMatrix._$matrix.slice();
-    //             $poolMatrix(baseMatrix);
-
-    //             message.grid = {
-    //                 "x": scale9Grid.x,
-    //                 "y": scale9Grid.y,
-    //                 "w": scale9Grid.width,
-    //                 "h": scale9Grid.height
-    //             };
-    //         }
-    //     }
-
-    //     return message;
-    // }
 }

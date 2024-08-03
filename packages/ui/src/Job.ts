@@ -5,7 +5,7 @@ import { execute as jobEntriesService } from "./Job/JobEntriesService";
 import { execute as jobUpdateFrameService } from "./Job/JobUpdateFrameService";
 import {
     EventDispatcher,
-    Event
+    JobEvent
 } from "@next2d/events";
 
 /**
@@ -16,18 +16,81 @@ import {
 export class Job extends EventDispatcher
 {
     private readonly _$target: any;
-    private _$delay: number;
-    private _$duration: number;
-    private _$ease: Function;
-    private _$from: ObjectImpl;
-    private _$to: ObjectImpl;
     private _$entries: EntriesObjectImpl[] | null;
     private _$startTime: number;
     private _$stopFlag: boolean;
-    private _$currentTime: number;
     private _$timerId: number;
+
+    /**
+     * @description イージングの開始までの遅延時間を返します。
+     *              Returns the delay time until the start of the easing.
+     *
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public delay: number;
+
+    /**
+     * @description イージング完了時間を返します。
+     *              Returns the easing completion time.
+     *
+     * @type {number}
+     * @default 1
+     * @public
+     */
+    public duration: number;
+
+    /**
+     * @description イージングの計算関数を返します。
+     *              Returns the calculation function of the easing.
+     *
+     * @see Easing
+     * @type {function}
+     * @default Easing.linear
+     * @public
+     */
+    public ease: Function;
+
+    /**
+     * @description イージングの開始オブジェクトを返します。
+     *              Returns the start object of the easing.
+     *
+     * @type {object}
+     * @public
+     */
+    public from: ObjectImpl;
+
+    /**
+     * @description イージングの終了オブジェクトを返します。
+     *              Returns the end object of the easing.
+     *
+     * @type {object}
+     * @public
+     */
+    public to: ObjectImpl;
+
+    /**
+     * @description イージングの現在時間を返します。
+     *              Returns the current time of the easing.
+     *
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public currentTime: number;
+
+    /**
+     * @description イージングの次のjobを返します。
+     *              Returns the next job of the easing.
+     *
+     * @member {Job | null}
+     * @default null
+     * @readonly
+     * @public
+     */
     // eslint-disable-next-line no-use-before-define
-    private _$nextJob: Job | null;
+    public nextJob: Job | null;
 
     /**
      * @param {object}   target
@@ -49,39 +112,18 @@ export class Job extends EventDispatcher
 
         super();
 
+        this.delay       = delay;
+        this.duration    = duration;
+        this.ease        = ease || Easing.linear;
+        this.from        = from;
+        this.to          = to;
+        this.currentTime = 0;
+        this.nextJob     = null;
         /**
          * @type {object}
          * @private
          */
         this._$target = target;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$delay = delay;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$duration = duration;
-
-        /**
-         * @type {function}
-         * @default Easing.linear
-         * @private
-         */
-        this._$ease = ease || Easing.linear;
-
-        /**
-         * @type {object}
-         * @default null
-         * @private
-         */
-        this._$from = from;
 
         /**
          * @type {array}
@@ -105,46 +147,11 @@ export class Job extends EventDispatcher
         this._$stopFlag = false;
 
         /**
-         * @type {object}
-         * @default null
-         * @private
-         */
-        this._$to = to;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$currentTime = 0;
-
-        /**
          * @type {number}
          * @default -1
          * @private
          */
         this._$timerId = -1;
-
-        /**
-         * @type {Job}
-         * @default null
-         * @private
-         */
-        this._$nextJob = null;
-    }
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class Job]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Job]";
     }
 
     /**
@@ -162,20 +169,6 @@ export class Job extends EventDispatcher
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object Job]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Job]";
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
@@ -187,109 +180,6 @@ export class Job extends EventDispatcher
     get namespace (): string
     {
         return "next2d.ui.Job";
-    }
-
-    /**
-     * @description イージングの計算関数を返します。
-     *              Returns the calculation function of the easing.
-     *
-     * @see Easing
-     * @member {function}
-     * @default Easing.linear
-     * @public
-     */
-    get ease (): Function
-    {
-        return this._$ease;
-    }
-    set ease (ease: Function)
-    {
-        this._$ease = ease;
-    }
-
-    /**
-     * @description イージングの開始までの遅延時間を返します。
-     *              Returns the delay time until the start of the easing.
-     *
-     * @member {number}
-     * @default 0
-     * @public
-     */
-    get delay (): number
-    {
-        return this._$delay;
-    }
-    set delay (delay: number)
-    {
-        this._$delay = delay;
-    }
-
-    /**
-     * @description イージング完了時間を返します。
-     *              Returns the easing completion time.
-     *
-     * @member {number}
-     * @default 1
-     * @public
-     */
-    get duration (): number
-    {
-        return this._$duration;
-    }
-    set duration (duration: number)
-    {
-        this._$duration = duration;
-    }
-
-    /**
-     * @description イージングの開始オブジェクトを返します。
-     *              Returns the start object of the easing.
-     *
-     * @member {object}
-     * @default null
-     * @public
-     */
-    get from (): ObjectImpl
-    {
-        return this._$from;
-    }
-    set from (from: ObjectImpl)
-    {
-        this._$from = from;
-    }
-
-    /**
-     * @description イージングの終了オブジェクトを返します。
-     *              Returns the end object of the easing.
-     *
-     * @member {object}
-     * @default null
-     * @public
-     */
-    get to (): ObjectImpl
-    {
-        return this._$to;
-    }
-    set to (to: ObjectImpl)
-    {
-        this._$to = to;
-    }
-
-    /**
-     * @description イージングの現在時間を返します。
-     *              Returns the current time of the easing.
-     *
-     * @member {number}
-     * @default 0
-     * @public
-     */
-    get currentTime (): number
-    {
-        return this._$currentTime;
-    }
-    set currentTime (time: number)
-    {
-        this._$currentTime = time;
     }
 
     /**
@@ -318,20 +208,6 @@ export class Job extends EventDispatcher
     get entries (): EntriesObjectImpl[] | null
     {
         return this._$entries;
-    }
-
-    /**
-     * @description イージングの次のjobを返します。
-     *              Returns the next job of the easing.
-     *
-     * @member {Job | null}
-     * @default null
-     * @readonly
-     * @public
-     */
-    get nextJob (): Job | null
-    {
-        return this._$nextJob;
     }
 
     /**
@@ -372,7 +248,7 @@ export class Job extends EventDispatcher
      */
     chain (job: Job | null): Job | null
     {
-        this._$nextJob = job;
+        this.nextJob = job;
         return job;
     }
 
@@ -407,7 +283,7 @@ export class Job extends EventDispatcher
             }
 
             // create entries
-            this._$entries = jobEntriesService(this._$from);
+            this._$entries = jobEntriesService(this.from);
             if (!this._$entries) {
                 return ;
             }
@@ -420,8 +296,8 @@ export class Job extends EventDispatcher
         };
 
         // delayed start
-        if (this._$delay) {
-            setTimeout(boot, this._$delay * 1000);
+        if (this.delay) {
+            setTimeout(boot, this.delay * 1000);
         } else {
             boot();
         }
@@ -439,8 +315,8 @@ export class Job extends EventDispatcher
     {
         cancelAnimationFrame(this._$timerId);
 
-        if (this.hasEventListener(Event.STOP)) {
-            this.dispatchEvent(new Event(Event.STOP));
+        if (this.hasEventListener(JobEvent.STOP)) {
+            this.dispatchEvent(new JobEvent(JobEvent.STOP));
         }
 
         // reset

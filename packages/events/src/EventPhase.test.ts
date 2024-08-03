@@ -1,30 +1,11 @@
 import { EventPhase } from "./EventPhase";
 import { describe, expect, it } from "vitest";
 
-describe("EventPhase.js toString test", () =>
-{
-    it("toString test case1", () =>
-    {
-        const eventPhase = new EventPhase();
-        expect(eventPhase.toString()).toBe("[object EventPhase]");
-    });
-
-});
-
-describe("EventPhase.js static toString test", () =>
-{
-    it("static toString test", () =>
-    {
-        expect(EventPhase.toString()).toBe("[class EventPhase]");
-    });
-});
-
 describe("EventPhase.js namespace test", () =>
 {
     it("namespace test public", () =>
     {
-        const eventPhase = new EventPhase();
-        expect(eventPhase.namespace).toBe("next2d.events.EventPhase");
+        expect(new EventPhase().namespace).toBe("next2d.events.EventPhase");
     });
 
     it("namespace test static", () =>

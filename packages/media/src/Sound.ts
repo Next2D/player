@@ -29,12 +29,30 @@ export class Sound extends EventDispatcher
 {
     private _$source: AudioBufferSourceNode | null;
     private _$gain: GainNode | null;
-    private _$audioBuffer: AudioBuffer | null;
-    private _$volume: number;
-    private _$currentCount: number;
-    private _$src: string;
-    private _$loopCount: number;
     private _$stopFlag: boolean;
+    private _$currentCount: number;
+    private _$volume: number;
+    private _$src: string;
+
+    /**
+     * @description AudioBuffer
+     *              AudioBuffer
+     *
+     * @type {AudioBuffer}
+     * @default null
+     * @public
+     */
+    public audioBuffer: AudioBuffer | null;
+
+    /**
+     * @description ループ回数の設定
+     *              Loop count setting.
+     *
+     * @type {string}
+     * @default 0
+     * @public
+     */
+    public loopCount: number;
 
     /**
      * @constructor
@@ -44,12 +62,22 @@ export class Sound extends EventDispatcher
     {
         super();
 
+        this.loopCount   = 0;
+        this.audioBuffer = null;
+
         /**
          * @type {number}
          * @default 1
          * @private
          */
         this._$volume = 1;
+
+        /**
+         * @type {string}
+         * @default ""
+         * @private
+         */
+        this._$src = "";
 
         /**
          * @type {number}
@@ -59,25 +87,11 @@ export class Sound extends EventDispatcher
         this._$currentCount = 0;
 
         /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$loopCount = 0;
-
-        /**
          * @type {boolean}
          * @default true
          * @private
          */
         this._$stopFlag = true;
-
-        /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$src = "";
 
         /**
          * @type {AudioBufferSourceNode}
@@ -92,27 +106,6 @@ export class Sound extends EventDispatcher
          * @private
          */
         this._$gain = null;
-
-        /**
-         * @type {AudioBuffer}
-         * @default null
-         * @private
-         */
-        this._$audioBuffer = null;
-    }
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class Sound]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Sound]";
     }
 
     /**
@@ -130,20 +123,6 @@ export class Sound extends EventDispatcher
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object Sound]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Sound]";
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
@@ -155,23 +134,6 @@ export class Sound extends EventDispatcher
     get namespace (): string
     {
         return "next2d.media.Sound";
-    }
-
-    /**
-     * @description ループ回数の設定
-     *              Loop count setting.
-     *
-     * @member {number}
-     * @default 0
-     * @public
-     */
-    get loopCount (): number
-    {
-        return this._$loopCount;
-    }
-    set loopCount (loop_count: number)
-    {
-        this._$loopCount = loop_count;
     }
 
     /**
@@ -224,24 +186,7 @@ export class Sound extends EventDispatcher
      */
     get canLoop (): boolean
     {
-        return !this._$stopFlag && this._$loopCount >= this._$currentCount;
-    }
-
-    /**
-     * @description AudioBuffer
-     *              AudioBuffer
-     *
-     * @member {AudioBuffer}
-     * @default null
-     * @public
-     */
-    get audioBuffer (): AudioBuffer | null
-    {
-        return this._$audioBuffer;
-    }
-    set audioBuffer (audio_buffer: AudioBuffer | null)
-    {
-        this._$audioBuffer = audio_buffer;
+        return !this._$stopFlag && this.loopCount >= this._$currentCount;
     }
 
     /**
@@ -256,8 +201,8 @@ export class Sound extends EventDispatcher
     {
         const sound = new Sound();
         sound.volume      = this._$volume;
-        sound.loopCount   = this._$loopCount;
-        sound.audioBuffer = this._$audioBuffer;
+        sound.loopCount   = this.loopCount;
+        sound.audioBuffer = this.audioBuffer;
         return sound;
     }
 
@@ -313,9 +258,17 @@ export class Sound extends EventDispatcher
      */
     play (start_time: number = 0): void
     {
-        if (!this._$audioBuffer || !$audioContext) {
+        // 再生中なら終了
+        if (!this._$stopFlag) {
             return ;
         }
+
+        if (!this.audioBuffer || !$audioContext) {
+            return ;
+        }
+
+        // 初期化
+        this.stop();
 
         this._$gain = $audioContext.createGain();
         this._$gain.connect($audioContext.destination);
@@ -327,19 +280,14 @@ export class Sound extends EventDispatcher
             soundEndedEventService(this);
         });
 
-        this._$source.buffer = this._$audioBuffer;
+        this._$source.buffer = this.audioBuffer;
         this._$source.connect(this._$gain);
         this._$source.start(start_time);
 
         this._$stopFlag = false;
         this._$currentCount++;
 
-        const sounds = $getSounds();
-        const index = sounds.indexOf(this);
-        if (index > -1) {
-            sounds.splice(index, 1);
-        }
-        sounds.push(this);
+        $getSounds().push(this);
     }
 
     /**
@@ -352,6 +300,10 @@ export class Sound extends EventDispatcher
      */
     stop (): void
     {
+        if (this._$stopFlag) {
+            return ;
+        }
+
         this._$stopFlag = true;
         this._$currentCount = 0;
 
@@ -378,11 +330,11 @@ export class Sound extends EventDispatcher
      *              Create Sound from Character Data
      *
      * @param  {Character} character
-     * @return {void}
+     * @return {Promise}
      * @method
      * @private
      */
-    async build (character: Character<any>): Promise<void>
+    async _$build (character: Character<any>): Promise<void>
     {
         // load AudioBuffer
         if (!character.audioBuffer) {
@@ -394,6 +346,6 @@ export class Sound extends EventDispatcher
             character.audioBuffer = audioBuffer;
         }
 
-        this._$audioBuffer = character.audioBuffer;
+        this.audioBuffer = character.audioBuffer;
     }
 }

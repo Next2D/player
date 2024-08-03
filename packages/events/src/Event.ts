@@ -1,6 +1,6 @@
 import { EventPhase } from "./EventPhase";
+import type { EventDispatcher } from "./EventDispatcher";
 import type { EventDispatcherImpl } from "./interface/EventDispatcherImpl";
-import { execute as eventFormatToStringService } from "./Event/EventFormatToStringService";
 
 /**
  * @description Event クラスのメソッドは、イベントリスナー関数で使用してイベントオブジェクトの動作に影響を与えることができます。
@@ -24,26 +24,23 @@ export class Event
 {
     private readonly _$type: string;
     private readonly _$bubbles: boolean;
-    private readonly _$cancelable: boolean;
-    private _$target: EventDispatcherImpl<any> | null;
-    private _$currentTarget: EventDispatcherImpl<any> | null;
-    private _$listener: Function | null;
-    private _$eventPhase: number;
+    public listener: Function | null;
+    public target: EventDispatcherImpl<EventDispatcher> | null;
+    public currentTarget: EventDispatcherImpl<EventDispatcher> | null;
+    public eventPhase: number;
     public _$stopImmediatePropagation: boolean;
     public _$stopPropagation: boolean;
 
     /**
      * @param {string}  type
      * @param {boolean} [bubbles=false]
-     * @param {boolean} [cancelable=false]
      *
      * @constructor
      * @public
      */
     constructor (
         type: string,
-        bubbles: boolean = false,
-        cancelable: boolean = false
+        bubbles: boolean = false
     ) {
 
         /**
@@ -54,42 +51,38 @@ export class Event
 
         /**
          * @type {boolean}
+         * @default false
          * @private
          */
         this._$bubbles = bubbles;
 
         /**
-         * @type {boolean}
-         * @private
-         */
-        this._$cancelable = cancelable;
-
-        /**
-         * @type {EventDispatcher}
-         * @private
-         */
-        this._$target = null;
-
-        /**
-         * @type {EventDispatcher}
+         * @type {EventDispatcher | null}
          * @default null
          * @private
          */
-        this._$currentTarget = null;
+        this.target = null;
+
+        /**
+         * @type {EventDispatcher | null}
+         * @default null
+         * @private
+         */
+        this.currentTarget = null;
 
         /**
          * @type {number}
          * @default EventPhase.AT_TARGET
          * @private
          */
-        this._$eventPhase = EventPhase.AT_TARGET;
+        this.eventPhase = EventPhase.AT_TARGET;
 
         /**
          * @type {function}
          * @default null
          * @private
          */
-        this._$listener = null;
+        this.listener = null;
 
         /**
          * @type {boolean}
@@ -107,25 +100,10 @@ export class Event
     }
 
     /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return {string}
-     * @default "[class Event]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Event]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
      * @member  {string}
-     * @default "next2d.events.Event"
      * @const
      * @static
      */
@@ -135,24 +113,10 @@ export class Event
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return eventFormatToStringService(this, "Event", "type", "bubbles", "cancelable", "eventPhase");
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default "next2d.events.Event"
      * @const
      * @public
      */
@@ -162,23 +126,8 @@ export class Event
     }
 
     /**
-     * @description ACTIVATE 定数は、type プロパティ（activate イベントオブジェクト）の値を定義します。
-     *              The ACTIVATE constant defines the value
-     *              of the type property of an activate event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get ACTIVATE (): string
-    {
-        return "activate";
-    }
-
-    /**
-     * @description Event.ADDED 定数は、added イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.ADDED constant defines the value
-     *              of the type property of an added event object.
+     * @description Sprite または MovieClip を親に持つオブジェクトに追加されたときに発生します。
+     *              Occurs when the object is added to a parent object.
      *
      * @return {string}
      * @const
@@ -190,9 +139,8 @@ export class Event
     }
 
     /**
-     * @description Event.ADDED_TO_STAGE 定数は、type プロパティ（addedToStage イベントオブジェクト）の値を定義します。
-     *              The Event.ADDED_TO_STAGE constant defines the value
-     *              of the type property of an addedToStage event object.
+     * @description Stage に追加されたときに発生します。
+     *              Occurs when the object is added to the Stage.
      *
      * @return {string}
      * @const
@@ -204,23 +152,8 @@ export class Event
     }
 
     /**
-     * @description Event.CHANGE 定数は、type プロパティ（change イベントオブジェクト）の値を定義します。
-     *              The Event.CHANGE constant defines the value
-     *              of the type property of a change event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get CHANGE (): string
-    {
-        return "change";
-    }
-
-    /**
-     * @description Event.COMPLETE 定数は、complete イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.COMPLETE constant defines the value
-     *              of the type property of a complete event object.
+     * @description 読み込みや、処理完了時に発生します。
+     *              Occurs when loading or processing is complete.
      *
      * @return {string}
      * @const
@@ -232,23 +165,21 @@ export class Event
     }
 
     /**
-     * @description Event.DEACTIVATE 定数は、deactivate イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.DEACTIVATE constant defines the value
-     *              of the type property of a deactivate event object.
+     * @description サウンドやビデオなどの再生処理の終了時に発生します。
+     *              Occurs when playback of a sound or video ends.
      *
      * @return {string}
      * @const
      * @static
      */
-    static get DEACTIVATE (): string
+    static get ENDED (): string
     {
-        return "deactivate";
+        return "ended";
     }
 
     /**
-     * @description Event.ENTER_FRAME 定数は、enterFrame イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.ENTER_FRAME constant defines the value
-     *              of the type property of an enterFrame event object.
+     * @description MovieClip のフレームが変更される度に発生します。
+     *              Occurs when the frame of a MovieClip changes.
      *
      * @return {string}
      * @const
@@ -260,37 +191,8 @@ export class Event
     }
 
     /**
-     * @description Event.EXIT_FRAME 定数は、exitFrame イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.EXIT_FRAME constant defines the value
-     *              of the type property of an exitFrame event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get EXIT_FRAME (): string
-    {
-        return "exitFrame";
-    }
-
-    /**
-     * @description Event.FRAME_CONSTRUCTED 定数は、frameConstructed イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.FRAME_CONSTRUCTED constant defines the value
-     *              of the type property of an frameConstructed event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get FRAME_CONSTRUCTED (): string
-    {
-        return "frameConstructed";
-    }
-
-    /**
-     * @description Event.FRAME_LABEL 定数は、frameLabel イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.FRAME_LABEL constant defines the value
-     *              of the type property of an frameLabel event object.
+     * @description MovieClip のフレームラベルのキーフレームに到達したときに発生します。
+     *              Occurs when a MovieClip reaches a keyframe that designates a frame label.
      *
      * @return {string}
      * @const
@@ -302,51 +204,22 @@ export class Event
     }
 
     /**
-     * @description Event.INIT 定数は、init イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.INIT constant defines the value
-     *              of the type property of an init event object.
+     * @description データの読み込み開始時に発生します。
+     *              Occurs when sound data loading starts.
      *
      * @return {string}
+     * @default "soundopen"
      * @const
      * @static
      */
-    static get INIT (): string
+    static get OPEN (): string
     {
-        return "init";
+        return "open";
     }
 
     /**
-     * @description Event.LOAD 定数は、load イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.LOAD constant defines the value
-     *              of the type property of an load event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get LOAD (): string
-    {
-        return "load";
-    }
-
-    /**
-     * @description Event.MOUSE_LEAVE 定数は、mouseLeave イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.MOUSE_LEAVE constant defines the value
-     *              of the type property of a mouseLeave event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get MOUSE_LEAVE (): string
-    {
-        return "mouseLeave";
-    }
-
-    /**
-     * @description Event.REMOVED 定数は、removed プロパティ（paste イベントオブジェクト）の値を定義します。
-     *              The Event.REMOVED constant defines the value
-     *              of the type property of a removed event object.
+     * @description Sprite または MovieClip を親に持つオブジェクトから削除されたときに発生します。
+     *              Occurs when the object is removed from a parent object.
      *
      * @return {string}
      * @const
@@ -358,9 +231,8 @@ export class Event
     }
 
     /**
-     * @description Event.REMOVED_FROM_STAGE 定数は、removedFromStage イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.REMOVED_FROM_STAGE constant defines the value
-     *              of the type property of a removedFromStage event object.
+     * @description Stage から削除されたときに発生します。
+     *              Occurs when the object is removed from the Stage.
      *
      * @return {string}
      * @const
@@ -372,25 +244,8 @@ export class Event
     }
 
     /**
-     * @description Event.RENDER 定数は、render イベントオブジェクトの
-     *              type プロパティの値を定義します。
-     *              The Event.RENDER constant defines the value
-     *              of the type property of a render event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get RENDER (): string
-    {
-        return "render";
-    }
-
-    /**
-     * @description Event.RESIZE 定数は、resize イベントオブジェクトの
-     *              type プロパティの値を定義します。
-     *              The Event.RESIZE constant defines the value
-     *              of the type property of a resize event object.
+     * @description 画面のサイズが変更されたときに発生します。
+     *              Occurs when the screen size changes.
      *
      * @return {string}
      * @const
@@ -399,80 +254,6 @@ export class Event
     static get RESIZE (): string
     {
         return "resize";
-    }
-
-    /**
-     * @description Event.SCROLL 定数は、render イベントオブジェクトの
-     *              type プロパティの値を定義します。
-     *              The Event.SCROLL constant defines the value
-     *              of the type property of a render event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get SCROLL (): string
-    {
-        return "scroll";
-    }
-
-    /**
-     * @description Event.OPEN 定数は、render イベントオブジェクトの
-     *              type プロパティの値を定義します。
-     *              The Event.OPEN constant defines the value
-     *              of the type property of a render event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get OPEN (): string
-    {
-        return "open";
-    }
-
-    /**
-     * @description Event.STOP 定数は、render イベントオブジェクトの
-     *              type プロパティの値を定義します。
-     *              The Event.STOP constant defines the value
-     *              of the type property of a render event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get STOP (): string
-    {
-        return "stop";
-    }
-
-    /**
-     * @description Event.SOUND_COMPLETE 定数は、soundComplete イベントオブジェクトの type プロパティの値を定義します。
-     *              The Event.SOUND_COMPLETE constant defines the value
-     *              of the type property of a soundComplete event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get SOUND_COMPLETE (): string
-    {
-        return "soundComplete";
-    }
-
-    /**
-     * @description Event.UPDATE 定数は、render イベントオブジェクトの
-     *              type プロパティの値を定義します。
-     *              The Event.STOP constant defines the value
-     *              of the type property of a render event object.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get UPDATE (): string
-    {
-        return "update";
     }
 
     /**
@@ -487,89 +268,6 @@ export class Event
     get bubbles (): boolean
     {
         return this._$bubbles;
-    }
-
-    /**
-     * @description イベントに関連付けられた動作を回避できるかどうかを示します。
-     *              Indicates whether the behavior associated
-     *              with the event can be prevented.
-     *
-     * @member {boolean}
-     * @default false
-     * @readonly
-     * @public
-     */
-    get cancelable (): boolean
-    {
-        return this._$cancelable;
-    }
-
-    /**
-     * @description イベントリスナーで Event オブジェクトをアクティブに処理しているオブジェクトです。
-     *              The object that is actively processing the Event object
-     *              with an event listener.
-     *
-     * @member {EventDispatcher|null}
-     * @default null
-     * @public
-     */
-    get currentTarget (): EventDispatcherImpl<any>
-    {
-        return this._$currentTarget as EventDispatcherImpl<any>;
-    }
-    set currentTarget (current_target: EventDispatcherImpl<any>)
-    {
-        this._$currentTarget = current_target;
-    }
-
-    /**
-     * @description イベントフローの現在の段階です。
-     *              The current phase in the event flow.
-     *
-     * @member {number}
-     * @default EventPhase.AT_TARGET
-     * @public
-     */
-    get eventPhase (): number
-    {
-        return this._$eventPhase;
-    }
-    set eventPhase (event_phase: number)
-    {
-        this._$eventPhase = event_phase;
-    }
-
-    /**
-     * @description 現在コールされている関数
-     *              Function currently being called.
-     *
-     * @member {function}
-     * @default null
-     * @public
-     */
-    get listener (): Function | null
-    {
-        return this._$listener;
-    }
-    set listener (listener: Function | null)
-    {
-        this._$listener = listener;
-    }
-
-    /**
-     * @description イベントターゲットです。
-     *              The event target.
-     *
-     * @member {EventDispatcher|null}
-     * @public
-     */
-    get target (): EventDispatcherImpl<any>
-    {
-        return this._$target ? this._$target : this._$currentTarget;
-    }
-    set target (target: EventDispatcherImpl<any>)
-    {
-        this._$target = target;
     }
 
     /**

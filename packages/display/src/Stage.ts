@@ -11,8 +11,6 @@ import type { DisplayObjectImpl } from "@next2d/interface";
  */
 export class Stage extends DisplayObjectContainer
 {
-    public _$invalidate: boolean;
-
     /**
      * @constructor
      * @public
@@ -32,13 +30,6 @@ export class Stage extends DisplayObjectContainer
          * @private
          */
         this._$stage = this;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$invalidate = true;
     }
 
     /**
@@ -98,36 +89,15 @@ export class Stage extends DisplayObjectContainer
     }
 
     /**
-     * @description 表示リストをレンダリングする必要のある次の機会に、
-     *              表示オブジェクトに警告するようランタイムに通知します。
-     *              (例えば、再生ヘッドを新しいフレームに進める場合などです。)
-     *              Calling the invalidate() method signals runtimes
-     *              to alert display objects on the next opportunity
-     *              it has to render the display list.
-     *              (for example, when the playhead advances to a new frame)
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
-    invalidate (): void
-    {
-        this._$invalidate = true;
-    }
-
-    /**
      * @param  {DisplayObject} child
      * @return {DisplayObject}
      * @method
-     * @private
+     * @protected
      */
     _$addChild (child: DisplayObjectImpl<any>): DisplayObjectImpl<any>
     {
         child._$stage  = this;
         child._$root   = child;
-
-        // worker flag updated
-        this._$created = true;
 
         return super._$addChild(child);
     }

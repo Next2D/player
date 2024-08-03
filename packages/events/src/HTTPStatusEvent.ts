@@ -1,6 +1,5 @@
-import { Event } from "./Event";
 import type { URLRequestHeaderImpl } from "./interface/URLRequestHeaderImpl";
-import { execute as eventFormatToStringService } from "./Event/EventFormatToStringService";
+import { Event } from "./Event";
 
 /**
  * @description ネットワーク要求が HTTP ステータスコードを返すと、アプリケーションによって HTTPStatusEvent オブジェクトが送出されます。
@@ -19,7 +18,6 @@ export class HTTPStatusEvent extends Event
     /**
      * @param {string}  type
      * @param {boolean} [bubbles=false]
-     * @param {boolean} [cancelable=false]
      * @param {number}  [status=0]
      * @param {string}  [response_url=""]
      * @param {array}   [response_headers=[]]
@@ -28,12 +26,12 @@ export class HTTPStatusEvent extends Event
      * @public
      */
     constructor (
-        type: string, bubbles: boolean = false, cancelable: boolean = false,
+        type: string, bubbles: boolean = false,
         status: number = 0, response_url: string = "",
         response_headers: URLRequestHeaderImpl[] = []
     ) {
 
-        super(type, bubbles, cancelable);
+        super(type, bubbles);
 
         /**
          * @type {number}
@@ -58,20 +56,6 @@ export class HTTPStatusEvent extends Event
     }
 
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class HTTPStatusEvent]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class HTTPStatusEvent]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
@@ -83,23 +67,6 @@ export class HTTPStatusEvent extends Event
     static get namespace (): string
     {
         return "next2d.events.HTTPStatusEvent";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return eventFormatToStringService(this,
-            "HTTPStatusEvent",
-            "type", "bubbles", "cancelable",
-            "eventPhase", "status", "responseURL"
-        );
     }
 
     /**

@@ -1,7 +1,7 @@
 import type { EntriesObjectImpl } from "../interface/EntriesObjectImpl";
 import type { Job } from "../Job";
 import { execute as jobUpdatePropertyService } from "./JobUpdatePropertyService";
-import { Event } from "@next2d/events";
+import { JobEvent } from "@next2d/events";
 
 /**
  * @description 繰り返しのアップデート処理関数
@@ -30,16 +30,16 @@ export const execute = (job: Job, timestamp: number): number =>
     );
 
     // update event
-    if (job.hasEventListener(Event.UPDATE)) {
-        job.dispatchEvent(new Event(Event.UPDATE));
+    if (job.hasEventListener(JobEvent.UPDATE)) {
+        job.dispatchEvent(new JobEvent(JobEvent.UPDATE));
     }
 
     // complete logic
     if (job.currentTime >= job.duration) {
 
         // complete event
-        if (job.hasEventListener(Event.COMPLETE)) {
-            job.dispatchEvent(new Event(Event.COMPLETE));
+        if (job.hasEventListener(JobEvent.COMPLETE)) {
+            job.dispatchEvent(new JobEvent(JobEvent.COMPLETE));
         }
 
         // next job

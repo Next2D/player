@@ -1,4 +1,4 @@
-import type { EventDispatcherImpl } from "../interface/EventDispatcherImpl";
+import type { EventDispatcher } from "../EventDispatcher";
 
 /**
  * @description 先祖も含めてイベントリスナーが登録されているかどうかを判定。
@@ -10,8 +10,8 @@ import type { EventDispatcherImpl } from "../interface/EventDispatcherImpl";
  * @method
  * @protected
  */
-export const execute = (
-    scope: EventDispatcherImpl<any>,
+export const execute = <D extends EventDispatcher>(
+    scope: D,
     type: string
 ): boolean => {
 
@@ -21,14 +21,18 @@ export const execute = (
 
     if ("parent" in scope) {
 
-        let parent = scope.parent as EventDispatcherImpl<any> | null;
+        let parent = scope.parent as T | null;
         while (parent) {
 
             if (parent.hasEventListener(type)) {
                 return true;
             }
 
-            parent = parent.parent;
+            if (!("parent" in parent)) {
+                break;
+            }
+
+            parent = parent.parent as T | null;
         }
     }
 

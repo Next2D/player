@@ -15,7 +15,7 @@ export const execute = (loader_info: LoaderInfo, event: ProgressEvent): void =>
 {
     if (loader_info.willTrigger(Next2DProgressEvent.PROGRESS)) {
         loader_info.dispatchEvent(new Next2DProgressEvent(
-            Next2DProgressEvent.PROGRESS, false, false,
+            Next2DProgressEvent.PROGRESS, false,
             event.loaded, event.total
         ));
     }

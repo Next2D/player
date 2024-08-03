@@ -12,8 +12,8 @@ import { VideoEvent } from "@next2d/events";
  */
 export const execute = (video: Video): void =>
 {
-    if (video.willTrigger(VideoEvent.PLAY_END)) {
-        video.dispatchEvent(new VideoEvent(VideoEvent.PLAY_END));
+    if (video.willTrigger(VideoEvent.ENDED)) {
+        video.dispatchEvent(new VideoEvent(VideoEvent.ENDED));
     }
 
     if (video.loop) {

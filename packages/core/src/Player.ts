@@ -1,20 +1,8 @@
 import type { PlayerModeImpl } from "./interface/PlayerModeImpl";
-import type { EventDispatcherImpl } from "./interface/EventDispatcherImpl";
-// import type { ParentImpl } from "./interface/ParentImpl";
-// import type { PlayerHitObjectImpl } from "./interface/PlayerHitObjectImpl";
 import type { PlayerOptionsImpl } from "./interface/PlayerOptionsImpl";
-// import type {
-//     MovieClip,
-//     TextField
-// } from "@next2d/display";
+import type { MovieClip } from "@next2d/display";
 import { SoundMixer } from "@next2d/media";
-import { $cacheStore } from "@next2d/cache";
-import {
-    $devicePixelRatio,
-    $LOAD_START,
-    $LOAD_END,
-    $PREFIX
-} from "./CoreUtil";
+import { $devicePixelRatio } from "./CoreUtil";
 import { execute as playerCreateContainerElementService } from "./Player/PlayerCreateContainerElementService";
 import { execute as playerApplyContainerElementStyleService } from "./Player/PlayerApplyContainerElementStyleService";
 import { execute as playerLoadingAnimationService } from "./Player/PlayerLoadingAnimationService";
@@ -31,8 +19,7 @@ import { execute as playerUpdateBackgroundColorPostMessageService } from "./Play
  */
 export class Player
 {
-    // private readonly _$actions: MovieClip[];
-    private readonly _$loaders: EventDispatcherImpl<any>[];
+    private readonly _$actions: MovieClip[];
     // private readonly _$sounds: Map<any, MovieClip>;
     // private readonly _$hitObject: PlayerHitObjectImpl;
     private readonly _$matrix: Float32Array;
@@ -45,7 +32,6 @@ export class Player
     private _$fixedHeight: number;
     private _$frameRate: number;
     private _$stopFlag: boolean;
-    private _$loadStatus: number;
     private _$scale: number;
     // private _$state: "up" | "down";
     // private _$textField: TextField | null;
@@ -53,7 +39,7 @@ export class Player
     // private _$rollOverObject: EventDispatcherImpl<any> | null;
     // private _$mouseOverTarget: EventDispatcherImpl<any> | null;
     // private _$startTime: number;
-    // private _$fps: number;
+    private _$fps: number;
     // private _$hitTestStart: boolean;
     // private _$stageX: number;
     // private _$stageY: number;
@@ -61,7 +47,6 @@ export class Player
     private _$bgColor: string;
     private _$fullScreen: boolean;
     private _$timerId: number;
-    private _$loadId: number;
     // private _$deltaX: number;
     // private _$deltaY: number;
     // private _$clickTarget: ParentImpl<any> | null;
@@ -79,17 +64,11 @@ export class Player
          */
         this._$mode = "loader";
 
-        // /**
-        //  * @type {array}
-        //  * @private
-        //  */
-        // this._$actions = [];
-
         /**
          * @type {array}
-         * @public
+         * @private
          */
-        this._$loaders = [];
+        this._$actions = [];
 
         // /**
         //  * @type {Map}
@@ -143,19 +122,12 @@ export class Player
         //  */
         // this._$startTime = 0;
 
-        // /**
-        //  * @type {number}
-        //  * @default 16
-        //  * @private
-        //  */
-        // this._$fps = 16;
-
         /**
          * @type {number}
-         * @default 0
+         * @default 16
          * @private
          */
-        this._$loadStatus = 0;
+        this._$fps = 16;
 
         // /**
         //  * @type {number}
@@ -677,7 +649,7 @@ export class Player
         }
 
         // initialize resize
-        playerResizeEventService(this);
+        playerResizeEventService();
     }
 
     // /**
@@ -750,109 +722,6 @@ export class Player
     //         this.play();
     //     }
 
-    // }
-
-    //     // @ts-ignore
-    //     this._$canvas.addEventListener($TOUCH_START, (event: TouchEvent) =>
-    //     {
-    //         $setEvent(event);
-    //         $setEventType($TOUCH_START);
-
-    //         // start position
-    //         this._$hitTest();
-    //     });
-
-    //     // @ts-ignore
-    //     this._$canvas.addEventListener($TOUCH_MOVE, (event: TouchEvent) =>
-    //     {
-    //         $setEvent(event);
-    //         $setEventType($TOUCH_MOVE);
-    //         this._$hitTest();
-    //     });
-
-    //     // @ts-ignore
-    //     this._$canvas.addEventListener($TOUCH_END, (event: TouchEvent) =>
-    //     {
-    //         $setEvent(event);
-    //         $setEventType($TOUCH_END);
-    //         this._$hitTest();
-    //     });
-
-    //     // @ts-ignore
-    //     this._$canvas.addEventListener($TOUCH_MOVE, (event: TouchEvent) =>
-    //     {
-    //         $setEvent(event);
-    //         $setEventType($TOUCH_MOVE);
-
-    //         this._$hitTest();
-    //     }, { "passive": false });
-
-    //     // @ts-ignore
-    //     this._$canvas.addEventListener($MOUSE_DOWN, (event: MouseEvent) =>
-    //     {
-    //         $setEvent(event);
-    //         $setEventType($MOUSE_DOWN);
-
-    //         if (!event.button) {
-    //             this._$hitTest();
-    //         }
-    //     });
-
-    //     // @ts-ignore
-    //     this._$canvas.addEventListener($DOUBLE_CLICK, (event: MouseEvent) =>
-    //     {
-    //         $setEvent(event);
-    //         $setEventType($DOUBLE_CLICK);
-
-    //         if (!event.button) {
-    //             this._$hitTest();
-    //         }
-    //     });
-
-    //     // @ts-ignore
-    //     this._$canvas.addEventListener($MOUSE_LEAVE, (event: MouseEvent) =>
-    //     {
-    //         $setEvent(event);
-    //         $setEventType($MOUSE_LEAVE);
-
-    //         this._$hitTest();
-
-    //         $setEvent(null);
-    //         this._$stageX = -1;
-    //         this._$stageY = -1;
-    //     });
-
-    //     // @ts-ignore
-    //     this._$canvas.addEventListener($MOUSE_UP, (event: MouseEvent) =>
-    //     {
-    //         $setEvent(event);
-    //         $setEventType($MOUSE_UP);
-
-    //         if (!event.button) {
-    //             this._$hitTest();
-    //         }
-    //     });
-
-    //     // @ts-ignore
-    //     this._$canvas.addEventListener($MOUSE_MOVE, (event: MouseEvent) =>
-    //     {
-    //         $setEvent(event);
-    //         $setEventType($MOUSE_MOVE);
-
-    //         this._$hitTest();
-    //     });
-
-    //     // @ts-ignore
-    //     this._$canvas.addEventListener($MOUSE_WHEEL, (event: MouseEvent) =>
-    //     {
-    //         if (!event.defaultPrevented) {
-
-    //             $setEvent(event);
-    //             $setEventType($MOUSE_WHEEL);
-
-    //             this._$hitTest();
-    //         }
-    //     }, { "passive": false });
     // }
 
     // /**

@@ -1,6 +1,7 @@
 import type { EventListenerImpl } from "../interface/EventListenerImpl";
-import type { EventDispatcherImpl } from "../interface/EventDispatcherImpl";
+import type { EventDispatcher } from "../EventDispatcher";
 import { Event } from "../Event";
+import { KeyboardEvent } from "../KeyboardEvent";
 import {
     $broadcastEvents,
     $getArray
@@ -18,26 +19,21 @@ import {
  * @method
  * @protected
  */
-export const execute = (
-    scope: EventDispatcherImpl<any>,
+export const execute = <D extends EventDispatcher>(
+    scope: D,
     type: string,
     listener: Function,
     use_capture: boolean = false,
     priority: number = 0
 ): void => {
 
-    let events: EventListenerImpl[];
+    let listenerObjects: EventListenerImpl[];
     switch (type) {
 
         // broadcast event
         case Event.ENTER_FRAME:
-        case Event.EXIT_FRAME:
-        case Event.FRAME_CONSTRUCTED:
-        case Event.RENDER:
-        case Event.ACTIVATE:
-        case Event.DEACTIVATE:
-        case "keyDown":
-        case "keyUp":
+        case KeyboardEvent.KEY_DOWN:
+        case KeyboardEvent.KEY_UP:
 
             if (!$broadcastEvents.size
                 || !$broadcastEvents.has(type)
@@ -45,14 +41,13 @@ export const execute = (
                 $broadcastEvents.set(type, $getArray());
             }
 
-            events = $broadcastEvents.get(type) as NonNullable<EventListenerImpl[]>;
+            listenerObjects = $broadcastEvents.get(type) as NonNullable<EventListenerImpl[]>;
 
             break;
 
         // normal event
         default:
 
-            // init
             if (!scope._$events) {
                 scope._$events = new Map();
             }
@@ -61,27 +56,27 @@ export const execute = (
                 scope._$events.set(type, $getArray());
             }
 
-            events = scope._$events.get(type) as NonNullable<EventListenerImpl[]>;
+            listenerObjects = scope._$events.get(type) as NonNullable<EventListenerImpl[]>;
 
             break;
 
     }
 
     // duplicate check
-    const length: number = events.length;
+    const length = listenerObjects.length;
     let index = 0;
     for ( ; index < length; ++index) {
 
-        const event: EventListenerImpl = events[index];
-        if (use_capture !== event.useCapture) {
+        const object = listenerObjects[index];
+        if (use_capture !== object.useCapture) {
             continue;
         }
 
-        if (event.target !== scope) {
+        if (object.target !== scope) {
             continue;
         }
 
-        if (event.listener !== listener) {
+        if (object.listener !== listener) {
             continue;
         }
 
@@ -91,7 +86,7 @@ export const execute = (
     // add or overwrite
     if (length === index) {
         // add
-        events.push({
+        listenerObjects.push({
             "listener":   listener,
             "priority":   priority,
             "useCapture": use_capture,
@@ -99,17 +94,17 @@ export const execute = (
         });
     } else {
         // overwrite
-        const event: EventListenerImpl = events[index];
-        event.listener = listener;
-        event.priority = priority;
-        event.useCapture = use_capture;
-        event.target = scope;
+        const object = listenerObjects[index];
+        object.listener = listener;
+        object.priority = priority;
+        object.useCapture = use_capture;
+        object.target = scope;
     }
 
-    if (events.length > 1) {
+    if (listenerObjects.length > 1) {
 
         // sort(DESC)
-        events.sort((a: EventListenerImpl, b: EventListenerImpl): number =>
+        listenerObjects.sort((a, b): number =>
         {
             switch (true) {
 

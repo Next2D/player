@@ -5,7 +5,8 @@ import type {
     FocusEvent,
     HTTPStatusEvent,
     IOErrorEvent,
-    MouseEvent,
+    PointerEvent,
+    JobEvent,
     ProgressEvent,
     VideoEvent
 } from "@next2d/events";
@@ -17,7 +18,8 @@ export interface EventsImpl {
     FocusEvent: typeof FocusEvent;
     HTTPStatusEvent: typeof HTTPStatusEvent;
     IOErrorEvent: typeof IOErrorEvent;
-    MouseEvent: typeof MouseEvent;
+    PointerEvent: typeof PointerEvent;
+    JobEvent: typeof JobEvent;
     ProgressEvent: typeof ProgressEvent;
     VideoEvent: typeof VideoEvent;
 }

@@ -1,7 +1,7 @@
-import type { EventImpl } from "../interface/EventImpl";
-import type { EventDispatcherImpl } from "../interface/EventDispatcherImpl";
 import type { EventListenerImpl } from "../interface/EventListenerImpl";
+import type { EventDispatcher } from "../EventDispatcher";
 import { Event } from "../Event";
+import { KeyboardEvent } from "../KeyboardEvent";
 import { EventPhase } from "../EventPhase";
 import {
     $broadcastEvents,
@@ -19,21 +19,16 @@ import {
  * @method
  * @protected
  */
-export const execute = (
-    scope: EventDispatcherImpl<any>,
-    event: EventImpl<any>
+export const execute = <D extends EventDispatcher, E extends Event>(
+    scope: D,
+    event: E
 ):  boolean => {
 
     switch (event.type) {
 
         case Event.ENTER_FRAME:
-        case Event.EXIT_FRAME:
-        case Event.FRAME_CONSTRUCTED:
-        case Event.RENDER:
-        case Event.ACTIVATE:
-        case Event.DEACTIVATE:
-        case "keyDown":
-        case "keyUp":
+        case KeyboardEvent.KEY_DOWN:
+        case KeyboardEvent.KEY_UP:
             {
                 if (!$broadcastEvents.size
                     || !$broadcastEvents.has(event.type)
@@ -41,28 +36,25 @@ export const execute = (
                     return false;
                 }
 
-                const events = $broadcastEvents.get(event.type) as NonNullable<EventListenerImpl[]>;
-                if (!events.length) {
+                const listenerObjects = $broadcastEvents.get(event.type) as NonNullable<EventListenerImpl[]>;
+                if (!listenerObjects.length) {
                     return false;
                 }
 
-                for (let idx = 0; idx < events.length; ++idx) {
+                for (let idx = 0; idx < listenerObjects.length; ++idx) {
 
-                    const object: EventListenerImpl = events[idx];
-                    if (object.target !== scope) {
-                        continue;
-                    }
+                    const object = listenerObjects[idx];
 
                     // start target
                     event.eventPhase = EventPhase.AT_TARGET;
 
                     // event execute
-                    event.currentTarget = object.target;
+                    event.target = event.currentTarget = object.target;
 
                     try {
 
                         event.listener = object.listener;
-                        object.listener.call(null, event);
+                        object.listener(event);
 
                     } catch (e) {
 
@@ -77,6 +69,8 @@ export const execute = (
 
         default:
             {
+                event.target = scope;
+
                 let currentEvents: EventListenerImpl[] | null = null;
                 if (scope._$events
                     && scope._$events.size
@@ -92,7 +86,7 @@ export const execute = (
                 const parentEvents = $getArray();
                 if ("parent" in scope) {
 
-                    let parent = scope.parent as EventDispatcherImpl<any> | null;
+                    let parent = scope.parent as D | null;
                     while (parent) {
 
                         if (parent.hasEventListener(event.type)) {
@@ -106,7 +100,11 @@ export const execute = (
                             }
                         }
 
-                        parent = parent.parent;
+                        if (!("parent" in parent)) {
+                            break;
+                        }
+
+                        parent = parent.parent as D | null;
 
                     }
 
@@ -119,8 +117,6 @@ export const execute = (
                     $poolArray(parentEvents);
                     return false;
                 }
-
-                event.target = scope;
 
                 // stage => child... end
                 if (parentEvents.length) {

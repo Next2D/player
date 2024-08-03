@@ -6,7 +6,8 @@ import {
     FocusEvent,
     HTTPStatusEvent,
     IOErrorEvent,
-    MouseEvent,
+    PointerEvent,
+    JobEvent,
     ProgressEvent,
     VideoEvent
 } from "@next2d/events";
@@ -18,7 +19,8 @@ const events: EventsImpl = {
     FocusEvent,
     HTTPStatusEvent,
     IOErrorEvent,
-    MouseEvent,
+    PointerEvent,
+    JobEvent,
     ProgressEvent,
     VideoEvent
 };

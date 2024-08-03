@@ -43,6 +43,6 @@ describe("SoundEndedEventService.js test", () =>
         expect(state).toBe("");
         execute(new MockSound());
         expect(state).toBe("stop");
-        expect(type).toBe(Event.SOUND_COMPLETE);
+        expect(type).toBe(Event.COMPLETE);
     });
 });

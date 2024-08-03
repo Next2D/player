@@ -28,7 +28,7 @@ describe("VideoEndedEventService.js test", () =>
 
         execute(mockVideo);
 
-        expect(eventType).toBe(VideoEvent.PLAY_END);
+        expect(eventType).toBe(VideoEvent.ENDED);
         expect(pauseState).toBe("");
         expect(mockVideo.currentTime).toBe(0);
     });
@@ -56,7 +56,7 @@ describe("VideoEndedEventService.js test", () =>
 
         execute(mockVideo);
 
-        expect(eventType).toBe(VideoEvent.PLAY_END);
+        expect(eventType).toBe(VideoEvent.ENDED);
         expect(pauseState).toBe("pause");
         expect(mockVideo.currentTime).toBe(100);
     });

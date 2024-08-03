@@ -1,15 +1,18 @@
 import type { PlayerOptionsImpl } from "../interface/PlayerOptionsImpl";
 import type { StageDataImpl } from "../interface/StageDataImpl";
+import type { MovieClip } from "@next2d/display";
 import { $player } from "../Player";
-import { $stage } from "../Stage";
 import { $clamp } from "../CoreUtil";
 import { URLRequest } from "@next2d/net";
 import { IOErrorEvent } from "@next2d/events";
-import { Loader } from "@next2d/display";
 import { execute as playerResizeEventService } from "../Player/PlayerResizeEventService";
 import { execute as playerRemoveLoadingElementService } from "../Player/PlayerRemoveLoadingElementService";
 import { execute as playerAppendCanvasElementService } from "../Player/PlayerAppendCanvasElementService";
 import { execute as playerReadyCompleteService } from "../Player/PlayerReadyCompleteService";
+import {
+    Loader,
+    $stage
+} from "@next2d/display";
 
 /**
  * @description 指定のURLからJSONファイルを読み込みます。
@@ -21,7 +24,7 @@ import { execute as playerReadyCompleteService } from "../Player/PlayerReadyComp
  * @method
  * @protected
  */
-export const execute = async (url: string, options: PlayerOptionsImpl): Promise<void> =>
+export const execute = async (url: string, options: PlayerOptionsImpl | null = null): Promise<void> =>
 {
     if (url === "develop") {
         const path: string = location
@@ -67,7 +70,7 @@ export const execute = async (url: string, options: PlayerOptionsImpl): Promise<
     $player.frameRate   = $clamp(stageData.fps, 1, 60, 60);
     $player.bgColor     = stageData.bgColor;
 
-    // $stage.addChild(loaderInfo.content);
+    $stage.addChild<MovieClip>(loaderInfo.content as MovieClip);
 
     // resize
     playerResizeEventService();
