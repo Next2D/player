@@ -41,6 +41,7 @@ class => method => service
 ```
 
 #### case2
+```
 class => method => usecase => service
 ```
 
