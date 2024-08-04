@@ -29,9 +29,9 @@ npm run lint
 ```
 
 ## concept
-各クラスのメソッドはusecaseもしくはserviceで実装しています。但し、serviceからserviceをコールするのは禁止しています。メソッドが簡素な場合は、serviceを直接コールし、複雑な場合や、複数のserviceを呼び出したい場合はusecaseを実装しています。ロジックはusecaseもしくはserviceに責務を置き、メソッドの役割は、privateやprotectedなど、クラス変数への値のセットまでとしています。
+各 `class` の `method` は `usecase` もしくは `service` で実装しています。但し、`service` から `service` をコールするのは禁止しています。`method` が簡素な場合は、`service` を直接コールし、複雑な場合や、複数の `service` を呼び出したい場合は `usecase` を実装しています。ロジックは `usecase` もしくは `service` に責務を置き、 `method` の役割は、 `private` や `protected` など、`class` 変数への値のセットまでとしています。
 
-The methods of each class are implemented by usecase or service. However, calling service from service is prohibited. If the method is simple, call service directly. If the method is complex or if you want to call multiple services, implement usecase. Logic places the responsibility on usecase or service, and the role of the method is limited to setting values to class variables, such as private and protected.
+The `method` of each `class` is implemented by `usecase` or `service`. However, calling `service` from `service` is prohibited. If the `method` is simple, call `service` directly. If the `method` is complex or you want to call multiple `service`, implement `usecase`. The logic places the responsibility on the `usecase` or `service`, and the role of the `method` is limited to setting values in `class` variables, such as `private` or `protected`.
 
 ### dependency diagram
 
