@@ -34,7 +34,13 @@ npm run lint
 Methods of each class are implemented by usecase or service. However, calling service from service is prohibited. If the method is simple, call service directly. If the method is complex or you want to call service from service, implement usecase.
 
 ### dependency diagram
+
+#### case1
 ```
+class => method => service
+```
+
+#### case2
 class => method => usecase => service
 ```
 
