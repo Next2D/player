@@ -1,5 +1,6 @@
 import type { AnimationToolDataImpl } from "../../interface/AnimationToolDataImpl";
 import type { Loader } from "../../Loader";
+import { Event } from "@next2d/events";
 import { MovieClip } from "../../MovieClip";
 
 /**
@@ -33,7 +34,6 @@ export const execute = async (loader: Loader, object: AnimationToolDataImpl): Pr
 
     // build root content
     const movieClip = new MovieClip();
-
     await movieClip._$build<Loader>({
         "characterId": 0,
         "name": "main",
@@ -44,4 +44,9 @@ export const execute = async (loader: Loader, object: AnimationToolDataImpl): Pr
     }, loader);
 
     loaderInfo.content = movieClip;
+
+    // dispatch complete event
+    if (loaderInfo.willTrigger(Event.COMPLETE)) {
+        loaderInfo.dispatchEvent(new Event(Event.COMPLETE));
+    }
 };
