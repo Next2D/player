@@ -1,6 +1,6 @@
 import { Loader } from "../../Loader";
 import { $headerStringToArray } from "../../DisplayObjectUtil";
-import { execute as loaderLoadJsonService } from "./LoaderLoadJsonService";
+import { execute as loaderLoadJsonUseCase } from "./LoaderLoadJsonUseCase";
 import {
     Event,
     ProgressEvent as Next2DProgressEvent,
@@ -48,7 +48,7 @@ export const execute = async (loader: Loader, event: ProgressEvent): Promise<voi
     }
 
     if (199 < target.status && 400 > target.status) {
-        await loaderLoadJsonService(loader, target.response);
+        await loaderLoadJsonUseCase(loader, target.response);
 
         if (loaderInfo.willTrigger(Event.COMPLETE)) {
             loaderInfo.dispatchEvent(new Event(Event.COMPLETE));

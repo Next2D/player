@@ -1,5 +1,5 @@
 import { Loader } from "../../Loader";
-import { execute } from "./LoaderLoadEndEventService";
+import { execute } from "./LoaderLoadEndEventUseCase";
 import {
     Event,
     IOErrorEvent,
@@ -7,7 +7,7 @@ import {
 } from "@next2d/events";
 import { describe, expect, it, vi } from "vitest";
 
-describe("LoaderLoadEndEventService.js test", () =>
+describe("LoaderLoadEndEventUseCase.js test", () =>
 {
     it("execute test case1", async () =>
     {

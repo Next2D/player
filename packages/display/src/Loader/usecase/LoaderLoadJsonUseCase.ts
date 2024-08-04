@@ -1,7 +1,7 @@
 import type { AnimationToolDataImpl } from "../../interface/AnimationToolDataImpl";
 import type { AnimationToolDataZlibImpl } from "../../interface/AnimationToolDataZlibImpl";
 import type { Loader } from "../../Loader";
-import { execute as loaderBuildService } from "./LoaderBuildService";
+import { execute as loaderBuildService } from "../service/LoaderBuildService";
 
 // @ts-ignore
 import ZlibInflateWorker from "../worker/ZlibInflateWorker?worker&inline";
