@@ -29,9 +29,9 @@ npm run lint
 ```
 
 ## concept
-各クラスのメソッドはusecaseもしくはserviceで実装しています。但し、serviceからserviceをコールするのは禁止しています。メソッドが簡素な場合は、serviceを直接コールし、複雑な場合やserviceからserviceを呼び出したい場合はusecaseを実装しています。
+各クラスのメソッドはusecaseもしくはserviceで実装しています。但し、serviceからserviceをコールするのは禁止しています。メソッドが簡素な場合は、serviceを直接コールし、複雑な場合や、複数のserviceを呼び出したい場合はusecaseを実装しています。
 
-Methods of each class are implemented by usecase or service. However, calling service from service is prohibited. If the method is simple, call service directly. If the method is complex or you want to call service from service, implement usecase.
+The methods of each class are implemented by usecase or service. However, calling service from service is prohibited. If the method is simple, call service directly. If the method is complex or if you want to call multiple services, implement usecase.
 
 ### dependency diagram
 
