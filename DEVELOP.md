@@ -45,5 +45,11 @@ class => method => service
 class => method => usecase => service
 ```
 
+## packages
+`packages` ディレクトリの依存関係で注意する点は以下の通りです。
+- `@next2d/core` は他の `packages` からの参照を禁止しています。
+- `@next2d/events`, `@next2d/cache`, `@next2d/webgl` は疎結合で設計されている為、他の `packages` の `import` を禁止しています。
+- `@next2d/renderer` はOffscreenCanvasがworkerで処理されるため、 `@next2d/webgl` のみ `import` を許可しています。
+
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.
