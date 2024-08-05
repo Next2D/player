@@ -1,6 +1,8 @@
 import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
+import type { IMovieClipCharacter } from "../../interface/IMovieClipCharacter";
 import type { MovieClip } from "../../MovieClip";
+import { execute as movieClipBuildDictionaryCharacterUseCase } from "../usecase/MovieClipBuildDictionaryCharacterUseCase";
 
 /**
  * @description MovieClipの現在のフレームに設置されている子要素の取得
@@ -8,7 +10,7 @@ import type { MovieClip } from "../../MovieClip";
  *
  * @param  {MovieClip} movie_clip
  * @param  {DisplayObject[]} children
- * @param  {Array<Array<number>> | null} controllers
+ * @param  {number} character_id
  * @return {DisplayObject[]}
  * @method
  * @public
@@ -16,21 +18,52 @@ import type { MovieClip } from "../../MovieClip";
 export const execute = <D extends DisplayObject>(
     movie_clip: MovieClip,
     children: D[],
-    controllers: Array<Array<number>> | null,
+    character_id: number
 ): D[] => {
 
-    if (!controllers) {
+    const loaderInfo = movie_clip.loaderInfo;
+    if (!loaderInfo || !loaderInfo.data) {
+        return children;
+    }
+
+    const character = loaderInfo.data.characters[character_id] as IMovieClipCharacter;
+    if (!character) {
         return children;
     }
 
     const frame = movie_clip.currentFrame;
 
-    const controller: number[] = controllers[frame];
+    const controller: number[] = character.controller[frame];
     if (!controller) {
         return children;
     }
 
-    console.log(controller);
+    const dictionary = character.dictionary;
+    for (let idx: number = 0; idx < controller.length; ++idx) {
+
+        const dictionaryId = controller[idx];
+        if (typeof dictionaryId !== "number") {
+            continue;
+        }
+        
+        const tag = dictionary[dictionaryId];
+        if (!tag) {
+            continue;
+        }
+
+        const character = loaderInfo.data.characters[tag.characterId];
+        if (!character || !character) {
+            continue;
+        }
+
+        const displayObject = movieClipBuildDictionaryCharacterUseCase(tag, character, movie_clip);
+        if (!displayObject) {
+            continue
+        }
+
+        children.push(displayObject);
+    }
+    
 
     return children;
 

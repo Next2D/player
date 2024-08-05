@@ -27,9 +27,9 @@ export const execute = async (loader: Loader, object: IAnimationToolData | IAnim
     if (object.type === "zlib") {
         await new Promise<void>((resolve): void =>
         {
-            worker.onmessage = async (event: MessageEvent): Promise<void> =>
+            worker.onmessage = (event: MessageEvent): void =>
             {
-                await loaderBuildService(loader, event.data as IAnimationToolData);
+                loaderBuildService(loader, event.data as IAnimationToolData);
                 resolve();
             };
 
@@ -37,6 +37,6 @@ export const execute = async (loader: Loader, object: IAnimationToolData | IAnim
             worker.postMessage(buffer, [buffer.buffer]);
         });
     } else {
-        await loaderBuildService(loader, object);
+        loaderBuildService(loader, object);
     }
 };

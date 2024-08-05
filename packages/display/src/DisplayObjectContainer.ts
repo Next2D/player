@@ -1,10 +1,6 @@
 import type { DisplayObject } from "./DisplayObject";
-import type { IPlaceObject } from "./interface/IPlaceObject";
 import type { IDisplayObject } from "./interface/IDisplayObject";
-import type { IDictionaryTag } from "./interface/IDictionaryTag";
-import type { MovieClip } from "./MovieClip";
 import { execute as displayObjectContainerAddChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerAddChildUseCase";
-import { execute as movieClipGetChildrenService } from "./MovieClip/service/MovieClipGetChildrenService";
 import { $getArray } from "./DisplayObjectUtil";
 import { InteractiveObject } from "./InteractiveObject";
 
@@ -28,12 +24,6 @@ import { InteractiveObject } from "./InteractiveObject";
 export class DisplayObjectContainer extends InteractiveObject
 {
     protected readonly _$children: IDisplayObject<any>[];
-    protected _$placeMap: Array<Array<number>> | null;
-    protected _$placeObjects: IPlaceObject[] | null;
-    protected _$controller: Array<Array<number>> | null;
-    protected _$dictionary: IDictionaryTag[] | null;
-    protected _$needsChildren: boolean;
-    protected _$wait: boolean;
 
     /**
      * @description オブジェクトの子がマウスまたはユーザー入力デバイスに対応しているかどうかを判断します。
@@ -44,6 +34,16 @@ export class DisplayObjectContainer extends InteractiveObject
      * @public
      */
     public mouseChildren: boolean;
+
+    /**
+     * @description コンテナの機能を所持しているかを返却
+     *              Returns whether the display object has container functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public isContainerEnabled: boolean;
     
     /**
      * @constructor
@@ -53,71 +53,28 @@ export class DisplayObjectContainer extends InteractiveObject
     {
         super();
 
-        this.mouseChildren = true;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$placeMap = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$placeObjects = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$controller = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$dictionary = null;
+        this.isContainerEnabled = true;
+        this.mouseChildren      = true;
 
         /**
          * @type {array}
          * @private
          */
         this._$children = $getArray();
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$needsChildren = true;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$wait = true;
     }
 
-    // /**
-    //  * @description このオブジェクトの子の数を返します。
-    //  *              Returns the number of children of this object.
-    //  *
-    //  * @member   {number}
-    //  * @readonly
-    //  * @public
-    //  */
-    // get numChildren (): number
-    // {
-    //     return this._$needsChildren
-    //         ? this._$getChildren().length
-    //         : this._$children.length;
-    // }
+    /**
+     * @description このオブジェクトの子の数を返します。
+     *              Returns the number of children of this object.
+     *
+     * @member   {number}
+     * @readonly
+     * @public
+     */
+    get numChildren (): number
+    {
+        return this._$getChildren().length;
+    }
 
     /**
      * @description この DisplayObjectContainer インスタンスに子 DisplayObject インスタンスを追加します。
@@ -128,84 +85,35 @@ export class DisplayObjectContainer extends InteractiveObject
      * @method
      * @public
      */
-    addChild<T extends DisplayObject> (display_object: T): T
+    addChild<D extends DisplayObject> (display_object: D): D
     {
+        return this.addChildAt(display_object, this.numChildren - 1);
+    }
+
+    /**
+     * @description この DisplayObjectContainer インスタンスに子 DisplayObject インスタンスを追加します。
+     *              Adds a child DisplayObject instance to this DisplayObjectContainer instance.
+     *
+     * @param  {DisplayObject} child
+     * @param  {number}        index
+     * @return {DisplayObject}
+     * @method
+     * @public
+     */
+    addChildAt<D extends DisplayObject> (
+        display_object: D,
+        index: number
+    ): D {
+
         const parent = display_object.parent;
         if (parent) {
             parent.removeChild(display_object);
         }
 
-        if (this._$controller) {
-            // parent is MovieClip
-            const children = movieClipGetChildrenService(
-                this as unknown as MovieClip,
-                this._$children,
-                this._$controller
-            );
-            children.push(display_object);
-        } else {
-            // parent is Sprite
-            this._$children.push(display_object);
-        }
-        
-        displayObjectContainerAddChildUseCase(this, display_object);
-
-        // update properties
-        display_object._$added = true;
-        display_object._$addedToStage = true;
+        displayObjectContainerAddChildUseCase(this, display_object, index);
 
         return display_object;
     }
-
-    // /**
-    //  * @description この DisplayObjectContainer インスタンスに子 DisplayObject インスタンスを追加します。
-    //  *              Adds a child DisplayObject instance to this DisplayObjectContainer instance.
-    //  *
-    //  * @param  {DisplayObject} child
-    //  * @param  {number}        index
-    //  * @return {DisplayObject}
-    //  * @method
-    //  * @public
-    //  */
-    // addChildAt (
-    //     child: DisplayObjectImpl<any>,
-    //     index: number
-    // ): DisplayObjectImpl<any> {
-
-    //     if (child._$parent) {
-    //         child._$parent._$remove(child,
-    //             !(child._$parent._$instanceId === this._$instanceId)
-    //         );
-    //     }
-
-    //     const children: DisplayObjectImpl<any>[] = this._$getChildren();
-    //     const length: number = children.length;
-    //     if (0 > index || index > length) {
-    //         throw new RangeError(`RangeError: addChildAt: index error: ${index}`);
-    //     }
-
-    //     if (length && length > index) {
-
-    //         children.splice(index, 0, child);
-
-    //         for (let idx: number = 0; idx < index; ++idx) {
-    //             const instance: DisplayObjectImpl<any> = children[idx];
-    //             if (instance._$name) {
-    //                 this._$names.set(instance._$name, instance);
-    //             }
-    //         }
-
-    //     } else {
-
-    //         children.push(child);
-    //         if (child._$name) {
-    //             this._$names.set(child._$name, child);
-    //         }
-
-    //     }
-
-    //     return this._$addChild(child);
-    // }
 
     // /**
     //  * @description 指定された表示オブジェクトが、DisplayObjectContainer インスタンスの子であるか
@@ -621,211 +529,6 @@ export class DisplayObjectContainer extends InteractiveObject
     // }
 
     // /**
-    //  * @return {array}
-    //  * @private
-    //  */
-    // _$getChildren (): DisplayObjectImpl<any>[]
-    // {
-    //     if (this._$needsChildren) {
-
-    //         // set flag
-    //         this._$needsChildren = false;
-
-    //         const currentChildren: DisplayObjectImpl<any>[] = this._$children;
-    //         if (!this._$controller) {
-    //             return currentChildren;
-    //         }
-
-    //         const frame: number = "_$currentFrame" in this ? this._$currentFrame as number : 1;
-    //         const controller: number[] = this._$controller[frame];
-
-    //         // first build
-    //         if (!currentChildren.length) {
-
-    //             if (controller) {
-
-    //                 for (let idx: number = 0; idx < controller.length; ++idx) {
-
-    //                     const dictionaryId = controller[idx];
-    //                     if (typeof dictionaryId !== "number") {
-    //                         continue;
-    //                     }
-
-    //                     const instance: DisplayObjectImpl<any> = this._$createInstance(dictionaryId);
-    //                     instance._$placeId = idx;
-
-    //                     const loopConfig: LoopConfigImpl | null = instance.loopConfig;
-    //                     if (loopConfig) {
-    //                         instance._$currentFrame = instance
-    //                             ._$getLoopFrame(loopConfig);
-    //                     }
-
-    //                     currentChildren.push(instance);
-    //                     if (instance._$name) {
-    //                         this._$names.set(instance._$name, instance);
-    //                     }
-    //                 }
-    //             }
-
-    //             return currentChildren;
-    //         }
-
-    //         const useWorker: boolean = !!$rendererWorker && !!this._$stage;
-
-    //         const skipIds: Map<number, boolean> = $getMap();
-    //         const poolInstances: Map<number, DisplayObjectImpl<any>> = $getMap();
-
-    //         let depth: number = 0;
-    //         const children: DisplayObjectImpl<any>[] = $getArray();
-    //         for (let idx: number = 0; idx < currentChildren.length; ++idx) {
-
-    //             const instance: DisplayObjectImpl<any> = currentChildren[idx];
-
-    //             const parent: ParentImpl<any> = instance._$parent;
-    //             if (!parent || parent._$instanceId !== this._$instanceId) {
-    //                 continue;
-    //             }
-
-    //             const instanceId: number = instance._$instanceId;
-    //             const startFrame: number = instance._$startFrame;
-    //             const endFrame: number   = instance._$endFrame;
-    //             if (startFrame === 1 && endFrame === 0
-    //                 || startFrame <= frame && endFrame > frame
-    //             ) {
-
-    //                 // reset
-    //                 instance._$isNext      = true;
-    //                 instance._$placeObject = null;
-    //                 instance._$filters     = null;
-    //                 instance._$blendMode   = null;
-
-    //                 if (instance._$id === -1) {
-
-    //                     children.push(instance);
-    //                     if (instance._$name) {
-    //                         this._$names.set(instance._$name, instance);
-    //                     }
-
-    //                     continue;
-    //                 }
-
-    //                 const id: number = controller[depth];
-    //                 if (instance._$id === id) {
-
-    //                     instance._$placeId = depth;
-    //                     children.push(instance);
-
-    //                     if (instance._$name) {
-    //                         this._$names.set(instance._$name, instance);
-    //                     }
-
-    //                     if (poolInstances.has(id)) {
-    //                         poolInstances.delete(id);
-    //                     }
-
-    //                     skipIds.set(id, true);
-    //                     depth++;
-
-    //                     if (useWorker) {
-    //                         instance._$postProperty();
-    //                     }
-
-    //                     continue;
-    //                 }
-
-    //                 poolInstances.set(instance._$id, instance);
-
-    //                 continue;
-    //             }
-
-    //             if (useWorker) {
-    //                 instance._$removeWorkerInstance();
-    //             }
-
-    //             $cacheStore.setRemoveTimer(instanceId);
-    //             if (instance._$loaderInfo && instance._$characterId) {
-    //                 $cacheStore.setRemoveTimer(
-    //                     `${instance._$loaderInfo._$id}@${instance._$characterId}`
-    //                 );
-    //             }
-    //             if (instance._$graphics) {
-    //                 $cacheStore.setRemoveTimer(instance._$graphics._$uniqueKey);
-    //             }
-
-    //             // remove event
-    //             if (instance.willTrigger(Next2DEvent.REMOVED)) {
-    //                 instance.dispatchEvent(
-    //                     new Next2DEvent(Next2DEvent.REMOVED, true)
-    //                 );
-    //             }
-    //             if (instance.willTrigger(Next2DEvent.REMOVED_FROM_STAGE)) {
-    //                 instance.dispatchEvent(
-    //                     new Next2DEvent(Next2DEvent.REMOVED_FROM_STAGE, true)
-    //                 );
-    //             }
-
-    //             // reset
-    //             instance._$added       = false;
-    //             instance._$addedStage  = false;
-    //             instance._$active      = false;
-    //             instance._$updated     = true;
-    //             instance._$filters     = null;
-    //             instance._$blendMode   = null;
-    //             instance._$isNext      = true;
-    //             instance._$placeObject = null;
-    //             instance._$created     = false;
-    //             instance._$posted      = false;
-
-    //             if (instance instanceof DisplayObjectContainer) {
-    //                 instance._$executeRemovedFromStage();
-    //                 instance._$removeParentAndStage();
-    //             }
-
-    //         }
-
-    //         if (controller) {
-
-    //             for (let idx: number = 0; idx < controller.length; ++idx) {
-
-    //                 const dictionaryId: number = controller[idx];
-    //                 if (typeof dictionaryId !== "number" ||  skipIds.has(dictionaryId)) {
-    //                     continue;
-    //                 }
-
-    //                 const instance: DisplayObjectImpl<any> = poolInstances.has(dictionaryId)
-    //                     ? poolInstances.get(dictionaryId)
-    //                     : this._$createInstance(dictionaryId);
-
-    //                 instance._$placeId = idx;
-
-    //                 const loopConfig: LoopConfigImpl | null = instance.loopConfig;
-    //                 if (loopConfig) {
-    //                     instance._$currentFrame = instance
-    //                         ._$getLoopFrame(loopConfig);
-    //                 }
-
-    //                 children.push(instance);
-    //                 if (instance._$name) {
-    //                     this._$names.set(instance._$name, instance);
-    //                 }
-
-    //             }
-    //         }
-
-    //         // object pool
-    //         $poolMap(skipIds);
-    //         $poolMap(poolInstances);
-
-    //         // update
-    //         currentChildren.length = 0;
-    //         currentChildren.push(...children);
-    //         $poolArray(children);
-    //     }
-
-    //     return this._$children;
-    // }
-
-    // /**
     //  * @return void
     //  * @private
     //  */
@@ -839,91 +542,6 @@ export class DisplayObjectContainer extends InteractiveObject
 
     //     // clear
     //     this._$needsChildren = true;
-    // }
-
-    // /**
-    //  * @param   {DisplayObject} child
-    //  * @returns {DisplayObject}
-    //  * @private
-    //  */
-    // _$addChild (child: DisplayObjectImpl<any>): DisplayObjectImpl<any>
-    // {
-    //     // init
-    //     child._$parent = this;
-    //     if (!child._$stage || !child._$root) {
-    //         child._$stage = this._$stage;
-    //         child._$root  = this._$root;
-    //     }
-
-    //     // setup
-    //     if (child instanceof DisplayObjectContainer) {
-    //         child._$setParentAndStage();
-    //         child._$wait = true;
-    //     }
-
-    //     // added event
-    //     if (!child._$added) {
-    //         if (child.willTrigger(Next2DEvent.ADDED)) {
-    //             child.dispatchEvent(
-    //                 new Next2DEvent(Next2DEvent.ADDED, true)
-    //             );
-    //         }
-    //         child._$added = true;
-    //     }
-
-    //     if (this._$stage !== null && !child._$addedStage) {
-
-    //         if (child.willTrigger(Next2DEvent.ADDED_TO_STAGE)) {
-    //             child.dispatchEvent(
-    //                 new Next2DEvent(Next2DEvent.ADDED_TO_STAGE)
-    //             );
-    //         }
-
-    //         child._$addedStage = true;
-
-    //         // set params
-    //         if (child instanceof DisplayObjectContainer) {
-    //             child._$executeAddedToStage();
-    //         }
-
-    //         if ($rendererWorker) {
-    //             child._$createWorkerInstance();
-    //             this._$postChildrenIds();
-    //         }
-    //     }
-
-    //     this._$doChanged();
-    //     child._$active  = true;
-    //     child._$updated = true;
-    //     child._$isNext  = true;
-
-    //     return child;
-    // }
-
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$setParentAndStage (): void
-    // {
-    //     const children: DisplayObjectImpl<any>[] = this._$needsChildren
-    //         ? this._$getChildren()
-    //         : this._$children;
-
-    //     for (let idx: number = 0; idx < children.length; ++idx) {
-
-    //         const instance: DisplayObjectImpl<any> = children[idx];
-
-    //         instance._$root  = this._$root;
-    //         instance._$stage = this._$stage;
-
-    //         if (instance instanceof DisplayObjectContainer) {
-    //             instance._$setParentAndStage();
-    //             instance._$wait = true;
-    //         }
-
-    //     }
     // }
 
     // /**
@@ -2077,4 +1695,17 @@ export class DisplayObjectContainer extends InteractiveObject
 
     //     return this._$mouseHit($hitContext, matrix, options);
     // }
+
+    /**
+     * @description コンテナのアクティブな子要素を返却
+     *              Returns the active child elements of the container.
+     *
+     * @return {array}
+     * @method
+     * @protected
+     */
+    _$getChildren <D extends DisplayObject>(): D[]
+    {
+        return this._$children;
+    }
 }

@@ -21,7 +21,7 @@ export const execute = <D extends EventDispatcher>(
 
     if ("parent" in scope) {
 
-        let parent = scope.parent as T | null;
+        let parent = scope.parent as D | null;
         while (parent) {
 
             if (parent.hasEventListener(type)) {
@@ -32,7 +32,7 @@ export const execute = <D extends EventDispatcher>(
                 break;
             }
 
-            parent = parent.parent as T | null;
+            parent = parent.parent as D | null;
         }
     }
 

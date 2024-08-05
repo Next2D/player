@@ -44,11 +44,15 @@ export const execute = async (
                 continue;
             }
 
+            const character = data.characters[tag.characterId] as unknown as ISoundCharacter;
+            if (!character) {
+                continue;
+            }
+
             const sound: Sound = new Sound();
             sound.loopCount = tag.loopCount | 0;
             sound.volume    = Math.min(SoundMixer.volume, tag.volume);
 
-            const character = data.characters[tag.characterId] as ISoundCharacter;
             await sound._$build(character);
 
             sounds.push(sound);

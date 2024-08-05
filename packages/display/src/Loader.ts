@@ -4,7 +4,6 @@ import type { IAnimationToolData } from "./interface/IAnimationToolData";
 import type { IAnimationToolDataZlib } from "./interface/IAnimationToolDataZlib";
 import type { MovieClip } from "./MovieClip";
 import type { URLRequest } from "@next2d/net";
-import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { LoaderInfo } from "./LoaderInfo";
 import { execute as loaderLoadJsonUseCase } from "./Loader/usecase/LoaderLoadJsonUseCase";
 import { execute as loaderLoadUseCase } from "./Loader/usecase/LoaderLoadUseCase";
@@ -18,19 +17,25 @@ import { execute as loaderLoadUseCase } from "./Loader/usecase/LoaderLoadUseCase
  *
  * @class
  * @memberOf next2d.display
- * @extends  DisplayObjectContainer
  */
-export class Loader extends DisplayObjectContainer
+export class Loader
 {
     /**
      * @description 読み込まれているオブジェクトに対応する LoaderInfo オブジェクトを返します。
      *              Returns a LoaderInfo object corresponding to the object being loaded.
      *
-     * @member {LoaderInfo}
+     * @type {LoaderInfo}
      * @readonly
      * @public
      */    
     public readonly contentLoaderInfo: LoaderInfo;
+
+    /**
+     * @type {null}
+     * @readonly
+     * @public
+     */
+    public readonly root: null;
 
     /**
      * @constructor
@@ -38,8 +43,7 @@ export class Loader extends DisplayObjectContainer
      */
     constructor ()
     {
-        super();
-
+        this.root = null;
         this.contentLoaderInfo = new LoaderInfo();
     }
 

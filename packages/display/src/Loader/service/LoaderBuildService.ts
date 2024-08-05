@@ -2,6 +2,7 @@ import type { IAnimationToolData } from "../../interface/IAnimationToolData";
 import type { Loader } from "../../Loader";
 import { Event } from "@next2d/events";
 import { MovieClip } from "../../MovieClip";
+import { $parentMap } from "../../DisplayObjectUtil";
 
 /**
  * @description 読み込んだJSONオブジェクトからrootのMovieClipを構築
@@ -34,16 +35,20 @@ export const execute = async (loader: Loader, object: IAnimationToolData): Promi
 
     // build root content
     const movieClip = new MovieClip();
-    await movieClip._$build<Loader>({
+
+    const character = object.characters[0];
+    movieClip._$build({
         "characterId": 0,
         "name": "main",
         "clipDepth": 0,
         "depth": 0,
         "endFrame": object.characters[0].controller.length,
         "startFrame": 1
-    }, loader);
+    }, character, loader);
 
+    $parentMap.delete(movieClip);
     loaderInfo.content = movieClip;
+    console.log(movieClip);
 
     // dispatch complete event
     if (loaderInfo.willTrigger(Event.COMPLETE)) {

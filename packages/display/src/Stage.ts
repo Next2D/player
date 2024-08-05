@@ -1,4 +1,9 @@
+import type { DisplayObject } from "./DisplayObject";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
+import {
+    $rootMap,
+    $stageAssignedMap
+} from "./DisplayObjectUtil";
 
 /**
  * @description Stage クラスはメイン描画領域を表します。
@@ -106,6 +111,24 @@ export class Stage extends DisplayObjectContainer
     {
         return "next2d.display.Stage";
     }
+
+    /**
+     * @description Stage に追加した DisplayObject は rootとして rootMap に追加
+     *              DisplayObject added to Stage is added to rootMap as root
+     * 
+     * @param  {DisplayObject} display_object 
+     * @return {DisplayObject}
+     * @method
+     * @public
+     */
+    addChild<T extends DisplayObject>(display_object: T): T
+    {
+        $rootMap.set(display_object, display_object);
+        $stageAssignedMap.add(display_object);
+
+        return super.addChild(display_object);
+    }
 }
 
 export const $stage: Stage = new Stage();
+$stageAssignedMap.add($stage);

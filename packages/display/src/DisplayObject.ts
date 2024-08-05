@@ -1,17 +1,19 @@
-import type { Stage } from "./Stage";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Sprite } from "./Sprite";
 import type { IParent } from "./interface/IParent";
-import type { ICharacter } from "./interface/ICharacter";
-import type { DisplayObjectContainer } from "./DisplayObjectContainer";
+import type { Loader } from "./Loader";
 import type { IDictionaryTag } from "./interface/IDictionaryTag";
+import type { MovieClip } from "./MovieClip";
 import {
+    Event,
     EventDispatcher
 } from "@next2d/events";
 import {
     $getInstanceId,
     $parentMap,
-    $loaderInfoMap
+    $loaderInfoMap,
+    $rootMap,
+    $stageAssignedMap
 } from "./DisplayObjectUtil";
 
 /**
@@ -31,37 +33,67 @@ import {
  */
 export class DisplayObject extends EventDispatcher
 {
+    /**
+     * @description DisplayObject のユニークなインスタンスID
+     *              Unique instance ID of DisplayObject
+     * 
+     * @type {number}
+     * @readonly
+     * @public
+     */
     public readonly instanceId: number;
+
+    /**
+     * @description コンテナの機能を所持しているかを返却
+     *              Returns whether the display object has container functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isContainerEnabled: boolean;
+
+    /**
+     * @description MovieClipの機能を所持しているかを返却
+     *              Returns whether the display object has MovieClip functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isTimelineEnabled: boolean;
+
+
+    protected _$characterId: number;
     protected _$added: boolean;
     protected _$addedToStage: boolean;
+    protected _$updated: boolean;
+    protected _$name: string;
+    protected _$scaleX: number | null;
+    protected _$scaleY: number | null;
+    protected _$rotation: number | null;
+    protected _$startFrame: number;
+    protected _$endFrame: number;
+
+
 
     protected _$id: number;
-    protected _$root: IParent<any> | null;
     protected _$scale9Grid: Rectangle | null;
-    protected _$characterId: number;
     protected _$active: boolean;
     protected _$isMask: boolean;
-    protected _$updated: boolean;
     protected _$filters: FilterArrayImpl | null;
     protected _$blendMode: IBlendMode | null;
     protected _$transform: Transform;
     protected _$hitObject: Sprite | null;
     protected _$isNext: boolean;
     protected _$clipDepth: number;
-    protected _$name: string;
     protected _$mask: DisplayObjectImpl<any> | null;
     protected _$visible: boolean;
-    protected _$loaderInfo: LoaderInfo | null;
-    protected _$scaleX: number | null;
-    protected _$scaleY: number | null;
     protected _$variables: Map<any, any> | null;
     protected _$placeObject: PlaceObjectImpl | null;
-    protected _$rotation: number | null;
     protected _$changePlace: boolean;
     protected _$currentPlaceId: number;
     protected _$placeId: number;
-    protected _$startFrame: number;
-    protected _$endFrame: number;
 
     /**
      * @constructor
@@ -72,18 +104,22 @@ export class DisplayObject extends EventDispatcher
         super();
 
         this.instanceId = $getInstanceId();
+        this.isContainerEnabled = false;
+        this.isTimelineEnabled  = false;
 
         /**
          * @type {number}
+         * @default -1
          * @private
          */
         this._$id = -1;
 
         /**
          * @type {number}
+         * @default 0
          * @private
          */
-        this._$characterId = 0;
+        this._$characterId = -1;
 
         /**
          * @type {boolean}
@@ -184,13 +220,6 @@ export class DisplayObject extends EventDispatcher
         this._$scale9Grid = null;
 
         /**
-         * @type {Sprite|null}
-         * @default null
-         * @private
-         */
-        this._$root = null;
-
-        /**
          * @type {number|null}
          * @default null
          * @private
@@ -267,54 +296,54 @@ export class DisplayObject extends EventDispatcher
         this._$rotation = null;
     }
 
-    /**
-     * @description 指定されたオブジェクトのアルファ透明度値を示します。
-     *              有効な値は 0.0（完全な透明）～ 1.0（完全な不透明）です。
-     *              デフォルト値は 1.0 です。alpha が 0.0 に設定されている表示オブジェクトは、
-     *              表示されない場合でも、アクティブです。
-     *              Indicates the alpha transparency value of the object specified.
-     *              Valid values are 0.0 (fully transparent) to 1.0 (fully opaque).
-     *              The default value is 1.0. Display objects with alpha set to 0.0 are active,
-     *              even though they are invisible.
-     *
-     * @member  {number}
-     * @default 1
-     * @public
-     */
-    get alpha (): number
-    {
-        const colorTransform: Float32Array = this
-            ._$transform
-            ._$rawColorTransform();
+    // /**
+    //  * @description 指定されたオブジェクトのアルファ透明度値を示します。
+    //  *              有効な値は 0.0（完全な透明）～ 1.0（完全な不透明）です。
+    //  *              デフォルト値は 1.0 です。alpha が 0.0 に設定されている表示オブジェクトは、
+    //  *              表示されない場合でも、アクティブです。
+    //  *              Indicates the alpha transparency value of the object specified.
+    //  *              Valid values are 0.0 (fully transparent) to 1.0 (fully opaque).
+    //  *              The default value is 1.0. Display objects with alpha set to 0.0 are active,
+    //  *              even though they are invisible.
+    //  *
+    //  * @member  {number}
+    //  * @default 1
+    //  * @public
+    //  */
+    // get alpha (): number
+    // {
+    //     const colorTransform: Float32Array = this
+    //         ._$transform
+    //         ._$rawColorTransform();
 
-        return colorTransform[3] + colorTransform[7] / 255;
-    }
-    set alpha (alpha: number)
-    {
-        alpha = $clamp(alpha, 0, 1, 0);
+    //     return colorTransform[3] + colorTransform[7] / 255;
+    // }
+    // set alpha (alpha: number)
+    // {
+    //     alpha = $clamp(alpha, 0, 1, 0);
 
-        const transform: Transform = this._$transform;
+    //     const transform: Transform = this._$transform;
 
-        // clone
-        if (!transform._$colorTransform) {
-            const colorTransform: ColorTransform = transform.colorTransform;
+    //     // clone
+    //     if (!transform._$colorTransform) {
+    //         const colorTransform: ColorTransform = transform.colorTransform;
 
-            colorTransform._$colorTransform[3] = alpha;
-            colorTransform._$colorTransform[7] = 0;
+    //         colorTransform._$colorTransform[3] = alpha;
+    //         colorTransform._$colorTransform[7] = 0;
 
-            transform.colorTransform = colorTransform;
-            $poolColorTransform(colorTransform);
+    //         transform.colorTransform = colorTransform;
+    //         $poolColorTransform(colorTransform);
 
-        } else {
-            const colorTransform: ColorTransform = transform._$colorTransform;
+    //     } else {
+    //         const colorTransform: ColorTransform = transform._$colorTransform;
 
-            colorTransform._$colorTransform[3] = alpha;
-            colorTransform._$colorTransform[7] = 0;
+    //         colorTransform._$colorTransform[3] = alpha;
+    //         colorTransform._$colorTransform[7] = 0;
 
-            this._$doChanged();
-            $doUpdated();
-        }
-    }
+    //         this._$doChanged();
+    //         $doUpdated();
+    //     }
+    // }
 
     // /**
     //  * @description 使用するブレンドモードを指定する BlendMode クラスの値です。
@@ -646,36 +675,35 @@ export class DisplayObject extends EventDispatcher
 
     /**
      * @description このDisplayObjectの親のDisplayObjectContainerを返却します。
-     *              通常であれば、親のDisplayObjectContainerを継承しているのは、Sprite、MovieClip、または Loader となります。
+     *              通常であれば、親のDisplayObjectContainerを継承しているのは、Sprite、または MovieClip となります。
      *              Returns the DisplayObjectContainer of this DisplayObject's parent.
-     *              Under normal circumstances, the parent DisplayObjectContainer would be inherited by Sprite, MovieClip, or Loader.
+     *              Under normal circumstances, the parent DisplayObjectContainer would inherit from Sprite or MovieClip.
      *
-     * @member  {Sprite | MovieClip | Loader | null}
+     * @member  {Sprite | MovieClip | null}
      * @readonly
      * @public
      */
-    get parent (): IParent<any> | null
+    get parent (): IParent<MovieClip | Sprite> | null
     {
         return $parentMap.has(this)
-            ? $parentMap.get(this)
+            ? $parentMap.get(this) as NonNullable<IParent<MovieClip | Sprite>>
             : null;
     }
 
-    // /**
-    //  * @description 読み込まれた SWF ファイル内の表示オブジェクトの場合、
-    //  *              root プロパティはその SWF ファイルが表す表示リストのツリー構造部分の一番上にある表示オブジェクトとなります。
-    //  *              For a display object in a loaded SWF file,
-    //  *              the root property is the top-most display object
-    //  *              in the portion of the display list's tree structure represented by that SWF file.
-    //  *
-    //  * @member   {DisplayObject|null}
-    //  * @readonly
-    //  * @public
-    //  */
-    // get root (): ParentImpl<any>
-    // {
-    //     return this._$root;
-    // }
+    /**
+     * @description DisplayObject のルートである DisplayObjectContainer を返します。
+     *              Returns the DisplayObjectContainer object that contains this display object.
+     *
+     * @member   {MovieClip | Sprite | null}
+     * @readonly
+     * @public
+     */
+    get root (): IParent<MovieClip | Sprite> | null
+    {
+        return $rootMap.has(this)
+            ? $rootMap.get(this) as NonNullable<IParent<MovieClip | Sprite>>
+            : null;
+    }
 
     // /**
     //  * @description DisplayObject インスタンスの元の位置からの回転角を度単位で示します。
@@ -942,19 +970,6 @@ export class DisplayObject extends EventDispatcher
 
     //     this._$scaleY = scale_y;
     // }
-
-    /**
-     * @description 表示オブジェクトのステージです。
-     *              The Stage of the display object.
-     *
-     * @member   {Stage}
-     * @readonly
-     * @public
-     */
-    get stage (): Stage | null
-    {
-        return this._$addedToStage ? $stage : null;
-    }
 
     // /**
     //  * @description 表示オブジェクトのマトリックス、カラー変換、
@@ -2023,27 +2038,68 @@ export class DisplayObject extends EventDispatcher
     //     return true;
     // }
 
+    
+    /**
+     * @description 表示オブジェクトの追加イベントを発行します。
+     *              Dispatches the added event of the display object.
+     *
+     * @return {void}
+     * @method
+     * @protected
+     */
+    _$dispatchAddedEvent (): void
+    {
+        if (this._$added) {
+            return ;
+        }
+
+        this._$added = true;
+        if (this.willTrigger(Event.ADDED)) {
+            this.dispatchEvent(new Event(Event.ADDED, true));
+        }
+    }
+
+    /**
+     * @description Stageへの追加イベントを発行します。
+     *              Dispatches the added to stage event.
+     *
+     * @return {void}
+     * @method
+     * @protected
+     */
+    _$dispatchAddedToStageEvent (): void
+    {
+        if (this._$addedToStage || !$stageAssignedMap.has(this)) {
+            return ;
+        }
+
+        this._$addedToStage = true;
+        if (this.willTrigger(Event.ADDED_TO_STAGE)) {
+            this.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
+        }
+    }
+
     /**
      * @description 指定されたタグ情報を元に、表示オブジェクトを構築します。
      *              Based on the specified tag information, the display object is constructed.
      *
      * @param  {object} tag
-     * @param  {DisplayObjectContainer} parent
-     * @return {object}
+     * @param  {MovieClip | Loader} parent
+     * @return {void}
      * @method
      * @protected
      */
-    _$baseBuild<P extends DisplayObjectContainer> (tag: IDictionaryTag, parent: P): ICharacter
+    _$baseBuild (tag: IDictionaryTag, parent: MovieClip | Loader): void
     {
-        const loaderInfo = parent.loaderInfo as LoaderInfo;
-        if (!loaderInfo || !loaderInfo.data) {
+        const loaderInfo = parent.loaderInfo;
+        if (!loaderInfo) {
             throw new Error("the loaderInfo or data is nul.");
         }
 
         // set parent data
         $parentMap.set(this, parent);
+        $rootMap.set(this, parent.root);
         $loaderInfoMap.set(this, loaderInfo);
-        this._$root       = parent._$root;
 
         // bind tag data
         this._$characterId = tag.characterId | 0;
@@ -2051,7 +2107,5 @@ export class DisplayObject extends EventDispatcher
         this._$startFrame  = tag.startFrame | 0;
         this._$endFrame    = tag.endFrame | 0;
         this._$name        = tag.name || "";
-
-        return loaderInfo.data.characters[tag.characterId];
     }
 }

@@ -308,3 +308,21 @@ export const $parentMap: WeakMap<IDisplayObject<any>, IParent<any>> = new WeakMa
  * @protected
  */
 export const $loaderInfoMap: WeakMap<IDisplayObject<any>, LoaderInfo> = new WeakMap();
+
+/**
+ * @description 子孫のrootへのマップデータ
+ *              Map data to the root of descendants
+ * 
+ * @type {Map}
+ * @protected
+ */
+export const $rootMap: WeakMap<IDisplayObject<any>, IDisplayObject<any>> = new WeakMap();
+
+/**
+ * @description Stageに追加したかどうかのマップデータ
+ *              Map data of whether it was added to the Stage
+ * 
+ * @type {Map}
+ * @protected
+ */
+export const $stageAssignedMap: WeakSet<IDisplayObject<any>> = new WeakSet();

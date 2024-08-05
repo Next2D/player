@@ -1,12 +1,17 @@
 import type { IDictionaryTag } from "./interface/IDictionaryTag";
 import type { DisplayObjectContainer } from "./DisplayObjectContainer";
 import type { IMovieClipCharacter } from "./interface/IMovieClipCharacter";
+import type { Loader } from "./Loader";
+import type { DisplayObject } from "./DisplayObject";
+import type { LoaderInfo } from "./LoaderInfo";
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
 import { execute as movieClipAddActionsService } from "./MovieClip/service/MovieClipAddActionsService";
 import { execute as movieClipAddLabelsService } from "./MovieClip/service/MovieClipAddLabelsService";
 import { execute as movieClipBuildSoundsService } from "./MovieClip/service/MovieClipBuildSoundsService";
+import { execute as movieClipGetChildrenService } from "./MovieClip/service/MovieClipGetChildrenService";
+import { $loaderInfoMap } from "./DisplayObjectUtil";
 
 /**
  * @description MovieClip クラスは、Sprite、DisplayObjectContainer、InteractiveObject、DisplayObject
@@ -39,8 +44,19 @@ export class MovieClip extends Sprite
     protected _$actionLimit: number;
     protected _$totalFrames: number;
     protected _$isPlaying: boolean;
+    protected _$hasTimelineHeadMoved: boolean;
     // public _$loopConfig: LoopConfigImpl | null;
     // private _$tweenFrame: number;
+
+    /**
+     * @description MovieClipの機能を所持しているかを返却
+     *              Returns whether the display object has MovieClip functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isTimelineEnabled: boolean;
 
     /**
      * @constructor
@@ -49,6 +65,8 @@ export class MovieClip extends Sprite
     constructor()
     {
         super();
+
+        this.isTimelineEnabled = true;
 
         /**
          * @type {boolean}
@@ -137,6 +155,13 @@ export class MovieClip extends Sprite
          * @private
          */
         this._$isPlaying = false;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @private
+         */
+        this._$hasTimelineHeadMoved = true;
 
         // /**
         //  * @type {LoopConfig}
@@ -1084,27 +1109,39 @@ export class MovieClip extends Sprite
     // }
 
     /**
-     * @description 指定タグからキャラクターを取得して、MovieClipを構築
-     *              Get character from specified tag and build MovieClip
+     * @description コンテナのアクティブな子要素を返却
+     *              Returns the active child elements of the container.
      *
-     * @param  {object} tag
-     * @param  {DisplayObjectContainer} parent
-     * @return {Promise}
+     * @return {array}
      * @method
      * @protected
      */
-    async _$build <P extends DisplayObjectContainer> (
-        tag: IDictionaryTag,
-        parent: P
-    ): Promise<void> {
+    _$getChildren <D extends DisplayObject>(): D[]
+    {
+        if (!this._$hasTimelineHeadMoved || this._$characterId === -1) {
+            return this._$children;
+        }
+        
+        this._$hasTimelineHeadMoved = false;
 
-        const character = this._$baseBuild<P>(tag, parent) as IMovieClipCharacter;
+        return movieClipGetChildrenService(
+            this,
+            this._$children,
+            this._$characterId
+        );
+    }
 
-        this._$controller   = character.controller;
-        this._$dictionary   = character.dictionary;
-        this._$placeMap     = character.placeMap;
-        this._$placeObjects = character.placeObjects;
-
+    /**
+     * @description キャラクター情報からMovieClipを構築
+     *              Build MovieClip from character information
+     *
+     * @param  {object} character
+     * @return {void}
+     * @method
+     * @protected
+     */
+    _$buildCharacter (character: IMovieClipCharacter): void
+    {
         if (character.actions) {
             if (!this._$actions) {
                 this._$actions = new Map();
@@ -1127,5 +1164,53 @@ export class MovieClip extends Sprite
         }
 
         this._$totalFrames = character.totalFrame || 1;
+    }
+
+    /**
+     * @description AnimationToolのシンボルと同期
+     *              Synchronize with AnimationTool symbol
+     * 
+     * @param {number} character_id 
+     * @param {object} character 
+     * @param {LoaderInfo} loaderInfo 
+     * @return {void}
+     * @method
+     * @protected
+     */
+    _$sync (
+        character_id: number,
+        character: IMovieClipCharacter,
+        loaderInfo: LoaderInfo
+    ): void {
+
+        // setup
+        this._$characterId = character_id;
+        $loaderInfoMap.set(this, loaderInfo);
+
+        // build
+        this._$buildCharacter(character);
+    } 
+
+    /**
+     * @description 指定タグからキャラクターを取得して、MovieClipを構築
+     *              Get character from specified tag and build MovieClip
+     *
+     * @param  {object} tag
+     * @param  {object} character
+     * @param  {MovieClip | Loader} parent
+     * @return {Promise}
+     * @method
+     * @protected
+     */
+    _$build (
+        tag: IDictionaryTag,
+        character: IMovieClipCharacter,
+        parent: MovieClip | Loader
+    ): void {
+        // base build
+        this._$baseBuild(tag, parent);
+
+        // build
+        this._$buildCharacter(character);
     }
 }

@@ -1,6 +1,12 @@
 import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
-import { $parentMap } from "../../DisplayObjectUtil";
+import { execute as displayObjectContainerAssignStageAndRootService } from "../service/DisplayObjectContainerAssignStageAndRootService";
+import { execute as displayObjectContainerAddedToStageService } from "../service/DisplayObjectContainerAddedToStageService";
+import {
+    $parentMap,
+    $rootMap,
+    $stageAssignedMap
+} from "../../DisplayObjectUtil";
 
 /**
  * @description 指定のDisplayObjectContainerに子要素を追加する
@@ -14,52 +20,47 @@ import { $parentMap } from "../../DisplayObjectUtil";
  */
 export const execute = <P extends DisplayObjectContainer, D extends DisplayObject>(
     display_object_container: P,
-    display_object: D
+    display_object: D,
+    index: number = -1
 ): void => {
 
-    // init
+    // added display object
+    const children = display_object_container._$getChildren();
+    children.splice(index, 0, display_object);
+
+    // Set parent-child relationship
     $parentMap.set(display_object, display_object_container);
 
-    // if (!child._$stage || !child._$root) {
-    //     child._$stage = this._$stage;
-    //     child._$root  = this._$root;
-    // }
+    // 親が Stage に追加されている場合は、マップデータに情報を追加
+    if ($stageAssignedMap.has(display_object_container)) {  
+        
+        if (!$rootMap.has(display_object)) {
+            $rootMap.set(display_object, display_object_container.root);
+        }
 
-    // // setup
-    // if (child instanceof DisplayObjectContainer) {
-    //     child._$setParentAndStage();
-    //     child._$wait = true;
-    // }
+        if ($stageAssignedMap.has(display_object)) {
+            $stageAssignedMap.add(display_object);
+        }
+        
+        // If container functionality is available, set stage and root for small elements
+        if (display_object.isContainerEnabled) {
+            displayObjectContainerAssignStageAndRootService(
+                display_object as unknown as DisplayObjectContainer
+            );
+        }
+    }
 
-    // // added event
-    // if (!child._$added) {
-    //     if (child.willTrigger(Next2DEvent.ADDED)) {
-    //         child.dispatchEvent(
-    //             new Next2DEvent(Next2DEvent.ADDED, true)
-    //         );
-    //     }
-    //     child._$added = true;
-    // }
+    display_object._$dispatchAddedEvent();
 
-    // if (this._$stage !== null && !child._$addedStage) {
+    if ($stageAssignedMap.has(display_object_container)) {
+        display_object._$dispatchAddedToStageEvent();
+        if (display_object.isContainerEnabled) {
+            displayObjectContainerAddedToStageService(
+                display_object as unknown as DisplayObjectContainer
+            );
+        }
+    }
 
-    //     if (child.willTrigger(Next2DEvent.ADDED_TO_STAGE)) {
-    //         child.dispatchEvent(
-    //             new Next2DEvent(Next2DEvent.ADDED_TO_STAGE)
-    //         );
-    //     }
-
-    //     child._$addedStage = true;
-
-    //     // set params
-    //     if (child instanceof DisplayObjectContainer) {
-    //         child._$executeAddedToStage();
-    //     }
-
-    // }
-
-    // this._$doChanged();
-    // child._$active  = true;
-    // child._$updated = true;
-    // child._$isNext  = true;
+    display_object._$changed();
+    display_object_container._$changed();
 };

@@ -13,7 +13,15 @@ import { DisplayObject } from "./DisplayObject";
  */
 export class InteractiveObject extends DisplayObject
 {
-    protected _$mouseEnabled: boolean;
+    /**
+     * @description このオブジェクトでマウスまたはその他のユーザー入力メッセージを受け取るかどうかを指定します。
+     *              Specifies whether this object receives mouse, or other user input, messages.
+     *
+     * @member  {boolean}
+     * @default true
+     * @public
+     */
+    public mouseEnabled: boolean;
 
     /**
      * @constructor
@@ -23,28 +31,6 @@ export class InteractiveObject extends DisplayObject
     {
         super();
 
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$mouseEnabled = true;
-    }
-
-    /**
-     * @description このオブジェクトでマウスまたはその他のユーザー入力メッセージを受け取るかどうかを指定します。
-     *              Specifies whether this object receives mouse, or other user input, messages.
-     *
-     * @member  {boolean}
-     * @default true
-     * @public
-     */
-    get mouseEnabled (): boolean
-    {
-        return this._$mouseEnabled;
-    }
-    set mouseEnabled (mouse_enabled: boolean)
-    {
-        this._$mouseEnabled = !!mouse_enabled;
+        this.mouseEnabled = true;
     }
 }
