@@ -1,5 +1,5 @@
 import type { Sound } from "../../Sound";
-import { execute as soundDecodeService } from "./SoundDecodeService";
+import { execute as soundDecodeService } from "../service/SoundDecodeService";
 import {
     Event,
     ProgressEvent as Next2DProgressEvent,

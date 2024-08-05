@@ -1,4 +1,4 @@
-export interface URLRequestHeaderImpl
+export interface IURLRequestHeader
 {
     name: string;
     value: string;

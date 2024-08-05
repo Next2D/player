@@ -1,8 +1,8 @@
 import type { Sound } from "../../Sound";
 import type { Video } from "../../Video";
 import {
-    $getSounds,
-    $getVideos
+    $getPlayingSounds,
+    $getPlayingVideos
 } from "../../MediaUtil";
 
 /**
@@ -16,9 +16,9 @@ import {
 export const execute = (): void =>
 {
     // sounds
-    const sounds: Sound[] = $getSounds();
-    for (let idx: number = 0; idx < sounds.length; ++idx) {
-        const sound = sounds[idx];
+    const playingSounds: Sound[] = $getPlayingSounds();
+    for (let idx: number = 0; idx < playingSounds.length; ++idx) {
+        const sound = playingSounds[idx];
         if (!sound) {
             continue;
         }
@@ -26,9 +26,9 @@ export const execute = (): void =>
     }
 
     // videos
-    const videos: Video[] = $getVideos();
-    for (let idx: number = 0; idx < videos.length; ++idx) {
-        const video: Video = videos[idx];
+    const playingVideos: Video[] = $getPlayingVideos();
+    for (let idx: number = 0; idx < playingVideos.length; ++idx) {
+        const video: Video = playingVideos[idx];
         if (!video) {
             continue;
         }
@@ -36,6 +36,6 @@ export const execute = (): void =>
     }
 
     // reset
-    sounds.length = 0;
-    videos.length = 0;
+    playingSounds.length = 0;
+    playingVideos.length = 0;
 };

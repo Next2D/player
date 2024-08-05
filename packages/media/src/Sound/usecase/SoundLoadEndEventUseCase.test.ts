@@ -1,5 +1,5 @@
 import { Sound } from "../../Sound";
-import { execute } from "./SoundLoadEndEventService";
+import { execute } from "./SoundLoadEndEventUseCase";
 import {
     IOErrorEvent,
     ProgressEvent as Next2DProgressEvent

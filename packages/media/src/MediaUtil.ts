@@ -1,6 +1,6 @@
 import type { Sound } from "./Sound";
 import type { Video } from "./Video";
-import type { AjaxOptionImpl } from "./interface/AjaxOptionImpl";
+import type { IAjaxOption } from "./interface/IAjaxOption";
 
 /**
  * @type {AudioContext}
@@ -14,7 +14,7 @@ export const $audioContext: AudioContext | null = "AudioContext" in window ? new
  * @method
  * @public
  */
-export const $ajax = (option: AjaxOptionImpl): void =>
+export const $ajax = (option: IAjaxOption): void =>
 {
     // get or post
     let postData: string | null = null;
@@ -132,14 +132,14 @@ export const $getVolume = (): number =>
  */
 export const $setVolume = (volume: number): void =>
 {
-    $volume = volume;
+    $volume = $clamp(volume, 0, 1, 1);
 };
 
 /**
  * @type {Sound[]}
  * @private
  */
-const $sounds: Sound[] = [];
+const $playingSounds: Sound[] = [];
 
 /**
  * @description 再生中のサウンドを返却
@@ -149,16 +149,16 @@ const $sounds: Sound[] = [];
  * @method
  * @public
  */
-export const $getSounds = (): Sound[] =>
+export const $getPlayingSounds = (): Sound[] =>
 {
-    return $sounds;
+    return $playingSounds;
 };
 
 /**
  * @type {Video[]}
  * @private
  */
-const $videos: Video[] = [];
+const $playingVideos: Video[] = [];
 
 /**
  * @description 再生中のビデオを返却
@@ -168,7 +168,7 @@ const $videos: Video[] = [];
  * @method
  * @public
  */
-export const $getVideos = (): Video[] =>
+export const $getPlayingVideos = (): Video[] =>
 {
-    return $videos;
+    return $playingVideos;
 };

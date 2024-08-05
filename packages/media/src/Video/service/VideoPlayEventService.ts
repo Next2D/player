@@ -21,7 +21,7 @@ export const execute = (video: Video): number =>
         video.dispatchEvent(new VideoEvent(VideoEvent.PLAY));
     }
 
-    video._$doChanged();
+    video._$changed();
 
     return requestAnimationFrame(() =>
     {

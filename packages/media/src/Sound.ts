@@ -1,17 +1,14 @@
-import type { SoundCharacterImpl } from "./interface/SoundCharacterImpl";
+import type { ISoundCharacter } from "./interface/ISoundCharacter";
 import { URLRequest } from "@next2d/net";
 import { SoundMixer } from "./SoundMixer";
-import { execute as soundLoadStartEventService } from "./Sound/service/SoundLoadStartEventService";
-import { execute as soundProgressEventService } from "./Sound/service/SoundProgressEventService";
-import { execute as soundLoadEndEventService } from "./Sound/service/SoundLoadEndEventService";
 import { execute as soundEndedEventService } from "./Sound/service/SoundEndedEventService";
 import { execute as soundDecodeService } from "./Sound/service/SoundDecodeService";
+import { execute as soundLoadUseCase } from "./Sound/usecase/SoundLoadUseCase";
 import { EventDispatcher } from "@next2d/events";
 import {
     $clamp,
-    $ajax,
     $audioContext,
-    $getSounds
+    $getPlayingSounds
 } from "./MediaUtil";
 
 /**
@@ -168,7 +165,11 @@ export class Sound extends EventDispatcher
     }
     set volume (volume: number)
     {
-        this._$volume = $clamp(volume, 0, 1, 1);
+        this._$volume = $clamp(Math.min(
+            SoundMixer.volume,
+            volume
+        ), 0, 1, 1);
+
         if (this._$gainNode) {
             this._$gainNode.gain.value = this._$volume;
         }
@@ -216,33 +217,7 @@ export class Sound extends EventDispatcher
     async load (request: URLRequest): Promise<void>
     {
         this._$src = request.url;
-
-        await new Promise<void>((resolve): void =>
-        {
-            $ajax({
-                "format": "arraybuffer",
-                "url": request.url,
-                "method": request.method,
-                "data": request.data,
-                "headers": request.headers,
-                "withCredentials": request.withCredentials,
-                "event": {
-                    "loadstart": (event: ProgressEvent): void =>
-                    {
-                        soundLoadStartEventService(this, event);
-                    },
-                    "progress": (event: ProgressEvent): void =>
-                    {
-                        soundProgressEventService(this, event);
-                    },
-                    "loadend": async (event: ProgressEvent): Promise<void> =>
-                    {
-                        await soundLoadEndEventService(this, event);
-                        resolve();
-                    }
-                }
-            });
-        });
+        await soundLoadUseCase(this, request);
     }
 
     /**
@@ -285,7 +260,7 @@ export class Sound extends EventDispatcher
         this._$stopFlag = false;
         this._$currentCount++;
 
-        $getSounds().push(this);
+        $getPlayingSounds().push(this);
     }
 
     /**
@@ -310,16 +285,16 @@ export class Sound extends EventDispatcher
             this._$source = null;
         }
 
-        if (this._$gain) {
-            this._$gain.gain.value = 0;
-            this._$gain.disconnect();
-            this._$gain = null;
+        if (this._$gainNode) {
+            this._$gainNode.gain.value = 0;
+            this._$gainNode.disconnect();
+            this._$gainNode = null;
         }
 
-        const sounds = $getSounds();
-        const index = sounds.indexOf(this);
+        const playingSounds = $getPlayingSounds();
+        const index = playingSounds.indexOf(this);
         if (index > -1) {
-            sounds.splice(index, 1);
+            playingSounds.splice(index, 1);
         }
     }
 
@@ -330,9 +305,9 @@ export class Sound extends EventDispatcher
      * @param  {Character} character
      * @return {Promise}
      * @method
-     * @private
+     * @protected
      */
-    async _$build (character: SoundCharacterImpl): Promise<void>
+    async _$build (character: ISoundCharacter): Promise<void>
     {
         // load AudioBuffer
         if (!character.audioBuffer) {

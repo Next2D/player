@@ -26,7 +26,7 @@ export const execute = async (
         element.currentTime = 0;
     }
 
-    video._$doChanged();
+    video._$changed();
 
     if (video.willTrigger(Event.COMPLETE)) {
         video.dispatchEvent(new Event(Event.COMPLETE));

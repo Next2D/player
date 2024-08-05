@@ -1,4 +1,4 @@
-export interface BoundsImpl {
+export interface IBounds {
     xMin: number;
     xMax: number;
     yMin: number;

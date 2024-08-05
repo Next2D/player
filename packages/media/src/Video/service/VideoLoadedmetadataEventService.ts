@@ -1,4 +1,4 @@
-import type { BoundsImpl } from "../../interface/BoundsImpl";
+import type { BoundsImpl } from "../../interface/IBounds";
 import type { Video } from "../../Video";
 
 /**

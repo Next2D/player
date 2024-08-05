@@ -1,12 +1,12 @@
 import { SoundMixer } from "./SoundMixer";
 import { DisplayObject } from "@next2d/display";
 import { VideoEvent } from "@next2d/events";
-import type { BoundsImpl } from "./interface/BoundsImpl";
+import type { IBounds } from "./interface/IBounds";
 import { execute as videoCreateElementService } from "./Video/service/VideoCreateElementService";
 import { execute as videoPlayEventService } from "./Video/service/VideoPlayEventService";
 import {
     $clamp,
-    $getVideos
+    $getPlayingVideos
 } from "./MediaUtil";
 
 /**
@@ -26,7 +26,7 @@ export class Video extends DisplayObject
     private _$smoothing: boolean;
     private _$loop: boolean;
     private _$autoPlay: boolean;
-    private readonly _$bounds: BoundsImpl;
+    private readonly _$bounds: IBounds;
     private _$timerId: number;
     private _$videoElement: HTMLVideoElement | null;
     private _$stop: boolean;
@@ -368,7 +368,7 @@ export class Video extends DisplayObject
         this._$bounds.xMax  = 0;
         this._$bounds.yMax  = 0;
 
-        this.doChanged();
+        this._$changed();
     }
 
     /**
@@ -392,7 +392,7 @@ export class Video extends DisplayObject
                 this.dispatchEvent(new VideoEvent(VideoEvent.PAUSE));
             }
 
-            const videos = $getVideos();
+            const videos = $getPlayingVideos();
             const index = videos.indexOf(this);
             if (index > -1) {
                 videos.splice(index, 1);
@@ -423,7 +423,7 @@ export class Video extends DisplayObject
                 this.dispatchEvent(new VideoEvent(VideoEvent.PLAY));
             }
 
-            const videos = $getVideos();
+            const videos = $getPlayingVideos();
             const index = videos.indexOf(this);
             if (index > -1) {
                 videos.splice(index, 1);

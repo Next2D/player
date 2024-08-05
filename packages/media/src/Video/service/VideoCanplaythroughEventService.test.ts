@@ -15,7 +15,7 @@ describe("VideoCanplaythroughEventService.js test", () =>
             return {
                 "autoPlay": true,
                 "play": vi.fn(() => { playState = "play" }),
-                "_$doChanged": vi.fn(() => { state = "changed" }),
+                "_$changed": vi.fn(() => { state = "changed" }),
                 "willTrigger": vi.fn(() => true),
                 "dispatchEvent": vi.fn(() => { eventState = Event.COMPLETE })
             } as unknown as Video;
@@ -54,7 +54,7 @@ describe("VideoCanplaythroughEventService.js test", () =>
         {
             return {
                 "autoPlay": false,
-                "_$doChanged": vi.fn(() => { state = "changed" }),
+                "_$changed": vi.fn(() => { state = "changed" }),
                 "willTrigger": vi.fn(() => true),
                 "dispatchEvent": vi.fn(() => { eventState = Event.COMPLETE })
             } as unknown as Video;
