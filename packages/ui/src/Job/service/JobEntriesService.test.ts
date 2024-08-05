@@ -1,4 +1,4 @@
-import type { EntriesObjectImpl } from "../../interface/EntriesObjectImpl";
+import type { IEntriesObject } from "../../interface/IEntriesObject";
 import { execute } from "./JobEntriesService";
 import { describe, expect, it } from "vitest";
 
@@ -62,7 +62,7 @@ describe("JobEntriesService.js test", () =>
         expect(entries[1].name).toBe("y");
         expect(entries[1].value).toBe(200);
 
-        const transform = entries[2].value as EntriesObjectImpl[];
+        const transform = entries[2].value as IEntriesObject[];
         expect(transform.length).toBe(2);
 
         const matrix = transform[0].value;

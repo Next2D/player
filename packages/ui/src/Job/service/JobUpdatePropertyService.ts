@@ -1,5 +1,5 @@
-import type { EntriesObjectImpl } from "../../interface/EntriesObjectImpl";
-import type { ObjectImpl } from "../../interface/ObjectImpl";
+import type { IEntriesObject } from "../../interface/IEntriesObject";
+import type { IObject } from "../../interface/IObject";
 import type { Job } from "../../Job";
 
 /**
@@ -18,9 +18,9 @@ import type { Job } from "../../Job";
 export const execute = (
     job: Job,
     target: any,
-    from: ObjectImpl,
-    to: ObjectImpl,
-    entries: EntriesObjectImpl[]
+    from: IObject,
+    to: IObject,
+    entries: IEntriesObject[]
 ): void => {
 
     for (let idx = 0; idx < entries.length; ++idx) {
@@ -39,9 +39,9 @@ export const execute = (
             execute(
                 job,
                 target[name],
-                from[name] as ObjectImpl,
-                to[name] as ObjectImpl,
-                entry.value as EntriesObjectImpl[]
+                from[name] as IObject,
+                to[name] as IObject,
+                entry.value as IEntriesObject[]
             );
             continue;
         }

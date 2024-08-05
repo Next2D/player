@@ -1,5 +1,5 @@
-import type { EntriesObjectImpl } from "../../interface/EntriesObjectImpl";
-import type { ObjectImpl } from "../../interface/ObjectImpl";
+import type { IEntriesObject } from "../../interface/IEntriesObject";
+import type { IObject } from "../../interface/IObject";
 
 /**
  * @description Tweenの開始/終了のオブジェクトを配列に変換
@@ -10,9 +10,9 @@ import type { ObjectImpl } from "../../interface/ObjectImpl";
  * @method
  * @private
  */
-export const execute = (object: ObjectImpl): EntriesObjectImpl[] =>
+export const execute = (object: IObject): IEntriesObject[] =>
 {
-    const entries: EntriesObjectImpl[] = [];
+    const entries: IEntriesObject[] = [];
     for (const [name, value] of Object.entries(object))
     {
         entries.push({

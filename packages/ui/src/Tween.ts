@@ -1,5 +1,5 @@
+import type { IObject } from "./interface/IObject";
 import { Job } from "./Job";
-import type { ObjectImpl } from "./interface/ObjectImpl";
 
 /**
  * @class
@@ -48,7 +48,7 @@ export class Tween
      * @static
      */
     static add (
-        target: any, from: ObjectImpl, to: ObjectImpl,
+        target: any, from: IObject, to: IObject,
         delay: number = 0, duration: number = 1,
         ease: Function | null = null
     ): Job {

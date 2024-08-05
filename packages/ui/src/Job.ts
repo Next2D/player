@@ -1,5 +1,5 @@
-import type { ObjectImpl } from "./interface/ObjectImpl";
-import type { EntriesObjectImpl } from "./interface/EntriesObjectImpl";
+import type { IObject } from "./interface/IObject";
+import type { IEntriesObject } from "./interface/IEntriesObject";
 import { Easing } from "./Easing";
 import { execute as jobEntriesService } from "./Job/service/JobEntriesService";
 import { execute as jobUpdateFrameService } from "./Job/service/JobUpdateFrameService";
@@ -16,7 +16,7 @@ import {
 export class Job extends EventDispatcher
 {
     private readonly _$target: any;
-    private _$entries: EntriesObjectImpl[] | null;
+    private _$entries: IEntriesObject[] | null;
     private _$startTime: number;
     private _$stopFlag: boolean;
     private _$timerId: number;
@@ -59,7 +59,7 @@ export class Job extends EventDispatcher
      * @type {object}
      * @public
      */
-    public from: ObjectImpl;
+    public from: IObject;
 
     /**
      * @description イージングの終了オブジェクトを返します。
@@ -68,7 +68,7 @@ export class Job extends EventDispatcher
      * @type {object}
      * @public
      */
-    public to: ObjectImpl;
+    public to: IObject;
 
     /**
      * @description イージングの現在時間を返します。
@@ -105,7 +105,7 @@ export class Job extends EventDispatcher
      */
     constructor (
         target: any,
-        from: ObjectImpl, to: ObjectImpl,
+        from: IObject, to: IObject,
         delay: number = 0, duration: number = 1,
         ease: Function | null = null
     ) {
@@ -203,7 +203,7 @@ export class Job extends EventDispatcher
      * @readonly
      * @public
      */
-    get entries (): EntriesObjectImpl[] | null
+    get entries (): IEntriesObject[] | null
     {
         return this._$entries;
     }

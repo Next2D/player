@@ -1,4 +1,4 @@
-import type { EntriesObjectImpl } from "../../interface/EntriesObjectImpl";
+import type { IEntriesObject } from "../../interface/IEntriesObject";
 import type { Job } from "../../Job";
 import { execute as jobUpdatePropertyService } from "./JobUpdatePropertyService";
 import { JobEvent } from "@next2d/events";
@@ -26,7 +26,7 @@ export const execute = (job: Job, timestamp: number): number =>
     jobUpdatePropertyService(
         job, job.target,
         job.from, job.to,
-        job.entries as EntriesObjectImpl[]
+        job.entries as IEntriesObject[]
     );
 
     // update event
