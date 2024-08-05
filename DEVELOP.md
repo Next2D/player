@@ -51,5 +51,10 @@ class => method => usecase => service
 - `@next2d/events`, `@next2d/cache`, `@next2d/webgl` は疎結合で設計されている為、他の `packages` の `import` を禁止しています。
 - `@next2d/renderer` はOffscreenCanvasがworkerで処理されるため、 `@next2d/webgl` のみ `import` を許可しています。
 
+The dependencies to note in the `packages` directory are as follows
+- `@next2d/core` does not allow references from other `packages`.
+- `@next2d/events`, `@next2d/cache`, and `@next2d/webgl` are designed to be loosely coupled, so `import` of other `packages` is prohibited.
+- `@next2d/renderer` allows `import` only for `@next2d/webgl`, because OffscreenCanvas is processed by the worker.
+
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.
