@@ -1,4 +1,4 @@
-import type { GeomImpl } from "./interface/GeomImpl";
+import type { IGeom } from "./interface/IGeom";
 import {
     ColorTransform,
     Matrix,
@@ -7,7 +7,7 @@ import {
     Transform
 } from "@next2d/geom";
 
-const geom: GeomImpl = {
+const geom: IGeom = {
     ColorTransform,
     Matrix,
     Point,

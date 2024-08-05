@@ -1,12 +1,12 @@
-import type { DisplayImpl } from "./interface/DisplayImpl";
-import type { EventsImpl } from "./interface/EventsImpl";
-import type { FiltersImpl } from "./interface/FiltersImpl";
-import type { GeomImpl } from "./interface/GeomImpl";
-import type { MediaImpl } from "./interface/MediaImpl";
-import type { NetImpl } from "./interface/NetImpl";
-import type { TextImpl } from "./interface/TextImpl";
-import type { UIImpl } from "./interface/UIImpl";
-import type { PlayerOptionsImpl } from "./interface/PlayerOptionsImpl";
+import type { IDisplay } from "./interface/IDisplay";
+import type { EventsImpl } from "./interface/IEvents";
+import type { FiltersImpl } from "./interface/IFilters";
+import type { GeomImpl } from "./interface/IGeom";
+import type { MediaImpl } from "./interface/IMedia";
+import type { NetImpl } from "./interface/INet";
+import type { TextImpl } from "./interface/IText";
+import type { UIImpl } from "./interface/IUI";
+import type { PlayerOptionsImpl } from "./interface/IPlayerOptions";
 import type { Sprite } from "@next2d/display";
 import { events } from "./Events";
 import { display } from "./Display";
@@ -28,7 +28,7 @@ import { execute as createRootMovieClip } from "./Next2D/CreateRootMovieClip";
  */
 export class Next2D
 {
-    public readonly display: DisplayImpl;
+    public readonly display: IDisplay;
     public readonly events: EventsImpl;
     public readonly filters: FiltersImpl;
     public readonly geom: GeomImpl;

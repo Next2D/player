@@ -3,7 +3,7 @@ import type {
     Tween
 } from "@next2d/ui";
 
-export interface UIImpl {
+export interface IUI {
     Easing: typeof Easing;
     Tween: typeof Tween;
 }

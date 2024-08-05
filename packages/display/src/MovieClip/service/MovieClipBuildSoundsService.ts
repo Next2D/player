@@ -9,7 +9,7 @@ import { Sound, SoundMixer } from "@next2d/media";
  * @description 指定tagの情報を元に、MovieClipにサウンドを追加
  *              Add sound to MovieClip based on specified tag information
  *
- * @param  {MovieClip} movieClip
+ * @param  {MovieClip} movie_clip
  * @param  {Map} sound_map
  * @param  {array} sound_objects
  * @return {Promise}

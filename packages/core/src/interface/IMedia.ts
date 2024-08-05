@@ -5,7 +5,7 @@ import type {
     Video
 } from "@next2d/media";
 
-export interface MediaImpl {
+export interface IMedia {
     Sound: typeof Sound;
     SoundMixer: typeof SoundMixer;
     SoundTransform: typeof SoundTransform;

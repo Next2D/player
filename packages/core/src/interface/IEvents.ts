@@ -11,7 +11,7 @@ import type {
     VideoEvent
 } from "@next2d/events";
 
-export interface EventsImpl {
+export interface IEvents {
     Event: typeof Event;
     EventDispatcher: typeof EventDispatcher;
     EventPhase: typeof EventPhase;

@@ -1,4 +1,4 @@
-import type { MediaImpl } from "./interface/MediaImpl";
+import type { IMedia } from "./interface/IMedia";
 import {
     Sound,
     SoundMixer,
@@ -6,7 +6,7 @@ import {
     Video
 } from "@next2d/media";
 
-const media: MediaImpl = {
+const media: IMedia = {
     Sound,
     SoundMixer,
     SoundTransform,

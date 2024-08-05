@@ -1,7 +1,10 @@
-import type { TextImpl } from "./interface/TextImpl";
-import { TextFormat, TextField } from "@next2d/text";
+import type { IText } from "./interface/IText";
+import {
+    TextFormat,
+    TextField
+} from "@next2d/text";
 
-const text: TextImpl = {
+const text: IText = {
     TextFormat,
     TextField
 };

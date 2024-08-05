@@ -1,4 +1,4 @@
-import type { DisplayImpl } from "./interface/DisplayImpl";
+import type { IDisplay } from "./interface/IDisplay";
 import {
     Sprite,
     MovieClip,
@@ -14,7 +14,7 @@ import {
     Stage
 } from "@next2d/display";
 
-const display: DisplayImpl = {
+const display: IDisplay = {
     Sprite,
     MovieClip,
     BitmapData,

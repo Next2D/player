@@ -1,4 +1,4 @@
-export interface PlayerOptionsImpl {
+export interface IPlayerOptions {
     width?: number;
     height?: number;
     tagId?: string;

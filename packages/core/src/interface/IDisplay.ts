@@ -12,7 +12,8 @@ import type {
     Sprite,
     Stage
 } from "@next2d/display";
-export interface DisplayImpl {
+
+export interface IDisplay {
     BitmapData: typeof BitmapData;
     BlendMode: typeof BlendMode;
     DisplayObject: typeof DisplayObject;

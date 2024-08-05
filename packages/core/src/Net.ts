@@ -1,7 +1,7 @@
-import type { NetImpl } from "./interface/NetImpl";
+import type { INet } from "./interface/INet";
 import { URLRequest } from "@next2d/net";
 
-const net: NetImpl = {
+const net: INet = {
     URLRequest
 };
 

@@ -1,5 +1,5 @@
-import type { PlayerOptionsImpl } from "../interface/PlayerOptionsImpl";
-import type { StageDataImpl } from "../interface/StageDataImpl";
+import type { IPlayerOptions } from "../interface/IPlayerOptions";
+import type { IStageData } from "../interface/IStageData";
 import type { MovieClip } from "@next2d/display";
 import { $player } from "../Player";
 import { $clamp } from "../CoreUtil";
@@ -19,12 +19,12 @@ import {
  *              Reads a JSON file from the specified URL.
  *
  * @param  {string} url
- * @param  {PlayerOptionsImpl} options
+ * @param  {object} [options=null]
  * @return {Promise}
  * @method
  * @protected
  */
-export const execute = async (url: string, options: PlayerOptionsImpl | null = null): Promise<void> =>
+export const execute = async (url: string, options: IPlayerOptions | null = null): Promise<void> =>
 {
     if (url === "develop") {
         const path: string = location
@@ -64,7 +64,7 @@ export const execute = async (url: string, options: PlayerOptionsImpl | null = n
     }
 
     // update properties
-    const stageData: StageDataImpl = loaderInfo.data.stage;
+    const stageData: IStageData = loaderInfo.data.stage;
     $stage.stageWidth      = stageData.width;
     $stage.stageHeight     = stageData.height;
     $stage.frameRate       = $clamp(stageData.fps, 1, 60, 60);

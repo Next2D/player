@@ -1,4 +1,4 @@
-import type { ResizeMessageImpl } from "../interface/ResizeMessageImpl";
+import type { IResizeMessage } from "../interface/IResizeMessage";
 import { $player } from "../Player";
 import { $stage } from "@next2d/display";
 import { $rendererWorker } from "../CoreUtil";
@@ -7,10 +7,10 @@ import { $rendererWorker } from "../CoreUtil";
  * @description リサイズメッセージ
  *              Resize message
  *
- * @type {ResizeMessageImpl}
+ * @type {object}
  * @private
  */
-const message: ResizeMessageImpl = {
+const message: IResizeMessage = {
     "command": "resize",
     "buffer": null
 };

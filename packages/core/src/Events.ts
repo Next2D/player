@@ -1,4 +1,4 @@
-import type { EventsImpl } from "./interface/EventsImpl";
+import type { IEvents } from "./interface/IEvents";
 import {
     Event,
     EventDispatcher,
@@ -12,7 +12,7 @@ import {
     VideoEvent
 } from "@next2d/events";
 
-const events: EventsImpl = {
+const events: IEvents = {
     Event,
     EventDispatcher,
     EventPhase,

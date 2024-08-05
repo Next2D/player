@@ -1,5 +1,4 @@
-import type { PlayerModeImpl } from "./interface/PlayerModeImpl";
-import type { PlayerOptionsImpl } from "./interface/PlayerOptionsImpl";
+import type { IPlayerOptions } from "./interface/IPlayerOptions";
 import type { MovieClip } from "@next2d/display";
 import { SoundMixer } from "@next2d/media";
 import { $devicePixelRatio } from "./CoreUtil";
@@ -31,7 +30,6 @@ export class Player
     private _$scale: number;
     // private _$state: "up" | "down";
     // private _$textField: TextField | null;
-    private _$mode: PlayerModeImpl;
     // private _$rollOverObject: EventDispatcherImpl<any> | null;
     // private _$mouseOverTarget: EventDispatcherImpl<any> | null;
     // private _$startTime: number;
@@ -53,12 +51,6 @@ export class Player
      */
     constructor ()
     {
-        /**
-         * @type {string}
-         * @private
-         */
-        this._$mode = "loader";
-
         /**
          * @type {array}
          * @private
@@ -345,23 +337,6 @@ export class Player
     }
 
     /**
-     * @description Playerの利用モード、load関数を利用している場合は "loader"、createRootMovieClip関数を利用している場合は "create"
-     *              The usage mode of Player, "loader" if the load function is used, "create" if the createRootMovieClip function is used
-     *
-     * @member {string}
-     * @default "loader"
-     * @public
-     */
-    get mode (): PlayerModeImpl
-    {
-        return this._$mode;
-    }
-    set mode (mode: PlayerModeImpl)
-    {
-        this._$mode = mode;
-    }
-
-    /**
      * @description canvasの描画領域の幅
      *              The width of the drawing area of the canvas
      *
@@ -498,11 +473,14 @@ export class Player
     // }
 
     /**
+     * @description Playerのオプション設定を変更
+     *              Change the Player option settings
+     *
      * @param  {object} [options=null]
      * @return {void}
      * @public
      */
-    setOptions (options: PlayerOptionsImpl | null = null): void
+    setOptions (options: IPlayerOptions | null = null): void
     {
         if (!options) {
             return ;
@@ -511,7 +489,6 @@ export class Player
         this._$fixedWidth  = options.width   || this._$fixedWidth;
         this._$fixedHeight = options.height  || this._$fixedHeight;
         this._$tagId       = options.tagId   || this._$tagId;
-        this._$bgColor     = options.bgColor || this._$bgColor;
         this._$fullScreen  = !!options.fullScreen;
     }
 
@@ -523,7 +500,7 @@ export class Player
      * @method
      * @public
      */
-    boot (options: PlayerOptionsImpl | null = null): void
+    boot (options: IPlayerOptions | null = null): void
     {
         this.setOptions(options);
 

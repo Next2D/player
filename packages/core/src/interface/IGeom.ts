@@ -6,7 +6,7 @@ import type {
     Transform
 } from "@next2d/geom";
 
-export interface GeomImpl {
+export interface IGeom {
     ColorTransform: typeof ColorTransform;
     Matrix: typeof Matrix;
     Point: typeof Point;

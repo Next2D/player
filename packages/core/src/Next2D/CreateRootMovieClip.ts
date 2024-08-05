@@ -1,7 +1,10 @@
-import type { PlayerOptionsImpl } from "../interface/PlayerOptionsImpl";
-import { Sprite, $stage } from "@next2d/display";
+import type { IPlayerOptions } from "../interface/IPlayerOptions";
 import { $player } from "../Player";
 import { $clamp } from "../CoreUtil";
+import {
+    Sprite,
+    $stage
+} from "@next2d/display";
 
 /**
  * @description RootのMovieClipを作成します。
@@ -19,20 +22,20 @@ export const execute = async (
     width: number = 240,
     height: number = 240,
     fps: number = 24,
-    options: PlayerOptionsImpl | null = null
+    options: IPlayerOptions | null = null
 ): Promise<Sprite> => {
 
     // setup
-    $player.mode        = "create";
-    $player.stageWidth  = width | 0;
-    $player.stageHeight = height | 0;
-    $player.frameRate   = $clamp(fps, 1, 60, 60);
-
+    $stage.stageWidth  = width | 0;
+    $stage.stageHeight = height | 0;
+    $stage.frameRate   = $clamp(fps, 1, 60, 60);
+    if (options && options.bgColor) {
+        $stage.backgroundColor = options.bgColor;
+    }
+    
+    // boot player
     $player.boot(options);
-
-    const root: Sprite = $stage.addChild(new Sprite());
-    // $player._$loadStatus = $LOAD_END;
     $player.play();
 
-    return root;
+    return $stage.addChild<Sprite>(new Sprite());
 };

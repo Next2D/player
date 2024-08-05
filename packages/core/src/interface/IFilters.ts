@@ -10,7 +10,7 @@ import type {
     GradientGlowFilter
 } from "@next2d/filters";
 
-export interface FiltersImpl {
+export interface IFilters {
     BevelFilter: typeof BevelFilter;
     BlurFilter: typeof BlurFilter;
     ColorMatrixFilter: typeof ColorMatrixFilter;

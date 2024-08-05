@@ -1,6 +1,6 @@
 import type { URLRequestMethodImpl } from "./URLRequestMethodImpl";
 import type { URLLoaderDataFormatImpl } from "./URLLoaderDataFormatImpl";
-import type { AjaxEventImpl } from "./AjaxEventImpl";
+import type { IAjaxEvent } from "./IAjaxEvent";
 import type { URLRequestHeaderImpl } from "./URLRequestHeaderImpl";
 
 export interface AjaxOptionImpl {
@@ -10,5 +10,5 @@ export interface AjaxOptionImpl {
     withCredentials: boolean;
     headers: URLRequestHeaderImpl[];
     data?: any;
-    event?: AjaxEventImpl;
+    event?: IAjaxEvent;
 }

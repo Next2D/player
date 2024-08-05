@@ -1,4 +1,4 @@
-export interface AjaxEventImpl {
+export interface IAjaxEvent {
     loadstart?: Function;
     progress?: Function;
     loadend?: Function;
