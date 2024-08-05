@@ -1,13 +1,13 @@
-import type { IEventListener } from "../interface/IEventListener";
-import type { EventDispatcher } from "../EventDispatcher";
-import { Event } from "../Event";
-import { KeyboardEvent } from "../KeyboardEvent";
-import { EventPhase } from "../EventPhase";
+import type { IEventListener } from "../../interface/IEventListener";
+import type { EventDispatcher } from "../../EventDispatcher";
+import { Event } from "../../Event";
+import { KeyboardEvent } from "../../KeyboardEvent";
+import { EventPhase } from "../../EventPhase";
 import {
     $broadcastEvents,
     $getArray,
     $poolArray
-} from "../EventUtil";
+} from "../../EventUtil";
 
 /**
  * @description 指定のイベントを実行します。

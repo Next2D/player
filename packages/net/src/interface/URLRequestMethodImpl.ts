@@ -1,1 +1,0 @@
-export type URLRequestMethodImpl = "DELETE" | "GET" | "HEAD" | "OPTIONS" | "POST" | "PUT";

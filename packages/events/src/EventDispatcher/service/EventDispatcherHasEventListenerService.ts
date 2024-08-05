@@ -1,8 +1,8 @@
-import type { IEventListener } from "../interface/IEventListener";
-import type { EventDispatcher } from "../EventDispatcher";
-import { KeyboardEvent } from "../KeyboardEvent";
-import { Event } from "../Event";
-import { $broadcastEvents } from "../EventUtil";
+import type { IEventListener } from "../../interface/IEventListener";
+import type { EventDispatcher } from "../../EventDispatcher";
+import { KeyboardEvent } from "../../KeyboardEvent";
+import { Event } from "../../Event";
+import { $broadcastEvents } from "../../EventUtil";
 
 /**
  * @description 指定イベントが登録されているかを返却。

@@ -1,11 +1,11 @@
 import type { Event } from "./Event";
 import type { IEventListener } from "./interface/IEventListener";
-import { execute as eventDispatcherAddEventListenerService } from "./EventDispatcher/EventDispatcherAddEventListenerService";
-import { execute as eventDispatcherHasEventListenerService } from "./EventDispatcher/EventDispatcherHasEventListenerService";
-import { execute as eventDispatcherRemoveEventListenerService } from "./EventDispatcher/EventDispatcherRemoveEventListenerService";
-import { execute as eventDispatcherRemoveAllEventListenerService } from "./EventDispatcher/EventDispatcherRemoveAllEventListenerService";
-import { execute as eventDispatcherWillTriggerService } from "./EventDispatcher/EventDispatcherWillTriggerService";
-import { execute as eventDispatcherDispatchEventService } from "./EventDispatcher/EventDispatcherDispatchEventService";
+import { execute as eventDispatcherAddEventListenerService } from "./EventDispatcher/service/EventDispatcherAddEventListenerService";
+import { execute as eventDispatcherHasEventListenerService } from "./EventDispatcher/service/EventDispatcherHasEventListenerService";
+import { execute as eventDispatcherRemoveEventListenerService } from "./EventDispatcher/service/EventDispatcherRemoveEventListenerService";
+import { execute as eventDispatcherRemoveAllEventListenerService } from "./EventDispatcher/service/EventDispatcherRemoveAllEventListenerService";
+import { execute as eventDispatcherWillTriggerService } from "./EventDispatcher/service/EventDispatcherWillTriggerService";
+import { execute as eventDispatcherDispatchEventService } from "./EventDispatcher/service/EventDispatcherDispatchEventService";
 
 /**
  * @description EventDispatcher クラスは、イベントを送出するすべてのクラスの基本クラスです。

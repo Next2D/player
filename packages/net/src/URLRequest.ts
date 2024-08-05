@@ -1,6 +1,6 @@
-import type { URLRequestHeaderImpl } from "./interface/URLRequestHeaderImpl";
-import type { URLLoaderDataFormatImpl } from "./interface/URLLoaderDataFormatImpl";
-import type { URLRequestMethodImpl } from "./interface/URLRequestMethodImpl";
+import type { IURLRequestHeader } from "./interface/IURLRequestHeader";
+import type { IURLLoaderDataFormat } from "./interface/IURLLoaderDataFormat";
+import type { IURLRequestMethod } from "./interface/IURLRequestMethod";
 
 /**
  * @description URLRequestクラスは、外部へのリクエストを管理するクラスです
@@ -18,7 +18,7 @@ export class URLRequest
      * @type {array}
      * @public
      */
-    public requestHeaders: URLRequestHeaderImpl[];
+    public requestHeaders: IURLRequestHeader[];
 
     /**
      * @description リクエストされる URL です。
@@ -58,7 +58,7 @@ export class URLRequest
      * @default "GET"
      * @public
      */
-    public method: URLRequestMethodImpl;
+    public method: IURLRequestMethod;
 
     /**
      * @description レスポンスのデータフォーマットを指定します。
@@ -68,7 +68,7 @@ export class URLRequest
      * @default "json"
      * @public
      */
-    public responseDataFormat: URLLoaderDataFormatImpl;
+    public responseDataFormat: IURLLoaderDataFormat;
 
     /**
      * @description HTTP 要求で使用されるユーザーエージェントストリングを指定します。
@@ -131,7 +131,7 @@ export class URLRequest
      * @readonly
      * @public
      */
-    get headers (): URLRequestHeaderImpl[]
+    get headers (): IURLRequestHeader[]
     {
         const headers = [];
         headers.push({

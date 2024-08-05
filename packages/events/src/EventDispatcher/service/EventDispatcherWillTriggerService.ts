@@ -1,4 +1,4 @@
-import type { EventDispatcher } from "../EventDispatcher";
+import type { EventDispatcher } from "../../EventDispatcher";
 
 /**
  * @description 先祖も含めてイベントリスナーが登録されているかどうかを判定。

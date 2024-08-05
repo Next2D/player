@@ -1,7 +1,7 @@
-import { Event } from "../Event";
-import { $broadcastEvents } from "../EventUtil";
-import { EventDispatcher } from "../EventDispatcher";
-import { IEventListener } from "../interface/IEventListener";
+import { Event } from "../../Event";
+import { $broadcastEvents } from "../../EventUtil";
+import { EventDispatcher } from "../../EventDispatcher";
+import { IEventListener } from "../../interface/IEventListener";
 import { describe, expect, it } from "vitest";
 
 describe("EventDispatcher.js removeEventListener test", () =>

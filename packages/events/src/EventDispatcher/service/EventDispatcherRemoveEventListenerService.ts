@@ -1,20 +1,20 @@
-import type { IEventListener } from "../interface/IEventListener";
-import type { EventDispatcher } from "../EventDispatcher";
-import { KeyboardEvent } from "../KeyboardEvent";
-import { Event } from "../Event";
+import type { IEventListener } from "../../interface/IEventListener";
+import type { EventDispatcher } from "../../EventDispatcher";
+import { Event } from "../../Event";
+import { KeyboardEvent } from "../../KeyboardEvent";
 import {
     $broadcastEvents,
-    $getArray,
     $poolArray
-} from "../EventUtil";
+} from "../../EventUtil";
 
 /**
- * @description イベントリスナーを全て削除。
- *              Remove all event listeners.
+ * @description イベントリスナーを削除。
+ *              Remove the event listener.
  *
  * @param  {EventDispatcher} scope
  * @param  {string} type
- * @param  {boolean} use_capture
+ * @param  {Function} listener
+ * @param  {boolean} [use_capture = false]
  * @return {void}
  * @method
  * @protected
@@ -22,6 +22,7 @@ import {
 export const execute = <D extends EventDispatcher>(
     scope: D,
     type: string,
+    listener: Function,
     use_capture: boolean = false
 ): void => {
 
@@ -56,19 +57,25 @@ export const execute = <D extends EventDispatcher>(
     }
 
     // remove listener
-    const results: IEventListener[] = $getArray();
     for (let idx = 0; idx < listenerObjects.length; ++idx) {
 
         // event object
         const object = listenerObjects[idx];
-        if (use_capture === object.useCapture) {
-            continue;
+        if (use_capture !== object.useCapture) {
+            continue ;
         }
 
-        results.push(object);
+        if (object.listener !== listener) {
+            continue ;
+        }
+
+        // delete if match
+        listenerObjects.splice(idx, 1);
+
+        break;
     }
 
-    if (!results.length) {
+    if (!listenerObjects.length) {
 
         if ($broadcastEvents.has(type)) {
             $broadcastEvents.delete(type);
@@ -81,16 +88,14 @@ export const execute = <D extends EventDispatcher>(
             }
         }
 
-        $poolArray(results);
         $poolArray(listenerObjects);
-
         return ;
     }
 
-    if (results.length > 1) {
+    if (listenerObjects.length > 1) {
 
-        // event sort (DESC)
-        results.sort((a, b): number =>
+        // event sort(DESC)
+        listenerObjects.sort((a, b): number =>
         {
             switch (true) {
 
@@ -107,12 +112,4 @@ export const execute = <D extends EventDispatcher>(
         });
 
     }
-
-    if ($broadcastEvents.has(type)) {
-        $broadcastEvents.set(type, results);
-    } else {
-        scope._$events?.set(type, results);
-    }
-
-    $poolArray(listenerObjects);
 };

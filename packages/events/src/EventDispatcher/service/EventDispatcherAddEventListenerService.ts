@@ -1,11 +1,11 @@
-import type { IEventListener } from "../interface/IEventListener";
-import type { EventDispatcher } from "../EventDispatcher";
-import { Event } from "../Event";
-import { KeyboardEvent } from "../KeyboardEvent";
+import type { IEventListener } from "../../interface/IEventListener";
+import type { EventDispatcher } from "../../EventDispatcher";
+import { Event } from "../../Event";
+import { KeyboardEvent } from "../../KeyboardEvent";
 import {
     $broadcastEvents,
     $getArray
-} from "../EventUtil";
+} from "../../EventUtil";
 
 /**
  * @description 指定イベントに関数を登録、既に登録されている場合は上書。

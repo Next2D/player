@@ -1,5 +1,5 @@
-import { Event } from "../Event";
-import { EventDispatcher } from "../EventDispatcher";
+import { Event } from "../../Event";
+import { EventDispatcher } from "../../EventDispatcher";
 import { describe, expect, it } from "vitest";
 
 describe("EventDispatcher.js hasEventListener test", () =>

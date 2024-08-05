@@ -1,6 +1,6 @@
-import { Event } from "../Event";
-import { EventDispatcher } from "../EventDispatcher";
-import { $broadcastEvents } from "../EventUtil";
+import { Event } from "../../Event";
+import { EventDispatcher } from "../../EventDispatcher";
+import { $broadcastEvents } from "../../EventUtil";
 import { describe, expect, it } from "vitest";
 
 describe("EventDispatcher.js addEventListener test", () =>
