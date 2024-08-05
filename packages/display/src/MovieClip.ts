@@ -1,5 +1,4 @@
 import type { IDictionaryTag } from "./interface/IDictionaryTag";
-import type { DisplayObjectContainer } from "./DisplayObjectContainer";
 import type { IMovieClipCharacter } from "./interface/IMovieClipCharacter";
 import type { Loader } from "./Loader";
 import type { DisplayObject } from "./DisplayObject";
@@ -1164,53 +1163,5 @@ export class MovieClip extends Sprite
         }
 
         this._$totalFrames = character.totalFrame || 1;
-    }
-
-    /**
-     * @description AnimationToolのシンボルと同期
-     *              Synchronize with AnimationTool symbol
-     * 
-     * @param {number} character_id 
-     * @param {object} character 
-     * @param {LoaderInfo} loaderInfo 
-     * @return {void}
-     * @method
-     * @protected
-     */
-    _$sync (
-        character_id: number,
-        character: IMovieClipCharacter,
-        loaderInfo: LoaderInfo
-    ): void {
-
-        // setup
-        this._$characterId = character_id;
-        $loaderInfoMap.set(this, loaderInfo);
-
-        // build
-        this._$buildCharacter(character);
-    } 
-
-    /**
-     * @description 指定タグからキャラクターを取得して、MovieClipを構築
-     *              Get character from specified tag and build MovieClip
-     *
-     * @param  {object} tag
-     * @param  {object} character
-     * @param  {MovieClip | Loader} parent
-     * @return {Promise}
-     * @method
-     * @protected
-     */
-    _$build (
-        tag: IDictionaryTag,
-        character: IMovieClipCharacter,
-        parent: MovieClip | Loader
-    ): void {
-        // base build
-        this._$baseBuild(tag, parent);
-
-        // build
-        this._$buildCharacter(character);
     }
 }

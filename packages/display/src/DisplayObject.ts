@@ -3,6 +3,7 @@ import type { Sprite } from "./Sprite";
 import type { IParent } from "./interface/IParent";
 import type { Loader } from "./Loader";
 import type { IDictionaryTag } from "./interface/IDictionaryTag";
+import type { ICharacter } from "./interface/ICharacter";
 import type { MovieClip } from "./MovieClip";
 import {
     Event,
@@ -74,7 +75,6 @@ export class DisplayObject extends EventDispatcher
     protected _$rotation: number | null;
     protected _$startFrame: number;
     protected _$endFrame: number;
-
 
 
     protected _$id: number;
@@ -2080,6 +2080,17 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
+     * @description キャラクター情報からオブジェクトを構築
+     *              Build an object from character information
+     * 
+     * @param  {ICharacter} character
+     * @return {void}
+     * @method
+     * @abstract
+     */
+    _$buildCharacter(character: ICharacter): void {}
+
+    /**
      * @description 指定されたタグ情報を元に、表示オブジェクトを構築します。
      *              Based on the specified tag information, the display object is constructed.
      *
@@ -2102,10 +2113,58 @@ export class DisplayObject extends EventDispatcher
         $loaderInfoMap.set(this, loaderInfo);
 
         // bind tag data
-        this._$characterId = tag.characterId | 0;
-        this._$clipDepth   = tag.clipDepth | 0;
-        this._$startFrame  = tag.startFrame | 0;
-        this._$endFrame    = tag.endFrame | 0;
+        this._$characterId = tag.characterId;
+        this._$clipDepth   = tag.clipDepth;
+        this._$startFrame  = tag.startFrame;
+        this._$endFrame    = tag.endFrame;
         this._$name        = tag.name || "";
+    }
+
+    /**
+     * @description 指定タグからキャラクターを取得して、オブジェクトを構築
+     *              Get the character from the specified tag and build the object
+     *
+     * @param  {object} tag
+     * @param  {object} character
+     * @param  {MovieClip | Loader} parent
+     * @return {Promise}
+     * @method
+     * @protected
+     */
+    _$build (
+        tag: IDictionaryTag,
+        character: ICharacter,
+        parent: MovieClip | Loader
+    ): void {
+        // base build
+        this._$baseBuild(tag, parent);
+
+        // build
+        this._$buildCharacter(character);
+    }
+
+    /**
+     * @description AnimationToolのシンボルと同期
+     *              Synchronize with AnimationTool symbol
+     * 
+     * @param {number} character_id 
+     * @param {object} character 
+     * @param {LoaderInfo} loaderInfo 
+     * @return {void}
+     * @method
+     * @protected
+     */
+    _$sync (
+        character_id: number,
+        character: ICharacter,
+        loaderInfo: LoaderInfo
+    ): void {
+
+        // setup
+        this._$characterId = character_id;
+        $loaderInfoMap.set(this, loaderInfo);
+
+        // build
+        this._$buildCharacter(character);
     }
 }

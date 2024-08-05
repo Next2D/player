@@ -1,4 +1,5 @@
 import type { Video } from "../../Video";
+import { $getPlayingVideos } from "../../MediaUtil";
 import { VideoEvent } from "@next2d/events";
 import { execute } from "./VideoPlayEventService";
 import { describe, expect, it, vi } from "vitest";
@@ -13,7 +14,6 @@ describe("VideoPlayEventService.js test", () =>
         const MockVideo = vi.fn().mockImplementation(() =>
         {
             return {
-                "stage": true,
                 "pause": vi.fn(() => { pauseState = "pause" }),
                 "willTrigger": vi.fn(() => true),
                 "dispatchEvent": vi.fn((event: VideoEvent) => { eventState = event.type }),
@@ -26,14 +26,15 @@ describe("VideoPlayEventService.js test", () =>
         expect(eventState).toBe("");
         expect(state).toBe("");
 
+        const playingVideos = $getPlayingVideos();
+        playingVideos.length = 0;
+        expect(playingVideos.length).toBe(0);
+
         cancelAnimationFrame(execute(mockVideo));
 
+        expect(playingVideos.length).toBe(1);
         expect(state).toBe("doChanged");
         expect(pauseState).toBe("");
         expect(eventState).toBe(VideoEvent.PLAY);
-
-        mockVideo.stage = false;
-        cancelAnimationFrame(execute(mockVideo));
-        expect(pauseState).toBe("pause");
     });
 });
