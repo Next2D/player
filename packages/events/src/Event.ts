@@ -1,6 +1,6 @@
-import { EventPhase } from "./EventPhase";
 import type { EventDispatcher } from "./EventDispatcher";
-import type { EventDispatcherImpl } from "./interface/EventDispatcherImpl";
+import type { IEventDispatcher } from "./interface/IEventDispatcher";
+import { EventPhase } from "./EventPhase";
 
 /**
  * @description Event クラスのメソッドは、イベントリスナー関数で使用してイベントオブジェクトの動作に影響を与えることができます。
@@ -25,8 +25,8 @@ export class Event
     private readonly _$type: string;
     private readonly _$bubbles: boolean;
     public listener: Function | null;
-    public target: EventDispatcherImpl<EventDispatcher> | null;
-    public currentTarget: EventDispatcherImpl<EventDispatcher> | null;
+    public target: IEventDispatcher<EventDispatcher> | null;
+    public currentTarget: IEventDispatcher<EventDispatcher> | null;
     public eventPhase: number;
     public _$stopImmediatePropagation: boolean;
     public _$stopPropagation: boolean;

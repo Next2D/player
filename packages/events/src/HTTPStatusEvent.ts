@@ -1,4 +1,4 @@
-import type { URLRequestHeaderImpl } from "./interface/URLRequestHeaderImpl";
+import type { IURLRequestHeader } from "./interface/IURLRequestHeader";
 import { Event } from "./Event";
 
 /**
@@ -12,7 +12,7 @@ import { Event } from "./Event";
 export class HTTPStatusEvent extends Event
 {
     private readonly _$status: number;
-    private readonly _$responseHeaders: URLRequestHeaderImpl[];
+    private readonly _$responseHeaders: IURLRequestHeader[];
     private readonly _$responseURL: string;
 
     /**
@@ -28,7 +28,7 @@ export class HTTPStatusEvent extends Event
     constructor (
         type: string, bubbles: boolean = false,
         status: number = 0, response_url: string = "",
-        response_headers: URLRequestHeaderImpl[] = []
+        response_headers: IURLRequestHeader[] = []
     ) {
 
         super(type, bubbles);
@@ -106,7 +106,7 @@ export class HTTPStatusEvent extends Event
      * @readonly
      * @public
      */
-    get responseHeaders (): URLRequestHeaderImpl[]
+    get responseHeaders (): IURLRequestHeader[]
     {
         return this._$responseHeaders;
     }

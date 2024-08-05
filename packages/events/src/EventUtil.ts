@@ -1,4 +1,4 @@
-import type { EventListenerImpl } from "./interface/EventListenerImpl";
+import type { EventListenerImpl } from "./interface/IEventListener";
 
 /**
  * @type {Map}

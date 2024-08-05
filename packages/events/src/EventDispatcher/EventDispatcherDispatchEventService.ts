@@ -1,4 +1,4 @@
-import type { EventListenerImpl } from "../interface/EventListenerImpl";
+import type { IEventListener } from "../interface/IEventListener";
 import type { EventDispatcher } from "../EventDispatcher";
 import { Event } from "../Event";
 import { KeyboardEvent } from "../KeyboardEvent";
@@ -36,7 +36,7 @@ export const execute = <D extends EventDispatcher, E extends Event>(
                     return false;
                 }
 
-                const listenerObjects = $broadcastEvents.get(event.type) as NonNullable<EventListenerImpl[]>;
+                const listenerObjects = $broadcastEvents.get(event.type) as NonNullable<IEventListener[]>;
                 if (!listenerObjects.length) {
                     return false;
                 }
@@ -71,7 +71,7 @@ export const execute = <D extends EventDispatcher, E extends Event>(
             {
                 event.target = scope;
 
-                let currentEvents: EventListenerImpl[] | null = null;
+                let currentEvents: IEventListener[] | null = null;
                 if (scope._$events
                     && scope._$events.size
                     && scope._$events.has(event.type)
@@ -91,8 +91,8 @@ export const execute = <D extends EventDispatcher, E extends Event>(
 
                         if (parent.hasEventListener(event.type)) {
 
-                            const events: EventListenerImpl[] | null = parent._$events && parent._$events.has(event.type)
-                                ? parent._$events.get(event.type) as NonNullable<EventListenerImpl[]>
+                            const events: IEventListener[] | null = parent._$events && parent._$events.has(event.type)
+                                ? parent._$events.get(event.type) as NonNullable<IEventListener[]>
                                 : null;
 
                             if (events) {
@@ -133,10 +133,10 @@ export const execute = <D extends EventDispatcher, E extends Event>(
                         default:
                             for (let idx = parentEvents.length - 1; idx > -1; --idx) {
 
-                                const events: EventListenerImpl[] = parentEvents[idx];
+                                const events: IEventListener[] = parentEvents[idx];
                                 for (let idx: number = 0; idx < events.length; ++idx) {
 
-                                    const object: EventListenerImpl = events[idx];
+                                    const object: IEventListener = events[idx];
                                     if (!object.useCapture) {
                                         continue;
                                     }
@@ -182,7 +182,7 @@ export const execute = <D extends EventDispatcher, E extends Event>(
 
                     for (let idx: number = 0; idx < currentEvents.length; ++idx) {
 
-                        const object: EventListenerImpl = currentEvents[idx];
+                        const object = currentEvents[idx];
                         if (object.useCapture) {
                             continue;
                         }
@@ -227,10 +227,10 @@ export const execute = <D extends EventDispatcher, E extends Event>(
                             // this => parent... => stage end
                             for (let idx: number = 0; idx < parentEvents.length; ++idx) {
 
-                                const events: EventListenerImpl[] = parentEvents[idx];
+                                const events: IEventListener[] = parentEvents[idx];
                                 for (let idx: number = 0; idx < events.length; ++idx) {
 
-                                    const object: EventListenerImpl = events[idx];
+                                    const object = events[idx];
                                     if (object.useCapture) {
                                         continue;
                                     }

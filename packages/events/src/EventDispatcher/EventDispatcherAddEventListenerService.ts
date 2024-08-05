@@ -1,4 +1,4 @@
-import type { EventListenerImpl } from "../interface/EventListenerImpl";
+import type { IEventListener } from "../interface/IEventListener";
 import type { EventDispatcher } from "../EventDispatcher";
 import { Event } from "../Event";
 import { KeyboardEvent } from "../KeyboardEvent";
@@ -27,7 +27,7 @@ export const execute = <D extends EventDispatcher>(
     priority: number = 0
 ): void => {
 
-    let listenerObjects: EventListenerImpl[];
+    let listenerObjects: IEventListener[];
     switch (type) {
 
         // broadcast event
@@ -41,7 +41,7 @@ export const execute = <D extends EventDispatcher>(
                 $broadcastEvents.set(type, $getArray());
             }
 
-            listenerObjects = $broadcastEvents.get(type) as NonNullable<EventListenerImpl[]>;
+            listenerObjects = $broadcastEvents.get(type) as NonNullable<IEventListener[]>;
 
             break;
 
@@ -56,7 +56,7 @@ export const execute = <D extends EventDispatcher>(
                 scope._$events.set(type, $getArray());
             }
 
-            listenerObjects = scope._$events.get(type) as NonNullable<EventListenerImpl[]>;
+            listenerObjects = scope._$events.get(type) as NonNullable<IEventListener[]>;
 
             break;
 

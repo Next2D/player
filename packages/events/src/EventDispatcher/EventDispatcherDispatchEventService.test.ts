@@ -1,7 +1,6 @@
 import { Event } from "../Event";
 import { EventDispatcher } from "../EventDispatcher";
 import { EventPhase } from "../EventPhase";
-import { $broadcastEvents } from "../EventUtil";
 import { describe, expect, it } from "vitest";
 
 describe("EventDispatcher.js dispatchEvent test", () =>

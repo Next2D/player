@@ -1,7 +1,7 @@
 import { Event } from "../Event";
 import { $broadcastEvents } from "../EventUtil";
 import { EventDispatcher } from "../EventDispatcher";
-import { EventListenerImpl } from "../interface/EventListenerImpl";
+import { IEventListener } from "../interface/IEventListener";
 import { describe, expect, it } from "vitest";
 
 describe("EventDispatcher.js removeEventListener test", () =>
@@ -135,7 +135,7 @@ describe("EventDispatcher.js removeEventListener test", () =>
         expect($broadcastEvents.size).toBe(1);
         expect($broadcastEvents.has(Event.ENTER_FRAME)).toBe(true);
 
-        const events = $broadcastEvents.get(Event.ENTER_FRAME) as NonNullable<EventListenerImpl[]>;
+        const events = $broadcastEvents.get(Event.ENTER_FRAME) as NonNullable<IEventListener[]>;
         expect(events.length).toBe(2);
 
         eventDispatcher1.removeEventListener(Event.ENTER_FRAME, a);

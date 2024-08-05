@@ -1,4 +1,4 @@
-import type { EventListenerImpl } from "../interface/EventListenerImpl";
+import type { IEventListener } from "../interface/IEventListener";
 import type { EventDispatcher } from "../EventDispatcher";
 import { Event } from "../Event";
 import { KeyboardEvent } from "../KeyboardEvent";
@@ -26,7 +26,7 @@ export const execute = <D extends EventDispatcher>(
     use_capture: boolean = false
 ): void => {
 
-    let listenerObjects: EventListenerImpl[];
+    let listenerObjects: IEventListener[];
     switch (type) {
 
         case Event.ENTER_FRAME:
@@ -37,7 +37,7 @@ export const execute = <D extends EventDispatcher>(
             ) {
                 return ;
             }
-            listenerObjects = $broadcastEvents.get(type) as NonNullable<EventListenerImpl[]>;
+            listenerObjects = $broadcastEvents.get(type) as NonNullable<IEventListener[]>;
             break;
 
         default:
@@ -47,7 +47,7 @@ export const execute = <D extends EventDispatcher>(
             ) {
                 return ;
             }
-            listenerObjects = scope._$events.get(type) as NonNullable<EventListenerImpl[]>;
+            listenerObjects = scope._$events.get(type) as NonNullable<IEventListener[]>;
             break;
 
     }
@@ -95,7 +95,7 @@ export const execute = <D extends EventDispatcher>(
     if (listenerObjects.length > 1) {
 
         // event sort(DESC)
-        listenerObjects.sort(function (a: EventListenerImpl, b: EventListenerImpl)
+        listenerObjects.sort((a, b): number =>
         {
             switch (true) {
 

@@ -1,5 +1,5 @@
 import type { Event } from "./Event";
-import type { EventListenerImpl } from "./interface/EventListenerImpl";
+import type { IEventListener } from "./interface/IEventListener";
 import { execute as eventDispatcherAddEventListenerService } from "./EventDispatcher/EventDispatcherAddEventListenerService";
 import { execute as eventDispatcherHasEventListenerService } from "./EventDispatcher/EventDispatcherHasEventListenerService";
 import { execute as eventDispatcherRemoveEventListenerService } from "./EventDispatcher/EventDispatcherRemoveEventListenerService";
@@ -16,7 +16,7 @@ import { execute as eventDispatcherDispatchEventService } from "./EventDispatche
  */
 export class EventDispatcher
 {
-    public _$events: Map<string, EventListenerImpl[]> | null;
+    public _$events: Map<string, IEventListener[]> | null;
 
     /**
      * @constructor
