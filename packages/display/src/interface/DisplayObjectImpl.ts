@@ -1,3 +1,3 @@
-import type { DisplayObject } from "@next2d/display";
+import type { DisplayObject } from "../DisplayObject";
 
 export type DisplayObjectImpl<T extends DisplayObject> = T;

@@ -23,6 +23,16 @@ import { execute as loaderLoadUseCase } from "./Loader/usecase/LoaderLoadUseCase
 export class Loader extends DisplayObjectContainer
 {
     /**
+     * @description 読み込まれているオブジェクトに対応する LoaderInfo オブジェクトを返します。
+     *              Returns a LoaderInfo object corresponding to the object being loaded.
+     *
+     * @member {LoaderInfo}
+     * @readonly
+     * @public
+     */    
+    public readonly contentLoaderInfo: LoaderInfo;
+
+    /**
      * @constructor
      * @public
      */
@@ -30,11 +40,7 @@ export class Loader extends DisplayObjectContainer
     {
         super();
 
-        /**
-         * @type {LoaderInfo}
-         * @private
-         */
-        this._$loaderInfo = new LoaderInfo();
+        this.contentLoaderInfo = new LoaderInfo();
     }
 
     /**
@@ -73,20 +79,22 @@ export class Loader extends DisplayObjectContainer
      */
     get content (): ParentImpl<MovieClip | Sprite> | null
     {
-        return (this._$loaderInfo as NonNullable<LoaderInfo>).content;
+        return this.contentLoaderInfo.content;
     }
 
     /**
-     * @description 読み込まれているオブジェクトに対応する LoaderInfo オブジェクトを返します。
-     *              Returns a LoaderInfo object corresponding to the object being loaded.
+     * @description この表示オブジェクトが属するファイルの読み込み情報を含む LoaderInfo オブジェクトを返します。
+     *              Returns a LoaderInfo object containing information
+     *              about loading the file to which this display object belongs.
      *
-     * @member {LoaderInfo}
+     * @member  {LoaderInfo}
+     * @default null
      * @readonly
      * @public
      */
-    get contentLoaderInfo (): LoaderInfo
+    get loaderInfo (): LoaderInfo
     {
-        return this._$loaderInfo as NonNullable<LoaderInfo>;
+        return this.contentLoaderInfo;
     }
 
     /**
@@ -107,9 +115,8 @@ export class Loader extends DisplayObjectContainer
             throw new Error("The only format that can be loaded by this function is `json` format.");
         }
 
-        const loaderInfo  = this._$loaderInfo as NonNullable<LoaderInfo>;
-        loaderInfo.url    = request.url;
-        loaderInfo.format = request.responseDataFormat;
+        this.contentLoaderInfo.url    = request.url;
+        this.contentLoaderInfo.format = request.responseDataFormat;
 
         await loaderLoadUseCase(this, request);
     }

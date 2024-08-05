@@ -3,9 +3,10 @@ import type { DisplayObject } from "./DisplayObject";
 import type { PlaceObjectImpl } from "./interface/PlaceObjectImpl";
 import type { DisplayObjectImpl } from "./interface/DisplayObjectImpl";
 import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
-import {
-    $getArray
-} from "./DisplayObjectUtil";
+import type { MovieClip } from "./MovieClip";
+import { execute as displayObjectContainerAddChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerAddChildUseCase";
+import { execute as movieClipGetChildrenService } from "./MovieClip/service/MovieClipGetChildrenService";
+import { $getArray } from "./DisplayObjectUtil";
 
 /**
  * @description DisplayObjectContainer クラスは、表示リストで表示オブジェクトコンテナとして機能するすべてのオブジェクトの基本クラスです。
@@ -26,16 +27,24 @@ import {
  */
 export class DisplayObjectContainer extends InteractiveObject
 {
+    protected readonly _$children: DisplayObjectImpl<any>[];
     protected _$placeMap: Array<Array<number>> | null;
     protected _$placeObjects: PlaceObjectImpl[] | null;
     protected _$controller: Array<Array<number>> | null;
     protected _$dictionary: DictionaryTagImpl[] | null;
-    protected readonly _$children: DisplayObjectImpl<any>[];
     protected _$needsChildren: boolean;
-    protected _$mouseChildren: boolean;
     protected _$wait: boolean;
-    protected readonly _$names: Map<string, DisplayObjectImpl<any>>;
 
+    /**
+     * @description オブジェクトの子がマウスまたはユーザー入力デバイスに対応しているかどうかを判断します。
+     *              Determine if the object's children are compatible with mouse or user input devices.
+     *
+     * @type {boolean}
+     * @default true
+     * @public
+     */
+    public mouseChildren: boolean;
+    
     /**
      * @constructor
      * @public
@@ -43,6 +52,8 @@ export class DisplayObjectContainer extends InteractiveObject
     constructor ()
     {
         super();
+
+        this.mouseChildren = true;
 
         /**
          * @type {array}
@@ -90,47 +101,7 @@ export class DisplayObjectContainer extends InteractiveObject
          * @default true
          * @private
          */
-        this._$mouseChildren = true;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
         this._$wait = true;
-
-        /**
-         * @type {Map}
-         * @private
-         */
-        this._$names = new Map();
-
-        return new Proxy(this, {
-            "get": (object: this, name: string): any =>
-            {
-                if (object._$names.size && object._$names.has(name)) {
-                    return object._$names.get(name);
-                }
-                // @ts-ignore
-                return object[name];
-            }
-        });
-    }
-
-    /**
-     * @description オブジェクトの子がマウスまたはユーザー入力デバイスに対応しているかどうかを判断します。
-     *              Determine if the object's children are compatible with mouse or user input devices.
-     *
-     * @member {boolean}
-     * @public
-     */
-    get mouseChildren (): boolean
-    {
-        return this._$mouseChildren;
-    }
-    set mouseChildren (mouse_children: boolean)
-    {
-        this._$mouseChildren = !!mouse_children;
     }
 
     // /**
@@ -159,19 +130,31 @@ export class DisplayObjectContainer extends InteractiveObject
      */
     addChild<T extends DisplayObject> (display_object: T): T
     {
-        if (display_object._$parent) {
-            child._$parent._$remove(child,
-                !(child._$parent._$instanceId === this._$instanceId)
-            );
+        const parent = display_object.parent;
+        if (parent) {
+            parent.removeChild(display_object);
         }
 
-        // this._$getChildren().push(child);
+        if (this._$controller) {
+            // parent is MovieClip
+            const children = movieClipGetChildrenService(
+                this as unknown as MovieClip,
+                this._$children,
+                this._$controller
+            );
+            children.push(display_object);
+        } else {
+            // parent is Sprite
+            this._$children.push(display_object);
+        }
+        
+        displayObjectContainerAddChildUseCase(this, display_object);
 
-        // if (child._$name) {
-        //     this._$names.set(child._$name, child);
-        // }
+        // update properties
+        display_object._$added = true;
+        display_object._$addedToStage = true;
 
-        return display_object;//this._$addChild(child);
+        return display_object;
     }
 
     // /**
@@ -336,24 +319,25 @@ export class DisplayObjectContainer extends InteractiveObject
     //     return index;
     // }
 
-    // /**
-    //  * @description DisplayObjectContainer インスタンスの子リストから指定の
-    //  *              child DisplayObject インスタンスを削除します。
-    //  *              Removes the specified child DisplayObject instance from the
-    //  *              child list of the DisplayObjectContainer instance.
-    //  *
-    //  * @param  {DisplayObject} child
-    //  * @return {DisplayObject}
-    //  * @method
-    //  * @public
-    //  */
-    // removeChild (child: DisplayObjectImpl<any>): DisplayObjectImpl<any>
-    // {
-    //     if (child._$parent !== this) {
-    //         throw new Error("ArgumentError: removeChild: not child");
-    //     }
-    //     return this._$remove(child);
-    // }
+    /**
+     * @description DisplayObjectContainer インスタンスの子リストから指定の
+     *              child DisplayObject インスタンスを削除します。
+     *              Removes the specified child DisplayObject instance from the
+     *              child list of the DisplayObjectContainer instance.
+     *
+     * @param  {DisplayObject} display_object
+     * @return {DisplayObject}
+     * @method
+     * @public
+     */
+    removeChild <D extends DisplayObject>(display_object: D): D
+    {
+        if (display_object.parent !== this) {
+            throw new Error("ArgumentError: Parent-child relationship does not match.");
+        }
+        return display_object;
+        // return this._$remove(child);
+    }
 
     // /**
     //  * @description DisplayObjectContainer の子リストの指定された index 位置から子 DisplayObject を削除します。

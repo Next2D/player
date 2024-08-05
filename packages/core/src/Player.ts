@@ -8,7 +8,6 @@ import { execute as playerApplyContainerElementStyleService } from "./Player/Pla
 import { execute as playerLoadingAnimationService } from "./Player/PlayerLoadingAnimationService";
 import { execute as playerResizeEventService } from "./Player/PlayerResizeEventService";
 import { execute as playerResizeRegisterService } from "./Player/PlayerResizeRegisterService";
-import { execute as playerUpdateBackgroundColorPostMessageService } from "./Player/PlayerUpdateBackgroundColorPostMessageService";
 
 /**
  * @description Next2Dの描画、イベント、設定、コントロールの管理クラスです。
@@ -26,11 +25,8 @@ export class Player
     private _$rendererWidth: number;
     private _$rendererHeight: number;
     private _$rendererScale: number;
-    private _$stageWidth: number;
-    private _$stageHeight: number;
     private _$fixedWidth: number;
     private _$fixedHeight: number;
-    private _$frameRate: number;
     private _$stopFlag: boolean;
     private _$scale: number;
     // private _$state: "up" | "down";
@@ -44,7 +40,6 @@ export class Player
     // private _$stageX: number;
     // private _$stageY: number;
     private _$tagId: string;
-    private _$bgColor: string;
     private _$fullScreen: boolean;
     private _$timerId: number;
     // private _$deltaX: number;
@@ -102,13 +97,6 @@ export class Player
         // this._$mouseOverTarget = null;
 
         /**
-         * @type {number}
-         * @default 60
-         * @private
-         */
-        this._$frameRate = 60;
-
-        /**
          * @type {boolean}
          * @default true
          * @private
@@ -142,20 +130,6 @@ export class Player
         //  * @private
         //  */
         // this._$height = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$stageWidth = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$stageHeight = 0;
 
         /**
          * @type {number}
@@ -255,13 +229,6 @@ export class Player
         this._$tagId = "";
 
         /**
-         * @type {string}
-         * @default "transparent"
-         * @private
-         */
-        this._$bgColor = "transparent";
-
-        /**
          * @type {boolean}
          * @default false
          * @private
@@ -281,13 +248,6 @@ export class Player
          * @private
          */
         this._$timerId = -1;
-
-        /**
-         * @type {number}
-         * @default -1
-         * @private
-         */
-        this._$loadId  = -1;
 
         // /**
         //  * @type {DisplayObject}
@@ -473,72 +433,7 @@ export class Player
         this._$fullScreen = full_screen;
 
         // display resize
-        playerResizeEventService(this);
-    }
-
-    /**
-     * @member {string}
-     * @public
-     */
-    get bgColor (): string
-    {
-        return this._$bgColor;
-    }
-    set bgColor (bg_color: string)
-    {
-        if (this._$bgColor === bg_color) {
-            return ;
-        }
-
-        this._$bgColor = `${bg_color}`;
-        playerUpdateBackgroundColorPostMessageService(this._$bgColor);
-    }
-
-    /**
-     * @member {number}
-     * @public
-     */
-    get frameRate (): number
-    {
-        return this._$frameRate;
-    }
-    set frameRate (frame_rate: number)
-    {
-        this._$frameRate = frame_rate;
-    }
-
-    /**
-     * @description ステージの幅
-     *              Stage width
-     *
-     * @member {number}
-     * @default 0
-     * @public
-     */
-    get stageWidth (): number
-    {
-        return this._$stageWidth;
-    }
-    set stageWidth (stage_width: number)
-    {
-        this._$stageWidth = stage_width;
-    }
-
-    /**
-     * @description ステージの高さ
-     *              Stage height
-     *
-     * @member {number}
-     * @default 0
-     * @public
-     */
-    get stageHeight (): number
-    {
-        return this._$stageHeight;
-    }
-    set stageHeight (stage_height: number)
-    {
-        this._$stageHeight = stage_height;
+        playerResizeEventService();
     }
 
     /**
@@ -645,7 +540,7 @@ export class Player
 
         // register resize event
         if (!this._$fixedWidth && !this._$fixedHeight) {
-            playerResizeRegisterService(this);
+            playerResizeRegisterService();
         }
 
         // initialize resize

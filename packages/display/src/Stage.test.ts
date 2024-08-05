@@ -13,19 +13,3 @@ describe("Stage.js namespace test", () =>
         expect(Stage.namespace).toBe("next2d.display.Stage");
     });
 });
-
-describe("Stage.js toString test", () =>
-{
-    it("toString test success", () =>
-    {
-        expect(new Stage().toString()).toBe("[object Stage]");
-    });
-});
-
-describe("Stage.js static toString test", () =>
-{
-    it("static toString test", () =>
-    {
-        expect(Stage.toString()).toBe("[class Stage]");
-    });
-});

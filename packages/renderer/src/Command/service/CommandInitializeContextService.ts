@@ -5,7 +5,7 @@ import {
     $setDevicePixelRatio,
     $setWebGL2RenderingContext,
     $samples
-} from "../RendererUtil";
+} from "../../RendererUtil";
 
 /**
  * @description OffscreenCanvasからWebGL2のコンテキストを取得

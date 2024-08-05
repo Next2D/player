@@ -14,38 +14,3 @@ describe("SoundTransform.js namespace test", () =>
         expect(SoundTransform.namespace).toBe("next2d.media.SoundTransform");
     });
 });
-
-describe("SoundTransform.js property test", () =>
-{
-    it("volume test case1", () =>
-    {
-        const soundTransform = new SoundTransform();
-        expect(soundTransform.volume).toBe(1);
-    });
-
-    it("volume test case2", () =>
-    {
-        const soundTransform = new SoundTransform();
-        soundTransform.volume = 100;
-        expect(soundTransform.volume).toBe(1);
-    });
-
-    it("volume test case3", () =>
-    {
-        const soundTransform = new SoundTransform();
-        soundTransform.volume = -32;
-        expect(soundTransform.volume).toBe(0);
-    });
-
-    it("volume test case4", () =>
-    {
-        const soundTransform = new SoundTransform(100);
-        expect(soundTransform.volume).toBe(1);
-    });
-
-    it("volume test case5", () =>
-    {
-        const soundTransform = new SoundTransform(-32);
-        expect(soundTransform.volume).toBe(0);
-    });
-});

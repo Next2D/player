@@ -1,7 +1,7 @@
 import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
-import { execute as commandInitializeContextService } from "./Command/CommandInitializeContextService";
-import { execute as commandResizeService } from "./Command/CommandResizeService";
-import { execute as commandBackgroundColorService } from "./Command/CommandBackgroundColorService";
+import { execute as commandInitializeContextService } from "./Command/service/CommandInitializeContextService";
+import { execute as commandResizeService } from "./Command/service/CommandResizeService";
+import { execute as commandDrawUseCase } from "./Command/usecase/CommandDrawUseCase";
 
 /**
  * @class
@@ -10,7 +10,6 @@ export class CommandController
 {
     public state: string;
     public queue: PropertyMessageMapImpl<any>[];
-    private readonly _$options: ArrayBuffer[];
 
     /**
      * @constructor
@@ -30,12 +29,6 @@ export class CommandController
          * @public
          */
         this.queue = [];
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$options = [];
     }
 
     /**
@@ -62,6 +55,7 @@ export class CommandController
             switch (object.command) {
 
                 case "draw":
+                    commandDrawUseCase();
                     break;
 
                 case "resize":
@@ -79,10 +73,6 @@ export class CommandController
                     commandInitializeContextService(
                         object.canvas, object.buffer[0] as number
                     );
-                    break;
-
-                case "setBackgroundColor":
-                    commandBackgroundColorService(object.buffer[0] as number);
                     break;
 
                 case "removeCache":

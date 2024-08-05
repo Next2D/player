@@ -1,4 +1,5 @@
 import { $player } from "../Player";
+import { $stage } from "@next2d/display";
 import { execute as playerResizePostMessageService } from "./PlayerResizePostMessageService";
 import {
     $PREFIX,
@@ -39,22 +40,22 @@ export const execute = (): void =>
     style.width  = `${screenWidth}px`;
     style.height = `${screenHeight}px`;
 
-    if (!$player.stageWidth || !$player.stageHeight) {
+    if (!$stage.stageWidth || !$stage.stageHeight) {
         return ;
     }
 
     const scale: number = Math.min(
-        screenWidth  / $player.stageWidth,
-        screenHeight / $player.stageHeight
+        screenWidth  / $stage.stageWidth,
+        screenHeight / $stage.stageHeight
     );
 
     const width: number = $player.fullScreen
         ? window.innerWidth * $devicePixelRatio
-        : $player.stageWidth * scale * $devicePixelRatio | 0;
+        : $stage.stageWidth * scale * $devicePixelRatio | 0;
 
     const height: number = $player.fullScreen
         ? window.innerHeight * $devicePixelRatio
-        : $player.stageHeight * scale * $devicePixelRatio | 0;
+        : $stage.stageHeight * scale * $devicePixelRatio | 0;
 
     // 同じサイズの場合は、ここれで終了
     if (width === $player.rendererWidth

@@ -1,5 +1,5 @@
 import { execute } from "./CommandInitializeContextService";
-import { $devicePixelRatio } from "../RendererUtil";
+import { $devicePixelRatio } from "../../RendererUtil";
 import { describe, expect, it, vi } from "vitest";
 
 describe("CommandInitializeContextService.js test", () =>

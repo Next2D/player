@@ -1,5 +1,6 @@
 import type { ResizeMessageImpl } from "../interface/ResizeMessageImpl";
 import { $player } from "../Player";
+import { $stage } from "@next2d/display";
 import { $rendererWorker } from "../CoreUtil";
 
 /**
@@ -38,8 +39,8 @@ export const execute = (): void =>
         $player.rendererScale,
         $player.rendererWidth,
         $player.rendererHeight,
-        $player.stageWidth,
-        $player.stageHeight,
+        $stage.stageWidth,
+        $stage.stageHeight,
         $player.fullScreen ? 1 : 0
     ]);
 

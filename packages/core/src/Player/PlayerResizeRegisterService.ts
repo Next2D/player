@@ -1,4 +1,3 @@
-import type { Player } from "../Player";
 import { execute as playerResizeEventService } from "./PlayerResizeEventService";
 
 /**
@@ -15,14 +14,11 @@ let timerId: number = -1;
  * @method
  * @protected
  */
-export const execute = (player: Player): void =>
+export const execute = (): void =>
 {
     window.addEventListener("resize", (): void =>
     {
         cancelAnimationFrame(timerId);
-        timerId = requestAnimationFrame((): void =>
-        {
-            playerResizeEventService(player);
-        });
+        timerId = requestAnimationFrame(playerResizeEventService);
     });
 };

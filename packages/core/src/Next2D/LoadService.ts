@@ -65,22 +65,22 @@ export const execute = async (url: string, options: PlayerOptionsImpl | null = n
 
     // update properties
     const stageData: StageDataImpl = loaderInfo.data.stage;
-    $player.stageWidth  = stageData.width;
-    $player.stageHeight = stageData.height;
-    $player.frameRate   = $clamp(stageData.fps, 1, 60, 60);
-    $player.bgColor     = stageData.bgColor;
+    $stage.stageWidth      = stageData.width;
+    $stage.stageHeight     = stageData.height;
+    $stage.frameRate       = $clamp(stageData.fps, 1, 60, 60);
+    $stage.backgroundColor = stageData.bgColor;
 
     $stage.addChild<MovieClip>(loaderInfo.content as MovieClip);
 
     // resize
     playerResizeEventService();
 
+    // TODO: ready complete
+    playerReadyCompleteService();
+
     // remove loading
     playerRemoveLoadingElementService();
 
     // append canvas
     playerAppendCanvasElementService();
-
-    // TODO: ready complete
-    playerReadyCompleteService();
 };

@@ -1,9 +1,6 @@
-import type { MovieClipCharacterImpl } from "./interface/MovieClipCharacterImpl";
-import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
-import type { ParentImpl } from "./interface/ParentImpl";
+import type { SpriteImpl } from "./interface/SpriteImpl";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { SoundTransform } from "@next2d/media";
-import { execute as displayObjectBaseBuildService } from "./DisplayObject/DisplayObjectBaseBuildService";
 
 /**
  * @description Sprite クラスは、表示リストの基本的要素です。
@@ -18,10 +15,32 @@ import { execute as displayObjectBaseBuildService } from "./DisplayObject/Displa
  */
 export class Sprite extends DisplayObjectContainer
 {
-    protected _$buttonMode: boolean;
+    /**
+     * @description このスプライトのボタンモードを指定します。
+     *              Specifies the button mode of this sprite.
+     *
+     * @member  {boolean}
+     * @default false
+     * @public
+     */
+    public buttonMode: boolean;
+
+    /**
+     * @description buttonMode プロパティが true に設定されたスプライト上にポインターが移動したときに、
+     *              指差しハンドポインター（ハンドカーソル）を表示するかどうかを示すブール値です。
+     *              A Boolean value that indicates whether the pointing hand (hand cursor)
+     *              appears when the pointer rolls over a sprite
+     *              in which the buttonMode property is set to true.
+     *
+     * @member  {boolean}
+     * @default true
+     * @public
+     */
+    public useHandCursor: boolean;
+
     protected _$hitArea: SpriteImpl<any> | null;
     protected _$soundTransform: SoundTransform | null;
-    protected _$useHandCursor: boolean;
+    
 
     /**
      * @constructor
@@ -34,9 +53,16 @@ export class Sprite extends DisplayObjectContainer
         /**
          * @type {boolean}
          * @default false
-         * @private
+         * @public
          */
-        this._$buttonMode = false;
+        this.buttonMode = false;
+
+        /**
+         * @type {boolean}
+         * @default true
+         * @public
+         */
+        this.useHandCursor = true;
 
         /**
          * @type {Sprite|null}
@@ -51,27 +77,6 @@ export class Sprite extends DisplayObjectContainer
          * @private
          */
         this._$soundTransform = null;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$useHandCursor = true;
-    }
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class Sprite]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Sprite]";
     }
 
     /**
@@ -89,20 +94,6 @@ export class Sprite extends DisplayObjectContainer
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object Sprite]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Sprite]";
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
@@ -114,23 +105,6 @@ export class Sprite extends DisplayObjectContainer
     get namespace (): string
     {
         return "next2d.display.Sprite";
-    }
-
-    /**
-     * @description このスプライトのボタンモードを指定します。
-     *              Specifies the button mode of this sprite.
-     *
-     * @member  {boolean}
-     * @default false
-     * @public
-     */
-    get buttonMode (): boolean
-    {
-        return this._$buttonMode;
-    }
-    set buttonMode (button_mode: boolean)
-    {
-        this._$buttonMode = !!button_mode;
     }
 
     // /**
@@ -188,26 +162,6 @@ export class Sprite extends DisplayObjectContainer
     set soundTransform (sound_transform: SoundTransform | null)
     {
         this._$soundTransform = sound_transform;
-    }
-
-    /**
-     * @description buttonMode プロパティが true に設定されたスプライト上にポインターが移動したときに、
-     *              指差しハンドポインター（ハンドカーソル）を表示するかどうかを示すブール値です。
-     *              A Boolean value that indicates whether the pointing hand (hand cursor)
-     *              appears when the pointer rolls over a sprite
-     *              in which the buttonMode property is set to true.
-     *
-     * @member  {boolean}
-     * @default true
-     * @public
-     */
-    get useHandCursor (): boolean
-    {
-        return this._$useHandCursor;
-    }
-    set useHandCursor (use_hand_cursor: boolean)
-    {
-        this._$useHandCursor = use_hand_cursor;
     }
 
     // /**

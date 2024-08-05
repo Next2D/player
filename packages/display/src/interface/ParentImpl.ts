@@ -1,3 +1,3 @@
-import type { DisplayObjectContainer } from "@next2d/display";
+import type { DisplayObjectContainer } from "../DisplayObjectContainer";
 
 export type ParentImpl<T extends DisplayObjectContainer> = T;

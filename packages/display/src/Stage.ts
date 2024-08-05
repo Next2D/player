@@ -1,5 +1,4 @@
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
-import type { DisplayObjectImpl } from "@next2d/interface";
 
 /**
  * @description Stage クラスはメイン描画領域を表します。
@@ -12,38 +11,72 @@ import type { DisplayObjectImpl } from "@next2d/interface";
 export class Stage extends DisplayObjectContainer
 {
     /**
+     * @description ステージ幅
+     *              Stage width
+     * 
+     * @type {number}
+     * @public
+     */
+    public stageWidth: number;
+
+    /**
+     * @description ステージ高さ
+     *              Stage height
+     * 
+     * @type {number}
+     * @public
+     */
+    public stageHeight: number;
+
+    /**
+     * @description フレームレート
+     *              Frame rate
+     * 
+     * @type {number}
+     * @public
+     */
+    public frameRate: number;
+
+    /**
+     * @description 背景色
+     *              Background color
+     * 
+     * @type {string}
+     * @public
+     */
+    public backgroundColor: string;
+
+    /**
      * @constructor
      * @public
      */
-    constructor ()
+    constructor () 
     {
         super();
 
         /**
          * @type {Stage}
-         * @private
+         * @public
          */
-        this._$root = this;
+        this.stageWidth = 0;
 
         /**
          * @type {Stage}
-         * @private
+         * @public
          */
-        this._$stage = this;
-    }
+        this.stageHeight = 0;
 
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class Stage]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Stage]";
+        /**
+         * @type {Stage}
+         * @public
+         */
+        this.frameRate = 1;
+
+        /**
+         * @type {Stage}
+         * @public
+         */
+        this.backgroundColor = "transparent";
     }
 
     /**
@@ -61,20 +94,6 @@ export class Stage extends DisplayObjectContainer
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object Stage]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Stage]";
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
@@ -87,20 +106,6 @@ export class Stage extends DisplayObjectContainer
     {
         return "next2d.display.Stage";
     }
-
-    /**
-     * @param  {DisplayObject} child
-     * @return {DisplayObject}
-     * @method
-     * @protected
-     */
-    _$addChild (child: DisplayObjectImpl<any>): DisplayObjectImpl<any>
-    {
-        child._$stage  = this;
-        child._$root   = child;
-
-        return super._$addChild(child);
-    }
 }
 
-export const $stage = new Stage();
+export const $stage: Stage = new Stage();

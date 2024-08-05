@@ -6,22 +6,12 @@ import type { CharacterImpl } from "./interface/CharacterImpl";
 import type { DisplayObjectContainer } from "./DisplayObjectContainer";
 import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
 import {
-    Event as Next2DEvent,
     EventDispatcher
 } from "@next2d/events";
-// import {
-//     Transform,
-//     Rectangle,
-//     Point,
-//     ColorTransform,
-//     Matrix
-// } from "@next2d/geom";
-// import type {
-//     CanvasToWebGLContext,
-//     FrameBufferManager
-// } from "@next2d/webgl";
 import {
-    $getInstanceId
+    $getInstanceId,
+    $parentMap,
+    $loaderInfoMap
 } from "./DisplayObjectUtil";
 
 /**
@@ -41,29 +31,26 @@ import {
  */
 export class DisplayObject extends EventDispatcher
 {
-    protected readonly _$instanceId: number;
+    public readonly instanceId: number;
+    protected _$added: boolean;
+    protected _$addedToStage: boolean;
+
     protected _$id: number;
-    protected _$stage: Stage | null;
-    protected _$parent: ParentImpl<any> | null;
+    protected _$root: ParentImpl<any> | null;
     protected _$scale9Grid: Rectangle | null;
     protected _$characterId: number;
     protected _$active: boolean;
     protected _$isMask: boolean;
     protected _$updated: boolean;
-    protected _$added: boolean;
-    protected _$addedStage: boolean;
     protected _$filters: FilterArrayImpl | null;
     protected _$blendMode: BlendModeImpl | null;
     protected _$transform: Transform;
     protected _$hitObject: Sprite | null;
     protected _$isNext: boolean;
-    protected _$created: boolean;
-    protected _$posted: boolean;
     protected _$clipDepth: number;
     protected _$name: string;
     protected _$mask: DisplayObjectImpl<any> | null;
     protected _$visible: boolean;
-    protected _$root: T | null;
     protected _$loaderInfo: LoaderInfo | null;
     protected _$scaleX: number | null;
     protected _$scaleY: number | null;
@@ -75,7 +62,6 @@ export class DisplayObject extends EventDispatcher
     protected _$placeId: number;
     protected _$startFrame: number;
     protected _$endFrame: number;
-    protected _$postArray: Float32Array | null;
 
     /**
      * @constructor
@@ -85,17 +71,13 @@ export class DisplayObject extends EventDispatcher
     {
         super();
 
-        /**
-         * @type {number}
-         * @private
-         */
-        this._$id = -1;
+        this.instanceId = $getInstanceId();
 
         /**
          * @type {number}
          * @private
          */
-        this._$instanceId = $getInstanceId();
+        this._$id = -1;
 
         /**
          * @type {number}
@@ -136,7 +118,7 @@ export class DisplayObject extends EventDispatcher
          * @default false
          * @private
          */
-        this._$addedStage = false;
+        this._$addedToStage = false;
 
         /**
          * @type {array|null}
@@ -165,27 +147,6 @@ export class DisplayObject extends EventDispatcher
          * @private
          */
         this._$isNext = true;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$created = false;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$posted = false;
-
-        /**
-         * @type {Float32Array}
-         * @default null
-         * @private
-         */
-        this._$postArray = null;
 
         /**
          * @type {number}
@@ -223,32 +184,11 @@ export class DisplayObject extends EventDispatcher
         this._$scale9Grid = null;
 
         /**
-         * @type {Sprite | null}
-         * @default null
-         * @private
-         */
-        this._$parent = null;
-
-        /**
-         * @type {Stage|null}
-         * @default null
-         * @private
-         */
-        this._$stage = null;
-
-        /**
          * @type {Sprite|null}
          * @default null
          * @private
          */
         this._$root = null;
-
-        /**
-         * @type {number|null}
-         * @default null
-         * @private
-         */
-        this._$loaderInfo = null;
 
         /**
          * @type {number|null}
@@ -592,7 +532,9 @@ export class DisplayObject extends EventDispatcher
      */
     get loaderInfo (): LoaderInfo | null
     {
-        return this._$loaderInfo;
+        return $loaderInfoMap.has(this) 
+            ? $loaderInfoMap.get(this) as NonNullable<LoaderInfo>
+            : null;
     }
 
     // /**
@@ -702,18 +644,22 @@ export class DisplayObject extends EventDispatcher
     //     }
     // }
 
-    // /**
-    //  * @description この表示オブジェクトを含む DisplayObjectContainer オブジェクトを示します。
-    //  *              Indicates the DisplayObjectContainer object that contains this display object.
-    //  *
-    //  * @member  {DisplayObjectContainer | null}
-    //  * @readonly
-    //  * @public
-    //  */
-    // get parent (): ParentImpl<any> | null
-    // {
-    //     return this._$parent;
-    // }
+    /**
+     * @description このDisplayObjectの親のDisplayObjectContainerを返却します。
+     *              通常であれば、親のDisplayObjectContainerを継承しているのは、Sprite、MovieClip、または Loader となります。
+     *              Returns the DisplayObjectContainer of this DisplayObject's parent.
+     *              Under normal circumstances, the parent DisplayObjectContainer would be inherited by Sprite, MovieClip, or Loader.
+     *
+     * @member  {Sprite | MovieClip | Loader | null}
+     * @readonly
+     * @public
+     */
+    get parent (): ParentImpl<any> | null
+    {
+        return $parentMap.has(this)
+            ? $parentMap.get(this)
+            : null;
+    }
 
     // /**
     //  * @description 読み込まれた SWF ファイル内の表示オブジェクトの場合、
@@ -997,28 +943,18 @@ export class DisplayObject extends EventDispatcher
     //     this._$scaleY = scale_y;
     // }
 
-    // /**
-    //  * @description 表示オブジェクトのステージです。
-    //  *              The Stage of the display object.
-    //  *
-    //  * @member   {Stage}
-    //  * @readonly
-    //  * @public
-    //  */
-    // get stage (): Stage | null
-    // {
-    //     if (this._$stage) {
-    //         return this._$stage;
-    //     }
-
-    //     // find parent
-    //     const parent: ParentImpl<any> | null = this._$parent;
-    //     if (parent) {
-    //         return parent._$stage;
-    //     }
-
-    //     return null;
-    // }
+    /**
+     * @description 表示オブジェクトのステージです。
+     *              The Stage of the display object.
+     *
+     * @member   {Stage}
+     * @readonly
+     * @public
+     */
+    get stage (): Stage | null
+    {
+        return this._$addedStage ? $stage : null;
+    }
 
     // /**
     //  * @description 表示オブジェクトのマトリックス、カラー変換、
@@ -1616,48 +1552,33 @@ export class DisplayObject extends EventDispatcher
     //     return this._$placeObject;
     // }
 
-    // /**
-    //  * @param  {object} tag
-    //  * @param  {DisplayObjectContainer} parent
-    //  * @return {object}
-    //  * @method
-    //  * @private
-    //  */
-    // _$baseBuild<T> (
-    //     tag: DictionaryTagImpl,
-    //     parent: ParentImpl<any>
-    // ): T {
+    /**
+     * @return {boolean}
+     * @method
+     * @protected
+     */
+    _$hasChanged (): boolean
+    {
+        return this._$updated;
+    }
 
-    //     const loaderInfo: LoaderInfo | null = parent._$loaderInfo;
-    //     if (!loaderInfo || !loaderInfo._$data) {
-    //         throw new Error("the loaderInfo or data is nul.");
-    //     }
+    /**
+     * @return {void}
+     * @method
+     * @protected
+     */
+    _$changed (): void
+    {
+        this._$isNext  = true;
+        this._$updated = true;
 
-    //     // setup
-    //     this._$parent     = parent;
-    //     this._$root       = parent._$root;
-    //     this._$stage      = parent._$stage;
-    //     this._$loaderInfo = loaderInfo;
-
-    //     // bind tag data
-    //     this._$characterId = tag.characterId | 0;
-    //     this._$clipDepth   = tag.clipDepth | 0;
-    //     this._$startFrame  = tag.startFrame | 0;
-    //     this._$endFrame    = tag.endFrame | 0;
-    //     this._$name        = tag.name || "";
-
-    //     return loaderInfo._$data.characters[tag.characterId];
-    // }
-
-    // /**
-    //  * @return {boolean}
-    //  * @method
-    //  * @private
-    //  */
-    // _$isUpdated (): boolean
-    // {
-    //     return this._$updated;
-    // }
+        const parent = this.parent;
+        if (parent) {
+            if (!parent._$hasChanged()) {
+                parent._$changed();
+            }
+        }
+    }
 
     // /**
     //  * @return {void}
@@ -1671,25 +1592,6 @@ export class DisplayObject extends EventDispatcher
     //     const parent: ParentImpl<any> | null = this._$parent;
     //     if (parent) {
     //         parent._$updateState();
-    //     }
-    // }
-
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$doChanged (): void
-    // {
-    //     this._$posted  = false;
-    //     this._$isNext  = true;
-    //     this._$updated = true;
-
-    //     const parent: ParentImpl<any> | null = this._$parent;
-    //     if (parent) {
-    //         if (!parent._$updated) {
-    //             parent._$doChanged();
-    //         }
     //     }
     // }
 
@@ -1867,11 +1769,6 @@ export class DisplayObject extends EventDispatcher
     //     this._$executeAddedEvent();
 
     //     this._$isNext = false;
-
-    //     if (!this._$posted && $rendererWorker) {
-    //         // @ts-ignore
-    //         this._$postProperty();
-    //     }
 
     //     return false;
     // }
@@ -2138,16 +2035,15 @@ export class DisplayObject extends EventDispatcher
      */
     _$baseBuild<C extends CharacterImpl, P extends DisplayObjectContainer> (tag: DictionaryTagImpl, parent: P): C
     {
-        const loaderInfo = parent._$loaderInfo as LoaderInfo;
+        const loaderInfo = parent.loaderInfo as LoaderInfo;
         if (!loaderInfo || !loaderInfo.data) {
             throw new Error("the loaderInfo or data is nul.");
         }
 
         // set parent data
-        this._$parent     = parent;
+        $parentMap.set(this, parent);
+        $loaderInfoMap.set(this, loaderInfo);
         this._$root       = parent._$root;
-        this._$stage      = parent._$stage;
-        this._$loaderInfo = loaderInfo;
 
         // bind tag data
         this._$characterId = tag.characterId | 0;

@@ -6,7 +6,7 @@ import {
     $gl,
     $context,
     $rendererStage
-} from "../RendererUtil";
+} from "../../RendererUtil";
 import { $cacheStore } from "@next2d/cache";
 
 /**

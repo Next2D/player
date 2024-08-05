@@ -1,5 +1,8 @@
 import type { AjaxOptionImpl } from "./interface/AjaxOptionImpl";
+import type { DisplayObjectImpl } from "./interface/DisplayObjectImpl";
+import type { ParentImpl } from "./interface/ParentImpl";
 import type { URLRequestHeaderImpl } from "./interface/URLRequestHeaderImpl";
+import type { LoaderInfo } from "./LoaderInfo";
 
 /**
  * @type {number}
@@ -287,3 +290,21 @@ export const $headerStringToArray = (header: string): URLRequestHeaderImpl[] =>
     }
     return results;
 };
+
+/**
+ * @description 親子関係のマップデータ
+ *              Parent-child relationship map data
+ * 
+ * @type {Map}
+ * @protected
+ */
+export const $parentMap: WeakMap<DisplayObjectImpl<any>, ParentImpl<any>> = new WeakMap();
+
+/**
+ * @description 親子関係のマップデータ
+ *              Parent-child relationship map data
+ * 
+ * @type {Map}
+ * @protected
+ */
+export const $loaderInfoMap: WeakMap<DisplayObjectImpl<any>, LoaderInfo> = new WeakMap();

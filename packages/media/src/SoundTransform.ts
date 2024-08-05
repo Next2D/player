@@ -1,5 +1,3 @@
-import { $clamp } from "./MediaUtil";
-
 /**
  * @description SoundTransform クラスにはボリュームとループのプロパティが含まれます。
  *              The SoundTransform class contains properties for volume and loop.
@@ -9,7 +7,15 @@ import { $clamp } from "./MediaUtil";
  */
 export class SoundTransform
 {
-    private _$volume: number;
+    /**
+     * @description ボリュームです。範囲は 0（無音）～ 1（フルボリューム）です。
+     *              The volume, ranging from 0 (silent) to 1 (full volume).
+     *
+     * @member {number}
+     * @default 1
+     * @public
+     */
+    public volume: number;
 
     /**
      * @description ループ設定です。
@@ -30,19 +36,8 @@ export class SoundTransform
      */
     constructor (volume: number = 1, loop: boolean = false)
     {
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$volume = $clamp(volume, 0, 1, 1);
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this.loop = !!loop;
+        this.volume = volume;
+        this.loop   = loop;
     }
 
     /**
@@ -69,22 +64,5 @@ export class SoundTransform
     get namespace (): string
     {
         return "next2d.media.SoundTransform";
-    }
-
-    /**
-     * @description ボリュームです。範囲は 0（無音）～ 1（フルボリューム）です。
-     *              The volume, ranging from 0 (silent) to 1 (full volume).
-     *
-     * @member {number}
-     * @default 1
-     * @public
-     */
-    get volume (): number
-    {
-        return this._$volume;
-    }
-    set volume (volume: number)
-    {
-        this._$volume = $clamp(volume, 0, 1);
     }
 }

@@ -1,7 +1,7 @@
 import type { PlayerOptionsImpl } from "../interface/PlayerOptionsImpl";
 import { Sprite, $stage } from "@next2d/display";
 import { $player } from "../Player";
-import { $LOAD_END, $clamp } from "../CoreUtil";
+import { $clamp } from "../CoreUtil";
 
 /**
  * @description RootのMovieClipを作成します。
@@ -30,7 +30,7 @@ export const execute = async (
 
     $player.boot(options);
 
-    // const root: Sprite = $stage.addChild(new Sprite());
+    const root: Sprite = $stage.addChild(new Sprite());
     // $player._$loadStatus = $LOAD_END;
     $player.play();
 

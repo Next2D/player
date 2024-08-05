@@ -1,9 +1,9 @@
 import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
 import type { DisplayObjectContainer } from "./DisplayObjectContainer";
+import type { MovieClipCharacterImpl } from "./interface/MovieClipCharacterImpl";
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
-import { MovieClipCharacterImpl } from "./interface/MovieClipCharacterImpl";
 import { execute as movieClipAddActionsService } from "./MovieClip/service/MovieClipAddActionsService";
 import { execute as movieClipAddLabelsService } from "./MovieClip/service/MovieClipAddLabelsService";
 import { execute as movieClipBuildSoundsService } from "./MovieClip/service/MovieClipBuildSoundsService";
@@ -1093,8 +1093,11 @@ export class MovieClip extends Sprite
      * @method
      * @protected
      */
-    async _$build <P extends DisplayObjectContainer> (tag: DictionaryTagImpl, parent: P): Promise<void>
-    {
+    async _$build <P extends DisplayObjectContainer> (
+        tag: DictionaryTagImpl,
+        parent: P
+    ): Promise<void> {
+
         const character = this._$baseBuild<MovieClipCharacterImpl, P>(tag, parent);
 
         this._$controller   = character.controller;

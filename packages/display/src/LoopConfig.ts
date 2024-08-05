@@ -63,20 +63,6 @@ export class LoopConfig
     }
 
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class LoopConfig]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class LoopConfig]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
@@ -88,20 +74,6 @@ export class LoopConfig
     static get namespace (): string
     {
         return "next2d.display.LoopConfig";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object LoopConfig]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object LoopConfig]";
     }
 
     /**

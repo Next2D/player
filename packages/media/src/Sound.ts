@@ -28,7 +28,7 @@ import {
 export class Sound extends EventDispatcher
 {
     private _$source: AudioBufferSourceNode | null;
-    private _$gain: GainNode | null;
+    private _$gainNode: GainNode | null;
     private _$stopFlag: boolean;
     private _$currentCount: number;
     private _$volume: number;
@@ -105,7 +105,7 @@ export class Sound extends EventDispatcher
          * @default null
          * @private
          */
-        this._$gain = null;
+        this._$gainNode = null;
     }
 
     /**
@@ -169,8 +169,8 @@ export class Sound extends EventDispatcher
     set volume (volume: number)
     {
         this._$volume = $clamp(volume, 0, 1, 1);
-        if (this._$gain) {
-            this._$gain.gain.value = this._$volume;
+        if (this._$gainNode) {
+            this._$gainNode.gain.value = this._$volume;
         }
     }
 
@@ -268,9 +268,9 @@ export class Sound extends EventDispatcher
         // 初期化
         this.stop();
 
-        this._$gain = $audioContext.createGain();
-        this._$gain.connect($audioContext.destination);
-        this._$gain.gain.value = Math.min(SoundMixer.volume, this._$volume);
+        this._$gainNode = $audioContext.createGain();
+        this._$gainNode.connect($audioContext.destination);
+        this._$gainNode.gain.value = Math.min(SoundMixer.volume, this._$volume);
 
         this._$source = $audioContext.createBufferSource();
         this._$source.addEventListener("ended", (): void =>
@@ -279,7 +279,7 @@ export class Sound extends EventDispatcher
         });
 
         this._$source.buffer = this.audioBuffer;
-        this._$source.connect(this._$gain);
+        this._$source.connect(this._$gainNode);
         this._$source.start(start_time);
 
         this._$stopFlag = false;

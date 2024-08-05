@@ -2,6 +2,7 @@ import type { AnimationToolDataImpl } from "../../interface/AnimationToolDataImp
 import type { Loader } from "../../Loader";
 import { Event } from "@next2d/events";
 import { MovieClip } from "../../MovieClip";
+import { $loaderInfoMap } from "../../DisplayObjectUtil";
 
 /**
  * @description 読み込んだJSONオブジェクトからrootのMovieClipを構築
