@@ -1,8 +1,5 @@
 import type { Video } from "../../Video";
-import {
-    VideoEvent,
-    ProgressEvent as Next2DProgressEvent
-} from "@next2d/events";
+import { ProgressEvent as Next2DProgressEvent } from "@next2d/events";
 import { execute } from "./VideoProgressEventService";
 import { describe, expect, it, vi } from "vitest";
 

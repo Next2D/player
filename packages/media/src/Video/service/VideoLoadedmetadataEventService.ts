@@ -1,4 +1,4 @@
-import type { BoundsImpl } from "../../interface/IBounds";
+import type { IBounds } from "../../interface/IBounds";
 import type { Video } from "../../Video";
 
 /**
@@ -15,7 +15,7 @@ import type { Video } from "../../Video";
 export const execute = (
     video: Video,
     element: HTMLVideoElement,
-    bounds: BoundsImpl
+    bounds: IBounds
 ): void => {
 
     // update metadata

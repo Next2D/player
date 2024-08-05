@@ -1,4 +1,4 @@
-import type { BoundsImpl } from "../../interface/IBounds";
+import type { IBounds } from "../../interface/IBounds";
 import type { Video } from "../../Video";
 import { execute as videoCanplaythroughEventService } from "./VideoCanplaythroughEventService";
 import { execute as videoLoadedmetadataEventService } from "./VideoLoadedmetadataEventService";
@@ -15,7 +15,7 @@ import { execute as videoEndedEventService } from "./VideoEndedEventService";
  * @method
  * @protected
  */
-export const execute = (video: Video, bounds: BoundsImpl): HTMLVideoElement =>
+export const execute = (video: Video, bounds: IBounds): HTMLVideoElement =>
 {
     const element = document.createElement("video");
     element.autoplay    = false;
@@ -36,7 +36,7 @@ export const execute = (video: Video, bounds: BoundsImpl): HTMLVideoElement =>
 
     element.addEventListener("canplaythrough", async (): Promise<void> =>
     {
-        await videoCanplaythroughEventService(video, element);
+        await videoCanplaythroughEventService(video);
     }, { "once": true });
 
     element.addEventListener("ended", (): void =>

@@ -6,24 +6,14 @@ import { Event } from "@next2d/events";
  *              Playable processing
  *
  * @param  {Video} video
- * @param  {HTMLVideoElement} element
  * @return {Promise}
  * @method
  * @protected
  */
-export const execute = async (
-    video: Video,
-    element: HTMLVideoElement
-): Promise<void> => {
-
+export const execute = async (video: Video,): Promise<void> =>
+{
     if (video.autoPlay) {
-
         await video.play();
-
-    } else {
-        await element.play();
-        element.pause();
-        element.currentTime = 0;
     }
 
     video._$changed();

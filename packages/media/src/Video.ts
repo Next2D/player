@@ -80,7 +80,6 @@ export class Video extends DisplayObject
     private _$videoElement: HTMLVideoElement | null;
     private _$stop: boolean;
     private _$volume: number;
-    private _$ready: boolean;
     private _$src: string;
 
     /**
@@ -138,13 +137,6 @@ export class Video extends DisplayObject
          * @private
          */
         this._$stop = true;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$ready = false;
 
         /**
          * @type {number}
