@@ -1,10 +1,10 @@
 import type { Stage } from "./Stage";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Sprite } from "./Sprite";
-import type { ParentImpl } from "./interface/ParentImpl";
-import type { CharacterImpl } from "./interface/CharacterImpl";
+import type { IParent } from "./interface/IParent";
+import type { ICharacter } from "./interface/ICharacter";
 import type { DisplayObjectContainer } from "./DisplayObjectContainer";
-import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
+import type { IDictionaryTag } from "./interface/IDictionaryTag";
 import {
     EventDispatcher
 } from "@next2d/events";
@@ -36,14 +36,14 @@ export class DisplayObject extends EventDispatcher
     protected _$addedToStage: boolean;
 
     protected _$id: number;
-    protected _$root: ParentImpl<any> | null;
+    protected _$root: IParent<any> | null;
     protected _$scale9Grid: Rectangle | null;
     protected _$characterId: number;
     protected _$active: boolean;
     protected _$isMask: boolean;
     protected _$updated: boolean;
     protected _$filters: FilterArrayImpl | null;
-    protected _$blendMode: BlendModeImpl | null;
+    protected _$blendMode: IBlendMode | null;
     protected _$transform: Transform;
     protected _$hitObject: Sprite | null;
     protected _$isNext: boolean;
@@ -654,7 +654,7 @@ export class DisplayObject extends EventDispatcher
      * @readonly
      * @public
      */
-    get parent (): ParentImpl<any> | null
+    get parent (): IParent<any> | null
     {
         return $parentMap.has(this)
             ? $parentMap.get(this)
@@ -953,7 +953,7 @@ export class DisplayObject extends EventDispatcher
      */
     get stage (): Stage | null
     {
-        return this._$addedStage ? $stage : null;
+        return this._$addedToStage ? $stage : null;
     }
 
     // /**
@@ -2033,7 +2033,7 @@ export class DisplayObject extends EventDispatcher
      * @method
      * @protected
      */
-    _$baseBuild<C extends CharacterImpl, P extends DisplayObjectContainer> (tag: DictionaryTagImpl, parent: P): C
+    _$baseBuild<P extends DisplayObjectContainer> (tag: IDictionaryTag, parent: P): ICharacter
     {
         const loaderInfo = parent.loaderInfo as LoaderInfo;
         if (!loaderInfo || !loaderInfo.data) {

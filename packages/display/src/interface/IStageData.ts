@@ -1,4 +1,4 @@
-export interface StageDataImpl {
+export interface IStageData {
     width: number;
     height: number;
     fps: number

@@ -1,8 +1,8 @@
 import type { MovieClip } from "./MovieClip";
 import type { Sprite } from "./Sprite";
-import type { ParentImpl } from "./interface/ParentImpl";
-import type { URLLoaderDataFormatImpl } from "./interface/URLLoaderDataFormatImpl";
-import type { LoaderInfoDataImpl } from "./interface/LoaderInfoDataImpl";
+import type { IParent } from "./interface/IParent";
+import type { IURLLoaderDataFormat } from "./interface/IURLLoaderDataFormat";
+import type { ILoaderInfoData } from "./interface/ILoaderInfoData";
 import { EventDispatcher } from "@next2d/events";
 import { $getInstanceId } from "./DisplayObjectUtil";
 
@@ -36,7 +36,7 @@ export class LoaderInfo extends EventDispatcher
      * @type {MovieClip | Sprite | null}
      * @public
      */
-    public content: ParentImpl<MovieClip | Sprite> | null;
+    public content: IParent<MovieClip | Sprite> | null;
 
     /**
      * @description Loaderで読み込まれたデータオブジェクトを返却
@@ -45,7 +45,7 @@ export class LoaderInfo extends EventDispatcher
      * @type {object}
      * @public
      */
-    public data: LoaderInfoDataImpl | null;
+    public data: ILoaderInfoData | null;
 
     /**
      * @description 読み込まれるメディアの URL です。
@@ -66,7 +66,7 @@ export class LoaderInfo extends EventDispatcher
      * @default "json"
      * @public
      */
-    public format: URLLoaderDataFormatImpl;
+    public format: IURLLoaderDataFormat;
 
     /**
      * @constructor

@@ -1,7 +1,7 @@
-import type { ParentImpl } from "./interface/ParentImpl";
+import type { IParent } from "./interface/IParent";
 import type { Sprite } from "./Sprite";
-import type { AnimationToolDataImpl } from "./interface/AnimationToolDataImpl";
-import type { AnimationToolDataZlibImpl } from "./interface/AnimationToolDataZlibImpl";
+import type { IAnimationToolData } from "./interface/IAnimationToolData";
+import type { IAnimationToolDataZlib } from "./interface/IAnimationToolDataZlib";
 import type { MovieClip } from "./MovieClip";
 import type { URLRequest } from "@next2d/net";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
@@ -77,7 +77,7 @@ export class Loader extends DisplayObjectContainer
      * @readonly
      * @public
      */
-    get content (): ParentImpl<MovieClip | Sprite> | null
+    get content (): IParent<MovieClip | Sprite> | null
     {
         return this.contentLoaderInfo.content;
     }
@@ -130,7 +130,7 @@ export class Loader extends DisplayObjectContainer
      * @method
      * @public
      */
-    async loadJSON (json: AnimationToolDataImpl | AnimationToolDataZlibImpl): Promise<void>
+    async loadJSON (json: IAnimationToolData | IAnimationToolDataZlib): Promise<void>
     {
         await loaderLoadJsonUseCase(this, json);
     }

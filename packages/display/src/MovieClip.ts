@@ -1,6 +1,6 @@
-import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
+import type { IDictionaryTag } from "./interface/IDictionaryTag";
 import type { DisplayObjectContainer } from "./DisplayObjectContainer";
-import type { MovieClipCharacterImpl } from "./interface/MovieClipCharacterImpl";
+import type { IMovieClipCharacter } from "./interface/IMovieClipCharacter";
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
@@ -1094,11 +1094,11 @@ export class MovieClip extends Sprite
      * @protected
      */
     async _$build <P extends DisplayObjectContainer> (
-        tag: DictionaryTagImpl,
+        tag: IDictionaryTag,
         parent: P
     ): Promise<void> {
 
-        const character = this._$baseBuild<MovieClipCharacterImpl, P>(tag, parent);
+        const character = this._$baseBuild<P>(tag, parent) as IMovieClipCharacter;
 
         this._$controller   = character.controller;
         this._$dictionary   = character.dictionary;

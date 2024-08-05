@@ -1,4 +1,4 @@
-import type { SpriteImpl } from "./interface/SpriteImpl";
+import type { ISprite } from "./interface/ISprite";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { SoundTransform } from "@next2d/media";
 
@@ -38,7 +38,7 @@ export class Sprite extends DisplayObjectContainer
      */
     public useHandCursor: boolean;
 
-    protected _$hitArea: SpriteImpl<any> | null;
+    protected _$hitArea: ISprite<any> | null;
     protected _$soundTransform: SoundTransform | null;
     
 

@@ -1,4 +1,4 @@
-import type { MovieClipActionObjectImpl } from "../../interface/MovieClipActionObjectImpl";
+import type { IMovieClipActionObject } from "../../interface/IMovieClipActionObject";
 import { $getArray } from "../../DisplayObjectUtil";
 
 /**
@@ -13,7 +13,7 @@ import { $getArray } from "../../DisplayObjectUtil";
  */
 export const execute = (
     actions: Map<number, Function[]>,
-    objects: MovieClipActionObjectImpl[]
+    objects: IMovieClipActionObject[]
 ): void => {
 
     for (let idx = 0; idx < objects.length; ++idx) {

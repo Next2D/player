@@ -1,7 +1,7 @@
-import type { AjaxOptionImpl } from "./interface/AjaxOptionImpl";
-import type { DisplayObjectImpl } from "./interface/DisplayObjectImpl";
-import type { ParentImpl } from "./interface/ParentImpl";
-import type { URLRequestHeaderImpl } from "./interface/URLRequestHeaderImpl";
+import type { IAjaxOption } from "./interface/IAjaxOption";
+import type { IDisplayObject } from "./interface/IDisplayObject";
+import type { IParent } from "./interface/IParent";
+import type { IURLRequestHeader } from "./interface/IURLRequestHeader";
 import type { LoaderInfo } from "./LoaderInfo";
 
 /**
@@ -195,7 +195,7 @@ export const $poolArray = (array: any[]): void =>
  * @method
  * @public
  */
-export const $ajax = (option: AjaxOptionImpl): void =>
+export const $ajax = (option: IAjaxOption): void =>
 {
     // get or post
     let postData: string | null = null;
@@ -270,7 +270,7 @@ export const $ajax = (option: AjaxOptionImpl): void =>
  * @method
  * @public
  */
-export const $headerStringToArray = (header: string): URLRequestHeaderImpl[] =>
+export const $headerStringToArray = (header: string): IURLRequestHeader[] =>
 {
     const results = $getArray();
     if (header) {
@@ -298,7 +298,7 @@ export const $headerStringToArray = (header: string): URLRequestHeaderImpl[] =>
  * @type {Map}
  * @protected
  */
-export const $parentMap: WeakMap<DisplayObjectImpl<any>, ParentImpl<any>> = new WeakMap();
+export const $parentMap: WeakMap<IDisplayObject<any>, IParent<any>> = new WeakMap();
 
 /**
  * @description 親子関係のマップデータ
@@ -307,4 +307,4 @@ export const $parentMap: WeakMap<DisplayObjectImpl<any>, ParentImpl<any>> = new 
  * @type {Map}
  * @protected
  */
-export const $loaderInfoMap: WeakMap<DisplayObjectImpl<any>, LoaderInfo> = new WeakMap();
+export const $loaderInfoMap: WeakMap<IDisplayObject<any>, LoaderInfo> = new WeakMap();

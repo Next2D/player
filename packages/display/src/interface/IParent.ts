@@ -1,3 +1,3 @@
 import type { DisplayObjectContainer } from "../DisplayObjectContainer";
 
-export type ParentImpl<T extends DisplayObjectContainer> = T;
+export type IParent<T extends DisplayObjectContainer> = T;

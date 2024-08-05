@@ -1,9 +1,13 @@
 import type { LoaderInfo } from "../../LoaderInfo";
 import type { MovieClip } from "../../MovieClip";
-import type { LoaderInfoDataImpl } from "../../interface/LoaderInfoDataImpl";
-import type { MovieClipSoundObjectImpl } from "../../interface/MovieClipSoundObjectImpl";
+import type { ILoaderInfoData } from "../../interface/ILoaderInfoData";
+import type { IMovieClipSoundObject } from "../../interface/IMovieClipSoundObject";
+import type { ISoundCharacter } from "../../interface/ISoundCharacter";
 import { $getArray } from "../../DisplayObjectUtil";
-import { Sound, SoundMixer } from "@next2d/media";
+import {
+    Sound,
+    SoundMixer
+} from "@next2d/media";
 
 /**
  * @description 指定tagの情報を元に、MovieClipにサウンドを追加
@@ -19,11 +23,11 @@ import { Sound, SoundMixer } from "@next2d/media";
 export const execute = async (
     movie_clip: MovieClip,
     sound_map: Map<number, Sound[]>,
-    sound_objects: MovieClipSoundObjectImpl[]
+    sound_objects: IMovieClipSoundObject[]
 ): Promise<void> => {
 
     const loaderInfo = movie_clip.loaderInfo as NonNullable<LoaderInfo>;
-    const data = loaderInfo.data as NonNullable<LoaderInfoDataImpl>;
+    const data = loaderInfo.data as NonNullable<ILoaderInfoData>;
 
     for (let idx: number = 0; idx < sound_objects.length; ++idx) {
 
@@ -44,7 +48,7 @@ export const execute = async (
             sound.loopCount = tag.loopCount | 0;
             sound.volume    = Math.min(SoundMixer.volume, tag.volume);
 
-            const character = data.characters[tag.characterId];
+            const character = data.characters[tag.characterId] as ISoundCharacter;
             await sound._$build(character);
 
             sounds.push(sound);

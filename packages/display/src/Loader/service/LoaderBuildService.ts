@@ -1,8 +1,7 @@
-import type { AnimationToolDataImpl } from "../../interface/AnimationToolDataImpl";
+import type { IAnimationToolData } from "../../interface/IAnimationToolData";
 import type { Loader } from "../../Loader";
 import { Event } from "@next2d/events";
 import { MovieClip } from "../../MovieClip";
-import { $loaderInfoMap } from "../../DisplayObjectUtil";
 
 /**
  * @description 読み込んだJSONオブジェクトからrootのMovieClipを構築
@@ -14,7 +13,7 @@ import { $loaderInfoMap } from "../../DisplayObjectUtil";
  * @method
  * @protected
  */
-export const execute = async (loader: Loader, object: AnimationToolDataImpl): Promise<void> =>
+export const execute = async (loader: Loader, object: IAnimationToolData): Promise<void> =>
 {
     const symbols: Map<string, number> = new Map();
     if (object.symbols.length) {

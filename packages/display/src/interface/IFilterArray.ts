@@ -10,7 +10,7 @@ import type {
     GradientGlowFilter
 } from "@next2d/filters";
 
-export type FilterArrayImpl = Array<
+export type IFilterArray = Array<
     BlurFilter
     | BevelFilter
     | ColorMatrixFilter

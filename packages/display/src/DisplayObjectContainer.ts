@@ -1,12 +1,12 @@
-import { InteractiveObject } from "./InteractiveObject";
 import type { DisplayObject } from "./DisplayObject";
-import type { PlaceObjectImpl } from "./interface/PlaceObjectImpl";
-import type { DisplayObjectImpl } from "./interface/DisplayObjectImpl";
-import type { DictionaryTagImpl } from "./interface/DictionaryTagImpl";
+import type { IPlaceObject } from "./interface/IPlaceObject";
+import type { IDisplayObject } from "./interface/IDisplayObject";
+import type { IDictionaryTag } from "./interface/IDictionaryTag";
 import type { MovieClip } from "./MovieClip";
 import { execute as displayObjectContainerAddChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerAddChildUseCase";
 import { execute as movieClipGetChildrenService } from "./MovieClip/service/MovieClipGetChildrenService";
 import { $getArray } from "./DisplayObjectUtil";
+import { InteractiveObject } from "./InteractiveObject";
 
 /**
  * @description DisplayObjectContainer クラスは、表示リストで表示オブジェクトコンテナとして機能するすべてのオブジェクトの基本クラスです。
@@ -27,11 +27,11 @@ import { $getArray } from "./DisplayObjectUtil";
  */
 export class DisplayObjectContainer extends InteractiveObject
 {
-    protected readonly _$children: DisplayObjectImpl<any>[];
+    protected readonly _$children: IDisplayObject<any>[];
     protected _$placeMap: Array<Array<number>> | null;
-    protected _$placeObjects: PlaceObjectImpl[] | null;
+    protected _$placeObjects: IPlaceObject[] | null;
     protected _$controller: Array<Array<number>> | null;
-    protected _$dictionary: DictionaryTagImpl[] | null;
+    protected _$dictionary: IDictionaryTag[] | null;
     protected _$needsChildren: boolean;
     protected _$wait: boolean;
 

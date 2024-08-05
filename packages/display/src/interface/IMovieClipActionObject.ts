@@ -1,4 +1,4 @@
-export interface MovieClipActionObjectImpl {
+export interface IMovieClipActionObject {
     frame: number;
     action: string;
     script?: Function;

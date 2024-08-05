@@ -1,4 +1,4 @@
-export type BlendModeImpl = "copy"
+export type IBlendMode = "copy"
     | "add"
     | "alpha"
     | "darken"

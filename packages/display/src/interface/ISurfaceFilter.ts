@@ -8,7 +8,7 @@ type ClassName = "BevelFilter"
     | "GradientBevelFilter"
     | "GradientGlowFilter";
 
-export interface SurfaceFilterImpl {
+export interface ISurfaceFilter {
     class: ClassName;
     params: any[];
 }

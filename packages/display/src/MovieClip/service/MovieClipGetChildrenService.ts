@@ -1,6 +1,5 @@
 import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
-import type { ParentImpl } from "../../interface/ParentImpl";
 import type { MovieClip } from "../../MovieClip";
 
 /**

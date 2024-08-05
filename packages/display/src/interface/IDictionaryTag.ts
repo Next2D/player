@@ -1,4 +1,4 @@
-export interface DictionaryTagImpl {
+export interface IDictionaryTag {
     characterId: number;
     name: string;
     startFrame: number;

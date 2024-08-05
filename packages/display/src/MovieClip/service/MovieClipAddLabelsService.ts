@@ -1,4 +1,4 @@
-import type { MovieClipLabelObjectImpl } from "../../interface/MovieClipLabelObjectImpl";
+import type { IMovieClipLabelObject } from "../../interface/IMovieClipLabelObject";
 import { FrameLabel } from "../../FrameLabel";
 
 /**
@@ -13,11 +13,11 @@ import { FrameLabel } from "../../FrameLabel";
  */
 export const execute = (
     label_map: Map<number, FrameLabel>,
-    labels: MovieClipLabelObjectImpl[]
+    labels: IMovieClipLabelObject[]
 ): void => {
 
     for (let idx: number = 0; idx < labels.length; ++idx) {
-        const label: MovieClipLabelObjectImpl = labels[idx];
+        const label = labels[idx];
         if (!label) {
             continue;
         }
