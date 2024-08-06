@@ -41,7 +41,7 @@ describe("VideoLoadedmetadataEventService.js test", () =>
         expect(bounds.xMax).toBe(0);
         expect(bounds.yMax).toBe(0);
 
-        execute(mockVideo, mockElement, bounds);
+        execute(mockElement, mockVideo, bounds);
 
         // after
         expect(mockVideo.currentTime).toBe(0);

@@ -5,16 +5,16 @@ import type { Video } from "../../Video";
  * @description Videoオブジェクトの幅と高さを更新する
  *              Update the width and height of the Video object
  *
- * @param  {Video} video
  * @param  {HTMLVideoElement} element
+ * @param  {Video} video
  * @param  {object} bounds
  * @return {void}
  * @method
  * @protected
  */
 export const execute = (
-    video: Video,
     element: HTMLVideoElement,
+    video: Video,
     bounds: IBounds
 ): void => {
 

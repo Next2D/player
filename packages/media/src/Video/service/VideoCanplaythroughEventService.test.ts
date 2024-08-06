@@ -21,24 +21,14 @@ describe("VideoCanplaythroughEventService.js test", () =>
             } as unknown as Video;
         });
 
-        const MockHTMLVideoElement = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "play": vi.fn().mockResolvedValue(true),
-                "pause": vi.fn(),
-                "currentTime": 0
-            } as unknown as HTMLVideoElement;
-        });
-
         const mockVideo = new MockVideo();
-        const mockElement = new MockHTMLVideoElement();
 
         // before
         expect(playState).toBe("stop");
         expect(eventState).toBe("");
         expect(state).toBe("");
 
-        await execute(mockVideo, mockElement);
+        await execute(mockVideo);
 
         // after
         expect(playState).toBe("play");
@@ -60,34 +50,16 @@ describe("VideoCanplaythroughEventService.js test", () =>
             } as unknown as Video;
         });
 
-        let playState = "stop";
-        let pauseState = "";
-        const MockHTMLVideoElement = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "play": vi.fn(() => { playState = "play" }),
-                "pause": vi.fn(() => { pauseState = "pause" }),
-                "currentTime": 100
-            } as unknown as HTMLVideoElement;
-        });
-
         const mockVideo = new MockVideo();
-        const mockElement = new MockHTMLVideoElement();
 
         // before
-        expect(playState).toBe("stop");
         expect(eventState).toBe("");
-        expect(pauseState).toBe("");
-        expect(mockElement.currentTime).toBe(100);
         expect(state).toBe("");
 
-        await execute(mockVideo, mockElement);
+        await execute(mockVideo);
 
         // after
-        expect(playState).toBe("play");
         expect(eventState).toBe(Event.COMPLETE);
-        expect(pauseState).toBe("pause");
-        expect(mockElement.currentTime).toBe(0);
         expect(state).toBe("changed");
     });
 });

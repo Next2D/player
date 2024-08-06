@@ -4,6 +4,7 @@ import { VideoEvent } from "@next2d/events";
 import type { IBounds } from "./interface/IBounds";
 import type { IVideoCharacter } from "./interface/IVideoCharacter";
 import { execute as videoCreateElementService } from "./Video/service/VideoCreateElementService";
+import { execute as videoRegisterEventUseCase } from "./Video/usecase/VideoRegisterEventUseCase";
 import { execute as videoPlayEventService } from "./Video/service/VideoPlayEventService";
 import {
     $clamp,
@@ -194,7 +195,13 @@ export class Video extends DisplayObject
         this.currentTime = 0;
 
         this._$videoElement = null;
-        this._$videoElement = videoCreateElementService(this, this._$bounds);
+        this._$videoElement = videoCreateElementService();
+
+        videoRegisterEventUseCase(
+            this._$videoElement,
+            this,
+            this._$bounds
+        );
 
         this._$src = this._$videoElement.src = src;
         this._$videoElement.load();
@@ -346,7 +353,13 @@ export class Video extends DisplayObject
         this.autoPlay = character.autoPlay;
 
         this._$videoElement = null;
-        this._$videoElement = videoCreateElementService(this, this._$bounds);
+        this._$videoElement = videoCreateElementService();
+
+        videoRegisterEventUseCase(
+            this._$videoElement,
+            this,
+            this._$bounds
+        );
 
         this._$videoElement.src = URL.createObjectURL(new Blob(
             [character._$buffer],
