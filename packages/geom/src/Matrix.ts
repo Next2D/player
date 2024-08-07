@@ -60,25 +60,10 @@ export class Matrix
     }
 
     /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class Matrix]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Matrix]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
-     * @default "next2d.geom.Matrix"
+     * @member {string}
      * @const
      * @static
      */
@@ -88,24 +73,10 @@ export class Matrix
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return `(a=${this.a}, b=${this.b}, c=${this.c}, d=${this.d}, tx=${this.tx}, ty=${this.ty})`;
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
-     * @default "next2d.geom.Matrix"
+     * @member {string}
      * @const
      * @public
      */
@@ -234,16 +205,6 @@ export class Matrix
     }
 
     /**
-     * @return {Matrix}
-     * @method
-     * @private
-     */
-    _$clone (): Matrix
-    {
-        return matrixCloneService(this);
-    }
-
-    /**
      * @description 新しい Matrix オブジェクトとして、このマトリックスのクローンを返します。
      *              含まれるオブジェクトはまったく同じコピーになります。
      *              Returns a new Matrix object that is a clone of this matrix,
@@ -279,8 +240,9 @@ export class Matrix
      *              呼び出し元の Matrix オブジェクトにコピーします。
      *
      * @param  {Matrix} matrix
-     * @method
      * @return {void}
+     * @method
+     * @public
      */
     copyFrom (matrix: Matrix): void
     {
@@ -455,6 +417,9 @@ export class Matrix
     }
 
     /**
+     * @description 指定された配列の値を乗算します
+     *              Multiplies the value of the specified array.
+     * 
      * @param  {Float32Array} a
      * @param  {Float32Array} b
      * @return {Float32Array}
@@ -474,6 +439,9 @@ export class Matrix
     }
 
     /**
+     * @description 利用したFloat32Arrayを再利用する為にプールします。
+     *              Pool the Float32Array used for reuse.
+     *
      * @param {Float32Array} array
      * @method
      * @private

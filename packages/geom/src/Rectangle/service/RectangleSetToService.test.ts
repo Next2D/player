@@ -11,7 +11,14 @@ describe("Rectangle.js setTo test", () =>
         rectangle1.setTo(5, 5, 5, 5);
         rectangle2.setTo(10, 10, 10, 10);
 
-        expect(rectangle1.toString()).toBe("(x=5, y=5, w=5, h=5)");
-        expect(rectangle2.toString()).toBe("(x=10, y=10, w=10, h=10)");
+        expect(rectangle1.x).toBe(5);
+        expect(rectangle1.y).toBe(5);
+        expect(rectangle1.width).toBe(5);
+        expect(rectangle1.height).toBe(5);
+
+        expect(rectangle2.x).toBe(10);
+        expect(rectangle2.y).toBe(10);
+        expect(rectangle2.width).toBe(10);
+        expect(rectangle2.height).toBe(10);
     });
 });

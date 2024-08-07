@@ -20,7 +20,11 @@ export const execute = (
             }
 
         case Shape.namespace:
-            return new Shape();
+            {
+                const shape = new Shape();
+                shape._$build(tag, character, parent);
+                return shape;
+            }
 
         // case TextField.namespace:
         //     return new TextField();

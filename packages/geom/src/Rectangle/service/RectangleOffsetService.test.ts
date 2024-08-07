@@ -11,7 +11,14 @@ describe("Rectangle.js offset test", () =>
         rectangle1.offset(5, 8);
         rectangle2.offset(60, 30);
 
-        expect(rectangle1.toString()).toBe("(x=15, y=18, w=20, h=20)");
-        expect(rectangle2.toString()).toBe("(x=5, y=-25, w=0, h=0)");
+        expect(rectangle1.x).toBe(15);
+        expect(rectangle1.y).toBe(18);
+        expect(rectangle1.width).toBe(20);
+        expect(rectangle1.height).toBe(20);
+
+        expect(rectangle2.x).toBe(5);
+        expect(rectangle2.y).toBe(-25);
+        expect(rectangle2.width).toBe(0);
+        expect(rectangle2.height).toBe(0);
     });
 });

@@ -13,9 +13,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-12.727921843528748, y=15.55634891986847)"
-        );
+        expect(point2.x).toBeCloseTo(-12.727921843528748);
+        expect(point2.y).toBeCloseTo(15.55634891986847);
     });
 
     it("deltaTransformPoint test case2", () =>
@@ -27,9 +26,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=2.384185791015625e-7, y=28.284271001815796)"
-        );
+        expect(point2.x).toBeCloseTo(2.384185791015625e-7);
+        expect(point2.y).toBeCloseTo(28.284271001815796);
     });
 
     it("deltaTransformPoint test case3", () =>
@@ -54,9 +52,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=128.6934379339218, y=156.97770154476166)"
-        );
+        expect(point2.x).toBeCloseTo(128.6934379339218);
+        expect(point2.y).toBeCloseTo(156.97770154476166);
     });
 
     it("deltaTransformPoint test case5", () =>
@@ -68,9 +65,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-140.007142663002, y=142.83556973934174)"
-        );
+        expect(point2.x).toBeCloseTo(-140.007142663002);
+        expect(point2.y).toBeCloseTo(142.83556973934174);
     });
 
     it("deltaTransformPoint test case6", () =>
@@ -82,9 +78,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-15.55634891986847, y=12.727921843528748)"
-        );
+        expect(point2.x).toBeCloseTo(-15.55634891986847);
+        expect(point2.y).toBeCloseTo(12.727921843528748);
     });
 
     it("deltaTransformPoint test case7", () =>
@@ -96,9 +91,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=15.55634891986847, y=-12.727921843528748)"
-        );
+        expect(point2.x).toBeCloseTo(15.55634891986847);
+        expect(point2.y).toBeCloseTo(-12.727921843528748);
     });
 
     it("deltaTransformPoint test case8", () =>
@@ -110,9 +104,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=12.727921843528748, y=-15.55634891986847)"
-        );
+        expect(point2.x).toBeCloseTo(12.727921843528748);
+        expect(point2.y).toBeCloseTo(-15.55634891986847);
     });
 
     it("deltaTransformPoint test case9", () =>
@@ -124,9 +117,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=14.142135381698608, y=-16.97056245803833)"
-        );
+        expect(point2.x).toBeCloseTo(14.142135381698608);
+        expect(point2.y).toBeCloseTo(-16.97056245803833);
     });
 
     it("deltaTransformPoint test case10", () =>
@@ -164,9 +156,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-22, y=22)"
-        );
+        expect(point2.x).toBe(-22);
+        expect(point2.y).toBe(22);
     });
 
     it("deltaTransformPoint test case13", () =>
@@ -178,9 +169,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-31.11269783973694, y=2.4424906541753444e-15)"
-        );
+        expect(point2.x).toBe(-31.11269783973694);
+        expect(point2.y).toBe(2.4424906541753444e-15);
     });
 
     it("deltaTransformPoint test case14", () =>
@@ -192,9 +182,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-22, y=-22)"
-        );
+        expect(point2.x).toBeCloseTo(-22);
+        expect(point2.y).toBeCloseTo(-22);
     });
 
     it("deltaTransformPoint test case15", () =>
@@ -219,9 +208,8 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=22, y=-22)"
-        );
+        expect(point2.x).toBe(22);
+        expect(point2.y).toBe(-22);
     });
 
     it("deltaTransformPoint test case17", () =>
@@ -247,8 +235,7 @@ describe("Matrix.js deltaTransformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.deltaTransformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-22, y=-22)"
-        );
+        expect(point2.x).toBe(-22);
+        expect(point2.y).toBe(-22);
     });
 });

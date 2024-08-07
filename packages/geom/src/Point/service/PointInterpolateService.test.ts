@@ -9,7 +9,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(0, 0);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=3, y=4)");
+
+        expect(p3.x).toBe(3);
+        expect(p3.y).toBe(4);
     });
 
     it("interpolate test2 case", () =>
@@ -17,7 +19,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=7.5, y=9)");
+
+        expect(p3.x).toBe(7.5);
+        expect(p3.y).toBe(9);
     });
 
     it("interpolate test case3", () =>
@@ -25,7 +29,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(-9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=-1.5, y=9)");
+
+        expect(p3.x).toBe(-1.5);
+        expect(p3.y).toBe(9);
     });
 
     it("interpolate test case4", () =>
@@ -33,7 +39,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, -10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=7.5, y=-1)");
+
+        expect(p3.x).toBe(7.5);
+        expect(p3.y).toBe(-1);
     });
 
     it("interpolate test case5", () =>
@@ -41,7 +49,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(-9, -10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=-1.5, y=-1)");
+
+        expect(p3.x).toBe(-1.5);
+        expect(p3.y).toBe(-1);
     });
 
     it("interpolate test case6", () =>
@@ -49,7 +59,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(-6, 8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=1.5, y=9)");
+
+        expect(p3.x).toBe(1.5);
+        expect(p3.y).toBe(9);
     });
 
     it("interpolate test case7", () =>
@@ -57,7 +69,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, -8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=7.5, y=1)");
+
+        expect(p3.x).toBe(7.5);
+        expect(p3.y).toBe(1);
     });
 
     it("interpolate test case8", () =>
@@ -65,7 +79,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(-6, -8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=1.5, y=1)");
+
+        expect(p3.x).toBe(1.5);
+        expect(p3.y).toBe(1);
     });
 
     it("interpolate test case9", () =>
@@ -73,7 +89,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(-9, 10);
         const p2 = new Point(-6, 8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=-7.5, y=9)");
+
+        expect(p3.x).toBe(-7.5);
+        expect(p3.y).toBe(9);
     });
 
     it("interpolate test case10", () =>
@@ -81,7 +99,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, -10);
         const p2 = new Point(6, -8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=7.5, y=-9)");
+
+        expect(p3.x).toBe(7.5);
+        expect(p3.y).toBe(-9);
     });
 
     it("interpolate test case11", () =>
@@ -89,7 +109,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(-9, -10);
         const p2 = new Point(-6, -8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=-7.5, y=-9)");
+
+        expect(p3.x).toBe(-7.5);
+        expect(p3.y).toBe(-9);
     });
 
     it("interpolate test case12", () =>
@@ -97,7 +119,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, -0.5);
-        expect(p3.toString()).toBe("(x=4.5, y=7)");
+
+        expect(p3.x).toBe(4.5);
+        expect(p3.y).toBe(7);
     });
 
     it("interpolate test case13", () =>
@@ -105,7 +129,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(9, 8);
         const p3 = Point.interpolate(p1, p2, 0.5);
-        expect(p3.toString()).toBe("(x=9, y=9)");
+
+        expect(p3.x).toBe(9);
+        expect(p3.y).toBe(9);
     });
 
     it("interpolate test case14", () =>
@@ -113,7 +139,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, 1);
-        expect(p3.toString()).toBe("(x=9, y=10)");
+
+        expect(p3.x).toBe(9);
+        expect(p3.y).toBe(10);
     });
 
     it("interpolate test case15", () =>
@@ -121,7 +149,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, 0);
-        expect(p3.toString()).toBe("(x=6, y=8)");
+
+        expect(p3.x).toBe(6);
+        expect(p3.y).toBe(8);
     });
 
     it("interpolate test case16", () =>
@@ -129,7 +159,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, 1.5);
-        expect(p3.toString()).toBe("(x=10.5, y=11)");
+
+        expect(p3.x).toBe(10.5);
+        expect(p3.y).toBe(11);
     });
 
     it("interpolate test case17", () =>
@@ -137,7 +169,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, 0.2);
-        expect(p3.toString()).toBe("(x=6.6, y=8.4)");
+
+        expect(p3.x).toBe(6.6);
+        expect(p3.y).toBe(8.4);
     });
 
     it("interpolate test case18", () =>
@@ -145,7 +179,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, -0.2);
-        expect(p3.toString()).toBe("(x=5.4, y=7.6)");
+
+        expect(p3.x).toBe(5.4);
+        expect(p3.y).toBe(7.6);
     });
 
     it("interpolate test case19", () =>
@@ -153,7 +189,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, 1.2);
-        expect(p3.toString()).toBe("(x=9.6, y=10.4)");
+
+        expect(p3.x).toBe(9.6);
+        expect(p3.y).toBe(10.4);
     });
 
     it("interpolate test case20", () =>
@@ -161,7 +199,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, -1.2);
-        expect(p3.toString()).toBe("(x=2.3999999999999995, y=5.6)");
+
+        expect(p3.x).toBe(2.3999999999999995);
+        expect(p3.y).toBe(5.6);
     });
 
     it("interpolate test case21", () =>
@@ -169,7 +209,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(9, 10);
         const p2 = new Point(6, 8);
         const p3 = Point.interpolate(p1, p2, -1);
-        expect(p3.toString()).toBe("(x=3, y=6)");
+
+        expect(p3.x).toBe(3);
+        expect(p3.y).toBe(6);
     });
 
     it("interpolate test case22", () =>
@@ -177,7 +219,9 @@ describe("Point.js interpolate test", () =>
         const p1 = new Point(6, 8);
         const p2 = new Point(9, 10);
         const p3 = Point.interpolate(p1, p2, -1);
-        expect(p3.toString()).toBe("(x=12, y=12)");
+
+        expect(p3.x).toBe(12);
+        expect(p3.y).toBe(12);
     });
 
 });

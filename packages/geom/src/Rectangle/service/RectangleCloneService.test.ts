@@ -9,7 +9,13 @@ describe("Rectangle.js clone test", () =>
         const rectangle2 = rectangle1.clone();
         rectangle2.x = 100;
 
-        expect(rectangle1.toString()).toBe("(x=30, y=50, w=80, h=100)");
-        expect(rectangle2.toString()).toBe("(x=100, y=50, w=80, h=100)");
+        expect(rectangle1.x).toBe(30);
+        expect(rectangle2.x).toBe(100);
+        expect(rectangle1.y).toBe(50);
+        expect(rectangle2.y).toBe(50);
+        expect(rectangle1.width).toBe(80);
+        expect(rectangle2.width).toBe(80);
+        expect(rectangle1.height).toBe(100);
+        expect(rectangle2.height).toBe(100);
     });
 });

@@ -8,17 +8,27 @@ describe("Rectangle.js union test", () =>
         const rectangle1 = new Rectangle(10, 10, 0, 10);
         const rectangle2 = new Rectangle(-55, -25, 0, 20);
         const rectangle3 = rectangle1.union(rectangle2);
-        expect(rectangle3.toString()).toBe("(x=-55, y=-25, w=0, h=20)");
+
+        expect(rectangle3.x).toBe(-55);
+        expect(rectangle3.y).toBe(-25);
+        expect(rectangle3.width).toBe(0);
+        expect(rectangle3.height).toBe(20);
 
         const rectangle4 = new Rectangle(10, 10, 10, 10);
         const rectangle5 = new Rectangle(-55, -25, 0, 20);
         const rectangle6 = rectangle4.union(rectangle5);
-        expect(rectangle6.toString()).toBe("(x=10, y=10, w=10, h=10)");
+        expect(rectangle6.x).toBe(10);
+        expect(rectangle6.y).toBe(10);
+        expect(rectangle6.width).toBe(10);
+        expect(rectangle6.height).toBe(10);
 
         const rectangle7 = new Rectangle(10, 10, 10, 10);
         const rectangle8 = new Rectangle(-55, -25, 20, 20);
         const rectangle9 = rectangle7.union(rectangle8);
-        expect(rectangle9.toString()).toBe("(x=-55, y=-25, w=75, h=45)");
+        expect(rectangle9.x).toBe(-55);
+        expect(rectangle9.y).toBe(-25);
+        expect(rectangle9.width).toBe(75);
+        expect(rectangle9.height).toBe(45);
     });
 
     it("union test case2", () =>
@@ -26,7 +36,10 @@ describe("Rectangle.js union test", () =>
         const rectangle1 = new Rectangle(10, 10, 10, 10);
         const rectangle2 = new Rectangle(20, 20, 10, 10);
         const rectangle3 = rectangle1.union(rectangle2);
-        expect(rectangle3.toString()).toBe("(x=10, y=10, w=20, h=20)");
+        expect(rectangle3.x).toBe(10);
+        expect(rectangle3.y).toBe(10);
+        expect(rectangle3.width).toBe(20);
+        expect(rectangle3.height).toBe(20);
     });
 
     it("union test case3", () =>
@@ -34,7 +47,10 @@ describe("Rectangle.js union test", () =>
         const rectangle1 = new Rectangle(-10, 10, 10, 10);
         const rectangle2 = new Rectangle(20, 20, 10, 10);
         const rectangle3 = rectangle1.union(rectangle2);
-        expect(rectangle3.toString()).toBe("(x=-10, y=10, w=40, h=20)");
+        expect(rectangle3.x).toBe(-10);
+        expect(rectangle3.y).toBe(10);
+        expect(rectangle3.width).toBe(40);
+        expect(rectangle3.height).toBe(20);
     });
 
     it("union test case4", () =>
@@ -42,7 +58,10 @@ describe("Rectangle.js union test", () =>
         const rectangle1 = new Rectangle(10, -10, 10, 10);
         const rectangle2 = new Rectangle(20, 20, 10, 10);
         const rectangle3 = rectangle1.union(rectangle2);
-        expect(rectangle3.toString()).toBe("(x=10, y=-10, w=20, h=40)");
+        expect(rectangle3.x).toBe(10);
+        expect(rectangle3.y).toBe(-10);
+        expect(rectangle3.width).toBe(20);
+        expect(rectangle3.height).toBe(40);
     });
 
     it("union test cacse5", () =>
@@ -50,7 +69,10 @@ describe("Rectangle.js union test", () =>
         const rectangle1 = new Rectangle(-10, -10, 10, 10);
         const rectangle2 = new Rectangle(20, 20, 10, 10);
         const rectangle3 = rectangle1.union(rectangle2);
-        expect(rectangle3.toString()).toBe("(x=-10, y=-10, w=40, h=40)");
+        expect(rectangle3.x).toBe(-10);
+        expect(rectangle3.y).toBe(-10);
+        expect(rectangle3.width).toBe(40);
+        expect(rectangle3.height).toBe(40);
     });
 
     it("union test case6", () =>
@@ -58,7 +80,10 @@ describe("Rectangle.js union test", () =>
         const rectangle1 = new Rectangle(10, 10, 10, 10);
         const rectangle2 = new Rectangle(20, 20, 10, 10);
         const rectangle3 = rectangle2.union(rectangle1);
-        expect(rectangle3.toString()).toBe("(x=10, y=10, w=20, h=20)");
+        expect(rectangle3.x).toBe(10);
+        expect(rectangle3.y).toBe(10);
+        expect(rectangle3.width).toBe(20);
+        expect(rectangle3.height).toBe(20);
     });
 
     it("union test case7", () =>
@@ -66,7 +91,10 @@ describe("Rectangle.js union test", () =>
         const rectangle1 = new Rectangle(-10, 10, 10, 10);
         const rectangle2 = new Rectangle(20, 20, 10, 10);
         const rectangle3 = rectangle2.union(rectangle1);
-        expect(rectangle3.toString()).toBe("(x=-10, y=10, w=40, h=20)");
+        expect(rectangle3.x).toBe(-10);
+        expect(rectangle3.y).toBe(10);
+        expect(rectangle3.width).toBe(40);
+        expect(rectangle3.height).toBe(20);
     });
 
     it("union test case8", () =>
@@ -74,7 +102,10 @@ describe("Rectangle.js union test", () =>
         const rectangle1 = new Rectangle(10, -10, 10, 10);
         const rectangle2 = new Rectangle(20, 20, 10, 10);
         const rectangle3 = rectangle2.union(rectangle1);
-        expect(rectangle3.toString()).toBe("(x=10, y=-10, w=20, h=40)");
+        expect(rectangle3.x).toBe(10);
+        expect(rectangle3.y).toBe(-10);
+        expect(rectangle3.width).toBe(20);
+        expect(rectangle3.height).toBe(40);
     });
 
     it("union test case9", () =>
@@ -82,6 +113,9 @@ describe("Rectangle.js union test", () =>
         const rectangle1 = new Rectangle(-10, -10, 10, 10);
         const rectangle2 = new Rectangle(20, 20, 10, 10);
         const rectangle3 = rectangle2.union(rectangle1);
-        expect(rectangle3.toString()).toBe("(x=-10, y=-10, w=40, h=40)");
+        expect(rectangle3.x).toBe(-10);
+        expect(rectangle3.y).toBe(-10);
+        expect(rectangle3.width).toBe(40);
+        expect(rectangle3.height).toBe(40);
     });
 });

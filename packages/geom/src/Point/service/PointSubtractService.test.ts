@@ -9,7 +9,9 @@ describe("Point.js subtract test", () =>
         const p1 = new Point(6, 8);
         const p2 = new Point(1.5, 2);
         const p3 = p1.subtract(p2);
-        expect(p3.toString()).toBe("(x=4.5, y=6)");
+
+        expect(p3.x).toBe(4.5);
+        expect(p3.y).toBe(6);
     });
 
     it("subtract test case2", () =>
@@ -17,7 +19,9 @@ describe("Point.js subtract test", () =>
         const p1 = new Point(6, 8);
         const p2 = new Point(-1, 2);
         const p3 = p1.subtract(p2);
-        expect(p3.toString()).toBe("(x=7, y=6)");
+
+        expect(p3.x).toBe(7);
+        expect(p3.y).toBe(6);
     });
 
 });

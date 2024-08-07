@@ -344,9 +344,9 @@ export class Video extends DisplayObject
      */
     _$buildCharacter (character: IVideoCharacter): void
     {
-        if (character.buffer && !character._$buffer) {
-            character._$buffer = new Uint8Array(character.buffer);
-            character.buffer   = null;
+        if (character.buffer && !character.videoData) {
+            character.videoData = new Uint8Array(character.buffer);
+            character.buffer    = null;
         }
 
         this.loop     = character.loop;
@@ -362,7 +362,7 @@ export class Video extends DisplayObject
         );
 
         this._$videoElement.src = URL.createObjectURL(new Blob(
-            [character._$buffer],
+            [character.videoData],
             { "type": "video/mp4" }
         ));
 

@@ -1,24 +1,32 @@
 import type { Matrix } from "@next2d/geom";
+import type { IGradientType } from "./interface/IGradientType";
+import type { ISpreadMethod } from "./interface/ISpreadMethod";
+import type { IInterpolationMethod } from "./interface/IInterpolationMethod";
+import type { IColorStop } from "./interface/IColorStop";
+import {
+    $getArray,
+    $MATRIX_ARRAY_IDENTITY,
+    $convertColorStringToNumber
+} from "./DisplayObjectUtil";
 
 /**
- * グラデーション塗りを定義します。
- * Defines a gradient fill.
+ * @description グラデーション塗りを定義します。
+ *              Defines a gradient fill.
  *
  * @class
- * @memberOf next2d.display
  * @private
  */
 export class GraphicsGradientFill
 {
-    private readonly _$type: GradientTypeImpl;
+    private readonly _$type: IGradientType;
     private readonly _$colors: number[] | string[];
     private readonly _$alphas: number[];
     private readonly _$ratios: number[];
     private readonly _$matrix: Matrix | null;
-    private readonly _$spreadMethod: SpreadMethodImpl;
-    private readonly _$interpolationMethod: InterpolationMethodImpl;
+    private readonly _$spreadMethod: ISpreadMethod;
+    private readonly _$interpolationMethod: IInterpolationMethod;
     private readonly _$focalPointRatio: number;
-    private readonly _$colorStops: ColorStopImpl[];
+    private readonly _$colorStops: IColorStop[];
 
     /**
      * @param  {string} [type=GradientType.LINEAR]
@@ -34,13 +42,13 @@ export class GraphicsGradientFill
      * @private
      */
     constructor (
-        type: GradientTypeImpl,
+        type: IGradientType,
         colors: number[] | string[],
         alphas: number[],
         ratios: number[],
         matrix: Matrix | null = null,
-        spread_method: SpreadMethodImpl = "pad",
-        interpolation_method: InterpolationMethodImpl = "rgb",
+        spread_method: ISpreadMethod = "pad",
+        interpolation_method: IInterpolationMethod = "rgb",
         focal_point_ratio: number = 0
     ) {
 
@@ -85,7 +93,7 @@ export class GraphicsGradientFill
          * @description Matrix クラスで定義される変換マトリックスです。
          *              A transformation matrix as defined by the Matrix class.
          *
-         * @type {Matrix}
+         * @type {Matrix | null}
          * @default null
          * @private
          */
@@ -134,8 +142,7 @@ export class GraphicsGradientFill
      * @description 分配された色の情報を統合して配列で返却
      *              Integrate the distributed color information and return it in an array.
      *
-     * @member  {array}
-     * @default null
+     * @member {array}
      * @readonly
      * @public
      */
@@ -143,8 +150,8 @@ export class GraphicsGradientFill
     {
         if (!this._$colorStops.length) {
 
-            const length: number = $Math.min(
-                $Math.min(this._$alphas.length, this._$colors.length),
+            const length: number = Math.min(
+                Math.min(this._$alphas.length, this._$colors.length),
                 this._$ratios.length
             );
 
@@ -153,17 +160,15 @@ export class GraphicsGradientFill
                 const value: number | string = this._$colors[idx];
 
                 const color = typeof value === "string"
-                    ? $colorStringToInt(value)
+                    ? $convertColorStringToNumber(value)
                     : value;
-
-                const object = $intToRGBA(color, this._$alphas[idx]);
 
                 this._$colorStops[idx] = {
                     "ratio": this._$ratios[idx] / 255,
-                    "R": object.R,
-                    "G": object.G,
-                    "B": object.B,
-                    "A": object.A
+                    "R": (color & 0xff0000) >> 16,
+                    "G": (color & 0x00ff00) >> 8,
+                    "B": color & 0x0000ff,
+                    "A": this._$alphas[idx] * 255
                 };
 
             }
@@ -173,20 +178,20 @@ export class GraphicsGradientFill
     }
 
     /**
-     * @description このクラスのもつパラメーターをArrayで返却する
-     *              Return the parameters of this class as an Array.
+     * @description このクラスのもつパラメーターを配列で返却
+     *              Return the parameters of this class as an array.
      *
      * @return {array}
      * @method
      * @public
      */
-    toArray (): any[]
+    toArray (): Array<string | number | IColorStop[]>
     {
         return $getArray(
             this._$type,
             this.colorStops,
             this._$matrix
-                ? this._$matrix._$matrix
+                ? this._$matrix.rawData
                 : $MATRIX_ARRAY_IDENTITY,
             this._$spreadMethod,
             this._$interpolationMethod,
@@ -196,9 +201,7 @@ export class GraphicsGradientFill
 
     /**
      * @description 新しい GraphicsGradientFill オブジェクトとして、クローンを返します。
-     *              含まれるオブジェクトはまったく同じコピーになります。
      *              Returns a clone as a new GraphicsGradientFill object.
-     *              The contained object will be an exact copy.
      *
      * @return {GraphicsGradientFill}
      * @method

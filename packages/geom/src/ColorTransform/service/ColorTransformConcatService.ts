@@ -4,8 +4,8 @@ import type { ColorTransform } from "../../ColorTransform";
  * @description 指定のColorTransformを連結
  *              Concatenate the specified ColorTransform
  *
- * @param {ColorTransform} color_transform1
- * @param {ColorTransform} color_transform2
+ * @param  {ColorTransform} color_transform1
+ * @param  {ColorTransform} color_transform2
  * @return {void}
  * @method
  * @public

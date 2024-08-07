@@ -12,9 +12,8 @@ describe("Matrix.js transformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.transformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-19.79898965358734, y=164.04878056049347)"
-        );
+        expect(point2.x).toBe(-19.79898965358734);
+        expect(point2.y).toBe(164.04878056049347);
     });
 
     it("transformPoint test case2", () =>
@@ -25,9 +24,8 @@ describe("Matrix.js transformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.transformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-21.213203191757202, y=165.46299409866333)"
-        );
+        expect(point2.x).toBe(-21.213203191757202);
+        expect(point2.y).toBe(165.46299409866333);
     });
 
     it("transformPoint test case3", () =>
@@ -87,9 +85,8 @@ describe("Matrix.js transformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.transformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-88, y=78)"
-        );
+        expect(point2.x).toBe(-88);
+        expect(point2.y).toBe(78);
     });
 
     it("transformPoint test case8", () =>
@@ -100,9 +97,8 @@ describe("Matrix.js transformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.transformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-117.37973380088806, y=-7.071067810058596)"
-        );
+        expect(point2.x).toBe(-117.37973380088806);
+        expect(point2.y).toBe(-7.071067810058596);
     });
 
     it("transformPoint test case9", () =>
@@ -113,9 +109,8 @@ describe("Matrix.js transformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.transformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-78, y=-88)"
-        );
+        expect(point2.x).toBe(-78);
+        expect(point2.y).toBe(-88);
     });
 
     it("transformPoint test case10", () =>
@@ -139,9 +134,8 @@ describe("Matrix.js transformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.transformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=88, y=-78)"
-        );
+        expect(point2.x).toBe(88);
+        expect(point2.y).toBe(-78);
     });
 
     it("transformPoint test case12", () =>
@@ -152,9 +146,8 @@ describe("Matrix.js transformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.transformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=7.071067810058591, y=-117.37973380088806)"
-        );
+        expect(point2.x).toBe(7.071067810058591);
+        expect(point2.y).toBe(-117.37973380088806);
     });
 
     it("transformPoint test case13", () =>
@@ -165,8 +158,7 @@ describe("Matrix.js transformPoint test", () =>
         const point1 = new Point(2, 20);
         const point2 = matrix.transformPoint(point1);
 
-        expect(point2.toString()).toBe(
-            "(x=-78, y=-88)"
-        );
+        expect(point2.x).toBe(-78);
+        expect(point2.y).toBe(-88);
     });
 });

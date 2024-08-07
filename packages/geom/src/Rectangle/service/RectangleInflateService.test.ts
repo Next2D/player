@@ -7,21 +7,34 @@ describe("Rectangle.js inflate test", () =>
     {
         const rectangle1 = new Rectangle(10, 10, 20, 20);
         rectangle1.inflate(10, 10);
-        expect(rectangle1.toString()).toBe("(x=0, y=0, w=40, h=40)");
+
+        expect(rectangle1.x).toBe(0);
+        expect(rectangle1.y).toBe(0);
+        expect(rectangle1.width).toBe(40);
+        expect(rectangle1.height).toBe(40);
 
         const rectangle2 = new Rectangle(10, 10, 20, 20);
         rectangle2.inflate(20, 20);
-        expect(rectangle2.toString()).toBe("(x=-10, y=-10, w=60, h=60)");
+        expect(rectangle2.x).toBe(-10);
+        expect(rectangle2.y).toBe(-10);
+        expect(rectangle2.width).toBe(60);
+        expect(rectangle2.height).toBe(60);
     });
 
     it("inflate test case2", () =>
     {
         const rectangle1 = new Rectangle(-10, -10, -20, -20);
         rectangle1.inflate(10, 10);
-        expect(rectangle1.toString()).toBe("(x=-20, y=-20, w=0, h=0)");
+        expect(rectangle1.x).toBe(-20);
+        expect(rectangle1.y).toBe(-20);
+        expect(rectangle1.width).toBe(0);
+        expect(rectangle1.height).toBe(0);
 
         const rectangle2 = new Rectangle(10, 10, 20, 20);
         rectangle2.inflate(-20, -20);
-        expect(rectangle2.toString()).toBe("(x=30, y=30, w=-20, h=-20)");
+        expect(rectangle2.x).toBe(30);
+        expect(rectangle2.y).toBe(30);
+        expect(rectangle2.width).toBe(-20);
+        expect(rectangle2.height).toBe(-20);
     });
 });

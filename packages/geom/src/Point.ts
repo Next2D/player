@@ -21,8 +21,25 @@ import { execute as pointSubtractService } from "./Point/service/PointSubtractSe
  */
 export class Point
 {
-    private _$x: number;
-    private _$y: number;
+    /**
+     * @description ポイントの水平座標です。
+     *              The horizontal coordinate of the point.
+     *
+     * @member  {number}
+     * @default 0
+     * @public
+     */
+    public x: number;
+
+    /**
+     * @description ポイントの垂直座標です。
+     *              The vertical coordinate of the point.
+     *
+     * @member  {number}
+     * @default 0
+     * @public
+     */
+    public y: number;
 
     /**
      * @param {number} [x = 0]
@@ -32,41 +49,15 @@ export class Point
      */
     constructor (x: number = 0, y: number = 0)
     {
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$x = x;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$y = y;
-    }
-
-    /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class Point]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Point]";
+        this.x = x;
+        this.y = y;
     }
 
     /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
-     * @default "next2d.geom.Point"
+     * @member {string}
      * @const
      * @static
      */
@@ -76,24 +67,10 @@ export class Point
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return `(x=${this._$x}, y=${this._$y})`;
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
-     * @default next2d.geom.Point
+     * @member {string}
      * @const
      * @public
      */
@@ -113,41 +90,7 @@ export class Point
      */
     get length (): number
     {
-        return Math.sqrt(Math.pow(this._$x, 2) + Math.pow(this._$y, 2));
-    }
-
-    /**
-     * @description ポイントの水平座標です。
-     *              The horizontal coordinate of the point.
-     *
-     * @member  {number}
-     * @default 0
-     * @public
-     */
-    get x (): number
-    {
-        return this._$x;
-    }
-    set x (x: number)
-    {
-        this._$x = x;
-    }
-
-    /**
-     * @description ポイントの垂直座標です。
-     *              The vertical coordinate of the point.
-     *
-     * @member  {number}
-     * @default 0
-     * @public
-     */
-    get y (): number
-    {
-        return this._$y;
-    }
-    set y (y: number)
-    {
-        this._$y = y;
+        return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
     }
 
     /**

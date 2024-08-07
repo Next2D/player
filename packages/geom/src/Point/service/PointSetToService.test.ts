@@ -8,14 +8,18 @@ describe("Point.js setTo test", () =>
     {
         const point = new Point(10, 20);
         point.setTo(30, 40);
-        expect(point.toString()).toBe("(x=30, y=40)");
+
+        expect(point.x).toBe(30);
+        expect(point.y).toBe(40);
     });
 
     it("setTo test case2", () =>
     {
         const p = new Point(10, 20);
         p.setTo(0, 40);
-        expect(p.toString()).toBe("(x=0, y=40)");
+
+        expect(p.x).toBe(0);
+        expect(p.y).toBe(40);
     });
 
 });

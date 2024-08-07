@@ -104,3 +104,29 @@ export const $poolFloat32Array8 = (array: Float32Array): void =>
 {
     $objectPool8.push(array);
 };
+
+/**
+ * @description 値が最小値と最大値の間に収まるように調整します。
+ *              Adjust the value so that it falls between the minimum and maximum values.
+ * 
+ * @param  {number} value
+ * @param  {number} min
+ * @param  {number} max
+ * @param  {number} [default_value=null]
+ * @return {number}
+ * @method
+ * @static
+ */
+export const $clamp = (
+    value: number,
+    min: number,
+    max: number,
+    default_value: number | null = null
+): number => {
+
+    const number: number = +value;
+
+    return isNaN(number) && default_value !== null
+        ? default_value
+        : Math.min(Math.max(min, isNaN(number) ? 0 : number), max);
+};

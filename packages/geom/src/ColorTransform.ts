@@ -1,7 +1,8 @@
 import { execute as colorTransformConcatService } from "../src/ColorTransform/service/ColorTransformConcatService";
 import {
     $getFloat32Array8,
-    $poolFloat32Array8
+    $poolFloat32Array8,
+    $clamp
 } from "./GeomUtil";
 
 /**
@@ -65,25 +66,10 @@ export class ColorTransform
     }
 
     /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class ColorTransform]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class ColorTransform]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
      * @member {string}
-     * @default "next2d.geom.ColorTransform"
      * @const
      * @static
      */
@@ -93,31 +79,10 @@ export class ColorTransform
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "(redMultiplier=" + this._$colorTransform[0] + ", " +
-            "greenMultiplier="   + this._$colorTransform[1] + ", " +
-            "blueMultiplier="    + this._$colorTransform[2] + ", " +
-            "alphaMultiplier="   + this._$colorTransform[3] + ", " +
-            "redOffset="         + this._$colorTransform[4] + ", " +
-            "greenOffset="       + this._$colorTransform[5] + ", " +
-            "blueOffset="        + this._$colorTransform[6] + ", " +
-            "alphaOffset="       + this._$colorTransform[7] + ")";
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
      * @member  {string}
-     * @default "next2d.geom.ColorTransform"
      * @const
      * @public
      */
@@ -140,7 +105,7 @@ export class ColorTransform
     }
     set alphaMultiplier (alpha_multiplier: number)
     {
-        this._$colorTransform[3] = alpha_multiplier;
+        this._$colorTransform[3] = $clamp(alpha_multiplier, 0, 1, 1);
     }
 
     /**
@@ -159,7 +124,7 @@ export class ColorTransform
     }
     set alphaOffset (alpha_offset: number)
     {
-        this._$colorTransform[7] = alpha_offset;
+        this._$colorTransform[7] = $clamp(alpha_offset, -255, 255, 0);
     }
 
     /**
@@ -176,7 +141,7 @@ export class ColorTransform
     }
     set blueMultiplier (blue_multiplier: number)
     {
-        this._$colorTransform[2] = blue_multiplier;
+        this._$colorTransform[2] = $clamp(blue_multiplier, 0, 1, 1);
     }
 
     /**
@@ -195,7 +160,7 @@ export class ColorTransform
     }
     set blueOffset (blue_offset: number)
     {
-        this._$colorTransform[6] = blue_offset;
+        this._$colorTransform[6] = $clamp(blue_offset, -255, 255, 0);
     }
 
     /**
@@ -212,7 +177,7 @@ export class ColorTransform
     }
     set greenMultiplier (green_multiplier: number)
     {
-        this._$colorTransform[1] = green_multiplier;
+        this._$colorTransform[1] = $clamp(green_multiplier, 0, 1, 1);
     }
 
     /**
@@ -231,7 +196,7 @@ export class ColorTransform
     }
     set greenOffset (green_offset: number)
     {
-        this._$colorTransform[5] = green_offset;
+        this._$colorTransform[5] = $clamp(green_offset, -255, 255, 0);
     }
 
     /**
@@ -248,7 +213,7 @@ export class ColorTransform
     }
     set redMultiplier (red_multiplier: number)
     {
-        this._$colorTransform[0] = red_multiplier;
+        this._$colorTransform[0] = $clamp(red_multiplier, 0, 1, 1);
     }
 
     /**
@@ -267,7 +232,7 @@ export class ColorTransform
     }
     set redOffset (red_offset: number)
     {
-        this._$colorTransform[4] = red_offset;
+        this._$colorTransform[4] = $clamp(red_offset, -255, 255, 0);
     }
 
     /**
@@ -290,6 +255,9 @@ export class ColorTransform
     }
 
     /**
+     * @description 指定された配列の値を乗算します
+     *              Multiplies the value of the specified array.
+     * 
      * @param  {Float32Array} a
      * @param  {Float32Array} b
      * @return {Float32Array}
@@ -311,16 +279,22 @@ export class ColorTransform
     }
 
     /**
+     * @description オブジェクトの複製を返します。
+     *              Returns a copy of this ColorTransform object.
+     * 
      * @return {ColorTransform}
      * @method
-     * @private
+     * @public
      */
-    _$clone (): ColorTransform
+    clone (): ColorTransform
     {
         return new ColorTransform(...this._$colorTransform);
     }
 
     /**
+     * @description 利用したFloat32Arrayを再利用する為にプールします。
+     *              Pool the Float32Array used for reuse.
+     *
      * @param {Float32Array} array
      * @method
      * @private

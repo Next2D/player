@@ -8,9 +8,13 @@ describe("Matrix.js concat test", () =>
         const matrix1 = new Matrix(2, 1, -1, 1, 0, 5);
         const matrix2 = new Matrix(1.3, 0.75, 0, -1.5, 10, -10);
         matrix1.concat(matrix2);
-        expect(matrix1.toString()).toBe(
-            "(a=2.5999999046325684, b=0, c=-1.2999999523162842, d=-2.25, tx=10, ty=-17.5)"
-        );
+
+        expect(matrix1.a).toBe(2.5999999046325684);
+        expect(matrix1.b).toBe(0);
+        expect(matrix1.c).toBe(-1.2999999523162842);
+        expect(matrix1.d).toBe(-2.25);
+        expect(matrix1.tx).toBe(10);
+        expect(matrix1.ty).toBe(-17.5);
     });
 
     it("concat test case2", () =>
@@ -18,9 +22,13 @@ describe("Matrix.js concat test", () =>
         const matrix1 = new Matrix(2, 1, -1, 1, 0, 5);
         const matrix2 = new Matrix(0, 0.75, 0, -1.5, 10, -10);
         matrix1.concat(matrix2);
-        expect(matrix1.toString()).toBe(
-            "(a=0, b=0, c=0, d=-2.25, tx=10, ty=-17.5)"
-        );
+
+        expect(matrix1.a).toBe(0);
+        expect(matrix1.b).toBe(0);
+        expect(matrix1.c).toBe(0);
+        expect(matrix1.d).toBe(-2.25);
+        expect(matrix1.tx).toBe(10);
+        expect(matrix1.ty).toBe(-17.5);
     });
 
     it("concat test case3", () =>
@@ -28,9 +36,13 @@ describe("Matrix.js concat test", () =>
         const matrix1 = new Matrix(2, 1, -1, 1, 0, 5);
         const matrix2 = new Matrix(1.3, 0, 0, -1.5, 10, -10);
         matrix1.concat(matrix2);
-        expect(matrix1.toString()).toBe(
-            "(a=2.5999999046325684, b=-1.5, c=-1.2999999523162842, d=-1.5, tx=10, ty=-17.5)"
-        );
+
+        expect(matrix1.a).toBe(2.5999999046325684);
+        expect(matrix1.b).toBe(-1.5);
+        expect(matrix1.c).toBe(-1.2999999523162842);
+        expect(matrix1.d).toBe(-1.5);
+        expect(matrix1.tx).toBe(10);
+        expect(matrix1.ty).toBe(-17.5);
     });
 
     it("concat test case4", () =>
@@ -38,9 +50,13 @@ describe("Matrix.js concat test", () =>
         const matrix1 = new Matrix(2, 1, -1, 1, 0, 5);
         const matrix2 = new Matrix(1.3, 0.75, 0, 0, 10, -10);
         matrix1.concat(matrix2);
-        expect(matrix1.toString()).toBe(
-            "(a=2.5999999046325684, b=1.5, c=-1.2999999523162842, d=-0.75, tx=10, ty=-10)"
-        );
+
+        expect(matrix1.a).toBe(2.5999999046325684);
+        expect(matrix1.b).toBe(1.5);
+        expect(matrix1.c).toBe(-1.2999999523162842);
+        expect(matrix1.d).toBe(-0.75);
+        expect(matrix1.tx).toBe(10);
+        expect(matrix1.ty).toBe(-10);
     });
 
     it("concat test case5", () =>
@@ -48,9 +64,13 @@ describe("Matrix.js concat test", () =>
         const matrix1 = new Matrix(2, 1, -1, 1, 0, 5);
         const matrix2 = new Matrix(1.3, 0.75, 0, -1.5, 0, -10);
         matrix1.concat(matrix2);
-        expect(matrix1.toString()).toBe(
-            "(a=2.5999999046325684, b=0, c=-1.2999999523162842, d=-2.25, tx=0, ty=-17.5)"
-        );
+
+        expect(matrix1.a).toBe(2.5999999046325684);
+        expect(matrix1.b).toBe(0);
+        expect(matrix1.c).toBe(-1.2999999523162842);
+        expect(matrix1.d).toBe(-2.25);
+        expect(matrix1.tx).toBe(0);
+        expect(matrix1.ty).toBe(-17.5);
     });
 
     it("concat test case6", () =>
@@ -58,9 +78,13 @@ describe("Matrix.js concat test", () =>
         const matrix1 = new Matrix(2, 1, -1, 1, 0, 5);
         const matrix2 = new Matrix(1.3, 0.75, 0, -1.5, 10, 0);
         matrix1.concat(matrix2);
-        expect(matrix1.toString()).toBe(
-            "(a=2.5999999046325684, b=0, c=-1.2999999523162842, d=-2.25, tx=10, ty=-7.5)"
-        );
+
+        expect(matrix1.a).toBe(2.5999999046325684);
+        expect(matrix1.b).toBe(0);
+        expect(matrix1.c).toBe(-1.2999999523162842);
+        expect(matrix1.d).toBe(-2.25);
+        expect(matrix1.tx).toBe(10);
+        expect(matrix1.ty).toBe(-7.5);
     });
 
     it("concat test case7", () =>
@@ -68,9 +92,13 @@ describe("Matrix.js concat test", () =>
         const matrix1 = new Matrix(1,0,0,1,0,0);
         const matrix2 = new Matrix(1.3, 0.75, 0, -1.5, 10, -10);
         matrix1.concat(matrix2);
-        expect(matrix1.toString()).toBe(
-            "(a=1.2999999523162842, b=0.75, c=0, d=-1.5, tx=10, ty=-10)"
-        );
+
+        expect(matrix1.a).toBe(1.2999999523162842);
+        expect(matrix1.b).toBe(0.75);
+        expect(matrix1.c).toBe(0);
+        expect(matrix1.d).toBe(-1.5);
+        expect(matrix1.tx).toBe(10);
+        expect(matrix1.ty).toBe(-10);
     });
 
     it("concat test case8", () =>
@@ -78,8 +106,12 @@ describe("Matrix.js concat test", () =>
         const matrix1 = new Matrix(1,0,0,1,10,10);
         const matrix2 = new Matrix(1.3, 0.75, 0, -1.5, 10, -10);
         matrix1.concat(matrix2);
-        expect(matrix1.toString()).toBe(
-            "(a=1.2999999523162842, b=0.75, c=0, d=-1.5, tx=23, ty=-17.5)"
-        );
+
+        expect(matrix1.a).toBe(1.2999999523162842);
+        expect(matrix1.b).toBe(0.75);
+        expect(matrix1.c).toBe(0);
+        expect(matrix1.d).toBe(-1.5);
+        expect(matrix1.tx).toBe(23);
+        expect(matrix1.ty).toBe(-17.5);
     });
 });

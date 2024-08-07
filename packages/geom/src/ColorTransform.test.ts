@@ -1,30 +1,6 @@
 import { ColorTransform } from "./ColorTransform";
 import { describe, expect, it } from "vitest";
 
-describe("ColorTransform.js toString test", () =>
-{
-    it("toString test case1", () =>
-    {
-        const colorTransform = new ColorTransform();
-        expect(colorTransform.toString()).toBe("(redMultiplier=1, greenMultiplier=1, blueMultiplier=1, alphaMultiplier=1, redOffset=0, greenOffset=0, blueOffset=0, alphaOffset=0)");
-    });
-
-    it("toString test case2", () =>
-    {
-        const colorTransform = new ColorTransform(2, 3, 4, 5, 6, 7, 8, 9);
-        expect(colorTransform.toString()).toBe("(redMultiplier=2, greenMultiplier=3, blueMultiplier=4, alphaMultiplier=5, redOffset=6, greenOffset=7, blueOffset=8, alphaOffset=9)");
-    });
-});
-
-describe("ColorTransform.js static toString test", () =>
-{
-
-    it("static toString test", () =>
-    {
-        expect(ColorTransform.toString()).toBe("[class ColorTransform]");
-    });
-});
-
 describe("ColorTransform.js namespace test", () =>
 {
     it("namespace test public", () =>

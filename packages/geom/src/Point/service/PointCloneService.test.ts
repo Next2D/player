@@ -21,6 +21,8 @@ describe("Point.js property valid test and clone test", () =>
         expect(point2.x).toBe(10);
         expect(point2.y).toBe(20);
         expect(point2.length).toBe(22.360679774997898);
-        expect(point2.toString()).toBe("(x=10, y=20)");
+
+        expect(point2.x).toBe(10);
+        expect(point2.y).toBe(20);
     });
 });

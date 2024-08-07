@@ -1,37 +1,102 @@
+import type { ICapsStyle } from "./interface/ICapsStyle";
+import type { IJointStyle } from "./interface/IJointStyle";
+import type { BitmapData } from "./BitmapData";
+import type {
+    Matrix,
+    Rectangle
+} from "@next2d/geom";
 import { GraphicsBitmapFill } from "./GraphicsBitmapFill";
 import { GraphicsGradientFill } from "./GraphicsGradientFill";
-import type { BitmapData } from "./BitmapData";
-import type { Player } from "@next2d/core";
-import type { Matrix, Rectangle } from "@next2d/geom";
-import type {
-    CanvasToWebGLContext,
-    FrameBufferManager,
-    CanvasGradientToWebGL
-} from "@next2d/webgl";
+import {
+    $getArray,
+    $clamp
+} from "./DisplayObjectUtil";
 
 /**
- * Graphics クラスには、ベクターシェイプの作成に使用できる一連のメソッドがあります。
- * 描画をサポートする表示オブジェクトには、Sprite および Shape オブジェクトがあります。
- * これらの各クラスには、Graphics オブジェクトである graphics プロパティがあります。
- * 以下は、簡単に使用できるように用意されているヘルパー関数の一例です。
- * drawRect()、drawRoundRect()、drawCircle()、および drawEllipse()。
+ * @description Graphics クラスには、ベクターシェイプの作成に使用できる一連のメソッドがあります。
+ *              描画をサポートする表示オブジェクトには、Sprite および Shape オブジェクトがあります。
+ *              これらの各クラスには、Graphics オブジェクトである graphics プロパティがあります。
+ *              以下は、簡単に使用できるように用意されているヘルパー関数の一例です。
+ *              drawRect()、drawRoundRect()、drawCircle()、および drawEllipse()。
  *
- * The Graphics class contains a set of methods that you can use to create a vector shape.
- * Display objects that support drawing include Sprite and Shape objects.
- * Each of these classes includes a graphics property that is a Graphics object.
- * The following are among those helper functions provided for ease of use:
- * drawRect(), drawRoundRect(), drawCircle(), and drawEllipse().
+ *              The Graphics class contains a set of methods that you can use to create a vector shape.
+ *              Display objects that support drawing include Sprite and Shape objects.
+ *              Each of these classes includes a graphics property that is a Graphics object.
+ *              The following are among those helper functions provided for ease of use:
+ *              drawRect(), drawRoundRect(), drawCircle(), and drawEllipse().
  *
  * @class
  * @memberOf next2d.display
  */
 export class Graphics
 {
-    private readonly _$displayObject: GraphicsParentImpl<any> | null;
-    public _$maxAlpha: number;
+    /**
+     * @description 描画の透明度の最大値、0なら描画対象外とする
+     *              Maximum value of drawing transparency, 0 means not drawing target
+     * 
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public alpha: number;
+
+    /**
+     * @description 描画が可能な状態かを返却
+     *              Returns whether drawing is possible
+     * 
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public isDrawable: boolean;
+    
+    /**
+     * @description グラフィックの最小x座標
+     *              Minimum x coordinate of graphic
+     * 
+     * @type {number}
+     * @default Number.MAX_VALUE
+     * @public
+     */
+    public xMin: number;
+
+    /**
+     * @description グラフィックの最小y座標
+     *              Minimum y coordinate of graphic
+     * 
+     * @type {number}
+     * @default Number.MAX_VALUE
+     * @public
+     */
+    public yMin: number;
+
+    /**
+     * @description グラフィックの最大x座標
+     *              Maximum x coordinate of graphic
+     * 
+     * @type {number}
+     * @default -Number.MAX_VALUE
+     * @public
+     */
+    public xMax: number;
+
+    /**
+     * @description グラフィックの最大y座標
+     *              Maximum y coordinate of graphic
+     * 
+     * @type {number}
+     * @default -Number.MAX_VALUE
+     * @public
+     */
+    public yMax: number;
+
+    public _$buffer: Float32Array | null;
+    public _$recode: any[] | null;
+    public _$bitmapId: number;
+    public _$mode: ShapeModeImpl;
+
     private _$pointerX: number;
     private _$pointerY: number;
-    public _$canDraw: boolean;
     private _$fillType: number;
     private _$fillGradient: GraphicsGradientFill | null;
     private _$fillBitmap: GraphicsBitmapFill | null;
@@ -42,8 +107,8 @@ export class Graphics
     private _$doFill: boolean;
     private _$lineType: number;
     private _$lineGradient: GraphicsGradientFill | null;
-    private _$caps: CapsStyleImpl;
-    private _$joints: JointStyleImpl;
+    private _$caps: ICapsStyle;
+    private _$joints: IJointStyle;
     private _$miterLimit: number;
     private _$lineWidth: number;
     private _$lineStyleR: number;
@@ -51,42 +116,22 @@ export class Graphics
     private _$lineStyleB: number;
     private _$lineStyleA: number;
     private _$doLine: boolean;
-    public _$xMin: number;
-    public _$xMax: number;
-    public _$yMin: number;
-    public _$yMax: number;
-    public _$buffer: Float32Array | null;
-    public _$recode: any[] | null;
     private _$fills: any[] | null;
     private _$lines: any[] | null;
-    private _$uniqueKey: string;
-    private _$cacheKeys: string[];
-    private readonly _$cacheParams: number[];
-    public _$bitmapId: number;
-    public _$mode: ShapeModeImpl;
-    public _$posted: boolean;
+
 
     /**
-     * @param {DisplayObject} src
-     *
      * @constructor
      * @public
      */
-    constructor (src: GraphicsParentImpl<any> | null = null)
+    constructor ()
     {
-        /**
-         * @type {DisplayObject}
-         * @default null
-         * @private
-         */
-        this._$displayObject = src;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$maxAlpha = 0;
+        this.alpha      = 0;
+        this.isDrawable = false;
+        this.xMin       = Number.MAX_VALUE;
+        this.yMin       = Number.MAX_VALUE;
+        this.xMax       = -Number.MAX_VALUE;
+        this.yMax       = -Number.MAX_VALUE;
 
         /**
          * @type {number}
@@ -101,13 +146,6 @@ export class Graphics
          * @private
          */
         this._$pointerY = 0;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$canDraw = false;
 
         /**
          * @type {number}
@@ -243,34 +281,6 @@ export class Graphics
         this._$doLine = false;
 
         /**
-         * @type {number}
-         * @default Number.MAX_VALUE
-         * @private
-         */
-        this._$xMin = $Number.MAX_VALUE;
-
-        /**
-         * @type {number}
-         * @default -Number.MAX_VALUE
-         * @private
-         */
-        this._$xMax = -$Number.MAX_VALUE;
-
-        /**
-         * @type {number}
-         * @default Number.MAX_VALUE
-         * @private
-         */
-        this._$yMin = $Number.MAX_VALUE;
-
-        /**
-         * @type {number}
-         * @default -Number.MAX_VALUE
-         * @private
-         */
-        this._$yMax = -$Number.MAX_VALUE;
-
-        /**
          * @type {Float32Array}
          * @default null
          * @private
@@ -299,25 +309,6 @@ export class Graphics
         this._$lines = null;
 
         /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$uniqueKey = "";
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$cacheKeys = $getArray();
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$cacheParams = $getArray(0, 0, 0);
-
-        /**
          * @type {number}
          * @default 0
          * @private
@@ -330,35 +321,13 @@ export class Graphics
          * @private
          */
         this._$mode = "shape";
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$posted = false;
-    }
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class Graphics]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Graphics]";
     }
 
     /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @return  {string}
-     * @default next2d.display.Bitmap
+     * @return {string}
      * @const
      * @static
      */
@@ -368,25 +337,10 @@ export class Graphics
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object Graphics]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Graphics]";
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @return  {string}
-     * @default next2d.display.Graphics
+     * @return {string}
      * @const
      * @public
      */
@@ -396,11 +350,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、MoveToの識別番号
+     *              Drawing command, MoveTo identification number
+     * 
      * @return {number}
-     * @default 0
      * @const
      * @static
-     * @private
      */
     static get MOVE_TO (): number
     {
@@ -408,11 +363,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、2次ベジェ曲線の識別番号
+     *              Drawing command, 2nd Bezier curve identification number
+     * 
      * @return {number}
-     * @default 1
      * @const
      * @static
-     * @private
      */
     static get CURVE_TO (): number
     {
@@ -420,11 +376,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、直線の識別番号
+     *              Drawing command, straight line identification number
+     * 
      * @return {number}
-     * @default 2
      * @const
      * @static
-     * @private
      */
     static get LINE_TO (): number
     {
@@ -432,11 +389,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、3次ベジェ曲線の識別番号
+     *              Drawing command, 3rd Bezier curve identification number
+     * 
      * @return {number}
-     * @default 3
      * @const
      * @static
-     * @private
      */
     static get CUBIC (): number
     {
@@ -444,11 +402,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、円弧の識別番号
+     *              Drawing command, arc identification number
+     * 
      * @return {number}
-     * @default 4
      * @const
      * @static
-     * @private
      */
     static get ARC (): number
     {
@@ -456,11 +415,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、塗りの識別番号
+     *              Drawing command, fill identification number
+     * 
      * @return {number}
-     * @default 5
      * @const
      * @static
-     * @private
      */
     static get FILL_STYLE (): number
     {
@@ -468,11 +428,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、線の識別番号
+     *              Drawing command, line identification number
+     * 
      * @return {number}
-     * @default 6
      * @const
      * @static
-     * @private
      */
     static get STROKE_STYLE (): number
     {
@@ -480,11 +441,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、塗りの終了の識別番号
+     *              Drawing command, fill end identification number
+     * 
      * @return {number}
-     * @default 7
      * @const
      * @static
-     * @private
      */
     static get END_FILL (): number
     {
@@ -492,11 +454,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、線の終了の識別番号
+     *              Drawing command, line end identification number
+     * 
      * @return {number}
-     * @default 8
      * @const
      * @static
-     * @private
      */
     static get END_STROKE (): number
     {
@@ -504,11 +467,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、描画開始の識別番号
+     *              Drawing command, drawing start identification number
+     * 
      * @return {number}
-     * @default 9
      * @const
      * @static
-     * @private
      */
     static get BEGIN_PATH (): number
     {
@@ -516,11 +480,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、塗りのグラデーション開始の識別番号
+     *              Drawing command, gradient fill start identification number
+     * 
      * @return {number}
-     * @default 10
      * @const
      * @static
-     * @private
      */
     static get GRADIENT_FILL (): number
     {
@@ -528,11 +493,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、線のグラデーション開始の識別番号
+     *              Drawing command, gradient line start identification number
+     * 
      * @return {number}
-     * @default 11
      * @const
      * @static
-     * @private
      */
     static get GRADIENT_STROKE (): number
     {
@@ -540,11 +506,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、描画結合の識別番号
+     *              Drawing command, drawing join identification number
+     * 
      * @return {number}
-     * @default 12
      * @const
      * @static
-     * @private
      */
     static get CLOSE_PATH (): number
     {
@@ -552,11 +519,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、Bitmapの塗りの識別番号
+     *              Drawing command, Bitmap fill identification number
+     * 
      * @return {number}
-     * @default 13
      * @const
      * @static
-     * @private
      */
     static get BITMAP_FILL (): number
     {
@@ -564,11 +532,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、Bitmapの線の識別番号
+     *              Drawing command, Bitmap line identification number
+     * 
      * @return {number}
-     * @default 14
      * @const
      * @static
-     * @private
      */
     static get BITMAP_STROKE (): number
     {
@@ -604,9 +573,9 @@ export class Graphics
         }
 
         // start
-        this._$maxAlpha = 1;
+        this.alpha      = 1;
         this._$doFill   = true;
-        this._$canDraw  = true;
+        this.isDrawable = true;
 
         // beginPath
         this._$fills.push(Graphics.BEGIN_PATH);
@@ -650,9 +619,9 @@ export class Graphics
         alpha = $clamp(alpha, 0, 1, 1);
 
         // setup
-        this._$maxAlpha = $Math.max(this._$maxAlpha, alpha);
+        this.alpha = Math.max(this.alpha, alpha);
         this._$doFill   = true;
-        this._$canDraw  = true;
+        this.isDrawable  = true;
 
         // beginPath
         this._$fills.push(Graphics.BEGIN_PATH);
@@ -708,10 +677,10 @@ export class Graphics
 
         // setup
         for (let idx: number = 0; idx < alphas.length; ++idx) {
-            this._$maxAlpha = $Math.max(this._$maxAlpha, alphas[idx]);
+            this.alpha = Math.max(this.alpha, alphas[idx]);
         }
         this._$doFill  = true;
-        this._$canDraw = true;
+        this.isDrawable = true;
 
         // beginPath
         this._$fills.push(Graphics.BEGIN_PATH);
@@ -739,13 +708,12 @@ export class Graphics
     clear (): Graphics
     {
         // param clear
-        this._$maxAlpha     = 0;
+        this.alpha     = 0;
         this._$pointerX     = 0;
         this._$pointerY     = 0;
-        this._$canDraw      = false;
+        this.isDrawable      = false;
         this._$bitmapId     = 0;
         this._$mode         = "shape";
-        this._$posted       = false;
 
         // fill
         this._$fillType     = 0;
@@ -771,10 +739,10 @@ export class Graphics
         this._$doLine       = false;
 
         // bounds size
-        this._$xMin         = $Number.MAX_VALUE;
-        this._$xMax         = -$Number.MAX_VALUE;
-        this._$yMin         = $Number.MAX_VALUE;
-        this._$yMax         = -$Number.MAX_VALUE;
+        this.xMin         = Number.MAX_VALUE;
+        this.xMax         = -Number.MAX_VALUE;
+        this.yMin         = Number.MAX_VALUE;
+        this.yMax         = -Number.MAX_VALUE;
 
         // init array
         if (this._$recode) {
@@ -862,16 +830,16 @@ export class Graphics
         this._$lineStyleA   = graphics._$lineStyleA;
 
         // bounds
-        this._$xMin         = graphics._$xMin;
-        this._$xMax         = graphics._$xMax;
-        this._$yMin         = graphics._$yMin;
-        this._$yMax         = graphics._$yMax;
+        this.xMin           = graphics.xMin;
+        this.xMax           = graphics.xMax;
+        this.yMin           = graphics.yMin;
+        this.yMax           = graphics.yMax;
 
         // params
-        this._$maxAlpha     = graphics._$maxAlpha;
+        this.alpha          = graphics.alpha;
         this._$pointerX     = graphics._$pointerX;
         this._$pointerY     = graphics._$pointerY;
-        this._$canDraw      = graphics._$canDraw;
+        this.isDrawable     = graphics.isDrawable;
 
         // path params
         if (graphics._$fills) {
@@ -1002,7 +970,7 @@ export class Graphics
         x      = +x || 0;
         y      = +y || 0;
         radius = +radius || 0;
-        radius = $Math.round(radius);
+        radius = Math.round(radius);
 
         this._$setBounds(x - radius, y - radius);
         this._$setBounds(x + radius, y + radius);
@@ -1040,8 +1008,8 @@ export class Graphics
         width  = +width  || 0;
         height = +height || 0;
 
-        width  = $Math.round(width);
-        height = $Math.round(height);
+        width  = Math.round(width);
+        height = Math.round(height);
 
         const hw = width  / 2; // half width
         const hh = height / 2; // half height
@@ -1049,7 +1017,7 @@ export class Graphics
         const y0 = y + hh;
         const x1 = x + width;
         const y1 = y + height;
-        const c  = 4 / 3 * ($Math.SQRT2 - 1);
+        const c  = 4 / 3 * (Math.SQRT2 - 1);
         const cw = c * hw;
         const ch = c * hh;
 
@@ -1082,8 +1050,8 @@ export class Graphics
         width  = +width  || 0;
         height = +height || 0;
 
-        const xMax = $Math.round(x + width);
-        const yMax = $Math.round(y + height);
+        const xMax = Math.round(x + width);
+        const yMax = Math.round(y + height);
 
         return this
             .moveTo(x,    y)
@@ -1122,14 +1090,14 @@ export class Graphics
         ellipse_width  = +ellipse_width  || 0;
         ellipse_height = +ellipse_height || ellipse_width;
 
-        width  = $Math.round(width);
-        height = $Math.round(height);
-        ellipse_width  = $Math.round(ellipse_width);
-        ellipse_height = $Math.round(ellipse_height);
+        width  = Math.round(width);
+        height = Math.round(height);
+        ellipse_width  = Math.round(ellipse_width);
+        ellipse_height = Math.round(ellipse_height);
 
         const hew = ellipse_width  / 2;
         const heh = ellipse_height / 2;
-        const c   = 4 / 3 * ($Math.SQRT2 - 1);
+        const c   = 4 / 3 * (Math.SQRT2 - 1);
         const cw  = c * hew;
         const ch  = c * heh;
 
@@ -1359,9 +1327,9 @@ export class Graphics
         }
 
         // start
-        this._$maxAlpha = 1;
+        this.alpha = 1;
         this._$doLine   = true;
-        this._$canDraw  = true;
+        this.isDrawable  = true;
 
         // beginPath
         this._$lines.push(Graphics.BEGIN_PATH);
@@ -1409,7 +1377,7 @@ export class Graphics
 
         // setup
         for (let idx: number = 0; idx < alphas.length; ++idx) {
-            this._$maxAlpha = $Math.max(this._$maxAlpha, alphas[idx]);
+            this.alpha = Math.max(this.alpha, alphas[idx]);
         }
 
         // beginPath
@@ -1463,9 +1431,9 @@ export class Graphics
         alpha = $clamp(+alpha, 0, 1, 1);
 
         // setup
-        this._$maxAlpha = $Math.max(this._$maxAlpha, alpha);
+        this.alpha = Math.max(this.alpha, alpha);
         this._$doLine   = true;
-        this._$canDraw  = true;
+        this.isDrawable  = true;
 
         // beginPath
         if (this._$pointerX || this._$pointerY) {
@@ -1586,432 +1554,6 @@ export class Graphics
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$clip (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array
-    ): void {
-
-        // size
-        const baseBounds: BoundsImpl = this._$getBounds();
-
-        const bounds: BoundsImpl = $boundsMatrix(baseBounds, matrix);
-        $poolBoundsObject(baseBounds);
-
-        const width: number    = $Math.ceil($Math.abs(bounds.xMax - bounds.xMin));
-        const height: number   = $Math.ceil($Math.abs(bounds.yMax - bounds.yMin));
-        $poolBoundsObject(bounds);
-
-        switch (true) {
-
-            case width === 0:
-            case height === 0:
-            case width === -$Infinity:
-            case height === -$Infinity:
-            case width === $Infinity:
-            case height === $Infinity:
-                return;
-
-            default:
-                break;
-
-        }
-
-        context.reset();
-        context.setTransform(
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4], matrix[5]
-        );
-
-        this._$doDraw(context, null, true);
-
-        context.clip();
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
-     * @param  {string} [blend_mode=BlendMode.NORMAL]
-     * @param  {array}  [filters=null]
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$draw (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array,
-        color_transform: Float32Array,
-        blend_mode: BlendModeImpl = "normal",
-        filters: FilterArrayImpl | null = null
-    ): void {
-
-        if (!this._$maxAlpha) {
-            return ;
-        }
-
-        const alpha: number = $clamp(
-            color_transform[3] + color_transform[7] / 255, 0, 1
-        );
-
-        const displayObject: DisplayObjectImpl<any> = this._$displayObject;
-
-        // set grid data
-        let hasGrid: boolean = displayObject._$scale9Grid !== null;
-
-        // 9スライスを有効にしたオブジェクトが回転・傾斜成分を含む場合は
-        // 9スライスは無効になる
-        const rawMatrix: Float32Array = displayObject._$transform._$rawMatrix();
-        if (hasGrid) {
-            hasGrid = hasGrid
-                && $Math.abs(rawMatrix[1]) < 0.001
-                && $Math.abs(rawMatrix[2]) < 0.0001;
-        }
-
-        // size
-        const baseBounds: BoundsImpl = this._$getBounds();
-        const bounds: BoundsImpl = $boundsMatrix(baseBounds, matrix);
-        const xMax: number = bounds.xMax;
-        const xMin: number = bounds.xMin;
-        const yMax: number = bounds.yMax;
-        const yMin: number = bounds.yMin;
-        $poolBoundsObject(bounds);
-
-        const width: number  = $Math.ceil($Math.abs(xMax - xMin));
-        const height: number = $Math.ceil($Math.abs(yMax - yMin));
-        switch (true) {
-
-            case width === 0:
-            case height === 0:
-            case width === -$Infinity:
-            case height === -$Infinity:
-            case width === $Infinity:
-            case height === $Infinity:
-                return;
-
-            default:
-                break;
-
-        }
-
-        let xScale: number = +$Math.sqrt(
-            matrix[0] * matrix[0]
-            + matrix[1] * matrix[1]
-        );
-        if (!$Number.isInteger(xScale)) {
-            const value: string = xScale.toString();
-            const index: number = value.indexOf("e");
-            if (index !== -1) {
-                xScale = +value.slice(0, index);
-            }
-            xScale = +xScale.toFixed(4);
-        }
-
-        let yScale: number = +$Math.sqrt(
-            matrix[2] * matrix[2]
-            + matrix[3] * matrix[3]
-        );
-        if (!$Number.isInteger(yScale)) {
-            const value: string = yScale.toString();
-            const index: number = value.indexOf("e");
-            if (index !== -1) {
-                yScale = +value.slice(0, index);
-            }
-            yScale = +yScale.toFixed(4);
-        }
-
-        const canApply: boolean = filters !== null
-            && filters.length > 0
-            && displayObject._$canApply(filters);
-
-        let filterBounds: BoundsImpl = $getBoundsObject(0, width, 0, height);
-        if (canApply && filters) {
-            for (let idx: number = 0; idx < filters.length ; ++idx) {
-                filterBounds = filters[idx]
-                    ._$generateFilterRect(filterBounds, xScale, yScale);
-            }
-        }
-
-        // cache current buffer
-        const manager: FrameBufferManager = context.frameBuffer;
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-        if (!currentAttachment
-            || xMin - filterBounds.xMin > currentAttachment.width
-            || yMin - filterBounds.yMin > currentAttachment.height
-        ) {
-            $poolBoundsObject(filterBounds);
-            return;
-        }
-
-        if (0 > xMin + filterBounds.xMax || 0 > yMin + filterBounds.yMax) {
-            $poolBoundsObject(filterBounds);
-            return;
-        }
-
-        $poolBoundsObject(filterBounds);
-
-        // get cache
-        if (this._$uniqueKey === "") {
-            if (!hasGrid
-                && displayObject._$loaderInfo
-                && displayObject._$characterId
-            ) {
-                this._$uniqueKey = `${displayObject._$loaderInfo._$id}@${this._$bitmapId || displayObject._$characterId}`;
-            } else {
-                this._$uniqueKey = this._$createCacheKey();
-            }
-        }
-
-        const player: Player = $currentPlayer();
-
-        if (this._$mode === "bitmap") {
-
-            if (!this._$cacheKeys.length) {
-                this._$cacheKeys = $cacheStore.generateKeys(this._$uniqueKey);
-            }
-
-        } else {
-
-            if (!this._$cacheKeys.length
-                || this._$cacheParams[0] !== xScale
-                || this._$cacheParams[1] !== yScale
-                || this._$cacheParams[2] !== color_transform[7]
-            ) {
-
-                const keys: number[] = $getArray();
-                keys[0] = xScale;
-                keys[1] = yScale;
-
-                this._$cacheKeys = $cacheStore.generateKeys(
-                    this._$uniqueKey, keys, color_transform
-                );
-
-                $poolArray(keys);
-
-                this._$cacheParams[0] = xScale;
-                this._$cacheParams[1] = yScale;
-                this._$cacheParams[2] = color_transform[7];
-            }
-        }
-
-        context.cachePosition = $cacheStore.get(this._$cacheKeys);
-        if (!context.cachePosition) {
-
-            const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-
-            if (currentAttachment && currentAttachment.mask) {
-                context.stopStencil();
-            }
-
-            let width: number  = 0;
-            let height: number = 0;
-            if (this._$mode === "shape") {
-
-                width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-                height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
-
-                // resize
-                const textureScale: number = context._$getTextureScale(width, height);
-                if (textureScale < 1) {
-                    width  *= textureScale;
-                    height *= textureScale;
-                }
-
-            } else {
-                width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin));
-                height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin));
-            }
-
-            // create cache position
-            context.cachePosition = manager.createCachePosition(width, height);
-            context.bindRenderBuffer(context.cachePosition);
-
-            // reset
-            context.reset();
-
-            if (this._$mode === "shape") {
-                context.setTransform(
-                    xScale, 0, 0, yScale,
-                    -baseBounds.xMin * xScale,
-                    -baseBounds.yMin * yScale
-                );
-            } else {
-                context.setTransform(
-                    1, 0, 0, 1,
-                    -baseBounds.xMin,
-                    -baseBounds.yMin
-                );
-            }
-
-            if (hasGrid) {
-
-                const mScale: number = player.scaleX;
-
-                const baseMatrix: Float32Array = $getFloat32Array6(
-                    mScale, 0, 0, mScale, 0, 0
-                );
-
-                const pMatrix: Float32Array = $multiplicationMatrix(
-                    baseMatrix, rawMatrix
-                );
-
-                $poolFloat32Array6(baseMatrix);
-
-                const aMatrixBase: Float32Array = displayObject
-                    ._$parent
-                    ._$transform
-                    .concatenatedMatrix
-                    ._$matrix;
-
-                const aMatrix: Float32Array = $getFloat32Array6(
-                    aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
-                    aMatrixBase[4] * mScale - xMin,
-                    aMatrixBase[5] * mScale - yMin
-                );
-                $poolFloat32Array6(aMatrixBase);
-
-                const apMatrix: Float32Array = $multiplicationMatrix(
-                    aMatrix, pMatrix
-                );
-                const aOffsetX: number = apMatrix[4] - (matrix[4] - xMin);
-                const aOffsetY: number = apMatrix[5] - (matrix[5] - yMin);
-                $poolFloat32Array6(apMatrix);
-
-                const parentBounds: BoundsImpl = $boundsMatrix(baseBounds, pMatrix);
-                const parentXMax: number   = +parentBounds.xMax;
-                const parentXMin: number   = +parentBounds.xMin;
-                const parentYMax: number   = +parentBounds.yMax;
-                const parentYMin: number   = +parentBounds.yMin;
-                const parentWidth: number  = $Math.ceil($Math.abs(parentXMax - parentXMin));
-                const parentHeight: number = $Math.ceil($Math.abs(parentYMax - parentYMin));
-
-                $poolBoundsObject(parentBounds);
-
-                const scale9Grid: Rectangle = displayObject._$scale9Grid as NonNullable<Rectangle>;
-                const grid: GridImpl = {
-                    "x": scale9Grid.x,
-                    "y": scale9Grid.y,
-                    "w": scale9Grid.width,
-                    "h": scale9Grid.height
-                };
-
-                context.grid.enable(
-                    parentXMin, parentYMin, parentWidth, parentHeight,
-                    baseBounds, grid, mScale,
-                    pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
-                    aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
-                );
-
-                $poolFloat32Array6(pMatrix);
-                $poolFloat32Array6(aMatrix);
-            }
-
-            // execute
-            this._$doDraw(context, color_transform, false);
-
-            if (hasGrid) {
-                context.grid.disable();
-            }
-
-            manager.transferTexture(context.cachePosition);
-
-            // set cache
-            $cacheStore.set(this._$cacheKeys, context.cachePosition);
-
-            // end draw and reset current buffer
-            context._$bind(currentAttachment);
-        }
-
-        let offsetX: number = 0;
-        let offsetY: number = 0;
-        if (canApply) {
-
-            const bitmapTexture: WebGLTexture | null = this._$createBitmapTexture(
-                context, context.cachePosition,
-                xScale, yScale, width, height
-            );
-
-            const position: CachePositionImpl = displayObject._$drawFilter(
-                context, matrix, filters,
-                width, height, bitmapTexture
-            );
-
-            if (position.offsetX) {
-                offsetX = position.offsetX;
-            }
-
-            if (position.offsetY) {
-                offsetY = position.offsetY;
-            }
-
-            // update
-            context.cachePosition = position;
-        }
-
-        if (!canApply && this._$mode === "bitmap") {
-
-            context.setTransform(
-                matrix[0], matrix[1],
-                matrix[2], matrix[3],
-                baseBounds.xMin * matrix[0] + baseBounds.yMin * matrix[2] + matrix[4],
-                baseBounds.xMin * matrix[1] + baseBounds.yMin * matrix[3] + matrix[5]
-            );
-
-        } else {
-
-            const radianX: number = $Math.atan2(matrix[1], matrix[0]);
-            const radianY: number = $Math.atan2(-matrix[2], matrix[3]);
-            if (!canApply && (radianX || radianY)) {
-
-                const tx: number = baseBounds.xMin * xScale;
-                const ty: number = baseBounds.yMin * yScale;
-
-                const cosX: number = $Math.cos(radianX);
-                const sinX: number = $Math.sin(radianX);
-                const cosY: number = $Math.cos(radianY);
-                const sinY: number = $Math.sin(radianY);
-
-                context.setTransform(
-                    cosX, sinX, -sinY, cosY,
-                    tx * cosX - ty * sinY + matrix[4],
-                    tx * sinX + ty * cosY + matrix[5]
-                );
-
-            } else {
-
-                context.setTransform(1, 0, 0, 1,
-                    xMin - offsetX, yMin - offsetY
-                );
-
-            }
-        }
-
-        // draw
-        if (context.cachePosition) {
-
-            context.globalAlpha = alpha;
-            context.imageSmoothingEnabled = this._$mode === "shape";
-            context.globalCompositeOperation = blend_mode;
-
-            context.drawInstance(
-                xMin - offsetX, yMin - offsetY, xMax, yMax,
-                color_transform
-            );
-
-            // cache position clear
-            context.cachePosition = null;
-        }
-
-        // pool
-        $poolBoundsObject(baseBounds);
-    }
-
-    /**
      * @return {WebGLTexture | null}
      * @method
      * @private
@@ -2078,26 +1620,6 @@ export class Graphics
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array}         [color_transform=null]
-     * @param  {boolean}              [is_clip=false]
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$doDraw (
-        context: CanvasToWebGLContext,
-        color_transform: Float32Array | null = null,
-        is_clip: boolean = false
-    ): void {
-
-        // draw
-        context.reset();
-        context.beginPath();
-        this._$runCommand(context, color_transform, is_clip);
-    }
-
-    /**
      * @param  {CanvasRenderingContext2D} context
      * @param  {Float32Array} matrix
      * @param  {object}  options
@@ -2137,8 +1659,8 @@ export class Graphics
         }
 
         return $getBoundsObject(
-            this._$xMin, this._$xMax,
-            this._$yMin, this._$yMax
+            this.xMin, this.xMax,
+            this.yMin, this.yMax
         );
     }
 
@@ -2192,10 +1714,10 @@ export class Graphics
      */
     _$setFillBounds (x: number = 0, y: number = 0): void
     {
-        this._$xMin = $Math.min(this._$xMin, x);
-        this._$xMax = $Math.max(this._$xMax, x);
-        this._$yMin = $Math.min(this._$yMin, y);
-        this._$yMax = $Math.max(this._$yMax, y);
+        this.xMin = Math.min(this.xMin, x);
+        this.xMax = Math.max(this.xMax, x);
+        this.yMin = Math.min(this.yMin, y);
+        this.yMax = Math.max(this.yMax, y);
     }
 
     /**
@@ -2207,16 +1729,16 @@ export class Graphics
      */
     _$setLineBounds (x: number = 0, y: number = 0): void
     {
-        this._$xMin = $Math.min(this._$xMin, $Math.min(x, this._$pointerX));
-        this._$xMax = $Math.max(this._$xMax, $Math.max(x, this._$pointerX));
-        this._$yMin = $Math.min(this._$yMin, $Math.min(y, this._$pointerY));
-        this._$yMax = $Math.max(this._$yMax, $Math.max(y, this._$pointerY));
+        this.xMin = Math.min(this.xMin, Math.min(x, this._$pointerX));
+        this.xMax = Math.max(this.xMax, Math.max(x, this._$pointerX));
+        this.yMin = Math.min(this.yMin, Math.min(y, this._$pointerY));
+        this.yMax = Math.max(this.yMax, Math.max(y, this._$pointerY));
 
         // correction
         const half: number     = this._$lineWidth / 2;
-        const radian90: number = 0.5 * $Math.PI;
-        const radian1: number  = $Math.atan2(y - this._$pointerY, x - this._$pointerX); // to end point
-        const radian2: number  = $Math.atan2(this._$pointerY - y, this._$pointerX - x); // to start point
+        const radian90: number = 0.5 * Math.PI;
+        const radian1: number  = Math.atan2(y - this._$pointerY, x - this._$pointerX); // to end point
+        const radian2: number  = Math.atan2(this._$pointerY - y, this._$pointerX - x); // to start point
         const radian3: number  = radian1 + radian90;
         const radian4: number  = radian1 - radian90;
         const radian5: number  = radian2 + radian90;
@@ -2232,113 +1754,113 @@ export class Graphics
         let y3: number = this._$pointerY + half;
         let y4: number = -half + this._$pointerY;
 
-        this._$xMin = $Math.min(this._$xMin, $Math.min(x1, $Math.min(x2, $Math.min(x3, x4))));
-        this._$xMax = $Math.max(this._$xMax, $Math.max(x1, $Math.max(x2, $Math.max(x3, x4))));
-        this._$yMin = $Math.min(this._$yMin, $Math.min(y1, $Math.min(y2, $Math.min(y3, y4))));
-        this._$yMax = $Math.max(this._$yMax, $Math.max(y1, $Math.max(y2, $Math.max(y3, y4))));
+        this.xMin = Math.min(this.xMin, Math.min(x1, Math.min(x2, Math.min(x3, x4))));
+        this.xMax = Math.max(this.xMax, Math.max(x1, Math.max(x2, Math.max(x3, x4))));
+        this.yMin = Math.min(this.yMin, Math.min(y1, Math.min(y2, Math.min(y3, y4))));
+        this.yMax = Math.max(this.yMax, Math.max(y1, Math.max(y2, Math.max(y3, y4))));
 
         // pointer x
-        if ($Math.abs(radian3) % radian90 !== 0) {
-            x1 = x + $Math.cos(radian3) * half;
+        if (Math.abs(radian3) % radian90 !== 0) {
+            x1 = x + Math.cos(radian3) * half;
         }
 
-        if ($Math.abs(radian4) % radian90 !== 0) {
-            x2 = x + $Math.cos(radian4) * half;
+        if (Math.abs(radian4) % radian90 !== 0) {
+            x2 = x + Math.cos(radian4) * half;
         }
 
-        if ($Math.abs(radian5) % radian90 !== 0) {
-            x3 = this._$pointerX + $Math.cos(radian5) * half;
+        if (Math.abs(radian5) % radian90 !== 0) {
+            x3 = this._$pointerX + Math.cos(radian5) * half;
         }
 
-        if ($Math.abs(radian6) % radian90 !== 0) {
-            x4 = this._$pointerX + $Math.cos(radian6) * half;
+        if (Math.abs(radian6) % radian90 !== 0) {
+            x4 = this._$pointerX + Math.cos(radian6) * half;
         }
 
         // pointer y
-        if (radian3 && $Math.abs(radian3) % $Math.PI !== 0) {
-            y1 = y + $Math.sin(radian3) * half;
+        if (radian3 && Math.abs(radian3) % Math.PI !== 0) {
+            y1 = y + Math.sin(radian3) * half;
         }
 
-        if (radian4 && $Math.abs(radian4) % $Math.PI !== 0) {
-            y2 = y + $Math.sin(radian4) * half;
+        if (radian4 && Math.abs(radian4) % Math.PI !== 0) {
+            y2 = y + Math.sin(radian4) * half;
         }
 
-        if (radian5 && $Math.abs(radian5) % $Math.PI !== 0) {
-            y3 = this._$pointerY + $Math.sin(radian5) * half;
+        if (radian5 && Math.abs(radian5) % Math.PI !== 0) {
+            y3 = this._$pointerY + Math.sin(radian5) * half;
         }
 
-        if (radian6 && $Math.abs(radian6) % $Math.PI !== 0) {
-            y4 = this._$pointerY + $Math.sin(radian6) * half;
+        if (radian6 && Math.abs(radian6) % Math.PI !== 0) {
+            y4 = this._$pointerY + Math.sin(radian6) * half;
         }
 
-        this._$xMin = $Math.min(this._$xMin, $Math.min(x1, $Math.min(x2, $Math.min(x3, x4))));
-        this._$xMax = $Math.max(this._$xMax, $Math.max(x1, $Math.max(x2, $Math.max(x3, x4))));
-        this._$yMin = $Math.min(this._$yMin, $Math.min(y1, $Math.min(y2, $Math.min(y3, y4))));
-        this._$yMax = $Math.max(this._$yMax, $Math.max(y1, $Math.max(y2, $Math.max(y3, y4))));
+        this.xMin = Math.min(this.xMin, Math.min(x1, Math.min(x2, Math.min(x3, x4))));
+        this.xMax = Math.max(this.xMax, Math.max(x1, Math.max(x2, Math.max(x3, x4))));
+        this.yMin = Math.min(this.yMin, Math.min(y1, Math.min(y2, Math.min(y3, y4))));
+        this.yMax = Math.max(this.yMax, Math.max(y1, Math.max(y2, Math.max(y3, y4))));
 
         // case
         switch (this._$caps) {
 
             case "round":
 
-                if ($Math.abs(radian1) % radian90 !== 0) {
-                    const rx1: number = x + $Math.cos(radian1) * half;
-                    this._$xMin = $Math.min(this._$xMin, rx1);
-                    this._$xMax = $Math.max(this._$xMax, rx1);
+                if (Math.abs(radian1) % radian90 !== 0) {
+                    const rx1: number = x + Math.cos(radian1) * half;
+                    this.xMin = Math.min(this.xMin, rx1);
+                    this.xMax = Math.max(this.xMax, rx1);
                 }
 
-                if (radian1 && $Math.abs(radian1) % $Math.PI !== 0) {
-                    const ry1: number = y + $Math.sin(radian1) * half;
-                    this._$yMin = $Math.min(this._$yMin, ry1);
-                    this._$yMax = $Math.max(this._$yMax, ry1);
+                if (radian1 && Math.abs(radian1) % Math.PI !== 0) {
+                    const ry1: number = y + Math.sin(radian1) * half;
+                    this.yMin = Math.min(this.yMin, ry1);
+                    this.yMax = Math.max(this.yMax, ry1);
                 }
 
-                if ($Math.abs(radian2) % radian90 !== 0) {
-                    const rx2: number = this._$pointerX + $Math.cos(radian2) * half;
-                    this._$xMin = $Math.min(this._$xMin, rx2);
-                    this._$xMax = $Math.max(this._$xMax, rx2);
+                if (Math.abs(radian2) % radian90 !== 0) {
+                    const rx2: number = this._$pointerX + Math.cos(radian2) * half;
+                    this.xMin = Math.min(this.xMin, rx2);
+                    this.xMax = Math.max(this.xMax, rx2);
                 }
 
-                if (radian2 && $Math.abs(radian2) % $Math.PI !== 0) {
-                    const ry2: number = this._$pointerY + $Math.sin(radian2) * half;
-                    this._$yMin = $Math.min(this._$yMin, ry2);
-                    this._$yMax = $Math.max(this._$yMax, ry2);
+                if (radian2 && Math.abs(radian2) % Math.PI !== 0) {
+                    const ry2: number = this._$pointerY + Math.sin(radian2) * half;
+                    this.yMin = Math.min(this.yMin, ry2);
+                    this.yMax = Math.max(this.yMax, ry2);
                 }
 
                 break;
 
             case "square":
 
-                if ($Math.abs(radian1) % radian90 !== 0) {
-                    const r1cos: number = $Math.cos(radian1) * half;
+                if (Math.abs(radian1) % radian90 !== 0) {
+                    const r1cos: number = Math.cos(radian1) * half;
                     const rx1: number = x1 + r1cos;
                     const rx2: number = x2 + r1cos;
-                    this._$xMin = $Math.min(this._$xMin, $Math.min(rx1, rx2));
-                    this._$xMax = $Math.max(this._$xMax, $Math.max(rx1, rx2));
+                    this.xMin = Math.min(this.xMin, Math.min(rx1, rx2));
+                    this.xMax = Math.max(this.xMax, Math.max(rx1, rx2));
                 }
 
-                if ($Math.abs(radian2) % radian90 !== 0) {
-                    const r2cos: number = $Math.cos(radian2) * half;
+                if (Math.abs(radian2) % radian90 !== 0) {
+                    const r2cos: number = Math.cos(radian2) * half;
                     const rx3: number = x3 + r2cos;
                     const rx4: number = x4 + r2cos;
-                    this._$xMin = $Math.min(this._$xMin, $Math.min(rx3, rx4));
-                    this._$xMax = $Math.max(this._$xMax, $Math.max(rx3, rx4));
+                    this.xMin = Math.min(this.xMin, Math.min(rx3, rx4));
+                    this.xMax = Math.max(this.xMax, Math.max(rx3, rx4));
                 }
 
-                if (radian1 && $Math.abs(radian1) % $Math.PI !== 0) {
-                    const r1sin: number = $Math.sin(radian1) * half;
+                if (radian1 && Math.abs(radian1) % Math.PI !== 0) {
+                    const r1sin: number = Math.sin(radian1) * half;
                     const ry1: number = y1 + r1sin;
                     const ry2: number = y2 + r1sin;
-                    this._$yMin = $Math.min(this._$yMin, $Math.min(ry1, ry2));
-                    this._$yMax = $Math.max(this._$yMax, $Math.max(ry1, ry2));
+                    this.yMin = Math.min(this.yMin, Math.min(ry1, ry2));
+                    this.yMax = Math.max(this.yMax, Math.max(ry1, ry2));
                 }
 
-                if (radian2 && $Math.abs(radian2) % $Math.PI !== 0) {
-                    const r2sin: number = $Math.sin(radian2) * half;
+                if (radian2 && Math.abs(radian2) % Math.PI !== 0) {
+                    const r2sin: number = Math.sin(radian2) * half;
                     const ry3: number = y3 + r2sin;
                     const ry4: number = y4 + r2sin;
-                    this._$yMin = $Math.min(this._$yMin, $Math.min(ry3, ry4));
-                    this._$yMax = $Math.max(this._$yMax, $Math.max(ry3, ry4));
+                    this.yMin = Math.min(this.yMin, Math.min(ry3, ry4));
+                    this.yMax = Math.max(this.yMax, Math.max(ry3, ry4));
                 }
 
                 break;
@@ -2690,8 +2212,8 @@ export class Graphics
                             array.push(
                                 bitmapData.width,
                                 bitmapData.height,
-                                this._$xMax - this._$xMin,
-                                this._$yMax - this._$yMin,
+                                this.xMax - this.xMin,
+                                this.yMax - this.yMin,
                                 buffer.length
                             );
 
@@ -2794,8 +2316,8 @@ export class Graphics
                             array.push(
                                 bitmapData.width,
                                 bitmapData.height,
-                                this._$xMax - this._$xMin,
-                                this._$yMax - this._$yMin,
+                                this.xMax - this.xMin,
+                                this.yMax - this.yMin,
                                 buffer.length
                             );
 
@@ -2902,7 +2424,7 @@ export class Graphics
 
                         if (color_transform !== null) {
                             if (color_transform[7] !== 0) {
-                                color[3] = $Math.max(0, $Math.min(
+                                color[3] = Math.max(0, Math.min(
                                     color[3] * color_transform[7], 255)
                                 ) / 255;
                             }
@@ -2947,7 +2469,7 @@ export class Graphics
 
                         if (color_transform !== null) {
                             if (color_transform[7] !== 0) {
-                                color[3] = $Math.max(0, $Math.min(
+                                color[3] = Math.max(0, Math.min(
                                     color[3] + color_transform[7], 255)
                                 ) / 255;
                             }
@@ -2986,7 +2508,7 @@ export class Graphics
                 case Graphics.ARC:
                     context.arc(
                         recode[idx++], recode[idx++], recode[idx++],
-                        0, 2 * $Math.PI
+                        0, 2 * Math.PI
                     );
                     break;
 
@@ -3043,7 +2565,7 @@ export class Graphics
                             let alpha: number = color.A;
                             if (color_transform) {
                                 if (color_transform[7] !== 0) {
-                                    alpha = $Math.max(0, $Math.min(color.A + color_transform[7], 255)) | 0;
+                                    alpha = Math.max(0, Math.min(color.A + color_transform[7], 255)) | 0;
                                 }
                             }
 
@@ -3120,7 +2642,7 @@ export class Graphics
                             let alpha: number = color.A;
                             if (color_transform) {
                                 if (color_transform[7] !== 0) {
-                                    alpha = $Math.max(0, $Math.min(color.A + color_transform[7], 255)) | 0;
+                                    alpha = Math.max(0, Math.min(color.A + color_transform[7], 255)) | 0;
                                 }
                             }
 
@@ -3176,8 +2698,8 @@ export class Graphics
 
                         context.imageSmoothingEnabled = smooth;
                         if (this._$bitmapId
-                            || bitmapData.width === this._$xMax - this._$xMin
-                            && bitmapData.height === this._$yMax - this._$yMin
+                            || bitmapData.width === this.xMax - this.xMin
+                            && bitmapData.height === this.yMax - this.yMin
                         ) {
 
                             context.drawBitmap(texture);

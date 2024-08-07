@@ -6,16 +6,37 @@ describe("Matrix.js translate", () =>
     it("default test case1", () =>
     {
         const matrix = new Matrix();
-        expect(matrix.toString()).toBe("(a=1, b=0, c=0, d=1, tx=0, ty=0)");
+
+        expect(matrix.a).toBe(1);
+        expect(matrix.b).toBe(0);
+        expect(matrix.c).toBe(0);
+        expect(matrix.d).toBe(1);
+        expect(matrix.tx).toBe(0);
+        expect(matrix.ty).toBe(0);
 
         matrix.translate(-100, -100);
-        expect(matrix.toString()).toBe("(a=1, b=0, c=0, d=1, tx=-100, ty=-100)");
+        expect(matrix.a).toBe(1);
+        expect(matrix.b).toBe(0);
+        expect(matrix.c).toBe(0);
+        expect(matrix.d).toBe(1);
+        expect(matrix.tx).toBe(-100);
+        expect(matrix.ty).toBe(-100);
 
         matrix.scale(0.0, 1.0);
-        expect(matrix.toString()).toBe("(a=0, b=0, c=0, d=1, tx=0, ty=-100)");
+        expect(matrix.a).toBe(0);
+        expect(matrix.b).toBe(0);
+        expect(matrix.c).toBe(0);
+        expect(matrix.d).toBe(1);
+        expect(matrix.tx).toBe(-0);
+        expect(matrix.ty).toBe(-100);
 
         matrix.translate(100, 100);
-        expect(matrix.toString()).toBe("(a=0, b=0, c=0, d=1, tx=100, ty=0)");
+        expect(matrix.a).toBe(0);
+        expect(matrix.b).toBe(0);
+        expect(matrix.c).toBe(0);
+        expect(matrix.d).toBe(1);
+        expect(matrix.tx).toBe(100);
+        expect(matrix.ty).toBe(0);
     });
 
     it("pattern test case2", () =>
@@ -31,7 +52,11 @@ describe("Matrix.js translate", () =>
         // 移動成分を乗算
         matrix.translate( 128.0 , 128.0 );
 
-        expect(matrix.toString())
-            .toBe("(a=0.15622620284557343, b=0.0027269385755062103, c=-0.0027269385755062103, d=0.15622620284557343, tx=128, ty=128)");
+        expect(matrix.a).toBeCloseTo(0.15622620284557343);
+        expect(matrix.b).toBeCloseTo(0.0027269385755062103);
+        expect(matrix.c).toBeCloseTo(-0.0027269385755062103);
+        expect(matrix.d).toBeCloseTo(0.15622620284557343);
+        expect(matrix.tx).toBe(128);
+        expect(matrix.ty).toBe(128);
     });
 });

@@ -1,8 +1,5 @@
-import type { IDictionaryTag } from "./interface/IDictionaryTag";
 import type { IMovieClipCharacter } from "./interface/IMovieClipCharacter";
-import type { Loader } from "./Loader";
 import type { DisplayObject } from "./DisplayObject";
-import type { LoaderInfo } from "./LoaderInfo";
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
@@ -10,7 +7,6 @@ import { execute as movieClipAddActionsService } from "./MovieClip/service/Movie
 import { execute as movieClipAddLabelsService } from "./MovieClip/service/MovieClipAddLabelsService";
 import { execute as movieClipBuildSoundsService } from "./MovieClip/service/MovieClipBuildSoundsService";
 import { execute as movieClipGetChildrenService } from "./MovieClip/service/MovieClipGetChildrenService";
-import { $loaderInfoMap } from "./DisplayObjectUtil";
 
 /**
  * @description MovieClip クラスは、Sprite、DisplayObjectContainer、InteractiveObject、DisplayObject
@@ -181,8 +177,7 @@ export class MovieClip extends Sprite
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @return  {string}
-     * @default "next2d.display.MovieClip"
+     * @return {string}
      * @const
      * @static
      */
@@ -195,8 +190,7 @@ export class MovieClip extends Sprite
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @return  {string}
-     * @default "next2d.display.MovieClip"
+     * @return {string}
      * @const
      * @public
      */

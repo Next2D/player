@@ -11,7 +11,14 @@ describe("Rectangle.js setEmpty test", () =>
         rectangle1.setEmpty();
         rectangle2.setEmpty();
 
-        expect(rectangle1.toString()).toBe("(x=0, y=0, w=0, h=0)");
-        expect(rectangle2.toString()).toBe("(x=0, y=0, w=0, h=0)");
+        expect(rectangle1.x).toBe(0);
+        expect(rectangle1.y).toBe(0);
+        expect(rectangle1.width).toBe(0);
+        expect(rectangle1.height).toBe(0);
+
+        expect(rectangle2.x).toBe(0);
+        expect(rectangle2.y).toBe(0);
+        expect(rectangle2.width).toBe(0);
+        expect(rectangle2.height).toBe(0);
     });
 });

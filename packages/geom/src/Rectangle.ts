@@ -37,10 +37,41 @@ import { execute as rectangleUnionService } from "../src/Rectangle/service/Recta
  */
 export class Rectangle
 {
-    private _$x: number;
-    private _$y: number;
-    private _$width: number;
-    private _$height: number;
+    /**
+     * @description 矩形の左上隅の x 座標です。
+     *              The x coordinate of the top-left corner of the rectangle.
+     *
+     * @member {number}
+     * @public
+     */
+    public x: number;
+
+    /**
+     * @description 矩形の左上隅の y 座標です。
+     *              The y coordinate of the top-left corner of the rectangle.
+     *
+     * @member {number}
+     * @public
+     */
+    public y: number;
+
+    /**
+     * @description 矩形の幅（ピクセル単位）です。
+     *              The width of the rectangle, in pixels.
+     *
+     * @member {number}
+     * @public
+     */
+    public width: number;
+
+    /**
+     * @description 矩形の高さ（ピクセル単位）です。
+     *              The height of the rectangle, in pixels.
+     *
+     * @member {number}
+     * @public
+     */
+    public height: number;
 
     /**
      * @param   {number} [x=0]
@@ -55,55 +86,17 @@ export class Rectangle
         x: number = 0, y: number = 0,
         width: number = 0, height: number = 0
     ) {
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$x = x;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$y = y;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$width = width;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$height = height;
-    }
-
-    /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class Rectangle]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Rectangle]";
+        this.x = x;
+        this.y = y;
+        this.width  = width;
+        this.height = height;
     }
 
     /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @member  {string}
-     * @default "next2d.geom.Rectangle"
+     * @member {string}
      * @const
      * @static
      */
@@ -113,24 +106,10 @@ export class Rectangle
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return `(x=${this._$x}, y=${this._$y}, w=${this._$width}, h=${this._$height})`;
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @member  {string}
-     * @default "next2d.geom.Rectangle"
+     * @member {string}
      * @const
      * @public
      */
@@ -148,11 +127,11 @@ export class Rectangle
      */
     get bottom (): number
     {
-        return this._$y + this._$height;
+        return this.y + this.height;
     }
     set bottom (bottom: number)
     {
-        this._$height = bottom - this._$y;
+        this.height = bottom - this.y;
     }
 
     /**
@@ -175,22 +154,6 @@ export class Rectangle
     }
 
     /**
-     * @description 矩形の高さ（ピクセル単位）です。
-     *              The height of the rectangle, in pixels.
-     *
-     * @member {number}
-     * @public
-     */
-    get height (): number
-    {
-        return this._$height;
-    }
-    set height (height: number)
-    {
-        this._$height = height;
-    }
-
-    /**
      * @description 矩形の左上隅の x 座標です。
      *              The x coordinate of the top-left corner of the rectangle.
      *
@@ -199,12 +162,12 @@ export class Rectangle
      */
     get left (): number
     {
-        return this._$x;
+        return this.x;
     }
     set left (left: number)
     {
-        this._$width = this.right - left;
-        this._$x     = left;
+        this.width = this.right - left;
+        this.x     = left;
     }
 
     /**
@@ -216,11 +179,11 @@ export class Rectangle
      */
     get right (): number
     {
-        return this._$x + this.width;
+        return this.x + this.width;
     }
     set right (right: number)
     {
-        this._$width = right - this._$x;
+        this.width = right - this.x;
     }
 
     /**
@@ -234,12 +197,12 @@ export class Rectangle
      */
     get size (): Point
     {
-        return new Point(this._$width, this._$height);
+        return new Point(this.width, this.height);
     }
     set size (point: Point)
     {
-        this._$width  = point.x;
-        this._$height = point.y;
+        this.width  = point.x;
+        this.height = point.y;
     }
 
     /**
@@ -251,12 +214,12 @@ export class Rectangle
      */
     get top (): number
     {
-        return this._$y;
+        return this.y;
     }
     set top (top: number)
     {
-        this._$height = this.bottom - top;
-        this._$y      = top;
+        this.height = this.bottom - top;
+        this.y      = top;
     }
 
     /**
@@ -270,60 +233,12 @@ export class Rectangle
      */
     get topLeft (): Point
     {
-        return new Point(this._$x, this._$y);
+        return new Point(this.x, this.y);
     }
     set topLeft (point: Point)
     {
         this.left = point.x;
         this.top  = point.y;
-    }
-
-    /**
-     * @description 矩形の幅（ピクセル単位）です。
-     *              The width of the rectangle, in pixels.
-     *
-     * @member {number}
-     * @public
-     */
-    get width (): number
-    {
-        return this._$width;
-    }
-    set width (width: number)
-    {
-        this._$width = width;
-    }
-
-    /**
-     * @description 矩形の左上隅の x 座標です。
-     *              The x coordinate of the top-left corner of the rectangle.
-     *
-     * @member {number}
-     * @public
-     */
-    get x (): number
-    {
-        return this._$x;
-    }
-    set x (x: number)
-    {
-        this._$x = x;
-    }
-
-    /**
-     * @description 矩形の左上隅の y 座標です。
-     *              The y coordinate of the top-left corner of the rectangle.
-     *
-     * @member {number}
-     * @public
-     */
-    get y (): number
-    {
-        return this._$y;
-    }
-    set y (y: number)
-    {
-        this._$y = y;
     }
 
     /**
