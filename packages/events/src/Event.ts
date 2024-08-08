@@ -22,12 +22,68 @@ import { EventPhase } from "./EventPhase";
  */
 export class Event
 {
-    private readonly _$type: string;
-    private readonly _$bubbles: boolean;
+    /**
+     * @description イベントのタイプです。
+     *              The type of event.
+     *
+     * @member {string}
+     * @readonly
+     * @public
+     */
+    public readonly type: string;
+
+    /**
+     * @description イベントがバブリングイベントかどうかを示します。
+     *              Indicates whether an event is a bubbling event.
+     *
+     * @member {boolean}
+     * @default false
+     * @readonly
+     * @public
+     */
+    public readonly bubbles: boolean;
+
+    /**
+     * @description 実行される関数
+     *              The function to execute.
+     * 
+     * @type {Function | null}
+     * @default null
+     * @public
+     */
     public listener: Function | null;
+
+    /**
+     * @description イベント登録を行なったオブジェクト
+     *              The object that registered the event.
+     * 
+     * @type {EventDispatcher | null}
+     * @default null
+     * @public
+     */
     public target: IEventDispatcher<EventDispatcher> | null;
+
+    /**
+     * @description イベントを発火したオブジェクト
+     *              The object that fired the event.
+     * 
+     * @type {EventDispatcher | null}
+     * @default null
+     * @public
+     */
     public currentTarget: IEventDispatcher<EventDispatcher> | null;
+
+    /**
+     * @description イベントフェーズ
+     *              Event phase.
+     * 
+     * @see {EventPhase}
+     * @type {number}
+     * @default EventPhase.AT_TARGET
+     * @public
+     */
     public eventPhase: number;
+
     public _$stopImmediatePropagation: boolean;
     public _$stopPropagation: boolean;
 
@@ -44,14 +100,14 @@ export class Event
          * @type {string}
          * @private
          */
-        this._$type = `${type}`;
+        this.type = `${type}`;
 
         /**
          * @type {boolean}
          * @default false
          * @private
          */
-        this._$bubbles = bubbles;
+        this.bubbles = bubbles;
 
         /**
          * @type {EventDispatcher | null}
@@ -254,37 +310,8 @@ export class Event
     }
 
     /**
-     * @description イベントがバブリングイベントかどうかを示します。
-     *              Indicates whether an event is a bubbling event.
-     *
-     * @member {boolean}
-     * @default false
-     * @readonly
-     * @public
-     */
-    get bubbles (): boolean
-    {
-        return this._$bubbles;
-    }
-
-    /**
-     * @description イベントのタイプです。
-     *              The type of event.
-     *
-     * @member {string}
-     * @readonly
-     * @public
-     */
-    get type (): string
-    {
-        return this._$type;
-    }
-
-    /**
-     * @description イベントフローの現在のノードおよび後続するノードで、
-     *              イベントリスナーが処理されないようにします。
-     *              Prevents processing of any event listeners in the current node
-     *              and any subsequent nodes in the event flow.
+     * @description イベントフローの現在のノードおよび後続するノードで、イベントリスナーが処理されないようにします。
+     *              Prevents processing of any event listeners in the current node and any subsequent nodes in the event flow.
      *
      * @return {void}
      * @method
@@ -296,10 +323,8 @@ export class Event
     }
 
     /**
-     * @description イベントフローの現在のノードに後続するノードで
-     *              イベントリスナーが処理されないようにします。
-     *              Prevents processing of any event listeners in nodes subsequent
-     *              to the current node in the event flow.
+     * @description イベントフローの現在のノードに後続するノードで、イベントリスナーが処理されないようにします。
+     *              Prevents processing of any event listeners in nodes subsequent to the current node in the event flow.
      *
      * @return {void}
      * @method

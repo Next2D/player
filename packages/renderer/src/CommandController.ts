@@ -2,6 +2,7 @@ import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl"
 import { execute as commandInitializeContextService } from "./Command/service/CommandInitializeContextService";
 import { execute as commandResizeService } from "./Command/service/CommandResizeService";
 import { execute as commandDrawUseCase } from "./Command/usecase/CommandDrawUseCase";
+import { $cacheStore } from "@next2d/cache";
 
 /**
  * @class
@@ -76,6 +77,9 @@ export class CommandController
                     break;
 
                 case "removeCache":
+                    $cacheStore.removeCache(
+                        new TextDecoder().decode(object.buffer[0])
+                    );
                     // todo
                     break;
 

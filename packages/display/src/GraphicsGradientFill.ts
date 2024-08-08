@@ -165,9 +165,9 @@ export class GraphicsGradientFill
 
                 this._$colorStops[idx] = {
                     "ratio": this._$ratios[idx] / 255,
-                    "R": (color & 0xff0000) >> 16,
-                    "G": (color & 0x00ff00) >> 8,
-                    "B": color & 0x0000ff,
+                    "R": (color >>> 16) & 0xff,
+                    "G": (color >>> 8) & 0xff,
+                    "B": color & 0xff,
                     "A": this._$alphas[idx] * 255
                 };
 

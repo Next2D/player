@@ -10,7 +10,16 @@ import { Event } from "./Event";
  */
 export class IOErrorEvent extends Event
 {
-    private readonly _$text: string;
+    /**
+     * @description エラーテキストです。
+     *              error text.
+     *
+     * @return {string}
+     * @default ""
+     * @readonly
+     * @public
+     */
+    public readonly text: string;
 
     /**
      * @param {string}  type
@@ -28,12 +37,7 @@ export class IOErrorEvent extends Event
 
         super(type, bubbles);
 
-        /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$text = `${text}`;
+        this.text = `${text}`;
     }
 
     /**
@@ -73,19 +77,5 @@ export class IOErrorEvent extends Event
     static get IO_ERROR (): string
     {
         return "ioError";
-    }
-
-    /**
-     * @description エラーテキストです。
-     *              error text.
-     *
-     * @return {string}
-     * @default ""
-     * @readonly
-     * @public
-     */
-    get text (): string
-    {
-        return this._$text;
     }
 }

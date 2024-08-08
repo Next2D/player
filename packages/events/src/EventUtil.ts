@@ -1,10 +1,10 @@
-import type { EventListenerImpl } from "./interface/IEventListener";
+import type { IEventListener } from "./interface/IEventListener";
 
 /**
  * @type {Map}
  * @private
  */
-export const $broadcastEvents: Map<string, EventListenerImpl[]> = new Map();
+export const $broadcastEvents: Map<string, IEventListener[]> = new Map();
 
 /**
  * @type {array}

@@ -2088,7 +2088,10 @@ export class DisplayObject extends EventDispatcher
      * @method
      * @abstract
      */
-    _$buildCharacter(character: ICharacter): void {}
+    _$buildCharacter(character: ICharacter): void
+    {
+        console.warn("this is not implemented.", character);
+    }
 
     /**
      * @description 指定されたタグ情報を元に、表示オブジェクトを構築します。

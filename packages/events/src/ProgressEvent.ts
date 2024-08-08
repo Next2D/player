@@ -12,8 +12,28 @@ import { Event } from "./Event";
  */
 export class ProgressEvent extends Event
 {
-    private readonly _$bytesLoaded: number;
-    private readonly _$bytesTotal: number;
+    /**
+     * @description リスナーがイベントを処理しているときに読み込まれたアイテム数またはバイト数です。
+     *              The number of items or bytes loaded when the listener processes the event.
+     *
+     * @return {number}
+     * @default 0
+     * @readonly
+     * @public
+     */
+    public readonly bytesLoaded: number;
+
+    /**
+     * @description 読み込みプロセスが成功した場合に読み込まれるアイテムまたはバイトの総数です。
+     *              The total number of items or bytes that will be loaded
+     *              if the loading process succeeds.
+     *
+     * @return {number}
+     * @default 0
+     * @readonly
+     * @public
+     */
+    public readonly bytesTotal: number;
 
     /**
      * @param {string}  type
@@ -25,25 +45,16 @@ export class ProgressEvent extends Event
      * @public
      */
     constructor (
-        type: string, bubbles: boolean = false,
-        bytes_loaded: number = 0, bytes_total: number = 0
+        type: string,
+        bubbles: boolean = false,
+        bytes_loaded: number = 0,
+        bytes_total: number = 0
     ) {
 
         super(type, bubbles);
 
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bytesLoaded = bytes_loaded | 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bytesTotal  = bytes_total | 0;
+        this.bytesLoaded = bytes_loaded | 0;
+        this.bytesTotal  = bytes_total | 0;
     }
 
     /**
@@ -83,34 +94,5 @@ export class ProgressEvent extends Event
     static get PROGRESS (): string
     {
         return "progress";
-    }
-
-    /**
-     * @description リスナーがイベントを処理しているときに読み込まれたアイテム数またはバイト数です。
-     *              The number of items or bytes loaded when the listener processes the event.
-     *
-     * @return {number}
-     * @default 0
-     * @readonly
-     * @public
-     */
-    get bytesLoaded (): number
-    {
-        return this._$bytesLoaded;
-    }
-
-    /**
-     * @description 読み込みプロセスが成功した場合に読み込まれるアイテムまたはバイトの総数です。
-     *              The total number of items or bytes that will be loaded
-     *              if the loading process succeeds.
-     *
-     * @return {number}
-     * @default 0
-     * @readonly
-     * @public
-     */
-    get bytesTotal (): number
-    {
-        return this._$bytesTotal;
     }
 }

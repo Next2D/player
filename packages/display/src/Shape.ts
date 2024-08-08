@@ -140,7 +140,7 @@ export class Shape extends DisplayObject
     {
         const graphics: Graphics = this.graphics;
 
-        console.log(character, graphics);
+        console.log(this, graphics, character);
         if (character.recodes) {
 
             // switch (true) {

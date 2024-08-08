@@ -10,7 +10,6 @@ import { Event } from "./Event";
  */
 export class VideoEvent extends Event
 {
-
     /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.

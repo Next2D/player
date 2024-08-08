@@ -1,26 +1,36 @@
-import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import type { Player } from "@next2d/core";
 import type { CanvasToWebGLContext } from "@next2d/webgl";
 import type {
     Matrix,
     ColorTransform
 } from "@next2d/geom";
+import { DisplayObjectContainer } from "./DisplayObjectContainer";
+import { $getInstanceId } from "./DisplayObjectUtil";
 
 /**
- * BitmapData クラスを使用すると、Bitmap オブジェクトのデータ (ピクセル) を処理できます。
- * BitmapData クラスのメソッドを使用して、任意のサイズの透明または不透明のビットマップイメージを作成し
- * 実行時に様々な方法で操作できます。
+ * @description BitmapData クラスを使用すると、Bitmap オブジェクトのデータ (ピクセル) を処理できます。
+ *              BitmapData クラスのメソッドを使用して、任意のサイズの透明または不透明のビットマップイメージを作成し
+ *              実行時に様々な方法で操作できます。
  *
- * The BitmapData class lets you work with the data (pixels) of a Bitmap object.
- * You can use the methods of the BitmapData class to create arbitrarily sized transparent or
- * opaque bitmap images and manipulate them in various ways at runtime.
+ *              The BitmapData class lets you work with the data (pixels) of a Bitmap object.
+ *              You can use the methods of the BitmapData class to create arbitrarily sized transparent or
+ *              opaque bitmap images and manipulate them in various ways at runtime.
  *
  * @class
  * @memberOf next2d.display
  */
 export class BitmapData
 {
-    private readonly _$instanceId: number;
+    /**
+     * @description DisplayObject のユニークなインスタンスID
+     *              Unique instance ID of DisplayObject
+     * 
+     * @type {number}
+     * @readonly
+     * @public
+     */
+    public readonly instanceId: number;
+    
     private _$width: number;
     private _$height: number;
     _$buffer: Uint8Array | null;
@@ -41,7 +51,7 @@ export class BitmapData
          * @type {number}
          * @private
          */
-        this._$instanceId = $getInstanceId();
+        this.instanceId = $getInstanceId();
 
         /**
          * @type {number}

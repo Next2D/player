@@ -11,9 +11,36 @@ import { Event } from "./Event";
  */
 export class HTTPStatusEvent extends Event
 {
-    private readonly _$status: number;
-    private readonly _$responseHeaders: IURLRequestHeader[];
-    private readonly _$responseURL: string;
+    /**
+     * @description サーバーから返された HTTP ステータスコードです。
+     *              The HTTP status code returned by the server.
+     *
+     * @return {number}
+     * @readonly
+     * @public
+     */
+    public readonly status: number;
+
+    /**
+     * @description 返された応答ヘッダー（URLRequestHeader オブジェクトの配列）です。
+     *              The response headers that the response returned,
+     *              as an array of URLRequestHeader objects.
+     *
+     * @return {array}
+     * @readonly
+     * @public
+     */
+    public readonly responseHeaders: IURLRequestHeader[];
+
+    /**
+     * @description 応答の返送元の URL です。
+     *              The URL that the response was returned from.
+     *
+     * @return {string}
+     * @readonly
+     * @public
+     */
+    public readonly responseURL: string;
 
     /**
      * @param {string}  type
@@ -26,8 +53,10 @@ export class HTTPStatusEvent extends Event
      * @public
      */
     constructor (
-        type: string, bubbles: boolean = false,
-        status: number = 0, response_url: string = "",
+        type: string,
+        bubbles: boolean = false,
+        status: number = 0,
+        response_url: string = "",
         response_headers: IURLRequestHeader[] = []
     ) {
 
@@ -38,21 +67,21 @@ export class HTTPStatusEvent extends Event
          * @default 0
          * @private
          */
-        this._$status = status | 0;
+        this.status = status | 0;
 
         /**
          * @type {array}
          * @default {array}
          * @private
          */
-        this._$responseHeaders = response_headers;
+        this.responseHeaders = response_headers;
 
         /**
          * @type {string}
          * @default ""
          * @private
          */
-        this._$responseURL = response_url;
+        this.responseURL = response_url;
     }
 
     /**
@@ -95,45 +124,5 @@ export class HTTPStatusEvent extends Event
     static get HTTP_STATUS (): string
     {
         return "httpStatus";
-    }
-
-    /**
-     * @description 返された応答ヘッダー（URLRequestHeader オブジェクトの配列）です。
-     *              The response headers that the response returned,
-     *              as an array of URLRequestHeader objects.
-     *
-     * @return {array}
-     * @readonly
-     * @public
-     */
-    get responseHeaders (): IURLRequestHeader[]
-    {
-        return this._$responseHeaders;
-    }
-
-    /**
-     * @description 応答の返送元の URL です。
-     *              The URL that the response was returned from.
-     *
-     * @return {string}
-     * @readonly
-     * @public
-     */
-    get responseURL (): string
-    {
-        return this._$responseURL;
-    }
-
-    /**
-     * @description サーバーから返された HTTP ステータスコードです。
-     *              The HTTP status code returned by the server.
-     *
-     * @return {number}
-     * @readonly
-     * @public
-     */
-    get status (): number
-    {
-        return this._$status;
     }
 }

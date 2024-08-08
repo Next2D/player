@@ -1,4 +1,4 @@
-import { $rendererWorker } from "../CoreUtil";
+import { $rendererWorker } from "../RendererWorker";
 
 /**
  * @description OffscreenCanvasを起動

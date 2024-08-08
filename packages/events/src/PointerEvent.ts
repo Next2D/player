@@ -22,7 +22,6 @@ export class PointerEvent extends Event
      */
     constructor (type: string, bubbles: boolean = true)
     {
-
         super(type, bubbles);
 
         return new Proxy(this, {

@@ -18,8 +18,25 @@ import { EventDispatcher } from "@next2d/events";
  */
 export class FrameLabel extends EventDispatcher
 {
-    private readonly _$name: string;
-    private readonly _$frame: number;
+    /**
+     * @description ラベルの名前。
+     *              The name of the label.
+     *
+     * @type {string}
+     * @readonly
+     * @public
+     */
+    public readonly name: string;
+
+    /**
+     * @description ラベルを含むフレームの番号。
+     *              The frame number containing the label.
+     *
+     * @type {number}
+     * @readonly
+     * @public
+     */
+    public readonly frame: number;
 
     /**
      * @param {string} name
@@ -32,31 +49,8 @@ export class FrameLabel extends EventDispatcher
     {
         super();
 
-        /**
-         * @type {string}
-         * @private
-         */
-        this._$name = `${name}`;
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._$frame = frame | 0;
-    }
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default "[class FrameLabel]"
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class FrameLabel]";
+        this.name  = `${name}`;
+        this.frame = frame | 0;
     }
 
     /**
@@ -74,20 +68,6 @@ export class FrameLabel extends EventDispatcher
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default "[object FrameLabel]"
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object FrameLabel]";
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
@@ -99,33 +79,5 @@ export class FrameLabel extends EventDispatcher
     get namespace (): string
     {
         return "next2d.display.FrameLabel";
-    }
-
-    /**
-     * @description ラベルを含むフレームの番号。
-     *              The frame number containing the label.
-     *
-     * @return  {number}
-     * @method
-     * @readonly
-     * @public
-     */
-    get frame (): number
-    {
-        return this._$frame;
-    }
-
-    /**
-     * @description ラベルの名前。
-     *              The name of the label.
-     *
-     * @return  {string}
-     * @method
-     * @readonly
-     * @public
-     */
-    get name (): string
-    {
-        return this._$name;
     }
 }
