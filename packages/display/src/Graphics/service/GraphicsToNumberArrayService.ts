@@ -13,16 +13,20 @@ import { $cacheStore } from "@next2d/cache";
  * @description Graphicsのrecodesを解析して数値配列を生成します。
  *              Parses Graphics recodes and generates a numerical array.
  *
- * @param  {Graphics} graphics
+ * @param  {number} width
+ * @param  {number} height
+ * @param  {array} recodes
  * @return {any[]}
  * @method
  * @public
  */
-export const execute = (graphics: Graphics): any[] =>
+export const execute = (width: number, height: number, recodes : any[] | null): any[] =>
 {
-    const array: number[] = $getArray();
+    if (!recodes) {
+        return [];
+    }
 
-    const recodes: any[] = graphics.recodes as NonNullable<any[]>;
+    const array: number[] = $getArray();
     for (let idx: number = 0; idx < recodes.length;) {
 
         const type: number = recodes[idx++];
@@ -275,8 +279,8 @@ export const execute = (graphics: Graphics): any[] =>
 
                         $cacheStore.destroy(context);
 
-                    } else if (bitmapData._$buffer !== null) {
-                        imageArray = Array.from(bitmapData._$buffer);
+                    } else if (bitmapData.buffer !== null) {
+                        imageArray = Array.from(bitmapData.buffer);
                     } else {
                         break;
                     }
@@ -284,8 +288,8 @@ export const execute = (graphics: Graphics): any[] =>
                     array.push(
                         bitmapData.width,
                         bitmapData.height,
-                        graphics.xMax - graphics.xMin,
-                        graphics.yMax - graphics.yMin,
+                        width,
+                        height,
                         imageArray.length
                     );
 
@@ -377,8 +381,8 @@ export const execute = (graphics: Graphics): any[] =>
 
                         $cacheStore.destroy(context);
 
-                    } else if (bitmapData._$buffer !== null) {
-                        buffer = bitmapData._$buffer;
+                    } else if (bitmapData.buffer !== null) {
+                        buffer = bitmapData.buffer;
                     } else {
                         break;
                     }
@@ -386,8 +390,8 @@ export const execute = (graphics: Graphics): any[] =>
                     array.push(
                         bitmapData.width,
                         bitmapData.height,
-                        graphics.xMax - graphics.xMin,
-                        graphics.yMax - graphics.yMin,
+                        width,
+                        height,
                         buffer.length
                     );
 

@@ -31,9 +31,27 @@ export class BitmapData
      */
     public readonly instanceId: number;
     
-    private _$width: number;
-    private _$height: number;
-    _$buffer: Uint8Array | null;
+    /**
+     * @description ビットマップイメージの幅（ピクセル単位）です。
+     *              The width of the bitmap image in pixels.
+     *
+     * @return  {number}
+     * @readonly
+     * @public
+     */
+    public width: number;
+
+    /**
+     * @description ビットマップイメージの高さ（ピクセル単位）です。
+     *              The height of the bitmap image in pixels.
+     *
+     * @return  {number}
+     * @readonly
+     * @public
+     */
+    public height: number;
+
+    private _$buffer: Uint8Array | null;
     private _$image: HTMLImageElement | null;
     private _$canvas: HTMLCanvasElement | null;
     private _$texture: WebGLTexture | null;
@@ -58,14 +76,14 @@ export class BitmapData
          * @default 0
          * @private
          */
-        this._$width = width | 0;
+        this.width = width | 0;
 
         /**
          * @type {number}
          * @default 0
          * @private
          */
-        this._$height = height | 0;
+        this.height = height | 0;
 
         /**
          * @type {Uint8Array}
@@ -97,20 +115,6 @@ export class BitmapData
     }
 
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class BitmapData]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class BitmapData]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
@@ -125,20 +129,6 @@ export class BitmapData
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object BitmapData]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object BitmapData]";
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
@@ -150,32 +140,6 @@ export class BitmapData
     get namespace (): string
     {
         return "next2d.display.BitmapData";
-    }
-
-    /**
-     * @description ビットマップイメージのID
-     *              Bitmap image ID.
-     *
-     * @return  {number}
-     * @readonly
-     * @public
-     */
-    get instanceId (): number
-    {
-        return this._$instanceId;
-    }
-
-    /**
-     * @description ビットマップイメージの高さ（ピクセル単位）です。
-     *              The height of the bitmap image in pixels.
-     *
-     * @return  {number}
-     * @readonly
-     * @public
-     */
-    get height (): number
-    {
-        return this._$height;
     }
 
     /**
@@ -273,19 +237,6 @@ export class BitmapData
 
         this._$width  = canvas.width;
         this._$height = canvas.height;
-    }
-
-    /**
-     * @description ビットマップイメージの幅（ピクセル単位）です。
-     *              The width of the bitmap image in pixels.
-     *
-     * @return  {number}
-     * @readonly
-     * @public
-     */
-    get width (): number
-    {
-        return this._$width;
     }
 
     /**

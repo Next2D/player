@@ -21,6 +21,7 @@ export const execute = (
     position_x: number = 0, position_y: number = 0,
     line_width: number = 0, caps: string = "none"
 ): void => {
+
     graphics.xMin = Math.min(graphics.xMin, Math.min(x, position_x));
     graphics.xMax = Math.max(graphics.xMax, Math.max(x, position_x));
     graphics.yMin = Math.min(graphics.yMin, Math.min(y, position_y));

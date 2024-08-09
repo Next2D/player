@@ -1,14 +1,15 @@
 import type { IShapeCharacter } from "./interface/IShapeCharacter";
+import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import { DisplayObject } from "./DisplayObject";
 import { Graphics } from "./Graphics";
 import { BitmapData } from "./BitmapData";
 import { Event } from "@next2d/events";
 import { $graphicMap } from "./DisplayObjectUtil";
+import { execute as graphicsToNumberArrayService } from "./Graphics/service/GraphicsToNumberArrayService";
 
 /**
- * @description Shape クラスには、Graphics クラスからメソッドにアクセスできる graphics プロパティがあります。
- *              The Shape class includes a graphics property,
- *              which lets you access methods from the Graphics class.
+ * @description Shape クラスは、ベクターグラフィックスを表示するための表示オブジェクトです。
+ *              The Shape class is a display object for displaying vector graphics.
  *
  * @class
  * @memberOf next2d.display
@@ -69,9 +70,8 @@ export class Shape extends DisplayObject
     }
 
     /**
-     * @description ベクターの描画コマンドが発生するこのスプライトに属する Graphics オブジェクトを指定します。
-     *              Specifies the Graphics object that belongs to this sprite
-     *              where vector drawing commands can occur.
+     * @description この Shape オブジェクトに描画されるベクターの描画コマンドを保持する Graphics オブジェクトです。
+     *              The Graphics object that belongs to this Shape object, where vector drawing commands can occur.
      *
      * @member  {Graphics}
      * @readonly
@@ -124,7 +124,6 @@ export class Shape extends DisplayObject
         });
 
         this._$src = image.src = src;
-        this.graphics._$mode = "bitmap";
     }
 
     /**
@@ -140,10 +139,19 @@ export class Shape extends DisplayObject
     {
         const graphics: Graphics = this.graphics;
 
+        const width: number  = Math.ceil(Math.abs(character.bounds.xMax - character.bounds.xMin));
+        const height: number = Math.ceil(Math.abs(character.bounds.yMax - character.bounds.yMin));
+
+        // fixed logic
+        graphics.xMin = character.bounds.xMin;
+        graphics.xMax = character.bounds.xMax;
+        graphics.yMin = character.bounds.yMin;
+        graphics.yMax = character.bounds.yMax;
+
         console.log(this, graphics, character);
         if (character.recodes) {
 
-            // switch (true) {
+            switch (true) {
 
             //     case character.bitmapId > 0:
             //         {
@@ -264,11 +272,16 @@ export class Shape extends DisplayObject
             //         }
             //         break;
 
-            //     default:
-            //         graphics._$recode = character.recodes.slice(0);
-            //         break;
+                default:
+                    if (!character.recodeBuffer) {
+                        character.recodeBuffer = new Float32Array(
+                            graphicsToNumberArrayService(width, height, character.recodes)
+                        );
+                    }
+                    graphics.buffer = character.recodeBuffer.slice(0);
+                    break;
 
-            // }
+            }
 
         } else {
 
@@ -293,14 +306,6 @@ export class Shape extends DisplayObject
             //     .drawRect(0, 0, width, height);
 
         }
-
-        // graphics._$maxAlpha = 1;
-        // graphics._$canDraw  = true;
-
-        // graphics._$xMin = character.bounds.xMin;
-        // graphics._$xMax = character.bounds.xMax;
-        // graphics._$yMin = character.bounds.yMin;
-        // graphics._$yMax = character.bounds.yMax;
 
         // // 9-scale
         // if (character.grid) {
@@ -350,73 +355,68 @@ export class Shape extends DisplayObject
     //     return bounds;
     // }
 
-    // /**
-    //  * @param  {CanvasRenderingContext2D} context
-    //  * @param  {Float32Array} matrix
-    //  * @param  {object}  options
-    //  * @return {boolean}
-    //  * @method
-    //  * @private
-    //  */
-    // _$mouseHit (
-    //     context: CanvasRenderingContext2D,
-    //     matrix: Float32Array,
-    //     options: PlayerHitObjectImpl
-    // ): boolean {
+    /**
+     * @description マウスイベントのヒットテストを行います。
+     *              Performs a hit test on a display object by testing a point against all visible children.
+     * 
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object}  options
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$mouseHit (
+        context: CanvasRenderingContext2D,
+        matrix: Float32Array,
+        options: IPlayerHitObject
+    ): boolean {
 
-    //     if (!this._$visible) {
-    //         return false;
-    //     }
+        if (!this._$visible) {
+            return false;
+        }
 
-    //     return this._$hit(context, matrix, options);
-    // }
+        return this._$hit(context, matrix, options);
+    }
 
-    // /**
-    //  * @param  {CanvasRenderingContext2D} context
-    //  * @param  {Float32Array} matrix
-    //  * @param  {object}  options
-    //  * @param  {boolean} [is_clip=false]
-    //  * @return {boolean}
-    //  * @method
-    //  * @private
-    //  */
-    // _$hit (
-    //     context: CanvasRenderingContext2D,
-    //     matrix: Float32Array,
-    //     options: PlayerHitObjectImpl,
-    //     is_clip: boolean = false
-    // ): boolean {
+    /**
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object} options
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$hit (
+        context: CanvasRenderingContext2D,
+        matrix: Float32Array,
+        options: IPlayerHitObject,
+    ): boolean {
 
-    //     let hit: boolean = false;
+        const graphics: Graphics | null = this._$graphics;
+        if (!graphics || !graphics.isDrawable) {
+            return false;
+        }
 
-    //     const graphics: Graphics | null = this._$graphics;
-    //     if (graphics
-    //         && graphics._$canDraw
-    //         && graphics._$getBounds()
-    //     ) {
+        let multiMatrix: Float32Array = matrix;
+        // const rawMatrix: Float32Array = this._$transform._$rawMatrix();
+        // if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+        //     || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+        //     || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+        // ) {
+        //     multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
+        // }
 
-    //         let multiMatrix: Float32Array = matrix;
-    //         const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-    //         if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-    //             || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-    //             || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-    //         ) {
-    //             multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
-    //         }
+        const hit = graphics._$hit(
+            context,
+            multiMatrix,
+            options
+        );
 
-    //         hit = graphics._$hit(
-    //             context,
-    //             multiMatrix,
-    //             options,
-    //             is_clip
-    //         );
+        // if (multiMatrix !== matrix) {
+        //     $poolFloat32Array6(multiMatrix);
+        // }
 
-    //         if (multiMatrix !== matrix) {
-    //             $poolFloat32Array6(multiMatrix);
-    //         }
-
-    //     }
-
-    //     return hit;
-    // }
+        return hit;
+    }
 }

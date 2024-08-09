@@ -10,5 +10,6 @@ export interface IShapeCharacter {
     bounds: IBounds;
     recodes?: any[];
     buffer?: number[] | null;
-    _$buffer?: Uint8Array;
+    imageBuffer?: Uint8Array;
+    recodeBuffer?: Float32Array;
 }

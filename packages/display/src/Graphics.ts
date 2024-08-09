@@ -2,11 +2,10 @@ import type { ICapsStyle } from "./interface/ICapsStyle";
 import type { IJointStyle } from "./interface/IJointStyle";
 import type { IGradientType } from "./interface/IGradientType";
 import type { ISpreadMethod } from "./interface/ISpreadMethod";
-import type { IColorStop } from "./interface/IColorStop";
 import type { IInterpolationMethod } from "./interface/IInterpolationMethod";
+import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import type { BitmapData } from "./BitmapData";
 import type { Matrix } from "@next2d/geom";
-import { $cacheStore } from "@next2d/cache";
 import { GraphicsBitmapFill } from "./GraphicsBitmapFill";
 import { GraphicsGradientFill } from "./GraphicsGradientFill";
 import { execute as graphicsCalcBoundsUseCase } from "./Graphics/usecase/GraphicsCalcBoundsUseCase";
@@ -15,6 +14,7 @@ import { execute as graphicsDrawEllipseService } from "./Graphics/service/Graphi
 import { execute as graphicsDrawRectService } from "./Graphics/service/GraphicsDrawRectService";
 import { execute as graphicsDrawRoundRectService } from "./Graphics/service/GraphicsDrawRoundRectService";
 import { execute as graphicsToNumberArrayService } from "./Graphics/service/GraphicsToNumberArrayService";
+import { execute as graphicsHitTestService } from "./Graphics/service/GraphicsHitTestService";
 import {
     $getArray,
     $poolArray,
@@ -98,7 +98,7 @@ export class Graphics
      * @default null
      * @public
      */
-    public recodes: any[] | null;
+    public _$recodes: any[] | null;
 
     // parems
     private _$buffer: Float32Array | null;
@@ -137,7 +137,13 @@ export class Graphics
         this.yMin        = Number.MAX_VALUE;
         this.xMax        = -Number.MAX_VALUE;
         this.yMax        = -Number.MAX_VALUE;
-        this.recodes     = null;
+
+        /**
+         * @type {array}
+         * @default null
+         * @private
+         */
+        this._$recodes = null;
 
         /**
          * @type {Float32Array}
@@ -511,9 +517,13 @@ export class Graphics
      */
     get isDrawable (): boolean
     {
+        if (!this._$isBeginning || !this._$maxAlpha) {
+            return false;
+        }
+
         const width  = Math.abs(this.xMax - this.xMin);
         const height = Math.abs(this.yMax - this.yMin);
-        return this._$isBeginning && this._$maxAlpha > 0 && width > 0 && height > 0;
+        return width > 0 && height > 0;
     }
 
     /**
@@ -712,8 +722,8 @@ export class Graphics
         this.yMax = -Number.MAX_VALUE;
 
         // init array
-        if (this.recodes) {
-            $poolArray(this.recodes);
+        if (this._$recodes) {
+            $poolArray(this._$recodes);
         }
         if (this._$fills) {
             $poolArray(this._$fills);
@@ -722,10 +732,10 @@ export class Graphics
             $poolArray(this._$lines);
         }
 
-        this._$buffer = null;
-        this.recodes  = null;
-        this._$fills  = null;
-        this._$lines  = null;
+        this._$buffer  = null;
+        this._$recodes = null;
+        this._$fills   = null;
+        this._$lines   = null;
 
         return this;
     }
@@ -801,8 +811,8 @@ export class Graphics
         if (graphics._$lines) {
             this._$lines = graphics._$lines.slice(0);
         }
-        if (graphics.recodes) {
-            this.recodes = graphics.recodes.slice(0);
+        if (graphics._$recodes) {
+            this._$recodes = graphics._$recodes.slice(0);
         }
 
         this._$buffer = null;
@@ -1037,62 +1047,60 @@ export class Graphics
      */
     endFill (): Graphics
     {
-        if (this._$hasFillEnabled && this._$fills && this._$fills.length > 7) {
-
-            if (!this.recodes) {
-                this.recodes = $getArray();
-            }
-
-            if (this._$fills[2] !== this._$fills[this._$fills.length - 2]
-                || this._$fills[3] !== this._$fills[this._$fills.length - 1]
-            ) {
-                this._$fills.push(
-                    Graphics.LINE_TO,
-                    this._$fills[2],
-                    this._$fills[3]
-                );
-            }
-            this.recodes.push(...this._$fills);
-
-            // fill
-            switch (this._$fillType) {
-
-                case Graphics.FILL_STYLE:
-                    this.recodes.push(
-                        this._$fillType,
-                        (this._$fillColor >>> 24) & 0xff,
-                        (this._$fillColor >>> 16) & 0xff,
-                        (this._$fillColor >>> 8) & 0xff,
-                        this._$fillColor & 0xff,
-                        Graphics.END_FILL
-                    );
-                    break;
-
-                case Graphics.GRADIENT_FILL:
-                    if (this._$fillGradient) {
-                        this.recodes.push(
-                            this._$fillType,
-                            ...this._$fillGradient.toArray()
-                        );
-                    }
-                    break;
-
-                case Graphics.BITMAP_FILL:
-                    if (this._$fillBitmap) {
-                        this.recodes.push(
-                            this._$fillType,
-                            ...this._$fillBitmap.toArray()
-                        );
-                    }
-                    break;
-
-            }
-
+        if (!this._$hasFillEnabled || !this._$fills || 8 > this._$fills.length) {
+            return this;
         }
 
-        if (this._$fills) {
-            $poolArray(this._$fills);
-            this._$fills = null;
+        if (!this._$recodes) {
+            this._$recodes = $getArray();
+        }
+
+        if (this._$fills[2] !== this._$fills[this._$fills.length - 2]
+            || this._$fills[3] !== this._$fills[this._$fills.length - 1]
+        ) {
+            this._$fills.push(
+                Graphics.LINE_TO,
+                this._$fills[2],
+                this._$fills[3]
+            );
+        }
+        this._$recodes.push(...this._$fills);
+
+        $poolArray(this._$fills);
+        this._$fills = null;
+
+        // fill
+        switch (this._$fillType) {
+
+            case Graphics.FILL_STYLE:
+                this._$recodes.push(
+                    this._$fillType,
+                    (this._$fillColor >>> 24) & 0xff,
+                    (this._$fillColor >>> 16) & 0xff,
+                    (this._$fillColor >>> 8) & 0xff,
+                    this._$fillColor & 0xff,
+                    Graphics.END_FILL
+                );
+                break;
+
+            case Graphics.GRADIENT_FILL:
+                if (this._$fillGradient) {
+                    this._$recodes.push(
+                        this._$fillType,
+                        ...this._$fillGradient.toArray()
+                    );
+                }
+                break;
+
+            case Graphics.BITMAP_FILL:
+                if (this._$fillBitmap) {
+                    this._$recodes.push(
+                        this._$fillType,
+                        ...this._$fillBitmap.toArray()
+                    );
+                }
+                break;
+
         }
 
         // reset
@@ -1117,63 +1125,64 @@ export class Graphics
      */
     endLine (): Graphics
     {
-        if (this._$hasLineEnabled && this._$lines) {
+        if (!this._$hasLineEnabled || !this._$lines) {
+            return this;
+        }
 
-            if (!this.recodes) {
-                this.recodes = $getArray();
-            }
+        if (!this._$recodes) {
+            this._$recodes = $getArray();
+        }
 
-            this.recodes.push(...this._$lines);
+        this._$recodes.push(...this._$lines);
 
-            // clear
-            $poolArray(this._$lines);
-            this._$lines = null;
+        // clear
+        $poolArray(this._$lines);
+        this._$lines = null;
 
-            // fill
-            switch (this._$lineType) {
+        // fill
+        switch (this._$lineType) {
 
-                case Graphics.STROKE_STYLE:
-                    this.recodes.push(
+            case Graphics.STROKE_STYLE:
+                this._$recodes.push(
+                    this._$lineType,
+                    this._$lineWidth,
+                    this._$caps,
+                    this._$joints,
+                    this._$miterLimit,
+                    (this._$lineColor >>> 24) & 0xff,
+                    (this._$lineColor >>> 16) & 0xff,
+                    (this._$lineColor >>> 8) & 0xff,
+                    this._$lineColor & 0xff,
+                    Graphics.END_STROKE
+                );
+                break;
+
+            case Graphics.GRADIENT_STROKE:
+                if (this._$lineGradient) {
+                    this._$recodes.push(
                         this._$lineType,
                         this._$lineWidth,
                         this._$caps,
                         this._$joints,
                         this._$miterLimit,
-                        (this._$lineColor >>> 24) & 0xff,
-                        (this._$lineColor >>> 16) & 0xff,
-                        (this._$lineColor >>> 8) & 0xff,
-                        this._$lineColor & 0xff,
-                        Graphics.END_STROKE
+                        ...this._$lineGradient.toArray()
                     );
-                    break;
+                }
+                break;
 
-                case Graphics.GRADIENT_STROKE:
-                    if (this._$lineGradient) {
-                        this.recodes.push(
-                            this._$lineType,
-                            this._$lineWidth,
-                            this._$caps,
-                            this._$joints,
-                            this._$miterLimit,
-                            ...this._$lineGradient.toArray()
-                        );
-                    }
-                    break;
+            case Graphics.BITMAP_STROKE:
+                if (this._$fillBitmap) {
+                    this._$recodes.push(
+                        this._$lineType,
+                        this._$lineWidth,
+                        this._$caps,
+                        this._$joints,
+                        this._$miterLimit,
+                        ...this._$fillBitmap.toArray()
+                    );
+                }
+                break;
 
-                case Graphics.BITMAP_STROKE:
-                    if (this._$fillBitmap) {
-                        this.recodes.push(
-                            this._$lineType,
-                            this._$lineWidth,
-                            this._$caps,
-                            this._$joints,
-                            this._$miterLimit,
-                            ...this._$fillBitmap.toArray()
-                        );
-                    }
-                    break;
-
-            }
         }
 
         // reset
@@ -1468,29 +1477,45 @@ export class Graphics
         return this;
     }
 
-    // /**
-    //  * @param  {CanvasRenderingContext2D} context
-    //  * @param  {Float32Array} matrix
-    //  * @param  {object}  options
-    //  * @param  {boolean} [is_clip=false]
-    //  * @return {boolean}
-    //  * @method
-    //  * @private
-    //  */
-    // _$hit (
-    //     context: CanvasRenderingContext2D,
-    //     matrix: Float32Array,
-    //     options: PlayerHitObjectImpl,
-    //     is_clip: boolean = false
-    // ): boolean {
+    /**
+     * @description 指定のxy座標が描画範囲にヒットしてるかの判定
+     *              Judges whether the specified xy coordinate hits the drawing range.
+     * 
+     * @param  {CanvasRenderingContext2D} context
+     * @param  {Float32Array} matrix
+     * @param  {object} options
+     * @return {boolean}
+     * @method
+     * @private
+     */
+    _$hit (
+        context: CanvasRenderingContext2D,
+        matrix: Float32Array,
+        options: IPlayerHitObject,
+    ): boolean {
 
-    //     context.beginPath();
-    //     context.setTransform(
-    //         matrix[0], matrix[1], matrix[2],
-    //         matrix[3], matrix[4], matrix[5]
-    //     );
-    //     return this._$runCommand(context, null, is_clip, options);
-    // }
+        // fixed logic
+        if (this._$hasLineEnabled) {
+            this.endLine();
+        }
+
+        // fixed logic
+        if (this._$hasFillEnabled) {
+            this.endFill();
+        }
+
+        if (!this._$recodes) {
+            return false;
+        }
+
+        context.beginPath();
+        context.setTransform(
+            matrix[0], matrix[1], matrix[2],
+            matrix[3], matrix[4], matrix[5]
+        );
+
+        return graphicsHitTestService(context, this._$recodes, options);
+    }
 
     // /**
     //  * @return {object}
@@ -1514,12 +1539,19 @@ export class Graphics
     // }
 
     /**
-     * @return {Float32Array}
+     * @description この Graphics オブジェクトに描画されているパス情報をFloat32Arrayで返却
+     *              Returns the path information drawn to this Graphics object in Float32Array.
+     *
+     * @member {Float32Array}
      * @method
-     * @private
+     * @public
      */
-    _$getRecodes (): Float32Array
+    get buffer (): Float32Array
     {
+        if (this.isConfirmed && this._$buffer) {
+            return this._$buffer.slice();
+        }
+
         // fixed logic
         if (this._$hasLineEnabled) {
             this.endLine();
@@ -1530,448 +1562,23 @@ export class Graphics
             this.endFill();
         }
 
-        if (!this.recodes) {
-            this.recodes = $getArray();
-        }
+        const width  = Math.ceil(Math.abs(this.xMax - this.xMin));
+        const height = Math.ceil(Math.abs(this.yMax - this.yMin));
 
-        if (this.isConfirmed) {
-            return (this._$buffer as NonNullable<Float32Array>).slice();
-        }
-
-        const array: any[] = graphicsToNumberArrayService(this);
-
+        const array: any[] = graphicsToNumberArrayService(width, height, this._$recodes);
         this._$buffer = new Float32Array(array);
-
         $poolArray(array);
 
+        // レコードの確定フラグを更新
         this.isConfirmed = true;
 
         return this._$buffer.slice();
     }
-
-    // /**
-    //  * @param  {CanvasToWebGLContext|CanvasRenderingContext2D} context
-    //  * @param  {Float32Array} [color_transform=null]
-    //  * @param  {boolean}      [is_clip=false]
-    //  * @param  {object}       [options=null]
-    //  * @return {boolean}
-    //  * @method
-    //  * @private
-    //  */
-    // _$runCommand (
-    //     context: CanvasToWebGLContext | CanvasRenderingContext2D,
-    //     color_transform: Float32Array | null = null,
-    //     is_clip: boolean = false,
-    //     options: PlayerHitObjectImpl | null = null
-    // ): boolean {
-
-    //     // fixed logic
-    //     if (this._$doLine) {
-    //         this.endLine();
-    //     }
-
-    //     // fixed logic
-    //     if (this._$doFill) {
-    //         this.endFill();
-    //     }
-
-    //     if (!this._$recode) {
-    //         return false;
-    //     }
-
-    //     const recode: any[] = this._$recode;
-    //     const length: number = recode.length;
-    //     for (let idx: number = 0; idx < length; ) {
-    //         switch (recode[idx++]) {
-
-    //             case Graphics.BEGIN_PATH:
-    //                 context.beginPath();
-    //                 break;
-
-    //             case Graphics.MOVE_TO:
-    //                 context.moveTo(recode[idx++], recode[idx++]);
-    //                 break;
-
-    //             case Graphics.LINE_TO:
-    //                 context.lineTo(recode[idx++], recode[idx++]);
-    //                 break;
-
-    //             case Graphics.CURVE_TO:
-    //                 context.quadraticCurveTo(
-    //                     recode[idx++], recode[idx++],
-    //                     recode[idx++], recode[idx++]
-    //                 );
-    //                 break;
-
-    //             case Graphics.FILL_STYLE:
-    //                 {
-    //                     if (is_clip || options) {
-    //                         idx += 4;
-    //                         continue;
-    //                     }
-
-    //                     const color: Float32Array = $getFloat32Array4();
-    //                     color[0] = recode[idx++] / 255;
-    //                     color[1] = recode[idx++] / 255;
-    //                     color[2] = recode[idx++] / 255;
-    //                     color[3] = recode[idx++] / 255;
-
-    //                     if (color_transform !== null) {
-    //                         if (color_transform[7] !== 0) {
-    //                             color[3] = Math.max(0, Math.min(
-    //                                 color[3] * color_transform[7], 255)
-    //                             ) / 255;
-    //                         }
-    //                     }
-
-    //                     context.fillStyle = color;
-    //                 }
-    //                 break;
-
-    //             case Graphics.END_FILL:
-
-    //                 if (options && "isPointInPath" in context
-    //                     && context.isPointInPath(options.x, options.y)
-    //                 ) {
-    //                     return true;
-    //                 }
-
-    //                 if (!is_clip && !options) {
-    //                     context.fill();
-    //                 }
-
-    //                 break;
-
-    //             case Graphics.STROKE_STYLE:
-    //                 {
-    //                     if (is_clip || options) {
-    //                         idx += 8;
-    //                         continue;
-    //                     }
-
-    //                     context.lineWidth  = recode[idx++];
-    //                     context.lineCap    = recode[idx++];
-    //                     context.lineJoin   = recode[idx++];
-    //                     context.miterLimit = recode[idx++];
-
-    //                     const color = $getFloat32Array4();
-
-    //                     color[0] = recode[idx++] / 255;
-    //                     color[1] = recode[idx++] / 255;
-    //                     color[2] = recode[idx++] / 255;
-    //                     color[3] = recode[idx++] / 255;
-
-    //                     if (color_transform !== null) {
-    //                         if (color_transform[7] !== 0) {
-    //                             color[3] = Math.max(0, Math.min(
-    //                                 color[3] + color_transform[7], 255)
-    //                             ) / 255;
-    //                         }
-    //                     }
-
-    //                     context.strokeStyle = color;
-    //                 }
-    //                 break;
-
-    //             case Graphics.END_STROKE:
-
-    //                 if (options && "isPointInStroke" in context
-    //                     && context.isPointInStroke(options.x, options.y)
-    //                 ) {
-    //                     return true;
-    //                 }
-
-    //                 if (!is_clip && !options) {
-    //                     context.stroke();
-    //                 }
-
-    //                 break;
-
-    //             case Graphics.CLOSE_PATH:
-    //                 context.closePath();
-    //                 break;
-
-    //             case Graphics.CUBIC:
-    //                 context.bezierCurveTo(
-    //                     recode[idx++], recode[idx++],
-    //                     recode[idx++], recode[idx++],
-    //                     recode[idx++], recode[idx++]
-    //                 );
-    //                 break;
-
-    //             case Graphics.ARC:
-    //                 context.arc(
-    //                     recode[idx++], recode[idx++], recode[idx++],
-    //                     0, 2 * Math.PI
-    //                 );
-    //                 break;
-
-    //             case Graphics.GRADIENT_FILL:
-    //                 {
-    //                     if (options && "isPointInPath" in context
-    //                         && context.isPointInPath(options.x, options.y)
-    //                     ) {
-    //                         return true;
-    //                     }
-
-    //                     if (is_clip || options
-    //                         || context instanceof CanvasRenderingContext2D // fixed logic
-    //                     ) {
-    //                         idx += 6;
-    //                         continue;
-    //                     }
-
-    //                     const type: GradientTypeImpl = recode[idx++];
-    //                     const stops: ColorStopImpl[] = recode[idx++];
-    //                     const matrix: Float32Array = recode[idx++];
-    //                     const spread: SpreadMethodImpl = recode[idx++];
-    //                     const interpolation: InterpolationMethodImpl = recode[idx++];
-    //                     const focal: number = recode[idx++];
-
-    //                     let css: CanvasGradientToWebGL;
-    //                     if (type === "linear") {
-
-    //                         const xy: Float32Array = $linearGradientXY(matrix);
-    //                         css = context.createLinearGradient(
-    //                             xy[0], xy[1], xy[2], xy[3],
-    //                             interpolation, spread
-    //                         );
-
-    //                     } else {
-
-    //                         context.save();
-    //                         context.transform(
-    //                             matrix[0], matrix[1], matrix[2],
-    //                             matrix[3], matrix[4], matrix[5]
-    //                         );
-
-    //                         css = context.createRadialGradient(
-    //                             0, 0, 0, 0, 0, 819.2,
-    //                             interpolation, spread, focal
-    //                         );
-
-    //                     }
-
-    //                     for (let idx: number = 0; idx < stops.length; ++idx) {
-
-    //                         const color: ColorStopImpl = stops[idx];
-
-    //                         let alpha: number = color.A;
-    //                         if (color_transform) {
-    //                             if (color_transform[7] !== 0) {
-    //                                 alpha = Math.max(0, Math.min(color.A + color_transform[7], 255)) | 0;
-    //                             }
-    //                         }
-
-    //                         css.addColorStop(color.ratio, $getInt32Array4(
-    //                             color.R, color.G, color.B, alpha
-    //                         ));
-
-    //                     }
-
-    //                     context.fillStyle = css;
-    //                     context.fill();
-
-    //                     if (type === "radial") {
-    //                         context.restore();
-    //                     }
-    //                 }
-    //                 break;
-
-    //             case Graphics.GRADIENT_STROKE:
-    //                 {
-    //                     if (options && "isPointInStroke" in context
-    //                         && context.isPointInStroke(options.x, options.y)
-    //                     ) {
-    //                         return true;
-    //                     }
-
-    //                     if (is_clip || options
-    //                         || context instanceof CanvasRenderingContext2D // fixed logic
-    //                     ) {
-    //                         idx += 12;
-    //                         continue;
-    //                     }
-
-    //                     context.lineWidth  = recode[idx++];
-    //                     context.lineCap    = recode[idx++];
-    //                     context.lineJoin   = recode[idx++];
-    //                     context.miterLimit = recode[idx++];
-
-    //                     const type: GradientTypeImpl = recode[idx++];
-    //                     const stops: ColorStopImpl[] = recode[idx++];
-    //                     const matrix: Float32Array = recode[idx++];
-    //                     const spread: SpreadMethodImpl = recode[idx++];
-    //                     const interpolation: InterpolationMethodImpl = recode[idx++];
-    //                     const focal: number = recode[idx++];
-
-    //                     let css: CanvasGradientToWebGL;
-    //                     if (type === "linear") {
-
-    //                         const xy: Float32Array = $linearGradientXY(matrix);
-    //                         css = context.createLinearGradient(
-    //                             xy[0], xy[1], xy[2], xy[3],
-    //                             interpolation, spread
-    //                         );
-
-    //                     } else {
-
-    //                         context.save();
-    //                         context.transform(
-    //                             matrix[0], matrix[1], matrix[2],
-    //                             matrix[3], matrix[4], matrix[5]
-    //                         );
-
-    //                         css = context.createRadialGradient(
-    //                             0, 0, 0, 0, 0, 819.2,
-    //                             interpolation, spread, focal
-    //                         );
-
-    //                     }
-
-    //                     for (let idx = 0; idx < stops.length; ++idx) {
-
-    //                         const color: ColorStopImpl = stops[idx];
-
-    //                         let alpha: number = color.A;
-    //                         if (color_transform) {
-    //                             if (color_transform[7] !== 0) {
-    //                                 alpha = Math.max(0, Math.min(color.A + color_transform[7], 255)) | 0;
-    //                             }
-    //                         }
-
-    //                         css.addColorStop(color.ratio, $getInt32Array4(
-    //                             color.R, color.G, color.B, alpha
-    //                         ));
-
-    //                     }
-
-    //                     context.strokeStyle = css;
-    //                     context.stroke();
-
-    //                     if (type === "radial") {
-    //                         context.restore();
-    //                     }
-
-    //                 }
-    //                 break;
-
-    //             case Graphics.BITMAP_FILL:
-    //                 {
-    //                     if (options && "isPointInPath" in context
-    //                         && context.isPointInPath(options.x, options.y)
-    //                     ) {
-    //                         return true;
-    //                     }
-
-    //                     if (is_clip || options
-    //                         || context instanceof CanvasRenderingContext2D // fixed logic
-    //                     ) {
-    //                         idx += 6;
-    //                         continue;
-    //                     }
-
-    //                     context.save();
-
-    //                     const bitmapData: BitmapData = recode[idx++];
-    //                     const matrix: Float32Array = recode[idx++];
-    //                     const repeat: boolean = recode[idx++];
-    //                     const smooth: boolean = recode[idx++];
-
-    //                     if (matrix) {
-    //                         context.transform(
-    //                             matrix[0], matrix[1], matrix[2],
-    //                             matrix[3], matrix[4], matrix[5]
-    //                         );
-    //                     }
-
-    //                     const texture: WebGLTexture | null = bitmapData.getTexture();
-    //                     if (!texture || !color_transform) {
-    //                         break;
-    //                     }
-
-    //                     context.imageSmoothingEnabled = smooth;
-    //                     if (bitmapData.width === this.xMax - this.xMin
-    //                         && bitmapData.height === this.yMax - this.yMin
-    //                     ) {
-
-    //                         context.drawBitmap(texture);
-
-    //                     } else {
-
-    //                         context.fillStyle = context.createPattern(
-    //                             texture, repeat, color_transform
-    //                         );
-
-    //                         context.fill();
-    //                     }
-
-    //                     // restore
-    //                     context.restore();
-
-    //                     context.imageSmoothingEnabled = false;
-    //                 }
-    //                 break;
-
-    //             case Graphics.BITMAP_STROKE:
-    //                 {
-    //                     if (options && "isPointInStroke" in context
-    //                         && context.isPointInStroke(options.x, options.y)
-    //                     ) {
-    //                         return true;
-    //                     }
-
-    //                     if (is_clip || options
-    //                         || context instanceof CanvasRenderingContext2D // fixed logic
-    //                     ) {
-    //                         idx += 9;
-    //                         continue;
-    //                     }
-
-    //                     context.save();
-
-    //                     context.lineWidth  = recode[idx++];
-    //                     context.lineCap    = recode[idx++];
-    //                     context.lineJoin   = recode[idx++];
-    //                     context.miterLimit = recode[idx++];
-
-    //                     const bitmapData: BitmapData = recode[idx++];
-    //                     const matrix: Float32Array = recode[idx++];
-    //                     const repeat: boolean = recode[idx++];
-    //                     const smooth: boolean = recode[idx++];
-
-    //                     if (matrix) {
-    //                         context.transform(
-    //                             matrix[0], matrix[1], matrix[2],
-    //                             matrix[3], matrix[4], matrix[5]
-    //                         );
-    //                     }
-
-    //                     const texture: WebGLTexture | null = bitmapData.getTexture();
-    //                     if (!texture || !color_transform) {
-    //                         break;
-    //                     }
-
-    //                     context.strokeStyle = context.createPattern(
-    //                         texture, repeat, color_transform
-    //                     );
-
-    //                     context.imageSmoothingEnabled = smooth;
-    //                     context.stroke();
-
-    //                     // restore
-    //                     context.restore();
-    //                     context.imageSmoothingEnabled = false;
-
-    //                 }
-    //                 break;
-
-    //             default:
-    //                 break;
-
-    //         }
-    //     }
-
-    //     return false;
-    // }
+    set buffer (buffer: Float32Array)
+    {
+        this._$buffer      = buffer;
+        this.isConfirmed   = true;
+        this._$isBeginning = true;
+        this._$maxAlpha    = 1;
+    }
 }

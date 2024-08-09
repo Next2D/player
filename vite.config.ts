@@ -4,7 +4,6 @@
 
 import { defineConfig } from "vite";
 import path from "path";
-console.log(path.resolve(process.cwd(), "./"));
 
 export default defineConfig({
     "server": {

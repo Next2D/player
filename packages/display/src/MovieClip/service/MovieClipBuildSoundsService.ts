@@ -26,9 +26,17 @@ export const execute = async (
     sound_objects: IMovieClipSoundObject[]
 ): Promise<void> => {
 
-    const loaderInfo = movie_clip.loaderInfo as NonNullable<LoaderInfo>;
-    const data = loaderInfo.data as NonNullable<ILoaderInfoData>;
+    const loaderInfo = movie_clip.loaderInfo;
+    if (!loaderInfo) {
+        return ;
+    }
 
+    const data = loaderInfo.data;
+    if (!data) {
+        return ;
+    }
+
+    const characters = data.characters;
     for (let idx: number = 0; idx < sound_objects.length; ++idx) {
 
         const object = sound_objects[idx];
@@ -44,7 +52,7 @@ export const execute = async (
                 continue;
             }
 
-            const character = data.characters[tag.characterId] as unknown as ISoundCharacter;
+            const character = characters[tag.characterId] as unknown as ISoundCharacter;
             if (!character) {
                 continue;
             }
