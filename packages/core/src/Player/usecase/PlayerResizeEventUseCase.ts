@@ -47,15 +47,15 @@ export const execute = (): void =>
     const scale: number = Math.min(
         screenWidth  / $stage.stageWidth,
         screenHeight / $stage.stageHeight
-    );
+    ) * $devicePixelRatio;
 
     const width: number = $player.fullScreen
         ? window.innerWidth * $devicePixelRatio
-        : $stage.stageWidth * scale * $devicePixelRatio | 0;
+        : $stage.stageWidth * scale | 0;
 
     const height: number = $player.fullScreen
         ? window.innerHeight * $devicePixelRatio
-        : $stage.stageHeight * scale * $devicePixelRatio | 0;
+        : $stage.stageHeight * scale | 0;
 
     // 同じサイズの場合は、ここれで終了
     if (width === $player.rendererWidth

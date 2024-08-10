@@ -989,25 +989,25 @@ export class DisplayObject extends EventDispatcher
     //     this._$transform = transform;
     // }
 
-    // /**
-    //  * @description 表示オブジェクトが可視かどうかを示します。
-    //  *              Whether or not the display object is visible.
-    //  *
-    //  * @member {boolean}
-    //  * @public
-    //  */
-    // get visible (): boolean
-    // {
-    //     return this._$visible;
-    // }
-    // set visible (visible: boolean)
-    // {
-    //     if (this._$visible !== visible) {
-    //         this._$visible = !!visible;
-    //         this._$doChanged();
-    //         $doUpdated();
-    //     }
-    // }
+    /**
+     * @description 表示オブジェクトが可視かどうかを示します。
+     *              Whether or not the display object is visible.
+     *
+     * @member {boolean}
+     * @public
+     */
+    get visible (): boolean
+    {
+        return this._$visible;
+    }
+    set visible (visible: boolean)
+    {
+        if (this._$visible === visible) {
+            return ;
+        }
+        this._$visible = !!visible;
+        this._$changed();
+    }
 
     // /**
     //  * @description 表示オブジェクトの幅を示します（ピクセル単位）。

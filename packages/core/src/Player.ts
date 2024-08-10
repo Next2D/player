@@ -1,8 +1,7 @@
 import type { IPlayerOptions } from "./interface/IPlayerOptions";
-import type { MovieClip } from "@next2d/display";
+import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import { $stage } from "@next2d/display";
 import { SoundMixer } from "@next2d/media";
-import { $devicePixelRatio } from "./CoreUtil";
 import { execute as playerCreateContainerElementService } from "./Player/service/PlayerCreateContainerElementService";
 import { execute as playerApplyContainerElementStyleService } from "./Player/service/PlayerApplyContainerElementStyleService";
 import { execute as playerLoadingAnimationService } from "./Player/service/PlayerLoadingAnimationService";
@@ -18,15 +17,13 @@ import { execute as playerResizeRegisterService } from "./Player/usecase/PlayerR
  */
 export class Player
 {
-    // private readonly _$hitObject: PlayerHitObjectImpl;
-    private readonly _$matrix: Float32Array;
+    private readonly _$hitObject: IPlayerHitObject;
     private _$rendererWidth: number;
     private _$rendererHeight: number;
     private _$rendererScale: number;
     private _$fixedWidth: number;
     private _$fixedHeight: number;
     private _$stopFlag: boolean;
-    private _$scale: number;
     // private _$state: "up" | "down";
     // private _$textField: TextField | null;
     // private _$rollOverObject: EventDispatcherImpl<any> | null;
@@ -50,28 +47,22 @@ export class Player
      */
     constructor ()
     {
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$actions = [];
-
         // /**
         //  * @type {Map}
         //  * @private
         //  */
         // this._$sounds = new Map();
 
-        // /**
-        //  * @type {object}
-        //  * @private
-        //  */
-        // this._$hitObject = {
-        //     "x": 0,
-        //     "y": 0,
-        //     "pointer": "",
-        //     "hit": null
-        // };
+        /**
+         * @type {object}
+         * @private
+         */
+        this._$hitObject = {
+            "x": 0,
+            "y": 0,
+            "pointer": "",
+            "hit": null
+        };
 
         // /**
         //  * @type {DisplayObject}
@@ -149,12 +140,6 @@ export class Player
          * @private
          */
         this._$scale = 1;
-
-        /**
-         * @type {Float32Array}
-         * @private
-         */
-        this._$matrix = new Float32Array([1, 0, 0, 1, 0, 0]);
 
         // /**
         //  * @type {string}
@@ -256,83 +241,16 @@ export class Player
     }
 
     /**
-     * @description フルスクリーンモード時の画面全体を基準としたステージのx座標
-     *              The x-coordinate of the stage with the entire screen as the reference in full-screen mode
-     *
-     * @member {number}
-     * @default 0
-     * @readonly
-     * @public
-     */
-    get x (): number
-    {
-        return this._$matrix[5];
-    }
-
-    /**
-     * @description フルスクリーンモード時の画面全体を基準としたステージのy座標
-     *              The y-coordinate of the stage with the entire screen as the reference in full-screen mode
-     *
-     * @member {number}
-     * @default 0
-     * @readonly
-     * @public
-     */
-    get y (): number
-    {
-        return this._$matrix[4];
-    }
-
-    /**
-     * @description ステージ設定と画面表示のx拡大率
-     *              The x magnification of the stage setting and screen display
+     * @description 
+     *              
      *
      * @member {number}
      * @readonly
      * @public
      */
-    get scaleX (): number
+    get scale (): number
     {
-        return this._$matrix[0];
-    }
-
-    /**
-     * @description ステージ設定と画面表示のy拡大率
-     *              The y magnification of the stage setting and screen display
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get scaleY (): number
-    {
-        return this._$matrix[3];
-    }
-
-    /**
-     * @description フルスクリーンモード時のステージサイズを基準としたステージのx座標
-     *              The x-coordinate of the stage with the stage size in full-screen mode as the reference
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get tx (): number
-    {
-        return this._$matrix[4] / this._$scale / $devicePixelRatio;
-    }
-
-    /**
-     * @description フルスクリーンモード時のステージサイズを基準としたステージのy座標
-     *              The y-coordinate of the stage with the stage size in full-screen mode as the reference
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get ty (): number
-    {
-        return this._$matrix[5] / this._$scale / $devicePixelRatio;
+        return this._$rendererScale;
     }
 
     /**

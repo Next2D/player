@@ -1,4 +1,4 @@
-import { MovieClip } from "../../MovieClip";
+import type { MovieClip } from "../../MovieClip";
 import { $actions } from "../../DisplayObjectUtil";
 
 /**

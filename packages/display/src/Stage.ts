@@ -1,6 +1,7 @@
 import type { DisplayObject } from "./DisplayObject";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { execute as stageReadyUseCase } from "./Stage/usecase/StageReadyUseCase";
+import { execute as displayObjectContainerGenerateRenderQueueUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerGenerateRenderQueueUseCase";
 import {
     $rootMap,
     $stageAssignedMap
@@ -57,10 +58,10 @@ export class Stage extends DisplayObjectContainer
      * @description 背景色
      *              Background color
      * 
-     * @type {string}
+     * @type {number}
      * @public
      */
-    public backgroundColor: string;
+    private _$backgroundColor: number;
 
     /**
      * @constructor
@@ -78,28 +79,28 @@ export class Stage extends DisplayObjectContainer
         this._$ready = false;
 
         /**
-         * @type {Stage}
+         * @type {number}
          * @public
          */
         this.stageWidth = 0;
 
         /**
-         * @type {Stage}
+         * @type {number}
          * @public
          */
         this.stageHeight = 0;
 
         /**
-         * @type {Stage}
+         * @type {number}
          * @public
          */
         this.frameRate = 1;
 
         /**
-         * @type {Stage}
+         * @type {number}
          * @public
          */
-        this.backgroundColor = "transparent";
+        this._$backgroundColor = -1;
     }
 
     /**
@@ -128,6 +129,24 @@ export class Stage extends DisplayObjectContainer
     get namespace (): string
     {
         return "next2d.display.Stage";
+    }
+
+    /**
+     * @description 背景色
+     *              Background color
+     * 
+     * @member {string}
+     * @public
+     */
+    get backgroundColor (): number
+    {
+        return this._$backgroundColor;
+    }
+    set backgroundColor (color: string)
+    {
+        this._$backgroundColor = color === "transparent"
+            ? -1
+            : parseInt(color.replace("#", ""), 16);
     }
 
     /**
@@ -171,14 +190,20 @@ export class Stage extends DisplayObjectContainer
      * @description renderer workerに渡す描画データを生成
      *              Generate drawing data to pass to the renderer worker
      * 
-     * @param {array} render_queue
+     * @param  {array} render_queue
+     * @param  {Float32Array} matrix
      * @return {void}
      * @method
      * @private
      */
-    _$generateRenderQueue (render_queue: number[]): void
+    _$generateRenderQueue (render_queue: number[], matrix: Float32Array): void
     {
+        // set background color
+        render_queue.push(this._$backgroundColor);
 
+        displayObjectContainerGenerateRenderQueueUseCase(
+            this, render_queue, matrix
+        );
     }
 }
 

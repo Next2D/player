@@ -4,7 +4,7 @@ import { DisplayObject } from "./DisplayObject";
 import { Graphics } from "./Graphics";
 import { BitmapData } from "./BitmapData";
 import { Event } from "@next2d/events";
-import { $graphicMap } from "./DisplayObjectUtil";
+import { $graphicMap, $poolArray } from "./DisplayObjectUtil";
 import { execute as graphicsToNumberArrayService } from "./Graphics/service/GraphicsToNumberArrayService";
 
 /**
@@ -276,6 +276,8 @@ export class Shape extends DisplayObject
                         character.recodeBuffer = new Float32Array(
                             graphicsToNumberArrayService(width, height, character.recodes)
                         );
+                        $poolArray(character.recodes);
+                        character.recodes = null;
                     }
                     graphics.buffer = character.recodeBuffer.slice(0);
                     break;

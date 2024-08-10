@@ -1,7 +1,7 @@
 import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
 import { execute as commandInitializeContextService } from "./Command/service/CommandInitializeContextService";
 import { execute as commandResizeService } from "./Command/service/CommandResizeService";
-import { execute as commandDrawUseCase } from "./Command/usecase/CommandDrawUseCase";
+import { execute as commandRenderUseCase } from "./Command/usecase/CommandRenderUseCase";
 import { $cacheStore } from "@next2d/cache";
 
 /**
@@ -55,8 +55,8 @@ export class CommandController
             // returnBuffer = true;
             switch (object.command) {
 
-                case "draw":
-                    commandDrawUseCase();
+                case "render":
+                    commandRenderUseCase(object.buffer);
                     break;
 
                 case "resize":

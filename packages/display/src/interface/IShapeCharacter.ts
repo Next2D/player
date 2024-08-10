@@ -8,7 +8,7 @@ export interface IShapeCharacter {
     grid: IGrid | null;
     inBitmap: boolean;
     bounds: IBounds;
-    recodes?: any[];
+    recodes?: any[] | null;
     buffer?: number[] | null;
     imageBuffer?: Uint8Array;
     recodeBuffer?: Float32Array;
