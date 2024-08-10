@@ -1,6 +1,4 @@
-import type { LoaderInfo } from "../../LoaderInfo";
 import type { MovieClip } from "../../MovieClip";
-import type { ILoaderInfoData } from "../../interface/ILoaderInfoData";
 import type { IMovieClipSoundObject } from "../../interface/IMovieClipSoundObject";
 import type { ISoundCharacter } from "../../interface/ISoundCharacter";
 import { $getArray } from "../../DisplayObjectUtil";

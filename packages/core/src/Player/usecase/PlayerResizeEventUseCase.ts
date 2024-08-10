@@ -1,10 +1,10 @@
-import { $player } from "../Player";
+import { $player } from "../../Player";
 import { $stage } from "@next2d/display";
-import { execute as playerResizePostMessageService } from "./PlayerResizePostMessageService";
+import { execute as playerResizePostMessageService } from "../service/PlayerResizePostMessageService";
 import {
     $PREFIX,
     $devicePixelRatio
-} from "../CoreUtil";
+} from "../../CoreUtil";
 
 /**
  * @description 画面リサイズ時にcanvasのリサイズを行う

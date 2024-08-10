@@ -4,6 +4,7 @@ import type { IParent } from "./interface/IParent";
 import type { IURLRequestHeader } from "./interface/IURLRequestHeader";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Graphics } from "./Graphics";
+import type { MovieClip } from "./MovieClip";
 
 /**
  * @typs {Float32Array}
@@ -390,3 +391,11 @@ export const $clamp = (
         ? default_value
         : Math.min(Math.max(min, isNaN(number) ? 0 : number), max);
 };
+/**
+ * @description フレームアクションの発生したMovieClipを格納する配列
+ *              Array to store MovieClip where frame actions occurred
+ * 
+ * @type {array}
+ * @protected
+ */
+export const $actions: Array<MovieClip | Map<number, Function[]>> = [];

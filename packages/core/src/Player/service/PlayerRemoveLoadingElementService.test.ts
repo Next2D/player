@@ -1,6 +1,6 @@
 import { execute } from "./PlayerRemoveLoadingElementService";
 import { execute as playerLoadingAnimationService } from "./PlayerLoadingAnimationService";
-import { $PREFIX } from "../CoreUtil";
+import { $PREFIX } from "../../CoreUtil";
 import { describe, expect, it } from "vitest";
 
 describe("PlayerRemoveLoadingElementService.js test", () =>

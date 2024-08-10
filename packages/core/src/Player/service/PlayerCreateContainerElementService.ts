@@ -1,4 +1,4 @@
-import { $PREFIX } from "../CoreUtil";
+import { $PREFIX } from "../../CoreUtil";
 
 /**
  * @description コンテナとなるElementを作成して返却

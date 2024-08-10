@@ -1,16 +1,4 @@
 /**
- * @type {number}
- * @const
- */
-export const $LOAD_START: number = 1;
-
-/**
- * @type {number}
- * @const
- */
-export const $LOAD_END: number = 2;
-
-/**
  * @type {string}
  * @const
  */

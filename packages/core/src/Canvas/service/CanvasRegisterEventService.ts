@@ -2,7 +2,7 @@ import {
     $POINTER_DOWN,
     $POINTER_UP,
     $POINTER_MOVE
-} from "../Canvas";
+} from "../../Canvas";
 
 /**
  * 

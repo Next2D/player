@@ -25,7 +25,7 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
 ): void => {
 
     // added display object
-    const children = display_object_container._$getChildren();
+    const children = display_object_container.children;
     children.splice(index, 0, display_object);
 
     // Set parent-child relationship

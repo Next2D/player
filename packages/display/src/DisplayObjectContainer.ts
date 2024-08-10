@@ -73,7 +73,7 @@ export class DisplayObjectContainer extends InteractiveObject
      */
     get numChildren (): number
     {
-        return this._$getChildren().length;
+        return this.children.length;
     }
 
     /**
@@ -777,25 +777,6 @@ export class DisplayObjectContainer extends InteractiveObject
     //     }
 
     //     this._$needsChildren = true;
-    // }
-
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$prepareActions (): void
-    // {
-    //     const children: DisplayObjectImpl<any>[] = this._$needsChildren
-    //         ? this._$getChildren()
-    //         : this._$children;
-
-    //     for (let idx: number = children.length - 1; idx > -1; --idx) {
-    //         children[idx]._$prepareActions();
-    //     }
-
-    //     // added event
-    //     this._$executeAddedEvent();
     // }
 
     // /**
@@ -1704,7 +1685,7 @@ export class DisplayObjectContainer extends InteractiveObject
      * @method
      * @protected
      */
-    _$getChildren <D extends DisplayObject>(): D[]
+    get children (): IDisplayObject<any>[]
     {
         return this._$children;
     }

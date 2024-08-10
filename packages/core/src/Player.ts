@@ -1,12 +1,13 @@
 import type { IPlayerOptions } from "./interface/IPlayerOptions";
 import type { MovieClip } from "@next2d/display";
+import { $stage } from "@next2d/display";
 import { SoundMixer } from "@next2d/media";
 import { $devicePixelRatio } from "./CoreUtil";
-import { execute as playerCreateContainerElementService } from "./Player/PlayerCreateContainerElementService";
-import { execute as playerApplyContainerElementStyleService } from "./Player/PlayerApplyContainerElementStyleService";
-import { execute as playerLoadingAnimationService } from "./Player/PlayerLoadingAnimationService";
-import { execute as playerResizeEventService } from "./Player/PlayerResizeEventService";
-import { execute as playerResizeRegisterService } from "./Player/PlayerResizeRegisterService";
+import { execute as playerCreateContainerElementService } from "./Player/service/PlayerCreateContainerElementService";
+import { execute as playerApplyContainerElementStyleService } from "./Player/service/PlayerApplyContainerElementStyleService";
+import { execute as playerLoadingAnimationService } from "./Player/service/PlayerLoadingAnimationService";
+import { execute as playerResizeEventService } from "./Player/usecase/PlayerResizeEventUseCase";
+import { execute as playerResizeRegisterService } from "./Player/usecase/PlayerResizeRegisterUseCase";
 
 /**
  * @description Next2Dの描画、イベント、設定、コントロールの管理クラスです。
@@ -17,8 +18,6 @@ import { execute as playerResizeRegisterService } from "./Player/PlayerResizeReg
  */
 export class Player
 {
-    private readonly _$actions: MovieClip[];
-    // private readonly _$sounds: Map<any, MovieClip>;
     // private readonly _$hitObject: PlayerHitObjectImpl;
     private readonly _$matrix: Float32Array;
     private _$rendererWidth: number;
@@ -32,7 +31,7 @@ export class Player
     // private _$textField: TextField | null;
     // private _$rollOverObject: EventDispatcherImpl<any> | null;
     // private _$mouseOverTarget: EventDispatcherImpl<any> | null;
-    // private _$startTime: number;
+    private _$startTime: number;
     private _$fps: number;
     // private _$hitTestStart: boolean;
     // private _$stageX: number;
@@ -428,13 +427,12 @@ export class Player
             cancelAnimationFrame(this._$timerId);
         }
 
-        this._$fps = 1000 / this._$frameRate | 0;
+        this._$fps = 1000 / $stage.frameRate | 0;
 
         this._$startTime = performance.now();
-        this._$timerId = requestAnimationFrame(async (timestamp: number): Promise<void> =>
+        this._$timerId = requestAnimationFrame((timestamp: number): void =>
         {
-            // todo
-            // await this._$run(timestamp);
+            // this._$run(timestamp);
         });
     }
 
@@ -523,78 +521,6 @@ export class Player
         // initialize resize
         playerResizeEventService();
     }
-
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$loaded (): void
-    // {
-    //     const element: HTMLElement | null = $document
-    //         .getElementById($PREFIX);
-
-    //     if (element) {
-
-    //         // background color
-    //         this._$setBackgroundColor(this._$bgColor);
-
-    //         // DOM
-    //         this._$deleteNode();
-
-    //         // append canvas
-    //         element.appendChild(this._$canvas);
-    //         element.appendChild($textArea);
-
-    //         // stage init action
-    //         this._$stage._$prepareActions();
-
-    //         // constructed event
-    //         if (this._$broadcastEvents.has(Next2DEvent.FRAME_CONSTRUCTED)) {
-    //             this._$dispatchEvent(new Next2DEvent(Next2DEvent.FRAME_CONSTRUCTED));
-    //         }
-
-    //         // frame1 action
-    //         this._$doAction();
-
-    //         // exit event
-    //         if (this._$broadcastEvents.has(Next2DEvent.EXIT_FRAME)) {
-    //             this._$dispatchEvent(new Next2DEvent(Next2DEvent.EXIT_FRAME));
-    //         }
-
-    //         // loader events
-    //         const length: number = this._$loaders.length;
-    //         for (let idx: number = 0; idx < length; ++idx) {
-
-    //             const loader: EventDispatcherImpl<any> = this._$loaders.shift();
-
-    //             // init event
-    //             if (loader.hasEventListener(Next2DEvent.INIT)) {
-    //                 loader.dispatchEvent(new Next2DEvent(Next2DEvent.INIT));
-    //             }
-
-    //             // complete event
-    //             if (loader.hasEventListener(Next2DEvent.COMPLETE)) {
-    //                 loader.dispatchEvent(new Next2DEvent(Next2DEvent.COMPLETE));
-    //             }
-    //         }
-
-    //         // activate event
-    //         if (this._$broadcastEvents.has(Next2DEvent.ACTIVATE)) {
-    //             this._$dispatchEvent(new Next2DEvent(Next2DEvent.ACTIVATE));
-    //         }
-
-    //         // frame action
-    //         this._$doAction();
-
-    //         // render
-    //         this._$draw();
-
-    //         // start
-    //         this.play();
-    //     }
-
-    // }
 
     // /**
     //  * @param  {Event} event
@@ -1040,51 +966,26 @@ export class Player
     //     this._$doAction();
     // }
 
-    // /**
-    //  * @returns void
-    //  * @private
-    //  */
-    // _$draw (): void
-    // {
-    //     if (!this._$width || !this._$height) {
-    //         return ;
-    //     }
+    /**
+     * @returns void
+     * @public
+     */
+    draw (): void
+    {
+        if (!this._$width || !this._$height) {
+            return ;
+        }
 
-    //     if (!this._$stage._$isUpdated()) {
-    //         return ;
-    //     }
+        if (!this._$stage._$isUpdated()) {
+            return ;
+        }
 
-    //     if ($rendererWorker) {
-    //         $rendererWorker.postMessage({
-    //             "command": "draw"
-    //         });
-    //     }
-
-    //     const context: CanvasToWebGLContext | null = this._$context;
-    //     if (!context) {
-    //         return ;
-    //     }
-
-    //     // reset
-    //     context.reset();
-    //     context.setTransform(1, 0, 0, 1, 0, 0);
-    //     context.clearRect(0, 0, this._$width, this._$height);
-    //     context.beginPath();
-
-    //     this._$stage._$draw(
-    //         context,
-    //         this._$matrix,
-    //         $COLOR_ARRAY_IDENTITY
-    //     );
-
-    //     // stage end
-    //     this._$stage._$updated = false;
-
-    //     context.drawInstacedArray();
-    //     context
-    //         .frameBuffer
-    //         .transferToMainTexture();
-    // }
+        if ($rendererWorker) {
+            $rendererWorker.postMessage({
+                "command": "draw"
+            });
+        }
+    }
 
     // /**
     //  * @return {void}

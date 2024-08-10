@@ -148,7 +148,6 @@ export class Shape extends DisplayObject
         graphics.yMin = character.bounds.yMin;
         graphics.yMax = character.bounds.yMax;
 
-        console.log(this, graphics, character);
         if (character.recodes) {
 
             switch (true) {

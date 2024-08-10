@@ -1,6 +1,6 @@
-import type { IPlayerOptions } from "../interface/IPlayerOptions";
-import { $player } from "../Player";
-import { $clamp } from "../CoreUtil";
+import type { IPlayerOptions } from "../../interface/IPlayerOptions";
+import { $player } from "../../Player";
+import { $clamp } from "../../CoreUtil";
 import {
     Sprite,
     $stage
@@ -35,7 +35,11 @@ export const execute = async (
     
     // boot player
     $player.boot(options);
-    $player.play();
 
-    return $stage.addChild<Sprite>(new Sprite());
+    const root = $stage.addChild<Sprite>(new Sprite());
+
+    // stage ready
+    $stage.ready = true;
+
+    return root;
 };

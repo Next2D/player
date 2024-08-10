@@ -1,7 +1,7 @@
 import { $devicePixelRatio } from "./CoreUtil";
-import { execute as canvasInitializeService } from "./Canvas/CanvasInitializeService";
-import { execute as canvasBootOffscreenCanvasService } from "./Canvas/CanvasBootOffscreenCanvasService";
-import { execute as canvasRegisterEventService } from "./Canvas/CanvasRegisterEventService";
+import { execute as canvasInitializeService } from "./Canvas/service/CanvasInitializeService";
+import { execute as canvasBootOffscreenCanvasService } from "./Canvas/service/CanvasBootOffscreenCanvasService";
+import { execute as canvasRegisterEventService } from "./Canvas/service/CanvasRegisterEventService";
 
 /**
  * @type {string}

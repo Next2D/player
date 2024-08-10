@@ -1,5 +1,5 @@
-import { $PREFIX } from "../CoreUtil";
-import { $canvas } from "../Canvas";
+import { $PREFIX } from "../../CoreUtil";
+import { $canvas } from "../../Canvas";
 
 /**
  * @description canvas elementをメインのdivに追加

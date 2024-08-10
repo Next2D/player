@@ -1,7 +1,7 @@
-import type { IResizeMessage } from "../interface/IResizeMessage";
-import { $player } from "../Player";
+import type { IResizeMessage } from "../../interface/IResizeMessage";
+import { $player } from "../../Player";
 import { $stage } from "@next2d/display";
-import { $rendererWorker } from "../RendererWorker";
+import { $rendererWorker } from "../../RendererWorker";
 
 /**
  * @description リサイズメッセージ

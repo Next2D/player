@@ -1,12 +1,12 @@
 import type { IDisplay } from "./interface/IDisplay";
-import type { EventsImpl } from "./interface/IEvents";
-import type { FiltersImpl } from "./interface/IFilters";
-import type { GeomImpl } from "./interface/IGeom";
-import type { MediaImpl } from "./interface/IMedia";
-import type { NetImpl } from "./interface/INet";
-import type { TextImpl } from "./interface/IText";
-import type { UIImpl } from "./interface/IUI";
-import type { PlayerOptionsImpl } from "./interface/IPlayerOptions";
+import type { IEvents } from "./interface/IEvents";
+import type { IFilters } from "./interface/IFilters";
+import type { IGeom } from "./interface/IGeom";
+import type { IMedia } from "./interface/IMedia";
+import type { INet } from "./interface/INet";
+import type { IText } from "./interface/IText";
+import type { IUI } from "./interface/IUI";
+import type { IPlayerOptions } from "./interface/IPlayerOptions";
 import type { Sprite } from "@next2d/display";
 import { events } from "./Events";
 import { display } from "./Display";
@@ -16,8 +16,8 @@ import { media } from "./Media";
 import { net } from "./Net";
 import { text } from "./Text";
 import { ui } from "./UI";
-import { execute as loadService } from "./Next2D/LoadService";
-import { execute as createRootMovieClip } from "./Next2D/CreateRootMovieClip";
+import { execute as loadService } from "./Next2D/usecase/LoadUseCase";
+import { execute as createRootMovieClip } from "./Next2D/service/CreateRootMovieClipService";
 
 /**
  * @description Next2Dの起動管理クラス
@@ -29,13 +29,13 @@ import { execute as createRootMovieClip } from "./Next2D/CreateRootMovieClip";
 export class Next2D
 {
     public readonly display: IDisplay;
-    public readonly events: EventsImpl;
-    public readonly filters: FiltersImpl;
-    public readonly geom: GeomImpl;
-    public readonly media: MediaImpl;
-    public readonly net: NetImpl;
-    public readonly text: TextImpl;
-    public readonly ui: UIImpl;
+    public readonly events: IEvents;
+    public readonly filters: IFilters;
+    public readonly geom: IGeom;
+    public readonly media: IMedia;
+    public readonly net: INet;
+    public readonly text: IText;
+    public readonly ui: IUI;
     private readonly _$promise: Promise<void>;
 
     /**
@@ -123,7 +123,7 @@ export class Next2D
      * @method
      * @public
      */
-    async load (url: string, options: PlayerOptionsImpl | null = null): Promise<void>
+    async load (url: string, options: IPlayerOptions | null = null): Promise<void>
     {
         await Promise.all([this._$promise]);
         await loadService(url, options);
@@ -145,7 +145,7 @@ export class Next2D
         width: number = 240,
         height: number = 240,
         fps: number = 24,
-        options: PlayerOptionsImpl | null = null
+        options: IPlayerOptions | null = null
     ): Promise<Sprite> {
         await Promise.all([this._$promise]);
         return await createRootMovieClip(

@@ -13,11 +13,11 @@ import {
  * @method
  * @protected
  */
-export const execute = <P extends DisplayObjectContainer>(
-    display_object_container: P
+export const execute = <C extends DisplayObjectContainer>(
+    display_object_container: C
 ): void => {
 
-    const children = display_object_container._$getChildren();
+    const children = display_object_container.children;
     for (let idx = 0; idx < children.length; ++idx) {
 
         const child = children[idx];
@@ -29,8 +29,10 @@ export const execute = <P extends DisplayObjectContainer>(
         $rootMap.set(child, display_object_container.root);
         $stageAssignedMap.add(child);
 
-        if (child.isContainerEnabled) {
-            execute(child as DisplayObjectContainer);
+        if (!child.isContainerEnabled) {
+            continue;
         }
+
+        execute(child as DisplayObjectContainer);
     }
 }

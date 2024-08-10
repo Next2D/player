@@ -1,4 +1,4 @@
-import { execute as playerResizeEventService } from "./PlayerResizeEventService";
+import { execute as playerResizeEventUseCase } from "./PlayerResizeEventUseCase";
 
 /**
  * @type {number}
@@ -19,6 +19,6 @@ export const execute = (): void =>
     window.addEventListener("resize", (): void =>
     {
         cancelAnimationFrame(timerId);
-        timerId = requestAnimationFrame(playerResizeEventService);
+        timerId = requestAnimationFrame(playerResizeEventUseCase);
     });
 };

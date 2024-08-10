@@ -1,5 +1,5 @@
 import type { IMovieClipCharacter } from "./interface/IMovieClipCharacter";
-import type { DisplayObject } from "./DisplayObject";
+import type { IDisplayObject } from "./interface/IDisplayObject";
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
@@ -7,6 +7,8 @@ import { execute as movieClipAddActionsService } from "./MovieClip/service/Movie
 import { execute as movieClipAddLabelsService } from "./MovieClip/service/MovieClipAddLabelsService";
 import { execute as movieClipBuildSoundsService } from "./MovieClip/service/MovieClipBuildSoundsService";
 import { execute as movieClipGetChildrenService } from "./MovieClip/service/MovieClipGetChildrenService";
+import { execute as movieClipSetActionService } from "./MovieClip/service/MovieClipSetActionService";
+import { execute as movieClipDispatchFrameLabelEventService } from "./MovieClip/service/MovieClipDispatchFrameLabelEventService";
 
 /**
  * @description MovieClip クラスは、Sprite、DisplayObjectContainer、InteractiveObject、DisplayObject
@@ -26,20 +28,20 @@ import { execute as movieClipGetChildrenService } from "./MovieClip/service/Movi
  */
 export class MovieClip extends Sprite
 {
-    protected _$labels: Map<number, FrameLabel> | null;
-    protected _$currentFrame: number;
-    protected _$stopFlag: boolean;
-    protected _$canAction: boolean;
-    protected _$canSound: boolean;
-    protected _$actionProcess: boolean;
-    protected _$actions: Map<number, Function[]> | null;
-    protected _$frameCache: Map<string, any> | null;
-    protected _$sounds: Map<number, Sound[]> | null;
-    protected _$actionOffset: number;
-    protected _$actionLimit: number;
-    protected _$totalFrames: number;
-    protected _$isPlaying: boolean;
-    protected _$hasTimelineHeadMoved: boolean;
+    private _$labels: Map<number, FrameLabel> | null;
+    private _$actions: Map<number, Function[]> | null;
+    private _$sounds: Map<number, Sound[]> | null;
+    private _$currentFrame: number;
+    private _$stopFlag: boolean;
+    private _$canAction: boolean;
+    private _$canSound: boolean;
+    private _$actionProcess: boolean;
+    private _$frameCache: Map<string, any> | null;
+    private _$actionOffset: number;
+    private _$actionLimit: number;
+    private _$totalFrames: number;
+    private _$isPlaying: boolean;
+    private _$hasTimelineHeadMoved: boolean;
     // public _$loopConfig: LoopConfigImpl | null;
     // private _$tweenFrame: number;
 
@@ -518,42 +520,6 @@ export class MovieClip extends Sprite
     // }
 
     // /**
-    //  * @return {void}
-    //  * @private
-    //  */
-    // _$setAction (): void
-    // {
-    //     // added event
-    //     this._$executeAddedEvent();
-
-    //     if (this._$canAction) {
-
-    //         const frame: number = this._$currentFrame;
-
-    //         // frame label event
-    //         if (this._$labels && this._$labels.has(frame)) {
-
-    //             const frameLabel: FrameLabel | void = this._$labels.get(frame);
-
-    //             if (frameLabel && frameLabel.willTrigger(Event.FRAME_LABEL)) {
-    //                 frameLabel.dispatchEvent(new Event(Event.FRAME_LABEL));
-    //             }
-    //         }
-
-    //         // add action queue
-    //         if (this._$actions.size && this._$actions.has(frame)) {
-
-    //             const player: Player = $currentPlayer();
-    //             const index = player._$actions.indexOf(this);
-    //             if (index === -1) {
-    //                 player._$actions.push(this);
-    //             }
-
-    //         }
-    //     }
-    // }
-
-    // /**
     //  * @param  {number|string} value
     //  * @return {void}
     //  * @private
@@ -758,26 +724,28 @@ export class MovieClip extends Sprite
     //     }
     // }
 
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$prepareActions (): void
-    // {
-    //     // draw flag
-    //     this._$wait = false;
+    /**
+     * @description 子孫に登録されたアクションを準備します。
+     *              Prepares the actions registered in the descendants.
+     *
+     * @return {void}
+     * @method
+     * @private
+     */
+    _$prepareActions (): void
+    {
+        if (!this._$canAction) {
+            return ;
+        }
 
-    //     const children: DisplayObjectImpl<any>[] = this._$needsChildren
-    //         ? this._$getChildren()
-    //         : this._$children;
+        this._$canAction = false;
 
-    //     for (let idx: number = children.length - 1; idx > -1; --idx) {
-    //         children[idx]._$prepareActions();
-    //     }
+        // dispatch frame label event
+        movieClipDispatchFrameLabelEventService(this, this._$labels);
 
-    //     this._$setAction();
-    // }
+        // set frame action
+        movieClipSetActionService(this, this._$actions);
+    }
 
     // /**
     //  * @return {boolean}
@@ -1109,7 +1077,7 @@ export class MovieClip extends Sprite
      * @method
      * @protected
      */
-    _$getChildren <D extends DisplayObject>(): D[]
+    get children (): IDisplayObject<any>
     {
         if (!this._$hasTimelineHeadMoved || this._$characterId === -1) {
             return this._$children;

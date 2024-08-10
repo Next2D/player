@@ -1,14 +1,14 @@
-import type { IPlayerOptions } from "../interface/IPlayerOptions";
-import type { IStageData } from "../interface/IStageData";
+import type { IPlayerOptions } from "../../interface/IPlayerOptions";
+import type { IStageData } from "../../interface/IStageData";
 import type { MovieClip } from "@next2d/display";
-import { $player } from "../Player";
-import { $clamp } from "../CoreUtil";
+import { $player } from "../../Player";
+import { $clamp } from "../../CoreUtil";
 import { URLRequest } from "@next2d/net";
 import { IOErrorEvent } from "@next2d/events";
-import { execute as playerResizeEventService } from "../Player/PlayerResizeEventService";
-import { execute as playerRemoveLoadingElementService } from "../Player/PlayerRemoveLoadingElementService";
-import { execute as playerAppendCanvasElementService } from "../Player/PlayerAppendCanvasElementService";
-import { execute as playerReadyCompleteService } from "../Player/PlayerReadyCompleteService";
+import { execute as playerResizeEventUseCase } from "../../Player/usecase/PlayerResizeEventUseCase";
+import { execute as playerRemoveLoadingElementService } from "../../Player/service/PlayerRemoveLoadingElementService";
+import { execute as playerAppendCanvasElementService } from "../../Player/service/PlayerAppendCanvasElementService";
+import { execute as playerReadyCompleteUseCase } from "../../Player/usecase/PlayerReadyCompleteUseCase";
 import {
     Loader,
     $stage
@@ -73,10 +73,10 @@ export const execute = async (url: string, options: IPlayerOptions | null = null
     $stage.addChild<MovieClip>(loaderInfo.content as MovieClip);
 
     // resize
-    playerResizeEventService();
+    playerResizeEventUseCase();
 
-    // TODO: ready complete
-    playerReadyCompleteService();
+    // ready complete
+    playerReadyCompleteUseCase();
 
     // remove loading
     playerRemoveLoadingElementService();

@@ -1,5 +1,5 @@
 import { execute } from "./PlayerCreateContainerElementService";
-import { $PREFIX } from "../CoreUtil";
+import { $PREFIX } from "../../CoreUtil";
 import { describe, expect, it } from "vitest";
 
 describe("PlayerCreateContainerElementService.js test", () =>
