@@ -7,6 +7,12 @@ import type { Graphics } from "./Graphics";
 import type { MovieClip } from "./MovieClip";
 
 /**
+ * @type {number}
+ * @const
+ */
+export const $RENDERER_CONTAINER_TYPE: number = 0x00;
+
+/**
  * @typs {Float32Array}
  * @const
  */

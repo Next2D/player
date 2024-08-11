@@ -61,6 +61,36 @@ export class Stage extends DisplayObjectContainer
     public frameRate: number;
 
     /**
+     * @description devicePixelRatioを含んだcanvasの描画領域の拡大率
+     *              The magnification of the drawing area of the canvas including devicePixelRatio
+     *
+     * @member {number}
+     * @default 1
+     * @public
+     */
+    public rendererScale: number;
+
+    /**
+     * @description devicePixelRatioを含んだcanvasの描画領域の幅
+     *              The width of the drawing area of the canvas including devicePixelRatio
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    public rendererWidth: number;
+
+    /**
+     * @description devicePixelRatioを含んだcanvasの描画領域の高さ
+     *              The height of the drawing area of the canvas including devicePixelRatio
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    public rendererHeight: number;
+
+    /**
      * @description 背景色
      *              Background color
      * 
@@ -80,6 +110,10 @@ export class Stage extends DisplayObjectContainer
         this.stageWidth  = 0;
         this.stageHeight = 0;
         this.frameRate   = 1;
+
+        this.rendererScale  = 1;
+        this.rendererWidth  = 0;
+        this.rendererHeight = 0;
 
         // private
         this._$ready           = false;
@@ -185,7 +219,9 @@ export class Stage extends DisplayObjectContainer
         render_queue.push(this._$backgroundColor);
 
         displayObjectContainerGenerateRenderQueueUseCase(
-            this, render_queue, matrix, $COLOR_ARRAY_IDENTITY
+            this, render_queue, matrix, $COLOR_ARRAY_IDENTITY,
+            this.rendererWidth, this.rendererHeight,
+            matrix[4], matrix[5]
         );
     }
 }

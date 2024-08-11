@@ -31,6 +31,8 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
 
         switch (true) {
 
+            // todo
+
             default:
                 if (!character.recodeBuffer) {
                     character.recodeBuffer = new Float32Array(

@@ -37,7 +37,7 @@ export class Player
      * @default 0
      * @private
      */
-    private _$rendererWidth: number;
+    public rendererWidth: number;
 
     /**
      * @description devicePixelRatioを含んだcanvasの描画領域の高さ
@@ -47,7 +47,7 @@ export class Player
      * @default 0
      * @private
      */
-    private _$rendererHeight: number;
+    public rendererHeight: number;
 
     /**
      * @description devicePixelRatioを含んだcanvasの描画領域の拡大率
@@ -57,7 +57,7 @@ export class Player
      * @default 1
      * @private
      */
-    private _$rendererScale: number;
+    public rendererScale: number;
 
     /**
      * @description optionで指定された描画領域の固定幅、optionで指定されない場合は0
@@ -164,13 +164,14 @@ export class Player
             "hit": null
         };
 
-        this._$stopFlag       = true;
-        this._$startTime      = 0;
-        this._$fps            = 16;
-        this._$rendererWidth  = 0;
-        this._$rendererHeight = 0;
-        this._$rendererScale  = 1;
-        this._$timerId       = -1;
+        this.rendererWidth  = 0;
+        this.rendererHeight = 0;
+        this.rendererScale  = 1;
+
+        this._$stopFlag  = true;
+        this._$startTime = 0;
+        this._$fps       = 16;
+        this._$timerId   = -1;
 
         // options
         this._$fixedWidth  = 0;
@@ -254,57 +255,6 @@ export class Player
         //  * @private
         //  */
         // this._$actionProcess = false;
-    }
-
-    /**
-     * @description devicePixelRatioを含んだcanvasの描画領域の幅
-     *              The width of the drawing area of the canvas including devicePixelRatio
-     *
-     * @member {number}
-     * @default 0
-     * @public
-     */
-    get rendererWidth (): number
-    {
-        return this._$rendererWidth;
-    }
-    set rendererWidth (renderer_width: number)
-    {
-        this._$rendererWidth = renderer_width | 0;
-    }
-
-    /**
-     * @description devicePixelRatioを含んだcanvasの描画領域の高さ
-     *              The height of the drawing area of the canvas including devicePixelRatio
-     *
-     * @member {number}
-     * @default 0
-     * @public
-     */
-    get rendererHeight (): number
-    {
-        return this._$rendererHeight;
-    }
-    set rendererHeight (renderer_height: number)
-    {
-        this._$rendererHeight = renderer_height | 0;
-    }
-
-    /**
-     * @description devicePixelRatioを含んだcanvasの描画領域の拡大率
-     *              The magnification of the drawing area of the canvas including devicePixelRatio
-     *
-     * @member {number}
-     * @default 1
-     * @public
-     */
-    get rendererScale (): number
-    {
-        return this._$rendererScale;
-    }
-    set rendererScale (renderer_scale: number)
-    {
-        this._$rendererScale = renderer_scale;
     }
 
     /**

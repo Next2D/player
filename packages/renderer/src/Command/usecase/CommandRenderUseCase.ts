@@ -1,3 +1,7 @@
+import { execute as displayObjectContainerRenderUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerRenderUseCase";
+import { execute as shapeRenderUseCase } from "../../Shape/usecase/ShapeRenderUseCase";
+import { execute as textFieldRenderUseCase } from "../../TextField/usecase/TextFieldRenderUseCase";
+import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUseCase";
 import {
     $canvas,
     $context
@@ -20,8 +24,9 @@ let $color: number = -1;
  */
 export const execute = (render_queue: Float32Array): void =>
 {
+    let index = 0;
     // update background color
-    const color = render_queue[0];
+    const color = render_queue[index++];
     if ($color !== color) {
         $color = color;
         if ($color === -1) {
@@ -42,8 +47,39 @@ export const execute = (render_queue: Float32Array): void =>
     $context.clearRect(0, 0, $canvas.width, $canvas.height);
     $context.beginPath();
 
-    // todo
-    // ...
+    while (render_queue.length > index) {
+
+        // display object type
+        const type = render_queue[index++];
+
+        // hidden
+        if (!render_queue[index++]) {
+            continue;
+        }
+
+        switch (type) {
+
+            case 0x00: // container
+                index = displayObjectContainerRenderUseCase(render_queue, index);
+                break;
+
+            case 0x01: // shape
+                index = shapeRenderUseCase(render_queue, index);
+                break;
+
+            case 0x02: // text
+                index = textFieldRenderUseCase(render_queue, index);
+                break;
+
+            case 0x03: // video
+                index = videoRenderUseCase(render_queue, index);
+                break;
+
+            default:
+                break;
+
+        }
+    }
 
     // excute
     $context.drawInstacedArray();

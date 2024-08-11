@@ -4,8 +4,7 @@ import {
     $rendererMatrix,
     $devicePixelRatio,
     $gl,
-    $context,
-    $rendererStage
+    $context
 } from "../../RendererUtil";
 import { $cacheStore } from "@next2d/cache";
 
@@ -69,7 +68,4 @@ export const execute = (
 
     // context reset and update
     $context.resize(renderer_width, renderer_height);
-
-    // stage update
-    $rendererStage.doChanged();
 };

@@ -65,9 +65,9 @@ export const execute = (): void =>
     }
 
     // update
-    $player.rendererScale  = scale;
-    $player.rendererWidth  = width;
-    $player.rendererHeight = height;
+    $stage.rendererScale  = $player.rendererScale  = scale;
+    $stage.rendererWidth  = $player.rendererWidth  = width;
+    $stage.rendererHeight = $player.rendererHeight = height;
 
     // worker postMessage
     playerResizePostMessageService();

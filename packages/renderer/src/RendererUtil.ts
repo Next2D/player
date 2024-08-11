@@ -1,11 +1,4 @@
 import type { CanvasToWebGLContext } from "@next2d/webgl";
-import { RendererDisplayObjectContainer } from "./RendererDisplayObjectContainer";
-
-/**
- * @type {RendererDisplayObjectContainer}
- * @public
- */
-export const $rendererStage: RendererDisplayObjectContainer = new RendererDisplayObjectContainer();
 
 /**
  * @type {number}
