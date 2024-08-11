@@ -232,6 +232,7 @@ export class GradientBevelFilter  extends BitmapFilter
     set blurX (blur_x: number)
     {
         this._$blurFilter.blurX = blur_x;
+        this.$updated = this._$blurFilter.$updated;
     }
 
     /**
@@ -249,6 +250,7 @@ export class GradientBevelFilter  extends BitmapFilter
     set blurY (blur_y: number)
     {
         this._$blurFilter.blurY = blur_y;
+        this.$updated = this._$blurFilter.$updated;
     }
 
     /**
@@ -342,6 +344,7 @@ export class GradientBevelFilter  extends BitmapFilter
     set quality (quality: IFilterQuality)
     {
         this._$blurFilter.quality = quality;
+        this.$updated = this._$blurFilter.$updated;
     }
 
     /**
