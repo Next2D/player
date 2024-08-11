@@ -398,4 +398,18 @@ export class ConvolutionFilter extends BitmapFilter
             this._$clamp, this._$color, this._$alpha
         ];
     }
+
+    /**
+     * @description フィルターを適用できるかどうかを返します。
+     *              Returns whether the filter can be applied.
+     *
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    canApplyFilter (): boolean
+    {
+        return this._$matrix !== null
+            && this._$matrixX * this._$matrixY === this._$matrix.length;
+    }
 }

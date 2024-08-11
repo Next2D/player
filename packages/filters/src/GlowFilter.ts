@@ -1,4 +1,5 @@
 import type { IFilterQuality } from "./interface/IFilterQuality";
+import type { IBounds } from "./interface/IBounds";
 import { BitmapFilter } from "./BitmapFilter";
 import { BlurFilter } from "./BlurFilter";
 import {
@@ -327,5 +328,38 @@ export class GlowFilter extends BitmapFilter
             this._$color, this._$alpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
             this._$strength, this._$blurFilter.quality, this._$inner, this._$knockout
         ];
+    }
+
+    /**
+     * @description フィルターを適用できるかどうかを返します。
+     *              Returns whether the filter can be applied.
+     *
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    canApplyFilter (): boolean
+    {
+        return this._$alpha > 0
+            && this._$strength > 0
+            && this._$blurFilter.canApplyFilter();
+    }
+
+    /**
+     * @description フィルターの描画範囲のバウンディングボックスを返します。
+     *              Returns the bounding box of the filter drawing area.
+     * 
+     * @param  {object} bounds
+     * @return {object}
+     * @method
+     * @public
+     */
+    getBounds (bounds: IBounds): IBounds
+    {
+        if (!this.canApplyFilter() || this._$inner) {
+            return bounds;
+        }
+
+        return this._$blurFilter.getBounds(bounds);
     }
 }

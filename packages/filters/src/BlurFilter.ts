@@ -1,6 +1,13 @@
 import type { IFilterQuality } from "./interface/IFilterQuality";
+import type { IBounds } from "./interface/IBounds";
 import { BitmapFilter } from "./BitmapFilter";
 import { $clamp } from "./FilterUtil";
+
+/**
+ * @return {array}
+ * @private
+ */
+const STEP: number[] = [0.5, 1.05, 1.4, 1.55, 1.75, 1.9, 2, 2.15, 2.2, 2.3, 2.5, 3, 3, 3.5, 3.5];
 
 /**
  * @description BlurFilter クラスを使用すると、表示オブジェクトにぼかし効果を適用できます。
@@ -193,5 +200,45 @@ export class BlurFilter extends BitmapFilter
         return [1,
             this._$blurX, this._$blurY, this._$quality
         ];
+    }
+
+    /**
+     * @description フィルターを適用できるかどうかを返します。
+     *              Returns whether the filter can be applied.
+     *
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    canApplyFilter (): boolean
+    {
+        return this._$blurX > 0 && this._$blurY > 0 && this._$quality > 0;
+    }
+
+    /**
+     * @description フィルターの描画範囲のバウンディングボックスを返します。
+     *              Returns the bounding box of the filter drawing area.
+     * 
+     * @param  {object} bounds
+     * @return {object}
+     * @method
+     * @public
+     */
+    getBounds (bounds: IBounds): IBounds
+    {
+        if (!this.canApplyFilter()) {
+            return bounds;
+        }
+
+        const step = STEP[this._$quality - 1];
+        const dx = 0 >= this._$blurX ? 1 : Math.round(this._$blurX * step);
+        const dy = 0 >= this._$blurY ? 1 : Math.round(this._$blurY * step);
+
+        bounds.xMin -= dx;
+        bounds.xMax += dx * 2;
+        bounds.yMin -= dy;
+        bounds.yMax += dy * 2;
+
+        return bounds;
     }
 }

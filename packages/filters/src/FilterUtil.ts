@@ -43,3 +43,9 @@ export const $convertColorStringToNumber = (value: string): number =>
     colorContext.fillStyle = value;
     return +`0x${colorContext.fillStyle.slice(1)}`;
 };
+
+/**
+ * @type {number}
+ * @private
+ */
+export const $Deg2Rad: number = 180 / Math.PI;

@@ -1,10 +1,12 @@
 import type { IFilterQuality } from "./interface/IFilterQuality";
 import type { IBitmapFilterType } from "./interface/IBitmapFilterType";
+import type { IBounds } from "./interface/IBounds";
 import { BitmapFilter } from "./BitmapFilter";
 import { BlurFilter } from "./BlurFilter";
 import {
     $clamp,
-    $convertColorStringToNumber
+    $convertColorStringToNumber,
+    $Deg2Rad
 } from "./FilterUtil";
 
 /**
@@ -449,5 +451,56 @@ export class GradientBevelFilter  extends BitmapFilter
             this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
             this._$blurFilter.quality, this._$type, this._$knockout
         ];
+    }
+
+    /**
+     * @description フィルターを適用できるかどうかを返します。
+     *              Returns whether the filter can be applied.
+     *
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    canApplyFilter (): boolean
+    {
+        return this._$strength > 0 && this._$distance > 0
+            && this._$alphas !== null && this._$ratios !== null && this._$colors !== null
+            && this._$blurFilter.canApplyFilter();
+    }
+
+    /**
+     * @description フィルターの描画範囲のバウンディングボックスを返します。
+     *              Returns the bounding box of the filter drawing area.
+     * 
+     * @param  {object} bounds
+     * @return {object}
+     * @method
+     * @public
+     */
+    getBounds (bounds: IBounds): IBounds
+    {
+        if (!this.canApplyFilter()) {
+            return bounds;
+        }
+
+        this._$blurFilter.getBounds(bounds);
+        if (this._$type === "inner") {
+            return bounds;
+        }
+
+        const radian: number = this._$angle * $Deg2Rad;
+        const x: number = Math.abs(Math.cos(radian) * this._$distance);
+        const y: number = Math.abs(Math.sin(radian) * this._$distance);
+
+        bounds.xMin = Math.min(bounds.xMin, x);
+        if (x > 0) {
+            bounds.xMax += x;
+        }
+        bounds.yMin = Math.min(bounds.yMin, y);
+        if (y > 0) {
+            bounds.yMax += y;
+        }
+
+        return bounds;
     }
 }

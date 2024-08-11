@@ -1,3 +1,5 @@
+import type { IBounds } from "./interface/IBounds";
+
 /**
  * @description BitmapFilter クラスは、すべてのイメージフィルター効果の基本クラスです。
  *              BevelFilter、BlurFilter、ColorMatrixFilter、ConvolutionFilter、DisplacementMapFilter、DropShadowFilter、GlowFilter、GradientBevelFilter、
@@ -32,5 +34,32 @@ export class BitmapFilter
     constructor ()
     {
         this.$updated = true;
+    }
+
+    /**
+     * @description フィルターを適用できるかどうかを返します。
+     *              Returns whether the filter can be applied.
+     *
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    canApplyFilter (): boolean
+    {
+        return true;
+    }
+
+    /**
+     * @description フィルターの描画範囲のバウンディングボックスを返します。
+     *              Returns the bounding box of the filter drawing area.
+     * 
+     * @param  {object} bounds
+     * @return {object}
+     * @method
+     * @public
+     */
+    getBounds (bounds: IBounds): IBounds
+    {
+        return bounds;
     }
 }

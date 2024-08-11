@@ -425,4 +425,19 @@ export class DisplacementMapFilter extends BitmapFilter
             this._$scaleX, this._$scaleY, this._$mode, this._$color, this._$alpha
         ];
     }
+
+    /**
+     * @description フィルターを適用できるかどうかを返します。
+     *              Returns whether the filter can be applied.
+     *
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    canApplyFilter (): boolean
+    {
+        return this._$mapBitmap !== null
+            && this._$componentX > 0 && this._$componentY > 0
+            && this._$scaleX !== 0 && this._$scaleY !== 0;
+    }
 }
