@@ -216,6 +216,7 @@ export class BevelFilter extends BitmapFilter
     set blurX (blur_x: number)
     {
         this._$blurFilter.blurX = blur_x;
+        this.$updated = this._$blurFilter.$updated;
     }
 
     /**
@@ -233,6 +234,7 @@ export class BevelFilter extends BitmapFilter
     set blurY (blur_y: number)
     {
         this._$blurFilter.blurY = blur_y;
+        this.$updated = this._$blurFilter.$updated;
     }
 
     /**
@@ -343,6 +345,7 @@ export class BevelFilter extends BitmapFilter
     set quality (quality: IFilterQuality)
     {
         this._$blurFilter.quality = quality;
+        this.$updated = this._$blurFilter.$updated;
     }
 
     /**
@@ -431,10 +434,22 @@ export class BevelFilter extends BitmapFilter
     }
     set type (type: IBitmapFilterType)
     {
-        type = `${type}`;
+        type = `${type}`.toLowerCase() as IBitmapFilterType;
         if (type === this._$type) {
             return ;
         }
+
+        switch (type) {
+
+            case "inner":
+            case "outer":
+            case "full":
+                break;
+
+            default:
+                return ;
+        }
+
         this._$type   = type;
         this.$updated = true;
     }

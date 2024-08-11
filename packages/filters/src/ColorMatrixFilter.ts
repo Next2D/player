@@ -27,12 +27,12 @@ export class ColorMatrixFilter extends BitmapFilter
     private _$matrix: number[];
 
     /**
-     * @param {array} matrix
+     * @param {array} [matrix=null]
      *
      * @constructor
      * @public
      */
-    constructor (matrix: number[])
+    constructor (matrix: number[] | null = null)
     {
         super();
 
@@ -45,7 +45,9 @@ export class ColorMatrixFilter extends BitmapFilter
         ];
 
         // setup
-        this.matrix = matrix;
+        if (matrix && matrix.length === 20) {
+            this.matrix = matrix;
+        }
     }
 
     /**
