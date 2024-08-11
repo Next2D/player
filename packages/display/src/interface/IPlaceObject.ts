@@ -5,8 +5,8 @@ import type { IBlendMode } from "./IBlendMode";
 
 export interface IPlaceObject {
     matrix?: number[];
-    colorTransform?: number[];
     typedMatrix?: Float32Array;
+    colorTransform?: number[];
     typedColorTransform?: Float32Array;
     blendMode?: IBlendMode;
     surfaceFilterList?: ISurfaceFilter[];

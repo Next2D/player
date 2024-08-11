@@ -1,0 +1,1 @@
+export type IBitmapFilterType = "full" | "inner" | "outer";

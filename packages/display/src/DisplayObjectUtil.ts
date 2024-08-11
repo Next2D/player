@@ -36,7 +36,7 @@ export const $getInstanceId = (): number =>
  *
  * @type {array[]}
  * @const
- * @static
+ * @protected
  */
 export const $arrays: any[] = [];
 
@@ -46,7 +46,7 @@ export const $arrays: any[] = [];
  *
  * @type {Float32Array[]}
  * @const
- * @static
+ * @protected
  */
 export const $float32Array6: Float32Array[] = [];
 
@@ -56,7 +56,7 @@ export const $float32Array6: Float32Array[] = [];
  *
  * @type {Float32Array[]}
  * @const
- * @static
+ * @protected
  */
 export const $float32Array8: Float32Array[] = [];
 
@@ -74,7 +74,7 @@ export const $float32Array8: Float32Array[] = [];
  * @param  {number} [f5=0]
  * @return {Float32Array}
  * @method
- * @static
+ * @protected
  */
 export const $getFloat32Array6 = (
     f0: number = 0, f1: number = 0,
@@ -101,7 +101,7 @@ export const $getFloat32Array6 = (
  * @param  {Float32Array} array
  * @return {void}
  * @method
- * @static
+ * @protected
  */
 export const $poolFloat32Array6 = (array: Float32Array): void =>
 {
@@ -123,7 +123,7 @@ export const $poolFloat32Array6 = (array: Float32Array): void =>
  * @param  {number} [f7=0]
  * @return {Float32Array}
  * @method
- * @static
+ * @protected
  */
 export const $getFloat32Array8 = (
     f0: number = 1, f1: number = 1,
@@ -153,7 +153,7 @@ export const $getFloat32Array8 = (
  * @param  {Float32Array} array
  * @return {void}
  * @method
- * @static
+ * @protected
  */
 export const $poolFloat32Array8 = (array: Float32Array): void =>
 {
@@ -168,7 +168,7 @@ export const $poolFloat32Array8 = (array: Float32Array): void =>
  * @param  {array} args
  * @return {array}
  * @method
- * @static
+ * @protected
  */
 export const $getArray = (...args: any[]): any[] =>
 {
@@ -186,7 +186,7 @@ export const $getArray = (...args: any[]): any[] =>
  * @param  {array} array
  * @return {void}
  * @method
- * @static
+ * @protected
  */
 export const $poolArray = (array: any[]): void =>
 {
@@ -376,7 +376,7 @@ export const $convertColorStringToNumber = (value: string): number =>
  * @param  {number} [default_value=null]
  * @return {number}
  * @method
- * @static
+ * @protected
  */
 export const $clamp = (
     value: number,

@@ -22,7 +22,8 @@ import {
 export const execute = <D extends DisplayObject>(
     display_object: D,
     tag: IDictionaryTag,
-    parent: MovieClip | Loader
+    parent: MovieClip | Loader,
+    placeId: number = -1
 ): void => {
 
     const loaderInfo = parent.loaderInfo;
@@ -41,4 +42,7 @@ export const execute = <D extends DisplayObject>(
     display_object.startFrame  = tag.startFrame;
     display_object.endFrame    = tag.endFrame;
     display_object.name        = tag.name || "";
+
+    // first frame placeId
+    display_object.placeId = placeId;
 };

@@ -1,7 +1,7 @@
 import type { MovieClip } from "../../MovieClip";
 import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
-// import { execute as movieClipPreparaActionUseCase } from "../../MovieClip/usecase/MovieClipPreparaActionUseCase";
+import { execute as movieClipPrepareActionUseCase } from "../../MovieClip/usecase/MovieClipPrepareActionUseCase";
 
 /**
  * @description 子孫のアクションを準備する
@@ -29,7 +29,7 @@ export const execute = <C extends DisplayObjectContainer>(display_object_contain
         execute(displayObject as C);
 
         if (displayObject.isTimelineEnabled) {
-            (displayObject as MovieClip)._$prepareActions();
+            movieClipPrepareActionUseCase(displayObject as MovieClip);
         }
     }
 };

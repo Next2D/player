@@ -1,37 +1,23 @@
+import type { IBitmapFilterType } from "./interface/IBitmapFilterType";
+import type { IFilterQuality } from "./interface/IFilterQuality";
 import { BitmapFilter } from "./BitmapFilter";
 import { BlurFilter } from "./BlurFilter";
-import type { BitmapFilterTypeImpl } from "./interface/BitmapFilterTypeImpl";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { FilterQualityImpl } from "./interface/FilterQualityImpl";
-import type { BoundsImpl } from "./interface/BoundsImpl";
-import type {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
 import {
-    $Math,
     $clamp,
-    $toColorInt,
-    $getArray,
-    $Deg2Rad,
-    $intToR,
-    $intToG,
-    $intToB,
-    $getBoundsObject,
-    $devicePixelRatio
-} from "@next2d/share";
+    $convertColorStringToNumber
+} from "./FilterUtil";
 
 /**
- * BevelFilter クラスを使用すると、表示オブジェクトにベベル効果を追加できます。
- * ボタンなどのオブジェクトにベベル効果を適用すると 3 次元的に表現されます。
- * 異なるハイライトカラー、シャドウカラー、ベベルのぼかし量、ベベルの角度、ベベルの配置、
- * ノックアウト効果を使用して、ベベルの外観をカスタマイズできます。
+ * @description BevelFilter クラスを使用すると、表示オブジェクトにベベル効果を追加できます。
+ *              ボタンなどのオブジェクトにベベル効果を適用すると 3 次元的に表現されます。
+ *              異なるハイライトカラー、シャドウカラー、ベベルのぼかし量、ベベルの角度、ベベルの配置、
+ *              ノックアウト効果を使用して、ベベルの外観をカスタマイズできます。
  *
- * The BevelFilter class lets you add a bevel effect to display objects.
- * A bevel effect gives objects such as buttons a three-dimensional look.
- * You can customize the look of the bevel with different highlight and shadow colors,
- * the amount of blur on the bevel, the angle of the bevel, the placement of the bevel,
- * and a knockout effect.
+ *              The BevelFilter class lets you add a bevel effect to display objects.
+ *              A bevel effect gives objects such as buttons a three-dimensional look.
+ *              You can customize the look of the bevel with different highlight and shadow colors,
+ *              the amount of blur on the bevel, the angle of the bevel, the placement of the bevel,
+ *              and a knockout effect.
  *
  * @class
  * @memberOf next2d.filters
@@ -39,28 +25,87 @@ import {
  */
 export class BevelFilter extends BitmapFilter
 {
+    /**
+     * @type {BlurFilter}
+     * @default BlurFilter
+     * @private
+     */
     private _$blurFilter: BlurFilter;
+
+    /**
+     * @type {number}
+     * @default 4
+     * @private
+     */
     private _$distance: number;
+
+    /**
+     * @type {number}
+     * @default 45
+     * @private
+     */
     private _$angle: number;
+
+    /**
+     * @type {number}
+     * @default 0xffffff
+     * @private
+     */
     private _$highlightColor: number;
+
+    /**
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$highlightAlpha: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$shadowColor: number;
+
+    /**
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$shadowAlpha: number;
+
+    /**
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$strength: number;
-    private _$type: BitmapFilterTypeImpl;
+
+    /**
+     * @type {string}
+     * @default "inner"
+     * @private
+     */
+    private _$type: IBitmapFilterType;
+
+    /**
+     * @type {boolean}
+     * @default false
+     * @private
+     */
     private _$knockout: boolean;
 
     /**
      * @param {number}  [distance=4]
      * @param {number}  [angle=45]
-     * @param {uint}    [highlight_color=0xffffff]
+     * @param {number}  [highlight_color=0xffffff]
      * @param {number}  [highlight_alpha=1]
-     * @param {uint}    [shadow_color=0x000000]
+     * @param {number}  [shadow_color=0x000000]
      * @param {number}  [shadow_alpha=1]
      * @param {number}  [blur_x=4]
      * @param {number}  [blur_y=4]
      * @param {number}  [strength=1]
-     * @param {int}     [quality=1]
+     * @param {number}  [quality=1]
      * @param {string}  [type=BitmapFilterType.INNER]
      * @param {boolean} [knockout=false]
      *
@@ -68,85 +113,33 @@ export class BevelFilter extends BitmapFilter
      * @public
      */
     constructor (
-        distance: number = 4, angle: number = 45,
-        highlight_color: number = 0xffffff, highlight_alpha: number = 1,
-        shadow_color: number = 0, shadow_alpha: number = 1,
-        blur_x: number = 4, blur_y: number = 4,
-        strength: number = 1, quality: FilterQualityImpl = 1,
-        type: BitmapFilterTypeImpl = "inner", knockout: boolean = false
+        distance: number = 4,
+        angle: number = 45,
+        highlight_color: number = 0xffffff,
+        highlight_alpha: number = 1,
+        shadow_color: number = 0,
+        shadow_alpha: number = 1,
+        blur_x: number = 4,
+        blur_y: number = 4,
+        strength: number = 1,
+        quality: IFilterQuality = 1,
+        type: IBitmapFilterType = "inner", 
+        knockout: boolean = false
     ) {
 
         super();
 
-        /**
-         * @type {BlurFilter}
-         * @default BlurFilter
-         * @private
-         */
-        this._$blurFilter = new BlurFilter(blur_x, blur_y, quality);
-
-        /**
-         * @type {number}
-         * @default 4
-         * @private
-         */
-        this._$distance = 4;
-
-        /**
-         * @type {number}
-         * @default 45
-         * @private
-         */
-        this._$angle = 45;
-
-        /**
-         * @type {number}
-         * @default 0xffffff
-         * @private
-         */
+        // default 
+        this._$blurFilter     = new BlurFilter(blur_x, blur_y, quality);
+        this._$distance       = 4;
+        this._$angle          = 45;
         this._$highlightColor = 0xffffff;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
         this._$highlightAlpha = 1;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$shadowColor = 0;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$shadowAlpha = 1;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$strength = 1;
-
-        /**
-         * @type {string}
-         * @default "inner"
-         * @private
-         */
-        this._$type = "inner";
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$knockout = false;
+        this._$shadowColor    = 0;
+        this._$shadowAlpha    = 1;
+        this._$strength       = 1;
+        this._$type           = "inner";
+        this._$knockout       = false;
 
         // setup
         this.distance       = distance;
@@ -161,25 +154,10 @@ export class BevelFilter extends BitmapFilter
     }
 
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class BevelFilter]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class BevelFilter]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
-     * @return  {string}
-     * @default next2d.filters.BevelFilter
+     * @return {string}
      * @const
      * @static
      */
@@ -189,25 +167,10 @@ export class BevelFilter extends BitmapFilter
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object BevelFilter]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object BevelFilter]";
-    }
-
-    /**
      * @description 指定されたオブジェクトの空間名を返します。
      *              Returns the space name of the specified object.
      *
-     * @return  {string}
-     * @default next2d.filters.BevelFilter
+     * @return {string}
      * @const
      * @public
      */
@@ -230,11 +193,12 @@ export class BevelFilter extends BitmapFilter
     }
     set angle (angle: number)
     {
-        angle %= 360;
-        if (angle !== this._$angle) {
-            this._$angle = $clamp(angle, -360, 360, 45);
-            this._$doChanged();
+        angle = $clamp(angle % 360, -360, 360, 45);
+        if (angle === this._$angle) {
+            return ;
         }
+        this._$angle  = angle;
+        this.$updated = true;
     }
 
     /**
@@ -286,10 +250,11 @@ export class BevelFilter extends BitmapFilter
     set distance (distance: number)
     {
         distance = $clamp(+distance, -255, 255, 4);
-        if (distance !== this._$distance) {
-            this._$distance = distance;
-            this._$doChanged();
+        if (distance === this._$distance) {
+            return ;
         }
+        this._$distance = distance;
+        this.$updated   = true;
     }
 
     /**
@@ -307,10 +272,11 @@ export class BevelFilter extends BitmapFilter
     set highlightAlpha (highlight_alpha: number)
     {
         highlight_alpha = $clamp(+highlight_alpha, 0, 1, 0);
-        if (highlight_alpha !== this._$highlightAlpha) {
-            this._$highlightAlpha = highlight_alpha;
-            this._$doChanged();
+        if (highlight_alpha === this._$highlightAlpha) {
+            return ;
         }
+        this._$highlightAlpha = highlight_alpha;
+        this.$updated = true;
     }
 
     /**
@@ -325,15 +291,19 @@ export class BevelFilter extends BitmapFilter
     {
         return this._$highlightColor;
     }
-    set highlightColor (highlight_color: number)
+    set highlightColor (highlight_color: number | string)
     {
         highlight_color = $clamp(
-            $toColorInt(highlight_color), 0, 0xffffff, 0xffffff
+            typeof highlight_color === "string" 
+                ? $convertColorStringToNumber(highlight_color)
+                : highlight_color
+            , 0, 0xffffff, 0xffffff
         );
-        if (highlight_color !== this._$highlightColor) {
-            this._$highlightColor = highlight_color;
-            this._$doChanged();
+        if (highlight_color === this._$highlightColor) {
+            return ;
         }
+        this._$highlightColor = highlight_color;
+        this.$updated = true;
     }
 
     /**
@@ -350,10 +320,12 @@ export class BevelFilter extends BitmapFilter
     }
     set knockout (knockout: boolean)
     {
-        if (knockout !== this._$knockout) {
-            this._$knockout = !!knockout;
-            this._$doChanged();
+        knockout = !!knockout;
+        if (knockout === this._$knockout) {
+            return ;
         }
+        this._$knockout = knockout;
+        this.$updated   = true;
     }
 
     /**
@@ -364,11 +336,11 @@ export class BevelFilter extends BitmapFilter
      * @default 1
      * @public
      */
-    get quality (): FilterQualityImpl
+    get quality (): IFilterQuality
     {
         return this._$blurFilter.quality;
     }
-    set quality (quality: FilterQualityImpl)
+    set quality (quality: IFilterQuality)
     {
         this._$blurFilter.quality = quality;
     }
@@ -387,11 +359,12 @@ export class BevelFilter extends BitmapFilter
     }
     set shadowAlpha (shadow_alpha: number)
     {
-        shadow_alpha = $clamp(+shadow_alpha, 0, 1, 0);
-        if (shadow_alpha !== this._$shadowAlpha) {
-            this._$shadowAlpha = shadow_alpha;
-            this._$doChanged();
+        shadow_alpha = $clamp(shadow_alpha, 0, 1, 0);
+        if (shadow_alpha === this._$shadowAlpha) {
+            return ;
         }
+        this._$shadowAlpha = shadow_alpha;
+        this.$updated = true;
     }
 
     /**
@@ -406,16 +379,20 @@ export class BevelFilter extends BitmapFilter
     {
         return this._$shadowColor;
     }
-    set shadowColor (shadow_color: number)
+    set shadowColor (shadow_color: number | string)
     {
         shadow_color = $clamp(
-            $toColorInt(shadow_color), 0, 0xffffff, 0
+            typeof shadow_color === "string"
+                ? $convertColorStringToNumber(shadow_color)
+                : shadow_color
+            , 0, 0xffffff, 0
         );
 
-        if (shadow_color !== this._$shadowColor) {
-            this._$shadowColor = shadow_color;
-            this._$doChanged();
+        if (shadow_color === this._$shadowColor) {
+            return ;
         }
+        this._$shadowColor = shadow_color;
+        this.$updated = true;
     }
 
     /**
@@ -433,10 +410,11 @@ export class BevelFilter extends BitmapFilter
     set strength (strength: number)
     {
         strength = $clamp(strength | 0, 0, 255, 0);
-        if (strength !== this._$strength) {
-            this._$strength = strength;
-            this._$doChanged();
+        if (strength === this._$strength) {
+            return ;
         }
+        this._$strength = strength;
+        this.$updated   = true;
     }
 
     /**
@@ -447,17 +425,18 @@ export class BevelFilter extends BitmapFilter
      * @default BitmapFilterType.INNER
      * @public
      */
-    get type (): BitmapFilterTypeImpl
+    get type (): IBitmapFilterType
     {
         return this._$type;
     }
-    set type (type: BitmapFilterTypeImpl)
+    set type (type: IBitmapFilterType)
     {
         type = `${type}`;
-        if (type !== this._$type) {
-            this._$type = type;
-            this._$doChanged();
+        if (type === this._$type) {
+            return ;
         }
+        this._$type   = type;
+        this.$updated = true;
     }
 
     /**
@@ -478,205 +457,19 @@ export class BevelFilter extends BitmapFilter
     }
 
     /**
+     * @description 設定されたフィルターの値を配列で返します。
+     *              Returns the value of the specified filter as an array.
+     *
      * @return {array}
      * @method
      * @public
      */
-    _$toArray (): any[]
+    toArray (): Array<number | string | boolean>
     {
-        return $getArray(0,
+        return [0,
             this._$distance, this._$angle, this._$highlightColor, this._$highlightAlpha,
             this._$shadowColor, this._$shadowAlpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
             this._$strength, this._$blurFilter.quality, this._$type, this._$knockout
-        );
-    }
-
-    /**
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$isUpdated (): boolean
-    {
-        return this._$updated || this._$blurFilter._$isUpdated();
-    }
-
-    /**
-     * @param  {object} bounds
-     * @param  {number} [x_scale=null]
-     * @param  {number} [y_scale=null]
-     * @return {object}
-     * @method
-     * @private
-     */
-    _$generateFilterRect (
-        bounds: BoundsImpl,
-        x_scale: number = 0,
-        y_scale: number = 0
-    ): BoundsImpl {
-
-        let clone: BoundsImpl = $getBoundsObject(
-            bounds.xMin, bounds.xMax,
-            bounds.yMin, bounds.yMax
-        );
-
-        if (!this._$canApply()) {
-            return clone;
-        }
-
-        clone = this
-            ._$blurFilter
-            ._$generateFilterRect(clone, x_scale, y_scale);
-
-        const radian: number = this._$angle * $Deg2Rad;
-
-        let x: number = $Math.abs($Math.cos(radian) * this._$distance);
-        let y: number = $Math.abs($Math.sin(radian) * this._$distance);
-
-        if (x_scale) {
-            x *= x_scale;
-        }
-
-        if (y_scale) {
-            y *= y_scale;
-        }
-
-        clone.xMin = $Math.min(clone.xMin, x);
-        if (x > 0) {
-            clone.xMax += x;
-        }
-        clone.yMin = $Math.min(clone.yMin, y);
-        if (y > 0) {
-            clone.yMax += y;
-        }
-
-        return clone;
-    }
-
-    /**
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$canApply (): boolean
-    {
-        return this._$strength > 0
-            && this._$distance !== 0
-            && this._$blurFilter._$canApply();
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array}  matrix
-     * @return {WebGLTexture}
-     * @private
-     */
-    _$applyFilter (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array
-    ): WebGLTexture {
-
-        this._$updated = false;
-
-        const manager: FrameBufferManager = context.frameBuffer;
-
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-
-        if (!currentAttachment) {
-            throw new Error("the current attachment is null.");
-        }
-
-        // reset
-        context.setTransform(1, 0, 0, 1, 0, 0);
-
-        const baseTexture: WebGLTexture = manager
-            .getTextureFromCurrentAttachment();
-
-        if (!this._$canApply()) {
-            return baseTexture;
-        }
-
-        const baseWidth: number   = currentAttachment.width;
-        const baseHeight: number  = currentAttachment.height;
-        const baseOffsetX: number = context._$offsetX;
-        const baseOffsetY: number = context._$offsetY;
-
-        // matrix to scale
-        let xScale: number = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        let yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
-
-        xScale /= $devicePixelRatio;
-        yScale /= $devicePixelRatio;
-
-        xScale *= 2;
-        yScale *= 2;
-
-        // pointer
-        const radian: number = this._$angle * $Deg2Rad;
-        const x: number = $Math.cos(radian) * this._$distance * xScale;
-        const y: number = $Math.sin(radian) * this._$distance * yScale;
-
-        // highlight buffer
-        const highlightTextureBaseAttachment: AttachmentImpl = manager
-            .createTextureAttachment(baseWidth, baseHeight);
-
-        context._$bind(highlightTextureBaseAttachment);
-
-        context.reset();
-        context.drawImage(baseTexture, 0, 0, baseWidth, baseHeight);
-
-        context.globalCompositeOperation = "erase";
-        context.drawImage(baseTexture, x * 2, y * 2, baseWidth, baseHeight);
-
-        const highlightTextureBase = this
-            ._$blurFilter
-            ._$applyFilter(context, matrix, false);
-
-        const blurWidth   = highlightTextureBase.width;
-        const blurHeight  = highlightTextureBase.height;
-        const bevelWidth  = $Math.ceil(blurWidth  + $Math.abs(x) * 2);
-        const bevelHeight = $Math.ceil(blurHeight + $Math.abs(y) * 2);
-
-        // bevel filter buffer
-        const isInner: boolean = this._$type === "inner";
-        const width: number    = isInner ? baseWidth  : bevelWidth;
-        const height: number   = isInner ? baseHeight : bevelHeight;
-
-        const absX: number = $Math.abs(x);
-        const absY: number = $Math.abs(y);
-        const blurOffsetX: number = (blurWidth  - baseWidth)  / 2;
-        const blurOffsetY: number = (blurHeight - baseHeight) / 2;
-
-        const baseTextureX: number = isInner ? 0 : absX + blurOffsetX;
-        const baseTextureY: number = isInner ? 0 : absY + blurOffsetY;
-        const blurTextureX: number = isInner ? -blurOffsetX - x : absX - x;
-        const blurTextureY: number = isInner ? -blurOffsetY - y : absY - y;
-
-        context._$bind(currentAttachment);
-
-        manager.releaseAttachment(highlightTextureBaseAttachment, true);
-
-        context._$applyBitmapFilter(
-            highlightTextureBase, width, height,
-            baseWidth, baseHeight, baseTextureX, baseTextureY,
-            blurWidth, blurHeight, blurTextureX, blurTextureY,
-            false, this._$type, this._$knockout,
-            this._$strength, null, null, null,
-            $intToR(this._$highlightColor, this._$highlightAlpha, true),
-            $intToG(this._$highlightColor, this._$highlightAlpha, true),
-            $intToB(this._$highlightColor, this._$highlightAlpha, true),
-            this._$highlightAlpha,
-            $intToR(this._$shadowColor, this._$shadowAlpha, true),
-            $intToG(this._$shadowColor, this._$shadowAlpha, true),
-            $intToB(this._$shadowColor, this._$shadowAlpha, true),
-            this._$shadowAlpha
-        );
-
-        context._$offsetX = baseOffsetX + baseTextureX;
-        context._$offsetY = baseOffsetY + baseTextureY;
-
-        manager.releaseTexture(highlightTextureBase);
-
-        return manager.getTextureFromCurrentAttachment();
+        ];
     }
 }

@@ -24,9 +24,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Next2D/Player.git"
-  },
-  "peerDependencies": {
-    "@next2d/share": "file:../share",
-    "@next2d/webgl": "file:../webgl"
   }
 }

@@ -2,6 +2,9 @@ import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import { execute as displayObjectContainerAssignStageAndRootService } from "../service/DisplayObjectContainerAssignStageAndRootService";
 import { execute as displayObjectContainerAddedToStageService } from "../service/DisplayObjectContainerAddedToStageService";
+import { execute as displayObjectApplyChangesService } from "../../DisplayObject/service/DisplayObjectApplyChangesService";
+import { execute as displayObjectDispatchAddedEventService } from "../../DisplayObject/service/DisplayObjectDispatchAddedEventService";
+import { execute as displayObjectDispatchAddedToStageEventService } from "../../DisplayObject/service/DisplayObjectDispatchAddedToStageEventService";
 import {
     $parentMap,
     $rootMap,
@@ -50,10 +53,12 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         }
     }
 
-    display_object._$dispatchAddedEvent();
+    // Dispatch added event
+    displayObjectDispatchAddedEventService(display_object);
 
     if ($stageAssignedMap.has(display_object_container)) {
-        display_object._$dispatchAddedToStageEvent();
+        displayObjectDispatchAddedToStageEventService(display_object);
+        
         if (display_object.isContainerEnabled) {
             displayObjectContainerAddedToStageService(
                 display_object as unknown as DisplayObjectContainer
@@ -61,6 +66,6 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         }
     }
 
-    display_object._$changed();
-    display_object_container._$changed();
+    display_object.changed = true;
+    displayObjectApplyChangesService(display_object_container);
 };

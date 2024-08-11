@@ -1,8 +1,13 @@
 import type { IDictionaryTag } from "../../interface/IDictionaryTag";
 import type { ICharacter } from "../../interface/ICharacter";
 import type { IDisplayObject } from "../../interface/IDisplayObject";
+import type { IMovieClipCharacter } from "../../interface/IMovieClipCharacter";
+import type { IShapeCharacter } from "../../interface/IShapeCharacter";
 import { MovieClip } from "../../MovieClip";
 import { Shape } from "../../Shape";
+import { execute as displayObjectBaseBuildService } from "../../DisplayObject/service/DisplayObjectBaseBuildService";
+import { execute as movieClipBuildFromCharacterUseCase } from "../../MovieClip/usecase/MovieClipBuildFromCharacterUseCase";
+import { execute as shapeBuildFromCharacterUseCase } from "../../Shape/usecase/ShapeBuildFromCharacterUseCase";
 
 /**
  * @description cahracterを元にDisplayObjectを構築
@@ -27,16 +32,16 @@ export const execute = (
         case MovieClip.namespace:
             {
                 const movieClip = new MovieClip();
-                movieClip._$build(tag, character, parent);
-                movieClip.placeId = placeId;
-                return movieClip;
+                displayObjectBaseBuildService(movieClip, tag, parent, placeId);
+                movieClipBuildFromCharacterUseCase(movieClip, character as IMovieClipCharacter);
+                return movieClip as IDisplayObject<MovieClip>;
             }
 
         case Shape.namespace:
             {
                 const shape = new Shape();
-                shape._$build(tag, character, parent);
-                shape.placeId = placeId;
+                displayObjectBaseBuildService(shape, tag, parent, placeId);
+                shapeBuildFromCharacterUseCase(shape, character as IShapeCharacter);
                 return shape;
             }
 

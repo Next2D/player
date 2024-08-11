@@ -1,4 +1,5 @@
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
+import { execute as displayObjectDispatchAddedToStageEventService } from "../../DisplayObject/service/DisplayObjectDispatchAddedToStageEventService";
 
 /**
  * @description ステージに追加された DisplayObjectContainer の子要素のADDED_TO_STAGEイベントを発行
@@ -21,6 +22,12 @@ export const execute = <C extends DisplayObjectContainer>(
             continue;
         }
 
-        child._$dispatchAddedEvent();
+        displayObjectDispatchAddedToStageEventService(child);
+
+        if (!child.isContainerEnabled) {
+            continue;
+        }
+
+        execute(child as unknown as DisplayObjectContainer);
     }
 }

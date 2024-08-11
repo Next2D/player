@@ -1,26 +1,23 @@
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Sprite } from "./Sprite";
 import type { IParent } from "./interface/IParent";
-import type { Loader } from "./Loader";
-import type { IDictionaryTag } from "./interface/IDictionaryTag";
-import type { ICharacter } from "./interface/ICharacter";
 import type { IPlaceObject } from "./interface/IPlaceObject";
+import type { IBlendMode } from "./interface/IBlendMode";
+import type { IFilterArray } from "./interface/IFilterArray";
 import type { MovieClip } from "./MovieClip";
+import { execute as displayObjectGetPlaceObjectService } from "./DisplayObject/service/DisplayObjectGetPlaceObjectService";
+import { execute as displayObjectBuildFilterService } from "./DisplayObject/service/DisplayObjectBuildFilterService";
+import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
+import { EventDispatcher } from "@next2d/events";
 import type {
     ColorTransform,
     Matrix
 } from "@next2d/geom";
-import { execute as displayObjectBaseBuildService } from "./DisplayObject/service/DisplayObjectBaseBuildService";
-import {
-    Event,
-    EventDispatcher
-} from "@next2d/events";
 import {
     $getInstanceId,
     $parentMap,
     $loaderInfoMap,
-    $rootMap,
-    $stageAssignedMap
+    $rootMap
 } from "./DisplayObjectUtil";
 
 /**
@@ -172,6 +169,36 @@ export class DisplayObject extends EventDispatcher
     public endFrame: number;
 
     /**
+     * @description 描画に関連する何らかの変更が加えられたかを示します。
+     *              Indicates whether any changes related to drawing have been made.
+     * 
+     * @type {boolean}
+     * @default true
+     * @public
+     */
+    public changed: boolean;
+
+    /**
+     * @description DisplayObjectの追加イベントが発火したかを示します。
+     *              Indicates whether the DisplayObject addition event has been fired.
+     * 
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public $added: boolean;
+
+    /**
+     * @description DisplayObjectのステージ追加イベントが発火したかを示します。
+     *              Indicates whether the DisplayObject stage addition event has been fired.
+     * 
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public $addedToStage: boolean;
+
+    /**
      * @description 固定された変換行列、nullの場合はPlaceObjectの変換行列を検索します。
      *              Fixed transformation matrix, if null, search for PlaceObject transformation matrix.
      * 
@@ -181,13 +208,9 @@ export class DisplayObject extends EventDispatcher
      */
     protected _$matrix: Matrix | null;
     protected _$colorTransform: ColorTransform | null;
-    protected _$filters: FilterArrayImpl | null;
+    protected _$filters: IFilterArray | null;
     protected _$blendMode: IBlendMode | null;
 
-
-    protected _$added: boolean;
-    protected _$addedToStage: boolean;
-    protected _$updated: boolean;
 
     // todo
     protected _$scaleX: number | null;
@@ -227,21 +250,22 @@ export class DisplayObject extends EventDispatcher
         this.startFrame  = 1;
         this.endFrame    = 0;
 
-        this._$added = false;
-        this._$addedToStage = false;
+        this.changed = true;
+
+        this.$added        = false;
+        this.$addedToStage = false;
 
         this._$filters = null;
         this._$blendMode = null;
 
         this._$hitObject = null;
         this._$isMask = false;
-        this._$updated = true;
+        
         this._$visible = true;
         this._$mask = null;
         this._$scale9Grid = null;
         this._$variables = null;
         
-
         this._$scaleX   = null;
         this._$scaleY   = null;
         this._$rotation = null;
@@ -296,136 +320,71 @@ export class DisplayObject extends EventDispatcher
     //     }
     // }
 
-    // /**
-    //  * @description 使用するブレンドモードを指定する BlendMode クラスの値です。
-    //  *              A value from the BlendMode class that specifies which blend mode to use.
-    //  *
-    //  * @member  {string}
-    //  * @default BlendMode.NORMAL
-    //  * @public
-    //  */
-    // get blendMode (): BlendModeImpl
-    // {
-    //     // use cache
-    //     if (this._$blendMode) {
-    //         return this._$blendMode;
-    //     }
+    /**
+     * @description 使用するブレンドモードを指定する BlendMode クラスの値です。
+     *              A value from the BlendMode class that specifies which blend mode to use.
+     *
+     * @member  {string}
+     * @default BlendMode.NORMAL
+     * @public
+     */
+    get blendMode (): IBlendMode
+    {
+        if (this._$blendMode) {
+            return this._$blendMode;
+        }
 
-    //     const transform: Transform = this._$transform;
-    //     if (transform._$blendMode) {
+        const placeObject = displayObjectGetPlaceObjectService(this);
+        return placeObject && placeObject.blendMode 
+            ? placeObject.blendMode
+            : "normal";
+    }
+    set blendMode (blend_mode: IBlendMode)
+    {
+        if (this._$blendMode === blend_mode) {
+            return ;
+        }
+        this._$blendMode = blend_mode;
+        displayObjectApplyChangesService(this);
+    }
 
-    //         // cache
-    //         this._$blendMode = transform._$blendMode;
+    /**
+     * @description 表示オブジェクトに現在関連付けられている各フィルターオブジェクトの配列です。
+     *              An array of filter objects currently associated with the display object.
+     *
+     * @member  {array}
+     * @default null
+     * @public
+     */
+    get filters (): IFilterArray | null
+    {
+        if (this._$filters) {
+            return this._$filters;
+        }
 
-    //         return transform._$blendMode;
-    //     }
+        const placeObject = displayObjectGetPlaceObjectService(this);
+        if (placeObject && placeObject.surfaceFilterList) {
 
-    //     const placeObject: PlaceObjectImpl | null = this._$placeObject || this._$getPlaceObject();
-    //     if (placeObject && placeObject.blendMode) {
+            // build filter
+            if (!placeObject.filters) {
+                placeObject.filters = displayObjectBuildFilterService(
+                    placeObject.surfaceFilterList
+                );
+            }
 
-    //         // cache
-    //         this._$blendMode = placeObject.blendMode;
+            return placeObject.filters;
+        }
 
-    //         return placeObject.blendMode;
-    //     }
-
-    //     // cache
-    //     this._$blendMode = "normal";
-
-    //     return "normal";
-    // }
-    // set blendMode (blend_mode: BlendModeImpl)
-    // {
-    //     const transform: Transform = this._$transform;
-    //     if (!transform._$blendMode) {
-    //         transform._$transform(null, null, null, blend_mode);
-    //     } else {
-    //         transform._$blendMode = blend_mode;
-    //         this._$doChanged();
-    //         $doUpdated();
-    //     }
-    //     this._$blendMode = blend_mode;
-    // }
-
-    // /**
-    //  * @description 表示オブジェクトに現在関連付けられている各フィルターオブジェクトが
-    //  *              格納されているインデックス付きの配列です。
-    //  *              An indexed array that contains each filter object
-    //  *              currently associated with the display object.
-    //  *
-    //  * @member  {array}
-    //  * @default {array}
-    //  * @public
-    //  */
-    // get filters (): FilterArrayImpl
-    // {
-    //     // use cache
-    //     if (this._$filters) {
-    //         const filters: FilterArrayImpl = $getArray();
-    //         for (let idx: number = 0; idx < this._$filters.length; ++idx) {
-    //             filters[idx] = this._$filters[idx].clone();
-    //         }
-    //         return filters;
-    //     }
-
-    //     const transform: Transform = this._$transform;
-    //     if (transform._$filters) {
-
-    //         const clone: FilterArrayImpl   = $getArray();
-    //         const filters: FilterArrayImpl = $getArray();
-    //         for (let idx: number = 0; idx < transform._$filters.length; ++idx) {
-    //             const filter = transform._$filters[idx];
-    //             clone[idx]   = filter.clone();
-    //             filters[idx] = filter.clone();
-    //         }
-
-    //         // cache
-    //         this._$filters = clone;
-
-    //         return filters;
-    //     }
-
-    //     const placeObject: PlaceObjectImpl | null = this._$placeObject || this._$getPlaceObject();
-    //     if (placeObject && placeObject.surfaceFilterList) {
-
-    //         // create filter
-    //         if (!placeObject.filters) {
-    //             placeObject.filters = transform
-    //                 ._$buildFilter(placeObject.surfaceFilterList);
-    //         }
-
-    //         const clone: FilterArrayImpl = $getArray();
-
-    //         // @ts-ignore
-    //         const filters: FilterArrayImpl = $getArray();
-    //         for (let idx: number = 0; idx < placeObject.filters.length; ++idx) {
-    //             const filter = placeObject.filters[idx];
-    //             clone[idx]   = filter.clone();
-    //             filters[idx] = filter.clone();
-    //         }
-
-    //         // cache
-    //         this._$filters = clone;
-
-    //         return filters;
-    //     }
-
-    //     const filters: FilterArrayImpl = $getArray();
-
-    //     // cache
-    //     this._$filters = filters;
-
-    //     return filters;
-    // }
-    // set filters (filters: FilterArrayImpl | null)
-    // {
-    //     if (!filters) {
-    //         filters = $getArray();
-    //     }
-
-    //     this._$transform._$transform(null, null, filters);
-    //     this._$filters = filters;
-    // }
+        return null;
+    }
+    set filters (filters: IFilterArray | null)
+    {
+        if (this._$filters === filters) {
+            return ;
+        }
+        this._$filters = filters;
+        displayObjectApplyChangesService(this);
+    }
 
     // /**
     //  * @description 表示オブジェクトの高さを示します（ピクセル単位）。
@@ -924,7 +883,7 @@ export class DisplayObject extends EventDispatcher
             return ;
         }
         this._$visible = !!visible;
-        this._$changed();
+        displayObjectApplyChangesService(this);
     }
 
     // /**
@@ -1440,80 +1399,6 @@ export class DisplayObject extends EventDispatcher
     // }
 
     // /**
-    //  * @return {object}
-    //  * @method
-    //  * @private
-    //  */
-    // _$getPlaceObject (): PlaceObjectImpl | null
-    // {
-    //     if (!this._$placeObject) {
-
-    //         const placeId = this._$placeId;
-    //         if (placeId === -1) {
-    //             return null;
-    //         }
-
-    //         const parent: ParentImpl<any> | null = this._$parent;
-    //         if (!parent || !parent._$placeObjects) {
-    //             return null;
-    //         }
-
-    //         const placeMap: Array<Array<number>> | null = parent._$placeMap;
-    //         if (!placeMap || !placeMap.length) {
-    //             return null;
-    //         }
-
-    //         const frame: number = "currentFrame" in parent ? parent.currentFrame : 1;
-    //         const places: number[] | void = placeMap[frame];
-    //         if (!places) {
-    //             return null;
-    //         }
-
-    //         const currentPlaceId: number = places[placeId] | 0;
-    //         const placeObject: PlaceObjectImpl | void = parent._$placeObjects[currentPlaceId];
-    //         if (!placeObject) {
-    //             return null;
-    //         }
-
-    //         this._$changePlace    = currentPlaceId !== this._$currentPlaceId;
-    //         this._$currentPlaceId = currentPlaceId;
-    //         this._$placeObject    = placeObject;
-
-    //         return placeObject;
-    //     }
-
-    //     return this._$placeObject;
-    // }
-
-    /**
-     * @return {boolean}
-     * @method
-     * @protected
-     */
-    _$hasChanged (): boolean
-    {
-        return this._$updated;
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @protected
-     */
-    _$changed (): void
-    {
-        this._$isNext  = true;
-        this._$updated = true;
-
-        const parent = this.parent;
-        if (parent) {
-            if (!parent._$hasChanged()) {
-                parent._$changed();
-            }
-        }
-    }
-
-    // /**
     //  * @return {void}
     //  * @method
     //  * @private
@@ -1645,50 +1530,6 @@ export class DisplayObject extends EventDispatcher
     //     }
 
     //     return filterBounds;
-    // }
-
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$executeAddedEvent (): void
-    // {
-    //     if (!this._$parent) {
-    //         return ;
-    //     }
-
-    //     // add event
-    //     if (!this._$added) {
-
-    //         // added event
-    //         if (this.willTrigger(Next2DEvent.ADDED)) {
-    //             this.dispatchEvent(new Next2DEvent(Next2DEvent.ADDED, true));
-    //         }
-
-    //         // update
-    //         this._$added = true;
-    //     }
-
-    //     if (!this._$addedStage && this._$stage !== null) {
-
-    //         if (this.willTrigger(Next2DEvent.ADDED_TO_STAGE)) {
-    //             this.dispatchEvent(new Next2DEvent(Next2DEvent.ADDED_TO_STAGE));
-    //         }
-
-    //         // update
-    //         this._$addedStage = true;
-    //     }
-    // }
-
-    // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$prepareActions (): void
-    // {
-    //     this._$nextFrame();
     // }
 
     // /**
@@ -1879,183 +1720,27 @@ export class DisplayObject extends EventDispatcher
     // }
 
     // /**
-    //  * @param  {Float32Array} matrix
-    //  * @return {boolean}
+    //  * @description AnimationToolのシンボルと同期
+    //  *              Synchronize with AnimationTool symbol
+    //  * 
+    //  * @param {number} character_id 
+    //  * @param {object} character 
+    //  * @param {LoaderInfo} loaderInfo 
+    //  * @return {void}
     //  * @method
-    //  * @private
+    //  * @protected
     //  */
-    // _$shouldClip (matrix: Float32Array): boolean
-    // {
-    //     const bounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-    //         ? this._$getBounds(matrix) as BoundsImpl
-    //         : $getBoundsObject();
+    // _$sync (
+    //     character_id: number,
+    //     character: ICharacter,
+    //     loaderInfo: LoaderInfo
+    // ): void {
 
-    //     const width  = $Math.abs(bounds.xMax - bounds.xMin);
-    //     const height = $Math.abs(bounds.yMax - bounds.yMin);
-    //     $poolBoundsObject(bounds);
+    //     // setup
+    //     this.characterId = character_id;
+    //     $loaderInfoMap.set(this, loaderInfo);
 
-    //     // size 0
-    //     return !(!width || !height);
+    //     // build
+    //     this._$buildCharacter(character);
     // }
-
-    // /**
-    //  * @param  {CanvasToWebGLContext} context
-    //  * @param  {Float32Array} matrix
-    //  * @return {boolean}
-    //  * @method
-    //  * @private
-    //  */
-    // _$startClip (
-    //     context: CanvasToWebGLContext,
-    //     matrix: Float32Array
-    // ): boolean {
-
-    //     context.drawInstacedArray();
-
-    //     // マスクの描画反映を限定
-    //     const bounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-    //         ? this._$getBounds(matrix) as BoundsImpl
-    //         : $getBoundsObject();
-
-    //     const result = context._$startClip(bounds);
-    //     $poolBoundsObject(bounds);
-
-    //     if (!result) {
-    //         return false;
-    //     }
-
-    //     // start clip
-    //     context._$enterClip();
-
-    //     // mask start
-    //     context._$beginClipDef();
-
-    //     let containerClip = false;
-    //     if ("_$children" in this) {
-    //         containerClip = true;
-    //         context._$updateContainerClipFlag(true);
-    //     }
-
-    //     // @ts-ignore
-    //     this._$clip(context, matrix);
-    //     this._$updated = false;
-
-    //     // container clip
-    //     if (containerClip) {
-
-    //         // update flag
-    //         context._$updateContainerClipFlag(false);
-
-    //         // execute clip
-    //         context._$drawContainerClip();
-    //     }
-
-    //     // mask end
-    //     context._$endClipDef();
-
-    //     return true;
-    // }
-
-    
-    /**
-     * @description 表示オブジェクトの追加イベントを発行します。
-     *              Dispatches the added event of the display object.
-     *
-     * @return {void}
-     * @method
-     * @protected
-     */
-    _$dispatchAddedEvent (): void
-    {
-        if (this._$added) {
-            return ;
-        }
-
-        this._$added = true;
-        if (this.willTrigger(Event.ADDED)) {
-            this.dispatchEvent(new Event(Event.ADDED, true));
-        }
-    }
-
-    /**
-     * @description Stageへの追加イベントを発行します。
-     *              Dispatches the added to stage event.
-     *
-     * @return {void}
-     * @method
-     * @protected
-     */
-    _$dispatchAddedToStageEvent (): void
-    {
-        if (this._$addedToStage || !$stageAssignedMap.has(this)) {
-            return ;
-        }
-
-        this._$addedToStage = true;
-        if (this.willTrigger(Event.ADDED_TO_STAGE)) {
-            this.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
-        }
-    }
-
-    /**
-     * @description キャラクター情報からオブジェクトを構築
-     *              Build an object from character information
-     * 
-     * @param  {ICharacter} character
-     * @return {void}
-     * @method
-     * @abstract
-     */
-    _$buildCharacter(character: ICharacter): void
-    {
-        console.warn("this is not implemented.", character);
-    }
-
-    /**
-     * @description 指定タグからキャラクターを取得して、オブジェクトを構築
-     *              Get the character from the specified tag and build the object
-     *
-     * @param  {object} tag
-     * @param  {object} character
-     * @param  {MovieClip | Loader} parent
-     * @return {Promise}
-     * @method
-     * @protected
-     */
-    _$build (
-        tag: IDictionaryTag,
-        character: ICharacter,
-        parent: MovieClip | Loader
-    ): void {
-        // base build
-        displayObjectBaseBuildService(this, tag, parent);
-
-        // build
-        this._$buildCharacter(character);
-    }
-
-    /**
-     * @description AnimationToolのシンボルと同期
-     *              Synchronize with AnimationTool symbol
-     * 
-     * @param {number} character_id 
-     * @param {object} character 
-     * @param {LoaderInfo} loaderInfo 
-     * @return {void}
-     * @method
-     * @protected
-     */
-    _$sync (
-        character_id: number,
-        character: ICharacter,
-        loaderInfo: LoaderInfo
-    ): void {
-
-        // setup
-        this._$characterId = character_id;
-        $loaderInfoMap.set(this, loaderInfo);
-
-        // build
-        this._$buildCharacter(character);
-    }
 }

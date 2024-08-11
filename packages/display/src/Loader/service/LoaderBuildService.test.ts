@@ -1,4 +1,4 @@
-import type { AnimationToolDataImpl } from "../../interface/AnimationToolDataImpl";
+import type { IAnimationToolData } from "../../interface/IAnimationToolData";
 import { Loader } from "../../Loader";
 import { Event } from "@next2d/events";
 import { execute } from "./LoaderBuildService";
@@ -21,7 +21,7 @@ describe("LoaderBuildService.js test", () =>
         expect(openState).toBe("");
 
         // mock save data
-        const object: AnimationToolDataImpl = {
+        const object: IAnimationToolData = {
             "type": "json",
             "stage": {
                 "width": 240,

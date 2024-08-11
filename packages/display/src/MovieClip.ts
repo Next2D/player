@@ -1,14 +1,11 @@
-import type { IMovieClipCharacter } from "./interface/IMovieClipCharacter";
 import type { IDisplayObject } from "./interface/IDisplayObject";
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
-import { execute as movieClipAddActionsService } from "./MovieClip/service/MovieClipAddActionsService";
-import { execute as movieClipAddLabelsService } from "./MovieClip/service/MovieClipAddLabelsService";
-import { execute as movieClipBuildSoundsService } from "./MovieClip/service/MovieClipBuildSoundsService";
 import { execute as movieClipGetChildrenService } from "./MovieClip/service/MovieClipGetChildrenService";
 import { execute as movieClipSetActionService } from "./MovieClip/service/MovieClipSetActionService";
 import { execute as movieClipDispatchFrameLabelEventService } from "./MovieClip/service/MovieClipDispatchFrameLabelEventService";
+import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
 
 /**
  * @description MovieClip クラスは、Sprite、DisplayObjectContainer、InteractiveObject、DisplayObject
@@ -36,7 +33,7 @@ export class MovieClip extends Sprite
      * @default null
      * @private
      */
-    private _$labels: Map<number, FrameLabel> | null;
+    public $labels: Map<number, FrameLabel> | null;
 
     /**
      * @description フレーム毎のアクションマップ
@@ -46,7 +43,7 @@ export class MovieClip extends Sprite
      * @default null
      * @private
      */
-    private _$actions: Map<number, Function[]> | null;
+    public $actions: Map<number, Function[]> | null;
 
     /**
      * @description フレーム毎のサウンドマップ
@@ -56,15 +53,37 @@ export class MovieClip extends Sprite
      * @default null
      * @private
      */
-    private _$sounds: Map<number, Sound[]> | null;
+    public $sounds: Map<number, Sound[]> | null;
 
     /**
-     * @description 現在のフレーム
-     *              Current frame
+     * @description アクション実行フラグ
+     *              Action execution flag
      * 
-     * @type {number}
-     * @default 1
+     * @type {boolean}
+     * @default false
      * @private
+     */
+    public $canAction: boolean;
+
+    /**
+     * @description MovieClip インスタンス内のフレーム総数です。
+     *              The total number of frames in the MovieClip instance.
+     *
+     * @member  {number}
+     * @default 1
+     * @readonly
+     * @public
+     */
+    public totalFrames: number;
+
+    /**
+     * @description MovieClipのタイムライン内の再生ヘッドが置かれているフレームの番号を示します。
+     *              Specifies the number of the frame in which the playhead is located
+     *
+     * @member {number}
+     * @default 1
+     * @readonly
+     * @public
      */
     private _$currentFrame: number;
 
@@ -79,16 +98,6 @@ export class MovieClip extends Sprite
     private _$stopFlag: boolean;
 
     /**
-     * @description アクション実行フラグ
-     *              Action execution flag
-     * 
-     * @type {boolean}
-     * @default false
-     * @private
-     */
-    private _$canAction: boolean;
-
-    /**
      * @description サウンド実行フラグ
      *              Sound execution flag
      * 
@@ -97,26 +106,6 @@ export class MovieClip extends Sprite
      * @private
      */
     private _$canSound: boolean;
-
-    /**
-     * @description フレームの総数
-     *              Total number of frames
-     * 
-     * @type {number}
-     * @default 1
-     * @private
-     */
-    private _$totalFrames: number;
-
-    /**
-     * @description 再生中フラグ
-     *              Playing flag
-     * 
-     * @type {boolean}
-     * @default false
-     * @private
-     */
-    private _$isPlaying: boolean;
 
     /**
      * @description タイムラインヘッドが移動したかどうか
@@ -151,20 +140,19 @@ export class MovieClip extends Sprite
     {
         super();
 
+        this.totalFrames = 1;
         this.isTimelineEnabled = true;
+
+        this.$actions   = null;
+        this.$labels    = null;
+        this.$sounds    = null;
+        this.$canAction = true;
+
         this._$hasTimelineHeadMoved = true;
 
-        this._$actions = null;
-        this._$labels  = null;
-        this._$sounds  = null;
-
-        this._$stopFlag  = false;
-        this._$canAction = true;
-        this._$canSound  = true;
-
         this._$currentFrame = 1;
-        this._$totalFrames  = 1;
-        this._$isPlaying    = false;
+        this._$stopFlag = false;
+        this._$canSound = true;
     }
 
     /**
@@ -194,18 +182,24 @@ export class MovieClip extends Sprite
     }
 
     /**
-     * @description MovieClip インスタンスのタイムライン内の再生ヘッドが置かれているフレームの番号を示します。
-     *              Specifies the number of the frame in which the playhead is located
-     *              in the timeline of the MovieClip instance.
-     *
+     * @description MovieClip インスタンスの現在のフレーム番号です。
+     *             The current frame number of the MovieClip instance.
+     * 
      * @member {number}
      * @default 1
-     * @readonly
      * @public
      */
     get currentFrame (): number
     {
         return this._$currentFrame;
+    }
+    set currentFrame (frame: number)
+    {
+        if (this._$currentFrame === frame) {
+            return ;
+        }
+        this._$currentFrame = frame;
+        displayObjectApplyChangesService(this);
     }
 
     /**
@@ -218,16 +212,16 @@ export class MovieClip extends Sprite
      */
     get currentFrameLabel (): FrameLabel | null
     {
-        if (!this._$labels) {
+        if (!this.$labels) {
             return null;
         }
 
-        const frame = this._$currentFrame;
-        if (!this._$labels.has(frame)) {
+        const frame = this.currentFrame;
+        if (!this.$labels.has(frame)) {
             return null;
         }
 
-        return this._$labels.get(frame) || null;
+        return this.$labels.get(frame) || null;
     }
 
     /**
@@ -240,9 +234,9 @@ export class MovieClip extends Sprite
      */
     get currentLabels (): FrameLabel[] | null
     {
-        return !this._$labels || !this._$labels.size
+        return !this.$labels || !this.$labels.size
             ? null
-            : Array.from(this._$labels.values());
+            : Array.from(this.$labels.values());
     }
 
     /**
@@ -256,21 +250,7 @@ export class MovieClip extends Sprite
      */
     get isPlaying (): boolean
     {
-        return this._$isPlaying;
-    }
-
-    /**
-     * @description MovieClip インスタンス内のフレーム総数です。
-     *              The total number of frames in the MovieClip instance.
-     *
-     * @member  {number}
-     * @default 1
-     * @readonly
-     * @public
-     */
-    get totalFrames (): number
-    {
-        return this._$totalFrames;
+        return !this._$stopFlag;
     }
 
     // /**
@@ -370,8 +350,7 @@ export class MovieClip extends Sprite
     //  */
     // play (): void
     // {
-    //     this._$stopFlag  = false;
-    //     this._$isPlaying = true;
+    //     this._$stopFlag = false;
     //     this._$updateState();
     // }
 
@@ -402,8 +381,7 @@ export class MovieClip extends Sprite
      */
     stop (): void
     {
-        this._$stopFlag  = true;
-        this._$isPlaying = false;
+        this._$stopFlag = true;
     }
 
     /**
@@ -416,11 +394,11 @@ export class MovieClip extends Sprite
      */
     addFrameLabel (frame_label: FrameLabel): void
     {
-        if (!this._$labels) {
-            this._$labels = new Map();
+        if (!this.$labels) {
+            this.$labels = new Map();
         }
 
-        this._$labels.set(frame_label.frame, frame_label);
+        this.$labels.set(frame_label.frame, frame_label);
     }
 
     // /**
@@ -715,29 +693,6 @@ export class MovieClip extends Sprite
     //         player._$sounds.set(this._$instanceId, this);
     //     }
     // }
-
-    /**
-     * @description 子孫に登録されたアクションを準備します。
-     *              Prepares the actions registered in the descendants.
-     *
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$prepareActions (): void
-    {
-        if (!this._$canAction) {
-            return ;
-        }
-
-        this._$canAction = false;
-
-        // dispatch frame label event
-        movieClipDispatchFrameLabelEventService(this, this._$labels);
-
-        // set frame action
-        movieClipSetActionService(this, this._$actions);
-    }
 
     // /**
     //  * @return {boolean}
@@ -1078,40 +1033,5 @@ export class MovieClip extends Sprite
         this._$hasTimelineHeadMoved = false;
 
         return movieClipGetChildrenService(this, this._$children);
-    }
-
-    /**
-     * @description キャラクター情報からMovieClipを構築
-     *              Build MovieClip from character information
-     *
-     * @param  {object} character
-     * @return {void}
-     * @method
-     * @protected
-     */
-    _$buildCharacter (character: IMovieClipCharacter): void
-    {
-        if (character.actions) {
-            if (!this._$actions) {
-                this._$actions = new Map();
-            }
-            movieClipAddActionsService(this._$actions, character.actions);
-        }
-
-        if (character.sounds) {
-            if (!this._$sounds) {
-                this._$sounds = new Map();
-            }
-            movieClipBuildSoundsService(this, this._$sounds, character.sounds);
-        }
-
-        if (character.labels) {
-            if (!this._$labels) {
-                this._$labels = new Map();
-            }
-            movieClipAddLabelsService(this._$labels, character.labels);
-        }
-
-        this._$totalFrames = character.totalFrame || 1;
     }
 }
