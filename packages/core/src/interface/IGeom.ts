@@ -2,8 +2,7 @@ import type {
     ColorTransform,
     Matrix,
     Point,
-    Rectangle,
-    Transform
+    Rectangle
 } from "@next2d/geom";
 
 export interface IGeom {
@@ -11,5 +10,4 @@ export interface IGeom {
     Matrix: typeof Matrix;
     Point: typeof Point;
     Rectangle: typeof Rectangle;
-    Transform: typeof Transform;
 }

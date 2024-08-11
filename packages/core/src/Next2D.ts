@@ -28,14 +28,85 @@ import { execute as createRootMovieClip } from "./Next2D/service/CreateRootMovie
  */
 export class Next2D
 {
+    /**
+     * @description Displayパッケージ
+     *              Display package
+     *
+     * @type {IDisplay}
+     * @public
+     */
     public readonly display: IDisplay;
+
+    /**
+     * @description Eventsパッケージ
+     *              Events package
+     *
+     * @type {IEvents}
+     * @public
+     */
     public readonly events: IEvents;
+
+    /**
+     * @description Filtersパッケージ
+     *              Filters package
+     *
+     * @type {IFilters}
+     * @public
+     */
     public readonly filters: IFilters;
+
+    /**
+     * @description Geomパッケージ
+     *              Geom package
+     *
+     * @type {IGeom}
+     * @public
+     */
     public readonly geom: IGeom;
+
+    /**
+     * @description Mediaパッケージ
+     *              Media package
+     *
+     * @type {IMedia}
+     * @public
+     */
     public readonly media: IMedia;
+
+    /**
+     * @description Netパッケージ
+     *              Net package
+     *
+     * @type {INet}
+     * @public
+     */
     public readonly net: INet;
+
+    /**
+     * @description Textパッケージ
+     *              Text package
+     *
+     * @type {IText}
+     * @public
+     */
     public readonly text: IText;
+
+    /**
+     * @description UIパッケージ
+     *              UI package
+     *
+     * @type {IUI}
+     * @public
+     */
     public readonly ui: IUI;
+
+    /**
+     * @description 初期起動Promise
+     *              Initial boot Promise
+     *
+     * @type {Promise}
+     * @private
+     */
     private readonly _$promise: Promise<void>;
 
     /**
@@ -44,58 +115,16 @@ export class Next2D
      */
     constructor ()
     {
-        /**
-         * @type {DisplayImpl}
-         * @public
-         */
+        // packages
         this.display = display;
-
-        /**
-         * @type {EventsImpl}
-         * @public
-         */
-        this.events = events;
-
-        /**
-         * @type {FiltersImpl}
-         * @public
-         */
+        this.events  = events;
         this.filters = filters;
+        this.geom    = geom;
+        this.media   = media;
+        this.net     = net;
+        this.text    = text;
+        this.ui      = ui;
 
-        /**
-         * @type {GeomImpl}
-         * @public
-         */
-        this.geom = geom;
-
-        /**
-         * @type {MediaImpl}
-         * @public
-         */
-        this.media = media;
-
-        /**
-         * @type {NetImpl}
-         * @public
-         */
-        this.net = net;
-
-        /**
-         * @type {TextImpl}
-         * @public
-         */
-        this.text = text;
-
-        /**
-         * @type {UIImpl}
-         * @public
-         */
-        this.ui = ui;
-
-        /**
-         * @type {Promise}
-         * @private
-         */
         this._$promise = new Promise((resolve): void =>
         {
             if (document.readyState === "loading") {
@@ -113,11 +142,10 @@ export class Next2D
      * @param  {string} url JSONファイルのURL
      *                      URL of the JSON file
      *
-     * @param  {object} [options=null] {number} width = Stageの幅 | Stage width
-     *                                 {number} height = Stageの高さ | Stage height
+     * @param  {object} [options=null] {number} width Stageの幅 | Stage width
+     *                                 {number} height Stageの高さ | Stage height
      *                                 {string} [tagId=null] canvasを追加対象のDOMのID | ID of the DOM to which the canvas is added
-     *                                 {string} [base="/"] Loaderが読み込む際の絶対パス | Absolute path for Loader to load.
-     *                                 {number|string|boolean} [bgColor=null] 背景色 | background color
+     *                                 {string} [bgColor=null] 背景色 | background color
      *
      * @return {void}
      * @method

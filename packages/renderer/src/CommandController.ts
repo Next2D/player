@@ -1,4 +1,4 @@
-import type { PropertyMessageMapImpl } from "./interface/PropertyMessageMapImpl";
+import type { IMessage } from "./interface/IMessage";
 import { execute as commandInitializeContextService } from "./Command/service/CommandInitializeContextService";
 import { execute as commandResizeService } from "./Command/service/CommandResizeService";
 import { execute as commandRenderUseCase } from "./Command/usecase/CommandRenderUseCase";
@@ -9,8 +9,25 @@ import { $cacheStore } from "@next2d/cache";
  */
 export class CommandController
 {
+    /**
+     * @description workerの実行状態
+     *              Execution status of worker
+     * 
+     * @type {string}
+     * @default "deactivate"
+     * @public
+     */
     public state: string;
-    public queue: PropertyMessageMapImpl<any>[];
+
+    /**
+     * @description 受け取ったメッセージ配列
+     *              Received message array
+     * 
+     * @type {array}
+     * @default []
+     * @public
+     */
+    public queue: IMessage[];
 
     /**
      * @constructor
@@ -18,17 +35,7 @@ export class CommandController
      */
     constructor ()
     {
-        /**
-         * @type {string}
-         * @default "deactivate"
-         * @public
-         */
         this.state = "deactivate";
-
-        /**
-         * @type {array}
-         * @public
-         */
         this.queue = [];
     }
 
@@ -40,19 +47,16 @@ export class CommandController
      * @method
      * @public
      */
-    async execute (): Promise<void>
+    execute (): void
     {
         this.state = "active";
-
-        // let returnBuffer = true;
         while (this.queue.length) {
 
-            const object: PropertyMessageMapImpl<any> | void = this.queue.shift();
+            const object: IMessage | void = this.queue.shift();
             if (!object) {
                 continue;
             }
 
-            // returnBuffer = true;
             switch (object.command) {
 
                 case "render":
@@ -72,15 +76,13 @@ export class CommandController
 
                 case "initialize":
                     commandInitializeContextService(
-                        object.canvas, object.buffer[0] as number
+                        object.canvas as OffscreenCanvas, 
+                        object.buffer[0] as number
                     );
                     break;
 
-                case "removeCache":
-                    $cacheStore.removeCache(
-                        new TextDecoder().decode(object.buffer[0])
-                    );
-                    // todo
+                case "cacheClear":
+                    $cacheStore.reset();
                     break;
 
                 case "bitmapDraw":

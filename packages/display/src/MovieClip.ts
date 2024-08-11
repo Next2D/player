@@ -28,22 +28,110 @@ import { execute as movieClipDispatchFrameLabelEventService } from "./MovieClip/
  */
 export class MovieClip extends Sprite
 {
+    /**
+     * @description フレーム毎のラベルマップ
+     *              Label map per frame
+     * 
+     * @type {Map<number, FrameLabel>}
+     * @default null
+     * @private
+     */
     private _$labels: Map<number, FrameLabel> | null;
+
+    /**
+     * @description フレーム毎のアクションマップ
+     *              Action map per frame
+     * 
+     * @type {Map<number, Function[]>}
+     * @default null
+     * @private
+     */
     private _$actions: Map<number, Function[]> | null;
+
+    /**
+     * @description フレーム毎のサウンドマップ
+     *              Sound map per frame
+     * 
+     * @type {Map<number, Sound[]>}
+     * @default null
+     * @private
+     */
     private _$sounds: Map<number, Sound[]> | null;
+
+    /**
+     * @description 現在のフレーム
+     *              Current frame
+     * 
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$currentFrame: number;
+
+    /**
+     * @description 停止フラグ
+     *              Stop flag
+     * 
+     * @type {boolean}
+     * @default false
+     * @private
+     */
     private _$stopFlag: boolean;
+
+    /**
+     * @description アクション実行フラグ
+     *              Action execution flag
+     * 
+     * @type {boolean}
+     * @default false
+     * @private
+     */
     private _$canAction: boolean;
+
+    /**
+     * @description サウンド実行フラグ
+     *              Sound execution flag
+     * 
+     * @type {boolean}
+     * @default true
+     * @private
+     */
     private _$canSound: boolean;
-    private _$actionProcess: boolean;
-    private _$frameCache: Map<string, any> | null;
-    private _$actionOffset: number;
-    private _$actionLimit: number;
+
+    /**
+     * @description フレームの総数
+     *              Total number of frames
+     * 
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$totalFrames: number;
+
+    /**
+     * @description 再生中フラグ
+     *              Playing flag
+     * 
+     * @type {boolean}
+     * @default false
+     * @private
+     */
     private _$isPlaying: boolean;
+
+    /**
+     * @description タイムラインヘッドが移動したかどうか
+     *              Whether the timeline head has moved
+     * 
+     * @type {boolean}
+     * @default true
+     * @private
+     */
     private _$hasTimelineHeadMoved: boolean;
-    // public _$loopConfig: LoopConfigImpl | null;
-    // private _$tweenFrame: number;
+
+    // private _$actionProcess: boolean;
+    // private _$frameCache: Map<string, any> | null;
+    // private _$actionOffset: number;
+    // private _$actionLimit: number;
 
     /**
      * @description MovieClipの機能を所持しているかを返却
@@ -64,115 +152,19 @@ export class MovieClip extends Sprite
         super();
 
         this.isTimelineEnabled = true;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$stopFlag = false;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$canAction = true;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$canSound = true;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$actionProcess = false;
-
-        /**
-         * @type {Map}
-         * @private
-         */
-        this._$actions = null;
-
-        /**
-         * @type {Map}
-         * @private
-         */
-        this._$frameCache = null;
-
-        /**
-         * @type {Map}
-         * @default null
-         * @private
-         */
-        this._$labels = null;
-
-        /**
-         * @type {Map}
-         * @private
-         */
-        this._$sounds = null;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$actionOffset = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$actionLimit = 0;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$currentFrame = 1;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$totalFrames = 1;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$isPlaying = false;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
         this._$hasTimelineHeadMoved = true;
 
-        // /**
-        //  * @type {LoopConfig}
-        //  * @default null
-        //  * @private
-        //  */
-        // this._$loopConfig = null;
+        this._$actions = null;
+        this._$labels  = null;
+        this._$sounds  = null;
 
-        // /**
-        //  * @type {number}
-        //  * @default 0
-        //  * @private
-        //  */
-        // this._$tweenFrame = 0;
+        this._$stopFlag  = false;
+        this._$canAction = true;
+        this._$canSound  = true;
+
+        this._$currentFrame = 1;
+        this._$totalFrames  = 1;
+        this._$isPlaying    = false;
     }
 
     /**
@@ -1079,17 +1071,13 @@ export class MovieClip extends Sprite
      */
     get children (): IDisplayObject<any>
     {
-        if (!this._$hasTimelineHeadMoved || this._$characterId === -1) {
+        if (!this._$hasTimelineHeadMoved || this.characterId === -1) {
             return this._$children;
         }
         
         this._$hasTimelineHeadMoved = false;
 
-        return movieClipGetChildrenService(
-            this,
-            this._$children,
-            this._$characterId
-        );
+        return movieClipGetChildrenService(this, this._$children);
     }
 
     /**

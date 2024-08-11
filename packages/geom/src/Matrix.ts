@@ -426,7 +426,7 @@ export class Matrix
      * @method
      * @private
      */
-    _$multiplication (a: Float32Array, b: Float32Array): Float32Array
+    static multiply (a: Float32Array, b: Float32Array): Float32Array
     {
         return $getFloat32Array6(
             a[0] * b[0] + a[2] * b[1],
@@ -442,12 +442,12 @@ export class Matrix
      * @description 利用したFloat32Arrayを再利用する為にプールします。
      *              Pool the Float32Array used for reuse.
      *
-     * @param {Float32Array} array
+     * @param {Float32Array} buffer
      * @method
      * @private
      */
-    _$poolBuffer (array: Float32Array): void
+    static release (buffer: Float32Array): void
     {
-        $poolFloat32Array6(array);
+        $poolFloat32Array6(buffer);
     }
 }

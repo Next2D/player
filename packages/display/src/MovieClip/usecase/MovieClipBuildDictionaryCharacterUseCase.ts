@@ -4,10 +4,22 @@ import type { IDisplayObject } from "../../interface/IDisplayObject";
 import { MovieClip } from "../../MovieClip";
 import { Shape } from "../../Shape";
 
+/**
+ * @description cahracterを元にDisplayObjectを構築
+ *              Build DisplayObject based on character
+ * 
+ * @param  {object} tag 
+ * @param  {object} character 
+ * @param  {MovieClip} parent 
+ * @return {DisplayObject}
+ * @method
+ * @protected
+ */
 export const execute = (
     tag: IDictionaryTag,
     character: ICharacter,
-    parent: MovieClip
+    parent: MovieClip,
+    placeId: number = -1
 ): IDisplayObject<any> => {
 
     switch (character.extends) {
@@ -16,6 +28,7 @@ export const execute = (
             {
                 const movieClip = new MovieClip();
                 movieClip._$build(tag, character, parent);
+                movieClip.placeId = placeId;
                 return movieClip;
             }
 
@@ -23,17 +36,18 @@ export const execute = (
             {
                 const shape = new Shape();
                 shape._$build(tag, character, parent);
+                shape.placeId = placeId;
                 return shape;
             }
 
         // case TextField.namespace:
         //     return new TextField();
 
-        // case Sprite.namespace:
-        //     return new Sprite;
-
         // case Video.namespace:
         //     return new Video();
+
+        default:
+            break;
 
     }
 };

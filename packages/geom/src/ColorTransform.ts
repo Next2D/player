@@ -34,6 +34,10 @@ import {
  */
 export class ColorTransform
 {
+    /**
+     * @type {Float32Array}
+     * @private
+     */
     public readonly _$colorTransform: Float32Array;
 
     /**
@@ -55,10 +59,6 @@ export class ColorTransform
         red_offset: number = 0, green_offset: number = 0,
         blue_offset: number = 0, alpha_offset: number = 0
     ) {
-        /**
-         * @type {Float32Array}
-         * @private
-         */
         this._$colorTransform = $getFloat32Array8(
             red_multiplier, green_multiplier, blue_multiplier, alpha_multiplier,
             red_offset, green_offset, blue_offset, alpha_offset
@@ -236,6 +236,19 @@ export class ColorTransform
     }
 
     /**
+     * @description オブジェクトの複製を返します。
+     *              Returns a copy of this ColorTransform object.
+     * 
+     * @return {ColorTransform}
+     * @method
+     * @public
+     */
+    clone (): ColorTransform
+    {
+        return new ColorTransform(...this._$colorTransform);
+    }
+    
+    /**
      * @description 2 番目のパラメーターで指定された ColorTransform オブジェクトと
      *              現在の ColorTransform オブジェクトを連結し
      *              2 つのカラー変換を加算的に組み合わせた結果を現在のオブジェクトに設定します。
@@ -264,7 +277,7 @@ export class ColorTransform
      * @method
      * @private
      */
-    _$multiplication (a: Float32Array, b: Float32Array): Float32Array
+    static multiply (a: Float32Array, b: Float32Array): Float32Array
     {
         return $getFloat32Array8(
             a[0] * b[0],
@@ -279,28 +292,15 @@ export class ColorTransform
     }
 
     /**
-     * @description オブジェクトの複製を返します。
-     *              Returns a copy of this ColorTransform object.
-     * 
-     * @return {ColorTransform}
-     * @method
-     * @public
-     */
-    clone (): ColorTransform
-    {
-        return new ColorTransform(...this._$colorTransform);
-    }
-
-    /**
      * @description 利用したFloat32Arrayを再利用する為にプールします。
      *              Pool the Float32Array used for reuse.
      *
-     * @param {Float32Array} array
+     * @param {Float32Array} buffer
      * @method
      * @private
      */
-    _$poolBuffer (array: Float32Array): void
+    static release (buffer: Float32Array): void
     {
-        $poolFloat32Array8(array);
+        $poolFloat32Array8(buffer);
     }
 }

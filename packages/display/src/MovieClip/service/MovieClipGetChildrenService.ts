@@ -10,15 +10,13 @@ import { execute as movieClipBuildDictionaryCharacterUseCase } from "../usecase/
  *
  * @param  {MovieClip} movie_clip
  * @param  {DisplayObject[]} children
- * @param  {number} character_id
  * @return {DisplayObject[]}
  * @method
  * @public
  */
 export const execute = <D extends DisplayObject>(
     movie_clip: MovieClip,
-    children: D[],
-    character_id: number
+    children: D[]
 ): D[] => {
 
     const loaderInfo = movie_clip.loaderInfo;
@@ -26,7 +24,7 @@ export const execute = <D extends DisplayObject>(
         return children;
     }
 
-    const character = loaderInfo.data.characters[character_id] as IMovieClipCharacter;
+    const character = loaderInfo.data.characters[movie_clip.characterId] as IMovieClipCharacter;
     if (!character) {
         return children;
     }
@@ -41,6 +39,10 @@ export const execute = <D extends DisplayObject>(
     const dictionary = character.dictionary;
     for (let idx: number = 0; idx < controller.length; ++idx) {
 
+        if (!(idx in controller)) {
+            continue;
+        }
+        
         const dictionaryId = controller[idx];
         if (typeof dictionaryId !== "number") {
             continue;
@@ -56,7 +58,7 @@ export const execute = <D extends DisplayObject>(
             continue;
         }
 
-        const displayObject = movieClipBuildDictionaryCharacterUseCase(tag, character, movie_clip);
+        const displayObject = movieClipBuildDictionaryCharacterUseCase(tag, character, movie_clip, idx);
         if (!displayObject) {
             continue
         }

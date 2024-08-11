@@ -2,6 +2,8 @@ import type { IPlayerOptions } from "./interface/IPlayerOptions";
 import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import { $stage } from "@next2d/display";
 import { SoundMixer } from "@next2d/media";
+import { $cacheStore } from "@next2d/cache";
+import { $rendererWorker } from "./RendererWorker";
 import { execute as playerCreateContainerElementService } from "./Player/service/PlayerCreateContainerElementService";
 import { execute as playerApplyContainerElementStyleService } from "./Player/service/PlayerApplyContainerElementStyleService";
 import { execute as playerLoadingAnimationService } from "./Player/service/PlayerLoadingAnimationService";
@@ -17,25 +19,133 @@ import { execute as playerResizeRegisterService } from "./Player/usecase/PlayerR
  */
 export class Player
 {
+    /**
+     * @description canvasの描画領域のヒットテスト結果を保持します。
+     *              Holds the hit test results of the drawing area of the canvas.
+     * 
+     * @type {IPlayerHitObject}
+     * @readonly
+     * @private
+     */
     private readonly _$hitObject: IPlayerHitObject;
+
+    /**
+     * @description devicePixelRatioを含んだcanvasの描画領域の幅
+     *              The width of the drawing area of the canvas including devicePixelRatio
+     * 
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$rendererWidth: number;
+
+    /**
+     * @description devicePixelRatioを含んだcanvasの描画領域の高さ
+     *              The height of the drawing area of the canvas including devicePixelRatio
+     * 
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$rendererHeight: number;
+
+    /**
+     * @description devicePixelRatioを含んだcanvasの描画領域の拡大率
+     *              The magnification of the drawing area of the canvas including devicePixelRatio
+     * 
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$rendererScale: number;
+
+    /**
+     * @description optionで指定された描画領域の固定幅、optionで指定されない場合は0
+     *              The fixed width of the drawing area specified by the option, 0 if not specified by the option
+     * 
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$fixedWidth: number;
+
+    /**
+     * @description optionで指定された描画領域の固定高さ、optionで指定されない場合は0
+     *              The fixed height of the drawing area specified by the option, 0 if not specified by the option
+     * 
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$fixedHeight: number;
+
+    /**
+     * @description Playerの停止フラグ
+     *              Player stop flag
+     * 
+     * @type {boolean}
+     * @default true
+     * @private
+     */
     private _$stopFlag: boolean;
+
+    /**
+     * @description Playerの描画開始時間
+     *              Player drawing start time
+     * 
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$startTime: number;
+
+    /**
+     * @description PlayerのFPS
+     *              Player FPS
+     * 
+     * @type {number}
+     * @default 16
+     * @private
+     */
+    private _$fps: number;
+
+    /**
+     * @description optionで指定されたcanvasのID、optionで指定されない場合は空文字
+     *              The ID of the canvas specified by the option, an empty string if not specified by the option
+     * 
+     * @type {string}
+     * @default ""
+     * @private
+     */
+    private _$tagId: string;
+
+    /**
+     * @description フルスクリーンモードの設定
+     *              Full screen mode setting
+     * 
+     * @type {boolean}
+     * @default false
+     * @private
+     */
+    private _$fullScreen: boolean;
+
+    /**
+     * @description Playerの描画処理関数のタイマーID
+     *              Timer ID of the drawing process function of Player
+     * 
+     * @type {number}
+     * @default -1
+     * @private
+     */
+    private _$timerId: number;
+
     // private _$state: "up" | "down";
     // private _$textField: TextField | null;
     // private _$rollOverObject: EventDispatcherImpl<any> | null;
     // private _$mouseOverTarget: EventDispatcherImpl<any> | null;
-    private _$startTime: number;
-    private _$fps: number;
     // private _$hitTestStart: boolean;
     // private _$stageX: number;
     // private _$stageY: number;
-    private _$tagId: string;
-    private _$fullScreen: boolean;
-    private _$timerId: number;
     // private _$deltaX: number;
     // private _$deltaY: number;
     // private _$clickTarget: ParentImpl<any> | null;
@@ -47,22 +157,26 @@ export class Player
      */
     constructor ()
     {
-        // /**
-        //  * @type {Map}
-        //  * @private
-        //  */
-        // this._$sounds = new Map();
-
-        /**
-         * @type {object}
-         * @private
-         */
         this._$hitObject = {
             "x": 0,
             "y": 0,
             "pointer": "",
             "hit": null
         };
+
+        this._$stopFlag       = true;
+        this._$startTime      = 0;
+        this._$fps            = 16;
+        this._$rendererWidth  = 0;
+        this._$rendererHeight = 0;
+        this._$rendererScale  = 1;
+        this._$timerId       = -1;
+
+        // options
+        this._$fixedWidth  = 0;
+        this._$fixedHeight = 0;
+        this._$tagId       = "";
+        this._$fullScreen  = false;
 
         // /**
         //  * @type {DisplayObject}
@@ -77,69 +191,6 @@ export class Player
         //  * @private
         //  */
         // this._$mouseOverTarget = null;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$stopFlag = true;
-
-        // /**
-        //  * @type {number}
-        //  * @default 0
-        //  * @private
-        //  */
-        // this._$startTime = 0;
-
-        /**
-         * @type {number}
-         * @default 16
-         * @private
-         */
-        this._$fps = 16;
-
-        // /**
-        //  * @type {number}
-        //  * @default 0
-        //  * @private
-        //  */
-        // this._$width = 0;
-
-        // /**
-        //  * @type {number}
-        //  * @default 0
-        //  * @private
-        //  */
-        // this._$height = 0;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$rendererWidth = 0;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$rendererHeight = 0;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$rendererScale = 1;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$scale = 1;
 
         // /**
         //  * @type {string}
@@ -183,47 +234,12 @@ export class Player
         //  */
         // this._$deltaY = 0;
 
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$fixedWidth = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$fixedHeight = 0;
-
-        /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$tagId = "";
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$fullScreen = false;
-
         // /**
         //  * @type {TextField}
         //  * @default null
         //  * @private
         //  */
         // this._$textField = null;
-
-        /**
-         * @type {number}
-         * @default -1
-         * @private
-         */
-        this._$timerId = -1;
 
         // /**
         //  * @type {DisplayObject}
@@ -241,21 +257,8 @@ export class Player
     }
 
     /**
-     * @description 
-     *              
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get scale (): number
-    {
-        return this._$rendererScale;
-    }
-
-    /**
-     * @description canvasの描画領域の幅
-     *              The width of the drawing area of the canvas
+     * @description devicePixelRatioを含んだcanvasの描画領域の幅
+     *              The width of the drawing area of the canvas including devicePixelRatio
      *
      * @member {number}
      * @default 0
@@ -271,8 +274,8 @@ export class Player
     }
 
     /**
-     * @description canvasの描画領域の高さ
-     *              The height of the drawing area of the canvas
+     * @description devicePixelRatioを含んだcanvasの描画領域の高さ
+     *              The height of the drawing area of the canvas including devicePixelRatio
      *
      * @member {number}
      * @default 0
@@ -288,8 +291,8 @@ export class Player
     }
 
     /**
-     * @description canvasの描画領域の拡大率
-     *              The magnification of the drawing area of the canvas
+     * @description devicePixelRatioを含んだcanvasの描画領域の拡大率
+     *              The magnification of the drawing area of the canvas including devicePixelRatio
      *
      * @member {number}
      * @default 1
@@ -329,6 +332,9 @@ export class Player
     }
 
     /**
+     * @description Playerの描画を開始します。
+     *              Start drawing Player.
+     * 
      * @return {void}
      * @method
      * @public
@@ -355,6 +361,9 @@ export class Player
     }
 
     /**
+     * @description Playerの描画を停止します。
+     *              Stop drawing Player.
+     * 
      * @return {void}
      * @method
      * @public
@@ -371,22 +380,22 @@ export class Player
         SoundMixer.stopAll();
     }
 
-    // /**
-    //  * @param  {string} id
-    //  * @return {void}
-    //  * @method
-    //  * @public
-    //  */
-    // removeCache (id: string): void
-    // {
-    //     $cacheStore.removeCache(id);
-    //     if ($rendererWorker) {
-    //         $rendererWorker.postMessage({
-    //             "command": "removeCache",
-    //             "id": id
-    //         });
-    //     }
-    // }
+    /**
+     * @description Playerの描画キャッシュを全て初期化
+     *              Initialize all drawing caches of Player
+     * 
+     * @param  {string} id
+     * @return {void}
+     * @method
+     * @public
+     */
+    cacheClear (id: string): void
+    {
+        $cacheStore.removeCache(id);
+        $rendererWorker.postMessage({
+            "command": "cacheClear"
+        });
+    }
 
     /**
      * @description Playerのオプション設定を変更

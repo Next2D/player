@@ -1,6 +1,5 @@
-import type { DisplayObjectImpl } from "../../interface/DisplayObjectImpl";
-import type { PlaceObjectImpl } from "../../interface/PlaceObjectImpl";
-import type { ParentImpl } from "../../interface/ParentImpl";
+import type { DisplayObject } from "../../DisplayObject";
+import type { IPlaceObject } from "../../interface/IPlaceObject";
 
 /**
  * @description DisplayObjectのPlaceObjectを返却、存在しない場合はnullを返却
@@ -11,43 +10,43 @@ import type { ParentImpl } from "../../interface/ParentImpl";
  * @method
  * @protected
  */
-export const execute = (display_object: DisplayObjectImpl<any>): PlaceObjectImpl | null =>
+export const execute = <D extends DisplayObject>(display_object: D): IPlaceObject | null =>
 {
     // キャッシュされたPlaceObjectがあれば返却
-    const placeObject: PlaceObjectImpl | null = display_object._$placeObject;
-    if (placeObject) {
-        return placeObject;
+    if (display_object.placeObject) {
+        return display_object.placeObject;
     }
 
-    const placeId = display_object._$placeId;
+    const placeId = display_object.placeId;
     if (placeId === -1) {
         return null;
     }
 
-    const parent: ParentImpl<any> | null = display_object.parent;
-    if (!parent || !parent._$placeObjects) {
+    const parent = display_object.parent;
+    if (!parent) {
         return null;
     }
 
-    const placeMap: Array<Array<number>> | null = parent._$placeMap;
-    if (!placeMap || !placeMap.length) {
+    const loaderInfo = parent.loaderInfo;
+    if (!loaderInfo || !loaderInfo.data) {
         return null;
     }
 
-    const frame: number = "currentFrame" in parent ? parent.currentFrame : 1;
-    const places: number[] | void = placeMap[frame];
-    if (!places) {
+    const character = loaderInfo.data.characters[parent.characterId];
+    const frame: number = parent.isTimelineEnabled ? parent.currentFrame : 1;
+    const places: number[] | void = character.placeMap[frame];
+    if (!places || !(placeId in places)) {
         return null;
     }
 
-    const targetPlaceId: number = places[placeId] | 0;
-    const targetPlaceObject: PlaceObjectImpl | void = parent._$placeObjects[targetPlaceId];
-    if (!targetPlaceObject) {
+    const id: number = places[placeId];
+    const placeObject: IPlaceObject | void = character.placeObjects[id];
+    if (!placeObject) {
         return null;
     }
 
     // キャッシュ
-    display_object._$placeObject = targetPlaceObject;
+    display_object.placeObject = placeObject;
 
-    return null;
+    return placeObject;
 };

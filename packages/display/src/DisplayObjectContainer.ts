@@ -23,6 +23,14 @@ import { InteractiveObject } from "./InteractiveObject";
  */
 export class DisplayObjectContainer extends InteractiveObject
 {
+    /**
+     * @description 描画対象となるDisplayObjectの配列です。
+     *              An array of DisplayObjects to be drawn.
+     * 
+     * @type {array}
+     * @readonly
+     * @private
+     */
     protected readonly _$children: IDisplayObject<any>[];
 
     /**
@@ -56,10 +64,6 @@ export class DisplayObjectContainer extends InteractiveObject
         this.isContainerEnabled = true;
         this.mouseChildren      = true;
 
-        /**
-         * @type {array}
-         * @private
-         */
         this._$children = $getArray();
     }
 

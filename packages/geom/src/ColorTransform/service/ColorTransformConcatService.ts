@@ -1,4 +1,4 @@
-import type { ColorTransform } from "../../ColorTransform";
+import { ColorTransform } from "../../ColorTransform";
 
 /**
  * @description 指定のColorTransformを連結
@@ -15,7 +15,7 @@ export const execute = (
     color_transform2: ColorTransform
 ): void => {
 
-    const multiColor = color_transform1._$multiplication(
+    const multiColor = ColorTransform.multiply(
         color_transform1._$colorTransform,
         color_transform2._$colorTransform
     );
@@ -31,5 +31,5 @@ export const execute = (
     color_transform1._$colorTransform[7] = multiColor[7];
 
     // pool
-    color_transform1._$poolBuffer(multiColor);
+    ColorTransform.release(multiColor);
 };

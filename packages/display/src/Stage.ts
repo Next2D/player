@@ -8,6 +8,12 @@ import {
 } from "./DisplayObjectUtil";
 
 /**
+ * @type {Float32Array}
+ * @private
+ */
+export const $COLOR_ARRAY_IDENTITY: Float32Array = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
+
+/**
  * @description Stage クラスはメイン描画領域を表します。
  *              The Stage class represents the main drawing area.
  *
@@ -71,35 +77,12 @@ export class Stage extends DisplayObjectContainer
     {
         super();
 
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$ready = false;
-
-        /**
-         * @type {number}
-         * @public
-         */
-        this.stageWidth = 0;
-
-        /**
-         * @type {number}
-         * @public
-         */
+        this.stageWidth  = 0;
         this.stageHeight = 0;
+        this.frameRate   = 1;
 
-        /**
-         * @type {number}
-         * @public
-         */
-        this.frameRate = 1;
-
-        /**
-         * @type {number}
-         * @public
-         */
+        // private
+        this._$ready           = false;
         this._$backgroundColor = -1;
     }
 
@@ -135,7 +118,7 @@ export class Stage extends DisplayObjectContainer
      * @description 背景色
      *              Background color
      * 
-     * @member {string}
+     * @member {number}
      * @public
      */
     get backgroundColor (): number
@@ -202,7 +185,7 @@ export class Stage extends DisplayObjectContainer
         render_queue.push(this._$backgroundColor);
 
         displayObjectContainerGenerateRenderQueueUseCase(
-            this, render_queue, matrix
+            this, render_queue, matrix, $COLOR_ARRAY_IDENTITY
         );
     }
 }

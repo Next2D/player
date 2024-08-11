@@ -17,8 +17,29 @@ import { execute as graphicsToNumberArrayService } from "./Graphics/service/Grap
  */
 export class Shape extends DisplayObject
 {
+    /**
+     * @type {Graphics}
+     * @default null
+     * @private
+     */
     private _$graphics: Graphics | null;
+
+    /**
+     * @type {string}
+     * @default ""
+     * @private
+     */
     private _$src: string;
+
+    /**
+     * @description Shapeの機能を所持しているかを返却
+     *              Returns whether the display object has Shape functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isShape: boolean;
 
     /**
      * @constructor
@@ -28,19 +49,11 @@ export class Shape extends DisplayObject
     {
         super();
 
-        /**
-         * @type {Graphics}
-         * @default null
-         * @private
-         */
-        this._$graphics = null;
+        this.isShape = true;
 
-        /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$src = "";
+        // private
+        this._$graphics = null;
+        this._$src      = "";
     }
 
     /**

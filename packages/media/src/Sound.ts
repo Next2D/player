@@ -24,11 +24,46 @@ import {
  */
 export class Sound extends EventDispatcher
 {
+    /**
+     * @type {AudioBufferSourceNode}
+     * @default null
+     * @private
+     */
     private _$source: AudioBufferSourceNode | null;
+
+    /**
+     * @type {GainNode}
+     * @default null
+     * @private
+     */
     private _$gainNode: GainNode | null;
+
+    /**
+     * @type {boolean}
+     * @default true
+     * @private
+     */
     private _$stopFlag: boolean;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$currentCount: number;
+
+    /**
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$volume: number;
+
+    /**
+     * @type {string}
+     * @default ""
+     * @private
+     */
     private _$src: string;
 
     /**
@@ -62,47 +97,13 @@ export class Sound extends EventDispatcher
         this.loopCount   = 0;
         this.audioBuffer = null;
 
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$volume = 1;
-
-        /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$src = "";
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
+        // private
+        this._$volume       = 1;
+        this._$src          = "";
         this._$currentCount = 0;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$stopFlag = true;
-
-        /**
-         * @type {AudioBufferSourceNode}
-         * @default null
-         * @private
-         */
-        this._$source = null;
-
-        /**
-         * @type {GainNode}
-         * @default null
-         * @private
-         */
-        this._$gainNode = null;
+        this._$stopFlag     = true;
+        this._$source       = null;
+        this._$gainNode     = null;
     }
 
     /**
@@ -311,12 +312,11 @@ export class Sound extends EventDispatcher
     {
         // load AudioBuffer
         if (!character.audioBuffer) {
-            const buffer = new Uint8Array(character.buffer as number[]);
-            const audioBuffer = await soundDecodeService(buffer.buffer);
+            const uint8Array  = new Uint8Array(character.buffer as number[]);
+            const audioBuffer = await soundDecodeService(uint8Array.buffer);
             if (!audioBuffer) {
                 return ;
             }
-
             character.audioBuffer = audioBuffer;
         }
 

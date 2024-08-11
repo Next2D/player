@@ -15,10 +15,54 @@ import {
  */
 export class Job extends EventDispatcher
 {
+    /**
+     * @description イージングの対象オブジェクト
+     *              Target object of easing
+     * 
+     * @type {object}
+     * @default null
+     * @private
+     */
     private readonly _$target: any;
+
+    /**
+     * @description イージングのエントリーオブジェクト
+     *              Entry object of easing
+     * 
+     * @type {array}
+     * @default null
+     * @private
+     */
     private _$entries: IEntriesObject[] | null;
+
+    /**
+     * @description イージングの開始時間
+     *              Start time of easing
+     * 
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$startTime: number;
+
+    /**
+     * @description イージングの強制停止フラグ
+     *              Forced stop flag of easing
+     * 
+     * @type {boolean}
+     * @default false
+     * @private
+     */
     private _$stopFlag: boolean;
+
+    /**
+     * @description イージングの遅延実行のタイマーID
+     *              Timer ID for delayed execution of easing
+     *
+     * @type {number}
+     * @default -1
+     * @private
+     */
     private _$timerId: number;
 
     /**
@@ -119,39 +163,13 @@ export class Job extends EventDispatcher
         this.to          = to;
         this.currentTime = 0;
         this.nextJob     = null;
-        /**
-         * @type {object}
-         * @private
-         */
-        this._$target = target;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$entries = null;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
+        
+        // private params
+        this._$target    = target;
+        this._$entries   = null;
         this._$startTime = 0;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$stopFlag = false;
-
-        /**
-         * @type {number}
-         * @default -1
-         * @private
-         */
-        this._$timerId = -1;
+        this._$stopFlag  = false;
+        this._$timerId   = -1;
     }
 
     /**

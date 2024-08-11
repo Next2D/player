@@ -76,11 +76,45 @@ export class Video extends DisplayObject
      */
     public currentTime: number;
 
+    /**
+     * @type {IBounds}
+     * @private
+     */
     private readonly _$bounds: IBounds;
+
+    /**
+     * @type {number}
+     * @default -1
+     * @private
+     */
     private _$timerId: number;
+
+    /**
+     * @type {HTMLVideoElement}
+     * @default null
+     * @private
+     */
     private _$videoElement: HTMLVideoElement | null;
+
+    /**
+     * @type {boolean}
+     * @default true
+     * @private
+     */
     private _$stop: boolean;
+
+    /**
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$volume: number;
+
+    /**
+     * @type {string}
+     * @default ""
+     * @private
+     */
     private _$src: string;
 
     /**
@@ -100,51 +134,18 @@ export class Video extends DisplayObject
         this.autoPlay    = true;
         this.currentTime = 0;
 
-        /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$src = "";
-
-        /**
-         * @type {object}
-         * @private
-         */
+        // private params
+        this._$src          = "";
+        this._$timerId      = -1;
+        this._$videoElement = null;
+        this._$stop         = true;
+        this._$volume       = 1;
         this._$bounds = {
             "xMin": 0,
             "xMax": width,
             "yMin": 0,
             "yMax": height
         };
-
-        /**
-         * @type {number}
-         * @default -1
-         * @private
-         */
-        this._$timerId = -1;
-
-        /**
-         * @type {HTMLVideoElement}
-         * @default null
-         * @private
-         */
-        this._$videoElement = null;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$stop = true;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$volume = 1;
     }
 
     /**

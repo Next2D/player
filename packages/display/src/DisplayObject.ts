@@ -4,7 +4,13 @@ import type { IParent } from "./interface/IParent";
 import type { Loader } from "./Loader";
 import type { IDictionaryTag } from "./interface/IDictionaryTag";
 import type { ICharacter } from "./interface/ICharacter";
+import type { IPlaceObject } from "./interface/IPlaceObject";
 import type { MovieClip } from "./MovieClip";
+import type {
+    ColorTransform,
+    Matrix
+} from "@next2d/geom";
+import { execute as displayObjectBaseBuildService } from "./DisplayObject/service/DisplayObjectBaseBuildService";
 import {
     Event,
     EventDispatcher
@@ -63,37 +69,137 @@ export class DisplayObject extends EventDispatcher
      * @public
      */
     public readonly isTimelineEnabled: boolean;
+    
+    /**
+     * @description Shapeの機能を所持しているかを返却
+     *              Returns whether the display object has Shape functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isShape: boolean;
+
+    /**
+     * @description Videoの機能を所持しているかを返却
+     *              Returns whether the display object has Video functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isVideo: boolean;
+
+    /**
+     * @description Textの機能を所持しているかを返却
+     *              Returns whether the display object has Text functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isText: boolean;
+
+    /**
+     * @description 表示オブジェクトのPlaceObjectのIDを返却します。
+     *              Returns the ID of the PlaceObject of the display object.
+     * 
+     * @type {number}
+     * @default -1
+     * @public
+     */
+    public placeId: number;
+
+    /**
+     * @description 現在のフレームの表示オブジェクトのPlaceObjectを返却します。
+     *             Returns the PlaceObject of the current frame of the display object.
+     * 
+     * @type {IPlaceObject|null}
+     * @default null
+     * @public
+     */
+    public placeObject: IPlaceObject | null;
+
+    /**
+     * @description 構築に利用したキャラクターIDを返却します。
+     *              Returns the character ID used for construction.
+     * 
+     * @type {number}
+     * @default -1
+     * @public
+     */
+    public characterId: number;
+
+    /**
+     * @description マスク対象の深度を返却します。
+     *              Returns the depth of the mask target.
+     * 
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public clipDepth: number;
+
+    /**
+     * @description 名前を返却します。 getChildByName() で使用されます。
+     *              Returns the name. Used by getChildByName().
+     * 
+     * @see {DisplayObjectContainer.getChildByName}
+     * @type {string}
+     * @default ""
+     * @public
+     */
+    public name: string;
+
+    /**
+     * @description 開始フレームを返却します。
+     *              Returns the start frame.
+     * 
+     * @type {number}
+     * @default 1
+     * @public
+     */
+    public startFrame: number;
+
+    /**
+     * @description 終了フレームを返却します。
+     *              Returns the end frame.
+     * 
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public endFrame: number;
+
+    /**
+     * @description 固定された変換行列、nullの場合はPlaceObjectの変換行列を検索します。
+     *              Fixed transformation matrix, if null, search for PlaceObject transformation matrix.
+     * 
+     * @type {Matrix}
+     * @default null
+     * @protected
+     */
+    protected _$matrix: Matrix | null;
+    protected _$colorTransform: ColorTransform | null;
+    protected _$filters: FilterArrayImpl | null;
+    protected _$blendMode: IBlendMode | null;
 
 
-    protected _$characterId: number;
     protected _$added: boolean;
     protected _$addedToStage: boolean;
     protected _$updated: boolean;
-    protected _$name: string;
+
+    // todo
     protected _$scaleX: number | null;
     protected _$scaleY: number | null;
     protected _$rotation: number | null;
-    protected _$startFrame: number;
-    protected _$endFrame: number;
-
-
-    protected _$id: number;
     protected _$scale9Grid: Rectangle | null;
-    protected _$active: boolean;
     protected _$isMask: boolean;
-    protected _$filters: FilterArrayImpl | null;
-    protected _$blendMode: IBlendMode | null;
-    protected _$transform: Transform;
     protected _$hitObject: Sprite | null;
-    protected _$isNext: boolean;
-    protected _$clipDepth: number;
     protected _$mask: DisplayObjectImpl<any> | null;
     protected _$visible: boolean;
     protected _$variables: Map<any, any> | null;
-    protected _$placeObject: PlaceObjectImpl | null;
-    protected _$changePlace: boolean;
-    protected _$currentPlaceId: number;
-    protected _$placeId: number;
+    
 
     /**
      * @constructor
@@ -104,195 +210,40 @@ export class DisplayObject extends EventDispatcher
         super();
 
         this.instanceId = $getInstanceId();
+
         this.isContainerEnabled = false;
         this.isTimelineEnabled  = false;
+        this.isShape            = false;
+        this.isVideo            = false;
+        this.isText             = false;
 
-        /**
-         * @type {number}
-         * @default -1
-         * @private
-         */
-        this._$id = -1;
+        
+        this.placeId       = -1;
+        this.placeObject   = null;
+        
+        this.characterId = -1;
+        this.clipDepth   = 0;
+        this.name        = "";
+        this.startFrame  = 1;
+        this.endFrame    = 0;
 
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$characterId = -1;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$active = false;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$isMask = false;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$updated = true;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
         this._$added = false;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
         this._$addedToStage = false;
 
-        /**
-         * @type {array|null}
-         * @default null
-         * @private
-         */
         this._$filters = null;
-
-        /**
-         * @type {string|null}
-         * @default null
-         * @private
-         */
         this._$blendMode = null;
 
-        /**
-         * @type {Sprite|null}
-         * @default null
-         * @private
-         */
         this._$hitObject = null;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$isNext = true;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$clipDepth = 0;
-
-        /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$name = "";
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
+        this._$isMask = false;
+        this._$updated = true;
         this._$visible = true;
-
-        /**
-         * @type {DisplayObject|null}
-         * @default null
-         * @private
-         */
         this._$mask = null;
-
-        /**
-         * @type {Rectangle|null}
-         * @default null
-         * @private
-         */
         this._$scale9Grid = null;
-
-        /**
-         * @type {number|null}
-         * @default null
-         * @private
-         */
-        this._$placeId = -1;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$startFrame = 1;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$endFrame = 0;
-
-        // /**
-        //  * @type {Transform}
-        //  * @private
-        //  */
-        // this._$transform = new Transform(this);
-
-        /**
-         * @type {Map}
-         * @default null
-         * @private
-         */
         this._$variables = null;
+        
 
-        /**
-         * @type {object}
-         * @default null
-         * @private
-         */
-        this._$placeObject = null;
-
-        /**
-         * @type {number}
-         * @default -1
-         * @private
-         */
-        this._$currentPlaceId = -1;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$changePlace = false;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$scaleX = null;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$scaleY = null;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
+        this._$scaleX   = null;
+        this._$scaleY   = null;
         this._$rotation = null;
     }
 
@@ -640,39 +591,6 @@ export class DisplayObject extends EventDispatcher
     //         : 0;
     // }
 
-    // /**
-    //  * @description DisplayObject のインスタンス名を示します。
-    //  *              Indicates the instance name of the DisplayObject.
-    //  *
-    //  * @member {string}
-    //  * @public
-    //  */
-    // get name (): string
-    // {
-    //     if (this._$name) {
-    //         return this._$name;
-    //     }
-    //     return `instance${this._$instanceId}`;
-    // }
-    // set name (name: string)
-    // {
-    //     this._$name = `${name}`;
-
-    //     const parent: ParentImpl<any> | null = this._$parent;
-    //     if (parent && parent._$names) {
-
-    //         parent._$names.clear();
-
-    //         const children: DisplayObjectImpl<any>[] = parent._$getChildren();
-    //         for (let idx: number = 0; idx < children.length; ++idx) {
-    //             const child: DisplayObjectImpl<any> = children[idx];
-    //             if (child._$name) {
-    //                 parent._$names.set(child.name, child);
-    //             }
-    //         }
-    //     }
-    // }
-
     /**
      * @description このDisplayObjectの親のDisplayObjectContainerを返却します。
      *              通常であれば、親のDisplayObjectContainerを継承しているのは、Sprite、または MovieClip となります。
@@ -683,7 +601,7 @@ export class DisplayObject extends EventDispatcher
      * @readonly
      * @public
      */
-    get parent (): IParent<MovieClip | Sprite> | null
+    get parent (): IParent<any> | null
     {
         return $parentMap.has(this)
             ? $parentMap.get(this) as NonNullable<IParent<MovieClip | Sprite>>
@@ -2094,36 +2012,6 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @description 指定されたタグ情報を元に、表示オブジェクトを構築します。
-     *              Based on the specified tag information, the display object is constructed.
-     *
-     * @param  {object} tag
-     * @param  {MovieClip | Loader} parent
-     * @return {void}
-     * @method
-     * @protected
-     */
-    _$baseBuild (tag: IDictionaryTag, parent: MovieClip | Loader): void
-    {
-        const loaderInfo = parent.loaderInfo;
-        if (!loaderInfo) {
-            throw new Error("the loaderInfo or data is nul.");
-        }
-
-        // set parent data
-        $parentMap.set(this, parent);
-        $rootMap.set(this, parent.root);
-        $loaderInfoMap.set(this, loaderInfo);
-
-        // bind tag data
-        this._$characterId = tag.characterId;
-        this._$clipDepth   = tag.clipDepth;
-        this._$startFrame  = tag.startFrame;
-        this._$endFrame    = tag.endFrame;
-        this._$name        = tag.name || "";
-    }
-
-    /**
      * @description 指定タグからキャラクターを取得して、オブジェクトを構築
      *              Get the character from the specified tag and build the object
      *
@@ -2140,7 +2028,7 @@ export class DisplayObject extends EventDispatcher
         parent: MovieClip | Loader
     ): void {
         // base build
-        this._$baseBuild(tag, parent);
+        displayObjectBaseBuildService(this, tag, parent);
 
         // build
         this._$buildCharacter(character);

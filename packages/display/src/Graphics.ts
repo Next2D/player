@@ -100,30 +100,144 @@ export class Graphics
      */
     public _$recodes: any[] | null;
 
-    // parems
+    /**
+     * @type {Float32Array}
+     * @default null
+     * @private
+     */
     private _$buffer: Float32Array | null;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$maxAlpha: number;
+
+    /**
+     * @type {boolean}
+     * @default false
+     * @private
+     */
     private _$isBeginning: boolean;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$positionX: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$positionY: number;
 
-    // fills
+    /**
+     * @type {boolean}
+     * @default false
+     * @private
+     */
     private _$hasFillEnabled: boolean;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$fillType: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$fillColor: number;
+
+    /**
+     * @type {GraphicsGradientFill}
+     * @default null
+     * @private
+     */
     private _$fillGradient: GraphicsGradientFill | null;
+
+    /**
+     * @type {GraphicsBitmapFill}
+     * @default null
+     * @private
+     */
     private _$fillBitmap: GraphicsBitmapFill | null;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
     private _$fills: any[] | null;
 
-    // lines
+    /**
+     * @type {boolean}
+     * @default false
+     * @private
+     */
     private _$hasLineEnabled: boolean;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$lineType: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$lineColor: number;
+
+    /**
+     * @type {GraphicsGradientFill}
+     * @default null
+     * @private
+     */
     private _$lineGradient: GraphicsGradientFill | null;
+
+    /**
+     * @type {string}
+     * @default "round"
+     * @private
+     */
     private _$joints: IJointStyle;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$miterLimit: number;
+
+    /**
+     * @type {string}
+     * @default "none"
+     * @private
+     */
     private _$caps: ICapsStyle;
+
+    /**
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$lineWidth: number;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
     private _$lines: any[] | null;
 
     /**
@@ -138,152 +252,32 @@ export class Graphics
         this.xMax        = -Number.MAX_VALUE;
         this.yMax        = -Number.MAX_VALUE;
 
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$recodes = null;
-
-        /**
-         * @type {Float32Array}
-         * @default null
-         * @private
-         */
-        this._$buffer = null;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$positionX  = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$positionY  = 0;
-
-        /**
-         * @type {string}
-         * @default "none"
-         * @private
-         */
-        this._$caps = "none";
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$lineWidth  = 1;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$maxAlpha = 0;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
+        // private
+        this._$recodes     = null;
+        this._$buffer      = null;
+        this._$positionX   = 0;
+        this._$positionY   = 0;
+        this._$maxAlpha    = 0;
         this._$isBeginning = false;
 
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$fillType = 0;
-
-        /**
-         * @type {GraphicsGradientFill}
-         * @default null
-         * @private
-         */
-        this._$fillGradient = null;
-
-        /**
-         * @type {GraphicsGradientFill}
-         * @default null
-         * @private
-         */
-        this._$fillBitmap = null;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$fillColor = 0;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
+        // fill
+        this._$fills          = null;
         this._$hasFillEnabled = false;
+        this._$fillType       = 0;
+        this._$fillGradient   = null;
+        this._$fillBitmap     = null;
+        this._$fillColor      = 0;
 
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$lineType = 0;
-
-        /**
-         * @type {GraphicsGradientFill}
-         * @default 0
-         * @private
-         */
-        this._$lineGradient = null;
-
-        /**
-         * @type {string}
-         * @default round
-         * @private
-         */
-        this._$joints = "round";
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$miterLimit = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$lineColor = 0;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
+        // stroke
+        this._$caps           = "none";
+        this._$lineWidth      = 1;
+        this._$lines          = null;
         this._$hasLineEnabled = false;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$fills = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$lines = null;
+        this._$lineType       = 0;
+        this._$lineGradient   = null;
+        this._$joints         = "round";
+        this._$miterLimit     = 0;
+        this._$lineColor      = 0;
     }
 
     /**
