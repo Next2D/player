@@ -1,5 +1,5 @@
 import { BezierConverter } from "./BezierConverter";
-import type { VerticesImpl } from "./interface/IVertices";
+import type { VerticesImpl } from "./interface/VerticesImpl";
 import {
     $getArray,
     $poolArray
