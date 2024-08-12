@@ -113,9 +113,3 @@ export const $setRendererSize = (width: number, height: number): void =>
     $rendererWidth  = width;
     $rendererHeight = height;
 };
-
-/**
- * @type {Float32Array}
- * @public
- */
-export const $rendererMatrix: Float32Array = new Float32Array([1, 0, 0, 1, 0, 0]);

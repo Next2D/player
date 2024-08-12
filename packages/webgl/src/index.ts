@@ -1,3 +1,4 @@
+export * from "./Context";
 export * from "./CanvasGradientToWebGL";
 export * from "./CanvasPatternToWebGL";
 export * from "./CanvasToWebGLContext";

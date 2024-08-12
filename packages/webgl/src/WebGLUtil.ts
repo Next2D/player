@@ -16,10 +16,25 @@ export const $setRenderSize = (size: number): void =>
 };
 
 /**
- * @type {WebGL2RenderingContext}
+ * @type {number}
+ * @default 4
  * @public
  */
-export let $gl: WebGL2RenderingContext;
+export let $samples: number = 4;
+
+/**
+ * @description 描画のサンプリング数を変更
+ *              Change the number of samples for drawing
+ *
+ * @param  {number} samples
+ * @return {void}
+ * @method
+ * @public 
+ */
+export const $changeSamples = (samples: number): void =>
+{
+    $samples = samples;
+};
 
 /**
  * @description WebGL2のコンテキストをセット
@@ -34,6 +49,13 @@ export const $setWebGL2RenderingContext = (gl: WebGL2RenderingContext): void =>
 {
     $gl = gl;
 };
+
+/**
+ * @type {WebGL2RenderingContext}
+ * @public
+ */
+export let $gl: WebGL2RenderingContext;
+
 
 /**
  * @type {number}

@@ -67,10 +67,6 @@ export class CommandController
                     commandResizeService(
                         object.buffer[0] as number,
                         object.buffer[1] as number,
-                        object.buffer[2] as number,
-                        object.buffer[3] as number,
-                        object.buffer[4] as number,
-                        !!object.buffer[5]
                     );
                     break;
 

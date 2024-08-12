@@ -1,5 +1,5 @@
 import { BezierConverter } from "./BezierConverter";
-import type { VerticesImpl } from "./interface/VerticesImpl";
+import type { VerticesImpl } from "./interface/IVertices";
 import {
     $getArray,
     $poolArray
@@ -235,7 +235,7 @@ export class CanvasToWebGLContextPath
      * @method
      * @private
      */
-    _$pushPointToCurrentPath (x: number, y: number, is_control_point: boolean)
+    _$pushPointToCurrentPath (x: number, y: number, is_control_point: boolean): void
     {
         this._$currentPath.push(x, y, is_control_point);
     }

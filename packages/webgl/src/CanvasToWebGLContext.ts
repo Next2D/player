@@ -16,12 +16,12 @@ import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShader
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { FilterShaderVariantCollection } from "./shader/variants/FilterShaderVariantCollection";
 import type { BlendShaderVariantCollection } from "./shader/variants/BlendShaderVariantCollection";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
+import type { AttachmentImpl } from "./interface/IAttachment";
 import type { BoundsImpl } from "./interface/BoundsImpl";
 import type { BlendModeImpl } from "./interface/BlendModeImpl";
 import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
 import type { PointImpl } from "./interface/PointImpl";
-import type { VerticesImpl } from "./interface/VerticesImpl";
+import type { VerticesImpl } from "./interface/IVertices";
 import type { InterpolationMethodImpl } from "./interface/InterpolationMethodImpl";
 import type { SpreadMethodImpl } from "./interface/SpreadMethodImpl";
 import type { CapsStyleImpl } from "./interface/CapsStyleImpl";

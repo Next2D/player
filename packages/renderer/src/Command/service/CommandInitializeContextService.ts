@@ -1,4 +1,4 @@
-import { CanvasToWebGLContext } from "@next2d/webgl";
+import { Context } from "@next2d/webgl";
 import {
     $setCanvas,
     $setContext,
@@ -44,5 +44,5 @@ export const execute = (
     $setWebGL2RenderingContext(gl);
 
     // Set CanvasToWebGLContext
-    $setContext(new CanvasToWebGLContext(gl, $samples));
+    $setContext(new Context(gl, $samples));
 };

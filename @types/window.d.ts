@@ -1,56 +1,10 @@
-import type { Next2D } from "../src/Next2D";
-import type { IndexRangeImpl } from "@next2d/interface";
+import type { Next2D } from "@next2d/core";
 
 declare global {
 
-    // eslint-disable-next-line no-unused-vars
     const next2d: Next2D;
 
-    // eslint-disable-next-line no-unused-vars
     interface Window {
         next2d?: Next2D;
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    interface WebGLTexture {
-        width: number;
-        height: number;
-        area: number;
-        dirty: boolean;
-        smoothing: boolean;
-        filterState: boolean;
-        matrix: string;
-        offsetX: number;
-        offsetY: number;
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    interface WebGLProgram {
-        id: number;
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    interface WebGLRenderbuffer {
-        stencil: WebGLRenderbuffer;
-        samples: number;
-        width: number;
-        height: number;
-        area: number;
-        dirty: boolean;
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    interface WebGLBuffer {
-        length: number;
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    interface WebGLVertexArrayObject {
-        vertexBuffer: WebGLBuffer;
-        vertexLength: number;
-        indexBuffer: WebGLBuffer;
-        indexLength: number;
-        indexRanges: IndexRangeImpl[];
-        indexCount: number;
     }
 }

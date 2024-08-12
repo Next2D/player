@@ -1,4 +1,4 @@
-export interface AttachmentImpl {
+export interface IAttachment {
     width: number;
     height: number;
     color: WebGLTexture | WebGLRenderbuffer | null;

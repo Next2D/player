@@ -1,6 +1,5 @@
 import type { IResizeMessage } from "../../interface/IResizeMessage";
 import { $player } from "../../Player";
-import { $stage } from "@next2d/display";
 import { $rendererWorker } from "../../RendererWorker";
 
 /**
@@ -36,12 +35,8 @@ export const execute = (): void =>
 {
     // postMessage
     message.buffer = new Float32Array([
-        $player.rendererScale,
         $player.rendererWidth,
-        $player.rendererHeight,
-        $stage.stageWidth,
-        $stage.stageHeight,
-        $player.fullScreen ? 1 : 0
+        $player.rendererHeight
     ]);
 
     options[0] = message.buffer.buffer;

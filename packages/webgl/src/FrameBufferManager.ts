@@ -1,11 +1,28 @@
-import { TextureManager } from "./TextureManager";
-import { StencilBufferPool } from "./StencilBufferPool";
-import { ColorBufferPool } from "./ColorBufferPool";
-import { $RENDER_SIZE } from "./WebGLUtil";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { CachePositionImpl } from "./interface/CachePositionImpl";
+import type { IAttachment } from "./interface/IAttachment";
+import { $gl } from "./WebGLUtil";
 
 /**
+ * @description 生成したFrameBufferの管理オブジェクトを配列にプールして再利用します。
+ *              Pool the management object of the generated FrameBuffer in an array and reuse it.
+ * 
+ * @type {array}
+ * @private
+ */
+const $objectPool: IAttachment[] = [];
+
+/**
+ * 
+ */
+let $frameBuffer: WebGLFramebuffer | null = null;
+
+export const boot = (): void =>
+{
+    $frameBuffer = $gl.createFramebuffer();
+};
+
+/**
+ * @description FrameBuffer管理クラス
+ *              FrameBuffer management class
  * @class
  */
 export class FrameBufferManager
