@@ -2,17 +2,18 @@ import type { Shape } from "../../Shape";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
-import { $clamp } from "../../DisplayObjectUtil";
+import { execute as shapeGenerateHashService } from "../service/ShapeGenerateHashService";
+import { $cacheStore } from "@next2d/cache";
+import {
+    $clamp,
+    $RENDERER_SHAPE_TYPE,
+    $getArray,
+    $poolArray
+} from "../../DisplayObjectUtil";
 import {
     ColorTransform,
     Matrix
 } from "@next2d/geom";
-
-/**
- * @type {number}
- * @private
- */
-const $RENDERER_SHAPE_TYPE: number = 0x01;
 
 /**
  * @description renderer workerに渡すShapeの描画データを生成
@@ -120,6 +121,48 @@ export const execute = (
         return;
     }
 
+    // rennder on
+    render_queue.push(1);
+    render_queue.push(...tMatrix, ...tColorTransform);
+
+    const hasGrid: boolean = rawMatrix && shape.scale9Grid
+        ? Math.abs(rawMatrix[1]) < 0.001 && Math.abs(rawMatrix[2]) < 0.0001
+        : false;
+
+    render_queue.push(+hasGrid);
+
+    // base bounds
+    render_queue.push(
+        graphics.xMin, 
+        graphics.yMin, 
+        graphics.xMax, 
+        graphics.yMax
+    );
+
+    if (!shape.uniqueKey) {
+        if (shape.characterId && shape.loaderInfo) {
+
+            // key length
+            render_queue.push(2);
+
+            const loaderInfo = shape.loaderInfo;
+            render_queue.push(loaderInfo.id);
+            render_queue.push(shape.characterId);
+
+            shape.uniqueKey = `${loaderInfo.id}@${shape.characterId}`;
+
+        } else {
+
+            // key length
+            render_queue.push(1);
+
+            const hash = shapeGenerateHashService(graphics.buffer);
+            render_queue.push(hash);
+            shape.uniqueKey = `${hash}`;
+
+        }
+    }
+    
     let xScale: number = Math.sqrt(
         tMatrix[0] * tMatrix[0]
         + tMatrix[1] * tMatrix[1]
@@ -146,8 +189,32 @@ export const execute = (
         yScale = +yScale.toFixed(4);
     }
 
-    // todo
-    render_queue.push(1);
+    if (!shape.cacheKey
+        || shape.cacheParams[0] !== xScale
+        || shape.cacheParams[1] !== yScale
+        || shape.cacheParams[2] !== tColorTransform[7]
+    ) {
+        shape.cacheKey = $cacheStore.generateKeys(xScale, yScale, tColorTransform[7]);
+        shape.cacheParams[0] = xScale;
+        shape.cacheParams[1] = yScale;
+        shape.cacheParams[2] = tColorTransform[7];
+    }
+    
+    const cacheKey = shape.cacheKey;
+
+    render_queue.push(cacheKey);
+    const cachePosition = $cacheStore.get(shape.uniqueKey, `${cacheKey}`);
+    if (!cachePosition) {
+        render_queue.push(0);
+
+        const buffer = graphics.buffer;
+        render_queue.push(buffer.length, ...buffer);
+
+        $cacheStore.set(shape.uniqueKey, `${cacheKey}`, true);
+
+    } else {
+        render_queue.push(1);
+    }
 
     if (tColorTransform === color_transform) {
         ColorTransform.release(tColorTransform);

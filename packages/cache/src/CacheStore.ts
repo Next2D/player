@@ -110,30 +110,32 @@ export class CacheStore
      * @description 指定のキーのキャッシュデータを返却
      *              Returns the cache data for the specified key
      *
-     * @param  {array} keys
+     * @param  {string} unique_key
+     * @param  {string} key
      * @return {*}
      * @method
      * @public
      */
-    get (keys: string[]): any
+    get (unique_key: string, key: string): any
     {
-        return cacheStoreGetService(this._$store, keys);
+        return cacheStoreGetService(this._$store, unique_key, key);
     }
 
     /**
      * @description キャッシュストアにデータをセット
      *              Set data in the cache store
      *
-     * @param  {array} keys
+     * @param  {string} unique_key
+     * @param  {string} key
      * @param  {*} value
      * @return {void}
      * @method
      * @public
      */
-    set (keys: string[], value: any = null): void
+    set (unique_key: string, key: string, value: any = null): void
     {
         cacheStoreSetService(
-            this, this._$store, keys, value
+            this, this._$store, unique_key, key, value
         );
     }
 
@@ -155,23 +157,16 @@ export class CacheStore
      * @description キャッシュストアのキーを生成
      *              Generate cache store keys
      *
-     * @param  {string} unique_key
-     * @param  {array} keys
-     * @param  {array} [scales=null]
-     * @param  {Float32Array} [color=null]
-     * @return {void}
+     * @param  {number} x_scale
+     * @param  {number} y_scale
+     * @param  {number} alpha
+     * @return {number}
      * @method
      * @public
      */
-    generateKeys (
-        unique_key: string,
-        keys: string[],
-        scales: number[] | null = null,
-        color: Float32Array | null = null
-    ): void {
-        cacheStoreGenerateKeysService(
-            unique_key, keys, scales, color
-        );
+    generateKeys (x_scale: number, y_scale: number, alpha: number): number
+    {
+        return cacheStoreGenerateKeysService(x_scale, y_scale, alpha);
     }
 }
 

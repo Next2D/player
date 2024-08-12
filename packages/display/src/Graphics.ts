@@ -1543,7 +1543,7 @@ export class Graphics
     get buffer (): Float32Array
     {
         if (this.isConfirmed && this._$buffer) {
-            return this._$buffer.slice();
+            return this._$buffer;
         }
 
         // fixed logic
@@ -1566,7 +1566,7 @@ export class Graphics
         // レコードの確定フラグを更新
         this.isConfirmed = true;
 
-        return this._$buffer.slice();
+        return this._$buffer;
     }
     set buffer (buffer: Float32Array)
     {

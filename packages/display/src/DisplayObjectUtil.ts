@@ -13,6 +13,12 @@ import type { MovieClip } from "./MovieClip";
 export const $RENDERER_CONTAINER_TYPE: number = 0x00;
 
 /**
+ * @type {number}
+ * @const
+ */
+export const $RENDERER_SHAPE_TYPE: number = 0x01;
+
+/**
  * @typs {Float32Array}
  * @const
  */

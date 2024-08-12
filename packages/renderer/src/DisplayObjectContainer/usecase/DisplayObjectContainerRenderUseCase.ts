@@ -16,9 +16,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 {
     const length = render_queue[index++];
 
-    let currentClipDepth = 0;
+    let isMaskEnabled = 0;
     for (let idx = 0; length > idx; idx++) {
-        const placeId   = render_queue[index++];
+        const depth = render_queue[index++];
         const clipDepth = render_queue[index++];
 
         const type = render_queue[index++];

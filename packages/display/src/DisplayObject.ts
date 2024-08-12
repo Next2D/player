@@ -11,7 +11,8 @@ import { execute as displayObjectApplyChangesService } from "./DisplayObject/ser
 import { EventDispatcher } from "@next2d/events";
 import type {
     ColorTransform,
-    Matrix
+    Matrix,
+    Rectangle
 } from "@next2d/geom";
 import {
     $getInstanceId,
@@ -658,25 +659,25 @@ export class DisplayObject extends EventDispatcher
     //     this._$rotation = rotation;
     // }
 
-    // /**
-    //  * @description 現在有効な拡大 / 縮小グリッドです。
-    //  *              The current scaling grid that is in effect.
-    //  *
-    //  * @member {Rectangle}
-    //  * @public
-    //  */
-    // get scale9Grid (): Rectangle | null
-    // {
-    //     return this._$scale9Grid;
-    // }
-    // set scale9Grid (scale_9_grid: Rectangle | null)
-    // {
-    //     if (this._$scale9Grid !== scale_9_grid) {
-    //         this._$scale9Grid = scale_9_grid;
-    //         this._$doChanged();
-    //         $doUpdated();
-    //     }
-    // }
+    /**
+     * @description 現在有効な拡大 / 縮小グリッドです。
+     *              The current scaling grid that is in effect.
+     *
+     * @member {Rectangle}
+     * @public
+     */
+    get scale9Grid (): Rectangle | null
+    {
+        return this._$scale9Grid;
+    }
+    set scale9Grid (scale_9_grid: Rectangle | null)
+    {
+        if (this._$scale9Grid === scale_9_grid) {
+            return ;
+        }
+        this._$scale9Grid = scale_9_grid;
+        displayObjectApplyChangesService(this);
+    }
 
     // /**
     //  * @description 基準点から適用されるオブジェクトの水平スケール（パーセンテージ）を示します。

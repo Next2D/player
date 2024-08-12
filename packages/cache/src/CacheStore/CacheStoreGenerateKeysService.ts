@@ -2,45 +2,28 @@
  * @description キャッシュストアのキーを生成
  *              Generate cache store keys
  *
- * @param  {string} unique_key
- * @param  {array} keys
- * @param  {array} [scales=null]
- * @param  {Float32Array} [color=null]
- * @return {void}
+ * @param  {number} x_scale
+ * @param  {number} y_scale
+ * @param  {number} alpha
+ * @return {number}
  * @method
  * @public
  */
-export const execute = (
-    unique_key: string,
-    keys: string[],
-    scales: number[] | null = null,
-    color: Float32Array | null = null
-): void => {
-
-    let str: string = "";
-    if (scales && scales.length) {
-        str += scales.join("_");
+export const execute = (x_scale: number, y_scale: number, alpha: number): number => 
+{
+    let value: string = `${x_scale}_${y_scale}`;
+    if (alpha) {
+        value += `_${alpha}`;
     }
 
-    // color
-    if (color && color.length) {
-        str += color[7] === 0 ? "" : `_${color[7]}`;
+    let hash = 0;
+    for (let idx: number = 0; idx < value.length; idx++) {
+
+        const chr: number = value.charCodeAt(idx);
+
+        hash  = (hash << 5) - hash + chr;
+        hash |= 0;
     }
 
-    if (str) {
-        let hash = 0;
-        const length: number = str.length;
-        for (let idx: number = 0; idx < length; idx++) {
-
-            const chr: number = str.charCodeAt(idx);
-
-            hash  = (hash << 5) - hash + chr;
-            hash |= 0;
-        }
-        keys[1] = `${hash}`;
-    } else {
-        keys[1] = "0";
-    }
-
-    keys[0] = `${unique_key}`;
+    return hash;
 };

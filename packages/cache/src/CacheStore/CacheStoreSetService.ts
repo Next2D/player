@@ -19,31 +19,29 @@ import {
 export const execute = (
     cache_store: CacheStore,
     data_store: Map<string, Map<string, any>>,
-    keys: string[],
+    unique_key: string,
+    key: string,
     value: any = null
 ): void => {
 
-    const id: string   = keys[0];
-    const type: string = keys[1];
-
     // init
-    if (!data_store.has(id)) {
-        data_store.set(id, $getMap());
+    if (!data_store.has(unique_key)) {
+        data_store.set(unique_key, $getMap());
     }
 
-    const data = data_store.get(id) as NonNullable<Map<string, any>>;
+    const data = data_store.get(unique_key) as NonNullable<Map<string, any>>;
     if (value === null) {
 
-        if (!data.has(type)) {
+        if (!data.has(key)) {
             return ;
         }
 
-        cache_store.destroy(data.get(type));
+        cache_store.destroy(data.get(key));
 
-        data.delete(type);
+        data.delete(key);
 
         if (!data.size) {
-            data_store.delete(id);
+            data_store.delete(unique_key);
             $poolMap(data);
         }
 
@@ -51,5 +49,5 @@ export const execute = (
     }
 
     // set cache
-    data.set(type, value);
+    data.set(key, value);
 };

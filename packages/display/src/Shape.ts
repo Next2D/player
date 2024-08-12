@@ -3,7 +3,10 @@ import { DisplayObject } from "./DisplayObject";
 import { Graphics } from "./Graphics";
 import { BitmapData } from "./BitmapData";
 import { Event } from "@next2d/events";
-import { $graphicMap } from "./DisplayObjectUtil";
+import {
+    $graphicMap,
+    $getArray
+ } from "./DisplayObjectUtil";
 
 /**
  * @description Shape クラスは、ベクターグラフィックスを表示するための表示オブジェクトです。
@@ -40,6 +43,32 @@ export class Shape extends DisplayObject
     public readonly isShape: boolean;
 
     /**
+     * @description Shape描画のキャッシュで利用するユニークキー
+     *              Unique key used for Shape drawing cache
+     */
+    public uniqueKey: string;
+
+    /**
+     * @description ビルドされたキャッシュキー
+     *              Built cache key
+     * 
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public cacheKey: number;
+
+    /**
+     * @description キャッシュのビルドに利用されるパラメータ
+     *              Parameters used to build the cache
+     * 
+     * @type {number[]}
+     * @default [0, 0, 0]
+     * @public
+     */
+    public cacheParams: number[];
+
+    /**
      * @constructor
      * @public
      */
@@ -47,7 +76,10 @@ export class Shape extends DisplayObject
     {
         super();
 
-        this.isShape = true;
+        this.isShape     = true;
+        this.uniqueKey   = "";
+        this.cacheKey    = 0;
+        this.cacheParams = $getArray(0, 0, 0);
 
         // private
         this._$graphics = null;

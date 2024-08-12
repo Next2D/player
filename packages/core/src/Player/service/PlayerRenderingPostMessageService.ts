@@ -55,7 +55,6 @@ export const execute = (): void =>
 
     $stage._$generateRenderQueue($renderQueue, $matrix);
 
-    console.log($renderQueue.slice(0));
     const buffer = new Float32Array($renderQueue);
 
     message.buffer = buffer;

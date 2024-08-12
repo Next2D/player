@@ -9,7 +9,7 @@ describe("CacheStoreSetService.js test", () =>
         const store = new Map();
         expect(store.size).toBe(0);
 
-        execute($cacheStore, store, ["1", "0"], "test");
+        execute($cacheStore, store, "1", "0", "test");
 
         expect(store.size).toBe(1);
 
