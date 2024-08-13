@@ -1,19 +1,26 @@
+
 import { execute } from "./PathCommandBeginPathService";
 import { describe, expect, it } from "vitest";
+import {
+    $currentPath,
+    $vertices
+} from "../../PathCommand";
 
 describe("PathCommandBeginPathService.js method test", () =>
 {
     it("test case", () =>
     {
-        const currentPath = [1, 2, true];
-        const vertices = [[1, 2, true], [3, 4, false]];
+        $currentPath.length = 0;
+        $vertices.length = 0;
+        $currentPath.push(1, 2, true);
+        $vertices.push([1, 2, true], [3, 4, false]);
 
-        expect(currentPath.length).toBe(3);
-        expect(vertices.length).toBe(2);
+        expect($currentPath.length).toBe(3);
+        expect($vertices.length).toBe(2);
 
-        execute(currentPath, vertices);
+        execute();
 
-        expect(currentPath.length).toBe(0);
-        expect(vertices.length).toBe(0);
+        expect($currentPath.length).toBe(0);
+        expect($vertices.length).toBe(0);
     });
 });

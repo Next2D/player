@@ -1,8 +1,9 @@
+import { $bezierBuffer } from "../../BezierConverter";
+
 /**
  * @description 3次ベジェに分割
  *              Split cubic Bezier
  * 
- * @param  {Float32Array} bezier_buffer
  * @param  {number} p0
  * @param  {number} p1
  * @param  {number} p2
@@ -18,7 +19,6 @@
  * @protected
  */
 export const execute = (
-    bezier_buffer: Float32Array,
     p0: number, p1: number,
     p2: number, p3: number,
     p4: number, p5: number,
@@ -31,21 +31,21 @@ export const execute = (
     const dx: number = (p6 + p4 - p2 - p0) * 0.125;
     const dy: number = (p7 + p5 - p3 - p1) * 0.125;
 
-    bezier_buffer[offset1    ] = p0;
-    bezier_buffer[offset1 + 1] = p1;
-    bezier_buffer[offset1 + 2] = (p0 + p2) * 0.5;
-    bezier_buffer[offset1 + 3] = (p1 + p3) * 0.5;
-    bezier_buffer[offset1 + 4] = mx - dx;
-    bezier_buffer[offset1 + 5] = my - dy;
-    bezier_buffer[offset1 + 6] = mx;
-    bezier_buffer[offset1 + 7] = my;
+    $bezierBuffer[offset1    ] = p0;
+    $bezierBuffer[offset1 + 1] = p1;
+    $bezierBuffer[offset1 + 2] = (p0 + p2) * 0.5;
+    $bezierBuffer[offset1 + 3] = (p1 + p3) * 0.5;
+    $bezierBuffer[offset1 + 4] = mx - dx;
+    $bezierBuffer[offset1 + 5] = my - dy;
+    $bezierBuffer[offset1 + 6] = mx;
+    $bezierBuffer[offset1 + 7] = my;
 
-    bezier_buffer[offset2    ] = mx;
-    bezier_buffer[offset2 + 1] = my;
-    bezier_buffer[offset2 + 2] = mx + dx;
-    bezier_buffer[offset2 + 3] = my + dy;
-    bezier_buffer[offset2 + 4] = (p4 + p6) * 0.5;
-    bezier_buffer[offset2 + 5] = (p5 + p7) * 0.5;
-    bezier_buffer[offset2 + 6] = p6;
-    bezier_buffer[offset2 + 7] = p7;
+    $bezierBuffer[offset2    ] = mx;
+    $bezierBuffer[offset2 + 1] = my;
+    $bezierBuffer[offset2 + 2] = mx + dx;
+    $bezierBuffer[offset2 + 3] = my + dy;
+    $bezierBuffer[offset2 + 4] = (p4 + p6) * 0.5;
+    $bezierBuffer[offset2 + 5] = (p5 + p7) * 0.5;
+    $bezierBuffer[offset2 + 6] = p6;
+    $bezierBuffer[offset2 + 7] = p7;
 };

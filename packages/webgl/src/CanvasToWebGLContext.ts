@@ -691,6 +691,7 @@ export class CanvasToWebGLContext
     }
 
     /**
+     * 
      * @param  {object} position
      * @return {WebGLTexture}
      * @method

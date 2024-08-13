@@ -1,6 +1,22 @@
 import { $cacheStore } from "@next2d/cache";
 import { $context } from "../../RendererUtil";
 
+const MOVE_TO: number         = 0;
+const CURVE_TO: number        = 1;
+const LINE_TO: number         = 2;
+const CUBIC: number           = 3;
+const ARC: number             = 4;
+const FILL_STYLE: number      = 5;
+const STROKE_STYLE: number    = 6;
+const END_FILL: number        = 7;
+const END_STROKE: number      = 8;
+const BEGIN_PATH: number      = 9;
+const GRADIENT_FILL: number   = 10;
+const GRADIENT_STROKE: number = 11;
+const CLOSE_PATH: number      = 12;
+const BITMAP_FILL: number     = 13;
+const BITMAP_STROKE: number   = 14;
+
 /**
  * @description Shapeの描画を実行します。
  *              Execute the drawing of Shape.
@@ -38,13 +54,28 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     console.log("cache", hasCache, uniqueKey, cacheKey);
     if (!hasCache) {
         const length = render_queue[index++];
-        const commands = render_queue.subarray(index, index + length);
+        const end = index + length;
+        
+        const commands = render_queue.subarray(index, end);
         index += length;
+
+        // while (end > index) {
+
+        //     switch (commands[index++]) {
+
+        //         case 9:
+        //             $context.beginPath();
+        //             break;
+
+
+        //     }
+
+        // }
 
         // todo: draw shape
     } else {
-        const cachePosition = $cacheStore.get(uniqueKey, cacheKey);
-        if (!cache) {
+        const cachePosition = $cacheStore.get(uniqueKey, `${cacheKey}`);
+        if (!cachePosition) {
             return index;
         }
     }

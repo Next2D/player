@@ -1,33 +1,27 @@
-import { execute as pathCommandMoveToUseCase } from "./PathCommandMoveToUseCase";
 import { execute as pathCommandEqualsToLastPointService } from "../service/PathCommandEqualsToLastPointService";
 import { execute as pathCommandPushPointToCurrentPathService } from "../service/PathCommandPushPointToCurrentPathService";
 import { $currentPath } from "../../PathCommand";
 
 /**
- * @description 二次曲線を描画
- *              Draw a quadratic curve
+ * @description パスを閉じる
+ *              Close the path
  *
- * @param  {number} cx 
- * @param  {number} cy 
- * @param  {number} x 
- * @param  {number} y 
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (
-    cx: number, cy: number,
-    x: number ,y: number
-): void => {
-
-    if (!$currentPath.length) {
-        pathCommandMoveToUseCase(0, 0);
+export const execute = (): void =>
+{
+    if ($currentPath.length < 7) {
+        return ;
     }
+
+    const x: number = +$currentPath[0];
+    const y: number = +$currentPath[1];
 
     if (pathCommandEqualsToLastPointService(x, y)) {
         return;
     }
 
-    pathCommandPushPointToCurrentPathService(cx, cy, true);
     pathCommandPushPointToCurrentPathService(x, y, false);
 };

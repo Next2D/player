@@ -1,3 +1,4 @@
+import type { IColorBufferObject } from "./interface/IColorBufferObject";
 import {
     $getArray,
     $upperPowerOfTwo

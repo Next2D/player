@@ -31,10 +31,16 @@ export let $samples: number = 4;
  * @method
  * @public 
  */
-export const $changeSamples = (samples: number): void =>
+export const $setSamples = (samples: number): void =>
 {
     $samples = samples;
 };
+
+/**
+ * @type {WebGL2RenderingContext}
+ * @public
+ */
+export let $gl: WebGL2RenderingContext;
 
 /**
  * @description WebGL2のコンテキストをセット
@@ -49,13 +55,6 @@ export const $setWebGL2RenderingContext = (gl: WebGL2RenderingContext): void =>
 {
     $gl = gl;
 };
-
-/**
- * @type {WebGL2RenderingContext}
- * @public
- */
-export let $gl: WebGL2RenderingContext;
-
 
 /**
  * @type {number}
