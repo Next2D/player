@@ -1,4 +1,4 @@
-export interface ClipObjectImpl {
+export interface IClipObject {
     vertexArrayObject: WebGLVertexArrayObject;
     matrixA: number;
     matrixB: number;

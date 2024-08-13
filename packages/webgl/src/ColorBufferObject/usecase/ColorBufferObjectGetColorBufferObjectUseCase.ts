@@ -6,13 +6,23 @@ import {
     $upperPowerOfTwo
 } from "../../WebGLUtil";
 
-export const execute = (object_pool: IColorBufferObject[], width: number, height: number): IColorBufferObject =>
+/**
+ * @description 指定サイズのColorBufferObjectを取得する
+ *              Get a ColorBufferObject of the specified size
+ *
+ * @param  {number} width
+ * @param  {number} height
+ * @return {object}
+ * @method
+ * @protected
+ */
+export const execute = (width: number, height: number): IColorBufferObject =>
 {
     // 128以下で描画崩れが発生する場合がある？ため、256を最小サイズにする
     width  = Math.max(256, $upperPowerOfTwo(width));
     height = Math.max(256, $upperPowerOfTwo(height));
 
-    const colorBufferObject = colorBufferObjectAcquireObjectUseCase(object_pool, width * height);
+    const colorBufferObject = colorBufferObjectAcquireObjectUseCase(width * height);
     if (colorBufferObject.width < width
         || colorBufferObject.height < height
     ) {

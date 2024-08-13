@@ -1,4 +1,4 @@
-import type { UniformDataImpl } from "../interface/UniformDataImpl";
+import type { UniformDataImpl } from "../interface/IUniformData";
 
 /**
  * @class

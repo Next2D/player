@@ -17,16 +17,16 @@ import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { FilterShaderVariantCollection } from "./shader/variants/FilterShaderVariantCollection";
 import type { BlendShaderVariantCollection } from "./shader/variants/BlendShaderVariantCollection";
 import type { AttachmentImpl } from "./interface/IAttachment";
-import type { BoundsImpl } from "./interface/BoundsImpl";
-import type { BlendModeImpl } from "./interface/BlendModeImpl";
-import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
-import type { PointImpl } from "./interface/PointImpl";
+import type { BoundsImpl } from "./interface/IBounds";
+import type { BlendModeImpl } from "./interface/IBlendMode";
+import type { IndexRangeImpl } from "./interface/IIndexRange";
+import type { PointImpl } from "./interface/IPoint";
 import type { VerticesImpl } from "./interface/VerticesImpl";
-import type { InterpolationMethodImpl } from "./interface/InterpolationMethodImpl";
-import type { SpreadMethodImpl } from "./interface/SpreadMethodImpl";
-import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
-import type { JointStyleImpl } from "./interface/JointStyleImpl";
-import type { CachePositionImpl } from "./interface/CachePositionImpl";
+import type { InterpolationMethodImpl } from "./interface/IInterpolationMethod";
+import type { SpreadMethodImpl } from "./interface/ISpreadMethod";
+import type { CapsStyleImpl } from "./interface/ICapsStyle";
+import type { JointStyleImpl } from "./interface/IJointStyle";
+import type { CachePositionImpl } from "./interface/ICachePosition";
 import {
     $setRenderSize,
     $setWebGL2RenderingContext,

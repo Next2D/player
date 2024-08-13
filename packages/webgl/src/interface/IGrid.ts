@@ -1,4 +1,4 @@
-export interface GridImpl {
+export interface IGrid {
     x: number;
     y: number;
     w: number;

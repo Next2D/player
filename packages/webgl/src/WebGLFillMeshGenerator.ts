@@ -1,5 +1,5 @@
-import type { FillMeshImpl } from "./interface/FillMeshImpl";
-import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
+import type { FillMeshImpl } from "./interface/IFillMesh";
+import type { IndexRangeImpl } from "./interface/IIndexRange";
 import { $getArray } from "./WebGLUtil";
 
 /**

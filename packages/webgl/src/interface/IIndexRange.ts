@@ -1,4 +1,4 @@
-export interface IndexRangeImpl {
+export interface IIndexRange {
     first: number;
     count: number;
 }

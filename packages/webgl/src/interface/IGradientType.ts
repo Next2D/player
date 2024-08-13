@@ -1,0 +1,1 @@
+export type IGradientType = "linear" | "radial";

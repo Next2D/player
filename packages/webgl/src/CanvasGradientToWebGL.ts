@@ -1,6 +1,6 @@
-import type { InterpolationMethodImpl } from "./interface/InterpolationMethodImpl";
-import type { SpreadMethodImpl } from "./interface/SpreadMethodImpl";
-import type { GradientTypeImpl } from "./interface/GradientTypeImpl";
+import type { InterpolationMethodImpl } from "./interface/IInterpolationMethod";
+import type { SpreadMethodImpl } from "./interface/ISpreadMethod";
+import type { GradientTypeImpl } from "./interface/IGradientType";
 import {
     $getFloat32Array6,
     $getArray,

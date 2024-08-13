@@ -1,5 +1,5 @@
-import type { BoundsImpl } from "./interface/BoundsImpl";
-import type { GridImpl } from "./interface/GridImpl";
+import type { BoundsImpl } from "./interface/IBounds";
+import type { GridImpl } from "./interface/IGrid";
 
 /**
  * @class

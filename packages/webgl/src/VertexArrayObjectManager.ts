@@ -1,9 +1,9 @@
 import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
 import { WebGLStrokeMeshGenerator } from "./WebGLStrokeMeshGenerator";
-import type { FillMeshImpl } from "./interface/FillMeshImpl";
-import type { StrokeMethImpl } from "./interface/StrokeMethImpl";
-import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
-import type { JointStyleImpl } from "./interface/JointStyleImpl";
+import type { FillMeshImpl } from "./interface/IFillMesh";
+import type { StrokeMethImpl } from "./interface/IStrokeMeth";
+import type { CapsStyleImpl } from "./interface/ICapsStyle";
+import type { JointStyleImpl } from "./interface/IJointStyle";
 import type { WebGLShaderInstance } from "./shader/WebGLShaderInstance";
 import { $upperPowerOfTwo } from "./WebGLUtil";
 

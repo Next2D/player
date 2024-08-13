@@ -1,4 +1,4 @@
-export interface CachePositionImpl {
+export interface ICachePosition {
     index: number;
     x: number;
     y: number;

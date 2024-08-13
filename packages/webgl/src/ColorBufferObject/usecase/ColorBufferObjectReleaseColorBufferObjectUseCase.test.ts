@@ -1,10 +1,10 @@
-import { execute } from "./ColorBufferObjectMeguruBinarySearchService";
-import { describe, expect, it } from "vitest";
+import { execute } from "./ColorBufferObjectReleaseColorBufferObjectUseCase";
+import { describe, expect, it, vi } from "vitest";
 import { $objectPool } from "../../ColorBufferObject";
 
-describe("ColorBufferObjectMeguruBinarySearchService.js method test", () =>
+describe("ColorBufferObjectReleaseColorBufferObjectUseCase.js method test", () =>
 {
-    it("test case", () =>
+    it("test case", async () =>
     {
         $objectPool.length = 0;
         $objectPool.push(
@@ -37,12 +37,17 @@ describe("ColorBufferObjectMeguruBinarySearchService.js method test", () =>
                 "area": 2048 * 2048,
             },
         );
-        
-        expect(execute(255 * 255)).toBe(0);
-        expect(execute(257 * 257)).toBe(1);
-        expect(execute(511 * 511)).toBe(1);
-        expect(execute(513 * 513)).toBe(2);
-        expect(execute(1200 * 1200)).toBe(3);
-        expect(execute(2200 * 2200)).toBe(4);
+        expect($objectPool.length).toBe(4);
+
+        const colorBufferObject = {
+            "colorRenderbuffer": null,
+            "stencilRenderbuffer": null,
+            "width": 620,
+            "height": 480,
+            "area": 620 * 480,
+        };
+        execute(colorBufferObject);
+        expect($objectPool.length).toBe(5);
+        expect($objectPool[2]).toBe(colorBufferObject);
     });
 });

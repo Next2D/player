@@ -3,8 +3,8 @@ import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShader
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { AttachmentImpl } from "./interface/IAttachment";
-import type { ClipObjectImpl } from "./interface/ClipObjectImpl";
-import type { IndexRangeImpl } from "./interface/IndexRangeImpl";
+import type { ClipObjectImpl } from "./interface/IClipObject";
+import type { IndexRangeImpl } from "./interface/IIndexRange";
 import { WebGLFillMeshGenerator } from "./WebGLFillMeshGenerator";
 import { $poolArray } from "./WebGLUtil";
 

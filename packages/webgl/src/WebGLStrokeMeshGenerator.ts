@@ -1,6 +1,6 @@
-import type { StrokeMethImpl } from "./interface/StrokeMethImpl";
-import type { JointStyleImpl } from "./interface/JointStyleImpl";
-import type { CapsStyleImpl } from "./interface/CapsStyleImpl";
+import type { StrokeMethImpl } from "./interface/IStrokeMeth";
+import type { JointStyleImpl } from "./interface/IJointStyle";
+import type { CapsStyleImpl } from "./interface/ICapsStyle";
 
 /**
  * @class

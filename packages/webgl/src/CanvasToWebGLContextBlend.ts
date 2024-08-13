@@ -4,9 +4,9 @@ import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { WebGLShaderInstance } from "./shader/WebGLShaderInstance";
 import type { BlendShaderVariantCollection } from "./shader/variants/BlendShaderVariantCollection";
-import type { BlendModeImpl } from "./interface/BlendModeImpl";
+import type { BlendModeImpl } from "./interface/IBlendMode";
 import type { AttachmentImpl } from "./interface/IAttachment";
-import type { CachePositionImpl } from "./interface/CachePositionImpl";
+import type { CachePositionImpl } from "./interface/ICachePosition";
 import { $inverseMatrix } from "./WebGLUtil";
 
 /**
