@@ -1,8 +1,8 @@
-import { execute } from "./StencilBufferObjectAcquireObjectUseCase";
+import { execute } from "./TextureManagerAcquireObjectUseCase";
 import { describe, expect, it, vi } from "vitest";
-import { $objectPool } from "../../StencilBufferObject";
+import { $objectPool } from "../../TextureManager";
 
-describe("StencilBufferObjectAcquireObjectUseCase.js method test", () =>
+describe("TextureManagerAcquireObjectUseCase.js method test", () =>
 {
     it("test case", async () =>
     {
@@ -12,46 +12,47 @@ describe("StencilBufferObjectAcquireObjectUseCase.js method test", () =>
             return {
                 ...mod,
                 $gl: {
-                    "createRenderbuffer": vi.fn(() => { return  "createRenderbuffer" })
+                    "createTexture": vi.fn(() => { return  "createTexture" }),
+                    "activeTexture": vi.fn(() => { return  "activeTexture" }),
+                    "bindTexture": vi.fn(() => { return  "bindTexture" }),
+                    "texParameteri": vi.fn(() => { return  "texParameteri" }),
+                    "texStorage2D": vi.fn(() => { return  "texStorage2D" }),
                 }
             }
         });
 
         // new
         $objectPool.length = 0;
-        const newStencilBufferObject = execute(320, 240);
-        expect(newStencilBufferObject.width).toBe(0);
-        expect(newStencilBufferObject.height).toBe(0);
-        expect(newStencilBufferObject.area).toBe(0);
+        const newTextureObject = execute(320, 240);
+        expect(newTextureObject.width).toBe(320);
+        expect(newTextureObject.height).toBe(240);
+        expect(newTextureObject.area).toBe(320 * 240);
+        expect($objectPool.length).toBe(0);
 
         $objectPool.push(
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "width": 256,
                 "height": 256,
-                "area": 256 * 256,
-                "dirty": false,
+                "area": 256 * 256
             },
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "width": 512,
                 "height": 512,
-                "area": 512 * 512,
-                "dirty": false,
+                "area": 512 * 512
             },
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "width": 1024,
                 "height": 1024,
-                "area": 1024 * 1024,
-                "dirty": false,
+                "area": 1024 * 1024
             },
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "width": 2048,
                 "height": 2048,
-                "area": 2048 * 2048,
-                "dirty": false,
+                "area": 2048 * 2048
             },
         );
 
@@ -59,15 +60,16 @@ describe("StencilBufferObjectAcquireObjectUseCase.js method test", () =>
         expect($objectPool.length).toBe(4);
         const poolColorBufferObject = execute(512, 512)
         expect(poolColorBufferObject.width).toBe(512);
+        expect(poolColorBufferObject.width).toBe(512);
         expect(poolColorBufferObject.area).toBe(512 * 512);
         expect(poolColorBufferObject.height).toBe(512);
         expect($objectPool.length).toBe(3);
 
         // not hit
         const oldColorBufferObject = execute(100, 100)
-        expect(oldColorBufferObject.width).toBe(256);
-        expect(oldColorBufferObject.area).toBe(256 * 256);
-        expect(oldColorBufferObject.height).toBe(256);
-        expect($objectPool.length).toBe(2);
+        expect(oldColorBufferObject.width).toBe(100);
+        expect(oldColorBufferObject.area).toBe(100 * 100);
+        expect(oldColorBufferObject.height).toBe(100);
+        expect($objectPool.length).toBe(3);
     });
 });

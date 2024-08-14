@@ -1,9 +1,11 @@
 import type { ITextureObject } from "../../interface/ITextureObject";
 import { execute as textureManagerCreateTextureObjectService } from "../service/TextureManagerCreateTextureObjectService";
+import { execute as textureManagerInitializeBindService } from "../service/TextureManagerInitializeBindService";
 import {
     $atlasTextures,
     $atlasNodes,
-    $atlasCacheMap
+    $atlasCacheMap,
+    $activeTextureUnit
 } from "../../TextureManager";
 import {
     $gl,
@@ -40,19 +42,9 @@ export const execute = (
         $atlasCacheMap.set(index, []);
     }
 
-    $gl.activeTexture($gl.TEXTURE3 + index);
-    $gl.bindTexture($gl.TEXTURE_2D, textrueObject.resource);
+    // texture initialize setting
+    textureManagerInitializeBindService(textrueObject);
 
-    $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_WRAP_S, $gl.CLAMP_TO_EDGE);
-    $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_WRAP_T, $gl.CLAMP_TO_EDGE);
-    $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MIN_FILTER, $gl.NEAREST);
-    $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MAG_FILTER, $gl.NEAREST);
-
-    $gl.texStorage2D($gl.TEXTURE_2D, 1, $gl.RGBA8, width, height);
-
-    // reset
-    $gl.bindTexture($gl.TEXTURE_2D, null);  
-    
     // アトラステクスチャの入れ替え
     if (index in $atlasTextures) {
         const oldTextrueObject = $atlasTextures[index] as NonNullable<ITextureObject>;

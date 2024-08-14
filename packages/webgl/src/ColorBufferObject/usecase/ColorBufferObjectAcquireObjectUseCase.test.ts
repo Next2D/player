@@ -84,15 +84,18 @@ describe("ColorBufferObjectAcquireObjectUseCase.js method test", () =>
         );
 
         // hit
+        expect($objectPool.length).toBe(4);
         const poolColorBufferObject = execute(500 * 500)
         expect(poolColorBufferObject.width).toBe(512);
         expect(poolColorBufferObject.area).toBe(512 * 512);
         expect(poolColorBufferObject.height).toBe(512);
+        expect($objectPool.length).toBe(3);
 
         // array shift
         const oldColorBufferObject = execute(2500 * 2500)
         expect(oldColorBufferObject.width).toBe(256);
         expect(oldColorBufferObject.area).toBe(256 * 256);
         expect(oldColorBufferObject.height).toBe(256);
+        expect($objectPool.length).toBe(2);
     });
 });

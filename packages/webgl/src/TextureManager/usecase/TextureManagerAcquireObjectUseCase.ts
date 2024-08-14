@@ -1,6 +1,7 @@
-import { ITextureObject } from "../../interface/ITextureObject";
+import type { ITextureObject } from "../../interface/ITextureObject";
 import { $objectPool } from "../../TextureManager";
 import { execute as textureManagerCreateTextureObjectService } from "../service/TextureManagerCreateTextureObjectService";
+import { execute as textureManagerInitializeBindService } from "../service/TextureManagerInitializeBindService";
 
 /**
  * @description オブジェクトプールにTextureObjectがあれば再利用、なければ新規作成して返却します。
@@ -9,19 +10,17 @@ import { execute as textureManagerCreateTextureObjectService } from "../service/
  * 
  * @param  {number} width
  * @param  {number} height
- * @param  {boolean} [smoothing=false]
  * @return {ITextureObject}
  * @method
  * @protected
  */
-export const execute = (
-    width: number,
-    height: number,
-    smoothing: boolean = false
-): ITextureObject => {
+export const execute = (width: number, height: number): ITextureObject =>
+{
 
     if (!$objectPool.length) {
-        return textureManagerCreateTextureObjectService(width, height, smoothing);
+        const textureObject = textureManagerCreateTextureObjectService(width, height);
+        textureManagerInitializeBindService(textureObject);
+        return textureObject;
     }
 
     for (let idx: number = 0; idx < $objectPool.length; ++idx) {
@@ -33,10 +32,9 @@ export const execute = (
         }
 
         $objectPool.splice(idx, 1);
-        textureObject.smoothing = smoothing;
 
         return textureObject;
     }
 
-    return textureManagerCreateTextureObjectService(width, height, smoothing);
+    return textureManagerCreateTextureObjectService(width, height);
 };
