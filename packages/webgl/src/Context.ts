@@ -46,6 +46,10 @@ export class Context
         $setRenderSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
         $setSamples(samples);
 
+        // WebTexture設定
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
         this._$stack  = $getArray();
         this._$matrix = $getFloat32Array9(1, 0, 0, 0, 1, 0, 0, 0, 1);
     }

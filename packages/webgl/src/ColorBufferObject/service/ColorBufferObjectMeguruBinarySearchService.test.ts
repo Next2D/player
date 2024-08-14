@@ -1,5 +1,5 @@
 import { execute } from "./ColorBufferObjectMeguruBinarySearchService";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { $objectPool } from "../../ColorBufferObject";
 
 describe("ColorBufferObjectMeguruBinarySearchService.js method test", () =>
@@ -9,32 +9,60 @@ describe("ColorBufferObjectMeguruBinarySearchService.js method test", () =>
         $objectPool.length = 0;
         $objectPool.push(
             {
-                "colorRenderbuffer": null,
-                "stencilRenderbuffer": null,
+                "resource": {} as unknown as WebGLRenderbuffer,
+                "stencil": {
+                    "resource": {} as unknown as WebGLRenderbuffer,
+                    "width": 0,
+                    "height": 0,
+                    "area": 0,
+                    "dirty": false,
+                },
                 "width": 256,
                 "height": 256,
                 "area": 256 * 256,
+                "dirty": false,
             },
             {
-                "colorRenderbuffer": null,
-                "stencilRenderbuffer": null,
+                "resource": {} as unknown as WebGLRenderbuffer,
+                "stencil": {
+                    "resource": {} as unknown as WebGLRenderbuffer,
+                    "width": 0,
+                    "height": 0,
+                    "area": 0,
+                    "dirty": false,
+                },
                 "width": 512,
                 "height": 512,
                 "area": 512 * 512,
+                "dirty": false,
             },
             {
-                "colorRenderbuffer": null,
-                "stencilRenderbuffer": null,
+                "resource": {} as unknown as WebGLRenderbuffer,
+                "stencil": {
+                    "resource": {} as unknown as WebGLRenderbuffer,
+                    "width": 0,
+                    "height": 0,
+                    "area": 0,
+                    "dirty": false,
+                },
                 "width": 1024,
                 "height": 1024,
                 "area": 1024 * 1024,
+                "dirty": false,
             },
             {
-                "colorRenderbuffer": null,
-                "stencilRenderbuffer": null,
+                "resource": {} as unknown as WebGLRenderbuffer,
+                "stencil": {
+                    "resource": {} as unknown as WebGLRenderbuffer,
+                    "width": 0,
+                    "height": 0,
+                    "area": 0,
+                    "dirty": false,
+                },
                 "width": 2048,
                 "height": 2048,
                 "area": 2048 * 2048,
+                "dirty": false,
             },
         );
         

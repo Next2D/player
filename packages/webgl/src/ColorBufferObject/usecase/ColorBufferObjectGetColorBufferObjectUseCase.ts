@@ -34,7 +34,7 @@ export const execute = (width: number, height: number): IColorBufferObject =>
         colorBufferObject.height = height;
         colorBufferObject.area   = width * height;
 
-        $gl.bindRenderbuffer($gl.RENDERBUFFER, colorBufferObject.colorRenderbuffer);
+        $gl.bindRenderbuffer($gl.RENDERBUFFER, colorBufferObject.resource);
         $gl.renderbufferStorageMultisample(
             $gl.RENDERBUFFER,
             $samples,
@@ -42,7 +42,7 @@ export const execute = (width: number, height: number): IColorBufferObject =>
             width, height
         );
 
-        $gl.bindRenderbuffer($gl.RENDERBUFFER, colorBufferObject.stencilRenderbuffer);
+        $gl.bindRenderbuffer($gl.RENDERBUFFER, colorBufferObject.stencil.resource);
         $gl.renderbufferStorageMultisample(
             $gl.RENDERBUFFER,
             $samples,

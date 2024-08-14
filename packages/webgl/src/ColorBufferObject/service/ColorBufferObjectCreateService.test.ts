@@ -17,8 +17,8 @@ describe("ColorBufferObjectCreateService.js method test", () =>
         });
 
         const colorBufferObject = execute();
-        expect(colorBufferObject.colorRenderbuffer).toBe("createRenderbuffer");
-        expect(colorBufferObject.stencilRenderbuffer).toBe("createRenderbuffer");
+        expect(colorBufferObject.resource).toBe("createRenderbuffer");
+        expect(colorBufferObject.stencil.resource).toBe("createRenderbuffer");
         expect(colorBufferObject.width).toBe(0);
         expect(colorBufferObject.height).toBe(0);
         expect(colorBufferObject.area).toBe(0);

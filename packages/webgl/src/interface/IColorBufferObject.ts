@@ -1,7 +1,10 @@
+import type { IStencilBufferObject } from "./IStencilBufferObject";
+
 export interface IColorBufferObject {
-    colorRenderbuffer: WebGLRenderbuffer | null;
-    stencilRenderbuffer: WebGLRenderbuffer | null;
+    resource: WebGLRenderbuffer;
+    stencil: IStencilBufferObject;
     width: number;
     height: number;
     area: number;
+    dirty: boolean;
 }

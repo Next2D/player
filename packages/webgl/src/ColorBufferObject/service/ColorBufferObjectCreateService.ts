@@ -1,4 +1,5 @@
 import type { IColorBufferObject } from "../../interface/IColorBufferObject";
+import type { IStencilBufferObject } from "../../interface/IStencilBufferObject";
 import { $gl } from "../../WebGLUtil";
 
 /**
@@ -11,11 +12,20 @@ import { $gl } from "../../WebGLUtil";
  */
 export const execute = (): IColorBufferObject =>
 {
-    return {
-        "colorRenderbuffer": $gl.createRenderbuffer() as NonNullable<WebGLRenderbuffer>,
-        "stencilRenderbuffer": $gl.createRenderbuffer() as NonNullable<WebGLRenderbuffer>,
+    const stencilBufferObject: IStencilBufferObject = {
+        "resource": $gl.createRenderbuffer() as NonNullable<WebGLRenderbuffer>,
         "width": 0,
         "height": 0,
-        "area": 0
+        "area": 0,
+        "dirty": false
+    };
+
+    return {
+        "resource": $gl.createRenderbuffer() as NonNullable<WebGLRenderbuffer>,
+        "stencil": stencilBufferObject,
+        "width": 0,
+        "height": 0,
+        "area": 0,
+        "dirty": false
     };
 }

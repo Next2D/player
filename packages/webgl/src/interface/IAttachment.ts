@@ -1,11 +1,15 @@
+import type { IColorBufferObject } from "./IColorBufferObject";
+import type { ITextureObject } from "./ITextureObject";
+import type { IStencilBufferObject } from "./IStencilBufferObject";
+
 export interface IAttachment {
     width: number;
     height: number;
-    color: WebGLTexture | WebGLRenderbuffer | null;
-    texture: WebGLTexture | null;
     msaa: boolean;
-    stencil: WebGLRenderbuffer | null;
     mask: boolean;
     clipLevel: number;
+    color: IColorBufferObject | null;
+    texture: ITextureObject | null;
+    stencil: IStencilBufferObject | null;
     isActive: boolean;
 }

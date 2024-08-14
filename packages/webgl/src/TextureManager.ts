@@ -1,6 +1,51 @@
-import { $RENDER_SIZE } from "./WebGLUtil";
-import type { CachePositionImpl } from "./interface/CachePositionImpl";
-import type { GridImpl } from "./interface/GridImpl";
+import type { ICachePosition } from "./interface/ICachePosition";
+import type { IGrid } from "./interface/IGrid";
+import type { ITextureObject } from "./interface/ITextureObject";
+
+/**
+ * @description TextureObjectの再利用のための配列のオブジェクトプール、
+ *              Object pool of array for reusing TextureObject
+ * 
+ * @type {ITextureObject[]}
+ * @protected
+ */
+export const $objectPool: ITextureObject[] = [];
+
+/**
+ * @description 描画保管用のアトラステクスチャの配列
+ *              Array of atlas textures for drawing storage
+ * 
+ * @type {ITextureObject[]}
+ * @protected
+ */
+export const $atlasTextures: ITextureObject[] = [];
+
+/**
+ * @description アトラステクスチャのノードの配列
+ *              Array of nodes of atlas textures
+ * 
+ * @type {Map}
+ * @protected
+ */
+export const $atlasNodes: Map<number, IGrid[]> = new Map();
+
+/**
+ * @description アトラステクスチャにキャッシュした座標配列
+ *              Array of cached coordinates in atlas textures
+ * 
+ * @type {Map}
+ * @protected
+ */
+export const $atlasCacheMap: Map<number, ICachePosition[]> = new Map();
+
+/**
+ * @description 現在bindされてるアクティブてクスチャの番号
+ *              Number of the currently binded active texture
+ * 
+ * @type {number}
+ * @protected
+ */
+export let $activeTexture: number = -1;
 
 /**
  * @class
