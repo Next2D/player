@@ -1,6 +1,10 @@
 import type { ITextureObject } from "../../interface/ITextureObject";
 import { $gl } from "../../WebGLUtil";
-import { $activeTextureUnit } from "../../TextureManager";
+import {
+    $activeTextureUnit,
+    $boundTextures,
+    $setActiveTextureUnit
+} from "../../TextureManager";
 
 /**
  * @description テクスチャの初期設定を行います。
@@ -13,7 +17,12 @@ import { $activeTextureUnit } from "../../TextureManager";
  */
 export const execute = (textrue_object: ITextureObject): void =>
 {
-    $gl.activeTexture($gl.TEXTURE3);
+    if ($activeTextureUnit !== $gl.TEXTURE0) {
+        $setActiveTextureUnit($gl.TEXTURE0);
+        $gl.activeTexture($gl.TEXTURE0);
+    }
+    
+    $boundTextures[0] = textrue_object;
     $gl.bindTexture($gl.TEXTURE_2D, textrue_object.resource);
 
     $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_WRAP_S, $gl.CLAMP_TO_EDGE);
@@ -22,8 +31,4 @@ export const execute = (textrue_object: ITextureObject): void =>
     $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MAG_FILTER, $gl.NEAREST);
 
     $gl.texStorage2D($gl.TEXTURE_2D, 1, $gl.RGBA8, textrue_object.width, textrue_object.height);
-
-    // reset
-    $gl.bindTexture($gl.TEXTURE_2D, null);  
-    $gl.activeTexture($activeTextureUnit === -1 ? $gl.TEXTURE0 : $activeTextureUnit);
 };

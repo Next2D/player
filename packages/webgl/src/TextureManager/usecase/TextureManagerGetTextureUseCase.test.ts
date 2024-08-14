@@ -1,8 +1,8 @@
-import { execute } from "./TextureManagerAcquireObjectUseCase";
+import { execute } from "./TextureManagerGetTextureUseCase.ts";
 import { describe, expect, it, vi } from "vitest";
-import { $objectPool } from "../../TextureManager";
+import { $objectPool } from "../../TextureManager.ts";
 
-describe("TextureManagerAcquireObjectUseCase.js method test", () =>
+describe("TextureManagerGetTextureUseCase.js method test", () =>
 {
     it("test case", async () =>
     {
