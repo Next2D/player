@@ -39,13 +39,39 @@ export const $atlasNodes: Map<number, IGrid[]> = new Map();
 export const $atlasCacheMap: Map<number, ICachePosition[]> = new Map();
 
 /**
- * @description 現在bindされてるアクティブてクスチャの番号
+ * @description 現在のアクティブなテクスチャーの番号
  *              Number of the currently binded active texture
  * 
  * @type {number}
  * @protected
  */
-export let $activeTexture: number = -1;
+export let $activeTextureUnit: number = -1;
+
+/**
+ * @description 現在
+ * @param {number} unit
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setActiveTextureUnit = (unit: number): void =>
+{
+    $activeTextureUnit = unit;
+};
+
+/**
+ * @description 現在bindされてるテクスチャの配列
+ *              Array of currently binded textures
+ * 
+ * @type {Array}
+ * @protected
+ */
+export const $boundTextures: Array<ITextureObject | null> = [null, null, null];
+
+export const boot = (gl: WebGL2RenderingContext): void =>
+{
+
+}
 
 /**
  * @class

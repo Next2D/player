@@ -1,23 +1,35 @@
 import type { IAttachment } from "./interface/IAttachment";
-import { $gl } from "./WebGLUtil";
 
 /**
  * @description 生成したFrameBufferの管理オブジェクトを配列にプールして再利用します。
  *              Pool the management object of the generated FrameBuffer in an array and reuse it.
  * 
  * @type {array}
- * @private
+ * @protected
  */
-const $objectPool: IAttachment[] = [];
+export const $objectPool: IAttachment[] = [];
 
 /**
+ * @description FrameBufferの管理クラス
+ *              FrameBuffer management class
  * 
+ * @class
+ * @public
  */
-let $frameBuffer: WebGLFramebuffer | null = null;
+export let $baseFrameBuffer: WebGLFramebuffer;
 
-export const boot = (): void =>
+/**
+ * @description FrameBufferの管理オブジェクトを起動
+ *              Start the management object of FrameBuffer
+ * 
+ * @param {WebGL2RenderingContext} gl
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const boot = (gl: WebGL2RenderingContext): void =>
 {
-    $frameBuffer = $gl.createFramebuffer();
+    $baseFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
 };
 
 /**

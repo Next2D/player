@@ -16,12 +16,12 @@ describe("TextureManagerCreateTextureObjectService.js method test", () =>
             }
         });
 
-        const textureObject = execute(200, 300, true);
+        const textureObject = execute(200, 300);
         expect(textureObject.resource).toBe("createTexture");
         expect(textureObject.width).toBe(200);
         expect(textureObject.height).toBe(300);
         expect(textureObject.area).toBe(200 * 300);
-        expect(textureObject.smoothing).toBe(true);
+        expect(textureObject.smoothing).toBe(false);
         expect(textureObject.dirty).toBe(false);
     });
 });

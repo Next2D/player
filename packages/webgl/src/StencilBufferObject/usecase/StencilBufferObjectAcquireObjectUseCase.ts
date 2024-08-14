@@ -21,12 +21,15 @@ export const execute = (width: number, height: number): IStencilBufferObject =>
 
     for (let idx: number = 0; idx < $objectPool.length; ++idx) {
         const stencilBufferObject = $objectPool[idx];
-        if (stencilBufferObject.width === width
-            && stencilBufferObject.height === height
+
+        if (stencilBufferObject.width !== width
+            || stencilBufferObject.height !== height
         ) {
-            $objectPool.splice(idx, 1);
-            return stencilBufferObject;
+            continue;
         }
+
+        $objectPool.splice(idx, 1);
+        return stencilBufferObject;
     }
 
     return $objectPool.shift() as NonNullable<IStencilBufferObject>;

@@ -1,0 +1,45 @@
+
+import type { IAttachment } from "../../interface/IAttachment";
+import { $objectPool } from "../../FrameBufferManager";
+import { execute as frameBufferManagerCreateAttachmentObjectService } from "../service/FrameBufferManagerCreateAttachmentObjectService";
+import { execute as colorBufferObjectGetColorBufferObjectUseCase } from "../../ColorBufferObject/usecase/ColorBufferObjectGetColorBufferObjectUseCase";
+import { execute as stencilBufferObjectGetStencilBufferObjectUseCase } from "../../StencilBufferObject/usecase/StencilBufferObjectGetStencilBufferObjectUseCase";
+
+/**
+ * @description FrameBufferManagerのアタッチメントオブジェクトを取得
+ *              Get the attachment object of FrameBufferManager
+ *
+ * @param  {number} width 
+ * @param  {number} height 
+ * @param  {boolean} [multisample=false] 
+ * @return {IAttachment}
+ * @method
+ * @protected
+ */
+export const execute = (width: number, height: number, multisample: boolean = false): IAttachment =>
+{
+    const attachmentObject = $objectPool.length 
+        ? $objectPool.shift() as IAttachment
+        : frameBufferManagerCreateAttachmentObjectService();
+
+    attachmentObject.width  = width;
+    attachmentObject.height = height;
+
+    if (multisample) {
+        attachmentObject.color   = colorBufferObjectGetColorBufferObjectUseCase(width, height);
+        attachmentObject.texture = texture;
+        attachmentObject.msaa    = true;
+        attachmentObject.stencil = attachmentObject.color.stencil;
+    } else {
+        attachmentObject.color   = null;
+        attachmentObject.texture = texture;
+        attachmentObject.msaa    = false;
+        attachmentObject.stencil = stencilBufferObjectGetStencilBufferObjectUseCase(width, height);
+    }
+
+    // reset
+    attachmentObject.mask      = false;
+    attachmentObject.clipLevel = 0;
+
+    return attachmentObject;
+};

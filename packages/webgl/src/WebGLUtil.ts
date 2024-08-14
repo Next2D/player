@@ -1,21 +1,30 @@
 /**
+ * @description 描画の最大サイズ
+ *              Maximum size of drawing
+ * 
  * @type {number}
  * @public
  */
-export let $RENDER_SIZE: number = 2048;
+export let $RENDER_MAX_SIZE: number = 2048;
 
 /**
+ * @description 描画の最大サイズを変更
+ *              Change the maximum size of drawing
+ * 
  * @param  {number} size
  * @return {void}
  * @method
  * @public
  */
-export const $setRenderSize = (size: number): void =>
+export const $setRenderMaxSize = (size: number): void =>
 {
-    $RENDER_SIZE = Math.min(4096, size / 2);
+    $RENDER_MAX_SIZE = Math.min(4096, size / 2);
 };
 
 /**
+ * @description 描画のサンプリング数
+ *              Number of samples for drawing
+ * 
  * @type {number}
  * @default 4
  * @public
@@ -62,6 +71,9 @@ export const $setWebGL2RenderingContext = (gl: WebGL2RenderingContext): void =>
 let programId: number = 0;
 
 /**
+ * @description 管理用のユニークなプログラムIDを発行
+ *              Issue a unique program ID for management
+ * 
  * @return {number}
  * @method
  * @public
@@ -72,6 +84,9 @@ export const $getProgramId = (): number =>
 };
 
 /**
+ * @description 指定された値を範囲内にクランプします。
+ *              Clamps the specified value within the range.
+ * 
  * @param  {number} value
  * @param  {number} min
  * @param  {number} max
@@ -100,6 +115,9 @@ export const $clamp = (
 const $arrays: any[] = [];
 
 /**
+ * @description プールした配列があれば再利用、なければ新規作成
+ *              Reuse the pooled array if available, otherwise create a new one.
+ * 
  * @param  {array} args
  * @return {array}
  * @method
@@ -115,6 +133,9 @@ export const $getArray = (...args: any[]): any[] =>
 };
 
 /**
+ * @description 使用済みの配列をプールに保管
+ *              Store the used array in the pool.
+ *
  * @param  {array} array
  * @return {void}
  * @method
@@ -134,6 +155,9 @@ export const $poolArray = (array: any[] | null = null): void =>
 };
 
 /**
+ * @description 指定された値を2の累乗に切り上げます。
+ *              Rounds the specified value up to a power of two.
+ *
  * @param  {number} v
  * @return {number}
  * @method
@@ -158,6 +182,9 @@ export const $upperPowerOfTwo = (v: number): number =>
 const $float32Array4: Float32Array[] = [];
 
 /**
+ * @description プールしたFloat32Arrayがあれば再利用、なければ新規作成
+ *              Reuse the pooled Float32Array if available, otherwise create a new one.
+ *
  * @param  {number} [f0=0]
  * @param  {number} [f1=0]
  * @param  {number} [f2=0]
@@ -182,6 +209,9 @@ export const $getFloat32Array4 = (
 };
 
 /**
+ * @description 使用済みのFloat32Arrayをプールに保管
+ *              Store the used Float32Array in the pool.
+ *
  * @param  {Float32Array} array
  * @return {void}
  * @method
@@ -199,6 +229,9 @@ export const $poolFloat32Array4 = (array: Float32Array): void =>
 const $float32Array9: Float32Array[] = [];
 
 /**
+ * @description プールしたFloat32Arrayがあれば再利用、なければ新規作成
+ *              Reuse the pooled Float32Array if available, otherwise create a new one.
+ * 
  * @param  {number} [f0=0]
  * @param  {number} [f1=0]
  * @param  {number} [f2=0]
@@ -234,6 +267,9 @@ export const $getFloat32Array9 = (
 };
 
 /**
+ * @description 使用済みのFloat32Arrayをプールに保管
+ *              Store the used Float32Array in the pool.
+ *
  * @param  {Float32Array} array
  * @return {void}
  * @method
@@ -245,31 +281,15 @@ export const $poolFloat32Array9 = (array: Float32Array): void =>
 };
 
 /**
- * @param   {Float32Array} m
- * @returns {Float32Array}
- * @method
- * @static
- */
-export const $inverseMatrix = (m: Float32Array): Float32Array =>
-{
-    const rdet: number = 1 / (m[0] * m[4] - m[3] * m[1]);
-    const tx: number  = m[3] * m[7] - m[4] * m[6];
-    const ty: number  = m[1] * m[6] - m[0] * m[7];
-
-    return $getFloat32Array9(
-        m[4] * rdet,  0 - m[1] * rdet, 0,
-        0 - m[3] * rdet,  m[0] * rdet, 0,
-        tx * rdet, ty * rdet, 1
-    );
-};
-
-/**
  * @type {Float32Array[]}
  * @private
  */
 const $float32Array6: Float32Array[] = [];
 
 /**
+ * @description プールしたFloat32Arrayがあれば再利用、なければ新規作成
+ *              Reuse the pooled Float32Array if available, otherwise create a new one.
+ * 
  * @param  {number} [f0=0]
  * @param  {number} [f1=0]
  * @param  {number} [f2=0]
@@ -316,6 +336,9 @@ export const $poolFloat32Array6 = (array: Float32Array): void =>
 const $int32Array4: Int32Array[] = [];
 
 /**
+ * @description プールしたInt32Arrayがあれば再利用、なければ新規作成
+ *              Reuse the pooled Int32Array if available, otherwise create a new one.
+ * 
  * @param  {number} [f0=0]
  * @param  {number} [f1=0]
  * @param  {number} [f2=0]
@@ -340,6 +363,9 @@ export const $getInt32Array4 = (
 };
 
 /**
+ * @description 使用済みのInt32Arrayをプールに保管
+ *              Store the used Int32Array in the pool.
+ * 
  * @param  {Float32Array} array
  * @return {void}
  * @method
@@ -348,4 +374,26 @@ export const $getInt32Array4 = (
 export const $poolInt32Array4 = (array: Int32Array): void =>
 {
     $int32Array4.push(array);
+};
+
+/**
+ * @description 逆行列を取得
+ *              Get the inverse matrix
+ * 
+ * @param   {Float32Array} m
+ * @returns {Float32Array}
+ * @method
+ * @static
+ */
+export const $inverseMatrix = (m: Float32Array): Float32Array =>
+{
+    const rdet: number = 1 / (m[0] * m[4] - m[3] * m[1]);
+    const tx: number  = m[3] * m[7] - m[4] * m[6];
+    const ty: number  = m[1] * m[6] - m[0] * m[7];
+
+    return $getFloat32Array9(
+        m[4] * rdet,  0 - m[1] * rdet, 0,
+        0 - m[3] * rdet,  m[0] * rdet, 0,
+        tx * rdet, ty * rdet, 1
+    );
 };

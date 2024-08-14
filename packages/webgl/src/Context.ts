@@ -1,6 +1,6 @@
 import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService"
 import {
-    $setRenderSize,
+    $setRenderMaxSize,
     $setWebGL2RenderingContext,
     $setSamples,
     $getFloat32Array9,
@@ -43,7 +43,7 @@ export class Context
     constructor (gl: WebGL2RenderingContext, samples: number) 
     {
         $setWebGL2RenderingContext(gl);
-        $setRenderSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
+        $setRenderMaxSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
         $setSamples(samples);
 
         // WebTexture設定

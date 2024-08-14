@@ -7,7 +7,7 @@ import {
 } from "../../TextureManager";
 import {
     $gl,
-    $RENDER_SIZE
+    $upperPowerOfTwo
 } from "../../WebGLUtil";
 
 /**
@@ -27,17 +27,10 @@ export const execute = (
     index: number = 0
 ): void => {
 
-    const textrueObject = textureManagerCreateTextureObjectService(width, height);
-    if (index in $atlasTextures) {
-        const oldTextrueObject = $atlasTextures[index] as NonNullable<ITextureObject>;
-
-        // clone texture
-
-        // delete texture
-        $gl.deleteTexture(oldTextrueObject.resource);
-        oldTextrueObject.resource = null;
-    }
-    $atlasTextures[index] = textrueObject;
+    const textrueObject = textureManagerCreateTextureObjectService(
+        $upperPowerOfTwo(width),
+        $upperPowerOfTwo(height)
+    );
 
     // update map
     if (!$atlasNodes.has(index)) {
@@ -58,5 +51,16 @@ export const execute = (
     $gl.texStorage2D($gl.TEXTURE_2D, 1, $gl.RGBA8, width, height);
 
     // reset
-    $gl.bindTexture($gl.TEXTURE_2D, null);    
+    $gl.bindTexture($gl.TEXTURE_2D, null);  
+    
+    // アトラステクスチャの入れ替え
+    if (index in $atlasTextures) {
+        const oldTextrueObject = $atlasTextures[index] as NonNullable<ITextureObject>;
+
+        // clone texture
+
+        // delete texture
+        $gl.deleteTexture(oldTextrueObject.resource);
+    }
+    $atlasTextures[index] = textrueObject;
 };

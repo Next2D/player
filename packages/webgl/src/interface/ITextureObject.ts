@@ -1,5 +1,5 @@
 export interface ITextureObject {
-    resource: WebGLTexture | null;
+    resource: WebGLTexture;
     width: number;
     height: number;
     area: number;
