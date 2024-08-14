@@ -20,7 +20,6 @@ export const execute = (width: number, height: number): IStencilBufferObject =>
     }
 
     for (let idx: number = 0; idx < $objectPool.length; ++idx) {
-
         const stencilBufferObject = $objectPool[idx];
         if (stencilBufferObject.width === width
             && stencilBufferObject.height === height

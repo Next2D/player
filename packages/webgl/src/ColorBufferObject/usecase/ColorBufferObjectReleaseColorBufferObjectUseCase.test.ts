@@ -1,5 +1,5 @@
 import { execute } from "./ColorBufferObjectReleaseColorBufferObjectUseCase";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { $objectPool } from "../../ColorBufferObject";
 
 describe("ColorBufferObjectReleaseColorBufferObjectUseCase.js method test", () =>
@@ -84,5 +84,9 @@ describe("ColorBufferObjectReleaseColorBufferObjectUseCase.js method test", () =
         execute(colorBufferObject);
         expect($objectPool.length).toBe(5);
         expect($objectPool[2]).toBe(colorBufferObject);
+
+        // 重複チェック
+        execute(colorBufferObject);
+        expect($objectPool.length).toBe(5);
     });
 });

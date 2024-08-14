@@ -22,5 +22,6 @@ describe("ColorBufferObjectCreateService.js method test", () =>
         expect(colorBufferObject.width).toBe(0);
         expect(colorBufferObject.height).toBe(0);
         expect(colorBufferObject.area).toBe(0);
+        expect(colorBufferObject.dirty).toBe(false);
     });
 });

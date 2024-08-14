@@ -13,6 +13,10 @@ import { $objectPool } from "../../ColorBufferObject";
  */
 export const execute = (color_buffer_object: IColorBufferObject): void =>
 {
+    if ($objectPool.indexOf(color_buffer_object) > -1) {
+        return ;
+    }
+
     const index = colorBufferObjectMeguruBinarySearchService(color_buffer_object.area);
     $objectPool.splice(index, 0, color_buffer_object);
 };

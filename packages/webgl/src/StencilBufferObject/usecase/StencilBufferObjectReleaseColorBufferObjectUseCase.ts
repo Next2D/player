@@ -13,6 +13,10 @@ import { $gl } from "../../WebGLUtil";
  */
 export const execute = (stencil_bffer_object: IStencilBufferObject): void =>
 {
+    if ($objectPool.indexOf(stencil_bffer_object) > -1) {
+        return ;
+    }
+
     // プールに10個以上ある場合は削除
     if ($objectPool.length > 10) {
         $gl.deleteRenderbuffer(stencil_bffer_object.resource);
