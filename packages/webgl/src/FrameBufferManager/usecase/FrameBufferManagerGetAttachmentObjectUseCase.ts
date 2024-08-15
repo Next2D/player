@@ -4,6 +4,7 @@ import { $objectPool } from "../../FrameBufferManager";
 import { execute as frameBufferManagerCreateAttachmentObjectService } from "../service/FrameBufferManagerCreateAttachmentObjectService";
 import { execute as colorBufferObjectGetColorBufferObjectUseCase } from "../../ColorBufferObject/usecase/ColorBufferObjectGetColorBufferObjectUseCase";
 import { execute as stencilBufferObjectGetStencilBufferObjectUseCase } from "../../StencilBufferObject/usecase/StencilBufferObjectGetStencilBufferObjectUseCase";
+import { execute as textureManagerGetTextureUseCase } from "../../TextureManager/usecase/TextureManagerGetTextureUseCase";
 
 /**
  * @description FrameBufferManagerのアタッチメントオブジェクトを取得
@@ -18,21 +19,23 @@ import { execute as stencilBufferObjectGetStencilBufferObjectUseCase } from "../
  */
 export const execute = (width: number, height: number, multisample: boolean = false): IAttachment =>
 {
+    // キャッシュがあれば再利用する
     const attachmentObject = $objectPool.length 
         ? $objectPool.shift() as IAttachment
         : frameBufferManagerCreateAttachmentObjectService();
 
-    attachmentObject.width  = width;
-    attachmentObject.height = height;
+    // テクスチャを取得
+    attachmentObject.width   = width;
+    attachmentObject.height  = height;
+    attachmentObject.texture = textureManagerGetTextureUseCase(width, height);
 
     if (multisample) {
-        attachmentObject.color   = colorBufferObjectGetColorBufferObjectUseCase(width, height);
-        attachmentObject.texture = texture;
+        const colorBufferObject  = colorBufferObjectGetColorBufferObjectUseCase(width, height);
+        attachmentObject.color   = colorBufferObject;
         attachmentObject.msaa    = true;
-        attachmentObject.stencil = attachmentObject.color.stencil;
+        attachmentObject.stencil = colorBufferObject.stencil;
     } else {
         attachmentObject.color   = null;
-        attachmentObject.texture = texture;
         attachmentObject.msaa    = false;
         attachmentObject.stencil = stencilBufferObjectGetStencilBufferObjectUseCase(width, height);
     }
