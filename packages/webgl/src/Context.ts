@@ -1,16 +1,17 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
-// import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService"
-import { boot as textureManagerBoot } from "./TextureManager";
-import { boot as frameBufferManagerBoot } from "./FrameBufferManager";
-import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "./FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
+import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService"
+import { execute as frameBufferManagerBootService } from "./FrameBufferManager/service/FrameBufferManagerBootService";
+import { execute as contextUpdateBackgroundColorService } from "./Context/service/ContextUpdateBackgroundColorService";
+import { execute as contextResizeUseCase } from "./Context/usecase/ContextResizeUseCase";
+import { execute as contextClearRectService } from "./Context/service/ContextClearRectService";
+import { execute as contextBindUseCase } from "./Context/usecase/ContextBindUseCase";
 import {
     $setRenderMaxSize,
     $setWebGL2RenderingContext,
     $setSamples,
     $getFloat32Array9,
     $poolFloat32Array9,
-    $getArray,
-    $clamp
+    $getArray
 } from "./WebGLUtil";
 
 /**
@@ -26,63 +27,63 @@ export class Context
      *              Stack to hold matrix data
      * 
      * @type {Float32Array[]}
-     * @private
+     * @protected
      */
-    private readonly _$stack: Float32Array[];
+    public readonly $stack: Float32Array[];
 
     /**
      * @description 2D変換行列
      *              2D transformation matrix
      * 
      * @type {Float32Array}
-     * @private
+     * @protected
      */
-    private readonly _$matrix: Float32Array;
+    public readonly $matrix: Float32Array;
 
     /**
      * @description 背景色のR
      *              Background color R
      * 
      * @type {number}
-     * @private
+     * @protected
      */
-    private _$clearColorR: number;
+    public $clearColorR: number;
 
     /**
      * @description 背景色のG
      *              Background color G
      * 
      * @type {number}
-     * @private
+     * @protected
      */
-    private _$clearColorG: number;
+    public $clearColorG: number;
 
     /**
      * @description 背景色のB
      *              Background color B
      * 
      * @type {number}
-     * @private
+     * @protected
      */
-    private _$clearColorB: number;
+    public $clearColorB: number;
 
     /**
      * @description 背景色のA
      *              Background color A
      * 
      * @type {number}
-     * @private
+     * @protected
      */
-    private _$clearColorA: number;
+    public $clearColorA: number;
 
     /**
      * @description メインのアタッチメントオブジェクト
      *              Main attachment object
      * 
      * @type {IAttachmentObject}
-     * @private
+     * @protected
      */
-    private _$mainAttachment: IAttachmentObject | null;
+    public $mainAttachment: IAttachmentObject | null;
 
     /**
      * @param {WebGL2RenderingContext} gl
@@ -96,21 +97,25 @@ export class Context
         $setRenderMaxSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
         $setSamples(samples);
 
-        this._$stack  = $getArray();
-        this._$matrix = $getFloat32Array9(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        this.$stack  = $getArray();
+        this.$matrix = $getFloat32Array9(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
-        this._$clearColorR = 0;
-        this._$clearColorG = 0;
-        this._$clearColorB = 0;
-        this._$clearColorA = 0;
+        this.$clearColorR = 0;
+        this.$clearColorG = 0;
+        this.$clearColorB = 0;
+        this.$clearColorA = 0;
 
-        this._$mainAttachment = null;
+        this.$mainAttachment = null;
 
-        // WebTextureの初期起動
-        textureManagerBoot(gl);
+        // カラー設定
+        gl.clearColor(0, 0, 0, 0);
+
+        // WebTextureの設定
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
         // FrameBufferManagerの初期起動
-        frameBufferManagerBoot(gl);
+        frameBufferManagerBootService(gl);
     }
 
     /**
@@ -127,10 +132,7 @@ export class Context
      */
     updateBackgroundColor (red: number, green: number, blue: number, alpha: number): void
     {
-        this._$clearColorR = $clamp(red, 0, 1, 0);
-        this._$clearColorG = $clamp(green, 0, 1, 0);
-        this._$clearColorB = $clamp(blue, 0, 1, 0);
-        this._$clearColorA = $clamp(alpha, 0, 1, 0);
+        contextUpdateBackgroundColorService(this, red, green, blue, alpha);
     }
 
     /**
@@ -145,16 +147,38 @@ export class Context
      */
     resize (width: number, height: number): void
     {
-        // todo clearInstacedArray
-
-        if (this._$mainAttachment) {
-            frameBufferManagerReleaseAttachmentObjectUseCase(this._$mainAttachment);
-        }
+        contextResizeUseCase(this, width, height);
     }
 
-    bind (): void
+    /**
+     * @description 指定範囲をクリアする
+     *              Clear the specified range
+     * 
+     * @param  {number} x 
+     * @param  {number} y 
+     * @param  {number} w 
+     * @param  {number} h 
+     * @return {void}
+     * @method
+     * @purotected
+     */
+    clearRect (x: number, y: number, w: number, h: number): void
     {
-        // todo
+        contextClearRectService(x, y, w, h);
+    }
+
+    /**
+     * @description アタッチメントオブジェクトをバインド
+     *              Bind the attachment object
+     * 
+     * @param {IAttachmentObject} attachment_object
+     * @return {void}
+     * @method
+     * @public
+     */
+    bind (attachment_object: IAttachmentObject): void
+    {
+        contextBindUseCase(this, attachment_object);
     }
 
     /**
@@ -167,10 +191,10 @@ export class Context
      */
     save (): void
     {
-        this._$stack.push($getFloat32Array9(
-            this._$matrix[0], this._$matrix[1], this._$matrix[2],
-            this._$matrix[3], this._$matrix[4], this._$matrix[5],
-            this._$matrix[6], this._$matrix[7], this._$matrix[8]
+        this.$stack.push($getFloat32Array9(
+            this.$matrix[0], this.$matrix[1], this.$matrix[2],
+            this.$matrix[3], this.$matrix[4], this.$matrix[5],
+            this.$matrix[6], this.$matrix[7], this.$matrix[8]
         ));
 
         // todo mask
@@ -186,17 +210,17 @@ export class Context
      */
     restore (): void
     {
-        if (!this._$stack.length) {
+        if (!this.$stack.length) {
             return ;
         }
 
-        const matrix = this._$stack.pop() as Float32Array;
-        this._$matrix[0] = matrix[0];
-        this._$matrix[1] = matrix[1];
-        this._$matrix[3] = matrix[3];
-        this._$matrix[4] = matrix[4];
-        this._$matrix[6] = matrix[6];
-        this._$matrix[7] = matrix[7];
+        const matrix = this.$stack.pop() as Float32Array;
+        this.$matrix[0] = matrix[0];
+        this.$matrix[1] = matrix[1];
+        this.$matrix[3] = matrix[3];
+        this.$matrix[4] = matrix[4];
+        this.$matrix[6] = matrix[6];
+        this.$matrix[7] = matrix[7];
 
         $poolFloat32Array9(matrix);
 
@@ -221,12 +245,12 @@ export class Context
         a: number, b: number, c: number,
         d: number, e: number, f: number
     ): void {
-        this._$matrix[0] = a;
-        this._$matrix[1] = b;
-        this._$matrix[3] = c;
-        this._$matrix[4] = d;
-        this._$matrix[6] = e;
-        this._$matrix[7] = f;
+        this.$matrix[0] = a;
+        this.$matrix[1] = b;
+        this.$matrix[3] = c;
+        this.$matrix[4] = d;
+        this.$matrix[6] = e;
+        this.$matrix[7] = f;
     }
 
     /**
@@ -248,31 +272,31 @@ export class Context
         d: number, e: number, f: number
     ): void {
 
-        const a00: number = this._$matrix[0];
-        const a01: number = this._$matrix[1];
-        const a10: number = this._$matrix[3];
-        const a11: number = this._$matrix[4];
-        const a20: number = this._$matrix[6];
-        const a21: number = this._$matrix[7];
+        const a00: number = this.$matrix[0];
+        const a01: number = this.$matrix[1];
+        const a10: number = this.$matrix[3];
+        const a11: number = this.$matrix[4];
+        const a20: number = this.$matrix[6];
+        const a21: number = this.$matrix[7];
 
-        this._$matrix[0] = a * a00 + b * a10;
-        this._$matrix[1] = a * a01 + b * a11;
-        this._$matrix[3] = c * a00 + d * a10;
-        this._$matrix[4] = c * a01 + d * a11;
-        this._$matrix[6] = e * a00 + f * a10 + a20;
-        this._$matrix[7] = e * a01 + f * a11 + a21;
+        this.$matrix[0] = a * a00 + b * a10;
+        this.$matrix[1] = a * a01 + b * a11;
+        this.$matrix[3] = c * a00 + d * a10;
+        this.$matrix[4] = c * a01 + d * a11;
+        this.$matrix[6] = e * a00 + f * a10 + a20;
+        this.$matrix[7] = e * a01 + f * a11 + a21;
     }
 
-    // /**
-    //  * @description パスを開始
-    //  *              Start the path
-    //  * 
-    //  * @return {void}
-    //  * @method
-    //  * @public
-    //  */
-    // beginPath (): void
-    // {
-    //     beginPath();
-    // }
+    /**
+     * @description パスを開始
+     *              Start the path
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    beginPath (): void
+    {
+        beginPath();
+    }
 }

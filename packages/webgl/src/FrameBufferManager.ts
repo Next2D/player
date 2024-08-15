@@ -1,4 +1,3 @@
-import exp from "constants";
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 
 /**
@@ -29,6 +28,21 @@ let $currentAttachment: IAttachmentObject | null = null;
 export let $readFrameBuffer: WebGLFramebuffer;
 
 /**
+ * @description READ_FRAMEBUFFER専用のFrameBufferオブジェクトを設定
+ *              Set the FrameBuffer object for READ_FRAMEBUFFER only
+ * 
+ * @param  {WebGL2RenderingContext} gl
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setReadFrameBuffer = (gl: WebGL2RenderingContext): void => 
+{
+    $readFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, $readFrameBuffer);
+};
+
+/**
  * @description DRAW_FRAMEBUFFER専用のFrameBufferオブジェクト
  *              FrameBuffer object for DRAW_FRAMEBUFFER only
  * 
@@ -36,6 +50,21 @@ export let $readFrameBuffer: WebGLFramebuffer;
  * @public
  */
 export let $drawFrameBuffer: WebGLFramebuffer;
+
+/**
+ * @description DRAW_FRAMEBUFFER専用のFrameBufferオブジェクトを設定
+ *              Set the FrameBuffer object for DRAW_FRAMEBUFFER only
+ *
+ * @param  {WebGL2RenderingContext} gl
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setDrawFrameBuffer = (gl: WebGL2RenderingContext): void => 
+{
+    $drawFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, $drawFrameBuffer); 
+};
 
 /**
  * @description FrameBufferがバインドされているかどうかのフラグ
@@ -85,24 +114,6 @@ export const $getCurrentAttachment = (): IAttachmentObject | null =>
 export const $setFramebufferBound = (state: boolean): void =>
 {
     $isFramebufferBound = state;
-};
-
-/**
- * @description FrameBufferの管理オブジェクトを起動
- *              Start the management object of FrameBuffer
- * 
- * @param {WebGL2RenderingContext} gl
- * @return {void}
- * @method
- * @protected
- */
-export const boot = (gl: WebGL2RenderingContext): void =>
-{
-    $drawFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
-    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, $drawFrameBuffer);
-
-    $readFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
-    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, $readFrameBuffer);
 };
 
 /**

@@ -27,16 +27,17 @@ export const execute = (width: number, height: number, multisample: boolean = fa
     // テクスチャを取得
     attachmentObject.width   = width;
     attachmentObject.height  = height;
-    attachmentObject.texture = textureManagerGetTextureUseCase(width, height);
-
+    
     if (multisample) {
         attachmentObject.msaa    = true;
+        attachmentObject.texture = null;
         const colorBufferObject  = colorBufferObjectGetColorBufferObjectUseCase(width, height);
         attachmentObject.color   = colorBufferObject;
         attachmentObject.stencil = colorBufferObject.stencil;
     } else {
         attachmentObject.msaa    = false;
         attachmentObject.color   = null;
+        attachmentObject.texture = textureManagerGetTextureUseCase(width, height);
         attachmentObject.stencil = stencilBufferObjectGetStencilBufferObjectUseCase(width, height);
     }
 

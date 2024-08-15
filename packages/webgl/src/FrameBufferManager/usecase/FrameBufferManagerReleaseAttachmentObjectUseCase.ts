@@ -5,10 +5,7 @@ import type { IStencilBufferObject } from "../../interface/IStencilBufferObject"
 import { execute as colorBufferObjectReleaseColorBufferObjectUseCase } from "../../ColorBufferObject/usecase/ColorBufferObjectReleaseColorBufferObjectUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
 import { execute as stencilBufferObjectReleaseColorBufferObjectUseCase } from "../../StencilBufferObject/usecase/StencilBufferObjectReleaseColorBufferObjectUseCase";
-import {
-    $objectPool,
-    $currentAttachment
-} from "../../FrameBufferManager";
+import { $objectPool } from "../../FrameBufferManager";
 
 /**
  * @description 各オブジェクトを再利用するためにプールを行い、アタッチメントオブジェクトは初期化してプールに戻す
@@ -21,10 +18,6 @@ import {
  */
 export const execute = (attachment_object: IAttachmentObject): void =>
 {
-    if (attachment_object === $currentAttachment) {
-
-    }
-    
     textureManagerReleaseTextureObjectUseCase(attachment_object.texture as ITextureObject);
     attachment_object.texture = null;
 

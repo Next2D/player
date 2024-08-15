@@ -2,8 +2,9 @@ import { $cacheStore } from "@next2d/cache";
 import {
     $canvas,
     $setRendererSize,
-    $gl,
-    $context
+    $context,
+    $rendererWidth,
+    $rendererHeight
 } from "../../RendererUtil";
 
 /**
@@ -21,8 +22,8 @@ export const execute = (
     renderer_height: number
 ): void => {
 
-    if ($canvas.width === renderer_width
-        && $canvas.height === renderer_height
+    if ($rendererWidth === renderer_width
+        && $rendererHeight === renderer_height
     ) {
         return ;
     }
@@ -33,11 +34,10 @@ export const execute = (
     // update canvas size
     $canvas.width  = renderer_width;
     $canvas.height = renderer_height;
-    $gl.viewport(0, 0, renderer_width, renderer_height);
+
+    // context reset and update
+    $context.resize(renderer_width, renderer_height);
 
     // cache clear
     $cacheStore.reset();
-
-    // context reset and update
-    // $context.resize(renderer_width, renderer_height);
 };

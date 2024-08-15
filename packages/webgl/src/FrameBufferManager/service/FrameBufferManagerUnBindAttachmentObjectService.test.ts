@@ -1,14 +1,14 @@
-import type { IAttachmentObject } from "../../interface/IAttachmentObject";
-import { execute } from "./FrameBufferManagerUnBindAttachmentObjectUseCase";
+import type { IAttachmentObject } from "../../interface/IAttachmentObject.ts";
+import { execute } from "./FrameBufferManagerUnBindAttachmentObjectService.ts";
 import { describe, expect, it, vi } from "vitest";
 import {
     $setCurrentAttachment,
     $getCurrentAttachment,
     $isFramebufferBound,
     $setFramebufferBound
-} from "../../FrameBufferManager";
+} from "../../FrameBufferManager.ts";
 
-describe("FrameBufferManagerUnBindAttachmentObjectUseCase.js method test", () =>
+describe("FrameBufferManagerUnBindAttachmentObjectService.js method test", () =>
 {
     it("test case1", () =>
     {
