@@ -3,15 +3,6 @@ import type { IGrid } from "./interface/IGrid";
 import type { ITextureObject } from "./interface/ITextureObject";
 
 /**
- * @description TextureObjectの再利用のための配列のオブジェクトプール、
- *              Object pool of array for reusing TextureObject
- * 
- * @type {ITextureObject[]}
- * @protected
- */
-export const $objectPool: ITextureObject[] = [];
-
-/**
  * @description 描画保管用のアトラステクスチャの配列
  *              Array of atlas textures for drawing storage
  * 

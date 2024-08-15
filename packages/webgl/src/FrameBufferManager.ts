@@ -10,13 +10,31 @@ import type { IAttachment } from "./interface/IAttachment";
 export const $objectPool: IAttachment[] = [];
 
 /**
- * @description FrameBufferの管理クラス
- *              FrameBuffer management class
+ * @description 現在アタッチされてるAttachmentObject
+ *              Currently attached AttachmentObject
+ * 
+ * @type {IAttachment|null}
+ * @private
+ */
+let $currentAttachment: IAttachment | null = null;
+
+/**
+ * @description READ_FRAMEBUFFER専用のFrameBufferオブジェクト
+ *              FrameBuffer object for READ_FRAMEBUFFER only
  * 
  * @class
  * @public
  */
-export let $baseFrameBuffer: WebGLFramebuffer;
+export let $readFrameBuffer: WebGLFramebuffer;
+
+/**
+ * @description DRAW_FRAMEBUFFER専用のFrameBufferオブジェクト
+ *              FrameBuffer object for DRAW_FRAMEBUFFER only
+ * 
+ * @class
+ * @public
+ */
+export let $drawFrameBuffer: WebGLFramebuffer;
 
 /**
  * @description FrameBufferの管理オブジェクトを起動
@@ -29,7 +47,9 @@ export let $baseFrameBuffer: WebGLFramebuffer;
  */
 export const boot = (gl: WebGL2RenderingContext): void =>
 {
-    $baseFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+    $drawFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+    $readFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, $readFrameBuffer);
 };
 
 /**

@@ -4,8 +4,7 @@ import { execute as textureManagerInitializeBindService } from "../service/Textu
 import {
     $atlasTextures,
     $atlasNodes,
-    $atlasCacheMap,
-    $activeTextureUnit
+    $atlasCacheMap
 } from "../../TextureManager";
 import {
     $gl,

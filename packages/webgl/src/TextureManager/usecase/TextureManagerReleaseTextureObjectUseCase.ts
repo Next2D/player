@@ -1,5 +1,4 @@
 import type { ITextureObject } from "../../interface/ITextureObject";
-import { $objectPool } from "../../TextureManager";
 import { $gl } from "../../WebGLUtil";
 
 /**
@@ -13,15 +12,5 @@ import { $gl } from "../../WebGLUtil";
  */
 export const execute = (texture_object: ITextureObject): void =>
 {
-    if ($objectPool.indexOf(texture_object) > -1) {
-        return ;
-    }
-
-    // プールに10個以上ある場合は削除
-    if ($objectPool.length > 10) {
-        $gl.deleteTexture(texture_object.resource);
-        return;
-    }
-
-    $objectPool.push(texture_object);
+    $gl.deleteTexture(texture_object.resource);
 };

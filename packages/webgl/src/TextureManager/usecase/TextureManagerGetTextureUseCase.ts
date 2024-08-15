@@ -16,24 +16,7 @@ import { execute as textureManagerInitializeBindService } from "../service/Textu
  */
 export const execute = (width: number, height: number): ITextureObject =>
 {
-    if (!$objectPool.length) {
-        const textureObject = textureManagerCreateTextureObjectService(width, height);
-        textureManagerInitializeBindService(textureObject);
-        return textureObject;
-    }
-
-    for (let idx: number = 0; idx < $objectPool.length; ++idx) {
-        const textureObject = $objectPool[idx];
-        if (textureObject.width !== width
-            || textureObject.height !== height
-        ) {
-            continue;
-        }
-
-        $objectPool.splice(idx, 1);
-
-        return textureObject;
-    }
-
-    return textureManagerCreateTextureObjectService(width, height);
+    const textureObject = textureManagerCreateTextureObjectService(width, height);
+    textureManagerInitializeBindService(textureObject);
+    return textureObject;
 };
