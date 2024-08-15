@@ -1,11 +1,16 @@
-import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService"
+import type { IAttachmentObject } from "./interface/IAttachmentObject";
+// import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService"
+import { boot as textureManagerBoot } from "./TextureManager";
+import { boot as frameBufferManagerBoot } from "./FrameBufferManager";
+import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "./FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import {
     $setRenderMaxSize,
     $setWebGL2RenderingContext,
     $setSamples,
     $getFloat32Array9,
     $poolFloat32Array9,
-    $getArray
+    $getArray,
+    $clamp
 } from "./WebGLUtil";
 
 /**
@@ -35,6 +40,51 @@ export class Context
     private readonly _$matrix: Float32Array;
 
     /**
+     * @description 背景色のR
+     *              Background color R
+     * 
+     * @type {number}
+     * @private
+     */
+    private _$clearColorR: number;
+
+    /**
+     * @description 背景色のG
+     *              Background color G
+     * 
+     * @type {number}
+     * @private
+     */
+    private _$clearColorG: number;
+
+    /**
+     * @description 背景色のB
+     *              Background color B
+     * 
+     * @type {number}
+     * @private
+     */
+    private _$clearColorB: number;
+
+    /**
+     * @description 背景色のA
+     *              Background color A
+     * 
+     * @type {number}
+     * @private
+     */
+    private _$clearColorA: number;
+
+    /**
+     * @description メインのアタッチメントオブジェクト
+     *              Main attachment object
+     * 
+     * @type {IAttachmentObject}
+     * @private
+     */
+    private _$mainAttachment: IAttachmentObject | null;
+
+    /**
      * @param {WebGL2RenderingContext} gl
      * @param {number} samples
      * @constructor
@@ -46,12 +96,60 @@ export class Context
         $setRenderMaxSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
         $setSamples(samples);
 
-        // WebTexture設定
-        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
         this._$stack  = $getArray();
         this._$matrix = $getFloat32Array9(1, 0, 0, 0, 1, 0, 0, 0, 1);
+
+        this._$clearColorR = 0;
+        this._$clearColorG = 0;
+        this._$clearColorB = 0;
+        this._$clearColorA = 0;
+
+        this._$mainAttachment = null;
+
+        // WebTextureの初期起動
+        textureManagerBoot(gl);
+
+        // FrameBufferManagerの初期起動
+        frameBufferManagerBoot(gl);
+    }
+
+    /**
+     * @description 背景色を更新
+     *              Update background color
+     * 
+     * @param  {number} red 
+     * @param  {number} green 
+     * @param  {number} blue 
+     * @param  {number} alpha 
+     * @return {void}
+     * @method
+     * @public
+     */
+    updateBackgroundColor (red: number, green: number, blue: number, alpha: number): void
+    {
+        this._$clearColorR = $clamp(red, 0, 1, 0);
+        this._$clearColorG = $clamp(green, 0, 1, 0);
+        this._$clearColorB = $clamp(blue, 0, 1, 0);
+        this._$clearColorA = $clamp(alpha, 0, 1, 0);
+    }
+
+    /**
+     * @description メインcanvasのサイズを変更
+     *              Change the size of the main canvas
+     *
+     * @param  {number} width
+     * @param  {number} height
+     * @return {void}
+     * @method
+     * @public
+     */
+    resize (width: number, height: number): void
+    {
+        // todo clearInstacedArray
+
+        if (this._$mainAttachment) {
+            frameBufferManagerReleaseAttachmentObjectUseCase(this._$mainAttachment);
+        }
     }
 
     bind (): void
@@ -165,16 +263,16 @@ export class Context
         this._$matrix[7] = e * a01 + f * a11 + a21;
     }
 
-    /**
-     * @description パスを開始
-     *              Start the path
-     * 
-     * @return {void}
-     * @method
-     * @public
-     */
-    beginPath (): void
-    {
-        beginPath();
-    }
+    // /**
+    //  * @description パスを開始
+    //  *              Start the path
+    //  * 
+    //  * @return {void}
+    //  * @method
+    //  * @public
+    //  */
+    // beginPath (): void
+    // {
+    //     beginPath();
+    // }
 }

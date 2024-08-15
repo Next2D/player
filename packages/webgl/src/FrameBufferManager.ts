@@ -1,4 +1,5 @@
-import type { IAttachment } from "./interface/IAttachment";
+import exp from "constants";
+import type { IAttachmentObject } from "./interface/IAttachmentObject";
 
 /**
  * @description 生成したFrameBufferの管理オブジェクトを配列にプールして再利用します。
@@ -7,16 +8,16 @@ import type { IAttachment } from "./interface/IAttachment";
  * @type {array}
  * @protected
  */
-export const $objectPool: IAttachment[] = [];
+export const $objectPool: IAttachmentObject[] = [];
 
 /**
  * @description 現在アタッチされてるAttachmentObject
  *              Currently attached AttachmentObject
  * 
- * @type {IAttachment|null}
+ * @type {IAttachmentObject|null}
  * @private
  */
-let $currentAttachment: IAttachment | null = null;
+let $currentAttachment: IAttachmentObject | null = null;
 
 /**
  * @description READ_FRAMEBUFFER専用のFrameBufferオブジェクト
@@ -37,6 +38,56 @@ export let $readFrameBuffer: WebGLFramebuffer;
 export let $drawFrameBuffer: WebGLFramebuffer;
 
 /**
+ * @description FrameBufferがバインドされているかどうかのフラグ
+ *              Flag to check if FrameBuffer is bound
+ * 
+ * @type {boolean}
+ * @protected
+ */
+export let $isFramebufferBound: boolean = false;
+
+/**
+ * @description 現在アタッチされてるAttachmentObjectを設定
+ *              Set the currently attached AttachmentObject
+ *
+ * @param  {IAttachmentObject | null} attachment_object 
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setCurrentAttachment = (attachment_object: IAttachmentObject | null): void =>
+{
+    $currentAttachment = attachment_object;
+};
+
+/**
+ * @description 現在アタッチされてるAttachmentObjectを返却
+ *              Returns the currently attached AttachmentObject
+ * 
+ * @return {IAttachmentObject | null}
+ * @method
+ * @protected
+ */
+export const $getCurrentAttachment = (): IAttachmentObject | null =>
+{
+    return $currentAttachment;
+}
+
+/**
+ * @description FrameBufferがバインドされているかどうかのフラグの値を更新
+ *              Update the value of the flag to check if FrameBuffer is bound
+ * 
+ * @param {boolean} state
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setFramebufferBound = (state: boolean): void =>
+{
+    $isFramebufferBound = state;
+};
+
+/**
  * @description FrameBufferの管理オブジェクトを起動
  *              Start the management object of FrameBuffer
  * 
@@ -48,6 +99,8 @@ export let $drawFrameBuffer: WebGLFramebuffer;
 export const boot = (gl: WebGL2RenderingContext): void =>
 {
     $drawFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, $drawFrameBuffer);
+
     $readFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, $readFrameBuffer);
 };

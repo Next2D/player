@@ -1,14 +1,14 @@
-import type { IAttachment } from "../../interface/IAttachment";
+import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 
 /**
  * @description FrameBufferManagerのアタッチメントオブジェクトを新規作成
  *              Create a new attachment object for FrameBufferManager
  *
- * @return {IAttachment}
+ * @return {IAttachmentObject}
  * @method
  * @protected
  */
-export const execute = (): IAttachment => 
+export const execute = (): IAttachmentObject => 
 {
     return {
         "width": 0,

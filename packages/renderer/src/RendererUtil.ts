@@ -1,4 +1,4 @@
-import type { CanvasToWebGLContext } from "@next2d/webgl";
+import type { Context } from "@next2d/webgl";
 
 /**
  * @type {number}
@@ -27,10 +27,10 @@ export const $setDevicePixelRatio = (ratio: number): void =>
 };
 
 /**
- * @type {CanvasToWebGLContext}
+ * @type {Context}
  * @public
  */
-export let $context: CanvasToWebGLContext;
+export let $context: Context;
 
 /**
  * @description Next2DのWebGLの描画コンテキストを設定
@@ -41,7 +41,7 @@ export let $context: CanvasToWebGLContext;
  * @method
  * @public
  */
-export const $setContext = (context: CanvasToWebGLContext): void =>
+export const $setContext = (context: Context): void =>
 {
     $context = context;
 };

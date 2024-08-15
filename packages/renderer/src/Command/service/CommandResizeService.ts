@@ -39,5 +39,5 @@ export const execute = (
     $cacheStore.reset();
 
     // context reset and update
-    $context.resize(renderer_width, renderer_height);
+    // $context.resize(renderer_width, renderer_height);
 };

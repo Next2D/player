@@ -2,7 +2,7 @@ import type { IColorBufferObject } from "./IColorBufferObject";
 import type { ITextureObject } from "./ITextureObject";
 import type { IStencilBufferObject } from "./IStencilBufferObject";
 
-export interface IAttachment {
+export interface IAttachmentObject {
     width: number;
     height: number;
     clipLevel: number;

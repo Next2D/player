@@ -2,7 +2,7 @@ import type { CanvasToWebGLContext } from "../CanvasToWebGLContext";
 import type { GradientLUTShaderVariantCollection } from "./variants/GradientLUTShaderVariantCollection";
 import type { CanvasToWebGLShader } from "./CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./WebGLShaderUniform";
-import type { AttachmentImpl } from "../interface/IAttachment";
+import type { AttachmentImpl } from "../interface/IAttachmentObject";
 
 /**
  * @class

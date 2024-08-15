@@ -3,7 +3,8 @@ import { execute as shapeRenderUseCase } from "../../Shape/usecase/ShapeRenderUs
 import { execute as textFieldRenderUseCase } from "../../TextField/usecase/TextFieldRenderUseCase";
 import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUseCase";
 import {
-    $canvas,
+    $rendererWidth,
+    $rendererHeight,
     $context
 } from "../../RendererUtil"; 
 
@@ -33,19 +34,19 @@ export const execute = (render_queue: Float32Array): void =>
             $context.updateBackgroundColor(0, 0, 0, 0);
         } else {
             $context.updateBackgroundColor(
-                $color >> 16 & 0xff,
-                $color >> 8 & 0xff,
-                $color & 0xff,
+                $color >> 16 & 0xff / 255,
+                $color >> 8 & 0xff / 255,
+                $color & 0xff / 255,
                 1
             );
         }
     }
 
     // reset
-    $context.reset();
+    // $context.reset();
     $context.setTransform(1, 0, 0, 1, 0, 0);
-    $context.clearRect(0, 0, $canvas.width, $canvas.height);
-    $context.beginPath();
+    // $context.clearRect(0, 0, $rendererWidth, $rendererHeight);
+    // $context.beginPath();
 
     while (render_queue.length > index) {
 
@@ -82,8 +83,8 @@ export const execute = (render_queue: Float32Array): void =>
     }
 
     // excute
-    $context.drawInstacedArray();
-    $context
-        .frameBuffer
-        .transferToMainTexture();
+    // $context.drawInstacedArray();
+    // $context
+    //     .frameBuffer
+    //     .transferToMainTexture();
 };

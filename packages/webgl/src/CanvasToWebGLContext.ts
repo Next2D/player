@@ -16,7 +16,7 @@ import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShader
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { FilterShaderVariantCollection } from "./shader/variants/FilterShaderVariantCollection";
 import type { BlendShaderVariantCollection } from "./shader/variants/BlendShaderVariantCollection";
-import type { AttachmentImpl } from "./interface/IAttachment";
+import type { AttachmentImpl } from "./interface/IAttachmentObject";
 import type { BoundsImpl } from "./interface/IBounds";
 import type { BlendModeImpl } from "./interface/IBlendMode";
 import type { IndexRangeImpl } from "./interface/IIndexRange";

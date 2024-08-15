@@ -1,5 +1,5 @@
 
-import type { IAttachment } from "../../interface/IAttachment";
+import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import { $objectPool } from "../../FrameBufferManager";
 import { execute as frameBufferManagerCreateAttachmentObjectService } from "../service/FrameBufferManagerCreateAttachmentObjectService";
 import { execute as colorBufferObjectGetColorBufferObjectUseCase } from "../../ColorBufferObject/usecase/ColorBufferObjectGetColorBufferObjectUseCase";
@@ -13,15 +13,15 @@ import { execute as textureManagerGetTextureUseCase } from "../../TextureManager
  * @param  {number} width 
  * @param  {number} height 
  * @param  {boolean} [multisample=false] 
- * @return {IAttachment}
+ * @return {IAttachmentObject}
  * @method
  * @protected
  */
-export const execute = (width: number, height: number, multisample: boolean = false): IAttachment =>
+export const execute = (width: number, height: number, multisample: boolean = false): IAttachmentObject =>
 {
     // キャッシュがあれば再利用する
     const attachmentObject = $objectPool.length 
-        ? $objectPool.shift() as IAttachment
+        ? $objectPool.shift() as IAttachmentObject
         : frameBufferManagerCreateAttachmentObjectService();
 
     // テクスチャを取得
@@ -30,13 +30,13 @@ export const execute = (width: number, height: number, multisample: boolean = fa
     attachmentObject.texture = textureManagerGetTextureUseCase(width, height);
 
     if (multisample) {
+        attachmentObject.msaa    = true;
         const colorBufferObject  = colorBufferObjectGetColorBufferObjectUseCase(width, height);
         attachmentObject.color   = colorBufferObject;
-        attachmentObject.msaa    = true;
         attachmentObject.stencil = colorBufferObject.stencil;
     } else {
-        attachmentObject.color   = null;
         attachmentObject.msaa    = false;
+        attachmentObject.color   = null;
         attachmentObject.stencil = stencilBufferObjectGetStencilBufferObjectUseCase(width, height);
     }
 

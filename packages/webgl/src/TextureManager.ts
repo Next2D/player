@@ -61,7 +61,8 @@ export const $boundTextures: Array<ITextureObject | null> = [null, null, null];
 
 export const boot = (gl: WebGL2RenderingContext): void =>
 {
-
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 }
 
 /**
