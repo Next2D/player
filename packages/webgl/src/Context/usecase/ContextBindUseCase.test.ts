@@ -12,6 +12,10 @@ describe("ContextBindUseCase.js method test", () =>
     it("test case", () =>
     {
         const mockGL = {
+            "enable": vi.fn(() => "enable"),
+            "scissor": vi.fn(() => "scissor"),
+            "clear": vi.fn(() => "clear"),
+            "disable": vi.fn(() => "disable"),
             "activeTexture": vi.fn(() => "activeTexture"),
             "bindTexture": vi.fn(() => "bindTexture"),
             "framebufferTexture2D": vi.fn(() => "framebufferTexture2D"),
@@ -55,12 +59,13 @@ describe("ContextBindUseCase.js method test", () =>
                 "width": 0,
                 "height": 0,
                 "area": 0,
-                "dirty": false,
+                "dirty": true,
             }
         };
 
         execute(context, attachment_object);
 
         expect($getCurrentAttachment()).toBe(attachment_object);
+        expect(attachment_object.stencil?.dirty).toBe(false);
     });
 });

@@ -45,8 +45,7 @@ export const execute = (render_queue: Float32Array): void =>
     // reset
     // $context.reset();
     $context.setTransform(1, 0, 0, 1, 0, 0);
-    // $context.clearRect(0, 0, $rendererWidth, $rendererHeight);
-    // $context.beginPath();
+    $context.clearRect(0, 0, $rendererWidth, $rendererHeight);
 
     while (render_queue.length > index) {
 

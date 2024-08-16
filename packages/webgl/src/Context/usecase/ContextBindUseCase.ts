@@ -20,6 +20,9 @@ export const execute = (context: Context, attachment_object: IAttachmentObject):
 {
     // fixed logic
     const currentAttachment = $getCurrentAttachment();
+    if (attachment_object === currentAttachment) {
+        return ;
+    }
 
     // フレームバッファにアタッチメントオブジェクトをバインドする
     frameBufferManagerBindAttachmentObjectService(attachment_object);
