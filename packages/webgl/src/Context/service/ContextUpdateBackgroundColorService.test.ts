@@ -11,6 +11,7 @@ describe("ContextUpdateBackgroundColorService.js method test", () =>
             "pixelStorei": vi.fn(),
             "createFramebuffer": vi.fn(),
             "bindFramebuffer": vi.fn(),
+            "clearColor": vi.fn(),
         } as unknown as WebGL2RenderingContext;
 
         const context = new Context(mockGL, 4);

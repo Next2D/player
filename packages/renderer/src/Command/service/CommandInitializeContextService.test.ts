@@ -19,6 +19,7 @@ describe("CommandInitializeContextService.js test", () =>
                     expect(options.preserveDrawingBuffer).toBe(true);
 
                     return {
+                        "clearColor": vi.fn(),
                         "getParameter": vi.fn(),
                         "createFramebuffer": vi.fn(),
                         "bindFramebuffer": vi.fn(),

@@ -1,10 +1,13 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService"
-import { execute as frameBufferManagerBootService } from "./FrameBufferManager/service/FrameBufferManagerBootService";
 import { execute as contextUpdateBackgroundColorService } from "./Context/service/ContextUpdateBackgroundColorService";
 import { execute as contextResizeUseCase } from "./Context/usecase/ContextResizeUseCase";
 import { execute as contextClearRectService } from "./Context/service/ContextClearRectService";
 import { execute as contextBindUseCase } from "./Context/usecase/ContextBindUseCase";
+import {
+    $setReadFrameBuffer,
+    $setDrawFrameBuffer
+} from "./FrameBufferManager";
 import {
     $setRenderMaxSize,
     $setWebGL2RenderingContext,
@@ -115,7 +118,8 @@ export class Context
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
         // FrameBufferManagerの初期起動
-        frameBufferManagerBootService(gl);
+        $setReadFrameBuffer(gl);
+        $setDrawFrameBuffer(gl);
     }
 
     /**

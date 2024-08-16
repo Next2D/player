@@ -71,10 +71,7 @@ describe("FrameBufferManagerGetAttachmentObjectUseCase.js method test", () =>
         expect(attachmentObject.color?.width).toBe(256);
         expect(attachmentObject.color?.height).toBe(256);
         expect(attachmentObject.color?.area).toBe(256 * 256);
-        expect(attachmentObject.texture?.resource).toBe("createTexture");
-        expect(attachmentObject.texture?.width).toBe(100);
-        expect(attachmentObject.texture?.height).toBe(100);
-        expect(attachmentObject.texture?.area).toBe(100 * 100);
+        expect(attachmentObject.texture).toBe(null);
         expect(attachmentObject.stencil?.resource).toBe("createRenderbuffer");
         expect(attachmentObject.stencil?.width).toBe(0);
         expect(attachmentObject.stencil?.height).toBe(0);

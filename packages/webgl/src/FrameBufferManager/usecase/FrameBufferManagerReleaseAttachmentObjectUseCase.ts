@@ -18,8 +18,10 @@ import { $objectPool } from "../../FrameBufferManager";
  */
 export const execute = (attachment_object: IAttachmentObject): void =>
 {
-    textureManagerReleaseTextureObjectUseCase(attachment_object.texture as ITextureObject);
-    attachment_object.texture = null;
+    if (attachment_object.texture) {
+        textureManagerReleaseTextureObjectUseCase(attachment_object.texture as ITextureObject);
+        attachment_object.texture = null;
+    }
 
     if (attachment_object.msaa) {
         colorBufferObjectReleaseColorBufferObjectUseCase(attachment_object.color as IColorBufferObject);
