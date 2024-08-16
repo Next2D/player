@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 describe("ContextResizeUseCase.js method test", () =>
 {
-    it("test case", async () =>
+    it("test case", () =>
     {
         const mockGL = {
             "getParameter": vi.fn(() => "getParameter"),

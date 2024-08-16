@@ -4,6 +4,10 @@ import { execute as contextUpdateBackgroundColorService } from "./Context/servic
 import { execute as contextResizeUseCase } from "./Context/usecase/ContextResizeUseCase";
 import { execute as contextClearRectService } from "./Context/service/ContextClearRectService";
 import { execute as contextBindUseCase } from "./Context/usecase/ContextBindUseCase";
+import { execute as contextSaveService } from "./Context/service/ContextSaveService";
+import { execute as contextRestoreService } from "./Context/service/ContextRestoreService";
+import { execute as contextSetTransformService } from "./Context/service/ContextSetTransformService";
+import { execute as contextTransformService } from "./Context/service/ContextTransformService";
 import {
     $setReadFrameBuffer,
     $setDrawFrameBuffer
@@ -13,7 +17,6 @@ import {
     $setWebGL2RenderingContext,
     $setSamples,
     $getFloat32Array9,
-    $poolFloat32Array9,
     $getArray
 } from "./WebGLUtil";
 
@@ -195,13 +198,7 @@ export class Context
      */
     save (): void
     {
-        this.$stack.push($getFloat32Array9(
-            this.$matrix[0], this.$matrix[1], this.$matrix[2],
-            this.$matrix[3], this.$matrix[4], this.$matrix[5],
-            this.$matrix[6], this.$matrix[7], this.$matrix[8]
-        ));
-
-        // todo mask
+        contextSaveService(this);
     }
 
     /**
@@ -214,21 +211,7 @@ export class Context
      */
     restore (): void
     {
-        if (!this.$stack.length) {
-            return ;
-        }
-
-        const matrix = this.$stack.pop() as Float32Array;
-        this.$matrix[0] = matrix[0];
-        this.$matrix[1] = matrix[1];
-        this.$matrix[3] = matrix[3];
-        this.$matrix[4] = matrix[4];
-        this.$matrix[6] = matrix[6];
-        this.$matrix[7] = matrix[7];
-
-        $poolFloat32Array9(matrix);
-
-        // todo mask
+        contextRestoreService(this);
     }
 
     /**
@@ -249,12 +232,7 @@ export class Context
         a: number, b: number, c: number,
         d: number, e: number, f: number
     ): void {
-        this.$matrix[0] = a;
-        this.$matrix[1] = b;
-        this.$matrix[3] = c;
-        this.$matrix[4] = d;
-        this.$matrix[6] = e;
-        this.$matrix[7] = f;
+        contextSetTransformService(this, a, b, c, d, e, f);
     }
 
     /**
@@ -275,20 +253,7 @@ export class Context
         a: number, b: number, c: number,
         d: number, e: number, f: number
     ): void {
-
-        const a00: number = this.$matrix[0];
-        const a01: number = this.$matrix[1];
-        const a10: number = this.$matrix[3];
-        const a11: number = this.$matrix[4];
-        const a20: number = this.$matrix[6];
-        const a21: number = this.$matrix[7];
-
-        this.$matrix[0] = a * a00 + b * a10;
-        this.$matrix[1] = a * a01 + b * a11;
-        this.$matrix[3] = c * a00 + d * a10;
-        this.$matrix[4] = c * a01 + d * a11;
-        this.$matrix[6] = e * a00 + f * a10 + a20;
-        this.$matrix[7] = e * a01 + f * a11 + a21;
+        contextTransformService(this, a, b, c, d, e, f);
     }
 
     /**

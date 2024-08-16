@@ -4,7 +4,7 @@ import { $objectPool } from "../../ColorBufferObject";
 
 describe("ColorBufferObjectReleaseColorBufferObjectUseCase.js method test", () =>
 {
-    it("test case", async () =>
+    it("test case", () =>
     {
         $objectPool.length = 0;
         $objectPool.push(

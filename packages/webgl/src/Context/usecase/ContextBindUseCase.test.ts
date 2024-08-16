@@ -9,7 +9,7 @@ import {
 
 describe("ContextBindUseCase.js method test", () =>
 {
-    it("test case", async () =>
+    it("test case", () =>
     {
         const mockGL = {
             "activeTexture": vi.fn(() => "activeTexture"),

@@ -4,7 +4,7 @@ import { $objectPool } from "../../ColorBufferObject";
 
 describe("ColorBufferObjectAcquireObjectUseCase.js method test", () =>
 {
-    it("test case", async () =>
+    it("test case", () =>
     {
         vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
         {

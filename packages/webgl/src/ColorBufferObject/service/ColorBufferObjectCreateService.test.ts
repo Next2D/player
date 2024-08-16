@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 describe("ColorBufferObjectCreateService.js method test", () =>
 {
-    it("test case", async () =>
+    it("test case", () =>
     {
         vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
         {

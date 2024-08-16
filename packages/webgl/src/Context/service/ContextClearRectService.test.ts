@@ -1,10 +1,9 @@
-import { Context } from "../../Context";
 import { execute } from "./ContextClearRectService";
 import { describe, expect, it, vi } from "vitest";
 
 describe("ContextClearRectService.js method test", () =>
 {
-    it("test case", async () =>
+    it("test case", () =>
     {
         vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
         {
