@@ -12,13 +12,11 @@ describe("ContextBindUseCase.js method test", () =>
     it("test case", () =>
     {
         const mockGL = {
-            "enable": vi.fn(() => "enable"),
-            "scissor": vi.fn(() => "scissor"),
-            "clear": vi.fn(() => "clear"),
-            "disable": vi.fn(() => "disable"),
+            "createTexture": vi.fn(() => "createTexture"),
             "activeTexture": vi.fn(() => "activeTexture"),
             "bindTexture": vi.fn(() => "bindTexture"),
-            "framebufferTexture2D": vi.fn(() => "framebufferTexture2D"),
+            "texParameteri": vi.fn(() => "texParameteri"),
+            "texStorage2D": vi.fn(() => "texStorage2D"),
             "getParameter": vi.fn(() => "getParameter"),
             "pixelStorei": vi.fn(() => "pixelStorei"),
             "createFramebuffer": vi.fn(() => "createFramebuffer"),
@@ -28,6 +26,12 @@ describe("ContextBindUseCase.js method test", () =>
             "bindRenderbuffer": vi.fn(() => "bindRenderbuffer"),
             "renderbufferStorageMultisample": vi.fn(() => "renderbufferStorageMultisample"),
             "framebufferRenderbuffer": vi.fn(() => "framebufferRenderbuffer"),
+            "renderbufferStorage": vi.fn(() => "renderbufferStorage"),
+            "framebufferTexture2D": vi.fn(() => "framebufferTexture2D"),
+            "enable": vi.fn(() => "enable"),
+            "scissor": vi.fn(() => "scissor"),
+            "clear": vi.fn(() => "clear"),
+            "disable": vi.fn(() => "disable"),
             "viewport": vi.fn((x, y, w, h) =>
             {
                 expect(x).toBe(0);

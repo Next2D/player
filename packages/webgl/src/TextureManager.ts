@@ -1,33 +1,4 @@
-import type { ICachePosition } from "./interface/ICachePosition";
-import type { IGrid } from "./interface/IGrid";
 import type { ITextureObject } from "./interface/ITextureObject";
-
-/**
- * @description 描画保管用のアトラステクスチャの配列
- *              Array of atlas textures for drawing storage
- * 
- * @type {ITextureObject[]}
- * @protected
- */
-export const $atlasTextures: ITextureObject[] = [];
-
-/**
- * @description アトラステクスチャのノードの配列
- *              Array of nodes of atlas textures
- * 
- * @type {Map}
- * @protected
- */
-export const $atlasNodes: Map<number, IGrid[]> = new Map();
-
-/**
- * @description アトラステクスチャにキャッシュした座標配列
- *              Array of cached coordinates in atlas textures
- * 
- * @type {Map}
- * @protected
- */
-export const $atlasCacheMap: Map<number, ICachePosition[]> = new Map();
 
 /**
  * @description 現在のアクティブなテクスチャーの番号

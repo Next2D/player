@@ -7,6 +7,11 @@ describe("ContextResizeUseCase.js method test", () =>
     it("test case", () =>
     {
         const mockGL = {
+            "createTexture": vi.fn(() => "createTexture"),
+            "activeTexture": vi.fn(() => "activeTexture"),
+            "bindTexture": vi.fn(() => "bindTexture"),
+            "texParameteri": vi.fn(() => "texParameteri"),
+            "texStorage2D": vi.fn(() => "texStorage2D"),
             "getParameter": vi.fn(() => "getParameter"),
             "pixelStorei": vi.fn(() => "pixelStorei"),
             "createFramebuffer": vi.fn(() => "createFramebuffer"),
@@ -17,6 +22,7 @@ describe("ContextResizeUseCase.js method test", () =>
             "renderbufferStorageMultisample": vi.fn(() => "renderbufferStorageMultisample"),
             "framebufferRenderbuffer": vi.fn(() => "framebufferRenderbuffer"),
             "viewport": vi.fn(() => "viewport"),
+            "renderbufferStorage": vi.fn(() => "renderbufferStorage"),
         } as unknown as WebGL2RenderingContext;
 
         const context = new Context(mockGL, 4);

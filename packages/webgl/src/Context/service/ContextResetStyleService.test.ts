@@ -1,8 +1,8 @@
 import { Context } from "../../Context";
-import { execute } from "./ContextTransformService";
+import { execute } from "./ContextResetStyleService";
 import { describe, expect, it, vi } from "vitest";
 
-describe("ContextTransformService.js method test", () =>
+describe("ContextResetStyleService.js method test", () =>
 {
     it("test case", () =>
     {
@@ -27,29 +27,34 @@ describe("ContextTransformService.js method test", () =>
 
         const context = new Context(mockGL, 4);
 
-        context.$matrix.fill(3);
-        context.$matrix[6] = 100;
-        context.$matrix[7] = 200;
-        expect(context.$matrix[0]).toBe(3);
-        expect(context.$matrix[1]).toBe(3);
-        expect(context.$matrix[2]).toBe(3);
-        expect(context.$matrix[3]).toBe(3);
-        expect(context.$matrix[4]).toBe(3);
-        expect(context.$matrix[5]).toBe(3);
-        expect(context.$matrix[6]).toBe(100);
-        expect(context.$matrix[7]).toBe(200);
-        expect(context.$matrix[8]).toBe(3);
-        
-        execute(context, 9, 3, 5, 2, 50, 300);
+        context.$fillType = 0;
+        context.$fillStyle.fill(0.5);
 
-        expect(context.$matrix[0]).toBe(36);
-        expect(context.$matrix[1]).toBe(36);
-        expect(context.$matrix[2]).toBe(3);
-        expect(context.$matrix[3]).toBe(21);
-        expect(context.$matrix[4]).toBe(21);
-        expect(context.$matrix[5]).toBe(3);
-        expect(context.$matrix[6]).toBe(1150);
-        expect(context.$matrix[7]).toBe(1250);
-        expect(context.$matrix[8]).toBe(3);
+        context.$strokeType = 0;
+        context.$strokeStyle.fill(0.5);
+
+        expect(context.$fillType).toBe(0);
+        expect(context.$fillStyle[0]).toBe(0.5);
+        expect(context.$fillStyle[1]).toBe(0.5);
+        expect(context.$fillStyle[2]).toBe(0.5);
+        expect(context.$fillStyle[3]).toBe(0.5);
+        expect(context.$strokeType).toBe(0);
+        expect(context.$strokeStyle[0]).toBe(0.5);
+        expect(context.$strokeStyle[1]).toBe(0.5);
+        expect(context.$strokeStyle[2]).toBe(0.5);
+        expect(context.$strokeStyle[3]).toBe(0.5);
+
+        execute(context);
+        
+        expect(context.$fillType).toBe(-1);
+        expect(context.$fillStyle[0]).toBe(1);
+        expect(context.$fillStyle[1]).toBe(1);
+        expect(context.$fillStyle[2]).toBe(1);
+        expect(context.$fillStyle[3]).toBe(1);
+        expect(context.$strokeType).toBe(-1);
+        expect(context.$strokeStyle[0]).toBe(1);
+        expect(context.$strokeStyle[1]).toBe(1);
+        expect(context.$strokeStyle[2]).toBe(1);
+        expect(context.$strokeStyle[3]).toBe(1);
     });
 });

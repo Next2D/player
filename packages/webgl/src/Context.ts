@@ -1,6 +1,16 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
-import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService"
+import type { IBlendMode } from "./interface/IBlendMode";
+import type { IFillTyle } from "./interface/IFillTyle";
+import type { IStrokeTyle } from "./interface/IStrokeTyle";
+import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService";
+import { execute as moveTo } from "./PathCommand/usecase/PathCommandMoveToUseCase";
+import { execute as lineTo } from "./PathCommand/usecase/PathCommandLineToUseCase";
+import { execute as quadraticCurveTo } from "./PathCommand/usecase/PathCommandQuadraticCurveToUseCase";
+import { execute as closePath } from "./PathCommand/usecase/PathCommandClosePathUseCase";
+import { execute as arc } from "./PathCommand/usecase/PathCommandArcUseCase";
+import { execute as bezierCurveTo } from "./PathCommand/usecase/PathCommandBezierCurveToUseCase";
 import { execute as contextUpdateBackgroundColorService } from "./Context/service/ContextUpdateBackgroundColorService";
+import { execute as contextFillBackgroundColorService } from "./Context/service/ContextFillBackgroundColorService";
 import { execute as contextResizeUseCase } from "./Context/usecase/ContextResizeUseCase";
 import { execute as contextClearRectService } from "./Context/service/ContextClearRectService";
 import { execute as contextBindUseCase } from "./Context/usecase/ContextBindUseCase";
@@ -8,9 +18,13 @@ import { execute as contextSaveService } from "./Context/service/ContextSaveServ
 import { execute as contextRestoreService } from "./Context/service/ContextRestoreService";
 import { execute as contextSetTransformService } from "./Context/service/ContextSetTransformService";
 import { execute as contextTransformService } from "./Context/service/ContextTransformService";
+import { execute as contextResetService } from "./Context/service/ContextResetService";
+import { execute as contextResetStyleService } from "./Context/service/ContextResetStyleService";
+import { execute as atlasManagerBootUseCase } from "./AtlasManager/usecase/AtlasManagerBootUseCase";
 import {
     $setReadFrameBuffer,
-    $setDrawFrameBuffer
+    $setDrawFrameBuffer,
+    $getCurrentAttachment
 } from "./FrameBufferManager";
 import {
     $setRenderMaxSize,
@@ -92,6 +106,74 @@ export class Context
     public $mainAttachment: IAttachmentObject | null;
 
     /**
+     * @description グローバルアルファ
+     *              Global alpha
+     * 
+     * @type {number}
+     * @default 1
+     * @public
+     */
+    public globalAlpha: number;
+
+    /**
+     * @description 合成モード
+     *              composite mode
+     * 
+     * @type {IBlendMode}
+     * @default "normal"
+     * @public
+     */
+    public globalCompositeOperation: IBlendMode;
+
+    /**
+     * @description イメージのスムージング設定
+     *              Image smoothing setting
+     * 
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public imageSmoothingEnabled: boolean;
+
+    /**
+     * @description 塗りつぶしタイプ
+     *              Fill type
+     * 
+     * @type {number}
+     * @default -1
+     * @protected
+     */
+    public $fillType: IFillTyle;
+
+    /**
+     * @description ストロークタイプ
+     *              Stroke type
+     * 
+     * @type {number}
+     * @default -1
+     * @protected
+     */
+    public $strokeType: IStrokeTyle;
+
+    /**
+     * @description 塗りつぶしのRGBAを保持するFloat32Array
+     *              Float32Array that holds the RGBA of the fill
+     * 
+     * @type {Float32Array}
+     * @protected
+     */
+    public $fillStyle: Float32Array;
+
+    /**
+     * @description 線のRGBAを保持するFloat32Array
+     *              Float32Array that holds the RGBA of the line
+     * 
+     * @type {Float32Array}
+     * @protected
+     */
+    public $strokeStyle: Float32Array;
+
+    /**
      * @param {WebGL2RenderingContext} gl
      * @param {number} samples
      * @constructor
@@ -106,12 +188,26 @@ export class Context
         this.$stack  = $getArray();
         this.$matrix = $getFloat32Array9(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
+        // bakground color
         this.$clearColorR = 0;
         this.$clearColorG = 0;
         this.$clearColorB = 0;
         this.$clearColorA = 0;
 
+        // メインのアタッチメントオブジェクト
         this.$mainAttachment = null;
+
+        // グローバルアルファ、合成モード、イメージのスムージング設定
+        this.globalAlpha              = 1;
+        this.globalCompositeOperation = "normal";
+        this.imageSmoothingEnabled    = false;
+
+        // 塗りつぶしタイプ、ストロークタイプ
+        this.$fillType   = -1;
+        this.$strokeType = -1;
+
+        this.$fillStyle   = new Float32Array([1, 1, 1, 1]);
+        this.$strokeStyle = new Float32Array([1, 1, 1, 1]);
 
         // カラー設定
         gl.clearColor(0, 0, 0, 0);
@@ -123,6 +219,9 @@ export class Context
         // FrameBufferManagerの初期起動
         $setReadFrameBuffer(gl);
         $setDrawFrameBuffer(gl);
+
+        // AtlasManagerの初期起動
+        atlasManagerBootUseCase();
     }
 
     /**
@@ -140,6 +239,24 @@ export class Context
     updateBackgroundColor (red: number, green: number, blue: number, alpha: number): void
     {
         contextUpdateBackgroundColorService(this, red, green, blue, alpha);
+    }
+
+    /**
+     * @description 背景色を指定カラーで塗りつぶす
+     *              Fill the background color with the specified color
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    fillBackgroundColor (): void
+    {
+        contextFillBackgroundColorService(
+            this.$clearColorR,
+            this.$clearColorG,
+            this.$clearColorB,
+            this.$clearColorA
+        );
     }
 
     /**
@@ -257,6 +374,19 @@ export class Context
     }
 
     /**
+     * @description コンテキストの値を初期化する
+     *              Initialize the values of the context
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    reset (): void
+    {
+        contextResetService(this);
+    }
+
+    /**
      * @description パスを開始
      *              Start the path
      * 
@@ -266,6 +396,191 @@ export class Context
      */
     beginPath (): void
     {
+        // reset color style
+        contextResetStyleService(this);
+
+        // begin path
         beginPath();
+    }
+
+    /**
+     * @description パスを移動
+     *              Move the path
+     * 
+     * @param  {number} x
+     * @param  {number} y
+     * @return {void}
+     * @method
+     * @public
+     */
+    moveTo (x: number, y: number): void
+    {
+        moveTo(x, y);
+    }
+
+    /**
+     * @description パスを線で結ぶ
+     *              Connect the path with a line
+     *
+     * @param  {number} x
+     * @param  {number} y
+     * @return {void}
+     * @method
+     * @public
+     */
+    lineTo (x: number, y: number): void
+    {
+        lineTo(x, y);
+    }
+
+    /**
+     * @description 二次ベジェ曲線を描画
+     *              Draw a quadratic Bezier curve
+     * 
+     * @param  {number} cx 
+     * @param  {number} cy 
+     * @param  {number} x 
+     * @param  {number} y 
+     * @return {void}
+     * @method
+     * @public
+     */
+    quadraticCurveTo (cx: number, cy: number, x: number, y: number): void
+    {
+        quadraticCurveTo(cx, cy, x, y);
+    }
+
+    /**
+     * @description 塗りつぶしスタイルを設定
+     *              Set fill style
+     * 
+     * @param  {number} red 
+     * @param  {number} green 
+     * @param  {number} blue 
+     * @param  {number} alpha 
+     * @return {void}
+     * @method
+     * @public
+     */
+    fillStyle (red: number, green: number, blue: number, alpha: number): void
+    {
+        this.$fillType = 0;
+        this.$fillStyle[0] = red;
+        this.$fillStyle[1] = green;
+        this.$fillStyle[2] = blue;
+        this.$fillStyle[3] = alpha;
+    }
+
+    /**
+     * @description 線のスタイルを設定
+     *              Set line style
+     * 
+     * @param  {number} red 
+     * @param  {number} green 
+     * @param  {number} blue 
+     * @param  {number} alpha 
+     * @return {void}
+     * @method
+     * @public
+     */
+    strokeStyle (red: number, green: number, blue: number, alpha: number): void
+    {
+        this.$strokeType = 0;
+        this.$strokeStyle[0] = red;
+        this.$strokeStyle[1] = green;
+        this.$strokeStyle[2] = blue;
+        this.$strokeStyle[3] = alpha;
+    }
+
+    /**
+     * @description パスを閉じる
+     *              Close the path
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    closePath (): void
+    {
+        closePath();
+    }
+
+    /**
+     * @description 円弧を描画
+     *              Draw an arc
+     * 
+     * @param {number} x
+     * @param {number} y
+     * @param {number} radius
+     * @return {void}
+     * @method
+     * @public
+     */
+    arc (x: number, y: number, radius: number): void
+    {
+        arc(x, y, radius);
+    }
+
+    /**
+     * @description 3次ベジェ曲線を描画
+     *              Draw a cubic Bezier curve
+     * 
+     * @param  {number} cx1 
+     * @param  {number} cy1 
+     * @param  {number} cx2 
+     * @param  {number} cy2 
+     * @param  {number} x 
+     * @param  {number} y 
+     * @return {void}
+     * @method
+     * @public
+     */
+    bezierCurveTo (cx1: number, cy1: number, cx2: number, cy2: number, x: number, y: number): void
+    {
+        bezierCurveTo(cx1, cy1, cx2, cy2, x, y);
+    }
+
+    /**
+     * @description 塗りつぶしを実行
+     *              Perform fill
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    fill (): void
+    {
+        console.log("fill");
+    }
+
+    /**
+     * @description 線の描画を実行
+     *              Perform line drawing
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    stroke (): void
+    {
+        console.log("stroke");
+    }
+
+    /**
+     * @description 現在のアタッチメントオブジェクトを取得
+     *              Get the current attachment object
+     * 
+     * @return {IAttachmentObject | null}
+     * @readonly
+     * @public
+     */
+    get currentAttachmentObject (): IAttachmentObject | null
+    {
+        return $getCurrentAttachment();
+    }
+
+    bindAtlasAttachmentObject (): void
+    {
+        
     }
 }
