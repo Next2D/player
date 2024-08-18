@@ -2,6 +2,7 @@ import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IFillTyle } from "./interface/IFillTyle";
 import type { IStrokeTyle } from "./interface/IStrokeTyle";
+import type { Node } from "./AtlasManager/domain/Node";
 import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService";
 import { execute as moveTo } from "./PathCommand/usecase/PathCommandMoveToUseCase";
 import { execute as lineTo } from "./PathCommand/usecase/PathCommandLineToUseCase";
@@ -21,6 +22,8 @@ import { execute as contextTransformService } from "./Context/service/ContextTra
 import { execute as contextResetService } from "./Context/service/ContextResetService";
 import { execute as contextResetStyleService } from "./Context/service/ContextResetStyleService";
 import { execute as atlasManagerBootUseCase } from "./AtlasManager/usecase/AtlasManagerBootUseCase";
+import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
+import { $getAtlasAttachmentObject } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
     $setDrawFrameBuffer,
@@ -579,8 +582,54 @@ export class Context
         return $getCurrentAttachment();
     }
 
-    bindAtlasAttachmentObject (): void
+    /**
+     * @description アトラス専用のアタッチメントオブジェクトを取得
+     *              Get the attachment object for the atlas
+     * 
+     * @return {IAttachmentObject}
+     * @readonly
+     * @public
+     */
+    get atlasAttachmentObject (): IAttachmentObject
     {
-        
+        return $getAtlasAttachmentObject();
+    }
+
+    /**
+     * @description キャッシュするポジションのノードを作成
+     *              Create a node for the position to cache
+     * 
+     * @param  {number} width
+     * @param  {number} height 
+     * @return {Node}
+     * @method
+     * @public
+     */
+    createNode (width: number, height: number): Node
+    {
+        return atlasManagerCreateNodeService(width, height);
+    }
+
+    /**
+     * @description インスタンスを描画
+     *              Draw an instance
+     * 
+     * @param {number} x_min 
+     * @param {number} y_min 
+     * @param {number} x_max 
+     * @param {number} y_max 
+     * @param {Float32Array} color_transform 
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawInstance (
+        x_min: number, 
+        y_min: number,
+        x_max: number,
+        y_max: number, 
+        color_transform: Float32Array
+    ): void {
+        console.log("drawInstance", x_min, y_min, x_max, y_max, color_transform);
     }
 }

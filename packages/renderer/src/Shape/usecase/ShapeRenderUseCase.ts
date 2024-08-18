@@ -1,6 +1,7 @@
 import { $cacheStore } from "@next2d/cache";
 import { execute as shapeCommandService } from "../service/ShapeCommandService"; 
-import { $context } from "../../RendererUtil"; 
+import { $context, $poolArray } from "../../RendererUtil"; 
+import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService"; 
 
 /**
  * @description Shapeの描画を実行します。
@@ -34,20 +35,103 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         : `${render_queue[index++]}`;
 
     const cacheKey = render_queue[index++];
-
     const hasCache = render_queue[index++];
-    // console.log("cache", hasCache, uniqueKey, cacheKey);
     if (!hasCache) {
 
         const currentAttachment = $context.currentAttachmentObject;
-        console.log("currentAttachment", currentAttachment);
+        $context.bind($context.atlasAttachmentObject);
+
+        let xScale: number = Math.sqrt(
+            matrix[0] * matrix[0]
+            + matrix[1] * matrix[1]
+        );
+        if (!Number.isInteger(xScale)) {
+            const value: string = xScale.toString();
+            const index: number = value.indexOf("e");
+            if (index !== -1) {
+                xScale = +value.slice(0, index);
+            }
+            xScale = +xScale.toFixed(4);
+        }
+    
+        let yScale: number = Math.sqrt(
+            matrix[2] * matrix[2]
+            + matrix[3] * matrix[3]
+        );
+        if (!Number.isInteger(yScale)) {
+            const value: string = yScale.toString();
+            const index: number = value.indexOf("e");
+            if (index !== -1) {
+                yScale = +value.slice(0, index);
+            }
+            yScale = +yScale.toFixed(4);
+        }
+
+        const width: number  = Math.ceil(Math.abs(xMax - xMin) * xScale);
+        const height: number = Math.ceil(Math.abs(yMax - yMin) * yScale);
+        const node = $context.createNode(width, height);
+        console.log("node", node);
+
+        $context.reset();
+        $context.setTransform(
+            xScale, 0, 0, yScale,
+            -xMin * xScale,
+            -yMin * yScale
+        );
 
         const length = render_queue[index++];
         const commands = render_queue.subarray(index, index + length);
         shapeCommandService(commands);
+
+        // calc bounds
+        const bounds = displayObjectCalcBoundsMatrixService(
+            xMin, yMin, xMax, yMax, matrix
+        );
+
+        const radianX: number = Math.atan2(matrix[1], matrix[0]);
+        const radianY: number = Math.atan2(-matrix[2], matrix[3]);
+        if (radianX || radianY) {
+
+            const tx: number = xMin * xScale;
+            const ty: number = yMin * yScale;
+
+            const cosX: number = Math.cos(radianX);
+            const sinX: number = Math.sin(radianX);
+            const cosY: number = Math.cos(radianY);
+            const sinY: number = Math.sin(radianY);
+
+            $context.setTransform(
+                cosX, sinX, -sinY, cosY,
+                tx * cosX - ty * sinY + matrix[4],
+                tx * sinX + ty * cosY + matrix[5]
+            );
+
+        } else {
+
+            $context.setTransform(1, 0, 0, 1,
+                bounds[0], bounds[1]
+            );
+
+        }
+
+        // todo
+        $context.globalAlpha = 1;
+        $context.imageSmoothingEnabled = true;
+        $context.globalCompositeOperation = "normal";
+
+        $context.drawInstance(
+            bounds[0], bounds[1], bounds[2], bounds[3],
+            colorTransform
+        );
+
+        if (currentAttachment) {
+            $context.bind(currentAttachment);
+        }
         
         index += length;
 
+        $poolArray(bounds);
+        
     } else {
         const cachePosition = $cacheStore.get(uniqueKey, `${cacheKey}`);
         if (!cachePosition) {

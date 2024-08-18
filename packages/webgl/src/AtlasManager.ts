@@ -1,16 +1,15 @@
-import type { ICachePosition } from "./interface/ICachePosition";
-import type { IGrid } from "./interface/IGrid";
 import type { ITextureObject } from "./interface/ITextureObject";
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
+import type { TexturePacker } from "./AtlasManager/domain/TexturePacker";
 
 /**
  * @description アトラステクスチャのアタッチメントオブジェクト
  *              Attachment object of atlas texture
  * 
  * @type {IAttachmentObject}
- * @protected
+ * @private
  */
-export let $atlasAttachmentObject: IAttachmentObject;
+let $atlasAttachmentObject: IAttachmentObject;
 
 /**
  * @description アトラステクスチャオブジェクトをセット
@@ -27,28 +26,68 @@ export const $setAtlasAttachmentObject = (attachment_object: IAttachmentObject):
 };
 
 /**
+ * @description アトラステクスチャオブジェクトを返却
+ *              Return the atlas texture object
+ * 
+ * @returns {IAttachmentObject}
+ * @method
+ * @protected
+ */
+export const $getAtlasAttachmentObject = (): IAttachmentObject =>
+{
+    return $atlasAttachmentObject;
+};
+
+/**
  * @description 描画保管用のアトラステクスチャの配列
  *              Array of atlas textures for drawing storage
  * 
  * @type {ITextureObject[]}
  * @protected
  */
-export let $atlasTextures: ITextureObject[] = [];
+export const $atlasTextures: ITextureObject[] = [];
 
 /**
- * @description アトラステクスチャのノードの配列
- *              Array of nodes of atlas textures
+ * @description アクティブなアトラスインデックス
+ *              Active atlas index
  * 
- * @type {Map}
- * @protected
+ * @type {number}
+ * @private
  */
-export const $atlasNodes: Map<number, IGrid[]> = new Map();
+let $activeAtlasIndex: number = 0;
 
 /**
- * @description アトラステクスチャにキャッシュした座標配列
- *              Array of cached coordinates in atlas textures
+ * @description アクティブなアトラスインデックスをセット
+ *              Set the active atlas index
  * 
- * @type {Map}
+ * @param  {number} index
+ * @return {void}
+ * @method
  * @protected
  */
-export const $atlasCacheMap: Map<number, ICachePosition[]> = new Map();
+export const $setActiveAtlasIndex = (index: number): void =>
+{
+    $activeAtlasIndex = index;
+};
+
+/**
+ * @description アクティブなアトラスインデックスを返却
+ *              Return the active atlas index
+ * 
+ * @returns {number}
+ * @method
+ * @protected
+ */
+export const $getActiveAtlasIndex = (): number =>
+{
+    return $activeAtlasIndex;
+};
+
+/**
+ * @description ルートノードの配列
+ *              Array of root nodes
+ * 
+ * @type {TexturePacker[]}
+ * @protected
+ */
+export const $rootNodes: TexturePacker[] = [];

@@ -113,3 +113,50 @@ export const $setRendererSize = (width: number, height: number): void =>
     $rendererWidth  = width;
     $rendererHeight = height;
 };
+
+/**
+ * @description 使用済みになったArrayのプール配列
+ *              Pool array of used Array.
+ *
+ * @type {array[]}
+ * @const
+ * @protected
+ */
+export const $arrays: any[] = [];
+
+/**
+ * @description プールされたArrayがあればプールから、なければ新規作成して返却
+ *              If there is a pooled Array, return it from the pool,
+ *              otherwise create a new one and return it.
+ *
+ * @param  {array} args
+ * @return {array}
+ * @method
+ * @protected
+ */
+export const $getArray = (...args: any[]): any[] =>
+{
+    const array: any[] = $arrays.pop() || [];
+    if (args.length) {
+        array.push(...args);
+    }
+    return array;
+};
+
+/**
+ * @description 使用済みになったArrayをプール
+ *              Pool used Array.
+ *
+ * @param  {array} array
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $poolArray = (array: any[]): void =>
+{
+    if (array.length) {
+        array.length = 0;
+    }
+
+    $arrays.push(array);
+};

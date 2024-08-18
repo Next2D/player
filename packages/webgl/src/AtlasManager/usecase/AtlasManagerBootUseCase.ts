@@ -1,6 +1,10 @@
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 import { $RENDER_MAX_SIZE } from "../../WebGLUtil";
-import { $setAtlasAttachmentObject } from "../../AtlasManager";
+import { TexturePacker } from "../domain/TexturePacker";
+import {
+    $setAtlasAttachmentObject,
+    $rootNodes,
+} from "../../AtlasManager";
 
 /**
  * @description アトラスマネージャの起動ユースケース
@@ -12,6 +16,9 @@ import { $setAtlasAttachmentObject } from "../../AtlasManager";
  */
 export const execute = (): void =>
 {
+    // ルートノードを登録
+    $rootNodes[0] = new TexturePacker(0, $RENDER_MAX_SIZE, $RENDER_MAX_SIZE);
+
     const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase($RENDER_MAX_SIZE, $RENDER_MAX_SIZE);
     $setAtlasAttachmentObject(attachmentObject);
 };

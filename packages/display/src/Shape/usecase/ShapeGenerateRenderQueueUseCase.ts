@@ -6,9 +6,7 @@ import { execute as shapeGenerateHashService } from "../service/ShapeGenerateHas
 import { $cacheStore } from "@next2d/cache";
 import {
     $clamp,
-    $RENDERER_SHAPE_TYPE,
-    $getArray,
-    $poolArray
+    $RENDERER_SHAPE_TYPE
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
