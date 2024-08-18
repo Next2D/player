@@ -21,6 +21,8 @@ import { execute as contextSetTransformService } from "./Context/service/Context
 import { execute as contextTransformService } from "./Context/service/ContextTransformService";
 import { execute as contextResetService } from "./Context/service/ContextResetService";
 import { execute as contextResetStyleService } from "./Context/service/ContextResetStyleService";
+import { execute as contextBeginNodeService } from "./Context/service/ContextBeginNodeService";
+import { execute as contextFillUseCase } from "./Context/usecase/ContextFillUseCase";
 import { execute as atlasManagerBootUseCase } from "./AtlasManager/usecase/AtlasManagerBootUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
@@ -34,7 +36,8 @@ import {
     $setWebGL2RenderingContext,
     $setSamples,
     $getFloat32Array9,
-    $getArray
+    $getArray,
+    $setContext
 } from "./WebGLUtil";
 
 /**
@@ -225,6 +228,9 @@ export class Context
 
         // AtlasManagerの初期起動
         atlasManagerBootUseCase();
+
+        // コンテキストをセット
+        $setContext(this);
     }
 
     /**
@@ -551,9 +557,9 @@ export class Context
      * @method
      * @public
      */
-    fill (): void
+    fill (fill_type: IFillTyle): void
     {
-        console.log("fill");
+        contextFillUseCase(fill_type);
     }
 
     /**
@@ -611,25 +617,40 @@ export class Context
     }
 
     /**
+     * @description 指定のノード範囲で描画を開始
+     *              Start drawing in the specified node range
+     * 
+     * @param  {Node} node
+     * @return {void}
+     * @method
+     * @public
+     */
+    beginNode (node: Node): void 
+    {
+        contextBeginNodeService(node);
+    }
+
+    /**
      * @description インスタンスを描画
      *              Draw an instance
-     * 
-     * @param {number} x_min 
-     * @param {number} y_min 
-     * @param {number} x_max 
-     * @param {number} y_max 
-     * @param {Float32Array} color_transform 
+     *
+     * @param  {number} x_min 
+     * @param  {number} y_min 
+     * @param  {number} x_max 
+     * @param  {number} y_max 
+     * @param  {Float32Array} color_transform 
      * @return {void}
      * @method
      * @public
      */
     drawInstance (
+        node: Node,
         x_min: number, 
         y_min: number,
         x_max: number,
         y_max: number, 
         color_transform: Float32Array
     ): void {
-        console.log("drawInstance", x_min, y_min, x_max, y_max, color_transform);
+        console.log("drawInstance", node, x_min, y_min, x_max, y_max, color_transform);
     }
 }

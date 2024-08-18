@@ -37,14 +37,6 @@ describe("PathCommandMoveToUseCase.js method test", () =>
         expect($currentPath[0]).toBe(10);
         expect($currentPath[1]).toBe(10);
         expect($currentPath[2]).toBe(false);
-        expect($vertices.length).toBe(1);
-        expect($vertices[0].length).toBe(6);
-        expect($vertices[0][0]).toBe(0);
-        expect($vertices[0][1]).toBe(0);
-        expect($vertices[0][2]).toBe(false);
-        expect($vertices[0][3]).toBe(30);
-        expect($vertices[0][4]).toBe(30);
-        expect($vertices[0][5]).toBe(true);
-
+        expect($vertices.length).toBe(0);
     });
 });

@@ -1,3 +1,6 @@
+import type { Context } from "./Context";
+
+
 /**
  * @description 描画の最大サイズ
  *              Maximum size of drawing
@@ -63,6 +66,26 @@ export let $gl: WebGL2RenderingContext;
 export const $setWebGL2RenderingContext = (gl: WebGL2RenderingContext): void =>
 {
     $gl = gl;
+};
+
+/**
+ * @type {Context}
+ * @public
+ */
+export let $context: Context;
+
+/**
+ * @description 起動したコンテキストをセット
+ *              Set the context that started
+ * 
+ * @param  {Context} context 
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $setContext = (context: Context): void =>
+{
+    $context = context;
 };
 
 /**

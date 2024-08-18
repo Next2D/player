@@ -13,7 +13,7 @@ import {
  */
 export const execute = (): void =>
 {
-    if ($currentPath.length < 4) {
+    if ($currentPath.length < 11) {
         $currentPath.length = 0;
         return ;
     }

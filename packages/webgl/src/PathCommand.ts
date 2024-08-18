@@ -28,7 +28,7 @@ export const $vertices: IPath[] = $getArray();
  * @method
  * @public
  */
-export const getVertices = (): IPath[] => 
+export const $getVertices = (): IPath[] => 
 {
     pathCommandPushCurrentPathToVerticesService();
     return $vertices;

@@ -13,12 +13,13 @@ describe("PathCommandPushCurrentPathToVerticesService.js method test", () =>
         $currentPath.push(
             1, 2, false,
             3, 4, false,
-            5, 6, true
+            5, 6, true,
+            7, 8, false
         );
 
         $vertices.length = 0;
         
-        expect($currentPath.length).toBe(9);
+        expect($currentPath.length).toBe(12);
         expect($vertices.length).toBe(0);
         
         execute();
@@ -34,6 +35,9 @@ describe("PathCommandPushCurrentPathToVerticesService.js method test", () =>
         expect($vertices[0][6]).toBe(5);
         expect($vertices[0][7]).toBe(6);
         expect($vertices[0][8]).toBe(true);
+        expect($vertices[0][9]).toBe(7);
+        expect($vertices[0][10]).toBe(8);
+        expect($vertices[0][11]).toBe(false);
 
     });
 });

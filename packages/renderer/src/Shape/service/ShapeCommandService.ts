@@ -59,7 +59,7 @@ export const execute = (commands: Float32Array): void =>
                 break;
 
             case END_FILL:
-                $context.fill();
+                $context.fill($context.$fillType);
                 break;
 
             case STROKE_STYLE:
