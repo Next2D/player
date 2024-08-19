@@ -21,14 +21,14 @@ export const execute = (
     matrix: Float32Array,
 ): number[] => {
 
-    const x0: number = x_max * matrix[0] + y_max * matrix[2] + matrix[4];
-    const x1: number = x_max * matrix[0] + y_min * matrix[2] + matrix[4];
-    const x2: number = x_min * matrix[0] + y_max * matrix[2] + matrix[4];
-    const x3: number = x_min * matrix[0] + y_min * matrix[2] + matrix[4];
-    const y0: number = x_max * matrix[1] + y_max * matrix[3] + matrix[5];
-    const y1: number = x_max * matrix[1] + y_min * matrix[3] + matrix[5];
-    const y2: number = x_min * matrix[1] + y_max * matrix[3] + matrix[5];
-    const y3: number = x_min * matrix[1] + y_min * matrix[3] + matrix[5];
+    const x0 = x_max * matrix[0] + y_max * matrix[2] + matrix[4];
+    const x1 = x_max * matrix[0] + y_min * matrix[2] + matrix[4];
+    const x2 = x_min * matrix[0] + y_max * matrix[2] + matrix[4];
+    const x3 = x_min * matrix[0] + y_min * matrix[2] + matrix[4];
+    const y0 = x_max * matrix[1] + y_max * matrix[3] + matrix[5];
+    const y1 = x_max * matrix[1] + y_min * matrix[3] + matrix[5];
+    const y2 = x_min * matrix[1] + y_max * matrix[3] + matrix[5];
+    const y3 = x_min * matrix[1] + y_min * matrix[3] + matrix[5];
 
     return $getArray(
         Math.min(Number.MAX_VALUE, x0, x1, x2, x3),

@@ -57,7 +57,7 @@ export const execute = (
     
     const alpha: number = $clamp(tColorTransform[3] + tColorTransform[7] / 255, 0, 1, 0);
     if (!alpha) {
-        if (tColorTransform === color_transform) {
+        if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
         render_queue.push(0);
@@ -92,10 +92,10 @@ export const execute = (
         case height === -Infinity:
         case width === Infinity:
         case height === Infinity:
-            if (tColorTransform === color_transform) {
+            if (tColorTransform !== color_transform) {
                 ColorTransform.release(tColorTransform);
             }
-            if (tMatrix === matrix) {
+            if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
             render_queue.push(0);
@@ -111,10 +111,10 @@ export const execute = (
         || xMin > renderer_width 
         || yMin > renderer_height
     ) {
-        if (tColorTransform === color_transform) {
+        if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        if (tMatrix === matrix) {
+        if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
         render_queue.push(0);
@@ -125,12 +125,6 @@ export const execute = (
     render_queue.push(1);
     render_queue.push(...tMatrix, ...tColorTransform);
 
-    const hasGrid: boolean = rawMatrix && shape.scale9Grid
-        ? Math.abs(rawMatrix[1]) < 0.001 && Math.abs(rawMatrix[2]) < 0.0001
-        : false;
-
-    render_queue.push(+hasGrid);
-
     // base bounds
     render_queue.push(
         graphics.xMin, 
@@ -138,6 +132,12 @@ export const execute = (
         graphics.xMax, 
         graphics.yMax
     );
+    
+    const hasGrid: boolean = rawMatrix && shape.scale9Grid
+        ? Math.abs(rawMatrix[1]) < 0.001 && Math.abs(rawMatrix[2]) < 0.0001
+        : false;
+
+    render_queue.push(+hasGrid);
 
     if (!shape.uniqueKey) {
         if (shape.characterId && shape.loaderInfo) {
@@ -216,10 +216,10 @@ export const execute = (
         render_queue.push(1);
     }
 
-    if (tColorTransform === color_transform) {
+    if (tColorTransform !== color_transform) {
         ColorTransform.release(tColorTransform);
     }
-    if (tMatrix === matrix) {
+    if (tMatrix !== matrix) {
         Matrix.release(tMatrix);
     }
 };

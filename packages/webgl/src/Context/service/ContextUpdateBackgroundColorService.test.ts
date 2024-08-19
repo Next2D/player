@@ -31,6 +31,8 @@ describe("ContextUpdateBackgroundColorService.js method test", () =>
             "enableVertexAttribArray": vi.fn(() => "enableVertexAttribArray"),
             "vertexAttribPointer": vi.fn(() => "vertexAttribPointer"),
             "vertexAttribDivisor": vi.fn(() => "vertexAttribDivisor"),
+            "enable": vi.fn(() => "enable"),
+            "blendFunc": vi.fn(() => "blendFunc"),
         } as unknown as WebGL2RenderingContext;
 
         const context = new Context(mockGL, 4);

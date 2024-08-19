@@ -1,7 +1,8 @@
 import type { ShaderManager } from "../../ShaderManager";
 import {
-    $gl,
-    $context
+    $context,
+    $getViewportWidth,
+    $getViewportHeight
 } from "../../../WebGLUtil";
 
 /**
@@ -33,17 +34,16 @@ export const execute = (shader_manager: ShaderManager, has_grid: boolean): void 
         highp[10] = matrix[8];
 
         // vertex: u_viewport
-        const viewport = $gl.getParameter($gl.VIEWPORT);
-        highp[3] = viewport[2];
-        highp[7] = viewport[3];
+        highp[3] = $getViewportWidth();
+        highp[7] = $getViewportHeight();
     } else {
         // todo
     }
 
-    const mediump = shader_manager.mediump;
-
-    const fillStyle = $context.$fillStyle
     // fragment: u_color
+    const fillStyle = $context.$fillStyle;    
+    const mediump   = shader_manager.mediump;
+
     mediump[0] = fillStyle[0];
     mediump[1] = fillStyle[1];
     mediump[2] = fillStyle[2];

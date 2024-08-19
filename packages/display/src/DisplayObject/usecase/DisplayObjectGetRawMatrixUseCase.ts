@@ -1,4 +1,3 @@
-import type { Matrix } from "@next2d/geom";
 import type { IPlaceObject } from "../../interface/IPlaceObject";
 import type { DisplayObject } from "../../DisplayObject";
 import { execute as displayObjectGetPlaceObjectService } from "../service/DisplayObjectGetPlaceObjectService";

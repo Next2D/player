@@ -40,6 +40,7 @@ describe("ContextBindUseCase.js method test", () =>
             "enableVertexAttribArray": vi.fn(() => "enableVertexAttribArray"),
             "vertexAttribPointer": vi.fn(() => "vertexAttribPointer"),
             "vertexAttribDivisor": vi.fn(() => "vertexAttribDivisor"),
+            "blendFunc": vi.fn(() => "blendFunc"),
             "viewport": vi.fn((x, y, w, h) =>
             {
                 expect(x).toBe(0);

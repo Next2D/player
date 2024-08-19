@@ -29,6 +29,7 @@ import { execute as blnedDrawDisplayObjectUseCase } from "./Blend/usecase/BlnedD
 import { execute as blnedDrawArraysInstancedUseCase } from "./Blend/usecase/BlnedDrawArraysInstancedUseCase";
 import { execute as vertexArrayObjectBootUseCase } from "./VertexArrayObject/usecase/VertexArrayObjectBootUseCase";
 import { execute as frameBufferManagerTransferMainCanvasService } from "./FrameBufferManager/service/FrameBufferManagerTransferMainCanvasService";
+import { execute as blendEnableUseCase } from "./Blend/usecase/BlendEnableUseCase";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
@@ -229,6 +230,9 @@ export class Context
 
         // VertexArrayObjectの初期起動
         vertexArrayObjectBootUseCase(gl);
+
+        // ブレンドモードを有効にする
+        blendEnableUseCase();
 
         // コンテキストをセット
         $setContext(this);

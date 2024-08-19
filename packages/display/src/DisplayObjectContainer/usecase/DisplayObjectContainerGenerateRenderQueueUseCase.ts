@@ -54,7 +54,7 @@ export const execute = <P extends DisplayObjectContainer>(
     
     const alpha: number = $clamp(tColorTransform[3] + tColorTransform[7] / 255, 0, 1, 0);
     if (!alpha) {
-        if (tColorTransform === color_transform) {
+        if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
         render_queue.push(0);
@@ -63,7 +63,7 @@ export const execute = <P extends DisplayObjectContainer>(
 
     const children = display_object_container.children;
     if (!children.length) {
-        if (tColorTransform === color_transform) {
+        if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
         render_queue.push(0);
@@ -80,10 +80,10 @@ export const execute = <P extends DisplayObjectContainer>(
     if (!tMatrix[0] && !tMatrix[1]
         || !tMatrix[2] && !tMatrix[3]
     ) {
-        if (tColorTransform === color_transform) {
+        if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        if (tMatrix === matrix) {
+        if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
         render_queue.push(0);
@@ -159,13 +159,12 @@ export const execute = <P extends DisplayObjectContainer>(
         }
 
         child.changed = false;
-        // console.log(child);
     }
 
-    if (tColorTransform === color_transform) {
+    if (tColorTransform !== color_transform) {
         ColorTransform.release(tColorTransform);
     }
-    if (tMatrix === matrix) {
+    if (tMatrix !== matrix) {
         Matrix.release(tMatrix);
     }
 };

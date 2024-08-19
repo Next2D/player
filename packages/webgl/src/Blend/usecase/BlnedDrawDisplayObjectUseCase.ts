@@ -58,7 +58,8 @@ export const execute = (
                 if ($getCurrentBlendMode() !== $context.globalCompositeOperation
                     || $getCurrentAtlasIndex() !== node.index
                 ) {
-                    // todo 一度描画を実行
+                    // 異なる環境になるので、一度描画を実行
+                    $context.drawArraysInstanced();
 
                     // ブレンドモードをセット
                     $setCurrentBlendMode($context.globalCompositeOperation);
@@ -67,6 +68,8 @@ export const execute = (
 
                 // 描画するまで配列に変数を保持
                 const shaderInstancedManager = variantsBlendInstanceShaderService();
+
+                const matrix = $context.$matrix;
                 shaderInstancedManager.attributes.push(
                     // texture rectangle
                     node.x / $RENDER_MAX_SIZE, node.y / $RENDER_MAX_SIZE,
@@ -74,10 +77,9 @@ export const execute = (
                     // texture width, height and viewport width, height
                     node.w, node.h, $getViewportWidth(), $getViewportHeight(),
                     // matrix tx, ty and with_color_transform
-                    $context.$matrix[6], $context.$matrix[7],
+                    matrix[6], matrix[7],
                     // matrix scale0, rotate0, scale1, rotate1
-                    $context.$matrix[0], $context.$matrix[1], 
-                    $context.$matrix[3], $context.$matrix[4],
+                    matrix[0], matrix[1], matrix[3], matrix[4],
                     // mulColor
                     ct0, ct1, ct2, ct3,
                     // addColor
@@ -88,6 +90,8 @@ export const execute = (
             break;
 
         default:
+            $context.drawArraysInstanced();
+            // todo
             break;
 
     }

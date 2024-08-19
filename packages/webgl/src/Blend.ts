@@ -73,3 +73,63 @@ export const $getCurrentAtlasIndex = (): number =>
 {
     return $currentAtlasIndex;
 };
+
+/**
+ * @description ブレンドモードの設定
+ *             Blend mode setting
+ * 
+ * @type {boolean}
+ * @default false
+ * @private
+ */
+export let $blendState: boolean = false;
+
+/**
+ * @description ブレンドモードの設定を有効にする
+ *              Enable blend mode setting 
+ * 
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $enabled = (): void =>
+{
+    $blendState = true;
+};
+
+/**
+ * @description ブレンドモードの設定を無効にする
+ *              Disable blend mode setting
+ * 
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $disabled = (): void =>
+{
+    $blendState = false;
+};
+
+/**
+ * @description ブレンドモードの設定コード
+ *              Blend mode setting code
+ * 
+ * @type {number}
+ * @default 600
+ * @private
+ */
+export let $funcCode: number = 600;
+
+/**
+ * @description ブレンドモードの設定コードを更新
+ *              Update the blend mode setting code
+ * 
+ * @param  {number} func_code
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setFuncCode = (func_code: number): void =>
+{
+    $funcCode = func_code;
+};

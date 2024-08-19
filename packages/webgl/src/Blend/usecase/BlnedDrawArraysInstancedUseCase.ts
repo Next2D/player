@@ -1,13 +1,17 @@
+import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import { execute as variantsBlendInstanceShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService";
 import { $getAtlasTextureObject } from "../../AtlasManager";
 import { $activeTextureUnit } from "../../TextureManager";
 import { execute as shaderInstancedManagerDrawArraysInstancedUseCase } from "../../Shader/ShaderInstancedManager/usecase/ShaderInstancedManagerDrawArraysInstancedUseCase";
+import { execute as blendOperationUseCase } from "../../Blend/usecase/BlendOperationUseCase";
 import {
     $gl,
     $context
 } from "../../WebGLUtil";
-import { IAttachmentObject } from "../../interface/IAttachmentObject";
-import { $drawFrameBuffer, $readFrameBuffer } from "../../FrameBufferManager";
+import {
+    $drawFrameBuffer,
+    $readFrameBuffer
+} from "../../FrameBufferManager";
 
 /**
  * @description インスタンス描画を実行します。
@@ -51,6 +55,7 @@ export const execute = (): void =>
     );
 
     $context.bind($context.$mainAttachmentObject as IAttachmentObject);
+    blendOperationUseCase($context.globalCompositeOperation);
     shaderInstancedManagerDrawArraysInstancedUseCase(
         shaderInstancedManager
     );
@@ -60,7 +65,7 @@ export const execute = (): void =>
         : $gl.TEXTURE0
     );
 
-    // shaderInstancedManager.clear();
+    shaderInstancedManager.clear();
 
     if (currentAttachmentObject) {
         $context.bind(currentAttachmentObject);

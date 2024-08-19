@@ -25,13 +25,13 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const colorTransform = render_queue.subarray(index, index + 8);
     index += 8;
 
-    const hasGrid = render_queue[index++];
-
     // baseBounds
     const xMin = render_queue[index++];
     const yMin = render_queue[index++];
     const xMax = render_queue[index++];
     const yMax = render_queue[index++];
+
+    const hasGrid = render_queue[index++];
 
     // cache uniqueKey
     const uniqueKey = render_queue[index++] === 2 
@@ -46,26 +46,26 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         xMin, yMin, xMax, yMax, matrix
     );
 
-    let xScale: number = Math.sqrt(
+    let xScale = Math.sqrt(
         matrix[0] * matrix[0]
         + matrix[1] * matrix[1]
     );
     if (!Number.isInteger(xScale)) {
-        const value: string = xScale.toString();
-        const index: number = value.indexOf("e");
+        const value = xScale.toString();
+        const index = value.indexOf("e");
         if (index !== -1) {
             xScale = +value.slice(0, index);
         }
         xScale = +xScale.toFixed(4);
     }
 
-    let yScale: number = Math.sqrt(
+    let yScale = Math.sqrt(
         matrix[2] * matrix[2]
         + matrix[3] * matrix[3]
     );
     if (!Number.isInteger(yScale)) {
-        const value: string = yScale.toString();
-        const index: number = value.indexOf("e");
+        const value = yScale.toString();
+        const index = value.indexOf("e");
         if (index !== -1) {
             yScale = +value.slice(0, index);
         }
@@ -78,8 +78,8 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const currentAttachment = $context.currentAttachmentObject;
         $context.bind($context.atlasAttachmentObject);
 
-        const width: number  = Math.ceil(Math.abs(xMax - xMin) * xScale);
-        const height: number = Math.ceil(Math.abs(yMax - yMin) * yScale);
+        const width  = Math.ceil(Math.abs(xMax - xMin) * xScale);
+        const height = Math.ceil(Math.abs(yMax - yMin) * yScale);
 
         node = $context.createNode(width, height);
         
@@ -111,19 +111,20 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         if (!node) {
             return index;
         }
+
     }
 
-    const radianX: number = Math.atan2(matrix[1], matrix[0]);
-    const radianY: number = Math.atan2(-matrix[2], matrix[3]);
+    const radianX = Math.atan2(matrix[1], matrix[0]);
+    const radianY = Math.atan2(-matrix[2], matrix[3]);
     if (radianX || radianY) {
 
-        const tx: number = xMin * xScale;
-        const ty: number = yMin * yScale;
+        const tx = xMin * xScale;
+        const ty = yMin * yScale;
 
-        const cosX: number = Math.cos(radianX);
-        const sinX: number = Math.sin(radianX);
-        const cosY: number = Math.cos(radianY);
-        const sinY: number = Math.sin(radianY);
+        const cosX = Math.cos(radianX);
+        const sinX = Math.sin(radianX);
+        const cosY = Math.cos(radianY);
+        const sinY = Math.sin(radianY);
 
         $context.setTransform(
             cosX, sinX, -sinY, cosY,
