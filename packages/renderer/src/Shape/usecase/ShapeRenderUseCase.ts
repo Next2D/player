@@ -85,7 +85,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         
         // 初期化して、描画範囲とmatrix設定
         $context.reset();
-        $context.beginNodeRendering(node.x, node.y, node.w, node.h);
+        $context.beginNodeRendering(node);
         $context.setTransform(
             xScale, 0, 0, yScale,
             -xMin * xScale,

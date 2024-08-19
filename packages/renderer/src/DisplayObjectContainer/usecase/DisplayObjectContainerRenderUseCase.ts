@@ -47,6 +47,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
                 break;
 
             default:
+                console.error("unknown type", type);
                 break;
 
         }

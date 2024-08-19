@@ -77,6 +77,7 @@ export const execute = (render_queue: Float32Array): void =>
                 break;
 
             default:
+                console.error("unknown type", type);
                 break;
 
         }

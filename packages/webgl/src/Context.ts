@@ -2,7 +2,7 @@ import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IFillTyle } from "./interface/IFillTyle";
 import type { IStrokeTyle } from "./interface/IStrokeTyle";
-import type { Node } from "./AtlasManager/domain/Node";
+import type { Node } from "@next2d/texture-packer";
 import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService";
 import { execute as moveTo } from "./PathCommand/usecase/PathCommandMoveToUseCase";
 import { execute as lineTo } from "./PathCommand/usecase/PathCommandLineToUseCase";
@@ -620,17 +620,16 @@ export class Context
      * @description 指定のノード範囲で描画を開始
      *              Start drawing in the specified node range
      * 
-     * @param  {number} x
-     * @param  {number} y
-     * @param  {number} w
-     * @param  {number} h
+     * @param  {Node} node
      * @return {void}
      * @method
      * @public
      */
-    beginNodeRendering (x: number, y: number, w: number, h: number): void 
+    beginNodeRendering (node: Node): void 
     {
-        contextBeginNodeRenderingService(x, y, w, h);
+        contextBeginNodeRenderingService(
+            node.x, node.y, node.w, node.h
+        );
     }
 
     /**

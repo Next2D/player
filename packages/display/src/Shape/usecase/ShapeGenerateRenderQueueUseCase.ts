@@ -106,8 +106,10 @@ export const execute = (
 
     }
 
-    if (point_x > xMin + width || point_y > yMin + height
-        || xMin > renderer_width || yMin > renderer_height
+    if (point_x > xMin + width 
+        || point_y > yMin + height
+        || xMin - height > renderer_width 
+        || yMin - width > renderer_height
     ) {
         if (tColorTransform === color_transform) {
             ColorTransform.release(tColorTransform);
