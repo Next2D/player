@@ -1,5 +1,5 @@
 import type { CanvasToWebGLContext } from "./CanvasToWebGLContext";
-import type { ShapeShaderVariantCollection } from "./shader/variants/ShapeShaderVariantCollection";
+import type { ShapeShaderVariantCollection } from "./Shader/Variants/ShapeShaderVariantCollection";
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { AttachmentImpl } from "./interface/IAttachmentObject";

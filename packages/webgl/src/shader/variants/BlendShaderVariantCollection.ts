@@ -1,7 +1,7 @@
 import { CanvasToWebGLShader } from "../CanvasToWebGLShader";
-import { VertexShaderSource } from "../vertex/VertexShaderSource";
-import { FragmentShaderSourceTexture } from "../fragment/FragmentShaderSourceTexture";
-import { FragmentShaderSourceBlend } from "../fragment/FragmentShaderSourceBlend";
+import { VertexShaderSource } from "../Vertex/VertexShaderSource";
+import { FragmentShaderSourceTexture } from "../Fragment/FragmentShaderSourceTexture";
+import { FragmentShaderSourceBlend } from "../Fragment/FragmentShaderSourceBlend";
 import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 import type { WebGLShaderUniform } from "../WebGLShaderUniform";
 import type { WebGLShaderInstance } from "../WebGLShaderInstance";

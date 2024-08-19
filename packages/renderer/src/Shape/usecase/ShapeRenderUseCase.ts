@@ -93,7 +93,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         // 描画コマンドを実行
         const length = render_queue[index++];
         const commands = render_queue.subarray(index, index + length);
-        shapeCommandService(commands);
+        shapeCommandService(commands, Boolean(hasGrid));
 
         if (currentAttachment) {
             $context.bind(currentAttachment);

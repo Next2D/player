@@ -1,8 +1,8 @@
-import { ShapeShaderVariantCollection } from "./variants/ShapeShaderVariantCollection";
-import { GradientShapeShaderVariantCollection } from "./variants/GradientShapeShaderVariantCollection";
-import { GradientLUTShaderVariantCollection } from "./variants/GradientLUTShaderVariantCollection";
-import { FilterShaderVariantCollection } from "./variants/FilterShaderVariantCollection";
-import { BlendShaderVariantCollection } from "./variants/BlendShaderVariantCollection";
+import { ShapeShaderVariantCollection } from "./Variants/ShapeShaderVariantCollection";
+import { GradientShapeShaderVariantCollection } from "./Variants/GradientShapeShaderVariantCollection";
+import { GradientLUTShaderVariantCollection } from "./Variants/GradientLUTShaderVariantCollection";
+import { FilterShaderVariantCollection } from "./Variants/FilterShaderVariantCollection";
+import { BlendShaderVariantCollection } from "./Variants/BlendShaderVariantCollection";
 import type { CanvasToWebGLContext } from "../CanvasToWebGLContext";
 
 /**

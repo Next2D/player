@@ -553,13 +553,14 @@ export class Context
      * @description 塗りつぶしを実行
      *              Perform fill
      * 
+     * @param  {boolean} has_grid
      * @return {void}
      * @method
      * @public
      */
-    fill (fill_type: IFillTyle): void
+    fill (has_grid: boolean): void
     {
-        contextFillUseCase(fill_type);
+        contextFillUseCase(has_grid);
     }
 
     /**

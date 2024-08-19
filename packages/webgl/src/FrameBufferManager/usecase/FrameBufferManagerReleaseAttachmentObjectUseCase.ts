@@ -4,7 +4,7 @@ import type { ITextureObject } from "../../interface/ITextureObject";
 import type { IStencilBufferObject } from "../../interface/IStencilBufferObject";
 import { execute as colorBufferObjectReleaseColorBufferObjectUseCase } from "../../ColorBufferObject/usecase/ColorBufferObjectReleaseColorBufferObjectUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
-import { execute as stencilBufferObjectReleaseColorBufferObjectUseCase } from "../../StencilBufferObject/usecase/StencilBufferObjectReleaseColorBufferObjectUseCase";
+import { execute as stencilBufferObjectReleaseColorBufferObjectUseCase } from "../../StencilBufferObject/service/StencilBufferObjectReleaseColorBufferObjectService";
 import { $objectPool } from "../../FrameBufferManager";
 
 /**

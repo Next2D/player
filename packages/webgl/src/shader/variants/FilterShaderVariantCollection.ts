@@ -1,10 +1,10 @@
 import { CanvasToWebGLShader } from "../CanvasToWebGLShader";
-import { VertexShaderSource } from "../vertex/VertexShaderSource";
-import { FragmentShaderSourceFilter } from "../fragment/filter/FragmentShaderSourceFilter";
-import { FragmentShaderSourceBlurFilter } from "../fragment/filter/FragmentShaderSourceBlurFilter";
-import { FragmentShaderSourceColorMatrixFilter } from "../fragment/filter/FragmentShaderSourceColorMatrixFilter";
-import { FragmentShaderSourceConvolutionFilter } from "../fragment/filter/FragmentShaderSourceConvolutionFilter";
-import { FragmentShaderSourceDisplacementMapFilter } from "../fragment/filter/FragmentShaderSourceDisplacementMapFilter";
+import { VertexShaderSource } from "../Vertex/VertexShaderSource";
+import { FragmentShaderSourceFilter } from "../Fragment/filter/FragmentShaderSourceFilter";
+import { FragmentShaderSourceBlurFilter } from "../Fragment/filter/FragmentShaderSourceBlurFilter";
+import { FragmentShaderSourceColorMatrixFilter } from "../Fragment/filter/FragmentShaderSourceColorMatrixFilter";
+import { FragmentShaderSourceConvolutionFilter } from "../Fragment/filter/FragmentShaderSourceConvolutionFilter";
+import { FragmentShaderSourceDisplacementMapFilter } from "../Fragment/filter/FragmentShaderSourceDisplacementMapFilter";
 import type { WebGLShaderUniform } from "../WebGLShaderUniform";
 import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 

@@ -1,6 +1,5 @@
 import type { Context } from "./Context";
 
-
 /**
  * @description 描画の最大サイズ
  *              Maximum size of drawing
@@ -91,7 +90,7 @@ export const $setContext = (context: Context): void =>
 /**
  * @type {number}
  */
-let programId: number = 0;
+let $programId: number = 0;
 
 /**
  * @description 管理用のユニークなプログラムIDを発行
@@ -103,7 +102,7 @@ let programId: number = 0;
  */
 export const $getProgramId = (): number =>
 {
-    return programId++;
+    return $programId++;
 };
 
 /**

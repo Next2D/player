@@ -1,8 +1,8 @@
-import { execute } from "./StencilBufferObjectReleaseColorBufferObjectUseCase";
+import { execute } from "./StencilBufferObjectReleaseColorBufferObjectService";
 import { describe, expect, it } from "vitest";
 import { $objectPool } from "../../StencilBufferObject";
 
-describe("StencilBufferObjectReleaseColorBufferObjectUseCase.js method test", () =>
+describe("StencilBufferObjectReleaseColorBufferObjectService.js method test", () =>
 {
     it("test case", async () =>
     {

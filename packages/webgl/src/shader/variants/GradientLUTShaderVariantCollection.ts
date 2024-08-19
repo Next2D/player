@@ -1,5 +1,5 @@
-import { VertexShaderSource } from "../vertex/VertexShaderSource";
-import { FragmentShaderSourceGradientLUT } from "../fragment/FragmentShaderSourceGradientLUT";
+import { VertexShaderSource } from "../Vertex/VertexShaderSource";
+import { FragmentShaderSourceGradientLUT } from "../Fragment/FragmentShaderSourceGradientLUT";
 import { CanvasToWebGLShader } from "../CanvasToWebGLShader";
 import type { CanvasToWebGLContext } from "../../CanvasToWebGLContext";
 import type { WebGLShaderUniform } from "../WebGLShaderUniform";

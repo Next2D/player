@@ -21,11 +21,12 @@ const BITMAP_STROKE: number   = 14;
  *              Execute the graphic commands of Shape.
  *
  * @param  {Float32Array} commands
+ * @param  {boolean} has_grid
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (commands: Float32Array): void =>
+export const execute = (commands: Float32Array, has_grid: boolean): void =>
 {
     let index = 0;
     while (commands.length > index) {
@@ -59,7 +60,7 @@ export const execute = (commands: Float32Array): void =>
                 break;
 
             case END_FILL:
-                $context.fill($context.$fillType);
+                $context.fill(has_grid);
                 break;
 
             case STROKE_STYLE:

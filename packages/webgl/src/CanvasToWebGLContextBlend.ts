@@ -3,7 +3,7 @@ import type { FrameBufferManager } from "./FrameBufferManager";
 import type { CanvasToWebGLShader } from "./shader/CanvasToWebGLShader";
 import type { WebGLShaderUniform } from "./shader/WebGLShaderUniform";
 import type { WebGLShaderInstance } from "./shader/WebGLShaderInstance";
-import type { BlendShaderVariantCollection } from "./shader/variants/BlendShaderVariantCollection";
+import type { BlendShaderVariantCollection } from "./Shader/Variants/BlendShaderVariantCollection";
 import type { BlendModeImpl } from "./interface/IBlendMode";
 import type { AttachmentImpl } from "./interface/IAttachmentObject";
 import type { CachePositionImpl } from "./interface/ICachePosition";
