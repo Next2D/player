@@ -419,3 +419,59 @@ export const $inverseMatrix = (m: Float32Array): Float32Array =>
         tx * rdet, ty * rdet, 1
     );
 };
+
+/**
+ * @type {number}
+ * @default 0
+ * @private
+ */
+let $viewportWidth: number = 0;
+
+/**
+ * @type {number}
+ * @default 0
+ * @private
+ */
+let $viewportHeight: number = 0;
+
+/**
+ * @description ビューポートの幅を取得
+ *              Get the width of the viewport
+ * 
+ * @returns {number}
+ * @method
+ * @static
+ */
+export const $getViewportWidth = (): number =>
+{
+    return $viewportWidth;
+}
+
+/**
+ * @description ビューポートの高さを取得
+ *              Get the height of the viewport
+ * 
+ * @returns {number}
+ * @method
+ * @static
+ */
+export const $getViewportHeight = (): number =>
+{
+    return $viewportHeight;
+}
+
+/**
+ * @description ビューポートのサイズをセット
+ *              Set the size of the viewport
+ * 
+ * @param  {number} viewport_width
+ * @param  {number} viewport_height
+ * @return {void}
+ * @method
+ * @static
+ */
+export const $setViewportSize = (viewport_width: number, viewport_height: number): void =>
+{
+    $viewportWidth  = viewport_width;
+    $viewportHeight = viewport_height;
+}

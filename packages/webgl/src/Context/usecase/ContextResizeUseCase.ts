@@ -19,16 +19,16 @@ export const execute = (context: Context, width: number, height: number): void =
 {
     // todo clearInstacedArray
 
-    if (context.$mainAttachment) {
-        frameBufferManagerReleaseAttachmentObjectUseCase(context.$mainAttachment);
+    if (context.$mainAttachmentObject) {
+        frameBufferManagerReleaseAttachmentObjectUseCase(context.$mainAttachmentObject);
       
         // unbind
-        if (context.$mainAttachment === $getCurrentAttachment()) {
+        if (context.$mainAttachmentObject === $getCurrentAttachment()) {
             frameBufferManagerUnBindAttachmentObjectService();
         }
     }
 
     // new attachment object
-    context.$mainAttachment = frameBufferManagerGetAttachmentObjectUseCase(width, height, true);
-    context.bind(context.$mainAttachment);
+    context.$mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, true);
+    context.bind(context.$mainAttachmentObject);
 };

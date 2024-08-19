@@ -1,16 +1,24 @@
+import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import { $drawFrameBuffer } from "../../FrameBufferManager";
 import { $gl, $context } from "../../WebGLUtil";
-import { $setActiveAtlasIndex } from "../../AtlasManager";
 
+/**
+ * @description メインのアタッチメントオブジェクトをメインキャンバスに転送します。
+ *              Transfer the main attachment object to the main canvas.
+ * 
+ * @return {void}
+ * @method
+ * @protected
+ */
 export const execute = (): void =>
 {
     const currentAttachmentObject = $context.currentAttachmentObject;
 
-    $setActiveAtlasIndex(0);
-    $context.bind($context.atlasAttachmentObject);
+    const mainAttachmentObject = $context.$mainAttachmentObject as IAttachmentObject;
+    $context.bind(mainAttachmentObject);
 
-    const width  = $context.atlasAttachmentObject?.width;
-    const height = $context.atlasAttachmentObject?.height;
+    const width  = mainAttachmentObject.width;
+    const height = mainAttachmentObject.height;
 
     // use main Framebuffer
     $gl.bindFramebuffer(
@@ -21,7 +29,7 @@ export const execute = (): void =>
     // execute
     $gl.blitFramebuffer(
         0, 0, width, height,
-        0, 0, currentAttachmentObject?.width, currentAttachmentObject?.height,
+        0, 0, width, height,
         $gl.COLOR_BUFFER_BIT,
         $gl.NEAREST
     );

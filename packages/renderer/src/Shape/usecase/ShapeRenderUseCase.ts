@@ -145,11 +145,11 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     $context.globalCompositeOperation = "normal";
 
     // 描画範囲をinstanced arrayに設定
-    // $context.drawInstance(
-    //     node,
-    //     bounds[0], bounds[1], bounds[2], bounds[3],
-    //     colorTransform
-    // );
+    $context.drawDisplayObject(
+        node,
+        bounds[0], bounds[1], bounds[2], bounds[3],
+        colorTransform
+    );
 
     $poolArray(bounds);
 

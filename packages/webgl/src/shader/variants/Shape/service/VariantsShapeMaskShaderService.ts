@@ -1,8 +1,8 @@
 import { ShaderManager } from "../../../ShaderManager";
 import { $collection } from "../../ShapeVariants";
-import { VertexShaderSourceFill } from "../../../Vertex/VertexShaderSourceFill";
-import { VertexShaderSourceStroke } from "../../../Vertex/VertexShaderSourceStroke";
-import { FragmentShaderSource } from "../../../Fragment/FragmentShaderSource";
+import { FILL_TEMPLATE } from "../../../Vertex/VertexShaderSourceFill";
+import { STROKE_TEMPLATE } from "../../../Vertex/VertexShaderSourceStroke";
+import { MASK } from "../../../Fragment/FragmentShaderSource";
 
 /**
  * @description Shapeのマスクのシェーダを返却
@@ -27,19 +27,19 @@ export const execute = (is_stroke: boolean, has_grid: boolean): ShaderManager =>
 
     let vertexShaderSource: string;
     if (is_stroke) {
-        vertexShaderSource = VertexShaderSourceStroke.TEMPLATE(
+        vertexShaderSource = STROKE_TEMPLATE(
             highpLength, fragmentIndex,
             false, has_grid
         );
     } else {
-        vertexShaderSource = VertexShaderSourceFill.TEMPLATE(
+        vertexShaderSource = FILL_TEMPLATE(
             highpLength, false, true, has_grid
         );
     }
 
     const shaderManager = new ShaderManager(
         vertexShaderSource,
-        FragmentShaderSource.MASK()
+        MASK()
     );
 
     $collection.set(key, shaderManager);

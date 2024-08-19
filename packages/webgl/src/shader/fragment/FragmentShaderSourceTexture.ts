@@ -1,27 +1,22 @@
-import { FragmentShaderLibrary } from "./FragmentShaderLibrary";
+import { STATEMENT_COLOR_TRANSFORM_ON } from "./FragmentShaderLibrary";
 
 /**
- * @class
+ * @param  {boolean} with_color_transform
+ * @return {string}
+ * @method
+ * @static
  */
-export class FragmentShaderSourceTexture
+export const TEXTURE = (with_color_transform: boolean): string =>
 {
-    /**
-     * @param  {boolean} with_color_transform
-     * @return {string}
-     * @method
-     * @static
-     */
-    static TEMPLATE (with_color_transform: boolean): string
-    {
-        const colorTransformUniform: string = with_color_transform
-            ? "uniform vec4 u_mediump[2];"
-            : "";
+    const colorTransformUniform: string = with_color_transform
+        ? "uniform vec4 u_mediump[2];"
+        : "";
 
-        const colorTransformStatement: string = with_color_transform
-            ? FragmentShaderLibrary.STATEMENT_COLOR_TRANSFORM_ON(0)
-            : "";
+    const colorTransformStatement: string = with_color_transform
+        ? STATEMENT_COLOR_TRANSFORM_ON(0)
+        : "";
 
-        return `#version 300 es
+    return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_texture;
@@ -35,16 +30,16 @@ void main() {
     ${colorTransformStatement}
     o_color = src;
 }`;
-    }
+};
 
-    /**
-     * @return {string}
-     * @method
-     * @static
-     */
-    static INSTANCE_TEMPLATE (): string
-    {
-        return `#version 300 es
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const INSTANCE_TEXTURE = (): string =>
+{
+    return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_texture;
@@ -67,5 +62,4 @@ void main() {
     
     o_color = src;
 }`;
-    }
-}
+};

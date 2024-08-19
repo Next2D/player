@@ -1,37 +1,69 @@
-import { VertexShaderLibrary } from "./VertexShaderLibrary";
+import {
+    FUNCTION_GRID_ON,
+    FUNCTION_GRID_OFF
+} from "./VertexShaderLibrary";
 
 /**
- * @class
+ * @return {string}
+ * @method
+ * @static
  */
-export class VertexShaderSourceStroke
+export const VARYING_UV_ON = (): string =>
 {
-    /**
-     * @param  {number}  highp_length
-     * @param  {number}  fragment_index
-     * @param  {boolean} with_uv
-     * @param  {boolean} has_grid
-     * @return {string}
-     * @method
-     * @static
-     */
-    static TEMPLATE (
-        highp_length: number, fragment_index: number,
-        with_uv: boolean, has_grid: boolean
-    ): string {
+    return `out vec2 v_uv;`;
+}
+
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const STATEMENT_UV_ON = (): string =>
+{
+    return `
+    mat3 uv_matrix = mat3(
+        u_highp[0].xyz,
+        u_highp[1].xyz,
+        u_highp[2].xyz
+    );
+    mat3 inverse_matrix = mat3(
+        u_highp[3].xyz,
+        u_highp[4].xyz,
+        vec3(u_highp[2].w, u_highp[3].w, u_highp[4].w)
+    );
+
+    v_uv = (uv_matrix * vec3(a_vertex, 1.0)).xy;
+    v_uv += offset;
+    v_uv = (inverse_matrix * vec3(v_uv, 1.0)).xy;`;
+};
+
+/**
+ * @param  {number}  highp_length
+ * @param  {number}  fragment_index
+ * @param  {boolean} with_uv
+ * @param  {boolean} has_grid
+ * @return {string}
+ * @method
+ * @static
+ */
+export const STROKE_TEMPLATE = (
+    highp_length: number, fragment_index: number,
+    with_uv: boolean, has_grid: boolean
+): string => {
 
         const strokeIndex: number = fragment_index - 1;
 
         const uvVarying: string = with_uv
-            ? this.VARYING_UV_ON()
+            ? VARYING_UV_ON()
             : "";
 
         const uvStatement: string = with_uv
-            ? this.STATEMENT_UV_ON()
+            ? STATEMENT_UV_ON()
             : "";
 
         const gridFunction: string = has_grid
-            ? VertexShaderLibrary.FUNCTION_GRID_ON(with_uv ? 5 : 0)
-            : VertexShaderLibrary.FUNCTION_GRID_OFF();
+            ? FUNCTION_GRID_ON(with_uv ? 5 : 0)
+            : FUNCTION_GRID_OFF();
 
         return `#version 300 es
 
@@ -120,40 +152,4 @@ void main() {
     position = position * 2.0 - 1.0;
     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
 }`;
-    }
-
-    /**
-     * @return {string}
-     * @method
-     * @static
-     */
-    static VARYING_UV_ON (): string
-    {
-        return `out vec2 v_uv;`;
-    }
-
-    /**
-     * @return {string}
-     * @method
-     * @static
-     */
-    static STATEMENT_UV_ON (): string
-    {
-        return `
-    mat3 uv_matrix = mat3(
-        u_highp[0].xyz,
-        u_highp[1].xyz,
-        u_highp[2].xyz
-    );
-    mat3 inverse_matrix = mat3(
-        u_highp[3].xyz,
-        u_highp[4].xyz,
-        vec3(u_highp[2].w, u_highp[3].w, u_highp[4].w)
-    );
-
-    v_uv = (uv_matrix * vec3(a_vertex, 1.0)).xy;
-    v_uv += offset;
-    v_uv = (inverse_matrix * vec3(v_uv, 1.0)).xy;
-`;
-    }
-}
+};

@@ -1029,6 +1029,7 @@ export class CanvasToWebGLContext
                         this._$matrix,
                         this._$imageSmoothingEnabled
                     );
+                    
                     break;
 
                 default:

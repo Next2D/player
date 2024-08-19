@@ -33,24 +33,6 @@ export class ShaderManager
     private readonly _$uniformMap: Map<string, IUniformData>
 
     /**
-     * @description attribute変数の配列
-     *              Array of attribute variables
-     * 
-     * @type {number[]}
-     * @public
-     */
-    public attributes: number[];
-
-    /**
-     * @description attribute変数の数
-     *              Number of attribute variables
-     * 
-     * @type {number}
-     * @public
-     */
-    public count: number;
-
-    /**
      * @param {string} vertex_source 
      * @param {string} fragment_source
      * @constructor
@@ -60,8 +42,6 @@ export class ShaderManager
     {
         this._$programObject = shaderManagerCreateProgramService(vertex_source, fragment_source);
         this._$uniformMap    = new Map();
-        this.attributes      = [];
-        this.count           = 0;
 
         shaderManagerInitializeUniformService(
             this._$programObject.resource,

@@ -1,4 +1,4 @@
-import { FragmentShaderLibrary } from "../FragmentShaderLibrary";
+import { FUNCTION_IS_INSIDE } from "../FragmentShaderLibrary";
 
 /**
  * @class
@@ -91,7 +91,7 @@ uniform vec4 u_mediump[${mediump_length}];
 in vec2 v_coord;
 out vec4 o_color;
 
-${FragmentShaderLibrary.FUNCTION_IS_INSIDE()}
+${FUNCTION_IS_INSIDE()}
 
 void main() {
     ${baseStatement}

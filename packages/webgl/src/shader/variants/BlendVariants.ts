@@ -1,8 +1,8 @@
 import type { ShaderManager } from "../ShaderManager";
 
 /**
- * @description シェイプのシェーダー管理クラスのコレクション
- *              Collection of shape shader management classes
+ * @description ブレンドのシェーダー管理クラスのコレクション
+ *              Collection of blend shader management classes
  * 
  * @type {Map<string, ShaderManager>}
  * @public

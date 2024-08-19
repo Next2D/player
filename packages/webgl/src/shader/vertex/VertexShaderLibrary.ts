@@ -1,16 +1,14 @@
 /**
- * @class
+ * @description グリッドがオフの場合の頂点シェーダー
+ *              Vertex shader when grid is off
+ * 
+ * @return {string}
+ * @method
+ * @static
  */
-export class VertexShaderLibrary
+export const FUNCTION_GRID_OFF = (): string =>
 {
-    /**
-     * @return {string}
-     * @method
-     * @static
-     */
-    static FUNCTION_GRID_OFF (): string
-    {
-        return `
+    return `
 vec2 applyMatrix(in vec2 vertex) {
     mat3 matrix = mat3(
         u_highp[0].xyz,
@@ -22,17 +20,20 @@ vec2 applyMatrix(in vec2 vertex) {
 
     return position;
 }`;
-    }
+};
 
-    /**
-     * @param  {number} index
-     * @return {string}
-     * @method
-     * @static
-     */
-    static FUNCTION_GRID_ON (index: number): string
-    {
-        return `
+/**
+ * @description グリッドがオンの場合の頂点シェーダー
+ *              Vertex shader when grid is on
+ * 
+ * @param  {number} index
+ * @return {string}
+ * @method
+ * @static
+ */
+export const FUNCTION_GRID_ON = (index: number): string =>
+{
+    return `
 vec2 applyMatrix(in vec2 vertex) {
     mat3 parent_matrix = mat3(
         u_highp[${index    }].xyz,
@@ -48,7 +49,7 @@ vec2 applyMatrix(in vec2 vertex) {
     vec2 parent_size   = vec2(u_highp[${index + 4}].w, u_highp[${index + 5}].w);
     vec4 grid_min = u_highp[${index + 6}];
     vec4 grid_max = u_highp[${index + 7}];
-
+    
     vec2 position = (parent_matrix * vec3(vertex, 1.0)).xy;
     position = (position - parent_offset) / parent_size;
 
@@ -61,13 +62,12 @@ vec2 applyMatrix(in vec2 vertex) {
     vec2 pc = position - grid_max.st;
 
     position = (ga.pq / ga.st) * min(pa, ga.st)
-             + (gb.pq / gb.st) * clamp(pb, vec2(0.0), gb.st)
-             + (gc.pq / gc.st) * max(vec2(0.0), pc);
+                + (gb.pq / gb.st) * clamp(pb, vec2(0.0), gb.st)
+                + (gc.pq / gc.st) * max(vec2(0.0), pc);
 
     position = position * parent_size + parent_offset;
     position = (ancestor_matrix * vec3(position, 1.0)).xy;
 
     return position;
-}`;
-    }
-}
+}`;     
+};

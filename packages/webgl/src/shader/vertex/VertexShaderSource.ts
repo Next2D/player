@@ -1,16 +1,11 @@
 /**
- * @class
+ * @return {string}
+ * @method
+ * @static
  */
-export class VertexShaderSource
+export const TEXTURE_TEMPLATE = (): string =>
 {
-    /**
-     * @return {string}
-     * @method
-     * @static
-     */
-    static TEXTURE (): string
-    {
-        return `#version 300 es
+    return `#version 300 es
 
 layout (location = 0) in vec2 a_vertex;
 
@@ -22,16 +17,16 @@ void main() {
     vec2 position = a_vertex * 2.0 - 1.0;
     gl_Position = vec4(position, 0.0, 1.0);
 }`;
-    }
+};
 
-    /**
-     * @return {string}
-     * @method
-     * @static
-     */
-    static BLEND (): string
-    {
-        return `#version 300 es
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const BLEND_TEMPLATE = (): string =>
+{
+    return `#version 300 es
 
 layout (location = 0) in vec2 a_vertex;
 
@@ -55,16 +50,16 @@ void main() {
     position = position * 2.0 - 1.0;
     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
 }`;
-    }
+};
 
-    /**
-     * @return {string}
-     * @method
-     * @static
-     */
-    static INSTANCE_BLEND (): string
-    {
-        return `#version 300 es
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const INSTANCE_BLEND_TEMPLATE = (): string =>
+{
+    return `#version 300 es
 
 layout (location = 0) in vec2 a_vertex;
 
@@ -90,16 +85,16 @@ void main() {
     position = position * 2.0 - 1.0;
     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
 }`;
-    }
+};
 
-    /**
-     * @return {string}
-     * @method
-     * @static
-     */
-    static INSTANCE (): string
-    {
-        return `#version 300 es
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const INSTANCE_TEMPLATE = (): string =>
+{
+    return `#version 300 es
 
 layout (location = 0) in vec2 a_vertex;
 layout (location = 1) in vec4 a_rect;
@@ -127,16 +122,16 @@ void main() {
     position = position * 2.0 - 1.0;
     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
 }`;
-    }
+};
 
-    /**
-     * @return {string}
-     * @method
-     * @static
-     */
-    static BLEND_CLIP (): string
-    {
-        return `#version 300 es
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const BLEND_CLIP_TEMPLATE = (): string =>
+{
+    return `#version 300 es
 
 layout (location = 0) in vec2 a_vertex;
 
@@ -160,5 +155,4 @@ void main() {
     position = position * 2.0 - 1.0;
     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
 }`;
-    }
-}
+};

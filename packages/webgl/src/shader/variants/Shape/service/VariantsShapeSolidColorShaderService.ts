@@ -1,8 +1,8 @@
 import { ShaderManager } from "../../../ShaderManager";
 import { $collection } from "../../ShapeVariants";
-import { VertexShaderSourceFill } from "../../../Vertex/VertexShaderSourceFill";
-import { VertexShaderSourceStroke } from "../../../Vertex/VertexShaderSourceStroke";
-import { FragmentShaderSource } from "../../../Fragment/FragmentShaderSource";
+import { FILL_TEMPLATE } from "../../../Vertex/VertexShaderSourceFill";
+import { STROKE_TEMPLATE } from "../../../Vertex/VertexShaderSourceStroke";
+import { SOLID_COLOR } from "../../../Fragment/FragmentShaderSource";
 
 /**
  * @description Shapeのノーマルな塗りのシェーダを返却
@@ -26,19 +26,19 @@ export const execute = (is_stroke: boolean, has_grid: boolean): ShaderManager =>
 
     let vertexShaderSource: string;
     if (is_stroke) {
-        vertexShaderSource = VertexShaderSourceStroke.TEMPLATE(
+        vertexShaderSource = STROKE_TEMPLATE(
             highpLength, fragmentIndex,
             false, has_grid
         );
     } else {
-        vertexShaderSource = VertexShaderSourceFill.TEMPLATE(
+        vertexShaderSource = FILL_TEMPLATE(
             highpLength, false, false, has_grid
         );
     }
 
     const shaderManager = new ShaderManager(
         vertexShaderSource,
-        FragmentShaderSource.SOLID_COLOR()
+        SOLID_COLOR()
     );
 
     $collection.set(key, shaderManager);

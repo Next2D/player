@@ -23,9 +23,11 @@ import { execute as contextResetService } from "./Context/service/ContextResetSe
 import { execute as contextResetStyleService } from "./Context/service/ContextResetStyleService";
 import { execute as contextBeginNodeRenderingService } from "./Context/service/ContextBeginNodeRenderingService";
 import { execute as contextEndNodeRenderingService } from "./Context/service/ContextEndNodeRenderingService";
-import { execute as contextDebugService } from "./Context/service/ContextDebugService";
 import { execute as contextFillUseCase } from "./Context/usecase/ContextFillUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
+import { execute as blnedDrawDisplayObjectUseCase } from "./Blend/usecase/BlnedDrawDisplayObjectUseCase";
+import { execute as blnedDrawInstancedArrayUseCase } from "./Blend/usecase/BlnedDrawInstancedArrayUseCase";
+import { execute as frameBufferManagerTransferMainCanvasService } from "./FrameBufferManager/service/FrameBufferManagerTransferMainCanvasService";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
@@ -110,7 +112,7 @@ export class Context
      * @type {IAttachmentObject}
      * @protected
      */
-    public $mainAttachment: IAttachmentObject | null;
+    public $mainAttachmentObject: IAttachmentObject | null;
 
     /**
      * @description グローバルアルファ
@@ -202,7 +204,7 @@ export class Context
         this.$clearColorA = 0;
 
         // メインのアタッチメントオブジェクト
-        this.$mainAttachment = null;
+        this.$mainAttachmentObject = null;
 
         // グローバルアルファ、合成モード、イメージのスムージング設定
         this.globalAlpha              = 1;
@@ -654,7 +656,7 @@ export class Context
      * @method
      * @public
      */
-    drawInstance (
+    drawDisplayObject (
         node: Node,
         x_min: number, 
         y_min: number,
@@ -662,11 +664,34 @@ export class Context
         y_max: number, 
         color_transform: Float32Array
     ): void {
-        console.log("drawInstance", node, x_min, y_min, x_max, y_max, color_transform);
+        blnedDrawDisplayObjectUseCase(
+            node, x_min, y_min, x_max, y_max, color_transform
+        );
     }
 
-    debug = (): void =>
+    /**
+     * @description インスタンス配列を描画
+     *              Draw an instance array
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawInstacedArray (): void
     {
-        contextDebugService();
+        blnedDrawInstancedArrayUseCase();
+    }
+
+    /**
+     * @description フレームバッファの描画情報をキャンバスに転送
+     *              Transfer the drawing information of the frame buffer to the canvas
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    transferMainCanvas (): void
+    {
+        frameBufferManagerTransferMainCanvasService();
     }
 }
