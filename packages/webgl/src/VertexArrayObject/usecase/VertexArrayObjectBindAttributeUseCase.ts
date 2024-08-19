@@ -38,7 +38,6 @@ export const execute = (shader_instanced_manager: ShaderInstancedManager): void 
         );
     }
 
-    console.log(shader_instanced_manager.attributes);
     attributeBuffer.set(shader_instanced_manager.attributes);
     $gl.bufferSubData(
         $gl.ARRAY_BUFFER, 0,

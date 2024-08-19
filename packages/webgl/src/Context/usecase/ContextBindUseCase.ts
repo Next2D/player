@@ -4,7 +4,10 @@ import type { IStencilBufferObject } from "../../interface/IStencilBufferObject"
 import type { Context } from "../../Context";
 import { $getCurrentAttachment } from "../../FrameBufferManager";
 import { execute as frameBufferManagerBindAttachmentObjectService } from "../../FrameBufferManager/service/FrameBufferManagerBindAttachmentObjectService";
-import { $gl } from "../../WebGLUtil";
+import {
+    $gl,
+    $setViewportSize
+} from "../../WebGLUtil";
 
 /**
  * @description アタッチメントオブジェクトのサイズに変更・初期化し、フレームバッファにアタッチメントオブジェクトをバインドする
@@ -31,6 +34,7 @@ export const execute = (context: Context, attachment_object: IAttachmentObject):
         || currentAttachment.width !== attachment_object.width
         || currentAttachment.height !== attachment_object.height) 
     {
+        $setViewportSize(attachment_object.width, attachment_object.height);
         $gl.viewport(0, 0, attachment_object.width, attachment_object.height);
     }
 

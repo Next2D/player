@@ -32,8 +32,8 @@ export const execute = (
 
     return $getArray(
         Math.min(Number.MAX_VALUE, x0, x1, x2, x3),
-        Math.max(0 - Number.MAX_VALUE, x0, x1, x2, x3),
-        Math.max(0 - Number.MAX_VALUE, x0, x1, x2, x3),
-        Math.max(0 - Number.MAX_VALUE, y0, y1, y2, y3)
+        Math.min(Number.MAX_VALUE, y0, y1, y2, y3),
+        Math.max(-Number.MAX_VALUE, x0, x1, x2, x3),
+        Math.max(-Number.MAX_VALUE, y0, y1, y2, y3)
     );
 };

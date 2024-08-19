@@ -28,18 +28,11 @@ export const execute = (): void =>
     $context.bind($context.atlasAttachmentObject);
 
     $gl.bindFramebuffer(
-        $gl.DRAW_FRAMEBUFFER,
-        $drawFrameBuffer
-    );
-    $gl.bindFramebuffer(
         $gl.FRAMEBUFFER,
         $drawFrameBuffer
     );
 
     const textureObject = $getAtlasTextureObject();
-    $gl.activeTexture($gl.TEXTURE0);
-    $gl.bindTexture($gl.TEXTURE_2D, textureObject.resource);
-
     $gl.framebufferTexture2D(
         $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
         $gl.TEXTURE_2D, textureObject.resource, 0
