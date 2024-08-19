@@ -23,6 +23,14 @@ describe("ContextSetTransformService.js method test", () =>
             "framebufferRenderbuffer": vi.fn(() => "framebufferRenderbuffer"),
             "viewport": vi.fn(() => "viewport"),
             "renderbufferStorage": vi.fn(() => "renderbufferStorage"),
+            "bindBuffer": vi.fn(() => "bindBuffer"),
+            "createBuffer": vi.fn(() => "createBuffer"),
+            "createVertexArray": vi.fn(() => "createVertexArray"),
+            "bindVertexArray": vi.fn(() => "bindVertexArray"),
+            "bufferData": vi.fn(() => "bufferData"),
+            "enableVertexAttribArray": vi.fn(() => "enableVertexAttribArray"),
+            "vertexAttribPointer": vi.fn(() => "vertexAttribPointer"),
+            "vertexAttribDivisor": vi.fn(() => "vertexAttribDivisor"),
         } as unknown as WebGL2RenderingContext;
 
         const context = new Context(mockGL, 4);

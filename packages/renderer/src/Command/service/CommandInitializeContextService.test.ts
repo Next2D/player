@@ -57,6 +57,7 @@ describe("CommandInitializeContextService.js test", () =>
                         "enable": vi.fn(),
                         "blendFunc": vi.fn(),
                         "renderbufferStorage": vi.fn(),
+                        "bindVertexArray": vi.fn(() => "bindVertexArray"),
                     };
                 })
             } as unknown as HTMLCanvasElement;

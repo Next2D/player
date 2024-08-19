@@ -119,7 +119,7 @@ export let $atlasTexture: ITextureObject | null = null;
  * @method
  * @protected
  */
-export const $getAtlasTexture = (): ITextureObject =>
+export const $getAtlasTextureObject = (): ITextureObject =>
 {
     if (!$atlasTexture) {
         $atlasTexture = textureManagerCreateAtlasTextureUseCase();

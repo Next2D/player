@@ -24,6 +24,7 @@ describe("TextureManagerCreateAtlasTextureUseCase.js method test", () =>
                     }),
                     "texParameteri": vi.fn(() => { return "texParameteri" }),
                     "texStorage2D": vi.fn(() => { return "texStorage2D" }),
+                    "TEXTURE0": 0,
                     "TEXTURE3": 0,
                 }
             }
@@ -32,6 +33,7 @@ describe("TextureManagerCreateAtlasTextureUseCase.js method test", () =>
         // not hit
         $setActiveTextureUnit(-1);
         const textureObject = execute();
+        console.log(textureObject);
         expect(textureObject.width).toBe($RENDER_MAX_SIZE);
         expect(textureObject.height).toBe($RENDER_MAX_SIZE);
     });

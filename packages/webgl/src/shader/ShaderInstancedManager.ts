@@ -33,7 +33,6 @@ export class ShaderInstancedManager extends ShaderManager
     constructor (vertex_source: string, fragment_source: string) 
     {
         super(vertex_source, fragment_source);
-
         this.attributes = [];
         this.count      = 0;
     }

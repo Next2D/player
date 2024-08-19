@@ -26,7 +26,8 @@ import { execute as contextEndNodeRenderingService } from "./Context/service/Con
 import { execute as contextFillUseCase } from "./Context/usecase/ContextFillUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
 import { execute as blnedDrawDisplayObjectUseCase } from "./Blend/usecase/BlnedDrawDisplayObjectUseCase";
-import { execute as blnedDrawInstancedArrayUseCase } from "./Blend/usecase/BlnedDrawInstancedArrayUseCase";
+import { execute as blnedDrawArraysInstancedUseCase } from "./Blend/usecase/BlnedDrawArraysInstancedUseCase";
+import { execute as vertexArrayObjectBootUseCase } from "./VertexArrayObject/usecase/VertexArrayObjectBootUseCase";
 import { execute as frameBufferManagerTransferMainCanvasService } from "./FrameBufferManager/service/FrameBufferManagerTransferMainCanvasService";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import {
@@ -225,6 +226,9 @@ export class Context
         // FrameBufferManagerの初期起動
         $setReadFrameBuffer(gl);
         $setDrawFrameBuffer(gl);
+
+        // VertexArrayObjectの初期起動
+        vertexArrayObjectBootUseCase(gl);
 
         // コンテキストをセット
         $setContext(this);
@@ -677,9 +681,9 @@ export class Context
      * @method
      * @public
      */
-    drawInstacedArray (): void
+    drawArraysInstanced (): void
     {
-        blnedDrawInstancedArrayUseCase();
+        blnedDrawArraysInstancedUseCase();
     }
 
     /**

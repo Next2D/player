@@ -32,6 +32,14 @@ describe("ContextBindUseCase.js method test", () =>
             "scissor": vi.fn(() => "scissor"),
             "clear": vi.fn(() => "clear"),
             "disable": vi.fn(() => "disable"),
+            "bindBuffer": vi.fn(() => "bindBuffer"),
+            "createBuffer": vi.fn(() => "createBuffer"),
+            "createVertexArray": vi.fn(() => "createVertexArray"),
+            "bindVertexArray": vi.fn(() => "bindVertexArray"),
+            "bufferData": vi.fn(() => "bufferData"),
+            "enableVertexAttribArray": vi.fn(() => "enableVertexAttribArray"),
+            "vertexAttribPointer": vi.fn(() => "vertexAttribPointer"),
+            "vertexAttribDivisor": vi.fn(() => "vertexAttribDivisor"),
             "viewport": vi.fn((x, y, w, h) =>
             {
                 expect(x).toBe(0);

@@ -28,9 +28,10 @@ export const execute = (): ITextureObject =>
 
     $gl.texStorage2D($gl.TEXTURE_2D, 1, $gl.RGBA8, textureObject.width, textureObject.height);
 
-    if ($activeTextureUnit !== -1) {
-        $gl.activeTexture($activeTextureUnit);
-    }
+    $gl.activeTexture($activeTextureUnit !== -1 
+        ? $activeTextureUnit
+        : $gl.TEXTURE0
+    );
 
     return textureObject;
 };

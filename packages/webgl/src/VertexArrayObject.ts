@@ -1,4 +1,4 @@
-import { IVertexArrayObject } from "./interface/IVertexArrayObject";
+import type { IVertexArrayObject } from "./interface/IVertexArrayObject";
 
 /**
  * @description VertexArrayObjectの再利用のための配列のオブジェクトプール、
@@ -52,4 +52,50 @@ export const $setAttributeBuffer = (buffer: Float32Array): void =>
 export const $getAttributeBuffer = (): Float32Array => 
 {
     return $attributeBuffer;
+};
+
+/**
+ * @description インスタンス用のWebGLBuffer
+ *              WebGLBuffer for instance
+ * 
+ * @type {WebGLBuffer}
+ * @protected
+ */
+export let $attributeWebGLBuffer: WebGLBuffer;
+
+/**
+ * @description インスタンス用のWebGLBufferをセット
+ *              Set the WebGLBuffer for the instance
+ * 
+ * @param  {WebGL2RenderingContext} gl
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setAttributeWebGLBuffer = (gl: WebGL2RenderingContext): void => 
+{
+    $attributeWebGLBuffer = gl.createBuffer() as NonNullable<WebGLBuffer>;
+};
+
+/**
+ * @description インスタンス用のVertexArrayObject
+ *              VertexArrayObject for instance
+ * 
+ * @type {IVertexArrayObject}
+ * @protected
+ */
+export let $instancedVertexArrayObject: IVertexArrayObject;
+
+/**
+ * @description インスタンス用のVertexArrayObjectをセット
+ *              Set the VertexArrayObject for the instance
+ * 
+ * @param  {IVertexArrayObject} vertex_array_object
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setInstancedVertexArrayObject = (vertex_array_object: IVertexArrayObject): void =>
+{
+    $instancedVertexArrayObject = vertex_array_object;
 };
