@@ -1,4 +1,4 @@
-import type { INode } from "../../interface/INode";
+import type { Node } from "@next2d/texture-packer";
 import { $cacheStore } from "@next2d/cache";
 import { execute as shapeCommandService } from "../service/ShapeCommandService"; 
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService"; 
@@ -72,7 +72,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         yScale = +yScale.toFixed(4);
     }
 
-    let node: INode;
+    let node: Node;
     if (!hasCache) {
 
         const currentAttachment = $context.currentAttachmentObject;
@@ -107,7 +107,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         index += length;
         
     } else {
-        node = $cacheStore.get(uniqueKey, `${cacheKey}`) as INode;
+        node = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node;
         if (!node) {
             return index;
         }

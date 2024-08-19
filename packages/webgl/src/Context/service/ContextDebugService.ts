@@ -18,7 +18,7 @@ export const execute = (): void =>
     // execute
     $gl.blitFramebuffer(
         0, 0, width, height,
-        0, 0, width, height,
+        0, 0, currentAttachmentObject?.width, currentAttachmentObject?.height,
         $gl.COLOR_BUFFER_BIT,
         $gl.NEAREST
     );

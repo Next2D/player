@@ -1,8 +1,8 @@
-import type { Node } from "../domain/Node";
+import type { Node } from "@next2d/texture-packer";
 import { $getActiveAtlasIndex, $setActiveAtlasIndex } from "../../AtlasManager";
 import { $rootNodes } from "../../AtlasManager";
 import { $RENDER_MAX_SIZE } from "../../WebGLUtil";
-import { TexturePacker } from "../domain/TexturePacker";
+import { TexturePacker } from "@next2d/texture-packer";
 
 /**
  * @description 指定サイズのキャッシュ座標を生成、二分木構造を利用して座標を取得します。

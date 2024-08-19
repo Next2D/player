@@ -1,6 +1,6 @@
 import type { ITextureObject } from "./interface/ITextureObject";
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
-import type { TexturePacker } from "./AtlasManager/domain/TexturePacker";
+import type { TexturePacker } from "@next2d/texture-packer";
 
 /**
  * @description アトラステクスチャのアタッチメントオブジェクト

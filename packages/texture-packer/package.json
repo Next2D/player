@@ -1,7 +1,7 @@
 {
-  "name": "@next2d/renderer",
+  "name": "@next2d/texture-packer",
   "version": "*",
-  "description": "Next2D Renderer Packages",
+  "description": "Next2D Texture Packer Packages",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
   "homepage": "https://next2d.app",
@@ -19,15 +19,10 @@
   },
   "keywords": [
     "Next2D",
-    "Next2D Renderer"
+    "Next2D Texture Packer"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Next2D/Player.git"
-  },
-  "peerDependencies": {
-    "@next2d/webgl": "file:../webgl",
-    "@next2d/cache": "file:../cache",
-    "@next2d/texture-packer": "file:../texture-packer"
   }
 }

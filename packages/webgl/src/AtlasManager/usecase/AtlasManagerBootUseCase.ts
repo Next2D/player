@@ -1,6 +1,6 @@
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 import { $RENDER_MAX_SIZE } from "../../WebGLUtil";
-import { TexturePacker } from "../domain/TexturePacker";
+import { TexturePacker } from "@next2d/texture-packer";
 import {
     $setAtlasAttachmentObject,
     $rootNodes,
