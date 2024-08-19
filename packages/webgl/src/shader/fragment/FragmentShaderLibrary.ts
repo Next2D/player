@@ -11,11 +11,9 @@ export class FragmentShaderLibrary
     static FUNCTION_IS_INSIDE (): string
     {
         return `
-
 float isInside(in vec2 uv) {
     return step(4.0, dot(step(vec4(0.0, uv.x, 0.0, uv.y), vec4(uv.x, 1.0, uv.y, 1.0)), vec4(1.0)));
 }
-
 `;
     }
 

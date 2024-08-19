@@ -21,9 +21,7 @@ void main() {
 
     vec2 position = a_vertex * 2.0 - 1.0;
     gl_Position = vec4(position, 0.0, 1.0);
-}
-
-`;
+}`;
     }
 
     /**
@@ -56,9 +54,7 @@ void main() {
 
     position = position * 2.0 - 1.0;
     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
-}
-
-`;
+}`;
     }
 
     /**
@@ -93,9 +89,7 @@ void main() {
 
     position = position * 2.0 - 1.0;
     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
-}
-
-`;
+}`;
     }
 
     /**
@@ -132,9 +126,7 @@ void main() {
 
     position = position * 2.0 - 1.0;
     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
-}
-
-`;
+}`;
     }
 
     /**
@@ -167,8 +159,6 @@ void main() {
 
     position = position * 2.0 - 1.0;
     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
-}
-
-`;
+}`;
     }
 }

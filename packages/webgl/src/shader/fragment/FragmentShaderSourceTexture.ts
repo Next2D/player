@@ -34,9 +34,7 @@ void main() {
     vec4 src = texture(u_texture, v_coord);
     ${colorTransformStatement}
     o_color = src;
-}
-
-`;
+}`;
     }
 
     /**
@@ -68,8 +66,6 @@ void main() {
     }
     
     o_color = src;
-}
-
-`;
+}`;
     }
 }

@@ -47,7 +47,6 @@ ${bezierAttribute}
 uniform vec4 u_highp[${highp_length}];
 
 ${uvVarying}
-
 ${gridFunction}
 
 void main() {
@@ -58,9 +57,7 @@ void main() {
     vec2 pos = applyMatrix(a_vertex) / viewport;
     pos = pos * 2.0 - 1.0;
     gl_Position = vec4(pos.x, -pos.y, 0.0, 1.0);
-}
-
-`;
+}`;
     }
 
     /**
@@ -70,9 +67,7 @@ void main() {
      */
     static ATTRIBUTE_BEZIER_ON (): string
     {
-        return `
-layout (location = 1) in vec2 a_bezier;
-`;
+        return `layout (location = 1) in vec2 a_bezier;`;
     }
 
     /**
@@ -82,9 +77,7 @@ layout (location = 1) in vec2 a_bezier;
      */
     static VARYING_UV_ON (): string
     {
-        return `
-out vec2 v_uv;
-`;
+        return `out vec2 v_uv;`;
     }
 
     /**
@@ -94,9 +87,7 @@ out vec2 v_uv;
      */
     static VARYING_BEZIER_ON (): string
     {
-        return `
-out vec2 v_bezier;
-`;
+        return `out vec2 v_bezier;`;
     }
 
     /**
@@ -118,8 +109,7 @@ out vec2 v_bezier;
         vec3(u_highp[2].w, u_highp[3].w, u_highp[4].w)
     );
 
-    v_uv = (inverse_matrix * uv_matrix * vec3(a_vertex, 1.0)).xy;
-`;
+    v_uv = (inverse_matrix * uv_matrix * vec3(a_vertex, 1.0)).xy;`;
     }
 
     /**
@@ -129,8 +119,6 @@ out vec2 v_bezier;
      */
     static STATEMENT_BEZIER_ON (): string
     {
-        return `
-    v_bezier = a_bezier;
-`;
+        return `v_bezier = a_bezier;`;
     }
 }

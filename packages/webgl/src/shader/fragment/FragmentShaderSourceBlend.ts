@@ -79,9 +79,7 @@ void main() {
     vec4 src = texture(u_textures[1], v_coord);
     ${colorTransformStatement}
     o_color = blend(src, dst);
-}
-
-`;
+}`;
     }
 
     /**
@@ -159,9 +157,7 @@ void main() {
     vec4 src = texture(u_textures[1], v_src_coord);
     ${colorTransformStatement}
     o_color = blend(src, dst);
-}
-
-`;
+}`;
     }
 
     /**
@@ -202,7 +198,6 @@ vec4 blend (in vec4 src, in vec4 dst) {
         // [合成色計算式]
         // dst - src
         return `
-
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
     if (dst.a == 0.0) { return src; }
@@ -217,9 +212,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     c.rgb *= c.a;
 
     return a + b + c;
-}
-
-`;
+}`;
     }
 
     /**
@@ -232,16 +225,13 @@ vec4 blend (in vec4 src, in vec4 dst) {
         // [合成色計算式]
         // src * dst
         return `
-
 vec4 blend (in vec4 src, in vec4 dst) {
     vec4 a = src - src * dst.a;
     vec4 b = dst - dst * src.a;
     vec4 c = src * dst;
 
     return a + b + c;
-}
-
-`;
+}`;
     }
 
     /**
@@ -254,7 +244,6 @@ vec4 blend (in vec4 src, in vec4 dst) {
         // [合成色計算式]
         // (src > dst) ? src : dst
         return `
-
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
     if (dst.a == 0.0) { return src; }
@@ -269,9 +258,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     c.rgb *= c.a;
 
     return a + b + c;
-}
-
-`;
+}`;
     }
 
     /**
@@ -284,7 +271,6 @@ vec4 blend (in vec4 src, in vec4 dst) {
         // [合成色計算式]
         // (src < dst) ? src : dst
         return `
-
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
     if (dst.a == 0.0) { return src; }
@@ -299,9 +285,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     c.rgb *= c.a;
 
     return a + b + c;
-}
-
-`;
+}`;
     }
 
     /**
@@ -318,7 +302,6 @@ vec4 blend (in vec4 src, in vec4 dst) {
         //     return 1.0 - 2.0 * (1.0 - src) * (1.0 - dst)
         // }
         return `
-
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
     if (dst.a == 0.0) { return src; }
@@ -336,9 +319,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     c.rgb *= c.a;
 
     return a + b + c;
-}
-
-`;
+}`;
     }
 
     /**
@@ -355,7 +336,6 @@ vec4 blend (in vec4 src, in vec4 dst) {
         //     return 1.0 - 2.0 * (1.0 - src) * (1.0 - dst)
         // }
         return `
-
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
     if (dst.a == 0.0) { return src; }
@@ -373,9 +353,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     c.rgb *= c.a;
 
     return a + b + c;
-}
-
-`;
+}`;
     }
 
     /**
@@ -388,7 +366,6 @@ vec4 blend (in vec4 src, in vec4 dst) {
         // [合成色計算式]
         // abs(src - dst)
         return `
-
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
     if (dst.a == 0.0) { return src; }
@@ -403,9 +380,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     c.rgb *= c.a;
 
     return a + b + c;
-}
-
-`;
+}`;
     }
 
     /**
@@ -418,7 +393,6 @@ vec4 blend (in vec4 src, in vec4 dst) {
         // [基本計算式]
         // ((1.0 - dst) * src.a) + (dst * (1.0 - src.a))
         return `
-
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
     if (dst.a == 0.0) { return src; }
@@ -427,8 +401,6 @@ vec4 blend (in vec4 src, in vec4 dst) {
     vec4 c = vec4(src.a - dst.rgb * src.a, src.a);
 
     return b + c;
-}
-
-`;
+}`;
     }
 }

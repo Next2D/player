@@ -11,7 +11,6 @@ export class VertexShaderLibrary
     static FUNCTION_GRID_OFF (): string
     {
         return `
-
 vec2 applyMatrix(in vec2 vertex) {
     mat3 matrix = mat3(
         u_highp[0].xyz,
@@ -22,9 +21,7 @@ vec2 applyMatrix(in vec2 vertex) {
     vec2 position = (matrix * vec3(vertex, 1.0)).xy;
 
     return position;
-}
-
-`;
+}`;
     }
 
     /**
@@ -36,7 +33,6 @@ vec2 applyMatrix(in vec2 vertex) {
     static FUNCTION_GRID_ON (index: number): string
     {
         return `
-
 vec2 applyMatrix(in vec2 vertex) {
     mat3 parent_matrix = mat3(
         u_highp[${index    }].xyz,
@@ -72,8 +68,6 @@ vec2 applyMatrix(in vec2 vertex) {
     position = (ancestor_matrix * vec3(position, 1.0)).xy;
 
     return position;
-}
-
-`;
+}`;
     }
 }

@@ -1,3 +1,4 @@
+import type { IIndexRange } from "../../interface/IIndexRange";
 import { execute } from "./VertexArrayObjectGetFillObjectUseCase";
 import { describe, expect, it, vi } from "vitest";
 
@@ -31,7 +32,7 @@ describe("VertexArrayObjectGetFillObjectUseCase.js method test", () =>
 
         const vertexArrayObject = execute();
         expect(vertexArrayObject.resource).toBe("createVertexArray");
-        expect(vertexArrayObject.indexRanges.length).toBe(0);
+        expect((vertexArrayObject.indexRanges as IIndexRange[]).length).toBe(0);
         expect(vertexArrayObject.vertexBuffer).toBe("createBuffer");
         expect(vertexArrayObject.vertexLength).toBe(0);
     });

@@ -17,12 +17,10 @@ export const execute = (x: number, y: number, w: number, h: number): void =>
 {
     // 初期化範囲を設定
     $gl.enable($gl.SCISSOR_TEST);
-    $gl.scissor(x, x, w, h);
+    $gl.scissor(x, y, w, h);
 
     // 初期化
-    $gl.clearColor(0.2, 0.2, 0.2, 0.5);
     $gl.clear($gl.COLOR_BUFFER_BIT | $gl.STENCIL_BUFFER_BIT);
-
 
     // 描画領域をあらためて設定
     $gl.viewport(x, y, w, h);

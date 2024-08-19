@@ -85,8 +85,6 @@ void main() {
 
     result.rgb *= result.a;
     o_color = result;
-}
-
-`;
+}`;
     }
 }

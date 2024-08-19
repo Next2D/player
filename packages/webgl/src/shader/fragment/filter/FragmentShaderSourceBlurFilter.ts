@@ -80,8 +80,6 @@ void main() {
     color /= samples;
 
     o_color = color;
-}
-
-`;
+}`;
     }
 }

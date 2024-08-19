@@ -6,8 +6,8 @@ export const execute = (): void =>
     const currentAttachmentObject = $context.currentAttachmentObject;
     $context.bind($context.atlasAttachmentObject);
 
-    const width  = $context.currentAttachmentObject?.width;
-    const height = $context.currentAttachmentObject?.height;
+    const width  = $context.atlasAttachmentObject?.width;
+    const height = $context.atlasAttachmentObject?.height;
 
     // use main Framebuffer
     $gl.bindFramebuffer(

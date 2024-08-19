@@ -54,9 +54,7 @@ void main() {
     ${gradientTypeStatement}
     t = ${spread_methodExpression};
     o_color = texture(u_texture, vec2(t, 0.5));
-}
-
-`;
+}`;
     }
 
     /**
@@ -74,8 +72,7 @@ void main() {
     vec2 ab = b - a;
     vec2 ap = p - a;
 
-    float t = dot(ab, ap) / dot(ab, ab);
-`;
+    float t = dot(ab, ap) / dot(ab, ab);`;
     }
 
     /**
@@ -108,9 +105,7 @@ void main() {
      */
     static STATEMENT_FOCAL_POINT_OFF (): string
     {
-        return `
-    float t = length(coord);
-`;
+        return `float t = length(coord);`;
     }
 
     /**

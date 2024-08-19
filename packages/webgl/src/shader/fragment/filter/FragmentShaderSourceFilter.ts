@@ -98,9 +98,7 @@ void main() {
     ${blurStatement}
     ${colorStatement}
     o_color = ${modeExpression};
-}
-
-`;
+}`;
     }
 
     /**

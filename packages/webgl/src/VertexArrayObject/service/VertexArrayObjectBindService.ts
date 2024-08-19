@@ -26,6 +26,5 @@ export const execute = (vertex_array_object: IVertexArrayObject): void =>
     }
 
     $boundsVertexArrayObject = vertex_array_object;
-
     $gl.bindVertexArray(vertex_array_object.resource);
 };

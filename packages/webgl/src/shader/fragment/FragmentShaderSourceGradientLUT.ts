@@ -60,8 +60,6 @@ void main() {
     color.rgb *= color.a;
 
     o_color = color;
-}
-
-`;
+}`;
     }
 }

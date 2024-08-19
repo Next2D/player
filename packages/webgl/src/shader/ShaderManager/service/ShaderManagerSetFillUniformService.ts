@@ -34,8 +34,8 @@ export const execute = (shader_manager: ShaderManager, has_grid: boolean): void 
 
         // vertex: u_viewport
         const viewport = $gl.getParameter($gl.VIEWPORT);
-        highp[3] = viewport[3];
-        highp[7] = viewport[4];
+        highp[3] = viewport[2];
+        highp[7] = viewport[3];
     } else {
         // todo
     }

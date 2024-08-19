@@ -119,9 +119,7 @@ void main() {
     position /= viewport;
     position = position * 2.0 - 1.0;
     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
-}
-
-`;
+}`;
     }
 
     /**
@@ -131,9 +129,7 @@ void main() {
      */
     static VARYING_UV_ON (): string
     {
-        return `
-out vec2 v_uv;
-`;
+        return `out vec2 v_uv;`;
     }
 
     /**

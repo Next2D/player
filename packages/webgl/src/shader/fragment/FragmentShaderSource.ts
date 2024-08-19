@@ -16,14 +16,11 @@ export class FragmentShaderSource
 precision mediump float;
 
 uniform vec4 u_mediump;
-
 out vec4 o_color;
 
 void main() {
     o_color = vec4(u_mediump.rgb * u_mediump.a, u_mediump.a);
-}
-
-`;
+}`;
     }
 
     /**
@@ -101,8 +98,6 @@ void main() {
     } else {
         discard;
     }    
-}
-
-`;
+}`;
     }
 }

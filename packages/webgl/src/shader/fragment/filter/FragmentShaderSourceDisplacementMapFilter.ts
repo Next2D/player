@@ -126,8 +126,6 @@ void main() {
     ${modeStatement}
 
     o_color = mix(texture(u_textures[0], v_coord), source_color, isInside(st));
-}
-
-`;
+}`;
     }
 }
