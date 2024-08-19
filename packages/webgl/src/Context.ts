@@ -21,7 +21,9 @@ import { execute as contextSetTransformService } from "./Context/service/Context
 import { execute as contextTransformService } from "./Context/service/ContextTransformService";
 import { execute as contextResetService } from "./Context/service/ContextResetService";
 import { execute as contextResetStyleService } from "./Context/service/ContextResetStyleService";
-import { execute as contextBeginNodeService } from "./Context/service/ContextBeginNodeService";
+import { execute as contextBeginNodeRenderingService } from "./Context/service/ContextBeginNodeRenderingService";
+import { execute as contextEndNodeRenderingService } from "./Context/service/ContextEndNodeRenderingService";
+import { execute as contextDebugService } from "./Context/service/ContextDebugService";
 import { execute as contextFillUseCase } from "./Context/usecase/ContextFillUseCase";
 import { execute as atlasManagerBootUseCase } from "./AtlasManager/usecase/AtlasManagerBootUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
@@ -214,9 +216,6 @@ export class Context
 
         this.$fillStyle   = new Float32Array([1, 1, 1, 1]);
         this.$strokeStyle = new Float32Array([1, 1, 1, 1]);
-
-        // カラー設定
-        gl.clearColor(0, 0, 0, 0);
 
         // WebTextureの設定
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -621,14 +620,30 @@ export class Context
      * @description 指定のノード範囲で描画を開始
      *              Start drawing in the specified node range
      * 
-     * @param  {Node} node
+     * @param  {number} x
+     * @param  {number} y
+     * @param  {number} w
+     * @param  {number} h
      * @return {void}
      * @method
      * @public
      */
-    beginNode (node: Node): void 
+    beginNodeRendering (x: number, y: number, w: number, h: number): void 
     {
-        contextBeginNodeService(node);
+        contextBeginNodeRenderingService(x, y, w, h);
+    }
+
+    /**
+     * @description 指定のノード範囲で描画を終了
+     *              End drawing in the specified node range
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    endNodeRendering (): void
+    {
+        contextEndNodeRenderingService();
     }
 
     /**
@@ -653,5 +668,10 @@ export class Context
         color_transform: Float32Array
     ): void {
         console.log("drawInstance", node, x_min, y_min, x_max, y_max, color_transform);
+    }
+
+    debug = (): void =>
+    {
+        contextDebugService();
     }
 }

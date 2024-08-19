@@ -1,4 +1,4 @@
-interface INode {
+export interface INode {
     index: number;
     x: number;
     y: number;

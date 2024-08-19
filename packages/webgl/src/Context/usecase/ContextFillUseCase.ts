@@ -16,7 +16,6 @@ import {
  * @description Contextのパスコマンドの塗り実行します。
  *              Execute Context path command painting.
  *
- * @param  {IFillTyle} fill_type
  * @param  {boolean} has_grid
  * @return {void}
  * @method

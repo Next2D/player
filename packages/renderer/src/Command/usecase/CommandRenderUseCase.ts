@@ -31,7 +31,7 @@ export const execute = (render_queue: Float32Array): void =>
     if ($color !== color) {
         $color = color;
         if ($color === -1) {
-            $context.updateBackgroundColor(0, 0, 0, 0);
+            $context.updateBackgroundColor(0, 0, 0, 1);
         } else {
             $context.updateBackgroundColor(
                 $color >> 16 & 0xff / 255,
@@ -46,7 +46,7 @@ export const execute = (render_queue: Float32Array): void =>
     $context.reset();
     $context.setTransform(1, 0, 0, 1, 0, 0);
     $context.clearRect(0, 0, $rendererWidth, $rendererHeight);
-    $context.fillBackgroundColor();
+    // $context.fillBackgroundColor();
 
     while (render_queue.length > index) {
 
@@ -81,6 +81,9 @@ export const execute = (render_queue: Float32Array): void =>
 
         }
     }
+
+    console.log("debug");
+    $context.debug();
 
     // excute
     // $context.drawInstacedArray();

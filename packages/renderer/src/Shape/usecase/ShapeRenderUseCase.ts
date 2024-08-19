@@ -1,8 +1,11 @@
 import type { INode } from "../../interface/INode";
 import { $cacheStore } from "@next2d/cache";
 import { execute as shapeCommandService } from "../service/ShapeCommandService"; 
-import { $context, $poolArray } from "../../RendererUtil"; 
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService"; 
+import { 
+    $context,
+    $poolArray
+} from "../../RendererUtil"; 
 
 /**
  * @description Shapeの描画を実行します。
@@ -79,22 +82,24 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const height: number = Math.ceil(Math.abs(yMax - yMin) * yScale);
 
         node = $context.createNode(width, height);
-        console.log("node", node);
-
+        
         // 初期化して、描画範囲とmatrix設定
         $context.reset();
-        $context.beginNode(node);
+        $context.beginNodeRendering(node.x, node.y, node.w, node.h);
         $context.setTransform(
             xScale, 0, 0, yScale,
             -xMin * xScale,
             -yMin * yScale
         );
 
-        // 描画コマンドを実行
         const length = render_queue[index++];
+
+        // 描画コマンドを実行
         const commands = render_queue.subarray(index, index + length);
         shapeCommandService(commands, Boolean(hasGrid));
 
+        // 描画終了
+        $context.endNodeRendering();
         if (currentAttachment) {
             $context.bind(currentAttachment);
         }
@@ -140,11 +145,11 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     $context.globalCompositeOperation = "normal";
 
     // 描画範囲をinstanced arrayに設定
-    $context.drawInstance(
-        node,
-        bounds[0], bounds[1], bounds[2], bounds[3],
-        colorTransform
-    );
+    // $context.drawInstance(
+    //     node,
+    //     bounds[0], bounds[1], bounds[2], bounds[3],
+    //     colorTransform
+    // );
 
     $poolArray(bounds);
 

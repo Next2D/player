@@ -12,16 +12,16 @@ import { $gl } from "../../../WebGLUtil";
  */
 export const execute = (program: WebGLProgram, map: Map<string, IUniformData>): void => 
 {
-    const count: number = $gl.getProgramParameter(program, $gl.ACTIVE_UNIFORMS);
-    for (let idx: number = 0; idx < count; ++idx) {
+    const count = $gl.getProgramParameter(program, $gl.ACTIVE_UNIFORMS);
+    for (let idx = 0; idx < count; ++idx) {
 
-        const info: WebGLActiveInfo = $gl.getActiveUniform(program, idx) as NonNullable<WebGLActiveInfo>;
+        const info = $gl.getActiveUniform(program, idx) as NonNullable<WebGLActiveInfo>;
 
         const name: string = info.name.endsWith("[0]")
             ? info.name.slice(0, -3)
             : info.name;
 
-        const location: WebGLUniformLocation = $gl.getUniformLocation(program, name) as NonNullable<WebGLUniformLocation>;
+        const location = $gl.getUniformLocation(program, name) as NonNullable<WebGLUniformLocation>;
 
         // WebGLの仕様でuniformのint型のデフォルト値は0に設定されるため、
         // sampler2D（size=1）の値の更新は不要
