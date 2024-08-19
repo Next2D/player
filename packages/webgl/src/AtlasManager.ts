@@ -1,51 +1,9 @@
-import type { ITextureObject } from "./interface/ITextureObject";
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { TexturePacker } from "@next2d/texture-packer";
-
-/**
- * @description アトラステクスチャのアタッチメントオブジェクト
- *              Attachment object of atlas texture
- * 
- * @type {IAttachmentObject}
- * @private
- */
-let $atlasAttachmentObject: IAttachmentObject;
-
-/**
- * @description アトラステクスチャオブジェクトをセット
- *              Set the atlas texture object
- *
- * @param  {IAttachmentObject} attachment_object
- * @return {void}
- * @method
- * @protected
- */
-export const $setAtlasAttachmentObject = (attachment_object: IAttachmentObject): void =>
-{
-    $atlasAttachmentObject = attachment_object;
-};
-
-/**
- * @description アトラステクスチャオブジェクトを返却
- *              Return the atlas texture object
- * 
- * @returns {IAttachmentObject}
- * @method
- * @protected
- */
-export const $getAtlasAttachmentObject = (): IAttachmentObject =>
-{
-    return $atlasAttachmentObject;
-};
-
-/**
- * @description 描画保管用のアトラステクスチャの配列
- *              Array of atlas textures for drawing storage
- * 
- * @type {ITextureObject[]}
- * @protected
- */
-export const $atlasTextures: ITextureObject[] = [];
+import type { ITextureObject } from "./interface/ITextureObject";
+import { execute as textureManagerCreateAtlasTextureUseCase } from "./TextureManager/usecase/TextureManagerCreateAtlasTextureUseCase";
+import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "./FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
+import { $RENDER_MAX_SIZE } from "./WebGLUtil";
 
 /**
  * @description アクティブなアトラスインデックス
@@ -84,6 +42,58 @@ export const $getActiveAtlasIndex = (): number =>
 };
 
 /**
+ * @description アトラステクスチャのアタッチメントオブジェクト
+ *              Attachment object of atlas texture
+ * 
+ * @type {IAttachmentObject[]}
+ * @private
+ */
+let $atlasAttachmentObjects: IAttachmentObject[] = [];
+
+/**
+ * @description アトラステクスチャオブジェクトをセット
+ *              Set the atlas texture object
+ *
+ * @param  {IAttachmentObject} attachment_object
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setAtlasAttachmentObject = (attachment_object: IAttachmentObject): void =>
+{
+    $atlasAttachmentObjects[$activeAtlasIndex] = attachment_object;
+};
+
+/**
+ * @description アトラステクスチャオブジェクトを返却
+ *              Return the atlas texture object
+ * 
+ * @returns {IAttachmentObject}
+ * @method
+ * @protected
+ */
+export const $getAtlasAttachmentObject = (): IAttachmentObject =>
+{
+    if (!($activeAtlasIndex in $atlasAttachmentObjects)) {
+        $atlasAttachmentObjects[$activeAtlasIndex] = frameBufferManagerGetAttachmentObjectUseCase($RENDER_MAX_SIZE, $RENDER_MAX_SIZE);
+    }
+    return $atlasAttachmentObjects[$activeAtlasIndex];
+};
+
+/**
+ * @description アトラステクスチャオブジェクトが存在するか
+ *              Does the atlas texture object exist?
+ * 
+ * @return {boolean}
+ * @method
+ * @protected
+ */
+export const $hasAtlasAttachmentObject = (): boolean =>
+{
+    return $activeAtlasIndex in $atlasAttachmentObjects;
+};
+
+/**
  * @description ルートノードの配列
  *              Array of root nodes
  * 
@@ -91,3 +101,28 @@ export const $getActiveAtlasIndex = (): number =>
  * @protected
  */
 export const $rootNodes: TexturePacker[] = [];
+
+/**
+ * @description アトラス専用のテクスチャ
+ *              Texture for atlas only
+ * 
+ * @type {ITextureObject | null}
+ * @private
+ */
+export let $atlasTexture: ITextureObject | null = null;
+
+/**
+ * @description アトラステクスチャオブジェクトを返却
+ *              Return the atlas texture object
+ * 
+ * @return {ITextureObject}
+ * @method
+ * @protected
+ */
+export const $getAtlasTexture = (): ITextureObject =>
+{
+    if (!$atlasTexture) {
+        $atlasTexture = textureManagerCreateAtlasTextureUseCase();
+    }
+    return $atlasTexture as ITextureObject;
+};

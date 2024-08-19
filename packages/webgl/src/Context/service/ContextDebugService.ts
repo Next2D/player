@@ -1,9 +1,12 @@
 import { $drawFrameBuffer } from "../../FrameBufferManager";
 import { $gl, $context } from "../../WebGLUtil";
+import { $setActiveAtlasIndex } from "../../AtlasManager";
 
 export const execute = (): void =>
 {
     const currentAttachmentObject = $context.currentAttachmentObject;
+
+    $setActiveAtlasIndex(0);
     $context.bind($context.atlasAttachmentObject);
 
     const width  = $context.atlasAttachmentObject?.width;

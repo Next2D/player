@@ -25,7 +25,6 @@ import { execute as contextBeginNodeRenderingService } from "./Context/service/C
 import { execute as contextEndNodeRenderingService } from "./Context/service/ContextEndNodeRenderingService";
 import { execute as contextDebugService } from "./Context/service/ContextDebugService";
 import { execute as contextFillUseCase } from "./Context/usecase/ContextFillUseCase";
-import { execute as atlasManagerBootUseCase } from "./AtlasManager/usecase/AtlasManagerBootUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import {
@@ -224,9 +223,6 @@ export class Context
         // FrameBufferManagerの初期起動
         $setReadFrameBuffer(gl);
         $setDrawFrameBuffer(gl);
-
-        // AtlasManagerの初期起動
-        atlasManagerBootUseCase();
 
         // コンテキストをセット
         $setContext(this);

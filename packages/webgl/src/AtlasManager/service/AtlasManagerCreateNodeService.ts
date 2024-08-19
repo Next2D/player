@@ -1,8 +1,11 @@
 import type { Node } from "@next2d/texture-packer";
-import { $getActiveAtlasIndex, $setActiveAtlasIndex } from "../../AtlasManager";
 import { $rootNodes } from "../../AtlasManager";
 import { $RENDER_MAX_SIZE } from "../../WebGLUtil";
 import { TexturePacker } from "@next2d/texture-packer";
+import {
+    $getActiveAtlasIndex,
+    $setActiveAtlasIndex
+} from "../../AtlasManager";
 
 /**
  * @description 指定サイズのキャッシュ座標を生成、二分木構造を利用して座標を取得します。
@@ -25,8 +28,6 @@ export const execute = (width: number, height: number): Node =>
     const node = rootNode.insert(width, height);
 
     if (!node) {
-        // TODO
-        console.log("TODO");
         $setActiveAtlasIndex(index + 1);
         return execute(width, height);
     }

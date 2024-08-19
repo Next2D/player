@@ -32,10 +32,10 @@ export const execute = (node: Node, width: number, height: number): Node | null 
 
     if (dw > dh) {
         node.left  = new Node(node.index, node.x, node.y, width, height);
-        node.right = new Node(node.index, node.x + width + 1, node.y, node.w - width - 1, node.h);
+        node.right = new Node(node.index, node.x + width + 1, node.y, dw - 1, node.h);
     } else {
         node.left  = new Node(node.index, node.x, node.y, node.w, height);
-        node.right = new Node(node.index, node.x, node.y + height + 1, node.w, node.h - height - 1);
+        node.right = new Node(node.index, node.x, node.y + height + 1, node.w, dh - 1);
     }
 
     node.used = true;
