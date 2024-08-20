@@ -1,6 +1,9 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import { $drawFrameBuffer } from "../../FrameBufferManager";
-import { $gl, $context } from "../../WebGLUtil";
+import {
+    $gl,
+    $context
+} from "../../WebGLUtil";
 
 /**
  * @description メインのアタッチメントオブジェクトをメインキャンバスに転送します。

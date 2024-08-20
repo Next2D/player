@@ -118,7 +118,7 @@ export const $disabled = (): void =>
  * @default 600
  * @private
  */
-export let $funcCode: number = 600;
+let $funcCode: number = 600;
 
 /**
  * @description ブレンドモードの設定コードを更新
@@ -132,4 +132,17 @@ export let $funcCode: number = 600;
 export const $setFuncCode = (func_code: number): void =>
 {
     $funcCode = func_code;
+};
+
+/**
+ * @description ブレンドモードの設定コードを返却
+ *              Returns the blend mode setting code
+ * 
+ * @return {number}
+ * @method
+ * @protected
+ */
+export const $getFuncCode = (): number =>
+{
+    return $funcCode;
 };
