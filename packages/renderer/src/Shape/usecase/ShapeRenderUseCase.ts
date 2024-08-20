@@ -82,7 +82,8 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const height = Math.ceil(Math.abs(yMax - yMin) * yScale);
 
         node = $context.createNode(width, height);
-        
+        $cacheStore.set(uniqueKey, `${cacheKey}`, node);
+
         // 初期化して、描画範囲とmatrix設定
         $context.reset();
         $context.beginNodeRendering(node);
@@ -111,7 +112,6 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         if (!node) {
             return index;
         }
-
     }
 
     const radianX = Math.atan2(matrix[1], matrix[0]);

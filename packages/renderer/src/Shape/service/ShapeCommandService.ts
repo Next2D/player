@@ -91,18 +91,22 @@ export const execute = (commands: Float32Array, has_grid: boolean): void =>
                 break;
 
             case GRADIENT_FILL:
+                console.log("GRADIENT_FILL");
                 // todo
                 break;
 
             case GRADIENT_STROKE:
+                console.log("GRADIENT_STROKE");
                 // todo
                 break;
 
             case BITMAP_FILL:
+                console.log("BITMAP_FILL");
                 // todo
                 break;
 
             case BITMAP_STROKE:
+                console.log("BITMAP_STROKE");
                 // todo
                 break;
 

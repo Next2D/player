@@ -118,7 +118,6 @@ export const execute = <P extends DisplayObjectContainer>(
         }
 
         render_queue.push(child.placeId, child.clipDepth);
-       
         switch (true) {
 
             case child.isContainerEnabled: // 0x00

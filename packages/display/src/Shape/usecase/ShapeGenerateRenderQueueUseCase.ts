@@ -37,7 +37,6 @@ export const execute = (
 ): void => {
 
     render_queue.push($RENDERER_SHAPE_TYPE);
-
     if (!shape.visible) {
         render_queue.push(0);
         return ;
@@ -203,8 +202,8 @@ export const execute = (
     const cacheKey = shape.cacheKey;
 
     render_queue.push(cacheKey);
-    const cachePosition = $cacheStore.get(shape.uniqueKey, `${cacheKey}`);
-    if (!cachePosition) {
+    const cache = $cacheStore.get(shape.uniqueKey, `${cacheKey}`);
+    if (!cache) {
         render_queue.push(0);
 
         const buffer = graphics.buffer;

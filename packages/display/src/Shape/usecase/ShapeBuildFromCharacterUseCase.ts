@@ -27,25 +27,36 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
     graphics.yMin = character.bounds.yMin;
     graphics.yMax = character.bounds.yMax;
 
-    if (character.recodes) {
+    switch (true) {
 
-        switch (true) {
+        case character.bitmapId > 0:
+            break;
+            
+        case character.inBitmap:
+            break;
 
-            // todo
+        default:
+            switch (true) {
 
-            default:
-                if (!character.recodeBuffer) {
-                    character.recodeBuffer = new Float32Array(
-                        graphicsToNumberArrayService(width, height, character.recodes)
-                    );
-                    $poolArray(character.recodes);
-                    character.recodes = null;
-                }
-                graphics.buffer = character.recodeBuffer.slice(0);
-                break;
+                // todo
+    
+                default:
+                    if (character.recodes) {
+                        character.recodeBuffer = new Float32Array(
+                            graphicsToNumberArrayService(width, height, character.recodes)
+                        );
+                        $poolArray(character.recodes);
+                        character.recodes = null;
+                    }
 
-        }
-    } else {
-        // todo
+                    if (!character.recodeBuffer) {
+                        break;
+                    }
+
+                    graphics.buffer = character.recodeBuffer.slice(0);
+                    break;
+    
+            }
+            break;
     }
 };

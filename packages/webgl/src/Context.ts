@@ -30,6 +30,7 @@ import { execute as blnedDrawArraysInstancedUseCase } from "./Blend/usecase/Blne
 import { execute as vertexArrayObjectBootUseCase } from "./VertexArrayObject/usecase/VertexArrayObjectBootUseCase";
 import { execute as frameBufferManagerTransferMainCanvasService } from "./FrameBufferManager/service/FrameBufferManagerTransferMainCanvasService";
 import { execute as blendEnableUseCase } from "./Blend/usecase/BlendEnableUseCase";
+import { execute as contextDebugService } from "./Context/service/ContextDebugService";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
@@ -701,5 +702,10 @@ export class Context
     transferMainCanvas (): void
     {
         frameBufferManagerTransferMainCanvasService();
+    }
+
+    debug (): void
+    {
+        contextDebugService();
     }
 }
