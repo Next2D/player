@@ -1,5 +1,5 @@
-import { CacheStore } from "../CacheStore";
-import { $poolMap } from "../CacheUtil";
+import { CacheStore } from "../../CacheStore";
+import { $poolMap } from "../../CacheUtil";
 
 /**
  * @description 指定IDのキャッシュを削除する

@@ -1,4 +1,4 @@
-import { $cacheStore } from "../";
+import { $cacheStore } from "../../CacheStore";
 import { execute } from "./CacheStoreSetService";
 import { describe, expect, it } from "vitest";
 

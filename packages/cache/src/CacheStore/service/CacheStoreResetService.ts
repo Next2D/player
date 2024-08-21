@@ -1,5 +1,5 @@
-import type { CacheStore } from "../CacheStore";
-import { $poolMap } from "../CacheUtil";
+import type { CacheStore } from "../../CacheStore";
+import { $poolMap } from "../../CacheUtil";
 
 /**
  * @description キャッシュストアを全てリセット

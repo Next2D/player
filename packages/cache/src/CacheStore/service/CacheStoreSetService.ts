@@ -1,8 +1,8 @@
-import type { CacheStore } from "../CacheStore";
+import type { CacheStore } from "../../CacheStore";
 import {
     $getMap,
     $poolMap
-} from "../CacheUtil";
+} from "../../CacheUtil";
 
 /**
  * @description キャッシュストアにデータをセット

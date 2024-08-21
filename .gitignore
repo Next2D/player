@@ -3,7 +3,6 @@ json
 dist
 build
 coverage
-*.html
 .DS_Store
 .idea
 Thumbs.db

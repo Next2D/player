@@ -1,6 +1,6 @@
 import { execute } from "./CacheStoreResetService";
 import { describe, expect, it } from "vitest";
-import { $cacheStore } from "../";
+import { $cacheStore } from "../..";
 
 describe("CacheStoreResetService.js test", () =>
 {

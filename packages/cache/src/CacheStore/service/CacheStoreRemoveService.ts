@@ -1,4 +1,4 @@
-import { $poolMap } from "../CacheUtil";
+import { $poolMap } from "../../CacheUtil";
 
 /**
  * @description キャッシュストアから指定したキャッシュを削除

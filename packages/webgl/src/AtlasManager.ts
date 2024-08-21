@@ -75,7 +75,9 @@ export const $setAtlasAttachmentObject = (attachment_object: IAttachmentObject):
 export const $getAtlasAttachmentObject = (): IAttachmentObject =>
 {
     if (!($activeAtlasIndex in $atlasAttachmentObjects)) {
-        $atlasAttachmentObjects[$activeAtlasIndex] = frameBufferManagerGetAttachmentObjectUseCase($RENDER_MAX_SIZE, $RENDER_MAX_SIZE);
+        $setAtlasAttachmentObject(
+            frameBufferManagerGetAttachmentObjectUseCase($RENDER_MAX_SIZE, $RENDER_MAX_SIZE, true)
+        );
     }
     return $atlasAttachmentObjects[$activeAtlasIndex];
 };

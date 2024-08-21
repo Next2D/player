@@ -31,13 +31,12 @@ export const execute = (width: number, height: number, multisample: boolean = fa
     if (multisample) {
         attachmentObject.msaa    = true;
         attachmentObject.texture = null;
-        const colorBufferObject  = colorBufferObjectGetColorBufferObjectUseCase(width, height);
-        attachmentObject.color   = colorBufferObject;
-        attachmentObject.stencil = colorBufferObject.stencil;
+        attachmentObject.color   = colorBufferObjectGetColorBufferObjectUseCase(width, height);
+        attachmentObject.stencil = attachmentObject.color.stencil;
     } else {
         attachmentObject.msaa    = false;
-        attachmentObject.color   = null;
         attachmentObject.texture = textureManagerGetTextureUseCase(width, height);
+        attachmentObject.color   = null;
         attachmentObject.stencil = stencilBufferObjectGetStencilBufferObjectUseCase(width, height);
     }
 

@@ -56,6 +56,8 @@ export const execute = (): void =>
 
     $context.bind($context.$mainAttachmentObject as IAttachmentObject);
     blendOperationUseCase($context.globalCompositeOperation);
+
+    $gl.activeTexture($gl.TEXTURE3);
     shaderInstancedManagerDrawArraysInstancedUseCase(
         shaderInstancedManager
     );
