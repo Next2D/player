@@ -6,6 +6,7 @@ import {
     $context,
     $poolArray
 } from "../../RendererUtil"; 
+import { $clamp } from "../../../../webgl/src/WebGLUtil";
 
 /**
  * @description Shapeの描画を実行します。
@@ -141,7 +142,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     }
 
     // todo
-    $context.globalAlpha = 1;
+    $context.globalAlpha = $clamp(colorTransform[3] + colorTransform[7] / 255, 0, 1, 0);
     $context.imageSmoothingEnabled = true;
     $context.globalCompositeOperation = "normal";
 
