@@ -37,6 +37,8 @@ export const execute = (): void =>
     );
 
     const textureObject = $getAtlasTextureObject();
+    $gl.activeTexture($gl.TEXTURE3);
+
     $gl.framebufferTexture2D(
         $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
         $gl.TEXTURE_2D, textureObject.resource, 0
@@ -57,14 +59,8 @@ export const execute = (): void =>
     $context.bind($context.$mainAttachmentObject as IAttachmentObject);
     blendOperationUseCase($context.globalCompositeOperation);
 
-    $gl.activeTexture($gl.TEXTURE3);
     shaderInstancedManagerDrawArraysInstancedUseCase(
         shaderInstancedManager
-    );
-
-    $gl.activeTexture($activeTextureUnit !== -1 
-        ? $activeTextureUnit 
-        : $gl.TEXTURE0
     );
 
     shaderInstancedManager.clear();
@@ -72,4 +68,9 @@ export const execute = (): void =>
     if (currentAttachmentObject) {
         $context.bind(currentAttachmentObject);
     }
+
+    $gl.activeTexture($activeTextureUnit !== -1 
+        ? $activeTextureUnit 
+        : $gl.TEXTURE0
+    );
 };

@@ -1,4 +1,4 @@
-import { $drawFrameBuffer } from "../../FrameBufferManager";
+import { $drawFrameBuffer, $readFrameBuffer } from "../../FrameBufferManager";
 import { $context, $gl } from "../../WebGLUtil";
 
 export const execute = (): void =>
@@ -17,7 +17,7 @@ export const execute = (): void =>
 
     // execute
     $gl.blitFramebuffer(
-        0, 0, $context.atlasAttachmentObject?.width, $context.atlasAttachmentObject?.height,
+        0, 0, width, height,
         0, 0, width, height,
         $gl.COLOR_BUFFER_BIT,
         $gl.NEAREST

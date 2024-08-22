@@ -1,4 +1,5 @@
 
+import { $drawFrameBuffer, $readFrameBuffer } from "../../FrameBufferManager";
 import {
     $gl,
     $setViewportSize

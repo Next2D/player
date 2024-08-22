@@ -10,15 +10,6 @@ import type { IAttachmentObject } from "./interface/IAttachmentObject";
 export const $objectPool: IAttachmentObject[] = [];
 
 /**
- * @description 現在アタッチされてるAttachmentObject
- *              Currently attached AttachmentObject
- * 
- * @type {IAttachmentObject|null}
- * @private
- */
-let $currentAttachment: IAttachmentObject | null = null;
-
-/**
  * @description READ_FRAMEBUFFER専用のFrameBufferオブジェクト
  *              FrameBuffer object for READ_FRAMEBUFFER only
  * 
@@ -63,17 +54,17 @@ export let $drawFrameBuffer: WebGLFramebuffer;
 export const $setDrawFrameBuffer = (gl: WebGL2RenderingContext): void => 
 {
     $drawFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
-    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, $drawFrameBuffer); 
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, $drawFrameBuffer); 
 };
 
 /**
- * @description FrameBufferがバインドされているかどうかのフラグ
- *              Flag to check if FrameBuffer is bound
+ * @description 現在アタッチされてるAttachmentObject
+ *              Currently attached AttachmentObject
  * 
- * @type {boolean}
- * @protected
+ * @type {IAttachmentObject|null}
+ * @private
  */
-export let $isFramebufferBound: boolean = false;
+let $currentAttachment: IAttachmentObject | null = null;
 
 /**
  * @description 現在アタッチされてるAttachmentObjectを設定
@@ -101,6 +92,15 @@ export const $getCurrentAttachment = (): IAttachmentObject | null =>
 {
     return $currentAttachment;
 }
+
+/**
+ * @description FrameBufferがバインドされているかどうかのフラグ
+ *              Flag to check if FrameBuffer is bound
+ * 
+ * @type {boolean}
+ * @protected
+ */
+export let $isFramebufferBound: boolean = false;
 
 /**
  * @description FrameBufferがバインドされているかどうかのフラグの値を更新

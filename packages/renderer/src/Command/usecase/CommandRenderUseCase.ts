@@ -84,6 +84,6 @@ export const execute = (render_queue: Float32Array): void =>
     }
 
     $context.drawArraysInstanced();
-    // $context.transferMainCanvas();
-    $context.debug();
+    $context.transferMainCanvas();
+    // $context.debug();
 };
