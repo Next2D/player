@@ -51,5 +51,6 @@ export const execute = (width: number, height: number): IColorBufferObject =>
         );
     }
 
+    colorBufferObject.dirty = true;
     return colorBufferObject;
 };

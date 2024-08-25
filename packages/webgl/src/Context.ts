@@ -35,7 +35,8 @@ import { $getAtlasAttachmentObject } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
     $setDrawFrameBuffer,
-    $getCurrentAttachment
+    $getCurrentAttachment,
+    $setAtlasFrameBuffer
 } from "./FrameBufferManager";
 import {
     $setRenderMaxSize,
@@ -215,9 +216,8 @@ export class Context
         this.imageSmoothingEnabled    = false;
 
         // 塗りつぶしタイプ、ストロークタイプ
-        this.$fillType   = -1;
-        this.$strokeType = -1;
-
+        this.$fillType    = -1;
+        this.$strokeType  = -1;
         this.$fillStyle   = new Float32Array([1, 1, 1, 1]);
         this.$strokeStyle = new Float32Array([1, 1, 1, 1]);
 
@@ -228,6 +228,7 @@ export class Context
         // FrameBufferManagerの初期起動
         $setReadFrameBuffer(gl);
         $setDrawFrameBuffer(gl);
+        $setAtlasFrameBuffer(gl);
 
         // VertexArrayObjectの初期起動
         vertexArrayObjectBootUseCase(gl);

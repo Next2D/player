@@ -46,7 +46,7 @@ export const execute = (render_queue: Float32Array): void =>
     $context.reset();
     $context.setTransform(1, 0, 0, 1, 0, 0);
     $context.clearRect(0, 0, $rendererWidth, $rendererHeight);
-    $context.fillBackgroundColor();
+    // $context.fillBackgroundColor();
 
     while (render_queue.length > index) {
 

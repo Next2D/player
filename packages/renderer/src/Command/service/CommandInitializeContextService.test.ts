@@ -58,6 +58,7 @@ describe("CommandInitializeContextService.js test", () =>
                         "blendFunc": vi.fn(),
                         "renderbufferStorage": vi.fn(),
                         "bindVertexArray": vi.fn(() => "bindVertexArray"),
+                        "framebufferTexture2D": vi.fn(() => "framebufferTexture2D"),
                     };
                 })
             } as unknown as HTMLCanvasElement;

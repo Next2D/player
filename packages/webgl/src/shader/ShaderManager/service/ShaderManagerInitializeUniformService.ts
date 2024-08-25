@@ -1,3 +1,4 @@
+import { at } from "vitest/dist/chunks/reporters.C_zwCd4j.js";
 import type { IUniformData } from "../../../interface/IUniformData";
 import { $gl } from "../../../WebGLUtil";
 
@@ -7,11 +8,15 @@ import { $gl } from "../../../WebGLUtil";
  * 
  * @param {WebGLProgram} program 
  * @param {Map} map 
+ * @param {boolean} [atlas=false] 
  * @method
  * @protected
  */
-export const execute = (program: WebGLProgram, map: Map<string, IUniformData>): void => 
-{
+export const execute = (
+    program: WebGLProgram,
+    map: Map<string, IUniformData>,
+    atlas: boolean = false
+): void => {
     const count = $gl.getProgramParameter(program, $gl.ACTIVE_UNIFORMS);
     for (let idx = 0; idx < count; ++idx) {
 
@@ -25,7 +30,7 @@ export const execute = (program: WebGLProgram, map: Map<string, IUniformData>): 
 
         // WebGLの仕様でuniformのint型のデフォルト値は0に設定されるため、
         // sampler2D（size=1）の値の更新は不要
-        if (info.type === $gl.SAMPLER_2D && info.size === 1) {
+        if (info.type === $gl.SAMPLER_2D && info.size === 1 && !atlas) {
             continue;
         }
 
@@ -49,7 +54,9 @@ export const execute = (program: WebGLProgram, map: Map<string, IUniformData>): 
             // uniformの値の設定は、programに保持されるため、
             // sampler2Dは一度だけ設定するようにする
             case $gl.SAMPLER_2D:
-                data.method = $gl.uniform1iv.bind($gl, location);
+                data.method = atlas 
+                    ? $gl.uniform1i.bind($gl,location, 3) 
+                    : $gl.uniform1iv.bind($gl, location);
                 data.array  = new Int32Array(info.size);
                 data.assign = 1;
                 break;

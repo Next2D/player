@@ -33,6 +33,10 @@ describe("ContextResizeUseCase.js method test", () =>
             "vertexAttribDivisor": vi.fn(() => "vertexAttribDivisor"),
             "enable": vi.fn(() => "enable"),
             "blendFunc": vi.fn(() => "blendFunc"),
+            "framebufferTexture2D": vi.fn(() => "framebufferTexture2D"),
+            "scissor": vi.fn(() => "scissor"),
+            "clear": vi.fn(() => "clear"),
+            "disable": vi.fn(() => "disable"),
         } as unknown as WebGL2RenderingContext;
 
         const context = new Context(mockGL, 4);

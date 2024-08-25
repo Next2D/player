@@ -27,12 +27,13 @@ export class ShaderInstancedManager extends ShaderManager
     /**
      * @param {string} vertex_source 
      * @param {string} fragment_source
+     * @param {boolean} [atlas=true]
      * @constructor
      * @public
      */
-    constructor (vertex_source: string, fragment_source: string) 
+    constructor (vertex_source: string, fragment_source: string, atlas: boolean = true) 
     {
-        super(vertex_source, fragment_source);
+        super(vertex_source, fragment_source, atlas);
         this.attributes = [];
         this.count      = 0;
     }

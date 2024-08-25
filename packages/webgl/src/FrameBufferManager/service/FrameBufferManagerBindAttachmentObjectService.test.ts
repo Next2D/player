@@ -4,7 +4,7 @@ import {
     $setCurrentAttachment,
     $getCurrentAttachment,
     $setFramebufferBound,
-    $isFramebufferBound
+    $useFramebufferBound
 } from "../../FrameBufferManager";
 import {
     $activeTextureUnit,
@@ -59,7 +59,7 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
         };
 
         $setFramebufferBound(false);
-        expect($isFramebufferBound).toBe(false);
+        expect($useFramebufferBound()).toBe(false);
         $setCurrentAttachment(null);
         expect($getCurrentAttachment()).toBe(null);
         $setActiveTextureUnit(-1);
@@ -68,7 +68,7 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
         execute(attachmentObject);
 
         expect($getCurrentAttachment()).toBe(attachmentObject);
-        expect($isFramebufferBound).toBe(true);
+        expect($useFramebufferBound()).toBe(true);
         expect($activeTextureUnit).toBe(0);
     });
 
@@ -120,7 +120,7 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
         };
     
         $setFramebufferBound(false);
-        expect($isFramebufferBound).toBe(false);
+        expect($useFramebufferBound()).toBe(false);
         $setCurrentAttachment(null);
         expect($getCurrentAttachment()).toBe(null);
         $setActiveTextureUnit(-1);
@@ -129,7 +129,7 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
         execute(attachmentObject);
 
         expect($getCurrentAttachment()).toBe(attachmentObject);
-        expect($isFramebufferBound).toBe(true);
+        expect($useFramebufferBound()).toBe(true);
         expect($activeTextureUnit).toBe(-1);
     });
 });

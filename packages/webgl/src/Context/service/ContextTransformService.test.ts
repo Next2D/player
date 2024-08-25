@@ -33,6 +33,7 @@ describe("ContextTransformService.js method test", () =>
             "vertexAttribDivisor": vi.fn(() => "vertexAttribDivisor"),
             "enable": vi.fn(() => "enable"),
             "blendFunc": vi.fn(() => "blendFunc"),
+            "framebufferTexture2D": vi.fn(() => "framebufferTexture2D"),
         } as unknown as WebGL2RenderingContext;
 
         const context = new Context(mockGL, 4);

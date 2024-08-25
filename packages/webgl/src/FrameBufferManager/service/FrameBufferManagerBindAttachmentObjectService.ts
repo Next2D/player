@@ -5,10 +5,10 @@ import type { IStencilBufferObject } from "../../interface/IStencilBufferObject"
 import { $gl } from "../../WebGLUtil";
 import { execute as textureManagerBind0UseCase } from "../../TextureManager/usecase/TextureManagerBind0UseCase";
 import {
-    $isFramebufferBound,
     $setFramebufferBound,
     $setCurrentAttachment,
-    $readFrameBuffer
+    $readFrameBuffer,
+    $useFramebufferBound
 } from "../../FrameBufferManager";
 
 /**
@@ -24,7 +24,7 @@ export const execute = (attachment_object: IAttachmentObject): void =>
 {
     $setCurrentAttachment(attachment_object);
 
-    if (!$isFramebufferBound) {
+    if (!$useFramebufferBound()) {
         $setFramebufferBound(true);
         $gl.bindFramebuffer($gl.FRAMEBUFFER, $readFrameBuffer);
     }

@@ -35,17 +35,19 @@ export class ShaderManager
     /**
      * @param {string} vertex_source 
      * @param {string} fragment_source
+     * @param {boolean} [atlas=false]
      * @constructor
      * @public
      */
-    constructor (vertex_source: string, fragment_source: string) 
+    constructor (vertex_source: string, fragment_source: string, atlas: boolean = false) 
     {
         this._$programObject = shaderManagerCreateProgramService(vertex_source, fragment_source);
         this._$uniformMap    = new Map();
 
         shaderManagerInitializeUniformService(
             this._$programObject.resource,
-            this._$uniformMap
+            this._$uniformMap,
+            atlas
         );
     }
 

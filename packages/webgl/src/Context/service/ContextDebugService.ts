@@ -4,6 +4,7 @@ import { $context, $gl } from "../../WebGLUtil";
 export const execute = (): void =>
 {
     const currentAttachmentObject = $context.currentAttachmentObject;
+    $gl.bindFramebuffer($gl.FRAMEBUFFER, $readFrameBuffer);
     $context.bind($context.atlasAttachmentObject);
 
     const width  = $context.$mainAttachmentObject?.width;
@@ -31,6 +32,5 @@ export const execute = (): void =>
 
     if (currentAttachmentObject) {
         $context.bind(currentAttachmentObject);
-    }  
-
+    }
 };
