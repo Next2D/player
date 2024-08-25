@@ -105,8 +105,6 @@ export const execute = <P extends DisplayObjectContainer>(
         // todo
     }
 
-
-
     const colorTransform = isLayer 
         ? tColorTransform
         : new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);

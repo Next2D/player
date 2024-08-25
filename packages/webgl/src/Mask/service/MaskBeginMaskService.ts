@@ -30,6 +30,14 @@ export const execute = (
         $context.maskBounds.yMin = y_min;
         $context.maskBounds.xMax = x_max;
         $context.maskBounds.yMax = y_max;
+
+        $gl.enable($gl.SCISSOR_TEST);
+        $gl.scissor(
+            x_min,
+            y_min,
+            Math.abs(x_max - x_min),
+            Math.abs(y_max - y_min),
+        );
     }
 
     const currentAttachmentObject = $context.currentAttachmentObject;
