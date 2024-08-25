@@ -24,13 +24,9 @@ export const execute = (uniform_map: Map<string, IUniformData>): void =>
 
         } else if (data.assign > 0) {
 
-            
             data.assign--;
             data.method(data.array);
-
-            if (data.unit) {
-                data.unit();
-            }
+            
         }
     }
 };

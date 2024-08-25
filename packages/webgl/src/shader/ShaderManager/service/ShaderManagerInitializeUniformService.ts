@@ -1,4 +1,3 @@
-import { at } from "vitest/dist/chunks/reporters.C_zwCd4j.js";
 import type { IUniformData } from "../../../interface/IUniformData";
 import { $gl } from "../../../WebGLUtil";
 
