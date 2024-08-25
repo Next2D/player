@@ -50,14 +50,13 @@ export const execute = (render_queue: Float32Array): void =>
 
     while (render_queue.length > index) {
 
-        // display object type
-        const type = render_queue[index++];
-
         // hidden
         if (!render_queue[index++]) {
             continue;
         }
 
+        // display object type
+        const type = render_queue[index++];
         switch (type) {
 
             case 0x00: // container
@@ -85,5 +84,4 @@ export const execute = (render_queue: Float32Array): void =>
 
     $context.drawArraysInstanced();
     $context.transferMainCanvas();
-    // $context.debug();
 };

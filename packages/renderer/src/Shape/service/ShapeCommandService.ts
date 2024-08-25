@@ -22,12 +22,17 @@ const BITMAP_STROKE: number   = 14;
  *
  * @param  {Float32Array} commands
  * @param  {boolean} has_grid
+ * @param  {boolean} [is_clip=false]
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (commands: Float32Array, has_grid: boolean): void =>
-{
+export const execute = (
+    commands: Float32Array,
+    has_grid: boolean,
+    is_clip: boolean = false
+): void => {
+
     let index = 0;
     while (commands.length > index) {
 
@@ -53,6 +58,11 @@ export const execute = (commands: Float32Array, has_grid: boolean): void =>
                 break;
 
             case FILL_STYLE:
+                if (is_clip) {
+                    index += 4;
+                    break;
+                }
+
                 $context.fillStyle(
                     commands[index++] / 255, commands[index++] / 255,
                     commands[index++] / 255, commands[index++] / 255
@@ -60,10 +70,19 @@ export const execute = (commands: Float32Array, has_grid: boolean): void =>
                 break;
 
             case END_FILL:
+                if (is_clip) {
+                    break;
+                }
+
                 $context.fill(has_grid);
                 break;
 
             case STROKE_STYLE:
+                if (is_clip) {
+                    index += 4;
+                    break;
+                }
+
                 $context.strokeStyle(
                     commands[index++] / 255, commands[index++] / 255,
                     commands[index++] / 255, commands[index++] / 255
@@ -71,6 +90,10 @@ export const execute = (commands: Float32Array, has_grid: boolean): void =>
                 break;
             
             case END_STROKE:
+                if (is_clip) {
+                    break;
+                }
+                
                 $context.stroke();
                 break;
 

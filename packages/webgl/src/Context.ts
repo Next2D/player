@@ -1,6 +1,7 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IFillTyle } from "./interface/IFillTyle";
+import type { IBounds } from "./interface/IBounds";
 import type { IStrokeTyle } from "./interface/IStrokeTyle";
 import type { Node } from "@next2d/texture-packer";
 import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService";
@@ -24,13 +25,17 @@ import { execute as contextResetStyleService } from "./Context/service/ContextRe
 import { execute as contextBeginNodeRenderingService } from "./Context/service/ContextBeginNodeRenderingService";
 import { execute as contextEndNodeRenderingService } from "./Context/service/ContextEndNodeRenderingService";
 import { execute as contextFillUseCase } from "./Context/usecase/ContextFillUseCase";
+import { execute as contextClipUseCase } from "./Context/usecase/ContextClipUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
 import { execute as blnedDrawDisplayObjectUseCase } from "./Blend/usecase/BlnedDrawDisplayObjectUseCase";
 import { execute as blnedDrawArraysInstancedUseCase } from "./Blend/usecase/BlnedDrawArraysInstancedUseCase";
 import { execute as vertexArrayObjectBootUseCase } from "./VertexArrayObject/usecase/VertexArrayObjectBootUseCase";
 import { execute as frameBufferManagerTransferMainCanvasService } from "./FrameBufferManager/service/FrameBufferManagerTransferMainCanvasService";
 import { execute as blendEnableUseCase } from "./Blend/usecase/BlendEnableUseCase";
-import { execute as contextDebugService } from "./Context/service/ContextDebugService";
+import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
+import { execute as maskStartMaskService } from "./Mask/service/MaskStartMaskService";
+import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
+import { execute as maskLeaveMaskService } from "./Mask/service/MaskLeaveMaskService";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
@@ -187,6 +192,15 @@ export class Context
     public $strokeStyle: Float32Array;
 
     /**
+     * @description マスクの描画範囲
+     *              Drawing range of the mask
+     * 
+     * @type {IBounds}
+     * @protected
+     */
+    public readonly maskBounds: IBounds;
+
+    /**
      * @param {WebGL2RenderingContext} gl
      * @param {number} samples
      * @constructor
@@ -220,6 +234,14 @@ export class Context
         this.$strokeType  = -1;
         this.$fillStyle   = new Float32Array([1, 1, 1, 1]);
         this.$strokeStyle = new Float32Array([1, 1, 1, 1]);
+
+        // マスクの描画範囲
+        this.maskBounds = {
+            "xMin": 0,
+            "yMin": 0,
+            "xMax": 0,
+            "yMax": 0
+        };
 
         // WebTextureの設定
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -584,6 +606,20 @@ export class Context
     }
 
     /**
+     * @description マスク処理を実行
+     *              Perform mask processing
+     * 
+     * @param  {boolean} has_grid
+     * @return {void}
+     * @method
+     * @public
+     */
+    clip (has_grid: boolean): void
+    {
+        contextClipUseCase(has_grid);
+    }
+
+    /**
      * @description 現在のアタッチメントオブジェクトを取得
      *              Get the current attachment object
      * 
@@ -705,8 +741,60 @@ export class Context
         frameBufferManagerTransferMainCanvasService();
     }
 
-    debug (): void
+    /**
+     * @description マスクを開始準備
+     *              Prepare to start drawing the mask
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    beginMask (
+        x_min: number, 
+        y_min: number, 
+        x_max: number, 
+        y_max: number
+    ): void {
+        maskBeginMaskService(x_min, y_min, x_max, y_max);
+    }
+
+    /**
+     * @description マスクの描画を開始
+     *              Start drawing the mask
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    startMask (): void
     {
-        contextDebugService();
+        maskStartMaskService();
+    }
+
+    /**
+     * @description マスクの描画を終了
+     *              End mask drawing
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    endMask (): void
+    {
+        maskEndMaskService();
+    }
+
+    /**
+     * @description マスクの終了処理
+     *              Mask end processing
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    leaveMask (): void
+    {
+        this.drawArraysInstanced();
+        maskLeaveMaskService();
     }
 }

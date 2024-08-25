@@ -25,7 +25,7 @@ export const execute = (): void =>
     if (!shaderInstancedManager.count) {
         return ;
     }
-
+    
     const currentAttachmentObject = $context.currentAttachmentObject;
 
     const atlasAttachmentObject = $context.atlasAttachmentObject;

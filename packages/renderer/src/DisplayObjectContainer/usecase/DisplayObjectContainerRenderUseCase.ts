@@ -1,4 +1,6 @@
+import { $context } from "../../RendererUtil";
 import { execute as shapeRenderUseCase } from "../../Shape/usecase/ShapeRenderUseCase";
+import { execute as shapeClipRenderUseCase } from "../../Shape/usecase/ShapeClipRenderUseCase";
 import { execute as textFieldRenderUseCase } from "../../TextField/usecase/TextFieldRenderUseCase";
 import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUseCase";
 
@@ -16,18 +18,78 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 {
     const length = render_queue[index++];
 
-    let isMaskEnabled = 0;
+    let endClipDepth = 0;
+    let canRenderMask = true;
     for (let idx = 0; length > idx; idx++) {
+
         const depth = render_queue[index++];
         const clipDepth = render_queue[index++];
+        
+        // end mask
+        if (endClipDepth && depth > endClipDepth) {
+            endClipDepth  = 0;
+            canRenderMask = true;
 
-        const type = render_queue[index++];
+            $context.restore();
+            $context.leaveMask();
+        }
+
+        if (!canRenderMask) {
+            continue;
+        }
+
+        // start mask
+        if (clipDepth) {
+
+            endClipDepth  = clipDepth;
+            canRenderMask = Boolean(render_queue[index++]);
+            if (!canRenderMask) {
+                continue;
+            }
+
+            // これまでの描画データを描画して初期化
+            $context.drawArraysInstanced();
+
+            // 設定値を保存
+            $context.save();
+
+            // マスク描画の開始準備
+            $context.beginMask(
+                render_queue[index++],
+                render_queue[index++],
+                render_queue[index++],
+                render_queue[index++]
+            );
+
+            $context.startMask();
+            const type = render_queue[index++];
+            switch (type) {
+
+                case 0x00: // container
+                    break;
+
+                case 0x01: // shape
+                    index = shapeClipRenderUseCase(render_queue, index);
+                    break;
+
+                case 0x02: // text
+                    break;
+
+                case 0x03: // video
+                    break;
+
+            }
+            $context.endMask();
+
+            continue;
+        }
 
         // hidden
         if (!render_queue[index++]) {
             continue;
         }
 
+        const type = render_queue[index++];
         switch (type) {
 
             case 0x00: // container
@@ -51,6 +113,12 @@ export const execute = (render_queue: Float32Array, index: number): number =>
                 break;
 
         }
+    }
+
+    // end mask
+    if (endClipDepth) {
+        $context.restore();
+        $context.leaveMask();
     }
 
     return index;

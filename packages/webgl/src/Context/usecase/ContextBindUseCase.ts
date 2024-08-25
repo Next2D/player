@@ -4,6 +4,7 @@ import type { IStencilBufferObject } from "../../interface/IStencilBufferObject"
 import type { Context } from "../../Context";
 import { $getCurrentAttachment } from "../../FrameBufferManager";
 import { execute as frameBufferManagerBindAttachmentObjectService } from "../../FrameBufferManager/service/FrameBufferManagerBindAttachmentObjectService";
+import { execute as maskBindUseCase } from "../../Mask/usecase/MaskBindUseCase";
 import {
     $gl,
     $setViewportSize
@@ -50,9 +51,8 @@ export const execute = (context: Context, attachment_object: IAttachmentObject):
 
         // 無色透明で初期化
         context.clearRect(0, 0, attachment_object.width, attachment_object.height);
-
-        // todo mask clear
     }
 
-    // todo mask bind
+    // mask bind
+    maskBindUseCase(attachment_object.mask);
 };

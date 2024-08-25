@@ -3,6 +3,7 @@ import type { IVertexArrayObject } from "../../../interface/IVertexArrayObject";
 import type { IIndexRange } from "../../../interface/IIndexRange";
 import { execute as vertexArrayObjectBindService } from "../../../VertexArrayObject/service/VertexArrayObjectBindService";
 import { $gl } from "../../../WebGLUtil";
+import { execute as blendResetService } from "../../../Blend/service/BlendResetService";
 
 /**
  * @description シェーダーマネージャの塗り実行します。
@@ -24,7 +25,7 @@ export const execute = (
     shader_manager.bindUniform();
 
     // set alpha
-    // this._$context.blend.reset();
+    blendResetService();
 
     // bind vertex array
     vertexArrayObjectBindService(vertex_array_object);

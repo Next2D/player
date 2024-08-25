@@ -36,7 +36,6 @@ export const execute = (
     point_y: number
 ): void => {
 
-    render_queue.push($RENDERER_SHAPE_TYPE);
     if (!shape.visible) {
         render_queue.push(0);
         return ;
@@ -122,6 +121,7 @@ export const execute = (
 
     // rennder on
     render_queue.push(1);
+    render_queue.push($RENDERER_SHAPE_TYPE);
     render_queue.push(...tMatrix, ...tColorTransform);
 
     // base bounds
