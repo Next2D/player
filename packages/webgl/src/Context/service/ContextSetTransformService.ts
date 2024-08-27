@@ -1,10 +1,8 @@
-import type { Context } from "../../Context";
-
 /**
  * @description 2D変換行列を設定します
  *              Set the 2D transformation matrix
  * 
- * @param  {Context} context 
+ * @param  {Float32Array} matrix 
  * @param  {number} a 
  * @param  {number} b 
  * @param  {number} c 
@@ -16,14 +14,14 @@ import type { Context } from "../../Context";
  * @protected
  */
 export const execute = (
-    context: Context,
+    matrix: Float32Array,
     a: number, b: number, c: number,
     d: number, e: number, f: number
 ): void => {
-    context.$matrix[0] = a;
-    context.$matrix[1] = b;
-    context.$matrix[3] = c;
-    context.$matrix[4] = d;
-    context.$matrix[6] = e;
-    context.$matrix[7] = f;
+    matrix[0] = a;
+    matrix[1] = b;
+    matrix[3] = c;
+    matrix[4] = d;
+    matrix[6] = e;
+    matrix[7] = f;
 };

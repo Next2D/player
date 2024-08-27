@@ -1,4 +1,4 @@
-import { execute } from "./ContextClearRectService";
+import { execute } from "../service/ContextClearRectService.ts";
 import { describe, expect, it, vi } from "vitest";
 
 describe("ContextClearRectService.js method test", () =>

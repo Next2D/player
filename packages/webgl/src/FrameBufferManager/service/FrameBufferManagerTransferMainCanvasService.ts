@@ -1,5 +1,8 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
-import { $drawFrameBuffer } from "../../FrameBufferManager";
+import {
+    $atlasFrameBuffer,
+    $setFramebufferBound
+} from "../../FrameBufferManager";
 import {
     $gl,
     $context
@@ -25,6 +28,7 @@ export const execute = (): void =>
         $gl.DRAW_FRAMEBUFFER,
         null
     );
+    $setFramebufferBound(false);
 
     const width  = mainAttachmentObject.width;
     const height = mainAttachmentObject.height;
@@ -35,12 +39,6 @@ export const execute = (): void =>
         0, 0, width, height,
         $gl.COLOR_BUFFER_BIT,
         $gl.NEAREST
-    );
-
-    // reset
-    $gl.bindFramebuffer(
-        $gl.DRAW_FRAMEBUFFER,
-        $drawFrameBuffer
     );
 
     if (currentAttachmentObject) {

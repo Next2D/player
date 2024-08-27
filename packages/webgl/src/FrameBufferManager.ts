@@ -55,7 +55,6 @@ export let $drawFrameBuffer: WebGLFramebuffer | null = null;
 export const $setDrawFrameBuffer = (gl: WebGL2RenderingContext): void => 
 {
     $drawFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
-    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, $drawFrameBuffer); 
 };
 
 /**
@@ -87,6 +86,9 @@ export const $setAtlasFrameBuffer = (gl: WebGL2RenderingContext): void =>
         gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
         gl.TEXTURE_2D, textureObject.resource, 0
     );
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, $atlasFrameBuffer); 
 };
 
 /**

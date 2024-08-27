@@ -8,6 +8,7 @@ import {
 } from "../../WebGLUtil";
 import {
     $atlasFrameBuffer,
+    $drawFrameBuffer,
     $setFramebufferBound
 } from "../../FrameBufferManager";
 
@@ -43,7 +44,7 @@ export const execute = (): void =>
         $gl.COLOR_BUFFER_BIT,
         $gl.NEAREST
     );
-    
+
     $context.bind($context.$mainAttachmentObject as IAttachmentObject);
     blendOperationUseCase($context.globalCompositeOperation);
 

@@ -49,6 +49,16 @@ export class DisplayObject extends EventDispatcher
     public readonly instanceId: number;
 
     /**
+     * @description DisplayObject の生成元ID
+     *              Source ID of DisplayObject
+     * 
+     * @type {number}
+     * @default -1
+     * @public
+     */
+    public dictionaryId: number;
+
+    /**
      * @description コンテナの機能を所持しているかを返却
      *              Returns whether the display object has container functionality.
      *
@@ -200,6 +210,12 @@ export class DisplayObject extends EventDispatcher
     public $addedToStage: boolean;
 
     /**
+     * @description キャッシュで利用するユニークキー
+     *              Unique key used for caching
+     */
+    public uniqueKey: string;
+
+    /**
      * @description 固定された変換行列、nullの場合はPlaceObjectの変換行列を検索します。
      *              Fixed transformation matrix, if null, search for PlaceObject transformation matrix.
      * 
@@ -233,14 +249,15 @@ export class DisplayObject extends EventDispatcher
     {
         super();
 
-        this.instanceId = $getInstanceId();
+        this.instanceId   = $getInstanceId();
+        this.dictionaryId = -1;
+        this.uniqueKey    = "";
 
         this.isContainerEnabled = false;
         this.isTimelineEnabled  = false;
         this.isShape            = false;
         this.isVideo            = false;
         this.isText             = false;
-
         
         this.placeId       = -1;
         this.placeObject   = null;

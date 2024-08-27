@@ -77,6 +77,10 @@ export class CommandController
                     );
                     break;
 
+                case "removeClear":
+                    $cacheStore.removeCache(`${object.buffer[0] as number}`);
+                    break;
+
                 case "cacheClear":
                     $cacheStore.reset();
                     break;

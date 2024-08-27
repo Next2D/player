@@ -24,7 +24,9 @@ export const execute = (context: Context, attachment_object: IAttachmentObject):
 {
     // fixed logic
     const currentAttachment = $getCurrentAttachment();
-    if (attachment_object === currentAttachment) {
+    if (currentAttachment
+        && attachment_object.id === currentAttachment.id
+    ) {
         return ;
     }
 
@@ -54,5 +56,5 @@ export const execute = (context: Context, attachment_object: IAttachmentObject):
     }
 
     // mask bind
-    maskBindUseCase(attachment_object.mask);
+    // maskBindUseCase(attachment_object.mask);
 };

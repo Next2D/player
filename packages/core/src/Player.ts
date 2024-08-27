@@ -1,7 +1,5 @@
 import type { IPlayerOptions } from "./interface/IPlayerOptions";
 import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
-import { $stage } from "@next2d/display";
-import { SoundMixer } from "@next2d/media";
 import { $cacheStore } from "@next2d/cache";
 import { $rendererWorker } from "./RendererWorker";
 import { execute as playerCreateContainerElementService } from "./Player/service/PlayerCreateContainerElementService";
@@ -9,6 +7,8 @@ import { execute as playerApplyContainerElementStyleService } from "./Player/ser
 import { execute as playerLoadingAnimationService } from "./Player/service/PlayerLoadingAnimationService";
 import { execute as playerResizeEventService } from "./Player/usecase/PlayerResizeEventUseCase";
 import { execute as playerResizeRegisterService } from "./Player/usecase/PlayerResizeRegisterUseCase";
+import { execute as playerPlayUseCase } from "./Player/usecase/PlayerPlayUseCase";
+import { execute as playerStopService } from "./Player/service/PlayerStopService";
 
 /**
  * @description Next2Dの描画、イベント、設定、コントロールの管理クラスです。
@@ -87,7 +87,7 @@ export class Player
      * @default true
      * @private
      */
-    private _$stopFlag: boolean;
+    public stopFlag: boolean;
 
     /**
      * @description Playerの描画開始時間
@@ -97,7 +97,7 @@ export class Player
      * @default 0
      * @private
      */
-    private _$startTime: number;
+    public startTime: number;
 
     /**
      * @description PlayerのFPS
@@ -107,7 +107,7 @@ export class Player
      * @default 16
      * @private
      */
-    private _$fps: number;
+    public fps: number;
 
     /**
      * @description optionで指定されたcanvasのID、optionで指定されない場合は空文字
@@ -137,7 +137,7 @@ export class Player
      * @default -1
      * @private
      */
-    private _$timerId: number;
+    public timerId: number;
 
     // private _$state: "up" | "down";
     // private _$textField: TextField | null;
@@ -168,10 +168,10 @@ export class Player
         this.rendererHeight = 0;
         this.rendererScale  = 1;
 
-        this._$stopFlag  = true;
-        this._$startTime = 0;
-        this._$fps       = 16;
-        this._$timerId   = -1;
+        this.stopFlag  = true;
+        this.startTime = 0;
+        this.fps       = 16;
+        this.timerId   = -1;
 
         // options
         this._$fixedWidth  = 0;
@@ -291,23 +291,7 @@ export class Player
      */
     play (): void
     {
-        if (!this._$stopFlag) {
-            return ;
-        }
-
-        this._$stopFlag = false;
-
-        if (this._$timerId > -1) {
-            cancelAnimationFrame(this._$timerId);
-        }
-
-        this._$fps = 1000 / $stage.frameRate | 0;
-
-        this._$startTime = performance.now();
-        this._$timerId = requestAnimationFrame((timestamp: number): void =>
-        {
-            // this._$run(timestamp);
-        });
+        playerPlayUseCase(this);
     }
 
     /**
@@ -320,14 +304,7 @@ export class Player
      */
     stop (): void
     {
-        if (this._$timerId > -1) {
-            cancelAnimationFrame(this._$timerId);
-        }
-
-        this._$stopFlag = true;
-        this._$timerId  = -1;
-
-        SoundMixer.stopAll();
+        playerStopService(this);
     }
 
     /**

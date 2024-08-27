@@ -1,4 +1,5 @@
-import { $gl } from "../../WebGLUtil";
+import { $context, $gl } from "../../WebGLUtil";
+import { execute as maskClearRectService } from "../../Mask/service/MaskClearRectService";
 
 /**
  * @description 指定範囲をクリアする
@@ -14,7 +15,8 @@ import { $gl } from "../../WebGLUtil";
  */
 export const execute = (x: number, y: number, w: number, h: number): void =>
 {
-    // todo mask clear
+    // mask clear
+    // maskClearRectService();
 
     // 指定範囲をクリア
     $gl.enable($gl.SCISSOR_TEST);

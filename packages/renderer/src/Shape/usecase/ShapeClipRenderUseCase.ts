@@ -26,7 +26,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     const length = render_queue[index++];
     const commands = render_queue.subarray(index, index + length);
-    shapeCommandService(commands, false, true);
+    // shapeCommandService(commands, false, true);
 
     index += length;
     

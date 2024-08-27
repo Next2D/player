@@ -1,5 +1,5 @@
 
-import type { IResizeMessage } from "../../interface/IResizeMessage";
+import type { IRenderMessage } from "../../interface/IRenderMessage";
 import { $rendererWorker } from "../../RendererWorker";
 import { $player } from "../../Player";
 import { $stage } from "@next2d/display";
@@ -23,7 +23,7 @@ const $matrix: Float32Array = new Float32Array([1, 0, 0, 1, 0, 0]);
  * @type {object}
  * @private
  */
-const message: IResizeMessage = {
+const message: IRenderMessage = {
     "command": "render",
     "buffer": null
 };
@@ -53,6 +53,7 @@ export const execute = (): void =>
     $matrix[4] = ($player.rendererWidth - $stage.stageWidth * scale) / 2;
     $matrix[5] = ($player.rendererHeight - $stage.stageHeight * scale) / 2;
 
+    $renderQueue.length = 0;
     $stage._$generateRenderQueue($renderQueue, $matrix);
 
     const buffer = new Float32Array($renderQueue);

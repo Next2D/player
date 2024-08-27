@@ -43,12 +43,6 @@ export class Shape extends DisplayObject
     public readonly isShape: boolean;
 
     /**
-     * @description Shape描画のキャッシュで利用するユニークキー
-     *              Unique key used for Shape drawing cache
-     */
-    public uniqueKey: string;
-
-    /**
      * @description ビルドされたキャッシュキー
      *              Built cache key
      * 
@@ -77,7 +71,6 @@ export class Shape extends DisplayObject
         super();
 
         this.isShape     = true;
-        this.uniqueKey   = "";
         this.cacheKey    = 0;
         this.cacheParams = $getArray(0, 0, 0);
 

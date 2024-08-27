@@ -11,17 +11,14 @@
  */
 export const execute = (x_scale: number, y_scale: number, alpha: number): number => 
 {
-    let value: string = `${x_scale}_${y_scale}`;
+    const values = [x_scale, y_scale];
     if (alpha) {
-        value += `_${alpha}`;
+        values.push(alpha);
     }
 
     let hash = 0;
-    for (let idx: number = 0; idx < value.length; idx++) {
-
-        const chr: number = value.charCodeAt(idx);
-
-        hash  = (hash << 5) - hash + chr;
+    for (let idx: number = 0; idx < values.length; idx++) {
+        hash  = (hash << 5) - hash + values[idx];
         hash |= 0;
     }
 

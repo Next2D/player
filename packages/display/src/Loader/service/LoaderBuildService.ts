@@ -39,7 +39,7 @@ export const execute = async (loader: Loader, object: IAnimationToolData): Promi
     const movieClip = new MovieClip();
 
     const character = object.characters[0];
-    displayObjectBaseBuildService(movieClip,
+    displayObjectBaseBuildService(movieClip, -1,
     {
         "characterId": 0,
         "name": "main",

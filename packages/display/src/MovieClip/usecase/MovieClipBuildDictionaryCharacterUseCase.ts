@@ -13,6 +13,7 @@ import { execute as shapeBuildFromCharacterUseCase } from "../../Shape/usecase/S
  * @description cahracterを元にDisplayObjectを構築
  *              Build DisplayObject based on character
  * 
+ * @param  {number} dictionary_id 
  * @param  {object} tag 
  * @param  {object} character 
  * @param  {MovieClip} parent 
@@ -21,6 +22,7 @@ import { execute as shapeBuildFromCharacterUseCase } from "../../Shape/usecase/S
  * @protected
  */
 export const execute = (
+    dictionary_id: number,
     tag: IDictionaryTag,
     character: ICharacter,
     parent: MovieClip,
@@ -32,7 +34,7 @@ export const execute = (
         case MovieClip.namespace:
             {
                 const movieClip = new MovieClip();
-                displayObjectBaseBuildService(movieClip, tag, parent, placeId);
+                displayObjectBaseBuildService(movieClip, dictionary_id, tag, parent, placeId);
                 movieClipBuildFromCharacterUseCase(movieClip, character as IMovieClipCharacter);
                 return movieClip as IDisplayObject<MovieClip>;
             }
@@ -40,7 +42,7 @@ export const execute = (
         case Shape.namespace:
             {
                 const shape = new Shape();
-                displayObjectBaseBuildService(shape, tag, parent, placeId);
+                displayObjectBaseBuildService(shape, dictionary_id, tag, parent, placeId);
                 shapeBuildFromCharacterUseCase(shape, character as IShapeCharacter);
                 return shape;
             }

@@ -35,12 +35,8 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const hasGrid = render_queue[index++];
 
     // cache uniqueKey
-    const uniqueKey = render_queue[index++] === 2 
-        ? `${render_queue[index++]}@${render_queue[index++]}`
-        : `${render_queue[index++]}`;
-
-    const cacheKey = render_queue[index++];
-    const hasCache = render_queue[index++];
+    const uniqueKey = `${render_queue[index++]}`; 
+    const cacheKey  = render_queue[index++];
 
     // calc bounds
     const bounds = displayObjectCalcBoundsMatrixService(
@@ -74,6 +70,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     }
 
     let node: Node;
+    const hasCache = render_queue[index++];
     if (!hasCache) {
 
         const currentAttachment = $context.currentAttachmentObject;

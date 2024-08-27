@@ -14,7 +14,7 @@ import { execute as bezierCurveTo } from "./PathCommand/usecase/PathCommandBezie
 import { execute as contextUpdateBackgroundColorService } from "./Context/service/ContextUpdateBackgroundColorService";
 import { execute as contextFillBackgroundColorService } from "./Context/service/ContextFillBackgroundColorService";
 import { execute as contextResizeUseCase } from "./Context/usecase/ContextResizeUseCase";
-import { execute as contextClearRectService } from "./Context/service/ContextClearRectService";
+import { execute as contextClearRectUseCase } from "./Context/usecase/ContextClearRectUseCase";
 import { execute as contextBindUseCase } from "./Context/usecase/ContextBindUseCase";
 import { execute as contextSaveService } from "./Context/service/ContextSaveService";
 import { execute as contextRestoreService } from "./Context/service/ContextRestoreService";
@@ -35,7 +35,7 @@ import { execute as blendEnableUseCase } from "./Blend/usecase/BlendEnableUseCas
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
 import { execute as maskStartMaskService } from "./Mask/service/MaskStartMaskService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
-import { execute as maskLeaveMaskService } from "./Mask/service/MaskLeaveMaskService";
+import { execute as maskLeaveMaskService } from "./Mask/usecase/MaskLeaveMaskUseCase";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
@@ -326,7 +326,7 @@ export class Context
      */
     clearRect (x: number, y: number, w: number, h: number): void
     {
-        contextClearRectService(x, y, w, h);
+        contextClearRectUseCase(x, y, w, h);
     }
 
     /**
@@ -387,7 +387,7 @@ export class Context
         a: number, b: number, c: number,
         d: number, e: number, f: number
     ): void {
-        contextSetTransformService(this, a, b, c, d, e, f);
+        contextSetTransformService(this.$matrix, a, b, c, d, e, f);
     }
 
     /**
@@ -755,7 +755,7 @@ export class Context
         x_max: number, 
         y_max: number
     ): void {
-        maskBeginMaskService(x_min, y_min, x_max, y_max);
+        //maskBeginMaskService(x_min, y_min, x_max, y_max);
     }
 
     /**

@@ -21,6 +21,7 @@ import {
  */
 export const execute = <D extends DisplayObject>(
     display_object: D,
+    dictionary_id: number,
     tag: IDictionaryTag,
     parent: MovieClip | Loader,
     placeId: number = -1
@@ -28,7 +29,7 @@ export const execute = <D extends DisplayObject>(
 
     const loaderInfo = parent.loaderInfo;
     if (!loaderInfo) {
-        throw new Error("the loaderInfo or data is nul.");
+        throw new Error("the loaderInfo or data is null.");
     }
 
     // set parent data
@@ -37,11 +38,12 @@ export const execute = <D extends DisplayObject>(
     $loaderInfoMap.set(display_object, loaderInfo);
 
     // bind tag data
-    display_object.characterId = tag.characterId;
-    display_object.clipDepth   = tag.clipDepth;
-    display_object.startFrame  = tag.startFrame;
-    display_object.endFrame    = tag.endFrame;
-    display_object.name        = tag.name || "";
+    display_object.dictionaryId = dictionary_id;
+    display_object.characterId  = tag.characterId;
+    display_object.clipDepth    = tag.clipDepth;
+    display_object.startFrame   = tag.startFrame;
+    display_object.endFrame     = tag.endFrame;
+    display_object.name         = tag.name || "";
 
     // first frame placeId
     display_object.placeId = placeId;

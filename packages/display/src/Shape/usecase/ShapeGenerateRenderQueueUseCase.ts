@@ -12,6 +12,10 @@ import {
     ColorTransform,
     Matrix
 } from "@next2d/geom";
+import {
+    $getArray,
+    $poolArray
+} from "@next2d/share";
 
 /**
  * @description renderer workerに渡すShapeの描画データを生成
@@ -140,27 +144,30 @@ export const execute = (
 
     if (!shape.uniqueKey) {
         if (shape.characterId && shape.loaderInfo) {
+            
+            const values = $getArray(
+                shape.loaderInfo.id,
+                shape.characterId
+            );
 
-            // key length
-            render_queue.push(2);
+            let hash = 0;
+            for (let idx = 0; idx < values.length; idx++) {
+                hash = (hash << 5) - hash + values[idx];
+                hash |= 0;
+            }
 
-            const loaderInfo = shape.loaderInfo;
-            render_queue.push(loaderInfo.id);
-            render_queue.push(shape.characterId);
-
-            shape.uniqueKey = `${loaderInfo.id}@${shape.characterId}`;
+            $poolArray(values);
+            shape.uniqueKey = `${hash}`;
 
         } else {
 
-            // key length
-            render_queue.push(1);
-
             const hash = shapeGenerateHashService(graphics.buffer);
-            render_queue.push(hash);
             shape.uniqueKey = `${hash}`;
 
         }
     }
+
+    render_queue.push(+shape.uniqueKey);
     
     let xScale: number = Math.sqrt(
         tMatrix[0] * tMatrix[0]
@@ -200,8 +207,8 @@ export const execute = (
     }
     
     const cacheKey = shape.cacheKey;
-
     render_queue.push(cacheKey);
+
     const cache = $cacheStore.get(shape.uniqueKey, `${cacheKey}`);
     if (!cache) {
         render_queue.push(0);

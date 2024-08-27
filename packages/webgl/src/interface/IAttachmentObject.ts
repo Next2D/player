@@ -3,6 +3,7 @@ import type { ITextureObject } from "./ITextureObject";
 import type { IStencilBufferObject } from "./IStencilBufferObject";
 
 export interface IAttachmentObject {
+    id: number;
     width: number;
     height: number;
     clipLevel: number;

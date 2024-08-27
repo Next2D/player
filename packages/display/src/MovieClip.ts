@@ -115,7 +115,7 @@ export class MovieClip extends Sprite
      * @default true
      * @private
      */
-    private _$hasTimelineHeadMoved: boolean;
+    public $hasTimelineHeadMoved: boolean;
 
     // private _$actionProcess: boolean;
     // private _$frameCache: Map<string, any> | null;
@@ -148,7 +148,7 @@ export class MovieClip extends Sprite
         this.$sounds    = null;
         this.$canAction = true;
 
-        this._$hasTimelineHeadMoved = true;
+        this.$hasTimelineHeadMoved = true;
 
         this._$currentFrame = 1;
         this._$stopFlag = false;
@@ -1026,11 +1026,11 @@ export class MovieClip extends Sprite
      */
     get children (): IDisplayObject<any>
     {
-        if (!this._$hasTimelineHeadMoved || this.characterId === -1) {
+        if (!this.$hasTimelineHeadMoved || this.characterId === -1) {
             return this._$children;
         }
         
-        this._$hasTimelineHeadMoved = false;
+        this.$hasTimelineHeadMoved = false;
 
         return movieClipGetChildrenService(this, this._$children);
     }

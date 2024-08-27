@@ -2,6 +2,7 @@ import type { DisplayObject } from "./DisplayObject";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { execute as stageReadyUseCase } from "./Stage/usecase/StageReadyUseCase";
 import { execute as displayObjectContainerGenerateRenderQueueUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerGenerateRenderQueueUseCase";
+import { execute as stageTickerUseCase } from "./Stage/usecase/StageTickerUseCase";
 import {
     $rootMap,
     $stageAssignedMap
@@ -204,6 +205,19 @@ export class Stage extends DisplayObjectContainer
     }
 
     /**
+     * @description Stage に追加した DisplayObject の定期処理、描画処理を実行
+     *              Execute regular processing and drawing processing of DisplayObject added to Stage
+     * 
+     * @return {void}
+     * @method
+     * @protected
+     */
+    $ticker (): void
+    {
+        stageTickerUseCase(this);
+    }
+
+    /**
      * @description renderer workerに渡す描画データを生成
      *              Generate drawing data to pass to the renderer worker
      * 
@@ -223,6 +237,8 @@ export class Stage extends DisplayObjectContainer
             this.rendererWidth, this.rendererHeight,
             matrix[4], matrix[5]
         );
+
+        this.changed = false;
     }
 }
 
