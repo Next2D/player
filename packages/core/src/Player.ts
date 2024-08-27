@@ -820,27 +820,6 @@ export class Player
     //     this._$doAction();
     // }
 
-    /**
-     * @returns void
-     * @public
-     */
-    draw (): void
-    {
-        if (!this._$width || !this._$height) {
-            return ;
-        }
-
-        if (!this._$stage._$isUpdated()) {
-            return ;
-        }
-
-        if ($rendererWorker) {
-            $rendererWorker.postMessage({
-                "command": "draw"
-            });
-        }
-    }
-
     // /**
     //  * @return {void}
     //  * @method

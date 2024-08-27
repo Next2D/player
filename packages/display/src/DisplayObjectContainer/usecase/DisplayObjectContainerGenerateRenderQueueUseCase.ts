@@ -106,10 +106,9 @@ export const execute = <P extends DisplayObjectContainer>(
     }
 
     const colorTransform = isLayer 
-        ? tColorTransform
-        : new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
+        ? new Float32Array([1, 1, 1, 1, 0, 0, 0, 0])
+        : tColorTransform;
 
-    const changed = display_object_container.changed;
     render_queue.push(children.length);
 
     let clipDepth = 0;
@@ -118,9 +117,6 @@ export const execute = <P extends DisplayObjectContainer>(
 
         const child = children[idx] as DisplayObject;
         child.changed = false;
-        if (changed) {
-            child.placeObject = null;
-        }
 
         render_queue.push(child.placeId, child.clipDepth);
         if (clipDepth && child.placeId > clipDepth) {
@@ -220,7 +216,7 @@ export const execute = <P extends DisplayObjectContainer>(
         }
     }
 
-    if (tColorTransform !== color_transform) {
+    if (!isLayer && tColorTransform !== color_transform) {
         ColorTransform.release(tColorTransform);
     }
     if (tMatrix !== matrix) {

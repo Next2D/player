@@ -1,8 +1,5 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
-import {
-    $atlasFrameBuffer,
-    $setFramebufferBound
-} from "../../FrameBufferManager";
+import { $setFramebufferBound } from "../../FrameBufferManager";
 import {
     $gl,
     $context

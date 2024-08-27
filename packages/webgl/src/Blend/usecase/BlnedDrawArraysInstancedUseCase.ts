@@ -8,7 +8,6 @@ import {
 } from "../../WebGLUtil";
 import {
     $atlasFrameBuffer,
-    $drawFrameBuffer,
     $setFramebufferBound
 } from "../../FrameBufferManager";
 
