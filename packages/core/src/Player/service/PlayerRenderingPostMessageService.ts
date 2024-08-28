@@ -54,18 +54,16 @@ export const execute = (): void =>
     $matrix[5] = ($player.rendererHeight - $stage.stageHeight * scale) / 2;
 
     $renderQueue.length = 0;
-    $stage._$generateRenderQueue($renderQueue, $matrix);
+    $stage._$generateRenderQueue(
+        $renderQueue, $matrix
+    );
 
     const buffer = new Float32Array($renderQueue);
+    $renderQueue.length = 0;
 
     message.buffer = buffer;
-    options[0]     = buffer.buffer;
+    options[0] = buffer.buffer;
 
     // postMessage
-    $rendererWorker.postMessage({
-        "command": "render",
-        "buffer": buffer
-    }, options);
-
-    $renderQueue.length = 0;
+    $rendererWorker.postMessage(message, options);
 };

@@ -12,6 +12,7 @@ import {
     $getCurrentAtlasIndex,
     $setCurrentAtlasIndex,
  } from "../../Blend";
+import { $setActiveAtlasIndex } from "../../AtlasManager";
 
 /**
  * @description DisplayObject単体の描画を実行
@@ -58,12 +59,14 @@ export const execute = (
                 if ($getCurrentBlendMode() !== $context.globalCompositeOperation
                     || $getCurrentAtlasIndex() !== node.index
                 ) {
-                    // 異なる環境になるので、一度描画を実行
+                    // 異なるフレームバッファになるので、切り替え前にメインバッファに描画を実行
+                    $setActiveAtlasIndex($getCurrentAtlasIndex());
                     $context.drawArraysInstanced();
 
                     // ブレンドモードをセット
                     $setCurrentBlendMode($context.globalCompositeOperation);
                     $setCurrentAtlasIndex(node.index);
+                    $setActiveAtlasIndex(node.index);
                 }
 
                 // 描画するまで配列に変数を保持

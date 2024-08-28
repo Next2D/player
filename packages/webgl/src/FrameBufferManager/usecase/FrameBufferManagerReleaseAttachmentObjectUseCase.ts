@@ -18,16 +18,13 @@ import { $objectPool } from "../../FrameBufferManager";
  */
 export const execute = (attachment_object: IAttachmentObject): void =>
 {
-    if (attachment_object.texture) {
-        textureManagerReleaseTextureObjectUseCase(attachment_object.texture as ITextureObject);
-        attachment_object.texture = null;
-    }
-
     if (attachment_object.msaa) {
         colorBufferObjectReleaseColorBufferObjectUseCase(attachment_object.color as IColorBufferObject);
         attachment_object.color   = null;
         attachment_object.stencil = null;
     } else {
+        textureManagerReleaseTextureObjectUseCase(attachment_object.texture as ITextureObject);
+        attachment_object.texture = null;
         stencilBufferObjectReleaseColorBufferObjectUseCase(attachment_object.stencil as IStencilBufferObject);
         attachment_object.stencil = null;
     }

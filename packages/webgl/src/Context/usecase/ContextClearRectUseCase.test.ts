@@ -1,7 +1,7 @@
-import { execute } from "../service/ContextClearRectService.ts";
+import { execute } from "./ContextClearRectUseCase";
 import { describe, expect, it, vi } from "vitest";
 
-describe("ContextClearRectService.js method test", () =>
+describe("ContextClearRectUseCase.js method test", () =>
 {
     it("test case", () =>
     {

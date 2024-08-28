@@ -101,9 +101,14 @@ export class CacheStore
      * @method
      * @public
      */
-    removeCache (id: string): void
+    removeById (id: string): void
     {
         cacheStoreRemoveByIdService(this, this._$store, id);
+    }
+
+    getById (id: string): Map<string, any>
+    {
+        return this._$store.get(id);
     }
 
     /**
@@ -143,14 +148,15 @@ export class CacheStore
      * @description 指定キーのキャッシュが存在するかどうか
      *              Whether the specified key cache exists
      *
-     * @param  {array} keys
+     * @param  {string} unique_key
+     * @param  {string} key
      * @return {boolean}
      * @method
      * @public
      */
-    has (keys: string[]): boolean
+    has (unique_key: string, key: string = ""): boolean
     {
-        return cacheStoreHasService(this._$store, keys);
+        return cacheStoreHasService(this._$store, unique_key, key);
     }
 
     /**

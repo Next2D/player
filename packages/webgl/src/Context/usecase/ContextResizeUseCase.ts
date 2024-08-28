@@ -1,8 +1,9 @@
 import type { Context } from "../../Context";
+import { $getCurrentAttachment } from "../../FrameBufferManager";
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 import { execute as frameBufferManagerUnBindAttachmentObjectService } from "../../FrameBufferManager/service/FrameBufferManagerUnBindAttachmentObjectService";
-import { $getCurrentAttachment } from "../../FrameBufferManager";
+import { execute as atlasManagerResetUseCase } from "../../AtlasManager/usecase/AtlasManagerResetUseCase";
 
 /**
  * @description メインのアタッチメントオブジェクトをリサイズする
@@ -17,7 +18,8 @@ import { $getCurrentAttachment } from "../../FrameBufferManager";
  */
 export const execute = (context: Context, width: number, height: number): void => 
 {
-    // todo clearInstacedArray
+    // clear InstacedArray
+    context.clearArraysInstanced();
 
     if (context.$mainAttachmentObject) {
         frameBufferManagerReleaseAttachmentObjectUseCase(context.$mainAttachmentObject);
@@ -27,6 +29,9 @@ export const execute = (context: Context, width: number, height: number): void =
             frameBufferManagerUnBindAttachmentObjectService();
         }
     }
+
+    // reset node
+    atlasManagerResetUseCase();
 
     // new attachment object
     context.$mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, true);

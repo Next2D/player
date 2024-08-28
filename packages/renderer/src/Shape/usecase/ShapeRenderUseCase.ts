@@ -2,10 +2,10 @@ import type { Node } from "@next2d/texture-packer";
 import { $cacheStore } from "@next2d/cache";
 import { execute as shapeCommandService } from "../service/ShapeCommandService"; 
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService"; 
-import { 
+import {
     $context,
     $poolArray
-} from "../../RendererUtil"; 
+} from "../../RendererUtil";
 import { $clamp } from "../../../../webgl/src/WebGLUtil";
 
 /**
@@ -73,14 +73,16 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const hasCache = render_queue[index++];
     if (!hasCache) {
 
-        const currentAttachment = $context.currentAttachmentObject;
-        $context.bind($context.atlasAttachmentObject);
-
         const width  = Math.ceil(Math.abs(xMax - xMin) * xScale);
         const height = Math.ceil(Math.abs(yMax - yMin) * yScale);
 
+        // fixed logic
         node = $context.createNode(width, height);
         $cacheStore.set(uniqueKey, `${cacheKey}`, node);
+
+        // fixed logic
+        const currentAttachment = $context.currentAttachmentObject;
+        $context.bind($context.atlasAttachmentObject);
 
         // 初期化して、描画範囲とmatrix設定
         $context.reset();

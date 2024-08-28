@@ -3,17 +3,23 @@
  *              Whether the specified key cache exists
  *
  * @param  {Map} data_store
- * @param  {array} keys
+ * @param  {string} unique_key
+ * @param  {string} key
  * @return {boolean}
  * @method
  * @public
  */
 export const execute = (
     data_store: Map<string, Map<string, any>>,
-    keys: string[]
+    unique_key: string,
+    key: string = ""
 ): boolean => {
-    const id: string = keys[0];
-    return !data_store.has(id)
+
+    if (!key) {
+        return data_store.has(unique_key);
+    }
+    
+    return !data_store.has(unique_key)
         ? false
-        : (data_store.get(id) as NonNullable<Map<string, any>>).has(keys[1]);
+        : (data_store.get(unique_key) as Map<string, any>).has(key);
 };

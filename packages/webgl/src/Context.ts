@@ -27,7 +27,9 @@ import { execute as contextEndNodeRenderingService } from "./Context/service/Con
 import { execute as contextFillUseCase } from "./Context/usecase/ContextFillUseCase";
 import { execute as contextClipUseCase } from "./Context/usecase/ContextClipUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
+import { execute as atlasManagerRemoveNodeService } from "./AtlasManager/service/AtlasManagerRemoveNodeService";
 import { execute as blnedDrawDisplayObjectUseCase } from "./Blend/usecase/BlnedDrawDisplayObjectUseCase";
+import { execute as blnedClearArraysInstancedUseCase } from "./Blend/usecase/BlnedClearArraysInstancedUseCase";
 import { execute as blnedDrawArraysInstancedUseCase } from "./Blend/usecase/BlnedDrawArraysInstancedUseCase";
 import { execute as vertexArrayObjectBootUseCase } from "./VertexArrayObject/usecase/VertexArrayObjectBootUseCase";
 import { execute as frameBufferManagerTransferMainCanvasService } from "./FrameBufferManager/service/FrameBufferManagerTransferMainCanvasService";
@@ -661,6 +663,20 @@ export class Context
     }
 
     /**
+     * @description 指定のノードを削除
+     *              Remove the specified node
+     * 
+     * @param  {Node} node 
+     * @return {void}
+     * @method
+     * @public
+     */
+    removeNode (node: Node): void
+    {
+        atlasManagerRemoveNodeService(node);
+    }
+
+    /**
      * @description 指定のノード範囲で描画を開始
      *              Start drawing in the specified node range
      * 
@@ -726,6 +742,19 @@ export class Context
     drawArraysInstanced (): void
     {
         blnedDrawArraysInstancedUseCase();
+    }
+
+    /**
+     * @description インスタンス配列をクリア
+     *              Clear the instance array
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    clearArraysInstanced (): void
+    {
+        blnedClearArraysInstancedUseCase();
     }
 
     /**

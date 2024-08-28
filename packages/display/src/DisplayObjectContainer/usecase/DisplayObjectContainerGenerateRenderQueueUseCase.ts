@@ -1,6 +1,7 @@
 import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { Shape } from "../../Shape";
+import { $COLOR_ARRAY_IDENTITY } from "../../Stage";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as shapeGenerateRenderQueueUseCase } from "../../Shape/usecase/ShapeGenerateRenderQueueUseCase";
@@ -106,7 +107,7 @@ export const execute = <P extends DisplayObjectContainer>(
     }
 
     const colorTransform = isLayer 
-        ? new Float32Array([1, 1, 1, 1, 0, 0, 0, 0])
+        ? $COLOR_ARRAY_IDENTITY
         : tColorTransform;
 
     render_queue.push(children.length);

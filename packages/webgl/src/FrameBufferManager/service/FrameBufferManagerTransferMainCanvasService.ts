@@ -15,8 +15,6 @@ import {
  */
 export const execute = (): void =>
 {
-    const currentAttachmentObject = $context.currentAttachmentObject;
-
     const mainAttachmentObject = $context.$mainAttachmentObject as IAttachmentObject;
     $context.bind(mainAttachmentObject);
 
@@ -37,8 +35,4 @@ export const execute = (): void =>
         $gl.COLOR_BUFFER_BIT,
         $gl.NEAREST
     );
-
-    if (currentAttachmentObject) {
-        $context.bind(currentAttachmentObject);
-    }  
 };

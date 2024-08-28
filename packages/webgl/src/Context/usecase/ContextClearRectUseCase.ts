@@ -1,4 +1,4 @@
-import { $context, $gl } from "../../WebGLUtil";
+import { $gl } from "../../WebGLUtil";
 import { execute as maskClearRectService } from "../../Mask/service/MaskClearRectService";
 
 /**

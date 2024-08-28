@@ -1,14 +1,4 @@
 import { $gl } from "../../WebGLUtil";
-import {
-    $readFrameBuffer,
-    $drawFrameBuffer
-} from "../../FrameBufferManager";
-
-/**
- * @type {number[]}
- * @private
- */
-const $colors: number[] = [0, 0, 0, 0];
 
 /**
  * @description 背景色を更新
@@ -24,12 +14,7 @@ const $colors: number[] = [0, 0, 0, 0];
  */
 export const execute = (red: number, green: number, blue: number, alpha: number): void =>
 {
-    $colors[0] = red;
-    $colors[1] = green;
-    $colors[2] = blue;
-    $colors[3] = alpha;
-
-    $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, $readFrameBuffer);
-    $gl.clearBufferfv($gl.COLOR, 0, $colors);
-    $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, $drawFrameBuffer);
+    $gl.clearColor(red, green, blue, alpha);
+    $gl.clear($gl.COLOR_BUFFER_BIT | $gl.STENCIL_BUFFER_BIT);
+    $gl.clearColor(0, 0, 0, 0);
 };

@@ -37,6 +37,15 @@ describe("ContextResizeUseCase.js method test", () =>
             "scissor": vi.fn(() => "scissor"),
             "clear": vi.fn(() => "clear"),
             "disable": vi.fn(() => "disable"),
+            "createProgram": vi.fn(() => "createProgram"),
+            "createShader": vi.fn(() => "createShader"),
+            "shaderSource": vi.fn(() => "shaderSource"),
+            "compileShader": vi.fn(() => "compileShader"),
+            "attachShader": vi.fn(() => "attachShader"),
+            "linkProgram": vi.fn(() => "linkProgram"),
+            "detachShader": vi.fn(() => "detachShader"),
+            "deleteShader": vi.fn(() => "deleteShader"),
+            "getProgramParameter": vi.fn(() => "getProgramParameter"),
         } as unknown as WebGL2RenderingContext;
 
         const context = new Context(mockGL, 4);

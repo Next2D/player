@@ -2,6 +2,7 @@ import type { IMessage } from "./interface/IMessage";
 import { execute as commandInitializeContextService } from "./Command/service/CommandInitializeContextService";
 import { execute as commandResizeService } from "./Command/service/CommandResizeService";
 import { execute as commandRenderUseCase } from "./Command/usecase/CommandRenderUseCase";
+import { execute as commandRemoveCacheService } from "./Command/service/CommandRemoveCacheService";
 import { $cacheStore } from "@next2d/cache";
 
 /**
@@ -78,7 +79,7 @@ export class CommandController
                     break;
 
                 case "removeClear":
-                    $cacheStore.removeCache(`${object.buffer[0] as number}`);
+                    commandRemoveCacheService(object.buffer);
                     break;
 
                 case "cacheClear":

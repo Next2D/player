@@ -2,11 +2,7 @@ import { execute as displayObjectContainerRenderUseCase } from "../../DisplayObj
 import { execute as shapeRenderUseCase } from "../../Shape/usecase/ShapeRenderUseCase";
 import { execute as textFieldRenderUseCase } from "../../TextField/usecase/TextFieldRenderUseCase";
 import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUseCase";
-import {
-    $rendererWidth,
-    $rendererHeight,
-    $context
-} from "../../RendererUtil"; 
+import { $context } from "../../RendererUtil"; 
 
 /**
  * @type {number}
@@ -18,7 +14,7 @@ let $color: number = -1;
  * @description 描画コマンドから描画を実行
  *              Execute drawing from drawing command
  * 
- * @param {Float32Array} render_queue
+ * @param  {Float32Array} render_queue
  * @return {void}
  * @method
  * @protected
@@ -26,6 +22,7 @@ let $color: number = -1;
 export const execute = (render_queue: Float32Array): void =>
 {
     let index = 0;
+
     // update background color
     const color = render_queue[index++];
     if ($color !== color) {
@@ -45,8 +42,7 @@ export const execute = (render_queue: Float32Array): void =>
     // reset
     $context.reset();
     $context.setTransform(1, 0, 0, 1, 0, 0);
-    $context.clearRect(0, 0, $rendererWidth, $rendererHeight);
-    // $context.fillBackgroundColor();
+    $context.fillBackgroundColor();
 
     while (render_queue.length > index) {
 

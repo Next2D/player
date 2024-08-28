@@ -1,7 +1,18 @@
 import type { Player } from "../../Player";
 import { $stage } from "@next2d/display";
 import { execute as playerRenderingPostMessageService } from "../service/PlayerRenderingPostMessageService";
+import { execute as playerRemoveCachePostMessageService } from "../service/PlayerRemoveCachePostMessageService";
 
+/**
+ * @description Playerの定期処理
+ *              Regular processing of Player
+ * 
+ * @param  {Player} player 
+ * @param  {number} timestamp 
+ * @return {void}
+ * @method
+ * @protected
+ */
 export const execute = (player: Player, timestamp: number): void =>
 {
     if (player.stopFlag) {
@@ -14,6 +25,10 @@ export const execute = (player: Player, timestamp: number): void =>
 
         // 定期処理
         $stage.$ticker();
+
+        if ($stage.$remoceCacheKeys) {
+            playerRemoveCachePostMessageService();
+        }
 
         // 描画情報をworkerに送る
         if ($stage.changed) {

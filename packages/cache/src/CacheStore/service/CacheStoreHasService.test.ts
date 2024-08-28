@@ -6,14 +6,15 @@ describe("CacheStoreHasService.js test", () =>
     it("test case1", () =>
     {
         const store = new Map();
-        expect(execute(store, ["1", "0"])).toBe(false);
+        expect(execute(store, "1", "0")).toBe(false);
     });
 
     it("test case2", () =>
     {
         const store = new Map();
         store.set("1", new Map());
-        expect(execute(store, ["1", "0"])).toBe(false);
+        expect(execute(store, "1")).toBe(true);
+        expect(execute(store, "1", "0")).toBe(false);
     });
 
     it("test case3", () =>
@@ -23,6 +24,6 @@ describe("CacheStoreHasService.js test", () =>
 
         const store = new Map();
         store.set("1", data);
-        expect(execute(store, ["1", "0"])).toBe(true);
+        expect(execute(store, "1", "0")).toBe(true);
     });
 });

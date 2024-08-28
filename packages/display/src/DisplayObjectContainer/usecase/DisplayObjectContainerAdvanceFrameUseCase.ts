@@ -10,8 +10,10 @@ import { execute as movieClipAdvanceFrameUseCase } from "../../MovieClip/usecase
  * @method
  * @protected
  */
-export const execute = <C extends DisplayObjectContainer>(display_object_container: C): void =>
-{
+export const execute = <C extends DisplayObjectContainer>(
+    display_object_container: C,
+): void => {
+
     const children = display_object_container.children;
     for (let idx = 0; children.length > idx; ++idx) {
 

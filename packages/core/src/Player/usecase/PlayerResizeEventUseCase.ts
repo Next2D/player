@@ -5,6 +5,7 @@ import {
     $PREFIX,
     $devicePixelRatio
 } from "../../CoreUtil";
+import { $cacheStore } from "@next2d/cache";
 
 /**
  * @description 画面リサイズ時にcanvasのリサイズを行う
@@ -72,6 +73,9 @@ export const execute = (): void =>
 
     // worker postMessage
     playerResizePostMessageService();
+
+    // cache clear
+    $cacheStore.reset();
 
     if (element.children.length > 1) {
         element.children[1].dispatchEvent(

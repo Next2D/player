@@ -6,16 +6,14 @@ import { execute as shapeGenerateHashService } from "../service/ShapeGenerateHas
 import { $cacheStore } from "@next2d/cache";
 import {
     $clamp,
-    $RENDERER_SHAPE_TYPE
+    $RENDERER_SHAPE_TYPE,
+    $getArray,
+    $poolArray
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
     Matrix
 } from "@next2d/geom";
-import {
-    $getArray,
-    $poolArray
-} from "@next2d/share";
 
 /**
  * @description renderer workerに渡すShapeの描画データを生成

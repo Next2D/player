@@ -9,8 +9,9 @@ import type { MovieClip } from "../../MovieClip";
  * @method
  * @protected
  */
-export const execute = <M extends MovieClip>(movie_clip: M): void =>
+export const execute = <M extends MovieClip>(movie_clip: M): void => 
 {
+
     if (movie_clip.totalFrames === 1 || !movie_clip.isPlaying) {
         return ;
     }
@@ -24,7 +25,7 @@ export const execute = <M extends MovieClip>(movie_clip: M): void =>
     }
 
     if (movie_clip.$actions?.has(movie_clip.currentFrame)) {
-        
+
     }
     // アクションをセット
 };

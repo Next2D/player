@@ -19,19 +19,26 @@ describe("ContextFillBackgroundColorService.js method test", () =>
                     "getParameter": vi.fn(() => "getParameter"),
                     "pixelStorei": vi.fn(() => "pixelStorei"),
                     "createFramebuffer": vi.fn(() => "createFramebuffer"),
-                    "clearColor": vi.fn(() => "clearColor"),
                     "createRenderbuffer": vi.fn(() => "createRenderbuffer"),
                     "bindRenderbuffer": vi.fn(() => "bindRenderbuffer"),
                     "renderbufferStorageMultisample": vi.fn(() => "renderbufferStorageMultisample"),
                     "viewport": vi.fn(() => "viewport"),
                     "renderbufferStorage": vi.fn(() => "renderbufferStorage"),
                     "bindFramebuffer": vi.fn(() => { return "bindFramebuffer" }),
-                    "clearBufferfv": vi.fn((buffer, drawbuffer, values) =>
+                    "clear": vi.fn(() => { return "clear" }),
+                    "clearColor": vi.fn((red, green, blue, alpha) =>
                     {
-                        expect(values[0]).toBe(1);
-                        expect(values[1]).toBe(2);
-                        expect(values[2]).toBe(3);
-                        expect(values[3]).toBe(4); 
+                        if (red === 1) {
+                            expect(red).toBe(1);
+                            expect(green).toBe(2);
+                            expect(blue).toBe(3);
+                            expect(alpha).toBe(4);
+                        } else {
+                            expect(red).toBe(0);
+                            expect(green).toBe(0);
+                            expect(blue).toBe(0);
+                            expect(alpha).toBe(0);
+                        }
                     }),
                 }
             }

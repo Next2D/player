@@ -18,5 +18,6 @@ export const execute = (color_buffer_object: IColorBufferObject): void =>
     }
 
     const index = colorBufferObjectMeguruBinarySearchService(color_buffer_object.area);
+    color_buffer_object.dirty = true;
     $objectPool.splice(index, 0, color_buffer_object);
 };

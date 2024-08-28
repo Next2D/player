@@ -51,6 +51,19 @@ export const $getActiveAtlasIndex = (): number =>
 let $atlasAttachmentObjects: IAttachmentObject[] = [];
 
 /**
+ * @description アトラス専用のフレームバッファ配列
+ *              Array of frame buffers dedicated to the atlas
+ * 
+ * @return {IAttachmentObject[]}
+ * @method
+ * @protected
+ */
+export const $getAtlasAttachmentObjects = (): IAttachmentObject[] =>
+{
+    return $atlasAttachmentObjects;
+};
+
+/**
  * @description アトラステクスチャオブジェクトをセット
  *              Set the atlas texture object
  *

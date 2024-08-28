@@ -3,10 +3,6 @@ import type { Shape } from "../../Shape";
 import { Matrix } from "@next2d/geom";
 import { execute as shapeGetCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeGetCalcBoundsMatrixUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
-import {
-    $getArray,
-    $poolArray
-} from "@next2d/share";
 
 /**
  * @description DisplayObjectのマスク描画範囲を計算して、マスク描画が実行可能かどうかを返します。

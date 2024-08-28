@@ -11,14 +11,19 @@
  */
 export const execute = (x_scale: number, y_scale: number, alpha: number): number => 
 {
-    const values = [x_scale, y_scale];
+    let value = "";
+    value += `${x_scale}`;
+    value += `${y_scale}`;
     if (alpha) {
-        values.push(alpha);
+        value += `${alpha}`;
     }
-
+    
     let hash = 0;
-    for (let idx: number = 0; idx < values.length; idx++) {
-        hash  = (hash << 5) - hash + values[idx];
+    for (let idx = 0; idx < value.length; idx++) {
+
+        const chr = value.charCodeAt(idx);
+
+        hash  = (hash << 5) - hash + chr;
         hash |= 0;
     }
 
