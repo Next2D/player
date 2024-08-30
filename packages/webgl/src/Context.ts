@@ -37,7 +37,7 @@ import { execute as blendEnableUseCase } from "./Blend/usecase/BlendEnableUseCas
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
 import { execute as maskStartMaskService } from "./Mask/service/MaskStartMaskService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
-import { execute as maskLeaveMaskService } from "./Mask/usecase/MaskLeaveMaskUseCase";
+import { execute as maskLeaveMaskService } from "./Mask/service/MaskLeaveMaskService";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
@@ -778,26 +778,30 @@ export class Context
      * @method
      * @public
      */
-    beginMask (
-        x_min: number, 
-        y_min: number, 
-        x_max: number, 
-        y_max: number
-    ): void {
-        //maskBeginMaskService(x_min, y_min, x_max, y_max);
+    beginMask (): void 
+    {
+        maskBeginMaskService();
     }
 
     /**
      * @description マスクの描画を開始
      *              Start drawing the mask
      * 
+     * @param  {number} x_min
+     * @param  {number} y_min
+     * @param  {number} x_max
+     * @param  {number} y_max
      * @return {void}
      * @method
      * @public
      */
-    startMask (): void
-    {
-        maskStartMaskService();
+    startMask (
+        x_min: number,
+        y_min: number,
+        x_max: number,
+        y_max: number
+    ): void {
+        maskStartMaskService(x_min, y_min, x_max, y_max);
     }
 
     /**

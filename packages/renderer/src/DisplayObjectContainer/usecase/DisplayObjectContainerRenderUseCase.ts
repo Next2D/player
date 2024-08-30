@@ -24,14 +24,17 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
         const depth = render_queue[index++];
         const clipDepth = render_queue[index++];
-        
+
         // end mask
         if (endClipDepth && depth > endClipDepth) {
+            if (canRenderMask) {
+                $context.restore();
+                $context.leaveMask();
+            }
+
+            // reset
             endClipDepth  = 0;
             canRenderMask = true;
-
-            $context.restore();
-            // $context.leaveMask();
         }
 
         if (!canRenderMask) {
@@ -39,50 +42,49 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         }
 
         // start mask
-        // if (clipDepth) {
+        if (clipDepth) {
+            endClipDepth  = clipDepth;
+            canRenderMask = Boolean(render_queue[index++]);
+            if (!canRenderMask) {
+                continue;
+            }
 
-        //     endClipDepth  = clipDepth;
-        //     canRenderMask = Boolean(render_queue[index++]);
-        //     if (!canRenderMask) {
-        //         continue;
-        //     }
+            // これまでの描画データを描画して初期化
+            $context.drawArraysInstanced();
 
-        //     // これまでの描画データを描画して初期化
-        //     $context.drawArraysInstanced();
+            // 設定値を保存
+            $context.save();
 
-        //     // 設定値を保存
-        //     $context.save();
+            // マスク描画の開始準備
+            $context.beginMask();
 
-        //     // マスク描画の開始準備
-        //     $context.beginMask(
-        //         render_queue[index++],
-        //         render_queue[index++],
-        //         render_queue[index++],
-        //         render_queue[index++]
-        //     );
+            $context.startMask(
+                render_queue[index++],
+                render_queue[index++],
+                render_queue[index++],
+                render_queue[index++]
+            );
+            const type = render_queue[index++];
+            switch (type) {
 
-        //     // $context.startMask();
-        //     const type = render_queue[index++];
-        //     switch (type) {
+                case 0x00: // container
+                    break;
 
-        //         case 0x00: // container
-        //             break;
+                case 0x01: // shape
+                    index = shapeClipRenderUseCase(render_queue, index);
+                    break;
 
-        //         case 0x01: // shape
-        //             index = shapeClipRenderUseCase(render_queue, index);
-        //             break;
+                case 0x02: // text
+                    break;
 
-        //         case 0x02: // text
-        //             break;
+                case 0x03: // video
+                    break;
 
-        //         case 0x03: // video
-        //             break;
+            }
+            $context.endMask();
 
-        //     }
-        //     // $context.endMask();
-
-        //     continue;
-        // }
+            continue;
+        }
 
         // hidden
         if (!render_queue[index++]) {
@@ -118,7 +120,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     // end mask
     if (endClipDepth) {
         $context.restore();
-        // $context.leaveMask();
+        $context.leaveMask();
     }
 
     return index;

@@ -129,53 +129,53 @@ export const execute = <P extends DisplayObjectContainer>(
             continue;
         }
 
-        // if (child.clipDepth) {
+        if (child.clipDepth) {
             
-        //     clipDepth = child.clipDepth;
+            clipDepth = child.clipDepth;
 
-        //     // マスクの描画開始判定
-        //     const bounds = displayObjectIsMaskReflectedInDisplayUseCase(
-        //         child, 
-        //         tMatrix, 
-        //         rendererWidth, 
-        //         rendererHeight, 
-        //         point_x, 
-        //         point_y
-        //     );
+            // マスクの描画開始判定
+            const bounds = displayObjectIsMaskReflectedInDisplayUseCase(
+                child, 
+                tMatrix, 
+                rendererWidth, 
+                rendererHeight, 
+                point_x, 
+                point_y
+            );
 
-        //     canRenderMask = bounds ? true : false;
-        //     render_queue.push(+canRenderMask);
+            canRenderMask = bounds ? true : false;
+            render_queue.push(+canRenderMask);
 
-        //     if (!bounds) {
-        //         continue;
-        //     }
+            if (!bounds) {
+                continue;
+            }
 
-        //     render_queue.push(...bounds);
-        //     switch (true) {
+            render_queue.push(...bounds);
+            switch (true) {
 
-        //         case child.isContainerEnabled: // 0x00
-        //             break;
+                case child.isContainerEnabled: // 0x00
+                    break;
 
-        //         case child.isShape: // 0x01
-        //             shapeGenerateClipQueueUseCase(
-        //                 child as Shape, 
-        //                 render_queue, 
-        //                 tMatrix
-        //             );
-        //             break;
+                case child.isShape: // 0x01
+                    shapeGenerateClipQueueUseCase(
+                        child as Shape, 
+                        render_queue, 
+                        tMatrix
+                    );
+                    break;
                 
-        //         case child.isText: // 0x02
-        //             break;
+                case child.isText: // 0x02
+                    break;
     
-        //         case child.isVideo: // 0x03
-        //             break;
+                case child.isVideo: // 0x03
+                    break;
     
-        //         default:
-        //             break;
-        //     }
+                default:
+                    break;
+            }
 
-        //     continue;
-        // }
+            continue;
+        }
         
         switch (true) {
 

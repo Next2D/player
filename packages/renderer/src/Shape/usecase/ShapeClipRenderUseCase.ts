@@ -1,5 +1,6 @@
 import { execute as shapeCommandService } from "../service/ShapeCommandService"; 
 import { $context } from "../../RendererUtil"; 
+import type { IAttachmentObject } from "../../../../webgl/src/interface/IAttachmentObject";
 
 /**
  * @description シェイプクリップの描画を実行
@@ -26,11 +27,11 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     const length = render_queue[index++];
     const commands = render_queue.subarray(index, index + length);
-    // shapeCommandService(commands, false, true);
+    shapeCommandService(commands, false, true);
 
     index += length;
     
     $context.clip(hasGrid);
-    
+
     return index;
 };

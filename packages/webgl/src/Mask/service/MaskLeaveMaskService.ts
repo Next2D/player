@@ -1,9 +1,5 @@
 import { $setMaskDrawing } from "../../Mask";
-import { execute as maskClearRectService } from "../../Mask/service/MaskClearRectService";
-import {
-    $gl,
-    $context
-} from "../../WebGLUtil";
+import { $context, $gl } from "../../WebGLUtil";
 
 /**
  * @description マスクの終了処理
@@ -24,10 +20,10 @@ export const execute = (): void =>
     currentAttachmentObject.mask = !!currentAttachmentObject.clipLevel;
 
     if (!currentAttachmentObject.clipLevel) {
-        maskClearRectService();
-
+        $setMaskDrawing(false);
+        $gl.disable($gl.STENCIL_TEST);
         $gl.clear($gl.STENCIL_BUFFER_BIT);
-        $gl.disable($gl.SCISSOR_TEST);
+        return ;
     }
 
     // todo

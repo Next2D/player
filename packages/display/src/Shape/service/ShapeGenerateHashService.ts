@@ -10,12 +10,15 @@
 export const execute = (buffer: Float32Array): number =>
 {
     let hash = 0;
-    for (let idx: number = 0; idx < buffer.length; idx++) {
+    for (let idx = 0; idx < buffer.length; idx++) {
+        const value = `${buffer[idx]}`;
+        for (let idx = 0; idx < value.length; idx++) {
 
-        const chr: number = buffer[idx];
+            const chr = value.charCodeAt(idx);
 
-        hash  = (hash << 5) - hash + chr;
-        hash |= 0;
+            hash  = (hash << 5) - hash + chr;
+            hash |= 0;
+        }
     }
 
     return hash;

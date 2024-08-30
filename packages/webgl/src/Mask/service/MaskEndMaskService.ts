@@ -30,4 +30,5 @@ export const execute = (): void =>
     $gl.stencilOp($gl.KEEP, $gl.KEEP, $gl.KEEP);
     $gl.stencilMask(0xff);
     $gl.colorMask(true, true, true, true);
+    $gl.disable($gl.SCISSOR_TEST);
 };

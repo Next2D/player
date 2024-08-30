@@ -56,5 +56,5 @@ export const execute = (context: Context, attachment_object: IAttachmentObject):
     }
 
     // mask bind
-    // maskBindUseCase(attachment_object.mask);
+    maskBindUseCase(attachment_object.mask);
 };

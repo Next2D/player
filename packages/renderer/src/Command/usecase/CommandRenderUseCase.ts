@@ -28,7 +28,7 @@ export const execute = (render_queue: Float32Array): void =>
     if ($color !== color) {
         $color = color;
         if ($color === -1) {
-            $context.updateBackgroundColor(0, 0, 0, 1);
+            $context.updateBackgroundColor(0, 0, 0, 0);
         } else {
             $context.updateBackgroundColor(
                 $color >> 16 & 0xff / 255,
