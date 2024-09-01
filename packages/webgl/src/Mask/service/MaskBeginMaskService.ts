@@ -17,7 +17,6 @@ import {
  */
 export const execute = (): void =>
 {
-
     const currentAttachmentObject = $context.currentAttachmentObject;
     if (!currentAttachmentObject) {
         return;
