@@ -30,19 +30,5 @@ export const execute = (textrue_object: ITextureObject): void =>
     $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MIN_FILTER, $gl.NEAREST);
     $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MAG_FILTER, $gl.NEAREST);
 
-    // $gl.texStorage2D($gl.TEXTURE_2D, 1, $gl.RGBA8, textrue_object.width, textrue_object.height);
-
-    const length = textrue_object.width * textrue_object.height * 4;
-    const pixels = new Uint8Array(length);
-    for (let idx = 0; idx < length; ) {
-        pixels[idx++] = 255;
-        pixels[idx++] = 0;
-        pixels[idx++] = 0;
-        pixels[idx++] = 255;
-    }
-
-    $gl.texImage2D($gl.TEXTURE_2D, 0, $gl.RGBA,
-        textrue_object.width, textrue_object.height,
-        0, $gl.RGBA, $gl.UNSIGNED_BYTE, pixels
-    );
+    $gl.texStorage2D($gl.TEXTURE_2D, 1, $gl.RGBA8, textrue_object.width, textrue_object.height);
 };

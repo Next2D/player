@@ -49,7 +49,7 @@ export const execute = (
     const textureObject = gradientLUTGenerateShapeTextureUseCase(stops, interpolation);
     textureManagerBind0UseCase(textureObject);
 
-    const inverseMatrix = $inverseMatrix($context.$matrix);
+    
 
     let shaderManager: ShaderManager | null= null;
     if (type === 0) { // linear
@@ -59,12 +59,14 @@ export const execute = (
 
         const points = $linearGradientXY(matrix);
         
+        const inverseMatrix = $inverseMatrix($context.$matrix);
         shaderManagerSetGradientFillUniformService(
             shaderManager, has_grid, type, $context.$matrix,
             inverseMatrix, 0, points
         );
 
         $poolFloat32Array4(points);
+        $poolFloat32Array6(inverseMatrix);
     } else { // radial
 
         $context.save();
@@ -79,15 +81,16 @@ export const execute = (
 
         const prevMatrix = $context.$stack[$context.$stack.length - 1];
 
+        const inverseMatrix = $inverseMatrix($context.$matrix);
         shaderManagerSetGradientFillUniformService(
             shaderManager, has_grid, type, prevMatrix,
             inverseMatrix, focal
         );
 
         $context.restore();
-    }
 
-    $poolFloat32Array6(inverseMatrix);
+        $poolFloat32Array6(inverseMatrix);
+    }
 
     const vertexArrayObject = vertexArrayObjectCreateFillObjectUseCase(vertices);
 

@@ -1,7 +1,8 @@
 import type { ShaderManager } from "../../ShaderManager";
 import {
     $getViewportWidth,
-    $getViewportHeight
+    $getViewportHeight,
+    $clamp
 } from "../../../WebGLUtil";
 
 /**
@@ -57,7 +58,7 @@ export const execute = (
 
     let index = 20;
     if (has_grid) {
-        index = 52;
+        index += 52;
     }
 
     if (type === 0) {
@@ -70,6 +71,6 @@ export const execute = (
         // fragment: u_radial_point
         highp[index++] = 819.2;
         // fragment: u_focal_point_ratio
-        highp[index] = focal_point_ratio;
+        highp[index] = $clamp(focal_point_ratio, -0.975, 0.975, 0);
     }
 };

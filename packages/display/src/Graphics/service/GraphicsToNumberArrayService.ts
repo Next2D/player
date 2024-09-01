@@ -122,8 +122,12 @@ export const execute = (width: number, height: number, recodes : any[] | null): 
                     array.push(type === "linear" ? 0 : 1);
 
                     array.push(stops.length);
-                    for (let idx: number = 0; idx < stops.length; ++idx) {
-                        const color = stops[idx];
+
+                    // 昇順に並び替え
+                    const sortStops = stops.sort((a, b) => a.ratio - b.ratio);
+
+                    for (let idx: number = 0; idx < sortStops.length; ++idx) {
+                        const color = sortStops[idx];
                         array.push(
                             color.ratio,
                             color.R,

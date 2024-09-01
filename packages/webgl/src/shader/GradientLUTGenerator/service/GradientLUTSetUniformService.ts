@@ -1,4 +1,4 @@
-import { ShaderManager } from "../../ShaderManager";
+    import { ShaderManager } from "../../ShaderManager";
 
 /**
  * @description グラデーションLUTのuniform変数を設定します。
@@ -30,10 +30,10 @@ export const execute = (
 
         const position = idx * 5;
 
-        mediump[index++] = 1;//table[stops[position + 1]];
-        mediump[index++] = 0;//table[stops[position + 2]];
-        mediump[index++] = 0;//table[stops[position + 3]];
-        mediump[index++] = 1;//table[stops[position + 4]];
+        mediump[index++] = table[stops[position + 1]];
+        mediump[index++] = table[stops[position + 2]];
+        mediump[index++] = table[stops[position + 3]];
+        mediump[index++] = table[stops[position + 4]];
     }
 
     // fragment: u_gradient_t
