@@ -42,17 +42,17 @@ export const $getGradientLUTGeneratorMaxLength = (): number =>
 /**
  * @description 最大長を設定
  *              Set the maximum length
- * 
+ *
  * @param  {WebGL2RenderingContext} gl
  * @return {void}
  * @method
  * @protected
  */
-export const $setGradientLUTGeneratorMaxLength = (gl: WebGL2RenderingContext): void => 
+export const $setGradientLUTGeneratorMaxLength = (gl: WebGL2RenderingContext): void =>
 {
     $maxLength = Math.floor(gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) * 0.75);
 };
-    
+
 /**
  * @type {Float32Array}
  * @private

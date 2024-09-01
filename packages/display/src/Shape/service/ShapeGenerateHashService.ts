@@ -1,7 +1,7 @@
 /**
  * @description 描画で利用するFloat32Arrayからハッシュ値を生成します。
  *              Generates a hash value from the Float32Array used for drawing.
- * 
+ *
  * @param  {Float32Array} buffer
  * @return {number}
  * @method

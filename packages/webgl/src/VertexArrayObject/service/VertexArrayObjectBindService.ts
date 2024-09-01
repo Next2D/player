@@ -4,7 +4,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description 現在バインドされているVertexArrayObject
  *              VertexArrayObject currently bound
- * 
+ *
  * @type {IVertexArrayObject}
  * @private
  */
@@ -13,8 +13,8 @@ let $boundsVertexArrayObject: IVertexArrayObject;
 /**
  * @description 指定のVertexArrayObjectのresourceをバインドする
  *              Bind the resource of the specified VertexArrayObject
- * 
- * @param  {IVertexArrayObject} vertex_array_object 
+ *
+ * @param  {IVertexArrayObject} vertex_array_object
  * @return {void}
  * @method
  * @protected

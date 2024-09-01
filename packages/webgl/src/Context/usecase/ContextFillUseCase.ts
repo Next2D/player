@@ -28,7 +28,7 @@ export const execute = (has_grid: boolean): void =>
         return ;
     }
 
-    let shaderManager: ShaderManager | null= null;
+    let shaderManager: ShaderManager | null = null;
     switch ($context.$fillType) {
 
         case 0: // normal fill

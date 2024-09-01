@@ -10,8 +10,8 @@ import {
  */
 export const VARYING_UV_ON = (): string =>
 {
-    return `out vec2 v_uv;`;
-}
+    return "out vec2 v_uv;";
+};
 
 /**
  * @return {string}
@@ -51,21 +51,21 @@ export const STROKE_TEMPLATE = (
     with_uv: boolean, has_grid: boolean
 ): string => {
 
-        const strokeIndex: number = fragment_index - 1;
+    const strokeIndex: number = fragment_index - 1;
 
-        const uvVarying: string = with_uv
-            ? VARYING_UV_ON()
-            : "";
+    const uvVarying: string = with_uv
+        ? VARYING_UV_ON()
+        : "";
 
-        const uvStatement: string = with_uv
-            ? STATEMENT_UV_ON()
-            : "";
+    const uvStatement: string = with_uv
+        ? STATEMENT_UV_ON()
+        : "";
 
-        const gridFunction: string = has_grid
-            ? FUNCTION_GRID_ON(with_uv ? 5 : 0)
-            : FUNCTION_GRID_OFF();
+    const gridFunction: string = has_grid
+        ? FUNCTION_GRID_ON(with_uv ? 5 : 0)
+        : FUNCTION_GRID_OFF();
 
-        return `#version 300 es
+    return `#version 300 es
 
 layout (location = 0) in vec2 a_vertex;
 layout (location = 1) in vec2 a_option1;

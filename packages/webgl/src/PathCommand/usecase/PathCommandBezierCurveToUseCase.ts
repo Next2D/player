@@ -8,13 +8,13 @@ import { $currentPath } from "../../PathCommand";
  * @description 3次ベジェ曲線を描画します。
  *              Draw a cubic Bezier curve.
  *
- * @param  {number} cx1 
- * @param  {number} cy1 
- * @param  {number} cx2 
- * @param  {number} cy2 
- * @param  {number} x 
- * @param  {number} y 
- * @return {void} 
+ * @param  {number} cx1
+ * @param  {number} cy1
+ * @param  {number} cx2
+ * @param  {number} cy2
+ * @param  {number} x
+ * @param  {number} y
+ * @return {void}
  * @method
  * @protected
  */

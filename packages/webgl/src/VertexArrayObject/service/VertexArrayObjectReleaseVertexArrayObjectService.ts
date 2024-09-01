@@ -7,8 +7,8 @@ import { $poolArray } from "../../WebGLUtil";
 /**
  * @description VertexArrayObjectをオブジェクトプールに保管、サイズオーバー時は削除します。
  *              Stores the VertexArrayObject in the object pool and deletes it if it exceeds the size.
- * 
- * @param  {IVertexArrayObject} vertex_array_object 
+ *
+ * @param  {IVertexArrayObject} vertex_array_object
  * @return {void}
  * @method
  * @protected

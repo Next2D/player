@@ -125,13 +125,13 @@ export class BevelFilter extends BitmapFilter
         blur_y: number = 4,
         strength: number = 1,
         quality: IFilterQuality = 1,
-        type: IBitmapFilterType = "inner", 
+        type: IBitmapFilterType = "inner",
         knockout: boolean = false
     ) {
 
         super();
 
-        // default 
+        // default
         this._$blurFilter     = new BlurFilter(blur_x, blur_y, quality);
         this._$distance       = 4;
         this._$angle          = 45;
@@ -298,7 +298,7 @@ export class BevelFilter extends BitmapFilter
     set highlightColor (highlight_color: number | string)
     {
         highlight_color = $clamp(
-            typeof highlight_color === "string" 
+            typeof highlight_color === "string"
                 ? $convertColorStringToNumber(highlight_color)
                 : highlight_color
             , 0, 0xffffff, 0xffffff
@@ -508,7 +508,7 @@ export class BevelFilter extends BitmapFilter
     /**
      * @description フィルターの描画範囲のバウンディングボックスを返します。
      *              Returns the bounding box of the filter drawing area.
-     * 
+     *
      * @param  {object} bounds
      * @return {object}
      * @method

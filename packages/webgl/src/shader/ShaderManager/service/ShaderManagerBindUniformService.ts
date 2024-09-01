@@ -3,7 +3,7 @@ import type { IUniformData } from "../../../interface/IUniformData";
 /**
  * @description uniform変数をバインドします。
  *              Bind uniform variables.
- * 
+ *
  * @param  {Map} uniform_map
  * @return {void}
  * @method
@@ -25,7 +25,7 @@ export const execute = (uniform_map: Map<string, IUniformData>): void =>
 
             data.assign--;
             data.method(data.array);
-            
+
         }
     }
 };

@@ -4,8 +4,8 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description TextureObjectをオブジェクトプールに保管、サイズオーバー時は削除します。
  *              Stores the TextureObject in the object pool and deletes it if it exceeds the size.
- * 
- * @param  {ITextureObject} texture_object 
+ *
+ * @param  {ITextureObject} texture_object
  * @return {void}
  * @method
  * @protected

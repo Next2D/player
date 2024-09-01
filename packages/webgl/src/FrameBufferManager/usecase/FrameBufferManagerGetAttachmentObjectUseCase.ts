@@ -10,9 +10,9 @@ import { execute as textureManagerGetTextureUseCase } from "../../TextureManager
  * @description FrameBufferManagerのアタッチメントオブジェクトを取得
  *              Get the attachment object of FrameBufferManager
  *
- * @param  {number} width 
- * @param  {number} height 
- * @param  {boolean} [multisample=false] 
+ * @param  {number} width
+ * @param  {number} height
+ * @param  {boolean} [multisample=false]
  * @return {IAttachmentObject}
  * @method
  * @protected
@@ -22,16 +22,16 @@ export const execute = (
     height: number,
     multisample: boolean = false
 ): IAttachmentObject => {
-    
+
     // キャッシュがあれば再利用する
-    const attachmentObject = $objectPool.length 
+    const attachmentObject = $objectPool.length
         ? $objectPool.shift() as IAttachmentObject
         : frameBufferManagerCreateAttachmentObjectService();
 
     // テクスチャを取得
     attachmentObject.width   = width;
     attachmentObject.height  = height;
-    
+
     if (multisample) {
         attachmentObject.msaa    = true;
         attachmentObject.texture = null;

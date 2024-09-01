@@ -4,10 +4,10 @@ import { $gl } from "../../../WebGLUtil";
 /**
  * @description uniform変数の初期化
  *              Initialize uniform variables
- * 
- * @param {WebGLProgram} program 
- * @param {Map} map 
- * @param {boolean} [atlas=false] 
+ *
+ * @param {WebGLProgram} program
+ * @param {Map} map
+ * @param {boolean} [atlas=false]
  * @method
  * @protected
  */
@@ -53,8 +53,8 @@ export const execute = (
             // uniformの値の設定は、programに保持されるため、
             // sampler2Dは一度だけ設定するようにする
             case $gl.SAMPLER_2D:
-                data.method = atlas 
-                    ? $gl.uniform1i.bind($gl,location, 3) 
+                data.method = atlas
+                    ? $gl.uniform1i.bind($gl,location, 3)
                     : $gl.uniform1iv.bind($gl, location);
                 data.array  = new Int32Array(info.size);
                 data.assign = 1;

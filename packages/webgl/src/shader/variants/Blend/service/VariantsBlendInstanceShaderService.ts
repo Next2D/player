@@ -6,7 +6,7 @@ import { $collection } from "../../BlendVariants";
 /**
  * @description InstancedArrayのシェーダーを生成して返却
  *              Generate and return the shader of InstancedArray
- * 
+ *
  * @return {ShaderInstancedManager}
  * @method
  * @protected
@@ -27,4 +27,4 @@ export const execute = (): ShaderInstancedManager =>
     $collection.set(key, shaderManager);
 
     return shaderManager;
-}
+};

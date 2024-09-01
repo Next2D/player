@@ -5,7 +5,7 @@ import { execute as displayObjectContainerPrepareActionService } from "../../Dis
 /**
  * @description Stageの起動準備完了時のユースーケース
  *              Use case when Stage is ready to start
- * 
+ *
  * @param  {DisplayObjectContainer} display_object_container
  * @return {void}
  * @method

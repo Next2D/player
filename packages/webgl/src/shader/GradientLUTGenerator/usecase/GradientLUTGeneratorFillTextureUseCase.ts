@@ -6,10 +6,10 @@ import { execute as vertexArrayObjectBindService } from "../../../VertexArrayObj
 /**
  * @description グラデーションのtextureの描画を実行
  *              Execute drawing of gradient texture
- * 
- * @param  {ShaderManager} shader_manager 
- * @param  {number} begin 
- * @param  {number} end 
+ *
+ * @param  {ShaderManager} shader_manager
+ * @param  {number} begin
+ * @param  {number} end
  * @return {void}
  * @method
  * @protected
@@ -17,7 +17,7 @@ import { execute as vertexArrayObjectBindService } from "../../../VertexArrayObj
 export const execute = (
     shader_manager: ShaderManager,
     begin: number,
-    end: number,
+    end: number
 ): void => {
 
     shader_manager.useProgram();

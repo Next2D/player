@@ -46,7 +46,7 @@ export class Event
     /**
      * @description 実行される関数
      *              The function to execute.
-     * 
+     *
      * @type {Function | null}
      * @default null
      * @public
@@ -56,7 +56,7 @@ export class Event
     /**
      * @description イベント登録を行なったオブジェクト
      *              The object that registered the event.
-     * 
+     *
      * @type {EventDispatcher | null}
      * @default null
      * @public
@@ -66,7 +66,7 @@ export class Event
     /**
      * @description イベントを発火したオブジェクト
      *              The object that fired the event.
-     * 
+     *
      * @type {EventDispatcher | null}
      * @default null
      * @public
@@ -76,7 +76,7 @@ export class Event
     /**
      * @description イベントフェーズ
      *              Event phase.
-     * 
+     *
      * @see {EventPhase}
      * @type {number}
      * @default EventPhase.AT_TARGET
@@ -94,7 +94,7 @@ export class Event
      * @constructor
      * @public
      */
-    constructor (type: string, bubbles: boolean = false) 
+    constructor (type: string, bubbles: boolean = false)
     {
         /**
          * @type {string}

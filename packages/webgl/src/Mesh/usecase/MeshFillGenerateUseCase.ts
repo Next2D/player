@@ -8,7 +8,7 @@ import { execute as meshFillGenerateService } from "../service/MeshFillGenerateS
 /**
  * @description 塗りのメッシュを生成する
  *              Generate a fill mesh
- * 
+ *
  * @param  {IPath[]} vertices
  * @return {IFillMesh}
  * @method

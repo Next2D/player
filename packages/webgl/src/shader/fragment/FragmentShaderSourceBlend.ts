@@ -24,7 +24,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
 // 背景色 b: dst.rgb * (dst.a * (1.0 - src.a))
 // 合成色 c: mix.rgb * (src.a * dst.a)
 // 最終結果: a + b + c
-    
+
 /**
  * @return {string}
  * @method
@@ -97,7 +97,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     return a + b + c;
 }`;
 };
-    
+
 /**
  * @return {string}
  * @method
@@ -124,7 +124,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     return a + b + c;
 }`;
 };
-    
+
 /**
  * @return {string}
  * @method
@@ -192,7 +192,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     return a + b + c;
 }`;
 };
-    
+
 /**
  * @return {string}
  * @method
@@ -219,7 +219,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     return a + b + c;
 }`;
 };
-    
+
 /**
  * @return {string}
  * @method

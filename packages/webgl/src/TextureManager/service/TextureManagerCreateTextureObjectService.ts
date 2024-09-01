@@ -10,9 +10,9 @@ let $id: number = 0;
 /**
  * @description 新規のテクスチャオブジェクトを作成します。
  *              Create a new texture object.
- * 
- * @param  {number} width 
- * @param  {number} height 
+ *
+ * @param  {number} width
+ * @param  {number} height
  * @return {ITextureObject}
  * @method
  * @protected

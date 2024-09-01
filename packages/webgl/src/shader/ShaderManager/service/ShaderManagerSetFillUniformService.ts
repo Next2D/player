@@ -8,9 +8,9 @@ import {
 /**
  * @description ShaderManagerの塗りのuniform変数を設定します。
  *              Set the fill uniform variables of the ShaderManager.
- * 
- * @param  {ShaderManager} shader_manager 
- * @param  {boolean} has_grid 
+ *
+ * @param  {ShaderManager} shader_manager
+ * @param  {boolean} has_grid
  * @return {void}
  * @method
  * @protected
@@ -41,7 +41,7 @@ export const execute = (shader_manager: ShaderManager, has_grid: boolean): void 
     }
 
     // fragment: u_color
-    const fillStyle = $context.$fillStyle;    
+    const fillStyle = $context.$fillStyle;
     const mediump   = shader_manager.mediump;
 
     mediump[0] = fillStyle[0];

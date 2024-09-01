@@ -1,5 +1,5 @@
 /**
- * @param  {number} index 
+ * @param  {number} index
  * @return {string}
  * @method
  * @private
@@ -26,12 +26,12 @@ const STATEMENT_FOCAL_POINT_ON = (index: number): string =>
  */
 const STATEMENT_FOCAL_POINT_OFF = (): string =>
 {
-    return `float t = length(coord);`;
+    return "float t = length(coord);";
 };
 
 /**
- * @param  {number} index 
- * @param  {boolean} has_focal_point 
+ * @param  {number} index
+ * @param  {boolean} has_focal_point
  * @return {string}
  * @method
  * @private
@@ -42,7 +42,7 @@ const STATEMENT_GRADIENT_TYPE_RADIAL = (index: number, has_focal_point: boolean)
         ? STATEMENT_FOCAL_POINT_ON(index)
         : STATEMENT_FOCAL_POINT_OFF();
 
-return `
+    return `
 float radius = u_highp[${index}][0];
 vec2 coord = p / radius;
 ${focalPointStatement}
@@ -50,7 +50,7 @@ ${focalPointStatement}
 };
 
 /**
- * @param {number} index 
+ * @param {number} index
  * @return {string}
  * @method
  * @private
@@ -68,11 +68,11 @@ const STATEMENT_GRADIENT_TYPE_LINEAR = (index: number): string =>
 };
 
 /**
- * @param  {number} highp_length 
- * @param  {number} fragment_index 
- * @param  {boolean} is_radial 
- * @param  {boolean} has_focal_point 
- * @param  {number} spread_method 
+ * @param  {number} highp_length
+ * @param  {number} fragment_index
+ * @param  {boolean} is_radial
+ * @param  {boolean} has_focal_point
+ * @param  {number} spread_method
  * @return {string}
  * @method
  * @private

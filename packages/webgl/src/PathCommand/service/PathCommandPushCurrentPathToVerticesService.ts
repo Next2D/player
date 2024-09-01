@@ -6,7 +6,7 @@ import {
 /**
  * @description 現在操作中のパス配列を全てverticesに統合します
  *              Integrate all path arrays currently being operated into vertices
- * 
+ *
  * @return {void}
  * @method
  * @protected

@@ -6,7 +6,7 @@ import { GRADIENT_LUT_TEMPLATE } from "../../../Fragment/FragmentShaderSourceGra
 /**
  * @description グラデーションLUTのシェーダーを返却
  *              Returns the shader of the gradient LUT
- * 
+ *
  * @param  {number} stops_length
  * @param  {boolean} is_linear_space
  * @return {ShaderManager}

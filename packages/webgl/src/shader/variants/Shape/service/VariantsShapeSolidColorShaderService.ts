@@ -7,9 +7,9 @@ import { SOLID_COLOR } from "../../../Fragment/FragmentShaderSource";
 /**
  * @description Shapeのノーマルな塗りのシェーダを返却
  *              Returns the normal fill shader of Shape
- * 
- * @param  {boolean} is_stroke 
- * @param  {boolean} has_grid 
+ *
+ * @param  {boolean} is_stroke
+ * @param  {boolean} has_grid
  * @return {ShaderManager}
  * @method
  * @protected

@@ -14,7 +14,7 @@ let $id: number = 0;
  * @method
  * @protected
  */
-export const execute = (): IAttachmentObject => 
+export const execute = (): IAttachmentObject =>
 {
     return {
         "id": $id++,
@@ -26,5 +26,5 @@ export const execute = (): IAttachmentObject =>
         "color": null,
         "texture": null,
         "stencil": null
-    }
+    };
 };

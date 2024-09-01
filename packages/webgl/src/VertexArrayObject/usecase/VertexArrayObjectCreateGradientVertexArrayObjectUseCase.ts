@@ -7,7 +7,7 @@ import { $vertexBufferData } from "../../VertexArrayObject";
 /**
  * @description インスタンス用の頂点配列オブジェクトを生成します。
  *              Generates a vertex array object for instances.
- * 
+ *
  * @param  {number} begin
  * @param  {number} end
  * @return {IVertexArrayObject}

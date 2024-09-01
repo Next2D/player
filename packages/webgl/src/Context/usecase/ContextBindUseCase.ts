@@ -13,7 +13,7 @@ import {
 /**
  * @description アタッチメントオブジェクトのサイズに変更・初期化し、フレームバッファにアタッチメントオブジェクトをバインドする
  *              Change and initialize to the size of the attachment object and bind the attachment object to the frame buffer
- * 
+ *
  * @param  {Context} context
  * @param  {IAttachmentObject} attachment_object
  * @return {void}
@@ -33,16 +33,16 @@ export const execute = (context: Context, attachment_object: IAttachmentObject):
     // フレームバッファにアタッチメントオブジェクトをバインドする
     frameBufferManagerBindAttachmentObjectService(attachment_object);
 
-    if (!currentAttachment 
+    if (!currentAttachment
         || currentAttachment.width !== attachment_object.width
-        || currentAttachment.height !== attachment_object.height) 
+        || currentAttachment.height !== attachment_object.height)
     {
         $setViewportSize(attachment_object.width, attachment_object.height);
         $gl.viewport(0, 0, attachment_object.width, attachment_object.height);
     }
 
     // カラーバッファorステンシルバッファが、未初期化の場合はクリアする
-    const object = attachment_object.msaa 
+    const object = attachment_object.msaa
         ? attachment_object.color as IColorBufferObject
         : attachment_object.stencil as IStencilBufferObject;
 

@@ -314,7 +314,7 @@ export const $headerStringToArray = (header: string): IURLRequestHeader[] =>
 /**
  * @description 親子関係のマップデータ
  *              Parent-child relationship map data
- * 
+ *
  * @type {Map}
  * @protected
  */

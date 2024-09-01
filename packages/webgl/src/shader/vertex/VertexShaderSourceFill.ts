@@ -10,7 +10,7 @@ import {
  */
 export const ATTRIBUTE_BEZIER_ON = (): string =>
 {
-    return `layout (location = 1) in vec2 a_bezier;`;
+    return "layout (location = 1) in vec2 a_bezier;";
 };
 
 /**
@@ -20,7 +20,7 @@ export const ATTRIBUTE_BEZIER_ON = (): string =>
  */
 export const VARYING_UV_ON = (): string =>
 {
-    return `out vec2 v_uv;`;
+    return "out vec2 v_uv;";
 };
 
 /**
@@ -30,7 +30,7 @@ export const VARYING_UV_ON = (): string =>
  */
 export const VARYING_BEZIER_ON = (): string =>
 {
-    return `out vec2 v_bezier;`;
+    return "out vec2 v_bezier;";
 };
 
 /**
@@ -62,7 +62,7 @@ v_uv = (inverse_matrix * uv_matrix * vec3(a_vertex, 1.0)).xy;`;
  */
 export const STATEMENT_BEZIER_ON = (): string =>
 {
-    return `v_bezier = a_bezier;`;
+    return "v_bezier = a_bezier;";
 };
 
 /**
@@ -75,7 +75,7 @@ export const STATEMENT_BEZIER_ON = (): string =>
  * @static
  */
 export const FILL_TEMPLATE = (
-    highp_length: number, 
+    highp_length: number,
     with_uv: boolean,
     for_mask: boolean,
     has_grid: boolean

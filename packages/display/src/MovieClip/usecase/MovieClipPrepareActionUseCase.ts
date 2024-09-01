@@ -9,7 +9,7 @@ import { execute as movieClipSetActionService } from "../service/MovieClipSetAct
  * @param  {MovieClip} movie_clip
  * @return {void}
  * @method
- * @protected 
+ * @protected
  */
 export const execute = (movie_clip: MovieClip): void =>
 {

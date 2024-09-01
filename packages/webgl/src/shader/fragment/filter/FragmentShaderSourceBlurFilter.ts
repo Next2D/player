@@ -2,12 +2,12 @@
  * @description ブラーフィルタのフラグメントシェーダーソース
  *              Fragment shader source of blur filter
  *
- * @param  {number} half_blur 
+ * @param  {number} half_blur
  * @return {string}
  * @method
  * @public
  */
-export const getFragmentSource = (half_blur: number): string => 
+export const getFragmentSource = (half_blur: number): string =>
 {
     const halfBlurFixed: string = half_blur.toFixed(1);
 

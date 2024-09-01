@@ -3,7 +3,7 @@ import { $currentPath } from "../../PathCommand";
 /**
  * @description 現在のパスに頂点情報を追加します。
  *              Add vertex information to the current path.
- * 
+ *
  * @param  {number} x
  * @param  {number} y
  * @param  {boolean} is_control_point

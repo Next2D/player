@@ -7,10 +7,10 @@ import { $currentPath } from "../../PathCommand";
  * @description 二次曲線を描画
  *              Draw a quadratic curve
  *
- * @param  {number} cx 
- * @param  {number} cy 
- * @param  {number} x 
- * @param  {number} y 
+ * @param  {number} cx
+ * @param  {number} cy
+ * @param  {number} x
+ * @param  {number} y
  * @return {void}
  * @method
  * @protected

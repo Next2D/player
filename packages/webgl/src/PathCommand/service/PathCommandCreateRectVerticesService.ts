@@ -4,11 +4,11 @@ import { $getArray } from "../../WebGLUtil";
 /**
  * @description 指定の座標とサイズで矩形を描画
  *              Draw a rectangle with the specified coordinates and size
- * 
- * @param  {number} x 
- * @param  {number} y 
- * @param  {number} w 
- * @param  {number} h 
+ *
+ * @param  {number} x
+ * @param  {number} y
+ * @param  {number} w
+ * @param  {number} h
  * @return {array}
  * @method
  * @public

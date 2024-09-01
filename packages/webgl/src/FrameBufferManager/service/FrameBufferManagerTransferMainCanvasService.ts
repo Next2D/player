@@ -8,7 +8,7 @@ import {
 /**
  * @description メインのアタッチメントオブジェクトをメインキャンバスに転送します。
  *              Transfer the main attachment object to the main canvas.
- * 
+ *
  * @return {void}
  * @method
  * @protected

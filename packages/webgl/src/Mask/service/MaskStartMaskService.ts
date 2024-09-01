@@ -6,7 +6,7 @@ import {
 /**
  * @description マスクの描画を開始
  *              Start mask drawing
- * 
+ *
  * @param  {number} x_min
  * @param  {number} y_min
  * @param  {number} x_max
@@ -37,8 +37,8 @@ export const execute = (
     const height = Math.abs(y_max - y_min);
     $gl.enable($gl.SCISSOR_TEST);
     $gl.scissor(
-        x_min, 
-        currentAttachmentObject.height - y_min - height, 
+        x_min,
+        currentAttachmentObject.height - y_min - height,
         width,
         height
     );

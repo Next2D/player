@@ -6,7 +6,7 @@ import { execute as stencilBufferObjectCreateService } from "../service/StencilB
  * @description オブジェクトプールにStencilBufferObjectがあれば再利用、なければ新規作成して返却します。
  *              If there is a StencilBufferObject in the object pool, it will be reused,
  *              otherwise it will be created and returned.
- * 
+ *
  * @param  {number} width
  * @param  {number} height
  * @return {IStencilBufferObject}

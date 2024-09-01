@@ -8,7 +8,7 @@ import { $RENDER_MAX_SIZE } from "./WebGLUtil";
 /**
  * @description アクティブなアトラスインデックス
  *              Active atlas index
- * 
+ *
  * @type {number}
  * @private
  */
@@ -17,7 +17,7 @@ let $activeAtlasIndex: number = 0;
 /**
  * @description アクティブなアトラスインデックスをセット
  *              Set the active atlas index
- * 
+ *
  * @param  {number} index
  * @return {void}
  * @method
@@ -31,7 +31,7 @@ export const $setActiveAtlasIndex = (index: number): void =>
 /**
  * @description アクティブなアトラスインデックスを返却
  *              Return the active atlas index
- * 
+ *
  * @returns {number}
  * @method
  * @protected
@@ -44,16 +44,16 @@ export const $getActiveAtlasIndex = (): number =>
 /**
  * @description アトラステクスチャのアタッチメントオブジェクト
  *              Attachment object of atlas texture
- * 
+ *
  * @type {IAttachmentObject[]}
  * @private
  */
-let $atlasAttachmentObjects: IAttachmentObject[] = [];
+const $atlasAttachmentObjects: IAttachmentObject[] = [];
 
 /**
  * @description アトラス専用のフレームバッファ配列
  *              Array of frame buffers dedicated to the atlas
- * 
+ *
  * @return {IAttachmentObject[]}
  * @method
  * @protected
@@ -80,7 +80,7 @@ export const $setAtlasAttachmentObject = (attachment_object: IAttachmentObject):
 /**
  * @description アトラステクスチャオブジェクトを返却
  *              Return the atlas texture object
- * 
+ *
  * @returns {IAttachmentObject}
  * @method
  * @protected
@@ -98,7 +98,7 @@ export const $getAtlasAttachmentObject = (): IAttachmentObject =>
 /**
  * @description アトラステクスチャオブジェクトが存在するか
  *              Does the atlas texture object exist?
- * 
+ *
  * @return {boolean}
  * @method
  * @protected
@@ -111,7 +111,7 @@ export const $hasAtlasAttachmentObject = (): boolean =>
 /**
  * @description ルートノードの配列
  *              Array of root nodes
- * 
+ *
  * @type {TexturePacker[]}
  * @protected
  */
@@ -120,7 +120,7 @@ export const $rootNodes: TexturePacker[] = [];
 /**
  * @description アトラス専用のテクスチャ
  *              Texture for atlas only
- * 
+ *
  * @type {ITextureObject | null}
  * @private
  */
@@ -129,7 +129,7 @@ export let $atlasTexture: ITextureObject | null = null;
 /**
  * @description アトラステクスチャオブジェクトを返却
  *              Return the atlas texture object
- * 
+ *
  * @return {ITextureObject}
  * @method
  * @protected

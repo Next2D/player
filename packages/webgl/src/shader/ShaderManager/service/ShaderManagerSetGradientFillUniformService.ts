@@ -1,5 +1,5 @@
 import type { ShaderManager } from "../../ShaderManager";
-import { 
+import {
     $getViewportWidth,
     $getViewportHeight
 } from "../../../WebGLUtil";
@@ -7,7 +7,7 @@ import {
 /**
  * @description グラデーションのuniformを設定
  *              Set the gradient uniform
- * 
+ *
  * @param  {ShaderManager} shader_manager
  * @return {void}
  * @method
@@ -20,7 +20,7 @@ export const execute = (
     matrix: Float32Array,
     inverse_matrix: Float32Array,
     focal_point_ratio: number = 0,
-    points: Float32Array | null = null,
+    points: Float32Array | null = null
 ): void => {
 
     const highp: Float32Array | Int32Array = shader_manager.highp;

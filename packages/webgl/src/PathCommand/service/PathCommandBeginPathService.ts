@@ -7,7 +7,7 @@ import {
 /**
  * @description 現在操作中のパス配列を全てクリアします。
  *              Clear all path arrays currently being operated.
- * 
+ *
  * @return {void}
  * @method
  * @protected

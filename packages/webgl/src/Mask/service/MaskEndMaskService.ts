@@ -6,7 +6,7 @@ import {
 /**
  * @description マスクの描画を終了
  *              End mask drawing
- * 
+ *
  * @return {void}
  * @method
  * @protected

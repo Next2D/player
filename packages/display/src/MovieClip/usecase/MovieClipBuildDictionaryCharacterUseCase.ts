@@ -12,7 +12,7 @@ import { execute as shapeBuildFromCharacterUseCase } from "../../Shape/usecase/S
 /**
  * @description cahracterを元にDisplayObjectを構築
  *              Build DisplayObject based on character
- * 
+ *
  * @param  {number} dictionary_id 
  * @param  {object} tag 
  * @param  {object} character 

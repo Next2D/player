@@ -10,7 +10,7 @@ import { $objectPool } from "../../FrameBufferManager";
 /**
  * @description 各オブジェクトを再利用するためにプールを行い、アタッチメントオブジェクトは初期化してプールに戻す
  *              Pool each object for reuse, and initialize and return the attachment object to the pool
- * 
+ *
  * @param  {IAttachmentObject} attachment_object
  * @return {void}
  * @method

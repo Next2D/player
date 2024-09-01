@@ -4,7 +4,7 @@ import { $context, $gl } from "../../WebGLUtil";
 /**
  * @description マスクの終了処理
  *              End mask processing
- * 
+ *
  * @return {void}
  * @method
  * @protected

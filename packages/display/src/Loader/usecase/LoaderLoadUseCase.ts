@@ -8,9 +8,9 @@ import { execute as loaderLoadEndEventUseCase } from "../usecase/LoaderLoadEndEv
 /**
  * @description 外部JSONのローディングの実行関数
  *              Execution function of external JSON loading
- * 
+ *
  * @see Loader.load
- * @param {Loader} loader 
+ * @param {Loader} loader
  * @param {URLRequest} request
  * @return {Promise}
  * @method

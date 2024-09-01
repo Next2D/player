@@ -4,7 +4,7 @@ import { execute as displayObjectContainerAdvanceFrameUseCase } from "../../Disp
 /**
  * @description ステージに配置されたDisplayObjectの定期処理
  *              Regular processing of DisplayObjects placed on the Stage
- * 
+ *
  * @param  {Stage} stage
  * @return {void}
  * @method

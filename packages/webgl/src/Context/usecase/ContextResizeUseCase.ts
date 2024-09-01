@@ -8,7 +8,7 @@ import { execute as atlasManagerResetUseCase } from "../../AtlasManager/usecase/
 /**
  * @description メインのアタッチメントオブジェクトをリサイズする
  *              Resize the main attachment object
- * 
+ *
  * @param  {Context} context
  * @param  {number} width
  * @param  {number} height
@@ -16,14 +16,14 @@ import { execute as atlasManagerResetUseCase } from "../../AtlasManager/usecase/
  * @method
  * @protected
  */
-export const execute = (context: Context, width: number, height: number): void => 
+export const execute = (context: Context, width: number, height: number): void =>
 {
     // clear InstacedArray
     context.clearArraysInstanced();
 
     if (context.$mainAttachmentObject) {
         frameBufferManagerReleaseAttachmentObjectUseCase(context.$mainAttachmentObject);
-      
+
         // unbind
         if (context.$mainAttachmentObject === $getCurrentAttachment()) {
             frameBufferManagerUnBindAttachmentObjectService();

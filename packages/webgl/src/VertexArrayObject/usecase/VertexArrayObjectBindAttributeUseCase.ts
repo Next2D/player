@@ -11,7 +11,7 @@ import {
 /**
  * @description インスタンス用のデータをバインドします。
  *              Binds data for instances.
- * 
+ *
  * @param  {ShaderInstancedManager} shader_instanced_manager
  * @return {void}
  * @method

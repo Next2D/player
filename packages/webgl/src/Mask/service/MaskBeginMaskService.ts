@@ -1,8 +1,8 @@
 import {
-    $isMaskDrawing, 
+    $isMaskDrawing,
     $setMaskDrawing
 } from "../../Mask";
-import { 
+import {
     $context,
     $gl
 } from "../../WebGLUtil";
@@ -10,12 +10,12 @@ import {
 /**
  * @description マスク描画の開始準備
  *              Prepare to start drawing the mask
- * 
+ *
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (): void => 
+export const execute = (): void =>
 {
 
     const currentAttachmentObject = $context.currentAttachmentObject;

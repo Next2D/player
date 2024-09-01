@@ -14,7 +14,7 @@ import {
 /**
  * @description フレームバッファにアタッチメントオブジェクトをバインドする
  *              Bind the attachment object to the frame buffer
- * 
+ *
  * @param  {IAttachmentObject} attachment_object
  * @return {void}
  * @method

@@ -7,13 +7,13 @@ import { MASK } from "../../../Fragment/FragmentShaderSource";
 /**
  * @description Shapeのマスクのシェーダを返却
  *              Returns the mask shader of Shape
- * 
- * @param  {boolean} is_stroke 
- * @param  {boolean} has_grid 
+ *
+ * @param  {boolean} is_stroke
+ * @param  {boolean} has_grid
  * @return {ShaderManager}
  * @method
  * @protected
- */ 
+ */
 export const execute = (is_stroke: boolean, has_grid: boolean): ShaderManager =>
 {
     const key: string = `m${is_stroke ? "y" : "n"}${has_grid ? "y" : "n"}`;

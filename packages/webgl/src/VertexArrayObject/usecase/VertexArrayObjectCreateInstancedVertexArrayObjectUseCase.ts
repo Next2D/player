@@ -10,7 +10,7 @@ import {
 /**
  * @description インスタンス用の頂点配列オブジェクトを生成します。
  *              Generates a vertex array object for instances.
- * 
+ *
  * @return {IVertexArrayObject}
  * @method
  * @protected

@@ -8,9 +8,9 @@ import {
 /**
  * @description ShaderManagerのマスクのuniform変数を設定します。
  *              Set the mask uniform variables of the ShaderManager.
- * 
- * @param  {ShaderManager} shader_manager 
- * @param  {boolean} has_grid 
+ *
+ * @param  {ShaderManager} shader_manager
+ * @param  {boolean} has_grid
  * @return {void}
  * @method
  * @protected

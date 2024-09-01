@@ -9,7 +9,7 @@ import {
 /**
  * @description テクスチャの初期設定を行います。
  *              Initialize the texture.
- * 
+ *
  * @param  {ITextureObject} textrue_object
  * @return {void}
  * @method
@@ -21,7 +21,7 @@ export const execute = (textrue_object: ITextureObject): void =>
         $setActiveTextureUnit($gl.TEXTURE0);
         $gl.activeTexture($gl.TEXTURE0);
     }
-    
+
     $boundTextures[0] = textrue_object;
     $gl.bindTexture($gl.TEXTURE_2D, textrue_object.resource);
 
@@ -41,8 +41,8 @@ export const execute = (textrue_object: ITextureObject): void =>
         pixels[idx++] = 255;
     }
 
-    $gl.texImage2D($gl.TEXTURE_2D, 0, $gl.RGBA, 
-        textrue_object.width, textrue_object.height, 
+    $gl.texImage2D($gl.TEXTURE_2D, 0, $gl.RGBA,
+        textrue_object.width, textrue_object.height,
         0, $gl.RGBA, $gl.UNSIGNED_BYTE, pixels
     );
 };

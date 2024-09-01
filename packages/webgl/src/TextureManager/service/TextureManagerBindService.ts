@@ -9,10 +9,10 @@ import {
 /**
  * @description 指定のunitにテクスチャをバインドします。nullの場合はバインドを解除します。
  *              Binds a texture to the specified unit. If null, the binding is released.
- * 
- * @param  {number} index 
- * @param  {number} unit 
- * @param  {ITextureObject} [texture_object=null] 
+ *
+ * @param  {number} index
+ * @param  {number} unit
+ * @param  {ITextureObject} [texture_object=null]
  * @return {void}
  * @method
  * @protected
@@ -29,8 +29,8 @@ export const execute = (
     }
 
     const boundTextures = $boundTextures[index];
-    if ((boundTextures !== null && texture_object !== null
-        && boundTextures.id === texture_object.id) 
+    if (boundTextures !== null && texture_object !== null
+        && boundTextures.id === texture_object.id
         || texture_object === boundTextures
     ) {
         return;

@@ -5,13 +5,13 @@ import { $gl } from "../../../WebGLUtil";
 /**
  * @description インスタンシング描画を実行します。
  *              Execute instanced drawing.
- * 
+ *
  * @param  {ShaderInstancedManager} shader_instanced_manager
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (shader_instanced_manager: ShaderInstancedManager): void => 
+export const execute = (shader_instanced_manager: ShaderInstancedManager): void =>
 {
     // setup
     shader_instanced_manager.useProgram();
@@ -22,4 +22,4 @@ export const execute = (shader_instanced_manager: ShaderInstancedManager): void 
 
     // draw
     $gl.drawArraysInstanced($gl.TRIANGLE_STRIP, 0, 4, shader_instanced_manager.count);
-}
+};

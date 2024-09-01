@@ -8,7 +8,7 @@ import {
 /**
  * @description 現在アタッチされているFramebufferのバインド解除
  *              Unbind the currently attached Framebuffer
- * 
+ *
  * @return {void}
  * @method
  * @protected

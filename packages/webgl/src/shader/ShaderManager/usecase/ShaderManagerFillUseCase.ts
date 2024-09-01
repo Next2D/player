@@ -8,9 +8,9 @@ import { execute as blendResetService } from "../../../Blend/service/BlendResetS
 /**
  * @description シェーダーマネージャの塗り実行します。
  *              Execute ShaderManager fill.
- * 
- * @param  {ShaderManager} shader_manager 
- * @param  {IVertexArrayObject} vertex_array_object 
+ *
+ * @param  {ShaderManager} shader_manager
+ * @param  {IVertexArrayObject} vertex_array_object
  * @return {void}
  * @method
  * @protected
@@ -21,7 +21,7 @@ export const execute = (
 ): void => {
 
     // setup
-    shader_manager.useProgram()
+    shader_manager.useProgram();
     shader_manager.bindUniform();
 
     // set alpha
@@ -34,4 +34,4 @@ export const execute = (
     const indexRanges = vertex_array_object.indexRanges as IIndexRange[];
     const range = indexRanges[indexRanges.length - 1];
     $gl.drawArrays($gl.TRIANGLES, 0, range.first + range.count);
-}
+};

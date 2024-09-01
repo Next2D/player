@@ -40,7 +40,7 @@ export let $samples: number = 4;
  * @param  {number} samples
  * @return {void}
  * @method
- * @protected 
+ * @protected
  */
 export const $setSamples = (samples: number): void =>
 {
@@ -77,7 +77,7 @@ export let $context: Context;
  * @description 起動したコンテキストをセット
  *              Set the context that started
  *
- * @param  {Context} context 
+ * @param  {Context} context
  * @return {void}
  * @method
  * @protected
@@ -95,7 +95,7 @@ let $programId: number = 0;
 /**
  * @description 管理用のユニークなプログラムIDを発行
  *              Issue a unique program ID for management
- * 
+ *
  * @return {number}
  * @method
  * @protected
@@ -108,7 +108,7 @@ export const $getProgramId = (): number =>
 /**
  * @description 指定された値を範囲内にクランプします。
  *              Clamps the specified value within the range.
- * 
+ *
  * @param  {number} value
  * @param  {number} min
  * @param  {number} max
@@ -139,7 +139,7 @@ const $arrays: any[] = [];
 /**
  * @description プールした配列があれば再利用、なければ新規作成
  *              Reuse the pooled array if available, otherwise create a new one.
- * 
+ *
  * @param  {array} args
  * @return {array}
  * @method
@@ -253,7 +253,7 @@ const $float32Array9: Float32Array[] = [];
 /**
  * @description プールしたFloat32Arrayがあれば再利用、なければ新規作成
  *              Reuse the pooled Float32Array if available, otherwise create a new one.
- * 
+ *
  * @param  {number} [f0=0]
  * @param  {number} [f1=0]
  * @param  {number} [f2=0]
@@ -311,7 +311,7 @@ const $float32Array6: Float32Array[] = [];
 /**
  * @description プールしたFloat32Arrayがあれば再利用、なければ新規作成
  *              Reuse the pooled Float32Array if available, otherwise create a new one.
- * 
+ *
  * @param  {number} [f0=0]
  * @param  {number} [f1=0]
  * @param  {number} [f2=0]
@@ -360,7 +360,7 @@ const $int32Array4: Int32Array[] = [];
 /**
  * @description プールしたInt32Arrayがあれば再利用、なければ新規作成
  *              Reuse the pooled Int32Array if available, otherwise create a new one.
- * 
+ *
  * @param  {number} [f0=0]
  * @param  {number} [f1=0]
  * @param  {number} [f2=0]
@@ -387,7 +387,7 @@ export const $getInt32Array4 = (
 /**
  * @description 使用済みのInt32Arrayをプールに保管
  *              Store the used Int32Array in the pool.
- * 
+ *
  * @param  {Float32Array} array
  * @return {void}
  * @method
@@ -401,7 +401,7 @@ export const $poolInt32Array4 = (array: Int32Array): void =>
 /**
  * @description 逆行列を取得
  *              Get the inverse matrix
- * 
+ *
  * @param   {Float32Array} m
  * @returns {Float32Array}
  * @method
@@ -437,7 +437,7 @@ let $viewportHeight: number = 0;
 /**
  * @description ビューポートの幅を取得
  *              Get the width of the viewport
- * 
+ *
  * @returns {number}
  * @method
  * @protected
@@ -450,7 +450,7 @@ export const $getViewportWidth = (): number =>
 /**
  * @description ビューポートの高さを取得
  *              Get the height of the viewport
- * 
+ *
  * @returns {number}
  * @method
  * @protected
@@ -463,7 +463,7 @@ export const $getViewportHeight = (): number =>
 /**
  * @description ビューポートのサイズをセット
  *              Set the size of the viewport
- * 
+ *
  * @param  {number} viewport_width
  * @param  {number} viewport_height
  * @return {void}
@@ -477,7 +477,9 @@ export const $setViewportSize = (viewport_width: number, viewport_height: number
 };
 
 /**
- * 
+ * @description ビューポートのサイズを取得
+ *              Get the size of the viewport
+ *
  * @param {Float32Array} matrix
  * @return {Float32Array}
  * @method

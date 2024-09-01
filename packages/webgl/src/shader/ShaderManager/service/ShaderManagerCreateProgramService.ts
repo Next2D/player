@@ -2,17 +2,17 @@ import type { IProgramObject } from "../../../interface/IProgramObject";
 import {
     $getProgramId,
     $gl
-} from "../../../WebGLUtil"
+} from "../../../WebGLUtil";
 
 /**
  * @description 指定のシェーダープログラムを生成する
  *              Generates the specified shader program
- * 
+ *
  * @param  {string} vertex_source
  * @param  {string} fragment_source
  * @return {IProgramObject}
  * @method
- * @protected  
+ * @protected
  */
 export const execute = (vertex_source: string, fragment_source: string): IProgramObject =>
 {

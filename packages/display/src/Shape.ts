@@ -6,7 +6,7 @@ import { Event } from "@next2d/events";
 import {
     $graphicMap,
     $getArray
- } from "./DisplayObjectUtil";
+} from "./DisplayObjectUtil";
 
 /**
  * @description Shape クラスは、ベクターグラフィックスを表示するための表示オブジェクトです。
@@ -45,7 +45,7 @@ export class Shape extends DisplayObject
     /**
      * @description ビルドされたキャッシュキー
      *              Built cache key
-     * 
+     *
      * @type {number}
      * @default 0
      * @public
@@ -55,7 +55,7 @@ export class Shape extends DisplayObject
     /**
      * @description キャッシュのビルドに利用されるパラメータ
      *              Parameters used to build the cache
-     * 
+     *
      * @type {number[]}
      * @default [0, 0, 0]
      * @public
@@ -204,7 +204,7 @@ export class Shape extends DisplayObject
     /**
      * @description マウスイベントのヒットテストを行います。
      *              Performs a hit test on a display object by testing a point against all visible children.
-     * 
+     *
      * @param  {CanvasRenderingContext2D} context
      * @param  {Float32Array} matrix
      * @param  {object}  options
@@ -236,7 +236,7 @@ export class Shape extends DisplayObject
     _$hit (
         context: CanvasRenderingContext2D,
         matrix: Float32Array,
-        options: IPlayerHitObject,
+        options: IPlayerHitObject
     ): boolean {
 
         const graphics: Graphics | null = this._$graphics;

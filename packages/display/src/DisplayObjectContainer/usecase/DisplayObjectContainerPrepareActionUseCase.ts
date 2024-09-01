@@ -7,7 +7,7 @@ import { execute as movieClipPrepareActionUseCase } from "../../MovieClip/usecas
  * @description 子孫のアクションを準備する
  *              Prepare descendant actions
  *
- * @param  {DisplayObjectContainer} display_object_container 
+ * @param  {DisplayObjectContainer} display_object_container
  * @return {void}
  * @method
  * @protected
@@ -16,7 +16,7 @@ export const execute = <C extends DisplayObjectContainer>(display_object_contain
 {
     const children = display_object_container.children;
     for (let idx: number = children.length - 1; idx > -1; --idx) {
-        
+
         const displayObject = children[idx] as DisplayObject;
         if (!displayObject) {
             continue;

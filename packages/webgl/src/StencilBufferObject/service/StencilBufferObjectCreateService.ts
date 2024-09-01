@@ -25,4 +25,4 @@ export const execute = (): IStencilBufferObject =>
         "area": 0,
         "dirty": false
     };
-}
+};

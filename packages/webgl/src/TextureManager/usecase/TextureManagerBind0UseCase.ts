@@ -5,7 +5,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description テクスチャをTEXTURE0にバインドし、TEXTURE1、TEXTURE2をアンバインドします。
  *              Bind the texture to TEXTURE0 and unbind TEXTURE1 and TEXTURE2.
- * 
+ *
  * @param  {ITextureObject} texture0
  * @return {void}
  * @method

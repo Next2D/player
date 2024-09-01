@@ -7,7 +7,7 @@ import {
 /**
  * @description VertexArrayObjectの起動ユースケース
  *              VertexArrayObject boot use case
- * 
+ *
  * @param  {WebGL2RenderingContext} gl
  * @return {void}
  * @method

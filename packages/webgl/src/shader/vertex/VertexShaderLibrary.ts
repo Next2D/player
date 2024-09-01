@@ -1,7 +1,7 @@
 /**
  * @description グリッドがオフの場合の頂点シェーダー
  *              Vertex shader when grid is off
- * 
+ *
  * @return {string}
  * @method
  * @static
@@ -25,7 +25,7 @@ vec2 applyMatrix(in vec2 vertex) {
 /**
  * @description グリッドがオンの場合の頂点シェーダー
  *              Vertex shader when grid is on
- * 
+ *
  * @param  {number} index
  * @return {string}
  * @method
@@ -69,5 +69,5 @@ vec2 applyMatrix(in vec2 vertex) {
     position = (ancestor_matrix * vec3(position, 1.0)).xy;
 
     return position;
-}`;     
+}`;
 };

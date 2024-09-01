@@ -42,4 +42,4 @@ export const execute = (
     }
 
     movie_clip.totalFrames = character.totalFrame || 1;
-}
+};

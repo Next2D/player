@@ -5,8 +5,8 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description StencilBufferObjectをオブジェクトプールに保管、サイズオーバー時は削除します。
  *              Stores the StencilBufferObject in the object pool and deletes it if it exceeds the size.
- * 
- * @param  {IStencilBufferObject} stencil_bffer_object 
+ *
+ * @param  {IStencilBufferObject} stencil_bffer_object
  * @return {void}
  * @method
  * @protected

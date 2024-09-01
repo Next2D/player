@@ -10,7 +10,7 @@ let $id: number = 0;
 /**
  * @description 新規のVertexArrayObjectを生成する
  *              Create a new VertexArrayObject
- * 
+ *
  * @return {IVertexArrayObject}
  * @method
  * @protected

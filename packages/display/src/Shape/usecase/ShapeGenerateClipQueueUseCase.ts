@@ -6,10 +6,10 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject
 /**
  * @description renderer workerに渡すShapeのマスク描画データを生成
  *              Generate mask drawing data of Shape to pass to renderer worker
- * 
- * @param  {Shape} shape 
- * @param  {array} render_queue 
- * @param  {Float32Array} matrix 
+ *
+ * @param  {Shape} shape
+ * @param  {array} render_queue
+ * @param  {Float32Array} matrix
  * @return {void}
  * @method
  * @protected
@@ -32,7 +32,7 @@ export const execute = (
     if (tMatrix !== matrix) {
         Matrix.release(tMatrix);
     }
-    
+
     const hasGrid: boolean = rawMatrix && shape.scale9Grid
         ? Math.abs(rawMatrix[1]) < 0.001 && Math.abs(rawMatrix[2]) < 0.0001
         : false;

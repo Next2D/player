@@ -20,7 +20,7 @@ export class BitmapFilter
     /**
      * @description フィルターが更新されたかどうかを示します。
      *              Indicates whether the filter is updated.
-     * 
+     *
      * @type {boolean}
      * @default true
      * @public
@@ -52,7 +52,7 @@ export class BitmapFilter
     /**
      * @description フィルターの描画範囲のバウンディングボックスを返します。
      *              Returns the bounding box of the filter drawing area.
-     * 
+     *
      * @param  {object} bounds
      * @return {object}
      * @method

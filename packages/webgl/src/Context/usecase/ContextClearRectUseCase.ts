@@ -3,7 +3,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description 指定範囲をクリアする
  *              Clear the specified range
- * 
+ *
  * @param  {number} x
  * @param  {number} y
  * @param  {number} w

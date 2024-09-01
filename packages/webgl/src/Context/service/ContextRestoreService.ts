@@ -4,7 +4,7 @@ import { $poolFloat32Array9 } from "../../WebGLUtil";
 /**
  * @description 2D変換行列をスタックから復元します
  *              Restore the 2D transformation matrix from the stack
- * 
+ *
  * @param  {Context} context
  * @return {void}
  * @method

@@ -9,7 +9,7 @@ import {
 /**
  * @description アトラス専用のテクスチャを作成します。
  *              Create a texture for the atlas.
- * 
+ *
  * @return {ITextureObject}
  * @method
  * @protected
@@ -28,10 +28,10 @@ export const execute = (): ITextureObject =>
 
     $gl.texStorage2D($gl.TEXTURE_2D, 1, $gl.RGBA8, textureObject.width, textureObject.height);
 
-    $gl.activeTexture($activeTextureUnit !== -1 
+    $gl.activeTexture($activeTextureUnit !== -1
         ? $activeTextureUnit
         : $gl.TEXTURE0
-    ); 
+    );
 
     return textureObject;
 };

@@ -31,7 +31,7 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
 
         case character.bitmapId > 0:
             break;
-            
+
         case character.inBitmap:
             break;
 
@@ -39,7 +39,7 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
             switch (true) {
 
                 // todo
-    
+
                 default:
                     if (character.recodes) {
                         character.recodeBuffer = new Float32Array(

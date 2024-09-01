@@ -1,9 +1,6 @@
 
 import { execute as maskEndMaskService } from "../service/MaskEndMaskService";
-import {
-    $gl,
-    $context
-} from "../../WebGLUtil";
+import { $gl } from "../../WebGLUtil";
 import {
     $isMaskDrawing,
     $setMaskDrawing
@@ -12,8 +9,8 @@ import {
 /**
  * @description マスクOn/Offに合わせたバインド処理
  *              Binding process according to mask On/Off
- * 
- * @param  {boolean} mask 
+ *
+ * @param  {boolean} mask
  * @return {void}
  * @method
  * @protected

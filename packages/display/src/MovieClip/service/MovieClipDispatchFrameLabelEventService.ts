@@ -5,7 +5,7 @@ import { Event } from "@next2d/events";
 /**
  * @description MovieClipのフレームラベルイベントを実行
  *              Execute the frame label event of MovieClip
- * 
+ *
  * @param  {MovieClip} movie_clip
  * @param  {Map} labels
  * @return {void}

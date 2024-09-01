@@ -1,14 +1,14 @@
 import type { IProgramObject } from "../interface/IProgramObject";
 import type { IUniformData } from "../interface/IUniformData";
-import { execute as shaderManagerCreateProgramService } from "./ShaderManager/service/ShaderManagerCreateProgramService"
-import { execute as shaderManagerInitializeUniformService } from "./ShaderManager/service/ShaderManagerInitializeUniformService"
-import { execute as shaderManagerUseProgramService } from "./ShaderManager/service/ShaderManagerUseProgramService"
-import { execute as shaderManagerBindUniformService } from "./ShaderManager/service/ShaderManagerBindUniformService"
+import { execute as shaderManagerCreateProgramService } from "./ShaderManager/service/ShaderManagerCreateProgramService";
+import { execute as shaderManagerInitializeUniformService } from "./ShaderManager/service/ShaderManagerInitializeUniformService";
+import { execute as shaderManagerUseProgramService } from "./ShaderManager/service/ShaderManagerUseProgramService";
+import { execute as shaderManagerBindUniformService } from "./ShaderManager/service/ShaderManagerBindUniformService";
 
 /**
  * @description 利用用途に合わせたシェーダークラス
  *              Shader class tailored to the intended use
- * 
+ *
  * @class
  * @public
  */
@@ -17,11 +17,11 @@ export class ShaderManager
     /**
      * @description WebGLプログラムオブジェクト
      *              WebGL program object
-     * 
+     *
      * @type {IProgramObject}
      * @public
      */
-    private readonly _$programObject: IProgramObject
+    private readonly _$programObject: IProgramObject;
 
     /**
      * @description uniform変数のマップ
@@ -30,16 +30,16 @@ export class ShaderManager
      * @type {Map<string, IUniformData>}
      * @private
      */
-    private readonly _$uniformMap: Map<string, IUniformData>
+    private readonly _$uniformMap: Map<string, IUniformData>;
 
     /**
-     * @param {string} vertex_source 
+     * @param {string} vertex_source
      * @param {string} fragment_source
      * @param {boolean} [atlas=false]
      * @constructor
      * @public
      */
-    constructor (vertex_source: string, fragment_source: string, atlas: boolean = false) 
+    constructor (vertex_source: string, fragment_source: string, atlas: boolean = false)
     {
         this._$programObject = shaderManagerCreateProgramService(vertex_source, fragment_source);
         this._$uniformMap    = new Map();
@@ -54,7 +54,7 @@ export class ShaderManager
     /**
      * @description 生成したプログラムを利用します。
      *              Use the generated program.
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -67,7 +67,7 @@ export class ShaderManager
     /**
      * @description uniform変数をバインドします。
      *              Bind uniform variables.
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -80,7 +80,7 @@ export class ShaderManager
     /**
      * @description highp uniform変数
      *              highp uniform variable
-     * 
+     *
      * @type {Int32Array | Float32Array}
      * @readonly
      * @public
@@ -94,7 +94,7 @@ export class ShaderManager
     /**
      * @description mediump uniform変数
      *              mediump uniform variable
-     * 
+     *
      * @type {Int32Array | Float32Array}
      * @readonly
      * @public

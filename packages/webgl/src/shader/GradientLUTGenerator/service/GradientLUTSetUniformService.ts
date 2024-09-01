@@ -3,12 +3,15 @@ import { ShaderManager } from "../../ShaderManager";
 /**
  * @description グラデーションLUTのuniform変数を設定します。
  *              Set the uniform variables of the gradient LUT.
- * 
- * @param {ShaderManager} shader_manager 
- * @param {array} stops 
- * @param {number} begin 
- * @param {number} end 
- * @param {Float32Array} table 
+ *
+ * @param {ShaderManager} shader_manager
+ * @param {array} stops
+ * @param {number} begin
+ * @param {number} end
+ * @param {Float32Array} table
+ * @return {void}
+ * @method
+ * @protected
  */
 export const execute = (
     shader_manager: ShaderManager,

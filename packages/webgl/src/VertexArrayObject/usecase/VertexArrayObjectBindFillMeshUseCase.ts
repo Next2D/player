@@ -11,8 +11,8 @@ import {
 /**
  * @description 塗りのコマンドからメッシュを生成して、VertexArrayにバインドする
  *              Generate a mesh from the fill command and bind it to the VertexArray
- * 
- * @param  {IPath[]} vertices 
+ *
+ * @param  {IPath[]} vertices
  * @return {IVertexArrayObject}
  * @method
  * @protected
@@ -20,11 +20,11 @@ import {
 export const execute = (vertices: IPath[]): IVertexArrayObject =>
 {
     const fillMesh = meshFillGenerateUseCase(vertices);
-    
+
     const vertexArrayObject = vertexArrayObjectGetFillObjectUseCase();
     vertexArrayObject.indexRanges = fillMesh.indexRanges;
     vertexArrayObjectBindService(vertexArrayObject);
-    
+
     $gl.bindBuffer($gl.ARRAY_BUFFER, vertexArrayObject.vertexBuffer);
 
     if (vertexArrayObject.vertexLength < fillMesh.buffer.length) {

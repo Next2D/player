@@ -4,7 +4,7 @@ import { $actions } from "../../DisplayObjectUtil";
 /**
  * @description フレームアクションがなくなるまで実行
  *              Execute until there are no frame actions
- * 
+ *
  * @return {void}
  * @method
  * @protected
