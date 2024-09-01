@@ -1,4 +1,5 @@
-import { $context } from "../../RendererUtil";
+import { $getFloat32Array6 } from "../../../../webgl/src/WebGLUtil";
+import { $context, $getArray } from "../../RendererUtil";
 
 const MOVE_TO: number         = 0;
 const CURVE_TO: number        = 1;
@@ -114,8 +115,36 @@ export const execute = (
                 break;
 
             case GRADIENT_FILL:
-                console.log("GRADIENT_FILL");
-                // todo
+                {
+                    const type = commands[index++];
+
+                    const stops = $getArray();
+                    const length = commands[index++];
+                    for (let idx = 0; idx < length; ++idx) {
+                        stops.push(
+                            commands[index++], // ratio
+                            commands[index++], // red
+                            commands[index++], // green
+                            commands[index++], // blue
+                            commands[index++]  // alpha
+                        );
+                    }
+
+                    const matrix = new Float32Array([
+                        commands[index++], commands[index++], commands[index++],
+                        commands[index++], commands[index++], commands[index++]
+                    ]);
+
+                    const spread = commands[index++];
+                    const interpolation = commands[index++];
+                    const focal = commands[index++];
+
+                    $context.gradientFill(
+                        has_grid,
+                        type, stops, matrix, 
+                        spread, interpolation, focal
+                    );
+                }
                 break;
 
             case GRADIENT_STROKE:

@@ -3,20 +3,20 @@ import type { Context } from "./Context";
 /**
  * @description 描画の最大サイズ
  *              Maximum size of drawing
- * 
+ *
  * @type {number}
- * @public
+ * @protected
  */
 export let $RENDER_MAX_SIZE: number = 2048;
 
 /**
  * @description 描画の最大サイズを変更
  *              Change the maximum size of drawing
- * 
+ *
  * @param  {number} size
  * @return {void}
  * @method
- * @public
+ * @protected
  */
 export const $setRenderMaxSize = (size: number): void =>
 {
@@ -26,10 +26,10 @@ export const $setRenderMaxSize = (size: number): void =>
 /**
  * @description 描画のサンプリング数
  *              Number of samples for drawing
- * 
+ *
  * @type {number}
  * @default 4
- * @public
+ * @protected
  */
 export let $samples: number = 4;
 
@@ -40,7 +40,7 @@ export let $samples: number = 4;
  * @param  {number} samples
  * @return {void}
  * @method
- * @public 
+ * @protected 
  */
 export const $setSamples = (samples: number): void =>
 {
@@ -49,7 +49,7 @@ export const $setSamples = (samples: number): void =>
 
 /**
  * @type {WebGL2RenderingContext}
- * @public
+ * @protected
  */
 export let $gl: WebGL2RenderingContext;
 
@@ -60,7 +60,7 @@ export let $gl: WebGL2RenderingContext;
  * @param  {WebGL2RenderingContext} gl
  * @return {void}
  * @method
- * @public
+ * @protected
  */
 export const $setWebGL2RenderingContext = (gl: WebGL2RenderingContext): void =>
 {
@@ -76,11 +76,11 @@ export let $context: Context;
 /**
  * @description 起動したコンテキストをセット
  *              Set the context that started
- * 
+ *
  * @param  {Context} context 
  * @return {void}
  * @method
- * @public
+ * @protected
  */
 export const $setContext = (context: Context): void =>
 {
@@ -98,7 +98,7 @@ let $programId: number = 0;
  * 
  * @return {number}
  * @method
- * @public
+ * @protected
  */
 export const $getProgramId = (): number =>
 {
@@ -115,7 +115,7 @@ export const $getProgramId = (): number =>
  * @param  {number} [default_value=null]
  * @return {number}
  * @method
- * @public
+ * @protected
  */
 export const $clamp = (
     value: number,
@@ -143,7 +143,7 @@ const $arrays: any[] = [];
  * @param  {array} args
  * @return {array}
  * @method
- * @public
+ * @protected
  */
 export const $getArray = (...args: any[]): any[] =>
 {
@@ -161,7 +161,7 @@ export const $getArray = (...args: any[]): any[] =>
  * @param  {array} array
  * @return {void}
  * @method
- * @public
+ * @protected
  */
 export const $poolArray = (array: any[] | null = null): void =>
 {
@@ -183,7 +183,7 @@ export const $poolArray = (array: any[] | null = null): void =>
  * @param  {number} v
  * @return {number}
  * @method
- * @public
+ * @protected
  */
 export const $upperPowerOfTwo = (v: number): number =>
 {
@@ -213,7 +213,7 @@ const $float32Array4: Float32Array[] = [];
  * @param  {number} [f3=0]
  * @return {Float32Array}
  * @method
- * @public
+ * @protected
  */
 export const $getFloat32Array4 = (
     f0: number = 0, f1: number = 0,
@@ -237,7 +237,7 @@ export const $getFloat32Array4 = (
  * @param  {Float32Array} array
  * @return {void}
  * @method
- * @public
+ * @protected
  */
 export const $poolFloat32Array4 = (array: Float32Array): void =>
 {
@@ -265,7 +265,7 @@ const $float32Array9: Float32Array[] = [];
  * @param  {number} [f8=0]
  * @return {Float32Array}
  * @method
- * @static
+ * @protected
  */
 export const $getFloat32Array9 = (
     f0: number = 0, f1: number = 0, f2: number = 0,
@@ -295,7 +295,7 @@ export const $getFloat32Array9 = (
  * @param  {Float32Array} array
  * @return {void}
  * @method
- * @static
+ * @protected
  */
 export const $poolFloat32Array9 = (array: Float32Array): void =>
 {
@@ -320,7 +320,7 @@ const $float32Array6: Float32Array[] = [];
  * @param  {number} [f5=0]
  * @return {Float32Array}
  * @method
- * @static
+ * @protected
  */
 export const $getFloat32Array6 = (
     f0: number = 0, f1: number = 0,
@@ -344,7 +344,7 @@ export const $getFloat32Array6 = (
  * @param  {Float32Array} array
  * @return {void}
  * @method
- * @static
+ * @protected
  */
 export const $poolFloat32Array6 = (array: Float32Array): void =>
 {
@@ -367,7 +367,7 @@ const $int32Array4: Int32Array[] = [];
  * @param  {number} [f3=0]
  * @return {Float32Array}
  * @method
- * @static
+ * @protected
  */
 export const $getInt32Array4 = (
     f0: number = 0, f1: number = 0,
@@ -391,7 +391,7 @@ export const $getInt32Array4 = (
  * @param  {Float32Array} array
  * @return {void}
  * @method
- * @static
+ * @protected
  */
 export const $poolInt32Array4 = (array: Int32Array): void =>
 {
@@ -405,7 +405,7 @@ export const $poolInt32Array4 = (array: Int32Array): void =>
  * @param   {Float32Array} m
  * @returns {Float32Array}
  * @method
- * @static
+ * @protected
  */
 export const $inverseMatrix = (m: Float32Array): Float32Array =>
 {
@@ -440,12 +440,12 @@ let $viewportHeight: number = 0;
  * 
  * @returns {number}
  * @method
- * @static
+ * @protected
  */
 export const $getViewportWidth = (): number =>
 {
     return $viewportWidth;
-}
+};
 
 /**
  * @description ビューポートの高さを取得
@@ -453,12 +453,12 @@ export const $getViewportWidth = (): number =>
  * 
  * @returns {number}
  * @method
- * @static
+ * @protected
  */
 export const $getViewportHeight = (): number =>
 {
     return $viewportHeight;
-}
+};
 
 /**
  * @description ビューポートのサイズをセット
@@ -468,10 +468,43 @@ export const $getViewportHeight = (): number =>
  * @param  {number} viewport_height
  * @return {void}
  * @method
- * @static
+ * @protected
  */
 export const $setViewportSize = (viewport_width: number, viewport_height: number): void =>
 {
     $viewportWidth  = viewport_width;
     $viewportHeight = viewport_height;
-}
+};
+
+/**
+ * 
+ * @param {Float32Array} matrix
+ * @return {Float32Array}
+ * @method
+ * @protected
+ */
+export const $linearGradientXY = (matrix: Float32Array): Float32Array =>
+{
+    const x0: number = -819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
+    const x1: number =  819.2 * matrix[0] - 819.2 * matrix[2] + matrix[4];
+    const x2: number = -819.2 * matrix[0] + 819.2 * matrix[2] + matrix[4];
+    const y0: number = -819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
+    const y1: number =  819.2 * matrix[1] - 819.2 * matrix[3] + matrix[5];
+    const y2: number = -819.2 * matrix[1] + 819.2 * matrix[3] + matrix[5];
+
+    let vx2: number = x2 - x0;
+    let vy2: number = y2 - y0;
+
+    const r1: number = Math.sqrt(vx2 * vx2 + vy2 * vy2);
+    if (r1) {
+        vx2 = vx2 / r1;
+        vy2 = vy2 / r1;
+    } else {
+        vx2 = 0;
+        vy2 = 0;
+    }
+
+    const r2: number = (x1 - x0) * vx2 + (y1 - y0) * vy2;
+
+    return $getFloat32Array4(x0 + r2 * vx2, y0 + r2 * vy2, x1, y1);
+};

@@ -17,8 +17,12 @@ import { execute as textureManagerGetTextureUseCase } from "../../TextureManager
  * @method
  * @protected
  */
-export const execute = (width: number, height: number, multisample: boolean = false): IAttachmentObject =>
-{
+export const execute = (
+    width: number,
+    height: number,
+    multisample: boolean = false
+): IAttachmentObject => {
+    
     // キャッシュがあれば再利用する
     const attachmentObject = $objectPool.length 
         ? $objectPool.shift() as IAttachmentObject

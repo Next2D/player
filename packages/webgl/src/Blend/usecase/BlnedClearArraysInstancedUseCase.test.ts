@@ -1,5 +1,5 @@
 import { execute } from "./BlnedClearArraysInstancedUseCase";
-import { execute as variantsBlendInstanceShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService";
+import { execute as variantsBlendInstanceShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService.ts";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../../WebGLUtil.ts", async (importOriginal) => 

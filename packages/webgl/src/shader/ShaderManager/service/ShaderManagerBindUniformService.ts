@@ -14,7 +14,6 @@ export const execute = (uniform_map: Map<string, IUniformData>): void =>
     for (const data of uniform_map.values()) {
 
         if (data.method === undefined || data.assign === undefined) {
-            console.log(data.assign);   
             continue;
         }
 

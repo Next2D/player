@@ -28,8 +28,14 @@ export const execute = (
         $gl.activeTexture(unit);
     }
 
-    if (texture_object !== $boundTextures[index]) {
-        $boundTextures[index] = texture_object;
-        $gl.bindTexture($gl.TEXTURE_2D, texture_object ? texture_object.resource : null);
+    const boundTextures = $boundTextures[index];
+    if ((boundTextures !== null && texture_object !== null
+        && boundTextures.id === texture_object.id) 
+        || texture_object === boundTextures
+    ) {
+        return;
     }
+
+    $boundTextures[index] = texture_object;
+    $gl.bindTexture($gl.TEXTURE_2D, texture_object ? texture_object.resource : null);
 };

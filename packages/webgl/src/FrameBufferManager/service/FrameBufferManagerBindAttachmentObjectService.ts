@@ -36,7 +36,6 @@ export const execute = (attachment_object: IAttachmentObject): void =>
             $gl.RENDERBUFFER, (attachment_object.color as IColorBufferObject).resource
         );
     } else {
-
         textureManagerBind0UseCase(attachment_object.texture as ITextureObject);
 
         $gl.framebufferTexture2D(

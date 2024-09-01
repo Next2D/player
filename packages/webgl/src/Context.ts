@@ -25,6 +25,7 @@ import { execute as contextResetStyleService } from "./Context/service/ContextRe
 import { execute as contextBeginNodeRenderingService } from "./Context/service/ContextBeginNodeRenderingService";
 import { execute as contextEndNodeRenderingService } from "./Context/service/ContextEndNodeRenderingService";
 import { execute as contextFillUseCase } from "./Context/usecase/ContextFillUseCase";
+import { execute as contextGradientFillUseCase } from "./Context/usecase/ContextGradientFillUseCase";
 import { execute as contextClipUseCase } from "./Context/usecase/ContextClipUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
 import { execute as atlasManagerRemoveNodeService } from "./AtlasManager/service/AtlasManagerRemoveNodeService";
@@ -39,6 +40,7 @@ import { execute as maskStartMaskService } from "./Mask/service/MaskStartMaskSer
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
 import { execute as maskLeaveMaskService } from "./Mask/service/MaskLeaveMaskService";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
+import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
 import {
     $setReadFrameBuffer,
     $setDrawFrameBuffer,
@@ -259,6 +261,9 @@ export class Context
 
         // ブレンドモードを有効にする
         blendEnableUseCase();
+
+        // グラデーションの最大長を設定
+        $setGradientLUTGeneratorMaxLength(gl);
 
         // コンテキストをセット
         $setContext(this);
@@ -592,6 +597,36 @@ export class Context
     fill (has_grid: boolean): void
     {
         contextFillUseCase(has_grid);
+    }
+
+    /**
+     * @description グラデーションの塗りつぶしを実行
+     *              Perform gradient fill
+     * 
+     * @param  {boolean} has_grid 
+     * @param  {number} type 
+     * @param  {array} stops 
+     * @param  {Float32Array} matrix 
+     * @param  {number} spread 
+     * @param  {number} interpolation 
+     * @param  {number} focal 
+     * @return {void}
+     * @method
+     * @public
+     */
+    gradientFill (
+        has_grid: boolean,
+        type: number, 
+        stops: number[], 
+        matrix: Float32Array, 
+        spread: number, 
+        interpolation: number, 
+        focal: number
+    ): void {
+        contextGradientFillUseCase(
+            has_grid, type, stops, matrix, 
+            spread, interpolation, focal
+        );
     }
 
     /**

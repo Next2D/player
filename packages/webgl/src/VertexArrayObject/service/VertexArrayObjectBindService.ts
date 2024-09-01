@@ -21,7 +21,9 @@ let $boundsVertexArrayObject: IVertexArrayObject;
  */
 export const execute = (vertex_array_object: IVertexArrayObject): void =>
 {
-    if ($boundsVertexArrayObject === vertex_array_object) {
+    if ($boundsVertexArrayObject
+        && $boundsVertexArrayObject.id === vertex_array_object.id
+    ) {
         return ;
     }
 
