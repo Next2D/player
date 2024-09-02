@@ -44,7 +44,7 @@ export const execute = (
     }
 
     const graphics = shape.graphics;
-    if (!graphics.isDrawable) {
+    if (!graphics.isDrawable && !shape.isBitmap) {
         render_queue.push(0);
         return ;
     }
@@ -139,6 +139,7 @@ export const execute = (
         : false;
 
     render_queue.push(+hasGrid);
+    render_queue.push(+shape.isBitmap);
 
     if (!shape.uniqueKey) {
         if (shape.characterId && shape.loaderInfo) {
@@ -159,8 +160,9 @@ export const execute = (
 
         } else {
 
-            const hash = shapeGenerateHashService(graphics.buffer);
-            shape.uniqueKey = `${hash}`;
+            shape.uniqueKey = shape.isBitmap 
+                ? `${shape.instanceId}`
+                : `${shapeGenerateHashService(graphics.buffer)}`;
 
         }
     }
@@ -193,7 +195,8 @@ export const execute = (
         yScale = +yScale.toFixed(4);
     }
 
-    if (!shape.cacheKey
+    if (!shape.isBitmap 
+        && !shape.cacheKey
         || shape.cacheParams[0] !== xScale
         || shape.cacheParams[1] !== yScale
         || shape.cacheParams[2] !== tColorTransform[7]
@@ -204,18 +207,26 @@ export const execute = (
         shape.cacheParams[2] = tColorTransform[7];
     }
     
-    const cacheKey = shape.cacheKey;
+    const cacheKey = shape.isBitmap
+        ? 0
+        : shape.cacheKey;
+
     render_queue.push(cacheKey);
 
     const cache = $cacheStore.get(shape.uniqueKey, `${cacheKey}`);
     if (!cache) {
         render_queue.push(0);
 
-        const buffer = graphics.buffer;
-        render_queue.push(buffer.length, ...buffer);
+        const buffer = shape.isBitmap 
+            ? shape.$bitmapBuffer as Uint8Array
+            : graphics.buffer;
+
+        render_queue.push(buffer.length);
+        for (let idx = 0; idx < buffer.length; idx += 4096) {
+            render_queue.push(...buffer.slice(idx, idx + 4096));
+        }
 
         $cacheStore.set(shape.uniqueKey, `${cacheKey}`, true);
-
     } else {
         render_queue.push(1);
     }

@@ -98,7 +98,7 @@ export class Graphics
      * @default null
      * @public
      */
-    public _$recodes: any[] | null;
+    public $recodes: any[] | null;
 
     /**
      * @type {Float32Array}
@@ -253,7 +253,7 @@ export class Graphics
         this.yMax        = -Number.MAX_VALUE;
 
         // private
-        this._$recodes     = null;
+        this.$recodes     = null;
         this._$buffer      = null;
         this._$positionX   = 0;
         this._$positionY   = 0;
@@ -716,8 +716,8 @@ export class Graphics
         this.yMax = -Number.MAX_VALUE;
 
         // init array
-        if (this._$recodes) {
-            $poolArray(this._$recodes);
+        if (this.$recodes) {
+            $poolArray(this.$recodes);
         }
         if (this._$fills) {
             $poolArray(this._$fills);
@@ -727,7 +727,7 @@ export class Graphics
         }
 
         this._$buffer  = null;
-        this._$recodes = null;
+        this.$recodes = null;
         this._$fills   = null;
         this._$lines   = null;
 
@@ -805,8 +805,8 @@ export class Graphics
         if (graphics._$lines) {
             this._$lines = graphics._$lines.slice(0);
         }
-        if (graphics._$recodes) {
-            this._$recodes = graphics._$recodes.slice(0);
+        if (graphics.$recodes) {
+            this.$recodes = graphics.$recodes.slice(0);
         }
 
         this._$buffer = null;
@@ -1045,8 +1045,8 @@ export class Graphics
             return this;
         }
 
-        if (!this._$recodes) {
-            this._$recodes = $getArray();
+        if (!this.$recodes) {
+            this.$recodes = $getArray();
         }
 
         if (this._$fills[2] !== this._$fills[this._$fills.length - 2]
@@ -1058,7 +1058,7 @@ export class Graphics
                 this._$fills[3]
             );
         }
-        this._$recodes.push(...this._$fills);
+        this.$recodes.push(...this._$fills);
 
         $poolArray(this._$fills);
         this._$fills = null;
@@ -1067,7 +1067,7 @@ export class Graphics
         switch (this._$fillType) {
 
             case Graphics.FILL_STYLE:
-                this._$recodes.push(
+                this.$recodes.push(
                     this._$fillType,
                     (this._$fillColor >>> 24) & 0xff,
                     (this._$fillColor >>> 16) & 0xff,
@@ -1079,7 +1079,7 @@ export class Graphics
 
             case Graphics.GRADIENT_FILL:
                 if (this._$fillGradient) {
-                    this._$recodes.push(
+                    this.$recodes.push(
                         this._$fillType,
                         ...this._$fillGradient.toArray()
                     );
@@ -1088,7 +1088,7 @@ export class Graphics
 
             case Graphics.BITMAP_FILL:
                 if (this._$fillBitmap) {
-                    this._$recodes.push(
+                    this.$recodes.push(
                         this._$fillType,
                         ...this._$fillBitmap.toArray()
                     );
@@ -1123,11 +1123,11 @@ export class Graphics
             return this;
         }
 
-        if (!this._$recodes) {
-            this._$recodes = $getArray();
+        if (!this.$recodes) {
+            this.$recodes = $getArray();
         }
 
-        this._$recodes.push(...this._$lines);
+        this.$recodes.push(...this._$lines);
 
         // clear
         $poolArray(this._$lines);
@@ -1137,7 +1137,7 @@ export class Graphics
         switch (this._$lineType) {
 
             case Graphics.STROKE_STYLE:
-                this._$recodes.push(
+                this.$recodes.push(
                     this._$lineType,
                     this._$lineWidth,
                     this._$caps,
@@ -1153,7 +1153,7 @@ export class Graphics
 
             case Graphics.GRADIENT_STROKE:
                 if (this._$lineGradient) {
-                    this._$recodes.push(
+                    this.$recodes.push(
                         this._$lineType,
                         this._$lineWidth,
                         this._$caps,
@@ -1166,7 +1166,7 @@ export class Graphics
 
             case Graphics.BITMAP_STROKE:
                 if (this._$fillBitmap) {
-                    this._$recodes.push(
+                    this.$recodes.push(
                         this._$lineType,
                         this._$lineWidth,
                         this._$caps,
@@ -1498,7 +1498,7 @@ export class Graphics
             this.endFill();
         }
 
-        if (!this._$recodes) {
+        if (!this.$recodes) {
             return false;
         }
 
@@ -1508,7 +1508,7 @@ export class Graphics
             matrix[3], matrix[4], matrix[5]
         );
 
-        return graphicsHitTestService(context, this._$recodes, options);
+        return graphicsHitTestService(context, this.$recodes, options);
     }
 
     // /**
@@ -1559,7 +1559,7 @@ export class Graphics
         const width  = Math.ceil(Math.abs(this.xMax - this.xMin));
         const height = Math.ceil(Math.abs(this.yMax - this.yMin));
 
-        const array: any[] = graphicsToNumberArrayService(width, height, this._$recodes);
+        const array: any[] = graphicsToNumberArrayService(width, height, this.$recodes);
         this._$buffer = new Float32Array(array);
         $poolArray(array);
 

@@ -39,6 +39,7 @@ import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskSer
 import { execute as maskStartMaskService } from "./Mask/service/MaskStartMaskService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
 import { execute as maskLeaveMaskService } from "./Mask/service/MaskLeaveMaskService";
+import { execute as contextDrawPixelsUseCase } from "./Context/usecase/ContextDrawPixelsUseCase";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
 import {
@@ -803,6 +804,21 @@ export class Context
     transferMainCanvas (): void
     {
         frameBufferManagerTransferMainCanvasService();
+    }
+
+    /**
+     * @description ピクセルバッファをNodeの指定箇所に転送
+     *              Transfer the pixel buffer to the specified location of the Node
+     *
+     * @param  {Node} node
+     * @param  {Uint8Array} pixels
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawPixels (node: Node, pixels: Uint8Array): void
+    {
+        contextDrawPixelsUseCase(node, pixels);
     }
 
     /**

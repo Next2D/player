@@ -158,16 +158,6 @@ export class BitmapData
         this._$canvas = null;
         this._$image  = null;
         this._$buffer = buffer;
-
-        if (this._$texture) {
-            const player: Player = $currentPlayer();
-            const context: CanvasToWebGLContext | null = player.context;
-            if (context) {
-                context.frameBuffer.releaseTexture(this._$texture);
-            }
-
-            this._$texture = null;
-        }
     }
 
     /**

@@ -1,8 +1,9 @@
 import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import { DisplayObject } from "./DisplayObject";
 import { Graphics } from "./Graphics";
-import { BitmapData } from "./BitmapData";
-import { Event } from "@next2d/events";
+import { execute as shapeClearBitmapBufferService } from "./Shape/service/ShapeClearBitmapBufferService";
+import { execute as shapeSetBitmapBufferUseCase } from "./Shape/usecase/ShapeSetBitmapBufferUseCase";
+import { execute as shapeLoadSrcUseCase } from "./Shape/usecase/ShapeLoadSrcUseCase";
 import {
     $graphicMap,
     $getArray
@@ -63,6 +64,26 @@ export class Shape extends DisplayObject
     public cacheParams: number[];
 
     /**
+     * @description ビットマップ描画の判定フラグ
+     *              Bitmap drawing judgment flag
+     * 
+     * @type {boolean}
+     * @default false
+     * @protected
+     */
+    public isBitmap: boolean;
+
+    /**
+     * @description 画像RGBAのUint8Array
+     *              Image RGBA Uint8Array
+     * 
+     * @type {Uint8Array|null}
+     * @default null
+     * @protected
+     */
+    public $bitmapBuffer: Uint8Array | null;
+
+    /**
      * @constructor
      * @public
      */
@@ -77,6 +98,10 @@ export class Shape extends DisplayObject
         // private
         this._$graphics = null;
         this._$src      = "";
+
+        // bitmap
+        this.$bitmapBuffer = null;
+        this.isBitmap = false;
     }
 
     /**
@@ -140,26 +165,42 @@ export class Shape extends DisplayObject
             return ;
         }
 
-        const image: HTMLImageElement = new Image();
-        image.addEventListener("load", () =>
-        {
-            const width: number  = image.width;
-            const height: number = image.height;
+        this._$src = src;
 
-            const bitmapData: BitmapData = new BitmapData(width, height);
-            bitmapData.image = image;
+        shapeLoadSrcUseCase(this, src);
+    }
 
-            this
-                .graphics
-                .beginBitmapFill(bitmapData)
-                .drawRect(0, 0, width, height);
+    /**
+     * @description ビットマップデータを解放します
+     *              Releases bitmap data.
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    clearBitmapBuffer (): void
+    {
+        shapeClearBitmapBufferService(this);
+    };
 
-            if (this.hasEventListener(Event.COMPLETE)) {
-                this.dispatchEvent(new Event(Event.COMPLETE));
-            }
-        });
-
-        this._$src = image.src = src;
+    /**
+     * @description RGBAの画像データを設定します
+     *              Sets the RGBA image data.
+     * 
+     * @param {number} width
+     * @param {number} height 
+     * @param {Uint8Array} buffer
+     * @method
+     * @public
+     */
+    setBitmapBuffer (width: number, height: number, buffer: Uint8Array): void
+    {
+        shapeSetBitmapBufferUseCase(
+            this,
+            width,
+            height,
+            buffer
+        );
     }
 
     // /**

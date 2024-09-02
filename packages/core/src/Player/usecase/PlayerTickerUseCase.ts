@@ -26,7 +26,7 @@ export const execute = (player: Player, timestamp: number): void =>
         // 定期処理
         $stage.$ticker();
 
-        if ($stage.$remoceCacheKeys) {
+        if ($stage.$remoceCacheKeys.length) {
             playerRemoveCachePostMessageService();
         }
 

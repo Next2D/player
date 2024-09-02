@@ -31,7 +31,7 @@ export const execute = (): ITextureObject =>
     $gl.activeTexture($activeTextureUnit !== -1
         ? $activeTextureUnit
         : $gl.TEXTURE0
-    );
+    ); 
 
     return textureObject;
 };

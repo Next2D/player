@@ -99,3 +99,26 @@ export const $setInstancedVertexArrayObject = (vertex_array_object: IVertexArray
 {
     $instancedVertexArrayObject = vertex_array_object;
 };
+
+/**
+ * @description 矩形描画用のVertexArrayObject
+ *              VertexArrayObject for rectangle drawing
+ *
+ * @type {IVertexArrayObject}
+ * @protected
+ */
+export let $rectVertexArrayObject: IVertexArrayObject;
+
+/**
+ * @description 矩形描画用のVertexArrayObjectをセット
+ *              Set the VertexArrayObject for rectangle drawing
+ *
+ * @param  {IVertexArrayObject} vertex_array_object
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setRectVertexArrayObject = (vertex_array_object: IVertexArrayObject): void =>
+{
+    $rectVertexArrayObject = vertex_array_object;
+};

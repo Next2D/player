@@ -1,7 +1,9 @@
 import { execute as vertexArrayObjectCreateInstancedVertexArrayObjectUseCase } from "./VertexArrayObjectCreateInstancedVertexArrayObjectUseCase";
+import { execute as vertexArrayObjectCreateRectVertexArrayObjectUseCase } from "./VertexArrayObjectCreateRectVertexArrayObjectUseCase";
 import {
     $setInstancedVertexArrayObject,
-    $setAttributeWebGLBuffer
+    $setAttributeWebGLBuffer,
+    $setRectVertexArrayObject
 } from "../../VertexArrayObject";
 
 /**
@@ -19,7 +21,13 @@ export const execute = (gl: WebGL2RenderingContext): void =>
     // fixed logic
     $setAttributeWebGLBuffer(gl);
 
+    // Array Instance用のVertexArrayObjectをセット
     $setInstancedVertexArrayObject(
         vertexArrayObjectCreateInstancedVertexArrayObjectUseCase()
+    );
+
+    // 矩形描画用のVertexArrayObjectをセット
+    $setRectVertexArrayObject(
+        vertexArrayObjectCreateRectVertexArrayObjectUseCase()
     );
 };

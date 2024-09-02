@@ -106,6 +106,15 @@ export class CacheStore
         cacheStoreRemoveByIdService(this, this._$store, id);
     }
 
+    /**
+     * @description 指定IDのキャッシュデータを返却
+     *              Returns the cache data for the specified ID
+     *
+     * @param  {string} id
+     * @return {Map<string, any>}
+     * @method
+     * @public
+     */
     getById (id: string): Map<string, any>
     {
         return this._$store.get(id);
