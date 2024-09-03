@@ -199,6 +199,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         );
 
         $poolArray(bounds);
+
     }
 
     return index;

@@ -261,30 +261,27 @@ export const execute = (width: number, height: number, recodes : any[] | null): 
                 {
                     const bitmapData: BitmapData = recodes[idx++];
 
-                    let imageArray: number[];
+                    let imageArray: Uint8Array;
                     if (bitmapData.image !== null || bitmapData.canvas !== null) {
 
-                        const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
-
-                        const width: number  = bitmapData.width;
-                        const height: number = bitmapData.height;
+                        const canvas  = $cacheStore.getCanvas();
+                        const width   = bitmapData.width;
+                        const height  = bitmapData.height;
                         canvas.width  = width;
                         canvas.height = height;
 
-                        const context: CanvasRenderingContext2D | null = canvas.getContext("2d");
-                        if (!context) {
-                            throw new Error("the context is null.");
-                        }
+                        const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+                        context.drawImage(
+                            bitmapData.image as HTMLImageElement 
+                            || bitmapData.canvas as HTMLCanvasElement, 
+                        0, 0);
 
-                        // @ts-ignore
-                        context.drawImage(bitmapData.image || bitmapData.canvas, 0, 0);
-
-                        imageArray = Array.from(context.getImageData(0, 0, width, height).data);
+                        imageArray = new Uint8Array(context.getImageData(0, 0, width, height).data);
 
                         $cacheStore.destroy(context);
 
                     } else if (bitmapData.buffer !== null) {
-                        imageArray = Array.from(bitmapData.buffer);
+                        imageArray = bitmapData.buffer;
                     } else {
                         break;
                     }
@@ -292,12 +289,12 @@ export const execute = (width: number, height: number, recodes : any[] | null): 
                     array.push(
                         bitmapData.width,
                         bitmapData.height,
-                        width,
-                        height,
                         imageArray.length
                     );
 
-                    array.push(...imageArray);
+                    for (let idx = 0; idx < imageArray.length; idx += 4096) {
+                        array.push(...imageArray.slice(idx, idx + 4096));
+                    }
 
                     const matrix: Float32Array = recodes[idx++];
                     if (matrix) {

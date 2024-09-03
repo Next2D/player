@@ -1,5 +1,7 @@
-import { $getFloat32Array6 } from "../../../../webgl/src/WebGLUtil";
-import { $context, $getArray } from "../../RendererUtil";
+import {
+    $context,
+    $getArray
+} from "../../RendererUtil";
 
 const MOVE_TO: number         = 0;
 const CURVE_TO: number        = 1;
@@ -147,13 +149,36 @@ export const execute = (
                 }
                 break;
 
-            case GRADIENT_STROKE:
-                console.log("GRADIENT_STROKE");
-                // todo
+            case BITMAP_FILL:
+                {
+                    const width  = commands[index++];
+                    const height = commands[index++];
+                    
+                    const length = commands[index++];
+                    const buffer = new Uint8Array(
+                        commands.subarray(index, index + length)
+                    );
+                    index += length;
+                    
+                    $context.save();
+                    $context.transform(
+                        commands[index++], commands[index++], commands[index++],
+                        commands[index++], commands[index++], commands[index++]
+                    );
+
+                    $context.bitmapFill(
+                        has_grid,
+                        buffer, width, height,
+                        Boolean(commands[index++]), 
+                        Boolean(commands[index++])
+                    );
+
+                    $context.restore();
+                }
                 break;
 
-            case BITMAP_FILL:
-                console.log("BITMAP_FILL");
+            case GRADIENT_STROKE:
+                console.log("GRADIENT_STROKE");
                 // todo
                 break;
 

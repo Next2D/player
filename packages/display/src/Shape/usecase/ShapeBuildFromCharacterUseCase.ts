@@ -3,6 +3,7 @@ import type { IShapeCharacter } from "../../interface/IShapeCharacter";
 import type { LoaderInfo } from "../../LoaderInfo";
 import { execute as graphicsToNumberArrayService } from "../../Graphics/service/GraphicsToNumberArrayService";
 import { $poolArray } from "../../DisplayObjectUtil";
+import { BitmapData } from "../../BitmapData";
 
 /**
  * @description characterを元にShapeを構築
@@ -46,9 +47,12 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                         bitmap.imageBuffer
                     );
                 } else {
-                    console.log("bitmap: ", bitmap);
+                    const bitmapData  = new BitmapData(bitmapWidth, bitmapHeight);
+                    bitmapData.buffer = bitmap.imageBuffer;
+                    graphics
+                        .beginBitmapFill(bitmapData)
+                        .drawRect(0, 0, width, height);
                 }
-
             }
             break;
 
@@ -63,7 +67,11 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                         bitmap.buffer
                     );
                 } else {
-                    console.log("inBitmap: ", bitmap, character);
+                    const bitmapData  = new BitmapData(bitmap.width, bitmap.height);
+                    bitmapData.buffer = bitmap.buffer;
+                    graphics
+                        .beginBitmapFill(bitmapData)
+                        .drawRect(0, 0, width, height);
                 }
             }
             break;

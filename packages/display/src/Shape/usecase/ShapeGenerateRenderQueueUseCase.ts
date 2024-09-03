@@ -217,7 +217,7 @@ export const execute = (
     if (!cache) {
         render_queue.push(0);
 
-        const buffer = shape.isBitmap 
+        const buffer = shape.isBitmap
             ? shape.$bitmapBuffer as Uint8Array
             : graphics.buffer;
 

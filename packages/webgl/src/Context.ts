@@ -40,6 +40,7 @@ import { execute as maskStartMaskService } from "./Mask/service/MaskStartMaskSer
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
 import { execute as maskLeaveMaskService } from "./Mask/service/MaskLeaveMaskService";
 import { execute as contextDrawPixelsUseCase } from "./Context/usecase/ContextDrawPixelsUseCase";
+import { execute as contextBitmapFillUseCase } from "./Context/usecase/ContextBitmapFillUseCase";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
 import {
@@ -627,6 +628,33 @@ export class Context
         contextGradientFillUseCase(
             has_grid, type, stops, matrix, 
             spread, interpolation, focal
+        );
+    }
+
+    /**
+     * @description ピクセルデータを描画
+     *              Draw pixel data
+     * 
+     * @param  {boolean} has_grid 
+     * @param  {Uint8Array} pixels 
+     * @param  {number} width 
+     * @param  {number} height
+     * @param  {boolean} repeat
+     * @param  {boolean} smooth
+     * @return {void}
+     * @method
+     * @public
+     */
+    bitmapFill (
+        has_grid: boolean,
+        pixels: Uint8Array,
+        width: number,
+        height: number,
+        repeat: boolean,
+        smooth: boolean
+    ): void {
+        contextBitmapFillUseCase(
+            has_grid, pixels, width, height, repeat, smooth
         );
     }
 

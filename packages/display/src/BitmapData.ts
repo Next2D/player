@@ -1,11 +1,10 @@
-import type { Player } from "@next2d/core";
-import type { CanvasToWebGLContext } from "@next2d/webgl";
 import type {
     Matrix,
     ColorTransform
 } from "@next2d/geom";
-import { DisplayObjectContainer } from "./DisplayObjectContainer";
+import type { DisplayObject } from "./DisplayObject";
 import { $getInstanceId } from "./DisplayObjectUtil";
+import { $cacheStore } from "@next2d/cache";
 
 /**
  * @description BitmapData クラスを使用すると、Bitmap オブジェクトのデータ (ピクセル) を処理できます。
@@ -54,7 +53,6 @@ export class BitmapData
     private _$buffer: Uint8Array | null;
     private _$image: HTMLImageElement | null;
     private _$canvas: HTMLCanvasElement | null;
-    private _$texture: WebGLTexture | null;
 
     /**
      * @param {number} [width=0]
@@ -64,7 +62,6 @@ export class BitmapData
      */
     constructor (width: number = 0, height: number = 0)
     {
-
         /**
          * @type {number}
          * @private
@@ -105,13 +102,6 @@ export class BitmapData
          * @private
          */
         this._$canvas = null;
-
-        /**
-         * @type {WebGLTexture}
-         * @type {null}
-         * @private
-         */
-        this._$texture = null;
     }
 
     /**
@@ -164,69 +154,50 @@ export class BitmapData
      * @description Imageクラスを利用して BitmapData を生成します。
      *              Use the Image class to generate BitmapData.
      *
-     * @return {HTMLImageElement}
+     * @return {HTMLImageElement | null}
      * @public
      */
-    get image (): HTMLImageElement|null
+    get image (): HTMLImageElement | null
     {
         return this._$image;
     }
-    set image (image: HTMLImageElement|null)
+    set image (image: HTMLImageElement | null)
     {
         this._$canvas = null;
         this._$buffer = null;
         this._$image  = image;
 
-        if (this._$texture) {
-            const player: Player = $currentPlayer();
-            const context: CanvasToWebGLContext | null = player.context;
-            if (context) {
-                context.frameBuffer.releaseTexture(this._$texture);
-            }
-
-            this._$texture = null;
-        }
-
         if (!image) {
             return ;
         }
 
-        this._$width  = image.width;
-        this._$height = image.height;
+        this.width  = image.width;
+        this.height = image.height;
     }
 
     /**
      * @description Canvasクラス利用して BitmapData を生成します。
      *              Use the Canvas class to generate BitmapData.
      *
-     * @return {HTMLCanvasElement}
+     * @return {HTMLCanvasElement | null}
      * @public
      */
-    get canvas (): HTMLCanvasElement|null
+    get canvas (): HTMLCanvasElement | null
     {
         return this._$canvas;
     }
-    set canvas (canvas: HTMLCanvasElement|null)
+    set canvas (canvas: HTMLCanvasElement | null)
     {
         this._$image  = null;
         this._$buffer = null;
         this._$canvas = canvas;
 
-        if (this._$texture) {
-            const player: Player = $currentPlayer();
-            const context: CanvasToWebGLContext | null = player.context;
-            if (context) {
-                context.frameBuffer.releaseTexture(this._$texture);
-            }
-            this._$texture = null;
-        }
-
         if (!canvas) {
             return ;
         }
 
-        this._$width  = canvas.width;
-        this._$height = canvas.height;
+        this.width  = canvas.width;
+        this.height = canvas.height;
     }
 
     /**
@@ -273,51 +244,9 @@ export class BitmapData
     }
 
     /**
-     * @member {WebGLTexture}
-     * @method
-     * @private
-     */
-    getTexture (): WebGLTexture | null
-    {
-        const { width, height } = this;
-        if (!width || !height) {
-            return null;
-        }
-
-        const player: Player = $currentPlayer();
-        const context: CanvasToWebGLContext | null = player.context;
-        if (!context) {
-            throw new Error("the context is null.");
-        }
-
-        if (this._$texture !== null) {
-            return this._$texture;
-        }
-
-        if (this._$image !== null) {
-            this._$texture = context
-                .frameBuffer
-                .createTextureFromImage(this._$image);
-        }
-
-        if (this._$canvas !== null) {
-            this._$texture = context
-                .frameBuffer
-                .createTextureFromCanvas(this._$canvas);
-        }
-
-        if (this._$buffer !== null) {
-            this._$texture = context
-                .frameBuffer
-                .createTextureFromPixels(
-                    width, height, this._$buffer, true
-                );
-        }
-
-        return this._$texture;
-    }
-
-    /**
+     * @description 指定された DisplayObject を指定のcanvasに描画します。
+     *              Draws the specified DisplayObject to the specified canvas.
+     * 
      * @param  {DisplayObject}     source
      * @param  {Matrix}            [matrix=null]
      * @param  {ColorTransform}    [color_transform=null]
@@ -326,159 +255,13 @@ export class BitmapData
      * @return {void}
      * @public
      */
-    draw (
-        source: DisplayObjectImpl<any>,
+    drawToCanvas <D extends DisplayObject>(
+        source: D,
         matrix: Matrix | null = null,
         color_transform: ColorTransform | null = null,
         canvas: HTMLCanvasElement | null = null,
         callback: Function | null = null
     ): void {
-
-        const { width, height } = this;
-        if (!width || !height) {
-            return ;
-        }
-
-        const player: Player = $currentPlayer();
-        const cacheWidth: number  = player._$width;
-        const cacheHeight: number = player._$height;
-        const resize: boolean = width > cacheWidth || height > cacheHeight;
-        if (resize) {
-            player._$width  = width;
-            player._$height = height;
-            player._$resizeCanvas(width, height, player.scaleX);
-        }
-
-        const colorTransform: Float32Array = color_transform
-            ? color_transform._$colorTransform
-            : $COLOR_ARRAY_IDENTITY;
-
-        let tMatrix: Float32Array = matrix
-            ? matrix._$matrix
-            : $MATRIX_ARRAY_IDENTITY;
-
-        if (matrix) {
-
-            const matrix: Matrix = source._$transform.matrix;
-            matrix.invert();
-
-            tMatrix = $multiplicationMatrix(
-                tMatrix, matrix._$matrix
-            );
-
-            $poolMatrix(matrix);
-        }
-
-        if (!canvas) {
-            canvas = $cacheStore.getCanvas();
-        }
-
-        if ($rendererWorker) {
-
-            if (!source._$stage) {
-                if (source instanceof DisplayObjectContainer) {
-
-                    if ($postContainerWorker) {
-                        $postContainerWorker(source);
-                    }
-
-                } else {
-
-                    source._$createWorkerInstance();
-                    source._$postProperty();
-
-                }
-            }
-
-            canvas.width  = width;
-            canvas.height = height;
-            const context: CanvasRenderingContext2D | null = canvas.getContext("2d");
-            if (!context) {
-                throw new Error("the context is null.");
-            }
-
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context.clearRect(0, 0, width, height);
-
-            const instanceId: number = source._$instanceId;
-            $bitmapDrawMap.set(instanceId, {
-                "source": source,
-                "context": context,
-                "callback": callback
-            });
-
-            const options: ArrayBuffer[] = $getArray();
-            const message: PropertyBitmapDataMessageImpl = {
-                "command": "bitmapDraw",
-                "sourceId": instanceId,
-                "width": width,
-                "height": height
-            };
-
-            if (tMatrix[0] !== 1 || tMatrix[1] !== 0
-                || tMatrix[2] !== 0 || tMatrix[3] !== 1
-                || tMatrix[4] !== 0 || tMatrix[5] !== 0
-            ) {
-                message.matrix = tMatrix.slice();
-                options.push(message.matrix.buffer);
-            }
-
-            if (colorTransform[0] !== 1 || colorTransform[1] !== 1
-                || colorTransform[2] !== 1 || colorTransform[3] !== 1
-                || colorTransform[4] !== 0 || colorTransform[5] !== 0
-                || colorTransform[6] !== 0 || colorTransform[7] !== 0
-            ) {
-                message.colorTransform = colorTransform.slice();
-                options.push(message.colorTransform.buffer);
-            }
-
-            $rendererWorker.postMessage(message, options);
-
-            $poolArray(options);
-
-        } else {
-
-            const context: CanvasToWebGLContext | null = player.context;
-            if (!context) {
-                throw new Error("the context is null.");
-            }
-
-            // reset
-            context.reset();
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context._$setColor(0, 0, 0, 0);
-            context.clearRect(0, 0, player._$width, player._$height);
-            context.beginPath();
-
-            source._$draw(context, tMatrix, colorTransform);
-
-            context.drawInstacedArray();
-            context
-                .frameBuffer
-                .transferToMainTexture();
-
-            canvas.width  = width;
-            canvas.height = height;
-            const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
-            if (!ctx) {
-                return ;
-            }
-
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.clearRect(0, 0, width, height);
-            ctx.drawImage(player.canvas, 0, 0);
-
-            if (callback) {
-                callback(canvas);
-            }
-        }
-
-        if (matrix) {
-            $poolMatrix(matrix);
-        }
-
-        if (color_transform) {
-            $poolColorTransform(color_transform);
-        }
+        // todo
     }
 }
