@@ -2,7 +2,7 @@ import type { ShaderManager } from "../../ShaderManager";
 import { execute as vertexArrayObjectBindService } from "../../../VertexArrayObject/service/VertexArrayObjectBindService";
 import { $gl } from "../../../WebGLUtil";
 import { execute as blendResetService } from "../../../Blend/service/BlendResetService";
-import { $rectVertexArrayObject } from "../../../VertexArrayObject";
+import { $getRectVertexArrayObject } from "../../../VertexArrayObject";
 
 /**
  * @description Textureの描画を行います。
@@ -22,7 +22,7 @@ export const execute = (shader_manager: ShaderManager): void =>
     blendResetService();
 
     // bind vertex array
-    vertexArrayObjectBindService($rectVertexArrayObject);
+    vertexArrayObjectBindService($getRectVertexArrayObject());
 
     // draw fill
     $gl.drawArrays($gl.TRIANGLE_STRIP, 0, 4);

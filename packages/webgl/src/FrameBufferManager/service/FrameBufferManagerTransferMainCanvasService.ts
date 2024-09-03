@@ -1,5 +1,5 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
-import { $setFramebufferBound } from "../../FrameBufferManager";
+import { $readFrameBuffer } from "../../FrameBufferManager";
 import {
     $gl,
     $context
@@ -23,7 +23,6 @@ export const execute = (): void =>
         $gl.DRAW_FRAMEBUFFER,
         null
     );
-    $setFramebufferBound(false);
 
     const width  = mainAttachmentObject.width;
     const height = mainAttachmentObject.height;
@@ -35,4 +34,6 @@ export const execute = (): void =>
         $gl.COLOR_BUFFER_BIT,
         $gl.NEAREST
     );
+
+    $gl.bindFramebuffer($gl.FRAMEBUFFER, $readFrameBuffer);
 };

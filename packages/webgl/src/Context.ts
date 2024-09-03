@@ -301,7 +301,7 @@ export class Context
             this.$clearColorR,
             this.$clearColorG,
             this.$clearColorB,
-            this.$clearColorA
+            this.$clearColorA,
         );
     }
 

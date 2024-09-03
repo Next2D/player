@@ -1,5 +1,5 @@
 import type { IVertexArrayObject } from "./interface/IVertexArrayObject";
-
+import { execute as vertexArrayObjectCreateRectVertexArrayObjectUseCase } from "./VertexArrayObject/usecase/VertexArrayObjectCreateRectVertexArrayObjectUseCase";
 /**
  * @description VertexArrayObjectの再利用のための配列のオブジェクトプール、
  *              Object pool of array for reusing VertexArrayObject
@@ -107,18 +107,20 @@ export const $setInstancedVertexArrayObject = (vertex_array_object: IVertexArray
  * @type {IVertexArrayObject}
  * @protected
  */
-export let $rectVertexArrayObject: IVertexArrayObject;
+let $rectVertexArrayObject: IVertexArrayObject;
 
 /**
- * @description 矩形描画用のVertexArrayObjectをセット
- *              Set the VertexArrayObject for rectangle drawing
+ * @description 矩形描画用のVertexArrayObjectを返却
+ *              Returns the VertexArrayObject for rectangle drawing
  *
- * @param  {IVertexArrayObject} vertex_array_object
- * @return {void}
+ * @return {IVertexArrayObject}
  * @method
  * @protected
  */
-export const $setRectVertexArrayObject = (vertex_array_object: IVertexArrayObject): void =>
+export const $getRectVertexArrayObject = (): IVertexArrayObject =>
 {
-    $rectVertexArrayObject = vertex_array_object;
+    if (!$rectVertexArrayObject) {
+        $rectVertexArrayObject = vertexArrayObjectCreateRectVertexArrayObjectUseCase()
+    }
+    return $rectVertexArrayObject as NonNullable<IVertexArrayObject>;
 };

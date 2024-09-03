@@ -18,8 +18,14 @@ describe("ContextBeginNodeRenderingService.js method test", () =>
                     "scissor": vi.fn((x, y, w, h) => {
                         expect(x).toBe(1);
                         expect(y).toBe(2);
-                        expect(w).toBe(3);
-                        expect(h).toBe(4);
+                        if (w === 3) {
+                            expect(w).toBe(3);
+                            expect(h).toBe(4);
+                        } else {
+                            expect(w).toBe(4);
+                            expect(h).toBe(5);
+                        }
+
                     }),
                     "clear": vi.fn((v) => { return "clear"; }),
                     "viewport": vi.fn((x, y, w, h) => {

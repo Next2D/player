@@ -3,7 +3,6 @@ import { execute as vertexArrayObjectCreateRectVertexArrayObjectUseCase } from "
 import {
     $setInstancedVertexArrayObject,
     $setAttributeWebGLBuffer,
-    $setRectVertexArrayObject
 } from "../../VertexArrayObject";
 
 /**
@@ -24,10 +23,5 @@ export const execute = (gl: WebGL2RenderingContext): void =>
     // Array Instance用のVertexArrayObjectをセット
     $setInstancedVertexArrayObject(
         vertexArrayObjectCreateInstancedVertexArrayObjectUseCase()
-    );
-
-    // 矩形描画用のVertexArrayObjectをセット
-    $setRectVertexArrayObject(
-        vertexArrayObjectCreateRectVertexArrayObjectUseCase()
     );
 };
