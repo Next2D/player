@@ -2,7 +2,8 @@ import { execute as displayObjectContainerRenderUseCase } from "../../DisplayObj
 import { execute as shapeRenderUseCase } from "../../Shape/usecase/ShapeRenderUseCase";
 import { execute as textFieldRenderUseCase } from "../../TextField/usecase/TextFieldRenderUseCase";
 import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUseCase";
-import { $context } from "../../RendererUtil"; 
+import { $canvas, $context, $isResize, $resizeComplete } from "../../RendererUtil"; 
+import { IAttachmentObject } from "../../../../webgl/src/interface/IAttachmentObject";
 
 /**
  * @type {number}
@@ -79,5 +80,10 @@ export const execute = (render_queue: Float32Array): void =>
     }
 
     $context.drawArraysInstanced();
+
+    if ($isResize()) {
+        $resizeComplete();
+    }
+
     $context.transferMainCanvas();
 };

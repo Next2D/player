@@ -43,8 +43,9 @@ export const execute = (
         return ;
     }
 
-    const graphics = shape.graphics;
-    if (!graphics.isDrawable && !shape.isBitmap) {
+    const graphics   = shape.graphics;
+    const isDrawable = graphics.isDrawable;
+    if (!isDrawable && !shape.isBitmap) {
         render_queue.push(0);
         return ;
     }
@@ -139,6 +140,7 @@ export const execute = (
         : false;
 
     render_queue.push(+hasGrid);
+    render_queue.push(+isDrawable);
     render_queue.push(+shape.isBitmap);
 
     if (!shape.uniqueKey) {
@@ -217,9 +219,9 @@ export const execute = (
     if (!cache) {
         render_queue.push(0);
 
-        const buffer = shape.isBitmap
-            ? shape.$bitmapBuffer as Uint8Array
-            : graphics.buffer;
+        const buffer = isDrawable
+            ? graphics.buffer
+            : shape.$bitmapBuffer as Uint8Array
 
         render_queue.push(buffer.length);
         for (let idx = 0; idx < buffer.length; idx += 4096) {

@@ -31,10 +31,6 @@ export const execute = (
     // resize
     $setRendererSize(renderer_width, renderer_height);
 
-    // update canvas size
-    $canvas.width  = renderer_width;
-    $canvas.height = renderer_height;
-
     // context reset and update
     $context.resize(renderer_width, renderer_height);
 

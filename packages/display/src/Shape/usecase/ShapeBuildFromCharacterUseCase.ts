@@ -40,6 +40,7 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                 const bitmapWidth  = Math.ceil(Math.abs(bitmap.bounds.xMax - bitmap.bounds.xMin));
                 const bitmapHeight = Math.ceil(Math.abs(bitmap.bounds.yMax - bitmap.bounds.yMin));
 
+                shape.isBitmap = true;
                 if (width === bitmapWidth && height === bitmapHeight) {
                     shape.setBitmapBuffer(
                         Math.ceil(Math.abs(bitmap.bounds.xMax - bitmap.bounds.xMin)),
@@ -58,6 +59,8 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
 
         case character.inBitmap:
             {
+                shape.isBitmap = true;
+
                 const recodes = character.recodes as any[];
                 const bitmap  = recodes[recodes.length - 4];
                 if (width === bitmap.width && height === bitmap.height) {

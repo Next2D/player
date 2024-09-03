@@ -32,8 +32,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const xMax = render_queue[index++];
     const yMax = render_queue[index++];
 
-    const hasGrid  = render_queue[index++];
-    const isBitmap = Boolean(render_queue[index++]);
+    const hasGrid    = render_queue[index++];
+    const isDrawable = Boolean(render_queue[index++]);
+    const isBitmap   = Boolean(render_queue[index++]);
 
     // cache uniqueKey
     const uniqueKey = `${render_queue[index++]}`; 
@@ -81,7 +82,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             // fixed logic
             node = $context.createNode(width, height);
             $cacheStore.set(uniqueKey, `${cacheKey}`, node);
-
+        
             // fixed logic
             const currentAttachment = $context.currentAttachmentObject;
             $context.bind($context.atlasAttachmentObject);
@@ -90,7 +91,12 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             $context.beginNodeRendering(node);
             $context.setTransform(1, 0, 0, 1, 0, 0);
 
-            $context.drawPixels(node, new Uint8Array(commands));
+            if (isDrawable) {
+                console.log("koko");
+                shapeCommandService(commands, Boolean(hasGrid));
+            } else {
+                $context.drawPixels(node, new Uint8Array(commands));
+            }
 
             $context.endNodeRendering();
 
@@ -128,6 +134,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             if (currentAttachment) {
                 $context.bind(currentAttachment);
             }
+
         }
 
         index += length;
@@ -145,7 +152,6 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     $context.globalCompositeOperation = "normal";
 
     if (isBitmap) {
-
         $context.setTransform(
             matrix[0], matrix[1], 
             matrix[2], matrix[3],
@@ -157,7 +163,6 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             xMin, yMin, xMax, yMax,
             colorTransform
         );
-
     } else {
 
         // calc bounds

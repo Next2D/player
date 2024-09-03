@@ -99,6 +99,12 @@ export let $rendererWidth: number = 0;
 export let $rendererHeight: number = 0;
 
 /**
+ * @type {boolean}
+ * @private
+ */
+let $resizeState: boolean = false;
+
+/**
  * @description 描画エリアの幅を設定
  *              Set the width of the drawing area
  *
@@ -110,8 +116,37 @@ export let $rendererHeight: number = 0;
  */
 export const $setRendererSize = (width: number, height: number): void =>
 {
+    $resizeState    = true;
     $rendererWidth  = width;
     $rendererHeight = height;
+};
+
+/**
+ * @description リサイズ中かどうかを取得
+ *              Get whether it is being resized
+ * 
+ * @return {boolean}
+ * @method
+ * @public
+ */
+export const $isResize = (): boolean =>
+{
+    return $resizeState;
+};
+
+/**
+ * @description リサイズ処理完了
+ *              Resize processing complete
+ * 
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $resizeComplete = (): void =>
+{
+    $canvas.width  = $rendererWidth;
+    $canvas.height = $rendererHeight
+    $resizeState = false;
 };
 
 /**
