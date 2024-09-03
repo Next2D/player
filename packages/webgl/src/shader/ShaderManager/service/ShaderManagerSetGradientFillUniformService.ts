@@ -66,7 +66,7 @@ export const execute = (
         highp[index++] = (points as Float32Array)[0];
         highp[index++] = (points as Float32Array)[1];
         highp[index++] = (points as Float32Array)[2];
-        highp[index] = (points as Float32Array)[3];
+        highp[index]   = (points as Float32Array)[3];
     } else {
         // fragment: u_radial_point
         highp[index++] = 819.2;

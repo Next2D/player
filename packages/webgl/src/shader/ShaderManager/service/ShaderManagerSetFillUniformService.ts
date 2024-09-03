@@ -47,5 +47,5 @@ export const execute = (shader_manager: ShaderManager, has_grid: boolean): void 
     mediump[0] = fillStyle[0];
     mediump[1] = fillStyle[1];
     mediump[2] = fillStyle[2];
-    mediump[3] = fillStyle[3] * $context.globalAlpha;
+    mediump[3] = fillStyle[3];
 };

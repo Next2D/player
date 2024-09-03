@@ -1,5 +1,3 @@
-import { STATEMENT_COLOR_TRANSFORM_ON } from "./FragmentShaderLibrary";
-
 /**
  * @return {string}
  * @method
@@ -38,7 +36,6 @@ void main() {
     vec2 uv = vec2(v_uv.x, u_mediump[0].y - v_uv.y) / u_mediump[0].xy;
 
     vec4 src = texture(u_texture, uv);
-    ${STATEMENT_COLOR_TRANSFORM_ON(1)}
     o_color = src;
 }`;
 };
@@ -63,7 +60,6 @@ void main() {
     vec2 uv = fract(vec2(v_uv.x, -v_uv.y) / u_mediump[0].xy);
     
     vec4 src = texture(u_texture, uv);
-    ${STATEMENT_COLOR_TRANSFORM_ON(1)}
     o_color = src;
 }`;
 };

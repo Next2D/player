@@ -1,5 +1,4 @@
-import { ShaderManager } from "../../ShaderManager";
-import type { ShaderManager } from "../../../WebGLUtil";
+import type { ShaderManager } from "../../ShaderManager";
 import {
     $context,
     $getViewportWidth,
@@ -26,7 +25,7 @@ export const execute = (
     height: number
 ): void =>
 {
-    const highp  = shader_manager.highp;
+    const highp = shader_manager.highp;
     
     // vertex: u_matrix
     const matrix = $context.$stack[$context.$stack.length - 1];
@@ -70,16 +69,4 @@ export const execute = (
     // fragment: u_uv
     mediump[0] = width;
     mediump[1] = height;
-
-    // fragment: u_color_transform_mul
-    mediump[4] = 1;
-    mediump[5] = 1;
-    mediump[6] = 1;
-    mediump[7] = $context.globalAlpha;
-
-    // fragment: u_color_transform_add
-    mediump[8]  = 0;
-    mediump[9]  = 0;
-    mediump[10] = 0;
-    mediump[11] = 0;
 };
