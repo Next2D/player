@@ -37,19 +37,13 @@ describe("ContextResetStyleService.js method test", () =>
         } as unknown as WebGL2RenderingContext;
 
         const context = new Context(mockGL, 4);
-
-        context.$fillType = 0;
         context.$fillStyle.fill(0.5);
-
-        context.$strokeType = 0;
         context.$strokeStyle.fill(0.5);
 
-        expect(context.$fillType).toBe(0);
         expect(context.$fillStyle[0]).toBe(0.5);
         expect(context.$fillStyle[1]).toBe(0.5);
         expect(context.$fillStyle[2]).toBe(0.5);
         expect(context.$fillStyle[3]).toBe(0.5);
-        expect(context.$strokeType).toBe(0);
         expect(context.$strokeStyle[0]).toBe(0.5);
         expect(context.$strokeStyle[1]).toBe(0.5);
         expect(context.$strokeStyle[2]).toBe(0.5);
@@ -57,12 +51,10 @@ describe("ContextResetStyleService.js method test", () =>
 
         execute(context);
         
-        expect(context.$fillType).toBe(-1);
         expect(context.$fillStyle[0]).toBe(1);
         expect(context.$fillStyle[1]).toBe(1);
         expect(context.$fillStyle[2]).toBe(1);
         expect(context.$fillStyle[3]).toBe(1);
-        expect(context.$strokeType).toBe(-1);
         expect(context.$strokeStyle[0]).toBe(1);
         expect(context.$strokeStyle[1]).toBe(1);
         expect(context.$strokeStyle[2]).toBe(1);

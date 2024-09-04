@@ -82,14 +82,19 @@ export const execute = (
 
             case STROKE_STYLE:
                 if (is_clip) {
-                    index += 4;
+                    index += 8;
                     break;
                 }
 
+                $context.thickness  = commands[index++];
+                $context.caps       = commands[index++];
+                $context.joints     = commands[index++];
+                $context.miterLimit = commands[index++];
                 $context.strokeStyle(
                     commands[index++] / 255, commands[index++] / 255,
                     commands[index++] / 255, commands[index++] / 255
                 );
+
                 break;
             
             case END_STROKE:
@@ -97,7 +102,7 @@ export const execute = (
                     break;
                 }
                 
-                $context.stroke();
+                $context.stroke(has_grid);
                 break;
 
             case CLOSE_PATH:
@@ -179,12 +184,10 @@ export const execute = (
 
             case GRADIENT_STROKE:
                 console.log("GRADIENT_STROKE");
-                // todo
                 break;
 
             case BITMAP_STROKE:
                 console.log("BITMAP_STROKE");
-                // todo
                 break;
 
         }

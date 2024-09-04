@@ -1,8 +1,6 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { IBlendMode } from "./interface/IBlendMode";
-import type { IFillTyle } from "./interface/IFillTyle";
 import type { IBounds } from "./interface/IBounds";
-import type { IStrokeTyle } from "./interface/IStrokeTyle";
 import type { Node } from "@next2d/texture-packer";
 import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService";
 import { execute as moveTo } from "./PathCommand/usecase/PathCommandMoveToUseCase";
@@ -41,6 +39,7 @@ import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService
 import { execute as maskLeaveMaskService } from "./Mask/service/MaskLeaveMaskService";
 import { execute as contextDrawPixelsUseCase } from "./Context/usecase/ContextDrawPixelsUseCase";
 import { execute as contextBitmapFillUseCase } from "./Context/usecase/ContextBitmapFillUseCase";
+import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStrokeUseCase";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
 import {
@@ -160,26 +159,6 @@ export class Context
     public imageSmoothingEnabled: boolean;
 
     /**
-     * @description 塗りつぶしタイプ
-     *              Fill type
-     * 
-     * @type {number}
-     * @default -1
-     * @protected
-     */
-    public $fillType: IFillTyle;
-
-    /**
-     * @description ストロークタイプ
-     *              Stroke type
-     * 
-     * @type {number}
-     * @default -1
-     * @protected
-     */
-    public $strokeType: IStrokeTyle;
-
-    /**
      * @description 塗りつぶしのRGBAを保持するFloat32Array
      *              Float32Array that holds the RGBA of the fill
      * 
@@ -207,6 +186,42 @@ export class Context
     public readonly maskBounds: IBounds;
 
     /**
+     * @description ストロークの太さ
+     *              Stroke thickness
+     * 
+     * @type {number}
+     * @public
+     */
+    public thickness: number;
+
+    /**
+     * @description ストロークのキャップ
+     *              Stroke cap
+     * 
+     * @type {number}
+     * @public
+     */
+    public caps: number;
+
+    /**
+     * @description ストロークのジョイント
+     *              Stroke joint
+     * 
+     * @type {number}
+     * @public
+     */
+    public joints: number;
+
+    /**
+     * @description ストロークのマイターリミット
+     *              Stroke miter limit
+     * 
+     * @type {number}
+     * @public
+     */
+    public miterLimit: number;
+
+    /**
      * @param {WebGL2RenderingContext} gl
      * @param {number} samples
      * @constructor
@@ -227,6 +242,12 @@ export class Context
         this.$clearColorB = 0;
         this.$clearColorA = 0;
 
+        // stroke
+        this.thickness  = 1;
+        this.caps       = 1;
+        this.joints     = 2;
+        this.miterLimit = 0;
+
         // メインのアタッチメントオブジェクト
         this.$mainAttachmentObject = null;
 
@@ -236,8 +257,6 @@ export class Context
         this.imageSmoothingEnabled    = false;
 
         // 塗りつぶしタイプ、ストロークタイプ
-        this.$fillType    = -1;
-        this.$strokeType  = -1;
         this.$fillStyle   = new Float32Array([1, 1, 1, 1]);
         this.$strokeStyle = new Float32Array([1, 1, 1, 1]);
 
@@ -511,7 +530,6 @@ export class Context
      */
     fillStyle (red: number, green: number, blue: number, alpha: number): void
     {
-        this.$fillType = 0;
         this.$fillStyle[0] = red;
         this.$fillStyle[1] = green;
         this.$fillStyle[2] = blue;
@@ -532,7 +550,6 @@ export class Context
      */
     strokeStyle (red: number, green: number, blue: number, alpha: number): void
     {
-        this.$strokeType = 0;
         this.$strokeStyle[0] = red;
         this.$strokeStyle[1] = green;
         this.$strokeStyle[2] = blue;
@@ -666,9 +683,9 @@ export class Context
      * @method
      * @public
      */
-    stroke (): void
+    stroke (has_grid: boolean): void
     {
-        console.log("stroke");
+        contextStrokeUseCase(has_grid);
     }
 
     /**

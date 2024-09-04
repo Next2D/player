@@ -1,13 +1,43 @@
 import type { IVertexArrayObject } from "./interface/IVertexArrayObject";
+import type { IStrokeVertexArrayObject } from "./interface/IStrokeVertexArrayObject";
 import { execute as vertexArrayObjectCreateRectVertexArrayObjectUseCase } from "./VertexArrayObject/usecase/VertexArrayObjectCreateRectVertexArrayObjectUseCase";
+
 /**
- * @description VertexArrayObjectの再利用のための配列のオブジェクトプール、
+ * @type {number}
+ * @private
+ */
+let $id: number = 0;
+
+/**
+ * @description VertexArrayObject管理用のユニークIDを返却
+ *              Returns a unique ID for managing VertexArrayObject
+ * 
+ * @return {number}
+ * @method
+ * @protected
+ */
+export const $getId = (): number =>
+{
+    return $id++;
+};
+
+/**
+ * @description VertexArrayObjectの再利用のための配列のオブジェクトプール
  *              Object pool of array for reusing VertexArrayObject
  *
  * @type {IVertexArrayObject[]}
  * @protected
  */
 export const $objectPool: IVertexArrayObject[] = [];
+
+/**
+ * @description Stroke用のVertexArrayObjectの再利用のための配列のオブジェクトプール
+ *             Object pool of array for reusing VertexArrayObject for Stroke
+ *
+ * @type {IStrokeVertexArrayObject[]}
+ * @protected
+ */
+export const $strokeObjectPool: IStrokeVertexArrayObject[] = [];
 
 /**
  * @description 頂点バッファのデータ、

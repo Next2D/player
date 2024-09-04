@@ -1,11 +1,6 @@
 import type { IVertexArrayObject } from "../../interface/IVertexArrayObject";
 import { $gl } from "../../WebGLUtil";
-
-/**
- * @type {number}
- * @private
- */
-let $id: number = 0;
+import { $getId } from "../../VertexArrayObject";
 
 /**
  * @description 新規のVertexArrayObjectを生成する
@@ -18,7 +13,7 @@ let $id: number = 0;
 export const execute = (): IVertexArrayObject =>
 {
     return {
-        "id": $id++,
+        "id": $getId(),
         "resource": $gl.createVertexArray() as NonNullable<WebGLVertexArrayObject>,
         "indexRanges": [],
         "vertexBuffer": $gl.createBuffer() as NonNullable<WebGLBuffer>,

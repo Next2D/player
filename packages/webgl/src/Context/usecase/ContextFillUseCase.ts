@@ -7,10 +7,7 @@ import { execute as variantsShapeMaskShaderService } from "../../Shader/Variants
 import { execute as shaderManagerSetFillUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetFillUniformService";
 import { execute as shaderManagerSetMaskUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMaskUniformService";
 import { execute as shaderManagerFillUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerFillUseCase";
-import {
-    $gl,
-    $context
-} from "../../WebGLUtil";
+import { $gl } from "../../WebGLUtil";
 
 /**
  * @description Contextのパスコマンドの塗り実行します。
@@ -26,27 +23,6 @@ export const execute = (has_grid: boolean): void =>
     const vertices = $getVertices();
     if (!vertices.length) {
         return ;
-    }
-
-    let shaderManager: ShaderManager | null = null;
-    switch ($context.$fillType) {
-
-        case 0: // normal fill
-            shaderManager = variantsShapeSolidColorShaderService(false, has_grid);
-            shaderManagerSetFillUniformService(shaderManager, has_grid);
-            break;
-
-        case 1: // gradient fill
-            // todo
-            break;
-
-        case 2: // pattern fill
-            // todo
-            break;
-
-        default:
-            break;
-
     }
 
     const vertexArrayObject = vertexArrayObjectCreateFillObjectUseCase(vertices);
@@ -70,6 +46,9 @@ export const execute = (has_grid: boolean): void =>
     $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
     $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
     $gl.colorMask(true, true, true, true);
+
+    const shaderManager = variantsShapeSolidColorShaderService(false, has_grid);
+    shaderManagerSetFillUniformService(shaderManager, has_grid);
     shaderManagerFillUseCase(shaderManager as ShaderManager, vertexArrayObject);
 
     // mask off

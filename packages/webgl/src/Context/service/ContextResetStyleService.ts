@@ -11,46 +11,6 @@ import type { Context } from "../../Context";
  */
 export const execute = (context: Context): void =>
 {
-    // todo type reset
-    switch (context.$fillType) {
-
-        case 0:
-            context.$fillStyle.fill(1);
-            break;
-
-        case 1:
-            // todo gradient
-            break;
-
-        case 2:
-            // todo bitmap
-            break;
-
-        default:
-            break;
-
-    }
-
-    switch (context.$strokeType) {
-
-        case 0:
-            context.$strokeStyle.fill(1);
-            break;
-
-        case 1:
-            // todo gradient
-            break;
-
-        case 2:
-            // todo bitmap
-            break;
-
-        default:
-            break;
-
-    }
-
-    // reset
-    context.$fillType   = -1;
-    context.$strokeType = -1;
+    context.$fillStyle.fill(1);
+    context.$strokeStyle.fill(1);
 };
