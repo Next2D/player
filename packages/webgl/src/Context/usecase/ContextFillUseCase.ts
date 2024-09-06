@@ -49,7 +49,7 @@ export const execute = (has_grid: boolean): void =>
 
     const shaderManager = variantsShapeSolidColorShaderService(false, has_grid);
     shaderManagerSetFillUniformService(shaderManager, has_grid);
-    shaderManagerFillUseCase(shaderManager as ShaderManager, vertexArrayObject);
+    shaderManagerFillUseCase(shaderManager, vertexArrayObject);
 
     // mask off
     $gl.disable($gl.STENCIL_TEST);

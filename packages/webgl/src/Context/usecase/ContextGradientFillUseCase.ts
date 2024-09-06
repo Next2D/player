@@ -49,8 +49,6 @@ export const execute = (
     const textureObject = gradientLUTGenerateShapeTextureUseCase(stops, interpolation);
     textureManagerBind0UseCase(textureObject);
 
-    
-
     let shaderManager: ShaderManager | null= null;
     if (type === 0) { // linear
         shaderManager = variantsGradientShapeShaderUseCase(

@@ -1,9 +1,5 @@
 
-import { $drawFrameBuffer, $readFrameBuffer } from "../../FrameBufferManager";
-import {
-    $gl,
-    $setViewportSize
-} from "../../WebGLUtil";
+import { $gl } from "../../WebGLUtil";
 
 /**
  * @description アトラスへの描画範囲を設定
@@ -25,9 +21,7 @@ export const execute = (x: number, y: number, w: number, h: number): void =>
 
     // 初期化
     $gl.clear($gl.COLOR_BUFFER_BIT | $gl.STENCIL_BUFFER_BIT);
-
+    
     // 描画領域をあらためて設定
-    $setViewportSize(w, h);
     $gl.scissor(x, y, w, h);
-    $gl.viewport(x, y, w, h);
 };

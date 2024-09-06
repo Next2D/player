@@ -22,11 +22,9 @@ export const execute = (vertices: IPath[]): IVertexArrayObject =>
     const fillMesh = meshFillGenerateUseCase(vertices);
 
     const vertexArrayObject = vertexArrayObjectGetFillObjectUseCase();
-    vertexArrayObject.indexRanges = fillMesh.indexRanges;
     vertexArrayObjectBindService(vertexArrayObject);
 
     $gl.bindBuffer($gl.ARRAY_BUFFER, vertexArrayObject.vertexBuffer);
-
     if (vertexArrayObject.vertexLength < fillMesh.buffer.length) {
         vertexArrayObject.vertexLength = $upperPowerOfTwo(fillMesh.buffer.length);
         $gl.bufferData($gl.ARRAY_BUFFER, vertexArrayObject.vertexLength * 4, $gl.DYNAMIC_DRAW);
@@ -34,5 +32,6 @@ export const execute = (vertices: IPath[]): IVertexArrayObject =>
 
     $gl.bufferSubData($gl.ARRAY_BUFFER, 0, fillMesh.buffer);
 
+    vertexArrayObject.indexRanges = fillMesh.indexRanges;
     return vertexArrayObject;
 };

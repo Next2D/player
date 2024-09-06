@@ -28,7 +28,7 @@ import {
 export const execute = (stops: number[], interpolation: number): ITextureObject =>
 {
     const currentAttachment = $context.currentAttachmentObject;
-    const viewport = $gl.getParameter($gl.VIEWPORT);
+    const scissorBox = $gl.getParameter($gl.SCISSOR_BOX);
     $gl.disable($gl.SCISSOR_TEST);
 
     const gradientAttachmentObject = $getGradientAttachmentObject();
@@ -68,7 +68,7 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
     }
 
     contextBeginNodeRenderingService(
-        viewport[0], viewport[1], viewport[2], viewport[3]
+        scissorBox[0], scissorBox[1], scissorBox[2], scissorBox[3]
     );
 
     return gradientAttachmentObject.texture as NonNullable<ITextureObject>;

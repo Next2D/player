@@ -89,10 +89,14 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             $context.reset();
             $context.beginNodeRendering(node);
-            $context.setTransform(1, 0, 0, 1, 0, 0);
+
+            const offsetY = $context.atlasAttachmentObject.height - node.y - height;
+            $context.setTransform(1, 0, 0, 1, 
+                node.x,
+                offsetY
+            );
 
             if (isDrawable) {
-                console.log("koko");
                 shapeCommandService(commands, Boolean(hasGrid));
             } else {
                 $context.drawPixels(node, new Uint8Array(commands));
@@ -120,10 +124,12 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             // 初期化して、描画範囲とmatrix設定
             $context.reset();
             $context.beginNodeRendering(node);
+
+            const offsetY = $context.atlasAttachmentObject.height - node.y - height;
             $context.setTransform(
                 xScale, 0, 0, yScale,
-                -xMin * xScale,
-                -yMin * yScale
+                -xMin * xScale + node.x,
+                -yMin * yScale + offsetY
             );
 
             shapeCommandService(commands, Boolean(hasGrid));
