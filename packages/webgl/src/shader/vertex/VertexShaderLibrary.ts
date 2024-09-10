@@ -10,15 +10,8 @@ export const FUNCTION_GRID_OFF = (): string =>
 {
     return `
 vec2 applyMatrix(in vec2 vertex) {
-    mat3 matrix = mat3(
-        u_highp[0].xyz,
-        u_highp[1].xyz,
-        u_highp[2].xyz
-    );
-
-    vec2 position = (matrix * vec3(vertex, 1.0)).xy;
-
-    return position;
+    mat3 matrix = mat3(a_matrix0, a_matrix1, a_matrix2);
+    return (matrix * vec3(vertex, 1.0)).xy;
 }`;
 };
 

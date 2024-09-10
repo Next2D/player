@@ -38,7 +38,7 @@ export const execute = (has_grid: boolean): void =>
     $gl.colorMask(false, false, false, false);
 
     const coverageShader = variantsShapeMaskShaderService(false, has_grid);
-    shaderManagerSetMaskUniformService(coverageShader, has_grid);
+    // shaderManagerSetMaskUniformService(coverageShader, has_grid);
     shaderManagerFillUseCase(coverageShader, vertexArrayObject);
     $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
 
@@ -48,7 +48,7 @@ export const execute = (has_grid: boolean): void =>
     $gl.colorMask(true, true, true, true);
 
     const shaderManager = variantsShapeSolidColorShaderService(false, has_grid);
-    shaderManagerSetFillUniformService(shaderManager, has_grid);
+    // shaderManagerSetFillUniformService(shaderManager, has_grid);
     shaderManagerFillUseCase(shaderManager, vertexArrayObject);
 
     // mask off

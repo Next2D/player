@@ -32,6 +32,6 @@ export const execute = (vertices: IPath[]): IVertexArrayObject =>
 
     $gl.bufferSubData($gl.ARRAY_BUFFER, 0, fillMesh.buffer);
 
-    vertexArrayObject.indexRanges = fillMesh.indexRanges;
+    vertexArrayObject.indexCount = fillMesh.indexCount;
     return vertexArrayObject;
 };

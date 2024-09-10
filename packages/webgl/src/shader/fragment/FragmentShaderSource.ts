@@ -9,10 +9,11 @@ export const SOLID_COLOR = (): string =>
 precision mediump float;
 
 uniform vec4 u_mediump;
+in vec4 v_color;
 out vec4 o_color;
 
 void main() {
-    o_color = vec4(u_mediump.rgb * u_mediump.a, u_mediump.a);
+    o_color = vec4(v_color.rgb * v_color.a, v_color.a);
 }`;
 };
 

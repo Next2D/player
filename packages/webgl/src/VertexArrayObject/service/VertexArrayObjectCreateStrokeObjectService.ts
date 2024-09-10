@@ -19,6 +19,7 @@ export const execute = (): IStrokeVertexArrayObject =>
         "vertexBuffer": $gl.createBuffer() as NonNullable<WebGLBuffer>,
         "vertexLength": 0,
         "indexBuffer": $gl.createBuffer() as NonNullable<WebGLBuffer>,
-        "indexLength": 0
+        "indexLength": 0,
+        "indexCount": 0
     };
 };

@@ -25,8 +25,16 @@ export const execute = (): IVertexArrayObject =>
 
     $gl.enableVertexAttribArray(0);
     $gl.enableVertexAttribArray(1);
-    $gl.vertexAttribPointer(0, 2, $gl.FLOAT, false, 16, 0);
-    $gl.vertexAttribPointer(1, 2, $gl.FLOAT, false, 16, 8);
+    $gl.enableVertexAttribArray(2);
+    $gl.enableVertexAttribArray(3);
+    $gl.enableVertexAttribArray(4);
+    $gl.enableVertexAttribArray(5);
+    $gl.vertexAttribPointer(0, 2, $gl.FLOAT, false, 68, 0);
+    $gl.vertexAttribPointer(1, 2, $gl.FLOAT, false, 68, 8);
+    $gl.vertexAttribPointer(2, 4, $gl.FLOAT, false, 68, 16);
+    $gl.vertexAttribPointer(3, 3, $gl.FLOAT, false, 68, 32);
+    $gl.vertexAttribPointer(4, 3, $gl.FLOAT, false, 68, 44);
+    $gl.vertexAttribPointer(5, 3, $gl.FLOAT, false, 68, 56);
 
     return vertexArrayObject;
 };

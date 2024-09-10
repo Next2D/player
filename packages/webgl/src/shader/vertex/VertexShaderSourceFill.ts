@@ -66,6 +66,36 @@ export const STATEMENT_BEZIER_ON = (): string =>
 };
 
 /**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const ATTRIBUTE_COLOR_ON = (): string =>
+{
+    return "layout (location = 2) in vec4 a_color;";
+};
+
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const VARYING_COLOR_ON = (): string =>
+{
+    return "out vec4 v_color;";
+};
+
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const STATEMENT_COLOR_ON = (): string =>
+{
+    return "v_color = a_color;";
+};
+
+/**
  * @param  {number}  highp_length
  * @param  {boolean} with_uv
  * @param  {boolean} for_mask
@@ -101,22 +131,40 @@ export const FILL_TEMPLATE = (
         ? FUNCTION_GRID_ON(with_uv ? 5 : 0)
         : FUNCTION_GRID_OFF();
 
+    const colorAttribute: string = for_mask
+        ? ""
+        : ATTRIBUTE_COLOR_ON();
+
+    const colorVarying: string = for_mask
+        ? ""
+        : VARYING_COLOR_ON();
+
+    const colorStatement: string = for_mask
+        ? ""
+        : STATEMENT_COLOR_ON();
+    
+    const uniform = highp_length > 1
+        ? `uniform vec4 u_highp[${highp_length}];`
+        : "";
+
     return `#version 300 es
 
 layout (location = 0) in vec2 a_vertex;
 ${bezierAttribute}
+${colorAttribute}
+layout (location = 3) in vec3 a_matrix0;
+layout (location = 4) in vec3 a_matrix1;
+layout (location = 5) in vec3 a_matrix2;
 
-uniform vec4 u_highp[${highp_length}];
-
+${uniform}
 ${uvVarying}
+${colorVarying}
 ${gridFunction}
 
 void main() {
-    vec2 viewport = vec2(u_highp[0].w, u_highp[1].w);
-
+    ${colorStatement}
     ${uvStatement}
-
-    vec2 pos = applyMatrix(a_vertex) / viewport;
+    vec2 pos = applyMatrix(a_vertex) ;
     pos = pos * 2.0 - 1.0;
     gl_Position = vec4(pos.x, -pos.y, 0.0, 1.0);
 }`;

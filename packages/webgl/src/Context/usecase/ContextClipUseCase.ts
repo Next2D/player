@@ -23,7 +23,7 @@ export const execute = (has_grid: boolean): void =>
 
     const vertexArrayObject = vertexArrayObjectCreateFillObjectUseCase(vertices);
     const shaderManager = variantsShapeMaskShaderService(false, has_grid);
-    shaderManagerSetMaskUniformService(shaderManager, has_grid);
+    // shaderManagerSetMaskUniformService(shaderManager, has_grid);
     shaderManagerFillUseCase(shaderManager, vertexArrayObject);
 
     // release vertex array

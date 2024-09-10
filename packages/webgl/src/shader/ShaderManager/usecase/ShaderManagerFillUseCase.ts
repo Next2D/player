@@ -1,6 +1,5 @@
 import type { ShaderManager } from "../../ShaderManager";
 import type { IVertexArrayObject } from "../../../interface/IVertexArrayObject";
-import type { IIndexRange } from "../../../interface/IIndexRange";
 import { execute as vertexArrayObjectBindService } from "../../../VertexArrayObject/service/VertexArrayObjectBindService";
 import { $gl } from "../../../WebGLUtil";
 import { execute as blendResetService } from "../../../Blend/service/BlendResetService";
@@ -31,7 +30,5 @@ export const execute = (
     vertexArrayObjectBindService(vertex_array_object);
 
     // draw fill
-    const indexRanges = vertex_array_object.indexRanges as IIndexRange[];
-    const range = indexRanges[indexRanges.length - 1];
-    $gl.drawArrays($gl.TRIANGLES, 0, range.first + range.count);
+    $gl.drawArrays($gl.TRIANGLES, 0, vertex_array_object.indexCount);
 };
