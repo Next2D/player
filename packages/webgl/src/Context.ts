@@ -864,7 +864,7 @@ export class Context
     drawPixels (node: Node, pixels: Uint8Array): void
     {
         contextDrawPixelsUseCase(node, pixels);
-    }
+    };
 
     /**
      * @description マスクを開始準備

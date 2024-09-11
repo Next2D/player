@@ -1,7 +1,8 @@
 import type { ShaderManager } from "../../ShaderManager";
 import {
-    $RENDER_MAX_SIZE,
-    $context
+    $context,
+    $getViewportHeight,
+    $getViewportWidth
 } from "../../../WebGLUtil";
 
 /**
@@ -34,6 +35,6 @@ export const execute = (shader_manager: ShaderManager, width: number, height: nu
     highp[14] = 1;
 
     // vertex: u_viewport
-    highp[7]  = $RENDER_MAX_SIZE;
-    highp[11] = $RENDER_MAX_SIZE;
+    highp[7]  = $getViewportWidth();
+    highp[11] = $getViewportHeight();
 };

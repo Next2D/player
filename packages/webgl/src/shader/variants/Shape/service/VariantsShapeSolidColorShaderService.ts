@@ -30,7 +30,6 @@ export const execute = (is_stroke: boolean, has_grid: boolean): ShaderManager =>
             highpLength, fragmentIndex,
             false, has_grid
         );
-        console.log(vertexShaderSource);
     } else {
         vertexShaderSource = FILL_TEMPLATE(
             highpLength, false, false, has_grid

@@ -51,13 +51,13 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
             buffer[position++] = matrix[0];
             buffer[position++] = matrix[1];
-            buffer[position++] = matrix[2];
+            buffer[position++] = 0;
             buffer[position++] = matrix[3];
             buffer[position++] = matrix[4];
-            buffer[position++] = matrix[5];
+            buffer[position++] = 0;
             buffer[position++] = matrix[6];
             buffer[position++] = matrix[7];
-            buffer[position++] = matrix[8];
+            buffer[position++] = 0;
 
             buffer[position++] = vertex[idx] as number;
             buffer[position++] = vertex[idx + 1] as number;
@@ -71,13 +71,13 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
             buffer[position++] = matrix[0];
             buffer[position++] = matrix[1];
-            buffer[position++] = matrix[2];
+            buffer[position++] = 0;
             buffer[position++] = matrix[3];
             buffer[position++] = matrix[4];
-            buffer[position++] = matrix[5];
+            buffer[position++] = 0;
             buffer[position++] = matrix[6];
             buffer[position++] = matrix[7];
-            buffer[position++] = matrix[8];
+            buffer[position++] = 0;
 
             buffer[position++] = vertex[idx + 3] as number;
             buffer[position++] = vertex[idx + 4] as number;
@@ -91,13 +91,13 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
             buffer[position++] = matrix[0];
             buffer[position++] = matrix[1];
-            buffer[position++] = matrix[2];
+            buffer[position++] = 0;
             buffer[position++] = matrix[3];
             buffer[position++] = matrix[4];
-            buffer[position++] = matrix[5];
+            buffer[position++] = 0;
             buffer[position++] = matrix[6];
             buffer[position++] = matrix[7];
-            buffer[position++] = matrix[8];
+            buffer[position++] = 0;
 
         } else if (vertex[idx + 5]) {
 
@@ -113,13 +113,13 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
             buffer[position++] = matrix[0];
             buffer[position++] = matrix[1];
-            buffer[position++] = matrix[2];
+            buffer[position++] = 0;
             buffer[position++] = matrix[3];
             buffer[position++] = matrix[4];
-            buffer[position++] = matrix[5];
+            buffer[position++] = 0;
             buffer[position++] = matrix[6];
             buffer[position++] = matrix[7];
-            buffer[position++] = matrix[8];
+            buffer[position++] = 0;
 
             buffer[position++] = vertex[idx] as number;
             buffer[position++] = vertex[idx + 1] as number;
@@ -133,13 +133,13 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
             buffer[position++] = matrix[0];
             buffer[position++] = matrix[1];
-            buffer[position++] = matrix[2];
+            buffer[position++] = 0;
             buffer[position++] = matrix[3];
             buffer[position++] = matrix[4];
-            buffer[position++] = matrix[5];
+            buffer[position++] = 0;
             buffer[position++] = matrix[6];
             buffer[position++] = matrix[7];
-            buffer[position++] = matrix[8];
+            buffer[position++] = 0;
 
             buffer[position++] = vertex[idx + 6] as number;
             buffer[position++] = vertex[idx + 7] as number;
@@ -153,13 +153,13 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
             buffer[position++] = matrix[0];
             buffer[position++] = matrix[1];
-            buffer[position++] = matrix[2];
+            buffer[position++] = 0;
             buffer[position++] = matrix[3];
             buffer[position++] = matrix[4];
-            buffer[position++] = matrix[5];
+            buffer[position++] = 0;
             buffer[position++] = matrix[6];
             buffer[position++] = matrix[7];
-            buffer[position++] = matrix[8];
+            buffer[position++] = 0;
 
         } else {
 
@@ -175,13 +175,13 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
             buffer[position++] = matrix[0];
             buffer[position++] = matrix[1];
-            buffer[position++] = matrix[2];
+            buffer[position++] = 0;
             buffer[position++] = matrix[3];
             buffer[position++] = matrix[4];
-            buffer[position++] = matrix[5];
+            buffer[position++] = 0;
             buffer[position++] = matrix[6];
             buffer[position++] = matrix[7];
-            buffer[position++] = matrix[8];
+            buffer[position++] = 0;
 
             buffer[position++] = vertex[idx] as number;
             buffer[position++] = vertex[idx + 1] as number;
@@ -195,13 +195,13 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
             buffer[position++] = matrix[0];
             buffer[position++] = matrix[1];
-            buffer[position++] = matrix[2];
+            buffer[position++] = 0;
             buffer[position++] = matrix[3];
             buffer[position++] = matrix[4];
-            buffer[position++] = matrix[5];
+            buffer[position++] = 0;
             buffer[position++] = matrix[6];
             buffer[position++] = matrix[7];
-            buffer[position++] = matrix[8];
+            buffer[position++] = 0;
 
             buffer[position++] = vertex[idx + 3] as number;
             buffer[position++] = vertex[idx + 4] as number;
@@ -215,13 +215,13 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
             buffer[position++] = matrix[0];
             buffer[position++] = matrix[1];
-            buffer[position++] = matrix[2];
+            buffer[position++] = 0;
             buffer[position++] = matrix[3];
             buffer[position++] = matrix[4];
-            buffer[position++] = matrix[5];
+            buffer[position++] = 0;
             buffer[position++] = matrix[6];
             buffer[position++] = matrix[7];
-            buffer[position++] = matrix[8];
+            buffer[position++] = 0;
         }
 
         index += 3;

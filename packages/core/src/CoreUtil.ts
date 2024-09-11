@@ -8,7 +8,7 @@ export const $PREFIX: string = "__next2d__";
  * @type {number}
  * @const
  */
-export const $devicePixelRatio: number = window.devicePixelRatio;
+export const $devicePixelRatio: number = Math.min(2, window.devicePixelRatio);
 
 /**
  * @param  {number} value

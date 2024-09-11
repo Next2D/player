@@ -43,7 +43,6 @@ export const execute = (
         vertexShaderSource = FILL_TEMPLATE(
             highpLength, true, false, has_grid
         );
-        console.log(vertexShaderSource);
     }
 
     const fragmentShaderSource = repeat

@@ -9,11 +9,11 @@ import { GRADIENT_TEMPLATE } from "../../../Fragment/FragmentShaderSourceGradien
  * @description グラデーションのシェーダを生成して返却
  *              Generate and return the shader of gradient
  *
- * @param {boolean} is_stroke
- * @param {boolean} has_grid
- * @param {boolean} is_radial
- * @param {boolean} has_focal_point
- * @param {number} spread_method
+ * @param  {boolean} is_stroke
+ * @param  {boolean} has_grid
+ * @param  {boolean} is_radial
+ * @param  {boolean} has_focal_point
+ * @param  {number} spread_method
  * @return {ShaderManager}
  * @method
  * @protected
