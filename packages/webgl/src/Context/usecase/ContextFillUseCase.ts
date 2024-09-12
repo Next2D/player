@@ -1,4 +1,3 @@
-import type { ShaderManager } from "../../Shader/ShaderManager";
 import { $getVertices } from "../../PathCommand";
 import { execute as vertexArrayObjectCreateFillObjectUseCase } from "../../VertexArrayObject/usecase/VertexArrayObjectBindFillMeshUseCase";
 import { execute as vertexArrayObjectReleaseVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseVertexArrayObjectService";
