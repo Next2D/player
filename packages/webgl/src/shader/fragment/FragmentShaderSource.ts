@@ -3,7 +3,7 @@
  * @method
  * @static
  */
-export const SOLID_COLOR = (): string =>
+export const SOLID_FILL_COLOR = (): string =>
 {
     return `#version 300 es
 precision mediump float;
@@ -13,6 +13,25 @@ out vec4 o_color;
 
 void main() {
     o_color = vec4(v_color.rgb * v_color.a, v_color.a);
+}`;
+};
+
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const SOLID_STROKE_COLOR = (): string =>
+{
+    return `#version 300 es
+precision mediump float;
+
+uniform vec4 u_mediump;
+
+out vec4 o_color;
+
+void main() {
+    o_color = vec4(u_mediump.rgb * u_mediump.a, u_mediump.a);
 }`;
 };
 

@@ -1,6 +1,6 @@
 import {
     FUNCTION_GRID_ON,
-    FUNCTION_GRID_OFF
+    FUNCTION_GRID_OFF_TO_STROKE
 } from "./VertexShaderLibrary";
 
 /**
@@ -63,7 +63,7 @@ export const STROKE_TEMPLATE = (
 
     const gridFunction: string = has_grid
         ? FUNCTION_GRID_ON(with_uv ? 5 : 0)
-        : FUNCTION_GRID_OFF();
+        : FUNCTION_GRID_OFF_TO_STROKE();
 
     return `#version 300 es
 
