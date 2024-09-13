@@ -21,7 +21,7 @@ export const execute = (is_stroke: boolean, has_grid: boolean): ShaderManager =>
         return $collection.get(key) as NonNullable<ShaderManager>;
     }
 
-    const highpLength: number = (has_grid ? 8 : 0) + (is_stroke ? 2 : 0);
+    const highpLength: number = (has_grid ? 8 : 0) + (is_stroke ? 4 : 0);
     const fragmentIndex: number = highpLength;
 
     let vertexShaderSource: string;
