@@ -44,7 +44,7 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
     blendOneZeroService();
 
     const maxLength = $getGradientLUTGeneratorMaxLength();
-    for (let begin = stops[0]; begin < stopsLength; begin += maxLength - 1) {
+    for (let begin = 0; begin < stopsLength; begin += maxLength - 1) {
 
         const end: number = Math.min(begin + maxLength, stopsLength);
 

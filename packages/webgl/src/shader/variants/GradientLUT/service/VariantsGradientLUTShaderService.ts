@@ -18,9 +18,9 @@ export const execute = (
     is_linear_space: boolean
 ): ShaderManager => {
 
-    const key1: string = ("00" + stops_length).slice(-3);
-    const key2: string = is_linear_space ? "y" : "n";
-    const key: string  = `l${key1}${key2}`;
+    const key1 = ("00" + stops_length).slice(-3);
+    const key2 = is_linear_space ? "y" : "n";
+    const key  = `l${key1}${key2}`;
 
     if ($collection.has(key)) {
         return $collection.get(key) as NonNullable<ShaderManager>;
