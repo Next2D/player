@@ -73,10 +73,11 @@ export const execute = (shader_manager: ShaderManager, has_grid: boolean): void 
     // vertex: u_miter_limit
     highp[index + 2] = $context.miterLimit;
 
+    console.log(shader_manager);
     // fragment: u_color
-    const mediump = shader_manager.mediump;
-    mediump[0] = $context.$strokeStyle[0];
-    mediump[1] = $context.$strokeStyle[1];
-    mediump[2] = $context.$strokeStyle[2];
-    mediump[3] = $context.$strokeStyle[3];
+    // const mediump = shader_manager.mediump;
+    // mediump[0] = $context.$strokeStyle[0];
+    // mediump[1] = $context.$strokeStyle[1];
+    // mediump[2] = $context.$strokeStyle[2];
+    // mediump[3] = $context.$strokeStyle[3];
 };

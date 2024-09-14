@@ -24,6 +24,7 @@ import { execute as contextBeginNodeRenderingService } from "./Context/service/C
 import { execute as contextEndNodeRenderingService } from "./Context/service/ContextEndNodeRenderingService";
 import { execute as contextFillUseCase } from "./Context/usecase/ContextFillUseCase";
 import { execute as contextGradientFillUseCase } from "./Context/usecase/ContextGradientFillUseCase";
+import { execute as contextGradientStrokeUseCase } from "./Context/usecase/ContextGradientStrokeUseCase";
 import { execute as contextClipUseCase } from "./Context/usecase/ContextClipUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
 import { execute as atlasManagerRemoveNodeService } from "./AtlasManager/service/AtlasManagerRemoveNodeService";
@@ -686,6 +687,36 @@ export class Context
     stroke (has_grid: boolean): void
     {
         contextStrokeUseCase(has_grid);
+    }
+
+    /**
+     * @description 線のグラデーションを実行
+     *              Perform gradient of the line
+     * 
+     * @param  {boolean} has_grid 
+     * @param  {number} type 
+     * @param  {array} stops 
+     * @param  {Float32Array} matrix 
+     * @param  {number} spread 
+     * @param  {number} interpolation 
+     * @param  {number} focal 
+     * @return {void}
+     * @method
+     * @public
+     */
+    gradientStroke (
+        has_grid: boolean,
+        type: number, 
+        stops: number[], 
+        matrix: Float32Array, 
+        spread: number, 
+        interpolation: number, 
+        focal: number
+    ): void {
+        contextGradientStrokeUseCase(
+            has_grid, type, stops, matrix, 
+            spread, interpolation, focal
+        );
     }
 
     /**

@@ -2,12 +2,13 @@ import type { ShaderManager } from "../../ShaderManager";
 import {
     $getViewportWidth,
     $getViewportHeight,
-    $clamp
+    $clamp,
+    $context
 } from "../../../WebGLUtil";
 
 /**
- * @description 塗りのグラデーションのuniformを設定
- *              Set fill gradient uniform
+ * @description 線のグラデーションのuniformを設定
+ *              Set line gradient uniform
  *
  * @param  {ShaderManager} shader_manager
  * @return {void}
@@ -60,6 +61,37 @@ export const execute = (
     if (has_grid) {
         index += 52;
     }
+
+    let face: number = Math.sign(matrix[0] * matrix[4]);
+    if (face > 0 && matrix[1] !== 0 && matrix[3] !== 0) {
+        face = -Math.sign(matrix[1] * matrix[3]);
+    }
+
+    let halfWidth: number = $context.thickness * 0.5;
+    let scaleX: number;
+    let scaleY: number;
+    if (has_grid) {
+        // todo
+        scaleX = 1;
+        scaleY = 1;
+    } else {
+        scaleX = Math.abs(matrix[0] + matrix[3]);
+        scaleY = Math.abs(matrix[1] + matrix[4]);
+    }
+
+    const scaleMin: number = Math.min(scaleX, scaleY);
+    const scaleMax: number = Math.max(scaleX, scaleY);
+    halfWidth *= scaleMax * (1 - 0.3 * Math.cos(Math.PI * 0.5 * (scaleMin / scaleMax)));
+    halfWidth = Math.max(1, halfWidth);
+
+    // vertex: u_half_width
+    highp[index] = halfWidth;
+    // vertex: u_face
+    highp[index + 1] = face;
+    // vertex: u_miter_limit
+    highp[index + 2] = $context.miterLimit;
+
+    index += 4;
 
     if (type === 0) {
         // fragment: u_linear_points

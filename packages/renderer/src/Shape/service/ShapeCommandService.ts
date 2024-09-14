@@ -123,6 +123,14 @@ export const execute = (
 
             case GRADIENT_FILL:
                 {
+                    if (is_clip) {
+                        index += 1;
+                        const length = commands[index++];
+                        index += length * 5;
+                        index += 9;
+                        break;
+                    }
+
                     const type = commands[index++];
 
                     const stops = $getArray();
@@ -156,6 +164,14 @@ export const execute = (
 
             case BITMAP_FILL:
                 {
+                    if (is_clip) {
+                        index += 2;
+                        const length = commands[index++];
+                        index += length;
+                        index += 8;
+                        break;
+                    }
+
                     const width  = commands[index++];
                     const height = commands[index++];
                     
@@ -183,7 +199,40 @@ export const execute = (
                 break;
 
             case GRADIENT_STROKE:
-                console.log("GRADIENT_STROKE");
+                
+                $context.thickness  = commands[index++];
+                $context.caps       = commands[index++];
+                $context.joints     = commands[index++];
+                $context.miterLimit = commands[index++];
+
+                const type = commands[index++];
+
+                const stops = $getArray();
+                const length = commands[index++];
+                for (let idx = 0; idx < length; ++idx) {
+                    stops.push(
+                        commands[index++], // ratio
+                        commands[index++], // red
+                        commands[index++], // green
+                        commands[index++], // blue
+                        commands[index++]  // alpha
+                    );
+                }
+
+                const matrix = new Float32Array([
+                    commands[index++], commands[index++], commands[index++],
+                    commands[index++], commands[index++], commands[index++]
+                ]);
+
+                const spread = commands[index++];
+                const interpolation = commands[index++];
+                const focal = commands[index++];
+
+                $context.gradientStroke(
+                    has_grid,
+                    type, stops, matrix, 
+                    spread, interpolation, focal
+                );
                 break;
 
             case BITMAP_STROKE:

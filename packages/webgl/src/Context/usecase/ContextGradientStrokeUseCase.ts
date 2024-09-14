@@ -1,16 +1,13 @@
 import type { ShaderManager } from "../../Shader/ShaderManager";
 import { $getVertices } from "../../PathCommand";
 import { execute as gradientLUTGenerateShapeTextureUseCase } from "../../Shader/GradientLUTGenerator/usecase/GradientLUTGenerateShapeTextureUseCase";
+import { execute as vertexArrayObjectBindStrokeMeshUseCase } from "../../VertexArrayObject/usecase/VertexArrayObjectBindStrokeMeshUseCase";
 import { execute as variantsGradientShapeShaderUseCase } from "../../Shader/Variants/Gradient/usecase/VariantsGradientShapeShaderUseCase";
-// import { execute as shaderManagerSetMaskUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMaskUniformService";
-import { execute as shaderManagerFillUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerFillUseCase";
-import { execute as vertexArrayObjectCreateFillObjectUseCase } from "../../VertexArrayObject/usecase/VertexArrayObjectBindFillMeshUseCase";
-import { execute as vertexArrayObjectReleaseVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseVertexArrayObjectService";
-import { execute as variantsShapeMaskShaderService } from "../../Shader/Variants/Shape/service/VariantsShapeMaskShaderService";
-import { execute as shaderManagerSetGradientFillUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetGradientFillUniformService";
+import { execute as shaderManagerSetGradientStrokeUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetGradientStrokeUniformService";
 import { execute as textureManagerBind0UseCase } from "../../TextureManager/usecase/TextureManagerBind0UseCase";
+import { execute as vertexArrayObjectReleaseStrokeVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseStrokeVertexArrayObjectService";
+import { execute as shaderManagerStrokeUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerStrokeUseCase";
 import {
-    $gl,
     $context,
     $inverseMatrix,
     $linearGradientXY,
@@ -19,9 +16,9 @@ import {
 } from "../../WebGLUtil";
 
 /**
- * @description グラデーション塗りを描画
- *              Draw a gradient fill
- * 
+ * @description 線のグラデーションを実行
+ *              Execute gradient of line
+ *
  * @param  {boolean} has_grid 
  * @param  {number} type 
  * @param  {array} stops 
@@ -42,7 +39,7 @@ export const execute = (
     interpolation: number, 
     focal: number
 ): void => {
-    
+
     const vertices = $getVertices();
     if (!vertices.length) {
         return ;
@@ -54,13 +51,13 @@ export const execute = (
     let shaderManager: ShaderManager | null= null;
     if (type === 0) { // linear
         shaderManager = variantsGradientShapeShaderUseCase(
-            false, has_grid, false, false, spread
+            true, has_grid, false, false, spread
         );
 
         const points = $linearGradientXY(matrix);
         
         const inverseMatrix = $inverseMatrix($context.$matrix);
-        shaderManagerSetGradientFillUniformService(
+        shaderManagerSetGradientStrokeUniformService(
             shaderManager, has_grid, type, $context.$matrix,
             inverseMatrix, 0, points
         );
@@ -76,13 +73,13 @@ export const execute = (
         );
 
         shaderManager = variantsGradientShapeShaderUseCase(
-            false, has_grid, true, Boolean(focal), spread
+            true, has_grid, true, Boolean(focal), spread
         );
 
         const prevMatrix = $context.$stack[$context.$stack.length - 1];
 
         const inverseMatrix = $inverseMatrix($context.$matrix);
-        shaderManagerSetGradientFillUniformService(
+        shaderManagerSetGradientStrokeUniformService(
             shaderManager, has_grid, type, prevMatrix,
             inverseMatrix, focal
         );
@@ -92,32 +89,12 @@ export const execute = (
         $poolFloat32Array6(inverseMatrix);
     }
 
-    const vertexArrayObject = vertexArrayObjectCreateFillObjectUseCase(vertices);
+    const vertexArrayObject = vertexArrayObjectBindStrokeMeshUseCase(vertices);
 
-    // mask on
-    $gl.enable($gl.STENCIL_TEST);
-    $gl.stencilMask(0xff);
+    shaderManagerStrokeUseCase(
+        shaderManager,
+        vertexArrayObject
+    );
 
-    // draw shape
-    $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
-    $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
-    $gl.stencilOp($gl.KEEP, $gl.INVERT, $gl.INVERT);
-    $gl.colorMask(false, false, false, false);
-
-    const coverageShader = variantsShapeMaskShaderService(false, has_grid);
-    // shaderManagerSetMaskUniformService(coverageShader, has_grid);
-    shaderManagerFillUseCase(coverageShader, vertexArrayObject);
-    $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
-
-    // draw shape range
-    $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
-    $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
-    $gl.colorMask(true, true, true, true);
-    shaderManagerFillUseCase(shaderManager as ShaderManager, vertexArrayObject);
-
-    // mask off
-    $gl.disable($gl.STENCIL_TEST);
-
-    // release vertex array
-    vertexArrayObjectReleaseVertexArrayObjectService(vertexArrayObject);
+    vertexArrayObjectReleaseStrokeVertexArrayObjectService(vertexArrayObject);
 };
