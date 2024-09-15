@@ -4,6 +4,7 @@ import type { LoaderInfo } from "../../LoaderInfo";
 import { execute as graphicsToNumberArrayService } from "../../Graphics/service/GraphicsToNumberArrayService";
 import { $poolArray } from "../../DisplayObjectUtil";
 import { BitmapData } from "../../BitmapData";
+import { Graphics } from "../../Graphics";
 
 /**
  * @description characterを元にShapeを構築
@@ -50,9 +51,30 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                 } else {
                     const bitmapData  = new BitmapData(bitmapWidth, bitmapHeight);
                     bitmapData.buffer = bitmap.imageBuffer;
-                    graphics
-                        .beginBitmapFill(bitmapData)
-                        .drawRect(0, 0, width, height);
+
+                    if (character.recodes) {
+                        const type = character.recodes[character.recodes.length - 10];
+                        if (type === Graphics.BITMAP_STROKE) {
+                            character.recodes.splice(12, 5);
+                            character.recodes.push(
+                                bitmapData, null, true, false
+                            );
+
+                            character.recodeBuffer = new Float32Array(
+                                graphicsToNumberArrayService(width, height, character.recodes)
+                            );
+                            $poolArray(character.recodes);
+                            character.recodes = null;
+                        }
+                    }
+
+                    if (character.recodeBuffer) {
+                        graphics.buffer = character.recodeBuffer;
+                    } else {
+                        graphics
+                            .beginBitmapFill(bitmapData)
+                            .drawRect(0, 0, width, height);
+                    }
                 }
             }
             break;

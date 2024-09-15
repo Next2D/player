@@ -6,8 +6,8 @@ import {
 } from "../../../WebGLUtil";
 
 /**
- * @description ShaderManagerの塗りのuniform変数を設定します。
- *              Set the fill uniform variables of the ShaderManager.
+ * @description ShaderManagerの線のuniform変数を設定します。
+ *              Set the line uniform variables of ShaderManager.
  *
  * @param  {ShaderManager} shader_manager
  * @param  {boolean} has_grid
@@ -15,8 +15,10 @@ import {
  * @method
  * @protected
  */
-export const execute = (shader_manager: ShaderManager, has_grid: boolean): void =>
-{
+export const execute = (
+    shader_manager: ShaderManager,
+    has_grid: boolean
+): void => {
     const highp  = shader_manager.highp;
     const matrix = $context.$matrix;
 
@@ -67,17 +69,18 @@ export const execute = (shader_manager: ShaderManager, has_grid: boolean): void 
     halfWidth = Math.max(1, halfWidth);
 
     // vertex: u_half_width
-    highp[index]     = halfWidth;
+    highp[index] = halfWidth;
+
     // vertex: u_face
     highp[index + 1] = face;
+
     // vertex: u_miter_limit
     highp[index + 2] = $context.miterLimit;
 
-    console.log(shader_manager);
     // fragment: u_color
-    // const mediump = shader_manager.mediump;
-    // mediump[0] = $context.$strokeStyle[0];
-    // mediump[1] = $context.$strokeStyle[1];
-    // mediump[2] = $context.$strokeStyle[2];
-    // mediump[3] = $context.$strokeStyle[3];
+    const mediump = shader_manager.mediump;
+    mediump[0] = $context.$strokeStyle[0];
+    mediump[1] = $context.$strokeStyle[1];
+    mediump[2] = $context.$strokeStyle[2];
+    mediump[3] = $context.$strokeStyle[3];
 };

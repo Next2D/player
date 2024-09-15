@@ -236,6 +236,12 @@ export const execute = (
                 break;
 
             case BITMAP_STROKE:
+
+                $context.thickness  = commands[index++];
+                $context.caps       = commands[index++];
+                $context.joints     = commands[index++];
+                $context.miterLimit = commands[index++];
+
                 console.log("BITMAP_STROKE");
                 break;
 

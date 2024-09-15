@@ -1339,7 +1339,7 @@ export class Graphics
         }
 
         // color
-        this._$lineType   = Graphics.STROKE_STYLE;
+        this._$lineType = Graphics.STROKE_STYLE;
 
         // valid
         if (typeof color === "string") {
