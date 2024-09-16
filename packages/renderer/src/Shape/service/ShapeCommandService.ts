@@ -199,50 +199,76 @@ export const execute = (
                 break;
 
             case GRADIENT_STROKE:
-                
-                $context.thickness  = commands[index++];
-                $context.caps       = commands[index++];
-                $context.joints     = commands[index++];
-                $context.miterLimit = commands[index++];
+                {
+                    $context.thickness  = commands[index++];
+                    $context.caps       = commands[index++];
+                    $context.joints     = commands[index++];
+                    $context.miterLimit = commands[index++];
 
-                const type = commands[index++];
+                    const type = commands[index++];
 
-                const stops = $getArray();
-                const length = commands[index++];
-                for (let idx = 0; idx < length; ++idx) {
-                    stops.push(
-                        commands[index++], // ratio
-                        commands[index++], // red
-                        commands[index++], // green
-                        commands[index++], // blue
-                        commands[index++]  // alpha
+                    const stops = $getArray();
+                    const length = commands[index++];
+                    for (let idx = 0; idx < length; ++idx) {
+                        stops.push(
+                            commands[index++], // ratio
+                            commands[index++], // red
+                            commands[index++], // green
+                            commands[index++], // blue
+                            commands[index++]  // alpha
+                        );
+                    }
+
+                    const matrix = new Float32Array([
+                        commands[index++], commands[index++], commands[index++],
+                        commands[index++], commands[index++], commands[index++]
+                    ]);
+    
+                    const spread = commands[index++];
+                    const interpolation = commands[index++];
+                    const focal = commands[index++];
+
+                    $context.gradientStroke(
+                        has_grid,
+                        type, stops, matrix, 
+                        spread, interpolation, focal
                     );
                 }
-
-                const matrix = new Float32Array([
-                    commands[index++], commands[index++], commands[index++],
-                    commands[index++], commands[index++], commands[index++]
-                ]);
-
-                const spread = commands[index++];
-                const interpolation = commands[index++];
-                const focal = commands[index++];
-
-                $context.gradientStroke(
-                    has_grid,
-                    type, stops, matrix, 
-                    spread, interpolation, focal
-                );
                 break;
 
             case BITMAP_STROKE:
+                {
+                    $context.thickness  = commands[index++];
+                    $context.caps       = commands[index++];
+                    $context.joints     = commands[index++];
+                    $context.miterLimit = commands[index++];
 
-                $context.thickness  = commands[index++];
-                $context.caps       = commands[index++];
-                $context.joints     = commands[index++];
-                $context.miterLimit = commands[index++];
+                    const width  = commands[index++];
+                    const height = commands[index++];
 
-                console.log("BITMAP_STROKE");
+                    const length = commands[index++];
+                    const buffer = new Uint8Array(
+                        commands.subarray(index, index + length)
+                    );
+                    index += length;
+
+                    $context.save();
+                    $context.transform(
+                        commands[index++], commands[index++], commands[index++],
+                        commands[index++], commands[index++], commands[index++]
+                    );
+
+                    const repeat = Boolean(commands[index++]);
+                    const smooth = Boolean(commands[index++]);
+                    
+                    $context.bitmapStroke(
+                        has_grid,
+                        buffer, width, height,
+                        repeat, smooth
+                    );
+
+                    $context.restore();
+                }
                 break;
 
         }

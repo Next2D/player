@@ -55,7 +55,8 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                     if (character.recodes) {
                         const type = character.recodes[character.recodes.length - 10];
                         if (type === Graphics.BITMAP_STROKE) {
-                            character.recodes.splice(12, 5);
+                            
+                            character.recodes.splice(-5, 5);
                             character.recodes.push(
                                 bitmapData, null, true, false
                             );

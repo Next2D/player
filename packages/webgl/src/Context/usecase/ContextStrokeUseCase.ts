@@ -16,7 +16,7 @@ import { execute as shaderManagerStrokeUseCase } from "../../Shader/ShaderManage
  */
 export const execute = (has_grid: boolean): void =>
 {
-    const vertices = $getVertices();
+    const vertices = $getVertices(true);
     if (!vertices.length) {
         return ;
     }

@@ -382,8 +382,6 @@ export const execute = (width: number, height: number, recodes : any[] | null): 
                     array.push(
                         bitmapData.width,
                         bitmapData.height,
-                        width,
-                        height,
                         buffer.length
                     );
 
@@ -393,10 +391,7 @@ export const execute = (width: number, height: number, recodes : any[] | null): 
 
                     const matrix: Float32Array = recodes[idx++];
                     if (matrix) {
-                        array.push(
-                            matrix[0], matrix[1], matrix[2],
-                            matrix[3], matrix[4], matrix[5]
-                        );
+                        array.push(...matrix);
                     } else {
                         array.push(1, 0, 0, 1, 0, 0);
                     }

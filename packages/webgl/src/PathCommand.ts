@@ -24,12 +24,13 @@ export const $vertices: IPath[] = $getArray();
  * @description 頂点配列を取得
  *              Get the vertex array
  *
+ * @param  {boolean} [stroke=false]
  * @return {array}
  * @method
  * @public
  */
-export const $getVertices = (): IPath[] =>
+export const $getVertices = (stroke: boolean = false): IPath[] =>
 {
-    pathCommandPushCurrentPathToVerticesService();
+    pathCommandPushCurrentPathToVerticesService(stroke);
     return $vertices;
 };

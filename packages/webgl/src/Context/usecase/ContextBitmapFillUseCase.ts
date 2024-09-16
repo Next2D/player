@@ -1,7 +1,7 @@
 import type { ShaderManager } from "../../Shader/ShaderManager";
 import { $getVertices } from "../../PathCommand";
 import { execute as variantsBitmapShaderService } from "../../Shader/Variants/Bitmap/service/VariantsBitmapShaderService";
-import { execute as shaderManagerSetBitmapUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetBitmapFillUniformService";
+import { execute as shaderManagerSetBitmapFillUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetBitmapFillUniformService";
 import { execute as vertexArrayObjectCreateFillObjectUseCase } from "../../VertexArrayObject/usecase/VertexArrayObjectBindFillMeshUseCase";
 import { execute as vertexArrayObjectReleaseVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseVertexArrayObjectService";
 import { execute as variantsShapeMaskShaderService } from "../../Shader/Variants/Shape/service/VariantsShapeMaskShaderService";
@@ -42,7 +42,7 @@ export const execute = (
     }
 
     const shaderManager = variantsBitmapShaderService(false, Boolean(repeat), Boolean(smooth));
-    shaderManagerSetBitmapUniformService(
+    shaderManagerSetBitmapFillUniformService(
         shaderManager, has_grid, width, height
     );
 

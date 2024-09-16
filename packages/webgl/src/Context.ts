@@ -40,6 +40,7 @@ import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService
 import { execute as maskLeaveMaskService } from "./Mask/service/MaskLeaveMaskService";
 import { execute as contextDrawPixelsUseCase } from "./Context/usecase/ContextDrawPixelsUseCase";
 import { execute as contextBitmapFillUseCase } from "./Context/usecase/ContextBitmapFillUseCase";
+import { execute as contextBitmapStrokeUseCase } from "./Context/usecase/ContextBitmapStrokeUseCase";
 import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStrokeUseCase";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
@@ -650,8 +651,8 @@ export class Context
     }
 
     /**
-     * @description ピクセルデータを描画
-     *              Draw pixel data
+     * @description 塗りのピクセルデータを描画
+     *              Draw pixel data of the fill
      * 
      * @param  {boolean} has_grid 
      * @param  {Uint8Array} pixels 
@@ -716,6 +717,33 @@ export class Context
         contextGradientStrokeUseCase(
             has_grid, type, stops, matrix, 
             spread, interpolation, focal
+        );
+    }
+
+    /**
+     * @description 線のピクセルデータを描画
+     *              Draw pixel data of the line
+     * 
+     * @param  {boolean} has_grid 
+     * @param  {Uint8Array} pixels 
+     * @param  {number} width 
+     * @param  {number} height
+     * @param  {boolean} repeat
+     * @param  {boolean} smooth
+     * @return {void}
+     * @method
+     * @public
+     */
+    bitmapStroke (
+        has_grid: boolean,
+        pixels: Uint8Array,
+        width: number,
+        height: number,
+        repeat: boolean,
+        smooth: boolean
+    ): void {
+        contextBitmapStrokeUseCase(
+            has_grid, pixels, width, height, repeat, smooth
         );
     }
 
