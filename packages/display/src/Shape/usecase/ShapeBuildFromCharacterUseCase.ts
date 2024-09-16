@@ -5,6 +5,7 @@ import { execute as graphicsToNumberArrayService } from "../../Graphics/service/
 import { $poolArray } from "../../DisplayObjectUtil";
 import { BitmapData } from "../../BitmapData";
 import { Graphics } from "../../Graphics";
+import { Rectangle } from "@next2d/geom";
 
 /**
  * @description characterを元にShapeを構築
@@ -137,4 +138,13 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
     graphics.xMax = character.bounds.xMax;
     graphics.yMin = character.bounds.yMin;
     graphics.yMax = character.bounds.yMax;
+
+    if (character.grid) {
+        shape.scale9Grid = new Rectangle(
+            character.grid.x,
+            character.grid.y,
+            character.grid.w,
+            character.grid.h
+        );
+    }
 };

@@ -88,24 +88,6 @@ export const $setContext = (context: Context): void =>
 };
 
 /**
- * @type {number}
- */
-let $programId: number = 0;
-
-/**
- * @description 管理用のユニークなプログラムIDを発行
- *              Issue a unique program ID for management
- *
- * @return {number}
- * @method
- * @protected
- */
-export const $getProgramId = (): number =>
-{
-    return $programId++;
-};
-
-/**
  * @description 指定された値を範囲内にクランプします。
  *              Clamps the specified value within the range.
  *

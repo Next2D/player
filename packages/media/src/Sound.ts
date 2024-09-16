@@ -7,7 +7,7 @@ import { execute as soundLoadUseCase } from "./Sound/usecase/SoundLoadUseCase";
 import { EventDispatcher } from "@next2d/events";
 import {
     $clamp,
-    $audioContext,
+    $getAudioContext,
     $getPlayingSounds
 } from "./MediaUtil";
 
@@ -237,18 +237,19 @@ export class Sound extends EventDispatcher
             return ;
         }
 
-        if (!this.audioBuffer || !$audioContext) {
+        if (!this.audioBuffer) {
             return ;
         }
 
         // 初期化
         this.stop();
 
-        this._$gainNode = $audioContext.createGain();
-        this._$gainNode.connect($audioContext.destination);
+        const audioContext = $getAudioContext();
+        this._$gainNode = audioContext.createGain();
+        this._$gainNode.connect(audioContext.destination);
         this._$gainNode.gain.value = Math.min(SoundMixer.volume, this._$volume);
 
-        this._$source = $audioContext.createBufferSource();
+        this._$source = audioContext.createBufferSource();
         this._$source.addEventListener("ended", (): void =>
         {
             soundEndedEventService(this);

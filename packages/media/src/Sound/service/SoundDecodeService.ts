@@ -1,4 +1,4 @@
-import { $audioContext } from "../../MediaUtil";
+import { $getAudioContext } from "../../MediaUtil";
 
 /**
  * @description ArrayBufferをデコードしてAudioBufferを返却
@@ -11,13 +11,9 @@ import { $audioContext } from "../../MediaUtil";
  */
 export const execute = async (array_buffer: ArrayBuffer): Promise<AudioBuffer | void> =>
 {
-    if (!$audioContext) {
-        return ;
-    }
-
     try {
 
-        return await $audioContext.decodeAudioData(array_buffer);
+        return await $getAudioContext().decodeAudioData(array_buffer);
 
     } catch (error) {
 

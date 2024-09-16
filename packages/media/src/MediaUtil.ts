@@ -6,7 +6,24 @@ import type { IAjaxOption } from "./interface/IAjaxOption";
  * @type {AudioContext}
  * @static
  */
-export const $audioContext: AudioContext | null = "AudioContext" in window ? new AudioContext() : null;
+let $audioContext: AudioContext | null = null;
+
+/**
+ * @description AudioContext を返却
+ *              Returns AudioContext.
+ * 
+ * @return {AudioContext}
+ * @method
+ * @protected
+ */
+export const $getAudioContext = (): AudioContext =>
+{
+    if (!$audioContext) {
+        $audioContext = new AudioContext();
+        $audioContext.resume();
+    }
+    return $audioContext;
+};
 
 /**
  * @param  {object} option

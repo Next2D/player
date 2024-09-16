@@ -1,8 +1,14 @@
 import type { IProgramObject } from "../../../interface/IProgramObject";
-import {
-    $getProgramId,
-    $gl
-} from "../../../WebGLUtil";
+import { $gl } from "../../../WebGLUtil";
+
+/**
+ * @description シェーダープログラムID
+ *              Shader program ID
+ * 
+ * @type {number}
+ * @private
+ */
+let $programId = 0;
 
 /**
  * @description 指定のシェーダープログラムを生成する
@@ -37,7 +43,7 @@ export const execute = (vertex_source: string, fragment_source: string): IProgra
     $gl.deleteShader(fragmentShader);
 
     return {
-        "id": $getProgramId(),
+        "id": $programId++,
         "resource": program
     };
 };
