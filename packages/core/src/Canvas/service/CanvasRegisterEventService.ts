@@ -1,3 +1,4 @@
+import { $bootAudioContext } from "@next2d/media";
 import {
     $POINTER_DOWN,
     $POINTER_UP,
@@ -13,6 +14,13 @@ import {
  */
 export const execute = (canvas: HTMLCanvasElement): void =>
 {
+    const $loadAudioContext = (): void =>
+    {
+        $bootAudioContext();
+        canvas.removeEventListener("pointerup", $loadAudioContext);
+    };
+    canvas.addEventListener("pointerup", $loadAudioContext);
+
     canvas.addEventListener($POINTER_DOWN, (event: PointerEvent): void =>
     {
         // イベントの伝播を止める

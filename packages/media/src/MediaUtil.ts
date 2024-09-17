@@ -9,6 +9,21 @@ import type { IAjaxOption } from "./interface/IAjaxOption";
 let $audioContext: AudioContext | null = null;
 
 /**
+ * @description AudioContext を起動
+ *              Start AudioContext.
+ * 
+ * @method
+ * @private
+ */
+export const $bootAudioContext = (): void =>
+{
+    if (!$audioContext) {
+        $audioContext = new AudioContext();
+    }
+    $audioContext.resume();
+};
+
+/**
  * @description AudioContext を返却
  *              Returns AudioContext.
  * 
@@ -20,7 +35,6 @@ export const $getAudioContext = (): AudioContext =>
 {
     if (!$audioContext) {
         $audioContext = new AudioContext();
-        $audioContext.resume();
     }
     return $audioContext;
 };
