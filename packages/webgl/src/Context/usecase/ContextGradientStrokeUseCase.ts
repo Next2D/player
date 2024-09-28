@@ -19,7 +19,6 @@ import {
  * @description 線のグラデーションを実行
  *              Execute gradient of line
  *
- * @param  {boolean} has_grid 
  * @param  {number} type 
  * @param  {array} stops 
  * @param  {Float32Array} matrix 
@@ -31,7 +30,6 @@ import {
  * @protected
  */
 export const execute = (
-    has_grid: boolean,
     type: number, 
     stops: number[], 
     matrix: Float32Array, 
@@ -51,14 +49,14 @@ export const execute = (
     let shaderManager: ShaderManager | null= null;
     if (type === 0) { // linear
         shaderManager = variantsGradientShapeShaderUseCase(
-            true, has_grid, false, false, spread
+            true, false, false, spread
         );
 
         const points = $linearGradientXY(matrix);
         
         const inverseMatrix = $inverseMatrix($context.$matrix);
         shaderManagerSetGradientStrokeUniformService(
-            shaderManager, has_grid, type, $context.$matrix,
+            shaderManager, type, $context.$matrix,
             inverseMatrix, 0, points
         );
 
@@ -73,14 +71,14 @@ export const execute = (
         );
 
         shaderManager = variantsGradientShapeShaderUseCase(
-            true, has_grid, true, Boolean(focal), spread
+            true, true, Boolean(focal), spread
         );
 
         const prevMatrix = $context.$stack[$context.$stack.length - 1];
 
         const inverseMatrix = $inverseMatrix($context.$matrix);
         shaderManagerSetGradientStrokeUniformService(
-            shaderManager, has_grid, type, prevMatrix,
+            shaderManager, type, prevMatrix,
             inverseMatrix, focal
         );
 

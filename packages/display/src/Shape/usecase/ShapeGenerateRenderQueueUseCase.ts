@@ -1,14 +1,19 @@
 import type { Shape } from "../../Shape";
+import type { Rectangle } from"@next2d/geom";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as shapeGenerateHashService } from "../service/ShapeGenerateHashService";
+import { $stage } from "../../Stage";
 import { $cacheStore } from "@next2d/cache";
 import {
     $clamp,
     $RENDERER_SHAPE_TYPE,
     $getArray,
-    $poolArray
+    $poolArray,
+    $MATRIX_ARRAY_IDENTITY,
+    $getFloat32Array6,
+    $poolFloat32Array6
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
@@ -82,6 +87,7 @@ export const execute = (
     const yMin: number = bounds[1];
     const xMax: number = bounds[2];
     const yMax: number = bounds[3];
+    $poolArray(bounds);
 
     const width: number  = Math.ceil(Math.abs(xMax - xMin));
     const height: number = Math.ceil(Math.abs(yMax - yMin));
@@ -135,11 +141,11 @@ export const execute = (
         graphics.yMax
     );
     
-    const hasGrid: boolean = rawMatrix && shape.scale9Grid
+    const isGridEnabled: boolean = rawMatrix && shape.scale9Grid
         ? Math.abs(rawMatrix[1]) < 0.001 && Math.abs(rawMatrix[2]) < 0.0001
         : false;
 
-    render_queue.push(+hasGrid);
+    render_queue.push(+isGridEnabled);
     render_queue.push(+isDrawable);
     render_queue.push(+shape.isBitmap);
 
@@ -218,6 +224,91 @@ export const execute = (
     const cache = $cacheStore.get(shape.uniqueKey, `${cacheKey}`);
     if (!cache) {
         render_queue.push(0);
+
+        if (isGridEnabled) {
+
+            const scale = $stage.rendererScale;
+            
+            const stageMatrix = $getFloat32Array6(
+                scale, 0, 0, scale, 0, 0
+            );
+
+            const pMatrix = Matrix.multiply(
+                stageMatrix, 
+                rawMatrix ? rawMatrix : $MATRIX_ARRAY_IDENTITY
+            );
+            $poolFloat32Array6(stageMatrix);
+
+            const rawData = shape.parent.concatenatedMatrix.rawData;
+            const aMatrix = $getFloat32Array6(
+                rawData[0], rawData[1], rawData[2], rawData[3],
+                rawData[4] * scale - xMin,
+                rawData[5] * scale - yMin
+            );
+            Matrix.release(rawData);
+
+            const apMatrix = Matrix.multiply(aMatrix, pMatrix);
+            const aOffsetX = apMatrix[4] - (tMatrix[4] - xMin);
+            const aOffsetY = apMatrix[5] - (tMatrix[5] - yMin);
+            $poolFloat32Array6(apMatrix);
+
+            const parentBounds = displayObjectCalcBoundsMatrixService(
+                graphics.xMin, graphics.yMin, 
+                graphics.xMax, graphics.yMax,
+                pMatrix
+            );
+
+            const parentXMin = parentBounds[0];
+            const parentYMin = parentBounds[1];
+            const parentXMax = parentBounds[2];
+            const parentYMax = parentBounds[3];
+            $poolArray(parentBounds);
+
+            const parentWidth  = Math.ceil(Math.abs(parentXMax - parentXMin));
+            const parentHeight = Math.ceil(Math.abs(parentYMax - parentYMin));
+
+            const scale9Grid = shape.scale9Grid as Rectangle;
+
+            const actualWidth  = Math.abs(graphics.xMax - graphics.xMin);
+            const actualHeight = Math.abs(graphics.yMax - graphics.yMin);
+
+            // 等倍サイズでの正規化
+            const minXST = scale9Grid.width  > 0 ? (scale9Grid.x - graphics.xMin) / actualWidth  : 0.00001;
+            const minYST = scale9Grid.height > 0 ? (scale9Grid.y - graphics.yMin) / actualHeight : 0.00001;
+            const maxXST = scale9Grid.width  > 0 ? (scale9Grid.x + scale9Grid.width  - graphics.xMin) / actualWidth  : 0.99999;
+            const maxYST = scale9Grid.height > 0 ? (scale9Grid.y + scale9Grid.height - graphics.yMin) / actualHeight : 0.99999;
+    
+            // 現在サイズでの正規化
+            const sameWidth  = Math.ceil(actualWidth  * scale);
+            const sameHeight = Math.ceil(actualHeight * scale);
+            let minXPQ = sameWidth  * minXST / parentWidth;
+            let minYPQ = sameHeight * minYST / parentHeight;
+            let maxXPQ = (parentWidth  - sameWidth  * (1 - maxXST)) / parentWidth;
+            let maxYPQ = (parentHeight - sameHeight * (1 - maxYST)) / parentHeight;
+
+            if (minXPQ >= maxXPQ) {
+                const m = minXST / (minXST + (1 - maxXST));
+                minXPQ = Math.max(m - 0.00001, 0);
+                maxXPQ = Math.min(m + 0.00001, 1);
+            }
+    
+            if (minYPQ >= maxYPQ) {
+                const m = minYST / (minYST + (1 - maxYST));
+                minYPQ = Math.max(m - 0.00001, 0);
+                maxYPQ = Math.min(m + 0.00001, 1);
+            }
+
+            render_queue.push(
+                pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
+                aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY,
+                parentXMin, parentYMin, parentWidth, parentHeight,
+                minXST, minYST, minXPQ, minYPQ,
+                maxXST, maxYST, maxXPQ, maxYPQ
+            );
+
+            $poolFloat32Array6(aMatrix);
+            $poolFloat32Array6(pMatrix);
+        }
 
         const buffer = isDrawable
             ? graphics.buffer

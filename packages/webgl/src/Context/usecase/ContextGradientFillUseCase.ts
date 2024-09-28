@@ -22,7 +22,6 @@ import {
  * @description グラデーション塗りを描画
  *              Draw a gradient fill
  * 
- * @param  {boolean} has_grid 
  * @param  {number} type 
  * @param  {array} stops 
  * @param  {Float32Array} matrix 
@@ -34,7 +33,6 @@ import {
  * @protected
  */
 export const execute = (
-    has_grid: boolean,
     type: number, 
     stops: number[], 
     matrix: Float32Array, 
@@ -54,14 +52,14 @@ export const execute = (
     let shaderManager: ShaderManager | null= null;
     if (type === 0) { // linear
         shaderManager = variantsGradientShapeShaderUseCase(
-            false, has_grid, false, false, spread
+            false, false, false, spread
         );
 
         const points = $linearGradientXY(matrix);
         
         const inverseMatrix = $inverseMatrix($context.$matrix);
         shaderManagerSetGradientFillUniformService(
-            shaderManager, has_grid, type, $context.$matrix,
+            shaderManager, type, $context.$matrix,
             inverseMatrix, 0, points
         );
 
@@ -76,14 +74,14 @@ export const execute = (
         );
 
         shaderManager = variantsGradientShapeShaderUseCase(
-            false, has_grid, true, Boolean(focal), spread
+            false, true, Boolean(focal), spread
         );
 
         const prevMatrix = $context.$stack[$context.$stack.length - 1];
 
         const inverseMatrix = $inverseMatrix($context.$matrix);
         shaderManagerSetGradientFillUniformService(
-            shaderManager, has_grid, type, prevMatrix,
+            shaderManager, type, prevMatrix,
             inverseMatrix, focal
         );
 
@@ -104,8 +102,8 @@ export const execute = (
     $gl.stencilOp($gl.KEEP, $gl.INVERT, $gl.INVERT);
     $gl.colorMask(false, false, false, false);
 
-    const coverageShader = variantsShapeMaskShaderService(false, has_grid);
-    // shaderManagerSetMaskUniformService(coverageShader, has_grid);
+    const coverageShader = variantsShapeMaskShaderService(false);
+    // todo grid
     shaderManagerFillUseCase(coverageShader, vertexArrayObject);
     $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
 
@@ -113,6 +111,7 @@ export const execute = (
     $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
     $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
     $gl.colorMask(true, true, true, true);
+    // todo grid
     shaderManagerFillUseCase(shaderManager as ShaderManager, vertexArrayObject);
 
     // mask off

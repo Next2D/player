@@ -2,8 +2,11 @@ import { execute as displayObjectContainerRenderUseCase } from "../../DisplayObj
 import { execute as shapeRenderUseCase } from "../../Shape/usecase/ShapeRenderUseCase";
 import { execute as textFieldRenderUseCase } from "../../TextField/usecase/TextFieldRenderUseCase";
 import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUseCase";
-import { $canvas, $context, $isResize, $resizeComplete } from "../../RendererUtil"; 
-import { IAttachmentObject } from "../../../../webgl/src/interface/IAttachmentObject";
+import {
+    $context,
+    $isResize,
+    $resizeComplete
+} from "../../RendererUtil"; 
 
 /**
  * @type {number}

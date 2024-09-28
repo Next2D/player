@@ -59,6 +59,7 @@ vec2 applyMatrix(in vec2 vertex) {
         u_highp[${index + 4}].xyz,
         u_highp[${index + 5}].xyz
     );
+
     vec2 parent_offset = vec2(u_highp[${index + 2}].w, u_highp[${index + 3}].w);
     vec2 parent_size   = vec2(u_highp[${index + 4}].w, u_highp[${index + 5}].w);
     vec4 grid_min = u_highp[${index + 6}];
@@ -82,6 +83,7 @@ vec2 applyMatrix(in vec2 vertex) {
     position = position * parent_size + parent_offset;
     position = (ancestor_matrix * vec3(position, 1.0)).xy;
 
-    return position;
+    position = position + vec2(u_highp[8].x, u_highp[8].y);
+    return position / vec2(u_highp[0].w, u_highp[1].w);
 }`;
 };

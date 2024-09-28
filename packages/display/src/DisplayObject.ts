@@ -8,6 +8,7 @@ import type { MovieClip } from "./MovieClip";
 import { execute as displayObjectGetPlaceObjectService } from "./DisplayObject/service/DisplayObjectGetPlaceObjectService";
 import { execute as displayObjectBuildFilterService } from "./DisplayObject/service/DisplayObjectBuildFilterService";
 import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
+import { execute as displayObjectConcatenatedMatrixUseCase } from "./DisplayObject/usecase/DisplayObjectConcatenatedMatrixUseCase";
 import { EventDispatcher } from "@next2d/events";
 import type {
     ColorTransform,
@@ -223,8 +224,18 @@ export class DisplayObject extends EventDispatcher
      * @default null
      * @protected
      */
-    protected _$matrix: Matrix | null;
-    protected _$colorTransform: ColorTransform | null;
+    public $matrix: Matrix | null;
+
+    /**
+     * @description 固定されたカラートランスフォーム、nullの場合はPlaceObjectのカラートランスフォームを検索します。
+     *              Fixed color transform, if null, search for PlaceObject color transform.
+     *
+     * @type {ColorTransform}
+     * @default null
+     * @protected
+     */
+    public $colorTransform: ColorTransform | null;
+
     protected _$filters: IFilterArray | null;
     protected _$blendMode: IBlendMode | null;
 
@@ -273,6 +284,9 @@ export class DisplayObject extends EventDispatcher
         this.$added        = false;
         this.$addedToStage = false;
 
+        this.$matrix         = null;
+        this.$colorTransform = null;
+
         this._$filters = null;
         this._$blendMode = null;
 
@@ -287,6 +301,18 @@ export class DisplayObject extends EventDispatcher
         this._$scaleX   = null;
         this._$scaleY   = null;
         this._$rotation = null;
+    }
+
+    /**
+     * @description この表示オブジェクトおよびルートレベルまでのそのすべての親オブジェクトの結合された Matrix を返却します。
+     *              Returns a concatenated Matrix object representing the combined transformation matrixes of the display object and all of its parent objects, back to the root level.
+     * 
+     * @member  {Matrix}
+     * @readonly
+     */
+    get concatenatedMatrix (): Matrix
+    {
+        return displayObjectConcatenatedMatrixUseCase(this);
     }
 
     // /**

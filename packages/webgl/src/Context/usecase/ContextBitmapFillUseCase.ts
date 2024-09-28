@@ -15,7 +15,6 @@ import { $gl } from "../../WebGLUtil";
  * @description パスコマンドのビットマップ塗り実行します。
  *              Execute bitmap painting of path commands.
  * 
- * @param  {boolean} has_grid 
  * @param  {Uint8Array} pixels 
  * @param  {number} width 
  * @param  {number} height 
@@ -26,7 +25,6 @@ import { $gl } from "../../WebGLUtil";
  * @protected
  */
 export const execute = (
-    has_grid: boolean,
     pixels: Uint8Array,
     width: number,
     height: number,
@@ -43,7 +41,7 @@ export const execute = (
 
     const shaderManager = variantsBitmapShaderService(false, Boolean(repeat), Boolean(smooth));
     shaderManagerSetBitmapFillUniformService(
-        shaderManager, has_grid, width, height
+        shaderManager, width, height
     );
 
     const vertexArrayObject = vertexArrayObjectCreateFillObjectUseCase(vertices);

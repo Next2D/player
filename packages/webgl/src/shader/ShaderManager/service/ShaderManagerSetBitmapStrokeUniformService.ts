@@ -1,4 +1,5 @@
 import type { ShaderManager } from "../../ShaderManager";
+import { $gridEnabled } from "../../../Grid";
 import {
     $context,
     $inverseMatrix,
@@ -11,7 +12,6 @@ import {
  *              Set the fill uniform variables of the ShaderManager.
  *
  * @param  {ShaderManager} shader_manager
- * @param  {boolean} has_grid
  * @param  {number} width
  * @param  {number} height
  * @return {void}
@@ -20,7 +20,6 @@ import {
  */
 export const execute = (
     shader_manager: ShaderManager, 
-    has_grid: boolean,
     width: number,
     height: number
 ): void =>
@@ -60,7 +59,8 @@ export const execute = (
     highp[7] = $getViewportHeight();
 
     let index = 20;
-    if (has_grid) {
+    const isGridEnabled = $gridEnabled();
+    if (isGridEnabled) {
         index += 52;
     }
     let face: number = Math.sign(matrix[0] * matrix[4]);
@@ -71,7 +71,7 @@ export const execute = (
     let halfWidth: number = $context.thickness * 0.5;
     let scaleX: number;
     let scaleY: number;
-    if (has_grid) {
+    if (isGridEnabled) {
         // todo
         scaleX = 1;
         scaleY = 1;

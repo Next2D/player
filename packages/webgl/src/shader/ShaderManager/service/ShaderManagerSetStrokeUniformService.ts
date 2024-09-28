@@ -1,4 +1,5 @@
 import type { ShaderManager } from "../../ShaderManager";
+import { $gridEnabled } from "../../../Grid";
 import {
     $context,
     $getViewportWidth,
@@ -10,20 +11,18 @@ import {
  *              Set the line uniform variables of ShaderManager.
  *
  * @param  {ShaderManager} shader_manager
- * @param  {boolean} has_grid
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (
-    shader_manager: ShaderManager,
-    has_grid: boolean
-): void => {
+export const execute = (shader_manager: ShaderManager): void =>
+{
     const highp  = shader_manager.highp;
     const matrix = $context.$matrix;
 
     let index = 0;
-    if (!has_grid) {
+    const isGridEnabled = $gridEnabled();
+    if (!isGridEnabled) {
         // vertex: u_matrix
         highp[0]  = matrix[0];
         highp[1]  = matrix[1];
@@ -54,7 +53,7 @@ export const execute = (
     let halfWidth: number = $context.thickness * 0.5;
     let scaleX: number;
     let scaleY: number;
-    if (has_grid) {
+    if (isGridEnabled) {
         // todo
         scaleX = 1;
         scaleY = 1;

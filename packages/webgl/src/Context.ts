@@ -42,6 +42,9 @@ import { execute as contextDrawPixelsUseCase } from "./Context/usecase/ContextDr
 import { execute as contextBitmapFillUseCase } from "./Context/usecase/ContextBitmapFillUseCase";
 import { execute as contextBitmapStrokeUseCase } from "./Context/usecase/ContextBitmapStrokeUseCase";
 import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStrokeUseCase";
+import { execute as contextBeginGridService } from "./Context/service/ContextBeginGridService";
+import { execute as contextEndGridService } from "./Context/service/ContextEndGridService";
+import { execute as contextSetGridOffsetService } from "./Context/service/ContextSetGridOffsetService";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
 import {
@@ -610,21 +613,19 @@ export class Context
      * @description 塗りつぶしを実行
      *              Perform fill
      * 
-     * @param  {boolean} has_grid
      * @return {void}
      * @method
      * @public
      */
-    fill (has_grid: boolean): void
+    fill (): void
     {
-        contextFillUseCase(has_grid);
+        contextFillUseCase();
     }
 
     /**
      * @description グラデーションの塗りつぶしを実行
      *              Perform gradient fill
      * 
-     * @param  {boolean} has_grid 
      * @param  {number} type 
      * @param  {array} stops 
      * @param  {Float32Array} matrix 
@@ -636,7 +637,6 @@ export class Context
      * @public
      */
     gradientFill (
-        has_grid: boolean,
         type: number, 
         stops: number[], 
         matrix: Float32Array, 
@@ -645,7 +645,7 @@ export class Context
         focal: number
     ): void {
         contextGradientFillUseCase(
-            has_grid, type, stops, matrix, 
+            type, stops, matrix, 
             spread, interpolation, focal
         );
     }
@@ -654,7 +654,6 @@ export class Context
      * @description 塗りのピクセルデータを描画
      *              Draw pixel data of the fill
      * 
-     * @param  {boolean} has_grid 
      * @param  {Uint8Array} pixels 
      * @param  {number} width 
      * @param  {number} height
@@ -665,7 +664,6 @@ export class Context
      * @public
      */
     bitmapFill (
-        has_grid: boolean,
         pixels: Uint8Array,
         width: number,
         height: number,
@@ -673,7 +671,7 @@ export class Context
         smooth: boolean
     ): void {
         contextBitmapFillUseCase(
-            has_grid, pixels, width, height, repeat, smooth
+            pixels, width, height, repeat, smooth
         );
     }
 
@@ -685,16 +683,15 @@ export class Context
      * @method
      * @public
      */
-    stroke (has_grid: boolean): void
+    stroke (): void
     {
-        contextStrokeUseCase(has_grid);
+        contextStrokeUseCase();
     }
 
     /**
      * @description 線のグラデーションを実行
      *              Perform gradient of the line
      * 
-     * @param  {boolean} has_grid 
      * @param  {number} type 
      * @param  {array} stops 
      * @param  {Float32Array} matrix 
@@ -706,7 +703,6 @@ export class Context
      * @public
      */
     gradientStroke (
-        has_grid: boolean,
         type: number, 
         stops: number[], 
         matrix: Float32Array, 
@@ -715,7 +711,7 @@ export class Context
         focal: number
     ): void {
         contextGradientStrokeUseCase(
-            has_grid, type, stops, matrix, 
+            type, stops, matrix, 
             spread, interpolation, focal
         );
     }
@@ -724,7 +720,6 @@ export class Context
      * @description 線のピクセルデータを描画
      *              Draw pixel data of the line
      * 
-     * @param  {boolean} has_grid 
      * @param  {Uint8Array} pixels 
      * @param  {number} width 
      * @param  {number} height
@@ -735,7 +730,6 @@ export class Context
      * @public
      */
     bitmapStroke (
-        has_grid: boolean,
         pixels: Uint8Array,
         width: number,
         height: number,
@@ -743,7 +737,7 @@ export class Context
         smooth: boolean
     ): void {
         contextBitmapStrokeUseCase(
-            has_grid, pixels, width, height, repeat, smooth
+            pixels, width, height, repeat, smooth
         );
     }
 
@@ -751,14 +745,13 @@ export class Context
      * @description マスク処理を実行
      *              Perform mask processing
      * 
-     * @param  {boolean} has_grid
      * @return {void}
      * @method
      * @public
      */
-    clip (has_grid: boolean): void
+    clip (): void
     {
-        contextClipUseCase(has_grid);
+        contextClipUseCase();
     }
 
     /**
@@ -984,5 +977,47 @@ export class Context
     {
         this.drawArraysInstanced();
         maskLeaveMaskService();
+    }
+
+    /**
+     * @description グリッドの描画を開始
+     *              Start drawing the grid
+     * 
+     * @param {Float32Array} grid_data 
+     * @return {void}
+     * @method
+     * @public
+     */
+    beginGrid (grid_data: Float32Array): void
+    {
+        contextBeginGridService(grid_data);
+    }
+
+    /**
+     * @description グリッドの描画を終了
+     *              End drawing the grid
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    endGrid (): void
+    {
+        contextEndGridService();
+    }
+
+    /**
+     * @description グリッドのオフセットを設定
+     *              Set the grid offset
+     * 
+     * @param  {number} x 
+     * @param  {number} y
+     * @return {void}
+     * @method
+     * @public
+     */
+    setGridOffset (x: number, y: number): void
+    {
+        contextSetGridOffsetService(x, y);
     }
 }

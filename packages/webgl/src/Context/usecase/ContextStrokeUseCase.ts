@@ -9,12 +9,11 @@ import { execute as shaderManagerStrokeUseCase } from "../../Shader/ShaderManage
  * @description ストロークを描画
  *              Draw a stroke
  * 
- * @param  {boolean} has_grid 
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (has_grid: boolean): void =>
+export const execute = (): void =>
 {
     const vertices = $getVertices(true);
     if (!vertices.length) {
@@ -23,8 +22,8 @@ export const execute = (has_grid: boolean): void =>
 
     const vertexArrayObject = vertexArrayObjectBindStrokeMeshUseCase(vertices);
 
-    const shaderManager = variantsShapeSolidColorShaderService(true, has_grid);
-    shaderManagerSetStrokeUniformService(shaderManager, has_grid);
+    const shaderManager = variantsShapeSolidColorShaderService(true);
+    shaderManagerSetStrokeUniformService(shaderManager);
 
     shaderManagerStrokeUseCase(
         shaderManager,

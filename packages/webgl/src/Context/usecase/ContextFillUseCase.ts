@@ -3,8 +3,8 @@ import { execute as vertexArrayObjectCreateFillObjectUseCase } from "../../Verte
 import { execute as vertexArrayObjectReleaseVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseVertexArrayObjectService";
 import { execute as variantsShapeSolidColorShaderService } from "../../Shader/Variants/Shape/service/VariantsShapeSolidColorShaderService";
 import { execute as variantsShapeMaskShaderService } from "../../Shader/Variants/Shape/service/VariantsShapeMaskShaderService";
-// import { execute as shaderManagerSetFillUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetFillUniformService";
-// import { execute as shaderManagerSetMaskUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMaskUniformService";
+import { execute as shaderManagerSetFillUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetFillUniformService";
+import { execute as shaderManagerSetMaskUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMaskUniformService";
 import { execute as shaderManagerFillUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerFillUseCase";
 import { $gl } from "../../WebGLUtil";
 
@@ -12,12 +12,11 @@ import { $gl } from "../../WebGLUtil";
  * @description Contextのパスコマンドの塗り実行します。
  *              Execute Context path command painting.
  *
- * @param  {boolean} has_grid
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (has_grid: boolean): void =>
+export const execute = (): void =>
 {
     const vertices = $getVertices();
     if (!vertices.length) {
@@ -36,8 +35,8 @@ export const execute = (has_grid: boolean): void =>
     $gl.stencilOp($gl.KEEP, $gl.INVERT, $gl.INVERT);
     $gl.colorMask(false, false, false, false);
 
-    const coverageShader = variantsShapeMaskShaderService(false, has_grid);
-    // shaderManagerSetMaskUniformService(coverageShader, has_grid);
+    const coverageShader = variantsShapeMaskShaderService(false);
+    shaderManagerSetMaskUniformService(coverageShader);
     shaderManagerFillUseCase(coverageShader, vertexArrayObject);
     $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
 
@@ -46,8 +45,8 @@ export const execute = (has_grid: boolean): void =>
     $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
     $gl.colorMask(true, true, true, true);
 
-    const shaderManager = variantsShapeSolidColorShaderService(false, has_grid);
-    // shaderManagerSetFillUniformService(shaderManager, has_grid);
+    const shaderManager = variantsShapeSolidColorShaderService(false);
+    shaderManagerSetFillUniformService(shaderManager);
     shaderManagerFillUseCase(shaderManager, vertexArrayObject);
 
     // mask off

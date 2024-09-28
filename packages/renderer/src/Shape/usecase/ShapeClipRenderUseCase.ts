@@ -23,15 +23,26 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         matrix[3], matrix[4], matrix[5]
     );
 
-    const hasGrid = Boolean(render_queue[index++]);
+    const isGridEnabled = Boolean(render_queue[index++]);
+    if (isGridEnabled) {
+        $context.beginGrid(
+            render_queue.subarray(index, index + 24)
+        );
+        index += 24;
+        $context.setGridOffset(0, 0);
+    }
 
     const length = render_queue[index++];
     const commands = render_queue.subarray(index, index + length);
-    shapeCommandService(commands, false, true);
+    shapeCommandService(commands, true);
 
     index += length;
     
-    $context.clip(hasGrid);
+    $context.clip();
+
+    if (isGridEnabled) {
+        $context.endGrid();
+    }
 
     return index;
 };

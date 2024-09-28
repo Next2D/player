@@ -1,7 +1,7 @@
 import type { IPlaceObject } from "../../interface/IPlaceObject";
 import type { DisplayObject } from "../../DisplayObject";
 import { execute as displayObjectGetPlaceObjectService } from "../service/DisplayObjectGetPlaceObjectService";
-import { $getFloat32Array6 } from "../../DisplayObjectUtil";
+import { $getFloat32Array6, $MATRIX_ARRAY_IDENTITY } from "../../DisplayObjectUtil";
 
 /**
  * @description DisplayObjectの内部Float32Arrayデータを返却、存在しない場合は固定のFloat32Arrayデータを返却
@@ -15,6 +15,10 @@ import { $getFloat32Array6 } from "../../DisplayObjectUtil";
  */
 export const execute = <D extends DisplayObject>(display_object: D): Float32Array | null => 
 {
+    if (display_object.$matrix) {
+        return display_object.$matrix.rawData;
+    }
+
     const placeObject: IPlaceObject | null = displayObjectGetPlaceObjectService(display_object);
     if (!placeObject || !placeObject.matrix) {
         return null;

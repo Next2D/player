@@ -41,14 +41,16 @@ export const STATEMENT_UV_ON = (): string =>
  * @param  {number}  highp_length
  * @param  {number}  fragment_index
  * @param  {boolean} with_uv
- * @param  {boolean} has_grid
+ * @param  {boolean} is_grid_enabled
  * @return {string}
  * @method
  * @static
  */
 export const STROKE_TEMPLATE = (
-    highp_length: number, fragment_index: number,
-    with_uv: boolean, has_grid: boolean
+    highp_length: number,
+    fragment_index: number,
+    with_uv: boolean,
+    is_grid_enabled: boolean
 ): string => {
 
     const strokeIndex: number = fragment_index - 1;
@@ -61,7 +63,7 @@ export const STROKE_TEMPLATE = (
         ? STATEMENT_UV_ON()
         : "";
 
-    const gridFunction: string = has_grid
+    const gridFunction: string = is_grid_enabled
         ? FUNCTION_GRID_ON(with_uv ? 5 : 0)
         : FUNCTION_GRID_OFF_TO_STROKE();
 

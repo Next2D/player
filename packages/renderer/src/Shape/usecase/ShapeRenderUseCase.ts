@@ -32,9 +32,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const xMax = render_queue[index++];
     const yMax = render_queue[index++];
 
-    const hasGrid    = render_queue[index++];
-    const isDrawable = Boolean(render_queue[index++]);
-    const isBitmap   = Boolean(render_queue[index++]);
+    const isGridEnabled = Boolean(render_queue[index++]);
+    const isDrawable    = Boolean(render_queue[index++]);
+    const isBitmap      = Boolean(render_queue[index++]);
 
     // cache uniqueKey
     const uniqueKey = `${render_queue[index++]}`; 
@@ -69,6 +69,13 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     let node: Node;
     const hasCache = render_queue[index++];
     if (!hasCache) {
+
+        if (isGridEnabled) {
+            $context.beginGrid(
+                render_queue.subarray(index, index + 24)
+            );
+            index += 24;
+        }
         
         const length = render_queue[index++];
         const commands = render_queue.subarray(index, index + length);
@@ -96,8 +103,12 @@ export const execute = (render_queue: Float32Array, index: number): number =>
                 offsetY
             );
 
+            if (isGridEnabled) {
+                $context.setGridOffset(node.x, offsetY);
+            }
+
             if (isDrawable) {
-                shapeCommandService(commands, Boolean(hasGrid));
+                shapeCommandService(commands);
             } else {
                 $context.drawPixels(node, new Uint8Array(commands));
             }
@@ -132,7 +143,11 @@ export const execute = (render_queue: Float32Array, index: number): number =>
                 -yMin * yScale + offsetY
             );
 
-            shapeCommandService(commands, Boolean(hasGrid));
+            if (isGridEnabled) {
+                $context.setGridOffset(node.x, offsetY);
+            }
+
+            shapeCommandService(commands);
 
             // 描画終了
             $context.endNodeRendering();
@@ -141,6 +156,10 @@ export const execute = (render_queue: Float32Array, index: number): number =>
                 $context.bind(currentAttachment);
             }
 
+        }
+
+        if (isGridEnabled) {
+            $context.endGrid();
         }
 
         index += length;

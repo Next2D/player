@@ -11,7 +11,6 @@ import { execute as shaderManagerSetBitmapStrokeUniformService } from "../../Sha
  * @description パスコマンドの線のビットマップの描画を実行します。
  *              Execute drawing of bitmap of line of path command.
  * 
- * @param  {boolean} has_grid 
  * @param  {Uint8Array} pixels 
  * @param  {number} width 
  * @param  {number} height 
@@ -22,7 +21,6 @@ import { execute as shaderManagerSetBitmapStrokeUniformService } from "../../Sha
  * @protected
  */
 export const execute = (
-    has_grid: boolean,
     pixels: Uint8Array,
     width: number,
     height: number,
@@ -39,7 +37,7 @@ export const execute = (
     const vertexArrayObject = vertexArrayObjectBindStrokeMeshUseCase(vertices);
 
     const shaderManager = variantsBitmapShaderService(true, Boolean(repeat), Boolean(smooth));
-    shaderManagerSetBitmapStrokeUniformService(shaderManager, has_grid, width, height);
+    shaderManagerSetBitmapStrokeUniformService(shaderManager, width, height);
     
     shaderManagerStrokeUseCase(
         shaderManager,

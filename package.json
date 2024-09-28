@@ -7,6 +7,7 @@
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
   "main": "dist/index.js",
+  "type": "module",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
@@ -42,22 +43,22 @@
     "url": "https://github.com/sponsors/Next2D"
   },
   "dependencies": {
-    "htmlparser2": "^9.1.0"
+    "htmlparser2": "^9.1.0",
+    "fflate": "^0.8.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.1.0",
-    "@eslint/js": "^9.10.0",
-    "@types/node": "^22.5.5",
-    "@typescript-eslint/eslint-plugin": "^8.6.0",
-    "@typescript-eslint/parser": "^8.6.0",
+    "@eslint/js": "^9.11.1",
+    "@types/node": "^22.7.3",
+    "@typescript-eslint/eslint-plugin": "^8.7.0",
+    "@typescript-eslint/parser": "^8.7.0",
     "@vitest/web-worker": "^2.1.1",
-    "eslint": "^9.10.0",
+    "eslint": "^9.11.1",
     "eslint-plugin-unused-imports": "^4.1.4",
-    "fflate": "^0.8.2",
     "globals": "^15.9.0",
-    "jsdom": "^25.0.0",
+    "jsdom": "^25.0.1",
     "typescript": "^5.6.2",
-    "vite": "^5.4.6",
+    "vite": "^5.4.8",
     "vitest": "^2.1.1"
   },
   "peerDependencies": {

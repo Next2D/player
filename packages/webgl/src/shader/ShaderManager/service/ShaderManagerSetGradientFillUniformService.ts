@@ -1,4 +1,5 @@
 import type { ShaderManager } from "../../ShaderManager";
+import { $gridEnabled } from "../../../Grid";
 import {
     $getViewportWidth,
     $getViewportHeight,
@@ -16,7 +17,6 @@ import {
  */
 export const execute = (
     shader_manager: ShaderManager,
-    has_grid: boolean,
     type: number,
     matrix: Float32Array,
     inverse_matrix: Float32Array,
@@ -57,7 +57,8 @@ export const execute = (
     highp[7] = $getViewportHeight();
 
     let index = 20;
-    if (has_grid) {
+    const isGridEnabled = $gridEnabled();
+    if (isGridEnabled) {
         index += 52;
     }
 

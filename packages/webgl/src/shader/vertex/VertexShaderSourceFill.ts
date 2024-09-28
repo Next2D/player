@@ -14,6 +14,18 @@ export const ATTRIBUTE_BEZIER_ON = (): string =>
 };
 
 /**
+ * @returns {string}
+ * @method
+ * @static
+ */
+export const ATTRIBUTE_MATRIX_ON = (): string =>
+{
+    return `layout (location = 3) in vec3 a_matrix0;
+layout (location = 4) in vec3 a_matrix1;
+layout (location = 5) in vec3 a_matrix2;`;
+};
+
+/**
  * @return {string}
  * @method
  * @static
@@ -99,7 +111,7 @@ export const STATEMENT_COLOR_ON = (): string =>
  * @param  {number}  highp_length
  * @param  {boolean} with_uv
  * @param  {boolean} for_mask
- * @param  {boolean} has_grid
+ * @param  {boolean} is_grid_enabled
  * @return {string}
  * @method
  * @static
@@ -108,40 +120,44 @@ export const FILL_TEMPLATE = (
     highp_length: number,
     with_uv: boolean,
     for_mask: boolean,
-    has_grid: boolean
+    is_grid_enabled: boolean
 ): string => {
 
-    const bezierAttribute: string = for_mask
+    const bezierAttribute = for_mask
         ? ATTRIBUTE_BEZIER_ON()
         : "";
 
-    const uvVarying: string = for_mask
+    const uvVarying = for_mask
         ? VARYING_BEZIER_ON()
         : with_uv
             ? VARYING_UV_ON()
             : "";
 
-    const uvStatement: string = for_mask
+    const uvStatement = for_mask
         ? STATEMENT_BEZIER_ON()
         : with_uv
             ? STATEMENT_UV_ON()
             : "";
 
-    const gridFunction: string = has_grid
+    const gridFunction = is_grid_enabled
         ? FUNCTION_GRID_ON(with_uv ? 5 : 0)
         : FUNCTION_GRID_OFF();
 
-    const colorAttribute: string = for_mask
+    const colorAttribute = for_mask
         ? ""
         : ATTRIBUTE_COLOR_ON();
 
-    const colorVarying: string = for_mask
+    const colorVarying = for_mask
         ? ""
         : VARYING_COLOR_ON();
 
-    const colorStatement: string = for_mask
+    const colorStatement = for_mask
         ? ""
         : STATEMENT_COLOR_ON();
+
+    const matrixAttribute = is_grid_enabled
+        ? ""
+        : ATTRIBUTE_MATRIX_ON();
     
     const uniform = highp_length > 1
         ? `uniform vec4 u_highp[${highp_length}];`
@@ -152,9 +168,7 @@ export const FILL_TEMPLATE = (
 layout (location = 0) in vec2 a_vertex;
 ${bezierAttribute}
 ${colorAttribute}
-layout (location = 3) in vec3 a_matrix0;
-layout (location = 4) in vec3 a_matrix1;
-layout (location = 5) in vec3 a_matrix2;
+${matrixAttribute}
 
 ${uniform}
 ${uvVarying}

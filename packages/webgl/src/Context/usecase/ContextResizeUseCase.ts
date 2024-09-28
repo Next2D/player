@@ -34,6 +34,6 @@ export const execute = (context: Context, width: number, height: number): void =
     atlasManagerResetUseCase();
 
     // new attachment object
-    context.$mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, true);
+    context.$mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, false);
     context.bind(context.$mainAttachmentObject);
 };

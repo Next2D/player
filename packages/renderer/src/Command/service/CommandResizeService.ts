@@ -1,6 +1,5 @@
 import { $cacheStore } from "@next2d/cache";
 import {
-    $canvas,
     $setRendererSize,
     $context,
     $rendererWidth,

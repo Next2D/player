@@ -24,7 +24,6 @@ const BITMAP_STROKE: number   = 14;
  *              Execute the graphic commands of Shape.
  *
  * @param  {Float32Array} commands
- * @param  {boolean} has_grid
  * @param  {boolean} [is_clip=false]
  * @return {void}
  * @method
@@ -32,7 +31,6 @@ const BITMAP_STROKE: number   = 14;
  */
 export const execute = (
     commands: Float32Array,
-    has_grid: boolean,
     is_clip: boolean = false
 ): void => {
 
@@ -77,7 +75,7 @@ export const execute = (
                     break;
                 }
 
-                $context.fill(has_grid);
+                $context.fill();
                 break;
 
             case STROKE_STYLE:
@@ -102,7 +100,7 @@ export const execute = (
                     break;
                 }
                 
-                $context.stroke(has_grid);
+                $context.stroke();
                 break;
 
             case CLOSE_PATH:
@@ -155,7 +153,6 @@ export const execute = (
                     const focal = commands[index++];
 
                     $context.gradientFill(
-                        has_grid,
                         type, stops, matrix, 
                         spread, interpolation, focal
                     );
@@ -188,7 +185,6 @@ export const execute = (
                     );
 
                     $context.bitmapFill(
-                        has_grid,
                         buffer, width, height,
                         Boolean(commands[index++]), 
                         Boolean(commands[index++])
@@ -229,7 +225,6 @@ export const execute = (
                     const focal = commands[index++];
 
                     $context.gradientStroke(
-                        has_grid,
                         type, stops, matrix, 
                         spread, interpolation, focal
                     );
@@ -262,7 +257,6 @@ export const execute = (
                     const smooth = Boolean(commands[index++]);
                     
                     $context.bitmapStroke(
-                        has_grid,
                         buffer, width, height,
                         repeat, smooth
                     );

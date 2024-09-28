@@ -9,12 +9,11 @@ import { execute as shaderManagerFillUseCase } from "../../Shader/ShaderManager/
  * @description Contextのパスコマンドのマスク描画を実行します。
  *              Execute Context path command mask drawing.
  *
- * @param  {boolean} has_grid
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (has_grid: boolean): void =>
+export const execute = (): void =>
 {
     const vertices = $getVertices();
     if (!vertices.length) {
@@ -22,8 +21,8 @@ export const execute = (has_grid: boolean): void =>
     }
 
     const vertexArrayObject = vertexArrayObjectCreateFillObjectUseCase(vertices);
-    const shaderManager = variantsShapeMaskShaderService(false, has_grid);
-    // shaderManagerSetMaskUniformService(shaderManager, has_grid);
+    const shaderManager = variantsShapeMaskShaderService(false);
+    shaderManagerSetMaskUniformService(shaderManager);
     shaderManagerFillUseCase(shaderManager, vertexArrayObject);
 
     // release vertex array
