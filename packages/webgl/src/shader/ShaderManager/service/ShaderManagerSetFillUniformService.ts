@@ -1,5 +1,8 @@
 import type { ShaderManager } from "../../ShaderManager";
-import { $gridEnabled, $gridData } from "../../../Grid";
+import {
+    $gridEnabled,
+    $gridData
+} from "../../../Grid";
 import {
     $getViewportWidth,
     $getViewportHeight

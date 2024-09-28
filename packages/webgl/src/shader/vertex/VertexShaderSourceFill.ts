@@ -53,18 +53,17 @@ export const VARYING_BEZIER_ON = (): string =>
 export const STATEMENT_UV_ON = (): string =>
 {
     return `
-mat3 uv_matrix = mat3(
-    u_highp[0].xyz,
-    u_highp[1].xyz,
-    u_highp[2].xyz
-);
-mat3 inverse_matrix = mat3(
-    u_highp[3].xyz,
-    u_highp[4].xyz,
-    vec3(u_highp[2].w, u_highp[3].w, u_highp[4].w)
-);
-
-v_uv = (inverse_matrix * uv_matrix * vec3(a_vertex, 1.0)).xy;`;
+    mat3 uv_matrix = mat3(
+        u_highp[0].xyz,
+        u_highp[1].xyz,
+        u_highp[2].xyz
+    );
+    mat3 inverse_matrix = mat3(
+        u_highp[3].xyz,
+        u_highp[4].xyz,
+        vec3(u_highp[2].w, u_highp[3].w, u_highp[4].w)
+    );
+    v_uv = (inverse_matrix * uv_matrix * vec3(a_vertex, 1.0)).xy;`;
 };
 
 /**

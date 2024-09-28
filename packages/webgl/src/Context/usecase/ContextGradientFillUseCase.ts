@@ -2,7 +2,7 @@ import type { ShaderManager } from "../../Shader/ShaderManager";
 import { $getVertices } from "../../PathCommand";
 import { execute as gradientLUTGenerateShapeTextureUseCase } from "../../Shader/GradientLUTGenerator/usecase/GradientLUTGenerateShapeTextureUseCase";
 import { execute as variantsGradientShapeShaderUseCase } from "../../Shader/Variants/Gradient/usecase/VariantsGradientShapeShaderUseCase";
-// import { execute as shaderManagerSetMaskUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMaskUniformService";
+import { execute as shaderManagerSetMaskUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMaskUniformService";
 import { execute as shaderManagerFillUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerFillUseCase";
 import { execute as vertexArrayObjectCreateFillObjectUseCase } from "../../VertexArrayObject/usecase/VertexArrayObjectBindFillMeshUseCase";
 import { execute as vertexArrayObjectReleaseVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseVertexArrayObjectService";
@@ -103,7 +103,7 @@ export const execute = (
     $gl.colorMask(false, false, false, false);
 
     const coverageShader = variantsShapeMaskShaderService(false);
-    // todo grid
+    shaderManagerSetMaskUniformService(coverageShader);
     shaderManagerFillUseCase(coverageShader, vertexArrayObject);
     $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
 
@@ -111,7 +111,6 @@ export const execute = (
     $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
     $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
     $gl.colorMask(true, true, true, true);
-    // todo grid
     shaderManagerFillUseCase(shaderManager as ShaderManager, vertexArrayObject);
 
     // mask off

@@ -83,7 +83,7 @@ vec2 applyMatrix(in vec2 vertex) {
     position = position * parent_size + parent_offset;
     position = (ancestor_matrix * vec3(position, 1.0)).xy;
 
-    position = position + vec2(u_highp[8].x, u_highp[8].y);
+    position = position + vec2(u_highp[${index + 8}].x, u_highp[${index + 8}].y);
     return position / vec2(u_highp[0].w, u_highp[1].w);
 }`;
 };

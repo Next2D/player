@@ -34,7 +34,7 @@ export const execute = (
         return $collection.get(key) as NonNullable<ShaderManager>;
     }
 
-    const highpLength: number = (isGridEnabled ? 13 : 5) + (is_stroke ? 1 : 0) + 1;
+    const highpLength: number = (isGridEnabled ? 14 : 5) + (is_stroke ? 1 : 0) + 1;
     const fragmentIndex: number = highpLength - 1;
 
     let vertexShaderSource: string;
