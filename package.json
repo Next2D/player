@@ -43,8 +43,8 @@
     "url": "https://github.com/sponsors/Next2D"
   },
   "dependencies": {
-    "htmlparser2": "^9.1.0",
-    "fflate": "^0.8.2"
+    "fflate": "^0.8.2",
+    "htmlparser2": "^9.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.1.0",
