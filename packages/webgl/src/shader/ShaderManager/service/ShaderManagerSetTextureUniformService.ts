@@ -20,7 +20,7 @@ export const execute = (shader_manager: ShaderManager, width: number, height: nu
 {
     const highp  = shader_manager.highp;
     const matrix = $context.$matrix;
-    
+
     // vertex: u_offset
     highp[0] = matrix[6];
     highp[1] = matrix[7];

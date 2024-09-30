@@ -2,9 +2,19 @@ import { execute as meshAddLineJoinUseCase } from "./MeshAddLineJoinUseCase";
 import { execute as meshAddLineCapUseCase } from "./MeshAddLineCapUseCase";
 import { $getVertexBufferData } from "../../Mesh";
 
+/**
+ * @description 線端を生成する
+ *              generate a line end
+ *
+ * @param  {number} vertex_begin_offset
+ * @param  {number} vertex_end_offset
+ * @return {void}
+ * @method
+ * @protected
+ */
 export const execute = (
     vertex_begin_offset: number,
-    vertex_end_offset: number,
+    vertex_end_offset: number
 ): void => {
 
     const vbd: Float32Array = $getVertexBufferData();
@@ -32,13 +42,13 @@ export const execute = (
 
     // 始点の線端を追加する
     meshAddLineCapUseCase(
-        stx1, sty1, stx2, sty2, 
+        stx1, sty1, stx2, sty2,
         indexBeginOffset, indexBeginOffset + 1
     );
 
     // 終点の線端を追加する
     meshAddLineCapUseCase(
-        edx1, edy1, edx2, edy2, 
+        edx1, edy1, edx2, edy2,
         indexEndOffset - 1, indexEndOffset - 2
     );
 };

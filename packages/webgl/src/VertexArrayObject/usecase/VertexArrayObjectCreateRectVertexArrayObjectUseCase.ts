@@ -6,7 +6,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description 矩形描画用のVertexArrayObjectを生成します。
  *              Generates a VertexArrayObject for rectangle drawing.
- * 
+ *
  * @return {IVertexArrayObject}
  * @method
  * @protected

@@ -7,7 +7,7 @@ import { execute as vertexArrayObjectBindService } from "../service/VertexArrayO
 /**
  * @description ストローク用のVertexArrayObjectを返却
  *              Returns a VertexArrayObject for strokes
- * 
+ *
  * @return {IStrokeVertexArrayObject}
  * @method
  * @protected

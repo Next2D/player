@@ -3,7 +3,7 @@ import type { ShaderManager } from "../../ShaderManager";
 /**
  * @description マスクの縦横サイズだけをuniform変数に設定します。
  *              Set only the vertical and horizontal size of the mask to the uniform variable.
- * 
+ *
  * @param  {ShaderManager} shader_manager
  * @param  {number} width
  * @param  {number} height

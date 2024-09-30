@@ -4,11 +4,11 @@ import { $gl } from "../../../WebGLUtil";
 /**
  * @description シェーダープログラムID
  *              Shader program ID
- * 
+ *
  * @type {number}
  * @private
  */
-let $programId = 0;
+let $programId: number = 0;
 
 /**
  * @description 指定のシェーダープログラムを生成する

@@ -15,8 +15,8 @@ import {
 /**
  * @description ストロークのメッシュを生成
  *              Generate a stroke mesh
- * 
- * @param  {IPath[]} vertices 
+ *
+ * @param  {IPath[]} vertices
  * @return {IStrokeMesh}
  * @method
  * @protected

@@ -1,5 +1,5 @@
-import { execute as meshExpandVertexBufferIfNeededService } from "../service/MeshExpandVertexBufferIfNeededService"
-import { execute as meahExpandIndexBufferIfNeededService } from "../service/MeahExpandIndexBufferIfNeededService"
+import { execute as meshExpandVertexBufferIfNeededService } from "../service/MeshExpandVertexBufferIfNeededService";
+import { execute as meahExpandIndexBufferIfNeededService } from "../service/MeahExpandIndexBufferIfNeededService";
 import {
     $getVertexBufferPosition,
     $setVertexBufferPosition,
@@ -12,11 +12,11 @@ import {
 /**
  * @description ラインセグメントを追加
  *              Add a line segment
- * 
- * @param  {number} x1 
- * @param  {number} y1 
- * @param  {number} x2 
- * @param  {number} y2 
+ *
+ * @param  {number} x1
+ * @param  {number} y1
+ * @param  {number} x2
+ * @param  {number} y2
  * @param  {number} type
  * @return {void}
  * @method

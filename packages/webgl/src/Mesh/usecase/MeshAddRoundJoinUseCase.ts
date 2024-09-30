@@ -12,7 +12,7 @@ import {
 /**
  * @description ラウンドジョインを追加
  *              Add a round join
- * 
+ *
  * @param  {number} x
  * @param  {number} y
  * @return {void}

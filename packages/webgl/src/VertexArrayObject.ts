@@ -11,7 +11,7 @@ let $id: number = 0;
 /**
  * @description VertexArrayObject管理用のユニークIDを返却
  *              Returns a unique ID for managing VertexArrayObject
- * 
+ *
  * @return {number}
  * @method
  * @protected
@@ -150,7 +150,7 @@ let $rectVertexArrayObject: IVertexArrayObject;
 export const $getRectVertexArrayObject = (): IVertexArrayObject =>
 {
     if (!$rectVertexArrayObject) {
-        $rectVertexArrayObject = vertexArrayObjectCreateRectVertexArrayObjectUseCase()
+        $rectVertexArrayObject = vertexArrayObjectCreateRectVertexArrayObjectUseCase();
     }
     return $rectVertexArrayObject as NonNullable<IVertexArrayObject>;
 };

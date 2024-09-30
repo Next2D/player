@@ -7,7 +7,7 @@ import { execute as contextBeginNodeRenderingService } from "../../../Context/se
 import {
     $gl,
     $context
-} from "../../../WebGLUtil"
+} from "../../../WebGLUtil";
 import {
     $getGradientAttachmentObject,
     $getGradientLUTGeneratorMaxLength,
@@ -18,7 +18,7 @@ import {
 /**
  * @description グラデーションのテクスチャを生成します。
  *              Generates a texture of the gradient.
- * 
+ *
  * @param  {array} stops
  * @param  {number} interpolation
  * @return {ITextureObject}
@@ -55,7 +55,7 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
         gradientLUTSetUniformService(
             shaderManager, stops, begin, end, table
         );
-        
+
         gradientLUTGeneratorFillTextureUseCase(
             shaderManager,
             stops[0],
@@ -72,4 +72,4 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
     );
 
     return gradientAttachmentObject.texture as NonNullable<ITextureObject>;
-}
+};

@@ -12,17 +12,17 @@ import {
 /**
  * @description マイタージョインを追加
  *              Add a miter join
- * 
- * @param  {number} x 
- * @param  {number} y 
- * @param  {number} ax 
- * @param  {number} ay 
- * @param  {number} bx 
- * @param  {number} by 
- * @param  {number} index1 
- * @param  {number} index4 
- * @param  {number} index5 
- * @param  {number} index8 
+ *
+ * @param  {number} x
+ * @param  {number} y
+ * @param  {number} ax
+ * @param  {number} ay
+ * @param  {number} bx
+ * @param  {number} by
+ * @param  {number} index1
+ * @param  {number} index4
+ * @param  {number} index5
+ * @param  {number} index8
  * @return {void}
  * @method
  * @protected

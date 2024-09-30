@@ -5,7 +5,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description ピクセルデータからテクスチャを作成します。
  *              Create a texture from pixel data.
- * 
+ *
  * @param  {number} width
  * @param  {number} height
  * @param  {Uint8Array} pixels

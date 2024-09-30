@@ -24,7 +24,7 @@ export const execute = (shader_manager: ShaderManager): void =>
     }
 
     const highp = shader_manager.highp;
-    
+
     // vertex: u_parent_matrix
     highp[0]  = $gridData[0];
     highp[1]  = $gridData[1];

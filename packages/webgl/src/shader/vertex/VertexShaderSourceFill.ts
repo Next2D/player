@@ -157,7 +157,7 @@ export const FILL_TEMPLATE = (
     const matrixAttribute = is_grid_enabled
         ? ""
         : ATTRIBUTE_MATRIX_ON();
-    
+
     const uniform = highp_length > 1
         ? `uniform vec4 u_highp[${highp_length}];`
         : "";

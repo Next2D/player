@@ -7,18 +7,18 @@ import { $context } from "../../WebGLUtil";
 /**
  * @description ラインジョインを追加
  *              Add a line join
- * 
- * @param  {number} x1 
- * @param  {number} y1 
- * @param  {number} x2 
- * @param  {number} y2 
- * @param  {number} type 
- * @param  {number} x3 
- * @param  {number} y3 
- * @param  {number} index_offset2 
- * @param  {number} index_offset3 
- * @param  {number} index_offset4 
- * @param  {number} index_offset5 
+ *
+ * @param  {number} x1
+ * @param  {number} y1
+ * @param  {number} x2
+ * @param  {number} y2
+ * @param  {number} type
+ * @param  {number} x3
+ * @param  {number} y3
+ * @param  {number} index_offset2
+ * @param  {number} index_offset3
+ * @param  {number} index_offset4
+ * @param  {number} index_offset5
  * @return {void}
  * @method
  * @protected
@@ -26,7 +26,7 @@ import { $context } from "../../WebGLUtil";
 export const execute = (
     x1: number, y1: number,
     x2: number, y2: number,
-    type: number, 
+    type: number,
     x3: number, y3: number,
     index_offset2: number,
     index_offset3: number,
@@ -61,7 +61,7 @@ export const execute = (
             meshAddRoundJoinUseCase(x2, y2);
             break;
 
-        case 1: // miter 
+        case 1: // miter
             meshAddMiterJoinUseCase(
                 x2, y2, x1, y1, x3, y3,
                 index_offset4, index_offset2, index_offset3, index_offset5

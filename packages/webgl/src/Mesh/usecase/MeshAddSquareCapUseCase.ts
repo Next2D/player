@@ -12,13 +12,13 @@ import {
 /**
  * @description スクエアキャップを追加
  *              Add a square cap
- * 
- * @param  {number} x1 
- * @param  {number} y1 
- * @param  {number} x2 
- * @param  {number} y2 
- * @param  {number} index1 
- * @param  {number} index2 
+ *
+ * @param  {number} x1
+ * @param  {number} y1
+ * @param  {number} x2
+ * @param  {number} y2
+ * @param  {number} index1
+ * @param  {number} index2
  * @return {void}
  * @method
  * @protected

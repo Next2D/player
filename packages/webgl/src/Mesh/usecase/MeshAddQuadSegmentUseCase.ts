@@ -3,13 +3,13 @@ import { execute as meshAddLineSegmentUseCase } from "./MeshAddLineSegmentUseCas
 /**
  * @description クワッドセグメントを追加
  *              Add a quad segment
- * 
- * @param  {number} x1 
- * @param  {number} y1 
- * @param  {number} cx 
- * @param  {number} cy 
- * @param  {number} x2 
- * @param  {number} y2 
+ *
+ * @param  {number} x1
+ * @param  {number} y1
+ * @param  {number} cx
+ * @param  {number} cy
+ * @param  {number} x2
+ * @param  {number} y2
  * @return {void}
  * @method
  * @protected

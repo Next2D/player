@@ -12,7 +12,7 @@ import {
  * @description ストロークメッシュを生成してバインド
  *              Generate and bind stroke mesh
  *
- * @param  {IPath[]} vertices 
+ * @param  {IPath[]} vertices
  * @return {IStrokeVertexArrayObject}
  * @method
  * @protected
@@ -20,7 +20,7 @@ import {
 export const execute = (vertices: IPath[]): IStrokeVertexArrayObject =>
 {
     const strokeMesh = meshStrokeGenerateUseCase(vertices);
-    
+
     const vertexArrayObject = vertexArrayObjectGetStrokeObjectUseCase();
     vertexArrayObjectBindService(vertexArrayObject);
 

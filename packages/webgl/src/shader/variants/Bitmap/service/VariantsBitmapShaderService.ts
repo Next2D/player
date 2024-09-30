@@ -11,16 +11,16 @@ import {
 /**
  * @description BitmapShaderを取得
  *              Get BitmapShader
- * 
- * @param  {boolean} is_stroke 
- * @param  {boolean} repeat 
+ *
+ * @param  {boolean} is_stroke
+ * @param  {boolean} repeat
  * @return {ShaderManager}
  * @method
  * @protected
  */
 export const execute = (
     is_stroke: boolean,
-    repeat: boolean,
+    repeat: boolean
 ): ShaderManager => {
 
     const isGridEnabled = $gridEnabled();

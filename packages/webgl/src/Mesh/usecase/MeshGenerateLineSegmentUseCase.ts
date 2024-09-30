@@ -5,7 +5,7 @@ import { execute as meshAddLineSegmentUseCase } from "./MeshAddLineSegmentUseCas
 /**
  * @description ラインセグメントを生成
  *              Generate a line segment
- * 
+ *
  * @param  {IPath} vertex
  * @return {void}
  * @method

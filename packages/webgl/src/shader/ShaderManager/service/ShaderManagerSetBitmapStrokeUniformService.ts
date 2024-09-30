@@ -19,13 +19,12 @@ import {
  * @protected
  */
 export const execute = (
-    shader_manager: ShaderManager, 
+    shader_manager: ShaderManager,
     width: number,
     height: number
-): void =>
-{
+): void => {
     const highp = shader_manager.highp;
-    
+
     // vertex: u_matrix
     const matrix = $context.$stack[$context.$stack.length - 1];
     highp[0]  = matrix[0];
@@ -84,7 +83,7 @@ export const execute = (
     const scaleMax: number = Math.max(scaleX, scaleY);
     halfWidth *= scaleMax * (1 - 0.3 * Math.cos(Math.PI * 0.5 * (scaleMin / scaleMax)));
     halfWidth = Math.max(1, halfWidth);
-    
+
     // vertex: u_half_width
     highp[index] = halfWidth;
 

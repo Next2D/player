@@ -22,13 +22,13 @@ import {
  * @protected
  */
 export const execute = (
-    shader_manager: ShaderManager, 
+    shader_manager: ShaderManager,
     width: number,
     height: number
 ): void => {
 
     const highp = shader_manager.highp;
-    
+
     // vertex: u_matrix
     const matrix = $context.$stack[$context.$stack.length - 1];
     highp[0]  = matrix[0];
