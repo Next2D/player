@@ -1,5 +1,5 @@
 
-import { $gl, $setViewportSize } from "../../WebGLUtil";
+import { $gl } from "../../WebGLUtil";
 
 /**
  * @description アトラスへの描画範囲を設定

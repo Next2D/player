@@ -46,7 +46,7 @@ export const BITMAP_CLIPPED = (): string =>
 precision mediump float;
 
 uniform sampler2D u_texture;
-uniform vec4 u_mediump[3];
+uniform vec4 u_mediump[1];
 
 in vec2 v_uv;
 out vec4 o_color;
@@ -70,7 +70,7 @@ export const BITMAP_PATTERN = (): string =>
 precision mediump float;
 
 uniform sampler2D u_texture;
-uniform vec4 u_mediump[3];
+uniform vec4 u_mediump[1];
 
 in vec2 v_uv;
 out vec4 o_color;

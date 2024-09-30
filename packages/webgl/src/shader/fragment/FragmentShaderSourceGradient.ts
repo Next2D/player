@@ -43,9 +43,9 @@ const STATEMENT_GRADIENT_TYPE_RADIAL = (index: number, has_focal_point: boolean)
         : STATEMENT_FOCAL_POINT_OFF();
 
     return `
-float radius = u_highp[${index}][0];
-vec2 coord = p / radius;
-${focalPointStatement}
+    float radius = u_highp[${index}][0];
+    vec2 coord = p / radius;
+    ${focalPointStatement}
 `;
 };
 

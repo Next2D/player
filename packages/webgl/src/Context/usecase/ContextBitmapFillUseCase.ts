@@ -19,7 +19,6 @@ import { $gl } from "../../WebGLUtil";
  * @param  {number} width 
  * @param  {number} height 
  * @param  {boolean} repeat 
- * @param  {boolean} smooth 
  * @return {void}
  * @method
  * @protected
@@ -32,17 +31,14 @@ export const execute = (
     smooth: boolean
 ): void => {
 
-    const textureObject = textureManagerCreateFromPixelsUseCase(width, height, pixels);
+    const textureObject = textureManagerCreateFromPixelsUseCase(
+        width, height, pixels, smooth
+    );
 
     const vertices = $getVertices();
     if (!vertices.length) {
         return ;
     }
-
-    const shaderManager = variantsBitmapShaderService(false, Boolean(repeat), Boolean(smooth));
-    shaderManagerSetBitmapFillUniformService(
-        shaderManager, width, height
-    );
 
     const vertexArrayObject = vertexArrayObjectCreateFillObjectUseCase(vertices);
 
@@ -56,8 +52,8 @@ export const execute = (
     $gl.stencilOp($gl.KEEP, $gl.INVERT, $gl.INVERT);
     $gl.colorMask(false, false, false, false);
 
-    const coverageShader = variantsShapeMaskShaderService(false, has_grid);
-    shaderManagerSetMaskUniformService(coverageShader, has_grid);
+    const coverageShader = variantsShapeMaskShaderService(false);
+    shaderManagerSetMaskUniformService(coverageShader);
     shaderManagerFillUseCase(coverageShader, vertexArrayObject);
     $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
 
@@ -65,6 +61,11 @@ export const execute = (
     $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
     $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
     $gl.colorMask(true, true, true, true);
+
+    const shaderManager = variantsBitmapShaderService(false, Boolean(repeat));
+    shaderManagerSetBitmapFillUniformService(
+        shaderManager, width, height
+    );
     shaderManagerFillUseCase(shaderManager as ShaderManager, vertexArrayObject);
 
     // mask off

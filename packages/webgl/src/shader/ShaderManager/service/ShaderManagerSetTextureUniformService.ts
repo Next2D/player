@@ -18,7 +18,7 @@ import {
  */
 export const execute = (shader_manager: ShaderManager, width: number, height: number): void =>
 {
-    const highp = shader_manager.highp;
+    const highp  = shader_manager.highp;
     const matrix = $context.$matrix;
     
     // vertex: u_offset

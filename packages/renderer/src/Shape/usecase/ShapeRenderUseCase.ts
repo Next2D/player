@@ -80,7 +80,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const length = render_queue[index++];
         const commands = render_queue.subarray(index, index + length);
 
-        if (isBitmap) {
+        if (isBitmap && !isGridEnabled) {
 
             // Bitmapなので、スケールなし
             const width  = Math.ceil(Math.abs(xMax - xMin));
@@ -102,10 +102,6 @@ export const execute = (render_queue: Float32Array, index: number): number =>
                 node.x,
                 offsetY
             );
-
-            if (isGridEnabled) {
-                $context.setGridOffset(node.x, offsetY);
-            }
 
             if (isDrawable) {
                 shapeCommandService(commands);
@@ -156,10 +152,10 @@ export const execute = (render_queue: Float32Array, index: number): number =>
                 $context.bind(currentAttachment);
             }
 
-        }
+            if (isGridEnabled) {
+                $context.endGrid();
+            }
 
-        if (isGridEnabled) {
-            $context.endGrid();
         }
 
         index += length;

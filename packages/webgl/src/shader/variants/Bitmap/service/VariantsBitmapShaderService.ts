@@ -1,5 +1,6 @@
 import { $collection } from "../../BitmapVariants";
 import { ShaderManager } from "../../../ShaderManager";
+import { $gridEnabled } from "../../../../Grid";
 import { FILL_TEMPLATE } from "../../../Vertex/VertexShaderSourceFill";
 import { STROKE_TEMPLATE } from "../../../Vertex/VertexShaderSourceStroke";
 import {
@@ -13,7 +14,6 @@ import {
  * 
  * @param  {boolean} is_stroke 
  * @param  {boolean} repeat 
- * @param  {boolean} has_grid 
  * @return {ShaderManager}
  * @method
  * @protected
@@ -21,27 +21,27 @@ import {
 export const execute = (
     is_stroke: boolean,
     repeat: boolean,
-    has_grid: boolean
 ): ShaderManager => {
 
-    const key: string = `b${is_stroke ? "y" : "n"}${repeat ? "y" : "n"}${has_grid ? "y" : "n"}`;
+    const isGridEnabled = $gridEnabled();
+    const key: string = `b${is_stroke ? "y" : "n"}${repeat ? "y" : "n"}${isGridEnabled ? "y" : "n"}`;
 
     if ($collection.has(key)) {
         return $collection.get(key) as NonNullable<ShaderManager>;
     }
 
-    const highpLength = (has_grid ? 13 : 5) + (is_stroke ? 1 : 0);
+    const highpLength = (isGridEnabled ? 14 : 5) + (is_stroke ? 1 : 0);
     const fragmentIndex = highpLength;
 
     let vertexShaderSource: string;
     if (is_stroke) {
         vertexShaderSource = STROKE_TEMPLATE(
             highpLength, fragmentIndex,
-            true, has_grid
+            true, isGridEnabled
         );
     } else {
         vertexShaderSource = FILL_TEMPLATE(
-            highpLength, true, false, has_grid
+            highpLength, true, false, isGridEnabled
         );
     }
 

@@ -9,13 +9,14 @@ import { execute as textureManagerInitializeBindService } from "../service/Textu
  *
  * @param  {number} width
  * @param  {number} height
+ * @param  {boolean} [smooth=false]
  * @return {ITextureObject}
  * @method
  * @protected
  */
-export const execute = (width: number, height: number): ITextureObject =>
+export const execute = (width: number, height: number, smooth: boolean = false): ITextureObject =>
 {
     const textureObject = textureManagerCreateTextureObjectService(width, height);
-    textureManagerInitializeBindService(textureObject);
+    textureManagerInitializeBindService(textureObject, smooth);
     return textureObject;
 };
