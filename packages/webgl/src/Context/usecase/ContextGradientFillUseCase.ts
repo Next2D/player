@@ -21,26 +21,26 @@ import {
 /**
  * @description グラデーション塗りを描画
  *              Draw a gradient fill
- * 
- * @param  {number} type 
- * @param  {array} stops 
- * @param  {Float32Array} matrix 
- * @param  {number} spread 
- * @param  {number} interpolation 
- * @param  {number} focal 
+ *
+ * @param  {number} type
+ * @param  {array} stops
+ * @param  {Float32Array} matrix
+ * @param  {number} spread
+ * @param  {number} interpolation
+ * @param  {number} focal
  * @return {void}
  * @method
  * @protected
  */
 export const execute = (
-    type: number, 
-    stops: number[], 
-    matrix: Float32Array, 
-    spread: number, 
-    interpolation: number, 
+    type: number,
+    stops: number[],
+    matrix: Float32Array,
+    spread: number,
+    interpolation: number,
     focal: number
 ): void => {
-    
+
     const vertices = $getVertices();
     if (!vertices.length) {
         return ;
@@ -49,14 +49,14 @@ export const execute = (
     const textureObject = gradientLUTGenerateShapeTextureUseCase(stops, interpolation);
     textureManagerBind0UseCase(textureObject);
 
-    let shaderManager: ShaderManager | null= null;
+    let shaderManager: ShaderManager | null = null;
     if (type === 0) { // linear
         shaderManager = variantsGradientShapeShaderUseCase(
             false, false, false, spread
         );
 
         const points = $linearGradientXY(matrix);
-        
+
         const inverseMatrix = $inverseMatrix($context.$matrix);
         shaderManagerSetGradientFillUniformService(
             shaderManager, type, $context.$matrix,

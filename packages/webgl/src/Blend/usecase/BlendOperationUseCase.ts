@@ -9,7 +9,7 @@ import { execute as blendOneZeroService } from "../service/BlendOneZeroService";
 /**
  * @description 設定されたブレンドモードへ切り替える
  *              Switch to the set blend mode
- * 
+ *
  * @param  {IBlendMode} operation
  * @return {void}
  * @method

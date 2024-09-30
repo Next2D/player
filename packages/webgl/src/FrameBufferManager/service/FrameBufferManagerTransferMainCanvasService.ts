@@ -26,7 +26,7 @@ export const execute = (): void =>
 
     const width  = mainAttachmentObject.width;
     const height = mainAttachmentObject.height;
-    
+
     // execute
     $gl.blitFramebuffer(
         0, 0, width, height,

@@ -7,7 +7,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description ブレンドモードをアルファに設定します。
  *              Set the blend mode to alpha.
- * 
+ *
  * @return {void}
  * @method
  * @protected

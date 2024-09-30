@@ -13,6 +13,7 @@ import { $gl } from "../../WebGLUtil";
 export const execute = (): IColorBufferObject =>
 {
     const stencilBufferObject: IStencilBufferObject = {
+        "id": 0,
         "resource": $gl.createRenderbuffer() as NonNullable<WebGLRenderbuffer>,
         "width": 0,
         "height": 0,
@@ -28,4 +29,4 @@ export const execute = (): IColorBufferObject =>
         "area": 0,
         "dirty": false
     };
-}
+};

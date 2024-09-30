@@ -8,7 +8,7 @@ import { execute as shaderManagerStrokeUseCase } from "../../Shader/ShaderManage
 /**
  * @description ストロークを描画
  *              Draw a stroke
- * 
+ *
  * @return {void}
  * @method
  * @protected

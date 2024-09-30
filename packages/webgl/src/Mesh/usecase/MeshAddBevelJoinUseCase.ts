@@ -12,13 +12,13 @@ import {
 /**
  * @description ベベルジョインを追加
  *              Add a bevel join
- * 
- * @param  {number} x 
- * @param  {number} y 
- * @param  {number} index1 
- * @param  {number} index2 
- * @param  {number} index3 
- * @param  {number} index4 
+ *
+ * @param  {number} x
+ * @param  {number} y
+ * @param  {number} index1
+ * @param  {number} index2
+ * @param  {number} index3
+ * @param  {number} index4
  * @return {void}
  * @method
  * @protected

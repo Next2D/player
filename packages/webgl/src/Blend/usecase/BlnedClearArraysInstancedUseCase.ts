@@ -3,7 +3,7 @@ import { execute as variantsBlendInstanceShaderService } from "../../Shader/Vari
 /**
  * @description リサイズなどのイベント発火時には描画情報を初期化します
  *              Initialize drawing information when an event such as resizing is fired
- * 
+ *
  * @return {void}
  * @method
  * @protected

@@ -10,12 +10,12 @@ import { execute as shaderManagerSetBitmapStrokeUniformService } from "../../Sha
 /**
  * @description パスコマンドの線のビットマップの描画を実行します。
  *              Execute drawing of bitmap of line of path command.
- * 
- * @param  {Uint8Array} pixels 
- * @param  {number} width 
- * @param  {number} height 
- * @param  {boolean} repeat 
- * @param  {boolean} smooth 
+ *
+ * @param  {Uint8Array} pixels
+ * @param  {number} width
+ * @param  {number} height
+ * @param  {boolean} repeat
+ * @param  {boolean} smooth
  * @return {void}
  * @method
  * @protected
@@ -28,7 +28,7 @@ export const execute = (
     smooth: boolean
 ): void => {
 
-    const textureObject = textureManagerCreateFromPixelsUseCase(width, height, pixels);
+    const textureObject = textureManagerCreateFromPixelsUseCase(width, height, pixels, smooth);
 
     const vertices = $getVertices(true);
     if (!vertices.length) {
@@ -36,9 +36,9 @@ export const execute = (
     }
     const vertexArrayObject = vertexArrayObjectBindStrokeMeshUseCase(vertices);
 
-    const shaderManager = variantsBitmapShaderService(true, Boolean(repeat), Boolean(smooth));
+    const shaderManager = variantsBitmapShaderService(true, repeat);
     shaderManagerSetBitmapStrokeUniformService(shaderManager, width, height);
-    
+
     shaderManagerStrokeUseCase(
         shaderManager,
         vertexArrayObject

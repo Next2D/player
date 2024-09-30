@@ -3,14 +3,14 @@ import type { Context } from "../../Context";
 /**
  * @description 2D変換行列の乗算を行います
  *              Multiply the 2D transformation matrix
- * 
- * @param  {Context} context 
- * @param  {number} a 
- * @param  {number} b 
- * @param  {number} c 
- * @param  {number} d 
- * @param  {number} e 
- * @param  {number} f 
+ *
+ * @param  {Context} context
+ * @param  {number} a
+ * @param  {number} b
+ * @param  {number} c
+ * @param  {number} d
+ * @param  {number} e
+ * @param  {number} f
  * @return {void}
  * @method
  * @protected

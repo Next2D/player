@@ -7,7 +7,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description ブレンドモードをスクリーンに設定します。
  *              Set the blend mode to screen.
- * 
+ *
  * @return {void}
  * @method
  * @protected

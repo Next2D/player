@@ -6,23 +6,23 @@ import {
     $getViewportHeight,
     $getViewportWidth
 } from "../../WebGLUtil";
-import { 
+import {
     $getCurrentBlendMode,
     $setCurrentBlendMode,
     $getCurrentAtlasIndex,
-    $setCurrentAtlasIndex,
- } from "../../Blend";
+    $setCurrentAtlasIndex
+} from "../../Blend";
 import { $setActiveAtlasIndex } from "../../AtlasManager";
 
 /**
  * @description DisplayObject単体の描画を実行
  *              Execute drawing of a single DisplayObject
- * 
- * @param  {Node} node 
- * @param  {number} x_min 
- * @param  {number} y_min 
- * @param  {number} x_max 
- * @param  {number} y_max 
+ *
+ * @param  {Node} node
+ * @param  {number} x_min
+ * @param  {number} y_min
+ * @param  {number} x_max
+ * @param  {number} y_max
  * @param  {Float32Array} color_transform
  * @return {void}
  * @method
@@ -30,10 +30,10 @@ import { $setActiveAtlasIndex } from "../../AtlasManager";
  */
 export const execute = (
     node: Node,
-    x_min: number, 
+    x_min: number,
     y_min: number,
     x_max: number,
-    y_max: number, 
+    y_max: number,
     color_transform: Float32Array
 ): void => {
 

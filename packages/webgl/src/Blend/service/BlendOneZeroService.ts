@@ -7,7 +7,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description ブレンドモードをOne/Zeroに設定します。
  *              Set the blend mode to One/Zero.
- * 
+ *
  * @return {void}
  * @method
  * @protected

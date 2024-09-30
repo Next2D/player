@@ -39,7 +39,7 @@ export const $getVertexBufferData = (): Float32Array =>
 export const $setVertexBufferData = (buffer: Float32Array): void =>
 {
     $vertexBufferData = buffer;
-}
+};
 
 /**
  * @type {Int16Array}
@@ -71,7 +71,7 @@ export const $getIndexBufferData = (): Int16Array =>
 export const $setIndexBufferData = (buffer: Int16Array): void =>
 {
     $indexBufferData = buffer;
-}
+};
 
 /**
  * @type {number}
@@ -82,7 +82,7 @@ let $vertexBufferPosition: number = 0;
 /**
  * @description 頂点バッファの位置を返却
  *              Returns the position of the vertex buffer
- * 
+ *
  * @return {number}
  * @method
  * @protected
@@ -95,7 +95,7 @@ export const $getVertexBufferPosition = (): number =>
 /**
  * @description 頂点バッファの位置を設定
  *              Set the position of the vertex buffer
- * 
+ *
  * @param {number} position
  * @method
  * @protected
@@ -114,7 +114,7 @@ let $indexBufferPosition: number = 0;
 /**
  * @description インデックスバッファの位置を返却
  *              Returns the position of the index buffer
- * 
+ *
  * @return {number}
  * @method
  * @protected
@@ -127,7 +127,7 @@ export const $getIndexBufferPosition = (): number =>
 /**
  * @description インデックスバッファの位置を設定
  *              Set the position of the index buffer
- * 
+ *
  * @param {number} position
  * @method
  * @protected

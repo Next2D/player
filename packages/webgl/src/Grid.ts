@@ -44,7 +44,7 @@ export const $setGridData = (grid_data: Float32Array): void =>
 /**
  * @description グリッドのオフセットを設定
  *              Set the grid offset.
- * 
+ *
  * @param {number} x
  * @param {number} y
  * @return {void}
@@ -62,7 +62,7 @@ export const $setGridOffset = (x: number, y: number): void =>
  * @description グリッドの有効状態を解除
  *              Disable the grid.
  *
- * 
+ *
  * @return {void}
  * @method
  * @protected

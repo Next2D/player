@@ -7,7 +7,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description ブレンドモードを消去に設定します。
  *              Set the blend mode to erase.
- * 
+ *
  * @return {void}
  * @method
  * @protected

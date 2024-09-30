@@ -14,11 +14,11 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description パスコマンドのビットマップ塗り実行します。
  *              Execute bitmap painting of path commands.
- * 
- * @param  {Uint8Array} pixels 
- * @param  {number} width 
- * @param  {number} height 
- * @param  {boolean} repeat 
+ *
+ * @param  {Uint8Array} pixels
+ * @param  {number} width
+ * @param  {number} height
+ * @param  {boolean} repeat
  * @return {void}
  * @method
  * @protected
@@ -62,7 +62,7 @@ export const execute = (
     $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
     $gl.colorMask(true, true, true, true);
 
-    const shaderManager = variantsBitmapShaderService(false, Boolean(repeat));
+    const shaderManager = variantsBitmapShaderService(false, repeat);
     shaderManagerSetBitmapFillUniformService(
         shaderManager, width, height
     );

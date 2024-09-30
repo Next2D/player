@@ -65,7 +65,7 @@ import {
 /**
  * @description WebGL版、Next2Dのコンテキスト
  *              WebGL version, Next2D context
- * 
+ *
  * @class
  */
 export class Context
@@ -73,7 +73,7 @@ export class Context
     /**
      * @description matrixのデータを保持するスタック
      *              Stack to hold matrix data
-     * 
+     *
      * @type {Float32Array[]}
      * @protected
      */
@@ -82,7 +82,7 @@ export class Context
     /**
      * @description 2D変換行列
      *              2D transformation matrix
-     * 
+     *
      * @type {Float32Array}
      * @protected
      */
@@ -91,7 +91,7 @@ export class Context
     /**
      * @description 背景色のR
      *              Background color R
-     * 
+     *
      * @type {number}
      * @protected
      */
@@ -100,7 +100,7 @@ export class Context
     /**
      * @description 背景色のG
      *              Background color G
-     * 
+     *
      * @type {number}
      * @protected
      */
@@ -109,7 +109,7 @@ export class Context
     /**
      * @description 背景色のB
      *              Background color B
-     * 
+     *
      * @type {number}
      * @protected
      */
@@ -118,7 +118,7 @@ export class Context
     /**
      * @description 背景色のA
      *              Background color A
-     * 
+     *
      * @type {number}
      * @protected
      */
@@ -127,7 +127,7 @@ export class Context
     /**
      * @description メインのアタッチメントオブジェクト
      *              Main attachment object
-     * 
+     *
      * @type {IAttachmentObject}
      * @protected
      */
@@ -136,7 +136,7 @@ export class Context
     /**
      * @description グローバルアルファ
      *              Global alpha
-     * 
+     *
      * @type {number}
      * @default 1
      * @public
@@ -146,7 +146,7 @@ export class Context
     /**
      * @description 合成モード
      *              composite mode
-     * 
+     *
      * @type {IBlendMode}
      * @default "normal"
      * @public
@@ -156,7 +156,7 @@ export class Context
     /**
      * @description イメージのスムージング設定
      *              Image smoothing setting
-     * 
+     *
      * @type {boolean}
      * @default false
      * @public
@@ -166,7 +166,7 @@ export class Context
     /**
      * @description 塗りつぶしのRGBAを保持するFloat32Array
      *              Float32Array that holds the RGBA of the fill
-     * 
+     *
      * @type {Float32Array}
      * @protected
      */
@@ -175,7 +175,7 @@ export class Context
     /**
      * @description 線のRGBAを保持するFloat32Array
      *              Float32Array that holds the RGBA of the line
-     * 
+     *
      * @type {Float32Array}
      * @protected
      */
@@ -184,7 +184,7 @@ export class Context
     /**
      * @description マスクの描画範囲
      *              Drawing range of the mask
-     * 
+     *
      * @type {IBounds}
      * @protected
      */
@@ -193,7 +193,7 @@ export class Context
     /**
      * @description ストロークの太さ
      *              Stroke thickness
-     * 
+     *
      * @type {number}
      * @public
      */
@@ -202,7 +202,7 @@ export class Context
     /**
      * @description ストロークのキャップ
      *              Stroke cap
-     * 
+     *
      * @type {number}
      * @public
      */
@@ -211,7 +211,7 @@ export class Context
     /**
      * @description ストロークのジョイント
      *              Stroke joint
-     * 
+     *
      * @type {number}
      * @public
      */
@@ -220,7 +220,7 @@ export class Context
     /**
      * @description ストロークのマイターリミット
      *              Stroke miter limit
-     * 
+     *
      * @type {number}
      * @public
      */
@@ -232,7 +232,7 @@ export class Context
      * @constructor
      * @public
      */
-    constructor (gl: WebGL2RenderingContext, samples: number) 
+    constructor (gl: WebGL2RenderingContext, samples: number)
     {
         $setWebGL2RenderingContext(gl);
         $setRenderMaxSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
@@ -298,11 +298,11 @@ export class Context
     /**
      * @description 背景色を更新
      *              Update background color
-     * 
-     * @param  {number} red 
-     * @param  {number} green 
-     * @param  {number} blue 
-     * @param  {number} alpha 
+     *
+     * @param  {number} red
+     * @param  {number} green
+     * @param  {number} blue
+     * @param  {number} alpha
      * @return {void}
      * @method
      * @public
@@ -315,7 +315,7 @@ export class Context
     /**
      * @description 背景色を指定カラーで塗りつぶす
      *              Fill the background color with the specified color
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -326,7 +326,7 @@ export class Context
             this.$clearColorR,
             this.$clearColorG,
             this.$clearColorB,
-            this.$clearColorA,
+            this.$clearColorA
         );
     }
 
@@ -348,11 +348,11 @@ export class Context
     /**
      * @description 指定範囲をクリアする
      *              Clear the specified range
-     * 
-     * @param  {number} x 
-     * @param  {number} y 
-     * @param  {number} w 
-     * @param  {number} h 
+     *
+     * @param  {number} x
+     * @param  {number} y
+     * @param  {number} w
+     * @param  {number} h
      * @return {void}
      * @method
      * @purotected
@@ -365,7 +365,7 @@ export class Context
     /**
      * @description アタッチメントオブジェクトをバインド
      *              Bind the attachment object
-     * 
+     *
      * @param {IAttachmentObject} attachment_object
      * @return {void}
      * @method
@@ -379,7 +379,7 @@ export class Context
     /**
      * @description 現在の2D変換行列を保存
      *             Save the current 2D transformation matrix
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -447,7 +447,7 @@ export class Context
     /**
      * @description コンテキストの値を初期化する
      *              Initialize the values of the context
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -460,7 +460,7 @@ export class Context
     /**
      * @description パスを開始
      *              Start the path
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -477,7 +477,7 @@ export class Context
     /**
      * @description パスを移動
      *              Move the path
-     * 
+     *
      * @param  {number} x
      * @param  {number} y
      * @return {void}
@@ -507,11 +507,11 @@ export class Context
     /**
      * @description 二次ベジェ曲線を描画
      *              Draw a quadratic Bezier curve
-     * 
-     * @param  {number} cx 
-     * @param  {number} cy 
-     * @param  {number} x 
-     * @param  {number} y 
+     *
+     * @param  {number} cx
+     * @param  {number} cy
+     * @param  {number} x
+     * @param  {number} y
      * @return {void}
      * @method
      * @public
@@ -524,11 +524,11 @@ export class Context
     /**
      * @description 塗りつぶしスタイルを設定
      *              Set fill style
-     * 
-     * @param  {number} red 
-     * @param  {number} green 
-     * @param  {number} blue 
-     * @param  {number} alpha 
+     *
+     * @param  {number} red
+     * @param  {number} green
+     * @param  {number} blue
+     * @param  {number} alpha
      * @return {void}
      * @method
      * @public
@@ -544,11 +544,11 @@ export class Context
     /**
      * @description 線のスタイルを設定
      *              Set line style
-     * 
-     * @param  {number} red 
-     * @param  {number} green 
-     * @param  {number} blue 
-     * @param  {number} alpha 
+     *
+     * @param  {number} red
+     * @param  {number} green
+     * @param  {number} blue
+     * @param  {number} alpha
      * @return {void}
      * @method
      * @public
@@ -564,7 +564,7 @@ export class Context
     /**
      * @description パスを閉じる
      *              Close the path
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -577,7 +577,7 @@ export class Context
     /**
      * @description 円弧を描画
      *              Draw an arc
-     * 
+     *
      * @param {number} x
      * @param {number} y
      * @param {number} radius
@@ -593,13 +593,13 @@ export class Context
     /**
      * @description 3次ベジェ曲線を描画
      *              Draw a cubic Bezier curve
-     * 
-     * @param  {number} cx1 
-     * @param  {number} cy1 
-     * @param  {number} cx2 
-     * @param  {number} cy2 
-     * @param  {number} x 
-     * @param  {number} y 
+     *
+     * @param  {number} cx1
+     * @param  {number} cy1
+     * @param  {number} cx2
+     * @param  {number} cy2
+     * @param  {number} x
+     * @param  {number} y
      * @return {void}
      * @method
      * @public
@@ -612,7 +612,7 @@ export class Context
     /**
      * @description 塗りつぶしを実行
      *              Perform fill
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -625,27 +625,27 @@ export class Context
     /**
      * @description グラデーションの塗りつぶしを実行
      *              Perform gradient fill
-     * 
-     * @param  {number} type 
-     * @param  {array} stops 
-     * @param  {Float32Array} matrix 
-     * @param  {number} spread 
-     * @param  {number} interpolation 
-     * @param  {number} focal 
+     *
+     * @param  {number} type
+     * @param  {array} stops
+     * @param  {Float32Array} matrix
+     * @param  {number} spread
+     * @param  {number} interpolation
+     * @param  {number} focal
      * @return {void}
      * @method
      * @public
      */
     gradientFill (
-        type: number, 
-        stops: number[], 
-        matrix: Float32Array, 
-        spread: number, 
-        interpolation: number, 
+        type: number,
+        stops: number[],
+        matrix: Float32Array,
+        spread: number,
+        interpolation: number,
         focal: number
     ): void {
         contextGradientFillUseCase(
-            type, stops, matrix, 
+            type, stops, matrix,
             spread, interpolation, focal
         );
     }
@@ -653,9 +653,9 @@ export class Context
     /**
      * @description 塗りのピクセルデータを描画
      *              Draw pixel data of the fill
-     * 
-     * @param  {Uint8Array} pixels 
-     * @param  {number} width 
+     *
+     * @param  {Uint8Array} pixels
+     * @param  {number} width
      * @param  {number} height
      * @param  {boolean} repeat
      * @param  {boolean} smooth
@@ -678,7 +678,7 @@ export class Context
     /**
      * @description 線の描画を実行
      *              Perform line drawing
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -691,27 +691,27 @@ export class Context
     /**
      * @description 線のグラデーションを実行
      *              Perform gradient of the line
-     * 
-     * @param  {number} type 
-     * @param  {array} stops 
-     * @param  {Float32Array} matrix 
-     * @param  {number} spread 
-     * @param  {number} interpolation 
-     * @param  {number} focal 
+     *
+     * @param  {number} type
+     * @param  {array} stops
+     * @param  {Float32Array} matrix
+     * @param  {number} spread
+     * @param  {number} interpolation
+     * @param  {number} focal
      * @return {void}
      * @method
      * @public
      */
     gradientStroke (
-        type: number, 
-        stops: number[], 
-        matrix: Float32Array, 
-        spread: number, 
-        interpolation: number, 
+        type: number,
+        stops: number[],
+        matrix: Float32Array,
+        spread: number,
+        interpolation: number,
         focal: number
     ): void {
         contextGradientStrokeUseCase(
-            type, stops, matrix, 
+            type, stops, matrix,
             spread, interpolation, focal
         );
     }
@@ -719,9 +719,9 @@ export class Context
     /**
      * @description 線のピクセルデータを描画
      *              Draw pixel data of the line
-     * 
-     * @param  {Uint8Array} pixels 
-     * @param  {number} width 
+     *
+     * @param  {Uint8Array} pixels
+     * @param  {number} width
      * @param  {number} height
      * @param  {boolean} repeat
      * @param  {boolean} smooth
@@ -744,7 +744,7 @@ export class Context
     /**
      * @description マスク処理を実行
      *              Perform mask processing
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -757,7 +757,7 @@ export class Context
     /**
      * @description 現在のアタッチメントオブジェクトを取得
      *              Get the current attachment object
-     * 
+     *
      * @return {IAttachmentObject | null}
      * @readonly
      * @public
@@ -770,7 +770,7 @@ export class Context
     /**
      * @description アトラス専用のアタッチメントオブジェクトを取得
      *              Get the attachment object for the atlas
-     * 
+     *
      * @return {IAttachmentObject}
      * @readonly
      * @public
@@ -783,9 +783,9 @@ export class Context
     /**
      * @description キャッシュするポジションのノードを作成
      *              Create a node for the position to cache
-     * 
+     *
      * @param  {number} width
-     * @param  {number} height 
+     * @param  {number} height
      * @return {Node}
      * @method
      * @public
@@ -798,8 +798,8 @@ export class Context
     /**
      * @description 指定のノードを削除
      *              Remove the specified node
-     * 
-     * @param  {Node} node 
+     *
+     * @param  {Node} node
      * @return {void}
      * @method
      * @public
@@ -812,13 +812,13 @@ export class Context
     /**
      * @description 指定のノード範囲で描画を開始
      *              Start drawing in the specified node range
-     * 
+     *
      * @param  {Node} node
      * @return {void}
      * @method
      * @public
      */
-    beginNodeRendering (node: Node): void 
+    beginNodeRendering (node: Node): void
     {
         contextBeginNodeRenderingService(
             node.x, node.y, node.w, node.h
@@ -828,7 +828,7 @@ export class Context
     /**
      * @description 指定のノード範囲で描画を終了
      *              End drawing in the specified node range
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -842,21 +842,21 @@ export class Context
      * @description インスタンスを描画
      *              Draw an instance
      *
-     * @param  {number} x_min 
-     * @param  {number} y_min 
-     * @param  {number} x_max 
-     * @param  {number} y_max 
-     * @param  {Float32Array} color_transform 
+     * @param  {number} x_min
+     * @param  {number} y_min
+     * @param  {number} x_max
+     * @param  {number} y_max
+     * @param  {Float32Array} color_transform
      * @return {void}
      * @method
      * @public
      */
     drawDisplayObject (
         node: Node,
-        x_min: number, 
+        x_min: number,
         y_min: number,
         x_max: number,
-        y_max: number, 
+        y_max: number,
         color_transform: Float32Array
     ): void {
         blnedDrawDisplayObjectUseCase(
@@ -867,7 +867,7 @@ export class Context
     /**
      * @description インスタンス配列を描画
      *              Draw an instance array
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -880,7 +880,7 @@ export class Context
     /**
      * @description インスタンス配列をクリア
      *              Clear the instance array
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -893,7 +893,7 @@ export class Context
     /**
      * @description フレームバッファの描画情報をキャンバスに転送
      *              Transfer the drawing information of the frame buffer to the canvas
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -916,17 +916,17 @@ export class Context
     drawPixels (node: Node, pixels: Uint8Array): void
     {
         contextDrawPixelsUseCase(node, pixels);
-    };
+    }
 
     /**
      * @description マスクを開始準備
      *              Prepare to start drawing the mask
-     * 
+     *
      * @return {void}
      * @method
      * @public
      */
-    beginMask (): void 
+    beginMask (): void
     {
         maskBeginMaskService();
     }
@@ -934,7 +934,7 @@ export class Context
     /**
      * @description マスクの描画を開始
      *              Start drawing the mask
-     * 
+     *
      * @param  {number} x_min
      * @param  {number} y_min
      * @param  {number} x_max
@@ -955,7 +955,7 @@ export class Context
     /**
      * @description マスクの描画を終了
      *              End mask drawing
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -968,7 +968,7 @@ export class Context
     /**
      * @description マスクの終了処理
      *              Mask end processing
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -982,8 +982,8 @@ export class Context
     /**
      * @description グリッドの描画を開始
      *              Start drawing the grid
-     * 
-     * @param {Float32Array} grid_data 
+     *
+     * @param {Float32Array} grid_data
      * @return {void}
      * @method
      * @public
@@ -996,7 +996,7 @@ export class Context
     /**
      * @description グリッドの描画を終了
      *              End drawing the grid
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -1009,8 +1009,8 @@ export class Context
     /**
      * @description グリッドのオフセットを設定
      *              Set the grid offset
-     * 
-     * @param  {number} x 
+     *
+     * @param  {number} x
      * @param  {number} y
      * @return {void}
      * @method

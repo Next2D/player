@@ -3,7 +3,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description 背景色を更新
  *              Update background color
- * 
+ *
  * @param  {number} red
  * @param  {number} green
  * @param  {number} blue

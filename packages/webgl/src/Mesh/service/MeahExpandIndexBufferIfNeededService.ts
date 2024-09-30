@@ -7,7 +7,7 @@ import {
 /**
  * @description インデックスバッファのサイズを拡張する
  *              Expand the size of the index buffer
- * 
+ *
  * @param {number} delta_length
  * @method
  * @protected

@@ -7,7 +7,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description ブレンドモードをリセット
  *              Reset the blend mode
- * 
+ *
  * @return {void}
  * @method
  * @protected

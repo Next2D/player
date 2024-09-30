@@ -7,7 +7,7 @@ import {
 /**
  * @description 頂点バッファのサイズを拡張する
  *              Expand the size of the vertex buffer
- * 
+ *
  * @param {number} delta_length
  * @method
  * @protected

@@ -6,7 +6,7 @@ import { $objectPool } from "../../ColorBufferObject";
 /**
  * @description 指定サイズのobjectがpoolにあれば再利用、なければ新規作成する
  *              If an object of the specified size is in the pool, reuse it, otherwise create a new one
- * 
+ *
  * @param  {number} area
  * @return {object}
  * @method

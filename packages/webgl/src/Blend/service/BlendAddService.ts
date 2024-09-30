@@ -7,7 +7,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description ブレンドモードを加算に設定します。
  *              Set the blend mode to add.
- * 
+ *
  * @return {void}
  * @method
  * @protected

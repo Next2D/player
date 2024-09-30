@@ -19,22 +19,22 @@ import {
  * @description 線のグラデーションを実行
  *              Execute gradient of line
  *
- * @param  {number} type 
- * @param  {array} stops 
- * @param  {Float32Array} matrix 
- * @param  {number} spread 
- * @param  {number} interpolation 
- * @param  {number} focal 
+ * @param  {number} type
+ * @param  {array} stops
+ * @param  {Float32Array} matrix
+ * @param  {number} spread
+ * @param  {number} interpolation
+ * @param  {number} focal
  * @return {void}
  * @method
  * @protected
  */
 export const execute = (
-    type: number, 
-    stops: number[], 
-    matrix: Float32Array, 
-    spread: number, 
-    interpolation: number, 
+    type: number,
+    stops: number[],
+    matrix: Float32Array,
+    spread: number,
+    interpolation: number,
     focal: number
 ): void => {
 
@@ -46,14 +46,14 @@ export const execute = (
     const textureObject = gradientLUTGenerateShapeTextureUseCase(stops, interpolation);
     textureManagerBind0UseCase(textureObject);
 
-    let shaderManager: ShaderManager | null= null;
+    let shaderManager: ShaderManager | null = null;
     if (type === 0) { // linear
         shaderManager = variantsGradientShapeShaderUseCase(
             true, false, false, spread
         );
 
         const points = $linearGradientXY(matrix);
-        
+
         const inverseMatrix = $inverseMatrix($context.$matrix);
         shaderManagerSetGradientStrokeUniformService(
             shaderManager, type, $context.$matrix,

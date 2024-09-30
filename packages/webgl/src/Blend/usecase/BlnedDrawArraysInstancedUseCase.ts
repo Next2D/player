@@ -14,7 +14,7 @@ import {
 /**
  * @description インスタンス描画を実行します。
  *              Execute instance drawing.
- * 
+ *
  * @return {void}
  * @method
  * @protected
@@ -25,7 +25,7 @@ export const execute = (): void =>
     if (!shaderInstancedManager.count) {
         return ;
     }
-    
+
     const currentAttachmentObject = $context.currentAttachmentObject;
 
     const atlasAttachmentObject = $context.atlasAttachmentObject;

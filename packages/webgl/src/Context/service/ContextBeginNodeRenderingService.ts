@@ -4,7 +4,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description アトラスへの描画範囲を設定
  *              Set the drawing range for the atlas
- * 
+ *
  * @param  {number} x
  * @param  {number} y
  * @param  {number} w
@@ -21,7 +21,7 @@ export const execute = (x: number, y: number, w: number, h: number): void =>
 
     // 初期化
     $gl.clear($gl.COLOR_BUFFER_BIT | $gl.STENCIL_BUFFER_BIT);
-    
+
     // 描画領域をあらためて設定
     $gl.scissor(x, y, w, h);
 };

@@ -8,7 +8,7 @@ import { $gl } from "../../WebGLUtil";
 /**
  * @description ブレンドモードを有効にする
  *              Enable blend mode
- * 
+ *
  * @return {void}
  * @method
  * @protected

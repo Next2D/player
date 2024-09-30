@@ -7,7 +7,7 @@ import { execute as maskEndMaskService } from "./MaskEndMaskService";
 import { execute as shaderManagerFillUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerFillUseCase";
 import {
     $context,
-    $getArray, 
+    $getArray,
     $gl,
     $poolArray
 } from "../../WebGLUtil";
@@ -35,7 +35,7 @@ export const execute = (): void =>
         $gl.clear($gl.STENCIL_BUFFER_BIT);
         return ;
     }
-    
+
     // 上位レベルのステンシルバッファをクリア
     const width  = currentAttachmentObject.width;
     const height = currentAttachmentObject.height;
@@ -60,7 +60,7 @@ export const execute = (): void =>
     $gl.stencilOp($gl.REPLACE, $gl.REPLACE, $gl.REPLACE);
     $gl.stencilMask(1 << currentAttachmentObject.clipLevel);
     $gl.colorMask(false, false, false, false);
-    
+
     shaderManagerFillUseCase(shaderManager, vertexArrayObject);
 
     maskEndMaskService();

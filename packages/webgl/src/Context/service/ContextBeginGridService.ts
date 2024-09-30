@@ -3,7 +3,7 @@ import { $setGridData } from "../../Grid";
 /**
  * @description グリッドデータをせットします。
  *              Set the grid data.
- * 
+ *
  * @param {Float32Array} grid_data
  * @return {void}
  * @method

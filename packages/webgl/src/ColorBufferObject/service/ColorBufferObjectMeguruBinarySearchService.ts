@@ -3,7 +3,7 @@ import { $objectPool } from "../../ColorBufferObject";
 /**
  * @description めぐる式二分探索法でobject_poolを検索する
  *              Search object_pool with Meguru binary search method
- * 
+ *
  * @param  {number} area
  * @return {number}
  * @method

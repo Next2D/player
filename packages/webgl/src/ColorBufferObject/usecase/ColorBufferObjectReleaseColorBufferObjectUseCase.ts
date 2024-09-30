@@ -1,5 +1,5 @@
 import type { IColorBufferObject } from "../../interface/IColorBufferObject";
-import { execute as colorBufferObjectMeguruBinarySearchService } from "../service/ColorBufferObjectMeguruBinarySearchService"
+import { execute as colorBufferObjectMeguruBinarySearchService } from "../service/ColorBufferObjectMeguruBinarySearchService";
 import { $objectPool } from "../../ColorBufferObject";
 
 /**

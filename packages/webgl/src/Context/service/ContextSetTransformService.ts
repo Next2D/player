@@ -1,14 +1,14 @@
 /**
  * @description 2D変換行列を設定します
  *              Set the 2D transformation matrix
- * 
- * @param  {Float32Array} matrix 
- * @param  {number} a 
- * @param  {number} b 
- * @param  {number} c 
- * @param  {number} d 
- * @param  {number} e 
- * @param  {number} f 
+ *
+ * @param  {Float32Array} matrix
+ * @param  {number} a
+ * @param  {number} b
+ * @param  {number} c
+ * @param  {number} d
+ * @param  {number} e
+ * @param  {number} f
  * @return {void}
  * @method
  * @protected
