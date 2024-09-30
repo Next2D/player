@@ -13,14 +13,12 @@ import { $cacheStore } from "@next2d/cache";
  * @description Graphicsのrecodesを解析して数値配列を生成します。
  *              Parses Graphics recodes and generates a numerical array.
  *
- * @param  {number} width
- * @param  {number} height
  * @param  {array} recodes
  * @return {any[]}
  * @method
  * @public
  */
-export const execute = (width: number, height: number, recodes : any[] | null): any[] =>
+export const execute = (recodes : any[] | null): any[] =>
 {
     if (!recodes) {
         return [];

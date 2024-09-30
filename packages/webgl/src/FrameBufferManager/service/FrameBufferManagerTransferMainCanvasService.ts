@@ -15,8 +15,7 @@ import {
  */
 export const execute = (): void =>
 {
-    const mainAttachmentObject = $context.atlasAttachmentObject as IAttachmentObject;
-    // const mainAttachmentObject = $context.$mainAttachmentObject as IAttachmentObject;
+    const mainAttachmentObject = $context.$mainAttachmentObject as IAttachmentObject;
     $context.bind(mainAttachmentObject);
 
     // use main Framebuffer

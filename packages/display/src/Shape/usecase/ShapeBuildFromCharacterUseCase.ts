@@ -34,6 +34,8 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                     break;
                 }
 
+                shape.isBitmap = true;
+
                 if (!bitmap.imageBuffer) {
                     bitmap.imageBuffer = new Uint8Array(bitmap.buffer as number[]);
                     bitmap.buffer = null;
@@ -42,46 +44,77 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                 const bitmapWidth  = Math.ceil(Math.abs(bitmap.bounds.xMax - bitmap.bounds.xMin));
                 const bitmapHeight = Math.ceil(Math.abs(bitmap.bounds.yMax - bitmap.bounds.yMin));
 
-                shape.isBitmap = true;
-                if (width === bitmapWidth && height === bitmapHeight) {
-                    shape.setBitmapBuffer(
-                        Math.ceil(Math.abs(bitmap.bounds.xMax - bitmap.bounds.xMin)),
-                        Math.ceil(Math.abs(bitmap.bounds.yMax - bitmap.bounds.yMin)),
-                        bitmap.imageBuffer
-                    );
-                } else {
-                    const bitmapData  = new BitmapData(bitmapWidth, bitmapHeight);
-                    bitmapData.buffer = bitmap.imageBuffer;
+                if (character.grid) {
 
+                    // 9slice image
                     if (character.recodes) {
-                        const type = character.recodes[character.recodes.length - 10];
-                        if (type === Graphics.BITMAP_STROKE) {
-                            
-                            character.recodes.splice(-5, 5);
-                            character.recodes.push(
-                                bitmapData, null, true, false
-                            );
+                        const recodes = character.recodes.slice(0);
+                        recodes.splice(-6, 6);
 
-                            character.recodeBuffer = new Float32Array(
-                                graphicsToNumberArrayService(width, height, character.recodes)
-                            );
-                            $poolArray(character.recodes);
-                            character.recodes = null;
-                        }
+                        const bitmapData  = new BitmapData(bitmapWidth, bitmapHeight);
+                        bitmapData.buffer = bitmap.imageBuffer;
+                        recodes.push(
+                            Graphics.BITMAP_FILL,
+                            bitmapData,
+                            null,
+                            true,
+                            false,
+                            9
+                        );
+
+                        const numberArray = graphicsToNumberArrayService(recodes);
+                        graphics.buffer = new Float32Array(numberArray);
+
+                        $poolArray(recodes);
+                        $poolArray(numberArray);
                     }
+                    
+                } else {
 
-                    if (character.recodeBuffer) {
-                        graphics.buffer = character.recodeBuffer;
+                    // draw image
+                    if (width === bitmapWidth && height === bitmapHeight) {
+
+                        shape.setBitmapBuffer(
+                            Math.ceil(Math.abs(bitmap.bounds.xMax - bitmap.bounds.xMin)),
+                            Math.ceil(Math.abs(bitmap.bounds.yMax - bitmap.bounds.yMin)),
+                            bitmap.imageBuffer
+                        );
+
                     } else {
-                        graphics
-                            .beginBitmapFill(bitmapData)
-                            .drawRect(0, 0, width, height);
+
+                        const bitmapData  = new BitmapData(bitmapWidth, bitmapHeight);
+                        bitmapData.buffer = bitmap.imageBuffer;
+
+                        if (character.recodes) {
+                            const type = character.recodes[character.recodes.length - 10];
+                            if (type === Graphics.BITMAP_STROKE) {
+                                
+                                const recodes = character.recodes.slice(0);
+                                recodes.splice(-5, 5);
+                                recodes.push(
+                                    bitmapData, null, true, false
+                                );
+    
+                                const numberArray = graphicsToNumberArrayService(recodes);
+                                graphics.buffer = new Float32Array(numberArray);
+
+                                $poolArray(recodes);
+                                $poolArray(numberArray);
+
+                            } else {
+
+                                graphics
+                                    .beginBitmapFill(bitmapData)
+                                    .drawRect(0, 0, width, height);
+
+                            }
+                        }
                     }
                 }
             }
             break;
 
-        case character.inBitmap:
+        case character.inBitmap: // to swf only
             {
                 shape.isBitmap = true;
 
@@ -103,7 +136,7 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
             }
             break;
 
-        case "buffer" in character:
+        case "buffer" in character: // bitmap
             if (!character.imageBuffer) {
                 character.imageBuffer = new Uint8Array(character.buffer as number[]);
                 character.buffer = null;
@@ -116,20 +149,19 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
             );
             break;
 
-        default:
+        default: // normal shape
             if (character.recodes) {
                 character.recodeBuffer = new Float32Array(
-                    graphicsToNumberArrayService(width, height, character.recodes)
+                    graphicsToNumberArrayService(character.recodes)
                 );
                 $poolArray(character.recodes);
                 character.recodes = null;
             }
 
-            if (!character.recodeBuffer) {
-                break;
+            if (character.recodeBuffer) {
+                graphics.buffer = character.recodeBuffer;
             }
-
-            graphics.buffer = character.recodeBuffer;
+            
             break;
     }
 

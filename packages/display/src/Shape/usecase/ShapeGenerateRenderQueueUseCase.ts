@@ -310,7 +310,7 @@ export const execute = (
             $poolFloat32Array6(pMatrix);
         }
 
-        const buffer = isDrawable
+        const buffer = isDrawable || isGridEnabled
             ? graphics.buffer
             : shape.$bitmapBuffer as Uint8Array
 

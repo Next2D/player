@@ -82,7 +82,7 @@ export const execute = (render_queue: Float32Array): void =>
         }
     }
 
-    // $context.drawArraysInstanced();
+    $context.drawArraysInstanced();
 
     if ($isResize()) {
         $resizeComplete();

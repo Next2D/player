@@ -1556,10 +1556,7 @@ export class Graphics
             this.endFill();
         }
 
-        const width  = Math.ceil(Math.abs(this.xMax - this.xMin));
-        const height = Math.ceil(Math.abs(this.yMax - this.yMin));
-
-        const array: any[] = graphicsToNumberArrayService(width, height, this.$recodes);
+        const array: any[] = graphicsToNumberArrayService(this.$recodes);
         this._$buffer = new Float32Array(array);
         $poolArray(array);
 

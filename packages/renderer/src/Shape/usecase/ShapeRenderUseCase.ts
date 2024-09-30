@@ -172,7 +172,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     $context.imageSmoothingEnabled = true;
     $context.globalCompositeOperation = "normal";
 
-    if (isBitmap) {
+    if (isBitmap && !isGridEnabled) {
         $context.setTransform(
             matrix[0], matrix[1], 
             matrix[2], matrix[3],
