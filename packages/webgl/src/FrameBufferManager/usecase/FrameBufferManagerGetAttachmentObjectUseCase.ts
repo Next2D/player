@@ -29,8 +29,8 @@ export const execute = (
         : frameBufferManagerCreateAttachmentObjectService();
 
     // テクスチャを取得
-    attachmentObject.width   = width;
-    attachmentObject.height  = height;
+    attachmentObject.width  = width;
+    attachmentObject.height = height;
 
     if (multisample) {
         attachmentObject.msaa    = true;

@@ -4,6 +4,7 @@ import { execute as displayObjectGetRawColorTransformUseCase } from "../../Displ
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as shapeGenerateHashService } from "../service/ShapeGenerateHashService";
+import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
 import { $stage } from "../../Stage";
 import { $cacheStore } from "@next2d/cache";
 import {
@@ -323,6 +324,8 @@ export const execute = (
     } else {
         render_queue.push(1);
     }
+
+    render_queue.push(displayObjectBlendToNumberService(shape.blendMode));
 
     if (tColorTransform !== color_transform) {
         ColorTransform.release(tColorTransform);

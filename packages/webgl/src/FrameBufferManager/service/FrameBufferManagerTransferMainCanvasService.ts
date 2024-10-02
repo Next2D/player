@@ -18,6 +18,8 @@ export const execute = (): void =>
     const mainAttachmentObject = $context.$mainAttachmentObject as IAttachmentObject;
     $context.bind(mainAttachmentObject);
 
+    $gl.bindFramebuffer($gl.READ_FRAMEBUFFER, $readFrameBuffer);
+
     // use main Framebuffer
     $gl.bindFramebuffer(
         $gl.DRAW_FRAMEBUFFER,

@@ -21,17 +21,25 @@ export const execute = (context: Context, width: number, height: number): void =
     // clear InstacedArray
     context.clearArraysInstanced();
 
-    if (context.$mainAttachmentObject) {
-        frameBufferManagerReleaseAttachmentObjectUseCase(context.$mainAttachmentObject);
-
-        // unbind
-        if (context.$mainAttachmentObject === $getCurrentAttachment()) {
-            frameBufferManagerUnBindAttachmentObjectService();
+    if (context.$stackAttachmentObject.length) {
+        for (let idx = 0; idx < context.$stackAttachmentObject.length; ++idx) {
+            const attachmentObject = context.$stackAttachmentObject[idx];
+            if (!attachmentObject) {
+                continue;
+            }
+            frameBufferManagerReleaseAttachmentObjectUseCase(attachmentObject);
+        }
+    } else {
+        if (context.$mainAttachmentObject) {
+            frameBufferManagerReleaseAttachmentObjectUseCase(context.$mainAttachmentObject);
         }
     }
 
     // reset node
     atlasManagerResetUseCase();
+
+    // unbind
+    frameBufferManagerUnBindAttachmentObjectService();
 
     // new attachment object
     context.$mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, false);

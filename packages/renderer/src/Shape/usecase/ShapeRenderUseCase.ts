@@ -2,6 +2,7 @@ import type { Node } from "@next2d/texture-packer";
 import { $cacheStore } from "@next2d/cache";
 import { execute as shapeCommandService } from "../service/ShapeCommandService"; 
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService"; 
+import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService"; 
 import { $clamp } from "../../../../webgl/src/WebGLUtil";
 import {
     $context,
@@ -167,10 +168,11 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         }
     }
 
-    // todo
+    const blendMode = render_queue[index++];
+
     $context.globalAlpha = $clamp(colorTransform[3] + colorTransform[7] / 255, 0, 1, 0);
     $context.imageSmoothingEnabled = true;
-    $context.globalCompositeOperation = "normal";
+    $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
 
     if (isBitmap && !isGridEnabled) {
         $context.setTransform(

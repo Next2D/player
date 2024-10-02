@@ -51,7 +51,8 @@ import {
     $setReadFrameBuffer,
     $setDrawFrameBuffer,
     $getCurrentAttachment,
-    $setAtlasFrameBuffer
+    $setAtlasFrameBuffer,
+    $setBitmapFrameBuffer
 } from "./FrameBufferManager";
 import {
     $setRenderMaxSize,
@@ -132,6 +133,15 @@ export class Context
      * @protected
      */
     public $mainAttachmentObject: IAttachmentObject | null;
+
+    /**
+     * @description アタッチメントオブジェクトを保持するスタック
+     *             Stack to hold attachment objects
+     * 
+     * @type {IAttachmentObject[]}
+     * @protected
+     */
+    public readonly $stackAttachmentObject: IAttachmentObject[];
 
     /**
      * @description グローバルアルファ
@@ -238,7 +248,8 @@ export class Context
         $setRenderMaxSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
         $setSamples(samples);
 
-        this.$stack  = $getArray();
+        this.$stack = $getArray();
+        this.$stackAttachmentObject = $getArray();
         this.$matrix = $getFloat32Array9(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
         // bakground color
@@ -281,6 +292,7 @@ export class Context
         $setReadFrameBuffer(gl);
         $setDrawFrameBuffer(gl);
         $setAtlasFrameBuffer(gl);
+        $setBitmapFrameBuffer(gl);
 
         // VertexArrayObjectの初期起動
         vertexArrayObjectBootUseCase(gl);

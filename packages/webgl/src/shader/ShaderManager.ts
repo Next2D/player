@@ -104,4 +104,18 @@ export class ShaderManager
         const data = this._$uniformMap.get("u_mediump") as NonNullable<IUniformData>;
         return data.array as Int32Array | Float32Array;
     }
+
+    /**
+     * @description texture uniform変数
+     *              texture uniform variable
+     * 
+     * @type {Int32Array | Float32Array}
+     * @readonly
+     * @public
+     */
+    get textures (): Int32Array | Float32Array
+    {
+        const data = this._$uniformMap.get("u_textures") as NonNullable<IUniformData>;
+        return data.array as Int32Array | Float32Array;
+    }
 }

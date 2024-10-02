@@ -162,3 +162,64 @@ export const $useFramebufferBound = (): boolean =>
 {
     return $isFramebufferBound;
 };
+
+/**
+ * @description ビットマップの読み込み専用のFrameBufferオブジェクト
+ *              FrameBuffer object for reading bitmaps only
+ * 
+ * @type {WebGLFramebuffer|null}
+ * @default null
+ * @private
+ */
+let $readBitmapFramebuffer: WebGLFramebuffer | null = null;
+
+/**
+ * @description ビットマップの書き込み専用のFrameBufferオブジェクト
+ *              FrameBuffer object for writing bitmaps only
+ * 
+ * @type {WebGLFramebuffer|null}
+ * @default null
+ * @private
+ */
+let $drawBitmapFramebuffer: WebGLFramebuffer | null = null;
+
+/**
+ * @description ビットマップの読み込み専用のFrameBufferオブジェクトを設定
+ *              Set the FrameBuffer object for reading bitmaps only
+ *
+ * @param  {WebGL2RenderingContext} gl
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setBitmapFrameBuffer = (gl: WebGL2RenderingContext): void =>
+{
+    $drawBitmapFramebuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+    $readBitmapFramebuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+};
+
+/**
+ * @description ビットマップの読み込み専用のFrameBufferオブジェクトを返却
+ *              Returns the FrameBuffer object for reading bitmaps only
+ *
+ * @return {WebGLFramebuffer}
+ * @method
+ * @protected
+ */
+export const $getReadBitmapFrameBuffer = (): WebGLFramebuffer =>
+{
+    return $readBitmapFramebuffer as NonNullable<WebGLFramebuffer>;
+};
+
+/**
+ * @description ビットマップの書き込み専用のFrameBufferオブジェクトを返却
+ *              Returns the FrameBuffer object for writing bitmaps only
+ *
+ * @return {WebGLFramebuffer}
+ * @method
+ * @protected
+ */
+export const $getDrawBitmapFrameBuffer = (): WebGLFramebuffer =>
+{
+    return $drawBitmapFramebuffer as NonNullable<WebGLFramebuffer>;
+};

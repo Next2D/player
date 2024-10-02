@@ -1,15 +1,8 @@
-import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import { execute as variantsBlendInstanceShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService";
 import { execute as shaderInstancedManagerDrawArraysInstancedUseCase } from "../../Shader/ShaderInstancedManager/usecase/ShaderInstancedManagerDrawArraysInstancedUseCase";
 import { execute as blendOperationUseCase } from "../../Blend/usecase/BlendOperationUseCase";
-import {
-    $gl,
-    $context
-} from "../../WebGLUtil";
-import {
-    $atlasFrameBuffer,
-    $setFramebufferBound
-} from "../../FrameBufferManager";
+import { execute as frameBufferManagerTransferAtlasTextureService } from "../../FrameBufferManager/service/FrameBufferManagerTransferAtlasTextureService";
+import { $context } from "../../WebGLUtil";
 
 /**
  * @description インスタンス描画を実行します。
@@ -26,34 +19,13 @@ export const execute = (): void =>
         return ;
     }
 
-    const currentAttachmentObject = $context.currentAttachmentObject;
+    // Transfer to atlas texture.
+    frameBufferManagerTransferAtlasTextureService();
 
-    const atlasAttachmentObject = $context.atlasAttachmentObject;
-    $context.bind(atlasAttachmentObject);
-
-    $gl.bindFramebuffer(
-        $gl.DRAW_FRAMEBUFFER,
-        $atlasFrameBuffer
-    );
-    $setFramebufferBound(false);
-
-    $gl.blitFramebuffer(
-        0, 0, atlasAttachmentObject.width, atlasAttachmentObject.height,
-        0, 0, atlasAttachmentObject.width, atlasAttachmentObject.height,
-        $gl.COLOR_BUFFER_BIT,
-        $gl.NEAREST
-    );
-
-    $context.bind($context.$mainAttachmentObject as IAttachmentObject);
     blendOperationUseCase($context.globalCompositeOperation);
-
     shaderInstancedManagerDrawArraysInstancedUseCase(
         shaderInstancedManager
     );
 
     shaderInstancedManager.clear();
-
-    if (currentAttachmentObject) {
-        $context.bind(currentAttachmentObject);
-    }
 };

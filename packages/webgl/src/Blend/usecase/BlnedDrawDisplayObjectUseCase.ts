@@ -1,6 +1,18 @@
 import type { Node } from "@next2d/texture-packer";
+import type { ITextureObject } from "../../interface/ITextureObject";
 import { execute as variantsBlendInstanceShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService";
+import { execute as variantsBlendDrawShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendDrawShaderService";
 import { $RENDER_MAX_SIZE } from "../../WebGLUtil";
+import { $setActiveAtlasIndex } from "../../AtlasManager";
+import { execute as frameBufferManagerGetTextureFromNodeUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromNodeUseCase";
+import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
+import { execute as textureManagerBind01UseCase } from "../../TextureManager/usecase/TextureManagerBind01UseCase";
+import { execute as frameBufferManagerGetTextureFromBoundsUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromBoundsUseCase";
+import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
+import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
+import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
+import { execute as frameBufferManagerTransferTextureFromRectService } from "../../FrameBufferManager/service/FrameBufferManagerTransferTextureFromRectService";
+import { execute as shaderManagerSetBlendUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetBlendUniformService";
 import {
     $context,
     $getViewportHeight,
@@ -12,7 +24,6 @@ import {
     $getCurrentAtlasIndex,
     $setCurrentAtlasIndex
 } from "../../Blend";
-import { $setActiveAtlasIndex } from "../../AtlasManager";
 
 /**
  * @description DisplayObject単体の描画を実行
@@ -61,10 +72,16 @@ export const execute = (
                 ) {
                     // 異なるフレームバッファになるので、切り替え前にメインバッファに描画を実行
                     $setActiveAtlasIndex($getCurrentAtlasIndex());
+
+                    const currentOperation = $context.globalCompositeOperation;
+                    $context.globalCompositeOperation = $getCurrentBlendMode();
                     $context.drawArraysInstanced();
 
                     // ブレンドモードをセット
+                    $context.globalCompositeOperation = currentOperation;
                     $setCurrentBlendMode($context.globalCompositeOperation);
+
+                    // indexをセット
                     $setCurrentAtlasIndex(node.index);
                     $setActiveAtlasIndex(node.index);
                 }
@@ -93,8 +110,58 @@ export const execute = (
             break;
 
         default:
-            $context.drawArraysInstanced();
-            // todo
+            {
+                // これまでの描画を実行
+                $context.drawArraysInstanced();
+
+                const srcTextureObject = frameBufferManagerGetTextureFromNodeUseCase(node);
+
+                const x = x_min | 0;
+                const y = y_min | 0;
+                const width  = Math.ceil(Math.abs(x_max - x_min));
+                const height = Math.ceil(Math.abs(y_max - y_min));
+                
+                const dstTextureObject = frameBufferManagerGetTextureFromBoundsUseCase(x, y, width, height);
+                
+                const currentAttachmentObject = $context.currentAttachmentObject;
+                const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, false);
+                $context.bind(attachmentObject);
+
+                // ブレンドするテクスチャをバインド
+                textureManagerBind01UseCase(dstTextureObject, srcTextureObject);
+
+                // blend用のシェーダーを取得
+                const shaderManager = variantsBlendDrawShaderService($context.globalCompositeOperation, true);
+                shaderManagerSetBlendUniformService(
+                    shaderManager,
+                    ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
+                );
+
+                shaderManagerDrawTextureUseCase(shaderManager);
+            
+                if (currentAttachmentObject) {
+                    $context.bind(currentAttachmentObject);
+                }
+                  
+                // ブレンドしたtextureを元の座標に描画
+                frameBufferManagerTransferTextureFromRectService(
+                    x, y, attachmentObject.texture as ITextureObject
+                );
+
+                // テクスチャを解放
+                textureManagerReleaseTextureObjectUseCase(srcTextureObject);
+                textureManagerReleaseTextureObjectUseCase(dstTextureObject);
+
+                // フレームバッファを解放
+                frameBufferManagerReleaseAttachmentObjectUseCase(attachmentObject);
+
+                // ブレンドモードをセット
+                $setCurrentBlendMode($context.globalCompositeOperation);
+
+                // indexをセット
+                $setCurrentAtlasIndex(node.index);
+                $setActiveAtlasIndex(node.index);
+            }
             break;
 
     }
