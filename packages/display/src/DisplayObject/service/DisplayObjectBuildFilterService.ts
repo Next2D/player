@@ -25,7 +25,7 @@ import { $getArray } from "../../DisplayObjectUtil";
 export const execute = (surface_filter_list: ISurfaceFilter[]): IFilterArray =>
 {
     const filters: IFilterArray = $getArray();
-    for (let idx: number = 0; idx < length; ++idx) {
+    for (let idx: number = 0; idx < surface_filter_list.length; ++idx) {
 
         const surfaceFilter = surface_filter_list[idx];
         if (!surfaceFilter) {

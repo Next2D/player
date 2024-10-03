@@ -8,7 +8,6 @@ import {
     $Deg2Rad
 } from "./FilterUtil";
 
-
 /**
  * @description DropShadowFilter クラスは、ドロップシャドウを表示オブジェクトに追加します。
  *              シャドウアルゴリズムは、ぼかしフィルターで使用するのと同じボックスフィルターに基づいています。

@@ -1,5 +1,4 @@
 import type { Context } from "../../Context";
-import { $getCurrentAttachment } from "../../FrameBufferManager";
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 import { execute as frameBufferManagerUnBindAttachmentObjectService } from "../../FrameBufferManager/service/FrameBufferManagerUnBindAttachmentObjectService";

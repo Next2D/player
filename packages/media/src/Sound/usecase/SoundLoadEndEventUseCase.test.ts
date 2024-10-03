@@ -32,7 +32,8 @@ describe("SoundLoadendEventService.js test", () =>
             return {
                 "target": {
                     "status": 200,
-                    "statusText": "OK"
+                    "statusText": "OK",
+                    "response": new ArrayBuffer(0)
                 },
                 "loaded": 1,
                 "total": 10

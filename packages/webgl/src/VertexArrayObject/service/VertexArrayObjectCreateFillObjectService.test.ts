@@ -20,7 +20,7 @@ describe("VertexArrayObjectCreateFillObjectService.js method test", () =>
 
         const vertexArrayObject = execute();
         expect(vertexArrayObject.resource).toBe("createVertexArray");
-        expect((vertexArrayObject.indexRanges as IIndexRange[]).length).toBe(0);
+        expect(vertexArrayObject.indexCount).toBe(0);
         expect(vertexArrayObject.vertexBuffer).toBe("createBuffer");
         expect(vertexArrayObject.vertexLength).toBe(0);
     });

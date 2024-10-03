@@ -168,6 +168,11 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         }
     }
 
+    const useFilfer = Boolean(render_queue[index++]);
+    if (useFilfer) {
+        // todo
+    }
+
     const blendMode = render_queue[index++];
 
     $context.globalAlpha = $clamp(colorTransform[3] + colorTransform[7] / 255, 0, 1, 0);

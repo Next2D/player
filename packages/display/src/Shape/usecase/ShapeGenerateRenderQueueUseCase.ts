@@ -325,6 +325,19 @@ export const execute = (
         render_queue.push(1);
     }
 
+    let useFilfer = false;
+    if (shape.filters?.length) {
+        for (let idx = 0; idx < shape.filters.length; idx++) {
+            const filter = shape.filters[idx];
+            if (!filter || !filter.canApplyFilter()) {
+                continue;
+            }
+
+            // render_queue.push(...filter.toArray());
+        }
+    }
+
+    render_queue.push(+useFilfer);
     render_queue.push(displayObjectBlendToNumberService(shape.blendMode));
 
     if (tColorTransform !== color_transform) {

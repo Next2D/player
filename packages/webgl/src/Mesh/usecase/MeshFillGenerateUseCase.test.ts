@@ -1,10 +1,22 @@
 import { execute } from "./MeshFillGenerateUseCase";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 describe("MeshFillGenerateUseCase.js method test", () =>
 {
     it("test case", async () =>
     {
+        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
+        {
+            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+            return {
+                ...mod,
+                "$context": {
+                    "$fillStyle": new Float32Array([0, 0, 0, 1]),
+                    "$matrix": new Float32Array([1, 0, 0, 1, 0, 0, 0, 0, 1]),
+                }
+            }
+        });
+
         const vertices = [
             -0.75, 0.8999999761581421, false,
             0.15000000596046448, 1.149999976158142, false,
@@ -20,9 +32,7 @@ describe("MeshFillGenerateUseCase.js method test", () =>
         ];
 
         const vertexArrayObject = execute([vertices]);
-        expect(vertexArrayObject.indexRanges.length).toBe(1);
-        expect(vertexArrayObject.indexRanges[0].first).toBe(0);
-        expect(vertexArrayObject.indexRanges[0].count).toBe(27);
-        expect(vertexArrayObject.buffer.length).toBe(108);
+        expect(vertexArrayObject.indexCount).toBe(27);
+        expect(vertexArrayObject.buffer.length).toBe(459);
     });
 });

@@ -11,6 +11,10 @@ import { $getAudioContext } from "../../MediaUtil";
  */
 export const execute = async (array_buffer: ArrayBuffer): Promise<AudioBuffer | void> =>
 {
+    if (!array_buffer.byteLength) {
+        return;
+    }
+
     try {
 
         return await $getAudioContext().decodeAudioData(array_buffer);

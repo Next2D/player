@@ -15,7 +15,7 @@ export const execute = (): IVertexArrayObject =>
     return {
         "id": $getId(),
         "resource": $gl.createVertexArray() as NonNullable<WebGLVertexArrayObject>,
-        "indexRanges": [],
+        "indexCount": 0,
         "vertexBuffer": $gl.createBuffer() as NonNullable<WebGLBuffer>,
         "vertexLength": 0
     };

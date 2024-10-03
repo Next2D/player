@@ -37,6 +37,15 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     shapeCommandService(commands, true);
 
     index += length;
+
+    // useFilter
+    const useFilter = Boolean(render_queue[index++]);
+    if (useFilter) {
+        // todo
+    }
+
+    // skip blendMode
+    index++;
     
     $context.clip();
 
