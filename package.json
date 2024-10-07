@@ -48,18 +48,18 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.1.0",
-    "@eslint/js": "^9.11.1",
+    "@eslint/js": "^9.12.0",
     "@types/node": "^22.7.4",
-    "@typescript-eslint/eslint-plugin": "^8.7.0",
-    "@typescript-eslint/parser": "^8.7.0",
-    "@vitest/web-worker": "^2.1.1",
-    "eslint": "^9.11.1",
+    "@typescript-eslint/eslint-plugin": "^8.8.0",
+    "@typescript-eslint/parser": "^8.8.0",
+    "@vitest/web-worker": "^2.1.2",
+    "eslint": "^9.12.0",
     "eslint-plugin-unused-imports": "^4.1.4",
-    "globals": "^15.9.0",
+    "globals": "^15.10.0",
     "jsdom": "^25.0.1",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
-    "vitest": "^2.1.1"
+    "vitest": "^2.1.2"
   },
   "peerDependencies": {
     "@next2d/cache": "file:packages/cache",

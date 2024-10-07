@@ -427,6 +427,52 @@ export class DisplacementMapFilter extends BitmapFilter
     }
 
     /**
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {number[]}
+     * @method
+     * @public
+     */
+    toNumberArray (): number[]
+    {
+        let mode = 2;
+        switch (this._$mode) {
+
+            case "clamp":
+                mode = 0;
+                break;
+
+            case "color":
+                mode = 1;
+                break;
+
+            case "wrap":
+                mode = 2;
+                break;
+
+            case "ignore":
+                mode = 3;
+                break;
+
+            default:
+                mode = 2;
+                break;
+
+        }
+
+        const mapBitmap = this._$mapBitmap 
+            ? []
+            : [];
+
+        return [4,
+            mapBitmap.length, ...mapBitmap, 
+            this._$mapPointX, this._$mapPointY, this._$componentX, this._$componentY,
+            this._$scaleX, this._$scaleY, mode, this._$color, this._$alpha
+        ];
+    }
+
+    /**
      * @description フィルターを適用できるかどうかを返します。
      *              Returns whether the filter can be applied.
      *

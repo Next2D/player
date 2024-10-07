@@ -325,7 +325,7 @@ export const execute = (
         render_queue.push(1);
     }
 
-    let useFilfer = false;
+    const params  = [];
     if (shape.filters?.length) {
         for (let idx = 0; idx < shape.filters.length; idx++) {
             const filter = shape.filters[idx];
@@ -333,12 +333,18 @@ export const execute = (
                 continue;
             }
 
-            // render_queue.push(...filter.toArray());
+            params.push(...filter.toNumberArray());
         }
     }
 
-    render_queue.push(+useFilfer);
     render_queue.push(displayObjectBlendToNumberService(shape.blendMode));
+
+    const useFilfer = params.length > 0;
+    render_queue.push(+useFilfer);
+    if (useFilfer) {
+        render_queue.push(params.length);
+        render_queue.push(...params);
+    }
 
     if (tColorTransform !== color_transform) {
         ColorTransform.release(tColorTransform);

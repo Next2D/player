@@ -203,6 +203,21 @@ export class BlurFilter extends BitmapFilter
     }
 
     /**
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {number[]}
+     * @method
+     * @public
+     */
+    toNumberArray (): number[]
+    {
+        return [1,
+            this._$blurX, this._$blurY, this._$quality
+        ];
+    }
+
+    /**
      * @description フィルターを適用できるかどうかを返します。
      *              Returns whether the filter can be applied.
      *

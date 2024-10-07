@@ -6,6 +6,7 @@ import { execute as cacheStoreGetService } from "./CacheStore/service/CacheStore
 import { execute as cacheStoreSetService } from "./CacheStore/service/CacheStoreSetService";
 import { execute as cacheStoreHasService } from "./CacheStore/service/CacheStoreHasService";
 import { execute as cacheStoreGenerateKeysService } from "./CacheStore/service/CacheStoreGenerateKeysService";
+import { execute as cacheStoreGenerateFilterKeysService } from "./CacheStore/service/CacheStoreGenerateFilterKeysService";
 
 /**
  * @description キャッシュ管理クラス
@@ -182,6 +183,23 @@ export class CacheStore
     generateKeys (x_scale: number, y_scale: number, alpha: number): number
     {
         return cacheStoreGenerateKeysService(x_scale, y_scale, alpha);
+    }
+
+    /**
+     * @description フィルター用のキャッシュストアのキーを生成
+     *              Generate cache store keys for filters
+     *
+     * @param  {number} a
+     * @param  {number} b
+     * @param  {number} c
+     * @param  {number} d
+     * @return {number}
+     * @method
+     * @public
+     */
+    generateFilterKeys (a: number, b: number, c: number, d: number): number 
+    {
+        return cacheStoreGenerateFilterKeysService(a, b, c, d);
     }
 }
 

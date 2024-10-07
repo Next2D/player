@@ -457,6 +457,51 @@ export class GradientBevelFilter  extends BitmapFilter
     }
 
     /**
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {number[]}
+     * @method
+     * @public
+     */
+    toNumberArray (): number[]
+    {
+        const colors: number[] = this._$colors ? this._$colors : [];
+        const alphas: number[] = this._$alphas ? this._$alphas : [];
+        const ratios: number[] = this._$ratios ? this._$ratios : [];
+        
+        let type: number = 0;
+        switch (this._$type) {
+
+            case "inner":
+                type = 0;
+                break;
+
+            case "outer":
+                type = 1;
+                break;
+
+            case "full":
+                type = 2;
+                break;
+
+            default:
+                type = 0;
+                break;
+
+        }
+
+        return [7,
+            this._$distance, this._$angle, 
+            colors.length, ...colors, 
+            alphas.length, ...alphas, 
+            ratios.length, ...ratios,
+            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
+            this._$blurFilter.quality, type, +this._$knockout
+        ];
+    }
+
+    /**
      * @description フィルターを適用できるかどうかを返します。
      *              Returns whether the filter can be applied.
      *

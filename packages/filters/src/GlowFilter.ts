@@ -334,6 +334,22 @@ export class GlowFilter extends BitmapFilter
     }
 
     /**
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {number[]}
+     * @method
+     * @public
+     */
+    toNumberArray (): number[]
+    {
+        return [6,
+            this._$color, this._$alpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
+            this._$strength, this._$blurFilter.quality, +this._$inner, +this._$knockout
+        ];
+    }
+
+    /**
      * @description フィルターを適用できるかどうかを返します。
      *              Returns whether the filter can be applied.
      *

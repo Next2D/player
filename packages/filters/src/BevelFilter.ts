@@ -491,6 +491,23 @@ export class BevelFilter extends BitmapFilter
     }
 
     /**
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {number[]}
+     * @method
+     * @public
+     */
+    toNumberArray (): number[]
+    {
+        return [0,
+            this._$distance, this._$angle, this._$highlightColor, this._$highlightAlpha,
+            this._$shadowColor, this._$shadowAlpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
+            this._$strength, this._$blurFilter.quality
+        ];
+    }
+
+    /**
      * @description フィルターを適用できるかどうかを返します。
      *              Returns whether the filter can be applied.
      *

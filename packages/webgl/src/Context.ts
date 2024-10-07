@@ -45,6 +45,7 @@ import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStroke
 import { execute as contextBeginGridService } from "./Context/service/ContextBeginGridService";
 import { execute as contextEndGridService } from "./Context/service/ContextEndGridService";
 import { execute as contextSetGridOffsetService } from "./Context/service/ContextSetGridOffsetService";
+import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
 import { $getAtlasAttachmentObject } from "./AtlasManager";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
 import {
@@ -1031,5 +1032,26 @@ export class Context
     setGridOffset (x: number, y: number): void
     {
         contextSetGridOffsetService(x, y);
+    }
+
+    /**
+     * @description フィルターを適用
+     *              Apply the filter
+     * 
+     * @param  {Node} node
+     * @param  {string} unique_key
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} params
+     * @return {void}
+     * @method
+     * @public
+     */
+    applyFilter (
+        node: Node,
+        unique_key: string,
+        matrix: Float32Array,
+        params: Float32Array
+    ): void {
+        contextApplyFilterUseCase(node, unique_key, matrix, params);
     }
 }

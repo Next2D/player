@@ -168,16 +168,23 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         }
     }
 
-    const useFilfer = Boolean(render_queue[index++]);
-    if (useFilfer) {
-        // todo
-    }
-
     const blendMode = render_queue[index++];
 
     $context.globalAlpha = $clamp(colorTransform[3] + colorTransform[7] / 255, 0, 1, 0);
     $context.imageSmoothingEnabled = true;
     $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
+
+    // フィルター設定があればフィルターを実行
+    const useFilfer = Boolean(render_queue[index++]);
+    if (useFilfer) {
+        const length = render_queue[index++];
+        const params = render_queue.subarray(index, index + length);
+
+        $context.applyFilter(node, uniqueKey, matrix, params);
+        index += length;
+
+        return index;
+    }
 
     if (isBitmap && !isGridEnabled) {
         $context.setTransform(

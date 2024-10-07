@@ -400,6 +400,24 @@ export class ConvolutionFilter extends BitmapFilter
     }
 
     /**
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {number[]}
+     * @method
+     * @public
+     */
+    toNumberArray (): number[]
+    {
+        const matrix: number[] = this._$matrix || [];
+        return [3,
+            this._$matrixX, this._$matrixY, matrix.length, ...matrix,
+            this._$divisor, this._$bias, +this._$preserveAlpha,
+            +this._$clamp, this._$color, this._$alpha
+        ];
+    }
+
+    /**
      * @description フィルターを適用できるかどうかを返します。
      *              Returns whether the filter can be applied.
      *

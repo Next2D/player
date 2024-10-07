@@ -437,6 +437,23 @@ export class DropShadowFilter extends BitmapFilter
     }
 
     /**
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {number[]}
+     * @method
+     * @public
+     */
+    toNumberArray (): number[]
+    {
+        return [5,
+            this._$distance, this._$angle, this._$color, this._$alpha,
+            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
+            this._$blurFilter.quality, +this._$inner, +this._$knockout, +this._$hideObject
+        ];
+    }
+
+    /**
      * @description フィルターを適用できるかどうかを返します。
      *              Returns whether the filter can be applied.
      *

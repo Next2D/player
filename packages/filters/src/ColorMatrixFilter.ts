@@ -139,4 +139,17 @@ export class ColorMatrixFilter extends BitmapFilter
     {
         return [2, this._$matrix];
     }
+
+    /**
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {number[]}
+     * @method
+     * @public
+     */
+    toNumberArray (): number[]
+    {
+        return [2, ...this._$matrix];
+    }
 }
