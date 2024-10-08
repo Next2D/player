@@ -1040,6 +1040,8 @@ export class Context
      * 
      * @param  {Node} node
      * @param  {string} unique_key
+     * @param  {number} width
+     * @param  {number} height
      * @param  {Float32Array} matrix
      * @param  {Float32Array} params
      * @return {void}
@@ -1049,9 +1051,13 @@ export class Context
     applyFilter (
         node: Node,
         unique_key: string,
+        width: number,
+        height: number,
         matrix: Float32Array,
         params: Float32Array
     ): void {
-        contextApplyFilterUseCase(node, unique_key, matrix, params);
+        contextApplyFilterUseCase(
+            node, unique_key, width, height, matrix, params
+        );
     }
 }

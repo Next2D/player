@@ -180,7 +180,21 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const length = render_queue[index++];
         const params = render_queue.subarray(index, index + length);
 
-        $context.applyFilter(node, uniqueKey, matrix, params);
+        // draw graphics
+        const bounds = displayObjectCalcBoundsMatrixService(
+            xMin, yMin, xMax, yMax,
+            matrix
+        );
+
+        const width  = Math.ceil(Math.abs(bounds[2] - bounds[0]));
+        const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
+
+        $context.applyFilter(
+            node, uniqueKey,
+            width, height,
+            matrix, params
+        );
+
         index += length;
 
         return index;

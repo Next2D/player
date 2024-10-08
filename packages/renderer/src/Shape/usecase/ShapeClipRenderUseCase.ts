@@ -38,14 +38,15 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     index += length;
 
+    // skip blendMode
+    index++;
+
     // useFilter
     const useFilter = Boolean(render_queue[index++]);
     if (useFilter) {
-        // todo
+        const length = render_queue[index++];
+        index += length;
     }
-
-    // skip blendMode
-    index++;
     
     $context.clip();
 
