@@ -4,17 +4,20 @@ import type { IParent } from "./interface/IParent";
 import type { IPlaceObject } from "./interface/IPlaceObject";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IFilterArray } from "./interface/IFilterArray";
+import type { IDisplayObject } from "./interface/IDisplayObject";
 import type { MovieClip } from "./MovieClip";
-import { execute as displayObjectGetPlaceObjectService } from "./DisplayObject/service/DisplayObjectGetPlaceObjectService";
-import { execute as displayObjectBuildFilterService } from "./DisplayObject/service/DisplayObjectBuildFilterService";
-import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
-import { execute as displayObjectConcatenatedMatrixUseCase } from "./DisplayObject/usecase/DisplayObjectConcatenatedMatrixUseCase";
-import { EventDispatcher } from "@next2d/events";
 import type {
     ColorTransform,
     Matrix,
     Rectangle
 } from "@next2d/geom";
+import { EventDispatcher } from "@next2d/events";
+import { execute as displayObjectGetPlaceObjectService } from "./DisplayObject/service/DisplayObjectGetPlaceObjectService";
+import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
+import { execute as displayObjectConcatenatedMatrixUseCase } from "./DisplayObject/usecase/DisplayObjectConcatenatedMatrixUseCase";
+import { execute as displayObjectGetAlphaUseCase } from "./DisplayObject/usecase/DisplayObjectGetAlphaUseCase";
+import { execute as displayObjectGetFiltersUseCase } from "./DisplayObject/usecase/DisplayObjectGetFiltersUseCase";
+import { execute as displayObjectSetFiltersUseCase } from "./DisplayObject/usecase/DisplayObjectSetFiltersUseCase";
 import {
     $getInstanceId,
     $parentMap,
@@ -213,6 +216,9 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description キャッシュで利用するユニークキー
      *              Unique key used for caching
+     * 
+     * @type {string}
+     * @public
      */
     public uniqueKey: string;
 
@@ -236,8 +242,25 @@ export class DisplayObject extends EventDispatcher
      */
     public $colorTransform: ColorTransform | null;
 
-    protected _$filters: IFilterArray | null;
-    protected _$blendMode: IBlendMode | null;
+    /**
+     * @description 表示オブジェクトに現在関連付けられている各フィルターオブジェクトの配列です。
+     *              An array of filter objects currently associated with the display object.
+     * 
+     * @type {array}
+     * @default null
+     * @protected
+     */
+    public $filters: IFilterArray | null;
+
+    /**
+     * @description 使用するブレンドモードを指定する BlendMode クラスの値です。
+     *              A value from the BlendMode class that specifies which blend mode to use.
+     * 
+     * @type {string}
+     * @default BlendMode.NORMAL
+     * @protected
+     */
+    public $blendMode: IBlendMode | null;
 
 
     // todo
@@ -247,11 +270,10 @@ export class DisplayObject extends EventDispatcher
     protected _$scale9Grid: Rectangle | null;
     protected _$isMask: boolean;
     protected _$hitObject: Sprite | null;
-    protected _$mask: DisplayObjectImpl<any> | null;
+    protected _$mask: IDisplayObject<any> | null;
     protected _$visible: boolean;
     protected _$variables: Map<any, any> | null;
     
-
     /**
      * @constructor
      * @public
@@ -264,39 +286,42 @@ export class DisplayObject extends EventDispatcher
         this.dictionaryId = -1;
         this.uniqueKey    = "";
 
+        // 各小クラスの機能を所持しているか
         this.isContainerEnabled = false;
         this.isTimelineEnabled  = false;
         this.isShape            = false;
         this.isVideo            = false;
         this.isText             = false;
         
+        // PlaceObject
         this.placeId       = -1;
         this.placeObject   = null;
         
+        // Characterパラメーター
         this.characterId = -1;
         this.clipDepth   = 0;
         this.name        = "";
         this.startFrame  = 1;
         this.endFrame    = 0;
 
-        this.changed = true;
-
+        // フラグ
+        this.changed       = true;
         this.$added        = false;
         this.$addedToStage = false;
 
+        // Transform変数
         this.$matrix         = null;
         this.$colorTransform = null;
-
-        this._$filters = null;
-        this._$blendMode = null;
+        this.$filters        = null;
+        this.$blendMode      = null;
 
         this._$hitObject = null;
-        this._$isMask = false;
+        this._$isMask    = false;
         
-        this._$visible = true;
-        this._$mask = null;
+        this._$visible    = true;
+        this._$mask       = null;
         this._$scale9Grid = null;
-        this._$variables = null;
+        this._$variables  = null;
         
         this._$scaleX   = null;
         this._$scaleY   = null;
@@ -315,28 +340,24 @@ export class DisplayObject extends EventDispatcher
         return displayObjectConcatenatedMatrixUseCase(this);
     }
 
-    // /**
-    //  * @description 指定されたオブジェクトのアルファ透明度値を示します。
-    //  *              有効な値は 0.0（完全な透明）～ 1.0（完全な不透明）です。
-    //  *              デフォルト値は 1.0 です。alpha が 0.0 に設定されている表示オブジェクトは、
-    //  *              表示されない場合でも、アクティブです。
-    //  *              Indicates the alpha transparency value of the object specified.
-    //  *              Valid values are 0.0 (fully transparent) to 1.0 (fully opaque).
-    //  *              The default value is 1.0. Display objects with alpha set to 0.0 are active,
-    //  *              even though they are invisible.
-    //  *
-    //  * @member  {number}
-    //  * @default 1
-    //  * @public
-    //  */
-    // get alpha (): number
-    // {
-    //     const colorTransform: Float32Array = this
-    //         ._$transform
-    //         ._$rawColorTransform();
-
-    //     return colorTransform[3] + colorTransform[7] / 255;
-    // }
+    /**
+     * @description 指定されたオブジェクトのアルファ透明度値を示します。
+     *              有効な値は 0.0（完全な透明）～ 1.0（完全な不透明）です。
+     *              デフォルト値は 1.0 です。alpha が 0.0 に設定されている表示オブジェクトは、
+     *              表示されない場合でも、アクティブです。
+     *              Indicates the alpha transparency value of the object specified.
+     *              Valid values are 0.0 (fully transparent) to 1.0 (fully opaque).
+     *              The default value is 1.0. Display objects with alpha set to 0.0 are active,
+     *              even though they are invisible.
+     *
+     * @member  {number}
+     * @default 1
+     * @public
+     */
+    get alpha (): number
+    {
+        return displayObjectGetAlphaUseCase(this);
+    }
     // set alpha (alpha: number)
     // {
     //     alpha = $clamp(alpha, 0, 1, 0);
@@ -374,8 +395,8 @@ export class DisplayObject extends EventDispatcher
      */
     get blendMode (): IBlendMode
     {
-        if (this._$blendMode) {
-            return this._$blendMode;
+        if (this.$blendMode) {
+            return this.$blendMode;
         }
 
         const placeObject = displayObjectGetPlaceObjectService(this);
@@ -385,10 +406,10 @@ export class DisplayObject extends EventDispatcher
     }
     set blendMode (blend_mode: IBlendMode)
     {
-        if (this._$blendMode === blend_mode) {
+        if (this.$blendMode === blend_mode) {
             return ;
         }
-        this._$blendMode = blend_mode;
+        this.$blendMode = blend_mode;
         displayObjectApplyChangesService(this);
     }
 
@@ -402,32 +423,11 @@ export class DisplayObject extends EventDispatcher
      */
     get filters (): IFilterArray | null
     {
-        if (this._$filters) {
-            return this._$filters;
-        }
-
-        const placeObject = displayObjectGetPlaceObjectService(this);
-        if (placeObject && placeObject.surfaceFilterList) {
-
-            // build filter
-            if (!placeObject.filters) {
-                placeObject.filters = displayObjectBuildFilterService(
-                    placeObject.surfaceFilterList
-                );
-            }
-
-            return placeObject.filters;
-        }
-
-        return null;
+        return displayObjectGetFiltersUseCase(this);
     }
     set filters (filters: IFilterArray | null)
     {
-        if (this._$filters === filters) {
-            return ;
-        }
-        this._$filters = filters;
-        displayObjectApplyChangesService(this);
+        displayObjectSetFiltersUseCase(this, filters);
     }
 
     // /**
@@ -604,7 +604,7 @@ export class DisplayObject extends EventDispatcher
      * @readonly
      * @public
      */
-    get parent (): IParent<any> | null
+    get parent (): IParent<MovieClip | Sprite> | null
     {
         return $parentMap.has(this)
             ? $parentMap.get(this) as NonNullable<IParent<MovieClip | Sprite>>

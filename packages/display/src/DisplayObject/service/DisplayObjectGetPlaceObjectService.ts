@@ -1,5 +1,7 @@
 import type { DisplayObject } from "../../DisplayObject";
+import type { IMovieClipCharacter } from "../../interface/IMovieClipCharacter";
 import type { IPlaceObject } from "../../interface/IPlaceObject";
+import type { MovieClip } from "../../MovieClip";
 
 /**
  * @description DisplayObjectのPlaceObjectを返却、存在しない場合はnullを返却
@@ -32,14 +34,14 @@ export const execute = <D extends DisplayObject>(display_object: D): IPlaceObjec
         return null;
     }
 
-    const character = loaderInfo.data.characters[parent.characterId];
-    const frame: number = parent.isTimelineEnabled ? parent.currentFrame : 1;
-    const places: number[] | void = character.placeMap[frame];
+    const character = loaderInfo.data.characters[parent.characterId] as IMovieClipCharacter;
+    const frame  = parent.isTimelineEnabled ? (parent as MovieClip).currentFrame : 1;
+    const places = character.placeMap[frame];
     if (!places || !(placeId in places)) {
         return null;
     }
 
-    const id: number = places[placeId];
+    const id = places[placeId];
     const placeObject: IPlaceObject | void = character.placeObjects[id];
     if (!placeObject) {
         return null;

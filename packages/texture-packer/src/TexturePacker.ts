@@ -19,6 +19,7 @@ export class TexturePacker
     private readonly _$root: Node;
 
     /**
+     * @param {number} index
      * @param {number} width
      * @param {number} height 
      * @constructor
@@ -27,6 +28,7 @@ export class TexturePacker
     constructor (index: number, width: number, height: number)
     {
         this._$root = new Node(index, 0, 0, width, height);
+        console.log(this._$root);
     }
 
     /**

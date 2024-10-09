@@ -20,7 +20,7 @@ export const execute = (job: Job, timestamp: number): number =>
     }
 
     // update current time
-    job.currentTime = (timestamp - job.startTime) * 0.001;
+    job.currentTime = (timestamp - job.startTime) / 1000;
 
     // update property
     jobUpdatePropertyService(

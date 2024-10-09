@@ -1,6 +1,6 @@
+import type { DisplayObject } from "../../DisplayObject";
 import { Matrix } from "@next2d/geom";
 import { execute as displayObjectGetRawMatrixUseCase } from "../usecase/DisplayObjectGetRawMatrixUseCase";
-import type { DisplayObject } from "../../DisplayObject";
 import { $MATRIX_ARRAY_IDENTITY } from "../../DisplayObjectUtil";
 
 /**

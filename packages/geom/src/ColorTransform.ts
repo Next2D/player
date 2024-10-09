@@ -92,6 +92,19 @@ export class ColorTransform
     }
 
     /**
+     * @description ColorTransform の内部Float32Arrayデータを返却
+     *              Returns the internal Float32Array data of ColorTransform
+     *
+     * @member {Float32Array}
+     * @readonly
+     * @public
+     */
+    get rawData (): Float32Array
+    {
+        return this._$colorTransform;
+    }
+
+    /**
      * @description アルファ透明度チャンネル値に乗算する 10 進数値です。
      *              A decimal value that is multiplied with the alpha transparency channel value.
      *
