@@ -50,7 +50,7 @@ export const execute = (): void =>
     $poolArray(vertices.pop());
     $poolArray(vertices);
 
-    const shaderManager = variantsShapeMaskShaderService(false, false);
+    const shaderManager = variantsShapeMaskShaderService(false);
     shaderManagerSetMaskUniformIdentityService(
         shaderManager, width, height
     );

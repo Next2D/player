@@ -1,6 +1,5 @@
 import type { Node } from "@next2d/texture-packer";
 import { $cacheStore } from "@next2d/cache";
-import { $context } from "../../WebGLUtil";
 import { execute as frameBufferManagerGetTextureFromNodeUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromNodeUseCase";
 
 /**
@@ -44,7 +43,7 @@ export const execute = (
     }
 
     const textureObject = frameBufferManagerGetTextureFromNodeUseCase(node);
-    
+    console.log(width, height, textureObject);
 
 
     $cacheStore.set(unique_key, "fKey", key);

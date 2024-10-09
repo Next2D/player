@@ -7,10 +7,7 @@ import {
     $getReadBitmapFrameBuffer,
     $readFrameBuffer
 } from "../../FrameBufferManager";
-import {
-    $context,
-    $gl
-} from "../../WebGLUtil";
+import { $gl } from "../../WebGLUtil";
 import {
     $getActiveAtlasIndex,
     $setActiveAtlasIndex,

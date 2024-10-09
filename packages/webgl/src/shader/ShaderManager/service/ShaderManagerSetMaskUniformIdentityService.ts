@@ -1,3 +1,4 @@
+import { $gridEnabled } from "../../../Grid";
 import type { ShaderManager } from "../../ShaderManager";
 
 /**
@@ -13,6 +14,10 @@ import type { ShaderManager } from "../../ShaderManager";
  */
 export const execute = (shader_manager: ShaderManager, width: number, height: number): void =>
 {
+    if (!$gridEnabled()) {
+        return ;
+    }
+
     const highp: Int32Array | Float32Array = shader_manager.highp;
 
     // vertex: u_matrix
