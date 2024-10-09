@@ -91,8 +91,8 @@ export class DisplacementMapFilter extends BitmapFilter
 
     /**
      * @param {HTMLImageElement} [map_bitmap = null]
-     * @param {object} [map_point_x = null]
-     * @param {object} [map_point_y = null]
+     * @param {object} [map_point_x = 0]
+     * @param {object} [map_point_y = 0]
      * @param {number} [component_x = 0]
      * @param {number} [component_y = 0]
      * @param {number} [scale_x = 0.0]

@@ -3,8 +3,6 @@ import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
 import { execute as movieClipGetChildrenService } from "./MovieClip/service/MovieClipGetChildrenService";
-import { execute as movieClipSetActionService } from "./MovieClip/service/MovieClipSetActionService";
-import { execute as movieClipDispatchFrameLabelEventService } from "./MovieClip/service/MovieClipDispatchFrameLabelEventService";
 import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
 
 /**

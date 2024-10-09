@@ -31,9 +31,9 @@ export const execute = (
     const y3 = x_min * matrix[1] + y_min * matrix[3] + matrix[5];
 
     return $getArray(
-        Math.min(Number.MAX_VALUE, x0, x1, x2, x3),
-        Math.min(Number.MAX_VALUE, y0, y1, y2, y3),
-        Math.max(-Number.MAX_VALUE, x0, x1, x2, x3),
-        Math.max(-Number.MAX_VALUE, y0, y1, y2, y3)
+        Math.min(Number.MAX_VALUE, x0, x1, x2, x3),  // x_min
+        Math.min(Number.MAX_VALUE, y0, y1, y2, y3),  // y_min
+        Math.max(-Number.MAX_VALUE, x0, x1, x2, x3), // x_max
+        Math.max(-Number.MAX_VALUE, y0, y1, y2, y3)  // y_max
     );
 };

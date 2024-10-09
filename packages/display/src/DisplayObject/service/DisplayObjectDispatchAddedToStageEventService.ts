@@ -13,10 +13,12 @@ import { $stageAssignedMap } from "../../DisplayObjectUtil";
  */
 export const execute = <D extends DisplayObject>(display_object: D): void =>
 {
-    if (display_object.$addedToStage || !$stageAssignedMap.has(this)) {
+    if (display_object.$addedToStage 
+        || !$stageAssignedMap.has(display_object)
+    ) {
         return ;
     }
-
+   
     display_object.$addedToStage = true;
     if (display_object.willTrigger(Event.ADDED_TO_STAGE)) {
         display_object.dispatchEvent(new Event(Event.ADDED_TO_STAGE));
