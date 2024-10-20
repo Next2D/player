@@ -58,7 +58,6 @@ export class Shape extends DisplayObject
      *              Parameters used to build the cache
      *
      * @type {number[]}
-     * @default [0, 0, 0]
      * @public
      */
     public cacheParams: number[];
@@ -101,7 +100,7 @@ export class Shape extends DisplayObject
 
         // bitmap
         this.$bitmapBuffer = null;
-        this.isBitmap = false;
+        this.isBitmap      = false;
     }
 
     /**

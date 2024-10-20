@@ -12,6 +12,10 @@ import { execute as displayObjectGetRawColorTransformUseCase } from "../usecase/
  */
 export const execute = <D extends DisplayObject>(display_object: D): number =>
 {
+    if (display_object.$alpha !== null) {
+        return display_object.$alpha;
+    }
+
     if (display_object.$colorTransform) {
         const rawData = display_object.$colorTransform.rawData;
         return rawData[3] + rawData[7] / 255;

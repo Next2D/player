@@ -12,12 +12,16 @@ import type {
     Rectangle
 } from "@next2d/geom";
 import { EventDispatcher } from "@next2d/events";
-import { execute as displayObjectGetPlaceObjectService } from "./DisplayObject/service/DisplayObjectGetPlaceObjectService";
 import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
 import { execute as displayObjectConcatenatedMatrixUseCase } from "./DisplayObject/usecase/DisplayObjectConcatenatedMatrixUseCase";
 import { execute as displayObjectGetAlphaUseCase } from "./DisplayObject/usecase/DisplayObjectGetAlphaUseCase";
+import { execute as displayObjectSetAlphaUseCase } from "./DisplayObject/usecase/DisplayObjectSetAlphaUseCase";
 import { execute as displayObjectGetFiltersUseCase } from "./DisplayObject/usecase/DisplayObjectGetFiltersUseCase";
 import { execute as displayObjectSetFiltersUseCase } from "./DisplayObject/usecase/DisplayObjectSetFiltersUseCase";
+import { execute as displayObjectGetBlendModeUseCase } from "./DisplayObject/usecase/DisplayObjectGetBlendModeUseCase";
+import { execute as displayObjectSetBlendModeUseCase } from "./DisplayObject/usecase/DisplayObjectSetBlendModeUseCase";
+import { execute as displayObjectGetRotationUseCase } from "./DisplayObject/usecase/DisplayObjectGetRotationUseCase";
+import { execute as displayObjectSetRotationUseCase } from "./DisplayObject/usecase/DisplayObjectSetRotationUseCase";
 import {
     $getInstanceId,
     $parentMap,
@@ -262,11 +266,47 @@ export class DisplayObject extends EventDispatcher
      */
     public $blendMode: IBlendMode | null;
 
+    /**
+     * @description キャッシュした scaleX の値を返却します。
+     *              Returns the cached scaleX value.
+     * 
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $scaleX: number | null;
+
+    /**
+     * @description キャッシュした scaleY の値を返却します。
+     *              Returns the cached scaleY value.
+     * 
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $scaleY: number | null;
+
+    /**
+     * @description キャッシュした rotation の値を返却します。
+     *              Returns the cached rotation value.
+     * 
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $rotation: number | null;
+
+    /**
+     * @description キャッシュした alpha の値を返却します。
+     *              Returns the cached alpha value.
+     * 
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $alpha: number | null;
 
     // todo
-    protected _$scaleX: number | null;
-    protected _$scaleY: number | null;
-    protected _$rotation: number | null;
     protected _$scale9Grid: Rectangle | null;
     protected _$isMask: boolean;
     protected _$hitObject: Sprite | null;
@@ -323,9 +363,11 @@ export class DisplayObject extends EventDispatcher
         this._$scale9Grid = null;
         this._$variables  = null;
         
-        this._$scaleX   = null;
-        this._$scaleY   = null;
-        this._$rotation = null;
+        // キャッシュ
+        this.$alpha    = null;
+        this.$scaleX   = null;
+        this.$scaleY   = null;
+        this.$rotation = null;
     }
 
     /**
@@ -358,32 +400,10 @@ export class DisplayObject extends EventDispatcher
     {
         return displayObjectGetAlphaUseCase(this);
     }
-    // set alpha (alpha: number)
-    // {
-    //     alpha = $clamp(alpha, 0, 1, 0);
-
-    //     const transform: Transform = this._$transform;
-
-    //     // clone
-    //     if (!transform._$colorTransform) {
-    //         const colorTransform: ColorTransform = transform.colorTransform;
-
-    //         colorTransform._$colorTransform[3] = alpha;
-    //         colorTransform._$colorTransform[7] = 0;
-
-    //         transform.colorTransform = colorTransform;
-    //         $poolColorTransform(colorTransform);
-
-    //     } else {
-    //         const colorTransform: ColorTransform = transform._$colorTransform;
-
-    //         colorTransform._$colorTransform[3] = alpha;
-    //         colorTransform._$colorTransform[7] = 0;
-
-    //         this._$doChanged();
-    //         $doUpdated();
-    //     }
-    // }
+    set alpha (alpha: number)
+    {
+        displayObjectSetAlphaUseCase(this, alpha);
+    }
 
     /**
      * @description 使用するブレンドモードを指定する BlendMode クラスの値です。
@@ -395,22 +415,11 @@ export class DisplayObject extends EventDispatcher
      */
     get blendMode (): IBlendMode
     {
-        if (this.$blendMode) {
-            return this.$blendMode;
-        }
-
-        const placeObject = displayObjectGetPlaceObjectService(this);
-        return placeObject && placeObject.blendMode 
-            ? placeObject.blendMode
-            : "normal";
+        return displayObjectGetBlendModeUseCase(this);
     }
     set blendMode (blend_mode: IBlendMode)
     {
-        if (this.$blendMode === blend_mode) {
-            return ;
-        }
-        this.$blendMode = blend_mode;
-        displayObjectApplyChangesService(this);
+        displayObjectSetBlendModeUseCase(this, blend_mode);
     }
 
     /**
@@ -626,81 +635,22 @@ export class DisplayObject extends EventDispatcher
             : null;
     }
 
-    // /**
-    //  * @description DisplayObject インスタンスの元の位置からの回転角を度単位で示します。
-    //  *              Indicates the rotation of the DisplayObject instance,
-    //  *              in degrees, from its original orientation.
-    //  *
-    //  * @member {number}
-    //  * @public
-    //  */
-    // get rotation (): number
-    // {
-    //     if (this._$rotation !== null) {
-    //         return this._$rotation;
-    //     }
-
-    //     const matrix: Float32Array = this._$transform._$rawMatrix();
-    //     return $Math.atan2(matrix[1], matrix[0]) * $Rad2Deg;
-    // }
-    // set rotation (rotation: number)
-    // {
-    //     rotation = $clamp(rotation % 360, 0 - 360, 360, 0);
-    //     if (this._$rotation === rotation) {
-    //         return ;
-    //     }
-
-    //     const transform: Transform = this._$transform;
-
-    //     const hasMatrix: boolean = transform._$matrix !== null;
-
-    //     const matrix: Matrix = hasMatrix
-    //         ? transform._$matrix as NonNullable<Matrix>
-    //         : transform.matrix;
-
-    //     const scaleX: number = $Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
-    //     const scaleY: number = $Math.sqrt(matrix.c * matrix.c + matrix.d * matrix.d);
-    //     if (rotation === 0) {
-
-    //         matrix.a = scaleX;
-    //         matrix.b = 0;
-    //         matrix.c = 0;
-    //         matrix.d = scaleY;
-
-    //     } else {
-
-    //         let radianX: number = $Math.atan2(matrix.b,  matrix.a);
-    //         let radianY: number = $Math.atan2(0 - matrix.c, matrix.d);
-
-    //         const radian: number = rotation * $Deg2Rad;
-    //         radianY = radianY + radian - radianX;
-    //         radianX = radian;
-
-    //         matrix.b = scaleX * $Math.sin(radianX);
-    //         if (matrix.b === 1 || matrix.b === -1) {
-    //             matrix.a = 0;
-    //         } else {
-    //             matrix.a = scaleX * $Math.cos(radianX);
-    //         }
-
-    //         matrix.c = -scaleY * $Math.sin(radianY);
-    //         if (matrix.c === 1 || matrix.c === -1) {
-    //             matrix.d = 0;
-    //         } else {
-    //             matrix.d = scaleY * $Math.cos(radianY);
-    //         }
-    //     }
-
-    //     if (hasMatrix) {
-    //         this._$doChanged();
-    //         $doUpdated();
-    //     } else {
-    //         transform.matrix = matrix;
-    //         $poolMatrix(matrix);
-    //     }
-
-    //     this._$rotation = rotation;
-    // }
+    /**
+     * @description DisplayObject インスタンスの元の位置からの回転角を度単位で示します。
+     *              Indicates the rotation of the DisplayObject instance,
+     *              in degrees, from its original orientation.
+     *
+     * @member {number}
+     * @public
+     */
+    get rotation (): number
+    {
+        return displayObjectGetRotationUseCase(this);
+    }
+    set rotation (rotation: number)
+    {
+        displayObjectSetRotationUseCase(this, rotation);
+    }
 
     /**
      * @description 現在有効な拡大 / 縮小グリッドです。

@@ -20,7 +20,7 @@ export let $RENDER_MAX_SIZE: number = 2048;
  */
 export const $setRenderMaxSize = (size: number): void =>
 {
-    $RENDER_MAX_SIZE = Math.min(4096, size / 2);
+    $RENDER_MAX_SIZE = Math.min(8192, size / 2);
 };
 
 /**

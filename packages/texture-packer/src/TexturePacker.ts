@@ -28,7 +28,6 @@ export class TexturePacker
     constructor (index: number, width: number, height: number)
     {
         this._$root = new Node(index, 0, 0, width, height);
-        console.log(this._$root);
     }
 
     /**
