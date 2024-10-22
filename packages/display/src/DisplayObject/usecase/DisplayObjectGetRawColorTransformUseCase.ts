@@ -14,6 +14,10 @@ import { $getFloat32Array8 } from "../../DisplayObjectUtil";
  */
 export const execute = <D extends DisplayObject>(display_object: D): Float32Array | null =>
 {
+    if (display_object.$colorTransform) {
+        return display_object.$colorTransform.rawData;
+    }
+
     const placeObject: IPlaceObject | null = displayObjectGetPlaceObjectService(display_object);
     if (!placeObject || !placeObject.colorTransform) {
         return null;
