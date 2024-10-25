@@ -22,6 +22,12 @@ import { execute as displayObjectGetBlendModeUseCase } from "./DisplayObject/use
 import { execute as displayObjectSetBlendModeUseCase } from "./DisplayObject/usecase/DisplayObjectSetBlendModeUseCase";
 import { execute as displayObjectGetRotationUseCase } from "./DisplayObject/usecase/DisplayObjectGetRotationUseCase";
 import { execute as displayObjectSetRotationUseCase } from "./DisplayObject/usecase/DisplayObjectSetRotationUseCase";
+import { execute as displayObjectGetScaleXUseCase } from "./DisplayObject/usecase/DisplayObjectGetScaleXUseCase";
+import { execute as displayObjectSetScaleXUseCase } from "./DisplayObject/usecase/DisplayObjectSetScaleXUseCase";
+import { execute as displayObjectGetScaleYUseCase } from "./DisplayObject/usecase/DisplayObjectGetScaleYUseCase";
+import { execute as displayObjectSetScaleYUseCase } from "./DisplayObject/usecase/DisplayObjectSetScaleYUseCase";
+import { execute as displayObjectGetXUseCase } from "./DisplayObject/usecase/DisplayObjectGetXUseCase";
+import { execute as displayObjectSetXUseCase } from "./DisplayObject/usecase/DisplayObjectSetXUseCase";
 import {
     $getInstanceId,
     $parentMap,
@@ -672,193 +678,38 @@ export class DisplayObject extends EventDispatcher
         displayObjectApplyChangesService(this);
     }
 
-    // /**
-    //  * @description 基準点から適用されるオブジェクトの水平スケール（パーセンテージ）を示します。
-    //  *              Indicates the horizontal scale (percentage)
-    //  *              of the object as applied from the registration point.
-    //  *
-    //  * @member {number}
-    //  * @public
-    //  */
-    // get scaleX (): number
-    // {
-    //     if (this._$scaleX !== null) {
-    //         return this._$scaleX;
-    //     }
+    /**
+     * @description 基準点から適用されるオブジェクトの水平スケール値を返却します。
+     *              Returns the horizontal scale value of the object applied from the reference point.
+     *
+     * @member {number}
+     * @public
+     */
+    get scaleX (): number
+    {
+        return displayObjectGetScaleXUseCase(this);
+    }
+    set scaleX (scale_x: number)
+    {
+        displayObjectSetScaleXUseCase(this, scale_x);
+    }
 
-    //     const matrix: Float32Array = this._$transform._$rawMatrix();
-
-    //     let xScale: number = $Math.sqrt(
-    //         matrix[0] * matrix[0]
-    //         + matrix[1] * matrix[1]
-    //     );
-    //     if (!$Number.isInteger(xScale)) {
-    //         const value: string = xScale.toString();
-    //         const index: number = value.indexOf("e");
-    //         if (index !== -1) {
-    //             xScale = +value.slice(0, index);
-    //         }
-    //         xScale = +xScale.toFixed(4);
-    //     }
-
-    //     return 0 > matrix[0] ? xScale * -1 : xScale;
-    // }
-    // set scaleX (scale_x: number)
-    // {
-    //     scale_x = $clamp(+scale_x,
-    //         $SHORT_INT_MIN, $SHORT_INT_MAX
-    //     );
-
-    //     if (!$Number.isInteger(scale_x)) {
-    //         const value: string = scale_x.toString();
-    //         const index: number = value.indexOf("e");
-    //         if (index !== -1) {
-    //             scale_x = +value.slice(0, index);
-    //         }
-    //         scale_x = +scale_x.toFixed(4);
-    //     }
-
-    //     if (this._$scaleX === scale_x) {
-    //         return ;
-    //     }
-
-    //     const transform: Transform = this._$transform;
-
-    //     const hasMatrix: boolean = transform._$matrix !== null;
-
-    //     const matrix: Matrix = hasMatrix
-    //         ? transform._$matrix as NonNullable<Matrix>
-    //         : transform.matrix;
-
-    //     if (matrix.b === 0 || $isNaN(matrix.b)) {
-
-    //         matrix.a = scale_x;
-
-    //     } else {
-
-    //         let radianX = $Math.atan2(matrix.b, matrix.a);
-    //         if (radianX === -$Math.PI) {
-    //             radianX = 0;
-    //         }
-
-    //         matrix.b = scale_x * $Math.sin(radianX);
-    //         matrix.a = scale_x * $Math.cos(radianX);
-
-    //     }
-
-    //     if (hasMatrix) {
-    //         this._$doChanged();
-    //         $doUpdated();
-    //     } else {
-    //         transform.matrix = matrix;
-    //         $poolMatrix(matrix);
-    //     }
-
-    //     this._$scaleX = scale_x;
-    // }
-
-    // /**
-    //  * @description 基準点から適用されるオブジェクトの垂直スケール（パーセンテージ）を示します。
-    //  *              IIndicates the vertical scale (percentage)
-    //  *              of an object as applied from the registration point.
-    //  *
-    //  * @member {number}
-    //  * @public
-    //  */
-    // get scaleY (): number
-    // {
-    //     if (this._$scaleY !== null) {
-    //         return this._$scaleY;
-    //     }
-
-    //     const matrix: Float32Array = this._$transform._$rawMatrix();
-
-    //     let yScale: number = $Math.sqrt(
-    //         matrix[2] * matrix[2]
-    //         + matrix[3] * matrix[3]
-    //     );
-
-    //     if (!$Number.isInteger(yScale)) {
-    //         const value: string = yScale.toString();
-    //         const index: number = value.indexOf("e");
-    //         if (index !== -1) {
-    //             yScale = +value.slice(0, index);
-    //         }
-    //         yScale = +yScale.toFixed(4);
-    //     }
-
-    //     return 0 > matrix[3] ? yScale * -1 : yScale;
-    // }
-    // set scaleY (scale_y: number)
-    // {
-    //     scale_y = $clamp(+scale_y,
-    //         $SHORT_INT_MIN, $SHORT_INT_MAX
-    //     );
-
-    //     if (!$Number.isInteger(scale_y)) {
-    //         const value: string = scale_y.toString();
-    //         const index: number = value.indexOf("e");
-    //         if (index !== -1) {
-    //             scale_y = +value.slice(0, index);
-    //         }
-    //         scale_y = +scale_y.toFixed(4);
-    //     }
-
-    //     if (this._$scaleY === scale_y) {
-    //         return ;
-    //     }
-
-    //     const transform: Transform = this._$transform;
-
-    //     const hasMatrix: boolean = transform._$matrix !== null;
-
-    //     const matrix: Matrix = hasMatrix
-    //         ? transform._$matrix as NonNullable<Matrix>
-    //         : transform.matrix;
-
-    //     if (matrix.c === 0 || $isNaN(matrix.c)) {
-
-    //         matrix.d = scale_y;
-
-    //     } else {
-
-    //         let radianY = $Math.atan2(-matrix.c, matrix.d);
-    //         if (radianY === -$Math.PI) {
-    //             radianY = 0;
-    //         }
-    //         matrix.c = -scale_y * $Math.sin(radianY);
-    //         matrix.d = scale_y  * $Math.cos(radianY);
-
-    //     }
-
-    //     if (hasMatrix) {
-    //         this._$doChanged();
-    //         $doUpdated();
-    //     } else {
-    //         transform.matrix = matrix;
-    //         $poolMatrix(matrix);
-    //     }
-
-    //     this._$scaleY = scale_y;
-    // }
-
-    // /**
-    //  * @description 表示オブジェクトのマトリックス、カラー変換、
-    //  *              ピクセル境界に関係するプロパティを持つオブジェクトです。
-    //  *              An object with properties pertaining
-    //  *              to a display object's matrix, color transform, and pixel bounds.
-    //  *
-    //  * @member {Transform}
-    //  * @public
-    //  */
-    // get transform (): Transform
-    // {
-    //     return this._$transform;
-    // }
-    // set transform (transform: Transform)
-    // {
-    //     this._$transform = transform;
-    // }
+    /**
+     * @description 基準点から適用されるオブジェクトの垂直スケール（パーセンテージ）を示します。
+     *              IIndicates the vertical scale (percentage)
+     *              of an object as applied from the registration point.
+     *
+     * @member {number}
+     * @public
+     */
+    get scaleY (): number
+    {
+         return displayObjectGetScaleYUseCase(this);
+    }
+    set scaleY (scale_y: number)
+    {
+        displayObjectSetScaleYUseCase(this, scale_y);
+    }
 
     /**
      * @description 表示オブジェクトが可視かどうかを示します。
@@ -952,35 +803,24 @@ export class DisplayObject extends EventDispatcher
     //     }
     // }
 
-    // /**
-    //  * @description 親 DisplayObjectContainer のローカル座標を基準にした
-    //  *              DisplayObject インスタンスの x 座標を示します。
-    //  *              Indicates the x coordinate
-    //  *              of the DisplayObject instance relative to the local coordinates
-    //  *              of the parent DisplayObjectContainer.
-    //  *
-    //  * @member {number}
-    //  * @public
-    //  */
-    // get x (): number
-    // {
-    //     return this._$transform._$rawMatrix()[4];
-    // }
-    // set x (x: number)
-    // {
-    //     const transform: Transform = this._$transform;
-
-    //     if (!transform._$matrix) {
-    //         const matrix: Matrix = transform.matrix;
-    //         matrix.tx = x;
-    //         transform.matrix = matrix;
-    //         $poolMatrix(matrix);
-    //     } else {
-    //         transform._$matrix.tx = x;
-    //         this._$doChanged();
-    //         $doUpdated();
-    //     }
-    // }
+    /**
+     * @description 親 DisplayObjectContainer のローカル座標を基準にした
+     *              DisplayObject インスタンスの x 座標を示します。
+     *              Indicates the x coordinate
+     *              of the DisplayObject instance relative to the local coordinates
+     *              of the parent DisplayObjectContainer.
+     *
+     * @member {number}
+     * @public
+     */
+    get x (): number
+    {
+        return displayObjectGetXUseCase(this);
+    }
+    set x (x: number)
+    {
+        displayObjectSetXUseCase(this, x);
+    }
 
     // /**
     //  * @description 親 DisplayObjectContainer のローカル座標を基準にした

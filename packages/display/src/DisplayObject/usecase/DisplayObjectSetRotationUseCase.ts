@@ -2,6 +2,7 @@ import { Matrix } from "@next2d/geom";
 import type { DisplayObject } from "../../DisplayObject";
 import { $clamp } from "../../DisplayObjectUtil";
 import { execute as displayObjectApplyChangesService } from "../service/DisplayObjectApplyChangesService";
+import { execute as displayObjectGetRawMatrixUseCase } from "../usecase/DisplayObjectGetRawMatrixUseCase";
 
 /**
  * @type {number}
@@ -10,8 +11,8 @@ import { execute as displayObjectApplyChangesService } from "../service/DisplayO
 const $Deg2Rad: number = Math.PI / 180;
 
 /**
- * @description DisplayObjectのalphaを設定
- *              Set the alpha of the DisplayObject
+ * @description DisplayObjectの回転値を設定
+ *              Set DisplayObject rotation value
  * 
  * @param  {DisplayObject} display_object
  * @param  {number} rotation
@@ -26,9 +27,14 @@ export const execute = <D extends DisplayObject>(display_object: D, rotation: nu
         return ;
     }
 
-    display_object.$rotation = rotation;
+    let matrix = display_object.$matrix;
+    if (!matrix) {
+        const rawData = displayObjectGetRawMatrixUseCase(display_object);
+        matrix = rawData 
+            ? new Matrix(...rawData) 
+            : new Matrix();
+    }
 
-    const matrix = display_object.$matrix ? display_object.$matrix : new Matrix();
     const scaleX = Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
     const scaleY = Math.sqrt(matrix.c * matrix.c + matrix.d * matrix.d);
     if (rotation === 0) {
@@ -60,6 +66,7 @@ export const execute = <D extends DisplayObject>(display_object: D, rotation: nu
         }
     }
     
-    display_object.$matrix = matrix;
+    display_object.$rotation = rotation;
+    display_object.$matrix   = matrix;
     displayObjectApplyChangesService(display_object);
 };

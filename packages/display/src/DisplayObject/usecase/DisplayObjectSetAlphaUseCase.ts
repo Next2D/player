@@ -2,6 +2,7 @@ import { ColorTransform } from "@next2d/geom";
 import type { DisplayObject } from "../../DisplayObject";
 import { $clamp } from "../../DisplayObjectUtil";
 import { execute as displayObjectApplyChangesService } from "../service/DisplayObjectApplyChangesService";
+import { execute as displayObjectGetRawColorTransformUseCase } from "../usecase/DisplayObjectGetRawColorTransformUseCase";
 
 /**
  * @description DisplayObjectのalphaを設定
@@ -21,13 +22,17 @@ export const execute = <D extends DisplayObject>(display_object: D, alpha: numbe
     }
 
     display_object.$alpha = alpha;
-    if (display_object.$colorTransform) {
-        const rawData = display_object.$colorTransform.rawData;
-        rawData[3] = alpha;
-        rawData[7] = 0;
-    } else {
-        display_object.$colorTransform = new ColorTransform(1, 1, 1, alpha);
+
+    let colorTransform = display_object.$colorTransform;
+    if (!colorTransform) {
+        const rawData = displayObjectGetRawColorTransformUseCase(display_object);
+        colorTransform = rawData 
+            ? new ColorTransform(...rawData) 
+            : new ColorTransform();
     }
-    
+
+    colorTransform.alphaMultiplier = alpha;
+    colorTransform.alphaOffset     = 0;
+    display_object.$colorTransform = colorTransform;
     displayObjectApplyChangesService(display_object);
 };

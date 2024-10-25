@@ -24,15 +24,9 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
         return display_object.$rotation;
     }
 
-    if (display_object.$matrix) {
-        const rawData = display_object.$matrix.rawData;
-        return Math.atan2(rawData[1], rawData[0]) * $Rad2Deg;
-    }
+    const matrix = display_object.$matrix
+        ? display_object.$matrix.rawData
+        : displayObjectGetRawMatrixUseCase(display_object);
 
-    const matrix = displayObjectGetRawMatrixUseCase(display_object);
-    if (matrix) {
-        return Math.atan2(matrix[1], matrix[0]) * $Rad2Deg;
-    }
-
-    return 0;
+    return matrix ? Math.atan2(matrix[1], matrix[0]) * $Rad2Deg : 0;
 };

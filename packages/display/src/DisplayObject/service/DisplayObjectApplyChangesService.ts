@@ -14,9 +14,7 @@ export const execute = <D extends DisplayObject>(display_object: D): void =>
     display_object.changed = true;
 
     const parent = display_object.parent;
-    if (!parent || parent.changed) {
-        return ;
+    if (parent && !parent.changed) {
+        execute(parent);
     }
-
-    execute(parent);
 }
