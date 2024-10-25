@@ -13,7 +13,7 @@ import { $cacheStore } from "@next2d/cache";
  */
 export const execute = (shape: Shape): void =>
 {
-    shape.isBitmap = false;
+    shape.isBitmap      = false;
     shape.$bitmapBuffer = null;
 
     // graphics clear

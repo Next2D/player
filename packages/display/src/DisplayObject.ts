@@ -28,6 +28,8 @@ import { execute as displayObjectGetScaleYUseCase } from "./DisplayObject/usecas
 import { execute as displayObjectSetScaleYUseCase } from "./DisplayObject/usecase/DisplayObjectSetScaleYUseCase";
 import { execute as displayObjectGetXUseCase } from "./DisplayObject/usecase/DisplayObjectGetXUseCase";
 import { execute as displayObjectSetXUseCase } from "./DisplayObject/usecase/DisplayObjectSetXUseCase";
+import { execute as displayObjectGetYUseCase } from "./DisplayObject/usecase/DisplayObjectGetYUseCase";
+import { execute as displayObjectSetYUseCase } from "./DisplayObject/usecase/DisplayObjectSetYUseCase";
 import {
     $getInstanceId,
     $parentMap,
@@ -312,12 +314,28 @@ export class DisplayObject extends EventDispatcher
      */
     public $alpha: number | null;
 
+    /**
+     * @description 表示オブジェクトのスケール9グリッドを示します。
+     *              Indicates the scale9 grid of the display object.
+     * 
+     * @type {Rectangle}
+     * @private
+     */
+    private _$scale9Grid: Rectangle | null;
+
+    /**
+     * @description 表示オブジェクトの可視性を示します。
+     *              Indicates the visibility of the display object.
+     * 
+     * @type {boolean}
+     * @private
+     */
+    private _$visible: boolean;
+
     // todo
-    protected _$scale9Grid: Rectangle | null;
     protected _$isMask: boolean;
     protected _$hitObject: Sprite | null;
     protected _$mask: IDisplayObject<any> | null;
-    protected _$visible: boolean;
     protected _$variables: Map<any, any> | null;
     
     /**
@@ -445,13 +463,13 @@ export class DisplayObject extends EventDispatcher
         displayObjectSetFiltersUseCase(this, filters);
     }
 
-    // /**
-    //  * @description 表示オブジェクトの高さを示します（ピクセル単位）。
-    //  *              Indicates the height of the display object, in pixels.
-    //  *
-    //  * @member {number}
-    //  * @public
-    //  */
+    /**
+     * @description 表示オブジェクトの高さを示します（ピクセル単位）。
+     *              Indicates the height of the display object, in pixels.
+     *
+     * @member {number}
+     * @public
+     */
     // get height (): number
     // {
     //     const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
@@ -731,13 +749,13 @@ export class DisplayObject extends EventDispatcher
         displayObjectApplyChangesService(this);
     }
 
-    // /**
-    //  * @description 表示オブジェクトの幅を示します（ピクセル単位）。
-    //  *              Indicates the width of the display object, in pixels.
-    //  *
-    //  * @member {number}
-    //  * @public
-    //  */
+    /**
+     * @description 表示オブジェクトの幅を示します（ピクセル単位）。
+     *              Indicates the width of the display object, in pixels.
+     *
+     * @member {number}
+     * @public
+     */
     // get width (): number
     // {
     //     const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
@@ -822,47 +840,35 @@ export class DisplayObject extends EventDispatcher
         displayObjectSetXUseCase(this, x);
     }
 
-    // /**
-    //  * @description 親 DisplayObjectContainer のローカル座標を基準にした
-    //  *              DisplayObject インスタンスの y 座標を示します。
-    //  *              Indicates the y coordinate
-    //  *              of the DisplayObject instance relative to the local coordinates
-    //  *              of the parent DisplayObjectContainer.
-    //  *
-    //  * @member {number}
-    //  * @public
-    //  */
-    // get y (): number
-    // {
-    //     return this._$transform._$rawMatrix()[5];
-    // }
-    // set y (y: number)
-    // {
-    //     const transform: Transform = this._$transform;
+    /**
+     * @description 親 DisplayObjectContainer のローカル座標を基準にした
+     *              DisplayObject インスタンスの y 座標を示します。
+     *              Indicates the y coordinate
+     *              of the DisplayObject instance relative to the local coordinates
+     *              of the parent DisplayObjectContainer.
+     *
+     * @member {number}
+     * @public
+     */
+    get y (): number
+    {
+        return displayObjectGetYUseCase(this);
+    }
+    set y (y: number)
+    {
+        displayObjectSetYUseCase(this, y);
+    }
 
-    //     if (!transform._$matrix) {
-    //         const matrix = transform.matrix;
-    //         matrix.ty = y;
-
-    //         transform.matrix = matrix;
-    //         $poolMatrix(matrix);
-    //     } else {
-    //         transform._$matrix.ty = y;
-    //         this._$doChanged();
-    //         $doUpdated();
-    //     }
-    // }
-
-    // /**
-    //  * @description targetCoordinateSpace オブジェクトの座標系を基準にして、
-    //  *              表示オブジェクトの領域を定義する矩形を返します。
-    //  *              Returns a rectangle that defines the area
-    //  *              of the display object relative to the coordinate system
-    //  *              of the targetCoordinateSpace object.
-    //  *
-    //  * @param  {DisplayObject} [target=null]
-    //  * @return {Rectangle}
-    //  */
+    /**
+     * @description targetCoordinateSpace オブジェクトの座標系を基準にして、
+     *              表示オブジェクトの領域を定義する矩形を返します。
+     *              Returns a rectangle that defines the area
+     *              of the display object relative to the coordinate system
+     *              of the targetCoordinateSpace object.
+     *
+     * @param  {DisplayObject} [target=null]
+     * @return {Rectangle}
+     */
     // getBounds (target: DisplayObjectImpl<any> | null = null): Rectangle
     // {
     //     const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
@@ -917,16 +923,16 @@ export class DisplayObject extends EventDispatcher
     //     );
     // }
 
-    // /**
-    //  * @description point オブジェクトをステージ（グローバル）座標から
-    //  *              表示オブジェクトの（ローカル）座標に変換します。
-    //  *              Converts the point object from the Stage (global) coordinates
-    //  *              to the display object's (local) coordinates.
-    //  *
-    //  * @param  {Point} point
-    //  * @return {Point}
-    //  * @public
-    //  */
+    /**
+     * @description point オブジェクトをステージ（グローバル）座標から
+     *              表示オブジェクトの（ローカル）座標に変換します。
+     *              Converts the point object from the Stage (global) coordinates
+     *              to the display object's (local) coordinates.
+     *
+     * @param  {Point} point
+     * @return {Point}
+     * @public
+     */
     // globalToLocal (point: Point): Point
     // {
     //     const matrix: Matrix = this._$transform.concatenatedMatrix;
@@ -1233,90 +1239,6 @@ export class DisplayObject extends EventDispatcher
     // }
 
     // /**
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$updateState (): void
-    // {
-    //     this._$isNext = true;
-
-    //     const parent: ParentImpl<any> | null = this._$parent;
-    //     if (parent) {
-    //         parent._$updateState();
-    //     }
-    // }
-
-    // /**
-    //  * @param  {CanvasToWebGLContext} context
-    //  * @param  {Float32Array}         matrix
-    //  * @param  {array}                filters
-    //  * @param  {number}               width
-    //  * @param  {number}               height
-    //  * @param  {WebGLTexture}         [target_texture = null]
-    //  * @return {object}
-    //  * @method
-    //  * @private
-    //  */
-    // _$drawFilter (
-    //     context: CanvasToWebGLContext,
-    //     matrix: Float32Array,
-    //     filters: FilterArrayImpl,
-    //     width: number,
-    //     height: number,
-    //     target_texture: WebGLTexture | null = null
-    // ): CachePositionImpl {
-
-    //     const cacheKeys: any[] = $getArray(this._$instanceId, "f");
-    //     let position: CachePositionImpl | void = $cacheStore.get(cacheKeys);
-
-    //     const updated: boolean = this._$isFilterUpdated(matrix, filters, true);
-
-    //     if (position && !updated) {
-    //         context.cachePosition = position;
-    //         return position;
-    //     }
-
-    //     // cache clear
-    //     if (position) {
-    //         $cacheStore.set(cacheKeys, null);
-    //     }
-
-    //     const manager: FrameBufferManager = context.frameBuffer;
-    //     const targetTexture: WebGLTexture = target_texture
-    //         ? target_texture
-    //         : context.getTextureFromRect(
-    //             context.cachePosition as NonNullable<CachePositionImpl>
-    //         );
-
-    //     const texture: WebGLTexture = this._$applyFilter(
-    //         context, filters, targetTexture,
-    //         matrix, width, height
-    //     );
-    //     manager.textureManager.release(targetTexture);
-
-    //     const bounds: BoundsImpl = this._$getLayerBounds(matrix);
-    //     position = manager.createCachePosition(
-    //         $Math.ceil($Math.abs(bounds.xMax - bounds.xMin)),
-    //         $Math.ceil($Math.abs(bounds.yMax - bounds.yMin))
-    //     );
-    //     $poolBoundsObject(bounds);
-
-    //     position.filterState = true;
-    //     position.matrix      = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}_0_0`;
-    //     position.offsetX     = texture.offsetX;
-    //     position.offsetY     = texture.offsetY;
-
-    //     // 関数先でtextureがreleaseされる
-    //     context.drawTextureFromRect(texture, position);
-
-    //     $cacheStore.set(cacheKeys, position);
-    //     $poolArray(cacheKeys);
-
-    //     return position;
-    // }
-
-    // /**
     //  * @param   {Float32Array} multi_matrix
     //  * @returns {object}
     //  * @private
@@ -1364,193 +1286,6 @@ export class DisplayObject extends EventDispatcher
     //     }
 
     //     return filterBounds;
-    // }
-
-    // /**
-    //  * @return {boolean}
-    //  * @method
-    //  * @private
-    //  */
-    // _$nextFrame (): boolean
-    // {
-    //     // added event
-    //     this._$executeAddedEvent();
-
-    //     this._$isNext = false;
-
-    //     return false;
-    // }
-
-    // /**
-    //  * @param  {array} [filters=null]
-    //  * @return {boolean}
-    //  * @private
-    //  */
-    // _$canApply (filters: FilterArrayImpl | null = null): boolean
-    // {
-    //     if (filters) {
-    //         for (let idx: number = 0; idx < filters.length; ++idx) {
-    //             if (filters[idx]._$canApply()) {
-    //                 return true;
-    //             }
-    //         }
-    //     }
-    //     return false;
-    // }
-
-    // /**
-    //  * @param  {Float32Array} matrix
-    //  * @param  {array}        [filters=null]
-    //  * @param  {boolean}      [can_apply=false]
-    //  * @param  {number}       [position_x=0]
-    //  * @param  {number}       [position_y=0]
-    //  * @return {boolean}
-    //  * @private
-    //  */
-    // _$isFilterUpdated (
-    //     matrix: Float32Array,
-    //     filters: FilterArrayImpl | null = null,
-    //     can_apply: boolean = false
-    // ): boolean {
-
-    //     // cache flag
-    //     if (this._$isUpdated()) {
-    //         return true;
-    //     }
-
-    //     // check filter data
-    //     if (can_apply && filters) {
-
-    //         for (let idx: number = 0; idx < filters.length; ++idx) {
-
-    //             if (!filters[idx]._$isUpdated()) {
-    //                 continue;
-    //             }
-
-    //             return true;
-    //         }
-
-    //     }
-
-    //     // check status
-    //     const cache: CachePositionImpl = $cacheStore.get([this._$instanceId, "f"]);
-    //     if (!cache) {
-    //         return true;
-    //     }
-
-    //     if (cache.filterState !== can_apply) {
-    //         return true;
-    //     }
-
-    //     if (cache.matrix !== `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}`) {
-    //         return true;
-    //     }
-
-    //     return false;
-    // }
-
-    // /**
-    //  * @param  {CanvasToWebGLContext} context
-    //  * @param  {array} filters
-    //  * @param  {WebGLTexture} target_texture
-    //  * @param  {Float32Array} matrix
-    //  * @param  {number} width
-    //  * @param  {number} height
-    //  * @return {WebGLTexture}
-    //  * @private
-    //  */
-    // _$applyFilter (
-    //     context: CanvasToWebGLContext,
-    //     filters: FilterArrayImpl,
-    //     target_texture: WebGLTexture,
-    //     matrix: Float32Array,
-    //     width: number,
-    //     height: number
-    // ): WebGLTexture {
-
-    //     const xScale: number = +$Math.sqrt(
-    //         matrix[0] * matrix[0]
-    //         + matrix[1] * matrix[1]
-    //     );
-    //     const yScale: number = +$Math.sqrt(
-    //         matrix[2] * matrix[2]
-    //         + matrix[3] * matrix[3]
-    //     );
-
-    //     const radianX: number = $Math.atan2(matrix[1], matrix[0]);
-    //     const radianY: number = $Math.atan2(-matrix[2], matrix[3]);
-
-    //     const parentMatrix: Float32Array = $getFloat32Array6(
-    //         $Math.cos(radianX), $Math.sin(radianX),
-    //         -$Math.sin(radianY), $Math.cos(radianY),
-    //         width / 2, height / 2
-    //     );
-
-    //     const baseMatrix: Float32Array = $getFloat32Array6(
-    //         1, 0, 0, 1,
-    //         -target_texture.width / 2,
-    //         -target_texture.height / 2
-    //     );
-
-    //     const multiMatrix: Float32Array = $multiplicationMatrix(
-    //         parentMatrix, baseMatrix
-    //     );
-    //     $poolFloat32Array6(parentMatrix);
-    //     $poolFloat32Array6(baseMatrix);
-
-    //     const manager: FrameBufferManager = context.frameBuffer;
-    //     const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-
-    //     const attachment: AttachmentImpl = manager
-    //         .createCacheAttachment(width, height);
-    //     context._$bind(attachment);
-
-    //     context.reset();
-    //     context.setTransform(
-    //         multiMatrix[0], multiMatrix[1],
-    //         multiMatrix[2], multiMatrix[3],
-    //         multiMatrix[4], multiMatrix[5]
-    //     );
-    //     $poolFloat32Array6(multiMatrix);
-
-    //     context.drawImage(target_texture,
-    //         0, 0, target_texture.width, target_texture.height
-    //     );
-
-    //     // init
-    //     context._$offsetX = 0;
-    //     context._$offsetY = 0;
-
-    //     const filterMatrix: Float32Array = $getFloat32Array6(
-    //         xScale, 0, 0, yScale, 0, 0
-    //     );
-
-    //     let texture: WebGLTexture | null = null;
-    //     for (let idx: number = 0; idx < filters.length; ++idx) {
-    //         texture = filters[idx]._$applyFilter(context, filterMatrix);
-    //     }
-
-    //     $poolFloat32Array6(filterMatrix);
-
-    //     if (!texture) {
-    //         return target_texture;
-    //     }
-
-    //     const offsetX: number = context._$offsetX;
-    //     const offsetY: number = context._$offsetY;
-
-    //     // reset
-    //     context._$offsetX = 0;
-    //     context._$offsetY = 0;
-
-    //     // set offset
-    //     texture.offsetX = offsetX;
-    //     texture.offsetY = offsetY;
-
-    //     context._$bind(currentAttachment);
-    //     manager.releaseAttachment(attachment, false);
-
-    //     return texture;
     // }
 
     // /**

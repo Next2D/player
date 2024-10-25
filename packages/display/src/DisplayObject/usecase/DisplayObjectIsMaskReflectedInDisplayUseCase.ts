@@ -1,7 +1,7 @@
 import type { DisplayObject } from "../../DisplayObject";
 import type { Shape } from "../../Shape";
 import { Matrix } from "@next2d/geom";
-import { execute as shapeGetCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeGetCalcBoundsMatrixUseCase";
+import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeCalcBoundsMatrixUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 
 /**
@@ -37,8 +37,8 @@ export const execute = <D extends DisplayObject>(
     switch (true) {
 
         case display_object.isShape:
-            bounds = shapeGetCalcBoundsMatrixUseCase(
-                (display_object as unknown as Shape).graphics, tMatrix
+            bounds = shapeCalcBoundsMatrixUseCase(
+                display_object as unknown as Shape, tMatrix
             );
             break;
         

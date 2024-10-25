@@ -202,45 +202,6 @@ export class Shape extends DisplayObject
         );
     }
 
-    // /**
-    //  * @param   {Float32Array} [matrix=null]
-    //  * @returns {object}
-    //  * @method
-    //  * @private
-    //  */
-    // _$getBounds (
-    //     matrix: Float32Array | null = null
-    // ): BoundsImpl {
-
-    //     if (!this._$graphics) {
-    //         return $getBoundsObject(0, 0, 0, 0);
-    //     }
-
-    //     const baseBounds: BoundsImpl = this._$graphics._$getBounds();
-    //     if (!matrix) {
-    //         return baseBounds;
-    //     }
-
-    //     let multiMatrix: Float32Array = matrix;
-
-    //     const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-    //     if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-    //         || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-    //         || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-    //     ) {
-    //         multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
-    //     }
-
-    //     const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
-    //     $poolBoundsObject(baseBounds);
-
-    //     if (multiMatrix !== matrix) {
-    //         $poolFloat32Array6(multiMatrix);
-    //     }
-
-    //     return bounds;
-    // }
-
     /**
      * @description マウスイベントのヒットテストを行います。
      *              Performs a hit test on a display object by testing a point against all visible children.
@@ -258,7 +219,7 @@ export class Shape extends DisplayObject
         options: IPlayerHitObject
     ): boolean {
 
-        if (!this._$visible) {
+        if (!this.visible) {
             return false;
         }
 
