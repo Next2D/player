@@ -59,7 +59,7 @@ export const execute = async (
             sound.loopCount = tag.loopCount | 0;
             sound.volume    = Math.min(SoundMixer.volume, tag.volume);
 
-            await sound._$build(character);
+            await sound.$build(character);
 
             sounds.push(sound);
         }

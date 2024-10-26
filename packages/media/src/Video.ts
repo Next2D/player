@@ -1,8 +1,8 @@
+import type { IBounds } from "./interface/IBounds";
+import type { IVideoCharacter } from "./interface/IVideoCharacter";
 import { SoundMixer } from "./SoundMixer";
 import { DisplayObject } from "@next2d/display";
 import { VideoEvent } from "@next2d/events";
-import type { IBounds } from "./interface/IBounds";
-import type { IVideoCharacter } from "./interface/IVideoCharacter";
 import { execute as videoCreateElementService } from "./Video/service/VideoCreateElementService";
 import { execute as videoRegisterEventUseCase } from "./Video/usecase/VideoRegisterEventUseCase";
 import { execute as videoPlayEventService } from "./Video/service/VideoPlayEventService";
@@ -439,38 +439,5 @@ export class Video extends DisplayObject
     //     }
 
     //     return context.isPointInPath(options.x, options.y);
-    // }
-
-    // /**
-    //  * @param  {Float32Array} [matrix=null]
-    //  * @return {object}
-    //  * @method
-    //  * @private
-    //  */
-    // _$getBounds (matrix: Float32Array | null = null): BoundsImpl
-    // {
-    //     if (matrix) {
-
-    //         let multiMatrix: Float32Array = matrix;
-    //         const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-    //         if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-    //             || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-    //             || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-    //         ) {
-    //             multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
-    //         }
-
-    //         const bounds: BoundsImpl = $boundsMatrix(this._$bounds, multiMatrix);
-    //         if (multiMatrix !== matrix) {
-    //             $poolFloat32Array6(multiMatrix);
-    //         }
-
-    //         return bounds;
-    //     }
-
-    //     return $getBoundsObject(
-    //         this._$bounds.xMin, this._$bounds.xMax,
-    //         this._$bounds.yMin, this._$bounds.yMax
-    //     );
     // }
 }

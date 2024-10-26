@@ -1,14 +1,15 @@
 import type { Shape } from "../../Shape";
+import type { Video } from "@next2d/media";
 import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import { Matrix } from "@next2d/geom";
+import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
+import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeCalcBoundsMatrixUseCase";
+import { execute as videoCalcBoundsMatrixUseCase } from "../../Video/usecase/VideoCalcBoundsMatrixUseCase";
 import {
     $getArray,
     $poolArray
 } from "../../DisplayObjectUtil";
-import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeCalcBoundsMatrixUseCase";
-import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
-
 
 /**
  * @description DisplayObjectContainerのバウンディングボックスを計算
@@ -56,7 +57,10 @@ export const execute = <C extends DisplayObjectContainer>(
                 break;
 
             case child.isText:
+                break;
+
             case child.isVideo:
+                bounds = videoCalcBoundsMatrixUseCase(child as Video, tMatrix);
                 break;
 
             case child.isContainerEnabled:

@@ -12,7 +12,7 @@ import { $getAudioContext } from "../../MediaUtil";
 export const execute = async (array_buffer: ArrayBuffer): Promise<AudioBuffer | void> =>
 {
     if (!array_buffer.byteLength) {
-        return;
+        return ;
     }
 
     try {
@@ -22,7 +22,7 @@ export const execute = async (array_buffer: ArrayBuffer): Promise<AudioBuffer | 
     } catch (error) {
 
         const buffer = new Uint8Array(array_buffer);
-        let idx: number = 0;
+        let idx = 0;
         for ( ; idx > buffer.byteLength; ) {
 
             idx = buffer.indexOf(0xff, idx);

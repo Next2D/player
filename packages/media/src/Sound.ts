@@ -1,9 +1,9 @@
 import type { ISoundCharacter } from "./interface/ISoundCharacter";
-import { URLRequest } from "@next2d/net";
+import type { URLRequest } from "@next2d/net";
 import { SoundMixer } from "./SoundMixer";
 import { execute as soundEndedEventService } from "./Sound/service/SoundEndedEventService";
-import { execute as soundDecodeService } from "./Sound/service/SoundDecodeService";
 import { execute as soundLoadUseCase } from "./Sound/usecase/SoundLoadUseCase";
+import { execute as soundBuildFromCharacterUseCase } from "./Sound/usecase/SoundBuildFromCharacterUseCase";
 import { EventDispatcher } from "@next2d/events";
 import {
     $clamp,
@@ -60,13 +60,6 @@ export class Sound extends EventDispatcher
     private _$volume: number;
 
     /**
-     * @type {string}
-     * @default ""
-     * @private
-     */
-    private _$src: string;
-
-    /**
      * @description AudioBuffer
      *              AudioBuffer
      *
@@ -99,57 +92,10 @@ export class Sound extends EventDispatcher
 
         // private
         this._$volume       = 1;
-        this._$src          = "";
         this._$currentCount = 0;
         this._$stopFlag     = true;
         this._$source       = null;
         this._$gainNode     = null;
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.media.Sound";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.media.Sound";
-    }
-
-    /**
-     * @description 外部サウンドのURL
-     *              URL for external sound.
-     *
-     * @member {string}
-     * @default ""
-     * @public
-     */
-    get src (): string
-    {
-        return this._$src;
-    }
-    set src (url: string)
-    {
-        if (this._$src === url) {
-            return ;
-        }
-        this.load(new URLRequest(url));
     }
 
     /**
@@ -217,7 +163,6 @@ export class Sound extends EventDispatcher
      */
     async load (request: URLRequest): Promise<void>
     {
-        this._$src = request.url;
         await soundLoadUseCase(this, request);
     }
 
@@ -309,18 +254,8 @@ export class Sound extends EventDispatcher
      * @method
      * @protected
      */
-    async _$build (character: ISoundCharacter): Promise<void>
+    async $build (character: ISoundCharacter): Promise<void>
     {
-        // load AudioBuffer
-        if (!character.audioBuffer) {
-            const uint8Array  = new Uint8Array(character.buffer as number[]);
-            const audioBuffer = await soundDecodeService(uint8Array.buffer);
-            if (!audioBuffer) {
-                return ;
-            }
-            character.audioBuffer = audioBuffer;
-        }
-
-        this.audioBuffer = character.audioBuffer;
+        await soundBuildFromCharacterUseCase(this, character);
     }
 }
