@@ -23,10 +23,20 @@ export const execute = <D extends DisplayObject>(display_object: D): number[] =>
                 displayObjectGetRawMatrixUseCase(display_object)
             );
 
-        // todo
+        case display_object.isText:
+            // todo
+            return $getArray(0, 0, 0, 0);
+
+        case display_object.isVideo:
+            // todo
+            return $getArray(0, 0, 0, 0);
+
+        case display_object.isContainerEnabled:
+            // todo
+            return $getArray(0, 0, 0, 0);
 
         default:
-            return $getArray(0, 0, 0, 0)
+            return $getArray(0, 0, 0, 0);
 
     }
 };

@@ -30,6 +30,7 @@ import { execute as displayObjectGetXUseCase } from "./DisplayObject/usecase/Dis
 import { execute as displayObjectSetXUseCase } from "./DisplayObject/usecase/DisplayObjectSetXUseCase";
 import { execute as displayObjectGetYUseCase } from "./DisplayObject/usecase/DisplayObjectGetYUseCase";
 import { execute as displayObjectSetYUseCase } from "./DisplayObject/usecase/DisplayObjectSetYUseCase";
+import { execute as displayObjectGetWidthUseCase } from "./DisplayObject/usecase/DisplayObjectGetWidthUseCase";
 import {
     $getInstanceId,
     $parentMap,
@@ -756,34 +757,10 @@ export class DisplayObject extends EventDispatcher
      * @member {number}
      * @public
      */
-    // get width (): number
-    // {
-    //     const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-    //         ? this._$getBounds() as BoundsImpl
-    //         : $getBoundsObject();
-
-    //     const bounds: BoundsImpl = $boundsMatrix(
-    //         baseBounds,
-    //         this._$transform._$rawMatrix()
-    //     );
-
-    //     $poolBoundsObject(baseBounds);
-
-    //     const width: number = $Math.abs(bounds.xMax - bounds.xMin);
-    //     $poolBoundsObject(bounds);
-
-    //     switch (true) {
-
-    //         case width === 0:
-    //         case width === $Infinity:
-    //         case width === 0 - $Infinity:
-    //             return 0;
-
-    //         default:
-    //             return +width.toFixed(2);
-
-    //     }
-    // }
+    get width (): number
+    {
+        return displayObjectGetWidthUseCase(this);
+    }
     // set width (width: number)
     // {
     //     width = +width;

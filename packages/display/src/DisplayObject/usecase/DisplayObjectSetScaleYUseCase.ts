@@ -1,5 +1,6 @@
-import { Matrix } from "@next2d/geom";
 import type { DisplayObject } from "../../DisplayObject";
+import { $clamp } from "../../DisplayObjectUtil";
+import { Matrix } from "@next2d/geom";
 import { execute as displayObjectApplyChangesService } from "../service/DisplayObjectApplyChangesService";
 import { execute as displayObjectGetRawMatrixUseCase } from "../usecase/DisplayObjectGetRawMatrixUseCase";
 
@@ -15,6 +16,8 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../usecase/DisplayO
  */
 export const execute = <D extends DisplayObject>(display_object: D, scale_y: number): void =>
 {
+    scale_y = $clamp(scale_y, -Number.MAX_VALUE, Number.MAX_VALUE, 1);
+
     if (!Number.isInteger(scale_y)) {
         const value: string = scale_y.toString();
         const index: number = value.indexOf("e");

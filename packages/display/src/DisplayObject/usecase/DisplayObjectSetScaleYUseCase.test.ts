@@ -59,4 +59,18 @@ describe("DisplayObjectSetScaleYUseCase.js test", () =>
         expect(displayObject.changed).toBe(true);
         expect(displayObject.$scaleY).toBe(2.2001);
     });
+
+    it("execute test case4", () =>
+    {
+        const displayObject = new DisplayObject();
+        displayObject.changed = false;
+
+        expect(displayObject.changed).toBe(false);
+        expect(displayObject.$scaleY).toBe(null);
+
+        execute(displayObject, "a" as unknown as number);
+        
+        expect(displayObject.changed).toBe(true);
+        expect(displayObject.$scaleY).toBe(1);
+    });
 });
