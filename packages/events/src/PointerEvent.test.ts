@@ -1,19 +1,6 @@
 import { PointerEvent } from "./PointerEvent";
 import { describe, expect, it } from "vitest";
 
-describe("PointerEvent.js namespace test", () =>
-{
-    it("namespace test public", () =>
-    {
-        expect(new PointerEvent("test").namespace).toBe("next2d.events.PointerEvent");
-    });
-
-    it("namespace test static", () =>
-    {
-        expect(PointerEvent.namespace).toBe("next2d.events.PointerEvent");
-    });
-});
-
 describe("PointerEvent.js property test", () =>
 {
     it("DOUBLE_CLICK test", () =>

@@ -11,32 +11,6 @@ import { Event } from "./Event";
 export class VideoEvent extends Event
 {
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.events.VideoEvent";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.events.VideoEvent";
-    }
-
-    /**
      * @description play イベントオブジェクトの type プロパティ値を定義します。
      *              Defines the value of the type property of a play event object.
      *

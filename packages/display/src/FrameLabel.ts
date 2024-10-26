@@ -52,32 +52,4 @@ export class FrameLabel extends EventDispatcher
         this.name  = `${name}`;
         this.frame = frame | 0;
     }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default "next2d.display.FrameLabel"
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.display.FrameLabel";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default "next2d.display.FrameLabel"
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.display.FrameLabel";
-    }
 }

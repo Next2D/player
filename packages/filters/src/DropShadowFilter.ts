@@ -141,32 +141,6 @@ export class DropShadowFilter extends BitmapFilter
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.filters.DropShadowFilter";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.filters.DropShadowFilter";
-    }
-
-    /**
      * @description アルファ透明度の値です。
      *              The alpha transparency value for the color.
      *

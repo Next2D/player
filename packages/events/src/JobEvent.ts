@@ -11,32 +11,6 @@ import { Event } from "./Event";
 export class JobEvent extends Event
 {
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.events.JobEvent";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.events.JobEvent";
-    }
-
-    /**
      * @description Jobのプロパティが更新されたときに発生します。
      *              Occurs when the Job property is updated.
      *

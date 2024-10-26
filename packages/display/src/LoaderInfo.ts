@@ -82,30 +82,4 @@ export class LoaderInfo extends EventDispatcher
         this.data    = null;
         this.format  = "json";
     }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.display.LoaderInfo";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.display.LoaderInfo";
-    }
 }

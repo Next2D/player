@@ -8,32 +8,6 @@
 export class EventPhase
 {
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.events.EventPhase";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.events.EventPhase";
-    }
-
-    /**
      * @description ターゲット段階（イベントフローの 2 番目の段階）です。
      *              The target phase, which is the second phase of the event flow.
      *

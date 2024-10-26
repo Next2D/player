@@ -1,19 +1,6 @@
 import { BlurFilter } from "./BlurFilter";
 import { describe, expect, it } from "vitest";
 
-describe("BlurFilter.js namespace test", () =>
-{
-    it("namespace test public", () =>
-    {
-        expect(new BlurFilter().namespace).toBe("next2d.filters.BlurFilter");
-    });
-
-    it("namespace test static", () =>
-    {
-        expect(BlurFilter.namespace).toBe("next2d.filters.BlurFilter");
-    });
-});
-
 describe("BlurFilter.js property test", () =>
 {
     it("default test success", () =>

@@ -133,34 +133,6 @@ export class Stage extends DisplayObjectContainer
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default "next2d.display.Stage"
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.display.Stage";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default "next2d.display.Stage"
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.display.Stage";
-    }
-
-    /**
      * @description 背景色
      *              Background color
      * 

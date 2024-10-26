@@ -1,19 +1,6 @@
 import { BlendMode } from "./BlendMode";
 import { describe, expect, it } from "vitest";
 
-describe("BlendMode.js namespace test", () =>
-{
-    it("namespace test public", () =>
-    {
-        expect(new BlendMode().namespace).toBe("next2d.display.BlendMode");
-    });
-
-    it("namespace test static", () =>
-    {
-        expect(BlendMode.namespace).toBe("next2d.display.BlendMode");
-    });
-});
-
 describe("BlendMode.js property test", () =>
 {
     it("ADD test", () =>

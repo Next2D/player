@@ -63,34 +63,6 @@ export class LoopConfig
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default next2d.display.LoopConfig
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.display.LoopConfig";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default next2d.display.LoopConfig
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.display.LoopConfig";
-    }
-
-    /**
      * @description ループ設定の適用を開始するフレームの値、自動で設定されます。
      *              The value of the frame at which to start applying the loop setting, set automatically.
      *

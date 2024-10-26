@@ -1,19 +1,6 @@
 import { Point } from "./Point";
 import { describe, expect, it } from "vitest";
 
-describe("Point.js namespace test", () =>
-{
-    it("namespace test public", () =>
-    {
-        expect( new Point().namespace).toBe("next2d.geom.Point");
-    });
-
-    it("namespace test static", () =>
-    {
-        expect(Point.namespace).toBe("next2d.geom.Point");
-    });
-});
-
 describe("Point.js length test", () =>
 {
     it("default test case1", () =>

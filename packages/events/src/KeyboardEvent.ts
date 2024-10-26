@@ -40,32 +40,6 @@ export class KeyboardEvent extends Event
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.events.KeyboardEvent";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.events.KeyboardEvent";
-    }
-
-    /**
      * @description キーボードのキーが押される度に発生します。
      *              Occurs each time a key is pressed on the keyboard.
      *

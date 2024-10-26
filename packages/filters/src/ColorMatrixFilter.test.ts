@@ -1,19 +1,6 @@
 import { ColorMatrixFilter } from "./ColorMatrixFilter";
 import { describe, expect, it } from "vitest";
 
-describe("ColorMatrixFilter.js namespace test", () =>
-{
-    it("namespace test public", () =>
-    {
-        expect(new ColorMatrixFilter().namespace).toBe("next2d.filters.ColorMatrixFilter");
-    });
-
-    it("namespace test static", () =>
-    {
-        expect(ColorMatrixFilter.namespace).toBe("next2d.filters.ColorMatrixFilter");
-    });
-});
-
 describe("ColorMatrixFilter.js property test", () =>
 {
     // default

@@ -1,19 +1,6 @@
 import { URLRequest } from "./URLRequest";
 import { describe, expect, it } from "vitest";
 
-describe("URLRequest.js namespace test", () =>
-{
-    it("namespace test public", () =>
-    {
-        expect(new URLRequest().namespace).toBe("next2d.net.URLRequest");
-    });
-
-    it("namespace test static", () =>
-    {
-        expect(URLRequest.namespace).toBe("next2d.net.URLRequest");
-    });
-});
-
 describe("URLRequest.js properties test", () =>
 {
     it("contentType case1", () =>

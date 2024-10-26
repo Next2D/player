@@ -173,32 +173,6 @@ export class Job extends EventDispatcher
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.ui.Job";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.ui.Job";
-    }
-
-    /**
      * @description イージングの対象オブジェクトを返します（読み取り専用）
      *              Returns the target object of the easing (read-only)
      *

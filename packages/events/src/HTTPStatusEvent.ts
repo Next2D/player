@@ -85,32 +85,6 @@ export class HTTPStatusEvent extends Event
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.events.HTTPStatusEvent";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.events.HTTPStatusEvent";
-    }
-
-    /**
      * @description HTTPStatusEvent.HTTP_STATUS 定数は、
      *              httpStatus イベントオブジェクトの type プロパティの値を定義します。
      *              The HTTPStatusEvent.HTTP_STATUS constant defines the value

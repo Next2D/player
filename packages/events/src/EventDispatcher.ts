@@ -33,32 +33,6 @@ export class EventDispatcher
     }
 
     /**
-     * @description クラスの空間名を返します。
-     *              Returns the space name of the class.
-     *
-     * @member {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.events.EventDispatcher";
-    }
-
-    /**
-     * @description オブジェクトの空間名を返します。
-     *              Returns the space name of the object.
-     *
-     * @member {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.events.EventDispatcher";
-    }
-
-    /**
      * @description イベントリスナーオブジェクトを EventDispatcher オブジェクトに登録し、
      *              リスナーがイベントの通知を受け取るようにします。
      *              Registers an event listener object with an EventDispatcher object

@@ -42,32 +42,6 @@ export class PointerEvent extends Event
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.events.PointerEvent";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.events.PointerEvent";
-    }
-
-    /**
      * @description ボタンが連続で押された時に発生します。
      *              Occurs when a button is pressed continuously.
      *

@@ -83,32 +83,6 @@ export class BlurFilter extends BitmapFilter
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.filters.BlurFilter";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.filters.BlurFilter";
-    }
-
-    /**
      * @description 水平方向のぼかし量。
      *              The amount of horizontal blur.
      *

@@ -10,34 +10,6 @@
 export class BlendMode
 {
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default "next2d.display.BlendMode"
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.display.BlendMode";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default "next2d.display.BlendMode"
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.display.BlendMode";
-    }
-
-    /**
      * @description 表示オブジェクトの要素カラーの値を背景色に加算し、その際に上限 0xFF を適用します。
      *              Adds the values of the constituent colors of the display object
      *              to the colors of its background, applying a ceiling of 0xFF.

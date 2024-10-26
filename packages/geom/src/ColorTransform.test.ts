@@ -1,20 +1,6 @@
 import { ColorTransform } from "./ColorTransform";
 import { describe, expect, it } from "vitest";
 
-describe("ColorTransform.js namespace test", () =>
-{
-    it("namespace test public", () =>
-    {
-        const colorTransform = new ColorTransform();
-        expect(colorTransform.namespace).toBe("next2d.geom.ColorTransform");
-    });
-
-    it("namespace test static", () =>
-    {
-        expect(ColorTransform.namespace).toBe("next2d.geom.ColorTransform");
-    });
-});
-
 describe("ColorTransform.js property test", () =>
 {
     it("test case1", () => {

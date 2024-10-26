@@ -66,32 +66,6 @@ export class ColorTransform
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.geom.ColorTransform";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member  {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.geom.ColorTransform";
-    }
-
-    /**
      * @description ColorTransform の内部Float32Arrayデータを返却
      *              Returns the internal Float32Array data of ColorTransform
      *

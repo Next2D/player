@@ -41,32 +41,6 @@ export class IOErrorEvent extends Event
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.events.IOErrorEvent";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.events.IOErrorEvent";
-    }
-
-    /**
      * @description ioError イベントオブジェクトの type プロパティ値を定義します。
      *              Defines the value of the type property of an ioError event object.
      *

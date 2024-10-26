@@ -54,32 +54,6 @@ export class Point
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.geom.Point";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.geom.Point";
-    }
-
-    /**
      * @description (0,0) からこのポイントまでの線のセグメントの長さです。
      *              The length of the line segment from (0,0) to this point.
      *

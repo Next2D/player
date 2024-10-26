@@ -1,18 +1,5 @@
 import { BevelFilter } from "./BevelFilter";
-import { describe, expect, it, vi } from "vitest";
-
-describe("BevelFilter.js namespace test", () =>
-{
-    it("namespace test public", () =>
-    {
-        expect(new BevelFilter().namespace).toBe("next2d.filters.BevelFilter");
-    });
-
-    it("namespace test static", () =>
-    {
-        expect(BevelFilter.namespace).toBe("next2d.filters.BevelFilter");
-    });
-});
+import { describe, expect, it } from "vitest";
 
 describe("BevelFilter.js default property test", () =>
 {

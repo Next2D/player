@@ -1,19 +1,6 @@
 import { JobEvent } from "./JobEvent";
 import { describe, expect, it } from "vitest";
 
-describe("JobEvent.js namespace test", () =>
-{
-    it("namespace test public", () =>
-    {
-        expect(new JobEvent("test").namespace).toBe("next2d.events.JobEvent");
-    });
-
-    it("namespace test static", () =>
-    {
-        expect(JobEvent.namespace).toBe("next2d.events.JobEvent");
-    });
-});
-
 describe("JobEvent.js property test", () =>
 {
     it("UPDATE test", () =>

@@ -12,32 +12,6 @@ import { $getVolume } from "./MediaUtil";
 export class SoundMixer
 {
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.media.SoundMixer";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.media.SoundMixer";
-    }
-
-    /**
      * @description ボリュームです。範囲は 0（無音）～ 1（フルボリューム）です。
      *              The volume, ranging from 0 (silent) to 1 (full volume).
      *

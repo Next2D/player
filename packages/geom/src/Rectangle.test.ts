@@ -2,21 +2,6 @@ import { Rectangle } from "./Rectangle";
 import { Point } from "./Point";
 import { describe, expect, it } from "vitest";
 
-describe("Rectangle.js namespace test", () =>
-{
-
-    it("namespace test public", () =>
-    {
-        expect(new Rectangle().namespace).toBe("next2d.geom.Rectangle");
-    });
-
-    it("namespace test static", () =>
-    {
-        expect(Rectangle.namespace).toBe("next2d.geom.Rectangle");
-    });
-
-});
-
 describe("Rectangle.js property test", () =>
 {
     it("top test case1", () =>

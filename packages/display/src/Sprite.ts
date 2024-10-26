@@ -78,32 +78,6 @@ export class Sprite extends DisplayObjectContainer
         this._$soundTransform = null;
     }
 
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.display.Sprite";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return {string}
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.display.Sprite";
-    }
-
     // /**
     //  * @description スプライトのドラッグ先またはスプライトがドロップされた先の表示オブジェクトを指定します。
     //  *              Specifies the display object over which the sprite is being dragged,
