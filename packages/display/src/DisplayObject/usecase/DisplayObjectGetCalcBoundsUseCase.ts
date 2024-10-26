@@ -2,7 +2,6 @@ import type { DisplayObject } from "../../DisplayObject";
 import type { Shape } from "../../Shape";
 import { $getArray } from "../../DisplayObjectUtil";
 import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeCalcBoundsMatrixUseCase";
-import { execute as displayObjectGetRawMatrixUseCase } from "./DisplayObjectGetRawMatrixUseCase";
 
 /**
  * @description DisplayObject のローカルバウンディングボックスを取得します。
@@ -15,12 +14,12 @@ import { execute as displayObjectGetRawMatrixUseCase } from "./DisplayObjectGetR
  */
 export const execute = <D extends DisplayObject>(display_object: D): number[] =>
 {
+
     switch (true) {
 
         case display_object.isShape:
             return shapeCalcBoundsMatrixUseCase(
-                display_object as unknown as Shape, 
-                displayObjectGetRawMatrixUseCase(display_object)
+                display_object as unknown as Shape
             );
 
         case display_object.isText:

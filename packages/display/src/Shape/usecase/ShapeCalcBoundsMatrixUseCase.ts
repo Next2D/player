@@ -1,6 +1,8 @@
 import type { Shape } from "../../Shape";
+import { Matrix } from "@next2d/geom";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
-import { execute as shapeLocalBoundsService } from "../service/ShapeLocalBoundsService";
+import { execute as shapeGetRawBoundsService } from "../service/ShapeGetRawBoundsService";
+import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { $poolArray } from "../../DisplayObjectUtil";
 
 /**
@@ -15,18 +17,31 @@ import { $poolArray } from "../../DisplayObjectUtil";
  */
 export const execute = (shape: Shape, matrix: Float32Array | null = null): number[] =>
 {
-    const bounds = shapeLocalBoundsService(shape);
-    if (!matrix) {
-        return bounds;
+    const rawBounds = shapeGetRawBoundsService(shape);
+
+    const rawMatrix = displayObjectGetRawMatrixUseCase(shape);
+    if (!rawMatrix) {
+        if (matrix) {
+            const calcBounds = displayObjectCalcBoundsMatrixService(
+                rawBounds[0], rawBounds[1], 
+                rawBounds[2], rawBounds[3],
+                matrix
+            );
+            $poolArray(rawBounds);
+            
+            return calcBounds;
+        }
+
+        return rawBounds;
     }
 
     const calcBounds = displayObjectCalcBoundsMatrixService(
-        bounds[0], bounds[1], 
-        bounds[2], bounds[3],
-        matrix
+        rawBounds[0], rawBounds[1], 
+        rawBounds[2], rawBounds[3],
+        matrix ? Matrix.multiply(matrix, rawMatrix) : rawMatrix
     );
 
-    $poolArray(bounds);
+    $poolArray(rawBounds);
     
     return calcBounds;
 };

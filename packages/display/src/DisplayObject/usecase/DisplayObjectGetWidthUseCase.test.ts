@@ -18,13 +18,14 @@ describe("DisplayObjectGetWidthUseCase.js test", () =>
     it("execute test shape case2", () =>
     {
         const shape = new Shape();
+        shape.$matrix = new Matrix();
+        shape.$matrix.scale(2, 3);
+
         shape.graphics.xMin = 10;
         shape.graphics.xMax = 100;
         shape.graphics.yMin = 20;
         shape.graphics.yMax = 200;
 
-        shape.$matrix = new Matrix();
-        shape.$matrix.scale(2, 3);
         expect(execute(shape)).toBe(180);
     });
 });

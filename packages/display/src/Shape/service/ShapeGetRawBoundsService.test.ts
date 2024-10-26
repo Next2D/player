@@ -1,8 +1,8 @@
-import { execute } from "./ShapeLocalBoundsService";
+import { execute } from "./ShapeGetRawBoundsService";
 import { Shape } from "../../Shape";
 import { describe, expect, it } from "vitest";
 
-describe("ShapeLocalBoundsService.js test", () =>
+describe("ShapeRawBoundsService.js test", () =>
 {
     it("execute test case", () =>
     {
