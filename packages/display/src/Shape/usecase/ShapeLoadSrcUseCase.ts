@@ -1,7 +1,7 @@
 import type { Shape } from "../../Shape";
 import { $cacheStore } from "@next2d/cache";
 import { Event } from "@next2d/events";
-import { execute as shapeSetBitmapBufferService } from "./ShapeSetBitmapBufferUseCase";
+import { execute as shapeSetBitmapBufferUseCase } from "./ShapeSetBitmapBufferUseCase";
 
 /**
  * @description 指定のURLを画像を読み込み、Shapeに設定
@@ -28,7 +28,7 @@ export const execute = (shape: Shape, src: string): void =>
         const context = canvas.getContext("2d") as CanvasRenderingContext2D;
         context.drawImage(image, 0, 0, width, height);
 
-        shapeSetBitmapBufferService(
+        shapeSetBitmapBufferUseCase(
             shape,
             width,
             height,

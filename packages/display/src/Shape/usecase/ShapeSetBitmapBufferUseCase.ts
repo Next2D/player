@@ -1,5 +1,5 @@
 import type { Shape } from "../../Shape";
-import { execute as shapeClearBitmapBufferService } from "../service/ShapeClearBitmapBufferService";
+import { execute as shapeClearBitmapBufferService } from "./ShapeClearBitmapBufferUseCase";
 
 /**
  * @description BitmapBufferを設定

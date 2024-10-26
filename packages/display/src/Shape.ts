@@ -1,7 +1,7 @@
 import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import { DisplayObject } from "./DisplayObject";
 import { Graphics } from "./Graphics";
-import { execute as shapeClearBitmapBufferService } from "./Shape/service/ShapeClearBitmapBufferService";
+import { execute as shapeClearBitmapBufferService } from "./Shape/usecase/ShapeClearBitmapBufferUseCase";
 import { execute as shapeSetBitmapBufferUseCase } from "./Shape/usecase/ShapeSetBitmapBufferUseCase";
 import { execute as shapeLoadSrcUseCase } from "./Shape/usecase/ShapeLoadSrcUseCase";
 import {

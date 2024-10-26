@@ -1,6 +1,7 @@
 import type { Shape } from "../../Shape";
 import { $stage } from "../../Stage";
 import { $cacheStore } from "@next2d/cache";
+import { execute as displayObjectApplyChangesService } from "../../DisplayObject/service/DisplayObjectApplyChangesService";
 
 /**
  * @description BitmapBufferの設定をクリア
@@ -22,4 +23,7 @@ export const execute = (shape: Shape): void =>
     // cache clear
     $stage.$remoceCacheKeys.push(+shape.uniqueKey);
     $cacheStore.removeById(shape.uniqueKey);
+
+    // apply changes
+    displayObjectApplyChangesService(shape);
 };
