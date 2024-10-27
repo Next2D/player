@@ -403,6 +403,7 @@ export const $clamp = (
         ? default_value
         : Math.min(Math.max(min, isNaN(number) ? 0 : number), max);
 };
+
 /**
  * @description フレームアクションの発生したMovieClipを格納する配列
  *              Array to store MovieClip where frame actions occurred

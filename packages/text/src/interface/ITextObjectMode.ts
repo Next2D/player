@@ -1,0 +1,1 @@
+export type ITextObjectMode = "break" | "wrap" | "image" | "text";

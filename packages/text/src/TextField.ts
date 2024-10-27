@@ -8,7 +8,6 @@ import {
 } from "@next2d/events";
 import {
     Tween,
-    Job,
     Easing
 } from "@next2d/ui";
 import {
@@ -77,6 +76,11 @@ import {
     $setTimeout,
     $clearTimeout
 } from "@next2d/share";
+import { execute as textFormatSetDefaultService } from "./TextFormat/service/TextFormatSetDefaultService";
+import { execute as textFormatHtmlTextGenerateStyleService } from "./TextFormat/service/TextFormatHtmlTextGenerateStyleService";
+import { execute as textFormatIsSameService } from "./TextFormat/service/TextFormatIsSameService";
+import { execute as textFormatMergeService } from "./TextFormat/service/TextFormatMergeService";
+import { execute as textFormatGetWidthMarginService } from "./TextFormat/service/TextFormatGetWidthMarginService";
 
 /**
  * TextField クラスは、テキストの表示と入力用の表示オブジェクトを作成するために使用されます。
@@ -240,7 +244,7 @@ export class TextField extends InteractiveObject
 
         // TextFormat
         const textFormat: TextFormat = new TextFormat();
-        textFormat._$setDefault();
+        textFormatSetDefaultService(textFormat);
 
         /**
          * @type {TextFormat}
@@ -709,11 +713,11 @@ export class TextField extends InteractiveObject
      */
     get defaultTextFormat (): TextFormat
     {
-        return this._$defaultTextFormat._$clone();
+        return this._$defaultTextFormat.clone();
     }
     set defaultTextFormat (text_format: TextFormat)
     {
-        text_format._$merge(this._$defaultTextFormat);
+        textFormatMergeService(text_format, this._$defaultTextFormat);
         this._$defaultTextFormat = text_format;
         this._$reset();
     }
@@ -783,7 +787,7 @@ export class TextField extends InteractiveObject
         let prevTextFormat: TextFormat = textData.textTable[0].textFormat;
 
         let htmlText = "<span";
-        const style: string = prevTextFormat._$toStyleString();
+        const style: string = textFormatHtmlTextGenerateStyleService(prevTextFormat);
         if (style) {
             htmlText += ` style="${style}"`;
         }
@@ -802,11 +806,11 @@ export class TextField extends InteractiveObject
             }
 
             const textFormat: TextFormat = textObject.textFormat;
-            if (!prevTextFormat._$isSame(textFormat)) {
+            if (!textFormatIsSameService(prevTextFormat, textFormat)) {
 
                 htmlText += "</span><span";
 
-                const style: string = textFormat._$toStyleString();
+                const style: string = textFormatHtmlTextGenerateStyleService(textFormat);
                 if (style) {
                     htmlText += ` style="${style}"`;
                 }
@@ -1010,7 +1014,7 @@ export class TextField extends InteractiveObject
                         parent.getChildIndex(this) + 1
                     );
 
-                    const job: Job = Tween.add(this._$xScrollShape,
+                    const job = Tween.add(this._$xScrollShape,
                         { "alpha" : 0.9 },
                         { "alpha" : 0 },
                         0.5, 0.2, Easing.outQuad
@@ -1099,7 +1103,7 @@ export class TextField extends InteractiveObject
                         parent.getChildIndex(this) + 1
                     );
 
-                    const job: Job = Tween.add(this._$yScrollShape,
+                    const job = Tween.add(this._$yScrollShape,
                         { "alpha" : 0.9 },
                         { "alpha" : 0 },
                         0.5, 0.2, Easing.outQuad
@@ -2008,7 +2012,7 @@ export class TextField extends InteractiveObject
 
                 if (this._$compositionStartIndex === idx) {
                     for (let idx: number = 0; idx < length; ++idx) {
-                        textFormats.push(textObject.textFormat._$clone());
+                        textFormats.push(textObject.textFormat.clone());
                         newText += texts[idx];
                     }
                 }
@@ -2035,7 +2039,7 @@ export class TextField extends InteractiveObject
             if (this._$compositionStartIndex === textData.textTable.length ) {
                 const textObject: TextObjectImpl = textData.textTable[this._$compositionStartIndex - 1];
                 for (let idx: number = 0; idx < length; ++idx) {
-                    textFormats.push(textObject.textFormat._$clone());
+                    textFormats.push(textObject.textFormat.clone());
                     newText += texts[idx];
                 }
             }
@@ -2221,14 +2225,14 @@ export class TextField extends InteractiveObject
             let textFormat: TextFormat;
             if (textData.textTable.length) {
                 const textObject: TextObjectImpl = textData.textTable[textData.textTable.length - 1];
-                textFormat = textObject.textFormat._$clone();
+                textFormat = textObject.textFormat.clone();
             } else {
                 textFormat = this.defaultTextFormat;
                 this._$focusIndex++;
             }
 
             for (let idx = 0; idx < texts.length; ++idx) {
-                textFormats.push(textFormat._$clone());
+                textFormats.push(textFormat.clone());
                 newText += texts[idx];
             }
         }
@@ -2577,7 +2581,7 @@ export class TextField extends InteractiveObject
         if (this._$autoSize !== "none") {
 
             const tf: TextFormat = this._$defaultTextFormat;
-            const width: number = this.textWidth + 4 + tf._$widthMargin();
+            const width: number = this.textWidth + 4 + textFormatGetWidthMarginService(tf);
 
             if (this._$wordWrap) {
 

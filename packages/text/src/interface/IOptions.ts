@@ -1,6 +1,6 @@
-import { TextFormat } from "../TextFormat";
+import type { TextFormat } from "../TextFormat";
 
-export interface OptionsImpl {
+export interface IOptions {
     width: number;
     multiline: boolean;
     wordWrap: boolean;

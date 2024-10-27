@@ -1,9 +1,11 @@
+import type { IOptions } from "./interface/IOptions";
+import type { ITextObject } from "./interface/ITextObject";
 import { parseDocument } from "htmlparser2";
 import { TextData } from "./TextData";
 import { TextFormat } from "./TextFormat";
-import { $toColorInt } from "@next2d/share";
-import type { OptionsImpl } from "./interface/OptionsImpl";
-import type { TextObjectImpl } from "./interface/TextObjectImpl";
+import { $toColorInt } from "./TextUtil";
+import { execute as textFormatGenerateFontStyleService } from "./TextFormat/service/TextFormatGenerateFontStyleService";
+import { execute as textFormatGetWidthMarginService } from "./TextFormat/service/TextFormatGetWidthMarginService";
 
 /**
  * @type {OffscreenCanvasRenderingContext2D}
@@ -30,11 +32,11 @@ const _$parseText = (
     texts: string,
     text_format: TextFormat,
     text_data: TextData,
-    options: OptionsImpl
+    options: IOptions
 ): void => {
 
     let line: number = text_data.lineTable.length - 1;
-    const maxWidth: number = options.width - text_format._$widthMargin() - 4;
+    const maxWidth: number = options.width - textFormatGetWidthMarginService(text_format) - 4;
 
     for (let idx: number = 0; idx < texts.length; ++idx) {
 
@@ -44,7 +46,7 @@ const _$parseText = (
 
         const text: string = texts[idx];
 
-        const object: TextObjectImpl = {
+        const object: ITextObject = {
             "mode"       : "text",
             "text"       : text,
             "x"          : 0,
@@ -52,10 +54,10 @@ const _$parseText = (
             "w"          : 0,
             "h"          : 0,
             "line"       : line,
-            "textFormat" : textFormat._$clone()
+            "textFormat" : textFormat.clone()
         };
 
-        $context.font = textFormat._$generateFontStyle();
+        $context.font = textFormatGenerateFontStyleService(textFormat);
         const mesure: TextMetrics = $context.measureText(text || "");
 
         let width: number = mesure.width;
@@ -84,7 +86,7 @@ const _$parseText = (
             object.line = line;
 
             // break object
-            const wrapObject: TextObjectImpl = {
+            const wrapObject: ITextObject = {
                 "mode"       : "wrap",
                 "text"       : "",
                 "x"          : 0,
@@ -92,7 +94,7 @@ const _$parseText = (
                 "w"          : 0,
                 "h"          : 0,
                 "line"       : line,
-                "textFormat" : textFormat._$clone()
+                "textFormat" : textFormat.clone()
             };
 
             let chunkLength: number  = 1;
@@ -108,7 +110,7 @@ const _$parseText = (
                     break;
                 }
 
-                const prevObj: TextObjectImpl = text_data.textTable[index];
+                const prevObj: ITextObject = text_data.textTable[index];
                 if (!prevObj) {
                     isSeparated = false;
                     chunkLength = 0;
@@ -152,7 +154,7 @@ const _$parseText = (
                 text_data.ascentTable[prevLine] = 0;
 
                 for (let idx: number = 0; idx < insertIdx; ++idx) {
-                    const textObject: TextObjectImpl = text_data.textTable[idx];
+                    const textObject: ITextObject = text_data.textTable[idx];
                     if (textObject.line !== prevLine) {
                         continue;
                     }
@@ -169,7 +171,7 @@ const _$parseText = (
                 // reset
                 $currentWidth = 0;
                 for (let idx: number = insertIdx + 1; idx < text_data.textTable.length; ++idx) {
-                    const textObject: TextObjectImpl = text_data.textTable[idx];
+                    const textObject: ITextObject = text_data.textTable[idx];
                     textObject.line = line;
                     $currentWidth += textObject.w;
                 }
@@ -197,7 +199,7 @@ const _$parseText = (
 const _$parseStyle = (
     value: string,
     text_format: TextFormat,
-    options: OptionsImpl
+    options: IOptions
 ): void => {
 
     const values: string[] = value
@@ -297,7 +299,7 @@ const _$parseStyle = (
 const _$setAttributes = (
     attributes: any[],
     text_format: TextFormat,
-    options: OptionsImpl
+    options: IOptions
 ): void => {
 
     for (let idx = 0; idx < attributes.length; ++idx) {
@@ -380,10 +382,10 @@ const _$createNewLine = (
     $currentWidth = 0;
     const line: number = text_data.lineTable.length;
 
-    $context.font = text_format._$generateFontStyle();
+    $context.font = textFormatGenerateFontStyleService(text_format);
     const mesure: TextMetrics = $context.measureText("");
 
-    const object: TextObjectImpl = {
+    const object: ITextObject = {
         "mode": "break",
         "text": "",
         "x": 0,
@@ -391,7 +393,7 @@ const _$createNewLine = (
         "w": 0,
         "h": mesure.fontBoundingBoxAscent + mesure.fontBoundingBoxDescent,
         "line": line,
-        "textFormat": text_format._$clone()
+        "textFormat": text_format.clone()
     };
 
     text_data.heightTable[line] = 0;
@@ -416,7 +418,7 @@ const _$parseTag = (
     document: any,
     text_format: TextFormat,
     text_data: TextData,
-    options: OptionsImpl
+    options: IOptions
 ): void => {
 
     for (let idx: number = 0; idx < document.children.length; ++idx) {
@@ -430,7 +432,7 @@ const _$parseTag = (
 
         }
 
-        const tf = text_format._$clone();
+        const tf = text_format.clone();
         switch (node.name.toUpperCase()) {
 
             case "DIV": // div tag
@@ -499,7 +501,7 @@ const _$adjustmentHeight = (text_data: TextData): void =>
         }
 
         // 改行があって、高さの設定がなければ前の行の高さを設定する
-        const object: TextObjectImpl = text_data.lineTable[idx];
+        const object: ITextObject = text_data.lineTable[idx];
         text_data.heightTable[idx] = object.h = text_data.heightTable[idx - 1];
     }
 };
@@ -516,7 +518,7 @@ const _$adjustmentHeight = (text_data: TextData): void =>
 export const parsePlainText = (
     text: string,
     text_format: TextFormat,
-    options: OptionsImpl
+    options: IOptions
 ): TextData => {
 
     const textData: TextData = new TextData();
@@ -530,7 +532,7 @@ export const parsePlainText = (
 
     for (let idx: number = 0; idx < lineText.length; ++idx) {
 
-        let textFormat: TextFormat = text_format._$clone();
+        let textFormat: TextFormat = text_format.clone();
         if (options.textFormats) {
             textFormat = idx === 0
                 ? options.textFormats[0]
@@ -574,7 +576,7 @@ export const parsePlainText = (
 export const parseHtmlText = (
     html_text: string,
     text_format: TextFormat,
-    options: OptionsImpl
+    options: IOptions
 ): TextData => {
 
     const textData: TextData = new TextData();
@@ -587,7 +589,7 @@ export const parseHtmlText = (
         .replace(/\r?\n/g, "")
         .replace(/\t/g, "");
 
-    const textFormat: TextFormat = text_format._$clone();
+    const textFormat: TextFormat = text_format.clone();
     if (options.subFontSize && options.subFontSize > 0 && textFormat.size) {
         textFormat.size -= options.subFontSize;
         if (1 > textFormat.size) {
