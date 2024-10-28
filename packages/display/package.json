@@ -26,16 +26,12 @@
     "url": "git+https://github.com/Next2D/Player.git"
   },
   "peerDependencies": {
-    "@next2d/interface": "file:../interface",
-    "@next2d/core": "file:../core",
     "@next2d/ui": "file:../ui",
     "@next2d/text": "file:../text",
     "@next2d/geom": "file:../geom",
-    "@next2d/util": "file:../util",
-    "@next2d/share": "file:../share",
-    "@next2d/webgl": "file:../webgl",
     "@next2d/media": "file:../media",
     "@next2d/net": "file:../net",
-    "@next2d/events": "file:../events"
+    "@next2d/events": "file:../events",
+    "@next2d/filters": "file:../filters"
   }
 }

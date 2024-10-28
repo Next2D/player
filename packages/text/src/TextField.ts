@@ -1,11 +1,14 @@
+import type { IBounds } from "./interface/IBounds";
+import type { ITextFieldAutoSize } from "./interface/ITextFieldAutoSize";
+import type { ITextFieldType } from "./interface/ITextFieldType";
+import type { ITextObject } from "./interface/ITextObject";
 import { TextData } from "./TextData";
 import { TextFormat } from "./TextFormat";
 import { execute as textFormatSetDefaultService } from "./TextFormat/service/TextFormatSetDefaultService";
 import { execute as textFormatHtmlTextGenerateStyleService } from "./TextFormat/service/TextFormatHtmlTextGenerateStyleService";
 import { execute as textFormatIsSameService } from "./TextFormat/service/TextFormatIsSameService";
 import { execute as textFormatGetWidthMarginService } from "./TextFormat/service/TextFormatGetWidthMarginService";
-import { execute as textParserParsePlainTextUseCase } from "./TextParser/usecase/TextParserParsePlainTextUseCase";
-import { execute as textParserParseHtmlTextUseCase } from "./TextParser/usecase/TextParserParseHtmlTextUseCase";
+import { execute as textFieldGetTextDataUseCase } from "./TextField/usecase/TextFieldGetTextDataUseCase";
 import {
     InteractiveObject,
     Shape
@@ -39,9 +42,28 @@ import {
  */
 export class TextField extends InteractiveObject
 {
-    private readonly _$bounds: BoundsImpl;
-    private readonly _$originBounds: BoundsImpl;
-    private _$textData: TextData | null;
+    /**
+     * @description セットされたテキストを描画用に分解したデータ
+     *              Data that breaks down the set text for drawing
+     * 
+     * @member {TextData}
+     * @protected
+     */
+    public $textData: TextData | null;
+
+    /**
+     * @description テキストが HTML であるかどうかを示します。
+     *              Indicates whether the text is HTML.
+     * 
+     * @member {boolean}
+     * @private
+     */
+    private _$isHTML: boolean;
+
+
+
+    private readonly _$bounds: IBounds;
+    private readonly _$originBounds: IBounds;
     private _$background: boolean;
     private _$backgroundColor: number;
     private _$border: boolean;
@@ -57,13 +79,12 @@ export class TextField extends InteractiveObject
     private _$rawHtmlText: string;
     private _$textFormats: TextFormat[] | null;
     private _$restrict: string;
-    private _$isHTML: boolean;
-    private _$autoSize: TextFieldAutoSizeImpl;
+    private _$autoSize: ITextFieldAutoSize;
     private _$autoFontSize: boolean;
     private _$scrollEnabled: boolean;
     private _$xScrollShape: Shape | null;
     private _$yScrollShape: Shape | null;
-    private _$type: TextFieldTypeImpl;
+    private _$type: ITextFieldType;
     private _$focus: boolean;
     private _$focusVisible: boolean;
     private _$timerId: number;
@@ -82,9 +103,16 @@ export class TextField extends InteractiveObject
      * @constructor
      * @public
      */
-    constructor()
+    constructor ()
     {
         super();
+
+        /**
+         * @type {TextData}
+         * @default null
+         * @public
+         */
+        this.$textData = null;
 
         /**
          * @type {boolean}
@@ -238,12 +266,6 @@ export class TextField extends InteractiveObject
         this._$isHTML = false;
 
         /**
-         * @type {TextData}
-         * @private
-         */
-        this._$textData = null;
-
-        /**
          * @type {string}
          * @default TextFieldAutoSize.NONE
          * @private
@@ -352,13 +374,13 @@ export class TextField extends InteractiveObject
          * @type {array}
          * @private
          */
-        this._$cacheKeys = $getArray();
+        this._$cacheKeys = [];
 
         /**
          * @type {array}
          * @private
          */
-        this._$cacheParams = $getArray(0, 0, 0);
+        this._$cacheParams = [];
     }
 
     /**
@@ -414,14 +436,14 @@ export class TextField extends InteractiveObject
      *              Controls automatic sizing and alignment of text fields.
      *
      * @member {string}
-     * @default TextFieldAutoSize.NONE
+     * @default "none"
      * @public
      */
-    get autoSize (): TextFieldAutoSizeImpl
+    get autoSize (): ITextFieldAutoSize
     {
         return this._$autoSize;
     }
-    set autoSize (auto_size: TextFieldAutoSizeImpl)
+    set autoSize (auto_size: ITextFieldAutoSize)
     {
         if (auto_size !== this._$autoSize) {
             this._$autoSize = auto_size;
@@ -538,7 +560,7 @@ export class TextField extends InteractiveObject
 
         this._$stopIndex = index;
 
-        const textData: TextData = this.getTextData();
+        const textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         if (!textData.textTable.length) {
             return ;
         }
@@ -547,7 +569,7 @@ export class TextField extends InteractiveObject
         let targetIndex: number = 0;
         for (let idx = 0; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
 
             let countUp = false;
             if (textObject.mode === "text") {
@@ -573,7 +595,7 @@ export class TextField extends InteractiveObject
 
         }
 
-        const textObject: TextObjectImpl = textData.textTable[targetIndex];
+        const textObject: ITextObject = textData.textTable[targetIndex];
 
         const line: number = textObject.line;
 
@@ -600,7 +622,7 @@ export class TextField extends InteractiveObject
         const width: number = this.width;
         let viewTextWidth: number = 0;
         for (let idx = targetIndex; idx > 0; --idx) {
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
             if (textObject.mode !== "text") {
                 continue;
             }
@@ -695,7 +717,7 @@ export class TextField extends InteractiveObject
             return this._$htmlText;
         }
 
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, true, this._$textFormats);
 
         let prevTextFormat: TextFormat = textData.textTable[0].textFormat;
 
@@ -708,7 +730,7 @@ export class TextField extends InteractiveObject
 
         for (let idx = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
             if (textObject.mode === "wrap") {
                 continue;
             }
@@ -816,7 +838,8 @@ export class TextField extends InteractiveObject
      */
     get numLines (): number
     {
-        return this.getTextData().lineTable.length;
+        const textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        return textData.lineTable.length;
     }
 
     /**
@@ -1063,10 +1086,10 @@ export class TextField extends InteractiveObject
 
         let text: string = "";
 
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, true, this._$textFormats);
         for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
             switch (textObject.mode) {
 
                 case "text":
@@ -1135,7 +1158,8 @@ export class TextField extends InteractiveObject
      */
     get textHeight (): number
     {
-        return this.getTextData().textHeight;
+        const textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        return textData.textHeight;
     }
 
     /**
@@ -1148,7 +1172,8 @@ export class TextField extends InteractiveObject
      */
     get textWidth ()
     {
-        return this.getTextData().textWidth;
+        const textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        return textData.textWidth;
     }
 
     /**
@@ -1203,11 +1228,11 @@ export class TextField extends InteractiveObject
      * @default TextFieldType.STATIC
      * @public
      */
-    get type (): TextFieldTypeImpl
+    get type (): ITextFieldType
     {
         return this._$type;
     }
-    set type (type: TextFieldTypeImpl)
+    set type (type: ITextFieldType)
     {
         this._$type = type;
     }
@@ -1248,7 +1273,7 @@ export class TextField extends InteractiveObject
         width = +width;
         if (!$isNaN(width) && width > -1) {
 
-            const bounds: BoundsImpl = this._$getBounds(null);
+            const bounds: IBounds = this._$getBounds(null);
 
             const xMin: number = $Math.abs(bounds.xMin);
             this._$originBounds.xMax = width + xMin;
@@ -1278,7 +1303,7 @@ export class TextField extends InteractiveObject
         height = +height;
         if (!$isNaN(height) && height > -1) {
 
-            const bounds: BoundsImpl = this._$getBounds(null);
+            const bounds: IBounds = this._$getBounds(null);
 
             const yMin: number = $Math.abs(bounds.yMin);
             this._$originBounds.yMax = height + yMin;
@@ -1303,12 +1328,12 @@ export class TextField extends InteractiveObject
     get x (): number
     {
         const matrix: Matrix = this._$transform.matrix;
-        const bounds: BoundsImpl = this._$getBounds(null);
+        const bounds: IBounds = this._$getBounds(null);
         return matrix._$matrix[4] + bounds.xMin;
     }
     set x (x: number)
     {
-        const bounds: BoundsImpl = this._$getBounds(null);
+        const bounds: IBounds = this._$getBounds(null);
         super.x = x - bounds.xMin;
     }
 
@@ -1325,12 +1350,12 @@ export class TextField extends InteractiveObject
     get y (): number
     {
         const matrix: Matrix = this._$transform.matrix;
-        const bounds: BoundsImpl = this._$getBounds(null);
+        const bounds: IBounds = this._$getBounds(null);
         return matrix._$matrix[5] + bounds.yMin;
     }
     set y (y: number)
     {
-        const bounds: BoundsImpl = this._$getBounds(null);
+        const bounds: IBounds = this._$getBounds(null);
         super.y = y - bounds.yMin;
     }
 
@@ -1368,10 +1393,10 @@ export class TextField extends InteractiveObject
         line_index |= 0;
 
         let lineText: string = "";
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         for (let idx: number = 0; idx < textData.textTable.length; idx++) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
 
             if (textObject.line > line_index) {
                 break;
@@ -1433,61 +1458,13 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @description text、htmlTextに登録したテキスト情報をTextDataクラスで返却
-     *              Return text information registered in text and htmlText with TextData class.
-     *
-     * @param  {number} [sub_font_size = 0]
-     * @return {array}
-     * @method
-     * @public
-     */
-    getTextData (sub_font_size: number = 0): TextData
-    {
-        if (this._$textData !== null) {
-            return this._$textData;
-        }
-
-        if (!this._$isHTML) {
-
-            this._$textData = textParserParsePlainTextUseCase(
-                this._$text,
-                this._$defaultTextFormat,
-                {
-                    "width": this.width,
-                    "multiline": this._$multiline,
-                    "wordWrap": this._$wordWrap,
-                    "subFontSize": sub_font_size,
-                    "textFormats": this._$textFormats
-                }
-            );
-
-        } else {
-
-            this._$textData = textParserParseHtmlTextUseCase(
-                this._$htmlText,
-                this._$defaultTextFormat,
-                {
-                    "width": this.width,
-                    "multiline": this._$multiline,
-                    "wordWrap": this._$wordWrap,
-                    "subFontSize": sub_font_size,
-                    "textFormats": this._$textFormats
-                }
-            );
-
-        }
-
-        return this._$textData;
-    }
-
-    /**
      * @return {void}
      * @method
      * @public
      */
     selectAll (): void
     {
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         if (!textData.textTable.length) {
             return ;
         }
@@ -1511,9 +1488,9 @@ export class TextField extends InteractiveObject
         const minIndex: number = $Math.min(this._$focusIndex, this._$selectIndex);
         const maxIndex: number = $Math.max(this._$focusIndex, this._$selectIndex) + 1;
 
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         for (let idx = minIndex; idx < maxIndex; ++idx) {
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
             if (!textObject || textObject.mode === "wrap") {
                 continue;
             }
@@ -1559,7 +1536,7 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         if (!textData.textTable.length) {
             return ;
         }
@@ -1568,7 +1545,7 @@ export class TextField extends InteractiveObject
             ? this._$focusIndex - 1
             : this._$focusIndex;
 
-        const textObject: TextObjectImpl = textData.textTable[index];
+        const textObject: ITextObject = textData.textTable[index];
         if (!textObject.line) {
             return ;
         }
@@ -1580,7 +1557,7 @@ export class TextField extends InteractiveObject
         let currentWidth: number = 2;
         for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
             if (this._$focusIndex === idx) {
                 if (textObject.mode === "text") {
                     currentWidth +=  textObject.w / 2;
@@ -1603,7 +1580,7 @@ export class TextField extends InteractiveObject
         const targetLine: number = line - 1;
         for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
             if (textObject.line > targetLine) {
                 this._$focusIndex  = textObject.mode === "text" ? idx - 1 : idx;
                 this._$selectIndex = -1;
@@ -1638,12 +1615,12 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         if (!textData.textTable.length) {
             return ;
         }
 
-        const textObject: TextObjectImpl = textData.textTable[this._$focusIndex];
+        const textObject: ITextObject = textData.textTable[this._$focusIndex];
         const line: number = textObject.mode === "text"
             ? textObject.line
             : textObject.line - 1;
@@ -1655,7 +1632,7 @@ export class TextField extends InteractiveObject
         let currentWidth: number = 2;
         for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
             if (this._$focusIndex === idx) {
                 if (textObject.mode === "text") {
                     currentWidth +=  textObject.w / 2;
@@ -1678,7 +1655,7 @@ export class TextField extends InteractiveObject
         const targetLine: number = line + 1;
         for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
             if (textObject.line > targetLine) {
                 this._$focusIndex  = textObject.mode === "text" ? idx - 1 : idx;
                 this._$selectIndex = -1;
@@ -1718,7 +1695,7 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         if (textData.textTable.length && this._$focusIndex < 2) {
             this._$focusIndex = 1;
             return ;
@@ -1737,7 +1714,7 @@ export class TextField extends InteractiveObject
      */
     arrowRight (): void
     {
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         if (textData.textTable.length === this._$focusIndex) {
             return ;
         }
@@ -1773,8 +1750,8 @@ export class TextField extends InteractiveObject
             this._$focusIndex--;
         }
 
-        const textData: TextData = this.getTextData();
-        const textObject: TextObjectImpl = textData.textTable[this._$focusIndex];
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textObject: ITextObject = textData.textTable[this._$focusIndex];
         if (textObject && textObject.mode === "wrap") {
             this._$focusIndex--;
         }
@@ -1784,7 +1761,7 @@ export class TextField extends InteractiveObject
         let newText: string = "";
         for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
 
             if (this._$focusIndex === idx || minIndex <= idx && maxIndex > idx) {
                 continue;
@@ -1909,7 +1886,7 @@ export class TextField extends InteractiveObject
             this._$selectIndex = -1;
         }
 
-        let textData: TextData = this.getTextData();
+        let textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         const textFormats: TextFormat[] = $getArray();
 
         const length: number = texts.length;
@@ -1921,7 +1898,7 @@ export class TextField extends InteractiveObject
         } else {
             for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-                const textObject: TextObjectImpl = textData.textTable[idx];
+                const textObject: ITextObject = textData.textTable[idx];
 
                 if (this._$compositionStartIndex === idx) {
                     for (let idx: number = 0; idx < length; ++idx) {
@@ -1950,7 +1927,7 @@ export class TextField extends InteractiveObject
 
             // last text
             if (this._$compositionStartIndex === textData.textTable.length ) {
-                const textObject: TextObjectImpl = textData.textTable[this._$compositionStartIndex - 1];
+                const textObject: ITextObject = textData.textTable[this._$compositionStartIndex - 1];
                 for (let idx: number = 0; idx < length; ++idx) {
                     textFormats.push(textObject.textFormat.clone());
                     newText += texts[idx];
@@ -1968,11 +1945,11 @@ export class TextField extends InteractiveObject
         this._$textFormats = null;
         $poolArray(textFormats);
 
-        textData = this.getTextData();
+        textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         let index: number = this._$compositionStartIndex + length;
         for (let idx: number = this._$compositionStartIndex; idx < index; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
             if (!textObject) {
                 break;
             }
@@ -1982,7 +1959,7 @@ export class TextField extends InteractiveObject
                 if (idx === this._$compositionStartIndex) {
                     let subIndex = 1;
                     for (;;) {
-                        const textObject: TextObjectImpl = textData.textTable[idx - subIndex];
+                        const textObject: ITextObject = textData.textTable[idx - subIndex];
 
                         if (!textObject) {
                             break;
@@ -2009,7 +1986,7 @@ export class TextField extends InteractiveObject
         const player: Player = $currentPlayer();
 
         const lastIndex = $Math.min(textData.textTable.length - 1, this._$compositionEndIndex);
-        const textObject: TextObjectImpl = textData.textTable[lastIndex];
+        const textObject: ITextObject = textData.textTable[lastIndex];
         if (textObject) {
             const line: number = textObject.line;
 
@@ -2024,7 +2001,7 @@ export class TextField extends InteractiveObject
             let targetIndex: number = this._$compositionEndIndex;
             for (;;) {
 
-                const textObject: TextObjectImpl = textData.textTable[targetIndex--];
+                const textObject: ITextObject = textData.textTable[targetIndex--];
                 if (!textObject || textObject.line !== line) {
                     break;
                 }
@@ -2032,7 +2009,7 @@ export class TextField extends InteractiveObject
                 offsetWidth += textObject.w;
             }
 
-            const lineObject: TextObjectImpl = textData.lineTable[line];
+            const lineObject: ITextObject = textData.lineTable[line];
             const offsetAlign: number = this._$getAlignOffset(lineObject, this.width);
 
             const point: Point = this.localToGlobal(new Point(
@@ -2064,9 +2041,9 @@ export class TextField extends InteractiveObject
     compositionEnd (): void
     {
         if (this._$compositionEndIndex > -1) {
-            const textData: TextData = this.getTextData();
+            const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
             for (let idx: number = this._$compositionStartIndex; idx < this._$compositionEndIndex; ++idx) {
-                const textObject: TextObjectImpl = textData.textTable[idx];
+                const textObject: ITextObject = textData.textTable[idx];
                 textObject.textFormat.underline = false;
             }
             this._$focusIndex = this._$compositionEndIndex;
@@ -2101,13 +2078,13 @@ export class TextField extends InteractiveObject
             this.deleteText();
         }
 
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         const textFormats: TextFormat[] = $getArray();
 
         let newText: string = "";
         for (let idx = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
 
             if (this._$focusIndex === idx) {
                 for (let idx = 0; idx < texts.length; ++idx) {
@@ -2137,7 +2114,7 @@ export class TextField extends InteractiveObject
         if (textData.textTable.length === this._$focusIndex) {
             let textFormat: TextFormat;
             if (textData.textTable.length) {
-                const textObject: TextObjectImpl = textData.textTable[textData.textTable.length - 1];
+                const textObject: ITextObject = textData.textTable[textData.textTable.length - 1];
                 textFormat = textObject.textFormat.clone();
             } else {
                 textFormat = this.defaultTextFormat;
@@ -2188,14 +2165,14 @@ export class TextField extends InteractiveObject
     _$reload (): void
     {
         this._$reset();
-        this.getTextData();
+        textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
 
         if (this._$autoSize === "none" && this._$autoFontSize) {
 
             let maxFontSize: number = 0;
-            const textData: TextData = this.getTextData();
+            const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
             for (let idx = 0; idx < textData.textTable.length; ++idx) {
-                const textObject: TextObjectImpl = textData.textTable[idx];
+                const textObject: ITextObject = textData.textTable[idx];
                 maxFontSize = $Math.max(maxFontSize, textObject.textFormat.size || 0);
             }
 
@@ -2206,7 +2183,7 @@ export class TextField extends InteractiveObject
                     && this.textWidth + 4 > this.width
                 ) {
                     this._$reset();
-                    this.getTextData(subSize++);
+                    textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats, subSize++);
                 }
 
             }
@@ -2217,7 +2194,7 @@ export class TextField extends InteractiveObject
                     && this.textHeight + 4 > this.height
                 ) {
                     this._$reset();
-                    this.getTextData(subSize++);
+                    textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats, subSize++);
                 }
 
             }
@@ -2258,7 +2235,7 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         if (!textData.textTable.length) {
             this._$focusIndex  = 0;
             this._$selectIndex = -1;
@@ -2289,7 +2266,7 @@ export class TextField extends InteractiveObject
         let yMax: number = yMin + textData.heightTable[0];
         for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
 
             switch (textObject.mode) {
 
@@ -2419,7 +2396,7 @@ export class TextField extends InteractiveObject
                             default:
 
                                 if (w + textObject.w / 2 < x) {
-                                    const textObject: TextObjectImpl = textData.textTable[index + 1];
+                                    const textObject: ITextObject = textData.textTable[index + 1];
                                     if (!textObject || textObject.mode === "text") {
                                         index += 1;
                                     }
@@ -2572,12 +2549,11 @@ export class TextField extends InteractiveObject
      * @method
      * @private
      */
-    _$getAlignOffset (text_object: TextObjectImpl, width: number): number
+    _$getAlignOffset (text_object: ITextObject, width: number): number
     {
         // default
-        const lineWidth: number = this
-            .getTextData()
-            .getLineWidth(text_object.line);
+        const textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const lineWidth: number = textData.getLineWidth(text_object.line);
 
         const textFormat: TextFormat = text_object.textFormat;
 
@@ -2610,7 +2586,7 @@ export class TextField extends InteractiveObject
      * @method
      * @private
      */
-    _$getBounds (matrix: Float32Array | null = null): BoundsImpl
+    _$getBounds (matrix: Float32Array | null = null): IBounds
     {
         if (matrix) {
 
@@ -2751,7 +2727,7 @@ export class TextField extends InteractiveObject
     ): void {
 
         // size
-        const bounds: BoundsImpl = this._$getBounds();
+        const bounds: IBounds = this._$getBounds();
         const xMax = bounds.xMax;
         const xMin = bounds.xMin;
         const yMax = bounds.yMax;
@@ -2841,13 +2817,13 @@ export class TextField extends InteractiveObject
             multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
         }
 
-        const baseBounds: BoundsImpl = this._$getBounds(null);
+        const baseBounds: IBounds = this._$getBounds(null);
         baseBounds.xMin -= this._$thickness;
         baseBounds.xMax += this._$thickness;
         baseBounds.yMin -= this._$thickness;
         baseBounds.yMax += this._$thickness;
 
-        const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
+        const bounds: IBounds = $boundsMatrix(baseBounds, multiMatrix);
         const xMax   = +bounds.xMax;
         const xMin   = +bounds.xMin;
         const yMax   = +bounds.yMax;
@@ -2902,7 +2878,7 @@ export class TextField extends InteractiveObject
             && filters.length > 0
             && this._$canApply(filters);
 
-        let filterBounds: BoundsImpl = $getBoundsObject(0, width, 0, height);
+        let filterBounds: IBounds = $getBoundsObject(0, width, 0, height);
         if (canApply && filters) {
             for (let idx: number = 0; idx < filters.length ; ++idx) {
                 filterBounds = filters[idx]
@@ -3148,7 +3124,7 @@ export class TextField extends InteractiveObject
     ): void {
 
         // init
-        const textData: TextData = this.getTextData();
+        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
         if (!textData.textTable.length
             && this._$focusIndex > -1
             && this._$focusVisible
@@ -3183,15 +3159,15 @@ export class TextField extends InteractiveObject
                 maxIndex = $Math.min(this._$focusIndex - 1, range);
             }
 
-            const textObject: TextObjectImpl = textData.textTable[minIndex];
-            const lineObject: TextObjectImpl = textData.lineTable[textObject.line];
+            const textObject: ITextObject = textData.textTable[minIndex];
+            const lineObject: ITextObject = textData.lineTable[textObject.line];
             const offsetAlign: number = this._$getAlignOffset(lineObject, width);
 
             let x: number = 0;
             if (minIndex && textObject.mode === "text") {
                 let idx: number = minIndex;
                 while (idx) {
-                    const textObject: TextObjectImpl = textData.textTable[--idx];
+                    const textObject: ITextObject = textData.textTable[--idx];
                     if (textObject.mode !== "text") {
                         break;
                     }
@@ -3204,7 +3180,7 @@ export class TextField extends InteractiveObject
             let w: number = 0;
             for (let idx: number = minIndex; idx <= maxIndex; ++idx) {
 
-                const textObject: TextObjectImpl = textData.textTable[idx];
+                const textObject: ITextObject = textData.textTable[idx];
                 if (textObject.mode === "text") {
 
                     w += textObject.w;
@@ -3262,7 +3238,7 @@ export class TextField extends InteractiveObject
         let currentIndex = -1;
         for (let idx: number = 0; idx < textData.textTable.length; ++idx) {
 
-            const textObject: TextObjectImpl = textData.textTable[idx];
+            const textObject: ITextObject = textData.textTable[idx];
             if (textObject.mode === "text" || textObject.mode === "break") {
                 currentIndex++;
                 if (this._$stopIndex > -1 && currentIndex > this._$stopIndex) {
@@ -3424,7 +3400,7 @@ export class TextField extends InteractiveObject
         }
 
         if (this._$focusVisible && this._$focusIndex >= textData.textTable.length) {
-            const textObject: TextObjectImpl = textData.textTable[this._$focusIndex - 1];
+            const textObject: ITextObject = textData.textTable[this._$focusIndex - 1];
             if (textObject) {
                 const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
                 const alpha: number = $Math.max(0, $Math.min(
@@ -3493,9 +3469,9 @@ export class TextField extends InteractiveObject
             multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
         }
 
-        const baseBounds: BoundsImpl = this._$getBounds(null);
+        const baseBounds: IBounds = this._$getBounds(null);
 
-        const bounds: BoundsImpl = $boundsMatrix(baseBounds, multiMatrix);
+        const bounds: IBounds = $boundsMatrix(baseBounds, multiMatrix);
         const xMax = +bounds.xMax;
         const xMin = +bounds.xMin;
         const yMax = +bounds.yMax;

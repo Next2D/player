@@ -1,4 +1,4 @@
-import type { DisplayObject } from "../../DisplayObject";
+import type { DisplayObject } from "@next2d/display";
 
 /**
  * @description DisplayObjectの更新フラグを立てる

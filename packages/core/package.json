@@ -35,7 +35,6 @@
     "@next2d/net": "file:../net",
     "@next2d/renderer": "file:../renderer",
     "@next2d/text": "file:../text",
-    "@next2d/ui": "file:../ui",
-    "@next2d/webgl": "file:../webgl"
+    "@next2d/ui": "file:../ui"
   }
 }

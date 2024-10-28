@@ -29,7 +29,6 @@
     "@next2d/events": "file:../events",
     "@next2d/net": "file:../net",
     "@next2d/display": "file:../display",
-    "@next2d/geom": "file:../geom",
-    "@next2d/webgl": "file:../webgl"
+    "@next2d/geom": "file:../geom"
   }
 }

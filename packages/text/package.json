@@ -27,5 +27,11 @@
   },
   "dependencies": {
     "htmlparser2": "^9.1.0"
+  },
+  "peerDependencies": {
+    "@next2d/display": "file:../display",
+    "@next2d/geom": "file:../geom",
+    "@next2d/events": "file:../events",
+    "@next2d/ui": "file:../ui"
   }
 }
