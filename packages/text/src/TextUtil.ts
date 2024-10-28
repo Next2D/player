@@ -1,8 +1,44 @@
 import type { IRGBA } from "./interface/IRGBA";
 
-const canvas = document.createElement("canvas");
+/**
+ * @type {HTMLCanvasElement}
+ * @private
+*/
+const canvas: HTMLCanvasElement = document.createElement("canvas");
 canvas.width = canvas.height = 1;
-const colorContext = canvas.getContext("2d");
+export const $context = canvas.getContext("2d") as CanvasRenderingContext2D;
+
+/**
+ * @type {number}
+ * @private
+ */
+let $currentWidth: number = 0;
+
+/**
+ * @description 分解中のテキストの現在の幅を取得
+ *              Get the current width of the text being decomposed
+ * 
+ * @return {number}
+ * @method
+ * @protected
+ */
+export const $getCurrentWidth = (): number =>
+{
+    return $currentWidth;
+};
+
+/**
+ * @description 分解中のテキストの現在の幅をセット
+ *              Set the current width of the text being decomposed
+ * 
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setCurrentWidth = (width: number): void =>
+{
+    $currentWidth = width;
+};
 
 /**
  * @description カラー文字列を数値に変換
@@ -15,24 +51,24 @@ const colorContext = canvas.getContext("2d");
  */
 export const $convertColorStringToNumber = (value: string): number =>
 {
-    if (!colorContext) {
+    if (!$context) {
         return 0;
     }
 
-    colorContext.fillStyle = value;
-    return +`0x${colorContext.fillStyle.slice(1)}`;
+    $context.fillStyle = value;
+    return +`0x${$context.fillStyle.slice(1)}`;
 };
 
 /**
  * @description カラー文字列を数値に変換
  *              Convert color string to number
  * 
- * @param  {number|string} value
+ * @param  {*} value
  * @return {number}
  * @method
  * @static
  */
-export const $toColorInt = (value: number | string): number =>
+export const $toColorInt = (value: any): number =>
 {
     return isNaN(+value)
         ? $convertColorStringToNumber(`${value}`)

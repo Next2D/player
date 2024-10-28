@@ -1,3 +1,11 @@
+import { TextData } from "./TextData";
+import { TextFormat } from "./TextFormat";
+import { execute as textFormatSetDefaultService } from "./TextFormat/service/TextFormatSetDefaultService";
+import { execute as textFormatHtmlTextGenerateStyleService } from "./TextFormat/service/TextFormatHtmlTextGenerateStyleService";
+import { execute as textFormatIsSameService } from "./TextFormat/service/TextFormatIsSameService";
+import { execute as textFormatGetWidthMarginService } from "./TextFormat/service/TextFormatGetWidthMarginService";
+import { execute as textParserParsePlainTextUseCase } from "./TextParser/usecase/TextParserParsePlainTextUseCase";
+import { execute as textParserParseHtmlTextUseCase } from "./TextParser/usecase/TextParserParseHtmlTextUseCase";
 import {
     InteractiveObject,
     Shape
@@ -11,85 +19,19 @@ import {
     Easing
 } from "@next2d/ui";
 import {
-    TextData,
-    TextFormat,
-    parsePlainText,
-    parseHtmlText
-} from "@next2d/text";
-import {
     Rectangle,
     Matrix,
     Point
 } from "@next2d/geom";
-import type { Player } from "@next2d/core";
-import type {
-    BoundsImpl,
-    TextFieldTypeImpl,
-    TextFieldAutoSizeImpl,
-    RGBAImpl,
-    ParentImpl,
-    TextObjectImpl,
-    DictionaryTagImpl,
-    TextCharacterImpl,
-    AttachmentImpl,
-    FilterArrayImpl,
-    BlendModeImpl,
-    PlayerHitObjectImpl,
-    PropertyMessageMapImpl,
-    PropertyTextMessageImpl,
-    Character,
-    CachePositionImpl
-} from "@next2d/interface";
-import type {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
-import {
-    $document,
-    $rendererWorker,
-    $getEventType,
-    $TOUCH_MOVE,
-    $MOUSE_MOVE,
-    $textArea,
-    $currentPlayer
-} from "@next2d/util";
-import {
-    $cacheStore,
-    $doUpdated,
-    $clamp,
-    $getArray,
-    $intToRGBA,
-    $isNaN,
-    $Math,
-    $toColorInt,
-    $poolFloat32Array6,
-    $boundsMatrix,
-    $multiplicationMatrix,
-    $poolBoundsObject,
-    $multiplicationColor,
-    $Infinity,
-    $Number,
-    $poolArray,
-    $poolFloat32Array8,
-    $generateFontStyle,
-    $getBoundsObject,
-    $setTimeout,
-    $clearTimeout
-} from "@next2d/share";
-import { execute as textFormatSetDefaultService } from "./TextFormat/service/TextFormatSetDefaultService";
-import { execute as textFormatHtmlTextGenerateStyleService } from "./TextFormat/service/TextFormatHtmlTextGenerateStyleService";
-import { execute as textFormatIsSameService } from "./TextFormat/service/TextFormatIsSameService";
-import { execute as textFormatMergeService } from "./TextFormat/service/TextFormatMergeService";
-import { execute as textFormatGetWidthMarginService } from "./TextFormat/service/TextFormatGetWidthMarginService";
 
 /**
- * TextField クラスは、テキストの表示と入力用の表示オブジェクトを作成するために使用されます。
- * プロパティインスペクターを使用して、テキストフィールドにインスタンス名を付けることができます。
- * また、TextField クラスのメソッドとプロパティを使用して、JavaScript でテキストフィールドを操作できます。
+ * @description TextField クラスは、テキストの表示と入力用の表示オブジェクトを作成するために使用されます。
+ *              プロパティインスペクターを使用して、テキストフィールドにインスタンス名を付けることができます。
+ *              また、TextField クラスのメソッドとプロパティを使用して、JavaScript でテキストフィールドを操作できます。
  *
- * The TextField class is used to create display objects for text display and input.
- * You can give a text field an instance name in the Property inspector
- * and use the methods and properties of the TextField class to manipulate it with JavaScript.
+ *              The TextField class is used to create display objects for text display and input.
+ *              You can give a text field an instance name in the Property inspector
+ *              nd use the methods and properties of the TextField class to manipulate it with JavaScript.
  *
  * @class
  * @memberOf next2d.display
@@ -420,20 +362,6 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class TextField]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class TextField]";
-    }
-
-    /**
      * @description 指定されたクラスの空間名を返します。
      *              Returns the space name of the specified class.
      *
@@ -445,20 +373,6 @@ export class TextField extends InteractiveObject
     static get namespace (): string
     {
         return "next2d.display.TextField";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object TextField]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object TextField]";
     }
 
     /**
@@ -717,7 +631,6 @@ export class TextField extends InteractiveObject
     }
     set defaultTextFormat (text_format: TextFormat)
     {
-        textFormatMergeService(text_format, this._$defaultTextFormat);
         this._$defaultTextFormat = text_format;
         this._$reset();
     }
@@ -1536,7 +1449,7 @@ export class TextField extends InteractiveObject
 
         if (!this._$isHTML) {
 
-            this._$textData = parsePlainText(
+            this._$textData = textParserParsePlainTextUseCase(
                 this._$text,
                 this._$defaultTextFormat,
                 {
@@ -1550,7 +1463,7 @@ export class TextField extends InteractiveObject
 
         } else {
 
-            this._$textData = parseHtmlText(
+            this._$textData = textParserParseHtmlTextUseCase(
                 this._$htmlText,
                 this._$defaultTextFormat,
                 {
@@ -3606,120 +3519,5 @@ export class TextField extends InteractiveObject
         }
 
         return context.isPointInPath(options.x, options.y);
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$createWorkerInstance (): void
-    {
-        if (this._$created || !$rendererWorker) {
-            return ;
-        }
-        this._$created = true;
-
-        const bounds: BoundsImpl = this._$getBounds();
-
-        const message: PropertyTextMessageImpl = {
-            "command": "createTextField",
-            "buffer": new Float32Array(),
-            "instanceId": this._$instanceId,
-            "parentId": this._$parent ? this._$parent._$instanceId : -1,
-            "xMin": bounds.xMin,
-            "yMin": bounds.yMin,
-            "xMax": bounds.xMax,
-            "yMax": bounds.yMax,
-            "limitWidth": this.width,
-            "limitHeight": this.height,
-            "textHeight": this.textHeight,
-            "autoSize": this._$autoSize,
-            "wordWrap": this._$wordWrap,
-            "border": this._$border,
-            "background": this._$background,
-            "thickness": this._$thickness
-        };
-
-        if (this._$border) {
-            message.borderColor = this._$borderColor;
-        }
-
-        if (this._$background) {
-            message.backgroundColor = this._$backgroundColor;
-        }
-
-        if (this._$thickness) {
-            message.thicknessColor = this._$backgroundColor;
-        }
-
-        if (this._$characterId > -1) {
-            message.characterId = this._$characterId;
-        }
-
-        if (this._$loaderInfo) {
-            message.loaderInfoId = this._$loaderInfo._$id;
-        }
-
-        if (this._$scale9Grid) {
-            message.grid = {
-                "x": this._$scale9Grid.x,
-                "y": this._$scale9Grid.y,
-                "w": this._$scale9Grid.width,
-                "h": this._$scale9Grid.height
-            };
-        }
-
-        $rendererWorker.postMessage(message);
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$postProperty (): void
-    {
-        if (!$rendererWorker) {
-            return ;
-        }
-
-        const message: PropertyMessageMapImpl<PropertyTextMessageImpl> = this._$createMessage();
-
-        const bounds: BoundsImpl = this._$getBounds(null);
-        message.xMin = bounds.xMin;
-        message.yMin = bounds.yMin;
-        message.xMax = bounds.xMax;
-        message.yMax = bounds.yMax;
-        $poolBoundsObject(bounds);
-
-        if (this._$isUpdated()) {
-
-            message.limitWidth      = this.width;
-            message.limitHeight     = this.height;
-            message.textHeight      = this.textHeight;
-            message.autoSize        = this._$autoSize;
-            message.wordWrap        = this._$wordWrap;
-
-            message.border = this._$border;
-            if (this._$border) {
-                message.borderColor = this._$borderColor;
-            }
-
-            message.background = this._$background;
-            if (this._$background) {
-                message.backgroundColor = this._$backgroundColor;
-            }
-
-            message.thickness = this._$thickness;
-            if (this._$thickness) {
-                message.thicknessColor = this._$backgroundColor;
-            }
-        }
-
-        $rendererWorker.postMessage(message);
-
-        this._$posted  = true;
-        this._$updated = false;
     }
 }

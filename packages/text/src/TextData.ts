@@ -91,11 +91,13 @@ export class TextData
      */
     get textWidth (): number
     {
-        if (this._$textWidth === -1) {
-            this._$textWidth = 0;
-            for (let idx: number = 0; idx < this.widthTable.length; ++idx) {
-                this._$textWidth = Math.max(this._$textWidth, this.widthTable[idx]);
-            }
+        if (this._$textWidth !== -1) {
+            return this._$textWidth;
+        }
+
+        this._$textWidth = 0;
+        for (let idx = 0; idx < this.widthTable.length; ++idx) {
+            this._$textWidth = Math.max(this._$textWidth, this.widthTable[idx]);
         }
         return this._$textWidth;
     }
@@ -110,11 +112,13 @@ export class TextData
      */
     get textHeight (): number
     {
-        if (this._$textHeight === -1) {
-            this._$textHeight = 0;
-            for (let idx: number = 0; idx < this.heightTable.length; ++idx) {
-                this._$textHeight += this.heightTable[idx];
-            }
+        if (this._$textHeight !== -1) {
+            return this._$textHeight;
+        }
+
+        this._$textHeight = 0;
+        for (let idx = 0; idx < this.heightTable.length; ++idx) {
+            this._$textHeight += this.heightTable[idx];
         }
         return this._$textHeight;
     }
@@ -145,5 +149,24 @@ export class TextData
     getLineHeight (line_index: number): number
     {
         return line_index in this.heightTable ? this.heightTable[line_index] : 0;
+    }
+
+    /**
+     * @description 設定を初期化
+     *              Initialize settings
+     * 
+     * @return {void}
+     * @method
+     * @public
+     */
+    clear (): void 
+    {
+        this._$textWidth  = -1;
+        this._$textHeight = -1;
+        this.widthTable.length  = 0;
+        this.heightTable.length = 0;
+        this.ascentTable.length = 0;
+        this.textTable.length   = 0;
+        this.lineTable.length   = 0;
     }
 }

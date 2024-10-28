@@ -12,49 +12,23 @@ import type { TextFormat } from "../../TextFormat";
  */
 export const execute = (source: TextFormat, destination: TextFormat): boolean =>
 {
-    if (source.font !== destination.font) {
-        return false;
-    }
+    switch (true) {
 
-    if (source.size !== destination.size) {
-        return false;
-    }
+        case source.font !== destination.font:
+        case source.size !== destination.size:
+        case source.color !== destination.color:
+        case source.bold !== destination.bold:
+        case source.italic !== destination.italic:
+        case source.underline !== destination.underline:
+        case source.align !== destination.align:
+        case source.leftMargin !== destination.leftMargin:
+        case source.rightMargin !== destination.rightMargin:
+        case source.leading !== destination.leading:
+        case source.letterSpacing !== destination.letterSpacing:
+            return false;
 
-    if (source.color !== destination.color) {
-        return false;
-    }
+        default:
+            return true;
 
-    if (source.bold !== destination.bold) {
-        return false;
     }
-
-    if (source.italic !== destination.italic) {
-        return false;
-    }
-
-    if (source.underline !== destination.underline) {
-        return false;
-    }
-
-    if (source.align !== destination.align) {
-        return false;
-    }
-
-    if (source.leftMargin !== destination.leftMargin) {
-        return false;
-    }
-
-    if (source.rightMargin !== destination.rightMargin) {
-        return false;
-    }
-
-    if (source.leading !== destination.leading) {
-        return false;
-    }
-
-    if (source.letterSpacing !== destination.letterSpacing) {
-        return false;
-    }
-
-    return true;
 };

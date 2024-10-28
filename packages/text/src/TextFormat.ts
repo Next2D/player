@@ -1,4 +1,5 @@
 import type { ITextFormatAlign } from "./interface/ITextFormatAlign";
+import { $toColorInt } from "./TextUtil";
 
 /**
  * @description TextFormat クラスは、文字フォーマット情報を表します。
@@ -180,8 +181,7 @@ export class TextFormat
         return new TextFormat(
             this.font, this.size, this.color, this.bold,
             this.italic, this.underline, this.align,
-            this.leftMargin, this.rightMargin, this.leading,
-            this.letterSpacing
+            this.leftMargin, this.rightMargin, this.leading, this.letterSpacing
         );
     }
 }
