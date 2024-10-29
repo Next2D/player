@@ -9,7 +9,8 @@ import type { MovieClip } from "./MovieClip";
 import type {
     ColorTransform,
     Matrix,
-    Rectangle
+    Rectangle,
+    Point
 } from "@next2d/geom";
 import { EventDispatcher } from "@next2d/events";
 import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
@@ -31,11 +32,14 @@ import { execute as displayObjectSetXUseCase } from "./DisplayObject/usecase/Dis
 import { execute as displayObjectGetYUseCase } from "./DisplayObject/usecase/DisplayObjectGetYUseCase";
 import { execute as displayObjectSetYUseCase } from "./DisplayObject/usecase/DisplayObjectSetYUseCase";
 import { execute as displayObjectGetWidthUseCase } from "./DisplayObject/usecase/DisplayObjectGetWidthUseCase";
+import { execute as displayObjectLocalToGlobalService } from "./DisplayObject/service/DisplayObjectLocalToGlobalService";
+import { execute as displayObjectGlobalToLocalService } from "./DisplayObject/service/DisplayObjectGlobalToLocalService";
 import {
     $getInstanceId,
     $parentMap,
     $loaderInfoMap,
-    $rootMap
+    $rootMap,
+    $variables
 } from "./DisplayObjectUtil";
 
 /**
@@ -333,12 +337,21 @@ export class DisplayObject extends EventDispatcher
      */
     private _$visible: boolean;
 
+    /**
+     * @description 表示オブジェクト単位の変数を保持するマップ
+     *              Map that holds variables for display objects
+     * 
+     * @type {Map<any, any>}
+     * @default null
+     * @protected
+     */
+    protected _$variables: Map<any, any> | null;
+
     // todo
     protected _$isMask: boolean;
     protected _$hitObject: Sprite | null;
     protected _$mask: IDisplayObject<any> | null;
-    protected _$variables: Map<any, any> | null;
-    
+
     /**
      * @constructor
      * @public
@@ -910,31 +923,21 @@ export class DisplayObject extends EventDispatcher
      * @return {Point}
      * @public
      */
-    // globalToLocal (point: Point): Point
-    // {
-    //     const matrix: Matrix = this._$transform.concatenatedMatrix;
-    //     matrix.invert();
+    globalToLocal (point: Point): Point
+    {
+        return displayObjectGlobalToLocalService(this, point);
+    }
 
-    //     const newPoint: Point = new Point(
-    //         point.x * matrix.a + point.y * matrix.c + matrix.tx,
-    //         point.x * matrix.b + point.y * matrix.d + matrix.ty
-    //     );
-
-    //     $poolMatrix(matrix);
-
-    //     return newPoint;
-    // }
-
-    // /**
-    //  * @description 表示オブジェクトの境界ボックスを評価して、
-    //  *              obj 表示オブジェクトの境界ボックスと重複または交差するかどうかを調べます。
-    //  *              Evaluates the bounding box of the display object to see
-    //  *              if it overlaps or intersects with the bounding box of the obj display object.
-    //  *
-    //  * @param   {DisplayObject} object
-    //  * @returns {boolean}
-    //  * @public
-    //  */
+    /**
+     * @description 表示オブジェクトの境界ボックスを評価して、
+     *              obj 表示オブジェクトの境界ボックスと重複または交差するかどうかを調べます。
+     *              Evaluates the bounding box of the display object to see
+     *              if it overlaps or intersects with the bounding box of the obj display object.
+     *
+     * @param   {DisplayObject} object
+     * @returns {boolean}
+     * @public
+     */
     // hitTestObject (object: DisplayObjectImpl<any>): boolean
     // {
     //     const baseBounds1: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
@@ -969,18 +972,18 @@ export class DisplayObject extends EventDispatcher
     //     return ex - sx >= 0 && ey - sy >= 0;
     // }
 
-    // /**
-    //  * @description 表示オブジェクトを評価して、x および y パラメーターで指定された
-    //  *              ポイントと重複または交差するかどうかを調べます。
-    //  *              Evaluates the display object to see if it overlaps
-    //  *              or intersects with the point specified by the x and y parameters.
-    //  *
-    //  * @param   {number}  x
-    //  * @param   {number}  y
-    //  * @param   {boolean} [shape_flag=false]
-    //  * @returns {boolean}
-    //  * @public
-    //  */
+    /**
+     * @description 表示オブジェクトを評価して、x および y パラメーターで指定された
+     *              ポイントと重複または交差するかどうかを調べます。
+     *              Evaluates the display object to see if it overlaps
+     *              or intersects with the point specified by the x and y parameters.
+     *
+     * @param   {number}  x
+     * @param   {number}  y
+     * @param   {boolean} [shape_flag=false]
+     * @returns {boolean}
+     * @public
+     */
     // hitTestPoint (
     //     x: number, y: number,
     //     shape_flag: boolean = false
@@ -1039,181 +1042,166 @@ export class DisplayObject extends EventDispatcher
     //     return rectangle.containsPoint(point);
     // }
 
-    // /**
-    //  * @description point オブジェクトを表示オブジェクトの（ローカル）座標から
-    //  *              ステージ（グローバル）座標に変換します。
-    //  *              Converts the point object from the display object's (local) coordinates
-    //  *              to the Stage (global) coordinates.
-    //  *
-    //  *
-    //  * @param   {Point} point
-    //  * @returns {Point}
-    //  * @public
-    //  */
-    // localToGlobal (point: Point): Point
-    // {
-    //     const matrix: Matrix = this
-    //         ._$transform
-    //         .concatenatedMatrix;
+    /**
+     * @description point オブジェクトを表示オブジェクトの（ローカル）座標からステージ（グローバル）座標に変換します。
+     *              Converts the point object from the display object's (local) coordinates to the Stage (global) coordinates.
+     *
+     * @param   {Point} point
+     * @returns {Point}
+     * @public
+     */
+    localToGlobal (point: Point): Point
+    {
+        return displayObjectLocalToGlobalService(this, point);
+    }
 
-    //     const newPoint: Point = new Point(
-    //         point.x * matrix.a + point.y * matrix.c + matrix.tx,
-    //         point.x * matrix.b + point.y * matrix.d + matrix.ty
-    //     );
+    /**
+     * @description クラスのローカル変数空間から値を取得
+     *              Get a value from the local variable space of the class
+     *
+     * @param  {*} key
+     * @return {*}
+     * @method
+     * @public
+     */
+    getLocalVariable (key: any): any
+    {
+        if (!this._$variables) {
+            return null;
+        }
 
-    //     $poolMatrix(matrix);
+        if (this._$variables.has(key)) {
+            return this._$variables.get(key);
+        }
+    }
 
-    //     return newPoint;
-    // }
+    /**
+     * @description クラスのローカル変数空間へ値を保存
+     *              Store values in the local variable space of the class
+     *
+     * @param  {*} key
+     * @param  {*} value
+     * @return {void}
+     * @method
+     * @public
+     */
+    setLocalVariable (key: any, value: any): void
+    {
+        if (!this._$variables) {
+            this._$variables = new Map();
+        }
+        this._$variables.set(key, value);
+    }
 
-    // /**
-    //  * @description クラスのローカル変数空間から値を取得
-    //  *              Get a value from the local variable space of the class
-    //  *
-    //  * @param  {*} key
-    //  * @return {*}
-    //  * @method
-    //  * @public
-    //  */
-    // getLocalVariable (key: any): any
-    // {
-    //     if (!this._$variables) {
-    //         return null;
-    //     }
+    /**
+     * @description クラスのローカル変数空間に値があるかどうかを判断します。
+     *              Determines if there is a value in the local variable space of the class.
+     *
+     * @param  {*} key
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    hasLocalVariable (key: any): boolean
+    {
+        return this._$variables
+            ? this._$variables.has(key)
+            : false;
+    }
 
-    //     if (this._$variables.has(key)) {
-    //         return this._$variables.get(key);
-    //     }
-    // }
+    /**
+     * @description クラスのローカル変数空間の値を削除
+     *              Remove values from the local variable space of a class
+     *
+     * @param  {*} key
+     * @return {void}
+     * @method
+     * @public
+     */
+    deleteLocalVariable (key: any): void
+    {
+        if (this._$variables && this._$variables.has(key)) {
+            this._$variables.delete(key);
+            if (!this._$variables.size) {
+                this._$variables = null;
+            }
+        }
+    }
 
-    // /**
-    //  * @description クラスのローカル変数空間へ値を保存
-    //  *              Store values in the local variable space of the class
-    //  *
-    //  * @param  {*} key
-    //  * @param  {*} value
-    //  * @return {void}
-    //  * @method
-    //  * @public
-    //  */
-    // setLocalVariable (key: any, value: any): void
-    // {
-    //     if (!this._$variables) {
-    //         this._$variables = $getMap();
-    //     }
-    //     this._$variables.set(key, value);
-    // }
+    /**
+     * @description グローバル変数空間から値を取得
+     *              Get a value from the global variable space
+     *
+     * @param  {*} key
+     * @return {*}
+     * @method
+     * @public
+     */
+    getGlobalVariable (key: any): any
+    {
+        if ($variables.has(key)) {
+            return $variables.get(key);
+        }
+        return null;
+    }
 
-    // /**
-    //  * @description クラスのローカル変数空間に値があるかどうかを判断します。
-    //  *              Determines if there is a value in the local variable space of the class.
-    //  *
-    //  * @param  {*} key
-    //  * @return {boolean}
-    //  * @method
-    //  * @public
-    //  */
-    // hasLocalVariable (key: any): boolean
-    // {
-    //     return this._$variables
-    //         ? this._$variables.has(key)
-    //         : false;
-    // }
+    /**
+     * @description グローバル変数空間へ値を保存
+     *              Save values to global variable space
+     *
+     * @param  {*} key
+     * @param  {*} value
+     * @return {void}
+     * @method
+     * @public
+     */
+    setGlobalVariable (key: any, value: any): void
+    {
+        $variables.set(key, value);
+    }
 
-    // /**
-    //  * @description クラスのローカル変数空間の値を削除
-    //  *              Remove values from the local variable space of a class
-    //  *
-    //  * @param  {*} key
-    //  * @return {void}
-    //  * @method
-    //  * @public
-    //  */
-    // deleteLocalVariable (key: any): void
-    // {
-    //     if (this._$variables && this._$variables.has(key)) {
-    //         this._$variables.delete(key);
-    //         if (!this._$variables.size) {
-    //             $poolMap(this._$variables);
-    //             this._$variables = null;
-    //         }
-    //     }
-    // }
+    /**
+     * @description グローバル変数空間に値があるかどうかを判断します。
+     *              Determines if there is a value in the global variable space.
+     *
+     * @param  {*} key
+     * @return {boolean}
+     * @method
+     * @public
+     */
+    hasGlobalVariable (key: any): boolean
+    {
+        return $variables.has(key);
+    }
 
-    // /**
-    //  * @description グローバル変数空間から値を取得
-    //  *              Get a value from the global variable space
-    //  *
-    //  * @param  {*} key
-    //  * @return {*}
-    //  * @method
-    //  * @public
-    //  */
-    // getGlobalVariable (key: any): any
-    // {
-    //     if ($variables.has(key)) {
-    //         return $variables.get(key);
-    //     }
-    //     return null;
-    // }
+    /**
+     * @description グローバル変数空間の値を削除
+     *              Remove values from global variable space.
+     *
+     * @param  {*} key
+     * @return {void}
+     * @method
+     * @public
+     */
+    deleteGlobalVariable (key: any): void
+    {
+        if ($variables.has(key)) {
+            $variables.delete(key);
+        }
+    }
 
-    // /**
-    //  * @description グローバル変数空間へ値を保存
-    //  *              Save values to global variable space
-    //  *
-    //  * @param  {*} key
-    //  * @param  {*} value
-    //  * @return {void}
-    //  * @method
-    //  * @public
-    //  */
-    // setGlobalVariable (key: any, value: any): void
-    // {
-    //     $variables.set(key, value);
-    // }
-
-    // /**
-    //  * @description グローバル変数空間に値があるかどうかを判断します。
-    //  *              Determines if there is a value in the global variable space.
-    //  *
-    //  * @param  {*} key
-    //  * @return {boolean}
-    //  * @method
-    //  * @public
-    //  */
-    // hasGlobalVariable (key: any): boolean
-    // {
-    //     return $variables.has(key);
-    // }
-
-    // /**
-    //  * @description グローバル変数空間の値を削除
-    //  *              Remove values from global variable space.
-    //  *
-    //  * @param  {*} key
-    //  * @return {void}
-    //  * @method
-    //  * @public
-    //  */
-    // deleteGlobalVariable (key: any): void
-    // {
-    //     if ($variables.has(key)) {
-    //         $variables.delete(key);
-    //     }
-    // }
-
-    // /**
-    //  * @description グローバル変数空間に値を全てクリアします。
-    //  *              Clear all values in the global variable space.
-    //  *
-    //  * @return {void}
-    //  * @method
-    //  * @public
-    //  */
-    // clearGlobalVariable (): void
-    // {
-    //     return $variables.clear();
-    // }
+    /**
+     * @description グローバル変数空間に値を全てクリアします。
+     *              Clear all values in the global variable space.
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    clearGlobalVariable (): void
+    {
+        return $variables.clear();
+    }
 
     // /**
     //  * @param   {Float32Array} multi_matrix

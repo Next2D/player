@@ -412,3 +412,12 @@ export const $clamp = (
  * @protected
  */
 export const $actions: Array<MovieClip | Map<number, Function[]>> = [];
+
+/**
+ * @description グローバル変数を格納するMap
+ *              Map to store global variables
+ * 
+ * @type {Map}
+ * @protected
+ */
+export const $variables: Map<any, any> = new Map();

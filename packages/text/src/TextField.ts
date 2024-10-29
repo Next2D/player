@@ -6,9 +6,13 @@ import { TextData } from "./TextData";
 import { TextFormat } from "./TextFormat";
 import { execute as textFormatSetDefaultService } from "./TextFormat/service/TextFormatSetDefaultService";
 import { execute as textFormatHtmlTextGenerateStyleService } from "./TextFormat/service/TextFormatHtmlTextGenerateStyleService";
-import { execute as textFormatIsSameService } from "./TextFormat/service/TextFormatIsSameService";
-import { execute as textFormatGetWidthMarginService } from "./TextFormat/service/TextFormatGetWidthMarginService";
 import { execute as textFieldGetTextDataUseCase } from "./TextField/usecase/TextFieldGetTextDataUseCase";
+import { execute as textFieldResetUseCase } from "./TextField/usecase/TextFieldResetUseCase";
+import { execute as textFieldResizeUseCase } from "./TextField/usecase/TextFieldResizeUseCase";
+import {
+    $clamp,
+    $toColorInt
+} from "./TextUtil";
 import {
     InteractiveObject,
     Shape
@@ -60,10 +64,79 @@ export class TextField extends InteractiveObject
      */
     private _$isHTML: boolean;
 
+    /**
+     * @description バウンディングボックスのxMin座標
+     *              Bounding box coordinates
+     * 
+     * @member {number}
+     * @public
+     */
+    public xMin: number;
 
+    /**
+     * @description バウンディングボックスのyMin座標
+     *              Bounding box coordinates
+     * 
+     * @member {number}
+     * @public
+     */
+    public yMin: number;
 
-    private readonly _$bounds: IBounds;
-    private readonly _$originBounds: IBounds;
+    /**
+     * @description バウンディングボックスのxMax座標
+     *              Bounding box coordinates
+     * 
+     * @member {number}
+     * @public
+     */
+    public xMax: number;
+
+    /**
+     * @description バウンディングボックスのyMax座標
+     *              Bounding box coordinates
+     * 
+     * @member {number}
+     * @public
+     */
+    public yMax: number;
+
+    /**
+     * @description テキストフィールドの描画範囲のバウンディングボックス
+     *              The bounding box of the drawing area of the text field
+     * 
+     * @member {IBounds}
+     * @private
+     */
+    public readonly bounds: IBounds;
+
+    /**
+     * @description スクロール機能のON/OFFの制御。
+     *              Control ON/OFF of the scroll function.
+     *
+     * @member  {boolean}
+     * @default true
+     * @public
+     */
+    public scrollEnabled: boolean;
+
+    /**
+     * @description xスクロールバーの表示用の Shape オブジェクト
+     *              Shape object for x scroll bar display
+     * 
+     * @member {Shape | null}
+     * @protected
+     */
+    protected $xScrollShape: Shape | null;
+
+    /**
+     * @description yスクロールバーの表示用の Shape オブジェクト
+     *              Shape object for y scroll bar display
+     * 
+     * @member {Shape | null}
+     * @protected
+     */
+    protected $yScrollShape: Shape | null;
+
     private _$background: boolean;
     private _$backgroundColor: number;
     private _$border: boolean;
@@ -81,9 +154,6 @@ export class TextField extends InteractiveObject
     private _$restrict: string;
     private _$autoSize: ITextFieldAutoSize;
     private _$autoFontSize: boolean;
-    private _$scrollEnabled: boolean;
-    private _$xScrollShape: Shape | null;
-    private _$yScrollShape: Shape | null;
     private _$type: ITextFieldType;
     private _$focus: boolean;
     private _$focusVisible: boolean;
@@ -230,25 +300,19 @@ export class TextField extends InteractiveObject
         this._$rawHtmlText = "";
 
         /**
-         * @type {object}
-         * @private
+         * @type {number}
+         * @default 0
+         * @public
          */
-        this._$bounds = {
+        this.xMin = 0;
+        this.yMin = 0;
+        this.xMax = 100;
+        this.yMax = 100;
+        this.bounds = {
             "xMin": 0 ,
-            "xMax": 100,
+            "xMax": this.xMax,
             "yMin": 0 ,
-            "yMax": 100
-        };
-
-        /**
-         * @type {object}
-         * @private
-         */
-        this._$originBounds = {
-            "xMin": 0 ,
-            "xMax": 100,
-            "yMin": 0 ,
-            "yMax": 100
+            "yMax": this.yMax
         };
 
         /**
@@ -310,23 +374,39 @@ export class TextField extends InteractiveObject
         /**
          * @type {boolean}
          * @default true
-         * @private
+         * @public
          */
-        this._$scrollEnabled = true;
+        this.scrollEnabled = true;
 
         /**
          * @type {Shape}
-         * @default null
-         * @private
+         * @protected
          */
-        this._$xScrollShape = null;
+        this.$xScrollShape = new Shape();
+        this
+            .$xScrollShape
+            .graphics
+            .beginFill("#000", 0.3)
+            .drawRoundRect(0, 0, 3, 3, 3);
+
+        this
+            .$xScrollShape
+            .scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
 
         /**
          * @type {Shape}
-         * @default null
-         * @private
+         * @protected
          */
-        this._$yScrollShape = null;
+        this.$yScrollShape = new Shape();
+        this
+            .$yScrollShape
+            .graphics
+            .beginFill("#000", 0.3)
+            .drawRoundRect(0, 0, 3, 3, 3);
+
+        this
+            .$yScrollShape
+            .scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
 
         /**
          * @type {string}
@@ -425,10 +505,11 @@ export class TextField extends InteractiveObject
     }
     set autoFontSize (auto_font_size: boolean)
     {
-        if (auto_font_size !== this._$autoFontSize) {
-            this._$autoFontSize = auto_font_size;
-            this._$reload();
+        if (auto_font_size === this._$autoFontSize) {
+            return ;
         }
+        this._$autoFontSize = auto_font_size;
+        this._$reload();
     }
 
     /**
@@ -445,10 +526,11 @@ export class TextField extends InteractiveObject
     }
     set autoSize (auto_size: ITextFieldAutoSize)
     {
-        if (auto_size !== this._$autoSize) {
-            this._$autoSize = auto_size;
-            this._$reload();
+        if (auto_size === this._$autoSize) {
+            return ;
         }
+        this._$autoSize = auto_size;
+        this._$reload();
     }
 
     /**
@@ -465,10 +547,11 @@ export class TextField extends InteractiveObject
     }
     set background (background: boolean)
     {
-        if (background !== this._$background) {
-            this._$background = !!background;
-            this._$reset();
+        if (background === this._$background) {
+            return ;
         }
+        this._$background = !!background;
+        textFieldResetUseCase(this);
     }
 
     /**
@@ -491,7 +574,7 @@ export class TextField extends InteractiveObject
 
         if (background_color !== this._$backgroundColor) {
             this._$backgroundColor = background_color;
-            this._$reset();
+            textFieldResetUseCase(this);
         }
     }
 
@@ -511,7 +594,7 @@ export class TextField extends InteractiveObject
     {
         if (border !== this._$border) {
             this._$border = !!border;
-            this._$reset();
+            textFieldResetUseCase(this);
         }
     }
 
@@ -535,7 +618,7 @@ export class TextField extends InteractiveObject
 
         if (border_color !== this._$borderColor) {
             this._$borderColor = border_color;
-            this._$reset();
+            textFieldResetUseCase(this);
         }
     }
 
@@ -560,7 +643,7 @@ export class TextField extends InteractiveObject
 
         this._$stopIndex = index;
 
-        const textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData = textFieldGetTextDataUseCase(this);
         if (!textData.textTable.length) {
             return ;
         }
@@ -616,7 +699,7 @@ export class TextField extends InteractiveObject
 
         if (currentTextHeight > height) {
             const scaleY: number = (this.textHeight - height) / height;
-            this._$scrollY = $Math.min((currentTextHeight - viewTextHeight) / scaleY, height);
+            this._$scrollY = Math.min((currentTextHeight - viewTextHeight) / scaleY, height);
         }
 
         const width: number = this.width;
@@ -635,7 +718,7 @@ export class TextField extends InteractiveObject
 
         if (currentTextWidth > width) {
             const scaleX: number = (this.textWidth - width) / width;
-            this._$scrollX = $Math.min((currentTextWidth - viewTextWidth) / scaleX, width + 0.5);
+            this._$scrollX = Math.min((currentTextWidth - viewTextWidth) / scaleX, width + 0.5);
         }
         this._$doChanged();
     }
@@ -654,7 +737,7 @@ export class TextField extends InteractiveObject
     set defaultTextFormat (text_format: TextFormat)
     {
         this._$defaultTextFormat = text_format;
-        this._$reset();
+        textFieldResetUseCase(this);
     }
 
     /**
@@ -717,64 +800,22 @@ export class TextField extends InteractiveObject
             return this._$htmlText;
         }
 
-        const textData: TextData = textFieldGetTextDataUseCase(this, true, this._$textFormats);
+        const style = textFormatHtmlTextGenerateStyleService(this.defaultTextFormat);
+        this._$htmlText = `<span style="${style}">${this._$text.replace(/\n/g, "<br>")}</span>`;
 
-        let prevTextFormat: TextFormat = textData.textTable[0].textFormat;
-
-        let htmlText = "<span";
-        const style: string = textFormatHtmlTextGenerateStyleService(prevTextFormat);
-        if (style) {
-            htmlText += ` style="${style}"`;
-        }
-        htmlText += ">";
-
-        for (let idx = 1; idx < textData.textTable.length; ++idx) {
-
-            const textObject: ITextObject = textData.textTable[idx];
-            if (textObject.mode === "wrap") {
-                continue;
-            }
-
-            if (textObject.mode === "break") {
-                htmlText += "<br>";
-                continue;
-            }
-
-            const textFormat: TextFormat = textObject.textFormat;
-            if (!textFormatIsSameService(prevTextFormat, textFormat)) {
-
-                htmlText += "</span><span";
-
-                const style: string = textFormatHtmlTextGenerateStyleService(textFormat);
-                if (style) {
-                    htmlText += ` style="${style}"`;
-                }
-
-                htmlText += ">";
-
-                // change
-                prevTextFormat = textFormat;
-            }
-
-            if (textObject.mode === "text") {
-                htmlText += textObject.text;
-            }
-        }
-
-        htmlText += "</span>";
-        this._$htmlText = htmlText;
-
-        return htmlText;
+        return this._$htmlText;
     }
     set htmlText (html_text: string)
     {
-        if (this._$htmlText !== html_text) {
-            this._$htmlText    = `${html_text}`;
-            this._$rawHtmlText = "";
-            this._$text        = "";
-            this._$isHTML      = true;
-            this._$reload();
+        if (this._$htmlText === html_text) {
+            return ;
         }
+
+        this._$htmlText    = `${html_text}`;
+        this._$rawHtmlText = "";
+        this._$text        = "";
+        this._$isHTML      = true;
+        this._$reload();
     }
 
     /**
@@ -824,7 +865,7 @@ export class TextField extends InteractiveObject
     {
         if (multiline !== this._$multiline) {
             this._$multiline = !!multiline;
-            this._$reset();
+            textFieldResetUseCase(this);
         }
     }
 
@@ -838,7 +879,7 @@ export class TextField extends InteractiveObject
      */
     get numLines (): number
     {
-        const textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData = textFieldGetTextDataUseCase(this);
         return textData.lineTable.length;
     }
 
@@ -857,23 +898,6 @@ export class TextField extends InteractiveObject
     set restrict (restrict: string)
     {
         this._$restrict = `${restrict}`;
-    }
-
-    /**
-     * @description スクロール機能のON/OFFの制御。
-     *              Control ON/OFF of the scroll function.
-     *
-     * @member {boolean}
-     * @default true
-     * @public
-     */
-    get scrollEnabled (): boolean
-    {
-        return this._$scrollEnabled;
-    }
-    set scrollEnabled (scroll_enabled: boolean)
-    {
-        this._$scrollEnabled = scroll_enabled;
     }
 
     /**
@@ -902,8 +926,8 @@ export class TextField extends InteractiveObject
     }
     set scrollX (scroll_x: number)
     {
-        if (!this._$scrollEnabled
-            || this._$autoSize !== "none"
+        if (!this.scrollEnabled
+            || this.autoSize !== "none"
         ) {
             return ;
         }
@@ -989,8 +1013,8 @@ export class TextField extends InteractiveObject
     }
     set scrollY (scroll_y: number)
     {
-        if (!this._$scrollEnabled
-            || this._$autoSize !== "none"
+        if (!this.scrollEnabled
+            || this.autoSize !== "none"
             || !this._$multiline && !this._$wordWrap
         ) {
             return ;
@@ -1086,10 +1110,14 @@ export class TextField extends InteractiveObject
 
         let text: string = "";
 
-        const textData: TextData = textFieldGetTextDataUseCase(this, true, this._$textFormats);
-        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+        const textData = textFieldGetTextDataUseCase(this);
+        for (let idx = 1; idx < textData.textTable.length; ++idx) {
 
-            const textObject: ITextObject = textData.textTable[idx];
+            const textObject = textData.textTable[idx];
+            if (!textObject) {
+                continue;
+            }
+
             switch (textObject.mode) {
 
                 case "text":
@@ -1108,7 +1136,7 @@ export class TextField extends InteractiveObject
 
         this._$rawHtmlText = text;
 
-        return text;
+        return this._$rawHtmlText;
     }
     set text (text: string | null)
     {
@@ -1158,7 +1186,7 @@ export class TextField extends InteractiveObject
      */
     get textHeight (): number
     {
-        const textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData = textFieldGetTextDataUseCase(this);
         return textData.textHeight;
     }
 
@@ -1172,7 +1200,7 @@ export class TextField extends InteractiveObject
      */
     get textWidth ()
     {
-        const textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData = textFieldGetTextDataUseCase(this);
         return textData.textWidth;
     }
 
@@ -1193,7 +1221,7 @@ export class TextField extends InteractiveObject
         thickness |= 0;
         if (thickness !== this._$thickness) {
             this._$thickness = thickness;
-            this._$reset();
+            textFieldResetUseCase(this);
         }
     }
 
@@ -1216,7 +1244,7 @@ export class TextField extends InteractiveObject
         );
         if (thickness_color !== this._$thicknessColor) {
             this._$thicknessColor = thickness_color;
-            this._$reset();
+            textFieldResetUseCase(this);
         }
     }
 
@@ -1253,7 +1281,7 @@ export class TextField extends InteractiveObject
     {
         if (this._$wordWrap !== word_wrap) {
             this._$wordWrap = !!word_wrap;
-            this._$reset();
+            textFieldResetUseCase(this);
         }
     }
 
@@ -1275,7 +1303,7 @@ export class TextField extends InteractiveObject
 
             const bounds: IBounds = this._$getBounds(null);
 
-            const xMin: number = $Math.abs(bounds.xMin);
+            const xMin: number = Math.abs(bounds.xMin);
             this._$originBounds.xMax = width + xMin;
             this._$originBounds.xMin = xMin;
             this._$bounds.xMax = this._$originBounds.xMax;
@@ -1305,7 +1333,7 @@ export class TextField extends InteractiveObject
 
             const bounds: IBounds = this._$getBounds(null);
 
-            const yMin: number = $Math.abs(bounds.yMin);
+            const yMin: number = Math.abs(bounds.yMin);
             this._$originBounds.yMax = height + yMin;
             this._$bounds.yMax = this._$originBounds.yMax;
             this._$bounds.yMin = this._$originBounds.yMin;
@@ -1393,7 +1421,7 @@ export class TextField extends InteractiveObject
         line_index |= 0;
 
         let lineText: string = "";
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         for (let idx: number = 0; idx < textData.textTable.length; idx++) {
 
             const textObject: ITextObject = textData.textTable[idx];
@@ -1464,7 +1492,7 @@ export class TextField extends InteractiveObject
      */
     selectAll (): void
     {
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         if (!textData.textTable.length) {
             return ;
         }
@@ -1485,10 +1513,10 @@ export class TextField extends InteractiveObject
         }
 
         let text: string = "";
-        const minIndex: number = $Math.min(this._$focusIndex, this._$selectIndex);
-        const maxIndex: number = $Math.max(this._$focusIndex, this._$selectIndex) + 1;
+        const minIndex: number = Math.min(this._$focusIndex, this._$selectIndex);
+        const maxIndex: number = Math.max(this._$focusIndex, this._$selectIndex) + 1;
 
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         for (let idx = minIndex; idx < maxIndex; ++idx) {
             const textObject: ITextObject = textData.textTable[idx];
             if (!textObject || textObject.mode === "wrap") {
@@ -1536,7 +1564,7 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         if (!textData.textTable.length) {
             return ;
         }
@@ -1615,7 +1643,7 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         if (!textData.textTable.length) {
             return ;
         }
@@ -1695,7 +1723,7 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         if (textData.textTable.length && this._$focusIndex < 2) {
             this._$focusIndex = 1;
             return ;
@@ -1714,7 +1742,7 @@ export class TextField extends InteractiveObject
      */
     arrowRight (): void
     {
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         if (textData.textTable.length === this._$focusIndex) {
             return ;
         }
@@ -1739,8 +1767,8 @@ export class TextField extends InteractiveObject
         let minIndex: number = 0;
         let maxIndex: number = 0;
         if (this._$selectIndex > -1) {
-            minIndex = $Math.min(this._$focusIndex, this._$selectIndex);
-            maxIndex = $Math.max(this._$focusIndex, this._$selectIndex) + 1;
+            minIndex = Math.min(this._$focusIndex, this._$selectIndex);
+            maxIndex = Math.max(this._$focusIndex, this._$selectIndex) + 1;
             this._$focusIndex = minIndex;
         } else {
             if (2 > this._$focusIndex) {
@@ -1750,7 +1778,7 @@ export class TextField extends InteractiveObject
             this._$focusIndex--;
         }
 
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         const textObject: ITextObject = textData.textTable[this._$focusIndex];
         if (textObject && textObject.mode === "wrap") {
             this._$focusIndex--;
@@ -1886,7 +1914,7 @@ export class TextField extends InteractiveObject
             this._$selectIndex = -1;
         }
 
-        let textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        let textData: TextData = textFieldGetTextDataUseCase(this);
         const textFormats: TextFormat[] = $getArray();
 
         const length: number = texts.length;
@@ -1945,7 +1973,7 @@ export class TextField extends InteractiveObject
         this._$textFormats = null;
         $poolArray(textFormats);
 
-        textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        textData = textFieldGetTextDataUseCase(this);
         let index: number = this._$compositionStartIndex + length;
         for (let idx: number = this._$compositionStartIndex; idx < index; ++idx) {
 
@@ -1985,7 +2013,7 @@ export class TextField extends InteractiveObject
         // move textarea element
         const player: Player = $currentPlayer();
 
-        const lastIndex = $Math.min(textData.textTable.length - 1, this._$compositionEndIndex);
+        const lastIndex = Math.min(textData.textTable.length - 1, this._$compositionEndIndex);
         const textObject: ITextObject = textData.textTable[lastIndex];
         if (textObject) {
             const line: number = textObject.line;
@@ -2041,7 +2069,7 @@ export class TextField extends InteractiveObject
     compositionEnd (): void
     {
         if (this._$compositionEndIndex > -1) {
-            const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+            const textData: TextData = textFieldGetTextDataUseCase(this);
             for (let idx: number = this._$compositionStartIndex; idx < this._$compositionEndIndex; ++idx) {
                 const textObject: ITextObject = textData.textTable[idx];
                 textObject.textFormat.underline = false;
@@ -2078,7 +2106,7 @@ export class TextField extends InteractiveObject
             this.deleteText();
         }
 
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         const textFormats: TextFormat[] = $getArray();
 
         let newText: string = "";
@@ -2164,16 +2192,16 @@ export class TextField extends InteractiveObject
      */
     _$reload (): void
     {
-        this._$reset();
-        textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        textFieldResetUseCase(this);
+        textFieldGetTextDataUseCase(this);
 
-        if (this._$autoSize === "none" && this._$autoFontSize) {
+        if (this.autoSize === "none" && this.autoFontSize) {
 
             let maxFontSize: number = 0;
-            const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+            const textData: TextData = textFieldGetTextDataUseCase(this);
             for (let idx = 0; idx < textData.textTable.length; ++idx) {
                 const textObject: ITextObject = textData.textTable[idx];
-                maxFontSize = $Math.max(maxFontSize, textObject.textFormat.size || 0);
+                maxFontSize = Math.max(maxFontSize, textObject.textFormat.size || 0);
             }
 
             let subSize: number = 1;
@@ -2182,8 +2210,8 @@ export class TextField extends InteractiveObject
                 while (maxFontSize > subSize
                     && this.textWidth + 4 > this.width
                 ) {
-                    this._$reset();
-                    textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats, subSize++);
+                    textFieldResetUseCase(this);
+                    textFieldGetTextDataUseCase(this, subSize++);
                 }
 
             }
@@ -2193,14 +2221,14 @@ export class TextField extends InteractiveObject
                 while (maxFontSize > subSize
                     && this.textHeight + 4 > this.height
                 ) {
-                    this._$reset();
-                    textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats, subSize++);
+                    textFieldResetUseCase(this);
+                    textFieldGetTextDataUseCase(this, subSize++);
                 }
 
             }
         }
 
-        this._$resize();
+        textFieldResizeUseCase(this);
     }
 
     /**
@@ -2235,7 +2263,7 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         if (!textData.textTable.length) {
             this._$focusIndex  = 0;
             this._$selectIndex = -1;
@@ -2461,88 +2489,6 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$resize (): void
-    {
-        // update bounds
-        if (this._$autoSize !== "none") {
-
-            const tf: TextFormat = this._$defaultTextFormat;
-            const width: number = this.textWidth + 4 + textFormatGetWidthMarginService(tf);
-
-            if (this._$wordWrap) {
-
-                this._$bounds.xMax = this._$originBounds.xMax;
-                this._$bounds.xMin = this._$originBounds.xMin;
-
-            } else {
-
-                switch (this._$autoSize) {
-
-                    case "left":
-                        this._$bounds.xMax = width + this._$bounds.xMin;
-                        break;
-
-                    case "center":
-                        this._$bounds.xMax = width + this._$bounds.xMin;
-                        break;
-
-                    case "right":
-                        this._$bounds.xMax = this._$originBounds.xMax
-                            - (this._$originBounds.xMax - this._$originBounds.xMin
-                                - (width - this._$originBounds.xMin));
-                        break;
-
-                    default:
-                        break;
-
-                }
-
-            }
-
-            // set height
-            this._$bounds.yMax = this.textHeight + this._$originBounds.yMin + 4;
-
-        } else {
-            if (this._$scrollEnabled) {
-
-                if (!this._$xScrollShape) {
-
-                    this._$xScrollShape = new Shape();
-
-                    this
-                        ._$xScrollShape
-                        .graphics
-                        .beginFill("#000", 0.3)
-                        .drawRoundRect(0, 0, 3, 3, 3);
-
-                    this
-                        ._$xScrollShape
-                        .scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
-                }
-
-                if (!this._$yScrollShape) {
-
-                    this._$yScrollShape = new Shape();
-
-                    this
-                        ._$yScrollShape
-                        .graphics
-                        .beginFill("#000", 0.3)
-                        .drawRoundRect(0, 0, 3, 3, 3);
-
-                    this
-                        ._$yScrollShape
-                        .scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
-                }
-            }
-        }
-    }
-
-    /**
      * @param  {object} text_object
      * @param  {number} width
      * @return {number}
@@ -2552,32 +2498,32 @@ export class TextField extends InteractiveObject
     _$getAlignOffset (text_object: ITextObject, width: number): number
     {
         // default
-        const textData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData = textFieldGetTextDataUseCase(this);
         const lineWidth: number = textData.getLineWidth(text_object.line);
 
         const textFormat: TextFormat = text_object.textFormat;
 
         const leftMargin: number = textFormat.leftMargin || 0;
         if (!this._$wordWrap && lineWidth > width) {
-            return $Math.max(0, leftMargin);
+            return Math.max(0, leftMargin);
         }
 
         const rightMargin: number = textFormat.rightMargin || 0;
         if (textFormat.align === "center" // format CENTER
             || this._$autoSize === "center" // autoSize CENTER
         ) {
-            return $Math.max(0, width / 2 - leftMargin - rightMargin - lineWidth / 2 - 2);
+            return Math.max(0, width / 2 - leftMargin - rightMargin - lineWidth / 2 - 2);
         }
 
         if (textFormat.align === "right" // format RIGHT
             || this._$autoSize === "right" // autoSize RIGHT
         ) {
-            return $Math.max(0, width - leftMargin - lineWidth - rightMargin - 4);
+            return Math.max(0, width - leftMargin - lineWidth - rightMargin - 4);
         }
 
         // autoSize LEFT
         // format LEFT
-        return $Math.max(0, leftMargin);
+        return Math.max(0, leftMargin);
     }
 
     /**
@@ -2734,8 +2680,8 @@ export class TextField extends InteractiveObject
         const yMin = bounds.yMin;
         $poolBoundsObject(bounds);
 
-        const width: number  = $Math.ceil($Math.abs(xMax - xMin));
-        const height: number = $Math.ceil($Math.abs(yMax - yMin));
+        const width: number  = Math.ceil(Math.abs(xMax - xMin));
+        const height: number = Math.ceil(Math.abs(yMax - yMin));
         if (!width || !height) {
             return;
         }
@@ -2830,8 +2776,8 @@ export class TextField extends InteractiveObject
         const yMin   = +bounds.yMin;
         $poolBoundsObject(bounds);
 
-        const width: number  = $Math.ceil($Math.abs(xMax - xMin));
-        const height: number = $Math.ceil($Math.abs(yMax - yMin));
+        const width: number  = Math.ceil(Math.abs(xMax - xMin));
+        const height: number = Math.ceil(Math.abs(yMax - yMin));
         switch (true) {
 
             case width === 0:
@@ -2847,7 +2793,7 @@ export class TextField extends InteractiveObject
 
         }
 
-        let xScale: number = +$Math.sqrt(
+        let xScale: number = +Math.sqrt(
             multiMatrix[0] * multiMatrix[0]
             + multiMatrix[1] * multiMatrix[1]
         );
@@ -2860,7 +2806,7 @@ export class TextField extends InteractiveObject
             xScale = +xScale.toFixed(4);
         }
 
-        let yScale: number = +$Math.sqrt(
+        let yScale: number = +Math.sqrt(
             multiMatrix[2] * multiMatrix[2]
             + multiMatrix[3] * multiMatrix[3]
         );
@@ -2932,9 +2878,9 @@ export class TextField extends InteractiveObject
         if (!context.cachePosition) {
 
             // resize
-            const lineWidth: number = $Math.min(1, $Math.max(xScale, yScale));
-            const width: number  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-            const height: number = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
+            const lineWidth: number = Math.min(1, Math.max(xScale, yScale));
+            const width: number  = Math.ceil(Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
+            const height: number = Math.ceil(Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
 
             // new canvas
             const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
@@ -2959,7 +2905,7 @@ export class TextField extends InteractiveObject
                 if (this._$background) {
 
                     const rgb: RGBAImpl = $intToRGBA(this._$backgroundColor);
-                    const alpha: number = $Math.max(0, $Math.min(
+                    const alpha: number = Math.max(0, Math.min(
                         rgb.A * 255 + multiColor[7], 255)
                     ) / 255;
 
@@ -2970,7 +2916,7 @@ export class TextField extends InteractiveObject
                 if (this._$border) {
 
                     const rgb: RGBAImpl = $intToRGBA(this._$borderColor);
-                    const alpha: number = $Math.max(0, $Math.min(
+                    const alpha: number = Math.max(0, Math.min(
                         rgb.A * 255 + multiColor[7], 255)
                     ) / 255;
 
@@ -3052,17 +2998,17 @@ export class TextField extends InteractiveObject
             context.cachePosition = position;
         }
 
-        const radianX: number = $Math.atan2(multiMatrix[1], multiMatrix[0]);
-        const radianY: number = $Math.atan2(-multiMatrix[2], multiMatrix[3]);
+        const radianX: number = Math.atan2(multiMatrix[1], multiMatrix[0]);
+        const radianY: number = Math.atan2(-multiMatrix[2], multiMatrix[3]);
         if (!drawFilter && (radianX || radianY)) {
 
             const tx: number = baseBounds.xMin * xScale;
             const ty: number = baseBounds.yMin * yScale;
 
-            const cosX: number = $Math.cos(radianX);
-            const sinX: number = $Math.sin(radianX);
-            const cosY: number = $Math.cos(radianY);
-            const sinY: number = $Math.sin(radianY);
+            const cosX: number = Math.cos(radianX);
+            const sinX: number = Math.sin(radianX);
+            const cosY: number = Math.cos(radianY);
+            const sinY: number = Math.sin(radianY);
 
             context.setTransform(
                 cosX, sinX, -sinY, cosY,
@@ -3124,7 +3070,7 @@ export class TextField extends InteractiveObject
     ): void {
 
         // init
-        const textData: TextData = textFieldGetTextDataUseCase(this, this._$isHTML, this._$textFormats);
+        const textData: TextData = textFieldGetTextDataUseCase(this);
         if (!textData.textTable.length
             && this._$focusIndex > -1
             && this._$focusVisible
@@ -3133,7 +3079,7 @@ export class TextField extends InteractiveObject
             const textFormat: TextFormat = this._$defaultTextFormat;
 
             const rgb: RGBAImpl = $intToRGBA(textFormat.color || 0);
-            const alpha: number = $Math.max(0, $Math.min(
+            const alpha: number = Math.max(0, Math.min(
                 rgb.A * 255 + color_transform[7], 255)
             ) / 255;
 
@@ -3152,11 +3098,11 @@ export class TextField extends InteractiveObject
             let minIndex: number = 0;
             let maxIndex: number = 0;
             if (this._$focusIndex <= this._$selectIndex) {
-                minIndex = $Math.min(this._$focusIndex, range);
-                maxIndex = $Math.min(this._$selectIndex, range);
+                minIndex = Math.min(this._$focusIndex, range);
+                maxIndex = Math.min(this._$selectIndex, range);
             } else {
-                minIndex = $Math.min(this._$selectIndex, range);
-                maxIndex = $Math.min(this._$focusIndex - 1, range);
+                minIndex = Math.min(this._$selectIndex, range);
+                maxIndex = Math.min(this._$focusIndex - 1, range);
             }
 
             const textObject: ITextObject = textData.textTable[minIndex];
@@ -3272,7 +3218,7 @@ export class TextField extends InteractiveObject
 
             // color setting
             const rgb: RGBAImpl = $intToRGBA(textFormat.color || 0);
-            const alpha: number = $Math.max(0, $Math.min(
+            const alpha: number = Math.max(0, Math.min(
                 rgb.A * 255 + color_transform[7], 255)
             ) / 255;
 
@@ -3312,7 +3258,7 @@ export class TextField extends InteractiveObject
 
             if (this._$thickness) {
                 const rgb: RGBAImpl = $intToRGBA(this._$thicknessColor);
-                const alpha: number = $Math.max(0, $Math.min(
+                const alpha: number = Math.max(0, Math.min(
                     rgb.A * 255 + color_transform[7], 255)
                 ) / 255;
                 context.lineWidth   = this._$thickness;
@@ -3358,7 +3304,7 @@ export class TextField extends InteractiveObject
                         if (textFormat.underline) {
 
                             const rgb: RGBAImpl = $intToRGBA(textFormat.color || 0);
-                            const alpha: number = $Math.max(0, $Math.min(
+                            const alpha: number = Math.max(0, Math.min(
                                 rgb.A * 255 + color_transform[7], 255)
                             ) / 255;
 
@@ -3403,7 +3349,7 @@ export class TextField extends InteractiveObject
             const textObject: ITextObject = textData.textTable[this._$focusIndex - 1];
             if (textObject) {
                 const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
-                const alpha: number = $Math.max(0, $Math.min(
+                const alpha: number = Math.max(0, Math.min(
                     rgb.A * 255 + color_transform[7], 255)
                 ) / 255;
 
@@ -3479,8 +3425,8 @@ export class TextField extends InteractiveObject
         $poolBoundsObject(bounds);
         $poolBoundsObject(baseBounds);
 
-        const width: number  = $Math.ceil($Math.abs(xMax - xMin));
-        const height: number = $Math.ceil($Math.abs(yMax - yMin));
+        const width: number  = Math.ceil(Math.abs(xMax - xMin));
+        const height: number = Math.ceil(Math.abs(yMax - yMin));
 
         context.setTransform(1, 0, 0, 1, xMin, yMin);
         context.beginPath();

@@ -4,6 +4,6 @@ export interface IOptions {
     width: number;
     multiline: boolean;
     wordWrap: boolean;
-    textFormats: TextFormat[] | null
+    textFormats?: TextFormat[] | null
     subFontSize?: number;
 }

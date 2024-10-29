@@ -32,6 +32,7 @@
     "@next2d/display": "file:../display",
     "@next2d/geom": "file:../geom",
     "@next2d/events": "file:../events",
-    "@next2d/ui": "file:../ui"
+    "@next2d/ui": "file:../ui",
+    "@next2d/cache": "file:../cache"
   }
 }

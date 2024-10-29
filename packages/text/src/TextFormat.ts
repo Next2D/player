@@ -1,5 +1,4 @@
 import type { ITextFormatAlign } from "./interface/ITextFormatAlign";
-import { $toColorInt } from "./TextUtil";
 
 /**
  * @description TextFormat クラスは、文字フォーマット情報を表します。

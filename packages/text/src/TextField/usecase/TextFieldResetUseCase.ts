@@ -19,6 +19,8 @@ export const execute = (text_field: TextField): void =>
     textFieldApplyChangesService(text_field);
 
     // Remove cache
-    $stage.$remoceCacheKeys.push(+text_field.uniqueKey);
-    $cacheStore.removeById(text_field.uniqueKey);
+    if (text_field.uniqueKey && $cacheStore.has(text_field.uniqueKey)) {
+        $stage.$remoceCacheKeys.push(+text_field.uniqueKey);
+        $cacheStore.removeById(text_field.uniqueKey);
+    }
 };
