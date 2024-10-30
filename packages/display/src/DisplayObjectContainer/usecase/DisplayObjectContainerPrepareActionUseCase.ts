@@ -15,7 +15,7 @@ import { execute as movieClipPrepareActionUseCase } from "../../MovieClip/usecas
 export const execute = <C extends DisplayObjectContainer>(display_object_container: C): void =>
 {
     const children = display_object_container.children;
-    for (let idx: number = children.length - 1; idx > -1; --idx) {
+    for (let idx = children.length - 1; idx > -1; --idx) {
 
         const displayObject = children[idx] as DisplayObject;
         if (!displayObject) {

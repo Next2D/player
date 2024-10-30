@@ -1,7 +1,12 @@
-import type { DisplayObject } from "../../DisplayObject";
+import type { DisplayObject, DisplayObjectContainer } from "../../DisplayObject";
 import type { Shape } from "../../Shape";
+import type { Video } from "@next2d/media";
+import type { TextField } from "@next2d/text";
 import { $getArray } from "../../DisplayObjectUtil";
 import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeCalcBoundsMatrixUseCase";
+import { execute as videoCalcBoundsMatrixUseCase } from "../../Video/usecase/VideoCalcBoundsMatrixUseCase";
+import { execute as textFieldCalcBoundsMatrixUseCase } from "../../TextField/usecase/TextFieldCalcBoundsMatrixUseCase";
+import { execute as displayObjectContainerCalcBoundsMatrixUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerCalcBoundsMatrixUseCase";
 
 /**
  * @description DisplayObject のローカルバウンディングボックスを取得します。
@@ -14,8 +19,12 @@ import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/Sha
  */
 export const execute = <D extends DisplayObject>(display_object: D): number[] =>
 {
-
     switch (true) {
+
+        case display_object.isContainerEnabled:
+            return displayObjectContainerCalcBoundsMatrixUseCase(
+                display_object as unknown as DisplayObjectContainer
+            );
 
         case display_object.isShape:
             return shapeCalcBoundsMatrixUseCase(
@@ -23,16 +32,14 @@ export const execute = <D extends DisplayObject>(display_object: D): number[] =>
             );
 
         case display_object.isText:
-            // todo
-            return $getArray(0, 0, 0, 0);
+            return textFieldCalcBoundsMatrixUseCase(
+                display_object as unknown as TextField
+            );
 
         case display_object.isVideo:
-            // todo
-            return $getArray(0, 0, 0, 0);
-
-        case display_object.isContainerEnabled:
-            // todo
-            return $getArray(0, 0, 0, 0);
+            return videoCalcBoundsMatrixUseCase(
+                display_object as unknown as Video
+            );
 
         default:
             return $getArray(0, 0, 0, 0);

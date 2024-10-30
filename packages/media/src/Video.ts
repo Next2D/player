@@ -77,6 +77,16 @@ export class Video extends DisplayObject
     public currentTime: number;
 
     /**
+     * @description Videoの機能を所持しているかを返却
+     *              Returns whether the display object has Video functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isVideo: boolean;
+
+    /**
      * @type {IBounds}
      * @private
      */
@@ -128,6 +138,7 @@ export class Video extends DisplayObject
     {
         super();
 
+        this.isVideo     = true;
         this.duration    = 0;
         this.smoothing   = true;
         this.loop        = false;

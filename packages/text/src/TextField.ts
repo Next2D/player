@@ -47,6 +47,16 @@ import {
 export class TextField extends InteractiveObject
 {
     /**
+     * @description TextFieldの機能を所持しているかを返却
+     *              Returns whether the display object has TextField functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isText: boolean;
+
+    /**
      * @description セットされたテキストを描画用に分解したデータ
      *              Data that breaks down the set text for drawing
      * 
@@ -176,6 +186,8 @@ export class TextField extends InteractiveObject
     constructor ()
     {
         super();
+
+        this.isText = true;
 
         /**
          * @type {TextData}

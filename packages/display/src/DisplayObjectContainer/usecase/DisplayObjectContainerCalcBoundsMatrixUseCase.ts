@@ -1,11 +1,13 @@
 import type { Shape } from "../../Shape";
 import type { Video } from "@next2d/media";
+import type { TextField } from "@next2d/text";
 import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import { Matrix } from "@next2d/geom";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeCalcBoundsMatrixUseCase";
 import { execute as videoCalcBoundsMatrixUseCase } from "../../Video/usecase/VideoCalcBoundsMatrixUseCase";
+import { execute as textFieldCalcBoundsMatrixUseCase } from "../../TextField/usecase/TextFieldCalcBoundsMatrixUseCase";
 import {
     $getArray,
     $poolArray
@@ -45,26 +47,27 @@ export const execute = <C extends DisplayObjectContainer>(
     for (let idx = 0; idx < children.length; idx++) {
 
         const child = children[idx] as DisplayObject;
-        if (child.visible) {
+        if (!child.visible) {
             continue;
         }
 
         let bounds: number[] | null = null;
         switch (true) {
+            
+            case child.isContainerEnabled:
+                bounds = execute(child as DisplayObjectContainer, tMatrix);
+                break;
 
             case child.isShape:
                 bounds = shapeCalcBoundsMatrixUseCase(child as Shape, tMatrix);
                 break;
 
             case child.isText:
+                bounds = textFieldCalcBoundsMatrixUseCase(child as TextField, tMatrix);
                 break;
 
             case child.isVideo:
                 bounds = videoCalcBoundsMatrixUseCase(child as Video, tMatrix);
-                break;
-
-            case child.isContainerEnabled:
-                bounds = execute(child as DisplayObjectContainer, tMatrix);
                 break;
 
         }
