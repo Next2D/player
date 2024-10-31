@@ -9,13 +9,24 @@ describe("TextFieldResizeAutoFontSizeUseCase.js test", () =>
     {
         const textField = new TextField();
 
+        expect(textField.defaultTextFormat.size).toBe(12);
+
         textField.text = "かきくけこ";
         textField.changed = false;
+
+        textField.xMax = 5;
+        textField.yMax = 5;
+
         expect(textField.changed).toBe(false);
         
         execute(textField);
-        console.log(textField.$textData.textTable[1].textFormat);
-        // expect(textField.$textData).toBe(null);
-        // expect(textField.changed).toBe(true);
+
+        const textFormat = textField.$textData?.textTable[1].textFormat;
+        if (!textFormat) {
+            throw new Error("textFormat is null");
+        }
+
+        expect(textFormat.size).toBe(1);
+        expect(textField.changed).toBe(true);
     });
 });

@@ -8,7 +8,8 @@ import { execute as textFormatSetDefaultService } from "./TextFormat/service/Tex
 import { execute as textFormatHtmlTextGenerateStyleService } from "./TextFormat/service/TextFormatHtmlTextGenerateStyleService";
 import { execute as textFieldGetTextDataUseCase } from "./TextField/usecase/TextFieldGetTextDataUseCase";
 import { execute as textFieldResetUseCase } from "./TextField/usecase/TextFieldResetUseCase";
-import { execute as textFieldResizeUseCase } from "./TextField/usecase/TextFieldResizeUseCase";
+import { execute as textFieldReloadUseCase } from "./TextField/usecase/TextFieldReloadUseCase";
+import { execute as textFieldUpdateStopIndexUseCase } from "./TextField/usecase/TextFieldUpdateStopIndexUseCase";
 import {
     $clamp,
     $toColorInt
@@ -136,7 +137,7 @@ export class TextField extends InteractiveObject
      * @member {Shape | null}
      * @protected
      */
-    protected $xScrollShape: Shape | null;
+    public xScrollShape: Shape | null;
 
     /**
      * @description yスクロールバーの表示用の Shape オブジェクト
@@ -145,7 +146,7 @@ export class TextField extends InteractiveObject
      * @member {Shape | null}
      * @protected
      */
-    protected $yScrollShape: Shape | null;
+    public yScrollShape: Shape | null;
 
     private _$background: boolean;
     private _$backgroundColor: number;
@@ -394,30 +395,30 @@ export class TextField extends InteractiveObject
          * @type {Shape}
          * @protected
          */
-        this.$xScrollShape = new Shape();
+        this.xScrollShape = new Shape();
         this
-            .$xScrollShape
+            .xScrollShape
             .graphics
             .beginFill("#000", 0.3)
             .drawRoundRect(0, 0, 3, 3, 3);
 
         this
-            .$xScrollShape
+            .xScrollShape
             .scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
 
         /**
          * @type {Shape}
          * @protected
          */
-        this.$yScrollShape = new Shape();
+        this.yScrollShape = new Shape();
         this
-            .$yScrollShape
+            .yScrollShape
             .graphics
             .beginFill("#000", 0.3)
             .drawRoundRect(0, 0, 3, 3, 3);
 
         this
-            .$yScrollShape
+            .yScrollShape
             .scale9Grid = new Rectangle(1.5, 1.5, 0.1, 0.1);
 
         /**
@@ -520,8 +521,8 @@ export class TextField extends InteractiveObject
         if (auto_font_size === this._$autoFontSize) {
             return ;
         }
-        this._$autoFontSize = auto_font_size;
-        this._$reload();
+        this._$autoFontSize = !!auto_font_size;
+        textFieldReloadUseCase(this);
     }
 
     /**
@@ -542,7 +543,7 @@ export class TextField extends InteractiveObject
             return ;
         }
         this._$autoSize = auto_size;
-        this._$reload();
+        textFieldReloadUseCase(this);
     }
 
     /**
@@ -584,10 +585,12 @@ export class TextField extends InteractiveObject
             $toColorInt(background_color), 0, 0xffffff, 0xffffff
         );
 
-        if (background_color !== this._$backgroundColor) {
-            this._$backgroundColor = background_color;
-            textFieldResetUseCase(this);
+        if (background_color === this._$backgroundColor) {
+            return ;
         }
+
+        this._$backgroundColor = background_color;
+        textFieldResetUseCase(this);
     }
 
     /**
@@ -604,10 +607,12 @@ export class TextField extends InteractiveObject
     }
     set border (border: boolean)
     {
-        if (border !== this._$border) {
-            this._$border = !!border;
-            textFieldResetUseCase(this);
+        if (border === this._$border) {
+            return ;
         }
+
+        this._$border = !!border;
+        textFieldResetUseCase(this);
     }
 
     /**
@@ -628,10 +633,12 @@ export class TextField extends InteractiveObject
             $toColorInt(border_color), 0, 0xffffff, 0
         );
 
-        if (border_color !== this._$borderColor) {
-            this._$borderColor = border_color;
-            textFieldResetUseCase(this);
+        if (border_color === this._$borderColor) {
+            return ;
         }
+
+        this._$borderColor = border_color;
+        textFieldResetUseCase(this);
     }
 
     /**
@@ -655,84 +662,11 @@ export class TextField extends InteractiveObject
 
         this._$stopIndex = index;
 
-        const textData = textFieldGetTextDataUseCase(this);
-        if (!textData.textTable.length) {
-            return ;
+        const point = textFieldUpdateStopIndexUseCase(this, index);
+        if (point) {
+            this._$scrollX = point.x;
+            this._$scrollY = point.y;
         }
-
-        let currentTextWidth: number = 2;
-        let targetIndex: number = 0;
-        for (let idx = 0; idx < textData.textTable.length; ++idx) {
-
-            const textObject: ITextObject = textData.textTable[idx];
-
-            let countUp = false;
-            if (textObject.mode === "text") {
-                countUp = true;
-                currentTextWidth += textObject.w;
-            }
-
-            if (targetIndex >= index) {
-                targetIndex = idx;
-                break;
-            }
-
-            if (textObject.mode === "break") {
-                countUp = true;
-                // reset
-                this._$scrollX   = 0;
-                currentTextWidth = 2;
-            }
-
-            if (countUp) {
-                targetIndex++;
-            }
-
-        }
-
-        const textObject: ITextObject = textData.textTable[targetIndex];
-
-        const line: number = textObject.line;
-
-        let currentTextHeight: number = 0;
-        for (let idx = 0; idx <= line; ++idx) {
-            currentTextHeight += textData.heightTable[idx];
-        }
-
-        const height: number = this.height;
-        let viewTextHeight: number = 0;
-        for (let idx = line; idx > -1; --idx) {
-            const lineHeight: number = textData.heightTable[idx];
-            if (height < viewTextHeight + lineHeight) {
-                break;
-            }
-            viewTextHeight += lineHeight;
-        }
-
-        if (currentTextHeight > height) {
-            const scaleY: number = (this.textHeight - height) / height;
-            this._$scrollY = Math.min((currentTextHeight - viewTextHeight) / scaleY, height);
-        }
-
-        const width: number = this.width;
-        let viewTextWidth: number = 0;
-        for (let idx = targetIndex; idx > 0; --idx) {
-            const textObject: ITextObject = textData.textTable[idx];
-            if (textObject.mode !== "text") {
-                continue;
-            }
-
-            if (width < viewTextWidth + textObject.w) {
-                break;
-            }
-            viewTextWidth += textObject.w;
-        }
-
-        if (currentTextWidth > width) {
-            const scaleX: number = (this.textWidth - width) / width;
-            this._$scrollX = Math.min((currentTextWidth - viewTextWidth) / scaleX, width + 0.5);
-        }
-        this._$doChanged();
     }
 
     /**
@@ -827,7 +761,7 @@ export class TextField extends InteractiveObject
         this._$rawHtmlText = "";
         this._$text        = "";
         this._$isHTML      = true;
-        this._$reload();
+        textFieldReloadUseCase(this);
     }
 
     /**
@@ -945,8 +879,8 @@ export class TextField extends InteractiveObject
         }
 
         // check y animation
-        if (this._$yScrollShape
-            && this._$yScrollShape.hasLocalVariable("job")
+        if (this.yScrollShape
+            && this.yScrollShape.hasLocalVariable("job")
         ) {
             return ;
         }
@@ -955,13 +889,13 @@ export class TextField extends InteractiveObject
         if (this._$scrollX !== scroll_x) {
 
             const width: number = this.width;
-            if (this._$xScrollShape && this.textWidth > width) {
+            if (this.xScrollShape && this.textWidth > width) {
 
                 this._$doChanged();
 
                 this._$scrollX = scroll_x;
 
-                this._$xScrollShape.width = width * width / this.textWidth;
+                this.xScrollShape.width = width * width / this.textWidth;
                 const parent: ParentImpl<any> = this._$parent;
                 if (parent) {
 
@@ -1157,7 +1091,7 @@ export class TextField extends InteractiveObject
             this._$htmlText    = "";
             this._$rawHtmlText = "";
             this._$isHTML      = false;
-            this._$reload();
+            textFieldReloadUseCase(this);
             return ;
         }
 
@@ -1167,7 +1101,7 @@ export class TextField extends InteractiveObject
             this._$htmlText    = "";
             this._$rawHtmlText = "";
             this._$isHTML      = false;
-            this._$reload();
+            textFieldReloadUseCase(this);
         }
     }
 
@@ -1185,7 +1119,7 @@ export class TextField extends InteractiveObject
     set textColor (text_color: number)
     {
         this._$defaultTextFormat.color = text_color;
-        this._$reload();
+        textFieldReloadUseCase(this);
     }
 
     /**
@@ -1323,7 +1257,7 @@ export class TextField extends InteractiveObject
 
             super.width = width;
 
-            this._$reload();
+            textFieldReloadUseCase(this);
         }
     }
 
@@ -1351,7 +1285,7 @@ export class TextField extends InteractiveObject
             this._$bounds.yMin = this._$originBounds.yMin;
             super.height = height;
 
-            this._$reload();
+            textFieldReloadUseCase(this);
         }
     }
 
@@ -2195,52 +2129,6 @@ export class TextField extends InteractiveObject
 
         // cache clear
         $cacheStore.removeCache(this._$instanceId);
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$reload (): void
-    {
-        textFieldResetUseCase(this);
-        textFieldGetTextDataUseCase(this);
-
-        if (this.autoSize === "none" && this.autoFontSize) {
-
-            let maxFontSize: number = 0;
-            const textData: TextData = textFieldGetTextDataUseCase(this);
-            for (let idx = 0; idx < textData.textTable.length; ++idx) {
-                const textObject: ITextObject = textData.textTable[idx];
-                maxFontSize = Math.max(maxFontSize, textObject.textFormat.size || 0);
-            }
-
-            let subSize: number = 1;
-            if (this.width && this.textWidth) {
-
-                while (maxFontSize > subSize
-                    && this.textWidth + 4 > this.width
-                ) {
-                    textFieldResetUseCase(this);
-                    textFieldGetTextDataUseCase(this, subSize++);
-                }
-
-            }
-
-            if (this.height && this.textHeight) {
-
-                while (maxFontSize > subSize
-                    && this.textHeight + 4 > this.height
-                ) {
-                    textFieldResetUseCase(this);
-                    textFieldGetTextDataUseCase(this, subSize++);
-                }
-
-            }
-        }
-
-        textFieldResizeUseCase(this);
     }
 
     /**

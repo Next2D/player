@@ -1,6 +1,7 @@
 import type { TextField } from "../../TextField";
 import { execute as textFieldGetTextDataUseCase } from "./TextFieldGetTextDataUseCase";
 import { execute as textFieldResetUseCase } from "./TextFieldResetUseCase";
+import { execute as textFieldApplyChangesService } from "../service/TextFieldApplyChangesService";
 
 /**
  * @description 現在の TextField のエリア内に収まる最大のフォントサイズを計算し、描画情報を生成します
@@ -42,4 +43,7 @@ export const execute = (text_field: TextField): void =>
         }
 
     }
+
+    // Apply changes
+    textFieldApplyChangesService(text_field);
 };
