@@ -1,6 +1,31 @@
 import type { IRGBA } from "./interface/IRGBA";
 
 /**
+ * @description テキスト変更用の TextArea Element(hidden)
+ *              TextArea Element(hidden) for changing text
+ *
+ * @type {HTMLTextAreaElement}
+ * @protected
+ */
+export const $textArea: HTMLTextAreaElement = document.createElement("textarea") as HTMLTextAreaElement;
+
+let style = "";
+style += "position: fixed;";
+style += "top: 0;";
+style += "left: 0;";
+style += "font-size: 16px;";
+style += "border: 0;";
+style += "resize: none;";
+style += "opacity: 0;";
+style += "z-index: -1;";
+style += "pointer-events: none;";
+$textArea.setAttribute("style", style);
+
+$textArea.tabIndex = -1;
+
+
+
+/**
  * @type {HTMLCanvasElement}
  * @private
 */
@@ -116,4 +141,35 @@ export const $clamp = (
     return isNaN(number) && default_value !== null
         ? default_value
         : Math.min(Math.max(min, isNaN(number) ? 0 : number), max);
+};
+
+/**
+ * @type {NodeJS.Timeout}
+ * @private
+ */
+let $timerId: NodeJS.Timeout;
+
+/**
+ * @description テキスト点滅のタイマーIDを返却
+ *              Returns the timer ID for text blinking
+ * 
+ * @return {NodeJS.Timeout}
+ * @protected
+ */
+export const $getBlinkingTimerId = (): NodeJS.Timeout =>
+{
+    return $timerId;
+};
+
+/**
+ * @description テキスト点滅のタイマーIDをセット
+ *              Set the timer ID for text blinking
+ * 
+ * @param  {NodeJS.Timeout} timer_id
+ * @return {void}
+ * @protected
+ */
+export const $setBlinkingTimerId = (timer_id: NodeJS.Timeout): void =>
+{
+    $timerId = timer_id;
 };

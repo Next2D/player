@@ -10,6 +10,7 @@ import { execute as textFieldGetTextDataUseCase } from "./TextField/usecase/Text
 import { execute as textFieldResetUseCase } from "./TextField/usecase/TextFieldResetUseCase";
 import { execute as textFieldReloadUseCase } from "./TextField/usecase/TextFieldReloadUseCase";
 import { execute as textFieldUpdateStopIndexUseCase } from "./TextField/usecase/TextFieldUpdateStopIndexUseCase";
+import { execute as textFieldSetFocusUseCase } from "./TextField/usecase/TextFieldSetFocusUseCase";
 import {
     $clamp,
     $toColorInt
@@ -148,6 +149,68 @@ export class TextField extends InteractiveObject
      */
     public yScrollShape: Shape | null;
 
+    /**
+     * @description テキストフィールドの点滅線の表示・非表示を制御します。
+     *              Controls the visibility of the text field's blinking line.
+     * 
+     * @member {boolean}
+     * @default false
+     * @public
+     */
+    public focusVisible: boolean;
+
+    /**
+     * @description テキストフィールドのフォーカス位置のインデックス
+     *              Index of the focus position of the text field
+     * 
+     * @member {number}
+     * @default -1
+     * @public
+     */
+    public focusIndex: number;
+
+    /**
+     * @description テキストフィールドの選択位置のインデックス
+     *              Index of the selected position of the text field
+     * 
+     * @member {number}
+     * @default -1
+     * @public
+     */
+    public selectIndex: number;
+
+    /**
+     * @description ユーザーが入力するときに、テキストフィールドに入力できる最大の文字数です。
+     *              The maximum number of characters that the text field can contain,
+     *              as entered by a user.
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    public maxChars: number;
+
+    /**
+     * @description ユーザーがテキストフィールドに入力できる文字のセットを指定します。
+     *              Indicates the set of characters that a user can enter into the text field.
+     *
+     * @member {string}
+     * @default null
+     * @public
+     */
+    public restrict: string;
+
+    /**
+     * @description テキストフィールドのタイプです。
+     *              The type of the text field.
+     *
+     * @member {string}
+     * @default TextFieldType.STATIC
+     * @public
+     */
+    public type: ITextFieldType;
+
+
     private _$background: boolean;
     private _$backgroundColor: number;
     private _$border: boolean;
@@ -158,19 +221,12 @@ export class TextField extends InteractiveObject
     private _$wordWrap: boolean;
     private _$scrollX: number;
     private _$scrollY: number;
-    private _$maxChars: number;
     private _$defaultTextFormat: TextFormat;
     private _$rawHtmlText: string;
     private _$textFormats: TextFormat[] | null;
-    private _$restrict: string;
     private _$autoSize: ITextFieldAutoSize;
     private _$autoFontSize: boolean;
-    private _$type: ITextFieldType;
     private _$focus: boolean;
-    private _$focusVisible: boolean;
-    private _$timerId: number;
-    private _$focusIndex: number;
-    private _$selectIndex: number;
     private _$copyText: string;
     private _$thickness: number;
     private _$thicknessColor: number;
@@ -270,9 +326,9 @@ export class TextField extends InteractiveObject
         /**
          * @type {number}
          * @default 0
-         * @private
+         * @public
          */
-        this._$maxChars = 0;
+        this.maxChars = 0;
 
         /**
          * @type {number}
@@ -333,7 +389,7 @@ export class TextField extends InteractiveObject
          * @default null
          * @private
          */
-        this._$restrict = "";
+        this.restrict = "";
 
         /**
          * @type {boolean}
@@ -361,28 +417,21 @@ export class TextField extends InteractiveObject
          * @default true
          * @private
          */
-        this._$focusVisible = false;
+        this.focusVisible = false;
 
         /**
          * @type {number}
          * @default -1
-         * @private
+         * @public
          */
-        this._$timerId = -1;
+        this.focusIndex = -1;
 
         /**
          * @type {number}
          * @default -1
-         * @private
+         * @public
          */
-        this._$focusIndex = -1;
-
-        /**
-         * @type {number}
-         * @default -1
-         * @private
-         */
-        this._$selectIndex = -1;
+        this.selectIndex = -1;
 
         /**
          * @type {boolean}
@@ -393,7 +442,7 @@ export class TextField extends InteractiveObject
 
         /**
          * @type {Shape}
-         * @protected
+         * @public
          */
         this.xScrollShape = new Shape();
         this
@@ -408,7 +457,7 @@ export class TextField extends InteractiveObject
 
         /**
          * @type {Shape}
-         * @protected
+         * @public
          */
         this.yScrollShape = new Shape();
         this
@@ -423,10 +472,10 @@ export class TextField extends InteractiveObject
 
         /**
          * @type {string}
-         * @default null
-         * @private
+         * @default "static"
+         * @public
          */
-        this._$type = "static";
+        this.type = "static";
 
         /**
          * @type {boolean}
@@ -703,33 +752,15 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        if (this._$type !== "input") {
+        if (this.type !== "input") {
             return ;
         }
 
         this._$focus = !!focus;
-
-        const name = this._$focus
-            ? FocusEvent.FOCUS_IN
-            : FocusEvent.FOCUS_OUT;
-
-        if (this.willTrigger(name)) {
-            this.dispatchEvent(new FocusEvent(name));
-        }
-
-        $textArea.value = "";
-        if (this._$focus) {
-            $textArea.focus();
-        } else {
-            this._$focusIndex   = -1;
-            this._$selectIndex  = -1;
-            this._$focusVisible = false;
-            $clearTimeout(this._$timerId);
-            $textArea.blur();
-        }
-
-        this._$doChanged();
-        $doUpdated();
+    
+        textFieldSetFocusUseCase(
+            this, this._$focus ? FocusEvent.FOCUS_IN : FocusEvent.FOCUS_OUT
+        );
     }
 
     /**
@@ -778,24 +809,6 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @description ユーザーが入力するときに、テキストフィールドに入力できる最大の文字数です。
-     *              The maximum number of characters that the text field can contain,
-     *              as entered by a user.
-     *
-     * @member {number}
-     * @default 0
-     * @public
-     */
-    get maxChars (): number
-    {
-        return this._$maxChars;
-    }
-    set maxChars (max_chars: number)
-    {
-        this._$maxChars = max_chars | 0;
-    }
-
-    /**
      * @description フィールドが複数行テキストフィールドであるかどうかを示します。
      *              Indicates whether field is a multiline text field.
      *
@@ -827,36 +840,6 @@ export class TextField extends InteractiveObject
     {
         const textData = textFieldGetTextDataUseCase(this);
         return textData.lineTable.length;
-    }
-
-    /**
-     * @description ユーザーがテキストフィールドに入力できる文字のセットを指定します。
-     *              Indicates the set of characters that a user can enter into the text field.
-     *
-     * @member {string}
-     * @default null
-     * @public
-     */
-    get restrict (): string
-    {
-        return this._$restrict;
-    }
-    set restrict (restrict: string)
-    {
-        this._$restrict = `${restrict}`;
-    }
-
-    /**
-     * @description テキストの選択位置を返す
-     *              Returns the text selection position
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get selectIndex (): number
-    {
-        return this._$selectIndex;
     }
 
     /**
@@ -946,6 +929,7 @@ export class TextField extends InteractiveObject
             }
         }
     }
+
     /**
      * @description テキストフィールドのスクロール垂直位置です。
      *              The scroll vertical position of the text field.
@@ -1195,23 +1179,6 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @description テキストフィールドのタイプです。
-     *              The type of the text field.
-     *
-     * @member {string}
-     * @default TextFieldType.STATIC
-     * @public
-     */
-    get type (): ITextFieldType
-    {
-        return this._$type;
-    }
-    set type (type: ITextFieldType)
-    {
-        this._$type = type;
-    }
-
-    /**
      * @description テキストフィールドのテキストを折り返すかどうかを示すブール値です。
      *              A Boolean value that indicates whether the text field has word wrap.
      *
@@ -1346,7 +1313,7 @@ export class TextField extends InteractiveObject
      */
     appendText (new_text: string): void
     {
-        const currentText: string = this.text;
+        const currentText = this.text;
         this.text = currentText + `${new_text}`;
     }
 
@@ -1443,8 +1410,8 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        this._$selectIndex = 1;
-        this._$focusIndex  = textData.textTable.length;
+        this.selectIndex = 1;
+        this.focusIndex  = textData.textTable.length;
     }
 
     /**
@@ -1454,13 +1421,13 @@ export class TextField extends InteractiveObject
      */
     copy (): void
     {
-        if (this._$focusIndex === -1 || this._$selectIndex === -1) {
+        if (this.focusIndex === -1 || this.selectIndex === -1) {
             return ;
         }
 
         let text: string = "";
-        const minIndex: number = Math.min(this._$focusIndex, this._$selectIndex);
-        const maxIndex: number = Math.max(this._$focusIndex, this._$selectIndex) + 1;
+        const minIndex: number = Math.min(this.focusIndex, this.selectIndex);
+        const maxIndex: number = Math.max(this.focusIndex, this.selectIndex) + 1;
 
         const textData: TextData = textFieldGetTextDataUseCase(this);
         for (let idx = minIndex; idx < maxIndex; ++idx) {
@@ -1492,7 +1459,7 @@ export class TextField extends InteractiveObject
      */
     paste (): void
     {
-        if (!this._$copyText || this._$focusIndex === -1) {
+        if (!this._$copyText || this.focusIndex === -1) {
             return ;
         }
 
@@ -1506,7 +1473,7 @@ export class TextField extends InteractiveObject
      */
     arrowUp (): void
     {
-        if (this._$focusIndex === -1) {
+        if (this.focusIndex === -1) {
             return ;
         }
 
@@ -1515,9 +1482,9 @@ export class TextField extends InteractiveObject
             return ;
         }
 
-        const index = textData.textTable.length === this._$focusIndex
-            ? this._$focusIndex - 1
-            : this._$focusIndex;
+        const index = textData.textTable.length === this.focusIndex
+            ? this.focusIndex - 1
+            : this.focusIndex;
 
         const textObject: ITextObject = textData.textTable[index];
         if (!textObject.line) {
@@ -1532,7 +1499,7 @@ export class TextField extends InteractiveObject
         for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
 
             const textObject: ITextObject = textData.textTable[idx];
-            if (this._$focusIndex === idx) {
+            if (this.focusIndex === idx) {
                 if (textObject.mode === "text") {
                     currentWidth +=  textObject.w / 2;
                 }
@@ -1556,8 +1523,8 @@ export class TextField extends InteractiveObject
 
             const textObject: ITextObject = textData.textTable[idx];
             if (textObject.line > targetLine) {
-                this._$focusIndex  = textObject.mode === "text" ? idx - 1 : idx;
-                this._$selectIndex = -1;
+                this.focusIndex  = textObject.mode === "text" ? idx - 1 : idx;
+                this.selectIndex = -1;
                 $clearTimeout(this._$timerId);
                 this._$blinking();
                 return ;
@@ -1569,8 +1536,8 @@ export class TextField extends InteractiveObject
 
             textWidth += textObject.w;
             if (textWidth > currentWidth) {
-                this._$focusIndex  = idx;
-                this._$selectIndex = -1;
+                this.focusIndex  = idx;
+                this.selectIndex = -1;
                 $clearTimeout(this._$timerId);
                 this._$blinking();
                 return ;
@@ -1585,7 +1552,7 @@ export class TextField extends InteractiveObject
      */
     arrowDown (): void
     {
-        if (this._$focusIndex === -1) {
+        if (this.focusIndex === -1) {
             return ;
         }
 
@@ -1836,7 +1803,7 @@ export class TextField extends InteractiveObject
      */
     compositionStart (): void
     {
-        this._$compositionStartIndex = this._$focusIndex;
+        this._$compositionStartIndex = this.focusIndex;
     }
 
     /**
@@ -2120,22 +2087,6 @@ export class TextField extends InteractiveObject
      * @method
      * @private
      */
-    _$reset (): void
-    {
-        this._$textData = null;
-
-        this._$doChanged();
-        $doUpdated();
-
-        // cache clear
-        $cacheStore.removeCache(this._$instanceId);
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
     _$blinking (): void
     {
         this._$focusVisible = !this._$focusVisible;
@@ -2159,7 +2110,7 @@ export class TextField extends InteractiveObject
      */
     _$setIndex (stage_x: number, stage_y: number): void
     {
-        if (this._$type !== "input") {
+        if (this.type !== "input") {
             return ;
         }
 
@@ -2492,23 +2443,23 @@ export class TextField extends InteractiveObject
         }
 
         // setup
-        this._$type           = character.inputType;
+        this.type           = character.inputType;
         this._$multiline      = !!character.multiline;
         this._$wordWrap       = !!character.wordWrap;
         this._$border         = !!character.border;
-        this._$scrollEnabled  = !!character.scroll;
+        this.scrollEnabled  = !!character.scroll;
         this._$thickness      = character.thickness | 0;
         this._$thicknessColor = character.thicknessColor | 0;
 
         // bounds
-        this._$bounds.xMin       = character.originBounds.xMin;
-        this._$bounds.xMax       = character.originBounds.xMax;
-        this._$bounds.yMin       = character.originBounds.yMin;
-        this._$bounds.yMax       = character.originBounds.yMax;
-        this._$originBounds.xMin = character.originBounds.xMin;
-        this._$originBounds.xMax = character.originBounds.xMax;
-        this._$originBounds.yMin = character.originBounds.yMin;
-        this._$originBounds.yMax = character.originBounds.yMax;
+        this.xMin        = character.originBounds.xMin;
+        this.xMax        = character.originBounds.xMax;
+        this.yMin        = character.originBounds.yMin;
+        this.yMax        = character.originBounds.yMax;
+        this.bounds.xMin = character.originBounds.xMin;
+        this.bounds.xMax = character.originBounds.xMax;
+        this.bounds.yMin = character.originBounds.yMin;
+        this.bounds.yMax = character.originBounds.yMax;
 
         switch (character.autoSize) {
 

@@ -1,7 +1,6 @@
 import { execute } from "./TextFieldResizeAutoFontSizeUseCase";
 import { TextField } from "../../TextField";
 import { describe, expect, it } from "vitest";
-import { TextData } from "../../TextData";
 
 describe("TextFieldResizeAutoFontSizeUseCase.js test", () =>
 {

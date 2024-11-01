@@ -16,15 +16,13 @@ import { execute as textFieldApplyChangesService } from "../service/TextFieldApp
 export const execute = (text_field: TextField, index: number): Point | null =>
 {
     const textData = textFieldGetTextDataUseCase(text_field);
-    if (!textData.textTable.length) {
+    if (2 > textData.textTable.length) {
         return null;
     }
 
-    const point = new Point();
-
     let currentTextWidth = 2;
     let targetIndex = 0;
-    for (let idx = 0; idx < textData.textTable.length; ++idx) {
+    for (let idx = 1; idx < textData.textTable.length; ++idx) {
 
         const textObject = textData.textTable[idx];
 
@@ -41,8 +39,6 @@ export const execute = (text_field: TextField, index: number): Point | null =>
 
         if (textObject.mode === "break") {
             countUp = true;
-            // reset
-            point.x = 0;
             currentTextWidth = 2;
         }
 
@@ -54,9 +50,10 @@ export const execute = (text_field: TextField, index: number): Point | null =>
 
     const textObject = textData.textTable[targetIndex];
     if (!textObject) {
-        return point;
+        return null;
     }
 
+    const point = new Point();
     const line = textObject.line;
 
     let currentTextHeight = 0;

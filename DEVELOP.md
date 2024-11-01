@@ -3,7 +3,7 @@
 ## Version 
 Middleware required for development and supported versions
 ```
-node >= v20.x
+node >= v22.x
 ```
 
 ## Initial Settings
