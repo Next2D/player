@@ -1212,20 +1212,17 @@ export class TextField extends InteractiveObject
     set width (width: number)
     {
         width = +width;
-        if (!$isNaN(width) && width > -1) {
-
-            const bounds: IBounds = this._$getBounds(null);
-
-            const xMin: number = Math.abs(bounds.xMin);
-            this._$originBounds.xMax = width + xMin;
-            this._$originBounds.xMin = xMin;
-            this._$bounds.xMax = this._$originBounds.xMax;
-            this._$bounds.xMin = this._$originBounds.xMin;
-
-            super.width = width;
-
-            textFieldReloadUseCase(this);
+        if (!isNaN(width) && 0 > width) {
+            return ;
         }
+
+        const xMax = width + this.bounds.xMin;
+        if (xMax === this.bounds.xMax) {
+            return ;
+        }
+
+        this.bounds.xMax = xMax;
+        textFieldReloadUseCase(this);
     }
 
     /**

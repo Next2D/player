@@ -32,6 +32,7 @@ import { execute as displayObjectSetXUseCase } from "./DisplayObject/usecase/Dis
 import { execute as displayObjectGetYUseCase } from "./DisplayObject/usecase/DisplayObjectGetYUseCase";
 import { execute as displayObjectSetYUseCase } from "./DisplayObject/usecase/DisplayObjectSetYUseCase";
 import { execute as displayObjectGetWidthUseCase } from "./DisplayObject/usecase/DisplayObjectGetWidthUseCase";
+import { execute as displayObjectSetWidthUseCase } from "./DisplayObject/usecase/DisplayObjectSetWidthUseCase";
 import { execute as displayObjectLocalToGlobalService } from "./DisplayObject/service/DisplayObjectLocalToGlobalService";
 import { execute as displayObjectGlobalToLocalService } from "./DisplayObject/service/DisplayObjectGlobalToLocalService";
 import {
@@ -774,42 +775,10 @@ export class DisplayObject extends EventDispatcher
     {
         return displayObjectGetWidthUseCase(this);
     }
-    // set width (width: number)
-    // {
-    //     width = +width;
-    //     if (!$isNaN(width) && width > -1) {
-
-    //         const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-    //             ? this._$getBounds() as BoundsImpl
-    //             : $getBoundsObject();
-
-    //         const rotation: number = this.rotation;
-    //         const bounds = rotation
-    //             ? $boundsMatrix(baseBounds, this._$transform._$rawMatrix())
-    //             : baseBounds;
-
-    //         if (rotation) {
-    //             $poolBoundsObject(baseBounds);
-    //         }
-
-    //         const exWidth = $Math.abs(bounds.xMax - bounds.xMin);
-    //         $poolBoundsObject(bounds);
-
-    //         switch (true) {
-
-    //             case exWidth === 0:
-    //             case exWidth === $Infinity:
-    //             case exWidth === -$Infinity:
-    //                 this.scaleX = 0;
-    //                 break;
-
-    //             default:
-    //                 this.scaleX = width / exWidth;
-    //                 break;
-
-    //         }
-    //     }
-    // }
+    set width (width: number)
+    {
+        displayObjectSetWidthUseCase(this, width);
+    }
 
     /**
      * @description 親 DisplayObjectContainer のローカル座標を基準にした

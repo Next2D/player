@@ -2,7 +2,6 @@ import type { DisplayObject } from "../../DisplayObject";
 import { $poolArray } from "../../DisplayObjectUtil";
 import { execute as displayObjectGetCalcBoundsUseCase } from "./DisplayObjectGetCalcBoundsUseCase";
 
-
 /**
  * @description DisplayObjectのy軸方向の拡大率を返却
  *              

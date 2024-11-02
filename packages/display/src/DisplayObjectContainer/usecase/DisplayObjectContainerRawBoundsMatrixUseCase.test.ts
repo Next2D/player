@@ -1,4 +1,4 @@
-import { execute } from "./DisplayObjectContainerCalcBoundsMatrixUseCase";
+import { execute } from "./DisplayObjectContainerRawBoundsMatrixUseCase";
 import { Shape } from "../../Shape";
 import { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import { Matrix } from "@next2d/geom";
@@ -6,7 +6,7 @@ import { TextField } from "@next2d/text";
 import { Video } from "@next2d/media";
 import { describe, expect, it } from "vitest";
 
-describe("DisplayObjectContainerCalcBoundsMatrixUseCase.js test", () =>
+describe("DisplayObjectContainerRawBoundsMatrixUseCase.js test", () =>
 {
     it("execute test case1", () =>
     {
@@ -16,7 +16,7 @@ describe("DisplayObjectContainerCalcBoundsMatrixUseCase.js test", () =>
 
         const shape = new Shape();
         shape.$matrix = new Matrix();
-        shape.$matrix.scale(1.1, 1.2);
+        shape.$matrix.scale(1.2, 1.3);
 
         shape.graphics.xMin = -120;
         shape.graphics.xMax = 20;
@@ -31,9 +31,9 @@ describe("DisplayObjectContainerCalcBoundsMatrixUseCase.js test", () =>
         container.addChild(video);
 
         const bounds = execute(container);
-        expect(bounds[0]).toBe(-264.0000057220459);
-        expect(bounds[1]).toBe(-432.0000171661377);
-        expect(bounds[2]).toBe(200);
-        expect(bounds[3]).toBe(900);
+        expect(bounds[0]).toBe(-144.0000057220459);
+        expect(bounds[1]).toBe(-155.9999942779541);
+        expect(bounds[2]).toBe(100);
+        expect(bounds[3]).toBe(300);
     });
 });

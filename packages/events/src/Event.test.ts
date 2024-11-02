@@ -53,4 +53,9 @@ describe("Event.js property test", () =>
     {
         expect(Event.RESIZE).toBe("resize");
     });
+
+    it("SCROLL test", () =>
+    {
+        expect(Event.SCROLL).toBe("scroll");
+    });
 });

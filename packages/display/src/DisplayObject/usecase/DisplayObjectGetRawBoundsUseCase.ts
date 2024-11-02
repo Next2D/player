@@ -3,15 +3,15 @@ import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { Shape } from "../../Shape";
 import type { Video } from "@next2d/media";
 import type { TextField } from "@next2d/text";
+import { execute as displayObjectContainerRawBoundsMatrixUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerRawBoundsMatrixUseCase";
+import { execute as shapeGetRawBoundsService } from "../../Shape/service/ShapeGetRawBoundsService";
+import { execute as textFieldGetRawBoundsService } from "../../TextField/service/TextFieldGetRawBoundsService";
+import { execute as videoGetRawBoundsService } from "../../Video/service/VideoGetRawBoundsService";
 import { $getArray } from "../../DisplayObjectUtil";
-import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeCalcBoundsMatrixUseCase";
-import { execute as videoCalcBoundsMatrixUseCase } from "../../Video/usecase/VideoCalcBoundsMatrixUseCase";
-import { execute as textFieldCalcBoundsMatrixUseCase } from "../../TextField/usecase/TextFieldCalcBoundsMatrixUseCase";
-import { execute as displayObjectContainerCalcBoundsMatrixUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerCalcBoundsMatrixUseCase";
 
 /**
- * @description DisplayObject のローカルバウンディングボックスを取得します。
- *              Get the local bounding box of the DisplayObject.
+ * @description matrixを含まないバウンディングボックスを返却
+ *              Return bounding box without matrix
  * 
  * @param  {DisplayObject} display_object
  * @return {number[]}
@@ -23,22 +23,22 @@ export const execute = <D extends DisplayObject>(display_object: D): number[] =>
     switch (true) {
 
         case display_object.isContainerEnabled:
-            return displayObjectContainerCalcBoundsMatrixUseCase(
+            return displayObjectContainerRawBoundsMatrixUseCase(
                 display_object as unknown as DisplayObjectContainer
             );
 
         case display_object.isShape:
-            return shapeCalcBoundsMatrixUseCase(
+            return shapeGetRawBoundsService(
                 display_object as unknown as Shape
             );
 
         case display_object.isText:
-            return textFieldCalcBoundsMatrixUseCase(
+            return textFieldGetRawBoundsService(
                 display_object as unknown as TextField
             );
 
         case display_object.isVideo:
-            return videoCalcBoundsMatrixUseCase(
+            return videoGetRawBoundsService(
                 display_object as unknown as Video
             );
 

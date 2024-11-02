@@ -284,6 +284,19 @@ export class Event
     }
 
     /**
+     * @description スクロール位置が変更されたときに発生します。
+     *              Occurs when the scroll position changes.
+     * 
+     * @return {string}
+     * @const
+     * @static
+     */
+    static get SCROLL (): string
+    {
+        return "scroll";
+    }
+
+    /**
      * @description イベントフローの現在のノードおよび後続するノードで、イベントリスナーが処理されないようにします。
      *              Prevents processing of any event listeners in the current node and any subsequent nodes in the event flow.
      *
