@@ -39,8 +39,8 @@ export const execute = (text_field: TextField): void =>
 
     const textFormats: TextFormat[] = [];
 
-    let newText: string = "";
-    for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+    let newText = "";
+    for (let idx = 1; idx < textData.textTable.length; ++idx) {
 
         const textObject = textData.textTable[idx];
         if (!textObject) {
@@ -80,8 +80,6 @@ export const execute = (text_field: TextField): void =>
     if (!newText) {
         // reset
         text_field.text = "";
-        text_field.$scrollX   = 0;
-        text_field.$scrollY   = 0;
         text_field.focusIndex = 0;
     } else {
 
@@ -90,6 +88,8 @@ export const execute = (text_field: TextField): void =>
 
         // fixed logic
         text_field.$textFormats = textFormats;
+
+        // fixed logic
         text_field.text = newText;
 
         if (text_field.scrollX > 0) {
