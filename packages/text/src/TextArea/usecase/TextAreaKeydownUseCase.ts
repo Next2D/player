@@ -3,6 +3,9 @@ import { $getSelectedTextField } from "../../TextUtil";
 import { execute as textFieldDeleteTextUseCase } from "../../TextField/usecase/TextFieldDeleteTextUseCase";
 import { execute as textFieldInsertTextUseCase } from "../../TextField/usecase/TextFieldInsertTextUseCase";
 import { execute as textFieldArrowUpUseCase } from "../../TextField/usecase/TextFieldArrowUpUseCase";
+import { execute as textFieldArrowLeftUseCase } from "../../TextField/usecase/TextFieldArrowLeftUseCase";
+import { execute as textFieldArrowRightUseCase } from "../../TextField/usecase/TextFieldArrowRightUseCase";
+import { execute as textFieldArrowDownUseCase } from "../../TextField/usecase/TextFieldArrowDownUseCase";
 
 /**
  * @description キーダウンイベントを処理します。
@@ -32,9 +35,11 @@ export const execute = (event: KeyboardEvent): void =>
             break;
 
         case "ArrowLeft":
+            textFieldArrowLeftUseCase(textField);
             break;
 
         case "ArrowRight":
+            textFieldArrowRightUseCase(textField);
             break;
 
         case "ArrowUp":
@@ -42,6 +47,7 @@ export const execute = (event: KeyboardEvent): void =>
             break;
 
         case "ArrowDown":
+            textFieldArrowDownUseCase(textField);
             break;
 
         case "a":

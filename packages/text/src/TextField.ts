@@ -1,8 +1,8 @@
 import type { IBounds } from "./interface/IBounds";
 import type { ITextFieldAutoSize } from "./interface/ITextFieldAutoSize";
 import type { ITextFieldType } from "./interface/ITextFieldType";
-import type { ITextObject } from "./interface/ITextObject";
 import { FocusEvent } from "@next2d/events";
+import { Rectangle } from "@next2d/geom";
 import { TextData } from "./TextData";
 import { TextFormat } from "./TextFormat";
 import { execute as textFormatSetDefaultService } from "./TextFormat/service/TextFormatSetDefaultService";
@@ -27,10 +27,6 @@ import {
     InteractiveObject,
     Shape
 } from "@next2d/display";
-import {
-    Rectangle,
-    Point
-} from "@next2d/geom";
 
 /**
  * @description TextField クラスは、テキストの表示と入力用の表示オブジェクトを作成するために使用されます。
@@ -1216,507 +1212,328 @@ export class TextField extends InteractiveObject
         textFieldInsertTextUseCase(this, this._$copyText);
     }
 
-    /**
-     * @return {void}
-     * @method
-     * @public
-     */
-    arrowDown (): void
-    {
-        if (this.focusIndex === -1) {
-            return ;
-        }
-
-        const textData: TextData = textFieldGetTextDataUseCase(this);
-        if (!textData.textTable.length) {
-            return ;
-        }
-
-        const textObject: ITextObject = textData.textTable[this._$focusIndex];
-        const line: number = textObject.mode === "text"
-            ? textObject.line
-            : textObject.line - 1;
-
-        if (line === textData.lineTable.length - 1) {
-            return ;
-        }
-
-        let currentWidth: number = 2;
-        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
-
-            const textObject: ITextObject = textData.textTable[idx];
-            if (this._$focusIndex === idx) {
-                if (textObject.mode === "text") {
-                    currentWidth +=  textObject.w / 2;
-                }
-                break;
-            }
-
-            if (textObject.line > line) {
-                break;
-            }
-
-            if (textObject.line !== line || textObject.mode !== "text") {
-                continue;
-            }
-
-            currentWidth += textObject.w;
-        }
-
-        let textWidth: number = 2;
-        const targetLine: number = line + 1;
-        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
-
-            const textObject: ITextObject = textData.textTable[idx];
-            if (textObject.line > targetLine) {
-                this._$focusIndex  = textObject.mode === "text" ? idx - 1 : idx;
-                this._$selectIndex = -1;
-                $clearTimeout(this._$timerId);
-                this._$blinking();
-                return ;
-            }
-
-            if (textObject.line !== targetLine || textObject.mode !== "text") {
-                continue;
-            }
-
-            textWidth += textObject.w;
-            if (textWidth > currentWidth) {
-                this._$focusIndex  = idx;
-                this._$selectIndex = -1;
-                $clearTimeout(this._$timerId);
-                this._$blinking();
-                return ;
-            }
-        }
-
-        this._$focusIndex  = textData.textTable.length;
-        this._$selectIndex = -1;
-        $clearTimeout(this._$timerId);
-        this._$blinking();
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @public
-     */
-    arrowLeft (): void
-    {
-        if (!this._$focusIndex) {
-            return ;
-        }
-
-        const textData: TextData = textFieldGetTextDataUseCase(this);
-        if (textData.textTable.length && this._$focusIndex < 2) {
-            this._$focusIndex = 1;
-            return ;
-        }
-
-        this._$focusIndex--;
-        this._$selectIndex = -1;
-        $clearTimeout(this._$timerId);
-        this._$blinking();
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @public
-     */
-    arrowRight (): void
-    {
-        const textData: TextData = textFieldGetTextDataUseCase(this);
-        if (textData.textTable.length === this._$focusIndex) {
-            return ;
-        }
-
-        this._$focusIndex++;
-        this._$selectIndex = -1;
-        $clearTimeout(this._$timerId);
-        this._$blinking();
-    }
-
-    /**
-     * @param  {number} stage_x
-     * @param  {number} stage_y
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$setIndex (stage_x: number, stage_y: number): void
-    {
-        if (this.type !== "input") {
-            return ;
-        }
-
-        const textData: TextData = textFieldGetTextDataUseCase(this);
-        if (!textData.textTable.length) {
-            this.focusIndex  = 0;
-            this.selectIndex = -1;
-            this.setBlinkingTimer();
-            return ;
-        }
-
-        const width: number  = this.width;
-        const height: number = this.height;
-
-        let tx: number = 0;
-        if (this._$scrollX > 0) {
-            tx += this._$scrollX * (this.textWidth - width) / width;
-        }
-
-        let ty: number = 0;
-        if (this._$scrollY) {
-            ty += this._$scrollY * (this.textHeight - height) / height;
-        }
-
-        const eventType: string  = $getEventType();
-        const point: Point = this.globalToLocal(new Point(stage_x, stage_y));
-        const x: number = point.x + tx;
-        const y: number = point.y + ty;
-
-        let w: number    = 2;
-        let yMin: number = 2;
-        let yMax: number = yMin + textData.heightTable[0];
-        for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
-
-            const textObject: ITextObject = textData.textTable[idx];
-
-            switch (textObject.mode) {
-
-                case "break":
-                case "wrap":
-                    if (x > w && y > yMin
-                        && yMax > y
-                        && width > x
-                    ) {
-                        const index: number = idx;
-                        switch (eventType) {
-
-                            case $TOUCH_MOVE:
-                            case $MOUSE_MOVE:
-                                if (this._$selectIndex !== index && this._$focusIndex === index) {
-                                    this._$selectIndex = index;
-
-                                    if (this._$focusIndex !== index) {
-                                        this._$focusVisible = false;
-                                        $clearTimeout(this._$timerId);
-
-                                        this._$doChanged();
-                                        $doUpdated();
-                                    }
-                                }
-                                break;
-
-                            default:
-                                if (this._$focusIndex !== index || this._$selectIndex > -1) {
-                                    this._$focusIndex  = index;
-                                    this._$selectIndex = -1;
-                                    this.setBlinkingTimer();
-                                }
-                                break;
-                        }
-
-                        return ;
-                    }
-
-                    w = 2;
-                    yMin += textData.heightTable[textObject.line - 1];
-                    yMax = yMin + textData.heightTable[textObject.line];
-                    break;
-
-                case "text":
-                    if (idx === textData.textTable.length - 1
-                        && x > w && y > yMin && yMax > y
-                        && width > x
-                    ) {
-
-                        const index: number = textData.textTable.length;
-                        switch (eventType) {
-
-                            case $TOUCH_MOVE:
-                            case $MOUSE_MOVE:
-                                if (this._$selectIndex !== index) {
-                                    this._$selectIndex = index;
-
-                                    if (this._$focusIndex !== index) {
-                                        this._$focusVisible = false;
-                                        $clearTimeout(this._$timerId);
-
-                                        this._$doChanged();
-                                        $doUpdated();
-                                    }
-                                }
-                                break;
-
-                            default:
-                                if (this._$focusIndex !== index || this._$selectIndex > -1) {
-                                    this._$focusIndex  = index;
-                                    this._$selectIndex = -1;
-                                    this.setBlinkingTimer();
-                                }
-                                break;
-
-                        }
-
-                        return ;
-                    }
-
-                    if (x > w && y > yMin
-                        && yMax > y
-                        && w + textObject.w > x
-                    ) {
-
-                        let index: number = idx;
-                        switch (eventType) {
-                            case $TOUCH_MOVE:
-                            case $MOUSE_MOVE:
-
-                                if (this._$focusIndex > index) { // left
-                                    if (this._$focusIndex === index + 1) {
-                                        if (w + textObject.w / 2 < x) {
-                                            index = -1;
-                                        }
-                                    } else {
-                                        if (w + textObject.w / 2 < x) {
-                                            index += 1;
-                                        }
-                                    }
-                                } else { // right
-                                    if (this._$focusIndex === index) {
-                                        if (w + textObject.w / 2 > x) {
-                                            index = -1;
-                                        }
-                                    } else {
-                                        if (w + textObject.w / 2 > x) {
-                                            index -= 1;
-                                        }
-                                    }
-                                }
-
-                                if (this._$selectIndex !== index) {
-                                    this._$selectIndex = index;
-
-                                    if (this._$selectIndex > -1) {
-                                        this._$focusVisible = false;
-                                        $clearTimeout(this._$timerId);
-                                    }
-
-                                    this._$doChanged();
-                                    $doUpdated();
-                                }
-                                break;
-
-                            default:
-
-                                if (w + textObject.w / 2 < x) {
-                                    const textObject: ITextObject = textData.textTable[index + 1];
-                                    if (!textObject || textObject.mode === "text") {
-                                        index += 1;
-                                    }
-                                }
-
-                                if (this._$focusIndex !== index || this._$selectIndex > -1) {
-                                    this._$focusIndex  = index;
-                                    this._$selectIndex = -1;
-                                    this.setBlinkingTimer();
-                                }
-                                break;
-
-                        }
-                        return ;
-                    }
-
-                    w += textObject.w;
-                    break;
-
-                default:
-                    break;
-
-            }
-        }
-
-        switch (eventType) {
-
-            case $TOUCH_MOVE:
-            case $MOUSE_MOVE:
-                // reset
-                this._$focusIndex  = -1;
-                this._$selectIndex = -1;
-                break;
-
-            default:
-                this._$focusIndex  = textData.textTable.length;
-                this._$selectIndex = -1;
-                this.setBlinkingTimer();
-                break;
-
-        }
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    setBlinkingTimer (): void
-    {
-        this._$focusVisible = false;
-
-        this._$doChanged();
-        $doUpdated();
-
-        $clearTimeout(this._$timerId);
-        this._$timerId = +$setTimeout(() =>
-        {
-            this._$blinking();
-        }, 500);
-        this._$timerId |= 0;
-    }
-
-    /**
-     * @param  {object} text_object
-     * @param  {number} width
-     * @return {number}
-     * @method
-     * @private
-     */
-    _$getAlignOffset (text_object: ITextObject, width: number): number
-    {
-        // default
-        const textData = textFieldGetTextDataUseCase(this);
-        const lineWidth: number = textData.getLineWidth(text_object.line);
-
-        const textFormat: TextFormat = text_object.textFormat;
-
-        const leftMargin: number = textFormat.leftMargin || 0;
-        if (!this._$wordWrap && lineWidth > width) {
-            return Math.max(0, leftMargin);
-        }
-
-        const rightMargin: number = textFormat.rightMargin || 0;
-        if (textFormat.align === "center" // format CENTER
-            || this._$autoSize === "center" // autoSize CENTER
-        ) {
-            return Math.max(0, width / 2 - leftMargin - rightMargin - lineWidth / 2 - 2);
-        }
-
-        if (textFormat.align === "right" // format RIGHT
-            || this._$autoSize === "right" // autoSize RIGHT
-        ) {
-            return Math.max(0, width - leftMargin - lineWidth - rightMargin - 4);
-        }
-
-        // autoSize LEFT
-        // format LEFT
-        return Math.max(0, leftMargin);
-    }
-
-    /**
-     * @param  {object} character
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$buildCharacter (character: Character<TextCharacterImpl>): void
-    {
-        const textFormat = this._$defaultTextFormat;
-
-        textFormat.font          = character.font;
-        textFormat.size          = character.size | 0;
-        textFormat.align         = character.align;
-        textFormat.color         = character.color | 0;
-        textFormat.leading       = character.leading;
-        textFormat.letterSpacing = character.letterSpacing;
-        textFormat.leftMargin    = character.leftMargin;
-        textFormat.rightMargin   = character.rightMargin;
-
-        switch (character.fontType) {
-
-            case 1:
-                textFormat.bold = true;
-                break;
-
-            case 2:
-                textFormat.italic = true;
-                break;
-
-            case 3:
-                textFormat.bold   = true;
-                textFormat.italic = true;
-                break;
-
-        }
-
-        // setup
-        this.type           = character.inputType;
-        this._$multiline      = !!character.multiline;
-        this._$wordWrap       = !!character.wordWrap;
-        this._$border         = !!character.border;
-        this.scrollEnabled  = !!character.scroll;
-        this._$thickness      = character.thickness | 0;
-        this._$thicknessColor = character.thicknessColor | 0;
-
-        // bounds
-        this.xMin        = character.originBounds.xMin;
-        this.xMax        = character.originBounds.xMax;
-        this.yMin        = character.originBounds.yMin;
-        this.yMax        = character.originBounds.yMax;
-        this.bounds.xMin = character.originBounds.xMin;
-        this.bounds.xMax = character.originBounds.xMax;
-        this.bounds.yMin = character.originBounds.yMin;
-        this.bounds.yMax = character.originBounds.yMax;
-
-        switch (character.autoSize) {
-
-            case 1:
-                this.autoSize = character.align;
-                break;
-
-            case 2:
-                this.autoFontSize = true;
-                break;
-
-        }
-
-        this.text = character.text;
-
-        if ($rendererWorker && this._$stage) {
-            this._$createWorkerInstance();
-        }
-    }
-
-    /**
-     * @param  {object} character
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$sync (character: TextCharacterImpl): void
-    {
-        this._$buildCharacter(character);
-    }
-
-    /**
-     * @param  {object} tag
-     * @param  {DisplayObjectContainer} parent
-     * @return {object}
-     * @method
-     * @private
-     */
-    _$build (
-        tag: DictionaryTagImpl,
-        parent: ParentImpl<any>
-    ): TextCharacterImpl {
-
-        const character: TextCharacterImpl = this
-            ._$baseBuild<TextCharacterImpl>(tag, parent);
-
-        this._$buildCharacter(character);
-
-        return character;
-    }
+    // /**
+    //  * @param  {number} stage_x
+    //  * @param  {number} stage_y
+    //  * @return {void}
+    //  * @method
+    //  * @private
+    //  */
+    // _$setIndex (stage_x: number, stage_y: number): void
+    // {
+    //     if (this.type !== "input") {
+    //         return ;
+    //     }
+
+    //     const textData: TextData = textFieldGetTextDataUseCase(this);
+    //     if (!textData.textTable.length) {
+    //         this.focusIndex  = 0;
+    //         this.selectIndex = -1;
+    //         this.setBlinkingTimer();
+    //         return ;
+    //     }
+
+    //     const width: number  = this.width;
+    //     const height: number = this.height;
+
+    //     let tx: number = 0;
+    //     if (this._$scrollX > 0) {
+    //         tx += this._$scrollX * (this.textWidth - width) / width;
+    //     }
+
+    //     let ty: number = 0;
+    //     if (this._$scrollY) {
+    //         ty += this._$scrollY * (this.textHeight - height) / height;
+    //     }
+
+    //     const eventType: string  = $getEventType();
+    //     const point: Point = this.globalToLocal(new Point(stage_x, stage_y));
+    //     const x: number = point.x + tx;
+    //     const y: number = point.y + ty;
+
+    //     let w: number    = 2;
+    //     let yMin: number = 2;
+    //     let yMax: number = yMin + textData.heightTable[0];
+    //     for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
+
+    //         const textObject: ITextObject = textData.textTable[idx];
+
+    //         switch (textObject.mode) {
+
+    //             case "break":
+    //             case "wrap":
+    //                 if (x > w && y > yMin
+    //                     && yMax > y
+    //                     && width > x
+    //                 ) {
+    //                     const index: number = idx;
+    //                     switch (eventType) {
+
+    //                         case $TOUCH_MOVE:
+    //                         case $MOUSE_MOVE:
+    //                             if (this._$selectIndex !== index && this._$focusIndex === index) {
+    //                                 this._$selectIndex = index;
+
+    //                                 if (this._$focusIndex !== index) {
+    //                                     this._$focusVisible = false;
+    //                                     $clearTimeout(this._$timerId);
+
+    //                                     this._$doChanged();
+    //                                     $doUpdated();
+    //                                 }
+    //                             }
+    //                             break;
+
+    //                         default:
+    //                             if (this._$focusIndex !== index || this._$selectIndex > -1) {
+    //                                 this._$focusIndex  = index;
+    //                                 this._$selectIndex = -1;
+    //                                 this.setBlinkingTimer();
+    //                             }
+    //                             break;
+    //                     }
+
+    //                     return ;
+    //                 }
+
+    //                 w = 2;
+    //                 yMin += textData.heightTable[textObject.line - 1];
+    //                 yMax = yMin + textData.heightTable[textObject.line];
+    //                 break;
+
+    //             case "text":
+    //                 if (idx === textData.textTable.length - 1
+    //                     && x > w && y > yMin && yMax > y
+    //                     && width > x
+    //                 ) {
+
+    //                     const index: number = textData.textTable.length;
+    //                     switch (eventType) {
+
+    //                         case $TOUCH_MOVE:
+    //                         case $MOUSE_MOVE:
+    //                             if (this._$selectIndex !== index) {
+    //                                 this._$selectIndex = index;
+
+    //                                 if (this._$focusIndex !== index) {
+    //                                     this._$focusVisible = false;
+    //                                     $clearTimeout(this._$timerId);
+
+    //                                     this._$doChanged();
+    //                                     $doUpdated();
+    //                                 }
+    //                             }
+    //                             break;
+
+    //                         default:
+    //                             if (this._$focusIndex !== index || this._$selectIndex > -1) {
+    //                                 this._$focusIndex  = index;
+    //                                 this._$selectIndex = -1;
+    //                                 this.setBlinkingTimer();
+    //                             }
+    //                             break;
+
+    //                     }
+
+    //                     return ;
+    //                 }
+
+    //                 if (x > w && y > yMin
+    //                     && yMax > y
+    //                     && w + textObject.w > x
+    //                 ) {
+
+    //                     let index: number = idx;
+    //                     switch (eventType) {
+    //                         case $TOUCH_MOVE:
+    //                         case $MOUSE_MOVE:
+
+    //                             if (this._$focusIndex > index) { // left
+    //                                 if (this._$focusIndex === index + 1) {
+    //                                     if (w + textObject.w / 2 < x) {
+    //                                         index = -1;
+    //                                     }
+    //                                 } else {
+    //                                     if (w + textObject.w / 2 < x) {
+    //                                         index += 1;
+    //                                     }
+    //                                 }
+    //                             } else { // right
+    //                                 if (this._$focusIndex === index) {
+    //                                     if (w + textObject.w / 2 > x) {
+    //                                         index = -1;
+    //                                     }
+    //                                 } else {
+    //                                     if (w + textObject.w / 2 > x) {
+    //                                         index -= 1;
+    //                                     }
+    //                                 }
+    //                             }
+
+    //                             if (this._$selectIndex !== index) {
+    //                                 this._$selectIndex = index;
+
+    //                                 if (this._$selectIndex > -1) {
+    //                                     this._$focusVisible = false;
+    //                                     $clearTimeout(this._$timerId);
+    //                                 }
+
+    //                                 this._$doChanged();
+    //                                 $doUpdated();
+    //                             }
+    //                             break;
+
+    //                         default:
+
+    //                             if (w + textObject.w / 2 < x) {
+    //                                 const textObject: ITextObject = textData.textTable[index + 1];
+    //                                 if (!textObject || textObject.mode === "text") {
+    //                                     index += 1;
+    //                                 }
+    //                             }
+
+    //                             if (this._$focusIndex !== index || this._$selectIndex > -1) {
+    //                                 this._$focusIndex  = index;
+    //                                 this._$selectIndex = -1;
+    //                                 this.setBlinkingTimer();
+    //                             }
+    //                             break;
+
+    //                     }
+    //                     return ;
+    //                 }
+
+    //                 w += textObject.w;
+    //                 break;
+
+    //             default:
+    //                 break;
+
+    //         }
+    //     }
+
+    //     switch (eventType) {
+
+    //         case $TOUCH_MOVE:
+    //         case $MOUSE_MOVE:
+    //             // reset
+    //             this._$focusIndex  = -1;
+    //             this._$selectIndex = -1;
+    //             break;
+
+    //         default:
+    //             this._$focusIndex  = textData.textTable.length;
+    //             this._$selectIndex = -1;
+    //             this.setBlinkingTimer();
+    //             break;
+
+    //     }
+    // }
+
+    // /**
+    //  * @param  {object} character
+    //  * @return {void}
+    //  * @method
+    //  * @private
+    //  */
+    // _$buildCharacter (character: Character<TextCharacterImpl>): void
+    // {
+    //     const textFormat = this._$defaultTextFormat;
+
+    //     textFormat.font          = character.font;
+    //     textFormat.size          = character.size | 0;
+    //     textFormat.align         = character.align;
+    //     textFormat.color         = character.color | 0;
+    //     textFormat.leading       = character.leading;
+    //     textFormat.letterSpacing = character.letterSpacing;
+    //     textFormat.leftMargin    = character.leftMargin;
+    //     textFormat.rightMargin   = character.rightMargin;
+
+    //     switch (character.fontType) {
+
+    //         case 1:
+    //             textFormat.bold = true;
+    //             break;
+
+    //         case 2:
+    //             textFormat.italic = true;
+    //             break;
+
+    //         case 3:
+    //             textFormat.bold   = true;
+    //             textFormat.italic = true;
+    //             break;
+
+    //     }
+
+    //     // setup
+    //     this.type           = character.inputType;
+    //     this._$multiline      = !!character.multiline;
+    //     this._$wordWrap       = !!character.wordWrap;
+    //     this._$border         = !!character.border;
+    //     this.scrollEnabled  = !!character.scroll;
+    //     this._$thickness      = character.thickness | 0;
+    //     this._$thicknessColor = character.thicknessColor | 0;
+
+    //     // bounds
+    //     this.xMin        = character.originBounds.xMin;
+    //     this.xMax        = character.originBounds.xMax;
+    //     this.yMin        = character.originBounds.yMin;
+    //     this.yMax        = character.originBounds.yMax;
+    //     this.bounds.xMin = character.originBounds.xMin;
+    //     this.bounds.xMax = character.originBounds.xMax;
+    //     this.bounds.yMin = character.originBounds.yMin;
+    //     this.bounds.yMax = character.originBounds.yMax;
+
+    //     switch (character.autoSize) {
+
+    //         case 1:
+    //             this.autoSize = character.align;
+    //             break;
+
+    //         case 2:
+    //             this.autoFontSize = true;
+    //             break;
+
+    //     }
+
+    //     this.text = character.text;
+
+    //     if ($rendererWorker && this._$stage) {
+    //         this._$createWorkerInstance();
+    //     }
+    // }
+
+    // /**
+    //  * @param  {object} character
+    //  * @return {void}
+    //  * @method
+    //  * @private
+    //  */
+    // _$sync (character: TextCharacterImpl): void
+    // {
+    //     this._$buildCharacter(character);
+    // }
+
+    // /**
+    //  * @param  {object} tag
+    //  * @param  {DisplayObjectContainer} parent
+    //  * @return {object}
+    //  * @method
+    //  * @private
+    //  */
+    // _$build (
+    //     tag: DictionaryTagImpl,
+    //     parent: ParentImpl<any>
+    // ): TextCharacterImpl {
+
+    //     const character: TextCharacterImpl = this
+    //         ._$baseBuild<TextCharacterImpl>(tag, parent);
+
+    //     this._$buildCharacter(character);
+
+    //     return character;
+    // }
 
     // /**
     //  * @param  {CanvasRenderingContext2D} context
