@@ -10,8 +10,11 @@ describe("TextFieldUpdateStopIndexUseCase.js test", () =>
         textField.changed = false;
 
         expect(textField.changed).toBe(false);
+        
+        execute(textField, 10);
 
-        expect(execute(textField, 10)).toBe(null);
+        expect(textField.scrollX).toBe(0);
+        expect(textField.scrollY).toBe(0);
 
         expect(textField.changed).toBe(false);
     });
@@ -25,13 +28,10 @@ describe("TextFieldUpdateStopIndexUseCase.js test", () =>
         textField.changed = false;
         expect(textField.changed).toBe(false);
 
-        const point = execute(textField, 10);
-        if (!point) {
-            throw new Error("point is null");
-        }
+        execute(textField, 10);
 
-        expect(point.x).toBe(1.2903225806451613);
-        expect(point.y).toBe(0);
+        expect(textField.scrollX).toBe(1.2903225806451613);
+        expect(textField.scrollY).toBe(0);
         expect(textField.changed).toBe(true);
     });
 });

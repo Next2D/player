@@ -34,10 +34,9 @@ export const execute = (
 
     for (let idx = 0; idx < texts.length; ++idx) {
 
-        const textFormat = text_format;
-        // const textFormat = options.textFormats === null
-        //     ? text_format
-        //     : options.textFormats.shift() as NonNullable<TextFormat>;
+        const textFormat = options.textFormats
+            ? options.textFormats.shift() as NonNullable<TextFormat>
+            : text_format;
 
         const text = texts[idx];
 

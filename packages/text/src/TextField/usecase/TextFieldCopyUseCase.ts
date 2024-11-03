@@ -2,19 +2,23 @@ import type { TextField } from "../../TextField";
 import { execute as textFieldGetTextDataUseCase } from "./TextFieldGetTextDataUseCase";
 
 /**
- * @description HTMLテキストをプレーンテキストに変換します。
- *              Convert HTML text to plain text.
- * 
- * @param  {TextField} text_field
- * @return {string}
+ * @description テキストフィールドの選択範囲のテキストを返却します。
+ *              Returns the text of the selection in the text field.
+ *
+ * @param  {TextField} text_field 
+ * @return {string} 
  * @method
  * @protected
  */
 export const execute = (text_field: TextField): string =>
 {
     let text = "";
+
+    const minIndex: number = Math.min(text_field.focusIndex, text_field.selectIndex);
+    const maxIndex: number = Math.max(text_field.focusIndex, text_field.selectIndex) + 1;
+
     const textData = textFieldGetTextDataUseCase(text_field);
-    for (let idx = 1; idx < textData.textTable.length; ++idx) {
+    for (let idx = minIndex; idx < maxIndex; ++idx) {
 
         const textObject = textData.textTable[idx];
         if (!textObject) {
@@ -28,11 +32,11 @@ export const execute = (text_field: TextField): string =>
                 break;
 
             case "break":
-                text += "\r";
+                text += "\n";
                 break;
 
             default:
-                continue;
+                break;
 
         }
     }

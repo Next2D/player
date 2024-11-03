@@ -9,7 +9,6 @@ import { execute as textParserParseHtmlTextUseCase } from "../../TextParser/usec
  *              If data has already been generated, that data is returned.
  *
  * @param  {TextField} text_field 
- * @param  {TextFormat[]} [text_formats=null] 
  * @param  {number} sub_font_size 
  * @return {TextData}
  * @method
@@ -31,7 +30,8 @@ export const execute = (
             "width": text_field.width,
             "multiline": text_field.multiline,
             "wordWrap": text_field.wordWrap,
-            "subFontSize": sub_font_size
+            "subFontSize": sub_font_size,
+            "textFormats": text_field.$textFormats
         }
     );
 

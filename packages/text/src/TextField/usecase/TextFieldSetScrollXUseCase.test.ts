@@ -9,14 +9,20 @@ describe("TextFieldSetScrollXUseCase.js test", () =>
         const textField = new TextField();
 
         textField.scrollEnabled = false;
-        expect(execute(textField, 10)).toBe(0);
+        execute(textField, 10);
+
+        expect(textField.$scrollX).toBe(0);
 
         textField.scrollEnabled = true;
         textField.autoSize = "center";
-        expect(execute(textField, 10)).toBe(0);
+        execute(textField, 10);
+
+        expect(textField.$scrollX).toBe(0);
 
         textField.scrollEnabled = true;
         textField.autoSize = "none";
-        expect(execute(textField, 10)).toBe(10);
+        execute(textField, 10);
+
+        expect(textField.$scrollX).toBe(10);
     });
 });

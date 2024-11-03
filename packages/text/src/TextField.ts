@@ -2,6 +2,7 @@ import type { IBounds } from "./interface/IBounds";
 import type { ITextFieldAutoSize } from "./interface/ITextFieldAutoSize";
 import type { ITextFieldType } from "./interface/ITextFieldType";
 import type { ITextObject } from "./interface/ITextObject";
+import { FocusEvent } from "@next2d/events";
 import { TextData } from "./TextData";
 import { TextFormat } from "./TextFormat";
 import { execute as textFormatSetDefaultService } from "./TextFormat/service/TextFormatSetDefaultService";
@@ -15,6 +16,8 @@ import { execute as textFieldSetScrollXUseCase } from "./TextField/usecase/TextF
 import { execute as textFieldSetScrollYUseCase } from "./TextField/usecase/TextFieldSetScrollYUseCase";
 import { execute as textFieldHtmlTextToRawTextUseCase } from "./TextField/usecase/TextFieldHtmlTextToRawTextUseCase";
 import { execute as textFieldGetLineTextUseCase } from "./TextField/usecase/TextFieldGetLineTextUseCase";
+import { execute as textFieldReplaceTextUseCase } from "./TextField/usecase/TextFieldReplaceTextUseCase";
+import { execute as textFieldCopyUseCase } from "./TextField/usecase/TextFieldCopyUseCase";
 import {
     $clamp,
     $toColorInt
@@ -24,11 +27,7 @@ import {
     Shape
 } from "@next2d/display";
 import {
-    FocusEvent
-} from "@next2d/events";
-import {
     Rectangle,
-    Matrix,
     Point
 } from "@next2d/geom";
 
@@ -209,6 +208,55 @@ export class TextField extends InteractiveObject
      */
     public type: ITextFieldType;
 
+    /**
+     * @description テキストフィールドのコンポジション開始インデックス
+     *              Composition start index of the text field
+     * 
+     * @member {number}
+     * @default -1
+     * @public
+     */
+    public compositionStartIndex: number;
+
+    /**
+     * @description テキストフィールドのコンポジション終了インデックス
+     *              Composition end index of the text field
+     * 
+     * @member {number}
+     * @default -1
+     * @public
+     */
+    public compositionEndIndex: number;
+
+    /**
+     * @description テキストフィールドのテキストフォーマットの配列です。
+     *              An array of text formats for the text field.
+     * 
+     * @member {TextFormat[]}
+     * @default null
+     * @protected
+     */
+    public $textFormats: TextFormat[] | null;
+
+    /**
+     * @description x軸のスクロール位置
+     *              Scroll position on the x-axis
+     * 
+     * @member {number}
+     * @default 0
+     * @protected
+     */
+    public $scrollX: number;
+
+    /**
+     * @description y軸のスクロール位置
+     *              Scroll position on the y-axis
+     * 
+     * @member {number}
+     * @default 0
+     * @protected
+     */
+    public $scrollY: number;
 
     private _$background: boolean;
     private _$backgroundColor: number;
@@ -218,22 +266,17 @@ export class TextField extends InteractiveObject
     private _$multiline: boolean;
     private _$text: string;
     private _$wordWrap: boolean;
-    private _$scrollX: number;
-    private _$scrollY: number;
     private _$defaultTextFormat: TextFormat;
     private _$rawHtmlText: string;
-    private _$textFormats: TextFormat[] | null;
     private _$autoSize: ITextFieldAutoSize;
     private _$autoFontSize: boolean;
     private _$focus: boolean;
     private _$copyText: string;
     private _$thickness: number;
     private _$thicknessColor: number;
+    private _$stopIndex: number;
     private _$cacheKeys: string[];
     private readonly _$cacheParams: number[];
-    private _$stopIndex: number;
-    private _$compositionStartIndex: number;
-    private _$compositionEndIndex: number;
 
     /**
      * @constructor
@@ -311,16 +354,23 @@ export class TextField extends InteractiveObject
         /**
          * @type {number}
          * @default 0
-         * @private
+         * @protected
          */
-        this._$scrollX = 0;
+        this.$scrollX = 0;
 
         /**
          * @type {number}
          * @default 0
-         * @private
+         * @protected
          */
-        this._$scrollY = 0;
+        this.$scrollY = 0;
+
+        /**
+         * @type {array}
+         * @default null
+         * @protected
+         */
+        this.$textFormats = null;
 
         /**
          * @type {number}
@@ -339,16 +389,16 @@ export class TextField extends InteractiveObject
         /**
          * @type {number}
          * @default -1
-         * @private
+         * @public
          */
-        this._$compositionStartIndex = -1;
+        this.compositionStartIndex = -1;
 
         /**
          * @type {number}
          * @default -1
-         * @private
+         * @public
          */
-        this._$compositionEndIndex = -1;
+        this.compositionEndIndex = -1;
 
         // TextFormat
         const textFormat: TextFormat = new TextFormat();
@@ -503,13 +553,6 @@ export class TextField extends InteractiveObject
          * @private
          */
         this._$thicknessColor = 0;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$textFormats = null;
 
         /**
          * @type {array}
@@ -710,11 +753,7 @@ export class TextField extends InteractiveObject
 
         this._$stopIndex = index;
 
-        const point = textFieldUpdateStopIndexUseCase(this, index);
-        if (point) {
-            this._$scrollX = point.x;
-            this._$scrollY = point.y;
-        }
+        textFieldUpdateStopIndexUseCase(this, index);
     }
 
     /**
@@ -821,10 +860,11 @@ export class TextField extends InteractiveObject
     }
     set multiline (multiline: boolean)
     {
-        if (multiline !== this._$multiline) {
-            this._$multiline = !!multiline;
-            textFieldResetUseCase(this);
+        if (multiline === this._$multiline) {
+            return ;
         }
+        this._$multiline = !!multiline;
+        textFieldResetUseCase(this);
     }
 
     /**
@@ -850,11 +890,11 @@ export class TextField extends InteractiveObject
      */
     get scrollX (): number
     {
-        return this._$scrollX;
+        return this.$scrollX;
     }
     set scrollX (scroll_x: number)
     {
-        this._$scrollX = textFieldSetScrollXUseCase(this, scroll_x);
+        textFieldSetScrollXUseCase(this, scroll_x);
     }
 
     /**
@@ -866,11 +906,11 @@ export class TextField extends InteractiveObject
      */
     get scrollY (): number
     {
-        return this._$scrollY;
+        return this.$scrollY;
     }
     set scrollY (scroll_y: number)
     {
-        this._$scrollY = textFieldSetScrollYUseCase(this, scroll_y);
+        textFieldSetScrollYUseCase(this, scroll_y);
     }
 
     /**
@@ -1112,39 +1152,19 @@ export class TextField extends InteractiveObject
      *              Replaces the range of characters that the beginIndex
      *              and endIndex parameters specify with the contents of the newText parameter.
      *
+     * @param  {string} new_text
      * @param  {number} begin_index
      * @param  {number} end_index
-     * @param  {string} new_text
      * @return {void}
      * @method
      * @public
      */
     replaceText (
+        new_text: string,
         begin_index: number,
-        end_index: number,
-        new_text: string
+        end_index: number
     ): void {
-
-        begin_index |= 0;
-        end_index   |= 0;
-        if (begin_index > -1 && end_index > -1 && end_index >= begin_index) {
-
-            const text: string = this.text;
-
-            if (begin_index >= text.length) {
-
-                if (end_index >= text.length && end_index >= begin_index) {
-                    this.text = text + `${new_text}`;
-                }
-
-            } else {
-
-                this.text = text.slice(0, begin_index)
-                    + `${new_text}`
-                    + text.slice(end_index, text.length);
-
-            }
-        }
+        textFieldReplaceTextUseCase(this, new_text, begin_index | 0, end_index | 0);
     }
 
     /**
@@ -1154,8 +1174,8 @@ export class TextField extends InteractiveObject
      */
     selectAll (): void
     {
-        const textData: TextData = textFieldGetTextDataUseCase(this);
-        if (!textData.textTable.length) {
+        const textData = textFieldGetTextDataUseCase(this);
+        if (2 > textData.textTable.length) {
             return ;
         }
 
@@ -1164,6 +1184,9 @@ export class TextField extends InteractiveObject
     }
 
     /**
+     * @description テキストフィールドの選択範囲をコピーします。
+     *              Copy a selection of text fields.
+     *
      * @return {void}
      * @method
      * @public
@@ -1173,35 +1196,13 @@ export class TextField extends InteractiveObject
         if (this.focusIndex === -1 || this.selectIndex === -1) {
             return ;
         }
-
-        let text: string = "";
-        const minIndex: number = Math.min(this.focusIndex, this.selectIndex);
-        const maxIndex: number = Math.max(this.focusIndex, this.selectIndex) + 1;
-
-        const textData: TextData = textFieldGetTextDataUseCase(this);
-        for (let idx = minIndex; idx < maxIndex; ++idx) {
-            const textObject: ITextObject = textData.textTable[idx];
-            if (!textObject || textObject.mode === "wrap") {
-                continue;
-            }
-
-            switch (textObject.mode) {
-
-                case "text":
-                    text += textObject.text;
-                    break;
-
-                case "break":
-                    text += "\n";
-                    break;
-
-            }
-        }
-
-        this._$copyText = text;
+        this._$copyText = textFieldCopyUseCase(this);
     }
 
     /**
+     * @description コピーしたテキストを選択範囲に貼り付けます。
+     *              Paste the copied text into the selected range.
+     *
      * @return {void}
      * @method
      * @public
@@ -1211,7 +1212,6 @@ export class TextField extends InteractiveObject
         if (!this._$copyText || this.focusIndex === -1) {
             return ;
         }
-
         this.insertText(this._$copyText);
     }
 
@@ -1422,28 +1422,28 @@ export class TextField extends InteractiveObject
      */
     deleteText (): void
     {
-        if (this._$compositionStartIndex > -1) {
+        if (this.compositionStartIndex > -1) {
             return ;
         }
 
         let minIndex: number = 0;
         let maxIndex: number = 0;
-        if (this._$selectIndex > -1) {
-            minIndex = Math.min(this._$focusIndex, this._$selectIndex);
-            maxIndex = Math.max(this._$focusIndex, this._$selectIndex) + 1;
-            this._$focusIndex = minIndex;
+        if (this.selectIndex > -1) {
+            minIndex = Math.min(this.focusIndex, this.selectIndex);
+            maxIndex = Math.max(this.focusIndex, this.selectIndex) + 1;
+            this.focusIndex = minIndex;
         } else {
-            if (2 > this._$focusIndex) {
+            if (2 > this.focusIndex) {
                 return ;
             }
 
-            this._$focusIndex--;
+            this.focusIndex--;
         }
 
         const textData: TextData = textFieldGetTextDataUseCase(this);
-        const textObject: ITextObject = textData.textTable[this._$focusIndex];
+        const textObject: ITextObject = textData.textTable[this.focusIndex];
         if (textObject && textObject.mode === "wrap") {
-            this._$focusIndex--;
+            this.focusIndex--;
         }
 
         const textFormats: TextFormat[] = $getArray();
@@ -1453,7 +1453,7 @@ export class TextField extends InteractiveObject
 
             const textObject: ITextObject = textData.textTable[idx];
 
-            if (this._$focusIndex === idx || minIndex <= idx && maxIndex > idx) {
+            if (this.focusIndex === idx || minIndex <= idx && maxIndex > idx) {
                 continue;
             }
 
@@ -1475,24 +1475,24 @@ export class TextField extends InteractiveObject
             }
         }
 
-        if (textData.textTable.length === this._$focusIndex) {
+        if (textData.textTable.length === this.focusIndex) {
             textFormats.pop();
             newText = newText.slice(0, -1);
         }
 
-        this._$selectIndex = -1;
+        this.selectIndex = -1;
         if (!newText) {
             // reset
-            this.text = null;
+            this.text = "";
 
             this._$scrollX = 0;
             this._$scrollY = 0;
 
-            this._$focusIndex = 0;
+            this.focusIndex = 0;
         } else {
 
-            const beforeTextWidth: number   = this.textWidth;
-            const beforeTextHeight : number = this.textHeight;
+            const beforeTextWidth  = this.textWidth;
+            const beforeTextHeight = this.textHeight;
 
             this._$textFormats = textFormats;
             this.text = newText;
@@ -1546,16 +1546,6 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @return {void}
-     * @method
-     * @public
-     */
-    compositionStart (): void
-    {
-        this._$compositionStartIndex = this.focusIndex;
-    }
-
-    /**
      * @param  {string} texts
      * @return {void}
      * @method
@@ -1565,15 +1555,15 @@ export class TextField extends InteractiveObject
     {
         if (this._$compositionEndIndex > -1) {
             const cacheIndex: number = this._$compositionStartIndex;
-            this._$focusIndex  = this._$compositionStartIndex;
-            this._$selectIndex = this._$compositionEndIndex - 1;
+            this.focusIndex  = this._$compositionStartIndex;
+            this.selectIndex = this._$compositionEndIndex - 1;
 
             this._$compositionStartIndex = -1;
             this.deleteText();
 
             // reset
             this._$compositionStartIndex = cacheIndex;
-            this._$selectIndex = -1;
+            this.selectIndex = -1;
         }
 
         let textData: TextData = textFieldGetTextDataUseCase(this);
@@ -1583,7 +1573,7 @@ export class TextField extends InteractiveObject
         let newText: string  = "";
         if (!textData.textTable.length) {
             newText = texts;
-            this._$focusIndex = 1;
+            this.focusIndex = 1;
             this._$compositionStartIndex = 1;
         } else {
             for (let idx: number = 1; idx < textData.textTable.length; ++idx) {
@@ -1758,13 +1748,13 @@ export class TextField extends InteractiveObject
      */
     insertText (texts: string): void
     {
-        if (this._$focusIndex === -1
-            || this._$compositionStartIndex > -1
+        if (this.focusIndex === -1
+            || this.compositionStartIndex > -1
         ) {
             return ;
         }
 
-        if (this._$selectIndex > -1) {
+        if (this.selectIndex > -1) {
             this.deleteText();
         }
 
@@ -1865,8 +1855,8 @@ export class TextField extends InteractiveObject
 
         const textData: TextData = textFieldGetTextDataUseCase(this);
         if (!textData.textTable.length) {
-            this._$focusIndex  = 0;
-            this._$selectIndex = -1;
+            this.focusIndex  = 0;
+            this.selectIndex = -1;
             this.setBlinkingTimer();
             return ;
         }

@@ -1,5 +1,4 @@
-import { TextField } from "../../TextField";
-import { Point } from "@next2d/geom";
+import type { TextField } from "../../TextField";
 import { execute as textFieldGetTextDataUseCase } from "./TextFieldGetTextDataUseCase";
 import { execute as textFieldApplyChangesService } from "../service/TextFieldApplyChangesService";
 
@@ -9,15 +8,15 @@ import { execute as textFieldApplyChangesService } from "../service/TextFieldApp
  *
  * @param  {TextField} text_field
  * @param  {number} index
- * @return {Point | null}
+ * @return {void}
  * @method
  * @protected
  */
-export const execute = (text_field: TextField, index: number): Point | null =>
+export const execute = (text_field: TextField, index: number): void =>
 {
     const textData = textFieldGetTextDataUseCase(text_field);
     if (2 > textData.textTable.length) {
-        return null;
+        return ;
     }
 
     let currentTextWidth = 2;
@@ -25,6 +24,9 @@ export const execute = (text_field: TextField, index: number): Point | null =>
     for (let idx = 1; idx < textData.textTable.length; ++idx) {
 
         const textObject = textData.textTable[idx];
+        if (!textObject) {
+            continue;
+        }
 
         let countUp = false;
         if (textObject.mode === "text") {
@@ -50,10 +52,11 @@ export const execute = (text_field: TextField, index: number): Point | null =>
 
     const textObject = textData.textTable[targetIndex];
     if (!textObject) {
-        return null;
+        return ;
     }
 
-    const point = new Point();
+    text_field.$scrollX = text_field.$scrollY = 0;
+
     const line = textObject.line;
 
     let currentTextHeight = 0;
@@ -73,7 +76,7 @@ export const execute = (text_field: TextField, index: number): Point | null =>
 
     if (currentTextHeight > height) {
         const scaleY = (text_field.textHeight - height) / height;
-        point.y = Math.min((currentTextHeight - viewTextHeight) / scaleY, height);
+        text_field.$scrollY = Math.min((currentTextHeight - viewTextHeight) / scaleY, height);
     }
 
     const width = text_field.width;
@@ -92,10 +95,8 @@ export const execute = (text_field: TextField, index: number): Point | null =>
 
     if (currentTextWidth > width) {
         const scaleX = (text_field.textWidth - width) / width;
-        point.x = Math.min((currentTextWidth - viewTextWidth) / scaleX, width + 0.5);
+        text_field.$scrollX = Math.min((currentTextWidth - viewTextWidth) / scaleX, width + 0.5);
     }
 
     textFieldApplyChangesService(text_field);
-
-    return point;
 };

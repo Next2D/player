@@ -1,4 +1,41 @@
 import type { IRGBA } from "./interface/IRGBA";
+import type { TextField } from "./TextField";
+import { execute as textAreaRegisterEventUseCase } from "./TextArea/usecase/TextAreaRegisterEventUseCase";
+
+/**
+ * @description 選択中のテキストフィールド
+ *              Selected text field
+ * 
+ * @type {TextField | null}
+ * @private 
+ */
+let $selectedTextField: TextField | null = null;
+
+/**
+ * @description 選択したテキストフィールドをセット
+ *              Set the selected text field
+ * 
+ * @param {TextField | null} text_field
+ * @method
+ * @public
+ */
+export const $setSelectedTextField = (text_field: TextField | null): void =>
+{
+    $selectedTextField = text_field;
+};
+
+/**
+ * @description 選択中のテキストフィールドを返却
+ *              Returns the selected text field
+ * 
+ * @return {TextField | null}
+ * @method
+ * @public
+ */
+export const $getSelectedTextField = (): TextField | null =>
+{
+    return $selectedTextField;
+};
 
 /**
  * @description テキスト変更用の TextArea Element(hidden)
@@ -8,6 +45,9 @@ import type { IRGBA } from "./interface/IRGBA";
  * @protected
  */
 export const $textArea: HTMLTextAreaElement = document.createElement("textarea") as HTMLTextAreaElement;
+textAreaRegisterEventUseCase($textArea);
+
+$textArea.tabIndex = -1;
 
 let style = "";
 style += "position: fixed;";
@@ -20,10 +60,6 @@ style += "opacity: 0;";
 style += "z-index: -1;";
 style += "pointer-events: none;";
 $textArea.setAttribute("style", style);
-
-$textArea.tabIndex = -1;
-
-
 
 /**
  * @type {HTMLCanvasElement}

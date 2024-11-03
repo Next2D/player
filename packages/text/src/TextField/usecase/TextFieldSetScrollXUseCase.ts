@@ -11,29 +11,27 @@ import { execute as textFieldApplyChangesService } from "../service/TextFieldApp
  *
  * @param  {TextField} text_field 
  * @param  {number} scroll_x 
- * @return {number}
+ * @return {void}
  * @method
  * @protected
  */
-export const execute = (text_field: TextField, scroll_x: number): number =>
+export const execute = (text_field: TextField, scroll_x: number): void =>
 {
-    const scrollX = text_field.scrollX;
-
     if (!text_field.scrollEnabled
         || text_field.autoSize !== "none"
     ) {
-        return scrollX;
+        return ;
     }
 
     // check y animation
     if (text_field.yScrollShape.hasLocalVariable("job")) {
-        return scrollX;
+        return ;
     }
 
     const width = text_field.width;
     scroll_x = $clamp(scroll_x, 0, width + 0.5, 0);
     if (text_field.scrollX === scroll_x) {
-        return scrollX;
+        return ;
     }
     
     if (text_field.textWidth > width) {
@@ -93,5 +91,5 @@ export const execute = (text_field: TextField, scroll_x: number): number =>
         text_field.dispatchEvent(new Event(Event.SCROLL, true));
     }
 
-    return scroll_x;
+    text_field.$scrollX = scroll_x;
 };

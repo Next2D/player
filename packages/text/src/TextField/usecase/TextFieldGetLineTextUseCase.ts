@@ -1,4 +1,4 @@
-import { TextField } from "../../TextField";
+import type { TextField } from "../../TextField";
 import { execute as textFieldGetTextDataUseCase } from "./TextFieldGetTextDataUseCase";
 
 /**

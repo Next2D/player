@@ -11,19 +11,25 @@ describe("TextFieldSetScrollYUseCase.js test", () =>
         textField.wordWrap = true;
 
         textField.scrollEnabled = false;
-        expect(execute(textField, 10)).toBe(0);
+        execute(textField, 10);
+        expect(textField.scrollY).toBe(0);
 
         textField.scrollEnabled = true;
         textField.autoSize = "center";
-        expect(execute(textField, 10)).toBe(0);
+        execute(textField, 10);
+
+        expect(textField.scrollY).toBe(0);
 
         textField.scrollEnabled = true;
         textField.autoSize = "none";
 
-        expect(execute(textField, 10)).toBe(10);
+        execute(textField, 10);
+        expect(textField.scrollY).toBe(10);
 
         textField.multiline = false;
-        textField.wordWrap = false;
-        expect(execute(textField, 10)).toBe(0);
+        textField.wordWrap  = false;
+
+        execute(textField, 10);
+        expect(textField.scrollY).toBe(0);
     });
 });
