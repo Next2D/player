@@ -2,7 +2,7 @@ import { execute } from "./TextParserParseHtmlTextUseCase";
 import { TextFormat } from "../../TextFormat";
 import { describe, expect, it } from "vitest";
 
-describe("TextParserParseHtmlTextUseCase.js length test", () =>
+describe("TextParserParseHtmlTextUseCase.js test", () =>
 {
     it("test case1", () =>
     {
@@ -39,7 +39,7 @@ describe("TextParserParseHtmlTextUseCase.js length test", () =>
         });
 
         
-        expect(textData.textTable.length).toBe(10);
+        expect(textData.textTable.length).toBe(9);
 
         const object0 = textData.textTable[0];
         expect(object0.mode).toBe("break");

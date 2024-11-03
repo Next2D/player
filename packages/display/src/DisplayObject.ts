@@ -35,6 +35,8 @@ import { execute as displayObjectGetWidthUseCase } from "./DisplayObject/usecase
 import { execute as displayObjectSetWidthUseCase } from "./DisplayObject/usecase/DisplayObjectSetWidthUseCase";
 import { execute as displayObjectLocalToGlobalService } from "./DisplayObject/service/DisplayObjectLocalToGlobalService";
 import { execute as displayObjectGlobalToLocalService } from "./DisplayObject/service/DisplayObjectGlobalToLocalService";
+import { execute as displayObjectGetHeightUseCase } from "./DisplayObject/usecase/DisplayObjectGetHeightUseCase";
+import { execute as displayObjectSetHeightUseCase } from "./DisplayObject/usecase/DisplayObjectSetHeightUseCase";
 import {
     $getInstanceId,
     $parentMap,
@@ -485,71 +487,14 @@ export class DisplayObject extends EventDispatcher
      * @member {number}
      * @public
      */
-    // get height (): number
-    // {
-    //     const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-    //         ? this._$getBounds() as BoundsImpl
-    //         : $getBoundsObject();
-
-    //     const bounds: BoundsImpl = $boundsMatrix(
-    //         baseBounds,
-    //         this._$transform._$rawMatrix()
-    //     );
-    //     $poolBoundsObject(baseBounds);
-
-    //     const height: number = $Math.abs(bounds.yMax - bounds.yMin);
-
-    //     // object pool
-    //     $poolBoundsObject(bounds);
-
-    //     switch (height) {
-
-    //         case 0:
-    //         case $Infinity:
-    //         case -$Infinity:
-    //             return 0;
-
-    //         default:
-    //             return +height.toFixed(2);
-
-    //     }
-    // }
-    // set height (height: number)
-    // {
-    //     height = +height;
-    //     if (!$isNaN(height) && height > -1) {
-
-    //         const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-    //             ? this._$getBounds() as BoundsImpl
-    //             : $getBoundsObject();
-
-    //         const rotation: number = this.rotation;
-    //         const bounds: BoundsImpl = rotation
-    //             ? $boundsMatrix(baseBounds, this._$transform._$rawMatrix())
-    //             : baseBounds;
-
-    //         if (rotation) {
-    //             $poolBoundsObject(baseBounds);
-    //         }
-
-    //         const exHeight: number = $Math.abs(bounds.yMax - bounds.yMin);
-    //         $poolBoundsObject(bounds);
-
-    //         switch (exHeight) {
-
-    //             case 0:
-    //             case $Infinity:
-    //             case -$Infinity:
-    //                 this.scaleY = 0;
-    //                 break;
-
-    //             default:
-    //                 this.scaleY = height / exHeight;
-    //                 break;
-
-    //         }
-    //     }
-    // }
+    get height (): number
+    {
+        return displayObjectGetHeightUseCase(this);
+    }
+    set height (height: number)
+    {
+        displayObjectSetHeightUseCase(this, height);
+    }
 
     /**
      * @description この表示オブジェクトが属するファイルの読み込み情報を含む LoaderInfo オブジェクトを返します。
@@ -568,13 +513,13 @@ export class DisplayObject extends EventDispatcher
             : null;
     }
 
-    // /**
-    //  * @description 呼び出し元の表示オブジェクトは、指定された mask オブジェクトによってマスクされます。
-    //  *              The calling display object is masked by the specified mask object.
-    //  *
-    //  * @member {DisplayObject|null}
-    //  * @public
-    //  */
+    /**
+     * @description 呼び出し元の表示オブジェクトは、指定された mask オブジェクトによってマスクされます。
+     *              The calling display object is masked by the specified mask object.
+     *
+     * @member {DisplayObject|null}
+     * @public
+     */
     // get mask (): DisplayObjectImpl<any> | null
     // {
     //     return this._$mask;

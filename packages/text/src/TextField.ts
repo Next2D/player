@@ -11,6 +11,10 @@ import { execute as textFieldResetUseCase } from "./TextField/usecase/TextFieldR
 import { execute as textFieldReloadUseCase } from "./TextField/usecase/TextFieldReloadUseCase";
 import { execute as textFieldUpdateStopIndexUseCase } from "./TextField/usecase/TextFieldUpdateStopIndexUseCase";
 import { execute as textFieldSetFocusUseCase } from "./TextField/usecase/TextFieldSetFocusUseCase";
+import { execute as textFieldSetScrollXUseCase } from "./TextField/usecase/TextFieldSetScrollXUseCase";
+import { execute as textFieldSetScrollYUseCase } from "./TextField/usecase/TextFieldSetScrollYUseCase";
+import { execute as textFieldHtmlTextToRawTextUseCase } from "./TextField/usecase/TextFieldHtmlTextToRawTextUseCase";
+import { execute as textFieldGetLineTextUseCase } from "./TextField/usecase/TextFieldGetLineTextUseCase";
 import {
     $clamp,
     $toColorInt
@@ -20,13 +24,8 @@ import {
     Shape
 } from "@next2d/display";
 import {
-    FocusEvent,
-    Event as Next2DEvent
+    FocusEvent
 } from "@next2d/events";
-import {
-    Tween,
-    Easing
-} from "@next2d/ui";
 import {
     Rectangle,
     Matrix,
@@ -135,10 +134,10 @@ export class TextField extends InteractiveObject
      * @description xスクロールバーの表示用の Shape オブジェクト
      *              Shape object for x scroll bar display
      * 
-     * @member {Shape | null}
+     * @member {Shape}
      * @protected
      */
-    public xScrollShape: Shape | null;
+    public readonly xScrollShape: Shape;
 
     /**
      * @description yスクロールバーの表示用の Shape オブジェクト
@@ -147,7 +146,7 @@ export class TextField extends InteractiveObject
      * @member {Shape | null}
      * @protected
      */
-    public yScrollShape: Shape | null;
+    public readonly yScrollShape: Shape;
 
     /**
      * @description テキストフィールドの点滅線の表示・非表示を制御します。
@@ -855,79 +854,7 @@ export class TextField extends InteractiveObject
     }
     set scrollX (scroll_x: number)
     {
-        if (!this.scrollEnabled
-            || this.autoSize !== "none"
-        ) {
-            return ;
-        }
-
-        // check y animation
-        if (this.yScrollShape
-            && this.yScrollShape.hasLocalVariable("job")
-        ) {
-            return ;
-        }
-
-        scroll_x = $clamp(scroll_x, 0, this.width + 0.5, 0);
-        if (this._$scrollX !== scroll_x) {
-
-            const width: number = this.width;
-            if (this.xScrollShape && this.textWidth > width) {
-
-                this._$doChanged();
-
-                this._$scrollX = scroll_x;
-
-                this.xScrollShape.width = width * width / this.textWidth;
-                const parent: ParentImpl<any> = this._$parent;
-                if (parent) {
-
-                    // start animation
-                    if (this._$xScrollShape.hasLocalVariable("job")) {
-                        this._$xScrollShape.getLocalVariable("job").stop();
-                    }
-
-                    // view start
-                    this._$xScrollShape.alpha = 0.9;
-
-                    // set position
-                    this._$xScrollShape.x = this.x + 1
-                        + (width - 1 - this._$xScrollShape.width)
-                        / (width - 1)
-                        * (this._$scrollX - 1);
-                    this._$xScrollShape.y = this.y + this.height - this._$xScrollShape.height - 0.5;
-
-                    // added sprite
-                    parent.addChildAt(
-                        this._$xScrollShape,
-                        parent.getChildIndex(this) + 1
-                    );
-
-                    const job = Tween.add(this._$xScrollShape,
-                        { "alpha" : 0.9 },
-                        { "alpha" : 0 },
-                        0.5, 0.2, Easing.outQuad
-                    );
-
-                    job.addEventListener(Next2DEvent.COMPLETE, (event: Next2DEvent) =>
-                    {
-                        const shape: Shape = event.target.target;
-                        shape.deleteLocalVariable("job");
-                        if (shape.parent) {
-                            shape.parent.removeChild(shape);
-                        }
-                    });
-                    job.start();
-
-                    this._$xScrollShape.setLocalVariable("job", job);
-                }
-
-            }
-
-            if (this.willTrigger(Next2DEvent.SCROLL)) {
-                this.dispatchEvent(new Next2DEvent(Next2DEvent.SCROLL, true));
-            }
-        }
+        this._$scrollX = textFieldSetScrollXUseCase(this, scroll_x);
     }
 
     /**
@@ -943,81 +870,7 @@ export class TextField extends InteractiveObject
     }
     set scrollY (scroll_y: number)
     {
-        if (!this.scrollEnabled
-            || this.autoSize !== "none"
-            || !this._$multiline && !this._$wordWrap
-        ) {
-            return ;
-        }
-
-        // check x animation
-        if (this._$xScrollShape
-            && this._$xScrollShape.hasLocalVariable("job")
-        ) {
-            return ;
-        }
-
-        scroll_y = $clamp(scroll_y, 0, this.height, 0);
-        if (this._$scrollY !== scroll_y) {
-
-            const height: number = this.height;
-            if (this._$yScrollShape && this.textHeight > height) {
-
-                this._$doChanged();
-
-                this._$scrollY = scroll_y;
-
-                this._$yScrollShape.height = height * height / this.textHeight;
-
-                const parent: ParentImpl<any> = this._$parent;
-                if (parent) {
-
-                    // start animation
-                    if (this._$yScrollShape.hasLocalVariable("job")) {
-                        this._$yScrollShape.getLocalVariable("job").stop();
-                    }
-
-                    // view start
-                    this._$yScrollShape.alpha = 0.9;
-
-                    // set position
-                    this._$yScrollShape.x = this.x + this.width - this._$yScrollShape.width - 0.5;
-                    this._$yScrollShape.y = this.y + 0.5
-                        + (height - 1 - this._$yScrollShape.height)
-                        / (height - 1)
-                        * (this._$scrollY - 1);
-
-                    // added sprite
-                    parent.addChildAt(
-                        this._$yScrollShape,
-                        parent.getChildIndex(this) + 1
-                    );
-
-                    const job = Tween.add(this._$yScrollShape,
-                        { "alpha" : 0.9 },
-                        { "alpha" : 0 },
-                        0.5, 0.2, Easing.outQuad
-                    );
-
-                    job.addEventListener(Next2DEvent.COMPLETE, (event: Next2DEvent) =>
-                    {
-                        const shape: Shape = event.target.target;
-                        shape.deleteLocalVariable("job");
-                        if (shape.parent) {
-                            shape.parent.removeChild(shape);
-                        }
-                    });
-                    job.start();
-
-                    this._$yScrollShape.setLocalVariable("job", job);
-                }
-            }
-
-            if (this.willTrigger(Next2DEvent.SCROLL)) {
-                this.dispatchEvent(new Next2DEvent(Next2DEvent.SCROLL, true));
-            }
-        }
-
+        this._$scrollY = textFieldSetScrollYUseCase(this, scroll_y);
     }
 
     /**
@@ -1034,59 +887,25 @@ export class TextField extends InteractiveObject
             return this._$text;
         }
 
-        if (this._$rawHtmlText) {
-            return this._$rawHtmlText;
+        if (!this._$rawHtmlText) {
+            this._$rawHtmlText = textFieldHtmlTextToRawTextUseCase(this);
         }
-
-        let text: string = "";
-
-        const textData = textFieldGetTextDataUseCase(this);
-        for (let idx = 1; idx < textData.textTable.length; ++idx) {
-
-            const textObject = textData.textTable[idx];
-            if (!textObject) {
-                continue;
-            }
-
-            switch (textObject.mode) {
-
-                case "text":
-                    text += textObject.text;
-                    break;
-
-                case "break":
-                    text += "\r";
-                    break;
-
-                default:
-                    continue;
-
-            }
-        }
-
-        this._$rawHtmlText = text;
-
         return this._$rawHtmlText;
     }
-    set text (text: string | null)
+    set text (text: string)
     {
-        if (text === null) {
-            this._$text        = "";
-            this._$htmlText    = "";
-            this._$rawHtmlText = "";
-            this._$isHTML      = false;
-            textFieldReloadUseCase(this);
+        text = `${text}`;
+        if (text === this._$text) {
             return ;
         }
 
-        text = `${text}`;
-        if (text !== this._$text) {
-            this._$text        = text;
-            this._$htmlText    = "";
-            this._$rawHtmlText = "";
-            this._$isHTML      = false;
-            textFieldReloadUseCase(this);
-        }
+        // reset
+        this._$htmlText    = "";
+        this._$rawHtmlText = "";
+        this._$isHTML      = false;
+
+        this._$text = text;
+        textFieldReloadUseCase(this);
     }
 
     /**
@@ -1149,10 +968,11 @@ export class TextField extends InteractiveObject
     set thickness (thickness: number)
     {
         thickness |= 0;
-        if (thickness !== this._$thickness) {
-            this._$thickness = thickness;
-            textFieldResetUseCase(this);
+        if (thickness === this._$thickness) {
+            return ;
         }
+        this._$thickness = thickness;
+        textFieldResetUseCase(this);
     }
 
     /**
@@ -1172,10 +992,11 @@ export class TextField extends InteractiveObject
         thickness_color = $clamp(
             $toColorInt(thickness_color), 0, 0xffffff, 0
         );
-        if (thickness_color !== this._$thicknessColor) {
-            this._$thicknessColor = thickness_color;
-            textFieldResetUseCase(this);
+        if (thickness_color === this._$thicknessColor) {
+            return ;
         }
+        this._$thicknessColor = thickness_color;
+        textFieldResetUseCase(this);
     }
 
     /**
@@ -1192,10 +1013,11 @@ export class TextField extends InteractiveObject
     }
     set wordWrap (word_wrap: boolean)
     {
-        if (this._$wordWrap !== word_wrap) {
-            this._$wordWrap = !!word_wrap;
-            textFieldResetUseCase(this);
+        if (this._$wordWrap === word_wrap) {
+            return ;
         }
+        this._$wordWrap = !!word_wrap;
+        textFieldResetUseCase(this);
     }
 
     /**
@@ -1239,62 +1061,17 @@ export class TextField extends InteractiveObject
     set height (height: number)
     {
         height = +height;
-        if (!$isNaN(height) && height > -1) {
-
-            const bounds: IBounds = this._$getBounds(null);
-
-            const yMin: number = Math.abs(bounds.yMin);
-            this._$originBounds.yMax = height + yMin;
-            this._$bounds.yMax = this._$originBounds.yMax;
-            this._$bounds.yMin = this._$originBounds.yMin;
-            super.height = height;
-
-            textFieldReloadUseCase(this);
+        if (!isNaN(height) && 0 > height) {
+            return ;
         }
-    }
 
-    /**
-     * @description 親 DisplayObjectContainer のローカル座標を基準にした
-     *              DisplayObject インスタンスの x 座標を示します。
-     *              Indicates the x coordinate
-     *              of the DisplayObject instance relative to the local coordinates
-     *              of the parent DisplayObjectContainer.
-     *
-     * @member {number}
-     * @public
-     */
-    get x (): number
-    {
-        const matrix: Matrix = this._$transform.matrix;
-        const bounds: IBounds = this._$getBounds(null);
-        return matrix._$matrix[4] + bounds.xMin;
-    }
-    set x (x: number)
-    {
-        const bounds: IBounds = this._$getBounds(null);
-        super.x = x - bounds.xMin;
-    }
+        const yMax = height + this.bounds.yMin;
+        if (yMax === this.bounds.yMax) {
+            return ;
+        }
 
-    /**
-     * @description 親 DisplayObjectContainer のローカル座標を基準にした
-     *              DisplayObject インスタンスの y 座標を示します。
-     *              Indicates the y coordinate
-     *              of the DisplayObject instance relative to the local coordinates
-     *              of the parent DisplayObjectContainer.
-     *
-     * @member {number}
-     * @public
-     */
-    get y (): number
-    {
-        const matrix: Matrix = this._$transform.matrix;
-        const bounds: IBounds = this._$getBounds(null);
-        return matrix._$matrix[5] + bounds.yMin;
-    }
-    set y (y: number)
-    {
-        const bounds: IBounds = this._$getBounds(null);
-        super.y = y - bounds.yMin;
+        this.bounds.yMax = yMax;
+        textFieldReloadUseCase(this);
     }
 
     /**
@@ -1324,34 +1101,9 @@ export class TextField extends InteractiveObject
      */
     getLineText (line_index: number): string
     {
-        if (!this._$text && !this._$htmlText) {
-            return "";
-        }
-
-        line_index |= 0;
-
-        let lineText: string = "";
-        const textData: TextData = textFieldGetTextDataUseCase(this);
-        for (let idx: number = 0; idx < textData.textTable.length; idx++) {
-
-            const textObject: ITextObject = textData.textTable[idx];
-
-            if (textObject.line > line_index) {
-                break;
-            }
-
-            if (textObject.line !== line_index) {
-                continue;
-            }
-
-            if (textObject.mode !== "text") {
-                continue;
-            }
-
-            lineText += textObject.text;
-        }
-
-        return lineText;
+        return this._$text || this._$htmlText 
+            ? textFieldGetLineTextUseCase(this, line_index | 0)
+            : "";
     }
 
     /**
@@ -2375,35 +2127,6 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @param   {Float32Array} [matrix=null]
-     * @returns {object}
-     * @method
-     * @private
-     */
-    _$getBounds (matrix: Float32Array | null = null): IBounds
-    {
-        if (matrix) {
-
-            let multiMatrix : Float32Array = matrix;
-
-            const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-            if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-                || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-                || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-            ) {
-                multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
-            }
-
-            return $boundsMatrix(this._$bounds, multiMatrix);
-        }
-
-        return $getBoundsObject(
-            this._$bounds.xMin, this._$bounds.xMax,
-            this._$bounds.yMin, this._$bounds.yMax
-        );
-    }
-
-    /**
      * @param  {object} character
      * @return {void}
      * @method
@@ -2508,786 +2231,75 @@ export class TextField extends InteractiveObject
         return character;
     }
 
-    /**
-     * @param   {CanvasToWebGLContext} context
-     * @param   {Float32Array} matrix
-     * @returns {void}
-     * @method
-     * @private
-     */
-    _$clip (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array
-    ): void {
-
-        // size
-        const bounds: IBounds = this._$getBounds();
-        const xMax = bounds.xMax;
-        const xMin = bounds.xMin;
-        const yMax = bounds.yMax;
-        const yMin = bounds.yMin;
-        $poolBoundsObject(bounds);
-
-        const width: number  = Math.ceil(Math.abs(xMax - xMin));
-        const height: number = Math.ceil(Math.abs(yMax - yMin));
-        if (!width || !height) {
-            return;
-        }
-
-        let multiMatrix: Float32Array = matrix;
-        const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-        ) {
-            multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
-        }
-
-        context.reset();
-        context.setTransform(
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4], matrix[5]
-        );
-        context.beginPath();
-        context.moveTo(0, 0);
-        context.lineTo(width, 0);
-        context.lineTo(width, height);
-        context.lineTo(0, height);
-        context.lineTo(0, 0);
-        context.clip();
-
-        if (multiMatrix !== matrix) {
-            $poolFloat32Array6(multiMatrix);
-        }
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$draw (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array,
-        color_transform: Float32Array
-    ): void {
-
-        if (!this._$visible) {
-            return ;
-        }
-
-        if (this._$focusIndex === -1
-            && !this._$background
-            && !this._$border
-            && !this.text
-        ) {
-            return;
-        }
-
-        let multiColor: Float32Array = color_transform;
-        const rawColor: Float32Array = this._$transform._$rawColorTransform();
-        if (rawColor[0] !== 1 || rawColor[1] !== 1
-            || rawColor[2] !== 1 || rawColor[3] !== 1
-            || rawColor[4] !== 0 || rawColor[5] !== 0
-            || rawColor[6] !== 0 || rawColor[7] !== 0
-        ) {
-            multiColor = $multiplicationColor(color_transform, rawColor);
-        }
-
-        const alpha: number = $clamp(multiColor[3] + multiColor[7] / 255, 0 ,1);
-        if (!alpha) {
-            return ;
-        }
-
-        let multiMatrix: Float32Array = matrix;
-        const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-        ) {
-            multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
-        }
-
-        const baseBounds: IBounds = this._$getBounds(null);
-        baseBounds.xMin -= this._$thickness;
-        baseBounds.xMax += this._$thickness;
-        baseBounds.yMin -= this._$thickness;
-        baseBounds.yMax += this._$thickness;
-
-        const bounds: IBounds = $boundsMatrix(baseBounds, multiMatrix);
-        const xMax   = +bounds.xMax;
-        const xMin   = +bounds.xMin;
-        const yMax   = +bounds.yMax;
-        const yMin   = +bounds.yMin;
-        $poolBoundsObject(bounds);
-
-        const width: number  = Math.ceil(Math.abs(xMax - xMin));
-        const height: number = Math.ceil(Math.abs(yMax - yMin));
-        switch (true) {
-
-            case width === 0:
-            case height === 0:
-            case width === -$Infinity:
-            case height === -$Infinity:
-            case width === $Infinity:
-            case height === $Infinity:
-                return;
-
-            default:
-                break;
-
-        }
-
-        let xScale: number = +Math.sqrt(
-            multiMatrix[0] * multiMatrix[0]
-            + multiMatrix[1] * multiMatrix[1]
-        );
-        if (!$Number.isInteger(xScale)) {
-            const value: string = xScale.toString();
-            const index: number = value.indexOf("e");
-            if (index !== -1) {
-                xScale = +value.slice(0, index);
-            }
-            xScale = +xScale.toFixed(4);
-        }
-
-        let yScale: number = +Math.sqrt(
-            multiMatrix[2] * multiMatrix[2]
-            + multiMatrix[3] * multiMatrix[3]
-        );
-        if (!$Number.isInteger(yScale)) {
-            const value: string = yScale.toString();
-            const index: number = value.indexOf("e");
-            if (index !== -1) {
-                yScale = +value.slice(0, index);
-            }
-            yScale = +yScale.toFixed(4);
-        }
-
-        const filters: FilterArrayImpl = this._$filters || this.filters;
-        const canApply: boolean = filters !== null
-            && filters.length > 0
-            && this._$canApply(filters);
-
-        let filterBounds: IBounds = $getBoundsObject(0, width, 0, height);
-        if (canApply && filters) {
-            for (let idx: number = 0; idx < filters.length ; ++idx) {
-                filterBounds = filters[idx]
-                    ._$generateFilterRect(filterBounds, xScale, yScale);
-            }
-        }
-
-        // cache current buffer
-        const manager: FrameBufferManager = context.frameBuffer;
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-        if (!currentAttachment
-            || xMin - filterBounds.xMin > currentAttachment.width
-            || yMin - filterBounds.yMin > currentAttachment.height
-        ) {
-            $poolBoundsObject(filterBounds);
-            return;
-        }
-
-        if (0 > xMin + filterBounds.xMax || 0 > yMin + filterBounds.yMax) {
-            $poolBoundsObject(filterBounds);
-            return;
-        }
-
-        $poolBoundsObject(filterBounds);
-
-        // texture is small or renew
-        if (this._$isUpdated()) {
-            $cacheStore.removeCache(this._$instanceId);
-            context.cachePosition = null;
-            this._$cacheKeys.length = 0;
-        }
-
-        if (!this._$cacheKeys.length
-            || this._$cacheParams[0] !== xScale
-            || this._$cacheParams[1] !== yScale
-            || this._$cacheParams[2] !== color_transform[7]
-        ) {
-            const keys: number[] = $getArray(xScale, yScale);
-            this._$cacheKeys = $cacheStore.generateKeys(
-                this._$instanceId, keys
-            );
-            $poolArray(keys);
-
-            this._$cacheParams[0] = xScale;
-            this._$cacheParams[1] = yScale;
-            this._$cacheParams[2] = color_transform[7];
-        }
-
-        const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
-        context.cachePosition = $cacheStore.get(this._$cacheKeys);
-        if (!context.cachePosition) {
-
-            // resize
-            const lineWidth: number = Math.min(1, Math.max(xScale, yScale));
-            const width: number  = Math.ceil(Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-            const height: number = Math.ceil(Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
-
-            // new canvas
-            const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
-            canvas.width  = width  + lineWidth * 2;
-            canvas.height = height + lineWidth * 2;
-
-            const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
-            if (!ctx) {
-                throw new Error("the context is null.");
-            }
-
-            // border and background
-            if (this._$background || this._$border) {
-
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(width, 0);
-                ctx.lineTo(width, height);
-                ctx.lineTo(0, height);
-                ctx.lineTo(0, 0);
-
-                if (this._$background) {
-
-                    const rgb: RGBAImpl = $intToRGBA(this._$backgroundColor);
-                    const alpha: number = Math.max(0, Math.min(
-                        rgb.A * 255 + multiColor[7], 255)
-                    ) / 255;
-
-                    ctx.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-                    ctx.fill();
-                }
-
-                if (this._$border) {
-
-                    const rgb: RGBAImpl = $intToRGBA(this._$borderColor);
-                    const alpha: number = Math.max(0, Math.min(
-                        rgb.A * 255 + multiColor[7], 255)
-                    ) / 255;
-
-                    ctx.lineWidth   = lineWidth;
-                    ctx.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-                    ctx.stroke();
-
-                }
-
-            }
-
-            // mask start
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(2, 2);
-            ctx.lineTo(width - 2, 2);
-            ctx.lineTo(width - 2, height - 2);
-            ctx.lineTo(2, height - 2);
-            ctx.lineTo(2, 2);
-            ctx.clip();
-
-            let tx = 2;
-            if (this._$scrollX > 0) {
-                const scaleX: number = (this.textWidth - this.width) / this.width;
-                tx += -this._$scrollX * scaleX;
-            }
-
-            let ty = 2;
-            if (this._$scrollY > 0) {
-                const scaleY: number = (this.textHeight - this.height) / this.height;
-                ty += -this._$scrollY * scaleY;
-            }
-
-            ctx.setTransform(xScale, 0, 0, yScale, tx * xScale, ty * yScale);
-
-            ctx.beginPath();
-            this._$doDraw(ctx, multiColor, width / xScale, lineWidth);
-            ctx.restore();
-
-            const position: CachePositionImpl = manager
-                .createCachePosition(width, height);
-
-            const texture: WebGLTexture = manager
-                .createTextureFromCanvas(ctx.canvas);
-
-            context.drawTextureFromRect(texture, position);
-
-            // set cache
-            context.cachePosition = position;
-            $cacheStore.set(this._$cacheKeys, position);
-
-            // destroy cache
-            $cacheStore.destroy(ctx);
-        }
-
-        let drawFilter: boolean = false;
-        let offsetX: number = 0;
-        let offsetY: number = 0;
-        if (filters && filters.length
-            && this._$canApply(filters)
-        ) {
-
-            drawFilter = true;
-
-            const position: CachePositionImpl = this._$drawFilter(
-                context, multiMatrix, filters,
-                width, height
-            );
-
-            if (position.offsetX) {
-                offsetX = position.offsetX;
-            }
-
-            if (position.offsetY) {
-                offsetY = position.offsetY;
-            }
-
-            // update
-            context.cachePosition = position;
-        }
-
-        const radianX: number = Math.atan2(multiMatrix[1], multiMatrix[0]);
-        const radianY: number = Math.atan2(-multiMatrix[2], multiMatrix[3]);
-        if (!drawFilter && (radianX || radianY)) {
-
-            const tx: number = baseBounds.xMin * xScale;
-            const ty: number = baseBounds.yMin * yScale;
-
-            const cosX: number = Math.cos(radianX);
-            const sinX: number = Math.sin(radianX);
-            const cosY: number = Math.cos(radianY);
-            const sinY: number = Math.sin(radianY);
-
-            context.setTransform(
-                cosX, sinX, -sinY, cosY,
-                tx * cosX - ty * sinY + multiMatrix[4],
-                tx * sinX + ty * cosY + multiMatrix[5]
-            );
-
-        } else {
-
-            context.setTransform(1, 0, 0, 1,
-                xMin - offsetX, yMin - offsetY
-            );
-
-        }
-
-        // draw
-        if (context.cachePosition) {
-
-            context.globalAlpha = alpha;
-            context.imageSmoothingEnabled = true;
-            context.globalCompositeOperation = blendMode;
-
-            context.drawInstance(
-                xMin - offsetX, yMin - offsetY, xMax, yMax,
-                color_transform
-            );
-
-            // cache position clear
-            context.cachePosition = null;
-        }
-
-        // get cache
-        $poolBoundsObject(baseBounds);
-
-        // pool
-        if (multiMatrix !== matrix) {
-            $poolFloat32Array6(multiMatrix);
-        }
-
-        if (multiColor !== color_transform) {
-            $poolFloat32Array8(multiColor);
-        }
-    }
-
-    /**
-     * @param  {CanvasRenderingContext2D} context
-     * @param  {Float32Array} color_transform
-     * @param  {number} width
-     * @param  {number} line_width
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$doDraw (
-        context: CanvasRenderingContext2D,
-        color_transform: Float32Array,
-        width: number,
-        line_width: number
-    ): void {
-
-        // init
-        const textData: TextData = textFieldGetTextDataUseCase(this);
-        if (!textData.textTable.length
-            && this._$focusIndex > -1
-            && this._$focusVisible
-        ) {
-
-            const textFormat: TextFormat = this._$defaultTextFormat;
-
-            const rgb: RGBAImpl = $intToRGBA(textFormat.color || 0);
-            const alpha: number = Math.max(0, Math.min(
-                rgb.A * 255 + color_transform[7], 255)
-            ) / 255;
-
-            context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-            context.beginPath();
-            context.moveTo(0, 0);
-            context.lineTo(0, 0 + (textFormat.size || 12));
-            context.stroke();
-
-            return ;
-        }
-
-        if (this._$selectIndex > -1 && this._$focusIndex > -1) {
-
-            const range: number  = textData.textTable.length - 1;
-            let minIndex: number = 0;
-            let maxIndex: number = 0;
-            if (this._$focusIndex <= this._$selectIndex) {
-                minIndex = Math.min(this._$focusIndex, range);
-                maxIndex = Math.min(this._$selectIndex, range);
-            } else {
-                minIndex = Math.min(this._$selectIndex, range);
-                maxIndex = Math.min(this._$focusIndex - 1, range);
-            }
-
-            const textObject: ITextObject = textData.textTable[minIndex];
-            const lineObject: ITextObject = textData.lineTable[textObject.line];
-            const offsetAlign: number = this._$getAlignOffset(lineObject, width);
-
-            let x: number = 0;
-            if (minIndex && textObject.mode === "text") {
-                let idx: number = minIndex;
-                while (idx) {
-                    const textObject: ITextObject = textData.textTable[--idx];
-                    if (textObject.mode !== "text") {
-                        break;
-                    }
-                    x += textObject.w;
-                }
-            }
-
-            context.fillStyle = "#b4d7ff";
-
-            let w: number = 0;
-            for (let idx: number = minIndex; idx <= maxIndex; ++idx) {
-
-                const textObject: ITextObject = textData.textTable[idx];
-                if (textObject.mode === "text") {
-
-                    w += textObject.w;
-
-                    if (idx !== maxIndex) {
-                        continue;
-                    }
-                }
-
-                let y: number = 0;
-                const line: number = textObject.mode === "text"
-                    ? textObject.line
-                    : textObject.line - 1;
-
-                for (let idx: number = 0; idx < line; ++idx) {
-                    y += textData.heightTable[idx];
-                }
-
-                context.beginPath();
-                context.rect(
-                    x, y,
-                    w + offsetAlign,
-                    textData.heightTable[line]
-                );
-                context.fill();
-
-                x = 0;
-                w = 0;
-            }
-        }
-
-        const tw: number = this.width;
-        let scrollX = 0;
-        if (this._$scrollX > 0) {
-            const scaleX: number = (this.textWidth - tw) / tw;
-            scrollX = this._$scrollX * scaleX;
-        }
-        const limitWidth: number  = tw + scrollX;
-
-        const th: number = this.height;
-        let scrollY = 0;
-        if (this._$scrollY > 0) {
-            const scaleY: number = (this.textHeight - th) / th;
-            scrollY = this._$scrollY * scaleY;
-        }
-        const limitHeight: number = th + scrollY;
-
-        // setup
-        let offsetWidth: number   = 0;
-        let offsetHeight: number  = 0;
-        let offsetAlign: number   = 0;
-        let verticalAlign: number = 0;
-
-        let skip = false;
-        let currentIndex = -1;
-        for (let idx: number = 0; idx < textData.textTable.length; ++idx) {
-
-            const textObject: ITextObject = textData.textTable[idx];
-            if (textObject.mode === "text" || textObject.mode === "break") {
-                currentIndex++;
-                if (this._$stopIndex > -1 && currentIndex > this._$stopIndex) {
-                    break;
-                }
-            }
-
-            if (skip && textObject.mode === "text") {
-                continue;
-            }
-
-            const textFormat: TextFormat = textObject.textFormat;
-
-            // check
-            if (this._$autoSize === "none") {
-
-                if (offsetHeight > limitHeight) {
-                    break;
-                }
-
-                if (textObject.mode === "text") {
-                    if (scrollX > offsetWidth + textObject.w
-                        || offsetWidth > limitWidth
-                    ) {
-                        offsetWidth += textObject.w;
-                        continue;
-                    }
-                }
-
-            }
-
-            // color setting
-            const rgb: RGBAImpl = $intToRGBA(textFormat.color || 0);
-            const alpha: number = Math.max(0, Math.min(
-                rgb.A * 255 + color_transform[7], 255)
-            ) / 255;
-
-            context.fillStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-
-            // focus line
-            if (this._$focusVisible && this._$focusIndex === idx) {
-
-                const x: number = offsetWidth + offsetAlign + 0.1;
-                let line: number = textObject.line;
-
-                let h: number = textObject.y;
-                let y: number = textData.ascentTable[line];
-                if (textObject.mode !== "text") {
-                    h = textObject.mode === "break"
-                        ? textObject.h
-                        : textData.ascentTable[line - 1];
-                    if (line > 0 && !textData.ascentTable[line - 1]) {
-                        line = textObject.line;
-                        y = textData.ascentTable[line - 1];
-                    } else {
-                        line = textObject.line - 1;
-                        y = textData.ascentTable[line];
-                    }
-                }
-
-                for (let idx: number = 0; idx < line; ++idx) {
-                    y += textData.heightTable[idx];
-                }
-
-                context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-                context.beginPath();
-                context.moveTo(x, y);
-                context.lineTo(x, y - h);
-                context.stroke();
-            }
-
-            if (this._$thickness) {
-                const rgb: RGBAImpl = $intToRGBA(this._$thicknessColor);
-                const alpha: number = Math.max(0, Math.min(
-                    rgb.A * 255 + color_transform[7], 255)
-                ) / 255;
-                context.lineWidth   = this._$thickness;
-                context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-            }
-
-            const line: number = textObject.line | 0;
-            switch (textObject.mode) {
-
-                case "break":
-                case "wrap":
-
-                    // reset width
-                    offsetWidth = 0;
-                    if (line) {
-                        offsetHeight += textData.heightTable[line - 1];
-                    }
-
-                    if (scrollY > offsetHeight + textData.heightTable[line]) {
-                        skip = true;
-                        continue;
-                    }
-
-                    verticalAlign = textData.ascentTable[line];
-                    offsetAlign   = this._$getAlignOffset(textObject, width);
-
-                    skip = false;
-
-                    break;
-
-                case "text":
-                    {
-                        context.beginPath();
-                        context.font = $generateFontStyle(
-                            textFormat.font || "",
-                            textFormat.size || 0,
-                            !!textFormat.italic,
-                            !!textFormat.bold
-                        );
-
-                        const x: number = offsetWidth  + offsetAlign;
-                        const y: number = offsetHeight + verticalAlign;
-                        if (textFormat.underline) {
-
-                            const rgb: RGBAImpl = $intToRGBA(textFormat.color || 0);
-                            const alpha: number = Math.max(0, Math.min(
-                                rgb.A * 255 + color_transform[7], 255)
-                            ) / 255;
-
-                            context.lineWidth   = line_width;
-                            context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-
-                            context.beginPath();
-                            context.moveTo(x, y + 2);
-                            context.lineTo(x + textObject.w, y + 2);
-                            context.stroke();
-
-                        }
-
-                        if (this._$thickness) {
-                            context.strokeText(textObject.text, x, y);
-                        }
-
-                        context.fillText(textObject.text, x, y);
-
-                        offsetWidth += textObject.w;
-                    }
-                    break;
-
-                // case "image":
-
-                //     if (!obj.loaded) {
-                //         continue;
-                //     }
-
-                //     context.beginPath();
-                //     context.drawImage(obj.image,
-                //         obj.hspace, obj.y,
-                //         obj.width, obj.height
-                //     );
-
-                //     break;
-
-            }
-        }
-
-        if (this._$focusVisible && this._$focusIndex >= textData.textTable.length) {
-            const textObject: ITextObject = textData.textTable[this._$focusIndex - 1];
-            if (textObject) {
-                const rgb: RGBAImpl = $intToRGBA(textObject.textFormat.color || 0);
-                const alpha: number = Math.max(0, Math.min(
-                    rgb.A * 255 + color_transform[7], 255)
-                ) / 255;
-
-                context.strokeStyle = `rgba(${rgb.R},${rgb.G},${rgb.B},${alpha})`;
-
-                const x: number = offsetWidth + offsetAlign + 0.1;
-                const y: number = offsetHeight + verticalAlign;
-
-                context.beginPath();
-                if (textObject.mode === "text") {
-                    context.moveTo(x, y - textObject.y);
-                    context.lineTo(x, y);
-                } else {
-                    context.moveTo(x, y + textObject.h);
-                    context.lineTo(x, y);
-                }
-                context.stroke();
-            }
-        }
-    }
-
-    /**
-     * @param  {CanvasRenderingContext2D} context
-     * @param  {Float32Array} matrix
-     * @param  {object}  options
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$mouseHit (
-        context: CanvasRenderingContext2D,
-        matrix: Float32Array,
-        options: PlayerHitObjectImpl
-    ): boolean {
-
-        if (!this._$visible) {
-            return false;
-        }
-
-        return this._$hit(context, matrix, options);
-    }
-
-    /**
-     * @param  {CanvasRenderingContext2D} context
-     * @param  {Float32Array} matrix
-     * @param  {object} options
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$hit (
-        context: CanvasRenderingContext2D,
-        matrix: Float32Array,
-        options: PlayerHitObjectImpl
-    ): boolean {
-
-        let multiMatrix: Float32Array = matrix;
-        const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-        if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-        ) {
-            multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
-        }
-
-        const baseBounds: IBounds = this._$getBounds(null);
-
-        const bounds: IBounds = $boundsMatrix(baseBounds, multiMatrix);
-        const xMax = +bounds.xMax;
-        const xMin = +bounds.xMin;
-        const yMax = +bounds.yMax;
-        const yMin = +bounds.yMin;
-        $poolBoundsObject(bounds);
-        $poolBoundsObject(baseBounds);
-
-        const width: number  = Math.ceil(Math.abs(xMax - xMin));
-        const height: number = Math.ceil(Math.abs(yMax - yMin));
-
-        context.setTransform(1, 0, 0, 1, xMin, yMin);
-        context.beginPath();
-        context.moveTo(0, 0);
-        context.lineTo(width, 0);
-        context.lineTo(width, height);
-        context.lineTo(0, height);
-        context.lineTo(0, 0);
-
-        if (multiMatrix !== matrix) {
-            $poolFloat32Array6(multiMatrix);
-        }
-
-        return context.isPointInPath(options.x, options.y);
-    }
+    // /**
+    //  * @param  {CanvasRenderingContext2D} context
+    //  * @param  {Float32Array} matrix
+    //  * @param  {object}  options
+    //  * @return {boolean}
+    //  * @method
+    //  * @private
+    //  */
+    // _$mouseHit (
+    //     context: CanvasRenderingContext2D,
+    //     matrix: Float32Array,
+    //     options: PlayerHitObjectImpl
+    // ): boolean {
+
+    //     if (!this._$visible) {
+    //         return false;
+    //     }
+
+    //     return this._$hit(context, matrix, options);
+    // }
+
+    // /**
+    //  * @param  {CanvasRenderingContext2D} context
+    //  * @param  {Float32Array} matrix
+    //  * @param  {object} options
+    //  * @return {boolean}
+    //  * @method
+    //  * @private
+    //  */
+    // _$hit (
+    //     context: CanvasRenderingContext2D,
+    //     matrix: Float32Array,
+    //     options: PlayerHitObjectImpl
+    // ): boolean {
+
+    //     let multiMatrix: Float32Array = matrix;
+    //     const rawMatrix: Float32Array = this._$transform._$rawMatrix();
+    //     if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+    //         || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+    //         || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
+    //     ) {
+    //         multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
+    //     }
+
+    //     const baseBounds: IBounds = this._$getBounds(null);
+
+    //     const bounds: IBounds = $boundsMatrix(baseBounds, multiMatrix);
+    //     const xMax = +bounds.xMax;
+    //     const xMin = +bounds.xMin;
+    //     const yMax = +bounds.yMax;
+    //     const yMin = +bounds.yMin;
+    //     $poolBoundsObject(bounds);
+    //     $poolBoundsObject(baseBounds);
+
+    //     const width: number  = Math.ceil(Math.abs(xMax - xMin));
+    //     const height: number = Math.ceil(Math.abs(yMax - yMin));
+
+    //     context.setTransform(1, 0, 0, 1, xMin, yMin);
+    //     context.beginPath();
+    //     context.moveTo(0, 0);
+    //     context.lineTo(width, 0);
+    //     context.lineTo(width, height);
+    //     context.lineTo(0, height);
+    //     context.lineTo(0, 0);
+
+    //     if (multiMatrix !== matrix) {
+    //         $poolFloat32Array6(multiMatrix);
+    //     }
+
+    //     return context.isPointInPath(options.x, options.y);
+    // }
 }

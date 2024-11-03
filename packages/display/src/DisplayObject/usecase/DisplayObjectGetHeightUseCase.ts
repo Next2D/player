@@ -3,8 +3,8 @@ import { $poolArray } from "../../DisplayObjectUtil";
 import { execute as displayObjectGetCalcBoundsUseCase } from "./DisplayObjectGetCalcBoundsUseCase";
 
 /**
- * @description DisplayObjectの幅を返却
- *              DisplayObject width returned
+ * @description DisplayObjectの高さを返却
+ *              DisplayObject height returned
  * 
  * @param  {DisplayObject} display_object 
  * @return {number}
@@ -15,18 +15,18 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
 {
     const bounds = displayObjectGetCalcBoundsUseCase(display_object);
 
-    const width: number = Math.abs(bounds[2] - bounds[0]);
+    const height: number = Math.abs(bounds[3] - bounds[1]);
     $poolArray(bounds);
 
     switch (true) {
 
-        case width === 0:
-        case width === Infinity:
-        case width === -Infinity:
+        case height === 0:
+        case height === Infinity:
+        case height === -Infinity:
             return 0;
 
         default:
-            return +width.toFixed(2);
+            return +height.toFixed(2);
 
     }
 };

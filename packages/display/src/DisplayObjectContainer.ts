@@ -98,7 +98,7 @@ export class DisplayObjectContainer extends InteractiveObject
      * @description この DisplayObjectContainer インスタンスに子 DisplayObject インスタンスを追加します。
      *              Adds a child DisplayObject instance to this DisplayObjectContainer instance.
      *
-     * @param  {DisplayObject} child
+     * @param  {DisplayObject} display_object
      * @param  {number}        index
      * @return {DisplayObject}
      * @method
@@ -208,28 +208,19 @@ export class DisplayObjectContainer extends InteractiveObject
     //     return null;
     // }
 
-    // /**
-    //  * @description 子 DisplayObject インスタンスのインデックス位置を返します。
-    //  *              Returns the index position of a child DisplayObject instance.
-    //  *
-    //  * @param  {DisplayObject} child
-    //  * @return {number}
-    //  * @method
-    //  * @public
-    //  */
-    // getChildIndex (child: DisplayObjectImpl<any>): number
-    // {
-    //     if (child._$parent !== this) {
-    //         throw new Error("ArgumentError: getChildIndex: not child");
-    //     }
-
-    //     const index: number = this._$getChildren().indexOf(child);
-    //     if (index === -1) {
-    //         throw new Error("ArgumentError: getChildIndex: not found.");
-    //     }
-
-    //     return index;
-    // }
+    /**
+     * @description 子 DisplayObject インスタンスのインデックス位置を返します。
+     *              Returns the index position of a child DisplayObject instance.
+     *
+     * @param  {DisplayObject} display_object
+     * @return {number}
+     * @method
+     * @public
+     */
+    getChildIndex <D extends DisplayObject>(display_object: D): number
+    {
+        return this.children.indexOf(display_object);
+    }
 
     /**
      * @description DisplayObjectContainer インスタンスの子リストから指定の

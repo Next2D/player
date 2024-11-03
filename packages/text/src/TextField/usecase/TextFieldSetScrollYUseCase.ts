@@ -6,70 +6,69 @@ import { $clamp } from "../../TextUtil";
 import { execute as textFieldApplyChangesService } from "../service/TextFieldApplyChangesService";
 
 /**
- * @description xスクロール位置を設定します
- *              x Sets the scroll position.
+ * @description yスクロール位置を設定します
+ *              y Sets the scroll position.
  *
  * @param  {TextField} text_field 
- * @param  {number} scroll_x 
+ * @param  {number} scroll_y 
  * @return {number}
  * @method
  * @protected
  */
-export const execute = (text_field: TextField, scroll_x: number): number =>
+export const execute = (text_field: TextField, scroll_y: number): number =>
 {
-    const scrollX = text_field.scrollX;
+    const scrollY = text_field.scrollY;
 
     if (!text_field.scrollEnabled
         || text_field.autoSize !== "none"
+        || !text_field.multiline && !text_field.wordWrap
     ) {
-        return scrollX;
+        return scrollY;
     }
 
-    // check y animation
-    if (text_field.yScrollShape.hasLocalVariable("job")) {
-        return scrollX;
+    // check x animation
+    if (text_field.xScrollShape.hasLocalVariable("job")) {
+        return scrollY;
     }
 
-    const width = text_field.width;
-    scroll_x = $clamp(scroll_x, 0, width + 0.5, 0);
-    if (text_field.scrollX === scroll_x) {
-        return scrollX;
+    const height = text_field.height;
+    scroll_y = $clamp(scroll_y, 0, height, 0);
+    if (text_field.scrollY === scroll_y) {
+        return scrollY;
     }
-    
-    if (text_field.textWidth > width) {
+
+    if (text_field.textHeight > height) {
 
         textFieldApplyChangesService(text_field);
 
-        const xScrollShape = text_field.xScrollShape;
-        xScrollShape.width = width * width / text_field.textWidth;
+        const yScrollShape = text_field.yScrollShape;
+        yScrollShape.height = height * height / text_field.textHeight;
 
         const parent = text_field.parent;
         if (parent) {
 
             // start animation
-            if (xScrollShape.hasLocalVariable("job")) {
-                xScrollShape.getLocalVariable("job").stop();
+            if (yScrollShape.hasLocalVariable("job")) {
+                yScrollShape.getLocalVariable("job").stop();
             }
 
             // view start
-            xScrollShape.alpha = 0.9;
+            yScrollShape.alpha = 0.9;
 
             // set position
-            xScrollShape.x = text_field.x + 1
-                + (width - 1 - xScrollShape.width)
-                / (width - 1)
-                * (text_field.scrollX - 1);
-            
-            xScrollShape.y = text_field.y + text_field.height 
-                - xScrollShape.height - 0.5;
+            yScrollShape.x = text_field.x + text_field.width - yScrollShape.width - 0.5;
+            yScrollShape.y = text_field.y + 0.5
+                + (height - 1 - yScrollShape.height)
+                / (height - 1)
+                * (text_field.scrollY - 1);
 
             // added sprite
             parent.addChildAt(
-                xScrollShape,
+                yScrollShape,
                 parent.getChildIndex(text_field) + 1
             );
 
-            const job = Tween.add(xScrollShape,
+            const job = Tween.add(yScrollShape,
                 { "alpha" : 0.9 },
                 { "alpha" : 0 },
                 0.5, 0.2, Easing.outQuad
@@ -85,13 +84,13 @@ export const execute = (text_field: TextField, scroll_x: number): number =>
             });
             job.start();
 
-            xScrollShape.setLocalVariable("job", job);
+            yScrollShape.setLocalVariable("job", job);
         }
     }
 
     if (text_field.willTrigger(Event.SCROLL)) {
         text_field.dispatchEvent(new Event(Event.SCROLL, true));
     }
-
-    return scroll_x;
+    
+    return scroll_y;
 };

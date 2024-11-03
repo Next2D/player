@@ -49,10 +49,6 @@ export const execute = (
 
                 execute(node as Document, textFormat, text_data, options);
 
-                if (options.multiline) {
-                    textParserCreateNewLineUseCase(text_data, textFormat);
-                }
-
                 continue;
 
             case "U": // underline

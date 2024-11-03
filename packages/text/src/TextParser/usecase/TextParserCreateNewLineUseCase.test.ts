@@ -3,7 +3,7 @@ import { TextData } from "../../TextData";
 import { TextFormat } from "../../TextFormat";
 import { describe, expect, it } from "vitest";
 
-describe("TextParserCreateNewLineUseCase.js length test", () =>
+describe("TextParserCreateNewLineUseCase.js test", () =>
 {
     it("test case1", () =>
     {
