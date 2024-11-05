@@ -1,4 +1,5 @@
 import type { Context } from "@next2d/webgl";
+import type { IRGBA } from "./interface/IRGBA";
 
 /**
  * @type {number}
@@ -194,4 +195,21 @@ export const $poolArray = (array: any[]): void =>
     }
 
     $arrays.push(array);
+};
+
+/**
+ * @param   {number} color
+ * @param   {number} [alpha=1]
+ * @returns {IRGBA}
+ * @method
+ * @static
+ */
+export const $intToRGBA = (color: number, alpha: number = 1): IRGBA =>
+{
+    return {
+        "R": (color & 0xff0000) >> 16,
+        "G": (color & 0x00ff00) >> 8,
+        "B": color & 0x0000ff,
+        "A": alpha * 255
+    };
 };

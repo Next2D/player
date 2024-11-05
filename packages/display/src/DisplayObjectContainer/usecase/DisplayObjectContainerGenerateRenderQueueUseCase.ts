@@ -1,11 +1,13 @@
 import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { Shape } from "../../Shape";
+import type { TextField } from "@next2d/text";
 import { $COLOR_ARRAY_IDENTITY } from "../../Stage";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as shapeGenerateRenderQueueUseCase } from "../../Shape/usecase/ShapeGenerateRenderQueueUseCase";
 import { execute as shapeGenerateClipQueueUseCase } from "../../Shape/usecase/ShapeGenerateClipQueueUseCase";
+import { execute as textFieldGenerateRenderQueueUseCase } from "../../TextField/usecase/TextFieldGenerateRenderQueueUseCase";
 import { execute as displayObjectIsMaskReflectedInDisplayUseCase } from "../../DisplayObject/usecase/DisplayObjectIsMaskReflectedInDisplayUseCase";
 import {
     $clamp,
@@ -206,6 +208,16 @@ export const execute = <P extends DisplayObjectContainer>(
                 break;
 
             case child.isText: // 0x02
+                textFieldGenerateRenderQueueUseCase(
+                    child as TextField, 
+                    render_queue, 
+                    tMatrix, 
+                    colorTransform,
+                    rendererWidth,
+                    rendererHeight,
+                    point_x,
+                    point_y
+                );
                 break;
 
             case child.isVideo: // 0x03

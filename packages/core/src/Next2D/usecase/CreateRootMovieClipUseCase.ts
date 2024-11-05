@@ -1,6 +1,9 @@
 import type { IPlayerOptions } from "../../interface/IPlayerOptions";
 import { $player } from "../../Player";
 import { $clamp } from "../../CoreUtil";
+import { execute as playerRemoveLoadingElementService } from "../../Player/service/PlayerRemoveLoadingElementService";
+import { execute as playerAppendCanvasElementService } from "../../Player/service/PlayerAppendCanvasElementService";
+import { execute as playerReadyCompleteUseCase } from "../../Player/usecase/PlayerReadyCompleteUseCase";
 import {
     Sprite,
     $stage
@@ -10,10 +13,10 @@ import {
  * @description RootのMovieClipを作成します。
  *              Create a MovieClip for Root.
  *
- * @param  {number} width
- * @param  {number} height
- * @param  {number} fps
- * @param  {object} options
+ * @param  {number} [width=240]
+ * @param  {number} [height=240]
+ * @param  {number} [fps=60]
+ * @param  {object} [options=null]
  * @return {Promise}
  * @method
  * @protected
@@ -21,7 +24,7 @@ import {
 export const execute = async (
     width: number = 240,
     height: number = 240,
-    fps: number = 24,
+    fps: number = 60,
     options: IPlayerOptions | null = null
 ): Promise<Sprite> => {
 
@@ -38,8 +41,14 @@ export const execute = async (
 
     const root = $stage.addChild<Sprite>(new Sprite());
 
-    // stage ready
-    $stage.ready = true;
+    // ready complete
+    playerReadyCompleteUseCase();
+
+    // remove loading
+    playerRemoveLoadingElementService();
+
+    // append canvas
+    playerAppendCanvasElementService();
 
     return root;
 };

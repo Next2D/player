@@ -3,6 +3,7 @@ import type { Rectangle } from"@next2d/geom";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
+import { execute as shapeGetRawBoundsService } from "../../Shape/service/ShapeGetRawBoundsService";
 import { execute as shapeGenerateHashService } from "../service/ShapeGenerateHashService";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
 import { $stage } from "../../Stage";
@@ -20,6 +21,7 @@ import {
     ColorTransform,
     Matrix
 } from "@next2d/geom";
+import { MovieClip } from "../../MovieClip";
 
 /**
  * @description renderer workerに渡すShapeの描画データを生成
@@ -29,6 +31,10 @@ import {
  * @param  {array} render_queue
  * @param  {Float32Array} matrix 
  * @param  {Float32Array} color_transform
+ * @param  {number} renderer_width
+ * @param  {number} renderer_height
+ * @param  {number} point_x
+ * @param  {number} point_y
  * @return {void}
  * @method
  * @protected
@@ -78,9 +84,10 @@ export const execute = (
         : matrix;
 
     // draw graphics
+    const rawBounds = shapeGetRawBoundsService(shape);
     const bounds = displayObjectCalcBoundsMatrixService(
-        graphics.xMin, graphics.yMin, 
-        graphics.xMax, graphics.yMax,
+        rawBounds[0], rawBounds[1], 
+        rawBounds[2], rawBounds[3],
         tMatrix
     );
 
@@ -106,6 +113,7 @@ export const execute = (
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
+            $poolArray(rawBounds);
             render_queue.push(0);
             return;
 
@@ -125,6 +133,7 @@ export const execute = (
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
+        $poolArray(rawBounds);
         render_queue.push(0);
         return;
     }
@@ -135,13 +144,9 @@ export const execute = (
     render_queue.push(...tMatrix, ...tColorTransform);
 
     // base bounds
-    render_queue.push(
-        graphics.xMin, 
-        graphics.yMin, 
-        graphics.xMax, 
-        graphics.yMax
-    );
-    
+    render_queue.push(...rawBounds);
+    $poolArray(rawBounds);
+
     const isGridEnabled: boolean = rawMatrix && shape.scale9Grid
         ? Math.abs(rawMatrix[1]) < 0.001 && Math.abs(rawMatrix[2]) < 0.0001
         : false;
@@ -240,7 +245,7 @@ export const execute = (
             );
             $poolFloat32Array6(stageMatrix);
 
-            const rawData = shape.parent.concatenatedMatrix.rawData;
+            const rawData = (shape.parent as MovieClip).concatenatedMatrix.rawData;
             const aMatrix = $getFloat32Array6(
                 rawData[0], rawData[1], rawData[2], rawData[3],
                 rawData[4] * scale - xMin,
@@ -337,7 +342,9 @@ export const execute = (
         }
     }
 
-    render_queue.push(displayObjectBlendToNumberService(shape.blendMode));
+    render_queue.push(
+        displayObjectBlendToNumberService(shape.blendMode)
+    );
 
     const useFilfer = params.length > 0;
     render_queue.push(+useFilfer);

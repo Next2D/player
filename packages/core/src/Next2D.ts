@@ -17,7 +17,7 @@ import { net } from "./Net";
 import { text } from "./Text";
 import { ui } from "./UI";
 import { execute as loadService } from "./Next2D/usecase/LoadUseCase";
-import { execute as createRootMovieClip } from "./Next2D/service/CreateRootMovieClipService";
+import { execute as createRootMovieClipUseCase } from "./Next2D/usecase/CreateRootMovieClipUseCase";
 
 /**
  * @description Next2Dの起動管理クラス
@@ -176,7 +176,7 @@ export class Next2D
         options: IPlayerOptions | null = null
     ): Promise<Sprite> {
         await Promise.all([this._$promise]);
-        return await createRootMovieClip(
+        return await createRootMovieClipUseCase(
             width, height, fps, options
         );
     }

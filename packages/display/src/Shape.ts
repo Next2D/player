@@ -60,7 +60,7 @@ export class Shape extends DisplayObject
      * @type {number[]}
      * @public
      */
-    public cacheParams: number[];
+    public readonly cacheParams: number[];
 
     /**
      * @description ビットマップ描画の判定フラグ

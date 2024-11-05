@@ -1,9 +1,8 @@
-import { execute } from "./TextureManagerCreateAtlasTextureUseCase";
-import { describe, expect, it, vi } from "vitest";
+import { execute } from "./TextureManagerCreateFromPixelsUseCase";
 import { $setActiveTextureUnit } from "../../TextureManager";
-import { $RENDER_MAX_SIZE } from "../../WebGLUtil.ts";
+import { describe, expect, it, vi } from "vitest";
 
-describe("TextureManagerCreateAtlasTextureUseCase.js method test", () =>
+describe("TextureManagerCreateFromPixelsUseCase.js method test", () =>
 {
     it("test case", async () =>
     {
@@ -26,15 +25,20 @@ describe("TextureManagerCreateAtlasTextureUseCase.js method test", () =>
                     "texStorage2D": vi.fn(() => { return "texStorage2D" }),
                     "TEXTURE0": 0,
                     "TEXTURE3": 0,
+                    "texSubImage2D": vi.fn((a, b, c, d, width, height, e, f, pixels) => {
+                        expect(width).toBe(100);
+                        expect(height).toBe(200);
+                        expect(pixels.length).toBe(100 * 200 * 4);
+                    }),
                 }
             }
         });
 
         // not hit
         $setActiveTextureUnit(-1);
-        
-        const textureObject = execute();
-        expect(textureObject.width).toBe($RENDER_MAX_SIZE);
-        expect(textureObject.height).toBe($RENDER_MAX_SIZE);
+        const textureObject = execute(100, 200, new Uint8Array(100 * 200 * 4), true);
+
+        expect(textureObject.width).toBe(100);
+        expect(textureObject.height).toBe(200);
     });
 });

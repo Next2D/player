@@ -255,6 +255,25 @@ export class TextField extends InteractiveObject
      */
     public $scrollY: number;
 
+    /**
+     * @description ビルドされたキャッシュキー
+     *              Built cache key
+     *
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public cacheKey: number;
+
+    /**
+     * @description キャッシュのビルドに利用されるパラメータ
+     *              Parameters used to build the cache
+     *
+     * @type {number[]}
+     * @public
+     */
+    public readonly cacheParams: number[];
+
     private _$background: boolean;
     private _$backgroundColor: number;
     private _$border: boolean;
@@ -272,8 +291,6 @@ export class TextField extends InteractiveObject
     private _$thickness: number;
     private _$thicknessColor: number;
     private _$stopIndex: number;
-    private _$cacheKeys: string[];
-    private readonly _$cacheParams: number[];
 
     /**
      * @constructor
@@ -553,15 +570,16 @@ export class TextField extends InteractiveObject
 
         /**
          * @type {array}
-         * @private
+         * @default 0
+         * @public
          */
-        this._$cacheKeys = [];
+        this.cacheKey = 0;
 
         /**
          * @type {array}
-         * @private
+         * @public
          */
-        this._$cacheParams = [];
+        this.cacheParams = [0, 0, 0];
     }
 
     /**

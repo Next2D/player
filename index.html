@@ -10,7 +10,15 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        next2d.load("develop");
+        const root = await next2d.createRootMovieClip();
+        const TextField = next2d.text.TextField;
+
+        const textField = new TextField();
+        textField.text = "Hello Next2D!";
+        root.addChild(textField);  
+         
+        console.log(root);
+        // next2d.load("develop");
     });
 </script>
 </body>

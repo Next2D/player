@@ -19,6 +19,18 @@ export const $RENDERER_CONTAINER_TYPE: number = 0x00;
 export const $RENDERER_SHAPE_TYPE: number = 0x01;
 
 /**
+ * @type {number}
+ * @const
+ */
+export const $RENDERER_TEXT_TYPE: number = 0x02;
+
+/**
+ * @type {number}
+ * @const
+ */
+export const $RENDERER_VIDEO_TYPE: number = 0x03;
+
+/**
  * @typs {Float32Array}
  * @const
  */
