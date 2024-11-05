@@ -2,10 +2,14 @@ import type { Node } from "@next2d/texture-packer";
 import type { ITextFieldAutoSize } from "../../interface/ITextFieldAutoSize";
 import type { ITextSetting } from "../../interface/ITextSetting";
 import { $cacheStore } from "@next2d/cache";
-import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService"; 
-import { $clamp } from "../../../../webgl/src/WebGLUtil";
 import { $context } from "../../RendererUtil";
+import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService"; 
+import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService"; 
 import { execute as textFieldDrawOffscreenCanvasUseCase } from "./TextFieldDrawOffscreenCanvasUseCase";
+import {
+    $clamp,
+    $poolArray
+} from "../../../../webgl/src/WebGLUtil";
 
 /**
  * @type {TextDecoder}
@@ -80,8 +84,13 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             ? $cacheStore.get(uniqueKey, `${cacheKey}`) as Node
             : $context.createNode(width, height);
 
+        if (!hasNode) {
+            $cacheStore.set(uniqueKey, `${cacheKey}`, node);
+        }
+
         const length = render_queue[index++];
         const buffer = new Uint8Array(render_queue.subarray(index, index + length));
+        index += length;
 
         let autoSize: ITextFieldAutoSize = "none";
         switch (render_queue[index++]) {
@@ -134,14 +143,26 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             xScale, yScale
         );
 
-        // 
-        console.log(canvas);
+        // fixed logic
+        const currentAttachment = $context.currentAttachmentObject;
+        $context.bind($context.atlasAttachmentObject);
 
-        if (!hasNode) {
-            $cacheStore.set(uniqueKey, `${cacheKey}`, node);
+        $context.reset();
+        $context.beginNodeRendering(node);
+
+        const offsetY = $context.atlasAttachmentObject.height - node.y - height;
+        $context.setTransform(1, 0, 0, 1, 
+            node.x,
+            offsetY
+        );
+
+        $context.drawCanvas(node, canvas);
+
+        $context.endNodeRendering();
+
+        if (currentAttachment) {
+            $context.bind(currentAttachment);
         }
-        
-        index += length;
 
     } else {
         node = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node;
@@ -160,6 +181,46 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     if (useFilfer) {
 
     }
+
+    // calc bounds
+    const bounds = displayObjectCalcBoundsMatrixService(
+        xMin, yMin, xMax, yMax, matrix
+    );
+
+    const radianX = Math.atan2(matrix[1], matrix[0]);
+    const radianY = Math.atan2(-matrix[2], matrix[3]);
+    if (radianX || radianY) {
+
+        const tx = xMin * xScale;
+        const ty = yMin * yScale;
+
+        const cosX = Math.cos(radianX);
+        const sinX = Math.sin(radianX);
+        const cosY = Math.cos(radianY);
+        const sinY = Math.sin(radianY);
+
+        $context.setTransform(
+            cosX, sinX, -sinY, cosY,
+            tx * cosX - ty * sinY + matrix[4],
+            tx * sinX + ty * cosY + matrix[5]
+        );
+
+    } else {
+
+        $context.setTransform(1, 0, 0, 1,
+            bounds[0], bounds[1]
+        );
+
+    }
+
+    // 描画範囲をinstanced arrayに設定
+    $context.drawDisplayObject(
+        node,
+        bounds[0], bounds[1], bounds[2], bounds[3],
+        colorTransform
+    );
+
+    $poolArray(bounds);
 
     return index;
 };

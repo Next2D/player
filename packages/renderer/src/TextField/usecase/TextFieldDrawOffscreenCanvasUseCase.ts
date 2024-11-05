@@ -26,7 +26,11 @@ export const execute = (
     const canvas = new OffscreenCanvas(
         text_setting.width, text_setting.height
     );
-    const context = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+        return canvas;
+    }
 
     const lineWidth = Math.min(1, Math.max(x_scale, y_scale));
 
@@ -70,13 +74,13 @@ export const execute = (
 
     let tx = 2;
     if (text_setting.scrollX > 0) {
-        const scaleX = (text_setting.textWidth - text_setting.width) / text_setting.width;
+        const scaleX = (text_setting.textWidth - text_setting.rawWidth) / text_setting.rawWidth;
         tx += -text_setting.scrollX * scaleX;
     }
 
     let ty = 2;
     if (text_setting.scrollY > 0) {
-        const scaleY = (text_setting.textHeight - text_setting.height) / text_setting.height;
+        const scaleY = (text_setting.textHeight - text_setting.rawHeight) / text_setting.rawHeight;
         ty += -text_setting.scrollY * scaleY;
     }
 
@@ -112,7 +116,7 @@ export const execute = (
         context.lineTo(0, 0 + (text_setting.defaultSize || 12));
         context.stroke();
 
-        return ;
+        return canvas;
     }
 
     // setup

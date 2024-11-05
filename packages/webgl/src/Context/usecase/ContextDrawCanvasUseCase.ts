@@ -1,13 +1,13 @@
 import type { Node } from "@next2d/texture-packer";
-import { execute as textureManagerCreateFromPixelsUseCase } from "../../TextureManager/usecase/TextureManagerCreateFromPixelsUseCase";
+import { execute as textureManagerCreateFromCanvasUseCase } from "../../TextureManager/usecase/TextureManagerCreateFromCanvasUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
 import { execute as variantsBlendTextureShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendTextureShaderService";
 import { execute as shaderManagerSetTextureUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetTextureUniformService";
 import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
 
 /**
- * @description ピクセルを描画します。
- *              Draw pixels.
+ * @description OffscreenCanvasを描画します。
+ *              Draw OffscreenCanvas.
  *
  * @param  {Node} node
  * @param  {OffscreenCanvas} canvas
@@ -17,7 +17,7 @@ import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderM
  */
 export const execute = (node: Node, canvas: OffscreenCanvas): void =>
 {
-    const textureObject = textureManagerCreateFromPixelsUseCase(node.w, node.h, pixels);
+    const textureObject = textureManagerCreateFromCanvasUseCase(node.w, node.h, canvas);
 
     const shaderManager = variantsBlendTextureShaderService();
     shaderManagerSetTextureUniformService(shaderManager, node.w, node.h);
