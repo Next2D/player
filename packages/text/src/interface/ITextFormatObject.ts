@@ -1,6 +1,6 @@
 import type { ITextFormatAlign } from "./ITextFormatAlign";
 
-export interface ITextFormat {
+export interface ITextFormatObject {
     align: ITextFormatAlign | null;
     bold: boolean | null;
     color: number | null;

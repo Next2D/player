@@ -7,12 +7,12 @@ import { execute as textFieldApplyChangesService } from "../service/TextFieldApp
  *              Setting an arbitrary display end position for text.
  *
  * @param  {TextField} text_field
- * @param  {number} index
+ * @param  {number} stop_index
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (text_field: TextField, index: number): void =>
+export const execute = (text_field: TextField, stop_index: number): void =>
 {
     const textData = textFieldGetTextDataUseCase(text_field);
     if (2 > textData.textTable.length) {
@@ -34,7 +34,7 @@ export const execute = (text_field: TextField, index: number): void =>
             currentTextWidth += textObject.w;
         }
 
-        if (targetIndex >= index) {
+        if (targetIndex >= stop_index) {
             targetIndex = idx;
             break;
         }

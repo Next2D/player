@@ -12,12 +12,41 @@
     {
         const root = await next2d.createRootMovieClip(720, 720);
         const TextField = next2d.text.TextField;
+        const Tween = next2d.ui.Tween;
 
-        const textField = new TextField();
+        const textField  = new TextField();
         textField.text = "Hello Next2D!";
+
+        textField.width  = 400;
+        textField.height = 100;
+
+        const textFormat = textField.defaultTextFormat;
+        textFormat.size = 40;
+        textFormat.color = "#990000";
+        textField.defaultTextFormat = textFormat;
+
+        textField.x = 40;
+        textField.y = 40;
+
+        textField.border = true;
+        textField.borderColor = "#0000ee";
+        textField.background = true;
+        textField.backgroundColor = "#e0e0e0";
+        textField.stopIndex = 0;
+        
         root.addChild(textField);  
+
+        const job = Tween.add(textField, 
+            {
+                "stopIndex": 0
+            },
+            {
+                "stopIndex": textField.text.length
+            },
+            1, 0.5
+        );
+        job.start();
          
-        console.log(root);
         // next2d.load("develop");
     });
 </script>

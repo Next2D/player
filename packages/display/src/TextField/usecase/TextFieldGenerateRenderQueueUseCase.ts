@@ -210,6 +210,7 @@ export const execute = (
 
     const cache = $cacheStore.get(text_field.uniqueKey, `${cacheKey}`);
     if (!cache || text_field.changed) {
+
         // cache none
         render_queue.push(0);
 

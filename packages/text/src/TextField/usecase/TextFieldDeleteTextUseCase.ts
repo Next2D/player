@@ -1,5 +1,5 @@
 import type { TextField } from "../../TextField";
-import type { TextFormat } from "../../TextFormat";
+import { TextFormat } from "../../TextFormat";
 import { execute as textFieldGetTextDataUseCase } from "../../TextField/usecase/TextFieldGetTextDataUseCase";
 
 /**
@@ -56,12 +56,12 @@ export const execute = (text_field: TextField): void =>
         switch (textObject.mode) {
 
             case "break":
-                textFormats.push(textObject.textFormat);
+                textFormats.push(new TextFormat(...Object.values(textObject.textFormat)));
                 newText += "\n";
                 break;
 
             case "text":
-                textFormats.push(textObject.textFormat);
+                textFormats.push(new TextFormat(...Object.values(textObject.textFormat)));
                 newText += textObject.text;
                 break;
 

@@ -48,7 +48,7 @@ export const execute = (
             "w"          : 0,
             "h"          : 0,
             "line"       : line,
-            "textFormat" : textFormat.clone()
+            "textFormat" : textFormat.toObject()
         };
 
         $context.font = textFormatGenerateFontStyleService(textFormat);
@@ -86,7 +86,7 @@ export const execute = (
                 "w"          : 0,
                 "h"          : 0,
                 "line"       : line,
-                "textFormat" : textFormat.clone()
+                "textFormat" : textFormat.toObject()
             };
 
             let chunkLength = 1;

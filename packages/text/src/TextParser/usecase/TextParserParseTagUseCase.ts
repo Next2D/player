@@ -28,6 +28,7 @@ export const execute = (
     for (let idx = 0; idx < document.children.length; ++idx) {
 
         const node = document.children[idx] as ChildNode;
+        
         if (node.nodeType === 3) {
 
             textParserParseTextUseCase(node.nodeValue || "", text_format, text_data, options);

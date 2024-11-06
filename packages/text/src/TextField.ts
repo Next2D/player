@@ -19,6 +19,7 @@ import { execute as textFieldGetLineTextUseCase } from "./TextField/usecase/Text
 import { execute as textFieldReplaceTextUseCase } from "./TextField/usecase/TextFieldReplaceTextUseCase";
 import { execute as textFieldCopyUseCase } from "./TextField/usecase/TextFieldCopyUseCase";
 import { execute as textFieldInsertTextUseCase } from "./TextField/usecase/TextFieldInsertTextUseCase";
+import { execute as textFieldApplyChangesService } from "./TextField/service/TextFieldApplyChangesService";
 import {
     $clamp,
     $toColorInt
@@ -670,7 +671,7 @@ export class TextField extends InteractiveObject
             return ;
         }
         this._$background = !!background;
-        textFieldResetUseCase(this);
+        textFieldApplyChangesService(this);
     }
 
     /**
@@ -696,7 +697,7 @@ export class TextField extends InteractiveObject
         }
 
         this._$backgroundColor = background_color;
-        textFieldResetUseCase(this);
+        textFieldApplyChangesService(this);
     }
 
     /**
@@ -718,7 +719,7 @@ export class TextField extends InteractiveObject
         }
 
         this._$border = !!border;
-        textFieldResetUseCase(this);
+        textFieldApplyChangesService(this);
     }
 
     /**
@@ -744,7 +745,7 @@ export class TextField extends InteractiveObject
         }
 
         this._$borderColor = border_color;
-        textFieldResetUseCase(this);
+        textFieldApplyChangesService(this);
     }
 
     /**
@@ -759,16 +760,16 @@ export class TextField extends InteractiveObject
     {
         return this._$stopIndex;
     }
-    set stopIndex (index: number)
+    set stopIndex (stop_index: number)
     {
-        index |= 0;
-        if (this._$stopIndex === index) {
+        stop_index |= 0;
+        if (this._$stopIndex === stop_index) {
             return ;
         }
 
-        this._$stopIndex = index;
+        this._$stopIndex = stop_index;
 
-        textFieldUpdateStopIndexUseCase(this, index);
+        textFieldUpdateStopIndexUseCase(this, stop_index);
     }
 
     /**
@@ -784,8 +785,15 @@ export class TextField extends InteractiveObject
     }
     set defaultTextFormat (text_format: TextFormat)
     {
+        this._$rawHtmlText = "";
+        if (this._$isHTML) {
+            this._$text = "";
+        } else {
+            this._$htmlText = "";
+        }
+
         this._$defaultTextFormat = text_format;
-        textFieldResetUseCase(this);
+        textFieldReloadUseCase(this);
     }
 
     /**
@@ -879,7 +887,7 @@ export class TextField extends InteractiveObject
             return ;
         }
         this._$multiline = !!multiline;
-        textFieldResetUseCase(this);
+        textFieldReloadUseCase(this);
     }
 
     /**
@@ -964,23 +972,6 @@ export class TextField extends InteractiveObject
     }
 
     /**
-     * @description テキストフィールドのテキストの色です（16 進数形式）。
-     *              The color of the text in a text field, in hexadecimal format.
-     *
-     * @member {number}
-     * @public
-     */
-    get textColor (): number
-    {
-        return this._$defaultTextFormat.color || 0;
-    }
-    set textColor (text_color: number)
-    {
-        this._$defaultTextFormat.color = text_color;
-        textFieldReloadUseCase(this);
-    }
-
-    /**
      * @description テキストの高さです（ピクセル単位）。
      *              The height of the text in pixels.
      *
@@ -1027,7 +1018,7 @@ export class TextField extends InteractiveObject
             return ;
         }
         this._$thickness = thickness;
-        textFieldResetUseCase(this);
+        textFieldApplyChangesService(this);
     }
 
     /**
@@ -1051,7 +1042,7 @@ export class TextField extends InteractiveObject
             return ;
         }
         this._$thicknessColor = thickness_color;
-        textFieldResetUseCase(this);
+        textFieldApplyChangesService(this);
     }
 
     /**
@@ -1072,7 +1063,7 @@ export class TextField extends InteractiveObject
             return ;
         }
         this._$wordWrap = !!word_wrap;
-        textFieldResetUseCase(this);
+        textFieldApplyChangesService(this);
     }
 
     /**

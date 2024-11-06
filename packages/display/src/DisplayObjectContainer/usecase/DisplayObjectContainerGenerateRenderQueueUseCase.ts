@@ -119,7 +119,6 @@ export const execute = <P extends DisplayObjectContainer>(
     for (let idx = 0; idx < children.length; ++idx) {
 
         const child = children[idx] as DisplayObject;
-        child.changed = false;
 
         render_queue.push(child.placeId, child.clipDepth);
         if (clipDepth && child.placeId > clipDepth) {
@@ -128,6 +127,7 @@ export const execute = <P extends DisplayObjectContainer>(
         }
 
         if (!canRenderMask) {
+            child.changed = false;
             continue;
         }
 
@@ -149,6 +149,7 @@ export const execute = <P extends DisplayObjectContainer>(
             render_queue.push(+canRenderMask);
 
             if (!bounds) {
+                child.changed = false;
                 continue;
             }
 
@@ -227,6 +228,8 @@ export const execute = <P extends DisplayObjectContainer>(
                 break;
 
         }
+
+        child.changed = false;
     }
 
     if (!isLayer && tColorTransform !== color_transform) {

@@ -37,7 +37,7 @@ export const execute = (
         "w": 0,
         "h": mesure.fontBoundingBoxAscent + mesure.fontBoundingBoxDescent,
         "line": line,
-        "textFormat": text_format.clone()
+        "textFormat": text_format.toObject()
     };
 
     // initialize

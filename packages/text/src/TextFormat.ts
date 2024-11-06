@@ -1,4 +1,5 @@
 import type { ITextFormatAlign } from "./interface/ITextFormatAlign";
+import type { ITextFormatObject } from "./interface/ITextFormatObject";
 import { $toColorInt } from "./TextUtil";
 
 /**
@@ -13,16 +14,6 @@ import { $toColorInt } from "./TextUtil";
  */
 export class TextFormat
 {
-    /**
-     * @description テキストの色を示します。
-     *              Indicates the color of the text.
-     *
-     * @member {number}
-     * @default null
-     * @private
-     */
-    private _$color: number | null;
-    
     /**
      * @description 段落の行揃えの設定を示します。
      *              Indicates the alignment of the paragraph.
@@ -42,6 +33,16 @@ export class TextFormat
      * @public
      */
     public bold: boolean | null;
+
+    /**
+     * @description テキストの色を示します。
+     *              Indicates the color of the text.
+     *
+     * @member {number}
+     * @default null
+     * @public
+     */
+    public color: number | null;
 
     /**
      * @description このテキストフォーマットでのテキストフォント名を示すストリングです。
@@ -157,6 +158,7 @@ export class TextFormat
     ) {
         this.font          = font;
         this.size          = size;
+        this.color         = color;
         this.bold          = bold;
         this.italic        = italic;
         this.underline     = underline;
@@ -165,28 +167,6 @@ export class TextFormat
         this.rightMargin   = right_margin;
         this.leading       = leading;
         this.letterSpacing = letter_Spacing;
-
-        this._$color = null;
-        if (color !== null) {
-            this.color = color;
-        }
-    }
-
-    /**
-     * @description テキストの色を示します。
-     *              Indicates the color of the text.
-     *
-     * @member {number}
-     * @default null
-     * @public
-     */
-    get color (): number | null
-    {
-        return this._$color;
-    }
-    set color (color: number | string | null)
-    {
-        this._$color = $toColorInt(color);
     }
 
     /**
@@ -200,9 +180,34 @@ export class TextFormat
     clone (): TextFormat
     {
         return new TextFormat(
-            this.font, this.size, this._$color, this.bold,
+            this.font, this.size, this.color, this.bold,
             this.italic, this.underline, this.align,
             this.leftMargin, this.rightMargin, this.leading, this.letterSpacing
         );
+    }
+
+    /**
+     * @description この TextFormat オブジェクトのプロパティをオブジェクトに変換します。
+     *              Converts the properties of this TextFormat object to an object.
+     * 
+     * @return {ITextFormatObject}
+     * @method
+     * @public
+     */
+    toObject (): ITextFormatObject
+    {
+        return {
+            "font": this.font,
+            "size": this.size,
+            "color": $toColorInt(this.color),
+            "bold": this.bold,
+            "italic": this.italic,
+            "underline": this.underline,
+            "align": this.align,
+            "leftMargin": this.leftMargin,
+            "rightMargin": this.rightMargin,
+            "leading": this.leading,
+            "letterSpacing": this.letterSpacing
+        };
     }
 }
