@@ -4,6 +4,7 @@ import type { IDisplayObject } from "../../interface/IDisplayObject";
 import type { IMovieClipCharacter } from "../../interface/IMovieClipCharacter";
 import type { IShapeCharacter } from "../../interface/IShapeCharacter";
 import type { ITextFieldCharacter } from "../../interface/ITextFieldCharacter";
+import type { IVideoCharacter } from "../../interface/IVideoCharacter";
 import { MovieClip } from "../../MovieClip";
 import { Shape } from "../../Shape";
 import { TextField } from "@next2d/text";
@@ -12,6 +13,7 @@ import { execute as displayObjectBaseBuildService } from "../../DisplayObject/se
 import { execute as movieClipBuildFromCharacterUseCase } from "../../MovieClip/usecase/MovieClipBuildFromCharacterUseCase";
 import { execute as shapeBuildFromCharacterUseCase } from "../../Shape/usecase/ShapeBuildFromCharacterUseCase";
 import { execute as textFieldBuildFromCharacterUseCase } from "../../TextField/usecase/TextFieldBuildFromCharacterUseCase";
+import { execute as videoBuildFromCharacterUseCase } from "../../Video/usecase/VideoBuildFromCharacterUseCase";
 
 /**
  * @description cahracterを元にDisplayObjectを構築
@@ -60,7 +62,12 @@ export const execute = (
             }
 
         case Video.namespace:
-            return new Video();
+            {
+                const video = new Video();
+                displayObjectBaseBuildService(video, dictionary_id, tag, parent, placeId);
+                videoBuildFromCharacterUseCase(video, character as IVideoCharacter);
+                return video;
+            }
 
         default:
             break;

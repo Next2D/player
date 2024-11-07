@@ -5,6 +5,7 @@ import type { IPlaceObject } from "./IPlaceObject";
 import type { IDictionaryTag } from "./IDictionaryTag";
 
 export interface IMovieClipCharacter {
+    symbol?: string;
     extends: string;
     totalFrame: number;
     controller: Array<Array<number>>;
@@ -13,6 +14,5 @@ export interface IMovieClipCharacter {
     placeObjects: IPlaceObject[];
     labels?: IMovieClipLabelObject[];
     actions?: IMovieClipActionObject[];
-    symbol?: string;
     sounds?: IMovieClipSoundObject[];
 }

@@ -32,21 +32,12 @@ describe("VideoLoadedmetadataEventService.js test", () =>
         expect(mockElement.videoWidth).toBe(200);
         expect(mockElement.videoHeight).toBe(300);
 
-        const bounds = {
-            "xMin": 0,
-            "yMin": 0,
-            "xMax": 0,
-            "yMax": 0
-        };
-        expect(bounds.xMax).toBe(0);
-        expect(bounds.yMax).toBe(0);
-
-        execute(mockElement, mockVideo, bounds);
+        execute(mockElement, mockVideo);
 
         // after
         expect(mockVideo.currentTime).toBe(0);
         expect(mockVideo.duration).toBe(100);
-        expect(bounds.xMax).toBe(200);
-        expect(bounds.yMax).toBe(300);
+        expect(mockVideo.videoWidth).toBe(200);
+        expect(mockVideo.videoHeight).toBe(300);
     });
 });

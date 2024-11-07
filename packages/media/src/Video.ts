@@ -77,6 +77,26 @@ export class Video extends DisplayObject
     public currentTime: number;
 
     /**
+     * @description ビデオの幅をピクセル単位で指定する整数です。
+     *              An integer specifying the width of the video, in pixels.
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    public videoWidth: number;
+
+    /**
+     * @description ビデオの高さをピクセル単位で指定する整数です。
+     *              An integer specifying the height of the video, in pixels.
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    public videoHeight: number;
+
+    /**
      * @description Videoの機能を所持しているかを返却
      *              Returns whether the display object has Video functionality.
      *
@@ -85,12 +105,6 @@ export class Video extends DisplayObject
      * @public
      */
     public readonly isVideo: boolean;
-
-    /**
-     * @type {IBounds}
-     * @private
-     */
-    private readonly _$bounds: IBounds;
 
     /**
      * @type {number}
@@ -138,6 +152,9 @@ export class Video extends DisplayObject
     {
         super();
 
+        this.videoWidth  = width;
+        this.videoHeight = height;
+
         this.isVideo     = true;
         this.duration    = 0;
         this.smoothing   = true;
@@ -151,12 +168,6 @@ export class Video extends DisplayObject
         this._$videoElement = null;
         this._$stop         = true;
         this._$volume       = 1;
-        this._$bounds = {
-            "xMin": 0,
-            "xMax": width,
-            "yMin": 0,
-            "yMax": height
-        };
     }
 
     /**
@@ -209,42 +220,10 @@ export class Video extends DisplayObject
         this._$videoElement = null;
         this._$videoElement = videoCreateElementService();
 
-        videoRegisterEventUseCase(
-            this._$videoElement,
-            this,
-            this._$bounds
-        );
+        videoRegisterEventUseCase(this._$videoElement, this);
 
         this._$src = this._$videoElement.src = src;
         this._$videoElement.load();
-    }
-
-    /**
-     * @description ビデオの高さをピクセル単位で指定する整数です。
-     *              An integer specifying the height of the video, in pixels.
-     *
-     * @member {number}
-     * @default 320
-     * @readonly
-     * @public
-     */
-    get videoHeight (): number
-    {
-        return this._$bounds.yMax;
-    }
-
-    /**
-     * @description ビデオの幅をピクセル単位で指定する整数です。
-     *              An integer specifying the width of the video, in pixels.
-     *
-     * @member {number}
-     * @default 240
-     * @readonly
-     * @public
-     */
-    get videoWidth (): number
-    {
-        return this._$bounds.xMax;
     }
 
     /**
@@ -367,11 +346,7 @@ export class Video extends DisplayObject
         this._$videoElement = null;
         this._$videoElement = videoCreateElementService();
 
-        videoRegisterEventUseCase(
-            this._$videoElement,
-            this,
-            this._$bounds
-        );
+        videoRegisterEventUseCase(this._$videoElement, this);
 
         this._$videoElement.src = URL.createObjectURL(new Blob(
             [character.videoData],

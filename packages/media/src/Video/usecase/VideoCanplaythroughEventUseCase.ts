@@ -1,5 +1,6 @@
 import type { Video } from "../../Video";
 import { Event } from "@next2d/events";
+import { execute as videoApplyChangesService } from "../service/VideoApplyChangesService";
 
 /**
  * @description 再生可能処理
@@ -16,7 +17,7 @@ export const execute = async (video: Video,): Promise<void> =>
         await video.play();
     }
 
-    video._$changed();
+    videoApplyChangesService(video);
 
     if (video.willTrigger(Event.COMPLETE)) {
         video.dispatchEvent(new Event(Event.COMPLETE));

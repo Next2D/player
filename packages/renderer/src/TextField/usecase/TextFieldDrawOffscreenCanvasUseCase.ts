@@ -168,7 +168,7 @@ export const execute = (
         }
 
         // color setting
-        const color = $intToRGBA(textFormat.color);
+        const color = $intToRGBA(textFormat.color || 0);
         context.fillStyle = `rgba(${color.R},${color.G},${color.B},${color.A})`;
 
         // focus line
@@ -244,7 +244,7 @@ export const execute = (
                     const y = offsetHeight + verticalAlign;
                     if (textFormat.underline) {
 
-                        const color = $intToRGBA(textFormat.color);
+                        const color = $intToRGBA(textFormat.color || 0);
                         context.lineWidth   = lineWidth;
                         context.strokeStyle = `rgba(${color.R},${color.G},${color.B},${color.A})`;
 

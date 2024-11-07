@@ -6,7 +6,7 @@ import type { ITextFieldCharacter } from "../../interface/ITextFieldCharacter";
  *              Build TextField based on character
  *
  * @param  {TextField} text_field
- * @param  {object} character
+ * @param  {ITextFieldCharacter} character
  * @return {void}
  * @method
  * @protected
@@ -15,9 +15,9 @@ export const execute = (text_field: TextField, character: ITextFieldCharacter): 
 {
     const textFormat = text_field.defaultTextFormat;
     textFormat.font          = character.font;
-    textFormat.size          = character.size | 0;
+    textFormat.size          = character.size;
     textFormat.align         = character.align;
-    textFormat.color         = character.color | 0;
+    textFormat.color         = character.color;
     textFormat.leading       = character.leading;
     textFormat.letterSpacing = character.letterSpacing;
     textFormat.leftMargin    = character.leftMargin;
@@ -62,12 +62,15 @@ export const execute = (text_field: TextField, character: ITextFieldCharacter): 
             text_field.autoFontSize = true;
             break;
 
+        default:
+            break
+
     }
 
-    text_field.bounds.xMin = character.bounds.xMin;
-    text_field.bounds.xMax = character.bounds.xMax;
-    text_field.bounds.yMin = character.bounds.yMin;
-    text_field.bounds.yMax = character.bounds.yMax;
+    text_field.xMin = text_field.bounds.xMin = character.bounds.xMin;
+    text_field.xMax = text_field.bounds.xMax = character.bounds.xMax;
+    text_field.yMin = text_field.bounds.yMin = character.bounds.yMin;
+    text_field.yMax = text_field.bounds.yMax = character.bounds.yMax + 4;
     
     text_field.text = character.text;
 };

@@ -1,6 +1,6 @@
 import type { Video } from "../../Video";
 import { Event } from "@next2d/events";
-import { execute } from "./VideoCanplaythroughEventService";
+import { execute } from "./VideoCanplaythroughEventUseCase";
 import { describe, expect, it, vi } from "vitest";
 
 describe("VideoCanplaythroughEventService.js test", () =>
@@ -9,13 +9,11 @@ describe("VideoCanplaythroughEventService.js test", () =>
     {
         let playState = "stop";
         let eventState = "";
-        let state = "";
         const MockVideo = vi.fn().mockImplementation(() =>
         {
             return {
                 "autoPlay": true,
                 "play": vi.fn(() => { playState = "play" }),
-                "_$changed": vi.fn(() => { state = "changed" }),
                 "willTrigger": vi.fn(() => true),
                 "dispatchEvent": vi.fn(() => { eventState = Event.COMPLETE })
             } as unknown as Video;
@@ -26,25 +24,25 @@ describe("VideoCanplaythroughEventService.js test", () =>
         // before
         expect(playState).toBe("stop");
         expect(eventState).toBe("");
-        expect(state).toBe("");
+
+        mockVideo.changed = false;
+        expect(mockVideo.changed).toBe(false);
 
         await execute(mockVideo);
 
         // after
         expect(playState).toBe("play");
         expect(eventState).toBe(Event.COMPLETE);
-        expect(state).toBe("changed");
+        expect(mockVideo.changed).toBe(true);
     });
 
     it("execute test case2", async () =>
     {
         let eventState = "";
-        let state = "";
         const MockVideo = vi.fn().mockImplementation(() =>
         {
             return {
                 "autoPlay": false,
-                "_$changed": vi.fn(() => { state = "changed" }),
                 "willTrigger": vi.fn(() => true),
                 "dispatchEvent": vi.fn(() => { eventState = Event.COMPLETE })
             } as unknown as Video;
@@ -53,13 +51,14 @@ describe("VideoCanplaythroughEventService.js test", () =>
         const mockVideo = new MockVideo();
 
         // before
+        mockVideo.changed = false;
         expect(eventState).toBe("");
-        expect(state).toBe("");
+        expect(mockVideo.changed).toBe(false);
 
         await execute(mockVideo);
 
         // after
         expect(eventState).toBe(Event.COMPLETE);
-        expect(state).toBe("changed");
+        expect(mockVideo.changed).toBe(true);
     });
 });

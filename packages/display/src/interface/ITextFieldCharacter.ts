@@ -3,6 +3,8 @@ import type { ITextFieldType } from "./ITextFieldType";
 import type { IBounds } from "./IBounds";
 
 export interface ITextFieldCharacter {
+    symbol?: string;
+    extends: string;
     font: string;
     size: number;
     align: ITextFormatAlign;

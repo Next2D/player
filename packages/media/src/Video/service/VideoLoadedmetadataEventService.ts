@@ -7,21 +7,18 @@ import type { Video } from "../../Video";
  *
  * @param  {HTMLVideoElement} element
  * @param  {Video} video
- * @param  {object} bounds
  * @return {void}
  * @method
  * @protected
  */
 export const execute = (
     element: HTMLVideoElement,
-    video: Video,
-    bounds: IBounds
+    video: Video
 ): void => {
 
     // update metadata
     video.currentTime = 0;
     video.duration    = element.duration;
-
-    bounds.xMax = element.videoWidth;
-    bounds.yMax = element.videoHeight;
+    video.videoWidth  = element.videoWidth;
+    video.videoHeight = element.videoHeight;
 };
