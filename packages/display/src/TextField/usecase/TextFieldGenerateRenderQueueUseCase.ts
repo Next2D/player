@@ -250,8 +250,8 @@ export const execute = (
         render_queue.push(text_field.scrollY);
         render_queue.push(text_field.textWidth);
         render_queue.push(text_field.textHeight);
-        render_queue.push(text_field.width);
-        render_queue.push(text_field.height);
+        render_queue.push(Math.abs(text_field.xMax - text_field.xMin));
+        render_queue.push(Math.abs(text_field.yMax - text_field.yMin));
         render_queue.push(text_field.focusIndex);
         render_queue.push(+text_field.focusVisible);
         render_queue.push(text_field.thickness);

@@ -3,11 +3,15 @@ import type { ICharacter } from "../../interface/ICharacter";
 import type { IDisplayObject } from "../../interface/IDisplayObject";
 import type { IMovieClipCharacter } from "../../interface/IMovieClipCharacter";
 import type { IShapeCharacter } from "../../interface/IShapeCharacter";
+import type { ITextFieldCharacter } from "../../interface/ITextFieldCharacter";
 import { MovieClip } from "../../MovieClip";
 import { Shape } from "../../Shape";
+import { TextField } from "@next2d/text";
+import { Video } from "@next2d/media";
 import { execute as displayObjectBaseBuildService } from "../../DisplayObject/service/DisplayObjectBaseBuildService";
 import { execute as movieClipBuildFromCharacterUseCase } from "../../MovieClip/usecase/MovieClipBuildFromCharacterUseCase";
 import { execute as shapeBuildFromCharacterUseCase } from "../../Shape/usecase/ShapeBuildFromCharacterUseCase";
+import { execute as textFieldBuildFromCharacterUseCase } from "../../TextField/usecase/TextFieldBuildFromCharacterUseCase";
 
 /**
  * @description cahracterを元にDisplayObjectを構築
@@ -47,11 +51,16 @@ export const execute = (
                 return shape;
             }
 
-        // case TextField.namespace:
-        //     return new TextField();
+        case TextField.namespace:
+            {
+                const textField = new TextField();
+                displayObjectBaseBuildService(textField, dictionary_id, tag, parent, placeId);
+                textFieldBuildFromCharacterUseCase(textField, character as ITextFieldCharacter);
+                return textField;
+            }
 
-        // case Video.namespace:
-        //     return new Video();
+        case Video.namespace:
+            return new Video();
 
         default:
             break;

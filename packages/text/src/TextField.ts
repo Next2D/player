@@ -8,7 +8,6 @@ import { TextFormat } from "./TextFormat";
 import { execute as textFormatSetDefaultService } from "./TextFormat/service/TextFormatSetDefaultService";
 import { execute as textFormatHtmlTextGenerateStyleService } from "./TextFormat/service/TextFormatHtmlTextGenerateStyleService";
 import { execute as textFieldGetTextDataUseCase } from "./TextField/usecase/TextFieldGetTextDataUseCase";
-import { execute as textFieldResetUseCase } from "./TextField/usecase/TextFieldResetUseCase";
 import { execute as textFieldReloadUseCase } from "./TextField/usecase/TextFieldReloadUseCase";
 import { execute as textFieldUpdateStopIndexUseCase } from "./TextField/usecase/TextFieldUpdateStopIndexUseCase";
 import { execute as textFieldSetFocusUseCase } from "./TextField/usecase/TextFieldSetFocusUseCase";
@@ -1063,7 +1062,7 @@ export class TextField extends InteractiveObject
             return ;
         }
         this._$wordWrap = !!word_wrap;
-        textFieldApplyChangesService(this);
+        textFieldReloadUseCase(this);
     }
 
     /**
@@ -1437,111 +1436,6 @@ export class TextField extends InteractiveObject
     //             break;
 
     //     }
-    // }
-
-    // /**
-    //  * @param  {object} character
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$buildCharacter (character: Character<TextCharacterImpl>): void
-    // {
-    //     const textFormat = this._$defaultTextFormat;
-
-    //     textFormat.font          = character.font;
-    //     textFormat.size          = character.size | 0;
-    //     textFormat.align         = character.align;
-    //     textFormat.color         = character.color | 0;
-    //     textFormat.leading       = character.leading;
-    //     textFormat.letterSpacing = character.letterSpacing;
-    //     textFormat.leftMargin    = character.leftMargin;
-    //     textFormat.rightMargin   = character.rightMargin;
-
-    //     switch (character.fontType) {
-
-    //         case 1:
-    //             textFormat.bold = true;
-    //             break;
-
-    //         case 2:
-    //             textFormat.italic = true;
-    //             break;
-
-    //         case 3:
-    //             textFormat.bold   = true;
-    //             textFormat.italic = true;
-    //             break;
-
-    //     }
-
-    //     // setup
-    //     this.type           = character.inputType;
-    //     this._$multiline      = !!character.multiline;
-    //     this._$wordWrap       = !!character.wordWrap;
-    //     this._$border         = !!character.border;
-    //     this.scrollEnabled  = !!character.scroll;
-    //     this._$thickness      = character.thickness | 0;
-    //     this._$thicknessColor = character.thicknessColor | 0;
-
-    //     // bounds
-    //     this.xMin        = character.originBounds.xMin;
-    //     this.xMax        = character.originBounds.xMax;
-    //     this.yMin        = character.originBounds.yMin;
-    //     this.yMax        = character.originBounds.yMax;
-    //     this.bounds.xMin = character.originBounds.xMin;
-    //     this.bounds.xMax = character.originBounds.xMax;
-    //     this.bounds.yMin = character.originBounds.yMin;
-    //     this.bounds.yMax = character.originBounds.yMax;
-
-    //     switch (character.autoSize) {
-
-    //         case 1:
-    //             this.autoSize = character.align;
-    //             break;
-
-    //         case 2:
-    //             this.autoFontSize = true;
-    //             break;
-
-    //     }
-
-    //     this.text = character.text;
-
-    //     if ($rendererWorker && this._$stage) {
-    //         this._$createWorkerInstance();
-    //     }
-    // }
-
-    // /**
-    //  * @param  {object} character
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$sync (character: TextCharacterImpl): void
-    // {
-    //     this._$buildCharacter(character);
-    // }
-
-    // /**
-    //  * @param  {object} tag
-    //  * @param  {DisplayObjectContainer} parent
-    //  * @return {object}
-    //  * @method
-    //  * @private
-    //  */
-    // _$build (
-    //     tag: DictionaryTagImpl,
-    //     parent: ParentImpl<any>
-    // ): TextCharacterImpl {
-
-    //     const character: TextCharacterImpl = this
-    //         ._$baseBuild<TextCharacterImpl>(tag, parent);
-
-    //     this._$buildCharacter(character);
-
-    //     return character;
     // }
 
     // /**

@@ -63,10 +63,10 @@ export const execute = (
             : mesure.fontBoundingBoxAscent + mesure.fontBoundingBoxDescent;
 
         // setup
-        object.x  = 0;
-        object.y  = mesure.fontBoundingBoxAscent;
-        object.w  = width;
-        object.h  = height;
+        object.x = 0;
+        object.y = mesure.fontBoundingBoxAscent;
+        object.w = width;
+        object.h = height;
 
         $setCurrentWidth($getCurrentWidth() + width);
         if (options.wordWrap && $getCurrentWidth() > maxWidth) {
@@ -102,7 +102,7 @@ export const execute = (
                     break;
                 }
 
-                const prevObj: ITextObject = text_data.textTable[index];
+                const prevObj = text_data.textTable[index];
                 if (!prevObj) {
                     isSeparated = false;
                     chunkLength = 0;
@@ -147,7 +147,11 @@ export const execute = (
 
                 for (let idx = 0; idx < insertIdx; ++idx) {
                     
-                    const textObject: ITextObject = text_data.textTable[idx];
+                    const textObject = text_data.textTable[idx];
+                    if (!textObject) {
+                        continue;
+                    }
+
                     if (textObject.line !== prevLine) {
                         continue;
                     }
@@ -163,8 +167,8 @@ export const execute = (
 
                 // reset
                 $setCurrentWidth(0);
-                for (let idx: number = insertIdx + 1; idx < text_data.textTable.length; ++idx) {
-                    const textObject: ITextObject = text_data.textTable[idx];
+                for (let idx = insertIdx + 1; idx < text_data.textTable.length; ++idx) {
+                    const textObject = text_data.textTable[idx];
                     textObject.line = line;
                     $setCurrentWidth($getCurrentWidth() + textObject.w);
                 }

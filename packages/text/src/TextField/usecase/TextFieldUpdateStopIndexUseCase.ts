@@ -64,22 +64,22 @@ export const execute = (text_field: TextField, stop_index: number): void =>
         currentTextHeight += textData.heightTable[idx];
     }
 
-    const height = text_field.height;
+    const rawHeight = Math.abs(text_field.yMax - text_field.yMin);
     let viewTextHeight = 0;
     for (let idx = line; idx > -1; --idx) {
         const lineHeight = textData.heightTable[idx];
-        if (height < viewTextHeight + lineHeight) {
+        if (rawHeight < viewTextHeight + lineHeight) {
             break;
         }
         viewTextHeight += lineHeight;
     }
 
-    if (currentTextHeight > height) {
-        const scaleY = (text_field.textHeight - height) / height;
-        text_field.$scrollY = Math.min((currentTextHeight - viewTextHeight) / scaleY, height);
+    if (currentTextHeight > rawHeight) {
+        const scaleY = (text_field.textHeight - rawHeight) / rawHeight;
+        text_field.$scrollY = Math.max(0, Math.min((currentTextHeight - viewTextHeight) / scaleY, rawHeight));
     }
 
-    const width = text_field.width;
+    const rawWidth = Math.abs(text_field.xMax - text_field.xMin);
     let viewTextWidth = 0;
     for (let idx = targetIndex; idx > 0; --idx) {
         const textObject = textData.textTable[idx];
@@ -87,15 +87,15 @@ export const execute = (text_field: TextField, stop_index: number): void =>
             continue;
         }
 
-        if (width < viewTextWidth + textObject.w) {
+        if (rawWidth < viewTextWidth + textObject.w) {
             break;
         }
         viewTextWidth += textObject.w;
     }
 
-    if (currentTextWidth > width) {
-        const scaleX = (text_field.textWidth - width) / width;
-        text_field.$scrollX = Math.min((currentTextWidth - viewTextWidth) / scaleX, width + 0.5);
+    if (currentTextWidth > rawWidth) {
+        const scaleX = (text_field.textWidth - rawWidth) / rawWidth;
+        text_field.$scrollX = Math.max(0, Math.min((currentTextWidth - viewTextWidth) / scaleX, rawWidth + 0.5));
     }
 
     textFieldApplyChangesService(text_field);
