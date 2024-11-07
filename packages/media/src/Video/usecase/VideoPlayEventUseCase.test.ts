@@ -1,7 +1,7 @@
 import type { Video } from "../../Video";
 import { $getPlayingVideos } from "../../MediaUtil";
 import { VideoEvent } from "@next2d/events";
-import { execute } from "./VideoPlayEventService";
+import { execute } from "./VideoPlayEventUseCase";
 import { describe, expect, it, vi } from "vitest";
 
 describe("VideoPlayEventService.js test", () =>
@@ -17,14 +17,15 @@ describe("VideoPlayEventService.js test", () =>
                 "pause": vi.fn(() => { pauseState = "pause" }),
                 "willTrigger": vi.fn(() => true),
                 "dispatchEvent": vi.fn((event: VideoEvent) => { eventState = event.type }),
-                "_$changed": vi.fn(() => { state = "doChanged" })
             } as unknown as Video;
         });
 
         const mockVideo = new MockVideo();
         expect(pauseState).toBe("");
         expect(eventState).toBe("");
-        expect(state).toBe("");
+
+        mockVideo.changed = false;
+        expect(mockVideo.changed).toBe(false);
 
         const playingVideos = $getPlayingVideos();
         playingVideos.length = 0;
@@ -33,7 +34,7 @@ describe("VideoPlayEventService.js test", () =>
         cancelAnimationFrame(execute(mockVideo));
 
         expect(playingVideos.length).toBe(1);
-        expect(state).toBe("doChanged");
+        expect(mockVideo.changed).toBe(true);
         expect(pauseState).toBe("");
         expect(eventState).toBe(VideoEvent.PLAY);
     });

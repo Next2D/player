@@ -29,6 +29,7 @@ export const execute = (element: HTMLVideoElement, video: Video): void =>
     element.addEventListener("canplaythrough", async (): Promise<void> =>
     {
         await videoCanplaythroughEventUseCase(video);
+        element.volume = video.volume;
     }, { "once": true });
 
     element.addEventListener("ended", (): void =>

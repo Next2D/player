@@ -1,11 +1,9 @@
-import type { IBounds } from "./interface/IBounds";
-import type { IVideoCharacter } from "./interface/IVideoCharacter";
 import { SoundMixer } from "./SoundMixer";
 import { DisplayObject } from "@next2d/display";
 import { VideoEvent } from "@next2d/events";
 import { execute as videoCreateElementService } from "./Video/service/VideoCreateElementService";
 import { execute as videoRegisterEventUseCase } from "./Video/usecase/VideoRegisterEventUseCase";
-import { execute as videoPlayEventService } from "./Video/service/VideoPlayEventService";
+import { execute as videoPlayEventUseCase } from "./Video/usecase/VideoPlayEventUseCase";
 import {
     $clamp,
     $getPlayingVideos
@@ -299,7 +297,7 @@ export class Video extends DisplayObject
         this._$videoElement.volume = this._$volume;
         await this._$videoElement.play();
 
-        this._$timerId = videoPlayEventService(this);
+        this._$timerId = videoPlayEventUseCase(this);
     }
 
     /**
@@ -322,40 +320,6 @@ export class Video extends DisplayObject
         if (this.willTrigger(VideoEvent.SEEK)) {
             this.dispatchEvent(new VideoEvent(VideoEvent.SEEK));
         }
-    }
-
-    /**
-     * @description キャラクター情報からVideoを構築
-     *              Build Video from character information
-     *
-     * @param  {object} character
-     * @return {void}
-     * @method
-     * @protected
-     */
-    _$buildCharacter (character: IVideoCharacter): void
-    {
-        if (character.buffer && !character.videoData) {
-            character.videoData = new Uint8Array(character.buffer);
-            character.buffer    = null;
-        }
-
-        this.loop     = character.loop;
-        this.autoPlay = character.autoPlay;
-
-        this._$videoElement = null;
-        this._$videoElement = videoCreateElementService();
-
-        videoRegisterEventUseCase(this._$videoElement, this);
-
-        this._$videoElement.src = URL.createObjectURL(new Blob(
-            [character.videoData],
-            { "type": "video/mp4" }
-        ));
-
-        // setup
-        this._$videoElement.volume = Math.min(character.volume, SoundMixer.volume);
-        this._$videoElement.load();
     }
 
     // /**

@@ -1,6 +1,7 @@
 import type { Video } from "../../Video";
 import { $getPlayingVideos } from "../../MediaUtil";
 import { VideoEvent } from "@next2d/events";
+import { execute as videoApplyChangesService } from "../service/VideoApplyChangesService";
 
 /**
  * @description ビデオ再生中のイベント処理関数
@@ -17,7 +18,7 @@ export const execute = (video: Video): number =>
         video.dispatchEvent(new VideoEvent(VideoEvent.PLAY));
     }
 
-    video._$changed();
+    videoApplyChangesService(video);
 
     const playingVideos = $getPlayingVideos();
     const index = playingVideos.indexOf(video);

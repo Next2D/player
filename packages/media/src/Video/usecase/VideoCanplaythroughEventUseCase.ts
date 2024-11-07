@@ -11,7 +11,7 @@ import { execute as videoApplyChangesService } from "../service/VideoApplyChange
  * @method
  * @protected
  */
-export const execute = async (video: Video,): Promise<void> =>
+export const execute = async (video: Video): Promise<void> =>
 {
     if (video.autoPlay) {
         await video.play();
