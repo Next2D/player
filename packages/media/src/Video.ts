@@ -95,6 +95,26 @@ export class Video extends DisplayObject
     public videoHeight: number;
 
     /**
+     * @description ビデオが読み込まれているかどうかを返します。
+     *              Returns whether the video has been loaded.
+     * 
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public loaded: boolean;
+
+    /**
+     * @description ビデオが終了したかどうかを返します。
+     *              Returns whether the video has ended.
+     *
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public ended: boolean;
+
+    /**
      * @description Videoの機能を所持しているかを返却
      *              Returns whether the display object has Video functionality.
      *
@@ -105,25 +125,25 @@ export class Video extends DisplayObject
     public readonly isVideo: boolean;
 
     /**
+     * @type {HTMLVideoElement}
+     * @default null
+     * @public
+     */
+    public $videoElement: HTMLVideoElement | null;
+
+    /**
+     * @type {boolean}
+     * @default true
+     * @public
+     */
+    public paused: boolean;
+
+    /**
      * @type {number}
      * @default -1
      * @private
      */
     private _$timerId: number;
-
-    /**
-     * @type {HTMLVideoElement}
-     * @default null
-     * @private
-     */
-    private _$videoElement: HTMLVideoElement | null;
-
-    /**
-     * @type {boolean}
-     * @default true
-     * @private
-     */
-    private _$stop: boolean;
 
     /**
      * @type {number}
@@ -157,15 +177,17 @@ export class Video extends DisplayObject
         this.duration    = 0;
         this.smoothing   = true;
         this.loop        = false;
+        this.loaded      = false;
+        this.ended       = false;
+        this.paused      = true;
         this.autoPlay    = true;
         this.currentTime = 0;
 
         // private params
-        this._$src          = "";
-        this._$timerId      = -1;
-        this._$videoElement = null;
-        this._$stop         = true;
-        this._$volume       = 1;
+        this._$src         = "";
+        this._$timerId     = -1;
+        this.$videoElement = null;
+        this._$volume      = 1;
     }
 
     /**
@@ -213,15 +235,16 @@ export class Video extends DisplayObject
         }
 
         // reset
+        this.loaded = false;
         this.currentTime = 0;
 
-        this._$videoElement = null;
-        this._$videoElement = videoCreateElementService();
+        this.$videoElement = null;
+        this.$videoElement = videoCreateElementService();
 
-        videoRegisterEventUseCase(this._$videoElement, this);
+        videoRegisterEventUseCase(this.$videoElement, this);
 
-        this._$src = this._$videoElement.src = src;
-        this._$videoElement.load();
+        this._$src = this.$videoElement.src = src;
+        this.$videoElement.load();
     }
 
     /**
@@ -243,8 +266,8 @@ export class Video extends DisplayObject
             volume
         ), 0, 1, 1);
 
-        if (this._$videoElement) {
-            this._$videoElement.volume = this._$volume;
+        if (this.$videoElement) {
+            this.$videoElement.volume = this._$volume;
         }
     }
 
@@ -258,12 +281,12 @@ export class Video extends DisplayObject
      */
     pause (): void
     {
-        if (!this._$videoElement || this._$stop) {
+        if (!this.$videoElement || this.paused) {
             return ;
         }
 
-        this._$stop = true;
-        this._$videoElement.pause();
+        this.paused = true;
+        this.$videoElement.pause();
 
         cancelAnimationFrame(this._$timerId);
 
@@ -288,14 +311,15 @@ export class Video extends DisplayObject
      */
     async play (): Promise<void>
     {
-        if (!this._$videoElement || !this._$stop) {
+        if (!this.$videoElement || !this.paused) {
             return ;
         }
 
-        this._$stop = false;
+        this.paused = false;
+        this.ended  = false;
 
-        this._$videoElement.volume = this._$volume;
-        await this._$videoElement.play();
+        this.$videoElement.volume = this._$volume;
+        await this.$videoElement.play();
 
         this._$timerId = videoPlayEventUseCase(this);
     }
@@ -311,11 +335,11 @@ export class Video extends DisplayObject
      */
     seek (offset: number): void
     {
-        if (!this._$videoElement) {
+        if (!this.$videoElement) {
             return ;
         }
 
-        this.currentTime = this._$videoElement.currentTime = Math.min(this.duration, offset);
+        this.currentTime = this.$videoElement.currentTime = Math.min(this.duration, offset);
 
         if (this.willTrigger(VideoEvent.SEEK)) {
             this.dispatchEvent(new VideoEvent(VideoEvent.SEEK));

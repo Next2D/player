@@ -205,6 +205,7 @@ export class Stage extends DisplayObjectContainer
      *              Generate drawing data to pass to the renderer worker
      * 
      * @param  {array} render_queue
+     * @param  {Array<Promise<ImageBitmap>>} image_bitmaps
      * @param  {Float32Array} matrix
      * @return {void}
      * @method
@@ -212,6 +213,7 @@ export class Stage extends DisplayObjectContainer
      */
     _$generateRenderQueue (
         render_queue: number[], 
+        image_bitmaps: Array<Promise<ImageBitmap>>,
         matrix: Float32Array
     ): void {
 
@@ -219,7 +221,8 @@ export class Stage extends DisplayObjectContainer
         render_queue.push(this._$backgroundColor);
 
         displayObjectContainerGenerateRenderQueueUseCase(
-            this, render_queue, matrix, $COLOR_ARRAY_IDENTITY,
+            this, render_queue, image_bitmaps,
+            matrix, $COLOR_ARRAY_IDENTITY,
             this.rendererWidth, this.rendererHeight,
             matrix[4], matrix[5]
         );

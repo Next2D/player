@@ -2,12 +2,14 @@ import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { Shape } from "../../Shape";
 import type { TextField } from "@next2d/text";
+import type { Video } from "@next2d/media";
 import { $COLOR_ARRAY_IDENTITY } from "../../Stage";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as shapeGenerateRenderQueueUseCase } from "../../Shape/usecase/ShapeGenerateRenderQueueUseCase";
 import { execute as shapeGenerateClipQueueUseCase } from "../../Shape/usecase/ShapeGenerateClipQueueUseCase";
 import { execute as textFieldGenerateRenderQueueUseCase } from "../../TextField/usecase/TextFieldGenerateRenderQueueUseCase";
+import { execute as videoGenerateRenderQueueUseCase } from "../../Video/usecase/VideoGenerateRenderQueueUseCase";
 import { execute as displayObjectIsMaskReflectedInDisplayUseCase } from "../../DisplayObject/usecase/DisplayObjectIsMaskReflectedInDisplayUseCase";
 import {
     $clamp,
@@ -37,6 +39,7 @@ import {
 export const execute = <P extends DisplayObjectContainer>(
     display_object_container: P,
     render_queue: number[],
+    bitmaps: Array<Promise<ImageBitmap>>,
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
@@ -186,6 +189,7 @@ export const execute = <P extends DisplayObjectContainer>(
                 execute(
                     child as DisplayObjectContainer, 
                     render_queue,
+                    bitmaps,
                     tMatrix,
                     colorTransform,
                     rendererWidth,
@@ -222,6 +226,17 @@ export const execute = <P extends DisplayObjectContainer>(
                 break;
 
             case child.isVideo: // 0x03
+                videoGenerateRenderQueueUseCase(
+                    child as Video, 
+                    render_queue, 
+                    bitmaps,
+                    tMatrix, 
+                    colorTransform,
+                    rendererWidth,
+                    rendererHeight,
+                    point_x,
+                    point_y
+                );
                 break;
 
             default:

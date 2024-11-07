@@ -10,12 +10,16 @@ import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUs
  * 
  * @param  {Float32Array} render_queue 
  * @param  {number} index 
+ * @param  {ImageBitmap[]} [image_bitmaps=null] 
  * @return {number}
  * @method
  * @protected
  */
-export const execute = (render_queue: Float32Array, index: number): number =>
-{
+export const execute = (
+    render_queue: Float32Array, 
+    index: number,
+    image_bitmaps: ImageBitmap[] | null
+): number => {
     let endClipDepth = 0;
     let canRenderMask = true;
 
@@ -95,7 +99,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         switch (type) {
 
             case 0x00: // container
-                index = execute(render_queue, index);
+                index = execute(render_queue, index, image_bitmaps);
                 break;
 
             case 0x01: // shape
@@ -107,7 +111,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
                 break;
 
             case 0x03: // video
-                index = videoRenderUseCase(render_queue, index);
+                index = videoRenderUseCase(render_queue, index, image_bitmaps);
                 break;
 
             default:

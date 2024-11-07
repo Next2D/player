@@ -11,6 +11,12 @@ import { $stage } from "@next2d/display";
 const $renderQueue: number[] = [];
 
 /**
+ * @type {array}
+ * @private
+ */
+const $bitmaps: Array<Promise<ImageBitmap>> = [];
+
+/**
  * @type {Float32Array}
  * @private
  */
@@ -23,9 +29,10 @@ const $matrix: Float32Array = new Float32Array([1, 0, 0, 1, 0, 0]);
  * @type {object}
  * @private
  */
-const message: IRenderMessage = {
+const $message: IRenderMessage = {
     "command": "render",
-    "buffer": null
+    "buffer": null,
+    "imageBitmaps": null
 };
 
 /**
@@ -35,7 +42,7 @@ const message: IRenderMessage = {
  * @type {Transferable[]}
  * @private
  */
-const options: Transferable[] = [];
+const $options: Transferable[] = [];
 
 /**
  * @description レンダリングデータを生成してworkerに送る
@@ -53,17 +60,32 @@ export const execute = (): void =>
     $matrix[4] = ($player.rendererWidth - $stage.stageWidth * scale) / 2;
     $matrix[5] = ($player.rendererHeight - $stage.stageHeight * scale) / 2;
 
+    $options.length = 0;
     $renderQueue.length = 0;
+    $bitmaps.length = 0;
     $stage._$generateRenderQueue(
-        $renderQueue, $matrix
+        $renderQueue, $bitmaps, $matrix
     );
 
     const buffer = new Float32Array($renderQueue);
     $renderQueue.length = 0;
 
-    message.buffer = buffer;
-    options[0] = buffer.buffer;
+    $message.buffer = buffer;
+    $options.push(buffer.buffer);
 
     // postMessage
-    $rendererWorker.postMessage(message, options);
+    $message.imageBitmaps = null;
+    if ($bitmaps.length) {
+        Promise
+            .all($bitmaps)
+            .then((bitmaps: ImageBitmap[]): void =>
+            {
+                $message.imageBitmaps = bitmaps;
+                $options.push(...bitmaps);
+                $rendererWorker.postMessage($message, $options);
+            });
+
+    } else {
+        $rendererWorker.postMessage($message, $options);
+    }
 };

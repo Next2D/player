@@ -8,7 +8,7 @@ import { $gl } from "../../WebGLUtil";
  *
  * @param  {number} width
  * @param  {number} height
- * @param  {OffscreenCanvas} canvas
+ * @param  {OffscreenCanvas | ImageBitmap} element
  * @param  {boolean} [smooth=false]
  * @return {ITextureObject}
  * @method
@@ -17,7 +17,7 @@ import { $gl } from "../../WebGLUtil";
 export const execute = (
     width: number,
     height: number,
-    canvas: OffscreenCanvas,
+    element: OffscreenCanvas | ImageBitmap,
     smooth: boolean = false
 ): ITextureObject => {
 
@@ -25,7 +25,7 @@ export const execute = (
 
     $gl.texSubImage2D(
         $gl.TEXTURE_2D, 0, 0, 0,
-        $gl.RGBA, $gl.UNSIGNED_BYTE, canvas
+        $gl.RGBA, $gl.UNSIGNED_BYTE, element
     );
 
     return textureObject;

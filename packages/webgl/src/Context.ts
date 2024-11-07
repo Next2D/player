@@ -39,7 +39,7 @@ import { execute as maskStartMaskService } from "./Mask/service/MaskStartMaskSer
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
 import { execute as maskLeaveMaskService } from "./Mask/service/MaskLeaveMaskService";
 import { execute as contextDrawPixelsUseCase } from "./Context/usecase/ContextDrawPixelsUseCase";
-import { execute as contextDrawCanvasUseCase } from "./Context/usecase/ContextDrawCanvasUseCase";
+import { execute as contextDrawElementUseCase } from "./Context/usecase/ContextDrawElementUseCase";
 import { execute as contextBitmapFillUseCase } from "./Context/usecase/ContextBitmapFillUseCase";
 import { execute as contextBitmapStrokeUseCase } from "./Context/usecase/ContextBitmapStrokeUseCase";
 import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStrokeUseCase";
@@ -937,14 +937,14 @@ export class Context
      *              Transfer the OffscreenCanvas to the specified location of the Node
      *
      * @param  {Node} node
-     * @param  {OffscreenCanvas} canvas
+     * @param  {OffscreenCanvas | ImageBitmap} element
      * @return {void}
      * @method
      * @public
      */
-    drawCanvas (node: Node, canvas: OffscreenCanvas): void
+    drawElement (node: Node, element: OffscreenCanvas | ImageBitmap): void
     {
-        contextDrawCanvasUseCase(node, canvas);
+        contextDrawElementUseCase(node, element);
     }
 
     /**

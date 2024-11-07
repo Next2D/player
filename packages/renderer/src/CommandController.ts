@@ -61,7 +61,7 @@ export class CommandController
             switch (object.command) {
 
                 case "render":
-                    commandRenderUseCase(object.buffer);
+                    commandRenderUseCase(object.buffer, object.imageBitmaps as ImageBitmap[] | null);
                     break;
 
                 case "resize":

@@ -156,7 +156,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             offsetY
         );
 
-        $context.drawCanvas(node, canvas);
+        $context.drawElement(node, canvas);
 
         $context.endNodeRendering();
 

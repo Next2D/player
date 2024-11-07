@@ -19,12 +19,16 @@ let $color: number = -1;
  *              Execute drawing from drawing command
  * 
  * @param  {Float32Array} render_queue
+ * @param  {ImageBitmap[]} [image_bitmaps=null]
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (render_queue: Float32Array): void =>
-{
+export const execute = (
+    render_queue: Float32Array,
+    image_bitmaps: ImageBitmap[] | null
+): void => {
+
     let index = 0;
 
     // update background color
@@ -60,7 +64,7 @@ export const execute = (render_queue: Float32Array): void =>
         switch (type) {
 
             case 0x00: // container
-                index = displayObjectContainerRenderUseCase(render_queue, index);
+                index = displayObjectContainerRenderUseCase(render_queue, index, image_bitmaps);
                 break;
 
             case 0x01: // shape
@@ -72,7 +76,7 @@ export const execute = (render_queue: Float32Array): void =>
                 break;
 
             case 0x03: // video
-                index = videoRenderUseCase(render_queue, index);
+                index = videoRenderUseCase(render_queue, index, image_bitmaps);
                 break;
 
             default:

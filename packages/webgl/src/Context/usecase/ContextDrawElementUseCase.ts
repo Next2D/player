@@ -10,14 +10,14 @@ import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderM
  *              Draw OffscreenCanvas.
  *
  * @param  {Node} node
- * @param  {OffscreenCanvas} canvas
+ * @param  {OffscreenCanvas | ImageBitmap} element
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (node: Node, canvas: OffscreenCanvas): void =>
+export const execute = (node: Node, element: OffscreenCanvas | ImageBitmap): void =>
 {
-    const textureObject = textureManagerCreateFromCanvasUseCase(node.w, node.h, canvas);
+    const textureObject = textureManagerCreateFromCanvasUseCase(node.w, node.h, element);
 
     const shaderManager = variantsBlendTextureShaderService();
     shaderManagerSetTextureUniformService(shaderManager, node.w, node.h);

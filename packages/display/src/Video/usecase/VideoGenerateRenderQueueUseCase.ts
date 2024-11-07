@@ -1,13 +1,13 @@
-import type { TextField } from "@next2d/text";
+import type { Video } from "@next2d/media";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
-import { execute as textFieldGetRawBoundsService } from "../service/TextFieldGetRawBoundsService";
+import { execute as videoGetRawBoundsService } from "../service/VideoGetRawBoundsService";
 import { $cacheStore } from "@next2d/cache";
 import {
     $clamp,
-    $RENDERER_TEXT_TYPE,
+    $RENDERER_VIDEO_TYPE,
     $getArray,
     $poolArray
 } from "../../DisplayObjectUtil";
@@ -17,16 +17,10 @@ import {
 } from "@next2d/geom";
 
 /**
- * @type {TextEncoder}
- * @private
- */
-const $textEncoder: TextEncoder = new TextEncoder();
-
-/**
- * @description renderer workerに渡すTextFieldの描画データを生成
- *              Generate drawing data of TextField to pass to renderer
+ * @description renderer workerに渡すVideoの描画データを生成
+ *              Generate drawing data of Video to pass to renderer
  * 
- * @param  {TextField} text_field
+ * @param  {Video} video
  * @param  {array} render_queue
  * @param  {Float32Array} matrix 
  * @param  {Float32Array} color_transform
@@ -39,8 +33,9 @@ const $textEncoder: TextEncoder = new TextEncoder();
  * @protected
  */
 export const execute = (
-    text_field: TextField,
+    video: Video,
     render_queue: number[],
+    bitmaps: Array<Promise<ImageBitmap>>,
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
@@ -49,13 +44,13 @@ export const execute = (
     point_y: number
 ): void => {
 
-    if (!text_field.visible || !text_field.text) {
+    if (!video.visible || !video.$videoElement || !video.loaded) {
         render_queue.push(0);
         return ;
     }
 
     // transformed ColorTransform(tColorTransform)
-    const rawColor = displayObjectGetRawColorTransformUseCase(text_field);
+    const rawColor = displayObjectGetRawColorTransformUseCase(video);
     const tColorTransform = rawColor 
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
@@ -70,13 +65,13 @@ export const execute = (
     }
 
     // transformed matrix(tMatrix)
-    const rawMatrix = displayObjectGetRawMatrixUseCase(text_field);
+    const rawMatrix = displayObjectGetRawMatrixUseCase(video);
     const tMatrix = rawMatrix
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
 
     // draw text
-    const rawBounds = textFieldGetRawBoundsService(text_field);
+    const rawBounds = videoGetRawBoundsService(video);
     const bounds = displayObjectCalcBoundsMatrixService(
         rawBounds[0], rawBounds[1], 
         rawBounds[2], rawBounds[3],
@@ -132,21 +127,22 @@ export const execute = (
         return;
     }
 
+
     // rennder on
     render_queue.push(1);
-    render_queue.push($RENDERER_TEXT_TYPE);
+    render_queue.push($RENDERER_VIDEO_TYPE);
     render_queue.push(...tMatrix, ...tColorTransform);
 
     // base bounds
     render_queue.push(...rawBounds);
     $poolArray(rawBounds);
 
-    if (!text_field.uniqueKey) {
-        if (text_field.characterId && text_field.loaderInfo) {
+    if (!video.uniqueKey) {
+        if (video.characterId && video.loaderInfo) {
             
             const values = $getArray(
-                text_field.loaderInfo.id,
-                text_field.characterId
+                video.loaderInfo.id,
+                video.characterId
             );
 
             let hash = 0;
@@ -156,16 +152,16 @@ export const execute = (
             }
 
             $poolArray(values);
-            text_field.uniqueKey = `${hash}`;
+            video.uniqueKey = `${hash}`;
 
         } else {
 
-            text_field.uniqueKey = `${text_field.instanceId}`;
+            video.uniqueKey = `${video.instanceId}`;
 
         }
     }
 
-    render_queue.push(+text_field.uniqueKey);
+    render_queue.push(+video.uniqueKey);
 
     let xScale: number = Math.sqrt(
         tMatrix[0] * tMatrix[0]
@@ -193,23 +189,8 @@ export const execute = (
         yScale = +yScale.toFixed(4);
     }
 
-    if (text_field.changed 
-        && !text_field.cacheKey
-        || text_field.cacheParams[0] !== xScale
-        || text_field.cacheParams[1] !== yScale
-        || text_field.cacheParams[2] !== tColorTransform[7]
-    ) {
-        text_field.cacheKey = $cacheStore.generateKeys(xScale, yScale, tColorTransform[7]);
-        text_field.cacheParams[0] = xScale;
-        text_field.cacheParams[1] = yScale;
-        text_field.cacheParams[2] = tColorTransform[7];
-    }
-
-    const cacheKey = text_field.cacheKey;
-    render_queue.push(cacheKey);
-
-    const cache = $cacheStore.get(text_field.uniqueKey, `${cacheKey}`);
-    if (!cache || text_field.changed) {
+    const cache = $cacheStore.get(video.uniqueKey, "0");
+    if (cache || video.changed) {
 
         // cache none
         render_queue.push(0);
@@ -217,64 +198,21 @@ export const execute = (
         // has cache
         render_queue.push(+cache);
 
-        const buffer = $textEncoder.encode(JSON.stringify(text_field.$textData));
-        
-        render_queue.push(buffer.length);
-        for (let idx = 0; idx < buffer.length; idx += 4096) {
-            render_queue.push(...buffer.slice(idx, idx + 4096));
-        }
-
-        // text setting
-        switch (text_field.autoSize) {
-
-            case "center":
-                render_queue.push(0);
-                break;
-
-            case "left":
-                render_queue.push(1);
-                break;
-
-            case "none":
-                render_queue.push(2);
-                break;
-
-            case "right":
-                render_queue.push(3);
-                break;
-
-        }
-        
-        render_queue.push(text_field.stopIndex);
-        render_queue.push(text_field.scrollX);
-        render_queue.push(text_field.scrollY);
-        render_queue.push(text_field.textWidth);
-        render_queue.push(text_field.textHeight);
-        render_queue.push(Math.abs(text_field.xMax - text_field.xMin));
-        render_queue.push(Math.abs(text_field.yMax - text_field.yMin));
-        render_queue.push(text_field.focusIndex);
-        render_queue.push(+text_field.focusVisible);
-        render_queue.push(text_field.thickness);
-        render_queue.push(text_field.thicknessColor);
-        render_queue.push(+text_field.wordWrap);
-        render_queue.push(+text_field.border);
-        render_queue.push(text_field.borderColor);
-        render_queue.push(+text_field.background);
-        render_queue.push(text_field.backgroundColor);
-        render_queue.push(text_field.defaultTextFormat.color || 0);
-        render_queue.push(text_field.defaultTextFormat.size || 0);
+        bitmaps.push(createImageBitmap(video.$videoElement, {
+            "imageOrientation": "flipY"
+        }));
 
         if (!cache) {
-            $cacheStore.set(text_field.uniqueKey, `${cacheKey}`, true);
+            $cacheStore.set(video.uniqueKey, "0", true);
         }
     } else {
         render_queue.push(1);
     }
 
     const params  = [];
-    if (text_field.filters?.length) {
-        for (let idx = 0; idx < text_field.filters.length; idx++) {
-            const filter = text_field.filters[idx];
+    if (video.filters?.length) {
+        for (let idx = 0; idx < video.filters.length; idx++) {
+            const filter = video.filters[idx];
             if (!filter || !filter.canApplyFilter()) {
                 continue;
             }
@@ -284,7 +222,7 @@ export const execute = (
     }
 
     render_queue.push(
-        displayObjectBlendToNumberService(text_field.blendMode)
+        displayObjectBlendToNumberService(video.blendMode)
     );
 
     const useFilfer = params.length > 0;
@@ -300,4 +238,4 @@ export const execute = (
     if (tMatrix !== matrix) {
         Matrix.release(tMatrix);
     }
-}
+};

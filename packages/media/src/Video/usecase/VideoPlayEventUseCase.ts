@@ -21,14 +21,11 @@ export const execute = (video: Video): number =>
     videoApplyChangesService(video);
 
     const playingVideos = $getPlayingVideos();
-    const index = playingVideos.indexOf(video);
-    if (index > -1) {
-        playingVideos.splice(index, 1);
+    if (playingVideos.indexOf(video) === -1) {
+        playingVideos.push(video);
     }
 
-    playingVideos.push(video);
-
-    return requestAnimationFrame(() =>
+    return requestAnimationFrame((): void =>
     {
         execute(video);
     });

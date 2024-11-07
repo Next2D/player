@@ -68,7 +68,7 @@ export const execute = (
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
     
-    const alpha: number = $clamp(tColorTransform[3] + tColorTransform[7] / 255, 0, 1, 0);
+    const alpha = $clamp(tColorTransform[3] + tColorTransform[7] / 255, 0, 1, 0);
     if (!alpha) {
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
@@ -91,14 +91,14 @@ export const execute = (
         tMatrix
     );
 
-    const xMin: number = bounds[0];
-    const yMin: number = bounds[1];
-    const xMax: number = bounds[2];
-    const yMax: number = bounds[3];
+    const xMin = bounds[0];
+    const yMin = bounds[1];
+    const xMax = bounds[2];
+    const yMax = bounds[3];
     $poolArray(bounds);
 
-    const width: number  = Math.ceil(Math.abs(xMax - xMin));
-    const height: number = Math.ceil(Math.abs(yMax - yMin));
+    const width  = Math.ceil(Math.abs(xMax - xMin));
+    const height = Math.ceil(Math.abs(yMax - yMin));
     switch (true) {
 
         case width === 0:

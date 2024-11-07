@@ -17,6 +17,7 @@ export const execute = async (video: Video): Promise<void> =>
         await video.play();
     }
 
+    video.loaded = true;
     videoApplyChangesService(video);
 
     if (video.willTrigger(Event.COMPLETE)) {
