@@ -1,6 +1,10 @@
 import type { Video } from "../../Video";
 import { Event } from "@next2d/events";
 import { execute as videoApplyChangesService } from "../service/VideoApplyChangesService";
+import {
+    $isAudioContext,
+    $mutedVideos
+} from "../../MediaUtil";
 
 /**
  * @description 再生可能処理
@@ -14,6 +18,10 @@ import { execute as videoApplyChangesService } from "../service/VideoApplyChange
 export const execute = async (video: Video): Promise<void> =>
 {
     if (video.autoPlay) {
+        if (!$isAudioContext()) {
+            video.muted = true;
+            $mutedVideos.push(video);
+        }
         await video.play();
     }
 

@@ -248,6 +248,26 @@ export class Video extends DisplayObject
     }
 
     /**
+     * @description ビデオがミュートされているかどうかを返します。
+     *              Returns whether the video is muted.
+     *
+     * @member {boolean}
+     * @default false
+     * @public
+     */
+    get muted (): boolean
+    {
+        return this.$videoElement ? this.$videoElement.muted : false;
+    }
+    set muted (muted: boolean)
+    {
+        if (!this.$videoElement) {
+            return ;
+        }
+        this.$videoElement.muted = muted;
+    }
+
+    /**
      * @description ボリュームです。範囲は 0（無音）～ 1（フルボリューム）です。
      *              The volume, ranging from 0 (silent) to 1 (full volume).
      *

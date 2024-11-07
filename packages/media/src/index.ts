@@ -4,5 +4,6 @@ export * from "./SoundTransform";
 export * from "./Video";
 export {
     $bootAudioContext,
-    $getAudioContext
+    $getAudioContext,
+    $mutedVideos
 } from "./MediaUtil";

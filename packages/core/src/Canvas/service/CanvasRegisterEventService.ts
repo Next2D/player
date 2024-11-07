@@ -1,4 +1,7 @@
-import { $bootAudioContext } from "@next2d/media";
+import {
+    $bootAudioContext,
+    $mutedVideos
+} from "@next2d/media";
 import {
     $POINTER_DOWN,
     $POINTER_UP,
@@ -16,7 +19,15 @@ export const execute = (canvas: HTMLCanvasElement): void =>
 {
     const $loadAudioContext = (): void =>
     {
+        // audio contextを起動
         $bootAudioContext();
+
+        // ミュートになっているビデオの音声をon
+        for (let idx = 0; idx < $mutedVideos.length; ++idx) {
+            $mutedVideos[idx].muted = false;
+        }
+        $mutedVideos.length;
+        
         canvas.removeEventListener("pointerup", $loadAudioContext);
     };
     canvas.addEventListener("pointerup", $loadAudioContext);

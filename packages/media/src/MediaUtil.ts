@@ -3,10 +3,29 @@ import type { Video } from "./Video";
 import type { IAjaxOption } from "./interface/IAjaxOption";
 
 /**
+ * @type {Video[]}
+ * @public
+ */
+export const $mutedVideos: Video[] = [];
+
+/**
  * @type {AudioContext}
- * @static
+ * @private
  */
 let $audioContext: AudioContext | null = null;
+
+/**
+ * @description AudioContext が存在するか返却
+ *              Returns whether AudioContext exists.
+ * 
+ * @return {boolean}
+ * @method
+ * @public
+ */
+export const $isAudioContext = (): boolean =>
+{
+    return !!$audioContext;
+};
 
 /**
  * @description AudioContext を起動
