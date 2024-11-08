@@ -5,7 +5,7 @@ import type { IBlendMode } from "../../interface/IBlendMode";
 /**
  * @description DisplayObjectのブレンドモードをセット
  *              Set the blend mode of the DisplayObject
- * 
+ *
  * @param  {DisplayObject} display_object
  * @param  {IBlendMode} blend_mode
  * @return {void}

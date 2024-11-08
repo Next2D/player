@@ -7,7 +7,7 @@ import { execute as textAreaKeydownUseCase } from "./TextAreaKeydownUseCase";
 /**
  * @description テキストエリアにイベントを登録します。
  *              Registers events in the text area.
- * 
+ *
  * @param  {HTMLTextAreaElement} text_area
  * @return {void}
  * @method

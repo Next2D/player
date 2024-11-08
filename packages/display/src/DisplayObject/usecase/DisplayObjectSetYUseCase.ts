@@ -7,7 +7,7 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../usecase/DisplayO
 /**
  * @description DisplayObjectのy座標を設定
  *              Set y-coordinate of DisplayObject
- * 
+ *
  * @param  {DisplayObject} display_object
  * @param  {number} y
  * @return {void}
@@ -21,8 +21,8 @@ export const execute = <D extends DisplayObject>(display_object: D, y: number): 
     let matrix = display_object.$matrix;
     if (!matrix) {
         const rawData = displayObjectGetRawMatrixUseCase(display_object);
-        matrix = rawData 
-            ? new Matrix(...rawData) 
+        matrix = rawData
+            ? new Matrix(...rawData)
             : new Matrix();
     }
 

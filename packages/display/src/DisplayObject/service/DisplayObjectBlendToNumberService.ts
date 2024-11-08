@@ -57,7 +57,7 @@ export const execute = (blend_mode: IBlendMode): number =>
 
         case "subtract":
             return 14;
-        
+
         default:
             return 11; // normal
 

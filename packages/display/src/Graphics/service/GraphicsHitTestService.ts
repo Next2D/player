@@ -4,10 +4,10 @@ import { Graphics } from "../../Graphics";
 /**
  * @description 指定のパスが描画のヒット範囲か判定
  *              Determines if the specified path is within the hit range for drawing
- * 
- * @param  {CanvasRenderingContext2D} context 
- * @param  {array} recodes 
- * @param  {object} options 
+ *
+ * @param  {CanvasRenderingContext2D} context
+ * @param  {array} recodes
+ * @param  {object} options
  * @return {boolean}
  * @method
  * @protected
@@ -19,7 +19,7 @@ export const execute = (
 ): boolean => {
 
     for (let idx: number = 0; idx < recodes.length; ) {
-        
+
         switch (recodes[idx++]) {
 
             case Graphics.BEGIN_PATH:
@@ -115,4 +115,4 @@ export const execute = (
     }
 
     return false;
-}
+};

@@ -3,8 +3,8 @@ import type { IBlendMode } from "../../../../webgl/src/interface/IBlendMode";
 /**
  * @description ブレンドモードを取得します。
  *              Get the blend mode.
- * 
- * @param  {number} blend_number 
+ *
+ * @param  {number} blend_number
  * @return {IBlendMode}
  * @method
  * @protected
@@ -57,9 +57,9 @@ export const execute = (blend_number: number): IBlendMode =>
 
         case 14:
             return "subtract";
-        
+
         default:
             return "normal"; // normal
-            
+
     }
 };

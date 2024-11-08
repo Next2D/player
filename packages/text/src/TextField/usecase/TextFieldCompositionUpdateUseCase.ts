@@ -1,16 +1,16 @@
 import type { TextField } from "../../TextField";
-import type { TextFormat } from "../../TextFormat";
-import { Point } from "@next2d/geom";
-import { $textArea } from "../../TextUtil";
+import { TextFormat } from "../../TextFormat";
+// import { Point } from "@next2d/geom";
+// import { $textArea } from "../../TextUtil";
 import { execute as textFieldGetTextDataUseCase } from "../../TextField/usecase/TextFieldGetTextDataUseCase";
 import { execute as textFieldDeleteTextUseCase } from "../../TextField/usecase/TextFieldDeleteTextUseCase";
 
 /**
  * @description 新しい文字が入力されたときのイベント処理関数
  *              Event processing function when a new character is entered
- * 
- * @param  {TextField} text_field 
- * @param  {string} texts 
+ *
+ * @param  {TextField} text_field
+ * @param  {string} texts
  * @return {void}
  * @method
  * @protected
@@ -49,8 +49,8 @@ export const execute = (text_field: TextField, texts: string): void =>
             }
 
             if (text_field.compositionStartIndex === idx) {
-                for (let idx: number = 0; idx < length; ++idx) {
-                    textFormats.push(textObject.textFormat.clone());
+                for (let idx = 0; idx < length; ++idx) {
+                    textFormats.push(new TextFormat(...Object.values(textObject.textFormat)));
                     newText += texts[idx];
                 }
             }
@@ -58,12 +58,12 @@ export const execute = (text_field: TextField, texts: string): void =>
             switch (textObject.mode) {
 
                 case "break":
-                    textFormats.push(textObject.textFormat);
+                    textFormats.push(new TextFormat(...Object.values(textObject.textFormat)));
                     newText += "\n";
                     break;
 
                 case "text":
-                    textFormats.push(textObject.textFormat);
+                    textFormats.push(new TextFormat(...Object.values(textObject.textFormat)));
                     newText += textObject.text;
                     break;
 
@@ -82,7 +82,7 @@ export const execute = (text_field: TextField, texts: string): void =>
             }
 
             for (let idx = 0; idx < length; ++idx) {
-                textFormats.push(textObject.textFormat.clone());
+                textFormats.push(new TextFormat(...Object.values(textObject.textFormat)));
                 newText += texts[idx];
             }
         }
@@ -114,7 +114,7 @@ export const execute = (text_field: TextField, texts: string): void =>
         }
 
         if (idx === text_field.compositionStartIndex) {
-            
+
             let subIndex = 1;
             for (;;) {
                 const textObject = textData.textTable[idx - subIndex];
@@ -151,7 +151,7 @@ export const execute = (text_field: TextField, texts: string): void =>
         offsetHeight += textData.heightTable[idx];
     }
 
-    const verticalAlign = textData.ascentTable[line];
+    // const verticalAlign = textData.ascentTable[line];
 
     let offsetWidth = 0;
     let targetIndex = text_field.compositionEndIndex;
@@ -165,8 +165,8 @@ export const execute = (text_field: TextField, texts: string): void =>
         offsetWidth += textObject.w;
     }
 
-    const lineObject  = textData.lineTable[line];
-    const offsetAlign = text_field._$getAlignOffset(lineObject, text_field.width);
+    // const lineObject  = textData.lineTable[line];
+    // const offsetAlign = text_field._$getAlignOffset(lineObject, text_field.width);
 
     // const point = text_field.localToGlobal(new Point(
     //     offsetWidth  + offsetAlign   + player.tx,

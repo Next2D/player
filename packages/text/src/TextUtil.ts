@@ -5,16 +5,16 @@ import { execute as textAreaRegisterEventUseCase } from "./TextArea/usecase/Text
 /**
  * @description 選択中のテキストフィールド
  *              Selected text field
- * 
+ *
  * @type {TextField | null}
- * @private 
+ * @private
  */
 let $selectedTextField: TextField | null = null;
 
 /**
  * @description 選択したテキストフィールドをセット
  *              Set the selected text field
- * 
+ *
  * @param {TextField | null} text_field
  * @method
  * @public
@@ -27,7 +27,7 @@ export const $setSelectedTextField = (text_field: TextField | null): void =>
 /**
  * @description 選択中のテキストフィールドを返却
  *              Returns the selected text field
- * 
+ *
  * @return {TextField | null}
  * @method
  * @public
@@ -78,7 +78,7 @@ let $currentWidth: number = 0;
 /**
  * @description 分解中のテキストの現在の幅を取得
  *              Get the current width of the text being decomposed
- * 
+ *
  * @return {number}
  * @method
  * @protected
@@ -91,7 +91,7 @@ export const $getCurrentWidth = (): number =>
 /**
  * @description 分解中のテキストの現在の幅をセット
  *              Set the current width of the text being decomposed
- * 
+ *
  * @return {void}
  * @method
  * @protected
@@ -123,7 +123,7 @@ export const $convertColorStringToNumber = (value: string): number =>
 /**
  * @description カラー文字列を数値に変換
  *              Convert color string to number
- * 
+ *
  * @param  {*} value
  * @return {number}
  * @method
@@ -156,7 +156,7 @@ export const $intToRGBA = (color: number, alpha: number = 1): IRGBA =>
 /**
  * @description 値が最小値と最大値の間に収まるように調整します。
  *              Adjust the value so that it falls between the minimum and maximum values.
- * 
+ *
  * @param  {number} value
  * @param  {number} min
  * @param  {number} max
@@ -188,7 +188,7 @@ let $timerId: NodeJS.Timeout;
 /**
  * @description テキスト点滅のタイマーIDを返却
  *              Returns the timer ID for text blinking
- * 
+ *
  * @return {NodeJS.Timeout}
  * @protected
  */
@@ -200,7 +200,7 @@ export const $getBlinkingTimerId = (): NodeJS.Timeout =>
 /**
  * @description テキスト点滅のタイマーIDをセット
  *              Set the timer ID for text blinking
- * 
+ *
  * @param  {NodeJS.Timeout} timer_id
  * @return {void}
  * @protected

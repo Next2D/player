@@ -5,7 +5,7 @@ import { execute as frameBufferManagerGetTextureFromNodeUseCase } from "../../Fr
 /**
  * @description フィルターを適用します。
  *              Apply the filter.
- * 
+ *
  * @param  {Node} node
  * @param  {string} unique_key
  * @param  {number} width
@@ -17,11 +17,11 @@ import { execute as frameBufferManagerGetTextureFromNodeUseCase } from "../../Fr
  * @protected
  */
 export const execute = (
-    node: Node, 
+    node: Node,
     unique_key: string,
-    width: number, 
+    width: number,
     height: number,
-    matrix: Float32Array, 
+    matrix: Float32Array,
     params: Float32Array
 ): void => {
 
@@ -44,7 +44,6 @@ export const execute = (
 
     const textureObject = frameBufferManagerGetTextureFromNodeUseCase(node);
     console.log(width, height, textureObject);
-
 
     $cacheStore.set(unique_key, "fKey", key);
 

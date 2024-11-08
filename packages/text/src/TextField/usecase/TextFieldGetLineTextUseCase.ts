@@ -4,9 +4,9 @@ import { execute as textFieldGetTextDataUseCase } from "./TextFieldGetTextDataUs
 /**
  * @description 指定された行のテキストを返します。
  *              Returns the text of a given line.
- * 
+ *
  * @param  {TextField} text_field
- * @param  {number} index 
+ * @param  {number} index
  * @return {string}
  * @method
  * @protected

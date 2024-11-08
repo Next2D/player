@@ -5,8 +5,8 @@ import { execute as displayObjectGetCalcBoundsUseCase } from "./DisplayObjectGet
 /**
  * @description DisplayObjectの幅を返却
  *              DisplayObject width returned
- * 
- * @param  {DisplayObject} display_object 
+ *
+ * @param  {DisplayObject} display_object
  * @return {number}
  * @method
  * @protected

@@ -40,7 +40,7 @@ export class Sprite extends DisplayObjectContainer
 
     protected _$hitArea: ISprite<any> | null;
     protected _$soundTransform: SoundTransform | null;
-    
+
     /**
      * @constructor
      * @public

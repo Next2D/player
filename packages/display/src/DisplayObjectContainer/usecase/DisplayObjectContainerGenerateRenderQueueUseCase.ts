@@ -23,7 +23,7 @@ import {
 /**
  * @description renderer workerに渡すコンテナの描画データを生成
  *              Generate rendering data of the container to be passed to the renderer worker
- * 
+ *
  * @param  {DisplayObjectContainer} display_object_container
  * @param  {array} render_queue
  * @param  {Float32Array} matrix
@@ -55,10 +55,10 @@ export const execute = <P extends DisplayObjectContainer>(
 
     // transformed ColorTransform(tColorTransform)
     const rawColor = displayObjectGetRawColorTransformUseCase(display_object_container);
-    const tColorTransform = rawColor 
+    const tColorTransform = rawColor
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
-    
+
     const alpha: number = $clamp(tColorTransform[3] + tColorTransform[7] / 255, 0, 1, 0);
     if (!alpha) {
         if (tColorTransform !== color_transform) {
@@ -103,15 +103,13 @@ export const execute = <P extends DisplayObjectContainer>(
     const filters = display_object_container.filters;
     const blendMode = display_object_container.blendMode;
 
-    let rendererWidth  = renderer_width;
-    let rendererHeight = renderer_height;
     let isLayer = false;
-    if ((filters && filters.length > 0) || blendMode !== "normal") {
+    if (filters && filters.length > 0 || blendMode !== "normal") {
         isLayer = true;
         // todo
     }
 
-    const colorTransform = isLayer 
+    const colorTransform = isLayer
         ? $COLOR_ARRAY_IDENTITY
         : tColorTransform;
 
@@ -135,16 +133,16 @@ export const execute = <P extends DisplayObjectContainer>(
         }
 
         if (child.clipDepth) {
-            
+
             clipDepth = child.clipDepth;
 
             // マスクの描画開始判定
             const bounds = displayObjectIsMaskReflectedInDisplayUseCase(
-                child, 
-                tMatrix, 
-                rendererWidth, 
-                rendererHeight, 
-                point_x, 
+                child,
+                tMatrix,
+                renderer_width,
+                renderer_height,
+                point_x,
                 point_y
             );
 
@@ -164,36 +162,36 @@ export const execute = <P extends DisplayObjectContainer>(
 
                 case child.isShape: // 0x01
                     shapeGenerateClipQueueUseCase(
-                        child as Shape, 
-                        render_queue, 
+                        child as Shape,
+                        render_queue,
                         tMatrix
                     );
                     break;
-                
+
                 case child.isText: // 0x02
                     break;
-    
+
                 case child.isVideo: // 0x03
                     break;
-    
+
                 default:
                     break;
             }
 
             continue;
         }
-        
+
         switch (true) {
 
             case child.isContainerEnabled: // 0x00
                 execute(
-                    child as DisplayObjectContainer, 
+                    child as DisplayObjectContainer,
                     render_queue,
                     bitmaps,
                     tMatrix,
                     colorTransform,
-                    rendererWidth,
-                    rendererHeight,
+                    renderer_width,
+                    renderer_height,
                     point_x,
                     point_y
                 );
@@ -201,12 +199,12 @@ export const execute = <P extends DisplayObjectContainer>(
 
             case child.isShape: // 0x01
                 shapeGenerateRenderQueueUseCase(
-                    child as Shape, 
-                    render_queue, 
-                    tMatrix, 
+                    child as Shape,
+                    render_queue,
+                    tMatrix,
                     colorTransform,
-                    rendererWidth,
-                    rendererHeight,
+                    renderer_width,
+                    renderer_height,
                     point_x,
                     point_y
                 );
@@ -214,12 +212,12 @@ export const execute = <P extends DisplayObjectContainer>(
 
             case child.isText: // 0x02
                 textFieldGenerateRenderQueueUseCase(
-                    child as TextField, 
-                    render_queue, 
-                    tMatrix, 
+                    child as TextField,
+                    render_queue,
+                    tMatrix,
                     colorTransform,
-                    rendererWidth,
-                    rendererHeight,
+                    renderer_width,
+                    renderer_height,
                     point_x,
                     point_y
                 );
@@ -227,13 +225,13 @@ export const execute = <P extends DisplayObjectContainer>(
 
             case child.isVideo: // 0x03
                 videoGenerateRenderQueueUseCase(
-                    child as Video, 
-                    render_queue, 
+                    child as Video,
+                    render_queue,
                     bitmaps,
-                    tMatrix, 
+                    tMatrix,
                     colorTransform,
-                    rendererWidth,
-                    rendererHeight,
+                    renderer_width,
+                    renderer_height,
                     point_x,
                     point_y
                 );

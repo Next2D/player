@@ -27,7 +27,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description 初期起動の準備完了したかどうか
      *              Whether the initial startup is ready
-     * 
+     *
      * @type {boolean}
      * @default false
      * @private
@@ -37,7 +37,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description ステージ幅
      *              Stage width
-     * 
+     *
      * @type {number}
      * @public
      */
@@ -46,7 +46,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description ステージ高さ
      *              Stage height
-     * 
+     *
      * @type {number}
      * @public
      */
@@ -55,7 +55,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description フレームレート
      *              Frame rate
-     * 
+     *
      * @type {number}
      * @public
      */
@@ -94,7 +94,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description 背景色
      *              Background color
-     * 
+     *
      * @type {number}
      * @public
      */
@@ -103,7 +103,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description キャッシュキーの削除リスト
      *              List of cache keys to delete
-     * 
+     *
      * @type {number[]}
      * @public
      */
@@ -113,7 +113,7 @@ export class Stage extends DisplayObjectContainer
      * @constructor
      * @public
      */
-    constructor () 
+    constructor ()
     {
         super();
 
@@ -135,7 +135,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description 背景色
      *              Background color
-     * 
+     *
      * @member {number}
      * @public
      */
@@ -153,7 +153,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description 初期起動の準備完了したかどうか
      *              Whether the initial startup is ready
-     * 
+     *
      * @type {boolean}
      * @writeonly
      * @public
@@ -173,8 +173,8 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description Stage に追加した DisplayObject は rootとして rootMap に追加
      *              DisplayObject added to Stage is added to rootMap as root
-     * 
-     * @param  {DisplayObject} display_object 
+     *
+     * @param  {DisplayObject} display_object
      * @return {DisplayObject}
      * @method
      * @public
@@ -190,7 +190,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description Stage に追加した DisplayObject の定期処理、描画処理を実行
      *              Execute regular processing and drawing processing of DisplayObject added to Stage
-     * 
+     *
      * @return {void}
      * @method
      * @protected
@@ -203,7 +203,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description renderer workerに渡す描画データを生成
      *              Generate drawing data to pass to the renderer worker
-     * 
+     *
      * @param  {array} render_queue
      * @param  {Array<Promise<ImageBitmap>>} image_bitmaps
      * @param  {Float32Array} matrix
@@ -212,7 +212,7 @@ export class Stage extends DisplayObjectContainer
      * @private
      */
     _$generateRenderQueue (
-        render_queue: number[], 
+        render_queue: number[],
         image_bitmaps: Array<Promise<ImageBitmap>>,
         matrix: Float32Array
     ): void {

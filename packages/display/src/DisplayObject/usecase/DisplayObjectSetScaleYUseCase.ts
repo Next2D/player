@@ -7,7 +7,7 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../usecase/DisplayO
 /**
  * @description DisplayObjectのy軸方向の拡大率を設定
  *              Set the y-axis scaling factor of the DisplayObject.
- * 
+ *
  * @param  {DisplayObject} display_object
  * @param  {number} scale_y
  * @return {void}
@@ -34,8 +34,8 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_y: num
     let matrix = display_object.$matrix;
     if (!matrix) {
         const rawData = displayObjectGetRawMatrixUseCase(display_object);
-        matrix = rawData 
-            ? new Matrix(...rawData) 
+        matrix = rawData
+            ? new Matrix(...rawData)
             : new Matrix();
     }
 

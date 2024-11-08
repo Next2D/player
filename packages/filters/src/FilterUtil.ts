@@ -28,7 +28,7 @@ const colorContext = canvas.getContext("2d");
 /**
  * @description カラー文字列を数値に変換
  *              Convert color string to number
- * 
+ *
  * @param  {string} value
  * @return {number}
  * @method

@@ -6,14 +6,14 @@ import { $bezierBuffer } from "../../BezierConverter";
  * @description 3次ベジェ曲線を2次ベジェ曲線に分割
  *              Split cubic Bezier curve into quadratic Bezier curve
  *
- * @param  {number} from_x 
- * @param  {number} from_y 
- * @param  {number} cx1 
- * @param  {number} cy1 
- * @param  {number} cx2 
- * @param  {number} cy2 
- * @param  {number} x 
- * @param  {number} y 
+ * @param  {number} from_x
+ * @param  {number} from_y
+ * @param  {number} cx1
+ * @param  {number} cy1
+ * @param  {number} cx2
+ * @param  {number} cy2
+ * @param  {number} x
+ * @param  {number} y
  * @return {Float32Array}
  * @method
  * @protected
@@ -40,7 +40,7 @@ export const execute = (
         $bezierBuffer[20], $bezierBuffer[21], $bezierBuffer[22], $bezierBuffer[23],
         16, 24
     );
-    
+
     bezierConverterSplit2QuadService(
         $bezierBuffer[0], $bezierBuffer[1], $bezierBuffer[2], $bezierBuffer[3],
         $bezierBuffer[4], $bezierBuffer[5], $bezierBuffer[6], $bezierBuffer[7],

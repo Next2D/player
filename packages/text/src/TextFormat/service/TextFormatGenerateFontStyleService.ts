@@ -3,7 +3,7 @@ import type { TextFormat } from "../../TextFormat";
 /**
  * @description テキストフォーマットからフォントスタイルを生成
  *              Generate font style from text format
- * 
+ *
  * @param  {TextFormat} text_frmat
  * @return {string}
  * @method

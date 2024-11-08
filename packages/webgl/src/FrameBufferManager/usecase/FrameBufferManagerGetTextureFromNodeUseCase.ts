@@ -41,7 +41,7 @@ export const execute = (node: Node): ITextureObject =>
 
     const drawBitmapFrameBuffer = $getDrawBitmapFrameBuffer();
     $gl.bindFramebuffer($gl.FRAMEBUFFER, drawBitmapFrameBuffer);
-    
+
     const textureObject = textureManagerGetTextureUseCase(node.w, node.h);
     $gl.framebufferTexture2D(
         $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
@@ -51,7 +51,7 @@ export const execute = (node: Node): ITextureObject =>
     $gl.bindFramebuffer($gl.FRAMEBUFFER, null);
     $gl.bindFramebuffer($gl.READ_FRAMEBUFFER, readBitmapFrameBuffer);
     $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, drawBitmapFrameBuffer);
-    
+
     // execute
     $gl.blitFramebuffer(
         node.x, node.y, node.x + node.w, node.y + node.h,

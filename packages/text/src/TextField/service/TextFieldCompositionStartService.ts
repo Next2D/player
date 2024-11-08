@@ -3,7 +3,7 @@ import type { TextField } from "../../TextField";
 /**
  * @description 選択中のインデックスを記録します。
  *              Records the currently selected index.
- * 
+ *
  * @param  {TextField} text_field
  * @return {void}
  * @method

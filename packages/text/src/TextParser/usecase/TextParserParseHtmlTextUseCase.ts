@@ -9,7 +9,7 @@ import { execute as textParserParseTagUseCase } from "./TextParserParseTagUseCas
 /**
  * @description HTMLテキストを解析してTextDataを生成
  *              Analyze HTML text and generate TextData
- * 
+ *
  * @param  {string} html_text
  * @param  {TextFormat} text_format
  * @param  {IOptions} options

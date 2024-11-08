@@ -197,7 +197,7 @@ export class CacheStore
      * @method
      * @public
      */
-    generateFilterKeys (a: number, b: number, c: number, d: number): number 
+    generateFilterKeys (a: number, b: number, c: number, d: number): number
     {
         return cacheStoreGenerateFilterKeysService(a, b, c, d);
     }

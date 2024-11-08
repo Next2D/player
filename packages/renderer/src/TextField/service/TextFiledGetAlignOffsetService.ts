@@ -6,9 +6,9 @@ import type { ITextSetting } from "../../interface/ITextSetting";
  * @description テキストの揃え位置のオフセット値を取得します。
  *              Get the offset value of the alignment position of the text.
  *
- * @param  {ITextData} text_data 
- * @param  {ITextObject} text_object 
- * @param  {ITextSetting} text_setting 
+ * @param  {ITextData} text_data
+ * @param  {ITextObject} text_object
+ * @param  {ITextSetting} text_setting
  * @return {number}
  * @method
  * @protected

@@ -341,7 +341,7 @@ export class GlowFilter extends BitmapFilter
     /**
      * @description フィルターの描画範囲のバウンディングボックスを返します。
      *              Returns the bounding box of the filter drawing area.
-     * 
+     *
      * @param  {object} bounds
      * @return {object}
      * @method

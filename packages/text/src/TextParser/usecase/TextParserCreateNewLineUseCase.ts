@@ -10,7 +10,7 @@ import {
 /**
  * @description 新しい行を作成
  *              Create a new line
- * 
+ *
  * @param {TextData} text_data
  * @param {TextFormat} text_format
  * @return {void}

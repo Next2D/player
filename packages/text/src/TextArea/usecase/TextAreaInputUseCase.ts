@@ -4,7 +4,7 @@ import { execute as textFieldInsertTextUseCase } from "../../TextField/usecase/T
 /**
  * @description テキストエリアに入力された文字を挿入します。
  *              Inserts the characters entered in the text area.
- * 
+ *
  * @param  {InputEvent} event
  * @return {void}
  * @method

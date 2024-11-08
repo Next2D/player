@@ -4,7 +4,7 @@ import { SoundMixer } from "@next2d/media";
 /**
  * @description Playerの定期処理を停止
  *              Stop the regular processing of the Player
- * 
+ *
  * @param  {Player} player
  * @return {void}
  * @method

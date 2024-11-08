@@ -335,7 +335,7 @@ export const $parentMap: WeakMap<IDisplayObject<any>, IParent<any>> = new WeakMa
 /**
  * @description 親子関係のマップデータ
  *              Parent-child relationship map data
- * 
+ *
  * @type {Map}
  * @protected
  */
@@ -344,7 +344,7 @@ export const $loaderInfoMap: WeakMap<IDisplayObject<any>, LoaderInfo> = new Weak
 /**
  * @description 子孫のrootへのマップデータ
  *              Map data to the root of descendants
- * 
+ *
  * @type {Map}
  * @protected
  */
@@ -353,7 +353,7 @@ export const $rootMap: WeakMap<IDisplayObject<any>, IDisplayObject<any>> = new W
 /**
  * @description Stageに追加したかどうかのマップデータ
  *              Map data of whether it was added to the Stage
- * 
+ *
  * @type {Map}
  * @protected
  */
@@ -362,7 +362,7 @@ export const $stageAssignedMap: WeakSet<IDisplayObject<any>> = new WeakSet();
 /**
  * @description GraphicsとDisplayObjectのマップデータ
  *              Map data of Graphics and DisplayObject
- * 
+ *
  * @type {Map}
  * @protected
  */
@@ -393,7 +393,7 @@ export const $convertColorStringToNumber = (value: string): number =>
 /**
  * @description 値が最小値と最大値の間に収まるように調整します。
  *              Adjust the value so that it falls between the minimum and maximum values.
- * 
+ *
  * @param  {number} value
  * @param  {number} min
  * @param  {number} max
@@ -419,7 +419,7 @@ export const $clamp = (
 /**
  * @description フレームアクションの発生したMovieClipを格納する配列
  *              Array to store MovieClip where frame actions occurred
- * 
+ *
  * @type {array}
  * @protected
  */
@@ -428,7 +428,7 @@ export const $actions: Array<MovieClip | Map<number, Function[]>> = [];
 /**
  * @description グローバル変数を格納するMap
  *              Map to store global variables
- * 
+ *
  * @type {Map}
  * @protected
  */

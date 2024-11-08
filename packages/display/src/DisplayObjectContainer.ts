@@ -26,7 +26,7 @@ export class DisplayObjectContainer extends InteractiveObject
     /**
      * @description 描画対象となるDisplayObjectの配列です。
      *              An array of DisplayObjects to be drawn.
-     * 
+     *
      * @type {array}
      * @readonly
      * @private
@@ -52,7 +52,7 @@ export class DisplayObjectContainer extends InteractiveObject
      * @public
      */
     public isContainerEnabled: boolean;
-    
+
     /**
      * @constructor
      * @public
@@ -235,9 +235,9 @@ export class DisplayObjectContainer extends InteractiveObject
      */
     removeChild <D extends DisplayObject>(display_object: D): D
     {
-        if (display_object.parent !== this) {
-            throw new Error("ArgumentError: Parent-child relationship does not match.");
-        }
+        // if (display_object.parent && display_object.parent !== this) {
+        //     throw new Error("ArgumentError: Parent-child relationship does not match.");
+        // }
         return display_object;
         // return this._$remove(child);
     }

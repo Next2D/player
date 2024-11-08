@@ -4,10 +4,10 @@ import { execute as displayObjectSetScaleXUseCase } from "./DisplayObjectSetScal
 
 /**
  * @description DisplayObjectの幅を設定します
- * 　　　　　　　　Sets the width of the DisplayObject
+ *              Sets the width of the DisplayObject
  *
- * @param  {DisplayObject} display_object 
- * @param  {number} width 
+ * @param  {DisplayObject} display_object
+ * @param  {number} width
  * @return {void}
  * @method
  * @protected

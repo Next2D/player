@@ -6,7 +6,34 @@ import type { IAjaxOption } from "./interface/IAjaxOption";
  * @type {Video[]}
  * @public
  */
-export const $mutedVideos: Video[] = [];
+const $mutedVideos: Video[] = [];
+
+/**
+ * @description ミュートになっているビデオを返却
+ *              Returns the muted video.
+ *
+ * @return {Video[]}
+ * @method
+ * @public
+ */
+export const $getMutedVideos = (): Video[] =>
+{
+    return $mutedVideos;
+};
+
+/**
+ * @description ミュートになっているビデオを追加
+ *              Add a video that has been muted.
+ *
+ * @param  {Video} video
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $pushMutedVideos = (video: Video): void =>
+{
+    $mutedVideos.push(video);
+};
 
 /**
  * @type {AudioContext}
@@ -17,7 +44,7 @@ let $audioContext: AudioContext | null = null;
 /**
  * @description AudioContext が存在するか返却
  *              Returns whether AudioContext exists.
- * 
+ *
  * @return {boolean}
  * @method
  * @public
@@ -30,7 +57,7 @@ export const $isAudioContext = (): boolean =>
 /**
  * @description AudioContext を起動
  *              Start AudioContext.
- * 
+ *
  * @method
  * @private
  */
@@ -45,7 +72,7 @@ export const $bootAudioContext = (): void =>
 /**
  * @description AudioContext を返却
  *              Returns AudioContext.
- * 
+ *
  * @return {AudioContext}
  * @method
  * @protected
@@ -133,7 +160,7 @@ export const $ajax = (option: IAjaxOption): void =>
 /**
  * @description 値が最小値と最大値の間に収まるように調整します。
  *              Adjust the value so that it falls between the minimum and maximum values.
- * 
+ *
  * @param  {number} value
  * @param  {number} min
  * @param  {number} max

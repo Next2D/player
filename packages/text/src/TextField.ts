@@ -56,7 +56,7 @@ export class TextField extends InteractiveObject
     /**
      * @description セットされたテキストを描画用に分解したデータ
      *              Data that breaks down the set text for drawing
-     * 
+     *
      * @member {TextData}
      * @protected
      */
@@ -65,7 +65,7 @@ export class TextField extends InteractiveObject
     /**
      * @description テキストが HTML であるかどうかを示します。
      *              Indicates whether the text is HTML.
-     * 
+     *
      * @member {boolean}
      * @private
      */
@@ -74,7 +74,7 @@ export class TextField extends InteractiveObject
     /**
      * @description バウンディングボックスのxMin座標
      *              Bounding box coordinates
-     * 
+     *
      * @member {number}
      * @public
      */
@@ -83,7 +83,7 @@ export class TextField extends InteractiveObject
     /**
      * @description バウンディングボックスのyMin座標
      *              Bounding box coordinates
-     * 
+     *
      * @member {number}
      * @public
      */
@@ -92,7 +92,7 @@ export class TextField extends InteractiveObject
     /**
      * @description バウンディングボックスのxMax座標
      *              Bounding box coordinates
-     * 
+     *
      * @member {number}
      * @public
      */
@@ -101,7 +101,7 @@ export class TextField extends InteractiveObject
     /**
      * @description バウンディングボックスのyMax座標
      *              Bounding box coordinates
-     * 
+     *
      * @member {number}
      * @public
      */
@@ -110,7 +110,7 @@ export class TextField extends InteractiveObject
     /**
      * @description テキストフィールドの描画範囲のバウンディングボックス
      *              The bounding box of the drawing area of the text field
-     * 
+     *
      * @member {IBounds}
      * @private
      */
@@ -129,7 +129,7 @@ export class TextField extends InteractiveObject
     /**
      * @description xスクロールバーの表示用の Shape オブジェクト
      *              Shape object for x scroll bar display
-     * 
+     *
      * @member {Shape}
      * @protected
      */
@@ -138,7 +138,7 @@ export class TextField extends InteractiveObject
     /**
      * @description yスクロールバーの表示用の Shape オブジェクト
      *              Shape object for y scroll bar display
-     * 
+     *
      * @member {Shape | null}
      * @protected
      */
@@ -147,7 +147,7 @@ export class TextField extends InteractiveObject
     /**
      * @description テキストフィールドの点滅線の表示・非表示を制御します。
      *              Controls the visibility of the text field's blinking line.
-     * 
+     *
      * @member {boolean}
      * @default false
      * @public
@@ -157,7 +157,7 @@ export class TextField extends InteractiveObject
     /**
      * @description テキストフィールドのフォーカス位置のインデックス
      *              Index of the focus position of the text field
-     * 
+     *
      * @member {number}
      * @default -1
      * @public
@@ -167,7 +167,7 @@ export class TextField extends InteractiveObject
     /**
      * @description テキストフィールドの選択位置のインデックス
      *              Index of the selected position of the text field
-     * 
+     *
      * @member {number}
      * @default -1
      * @public
@@ -208,7 +208,7 @@ export class TextField extends InteractiveObject
     /**
      * @description テキストフィールドのコンポジション開始インデックス
      *              Composition start index of the text field
-     * 
+     *
      * @member {number}
      * @default -1
      * @public
@@ -218,7 +218,7 @@ export class TextField extends InteractiveObject
     /**
      * @description テキストフィールドのコンポジション終了インデックス
      *              Composition end index of the text field
-     * 
+     *
      * @member {number}
      * @default -1
      * @public
@@ -228,7 +228,7 @@ export class TextField extends InteractiveObject
     /**
      * @description テキストフィールドのテキストフォーマットの配列です。
      *              An array of text formats for the text field.
-     * 
+     *
      * @member {TextFormat[]}
      * @default null
      * @protected
@@ -238,7 +238,7 @@ export class TextField extends InteractiveObject
     /**
      * @description x軸のスクロール位置
      *              Scroll position on the x-axis
-     * 
+     *
      * @member {number}
      * @default 0
      * @protected
@@ -248,7 +248,7 @@ export class TextField extends InteractiveObject
     /**
      * @description y軸のスクロール位置
      *              Scroll position on the y-axis
-     * 
+     *
      * @member {number}
      * @default 0
      * @protected
@@ -817,7 +817,7 @@ export class TextField extends InteractiveObject
         }
 
         this._$focus = !!focus;
-    
+
         textFieldSetFocusUseCase(
             this, this._$focus ? FocusEvent.FOCUS_IN : FocusEvent.FOCUS_OUT
         );
@@ -1146,7 +1146,7 @@ export class TextField extends InteractiveObject
      */
     getLineText (line_index: number): string
     {
-        return this._$text || this._$htmlText 
+        return this._$text || this._$htmlText
             ? textFieldGetLineTextUseCase(this, line_index | 0)
             : "";
     }

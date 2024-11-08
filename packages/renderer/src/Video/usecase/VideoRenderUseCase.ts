@@ -1,7 +1,7 @@
 import type { Node } from "@next2d/texture-packer";
 import { $cacheStore } from "@next2d/cache";
 import { $context } from "../../RendererUtil";
-import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService"; 
+import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
 import { $clamp } from "../../../../webgl/src/WebGLUtil";
 
 /**
@@ -9,8 +9,8 @@ import { $clamp } from "../../../../webgl/src/WebGLUtil";
  *              Execute the drawing of Video.
  *
  * @param  {Float32Array} render_queue
- * @param  {number} index 
- * @param  {ImageBitmap[]} image_bitmaps 
+ * @param  {number} index
+ * @param  {ImageBitmap[]} image_bitmaps
  * @return {number}
  * @method
  * @protected
@@ -34,7 +34,7 @@ export const execute = (
     const yMax = render_queue[index++];
 
     // cache uniqueKey
-    const uniqueKey = `${render_queue[index++]}`; 
+    const uniqueKey = `${render_queue[index++]}`;
     const cacheKey  = "0";
 
     let xScale = Math.sqrt(
@@ -72,7 +72,7 @@ export const execute = (
 
         const hasNode = Boolean(render_queue[index++]);
 
-        node = hasNode 
+        node = hasNode
             ? $cacheStore.get(uniqueKey, `${cacheKey}`) as Node
             : $context.createNode(width, height);
 
@@ -90,7 +90,7 @@ export const execute = (
             $context.beginNodeRendering(node);
 
             const offsetY = $context.atlasAttachmentObject.height - node.y - height;
-            $context.setTransform(1, 0, 0, 1, 
+            $context.setTransform(1, 0, 0, 1,
                 node.x,
                 offsetY
             );
@@ -121,11 +121,11 @@ export const execute = (
 
     const useFilfer = Boolean(render_queue[index++]);
     if (useFilfer) {
-
+        // todo
     }
 
     $context.setTransform(
-        matrix[0], matrix[1], 
+        matrix[0], matrix[1],
         matrix[2], matrix[3],
         matrix[4], matrix[5]
     );

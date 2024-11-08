@@ -3,7 +3,7 @@ import type { Graphics } from "../../Graphics";
 /**
  * @description 矩形を描画データを登録
  *              Register rectangle drawing data
- *             
+ *
  * @param  {Graphics} graphics
  * @param  {number} x
  * @param  {number} y

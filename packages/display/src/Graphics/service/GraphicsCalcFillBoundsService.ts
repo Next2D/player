@@ -3,7 +3,7 @@ import type { Graphics } from "../../Graphics";
 /**
  * @description 塗りの描画範囲を計算
  *              Calculate the fill drawing range
- * 
+ *
  * @param  {Graphics} graphics
  * @param  {number} x
  * @param  {number} y

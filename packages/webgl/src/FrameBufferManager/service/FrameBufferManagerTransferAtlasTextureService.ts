@@ -10,7 +10,7 @@ import {
 /**
  * @description アトラステクスチャに転写します。
  *              Transfer to atlas texture.
- * 
+ *
  * @return {void}
  * @method
  * @protected

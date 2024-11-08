@@ -8,9 +8,9 @@ import { $poolArray } from "../../DisplayObjectUtil";
 /**
  * @description Shapeの描画範囲を計算します。
  *              Calculate the drawing area of Shape.
- * 
- * @param  {Video} video 
- * @param  {Float32Array | null} [matrix=null] 
+ *
+ * @param  {Video} video
+ * @param  {Float32Array | null} [matrix=null]
  * @return {number[]}
  * @method
  * @protected
@@ -23,12 +23,12 @@ export const execute = (video: Video, matrix: Float32Array | null = null): numbe
     if (!rawMatrix) {
         if (matrix) {
             const calcBounds = displayObjectCalcBoundsMatrixService(
-                rawBounds[0], rawBounds[1], 
+                rawBounds[0], rawBounds[1],
                 rawBounds[2], rawBounds[3],
                 matrix
             );
             $poolArray(rawBounds);
-            
+
             return calcBounds;
         }
 
@@ -36,12 +36,12 @@ export const execute = (video: Video, matrix: Float32Array | null = null): numbe
     }
 
     const calcBounds = displayObjectCalcBoundsMatrixService(
-        rawBounds[0], rawBounds[1], 
+        rawBounds[0], rawBounds[1],
         rawBounds[2], rawBounds[3],
         matrix ? Matrix.multiply(matrix, rawMatrix) : rawMatrix
     );
 
     $poolArray(rawBounds);
-    
+
     return calcBounds;
 };

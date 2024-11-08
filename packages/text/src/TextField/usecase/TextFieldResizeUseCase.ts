@@ -52,8 +52,8 @@ export const execute = (text_field: TextField): void =>
                         - (width - text_field.bounds.xMin));
                 break;
 
-                default:
-                    break;
+            default:
+                break;
 
         }
 

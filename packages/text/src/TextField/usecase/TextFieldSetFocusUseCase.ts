@@ -6,7 +6,7 @@ import { execute as textFieldBlinkingClearTimeoutService } from "../service/Text
 
 /**
  * @description フォーカス
- * 
+ *
  * @param  {TextField} text_field
  * @param  {string} name
  * @return {void}

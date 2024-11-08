@@ -5,7 +5,7 @@ import { execute as textFieldGetTextDataUseCase } from "../../TextField/usecase/
 /**
  * @description テキストフィールドのコンポジションエンドイベントを処理します。
  *              Processes the composition end event of the text field.
- * 
+ *
  * @param  {TextField} text_field
  * @return {void}
  * @method

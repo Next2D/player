@@ -22,7 +22,7 @@ export class Player
     /**
      * @description canvasの描画領域のヒットテスト結果を保持します。
      *              Holds the hit test results of the drawing area of the canvas.
-     * 
+     *
      * @type {IPlayerHitObject}
      * @readonly
      * @private
@@ -32,7 +32,7 @@ export class Player
     /**
      * @description devicePixelRatioを含んだcanvasの描画領域の幅
      *              The width of the drawing area of the canvas including devicePixelRatio
-     * 
+     *
      * @type {number}
      * @default 0
      * @private
@@ -42,7 +42,7 @@ export class Player
     /**
      * @description devicePixelRatioを含んだcanvasの描画領域の高さ
      *              The height of the drawing area of the canvas including devicePixelRatio
-     * 
+     *
      * @type {number}
      * @default 0
      * @private
@@ -52,7 +52,7 @@ export class Player
     /**
      * @description devicePixelRatioを含んだcanvasの描画領域の拡大率
      *              The magnification of the drawing area of the canvas including devicePixelRatio
-     * 
+     *
      * @type {number}
      * @default 1
      * @private
@@ -62,7 +62,7 @@ export class Player
     /**
      * @description optionで指定された描画領域の固定幅、optionで指定されない場合は0
      *              The fixed width of the drawing area specified by the option, 0 if not specified by the option
-     * 
+     *
      * @type {number}
      * @default 0
      * @private
@@ -72,7 +72,7 @@ export class Player
     /**
      * @description optionで指定された描画領域の固定高さ、optionで指定されない場合は0
      *              The fixed height of the drawing area specified by the option, 0 if not specified by the option
-     * 
+     *
      * @type {number}
      * @default 0
      * @private
@@ -82,7 +82,7 @@ export class Player
     /**
      * @description Playerの停止フラグ
      *              Player stop flag
-     * 
+     *
      * @type {boolean}
      * @default true
      * @private
@@ -92,7 +92,7 @@ export class Player
     /**
      * @description Playerの描画開始時間
      *              Player drawing start time
-     * 
+     *
      * @type {number}
      * @default 0
      * @private
@@ -102,7 +102,7 @@ export class Player
     /**
      * @description PlayerのFPS
      *              Player FPS
-     * 
+     *
      * @type {number}
      * @default 16
      * @private
@@ -112,7 +112,7 @@ export class Player
     /**
      * @description optionで指定されたcanvasのID、optionで指定されない場合は空文字
      *              The ID of the canvas specified by the option, an empty string if not specified by the option
-     * 
+     *
      * @type {string}
      * @default ""
      * @private
@@ -122,7 +122,7 @@ export class Player
     /**
      * @description フルスクリーンモードの設定
      *              Full screen mode setting
-     * 
+     *
      * @type {boolean}
      * @default false
      * @private
@@ -132,7 +132,7 @@ export class Player
     /**
      * @description Playerの描画処理関数のタイマーID
      *              Timer ID of the drawing process function of Player
-     * 
+     *
      * @type {number}
      * @default -1
      * @private
@@ -163,6 +163,7 @@ export class Player
             "pointer": "",
             "hit": null
         };
+        console.log(this._$hitObject);
 
         this.rendererWidth  = 0;
         this.rendererHeight = 0;
@@ -284,7 +285,7 @@ export class Player
     /**
      * @description Playerの描画を開始します。
      *              Start drawing Player.
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -297,7 +298,7 @@ export class Player
     /**
      * @description Playerの描画を停止します。
      *              Stop drawing Player.
-     * 
+     *
      * @return {void}
      * @method
      * @public
@@ -310,7 +311,7 @@ export class Player
     /**
      * @description Playerの描画キャッシュを全て初期化
      *              Initialize all drawing caches of Player
-     * 
+     *
      * @param  {string} id
      * @return {void}
      * @method
@@ -318,7 +319,7 @@ export class Player
      */
     cacheClear (id: string): void
     {
-        $cacheStore.removeCache(id);
+        $cacheStore.removeById(id);
         $rendererWorker.postMessage({
             "command": "cacheClear"
         });

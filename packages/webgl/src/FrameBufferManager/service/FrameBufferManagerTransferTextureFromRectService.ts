@@ -38,7 +38,7 @@ export const execute = (x: number, y: number, texture_object: ITextureObject): v
         $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
         $gl.TEXTURE_2D, (currentAttachmentObject.texture as ITextureObject).resource, 0
     );
-    
+
     $gl.bindFramebuffer($gl.FRAMEBUFFER, null);
     $gl.bindFramebuffer($gl.READ_FRAMEBUFFER, readBitmapFrameBuffer);
     $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, drawBitmapFrameBuffer);

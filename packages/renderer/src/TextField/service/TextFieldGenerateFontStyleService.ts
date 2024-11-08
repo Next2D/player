@@ -3,8 +3,8 @@ import type { ITextFormat } from "../../interface/ITextFormat";
 /**
  * @description テキストフォーマットを元にフォントスタイルを生成します。
  *              Generate font style based on text format.
- * 
- * @param  {ITextFormat} text_format 
+ *
+ * @param  {ITextFormat} text_format
  * @return {string}
  * @method
  * @protected

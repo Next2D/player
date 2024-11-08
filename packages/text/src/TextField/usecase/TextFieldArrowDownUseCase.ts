@@ -6,8 +6,8 @@ import { execute as textFieldBlinkingUseCase } from "../../TextField/usecase/Tex
 /**
  * @description テキストフィールドのフォーカスインデックスを下に移動します。
  *              Moves the focus index of the text field down.
- * 
- * @param  {TextField} text_field 
+ *
+ * @param  {TextField} text_field
  * @return {void}
  * @method
  * @protected

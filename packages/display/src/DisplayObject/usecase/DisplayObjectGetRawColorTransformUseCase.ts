@@ -6,7 +6,7 @@ import { $getFloat32Array8 } from "../../DisplayObjectUtil";
 /**
  * @description 現在のフレームのColorTransformを返却、存在しない場合はnullを返却
  *              Returns the ColorTransform of the current frame, or null if it does not exist.
- * 
+ *
  * @param  {DisplayObject} display_object
  * @return {Float32Array | null}
  * @method
@@ -26,8 +26,8 @@ export const execute = <D extends DisplayObject>(display_object: D): Float32Arra
     if (!placeObject.typedColorTransform) {
         const colorTransform: number[] = placeObject.colorTransform;
         placeObject.typedColorTransform = $getFloat32Array8(
-            colorTransform[0], colorTransform[1], 
-            colorTransform[2], colorTransform[3], 
+            colorTransform[0], colorTransform[1],
+            colorTransform[2], colorTransform[3],
             colorTransform[4], colorTransform[5],
             colorTransform[6], colorTransform[7]
         );

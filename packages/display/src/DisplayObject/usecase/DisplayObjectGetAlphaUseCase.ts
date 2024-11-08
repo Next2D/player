@@ -4,7 +4,7 @@ import { execute as displayObjectGetRawColorTransformUseCase } from "../usecase/
 /**
  * @description DisplayObjectのalphaを返却
  *              Returns the alpha of the DisplayObject
- * 
+ *
  * @param  {DisplayObject} display_object
  * @return {number}
  * @method

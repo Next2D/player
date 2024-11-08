@@ -1,8 +1,8 @@
 import type { Node } from "@next2d/texture-packer";
 import { $cacheStore } from "@next2d/cache";
-import { execute as shapeCommandService } from "../service/ShapeCommandService"; 
-import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService"; 
-import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService"; 
+import { execute as shapeCommandService } from "../service/ShapeCommandService";
+import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
+import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
 import { $clamp } from "../../../../webgl/src/WebGLUtil";
 import {
     $context,
@@ -14,7 +14,7 @@ import {
  *              Execute the drawing of Shape.
  *
  * @param  {Float32Array} render_queue
- * @param  {number} index 
+ * @param  {number} index
  * @return {number}
  * @method
  * @protected
@@ -38,7 +38,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const isBitmap      = Boolean(render_queue[index++]);
 
     // cache uniqueKey
-    const uniqueKey = `${render_queue[index++]}`; 
+    const uniqueKey = `${render_queue[index++]}`;
     const cacheKey  = render_queue[index++];
 
     let xScale = Math.sqrt(
@@ -77,7 +77,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             );
             index += 24;
         }
-        
+
         const length = render_queue[index++];
         const commands = render_queue.subarray(index, index + length);
 
@@ -90,7 +90,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             // fixed logic
             node = $context.createNode(width, height);
             $cacheStore.set(uniqueKey, `${cacheKey}`, node);
-        
+
             // fixed logic
             const currentAttachment = $context.currentAttachmentObject;
             $context.bind($context.atlasAttachmentObject);
@@ -99,7 +99,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             $context.beginNodeRendering(node);
 
             const offsetY = $context.atlasAttachmentObject.height - node.y - height;
-            $context.setTransform(1, 0, 0, 1, 
+            $context.setTransform(1, 0, 0, 1,
                 node.x,
                 offsetY
             );
@@ -160,7 +160,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         }
 
         index += length;
-        
+
     } else {
         node = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node;
         if (!node) {
@@ -202,7 +202,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     if (isBitmap && !isGridEnabled) {
         $context.setTransform(
-            matrix[0], matrix[1], 
+            matrix[0], matrix[1],
             matrix[2], matrix[3],
             matrix[4], matrix[5]
         );
@@ -225,7 +225,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             const tx = xMin * xScale;
             const ty = yMin * yScale;
-    
+
             const cosX = Math.cos(radianX);
             const sinX = Math.sin(radianX);
             const cosY = Math.cos(radianY);

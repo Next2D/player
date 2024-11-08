@@ -5,7 +5,7 @@ import { execute as playerTickerUseCase } from "./PlayerTickerUseCase";
 /**
  * @description Playerの再生を開始
  *              Start playing the Player
- * 
+ *
  * @param  {Player} player
  * @return {void}
  * @method

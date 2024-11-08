@@ -3,7 +3,7 @@ import type { Graphics } from "../../Graphics";
 /**
  * @description 楕円を描画データを登録
  *              Register ellipse drawing data
- *             
+ *
  * @param  {Graphics} graphics
  * @param  {number} x
  * @param  {number} y

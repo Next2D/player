@@ -35,7 +35,7 @@ export const execute = async (
     if (options && options.bgColor) {
         $stage.backgroundColor = options.bgColor;
     }
-    
+
     // boot player
     $player.boot(options);
 

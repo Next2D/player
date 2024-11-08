@@ -35,4 +35,4 @@ export const execute = <C extends DisplayObjectContainer>(
 
         execute(child as DisplayObjectContainer);
     }
-}
+};

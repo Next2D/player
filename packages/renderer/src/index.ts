@@ -5,7 +5,7 @@ import { CommandController } from "./CommandController";
 /**
  * @description CommandControllerのインスタンス
  *              Instance of CommandController
- * 
+ *
  * @type {CommandController}
  * @public
  */

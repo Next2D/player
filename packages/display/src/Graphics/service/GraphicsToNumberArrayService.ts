@@ -264,9 +264,10 @@ export const execute = (recodes : any[] | null): any[] =>
 
                         const context = canvas.getContext("2d") as CanvasRenderingContext2D;
                         context.drawImage(
-                            bitmapData.image as HTMLImageElement 
-                            || bitmapData.canvas as HTMLCanvasElement, 
-                        0, 0);
+                            bitmapData.image as HTMLImageElement
+                            || bitmapData.canvas as HTMLCanvasElement,
+                            0, 0
+                        );
 
                         imageArray = new Uint8Array(context.getImageData(0, 0, width, height).data);
 

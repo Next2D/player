@@ -9,8 +9,8 @@ import { execute as textFieldApplyChangesService } from "../service/TextFieldApp
  * @description yスクロール位置を設定します
  *              y Sets the scroll position.
  *
- * @param  {TextField} text_field 
- * @param  {number} scroll_y 
+ * @param  {TextField} text_field
+ * @param  {number} scroll_y
  * @return {void}
  * @method
  * @protected
@@ -89,6 +89,6 @@ export const execute = (text_field: TextField, scroll_y: number): void =>
     if (text_field.willTrigger(Event.SCROLL)) {
         text_field.dispatchEvent(new Event(Event.SCROLL, true));
     }
-    
+
     text_field.$scrollY = scroll_y;
 };

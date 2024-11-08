@@ -4,7 +4,7 @@ import { execute as shapeClearBitmapBufferService } from "./ShapeClearBitmapBuff
 /**
  * @description BitmapBufferを設定
  *              Set BitmapBuffer
- * 
+ *
  * @param  {Shape} shape
  * @param  {number} width
  * @param  {number} height
@@ -14,7 +14,7 @@ import { execute as shapeClearBitmapBufferService } from "./ShapeClearBitmapBuff
  * @protected
  */
 export const execute = (
-    shape: Shape, 
+    shape: Shape,
     width: number,
     height: number,
     buffer: Uint8Array
@@ -23,10 +23,10 @@ export const execute = (
     shapeClearBitmapBufferService(shape);
 
     shape.isBitmap = true;
-    shape.$bitmapBuffer = buffer; 
+    shape.$bitmapBuffer = buffer;
 
     shape.graphics.xMin = 0;
     shape.graphics.yMin = 0;
     shape.graphics.xMax = width;
     shape.graphics.yMax = height;
-}
+};

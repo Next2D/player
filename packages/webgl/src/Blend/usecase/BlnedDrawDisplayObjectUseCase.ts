@@ -120,9 +120,9 @@ export const execute = (
                 const y = y_min | 0;
                 const width  = Math.ceil(Math.abs(x_max - x_min));
                 const height = Math.ceil(Math.abs(y_max - y_min));
-                
+
                 const dstTextureObject = frameBufferManagerGetTextureFromBoundsUseCase(x, y, width, height);
-                
+
                 const currentAttachmentObject = $context.currentAttachmentObject;
                 const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, false);
                 $context.bind(attachmentObject);
@@ -138,11 +138,11 @@ export const execute = (
                 );
 
                 shaderManagerDrawTextureUseCase(shaderManager);
-            
+
                 if (currentAttachmentObject) {
                     $context.bind(currentAttachmentObject);
                 }
-                  
+
                 // ブレンドしたtextureを元の座標に描画
                 frameBufferManagerTransferTextureFromRectService(
                     x, y, attachmentObject.texture as ITextureObject

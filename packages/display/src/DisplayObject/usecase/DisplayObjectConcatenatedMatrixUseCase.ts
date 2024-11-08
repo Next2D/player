@@ -6,8 +6,8 @@ import { $MATRIX_ARRAY_IDENTITY } from "../../DisplayObjectUtil";
 /**
  * @description DisplayObjectの連結Matrixを返却
  *              Returns the concatenated Matrix of the DisplayObject.
- * 
- * @param  {DisplayObject} display_object 
+ *
+ * @param  {DisplayObject} display_object
  * @return {Matrix}
  * @method
  * @protected

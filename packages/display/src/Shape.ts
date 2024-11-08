@@ -65,7 +65,7 @@ export class Shape extends DisplayObject
     /**
      * @description ビットマップ描画の判定フラグ
      *              Bitmap drawing judgment flag
-     * 
+     *
      * @type {boolean}
      * @default false
      * @protected
@@ -75,7 +75,7 @@ export class Shape extends DisplayObject
     /**
      * @description 画像RGBAのUint8Array
      *              Image RGBA Uint8Array
-     * 
+     *
      * @type {Uint8Array|null}
      * @default null
      * @protected
@@ -180,14 +180,14 @@ export class Shape extends DisplayObject
     clearBitmapBuffer (): void
     {
         shapeClearBitmapBufferService(this);
-    };
+    }
 
     /**
      * @description RGBAの画像データを設定します
      *              Sets the RGBA image data.
-     * 
+     *
      * @param {number} width
-     * @param {number} height 
+     * @param {number} height
      * @param {Uint8Array} buffer
      * @method
      * @public
@@ -245,7 +245,7 @@ export class Shape extends DisplayObject
             return false;
         }
 
-        let multiMatrix: Float32Array = matrix;
+        const multiMatrix: Float32Array = matrix;
         // const rawMatrix: Float32Array = this._$transform._$rawMatrix();
         // if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
         //     || rawMatrix[2] !== 0 || rawMatrix[3] !== 1

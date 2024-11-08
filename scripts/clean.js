@@ -2,35 +2,35 @@
 
 "use strict";
 
-const fs   = require("fs");
-const path = require("path");
-const cp   = require("child_process");
+import { existsSync, readdirSync, statSync } from "fs";
+import { join } from "path";
+import { spawnSync } from "child_process";
 
 const execute = () =>
 {
     const distPath = `${process.cwd()}/dist`;
-    if (fs.existsSync(distPath)) {
-        cp.spawnSync(`rm -rf ${distPath}`, { "shell": true });
+    if (existsSync(distPath)) {
+        spawnSync(`rm -rf ${distPath}`, { "shell": true });
     }
 
     const dirPath = `${process.cwd()}/packages/`;
 
-    const files = fs.readdirSync(dirPath);
+    const files = readdirSync(dirPath);
 
     const dirList = files.filter((file) =>
     {
-        return fs.statSync(path.join(dirPath, file)).isDirectory();
+        return statSync(join(dirPath, file)).isDirectory();
     });
 
     for (let idx = 0; idx < dirList.length; ++idx) {
 
         const dirName = dirList[idx];
 
-        const packagePath = path.join(dirPath, dirName);
+        const packagePath = join(dirPath, dirName);
 
-        const outDir = path.join(packagePath, "dist");
-        if (fs.existsSync(outDir)) {
-            cp.spawnSync(`rm -rf ${outDir}`, { "shell": true });
+        const outDir = join(packagePath, "dist");
+        if (existsSync(outDir)) {
+            spawnSync(`rm -rf ${outDir}`, { "shell": true });
         }
     }
 };

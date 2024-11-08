@@ -4,8 +4,8 @@ import { $getArray } from "../../DisplayObjectUtil";
 /**
  * @description Shapeのローカルバウンディングボックスを取得します。
  *              Get the local bounding box of the Shape.
- * 
- * @param  {Shape} shape 
+ *
+ * @param  {Shape} shape
  * @return {number[]}
  * @protected
  */

@@ -13,7 +13,7 @@ import { $getFloat32Array6 } from "../../DisplayObjectUtil";
  * @method
  * @protected
  */
-export const execute = <D extends DisplayObject>(display_object: D): Float32Array | null => 
+export const execute = <D extends DisplayObject>(display_object: D): Float32Array | null =>
 {
     if (display_object.$matrix) {
         return display_object.$matrix.rawData;

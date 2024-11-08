@@ -1,6 +1,6 @@
 import type { IFilterArray } from "../../interface/IFilterArray";
 import type { ISurfaceFilter } from "../../interface/ISurfaceFilter";
-import { 
+import {
     BevelFilter,
     BlurFilter,
     ColorMatrixFilter,
@@ -16,7 +16,7 @@ import { $getArray } from "../../DisplayObjectUtil";
 /**
  * @description PlaceObjectのSurfaceFilterListを元にフィルターを構築
  *              Build filters based on the SurfaceFilterList of PlaceObject
- * 
+ *
  * @param  {array} surface_filter_list
  * @return {array}
  * @method
@@ -94,6 +94,6 @@ export const execute = (surface_filter_list: ISurfaceFilter[]): IFilterArray =>
 
         }
     }
-    
+
     return filters;
 };

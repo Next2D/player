@@ -94,12 +94,12 @@ export const execute = (
                 );
 
                 break;
-            
+
             case END_STROKE:
                 if (is_clip) {
                     break;
                 }
-                
+
                 $context.stroke();
                 break;
 
@@ -153,7 +153,7 @@ export const execute = (
                     const focal = commands[index++];
 
                     $context.gradientFill(
-                        type, stops, matrix, 
+                        type, stops, matrix,
                         spread, interpolation, focal
                     );
                 }
@@ -171,13 +171,13 @@ export const execute = (
 
                     const width  = commands[index++];
                     const height = commands[index++];
-                    
+
                     const length = commands[index++];
                     const buffer = new Uint8Array(
                         commands.subarray(index, index + length)
                     );
                     index += length;
-                    
+
                     $context.save();
                     $context.transform(
                         commands[index++], commands[index++], commands[index++],
@@ -186,7 +186,7 @@ export const execute = (
 
                     $context.bitmapFill(
                         buffer, width, height,
-                        Boolean(commands[index++]), 
+                        Boolean(commands[index++]),
                         Boolean(commands[index++])
                     );
 
@@ -219,13 +219,13 @@ export const execute = (
                         commands[index++], commands[index++], commands[index++],
                         commands[index++], commands[index++], commands[index++]
                     ]);
-    
+
                     const spread = commands[index++];
                     const interpolation = commands[index++];
                     const focal = commands[index++];
 
                     $context.gradientStroke(
-                        type, stops, matrix, 
+                        type, stops, matrix,
                         spread, interpolation, focal
                     );
                 }
@@ -255,7 +255,7 @@ export const execute = (
 
                     const repeat = Boolean(commands[index++]);
                     const smooth = Boolean(commands[index++]);
-                    
+
                     $context.bitmapStroke(
                         buffer, width, height,
                         repeat, smooth

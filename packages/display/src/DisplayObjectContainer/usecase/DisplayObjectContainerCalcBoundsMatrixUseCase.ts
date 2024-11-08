@@ -17,7 +17,7 @@ import {
  * @description DisplayObjectContainerのバウンディングボックスを計算
  *              Calculate the bounding box of the DisplayObjectContainer
  *
- * @param  {DisplayObjectContainer} display_object_container 
+ * @param  {DisplayObjectContainer} display_object_container
  * @return {number[]}
  * @method
  * @protected
@@ -33,9 +33,9 @@ export const execute = <C extends DisplayObjectContainer>(
     }
 
     const rawMatrix = displayObjectGetRawMatrixUseCase(display_object_container);
-    const tMatrix = rawMatrix 
-        ? matrix 
-            ? Matrix.multiply(matrix, rawMatrix) 
+    const tMatrix = rawMatrix
+        ? matrix
+            ? Matrix.multiply(matrix, rawMatrix)
             : rawMatrix
         : matrix;
 
@@ -53,7 +53,7 @@ export const execute = <C extends DisplayObjectContainer>(
 
         let bounds: number[] | null = null;
         switch (true) {
-            
+
             case child.isContainerEnabled:
                 bounds = execute(child as DisplayObjectContainer, tMatrix);
                 break;

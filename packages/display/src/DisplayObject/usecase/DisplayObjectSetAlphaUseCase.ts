@@ -7,7 +7,7 @@ import { execute as displayObjectGetRawColorTransformUseCase } from "../usecase/
 /**
  * @description DisplayObjectのalphaを設定
  *              Set the alpha of the DisplayObject
- * 
+ *
  * @param  {DisplayObject} display_object
  * @param  {number} alpha
  * @return {void}
@@ -26,8 +26,8 @@ export const execute = <D extends DisplayObject>(display_object: D, alpha: numbe
     let colorTransform = display_object.$colorTransform;
     if (!colorTransform) {
         const rawData = displayObjectGetRawColorTransformUseCase(display_object);
-        colorTransform = rawData 
-            ? new ColorTransform(...rawData) 
+        colorTransform = rawData
+            ? new ColorTransform(...rawData)
             : new ColorTransform();
     }
 

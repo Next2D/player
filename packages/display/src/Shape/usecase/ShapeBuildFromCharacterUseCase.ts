@@ -68,7 +68,7 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                         $poolArray(recodes);
                         $poolArray(numberArray);
                     }
-                    
+
                 } else {
 
                     // draw image
@@ -88,13 +88,13 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                         if (character.recodes) {
                             const type = character.recodes[character.recodes.length - 10];
                             if (type === Graphics.BITMAP_STROKE) {
-                                
+
                                 const recodes = character.recodes.slice(0);
                                 recodes.splice(-5, 5);
                                 recodes.push(
                                     bitmapData, null, true, false
                                 );
-    
+
                                 const numberArray = graphicsToNumberArrayService(recodes);
                                 graphics.buffer = new Float32Array(numberArray);
 
@@ -161,7 +161,7 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
             if (character.recodeBuffer) {
                 graphics.buffer = character.recodeBuffer;
             }
-            
+
             break;
     }
 

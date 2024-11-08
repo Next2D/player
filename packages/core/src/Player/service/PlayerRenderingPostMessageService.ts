@@ -47,7 +47,7 @@ const $options: Transferable[] = [];
 /**
  * @description レンダリングデータを生成してworkerに送る
  *              Generate rendering data and send it to the worker
- * 
+ *
  * @return {void}
  * @method
  * @protected

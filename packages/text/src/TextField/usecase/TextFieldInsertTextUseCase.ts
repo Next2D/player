@@ -1,5 +1,5 @@
 import type { TextField } from "../../TextField";
-import type { TextFormat } from "../../TextFormat";
+import { TextFormat } from "../../TextFormat";
 import { $textArea } from "../../TextUtil";
 import { execute as textFieldDeleteTextUseCase } from "../../TextField/usecase/TextFieldDeleteTextUseCase";
 import { execute as textFieldGetTextDataUseCase } from "../../TextField/usecase/TextFieldGetTextDataUseCase";
@@ -8,8 +8,8 @@ import { execute as textFieldGetTextDataUseCase } from "../../TextField/usecase/
  * @description TextField にテキストを挿入します。
  *              Inserts text into the TextField.
  *
- * @param  {TextField} text_field 
- * @param  {string} texts 
+ * @param  {TextField} text_field
+ * @param  {string} texts
  * @return {void}
  * @method
  * @protected
@@ -27,7 +27,7 @@ export const execute = (text_field: TextField, texts: string): void =>
     }
 
     const textData = textFieldGetTextDataUseCase(text_field);
-    
+
     const textFormats: TextFormat[] = [];
 
     let newText = "";
@@ -40,7 +40,7 @@ export const execute = (text_field: TextField, texts: string): void =>
 
         if (text_field.focusIndex === idx) {
             for (let idx = 0; idx < texts.length; ++idx) {
-                textFormats.push(textObject.textFormat);
+                textFormats.push(new TextFormat(...Object.values(textObject.textFormat)));
                 newText += texts[idx];
             }
         }
@@ -48,12 +48,12 @@ export const execute = (text_field: TextField, texts: string): void =>
         switch (textObject.mode) {
 
             case "break":
-                textFormats.push(textObject.textFormat);
+                textFormats.push(new TextFormat(...Object.values(textObject.textFormat)));
                 newText += "\n";
                 break;
 
             case "text":
-                textFormats.push(textObject.textFormat);
+                textFormats.push(new TextFormat(...Object.values(textObject.textFormat)));
                 newText += textObject.text;
                 break;
 
@@ -68,14 +68,15 @@ export const execute = (text_field: TextField, texts: string): void =>
         let textFormat: TextFormat;
         if (textData.textTable.length) {
             const textObject = textData.textTable[textData.textTable.length - 1];
-            textFormat = textObject.textFormat.clone();
+
+            textFormat = new TextFormat(...Object.values(textObject.textFormat));
         } else {
             textFormat = text_field.defaultTextFormat;
             text_field.focusIndex++;
         }
 
         for (let idx = 0; idx < texts.length; ++idx) {
-            textFormats.push(textFormat.clone());
+            textFormats.push(new TextFormat(...Object.values(textFormat)));
             newText += texts[idx];
         }
     }

@@ -57,7 +57,7 @@ export class DropShadowFilter extends BitmapFilter
      * @private
      */
     private _$alpha: number;
-    
+
     /**
      * @type {number}
      * @default 1
@@ -107,11 +107,11 @@ export class DropShadowFilter extends BitmapFilter
         angle: number = 45,
         color: number = 0,
         alpha: number = 1,
-        blur_x: number = 4, 
+        blur_x: number = 4,
         blur_y: number = 4,
         strength: number = 1,
         quality: IFilterQuality = 1,
-        inner: boolean = false, 
+        inner: boolean = false,
         knockout: boolean = false,
         hide_object: boolean = false
     ) {
@@ -235,13 +235,13 @@ export class DropShadowFilter extends BitmapFilter
     set color (color: number)
     {
         color = $clamp(
-            typeof color === "string" 
-                ? $convertColorStringToNumber(color) 
+            typeof color === "string"
+                ? $convertColorStringToNumber(color)
                 : color
             , 0, 0xffffff, 0
         );
 
-        if (color == this._$color) {
+        if (color === this._$color) {
             return ;
         }
         this._$color  = color;
@@ -437,14 +437,14 @@ export class DropShadowFilter extends BitmapFilter
      */
     canApplyFilter (): boolean
     {
-        return this._$alpha > 0 && this._$strength > 0 
+        return this._$alpha > 0 && this._$strength > 0
             && this._$blurFilter.canApplyFilter();
     }
 
     /**
      * @description フィルターの描画範囲のバウンディングボックスを返します。
      *              Returns the bounding box of the filter drawing area.
-     * 
+     *
      * @param  {object} bounds
      * @return {object}
      * @method

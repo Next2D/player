@@ -3,7 +3,7 @@ import { $bezierBuffer } from "../../BezierConverter";
 /**
  * @description 3次ベジェに分割
  *              Split cubic Bezier
- * 
+ *
  * @param  {number} p0
  * @param  {number} p1
  * @param  {number} p2

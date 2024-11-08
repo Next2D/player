@@ -3,16 +3,16 @@ import { $bezierBuffer } from "../../BezierConverter";
 /**
  * @description 2次ベジェを分割
  *              Split quadratic Bezier
- * 
- * @param  {number} p0 
- * @param  {number} p1 
- * @param  {number} p2 
- * @param  {number} p3 
- * @param  {number} p4 
- * @param  {number} p5 
- * @param  {number} p6 
- * @param  {number} p7 
- * @param  {number} offset 
+ *
+ * @param  {number} p0
+ * @param  {number} p1
+ * @param  {number} p2
+ * @param  {number} p3
+ * @param  {number} p4
+ * @param  {number} p5
+ * @param  {number} p6
+ * @param  {number} p7
+ * @param  {number} offset
  * @return {void}
  * @method
  * @protected

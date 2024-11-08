@@ -14,7 +14,7 @@ import {
 /**
  * @description 指定のDisplayObjectContainerに子要素を追加する
  *              Add a child element to the specified DisplayObjectContainer
- * 
+ *
  * @param  {DisplayObjectContainer} display_object_container
  * @param  {DisplayObject} display_object
  * @return {void}
@@ -35,8 +35,8 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     $parentMap.set(display_object, display_object_container);
 
     // 親が Stage に追加されている場合は、マップデータに情報を追加
-    if ($stageAssignedMap.has(display_object_container)) {  
-        
+    if ($stageAssignedMap.has(display_object_container)) {
+
         if (!$rootMap.has(display_object)) {
             $rootMap.set(display_object, display_object_container.root);
         }
@@ -44,7 +44,7 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         if ($stageAssignedMap.has(display_object)) {
             $stageAssignedMap.add(display_object);
         }
-        
+
         // If container functionality is available, set stage and root for small elements
         if (display_object.isContainerEnabled) {
             displayObjectContainerAssignStageAndRootService(
@@ -58,7 +58,7 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
 
     if ($stageAssignedMap.has(display_object_container)) {
         displayObjectDispatchAddedToStageEventService(display_object);
-        
+
         if (display_object.isContainerEnabled) {
             displayObjectContainerAddedToStageService(
                 display_object as unknown as DisplayObjectContainer

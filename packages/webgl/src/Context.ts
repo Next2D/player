@@ -139,7 +139,7 @@ export class Context
     /**
      * @description アタッチメントオブジェクトを保持するスタック
      *             Stack to hold attachment objects
-     * 
+     *
      * @type {IAttachmentObject[]}
      * @protected
      */
@@ -1053,7 +1053,7 @@ export class Context
     /**
      * @description フィルターを適用
      *              Apply the filter
-     * 
+     *
      * @param  {Node} node
      * @param  {string} unique_key
      * @param  {number} width

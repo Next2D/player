@@ -8,10 +8,10 @@ import { $intToRGBA } from "../../RendererUtil";
  * @description TextDataを元にOffscreenCanvasにテキストを描画
  *              Draw text in OffscreenCanvas based on TextData
  *
- * @param  {ITextData} text_data 
- * @param  {object} text_setting 
- * @param  {number} x_scale 
- * @param  {number} y_scale 
+ * @param  {ITextData} text_data
+ * @param  {object} text_setting
+ * @param  {number} x_scale
+ * @param  {number} y_scale
  * @return {OffscreenCanvas}
  * @method
  * @protected
@@ -19,7 +19,7 @@ import { $intToRGBA } from "../../RendererUtil";
 export const execute = (
     text_data: ITextData,
     text_setting: ITextSetting,
-    x_scale: number, 
+    x_scale: number,
     y_scale: number
 ): OffscreenCanvas => {
 
@@ -136,7 +136,7 @@ export const execute = (
 
         if (textObject.mode === "text" || textObject.mode === "break") {
             currentIndex++;
-            if (text_setting.stopIndex > -1 
+            if (text_setting.stopIndex > -1
                 && currentIndex > text_setting.stopIndex
             ) {
                 break;
@@ -184,7 +184,7 @@ export const execute = (
                 h = textObject.mode === "break"
                     ? textObject.h
                     : text_data.ascentTable[line - 1];
-                
+
                 if (line > 0 && !text_data.ascentTable[line - 1]) {
                     line = textObject.line;
                     y = text_data.ascentTable[line - 1];

@@ -79,7 +79,7 @@ export default [{
         "arrow-spacing": "error",
         "no-undef": "off",
         "comma-dangle": "warn",
-        "no-use-before-define": "error",
+        "no-use-before-define": "off",
         "no-const-assign": "error",
         "space-before-blocks": "error",
         "no-unexpected-multiline": "error",

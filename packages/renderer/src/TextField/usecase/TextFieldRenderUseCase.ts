@@ -3,8 +3,8 @@ import type { ITextFieldAutoSize } from "../../interface/ITextFieldAutoSize";
 import type { ITextSetting } from "../../interface/ITextSetting";
 import { $cacheStore } from "@next2d/cache";
 import { $context } from "../../RendererUtil";
-import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService"; 
-import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService"; 
+import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
+import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
 import { execute as textFieldDrawOffscreenCanvasUseCase } from "./TextFieldDrawOffscreenCanvasUseCase";
 import {
     $clamp,
@@ -22,7 +22,7 @@ const $textDecoder: TextDecoder = new TextDecoder();
  *              Execute the drawing of TextField.
  *
  * @param  {Float32Array} render_queue
- * @param  {number} index 
+ * @param  {number} index
  * @return {number}
  * @method
  * @protected
@@ -42,7 +42,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const yMax = render_queue[index++];
 
     // cache uniqueKey
-    const uniqueKey = `${render_queue[index++]}`; 
+    const uniqueKey = `${render_queue[index++]}`;
     const cacheKey  = render_queue[index++];
 
     let xScale = Math.sqrt(
@@ -80,7 +80,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
         const hasNode = Boolean(render_queue[index++]);
 
-        node = hasNode 
+        node = hasNode
             ? $cacheStore.get(uniqueKey, `${cacheKey}`) as Node
             : $context.createNode(width, height);
 
@@ -138,7 +138,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         };
 
         const canvas = textFieldDrawOffscreenCanvasUseCase(
-            JSON.parse($textDecoder.decode(buffer)), 
+            JSON.parse($textDecoder.decode(buffer)),
             textSetting,
             xScale, yScale
         );
@@ -151,7 +151,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         $context.beginNodeRendering(node);
 
         const offsetY = $context.atlasAttachmentObject.height - node.y - height;
-        $context.setTransform(1, 0, 0, 1, 
+        $context.setTransform(1, 0, 0, 1,
             node.x,
             offsetY
         );
@@ -179,7 +179,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     const useFilfer = Boolean(render_queue[index++]);
     if (useFilfer) {
-
+        // todo
     }
 
     // calc bounds

@@ -4,7 +4,7 @@ import { $getArray } from "../../DisplayObjectUtil";
 /**
  * @description Videoのローカルバウンディングボックスを取得します。
  *              Get the local bounding box of the Video.
- * 
+ *
  * @param  {Video} video
  * @return {number[]}
  * @method

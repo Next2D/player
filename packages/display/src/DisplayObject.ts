@@ -65,7 +65,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description DisplayObject のユニークなインスタンスID
      *              Unique instance ID of DisplayObject
-     * 
+     *
      * @type {number}
      * @readonly
      * @public
@@ -75,7 +75,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description DisplayObject の生成元ID
      *              Source ID of DisplayObject
-     * 
+     *
      * @type {number}
      * @default -1
      * @public
@@ -101,7 +101,7 @@ export class DisplayObject extends EventDispatcher
      * @public
      */
     public readonly isTimelineEnabled: boolean;
-    
+
     /**
      * @description Shapeの機能を所持しているかを返却
      *              Returns whether the display object has Shape functionality.
@@ -135,7 +135,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 表示オブジェクトのPlaceObjectのIDを返却します。
      *              Returns the ID of the PlaceObject of the display object.
-     * 
+     *
      * @type {number}
      * @default -1
      * @public
@@ -145,7 +145,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 現在のフレームの表示オブジェクトのPlaceObjectを返却します。
      *             Returns the PlaceObject of the current frame of the display object.
-     * 
+     *
      * @type {IPlaceObject|null}
      * @default null
      * @public
@@ -155,7 +155,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 構築に利用したキャラクターIDを返却します。
      *              Returns the character ID used for construction.
-     * 
+     *
      * @type {number}
      * @default -1
      * @public
@@ -165,7 +165,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description マスク対象の深度を返却します。
      *              Returns the depth of the mask target.
-     * 
+     *
      * @type {number}
      * @default 0
      * @public
@@ -175,7 +175,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 名前を返却します。 getChildByName() で使用されます。
      *              Returns the name. Used by getChildByName().
-     * 
+     *
      * @see {DisplayObjectContainer.getChildByName}
      * @type {string}
      * @default ""
@@ -186,7 +186,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 開始フレームを返却します。
      *              Returns the start frame.
-     * 
+     *
      * @type {number}
      * @default 1
      * @public
@@ -196,7 +196,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 終了フレームを返却します。
      *              Returns the end frame.
-     * 
+     *
      * @type {number}
      * @default 0
      * @public
@@ -206,7 +206,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 描画に関連する何らかの変更が加えられたかを示します。
      *              Indicates whether any changes related to drawing have been made.
-     * 
+     *
      * @type {boolean}
      * @default true
      * @public
@@ -216,7 +216,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description DisplayObjectの追加イベントが発火したかを示します。
      *              Indicates whether the DisplayObject addition event has been fired.
-     * 
+     *
      * @type {boolean}
      * @default false
      * @public
@@ -226,7 +226,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description DisplayObjectのステージ追加イベントが発火したかを示します。
      *              Indicates whether the DisplayObject stage addition event has been fired.
-     * 
+     *
      * @type {boolean}
      * @default false
      * @public
@@ -236,7 +236,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description キャッシュで利用するユニークキー
      *              Unique key used for caching
-     * 
+     *
      * @type {string}
      * @public
      */
@@ -245,7 +245,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 固定された変換行列、nullの場合はPlaceObjectの変換行列を検索します。
      *              Fixed transformation matrix, if null, search for PlaceObject transformation matrix.
-     * 
+     *
      * @type {Matrix}
      * @default null
      * @protected
@@ -265,7 +265,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 表示オブジェクトに現在関連付けられている各フィルターオブジェクトの配列です。
      *              An array of filter objects currently associated with the display object.
-     * 
+     *
      * @type {array}
      * @default null
      * @protected
@@ -275,7 +275,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 使用するブレンドモードを指定する BlendMode クラスの値です。
      *              A value from the BlendMode class that specifies which blend mode to use.
-     * 
+     *
      * @type {string}
      * @default BlendMode.NORMAL
      * @protected
@@ -285,7 +285,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description キャッシュした scaleX の値を返却します。
      *              Returns the cached scaleX value.
-     * 
+     *
      * @type {number}
      * @default null
      * @protected
@@ -295,7 +295,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description キャッシュした scaleY の値を返却します。
      *              Returns the cached scaleY value.
-     * 
+     *
      * @type {number}
      * @default null
      * @protected
@@ -305,7 +305,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description キャッシュした rotation の値を返却します。
      *              Returns the cached rotation value.
-     * 
+     *
      * @type {number}
      * @default null
      * @protected
@@ -315,7 +315,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description キャッシュした alpha の値を返却します。
      *              Returns the cached alpha value.
-     * 
+     *
      * @type {number}
      * @default null
      * @protected
@@ -325,7 +325,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 表示オブジェクトのスケール9グリッドを示します。
      *              Indicates the scale9 grid of the display object.
-     * 
+     *
      * @type {Rectangle}
      * @private
      */
@@ -334,7 +334,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 表示オブジェクトの可視性を示します。
      *              Indicates the visibility of the display object.
-     * 
+     *
      * @type {boolean}
      * @private
      */
@@ -343,7 +343,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 表示オブジェクト単位の変数を保持するマップ
      *              Map that holds variables for display objects
-     * 
+     *
      * @type {Map<any, any>}
      * @default null
      * @protected
@@ -373,11 +373,11 @@ export class DisplayObject extends EventDispatcher
         this.isShape            = false;
         this.isVideo            = false;
         this.isText             = false;
-        
+
         // PlaceObject
         this.placeId       = -1;
         this.placeObject   = null;
-        
+
         // Characterパラメーター
         this.characterId = -1;
         this.clipDepth   = 0;
@@ -398,12 +398,12 @@ export class DisplayObject extends EventDispatcher
 
         this._$hitObject = null;
         this._$isMask    = false;
-        
+
         this._$visible    = true;
         this._$mask       = null;
         this._$scale9Grid = null;
         this._$variables  = null;
-        
+
         // キャッシュ
         this.$alpha    = null;
         this.$scaleX   = null;
@@ -414,7 +414,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description この表示オブジェクトおよびルートレベルまでのそのすべての親オブジェクトの結合された Matrix を返却します。
      *              Returns a concatenated Matrix object representing the combined transformation matrixes of the display object and all of its parent objects, back to the root level.
-     * 
+     *
      * @member  {Matrix}
      * @readonly
      */
@@ -508,7 +508,7 @@ export class DisplayObject extends EventDispatcher
      */
     get loaderInfo (): LoaderInfo | null
     {
-        return $loaderInfoMap.has(this) 
+        return $loaderInfoMap.has(this)
             ? $loaderInfoMap.get(this) as NonNullable<LoaderInfo>
             : null;
     }
@@ -682,7 +682,7 @@ export class DisplayObject extends EventDispatcher
      */
     get scaleY (): number
     {
-         return displayObjectGetScaleYUseCase(this);
+        return displayObjectGetScaleYUseCase(this);
     }
     set scaleY (scale_y: number)
     {
@@ -1170,10 +1170,10 @@ export class DisplayObject extends EventDispatcher
     // /**
     //  * @description AnimationToolのシンボルと同期
     //  *              Synchronize with AnimationTool symbol
-    //  * 
-    //  * @param {number} character_id 
-    //  * @param {object} character 
-    //  * @param {LoaderInfo} loaderInfo 
+    //  *
+    //  * @param {number} character_id
+    //  * @param {object} character
+    //  * @param {LoaderInfo} loaderInfo
     //  * @return {void}
     //  * @method
     //  * @protected

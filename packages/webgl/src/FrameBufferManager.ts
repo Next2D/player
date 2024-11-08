@@ -166,7 +166,7 @@ export const $useFramebufferBound = (): boolean =>
 /**
  * @description ビットマップの読み込み専用のFrameBufferオブジェクト
  *              FrameBuffer object for reading bitmaps only
- * 
+ *
  * @type {WebGLFramebuffer|null}
  * @default null
  * @private
@@ -176,7 +176,7 @@ let $readBitmapFramebuffer: WebGLFramebuffer | null = null;
 /**
  * @description ビットマップの書き込み専用のFrameBufferオブジェクト
  *              FrameBuffer object for writing bitmaps only
- * 
+ *
  * @type {WebGLFramebuffer|null}
  * @default null
  * @private

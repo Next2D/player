@@ -5,13 +5,13 @@ import { Point, Matrix } from "@next2d/geom";
  * @description point オブジェクトを表示オブジェクトの（ローカル）座標からステージ（グローバル）座標に変換します。
  *              Converts the point object from the display object's (local) coordinates to the Stage (global) coordinates.
  *
- * @param  {DisplayObject} display_object 
- * @param  {Point} point 
+ * @param  {DisplayObject} display_object
+ * @param  {Point} point
  * @return {Point}
  * @method
  * @protected
  */
-export const execute = <D extends DisplayObject>(display_object: D, point: Point): Point => 
+export const execute = <D extends DisplayObject>(display_object: D, point: Point): Point =>
 {
     const matrix = display_object.concatenatedMatrix;
 

@@ -8,12 +8,12 @@ import { execute as textParserParseStyleService } from "../service/TextParserPar
 /**
  * @description 属性を TextFormat に設定
  *              Set attributes to TextFormat
- * 
- * @param {IAttributeObject[]} attributes 
- * @param {TextFormat} text_format 
+ *
+ * @param {IAttributeObject[]} attributes
+ * @param {TextFormat} text_format
  * @param {IOptions} options
  * @method
- * @protected 
+ * @protected
  */
 export const execute = (
     attributes: IAttributeObject[],

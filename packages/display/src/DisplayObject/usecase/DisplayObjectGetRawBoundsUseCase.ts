@@ -12,7 +12,7 @@ import { $getArray } from "../../DisplayObjectUtil";
 /**
  * @description matrixを含まないバウンディングボックスを返却
  *              Return bounding box without matrix
- * 
+ *
  * @param  {DisplayObject} display_object
  * @return {number[]}
  * @method

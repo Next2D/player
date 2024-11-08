@@ -3,8 +3,8 @@ import type { IAttributeObject } from "../../interface/IAttributeObject";
 /**
  * @description スタイルを解析して属性オブジェクトの配列を返す
  *              Analyze the style and return an array of attribute objects
- * 
- * @param  {string} value 
+ *
+ * @param  {string} value
  * @return {IAttributeObject[]}
  * @method
  * @protected
@@ -22,7 +22,7 @@ export const execute = (value: string): IAttributeObject[] =>
         if (!styleValue) {
             continue;
         }
-    
+
         const styles = styleValue.split(":");
         const name   = styles[0].trim();
         const value  = styles[1].trim();
@@ -41,7 +41,7 @@ export const execute = (value: string): IAttributeObject[] =>
                     "value": value.replace(/'|"/g, "")
                 });
                 break;
-    
+
             case "letter-spacing":
                 attributes.push({
                     "name": "letterSpacing",
@@ -62,7 +62,7 @@ export const execute = (value: string): IAttributeObject[] =>
                     "value": parseInt(value)
                 });
                 break;
-    
+
             case "margin-right":
                 attributes.push({
                     "name": "rightMargin",

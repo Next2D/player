@@ -4,9 +4,9 @@ import { Node } from "../../Node";
  * @description ノード挿入ロジック
  *              Node insertion logic
  *
- * @param  {Node} node 
- * @param  {number} width 
- * @param  {number} height 
+ * @param  {Node} node
+ * @param  {number} width
+ * @param  {number} height
  * @return {Node | null}
  * @method
  * @protected

@@ -10,7 +10,7 @@ import { $stage } from "../../Stage";
 /**
  * @description MovieClip の子要素で次のフレームに移動するDisplayObjectの格納マップ
  *              Storage map of DisplayObjects that move to the next frame in the child elements of MovieClip
- * 
+ *
  * @type {Map<number, IDisplayObject<any>>}
  * @private
  */
@@ -56,38 +56,38 @@ export const execute = <D extends DisplayObject>(
             if (!(idx in controller)) {
                 continue;
             }
-            
+
             const dictionaryId = controller[idx];
             if (typeof dictionaryId !== "number") {
                 continue;
             }
-            
+
             const tag = dictionary[dictionaryId];
-            if (!tag) { 
+            if (!tag) {
                 continue;
             }
-    
+
             const character = loaderInfo.data.characters[tag.characterId];
             if (!character) {
                 continue;
             }
-    
+
             const displayObject = movieClipBuildDictionaryCharacterUseCase(
                 dictionaryId, tag, character, movie_clip, idx
             );
 
             if (!displayObject) {
-                continue
+                continue;
             }
-    
+
             children.push(displayObject);
         }
 
         return children;
     }
-    
+
     for (let idx = 0; idx < children.length; ++idx) {
-        
+
         const displayObject = children[idx];
         if (!displayObject) {
             continue;
@@ -132,7 +132,7 @@ export const execute = <D extends DisplayObject>(
         if (!(idx in controller)) {
             continue;
         }
-        
+
         const dictionaryId = controller[idx];
         if (typeof dictionaryId !== "number") {
             continue;
@@ -147,7 +147,7 @@ export const execute = <D extends DisplayObject>(
         }
 
         const tag = dictionary[dictionaryId];
-        if (!tag) { 
+        if (!tag) {
             continue;
         }
 
@@ -160,13 +160,13 @@ export const execute = <D extends DisplayObject>(
             dictionaryId, tag, character, movie_clip, idx
         );
         if (!displayObject) {
-            continue
+            continue;
         }
 
         children.push(displayObject);
     }
 
     $stayDisplayObjectMap.clear();
-    
+
     return children;
 };

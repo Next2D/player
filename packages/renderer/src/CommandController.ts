@@ -13,7 +13,7 @@ export class CommandController
     /**
      * @description workerの実行状態
      *              Execution status of worker
-     * 
+     *
      * @type {string}
      * @default "deactivate"
      * @public
@@ -23,7 +23,7 @@ export class CommandController
     /**
      * @description 受け取ったメッセージ配列
      *              Received message array
-     * 
+     *
      * @type {array}
      * @default []
      * @public
@@ -67,13 +67,13 @@ export class CommandController
                 case "resize":
                     commandResizeService(
                         object.buffer[0] as number,
-                        object.buffer[1] as number,
+                        object.buffer[1] as number
                     );
                     break;
 
                 case "initialize":
                     commandInitializeContextService(
-                        object.canvas as OffscreenCanvas, 
+                        object.canvas as OffscreenCanvas,
                         object.buffer[0] as number
                     );
                     break;

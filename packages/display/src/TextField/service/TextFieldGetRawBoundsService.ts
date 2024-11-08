@@ -4,8 +4,8 @@ import { $getArray } from "../../DisplayObjectUtil";
 /**
  * @description TextFieldのローカルバウンディングボックスを取得します。
  *              Get the local bounding box of the TextField.
- * 
- * @param  {TextField} text_field 
+ *
+ * @param  {TextField} text_field
  * @return {number[]}
  * @protected
  */

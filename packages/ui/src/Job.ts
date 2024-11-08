@@ -18,7 +18,7 @@ export class Job extends EventDispatcher
     /**
      * @description イージングの対象オブジェクト
      *              Target object of easing
-     * 
+     *
      * @type {object}
      * @default null
      * @private
@@ -28,7 +28,7 @@ export class Job extends EventDispatcher
     /**
      * @description イージングのエントリーオブジェクト
      *              Entry object of easing
-     * 
+     *
      * @type {array}
      * @default null
      * @private
@@ -38,7 +38,7 @@ export class Job extends EventDispatcher
     /**
      * @description イージングの開始時間
      *              Start time of easing
-     * 
+     *
      * @type {number}
      * @default 0
      * @private
@@ -48,7 +48,7 @@ export class Job extends EventDispatcher
     /**
      * @description イージングの強制停止フラグ
      *              Forced stop flag of easing
-     * 
+     *
      * @type {boolean}
      * @default false
      * @private
@@ -133,7 +133,7 @@ export class Job extends EventDispatcher
      * @readonly
      * @public
      */
-    // eslint-disable-next-line no-use-before-define
+
     public nextJob: Job | null;
 
     /**
@@ -163,7 +163,7 @@ export class Job extends EventDispatcher
         this.to          = to;
         this.currentTime = 0;
         this.nextJob     = null;
-        
+
         // private params
         this._$target    = target;
         this._$entries   = null;

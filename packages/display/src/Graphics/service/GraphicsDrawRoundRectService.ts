@@ -10,7 +10,7 @@ import type { Graphics } from "../../Graphics";
  * @param  {number} width
  * @param  {number} height
  * @param  {number} ellipse_width
- * @param  {number} [ellipse_height=NaN] 
+ * @param  {number} [ellipse_height=NaN]
  * @return {Graphics}
  * @method
  * @protected

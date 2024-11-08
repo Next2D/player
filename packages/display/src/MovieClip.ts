@@ -26,7 +26,7 @@ export class MovieClip extends Sprite
     /**
      * @description フレーム毎のラベルマップ
      *              Label map per frame
-     * 
+     *
      * @type {Map<number, FrameLabel>}
      * @default null
      * @private
@@ -36,7 +36,7 @@ export class MovieClip extends Sprite
     /**
      * @description フレーム毎のアクションマップ
      *              Action map per frame
-     * 
+     *
      * @type {Map<number, Function[]>}
      * @default null
      * @private
@@ -46,7 +46,7 @@ export class MovieClip extends Sprite
     /**
      * @description フレーム毎のサウンドマップ
      *              Sound map per frame
-     * 
+     *
      * @type {Map<number, Sound[]>}
      * @default null
      * @private
@@ -56,7 +56,7 @@ export class MovieClip extends Sprite
     /**
      * @description アクション実行フラグ
      *              Action execution flag
-     * 
+     *
      * @type {boolean}
      * @default false
      * @private
@@ -88,7 +88,7 @@ export class MovieClip extends Sprite
     /**
      * @description 停止フラグ
      *              Stop flag
-     * 
+     *
      * @type {boolean}
      * @default false
      * @private
@@ -98,7 +98,7 @@ export class MovieClip extends Sprite
     /**
      * @description サウンド実行フラグ
      *              Sound execution flag
-     * 
+     *
      * @type {boolean}
      * @default true
      * @private
@@ -108,7 +108,7 @@ export class MovieClip extends Sprite
     /**
      * @description タイムラインヘッドが移動したかどうか
      *              Whether the timeline head has moved
-     * 
+     *
      * @type {boolean}
      * @default true
      * @private
@@ -151,6 +151,7 @@ export class MovieClip extends Sprite
         this._$currentFrame = 1;
         this._$stopFlag = false;
         this._$canSound = true;
+        console.log("MovieClip", this._$canSound);
     }
 
     /**
@@ -182,7 +183,7 @@ export class MovieClip extends Sprite
     /**
      * @description MovieClip インスタンスの現在のフレーム番号です。
      *             The current frame number of the MovieClip instance.
-     * 
+     *
      * @member {number}
      * @default 1
      * @public
@@ -1027,7 +1028,7 @@ export class MovieClip extends Sprite
         if (!this.$hasTimelineHeadMoved || this.characterId === -1) {
             return this._$children;
         }
-        
+
         this.$hasTimelineHeadMoved = false;
 
         return movieClipGetChildrenService(this, this._$children);

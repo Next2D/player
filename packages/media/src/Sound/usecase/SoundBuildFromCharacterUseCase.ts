@@ -5,9 +5,9 @@ import { execute as soundDecodeService } from "../service/SoundDecodeService";
 /**
  * @description キャラクターからSoundを構築
  *              Build Sound from character
- * 
- * @param  {Sound} sound 
- * @param  {ISoundCharacter} character 
+ *
+ * @param  {Sound} sound
+ * @param  {ISoundCharacter} character
  * @return {Promise<void>}
  * @method
  * @protected

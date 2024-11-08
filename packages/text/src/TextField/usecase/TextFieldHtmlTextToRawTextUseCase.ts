@@ -4,7 +4,7 @@ import { execute as textFieldGetTextDataUseCase } from "./TextFieldGetTextDataUs
 /**
  * @description HTMLテキストをプレーンテキストに変換します。
  *              Convert HTML text to plain text.
- * 
+ *
  * @param  {TextField} text_field
  * @return {string}
  * @method

@@ -6,7 +6,7 @@ import { execute as textFieldGetTextDataUseCase } from "../../TextField/usecase/
  * @description 選択中のテキストを削除します。
  *              Deletes the selected text.
  *
- * @param  {TextField} text_field 
+ * @param  {TextField} text_field
  * @return {void}
  * @method
  * @protected

@@ -9,7 +9,7 @@ import { execute as textParserSetAttributesUseCase } from "./TextParserSetAttrib
 /**
  * @description タグを解析してTextDataとTextFormatを設定
  *              Analyze tags and set TextData and TextFormat
- * 
+ *
  * @param  {Document} document
  * @param  {TextFormat} text_format
  * @param  {TextData} text_data
@@ -28,7 +28,7 @@ export const execute = (
     for (let idx = 0; idx < document.children.length; ++idx) {
 
         const node = document.children[idx] as ChildNode;
-        
+
         if (node.nodeType === 3) {
 
             textParserParseTextUseCase(node.nodeValue || "", text_format, text_data, options);

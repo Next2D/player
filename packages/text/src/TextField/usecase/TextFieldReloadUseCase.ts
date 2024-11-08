@@ -7,7 +7,7 @@ import { execute as textFieldResizeAutoFontSizeUseCase } from "./TextFieldResize
 /**
  * @description テキストフィールドの描画生成情報を再計算します
  *              Recalculates the drawing generation information of the text field
- * 
+ *
  * @param  {TextField} text_field
  * @return {void}
  * @method

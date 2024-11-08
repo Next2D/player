@@ -8,8 +8,8 @@ import { execute as textParserParseHtmlTextUseCase } from "../../TextParser/usec
  *              Generates and returns data for drawing based on text information.
  *              If data has already been generated, that data is returned.
  *
- * @param  {TextField} text_field 
- * @param  {number} sub_font_size 
+ * @param  {TextField} text_field
+ * @param  {number} sub_font_size
  * @return {TextData}
  * @method
  * @protected

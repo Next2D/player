@@ -5,5 +5,5 @@ export * from "./Video";
 export {
     $bootAudioContext,
     $getAudioContext,
-    $mutedVideos
+    $getMutedVideos
 } from "./MediaUtil";

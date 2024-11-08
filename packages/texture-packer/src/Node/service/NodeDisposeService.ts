@@ -3,12 +3,12 @@ import { Node } from "../../Node";
 /**
  * @description ノード解放ロジック
  *              Node release logic
- * 
- * @param  {Node} node 
- * @param  {number} x 
- * @param  {number} y 
- * @param  {number} width 
- * @param  {number} height 
+ *
+ * @param  {Node} node
+ * @param  {number} x
+ * @param  {number} y
+ * @param  {number} width
+ * @param  {number} height
  * @return {void}
  * @method
  * @protected
@@ -37,14 +37,14 @@ export const execute = (
         return true;
     }
 
-    if (x === node.x 
-        && y === node.y 
-        && width === node.w 
+    if (x === node.x
+        && y === node.y
+        && width === node.w
         && height === node.h
     ) {
         node.used = false;
         return true;
-    };
+    }
 
     return false;
 };

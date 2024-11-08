@@ -4,7 +4,7 @@ import { Event } from "@next2d/events";
 /**
  * @description DisplayObjectのADDEDイベントを実行
  *              Execute the ADDED event of DisplayObject
- * 
+ *
  * @param  {DisplayObject} display_object
  * @return {void}
  * @method

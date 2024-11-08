@@ -6,7 +6,7 @@ import { execute as shapeSetBitmapBufferUseCase } from "./ShapeSetBitmapBufferUs
 /**
  * @description 指定のURLを画像を読み込み、Shapeに設定
  *              Load the specified URL image and set it to Shape
- * 
+ *
  * @param  {Shape} shape
  * @param  {string} src
  * @return {void}

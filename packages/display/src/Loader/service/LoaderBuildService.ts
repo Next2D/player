@@ -40,14 +40,14 @@ export const execute = async (loader: Loader, object: IAnimationToolData): Promi
 
     const character = object.characters[0];
     displayObjectBaseBuildService(movieClip, -1,
-    {
-        "characterId": 0,
-        "name": "main",
-        "clipDepth": 0,
-        "depth": 0,
-        "endFrame": character.controller.length,
-        "startFrame": 1
-    }, loader);
+        {
+            "characterId": 0,
+            "name": "main",
+            "clipDepth": 0,
+            "depth": 0,
+            "endFrame": character.controller.length,
+            "startFrame": 1
+        }, loader);
     movieClipBuildFromCharacterUseCase(movieClip, character);
 
     $parentMap.delete(movieClip);

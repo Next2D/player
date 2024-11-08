@@ -1,4 +1,4 @@
-import type { IBlendMode } from "packages/display/src/interface/IBlendMode";
+import type { IBlendMode } from "../../../../interface/IBlendMode";
 import { BLEND_TEMPLATE } from "../../../Fragment/FragmentShaderSourceBlend";
 import { ShaderManager } from "../../../ShaderManager";
 import { TEXTURE_TEMPLATE } from "../../../Vertex/VertexShaderSource";
@@ -8,8 +8,8 @@ import { $collection } from "../../BlendVariants";
  * @description Blendのシェーダーを生成して返却
  *              Generate and return the shader of Blend
  *
- * @param  {IBlendMode} operation 
- * @param  {boolean} with_color_transform 
+ * @param  {IBlendMode} operation
+ * @param  {boolean} with_color_transform
  * @return {ShaderManager}
  * @method
  * @protected
@@ -30,4 +30,4 @@ export const execute = (operation: IBlendMode, with_color_transform: boolean): S
     $collection.set(key, shaderManager);
 
     return shaderManager;
-}
+};

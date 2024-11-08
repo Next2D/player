@@ -9,8 +9,8 @@ import { execute as textFieldApplyChangesService } from "../service/TextFieldApp
  * @description xスクロール位置を設定します
  *              x Sets the scroll position.
  *
- * @param  {TextField} text_field 
- * @param  {number} scroll_x 
+ * @param  {TextField} text_field
+ * @param  {number} scroll_x
  * @return {void}
  * @method
  * @protected
@@ -33,7 +33,7 @@ export const execute = (text_field: TextField, scroll_x: number): void =>
     if (text_field.scrollX === scroll_x) {
         return ;
     }
-    
+
     if (text_field.textWidth > width) {
 
         textFieldApplyChangesService(text_field);
@@ -57,8 +57,8 @@ export const execute = (text_field: TextField, scroll_x: number): void =>
                 + (width - 1 - xScrollShape.width)
                 / (width - 1)
                 * (text_field.scrollX - 1);
-            
-            xScrollShape.y = text_field.y + text_field.height 
+
+            xScrollShape.y = text_field.y + text_field.height
                 - xScrollShape.height - 0.5;
 
             // added sprite

@@ -225,7 +225,7 @@ export class ColorTransform
     /**
      * @description オブジェクトの複製を返します。
      *              Returns a copy of this ColorTransform object.
-     * 
+     *
      * @return {ColorTransform}
      * @method
      * @public
@@ -234,7 +234,7 @@ export class ColorTransform
     {
         return new ColorTransform(...this._$colorTransform);
     }
-    
+
     /**
      * @description 2 番目のパラメーターで指定された ColorTransform オブジェクトと
      *              現在の ColorTransform オブジェクトを連結し
@@ -257,7 +257,7 @@ export class ColorTransform
     /**
      * @description 指定された配列の値を乗算します
      *              Multiplies the value of the specified array.
-     * 
+     *
      * @param  {Float32Array} a
      * @param  {Float32Array} b
      * @return {Float32Array}

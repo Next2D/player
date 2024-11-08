@@ -22,7 +22,7 @@ export const execute = (text_field: TextField, character: ITextFieldCharacter): 
     textFormat.letterSpacing = character.letterSpacing;
     textFormat.leftMargin    = character.leftMargin;
     textFormat.rightMargin   = character.rightMargin;
-    
+
     switch (character.fontType) {
 
         case 1:
@@ -63,7 +63,7 @@ export const execute = (text_field: TextField, character: ITextFieldCharacter): 
             break;
 
         default:
-            break
+            break;
 
     }
 
@@ -71,6 +71,6 @@ export const execute = (text_field: TextField, character: ITextFieldCharacter): 
     text_field.xMax = text_field.bounds.xMax = character.bounds.xMax;
     text_field.yMin = text_field.bounds.yMin = character.bounds.yMin;
     text_field.yMax = text_field.bounds.yMax = character.bounds.yMax + 4;
-    
+
     text_field.text = character.text;
 };

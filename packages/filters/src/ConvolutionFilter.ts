@@ -216,8 +216,8 @@ export class ConvolutionFilter extends BitmapFilter
     set color (color: number)
     {
         color = $clamp(
-            typeof color === "string" 
-                ? $convertColorStringToNumber(color) 
+            typeof color === "string"
+                ? $convertColorStringToNumber(color)
                 : color
             , 0, 0xffffff, 0
         );

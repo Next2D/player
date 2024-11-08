@@ -6,8 +6,8 @@ import { execute as textFieldBlinkingUseCase } from "../../TextField/usecase/Tex
 /**
  * @description テキストフィールドのフォーカス位置を右に移動します。
  *              Moves the focus position of the text field to the right.
- * 
- * @param  {TextField} text_field 
+ *
+ * @param  {TextField} text_field
  * @return {void}
  * @method
  * @protected

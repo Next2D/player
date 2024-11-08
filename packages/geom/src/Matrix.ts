@@ -393,7 +393,7 @@ export class Matrix
     /**
      * @description 指定された配列の値を乗算します
      *              Multiplies the value of the specified array.
-     * 
+     *
      * @param  {Float32Array} a
      * @param  {Float32Array} b
      * @return {Float32Array}

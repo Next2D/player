@@ -1,5 +1,4 @@
 import type { TextData } from "../../TextData";
-import type { ITextObject } from "../../interface/ITextObject";
 
 /**
  * @description 改行だけの行の高さを調整

@@ -6,9 +6,9 @@ import { execute as playerRemoveCachePostMessageService } from "../service/Playe
 /**
  * @description Playerの定期処理
  *              Regular processing of Player
- * 
- * @param  {Player} player 
- * @param  {number} timestamp 
+ *
+ * @param  {Player} player
+ * @param  {number} timestamp
  * @return {void}
  * @method
  * @protected

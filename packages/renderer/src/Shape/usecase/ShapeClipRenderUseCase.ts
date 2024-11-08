@@ -1,13 +1,12 @@
-import { execute as shapeCommandService } from "../service/ShapeCommandService"; 
-import { $context } from "../../RendererUtil"; 
-import type { IAttachmentObject } from "../../../../webgl/src/interface/IAttachmentObject";
+import { execute as shapeCommandService } from "../service/ShapeCommandService";
+import { $context } from "../../RendererUtil";
 
 /**
  * @description シェイプクリップの描画を実行
  *              Execute drawing of shape clip
  *
- * @param  {Float32Array} render_queue 
- * @param  {number} index 
+ * @param  {Float32Array} render_queue
+ * @param  {number} index
  * @return {number}
  * @method
  * @protected

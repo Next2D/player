@@ -125,7 +125,7 @@ export const $setRendererSize = (width: number, height: number): void =>
 /**
  * @description リサイズ中かどうかを取得
  *              Get whether it is being resized
- * 
+ *
  * @return {boolean}
  * @method
  * @public
@@ -138,7 +138,7 @@ export const $isResize = (): boolean =>
 /**
  * @description リサイズ処理完了
  *              Resize processing complete
- * 
+ *
  * @return {void}
  * @method
  * @public
@@ -146,7 +146,7 @@ export const $isResize = (): boolean =>
 export const $resizeComplete = (): void =>
 {
     $canvas.width  = $rendererWidth;
-    $canvas.height = $rendererHeight
+    $canvas.height = $rendererHeight;
     $resizeState = false;
 };
 

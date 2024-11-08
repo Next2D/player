@@ -108,7 +108,7 @@ export const $poolFloat32Array8 = (array: Float32Array): void =>
 /**
  * @description 値が最小値と最大値の間に収まるように調整します。
  *              Adjust the value so that it falls between the minimum and maximum values.
- * 
+ *
  * @param  {number} value
  * @param  {number} min
  * @param  {number} max

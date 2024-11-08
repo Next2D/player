@@ -7,16 +7,16 @@ import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUs
 /**
  * @description DisplayObjectContainerの描画を実行します。
  *              Execute the drawing of DisplayObjectContainer.
- * 
- * @param  {Float32Array} render_queue 
- * @param  {number} index 
- * @param  {ImageBitmap[]} [image_bitmaps=null] 
+ *
+ * @param  {Float32Array} render_queue
+ * @param  {number} index
+ * @param  {ImageBitmap[]} [image_bitmaps=null]
  * @return {number}
  * @method
  * @protected
  */
 export const execute = (
-    render_queue: Float32Array, 
+    render_queue: Float32Array,
     index: number,
     image_bitmaps: ImageBitmap[] | null
 ): number => {

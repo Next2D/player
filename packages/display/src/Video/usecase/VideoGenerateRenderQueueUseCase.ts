@@ -19,10 +19,10 @@ import {
 /**
  * @description renderer workerに渡すVideoの描画データを生成
  *              Generate drawing data of Video to pass to renderer
- * 
+ *
  * @param  {Video} video
  * @param  {array} render_queue
- * @param  {Float32Array} matrix 
+ * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
  * @param  {number} renderer_height
@@ -51,10 +51,10 @@ export const execute = (
 
     // transformed ColorTransform(tColorTransform)
     const rawColor = displayObjectGetRawColorTransformUseCase(video);
-    const tColorTransform = rawColor 
+    const tColorTransform = rawColor
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
-    
+
     const alpha = $clamp(tColorTransform[3] + tColorTransform[7] / 255, 0, 1, 0);
     if (!alpha) {
         if (tColorTransform !== color_transform) {
@@ -73,7 +73,7 @@ export const execute = (
     // draw text
     const rawBounds = videoGetRawBoundsService(video);
     const bounds = displayObjectCalcBoundsMatrixService(
-        rawBounds[0], rawBounds[1], 
+        rawBounds[0], rawBounds[1],
         rawBounds[2], rawBounds[3],
         tMatrix
     );
@@ -110,9 +110,9 @@ export const execute = (
 
     }
 
-    if (point_x > xMin + width 
+    if (point_x > xMin + width
         || point_y > yMin + height
-        || xMin > renderer_width 
+        || xMin > renderer_width
         || yMin > renderer_height
     ) {
         if (tColorTransform !== color_transform) {
@@ -127,7 +127,6 @@ export const execute = (
         return;
     }
 
-
     // rennder on
     render_queue.push(1);
     render_queue.push($RENDERER_VIDEO_TYPE);
@@ -139,7 +138,7 @@ export const execute = (
 
     if (!video.uniqueKey) {
         if (video.characterId && video.loaderInfo) {
-            
+
             const values = $getArray(
                 video.loaderInfo.id,
                 video.characterId

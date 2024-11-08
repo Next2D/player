@@ -6,7 +6,7 @@ import { execute as displayObjectBuildFilterService } from "../service/DisplayOb
 /**
  * @description DisplayObjectのフィルタを返却、存在しない場合はnullを返却
  *              Return the filter of the DisplayObject, or return null if it does not exist.
- * 
+ *
  * @param  {DisplayObject} display_object
  * @return {IFilterArray | null}
  * @method

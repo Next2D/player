@@ -12,7 +12,7 @@ import { execute as displayObjectContainerCalcBoundsMatrixUseCase } from "../../
 /**
  * @description DisplayObject のローカルバウンディングボックスを取得します。
  *              Get the local bounding box of the DisplayObject.
- * 
+ *
  * @param  {DisplayObject} display_object
  * @return {number[]}
  * @method

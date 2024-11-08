@@ -1,6 +1,6 @@
 import {
     $bootAudioContext,
-    $mutedVideos
+    $getMutedVideos
 } from "@next2d/media";
 import {
     $POINTER_DOWN,
@@ -9,8 +9,10 @@ import {
 } from "../../Canvas";
 
 /**
- * 
- * @param {HTMLCanvasElement} canvas
+ * @description HTMLCanvasElementにイベントを登録します。
+ *              Register events on HTMLCanvasElement.
+ *
+ * @param  {HTMLCanvasElement} canvas
  * @return {void}
  * @method
  * @public
@@ -23,11 +25,17 @@ export const execute = (canvas: HTMLCanvasElement): void =>
         $bootAudioContext();
 
         // ミュートになっているビデオの音声をon
-        for (let idx = 0; idx < $mutedVideos.length; ++idx) {
-            $mutedVideos[idx].muted = false;
+        const mutedVideos = $getMutedVideos();
+        for (let idx = 0; idx < mutedVideos.length; ++idx) {
+            const video = mutedVideos[idx];
+            if (!video) {
+                continue;
+            }
+
+            video.muted = false;
         }
-        $mutedVideos.length;
-        
+        mutedVideos.length = 0;
+
         canvas.removeEventListener("pointerup", $loadAudioContext);
     };
     canvas.addEventListener("pointerup", $loadAudioContext);

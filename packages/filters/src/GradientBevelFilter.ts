@@ -248,8 +248,8 @@ export class GradientBevelFilter  extends BitmapFilter
             for (let idx = 0; idx < colors.length; ++idx) {
                 const color = colors[idx];
                 colors[idx] = $clamp(
-                    typeof color === "string" 
-                        ? $convertColorStringToNumber(color) 
+                    typeof color === "string"
+                        ? $convertColorStringToNumber(color)
                         : color
                     , 0, 0xffffff, 0
                 );
@@ -443,7 +443,7 @@ export class GradientBevelFilter  extends BitmapFilter
         const colors: number[] = this._$colors ? this._$colors : [];
         const alphas: number[] = this._$alphas ? this._$alphas : [];
         const ratios: number[] = this._$ratios ? this._$ratios : [];
-        
+
         let type: number = 0;
         switch (this._$type) {
 
@@ -466,9 +466,9 @@ export class GradientBevelFilter  extends BitmapFilter
         }
 
         return [7,
-            this._$distance, this._$angle, 
-            colors.length, ...colors, 
-            alphas.length, ...alphas, 
+            this._$distance, this._$angle,
+            colors.length, ...colors,
+            alphas.length, ...alphas,
             ratios.length, ...ratios,
             this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
             this._$blurFilter.quality, type, +this._$knockout
@@ -493,7 +493,7 @@ export class GradientBevelFilter  extends BitmapFilter
     /**
      * @description フィルターの描画範囲のバウンディングボックスを返します。
      *              Returns the bounding box of the filter drawing area.
-     * 
+     *
      * @param  {object} bounds
      * @return {object}
      * @method

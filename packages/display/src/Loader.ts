@@ -27,7 +27,7 @@ export class Loader
      * @type {LoaderInfo}
      * @readonly
      * @public
-     */    
+     */
     public readonly contentLoaderInfo: LoaderInfo;
 
     /**

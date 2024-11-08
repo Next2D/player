@@ -1,6 +1,5 @@
 import type { Video } from "@next2d/media";
 import type { IVideoCharacter } from "../../interface/IVideoCharacter";
-import { SoundMixer } from "@next2d/media";
 
 /**
  * @description characterを元にTextFieldを構築
@@ -24,7 +23,7 @@ export const execute = (video: Video, character: IVideoCharacter): void =>
     video.videoWidth  = character.bounds.xMax;
     video.videoHeight = character.bounds.yMax;
     video.volume      = character.volume;
-    
+
     video.src = URL.createObjectURL(new Blob(
         [character.videoData],
         { "type": "video/mp4" }

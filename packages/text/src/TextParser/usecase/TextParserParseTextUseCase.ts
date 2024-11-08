@@ -13,7 +13,7 @@ import {
 /**
  * @description テキストを解析
  *              Analyze text
- * 
+ *
  * @param  {string} texts
  * @param  {TextFormat} text_format
  * @param  {TextData} text_data
@@ -54,11 +54,11 @@ export const execute = (
         $context.font = textFormatGenerateFontStyleService(textFormat);
         const mesure  = $context.measureText(text || "");
 
-        const width = textFormat.letterSpacing 
+        const width = textFormat.letterSpacing
             ? mesure.width + textFormat.letterSpacing
             : mesure.width;
 
-        const height = textFormat.leading 
+        const height = textFormat.leading
             ? mesure.fontBoundingBoxAscent + mesure.fontBoundingBoxDescent + textFormat.leading
             : mesure.fontBoundingBoxAscent + mesure.fontBoundingBoxDescent;
 
@@ -146,7 +146,7 @@ export const execute = (
                 text_data.ascentTable[prevLine] = 0;
 
                 for (let idx = 0; idx < insertIdx; ++idx) {
-                    
+
                     const textObject = text_data.textTable[idx];
                     if (!textObject) {
                         continue;

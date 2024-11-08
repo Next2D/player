@@ -3,7 +3,7 @@ import type { TextFormat } from "../../TextFormat";
 /**
  * @description テキストフォーマットから幅のマージンを取得
  *              Get width margin from text format
- * 
+ *
  * @param  {TextFormat} text_format
  * @return {number}
  * @method

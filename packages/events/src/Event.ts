@@ -286,7 +286,7 @@ export class Event
     /**
      * @description スクロール位置が変更されたときに発生します。
      *              Occurs when the scroll position changes.
-     * 
+     *
      * @return {string}
      * @const
      * @static

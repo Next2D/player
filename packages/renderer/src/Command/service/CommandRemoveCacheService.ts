@@ -4,7 +4,7 @@ import { $context } from "../../RendererUtil";
 /**
  * @description キャッシュキーを削除
  *              Remove cache key
- * 
+ *
  * @param  {Float32Array} remove_cache_keys
  * @return {void}
  * @method
@@ -19,7 +19,7 @@ export const execute = (remove_cache_keys: Float32Array): void =>
         }
 
         const cache = $cacheStore.getById(cacheKey);
-        for (let node of cache.values()) {
+        for (const node of cache.values()) {
             $context.removeNode(node);
         }
 

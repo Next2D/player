@@ -4,8 +4,8 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../usecase/DisplayO
 /**
  * @description DisplayObjectのy軸方向の拡大率を返却
  *              Returns the scaling factor in the y-axis direction of the DisplayObject
- * 
- * @param  {DisplayObject} display_object 
+ *
+ * @param  {DisplayObject} display_object
  * @return {number}
  * @method
  * @protected
@@ -16,7 +16,7 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
         return display_object.$scaleY;
     }
 
-    const matrix = display_object.$matrix 
+    const matrix = display_object.$matrix
         ? display_object.$matrix.rawData
         : displayObjectGetRawMatrixUseCase(display_object);
 

@@ -32,7 +32,7 @@ export class BlurFilter extends BitmapFilter
     /**
      * @description 水平方向のぼかし量。
      *              The amount of horizontal blur.
-     * 
+     *
      * @member  {number}
      * @default 4
      * @private
@@ -42,7 +42,7 @@ export class BlurFilter extends BitmapFilter
     /**
      * @description 垂直方向のぼかし量。
      *              The amount of vertical blur.
-     * 
+     *
      * @member  {number}
      * @default 4
      * @private
@@ -52,7 +52,7 @@ export class BlurFilter extends BitmapFilter
     /**
      * @description ぼかしの実行回数です。
      *              The number of times to perform the blur.
-     * 
+     *
      * @member  {number}
      * @default 1
      * @private
@@ -207,7 +207,7 @@ export class BlurFilter extends BitmapFilter
     /**
      * @description フィルターの描画範囲のバウンディングボックスを返します。
      *              Returns the bounding box of the filter drawing area.
-     * 
+     *
      * @param  {object} bounds
      * @return {object}
      * @method

@@ -181,8 +181,8 @@ export class DisplacementMapFilter extends BitmapFilter
     set color (color: number)
     {
         color = $clamp(
-            typeof color === "string" 
-                ? $convertColorStringToNumber(color) 
+            typeof color === "string"
+                ? $convertColorStringToNumber(color)
                 : color
             , 0, 0xffffff, 0
         );
@@ -435,12 +435,12 @@ export class DisplacementMapFilter extends BitmapFilter
 
         }
 
-        const mapBitmap = this._$mapBitmap 
+        const mapBitmap = this._$mapBitmap
             ? []
             : [];
 
         return [4,
-            mapBitmap.length, ...mapBitmap, 
+            mapBitmap.length, ...mapBitmap,
             this._$mapPointX, this._$mapPointY, this._$componentX, this._$componentY,
             this._$scaleX, this._$scaleY, mode, this._$color, this._$alpha
         ];

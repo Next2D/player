@@ -3,7 +3,7 @@ import type { Graphics } from "../../Graphics";
 /**
  * @description 線の描画範囲を計算
  *              Calculate the stroke drawing range
- * 
+ *
  * @param  {Graphics} graphics
  * @param  {number} x
  * @param  {number} y
@@ -16,7 +16,7 @@ import type { Graphics } from "../../Graphics";
  * @protected
  */
 export const execute = (
-    graphics: Graphics, 
+    graphics: Graphics,
     x: number = 0, y: number = 0,
     position_x: number = 0, position_y: number = 0,
     line_width: number = 0, caps: string = "none"

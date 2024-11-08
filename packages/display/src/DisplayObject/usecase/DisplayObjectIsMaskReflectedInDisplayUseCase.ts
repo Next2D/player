@@ -7,13 +7,13 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject
 /**
  * @description DisplayObjectのマスク描画範囲を計算して、マスク描画が実行可能かどうかを返します。
  *              Calculate the mask drawing area of DisplayObject and return whether the mask drawing is executable.
- * 
- * @param  {DisplayObject} display_object 
- * @param  {Float32Array} matrix 
- * @param  {number} renderer_width 
- * @param  {number} renderer_height 
- * @param  {number} point_x 
- * @param  {number} point_y 
+ *
+ * @param  {DisplayObject} display_object
+ * @param  {Float32Array} matrix
+ * @param  {number} renderer_width
+ * @param  {number} renderer_height
+ * @param  {number} point_x
+ * @param  {number} point_y
  * @return {boolean}
  * @method
  * @protected
@@ -41,7 +41,7 @@ export const execute = <D extends DisplayObject>(
                 display_object as unknown as Shape, tMatrix
             );
             break;
-        
+
         case display_object.isContainerEnabled:
             // todo
             break;
@@ -81,9 +81,9 @@ export const execute = <D extends DisplayObject>(
         return null;
     }
 
-    if (point_x > xMin + width 
+    if (point_x > xMin + width
         || point_y > yMin + height
-        || xMin > renderer_width 
+        || xMin > renderer_width
         || yMin > renderer_height
     ) {
         return null;

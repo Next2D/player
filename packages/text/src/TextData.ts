@@ -14,7 +14,7 @@ export class TextData
     /**
      * @description テキストの行ごとの高さ
      *              Height of each line of text
-     * 
+     *
      * @type {array}
      * @public
      */
@@ -105,7 +105,7 @@ export class TextData
     /**
      * @description テキストエリアの高さ
      *              Height of text area
-     * 
+     *
      * @member {number}
      * @readonly
      * @public
@@ -126,7 +126,7 @@ export class TextData
     /**
      * @description 指定した行のテキストの幅
     *               Width of text for the specified line
-    * 
+    *
      * @param  {number} line_index
      * @return {number}
      * @method
@@ -140,7 +140,7 @@ export class TextData
     /**
      * @description 指定した行のテキストの高さ
      *              Height of text for the specified line
-     * 
+     *
      * @param  {number} line_index
      * @return {number}
      * @method
@@ -154,12 +154,12 @@ export class TextData
     /**
      * @description 設定を初期化
      *              Initialize settings
-     * 
+     *
      * @return {void}
      * @method
      * @public
      */
-    clear (): void 
+    clear (): void
     {
         this._$textWidth  = -1;
         this._$textHeight = -1;

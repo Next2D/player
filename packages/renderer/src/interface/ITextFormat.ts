@@ -6,10 +6,10 @@ export interface ITextFormat {
     color: number | null;
     font: string | null;
     italic: boolean | null;
-    leading: number | null;     
-    leftMargin: number | null;   
-    letterSpacing: number | null;   
-    rightMargin: number | null;   
-    size: number | null;   
-    underline: boolean | null;   
+    leading: number | null;
+    leftMargin: number | null;
+    letterSpacing: number | null;
+    rightMargin: number | null;
+    size: number | null;
+    underline: boolean | null;
 }

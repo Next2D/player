@@ -3,9 +3,9 @@ import type { TextFormat } from "../../TextFormat";
 /**
  * @description TextFormat の比較
  *              TextFormat comparison
- * 
- * @param  {TextFormat} source 
- * @param  {TextFormat} destination 
+ *
+ * @param  {TextFormat} source
+ * @param  {TextFormat} destination
  * @return {boolean}
  * @method
  * @protected

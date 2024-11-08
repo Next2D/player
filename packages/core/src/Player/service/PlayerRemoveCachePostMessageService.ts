@@ -26,7 +26,7 @@ const options: Transferable[] = [];
 /**
  * @description worker側のキャッシュキーを削除する
  *              Remove the cache key on the worker side
- * 
+ *
  * @return {void}
  * @method
  * @protected

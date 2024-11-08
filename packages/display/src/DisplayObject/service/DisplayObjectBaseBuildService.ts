@@ -11,7 +11,7 @@ import {
 /**
  * @description DisplayObjectの基本情報を設定します。
  *              Sets the basic information of the DisplayObject.
- * 
+ *
  * @param  {DisplayObject} display_object
  * @param  {object} tag
  * @param  {MovieClip} parent

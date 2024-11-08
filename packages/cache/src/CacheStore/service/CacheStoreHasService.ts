@@ -18,7 +18,7 @@ export const execute = (
     if (!key) {
         return data_store.has(unique_key);
     }
-    
+
     return !data_store.has(unique_key)
         ? false
         : (data_store.get(unique_key) as Map<string, any>).has(key);

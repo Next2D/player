@@ -5,8 +5,8 @@ import { execute as textFieldGetTextDataUseCase } from "./TextFieldGetTextDataUs
  * @description テキストフィールドの選択範囲のテキストを返却します。
  *              Returns the text of the selection in the text field.
  *
- * @param  {TextField} text_field 
- * @return {string} 
+ * @param  {TextField} text_field
+ * @return {string}
  * @method
  * @protected
  */
@@ -14,8 +14,8 @@ export const execute = (text_field: TextField): string =>
 {
     let text = "";
 
-    const minIndex: number = Math.min(text_field.focusIndex, text_field.selectIndex);
-    const maxIndex: number = Math.max(text_field.focusIndex, text_field.selectIndex) + 1;
+    const minIndex = Math.min(text_field.focusIndex, text_field.selectIndex);
+    const maxIndex = Math.max(text_field.focusIndex, text_field.selectIndex) + 1;
 
     const textData = textFieldGetTextDataUseCase(text_field);
     for (let idx = minIndex; idx < maxIndex; ++idx) {

@@ -13,7 +13,7 @@ const $Deg2Rad: number = Math.PI / 180;
 /**
  * @description DisplayObjectの回転値を設定
  *              Set DisplayObject rotation value
- * 
+ *
  * @param  {DisplayObject} display_object
  * @param  {number} rotation
  * @return {void}
@@ -30,8 +30,8 @@ export const execute = <D extends DisplayObject>(display_object: D, rotation: nu
     let matrix = display_object.$matrix;
     if (!matrix) {
         const rawData = displayObjectGetRawMatrixUseCase(display_object);
-        matrix = rawData 
-            ? new Matrix(...rawData) 
+        matrix = rawData
+            ? new Matrix(...rawData)
             : new Matrix();
     }
 
@@ -43,7 +43,7 @@ export const execute = <D extends DisplayObject>(display_object: D, rotation: nu
         matrix.c = 0;
         matrix.d = scaleY;
     } else {
-       
+
         let radianX = Math.atan2(matrix.b,  matrix.a);
         let radianY = Math.atan2(-matrix.c, matrix.d);
 
@@ -65,7 +65,7 @@ export const execute = <D extends DisplayObject>(display_object: D, rotation: nu
             matrix.d = scaleY * Math.cos(radianY);
         }
     }
-    
+
     display_object.$rotation = rotation;
     display_object.$matrix   = matrix;
     displayObjectApplyChangesService(display_object);

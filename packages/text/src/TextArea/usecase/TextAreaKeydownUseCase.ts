@@ -10,8 +10,8 @@ import { execute as textFieldArrowDownUseCase } from "../../TextField/usecase/Te
 /**
  * @description キーダウンイベントを処理します。
  *              Processes the keydown event.
- * 
- * @param  {KeyboardEvent} event 
+ *
+ * @param  {KeyboardEvent} event
  * @return {void}
  * @method
  * @protected
@@ -73,6 +73,6 @@ export const execute = (event: KeyboardEvent): void =>
 
         default:
             break;
-            
+
     }
 };

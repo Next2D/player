@@ -97,7 +97,7 @@ export class Video extends DisplayObject
     /**
      * @description ビデオが読み込まれているかどうかを返します。
      *              Returns whether the video has been loaded.
-     * 
+     *
      * @type {boolean}
      * @default false
      * @public

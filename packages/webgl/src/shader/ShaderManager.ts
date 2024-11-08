@@ -108,7 +108,7 @@ export class ShaderManager
     /**
      * @description texture uniform変数
      *              texture uniform variable
-     * 
+     *
      * @type {Int32Array | Float32Array}
      * @readonly
      * @public

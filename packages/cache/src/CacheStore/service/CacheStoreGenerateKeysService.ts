@@ -9,7 +9,7 @@
  * @method
  * @public
  */
-export const execute = (x_scale: number, y_scale: number, alpha: number): number => 
+export const execute = (x_scale: number, y_scale: number, alpha: number): number =>
 {
     let value = "";
     value += `${x_scale}`;
@@ -17,7 +17,7 @@ export const execute = (x_scale: number, y_scale: number, alpha: number): number
     if (alpha) {
         value += `${alpha}`;
     }
-    
+
     let hash = 0;
     for (let idx = 0; idx < value.length; idx++) {
 

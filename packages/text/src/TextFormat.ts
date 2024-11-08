@@ -127,7 +127,7 @@ export class TextFormat
      * @public
      */
     public underline: boolean | null;
-    
+
     /**
      * @param {string}  [font=null]
      * @param {number}  [size=null]
@@ -172,7 +172,7 @@ export class TextFormat
     /**
      * @description この TextFormat オブジェクトのコピーを作成して返します。
      *             Creates a copy of the TextFormat object and returns it.
-     * 
+     *
      * @return {next2d.text.TextFormat}
      * @method
      * @public
@@ -189,7 +189,7 @@ export class TextFormat
     /**
      * @description この TextFormat オブジェクトのプロパティをオブジェクトに変換します。
      *              Converts the properties of this TextFormat object to an object.
-     * 
+     *
      * @return {ITextFormatObject}
      * @method
      * @public

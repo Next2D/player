@@ -43,17 +43,17 @@ export class Graphics
     /**
      * @description グラフィックの確認フラグ
      *              Graphic confirmation flag
-     * 
+     *
      * @type {boolean}
      * @default false
      * @public
      */
     public isConfirmed: boolean;
-    
+
     /**
      * @description グラフィックの最小x座標
      *              Minimum x coordinate of graphic
-     * 
+     *
      * @type {number}
      * @default Number.MAX_VALUE
      * @public
@@ -63,7 +63,7 @@ export class Graphics
     /**
      * @description グラフィックの最小y座標
      *              Minimum y coordinate of graphic
-     * 
+     *
      * @type {number}
      * @default Number.MAX_VALUE
      * @public
@@ -73,7 +73,7 @@ export class Graphics
     /**
      * @description グラフィックの最大x座標
      *              Maximum x coordinate of graphic
-     * 
+     *
      * @type {number}
      * @default -Number.MAX_VALUE
      * @public
@@ -83,7 +83,7 @@ export class Graphics
     /**
      * @description グラフィックの最大y座標
      *              Maximum y coordinate of graphic
-     * 
+     *
      * @type {number}
      * @default -Number.MAX_VALUE
      * @public
@@ -93,7 +93,7 @@ export class Graphics
     /**
      * @description グラフィックのコマンド配列
      *              Graphic command array
-     * 
+     *
      * @type {array}
      * @default null
      * @public
@@ -283,7 +283,7 @@ export class Graphics
     /**
      * @description 描画コマンド、MoveToの識別番号
      *              Drawing command, MoveTo identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -296,7 +296,7 @@ export class Graphics
     /**
      * @description 描画コマンド、2次ベジェ曲線の識別番号
      *              Drawing command, 2nd Bezier curve identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -309,7 +309,7 @@ export class Graphics
     /**
      * @description 描画コマンド、直線の識別番号
      *              Drawing command, straight line identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -322,7 +322,7 @@ export class Graphics
     /**
      * @description 描画コマンド、3次ベジェ曲線の識別番号
      *              Drawing command, 3rd Bezier curve identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -335,7 +335,7 @@ export class Graphics
     /**
      * @description 描画コマンド、円弧の識別番号
      *              Drawing command, arc identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -348,7 +348,7 @@ export class Graphics
     /**
      * @description 描画コマンド、塗りの識別番号
      *              Drawing command, fill identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -361,7 +361,7 @@ export class Graphics
     /**
      * @description 描画コマンド、線の識別番号
      *              Drawing command, line identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -374,7 +374,7 @@ export class Graphics
     /**
      * @description 描画コマンド、塗りの終了の識別番号
      *              Drawing command, fill end identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -387,7 +387,7 @@ export class Graphics
     /**
      * @description 描画コマンド、線の終了の識別番号
      *              Drawing command, line end identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -400,7 +400,7 @@ export class Graphics
     /**
      * @description 描画コマンド、描画開始の識別番号
      *              Drawing command, drawing start identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -413,7 +413,7 @@ export class Graphics
     /**
      * @description 描画コマンド、塗りのグラデーション開始の識別番号
      *              Drawing command, gradient fill start identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -426,7 +426,7 @@ export class Graphics
     /**
      * @description 描画コマンド、線のグラデーション開始の識別番号
      *              Drawing command, gradient line start identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -439,7 +439,7 @@ export class Graphics
     /**
      * @description 描画コマンド、描画結合の識別番号
      *              Drawing command, drawing join identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -452,7 +452,7 @@ export class Graphics
     /**
      * @description 描画コマンド、Bitmapの塗りの識別番号
      *              Drawing command, Bitmap fill identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -465,7 +465,7 @@ export class Graphics
     /**
      * @description 描画コマンド、Bitmapの線の識別番号
      *              Drawing command, Bitmap line identification number
-     * 
+     *
      * @return {number}
      * @const
      * @static
@@ -478,7 +478,7 @@ export class Graphics
     /**
      * @description 描画コマンドが実行可能かを返却
      *              Returns whether the drawing command can be executed
-     * 
+     *
      * @type {boolean}
      * @readonly
      * @public
@@ -568,7 +568,7 @@ export class Graphics
         if (typeof color === "string") {
             color = $convertColorStringToNumber(color);
         }
-       
+
         color = $clamp(color, 0, 0xffffff, 0);
         alpha = $clamp(alpha, 0, 1, 1);
 
@@ -579,7 +579,7 @@ export class Graphics
 
         // beginPath
         this._$fills.push(Graphics.BEGIN_PATH);
-        
+
         this._$fillType = Graphics.FILL_STYLE;
 
         // Color Int 32bit(RGBA)
@@ -822,7 +822,7 @@ export class Graphics
 
         // calc bounds
         graphicsCalcBoundsUseCase(
-            this, this._$hasLineEnabled, 
+            this, this._$hasLineEnabled,
             this._$positionX, this._$positionY,
             this._$lineWidth, this._$caps,
             control_x1, control_y1,
@@ -881,7 +881,7 @@ export class Graphics
 
         // calc bounds
         graphicsCalcBoundsUseCase(
-            this, this._$hasLineEnabled, 
+            this, this._$hasLineEnabled,
             this._$positionX, this._$positionY,
             this._$lineWidth, this._$caps,
             control_x, control_y,
@@ -924,7 +924,7 @@ export class Graphics
 
         // calc bounds
         graphicsCalcBoundsUseCase(
-            this, this._$hasLineEnabled, 
+            this, this._$hasLineEnabled,
             this._$positionX, this._$positionY,
             this._$lineWidth, this._$caps,
             x - radius, y - radius,
@@ -1043,9 +1043,9 @@ export class Graphics
             case Graphics.FILL_STYLE:
                 this.$recodes.push(
                     this._$fillType,
-                    (this._$fillColor >>> 24) & 0xff,
-                    (this._$fillColor >>> 16) & 0xff,
-                    (this._$fillColor >>> 8) & 0xff,
+                    this._$fillColor >>> 24 & 0xff,
+                    this._$fillColor >>> 16 & 0xff,
+                    this._$fillColor >>> 8 & 0xff,
                     this._$fillColor & 0xff,
                     Graphics.END_FILL
                 );
@@ -1117,9 +1117,9 @@ export class Graphics
                     this._$caps,
                     this._$joints,
                     this._$miterLimit,
-                    (this._$lineColor >>> 24) & 0xff,
-                    (this._$lineColor >>> 16) & 0xff,
-                    (this._$lineColor >>> 8) & 0xff,
+                    this._$lineColor >>> 24 & 0xff,
+                    this._$lineColor >>> 16 & 0xff,
+                    this._$lineColor >>> 8 & 0xff,
                     this._$lineColor & 0xff,
                     Graphics.END_STROKE
                 );
@@ -1319,7 +1319,7 @@ export class Graphics
         if (typeof color === "string") {
             color = $convertColorStringToNumber(color);
         }
-        
+
         color = $clamp(color, 0, 0xffffff, 0);
         alpha = $clamp(alpha, 0, 1, 1);
 
@@ -1365,7 +1365,7 @@ export class Graphics
 
         // calc bounds
         graphicsCalcBoundsUseCase(
-            this, this._$hasLineEnabled, 
+            this, this._$hasLineEnabled,
             this._$positionX, this._$positionY,
             this._$lineWidth, this._$caps,
             x, y
@@ -1406,7 +1406,7 @@ export class Graphics
 
         // calc bounds
         graphicsCalcBoundsUseCase(
-            this, this._$hasLineEnabled, 
+            this, this._$hasLineEnabled,
             this._$positionX, this._$positionY,
             this._$lineWidth, this._$caps,
             x, y
@@ -1448,7 +1448,7 @@ export class Graphics
     /**
      * @description 指定のxy座標が描画範囲にヒットしてるかの判定
      *              Judges whether the specified xy coordinate hits the drawing range.
-     * 
+     *
      * @param  {CanvasRenderingContext2D} context
      * @param  {Float32Array} matrix
      * @param  {object} options
@@ -1459,7 +1459,7 @@ export class Graphics
     _$hit (
         context: CanvasRenderingContext2D,
         matrix: Float32Array,
-        options: IPlayerHitObject,
+        options: IPlayerHitObject
     ): boolean {
 
         // fixed logic

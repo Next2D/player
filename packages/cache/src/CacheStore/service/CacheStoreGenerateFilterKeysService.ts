@@ -10,10 +10,10 @@
  * @method
  * @public
  */
-export const execute = (a: number, b: number, c: number, d: number): number => 
+export const execute = (a: number, b: number, c: number, d: number): number =>
 {
     const value = `${a}${b}${c}${d}`;
-    
+
     let hash = 0;
     for (let idx = 0; idx < value.length; idx++) {
 

@@ -19,10 +19,10 @@ import { execute as videoBuildFromCharacterUseCase } from "../../Video/usecase/V
  * @description cahracterを元にDisplayObjectを構築
  *              Build DisplayObject based on character
  *
- * @param  {number} dictionary_id 
- * @param  {object} tag 
- * @param  {object} character 
- * @param  {MovieClip} parent 
+ * @param  {number} dictionary_id
+ * @param  {object} tag
+ * @param  {object} character
+ * @param  {MovieClip} parent
  * @return {DisplayObject}
  * @method
  * @protected
@@ -38,36 +38,36 @@ export const execute = (
     switch (character.extends) {
 
         case MovieClip.namespace:
-            {
-                const movieClip = new MovieClip();
-                displayObjectBaseBuildService(movieClip, dictionary_id, tag, parent, placeId);
-                movieClipBuildFromCharacterUseCase(movieClip, character as IMovieClipCharacter);
-                return movieClip as IDisplayObject<MovieClip>;
-            }
+        {
+            const movieClip = new MovieClip();
+            displayObjectBaseBuildService(movieClip, dictionary_id, tag, parent, placeId);
+            movieClipBuildFromCharacterUseCase(movieClip, character as IMovieClipCharacter);
+            return movieClip as IDisplayObject<MovieClip>;
+        }
 
         case Shape.namespace:
-            {
-                const shape = new Shape();
-                displayObjectBaseBuildService(shape, dictionary_id, tag, parent, placeId);
-                shapeBuildFromCharacterUseCase(shape, character as IShapeCharacter);
-                return shape;
-            }
+        {
+            const shape = new Shape();
+            displayObjectBaseBuildService(shape, dictionary_id, tag, parent, placeId);
+            shapeBuildFromCharacterUseCase(shape, character as IShapeCharacter);
+            return shape;
+        }
 
         case TextField.namespace:
-            {
-                const textField = new TextField();
-                displayObjectBaseBuildService(textField, dictionary_id, tag, parent, placeId);
-                textFieldBuildFromCharacterUseCase(textField, character as ITextFieldCharacter);
-                return textField;
-            }
+        {
+            const textField = new TextField();
+            displayObjectBaseBuildService(textField, dictionary_id, tag, parent, placeId);
+            textFieldBuildFromCharacterUseCase(textField, character as ITextFieldCharacter);
+            return textField;
+        }
 
         case Video.namespace:
-            {
-                const video = new Video();
-                displayObjectBaseBuildService(video, dictionary_id, tag, parent, placeId);
-                videoBuildFromCharacterUseCase(video, character as IVideoCharacter);
-                return video;
-            }
+        {
+            const video = new Video();
+            displayObjectBaseBuildService(video, dictionary_id, tag, parent, placeId);
+            videoBuildFromCharacterUseCase(video, character as IVideoCharacter);
+            return video;
+        }
 
         default:
             break;

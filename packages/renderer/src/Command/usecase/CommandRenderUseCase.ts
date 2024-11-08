@@ -6,7 +6,7 @@ import {
     $context,
     $isResize,
     $resizeComplete
-} from "../../RendererUtil"; 
+} from "../../RendererUtil";
 
 /**
  * @type {number}
@@ -17,7 +17,7 @@ let $color: number = -1;
 /**
  * @description 描画コマンドから描画を実行
  *              Execute drawing from drawing command
- * 
+ *
  * @param  {Float32Array} render_queue
  * @param  {ImageBitmap[]} [image_bitmaps=null]
  * @return {void}

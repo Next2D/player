@@ -26,10 +26,10 @@ import { MovieClip } from "../../MovieClip";
 /**
  * @description renderer workerに渡すShapeの描画データを生成
  *              Generate drawing data of Shape to pass to renderer
- * 
+ *
  * @param  {Shape} shape
  * @param  {array} render_queue
- * @param  {Float32Array} matrix 
+ * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
  * @param  {number} renderer_height
@@ -64,10 +64,10 @@ export const execute = (
 
     // transformed ColorTransform(tColorTransform)
     const rawColor = displayObjectGetRawColorTransformUseCase(shape);
-    const tColorTransform = rawColor 
+    const tColorTransform = rawColor
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
-    
+
     const alpha = $clamp(tColorTransform[3] + tColorTransform[7] / 255, 0, 1, 0);
     if (!alpha) {
         if (tColorTransform !== color_transform) {
@@ -86,7 +86,7 @@ export const execute = (
     // draw graphics
     const rawBounds = shapeGetRawBoundsService(shape);
     const bounds = displayObjectCalcBoundsMatrixService(
-        rawBounds[0], rawBounds[1], 
+        rawBounds[0], rawBounds[1],
         rawBounds[2], rawBounds[3],
         tMatrix
     );
@@ -122,9 +122,9 @@ export const execute = (
 
     }
 
-    if (point_x > xMin + width 
+    if (point_x > xMin + width
         || point_y > yMin + height
-        || xMin > renderer_width 
+        || xMin > renderer_width
         || yMin > renderer_height
     ) {
         if (tColorTransform !== color_transform) {
@@ -157,7 +157,7 @@ export const execute = (
 
     if (!shape.uniqueKey) {
         if (shape.characterId && shape.loaderInfo) {
-            
+
             const values = $getArray(
                 shape.loaderInfo.id,
                 shape.characterId
@@ -174,7 +174,7 @@ export const execute = (
 
         } else {
 
-            shape.uniqueKey = shape.isBitmap 
+            shape.uniqueKey = shape.isBitmap
                 ? `${shape.instanceId}`
                 : `${shapeGenerateHashService(graphics.buffer)}`;
 
@@ -182,7 +182,7 @@ export const execute = (
     }
 
     render_queue.push(+shape.uniqueKey);
-    
+
     let xScale: number = Math.sqrt(
         tMatrix[0] * tMatrix[0]
         + tMatrix[1] * tMatrix[1]
@@ -209,7 +209,7 @@ export const execute = (
         yScale = +yScale.toFixed(4);
     }
 
-    if (!shape.isBitmap 
+    if (!shape.isBitmap
         && !shape.cacheKey
         || shape.cacheParams[0] !== xScale
         || shape.cacheParams[1] !== yScale
@@ -220,7 +220,7 @@ export const execute = (
         shape.cacheParams[1] = yScale;
         shape.cacheParams[2] = tColorTransform[7];
     }
-    
+
     const cacheKey = shape.isBitmap
         ? 0
         : shape.cacheKey;
@@ -234,13 +234,13 @@ export const execute = (
         if (isGridEnabled) {
 
             const scale = $stage.rendererScale;
-            
+
             const stageMatrix = $getFloat32Array6(
                 scale, 0, 0, scale, 0, 0
             );
 
             const pMatrix = Matrix.multiply(
-                stageMatrix, 
+                stageMatrix,
                 rawMatrix ? rawMatrix : $MATRIX_ARRAY_IDENTITY
             );
             $poolFloat32Array6(stageMatrix);
@@ -259,7 +259,7 @@ export const execute = (
             $poolFloat32Array6(apMatrix);
 
             const parentBounds = displayObjectCalcBoundsMatrixService(
-                graphics.xMin, graphics.yMin, 
+                graphics.xMin, graphics.yMin,
                 graphics.xMax, graphics.yMax,
                 pMatrix
             );
@@ -283,7 +283,7 @@ export const execute = (
             const minYST = scale9Grid.height > 0 ? (scale9Grid.y - graphics.yMin) / actualHeight : 0.00001;
             const maxXST = scale9Grid.width  > 0 ? (scale9Grid.x + scale9Grid.width  - graphics.xMin) / actualWidth  : 0.99999;
             const maxYST = scale9Grid.height > 0 ? (scale9Grid.y + scale9Grid.height - graphics.yMin) / actualHeight : 0.99999;
-    
+
             // 現在サイズでの正規化
             const sameWidth  = Math.ceil(actualWidth  * scale);
             const sameHeight = Math.ceil(actualHeight * scale);
@@ -297,7 +297,7 @@ export const execute = (
                 minXPQ = Math.max(m - 0.00001, 0);
                 maxXPQ = Math.min(m + 0.00001, 1);
             }
-    
+
             if (minYPQ >= maxYPQ) {
                 const m = minYST / (minYST + (1 - maxYST));
                 minYPQ = Math.max(m - 0.00001, 0);
@@ -318,7 +318,7 @@ export const execute = (
 
         const buffer = isDrawable || isGridEnabled
             ? graphics.buffer
-            : shape.$bitmapBuffer as Uint8Array
+            : shape.$bitmapBuffer as Uint8Array;
 
         render_queue.push(buffer.length);
         for (let idx = 0; idx < buffer.length; idx += 4096) {

@@ -19,7 +19,7 @@ export const execute = async (array_buffer: ArrayBuffer): Promise<AudioBuffer | 
 
         return await $getAudioContext().decodeAudioData(array_buffer);
 
-    } catch (error) {
+    } catch (error: unknown) {
 
         const buffer = new Uint8Array(array_buffer);
         let idx = 0;

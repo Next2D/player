@@ -1,8 +1,4 @@
-import type {
-    Matrix,
-    ColorTransform
-} from "@next2d/geom";
-import type { DisplayObject } from "./DisplayObject";
+
 import { $getInstanceId } from "./DisplayObjectUtil";
 import { $cacheStore } from "@next2d/cache";
 
@@ -23,13 +19,13 @@ export class BitmapData
     /**
      * @description DisplayObject のユニークなインスタンスID
      *              Unique instance ID of DisplayObject
-     * 
+     *
      * @type {number}
      * @readonly
      * @public
      */
     public readonly instanceId: number;
-    
+
     /**
      * @description ビットマップイメージの幅（ピクセル単位）です。
      *              The width of the bitmap image in pixels.
@@ -215,25 +211,25 @@ export class BitmapData
         return bitmapData;
     }
 
-    /**
-     * @description 指定された DisplayObject を指定のcanvasに描画します。
-     *              Draws the specified DisplayObject to the specified canvas.
-     * 
-     * @param  {DisplayObject}     source
-     * @param  {Matrix}            [matrix=null]
-     * @param  {ColorTransform}    [color_transform=null]
-     * @param  {HTMLCanvasElement} [canvas=null]
-     * @param  {function}          [callback=null]
-     * @return {void}
-     * @public
-     */
-    drawToCanvas <D extends DisplayObject>(
-        source: D,
-        matrix: Matrix | null = null,
-        color_transform: ColorTransform | null = null,
-        canvas: HTMLCanvasElement | null = null,
-        callback: Function | null = null
-    ): void {
-        // todo
-    }
+    // /**
+    //  * @description 指定された DisplayObject を指定のcanvasに描画します。
+    //  *              Draws the specified DisplayObject to the specified canvas.
+    //  *
+    //  * @param  {DisplayObject}     source
+    //  * @param  {Matrix}            [matrix=null]
+    //  * @param  {ColorTransform}    [color_transform=null]
+    //  * @param  {HTMLCanvasElement} [canvas=null]
+    //  * @param  {function}          [callback=null]
+    //  * @return {void}
+    //  * @public
+    //  */
+    // drawToCanvas <D extends DisplayObject>(
+    //     source: D,
+    //     matrix: Matrix | null = null,
+    //     color_transform: ColorTransform | null = null,
+    //     canvas: HTMLCanvasElement | null = null,
+    //     callback: Function | null = null
+    // ): void {
+    //     // todo
+    // }
 }

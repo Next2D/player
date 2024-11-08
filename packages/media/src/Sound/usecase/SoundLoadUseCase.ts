@@ -43,4 +43,4 @@ export const execute = async (sound: Sound, request: URLRequest): Promise<void> 
             }
         });
     });
-}
+};

@@ -10,10 +10,10 @@ import {
  * @description 現在のアタッチメントオブジェクトから指定の範囲のtextureを取得します。
  *              Get a texture from the specified range of the current attachment object.
  *
- * @param  {number} x 
- * @param  {number} y 
- * @param  {number} width 
- * @param  {number} height 
+ * @param  {number} x
+ * @param  {number} y
+ * @param  {number} width
+ * @param  {number} height
  * @return {IAttachmentObject}
  * @method
  * @protected
@@ -22,9 +22,9 @@ export const execute = (
     x: number,
     y: number,
     width: number,
-    height: number,
+    height: number
 ): ITextureObject => {
-    
+
     const drawBitmapFrameBuffer = $getDrawBitmapFrameBuffer();
     $gl.bindFramebuffer($gl.FRAMEBUFFER, drawBitmapFrameBuffer);
 
@@ -37,7 +37,7 @@ export const execute = (
     $gl.bindFramebuffer($gl.FRAMEBUFFER, null);
     $gl.bindFramebuffer($gl.READ_FRAMEBUFFER, $readFrameBuffer);
     $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, drawBitmapFrameBuffer);
-    
+
     // execute
     $gl.blitFramebuffer(
         x, y, x + width, y + height,

@@ -1,4 +1,3 @@
-import type { IBounds } from "../../interface/IBounds";
 import type { Video } from "../../Video";
 
 /**

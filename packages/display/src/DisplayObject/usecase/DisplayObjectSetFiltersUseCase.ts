@@ -5,7 +5,7 @@ import { execute as displayObjectApplyChangesService } from "../service/DisplayO
 /**
  * @description DisplayObjectにフィルタを設定
  *              Set a filter to the DisplayObject.
- * 
+ *
  * @param  {DisplayObject} display_object
  * @param  {IFilterArray | null} filters
  * @return {void}

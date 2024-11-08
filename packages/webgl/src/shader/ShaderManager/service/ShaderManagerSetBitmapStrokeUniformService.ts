@@ -112,7 +112,7 @@ export const execute = (
         // vertex: u_offset
         highp[52] = $gridData[24];
         highp[53] = $gridData[25];
-        
+
         index += 56;
     }
     let face: number = Math.sign(matrix[0] * matrix[4]);

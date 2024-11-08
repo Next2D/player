@@ -6,7 +6,7 @@ import { execute as textFieldApplyChangesService } from "../service/TextFieldApp
 /**
  * @description 指定したテキストフィールドのテキストデータをリセットします。
  *              Resets the text data in the specified text field.
- * 
+ *
  * @param  {TextField} text_field
  * @return {void}
  * @method

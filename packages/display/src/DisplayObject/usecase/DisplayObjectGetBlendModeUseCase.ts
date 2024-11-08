@@ -5,7 +5,7 @@ import { execute as displayObjectGetPlaceObjectService } from "../service/Displa
 /**
  * @description DisplayObjectのブレンドモードを返却
  *              Returns the blend mode of the DisplayObject
- * 
+ *
  * @param  {DisplayObject} display_object
  * @return {IBlendMode}
  * @method
@@ -18,7 +18,7 @@ export const execute = <D extends DisplayObject>(display_object: D): IBlendMode 
     }
 
     const placeObject = displayObjectGetPlaceObjectService(display_object);
-    return placeObject && placeObject.blendMode 
+    return placeObject && placeObject.blendMode
         ? placeObject.blendMode
         : "normal";
 };

@@ -2,9 +2,9 @@
 
 "use strict";
 
-const fs   = require("fs");
-const path = require("path");
-const cp   = require("child_process");
+import { readdirSync, statSync, existsSync, rmdirSync, cpSync, unlinkSync } from "fs";
+import { join } from "path";
+import { spawn } from "child_process";
 
 const execute = () =>
 {
@@ -12,25 +12,25 @@ const execute = () =>
     const configPath = `${process.cwd()}/config/tsconfig.json`;
     const dirPath = `${process.cwd()}/src/`;
 
-    const files = fs.readdirSync(dirPath);
+    const files = readdirSync(dirPath);
 
     const dirList = files.filter((file) =>
     {
-        return fs.statSync(path.join(dirPath, file)).isDirectory();
+        return statSync(join(dirPath, file)).isDirectory();
     });
 
     for (let idx = 0; idx < dirList.length; ++idx) {
 
         const dirName = dirList[idx];
 
-        const targetDirPath = path.join(dirPath, dirName);
+        const targetDirPath = join(dirPath, dirName);
 
-        const nodeModulesPath = path.join(targetDirPath, "node_modules");
-        if (fs.existsSync(nodeModulesPath)) {
-            fs.rmdirSync(nodeModulesPath, { "recursive": true });
+        const nodeModulesPath = join(targetDirPath, "node_modules");
+        if (existsSync(nodeModulesPath)) {
+            rmdirSync(nodeModulesPath, { "recursive": true });
         }
 
-        const stream = cp.spawn("npm", [
+        const stream = spawn("npm", [
             "--prefix",
             targetDirPath,
             "install",
@@ -40,13 +40,13 @@ const execute = () =>
         // eslint-disable-next-line no-loop-func
         stream.on("exit", () =>
         {
-            const targetConfigPath = path.join(targetDirPath, "tsconfig.json");
+            const targetConfigPath = join(targetDirPath, "tsconfig.json");
 
             console.log("copy tsconfig.json: ", targetConfigPath);
-            fs.cpSync(configPath, targetConfigPath);
+            cpSync(configPath, targetConfigPath);
 
             console.log("start tsc");
-            const stream = cp.spawn("npx", [
+            const stream = spawn("npx", [
                 "tsc",
                 "--project",
                 targetConfigPath
@@ -56,10 +56,10 @@ const execute = () =>
             stream.on("exit", () =>
             {
                 console.log("end tsc");
-                fs.unlinkSync(targetConfigPath);
+                unlinkSync(targetConfigPath);
             });
 
-            fs.unlinkSync(targetConfigPath);
+            unlinkSync(targetConfigPath);
         });
     }
 };

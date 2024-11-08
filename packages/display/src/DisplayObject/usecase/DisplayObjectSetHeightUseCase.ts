@@ -4,10 +4,10 @@ import { execute as displayObjectSetScaleYUseCase } from "./DisplayObjectSetScal
 
 /**
  * @description DisplayObjectの高さを設定します
- * 　　　　　　　　Sets the height of the DisplayObject
+ *              Sets the height of the DisplayObject
  *
- * @param  {DisplayObject} display_object 
- * @param  {number} height 
+ * @param  {DisplayObject} display_object
+ * @param  {number} height
  * @return {void}
  * @method
  * @protected

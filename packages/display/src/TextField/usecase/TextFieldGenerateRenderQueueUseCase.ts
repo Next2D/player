@@ -25,10 +25,10 @@ const $textEncoder: TextEncoder = new TextEncoder();
 /**
  * @description renderer workerに渡すTextFieldの描画データを生成
  *              Generate drawing data of TextField to pass to renderer
- * 
+ *
  * @param  {TextField} text_field
  * @param  {array} render_queue
- * @param  {Float32Array} matrix 
+ * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
  * @param  {number} renderer_height
@@ -56,10 +56,10 @@ export const execute = (
 
     // transformed ColorTransform(tColorTransform)
     const rawColor = displayObjectGetRawColorTransformUseCase(text_field);
-    const tColorTransform = rawColor 
+    const tColorTransform = rawColor
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
-    
+
     const alpha = $clamp(tColorTransform[3] + tColorTransform[7] / 255, 0, 1, 0);
     if (!alpha) {
         if (tColorTransform !== color_transform) {
@@ -78,7 +78,7 @@ export const execute = (
     // draw text
     const rawBounds = textFieldGetRawBoundsService(text_field);
     const bounds = displayObjectCalcBoundsMatrixService(
-        rawBounds[0], rawBounds[1], 
+        rawBounds[0], rawBounds[1],
         rawBounds[2], rawBounds[3],
         tMatrix
     );
@@ -115,9 +115,9 @@ export const execute = (
 
     }
 
-    if (point_x > xMin + width 
+    if (point_x > xMin + width
         || point_y > yMin + height
-        || xMin > renderer_width 
+        || xMin > renderer_width
         || yMin > renderer_height
     ) {
         if (tColorTransform !== color_transform) {
@@ -143,7 +143,7 @@ export const execute = (
 
     if (!text_field.uniqueKey) {
         if (text_field.characterId && text_field.loaderInfo) {
-            
+
             const values = $getArray(
                 text_field.loaderInfo.id,
                 text_field.characterId
@@ -193,7 +193,7 @@ export const execute = (
         yScale = +yScale.toFixed(4);
     }
 
-    if (text_field.changed 
+    if (text_field.changed
         && !text_field.cacheKey
         || text_field.cacheParams[0] !== xScale
         || text_field.cacheParams[1] !== yScale
@@ -218,7 +218,7 @@ export const execute = (
         render_queue.push(+cache);
 
         const buffer = $textEncoder.encode(JSON.stringify(text_field.$textData));
-        
+
         render_queue.push(buffer.length);
         for (let idx = 0; idx < buffer.length; idx += 4096) {
             render_queue.push(...buffer.slice(idx, idx + 4096));
@@ -244,7 +244,7 @@ export const execute = (
                 break;
 
         }
-        
+
         render_queue.push(text_field.stopIndex);
         render_queue.push(text_field.scrollX);
         render_queue.push(text_field.scrollY);
@@ -300,4 +300,4 @@ export const execute = (
     if (tMatrix !== matrix) {
         Matrix.release(tMatrix);
     }
-}
+};

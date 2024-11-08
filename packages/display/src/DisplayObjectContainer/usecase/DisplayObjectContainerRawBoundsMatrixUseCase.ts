@@ -14,9 +14,9 @@ import {
 /**
  * @description DisplayObjectContainerのmatrixを含まないバウンディングボックスを返却
  *              Returns a bounding box that does not include the matrix of the DisplayObjectContainer
- * 
+ *
  * @param  {DisplayObjectContainer} display_object_container
- * @return {number[]} 
+ * @return {number[]}
  * @method
  * @protected
  */
@@ -41,7 +41,7 @@ export const execute = <C extends DisplayObjectContainer>(display_object_contain
 
         let bounds: number[] | null = null;
         switch (true) {
-            
+
             case child.isContainerEnabled:
                 bounds = execute(child as DisplayObjectContainer);
                 break;

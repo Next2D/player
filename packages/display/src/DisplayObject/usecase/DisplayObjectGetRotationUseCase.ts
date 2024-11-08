@@ -4,7 +4,7 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../usecase/DisplayO
 /**
  * @description ラジアンから度に変換するための定数
  *              Constant for converting radians to degrees
- * 
+ *
  * @type {number}
  */
 const $Rad2Deg: number = 180 / Math.PI;
@@ -12,8 +12,8 @@ const $Rad2Deg: number = 180 / Math.PI;
 /**
  * @description DisplayObjectの回転角度を返却
  *              Returns the rotation angle of the DisplayObject
- * 
- * @param  {DisplayObject} display_object 
+ *
+ * @param  {DisplayObject} display_object
  * @return {number}
  * @method
  * @protected
