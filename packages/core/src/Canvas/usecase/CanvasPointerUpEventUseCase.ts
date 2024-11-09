@@ -1,4 +1,3 @@
-import { $player } from "../../Player";
 import { $setEvent } from "@next2d/display";
 import { execute as playerHitTestUseCase } from "../../Player/usecase/PlayerHitTestUseCase";
 import { execute as playerSetCurrentMousePoint } from "../../Player/service/PlayerSetCurrentMousePoint";
@@ -29,5 +28,5 @@ export const execute = (event: PointerEvent): void =>
     playerSetCurrentMousePoint(event);
 
     // start position
-    playerHitTestUseCase($player, event);
+    playerHitTestUseCase(event);
 };

@@ -1,5 +1,6 @@
-import type { Player } from "../../Player";
 import type { IPlayerHitObject } from "../../interface/IPlayerHitObject";
+import { $player } from "../../Player";
+import { $canvas } from "../../Canvas";
 import { $stage } from "@next2d/display";
 import {
     $PREFIX,
@@ -28,15 +29,14 @@ const $hitObject: IPlayerHitObject = {
  * @description Playerの当たり判定
  *              Player hit test
  *
- * @param  {Player} player
  * @param  {PointerEvent} event
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (player: Player, event: PointerEvent): void =>
+export const execute = (event: PointerEvent): void =>
 {
-    if (!player.stopFlag) {
+    if (!$player.stopFlag) {
         return ;
     }
 
@@ -56,22 +56,26 @@ export const execute = (player: Player, event: PointerEvent): void =>
     let pageY = event.pageY;
 
     // drop point
-    const scale  = player.rendererScale / $devicePixelRatio;
+    const scale  = $player.rendererScale / $devicePixelRatio;
     const stageX = (pageX - x) / scale;
     const stageY = (pageY - y) / scale;
 
     // reset
-    $hitContext.setTransform(1, 0, 0, 1, 0, 0);
     $hitContext.beginPath();
+    $hitContext.setTransform(1, 0, 0, 1, 0, 0);
 
-    $hitObject.x = 0;
-    $hitObject.y = 0;
-    $hitObject.pointer = "";
+    $hitObject.x = stageX;
+    $hitObject.y = stageY;
+    $hitObject.pointer = "auto";
     $hitObject.hit = null;
 
     // hit test
-    $matrix[4] = (player.rendererWidth  - $stage.stageWidth  * player.rendererScale) / 2;
-    $matrix[5] = (player.rendererHeight - $stage.stageHeight * player.rendererScale) / 2;
+
+    $matrix[4] = ($player.rendererWidth  - $stage.stageWidth  * $player.rendererScale) / 2;
+    $matrix[5] = ($player.rendererHeight - $stage.stageHeight * $player.rendererScale) / 2;
 
     $stage.$mouseHit($hitContext, $matrix, $hitObject);
+
+    console.log($hitObject.pointer);
+    $canvas.style.cursor = $hitObject.pointer;
 };

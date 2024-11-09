@@ -24,6 +24,16 @@ export class InteractiveObject extends DisplayObject
     public mouseEnabled: boolean;
 
     /**
+     * @description InteractiveObject の機能を所持しているかを返却
+     *              Returns whether InteractiveObject functions are possessed.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isInteractive: boolean;
+
+    /**
      * @constructor
      * @public
      */
@@ -31,6 +41,7 @@ export class InteractiveObject extends DisplayObject
     {
         super();
 
-        this.mouseEnabled = true;
+        this.isInteractive = true;
+        this.mouseEnabled  = true;
     }
 }

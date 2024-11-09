@@ -7,7 +7,7 @@ import { Graphics } from "../../Graphics";
  *
  * @param  {CanvasRenderingContext2D} context
  * @param  {array} recodes
- * @param  {object} options
+ * @param  {IPlayerHitObject} hit_object
  * @return {boolean}
  * @method
  * @protected
@@ -15,10 +15,10 @@ import { Graphics } from "../../Graphics";
 export const execute = (
     context: CanvasRenderingContext2D,
     recodes: any[],
-    options: IPlayerHitObject
+    hit_object: IPlayerHitObject
 ): boolean => {
 
-    for (let idx: number = 0; idx < recodes.length; ) {
+    for (let idx = 0; idx < recodes.length; ) {
 
         switch (recodes[idx++]) {
 
@@ -46,7 +46,7 @@ export const execute = (
                 continue;
 
             case Graphics.END_FILL:
-                if (context.isPointInPath(options.x, options.y)) {
+                if (context.isPointInPath(hit_object.x, hit_object.y)) {
                     return true;
                 }
                 break;
@@ -56,7 +56,7 @@ export const execute = (
                 continue;
 
             case Graphics.END_STROKE:
-                if (context.isPointInStroke(options.x, options.y)) {
+                if (context.isPointInStroke(hit_object.x, hit_object.y)) {
                     return true;
                 }
                 break;
@@ -81,28 +81,28 @@ export const execute = (
                 break;
 
             case Graphics.GRADIENT_FILL:
-                if (context.isPointInPath(options.x, options.y)) {
+                if (context.isPointInPath(hit_object.x, hit_object.y)) {
                     return true;
                 }
                 idx += 6;
                 continue;
 
             case Graphics.GRADIENT_STROKE:
-                if (context.isPointInStroke(options.x, options.y)) {
+                if (context.isPointInStroke(hit_object.x, hit_object.y)) {
                     return true;
                 }
                 idx += 12;
                 continue;
 
             case Graphics.BITMAP_FILL:
-                if (context.isPointInPath(options.x, options.y)) {
+                if (context.isPointInPath(hit_object.x, hit_object.y)) {
                     return true;
                 }
                 idx += 6;
                 continue;
 
             case Graphics.BITMAP_STROKE:
-                if (context.isPointInStroke(options.x, options.y)) {
+                if (context.isPointInStroke(hit_object.x, hit_object.y)) {
                     return true;
                 }
                 idx += 9;

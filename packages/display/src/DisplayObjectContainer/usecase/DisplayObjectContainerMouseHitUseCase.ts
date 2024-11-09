@@ -1,10 +1,17 @@
 import type { IPlayerHitObject } from "../../interface/IPlayerHitObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { DisplayObject } from "../../DisplayObject";
+import type { Shape } from "../../Shape";
+import type { Sprite } from "../../Sprite";
+import type { InteractiveObject } from "../../InteractiveObject";
 import type { TextField } from "@next2d/text";
+import type { Video } from "@next2d/media";
 import { Matrix } from "@next2d/geom";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as displayObjectConcatenatedMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectConcatenatedMatrixUseCase";
+import { execute as shapeHitTestUseCase } from "../../Shape/usecase/ShapeHitTestUseCase";
+import { execute as textFieldHitTestUseCase } from "../../TextField/usecase/TextFieldHitTestUseCase";
+import { execute as videoHitTestUseCase } from "../../Video/usecase/VideoHitTestUseCase";
 import {
     $getArray,
     $poolArray,
@@ -33,16 +40,15 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     mouse_children: boolean = true
 ): boolean => {
 
-    const rawMatrix = displayObjectGetRawMatrixUseCase(display_object_container);
-    const tMatrix = rawMatrix
-        ? Matrix.multiply(matrix, rawMatrix)
-        : matrix;
-    
-
     const children = display_object_container.children as D[];
     if (!children.length) {
         return false;
     }
+
+    const rawMatrix = displayObjectGetRawMatrixUseCase(display_object_container);
+    const tMatrix = rawMatrix
+        ? Matrix.multiply(matrix, rawMatrix)
+        : matrix;
 
     // mask set
     const clips: D[]   = $getArray();
@@ -54,8 +60,11 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     for (let idx = 0; idx < children.length; ++idx) {
 
         const instance = children[idx];
+        if (!instance) {
+            continue;
+        }
 
-        if (!instance.visible) {
+        if (instance.isMask) {
             continue;
         }
 
@@ -63,6 +72,11 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
             clipIdx   = clips.length;
             clipDepth = instance.clipDepth;
             clips.push(instance);
+            continue;
+        }
+
+        // fixed logic
+        if (!instance.visible) {
             continue;
         }
 
@@ -80,7 +94,6 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         targets.push(instance);
     }
 
-
     const mouseChildren = display_object_container.mouseChildren && mouse_children;
 
     let hit = false;
@@ -96,16 +109,16 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         }
 
         // mask target
-        if (clipIndexes.has(instance.instanceId)) {
+        // if (clipIndexes.has(instance.instanceId)) {
 
-            const index = clipIndexes.get(instance.instanceId) as number;
+        //     const index = clipIndexes.get(instance.instanceId) as number;
 
-            const clip = clips[index];
-            if (!clip._$hit(hit_context, tMatrix, hit_object, true)) {
-                continue;
-            }
+        //     const clip = clips[index];
+        //     if (!clip._$hit(hit_context, tMatrix, hit_object, true)) {
+        //         continue;
+        //     }
 
-        }
+        // }
 
         // mask hit test
         const maskInstance = instance.mask;
@@ -128,54 +141,87 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
 
         }
 
-        if (instance._$mouseHit(context, multiMatrix, options, mouseChildren)) {
+        let hitTest = false;
+        switch (true) {
 
-            if (instance.root === instance) {
-                return true;
-            }
+            case instance.isContainerEnabled:
+                hitTest = execute(
+                    instance as unknown as DisplayObjectContainer, 
+                    hit_context, tMatrix, hit_object, mouseChildren
+                );
+                break;
 
-            if (!mouseChildren) {
-                return true;
-            }
+            case instance.isShape:
+                hitTest = shapeHitTestUseCase(
+                    instance as unknown as Shape, 
+                    hit_context, tMatrix, hit_object
+                );
+                break;
 
-            hit = true;
-            if (instance instanceof InteractiveObject) {
+            case instance.isText:
+                hitTest = textFieldHitTestUseCase(
+                    instance as unknown as TextField, 
+                    hit_context, tMatrix, hit_object
+                );
+                break;
 
-                if (!instance.mouseEnabled) {
-                    continue;
-                }
+            case instance.isVideo:
+                hitTest = videoHitTestUseCase(
+                    instance as unknown as Video, 
+                    hit_context, tMatrix, hit_object
+                );
+                break;
 
-                if (!hit_object.pointer) {
+            default:
+                break;
+            
+        }
 
-                    if (instance.isText
-                        && (instance as unknown as TextField).type === "input"
-                    ) {
+        if (!hitTest) {
+            continue;
+        }
+
+        hit = true;
+        if (!mouseChildren) {
+            break;
+        }
+
+        if (instance.isInteractive 
+            && !(instance as unknown as InteractiveObject).mouseEnabled
+        ) {
+            continue;
+        }
+
+        if (hit_object.pointer === "auto") {
+
+            switch (true) {
+
+                case instance.isText:
+                    if ((instance as unknown as TextField).type === "input") {
                         hit_object.pointer = "text";
                     }
+                    break;
 
-                    if ("buttonMode" in instance
-                        && "useHandCursor" in instance
-                        && instance.buttonMode
-                        && instance.useHandCursor
+                case instance.isSprite:
+                    if ((instance as unknown as Sprite).buttonMode
+                        && (instance as unknown as Sprite).useHandCursor
                     ) {
                         hit_object.pointer = "pointer";
                     }
+                    break;
 
-                }
+                default:
+                    hit_object.pointer = "pointer";
+                    break;
 
-                if (!hit_object.hit) {
-
-                    hit_object.hit = !instance.mouseEnabled && instance._$hitObject
-                        ? instance._$hitObject
-                        : instance;
-
-                }
-
-                return true;
             }
-
         }
 
+        if (!hit_object.hit) {
+            hit_object.hit = instance;
+        }
+
+        break;
     }
 
     // pool
@@ -187,6 +233,5 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         Matrix.release(tMatrix);
     }
 
-    // not found
     return hit;
 };

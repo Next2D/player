@@ -93,6 +93,16 @@ export class DisplayObject extends EventDispatcher
     public readonly isSprite: boolean;
 
     /**
+     * @description InteractiveObject の機能を所持しているかを返却
+     *              Returns whether InteractiveObject functions are possessed.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isInteractive: boolean;
+
+    /**
      * @description コンテナの機能を所持しているかを返却
      *              Returns whether the display object has container functionality.
      *
@@ -399,6 +409,7 @@ export class DisplayObject extends EventDispatcher
         this.isShape            = false;
         this.isVideo            = false;
         this.isText             = false;
+        this.isInteractive      = false;
 
         // PlaceObject
         this.placeId       = -1;
