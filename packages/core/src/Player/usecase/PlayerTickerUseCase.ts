@@ -30,9 +30,11 @@ export const execute = (player: Player, timestamp: number): void =>
             playerRemoveCachePostMessageService();
         }
 
-        // 描画情報をworkerに送る
         if ($stage.changed) {
+            // 描画情報をworkerに送る
             playerRenderingPostMessageService();
+
+            // todo sound
         }
 
         // pointer check

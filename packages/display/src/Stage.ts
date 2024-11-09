@@ -1,8 +1,10 @@
 import type { DisplayObject } from "./DisplayObject";
+import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { execute as stageReadyUseCase } from "./Stage/usecase/StageReadyUseCase";
 import { execute as displayObjectContainerGenerateRenderQueueUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerGenerateRenderQueueUseCase";
 import { execute as stageTickerUseCase } from "./Stage/usecase/StageTickerUseCase";
+import { execute as displayObjectContainerMouseHitUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerMouseHitUseCase";
 import {
     $rootMap,
     $stageAssignedMap
@@ -209,9 +211,9 @@ export class Stage extends DisplayObjectContainer
      * @param  {Float32Array} matrix
      * @return {void}
      * @method
-     * @private
+     * @protected
      */
-    _$generateRenderQueue (
+    $generateRenderQueue (
         render_queue: number[],
         image_bitmaps: Array<Promise<ImageBitmap>>,
         matrix: Float32Array
@@ -228,6 +230,27 @@ export class Stage extends DisplayObjectContainer
         );
 
         this.changed = false;
+    }
+
+    /**
+     * @description タップポイントの当たり判定
+     *              Hit test of tap point
+     * 
+     * @param  {CanvasRenderingContext2D} hit_context
+     * @param  {Float32Array} matrix
+     * @param  {IPlayerHitObject} hit_object
+     * @return {void}
+     * @method
+     * @protected
+     */
+    $mouseHit (
+        hit_context: CanvasRenderingContext2D,
+        matrix: Float32Array,
+        hit_object: IPlayerHitObject
+    ): void {
+        displayObjectContainerMouseHitUseCase(
+            this, hit_context, matrix, hit_object, true
+        );
     }
 }
 

@@ -83,6 +83,16 @@ export class DisplayObject extends EventDispatcher
     public dictionaryId: number;
 
     /**
+     * @description Spriteの機能を所持しているかを返却
+     *              Returns whether Sprite functions are possessed.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isSprite: boolean;
+
+    /**
      * @description コンテナの機能を所持しているかを返却
      *              Returns whether the display object has container functionality.
      *
@@ -346,14 +356,29 @@ export class DisplayObject extends EventDispatcher
      *
      * @type {Map<any, any>}
      * @default null
-     * @protected
+     * @private
      */
-    protected _$variables: Map<any, any> | null;
+    private _$variables: Map<any, any> | null;
 
-    // todo
-    protected _$isMask: boolean;
-    protected _$hitObject: Sprite | null;
-    protected _$mask: IDisplayObject<any> | null;
+    /**
+     * @description セットされてるDisplayObjectがマスクとして使用されます。
+     *              The DisplayObject set is used as a mask.
+     * 
+     * @type {IDisplayObject<any>|null}
+     * @default null
+     * @private
+     */
+    private _$mask: IDisplayObject<any> | null;
+
+    /**
+     * @description マスクとしてDisplayObjectにセットされているかを示します。
+     *              Indicates whether the DisplayObject is set as a mask.
+     * 
+     * @type {boolean}
+     * @default false
+     * @private
+     */
+    public isMask: boolean;
 
     /**
      * @constructor
@@ -368,6 +393,7 @@ export class DisplayObject extends EventDispatcher
         this.uniqueKey    = "";
 
         // 各小クラスの機能を所持しているか
+        this.isSprite           = false;
         this.isContainerEnabled = false;
         this.isTimelineEnabled  = false;
         this.isShape            = false;
@@ -386,6 +412,7 @@ export class DisplayObject extends EventDispatcher
         this.endFrame    = 0;
 
         // フラグ
+        this.isMask        = false;
         this.changed       = true;
         this.$added        = false;
         this.$addedToStage = false;
@@ -395,9 +422,6 @@ export class DisplayObject extends EventDispatcher
         this.$colorTransform = null;
         this.$filters        = null;
         this.$blendMode      = null;
-
-        this._$hitObject = null;
-        this._$isMask    = false;
 
         this._$visible    = true;
         this._$mask       = null;
@@ -520,50 +544,39 @@ export class DisplayObject extends EventDispatcher
      * @member {DisplayObject|null}
      * @public
      */
-    // get mask (): DisplayObjectImpl<any> | null
-    // {
-    //     return this._$mask;
-    // }
-    // set mask (mask: DisplayObjectImpl<any> | null)
-    // {
-    //     if (mask === this._$mask) {
-    //         return ;
-    //     }
+    get mask (): IDisplayObject<any> | null
+    {
+        return this._$mask;
+    }
+    set mask (mask: IDisplayObject<any> | null)
+    {
+        if (mask === this._$mask) {
+            return ;
+        }
 
-    //     // reset
-    //     if (this._$mask) {
-    //         if ($rendererWorker && this._$mask.stage) {
-    //             this._$mask._$removeWorkerInstance();
-    //         }
+        // 初期化
+        if (this._$mask) {
+            this._$mask.isMask = false;
+            this._$mask = null;
+        }
 
-    //         this._$mask._$isMask = false;
-    //         this._$mask = null;
-    //     }
+        if (mask) {
+            mask.isMask = true;
+            this._$mask = mask;
+        }
 
-    //     if (mask) {
-    //         if ($rendererWorker
-    //             && "_$createWorkerInstance" in mask
-    //             && typeof mask._$createWorkerInstance === "function"
-    //         ) {
-    //             mask._$createWorkerInstance();
-    //         }
+        displayObjectApplyChangesService(this);
+    }
 
-    //         mask._$isMask = true;
-    //         this._$mask   = mask;
-    //     }
-
-    //     this._$doChanged();
-    // }
-
-    // /**
-    //  * @description マウスまたはユーザー入力デバイスの x 軸の位置をピクセルで示します。
-    //  *              Indicates the x coordinate of the mouse or user input device position, in pixels.
-    //  *
-    //  * @member  {number}
-    //  * @default 0
-    //  * @readonly
-    //  * @public
-    //  */
+    /**
+     * @description マウスまたはユーザー入力デバイスの x 軸の位置をピクセルで示します。
+     *              Indicates the x coordinate of the mouse or user input device position, in pixels.
+     *
+     * @member  {number}
+     * @default 0
+     * @readonly
+     * @public
+     */
     // get mouseX (): number
     // {
     //     return $getEvent()

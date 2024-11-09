@@ -38,6 +38,16 @@ export class Sprite extends DisplayObjectContainer
      */
     public useHandCursor: boolean;
 
+    /**
+     * @description Spriteの機能を所持しているかを返却
+     *              Returns whether Sprite functions are possessed.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isSprite: boolean;
+
     protected _$hitArea: ISprite<any> | null;
     protected _$soundTransform: SoundTransform | null;
 
@@ -48,6 +58,8 @@ export class Sprite extends DisplayObjectContainer
     constructor ()
     {
         super();
+
+        this.isSprite = true;
 
         /**
          * @type {boolean}
@@ -182,24 +194,6 @@ export class Sprite extends DisplayObjectContainer
     //     $dragRules.position.x = 0;
     //     $dragRules.position.y = 0;
     //     $dragRules.bounds     = null;
-    // }
-
-    // /**
-    //  * @param  {object} character
-    //  * @return {void}
-    //  * @method
-    //  * @private
-    //  */
-    // _$sync (character: MovieClipCharacterImpl): void
-    // {
-    //     if ($rendererWorker && this._$stage) {
-    //         this._$createWorkerInstance();
-    //     }
-
-    //     this._$controller   = character.controller;
-    //     this._$dictionary   = character.dictionary;
-    //     this._$placeMap     = character.placeMap;
-    //     this._$placeObjects = character.placeObjects;
     // }
 
     // /**

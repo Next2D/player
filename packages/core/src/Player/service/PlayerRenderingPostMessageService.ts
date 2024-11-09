@@ -63,7 +63,7 @@ export const execute = (): void =>
     $options.length = 0;
     $renderQueue.length = 0;
     $bitmaps.length = 0;
-    $stage._$generateRenderQueue(
+    $stage.$generateRenderQueue(
         $renderQueue, $bitmaps, $matrix
     );
 

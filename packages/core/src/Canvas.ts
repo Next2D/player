@@ -1,7 +1,7 @@
 import { $devicePixelRatio } from "./CoreUtil";
 import { execute as canvasInitializeService } from "./Canvas/service/CanvasInitializeService";
 import { execute as canvasBootOffscreenCanvasService } from "./Canvas/service/CanvasBootOffscreenCanvasService";
-import { execute as canvasRegisterEventService } from "./Canvas/service/CanvasRegisterEventService";
+import { execute as canvasRegisterEventUseCase } from "./Canvas/usecase/CanvasRegisterEventUseCase";
 
 /**
  * @type {string}
@@ -31,7 +31,7 @@ export const $canvas: HTMLCanvasElement = document.createElement("canvas");
 canvasInitializeService($canvas, $devicePixelRatio);
 
 // Register an event
-canvasRegisterEventService($canvas);
+canvasRegisterEventUseCase($canvas);
 
 // Boot offscreen canvas
 canvasBootOffscreenCanvasService($canvas, $devicePixelRatio);

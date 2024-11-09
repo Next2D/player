@@ -15,7 +15,5 @@ export const execute = (stage: Stage): void =>
     // next frame
     displayObjectContainerAdvanceFrameUseCase(stage);
 
-    // action
-
-    // sound
+    // todo action
 };

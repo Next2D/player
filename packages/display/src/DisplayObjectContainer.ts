@@ -51,7 +51,7 @@ export class DisplayObjectContainer extends InteractiveObject
      * @readonly
      * @public
      */
-    public isContainerEnabled: boolean;
+    public readonly isContainerEnabled: boolean;
 
     /**
      * @constructor
@@ -1540,35 +1540,6 @@ export class DisplayObjectContainer extends InteractiveObject
     //     }
 
     //     return false;
-    // }
-
-    // /**
-    //  * @param  {number} index
-    //  * @return {DisplayObject}
-    //  * @method
-    //  * @private
-    //  */
-    // _$createInstance (index: number): DisplayObjectImpl<any>
-    // {
-    //     if (!this._$dictionary) {
-    //         throw new Error("the dictionary is null.");
-    //     }
-
-    //     // build
-    //     const tag: DictionaryTagImpl = this._$dictionary[index];
-    //     const loaderInfo: LoaderInfo | null = this._$loaderInfo;
-    //     if (!loaderInfo || !loaderInfo._$data) {
-    //         throw new Error("the loaderInfo or data is null.");
-    //     }
-
-    //     const character: Character<any> = loaderInfo._$data.characters[tag.characterId];
-
-    //     // symbol class
-    //     const instance: DisplayObjectImpl<any> = $createInstance(character.extends);
-    //     instance._$build(tag, this);
-    //     instance._$id = index;
-
-    //     return instance;
     // }
 
     // /**

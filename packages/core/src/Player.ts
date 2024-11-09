@@ -1,5 +1,4 @@
 import type { IPlayerOptions } from "./interface/IPlayerOptions";
-import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import { $cacheStore } from "@next2d/cache";
 import { $rendererWorker } from "./RendererWorker";
 import { execute as playerCreateContainerElementService } from "./Player/service/PlayerCreateContainerElementService";
@@ -19,16 +18,6 @@ import { execute as playerStopService } from "./Player/service/PlayerStopService
  */
 export class Player
 {
-    /**
-     * @description canvasの描画領域のヒットテスト結果を保持します。
-     *              Holds the hit test results of the drawing area of the canvas.
-     *
-     * @type {IPlayerHitObject}
-     * @readonly
-     * @private
-     */
-    private readonly _$hitObject: IPlayerHitObject;
-
     /**
      * @description devicePixelRatioを含んだcanvasの描画領域の幅
      *              The width of the drawing area of the canvas including devicePixelRatio
@@ -157,14 +146,6 @@ export class Player
      */
     constructor ()
     {
-        this._$hitObject = {
-            "x": 0,
-            "y": 0,
-            "pointer": "",
-            "hit": null
-        };
-        console.log(this._$hitObject);
-
         this.rendererWidth  = 0;
         this.rendererHeight = 0;
         this.rendererScale  = 1;
@@ -376,52 +357,6 @@ export class Player
         // initialize resize
         playerResizeEventService();
     }
-
-    // /**
-    //  * @param  {Event} event
-    //  * @return {boolean}
-    //  * @method
-    //  * @private
-    //  */
-    // _$dispatchEvent (event: Next2DEvent): boolean
-    // {
-    //     if (this._$broadcastEvents.size
-    //         && this._$broadcastEvents.has(event.type)
-    //     ) {
-
-    //         // clone
-    //         const events: EventListenerImpl[] = this
-    //             ._$broadcastEvents
-    //             .get(event.type)
-    //             .slice(0);
-
-    //         // start target
-    //         event.eventPhase = EventPhase.AT_TARGET;
-
-    //         for (let idx: number = 0; idx < events.length; ++idx) {
-
-    //             const obj: EventListenerImpl = events[idx];
-
-    //             // event execute
-    //             event.currentTarget = obj.target;
-
-    //             event.listener = obj.listener;
-    //             obj.listener.call(null, event);
-
-    //             if (event._$stopImmediatePropagation) {
-    //                 break;
-    //             }
-
-    //         }
-
-    //         $poolArray(events);
-
-    //         return true;
-
-    //     }
-
-    //     return false;
-    // }
 
     // /**
     //  * @param  {number} timestamp

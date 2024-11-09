@@ -5,6 +5,82 @@ import type { IURLRequestHeader } from "./interface/IURLRequestHeader";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Graphics } from "./Graphics";
 import type { MovieClip } from "./MovieClip";
+import { Point } from "@next2d/geom";
+type IEvent<E extends Event> = E | null;
+
+/**
+ * @description 現在のマウスの座標情報
+ *              Current mouse coordinate information
+ * 
+ * @type {IEvent<Event>}
+ * @private
+ */
+let $point: Point = new Point();
+
+/**
+ * @description 現在のマウスの座標情報を設定
+ *              Set the current mouse coordinate information
+ * 
+ * @param  {number} x
+ * @param  {number} y
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setCurrentMousePoint = (x: number, y: number): void =>
+{
+    $point.x = x;
+    $point.y = y;
+};
+
+/**
+ * @description 現在のマウスの座標情報を返却
+ *              Returns the current mouse coordinate information
+ *
+ * @return {Point}
+ * @method
+ * @public
+ */
+export const $getCurrentMousePoint = (): Point =>
+{
+    return $point;
+};
+
+/**
+ * @description イベントオブジェクト
+ *              Event object
+ * 
+ * @type {IEvent<Event>}
+ * @private
+ */
+let $event: IEvent<Event> = null;
+
+/**
+ * @description 発火されたイベントオブジェクトを設定
+ *              Set the event object that was fired
+ * 
+ * @param  {Event} event
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $setEvent = (event: IEvent<Event>): void =>
+{
+    $event = event;
+};
+
+/**
+ * @description アクティブなイベントオブジェクトを返却
+ *              Returns the active event object
+ *
+ * @return {IEvent<Event>}
+ * @method
+ * @public
+ */
+export const $getEvent = (): IEvent<Event> =>
+{
+    return $event;
+};
 
 /**
  * @type {number}
@@ -182,6 +258,41 @@ export const $getFloat32Array8 = (
 export const $poolFloat32Array8 = (array: Float32Array): void =>
 {
     $float32Array8.push(array);
+};
+
+/**
+ * @type {Map}
+ * @private
+ */
+let $maps: Map<any, any>[] = [];
+
+/**
+ * @description プールされたMapがあればプールから、なければ新規作成して返却
+ *              If there is a pooled Map, return it from the pool,
+ *              otherwise create a new one and return it.
+ *
+ * @return {Map}
+ * @method
+ * @protected
+ */
+export const $getMap = (): Map<any, any> =>
+{
+    return $maps.pop() || new Map();
+};
+
+/**
+ * @description 使用済みになったMapをプール
+ *              Pool used Map.
+ *
+ * @param  {Map} map
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $poolMap = (map: Map<any, any>): void =>
+{
+    map.clear();
+    $maps.push(map);
 };
 
 /**
