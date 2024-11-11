@@ -235,7 +235,7 @@ export class Stage extends DisplayObjectContainer
     /**
      * @description タップポイントの当たり判定
      *              Hit test of tap point
-     * 
+     *
      * @param  {CanvasRenderingContext2D} hit_context
      * @param  {Float32Array} matrix
      * @param  {IPlayerHitObject} hit_object

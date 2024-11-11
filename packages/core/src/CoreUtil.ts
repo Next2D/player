@@ -41,3 +41,35 @@ canvas.width = canvas.height = 1;
  * @const
  */
 export const $hitContext: CanvasRenderingContext2D = canvas.getContext("2d") as NonNullable<CanvasRenderingContext2D>;
+
+/**
+ * @type {HTMLDivElement}
+ * @private
+ */
+let $mainElement: HTMLDivElement | null = null;
+
+/**
+ * @description メインのコンテナになるDivElementを設定します。
+ *              Set the DivElement to be the main container.
+ *
+ * @param  {HTMLDivElement} element
+ * @method
+ * @protected
+ */
+export const $setMainElement = (element: HTMLDivElement): void =>
+{
+    $mainElement = element;
+};
+
+/**
+ * @description メインのコンテナになるDivElementを取得します。
+ *             Get the DivElement to be the main container.
+ *
+ * @return {HTMLDivElement}
+ * @method
+ * @protected
+ */
+export const $getMainElement = (): HTMLDivElement =>
+{
+    return $mainElement as NonNullable<HTMLDivElement>;
+};

@@ -5,7 +5,7 @@ import { execute as playerSetCurrentMousePoint } from "../../Player/service/Play
 /**
  * @description プレイヤーのポインタームーブイベントを処理します。
  *              Handles the player's pointer move event.
- * 
+ *
  * @param  {PointerEvent} event
  * @return {void}
  * @method

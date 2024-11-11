@@ -1,4 +1,6 @@
-import { $setEvent } from "@next2d/display";
+import { execute as canvasPointerDownEventUseCase } from "./CanvasPointerDownEventUseCase";
+import { execute as canvasPointerUpEventUseCase } from "./CanvasPointerUpEventUseCase";
+import { execute as canvasPointerMoveEventUseCase } from "./CanvasPointerMoveEventUseCase";
 import {
     $bootAudioContext,
     $getMutedVideos
@@ -8,11 +10,6 @@ import {
     $POINTER_UP,
     $POINTER_MOVE
 } from "../../Canvas";
-import { execute as playerHitTestUseCase } from "../../Player/usecase/PlayerHitTestUseCase";
-import { execute as canvasPointerDownEventUseCase } from "./CanvasPointerDownEventUseCase";
-import { execute as canvasPointerUpEventUseCase } from "./CanvasPointerUpEventUseCase";
-import { execute as canvasPointerMoveEventUseCase } from "./CanvasPointerMoveEventUseCase";
-import { $player } from "../../Player";
 
 /**
  * @description HTMLCanvasElementにイベントを登録します。

@@ -13,7 +13,7 @@ import { execute as playerTickerUseCase } from "./PlayerTickerUseCase";
  */
 export const execute = (player: Player): void =>
 {
-    if (player.stopFlag) {
+    if (!player.stopFlag) {
         return ;
     }
 

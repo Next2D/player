@@ -7,10 +7,10 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject
  * @description TextField のヒット判定
  *              Hit judgment of TextField
  *
- * @param  {TextField} text_field 
- * @param  {CanvasRenderingContext2D} hit_context 
- * @param  {Float32Array} matrix 
- * @param  {IPlayerHitObject} hit_object 
+ * @param  {TextField} text_field
+ * @param  {CanvasRenderingContext2D} hit_context
+ * @param  {Float32Array} matrix
+ * @param  {IPlayerHitObject} hit_object
  * @return {boolean}
  * @method
  * @protected
@@ -19,7 +19,7 @@ export const execute = (
     text_field: TextField,
     hit_context: CanvasRenderingContext2D,
     matrix: Float32Array,
-    hit_object: IPlayerHitObject,
+    hit_object: IPlayerHitObject
 ): boolean => {
 
     const width  = Math.ceil(Math.abs(text_field.xMax - text_field.xMin));

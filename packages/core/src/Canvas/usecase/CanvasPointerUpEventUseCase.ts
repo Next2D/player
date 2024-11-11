@@ -5,7 +5,7 @@ import { execute as playerSetCurrentMousePoint } from "../../Player/service/Play
 /**
  * @description プレイヤーのポインターアップイベントを処理します。
  *              Processes the player's pointer up event.
- * 
+ *
  * @param  {PointerEvent} event
  * @return {void}
  * @method
@@ -19,7 +19,7 @@ export const execute = (event: PointerEvent): void =>
     }
 
     element.setPointerCapture(event.pointerId);
-    
+
     // イベントの伝播を止める
     event.preventDefault();
     event.stopPropagation();

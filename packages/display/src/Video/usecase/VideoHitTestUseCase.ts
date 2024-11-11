@@ -7,10 +7,10 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject
  * @description Video のヒット判定
  *              Hit judgment of Video
  *
- * @param  {Video} video 
- * @param  {CanvasRenderingContext2D} hit_context 
- * @param  {Float32Array} matrix 
- * @param  {IPlayerHitObject} hit_object 
+ * @param  {Video} video
+ * @param  {CanvasRenderingContext2D} hit_context
+ * @param  {Float32Array} matrix
+ * @param  {IPlayerHitObject} hit_object
  * @return {boolean}
  * @method
  * @protected
@@ -19,7 +19,7 @@ export const execute = (
     video: Video,
     hit_context: CanvasRenderingContext2D,
     matrix: Float32Array,
-    hit_object: IPlayerHitObject,
+    hit_object: IPlayerHitObject
 ): boolean => {
 
     const width  = video.videoWidth;

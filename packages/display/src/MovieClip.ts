@@ -151,7 +151,6 @@ export class MovieClip extends Sprite
         this._$currentFrame = 1;
         this._$stopFlag = false;
         this._$canSound = true;
-        console.log("MovieClip", this._$canSound);
     }
 
     /**

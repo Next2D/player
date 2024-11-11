@@ -16,13 +16,13 @@ import {
     $getArray,
     $poolArray,
     $getMap,
-    $poolMap,
+    $poolMap
 } from "../../DisplayObjectUtil";
 
 /**
  * @description コンテナ内のヒット判定
  *              Hit judgment in the container
- * 
+ *
  * @param  {DisplayObjectContainer} display_object_container
  * @param  {CanvasRenderingContext2D} hit_context
  * @param  {Float32Array} matrix
@@ -109,19 +109,61 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         }
 
         // mask target
-        // if (clipIndexes.has(instance.instanceId)) {
+        if (clipIndexes.has(instance.instanceId)) {
 
-        //     const index = clipIndexes.get(instance.instanceId) as number;
+            const index = clipIndexes.get(instance.instanceId) as number;
+            if (!index) {
+                continue;
+            }
 
-        //     const clip = clips[index];
-        //     if (!clip._$hit(hit_context, tMatrix, hit_object, true)) {
-        //         continue;
-        //     }
+            const clip = clips[index];
+            if (!clip) {
+                continue;
+            }
 
-        // }
+            let hitTest = false;
+            switch (true) {
+
+                case clip.isContainerEnabled:
+                    hitTest = execute(
+                        clip as unknown as DisplayObjectContainer,
+                        hit_context, tMatrix, hit_object, mouseChildren
+                    );
+                    break;
+
+                case clip.isShape:
+                    hitTest = shapeHitTestUseCase(
+                        clip as unknown as Shape,
+                        hit_context, tMatrix, hit_object
+                    );
+                    break;
+
+                case clip.isText:
+                    hitTest = textFieldHitTestUseCase(
+                        clip as unknown as TextField,
+                        hit_context, tMatrix, hit_object
+                    );
+                    break;
+
+                case clip.isVideo:
+                    hitTest = videoHitTestUseCase(
+                        clip as unknown as Video,
+                        hit_context, tMatrix, hit_object
+                    );
+                    break;
+
+                default:
+                    break;
+
+            }
+
+            if (!hitTest) {
+                continue;
+            }
+        }
 
         // mask hit test
-        const maskInstance = instance.mask;
+        const maskInstance = instance.mask as D | null;
         if (maskInstance) {
 
             if (display_object_container === maskInstance.parent) {
@@ -146,35 +188,35 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
 
             case instance.isContainerEnabled:
                 hitTest = execute(
-                    instance as unknown as DisplayObjectContainer, 
+                    instance as unknown as DisplayObjectContainer,
                     hit_context, tMatrix, hit_object, mouseChildren
                 );
                 break;
 
             case instance.isShape:
                 hitTest = shapeHitTestUseCase(
-                    instance as unknown as Shape, 
+                    instance as unknown as Shape,
                     hit_context, tMatrix, hit_object
                 );
                 break;
 
             case instance.isText:
                 hitTest = textFieldHitTestUseCase(
-                    instance as unknown as TextField, 
+                    instance as unknown as TextField,
                     hit_context, tMatrix, hit_object
                 );
                 break;
 
             case instance.isVideo:
                 hitTest = videoHitTestUseCase(
-                    instance as unknown as Video, 
+                    instance as unknown as Video,
                     hit_context, tMatrix, hit_object
                 );
                 break;
 
             default:
                 break;
-            
+
         }
 
         if (!hitTest) {
@@ -186,9 +228,11 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
             break;
         }
 
-        if (instance.isInteractive 
-            && !(instance as unknown as InteractiveObject).mouseEnabled
-        ) {
+        if (!instance.isInteractive) {
+            continue;
+        }
+
+        if (!(instance as unknown as InteractiveObject).mouseEnabled) {
             continue;
         }
 

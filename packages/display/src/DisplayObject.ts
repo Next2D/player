@@ -373,7 +373,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description セットされてるDisplayObjectがマスクとして使用されます。
      *              The DisplayObject set is used as a mask.
-     * 
+     *
      * @type {IDisplayObject<any>|null}
      * @default null
      * @private
@@ -383,7 +383,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description マスクとしてDisplayObjectにセットされているかを示します。
      *              Indicates whether the DisplayObject is set as a mask.
-     * 
+     *
      * @type {boolean}
      * @default false
      * @private

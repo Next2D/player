@@ -11,16 +11,16 @@ type IEvent<E extends Event> = E | null;
 /**
  * @description 現在のマウスの座標情報
  *              Current mouse coordinate information
- * 
+ *
  * @type {IEvent<Event>}
  * @private
  */
-let $point: Point = new Point();
+const $point: Point = new Point();
 
 /**
  * @description 現在のマウスの座標情報を設定
  *              Set the current mouse coordinate information
- * 
+ *
  * @param  {number} x
  * @param  {number} y
  * @return {void}
@@ -49,7 +49,7 @@ export const $getCurrentMousePoint = (): Point =>
 /**
  * @description イベントオブジェクト
  *              Event object
- * 
+ *
  * @type {IEvent<Event>}
  * @private
  */
@@ -58,7 +58,7 @@ let $event: IEvent<Event> = null;
 /**
  * @description 発火されたイベントオブジェクトを設定
  *              Set the event object that was fired
- * 
+ *
  * @param  {Event} event
  * @return {void}
  * @method
@@ -264,7 +264,7 @@ export const $poolFloat32Array8 = (array: Float32Array): void =>
  * @type {Map}
  * @private
  */
-let $maps: Map<any, any>[] = [];
+const $maps: Map<any, any>[] = [];
 
 /**
  * @description プールされたMapがあればプールから、なければ新規作成して返却

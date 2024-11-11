@@ -3,9 +3,9 @@ import { $player } from "../../Player";
 import { $canvas } from "../../Canvas";
 import { $stage } from "@next2d/display";
 import {
-    $PREFIX,
     $devicePixelRatio,
-    $hitContext
+    $hitContext,
+    $getMainElement
 } from "../../CoreUtil";
 
 /**
@@ -43,22 +43,23 @@ export const execute = (event: PointerEvent): void =>
     let x = window.scrollX;
     let y = window.scrollY;
 
-    const div: HTMLElement | null = document
-        .getElementById($PREFIX);
-
+    const div = $getMainElement();
     if (div) {
         const rect = div.getBoundingClientRect();
         x += rect.left;
         y += rect.top;
     }
 
-    let pageX = event.pageX;
-    let pageY = event.pageY;
+    if ($canvas) {
+        const rect = $canvas.getBoundingClientRect();
+        x += rect.left;
+        y += rect.top;
+    }
 
     // drop point
     const scale  = $player.rendererScale / $devicePixelRatio;
-    const stageX = (pageX - x) / scale;
-    const stageY = (pageY - y) / scale;
+    const stageX = (event.pageX - x) / scale;
+    const stageY = (event.pageY - y) / scale;
 
     // reset
     $hitContext.beginPath();
@@ -76,6 +77,5 @@ export const execute = (event: PointerEvent): void =>
 
     $stage.$mouseHit($hitContext, $matrix, $hitObject);
 
-    console.log($hitObject.pointer);
     $canvas.style.cursor = $hitObject.pointer;
 };

@@ -1,4 +1,7 @@
-import { $PREFIX } from "../../CoreUtil";
+import {
+    $PREFIX,
+    $setMainElement
+} from "../../CoreUtil";
 
 /**
  * @description コンテナとなるElementを作成して返却
@@ -12,6 +15,8 @@ import { $PREFIX } from "../../CoreUtil";
 export const execute = (tag_id: string = ""): HTMLDivElement =>
 {
     const div: HTMLDivElement = document.createElement("div");
+    $setMainElement(div);
+
     div.id       = $PREFIX;
     div.tabIndex = -1;
 

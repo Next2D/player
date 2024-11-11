@@ -8,10 +8,10 @@ import { execute as graphicsHitTestService } from "../../Graphics/service/Graphi
  * @description Shape のヒット判定
  *              Hit judgment of Shape
  *
- * @param  {Shape} shape 
- * @param  {CanvasRenderingContext2D} hit_context 
- * @param  {Float32Array} matrix 
- * @param  {IPlayerHitObject} hit_object 
+ * @param  {Shape} shape
+ * @param  {CanvasRenderingContext2D} hit_context
+ * @param  {Float32Array} matrix
+ * @param  {IPlayerHitObject} hit_object
  * @return {boolean}
  * @method
  * @protected
@@ -20,7 +20,7 @@ export const execute = (
     shape: Shape,
     hit_context: CanvasRenderingContext2D,
     matrix: Float32Array,
-    hit_object: IPlayerHitObject,
+    hit_object: IPlayerHitObject
 ): boolean => {
 
     const graphics = shape.graphics;
@@ -38,7 +38,7 @@ export const execute = (
     const tMatrix = rawMatrix
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
-    
+
     hit_context.beginPath();
     hit_context.setTransform(
         tMatrix[0], tMatrix[1], tMatrix[2],

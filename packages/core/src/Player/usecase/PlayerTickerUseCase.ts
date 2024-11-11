@@ -19,7 +19,7 @@ export const execute = (player: Player, timestamp: number): void =>
         return ;
     }
 
-    const time: number = timestamp - player.startTime;
+    const time = timestamp - player.startTime;
     if (time > player.fps) {
         player.startTime = timestamp - time % player.fps;
 

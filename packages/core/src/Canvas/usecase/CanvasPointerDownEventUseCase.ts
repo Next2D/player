@@ -5,7 +5,7 @@ import { execute as playerSetCurrentMousePoint } from "../../Player/service/Play
 /**
  * @description プレイヤーのポインターダウンイベントを処理します。
  *              Processes the player's pointer down event.
- * 
+ *
  * @param  {PointerEvent} event
  * @return {void}
  * @method
