@@ -10,7 +10,27 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        next2d.load("develop");
+        // next2d.load("develop");
+        const root = await next2d.createRootMovieClip(480, 480);
+
+        const { Sprite, Shape } = next2d.display;
+        const { TextField } = next2d.text;
+
+        const sprite = root.addChild(new Sprite());
+        sprite.buttonMode = true;
+        sprite.x = 50;
+        sprite.y = 50;
+
+        // const textFiled = sprite.addChild(new TextField());
+        // textFiled.text = "Hello Next2D";
+
+        const shape = sprite.addChild(new Shape());
+        shape
+            .graphics
+            .beginFill("#ff0000")
+            .drawRect(0, 0, 100, 100);
+
+        console.log(root);
     });
 </script>
 </body>

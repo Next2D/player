@@ -36,7 +36,7 @@ const $hitObject: IPlayerHitObject = {
  */
 export const execute = (event: PointerEvent): void =>
 {
-    if (!$player.stopFlag) {
+    if ($player.stopFlag) {
         return ;
     }
 
@@ -71,7 +71,6 @@ export const execute = (event: PointerEvent): void =>
     $hitObject.hit = null;
 
     // hit test
-
     $matrix[4] = ($player.rendererWidth  - $stage.stageWidth  * $player.rendererScale) / 2;
     $matrix[5] = ($player.rendererHeight - $stage.stageHeight * $player.rendererScale) / 2;
 

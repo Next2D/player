@@ -25,10 +25,11 @@ export const execute = (recodes : any[] | null): any[] =>
     }
 
     const array: number[] = $getArray();
-    for (let idx: number = 0; idx < recodes.length;) {
+    for (let idx = 0; idx < recodes.length;) {
 
-        const type: number = recodes[idx++];
+        const type = recodes[idx++];
         array.push(type);
+
         switch (type) {
 
             case Graphics.BEGIN_PATH:

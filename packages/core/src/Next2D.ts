@@ -163,7 +163,7 @@ export class Next2D
      *
      * @param  {number} [width=240]
      * @param  {number} [height=240]
-     * @param  {number} [fps=24]
+     * @param  {number} [fps=60]
      * @param  {object} [options=null]
      * @return {Sprite}
      * @method
@@ -172,7 +172,7 @@ export class Next2D
     async createRootMovieClip (
         width: number = 240,
         height: number = 240,
-        fps: number = 24,
+        fps: number = 60,
         options: IPlayerOptions | null = null
     ): Promise<Sprite> {
         await Promise.all([this._$promise]);

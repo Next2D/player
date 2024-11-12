@@ -586,7 +586,7 @@ export class Graphics
         const red   = color >>> 16 & 0xff;
         const green = color >>> 8 & 0xff;
         const blue  = color & 0xff;
-        this._$fillColor = red << 24 | green << 16 | blue << 8 | alpha;
+        this._$fillColor = red << 24 | green << 16 | blue << 8 | alpha * 255;
 
         return this;
     }
