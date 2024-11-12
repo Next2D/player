@@ -26,6 +26,12 @@ const $hitObject: IPlayerHitObject = {
 };
 
 /**
+ * @type {string}
+ * @private
+ */
+let $currentCursor: string = "auto";
+
+/**
  * @description Playerの当たり判定
  *              Player hit test
  *
@@ -56,17 +62,9 @@ export const execute = (event: PointerEvent): void =>
         y += rect.top;
     }
 
-    // drop point
     const scale  = $player.rendererScale / $devicePixelRatio;
-    const stageX = (event.pageX - x) / scale;
-    const stageY = (event.pageY - y) / scale;
-
-    // reset
-    $hitContext.beginPath();
-    $hitContext.setTransform(1, 0, 0, 1, 0, 0);
-
-    $hitObject.x = stageX;
-    $hitObject.y = stageY;
+    $hitObject.x = (event.pageX - x) / scale;
+    $hitObject.y = (event.pageY - y) / scale;
     $hitObject.pointer = "auto";
     $hitObject.hit = null;
 
@@ -74,7 +72,18 @@ export const execute = (event: PointerEvent): void =>
     $matrix[4] = ($player.rendererWidth  - $stage.stageWidth  * $player.rendererScale) / 2;
     $matrix[5] = ($player.rendererHeight - $stage.stageHeight * $player.rendererScale) / 2;
 
+    // reset
+    $hitContext.beginPath();
+    $hitContext.setTransform(1, 0, 0, 1, 0, 0);
+
+    // ヒット判定
     $stage.$mouseHit($hitContext, $matrix, $hitObject);
 
-    $canvas.style.cursor = $hitObject.pointer;
+    // ヒットしたオブジェクトがある場合
+
+    // カーソルの表示を更新
+    if ($currentCursor !== $hitObject.pointer) {
+        $currentCursor = $hitObject.pointer;
+        $canvas.style.cursor = $hitObject.pointer
+    }
 };
