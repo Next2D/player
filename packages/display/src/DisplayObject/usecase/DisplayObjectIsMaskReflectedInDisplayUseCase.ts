@@ -1,8 +1,6 @@
 import type { DisplayObject } from "../../DisplayObject";
 import type { Shape } from "../../Shape";
-import { Matrix } from "@next2d/geom";
 import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeCalcBoundsMatrixUseCase";
-import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 
 /**
  * @description DisplayObjectのマスク描画範囲を計算して、マスク描画が実行可能かどうかを返します。
@@ -28,17 +26,11 @@ export const execute = <D extends DisplayObject>(
 ): number[] | null => {
 
     let bounds: number[] | null = null;
-
-    const rawMatrix = displayObjectGetRawMatrixUseCase(display_object);
-    const tMatrix = rawMatrix
-        ? Matrix.multiply(matrix, rawMatrix)
-        : matrix;
-
     switch (true) {
 
         case display_object.isShape:
             bounds = shapeCalcBoundsMatrixUseCase(
-                display_object as unknown as Shape, tMatrix
+                display_object as unknown as Shape, matrix
             );
             break;
 
@@ -57,10 +49,6 @@ export const execute = <D extends DisplayObject>(
         default:
             break;
 
-    }
-
-    if (tMatrix !== matrix) {
-        Matrix.release(tMatrix);
     }
 
     if (!bounds) {

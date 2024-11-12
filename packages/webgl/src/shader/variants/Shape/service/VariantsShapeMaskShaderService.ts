@@ -18,8 +18,7 @@ export const execute = (is_stroke: boolean): ShaderManager =>
 {
     const isGridEnabled = $gridEnabled();
 
-    const key: string = `m${is_stroke ? "y" : "n"}${isGridEnabled ? "y" : "n"}`;
-
+    const key = `m${is_stroke ? "y" : "n"}${isGridEnabled ? "y" : "n"}`;
     if ($collection.has(key)) {
         return $collection.get(key) as NonNullable<ShaderManager>;
     }
