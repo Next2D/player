@@ -44,7 +44,7 @@ describe("GraphicsDrawRectService.js test", () =>
         expect(buffer[17]).toBe(0);
         expect(buffer[18]).toBe(0);
         expect(buffer[19]).toBe(0);
-        expect(buffer[20]).toBe(1);
+        expect(buffer[20]).toBe(255);
         expect(buffer[21]).toBe(7);
     });
 });

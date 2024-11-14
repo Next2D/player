@@ -72,7 +72,7 @@ describe("GraphicsDrawRoundRectService.js test", () =>
         expect(buffer[45]).toBe(0);
         expect(buffer[46]).toBe(0);
         expect(buffer[47]).toBe(0);
-        expect(buffer[48]).toBe(1);
+        expect(buffer[48]).toBe(255);
         expect(buffer[49]).toBe(7);
     });
 });

@@ -4,24 +4,6 @@ import { execute as canvasBootOffscreenCanvasService } from "./Canvas/service/Ca
 import { execute as canvasRegisterEventUseCase } from "./Canvas/usecase/CanvasRegisterEventUseCase";
 
 /**
- * @type {string}
- * @public
- */
-export const $POINTER_DOWN: string = "pointerdown";
-
-/**
- * @type {string}
- * @public
- */
-export const $POINTER_UP: string = "pointerup";
-
-/**
- * @type {string}
- * @public
- */
-export const $POINTER_MOVE: string = "pointermove";
-
-/**
  * @type {HTMLCanvasElement}
  * @public
  */

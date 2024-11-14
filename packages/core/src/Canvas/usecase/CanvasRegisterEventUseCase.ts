@@ -1,15 +1,11 @@
 import { execute as canvasPointerDownEventUseCase } from "./CanvasPointerDownEventUseCase";
 import { execute as canvasPointerUpEventUseCase } from "./CanvasPointerUpEventUseCase";
 import { execute as canvasPointerMoveEventUseCase } from "./CanvasPointerMoveEventUseCase";
+import { PointerEvent } from "@next2d/events";
 import {
     $bootAudioContext,
     $getMutedVideos
 } from "@next2d/media";
-import {
-    $POINTER_DOWN,
-    $POINTER_UP,
-    $POINTER_MOVE
-} from "../../Canvas";
 
 /**
  * @description HTMLCanvasElementにイベントを登録します。
@@ -39,11 +35,11 @@ export const execute = (canvas: HTMLCanvasElement): void =>
         }
         mutedVideos.length = 0;
 
-        canvas.removeEventListener("pointerup", $loadAudioContext);
+        canvas.removeEventListener(PointerEvent.POINTER_UP, $loadAudioContext);
     };
-    canvas.addEventListener("pointerup", $loadAudioContext);
+    canvas.addEventListener(PointerEvent.POINTER_UP, $loadAudioContext);
 
-    canvas.addEventListener($POINTER_DOWN, canvasPointerDownEventUseCase);
-    canvas.addEventListener($POINTER_UP, canvasPointerUpEventUseCase);
-    canvas.addEventListener($POINTER_MOVE, canvasPointerMoveEventUseCase, { "passive": false });
+    canvas.addEventListener(PointerEvent.POINTER_DOWN, canvasPointerDownEventUseCase);
+    canvas.addEventListener(PointerEvent.POINTER_UP, canvasPointerUpEventUseCase);
+    canvas.addEventListener(PointerEvent.POINTER_MOVE, canvasPointerMoveEventUseCase, { "passive": false });
 };

@@ -1,4 +1,5 @@
-import { $setEvent } from "@next2d/display";
+import { $setEvent } from "@next2d/events";
+import { $player } from "../../Player";
 import { execute as playerHitTestUseCase } from "../../Player/usecase/PlayerHitTestUseCase";
 import { execute as playerSetCurrentMousePoint } from "../../Player/service/PlayerSetCurrentMousePoint";
 
@@ -18,11 +19,8 @@ export const execute = (event: PointerEvent): void =>
         return ;
     }
 
+    $player.mouseState = "up";
     element.setPointerCapture(event.pointerId);
-
-    // イベントの伝播を止める
-    event.preventDefault();
-    event.stopPropagation();
 
     $setEvent(event);
     playerSetCurrentMousePoint(event);

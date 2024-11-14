@@ -1,7 +1,8 @@
 import type { IPlayerHitObject } from "../../interface/IPlayerHitObject";
 import { $player } from "../../Player";
-import { $canvas } from "../../Canvas";
 import { $stage } from "@next2d/display";
+import { PointerEvent as Next2D_PointerEvent } from "@next2d/events";
+import { $canvas } from "../../Canvas";
 import {
     $devicePixelRatio,
     $hitContext,
@@ -30,6 +31,18 @@ const $hitObject: IPlayerHitObject = {
  * @private
  */
 let $currentCursor: string = "auto";
+
+/**
+ * @type {NodeJS.Timeout}
+ * @private
+ */
+let $timerId: NodeJS.Timeout;
+
+/**
+ * @type {boolean}
+ * @private
+ */
+let $wait: boolean = false;
 
 /**
  * @description Playerの当たり判定
@@ -80,10 +93,45 @@ export const execute = (event: PointerEvent): void =>
     $stage.$mouseHit($hitContext, $matrix, $hitObject);
 
     // ヒットしたオブジェクトがある場合
+    if ($hitObject.hit) {
+        event.preventDefault();
+    }
 
     // カーソルの表示を更新
     if ($currentCursor !== $hitObject.pointer) {
         $currentCursor = $hitObject.pointer;
         $canvas.style.cursor = $hitObject.pointer
+    }
+
+    switch (event.type) {
+
+        case Next2D_PointerEvent.POINTER_DOWN:
+            clearTimeout($timerId);
+            if (!$wait) {
+
+                // 初回のタップであればダブルタップを待機モードに変更
+                $wait = true;
+
+                // ダブルタップ有効期限をセット
+                $timerId = setTimeout((): void =>
+                {
+                    $wait = false;
+                }, 300);
+
+            } else {
+
+                // ダブルタップを終了
+                $wait = false;
+
+
+            }
+            break;
+
+        case Next2D_PointerEvent.POINTER_UP:
+            break;
+
+        case Next2D_PointerEvent.POINTER_MOVE:
+            break;
+
     }
 };

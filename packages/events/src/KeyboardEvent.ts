@@ -1,4 +1,4 @@
-import { $activeEvent } from "./EventUtil";
+import { $getEvent } from "./EventUtil";
 import { Event } from "./Event";
 
 /**
@@ -29,12 +29,25 @@ export class KeyboardEvent extends Event
                     return object[name];
                 }
 
-                if ($activeEvent && name in $activeEvent) {
-                    // @ts-ignore
-                    return $activeEvent[name];
+                const event = $getEvent();
+                if (!event) {
+                    return undefined;
                 }
 
-                return undefined;
+                switch (event.type) {
+
+                    case KeyboardEvent.KEY_DOWN:
+                    case KeyboardEvent.KEY_UP:
+                        if (name in event) {
+                            // @ts-ignore
+                            return $event[name];
+                        }
+                        return undefined;
+
+                    default:
+                        return undefined;
+                        
+                }
             }
         });
     }

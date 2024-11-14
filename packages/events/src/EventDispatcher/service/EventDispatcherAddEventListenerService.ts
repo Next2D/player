@@ -95,10 +95,10 @@ export const execute = <D extends EventDispatcher>(
     } else {
         // overwrite
         const object = listenerObjects[index];
-        object.listener = listener;
-        object.priority = priority;
+        object.listener   = listener;
+        object.priority   = priority;
         object.useCapture = use_capture;
-        object.target = scope;
+        object.target     = scope;
     }
 
     if (listenerObjects.length > 1) {

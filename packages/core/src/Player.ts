@@ -8,6 +8,7 @@ import { execute as playerResizeEventService } from "./Player/usecase/PlayerResi
 import { execute as playerResizeRegisterService } from "./Player/usecase/PlayerResizeRegisterUseCase";
 import { execute as playerPlayUseCase } from "./Player/usecase/PlayerPlayUseCase";
 import { execute as playerStopService } from "./Player/service/PlayerStopService";
+import { execute as playerRegisterEventUseCase } from "./Player/usecase/PlayerRegisterEventUseCase";
 
 /**
  * @description Next2Dの描画、イベント、設定、コントロールの管理クラスです。
@@ -128,7 +129,16 @@ export class Player
      */
     public timerId: number;
 
-    // private _$state: "up" | "down";
+    /**
+     * @description マウスの状態
+     *             Mouse state
+     * 
+     * @type {"up" | "down"}
+     * @default "up"
+     * @public
+     */
+    public mouseState: "up" | "down";
+
     // private _$textField: TextField | null;
     // private _$rollOverObject: EventDispatcherImpl<any> | null;
     // private _$mouseOverTarget: EventDispatcherImpl<any> | null;
@@ -150,10 +160,11 @@ export class Player
         this.rendererHeight = 0;
         this.rendererScale  = 1;
 
-        this.stopFlag  = true;
-        this.startTime = 0;
-        this.fps       = 16;
-        this.timerId   = -1;
+        this.stopFlag   = true;
+        this.startTime  = 0;
+        this.fps        = 16;
+        this.timerId    = -1;
+        this.mouseState = "up";
 
         // options
         this._$fixedWidth  = 0;
@@ -190,34 +201,6 @@ export class Player
         // this._$hitTestStart = false;
 
         // /**
-        //  * @type {number}
-        //  * @default -1
-        //  * @private
-        //  */
-        // this._$stageX = -1;
-
-        // /**
-        //  * @type {number}
-        //  * @default -1
-        //  * @private
-        //  */
-        // this._$stageY = -1;
-
-        // /**
-        //  * @type {number}
-        //  * @default 0
-        //  * @private
-        //  */
-        // this._$deltaX = 0;
-
-        // /**
-        //  * @type {number}
-        //  * @default 0
-        //  * @private
-        //  */
-        // this._$deltaY = 0;
-
-        // /**
         //  * @type {TextField}
         //  * @default null
         //  * @private
@@ -237,6 +220,8 @@ export class Player
         //  * @private
         //  */
         // this._$actionProcess = false;
+
+        playerRegisterEventUseCase();
     }
 
     /**

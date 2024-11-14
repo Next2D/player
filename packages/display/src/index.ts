@@ -12,8 +12,4 @@ export * from "./MovieClip";
 export * from "./Shape";
 export * from "./Sprite";
 export * from "./Stage";
-export {
-    $setEvent,
-    $getEvent,
-    $setCurrentMousePoint
-} from "./DisplayObjectUtil";
+export { $setCurrentMousePoint } from "./DisplayObjectUtil";

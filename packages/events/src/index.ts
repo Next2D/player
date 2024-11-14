@@ -8,4 +8,5 @@ export * from "./PointerEvent";
 export * from "./ProgressEvent";
 export * from "./VideoEvent";
 export * from "./JobEvent";
+export * from "./KeyboardEvent";
 export { $setEvent } from "./EventUtil";

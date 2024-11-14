@@ -6,13 +6,12 @@ import type { LoaderInfo } from "./LoaderInfo";
 import type { Graphics } from "./Graphics";
 import type { MovieClip } from "./MovieClip";
 import { Point } from "@next2d/geom";
-type IEvent<E extends Event> = E | null;
 
 /**
  * @description 現在のマウスの座標情報
  *              Current mouse coordinate information
  *
- * @type {IEvent<Event>}
+ * @type {Point}
  * @private
  */
 const $point: Point = new Point();
@@ -44,42 +43,6 @@ export const $setCurrentMousePoint = (x: number, y: number): void =>
 export const $getCurrentMousePoint = (): Point =>
 {
     return $point;
-};
-
-/**
- * @description イベントオブジェクト
- *              Event object
- *
- * @type {IEvent<Event>}
- * @private
- */
-let $event: IEvent<Event> = null;
-
-/**
- * @description 発火されたイベントオブジェクトを設定
- *              Set the event object that was fired
- *
- * @param  {Event} event
- * @return {void}
- * @method
- * @public
- */
-export const $setEvent = (event: IEvent<Event>): void =>
-{
-    $event = event;
-};
-
-/**
- * @description アクティブなイベントオブジェクトを返却
- *              Returns the active event object
- *
- * @return {IEvent<Event>}
- * @method
- * @public
- */
-export const $getEvent = (): IEvent<Event> =>
-{
-    return $event;
 };
 
 /**

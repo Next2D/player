@@ -1,5 +1,5 @@
 import { Event } from "./Event";
-import { $activeEvent } from "./EventUtil";
+import { $getEvent } from "./EventUtil";
 
 /**
  * @description FocusEvent オブジェクトは、ユーザーが表示リストの1つのオブジェクトから
@@ -34,12 +34,25 @@ export class FocusEvent extends Event
                     return object[name];
                 }
 
-                if ($activeEvent && name in $activeEvent) {
-                    // @ts-ignore
-                    return $activeEvent[name];
+                const event = $getEvent();
+                if (!event) {
+                    return undefined;
                 }
 
-                return undefined;
+                switch (event.type) {
+
+                    case FocusEvent.FOCUS_IN:
+                    case FocusEvent.FOCUS_OUT:
+                        if (name in event) {
+                            // @ts-ignore
+                            return $event[name];
+                        }
+                        return undefined;
+
+                    default:
+                        return undefined;
+                        
+                }
             }
         });
     }

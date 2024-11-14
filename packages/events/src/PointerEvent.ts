@@ -1,5 +1,5 @@
-import { $activeEvent } from "./EventUtil";
 import { Event } from "./Event";
+import { $getEvent } from "./EventUtil";
 
 /**
  * @description ポインターは、入力機器（マウス、ペン、またはタッチ可能な面の上の接触点など）のハードウェアにとらわれない表現です。
@@ -31,12 +31,31 @@ export class PointerEvent extends Event
                     return object[name];
                 }
 
-                if ($activeEvent && name in $activeEvent) {
-                    // @ts-ignore
-                    return $activeEvent[name];
+                const event = $getEvent();
+                if (!event) {
+                    return undefined;
                 }
 
-                return undefined;
+                switch (event.type) {
+
+                    case PointerEvent.POINTER_DOWN:
+                    case PointerEvent.POINTER_MOVE:
+                    case PointerEvent.POINTER_UP:
+                    case PointerEvent.POINTER_OUT:
+                    case PointerEvent.POINTER_OVER:
+                    case PointerEvent.WHEEL:
+                        if (name in event) {
+                            // @ts-ignore
+                            return $event[name];
+                        }
+                        return undefined;
+
+                    default:
+                        return undefined;
+                        
+                }
+
+
             }
         });
     }

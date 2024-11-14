@@ -59,7 +59,7 @@ describe("GraphicsDrawEllipseService.js test", () =>
         expect(buffer[33]).toBe(0);
         expect(buffer[34]).toBe(0);
         expect(buffer[35]).toBe(0);
-        expect(buffer[36]).toBe(1);
+        expect(buffer[36]).toBe(255);
         expect(buffer[37]).toBe(7);
     });
 });

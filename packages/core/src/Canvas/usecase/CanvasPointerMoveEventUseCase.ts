@@ -1,4 +1,4 @@
-import { $setEvent } from "@next2d/display";
+import { $setEvent } from "@next2d/events";
 import { execute as playerHitTestUseCase } from "../../Player/usecase/PlayerHitTestUseCase";
 import { execute as playerSetCurrentMousePoint } from "../../Player/service/PlayerSetCurrentMousePoint";
 
@@ -13,10 +13,6 @@ import { execute as playerSetCurrentMousePoint } from "../../Player/service/Play
  */
 export const execute = (event: PointerEvent): void =>
 {
-    // イベントの伝播を止める
-    event.preventDefault();
-    event.stopPropagation();
-
     $setEvent(event);
     playerSetCurrentMousePoint(event);
 

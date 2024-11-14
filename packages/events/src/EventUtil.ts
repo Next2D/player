@@ -37,22 +37,37 @@ export const $poolArray = (array: any[]): void =>
     }
 };
 
+type IEvent = PointerEvent | KeyboardEvent | Event | null;
+
 /**
  * @type {Event}
  * @private
  */
-export let $activeEvent: PointerEvent | null = null;
+let $event: IEvent = null;
 
 /**
  * @description アクティブなイベントオブジェクをセット
  *              Set the active event object
  *
- * @param  {PointerEvent | null} event
+ * @param  {IEvent} event
  * @return {void}
  * @method
  * @protected
  */
-export const $setEvent = (event: PointerEvent | null = null): void =>
+export const $setEvent = (event: IEvent): void =>
 {
-    $activeEvent = event;
+    $event = event;
+};
+
+/**
+ * @description アクティブなイベントオブジェクを取得
+ *              Get the active event object
+ * 
+ * @return {IEvent}
+ * @method
+ * @protected
+ */
+export const $getEvent = (): IEvent =>
+{
+    return $event;
 };
