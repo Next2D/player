@@ -1,4 +1,5 @@
 import { execute as playerKeyDownEventService } from "../service/PlayerKeyDownEventService";
+import { execute as playerKeyUpEventService } from "../service/PlayerKeyUpEventService";
 import { KeyboardEvent } from "@next2d/events";
 
 /**
@@ -12,8 +13,5 @@ import { KeyboardEvent } from "@next2d/events";
 export const execute = (): void =>
 {
     window.addEventListener(KeyboardEvent.KEY_DOWN, playerKeyDownEventService);
-    window.addEventListener("keyUp", () =>
-    {
-        console.log("keyUp");
-    });
+    window.addEventListener(KeyboardEvent.KEY_UP, playerKeyUpEventService);
 };

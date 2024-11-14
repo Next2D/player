@@ -5,8 +5,8 @@ import {
 } from "@next2d/events";
 
 /**
- * @description キーボードダウンイベントを実行する
- *              Execute the keyboard down event
+ * @description キーボードアップイベントを実行する
+ *              Execute the keyboard up event
  *
  * @param  {KeyboardEvent} event
  * @return {void}
@@ -15,10 +15,10 @@ import {
  */
 export const execute = (event: KeyboardEvent): void =>
 {
-    if (!$stage.hasEventListener(Event.KEY_DOWN)) {
+    if (!$stage.hasEventListener(Event.KEY_UP)) {
         return ;
     }
 
     $setEvent(event);
-    $stage.dispatchEvent(new Event(Event.KEY_DOWN));
+    $stage.dispatchEvent(new Event(Event.KEY_UP));
 };

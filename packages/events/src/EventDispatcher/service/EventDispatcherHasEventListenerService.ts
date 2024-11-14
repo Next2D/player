@@ -1,4 +1,3 @@
-import type { IEventListener } from "../../interface/IEventListener";
 import type { EventDispatcher } from "../../EventDispatcher";
 import { KeyboardEvent } from "../../KeyboardEvent";
 import { Event } from "../../Event";
@@ -24,19 +23,7 @@ export const execute = <D extends EventDispatcher>(
         case Event.ENTER_FRAME:
         case KeyboardEvent.KEY_DOWN:
         case KeyboardEvent.KEY_UP:
-        {
-            if ($broadcastEvents.size
-                && $broadcastEvents.has(type)
-            ) {
-                const events: IEventListener[] = $broadcastEvents.get(type) as NonNullable<IEventListener[]>;
-                for (let idx: number = 0; idx < events.length; idx++) {
-                    if (events[idx].target === scope) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
+            return $broadcastEvents.size && $broadcastEvents.has(type) ? true : false;
 
         default:
             return !!(scope._$events

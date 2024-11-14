@@ -70,7 +70,7 @@ export class EventDispatcher
      * @method
      * @public
      */
-    dispatchEvent (event: Event): boolean
+    dispatchEvent <E extends Event>(event: E): boolean
     {
         return eventDispatcherDispatchEventService(this, event);
     }

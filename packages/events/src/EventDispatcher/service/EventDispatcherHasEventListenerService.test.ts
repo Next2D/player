@@ -27,9 +27,9 @@ describe("EventDispatcher.js hasEventListener test", () =>
 
         eventDispatcher2.addEventListener(Event.ENTER_FRAME, () => { return "OK" });
 
-        expect(eventDispatcher1.hasEventListener(Event.ENTER_FRAME)).toBe(false);
+        expect(eventDispatcher1.hasEventListener(Event.ENTER_FRAME)).toBe(true);
         expect(eventDispatcher2.hasEventListener(Event.ENTER_FRAME)).toBe(true);
-        expect(eventDispatcher3.hasEventListener(Event.ENTER_FRAME)).toBe(false);
+        expect(eventDispatcher3.hasEventListener(Event.ENTER_FRAME)).toBe(true);
 
     });
 });

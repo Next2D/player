@@ -84,7 +84,16 @@ export class Event
      */
     public eventPhase: number;
 
+    /**
+     * @type {boolean}
+     * @private
+     */
     public _$stopImmediatePropagation: boolean;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
     public _$stopPropagation: boolean;
 
     /**
