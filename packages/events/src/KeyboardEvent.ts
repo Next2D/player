@@ -46,7 +46,7 @@ export class KeyboardEvent extends Event
 
                     default:
                         return undefined;
-                        
+
                 }
             }
         });

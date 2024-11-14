@@ -62,7 +62,7 @@ export const $setEvent = (event: IEvent): void =>
 /**
  * @description アクティブなイベントオブジェクを取得
  *              Get the active event object
- * 
+ *
  * @return {IEvent}
  * @method
  * @protected

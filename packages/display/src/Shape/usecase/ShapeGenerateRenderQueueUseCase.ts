@@ -154,7 +154,7 @@ export const execute = (
     render_queue.push(+isGridEnabled);
     render_queue.push(+isDrawable);
     render_queue.push(+shape.isBitmap);
-    
+
     if (!shape.uniqueKey) {
         if (shape.characterId && shape.loaderInfo) {
 

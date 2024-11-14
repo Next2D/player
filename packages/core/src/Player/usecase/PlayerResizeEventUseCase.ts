@@ -29,11 +29,11 @@ export const execute = (): void =>
         return ;
     }
 
-    const screenWidth: number = $player.fullScreen || parent.tagName === "BODY"
+    const screenWidth = $player.fullScreen || parent.tagName === "BODY"
         ? window.innerWidth
         : parent.clientWidth;
 
-    const screenHeight: number = $player.fullScreen || parent.tagName === "BODY"
+    const screenHeight = $player.fullScreen || parent.tagName === "BODY"
         ? window.innerHeight
         : parent.clientHeight;
 
@@ -45,27 +45,29 @@ export const execute = (): void =>
         return ;
     }
 
-    const scale: number = Math.min(
+    const scale = Math.min(
         screenWidth  / $stage.stageWidth,
         screenHeight / $stage.stageHeight
     ) * $devicePixelRatio;
 
-    const width: number = $player.fullScreen
+    const width = $player.fullScreen
         ? window.innerWidth * $devicePixelRatio
         : $stage.stageWidth * scale | 0;
 
-    const height: number = $player.fullScreen
+    const height = $player.fullScreen
         ? window.innerHeight * $devicePixelRatio
         : $stage.stageHeight * scale | 0;
 
     // 同じサイズの場合は、ここれで終了
-    if (width === $player.rendererWidth
-        && height === $player.rendererHeight
+    if (width === $player.screenWidth
+        && height === $player.screenHeight
     ) {
         return ;
     }
 
     // update
+    $player.screenWidth   = screenWidth;
+    $player.screenHeight  = screenHeight;
     $stage.rendererScale  = $player.rendererScale  = scale;
     $stage.rendererWidth  = $player.rendererWidth  = width;
     $stage.rendererHeight = $player.rendererHeight = height;

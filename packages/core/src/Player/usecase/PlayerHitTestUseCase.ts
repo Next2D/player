@@ -2,7 +2,6 @@ import type { IPlayerHitObject } from "../../interface/IPlayerHitObject";
 import { $player } from "../../Player";
 import { $stage } from "@next2d/display";
 import { PointerEvent as Next2D_PointerEvent } from "@next2d/events";
-import { $canvas } from "../../Canvas";
 import {
     $devicePixelRatio,
     $hitContext,
@@ -49,11 +48,12 @@ let $wait: boolean = false;
  *              Player hit test
  *
  * @param  {PointerEvent} event
+ * @param  {HTMLCanvasElement} canvas
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (event: PointerEvent): void =>
+export const execute = (event: PointerEvent, canvas: HTMLCanvasElement): void =>
 {
     if ($player.stopFlag) {
         return ;
@@ -67,12 +67,9 @@ export const execute = (event: PointerEvent): void =>
         const rect = div.getBoundingClientRect();
         x += rect.left;
         y += rect.top;
-    }
 
-    if ($canvas) {
-        const rect = $canvas.getBoundingClientRect();
-        x += rect.left;
-        y += rect.top;
+        x += ($player.screenWidth - $player.rendererWidth / $devicePixelRatio) / 2;
+        y += ($player.screenHeight - $player.rendererHeight / $devicePixelRatio) / 2;
     }
 
     const scale  = $player.rendererScale / $devicePixelRatio;
@@ -99,8 +96,7 @@ export const execute = (event: PointerEvent): void =>
 
     // カーソルの表示を更新
     if ($currentCursor !== $hitObject.pointer) {
-        $currentCursor = $hitObject.pointer;
-        $canvas.style.cursor = $hitObject.pointer
+        canvas.style.cursor = $currentCursor = $hitObject.pointer;
     }
 
     switch (event.type) {
@@ -122,7 +118,6 @@ export const execute = (event: PointerEvent): void =>
 
                 // ダブルタップを終了
                 $wait = false;
-
 
             }
             break;

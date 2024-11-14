@@ -51,7 +51,7 @@ export class FocusEvent extends Event
 
                     default:
                         return undefined;
-                        
+
                 }
             }
         });

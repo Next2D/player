@@ -166,20 +166,20 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         const maskInstance = instance.mask as D | null;
         if (maskInstance) {
 
-        //     if (display_object_container === maskInstance.parent) {
+            if (display_object_container === maskInstance.parent) {
 
-        //         if (!maskInstance._$hit(hit_context, tMatrix, hit_object, true)) {
-        //             continue;
-        //         }
+                if (!maskInstance._$hit(hit_context, tMatrix, hit_object, true)) {
+                    continue;
+                }
 
-        //     } else {
+            } else {
 
-        //         const matrix = displayObjectConcatenatedMatrixUseCase(maskInstance);
-        //         if (!maskInstance._$hit(hit_context, matrix.rawData, hit_object, true)) {
-        //             continue;
-        //         }
+                const matrix = displayObjectConcatenatedMatrixUseCase(maskInstance);
+                if (!maskInstance._$hit(hit_context, matrix.rawData, hit_object, true)) {
+                    continue;
+                }
 
-        //     }
+            }
 
         }
 

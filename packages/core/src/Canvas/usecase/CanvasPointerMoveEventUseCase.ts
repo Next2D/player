@@ -13,9 +13,14 @@ import { execute as playerSetCurrentMousePoint } from "../../Player/service/Play
  */
 export const execute = (event: PointerEvent): void =>
 {
+    const element = event.target as HTMLCanvasElement;
+    if (!element) {
+        return ;
+    }
+
     $setEvent(event);
     playerSetCurrentMousePoint(event);
 
     // start position
-    playerHitTestUseCase(event);
+    playerHitTestUseCase(event, element);
 };

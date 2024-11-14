@@ -40,6 +40,26 @@ export class Player
     public rendererHeight: number;
 
     /**
+     * @description メインのdiv elementの幅
+     *              Width of the main div element
+     *
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public screenWidth: number;
+
+    /**
+     * @description メインのdiv elementの高さ
+     *              Height of the main div element
+     *
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public screenHeight: number;
+
+    /**
      * @description devicePixelRatioを含んだcanvasの描画領域の拡大率
      *              The magnification of the drawing area of the canvas including devicePixelRatio
      *
@@ -132,7 +152,7 @@ export class Player
     /**
      * @description マウスの状態
      *             Mouse state
-     * 
+     *
      * @type {"up" | "down"}
      * @default "up"
      * @public
@@ -159,6 +179,8 @@ export class Player
         this.rendererWidth  = 0;
         this.rendererHeight = 0;
         this.rendererScale  = 1;
+        this.screenWidth    = 0;
+        this.screenHeight   = 0;
 
         this.stopFlag   = true;
         this.startTime  = 0;

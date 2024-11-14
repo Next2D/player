@@ -4,7 +4,7 @@ import { $stage } from "@next2d/display";
 /**
  * @description キーボードダウンイベントを実行する
  *              Execute the keyboard down event
- * 
+ *
  * @param  {KeyboardEvent} event
  * @return {void}
  * @method

@@ -52,9 +52,8 @@ export class PointerEvent extends Event
 
                     default:
                         return undefined;
-                        
-                }
 
+                }
 
             }
         });
