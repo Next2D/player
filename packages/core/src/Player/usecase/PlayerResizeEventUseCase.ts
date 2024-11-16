@@ -3,6 +3,7 @@ import { $stage } from "@next2d/display";
 import { execute as playerResizePostMessageService } from "../service/PlayerResizePostMessageService";
 import {
     $PREFIX,
+    $getMainElement,
     $devicePixelRatio
 } from "../../CoreUtil";
 import { $cacheStore } from "@next2d/cache";
@@ -17,9 +18,7 @@ import { $cacheStore } from "@next2d/cache";
  */
 export const execute = (): void =>
 {
-    const element: HTMLElement | null = document
-        .getElementById($PREFIX);
-
+    const element: HTMLDivElement = $getMainElement();
     if (!element) {
         return ;
     }

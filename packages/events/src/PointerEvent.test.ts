@@ -32,8 +32,4 @@ describe("PointerEvent.js property test", () =>
     {
         expect(PointerEvent.POINTER_UP).toBe("pointerup");
     });
-
-    it("WHEEL test", () => {
-        expect(PointerEvent.WHEEL).toBe("wheel");
-    });
 });

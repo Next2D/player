@@ -41,9 +41,9 @@ export class PointerEvent extends Event
                     case PointerEvent.POINTER_DOWN:
                     case PointerEvent.POINTER_MOVE:
                     case PointerEvent.POINTER_UP:
-                    case PointerEvent.POINTER_OUT:
+                    case PointerEvent.POINTER_LEAVE:
                     case PointerEvent.POINTER_OVER:
-                    case PointerEvent.WHEEL:
+                    case PointerEvent.POINTER_OUT:
                         if (name in event) {
                             // @ts-ignore
                             return $event[name];
@@ -83,6 +83,19 @@ export class PointerEvent extends Event
     static get POINTER_DOWN (): string
     {
         return "pointerdown";
+    }
+
+    /**
+     * @description ポインティングデバイスが要素のヒットテスト領域を出た時に発生します
+     *              Occurs when the pointing device leaves the hit test area of an element
+     *
+     * @return {string}
+     * @const
+     * @static
+     */
+    static get POINTER_LEAVE (): string
+    {
+        return "pointerleave";
     }
 
     /**
@@ -135,18 +148,5 @@ export class PointerEvent extends Event
     static get POINTER_UP (): string
     {
         return "pointerup";
-    }
-
-    /**
-     * @description ポインティングデバイス（通常はマウス）のホイールボタンを回転させたときに発生します。
-     *              Occurs when the wheel button of a pointing device (usually a mouse) is rotated.
-     *
-     * @return {string}
-     * @const
-     * @static
-     */
-    static get WHEEL (): string
-    {
-        return "wheel";
     }
 }

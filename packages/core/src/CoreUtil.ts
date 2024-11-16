@@ -1,3 +1,6 @@
+import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
+import type { IDisplayObject } from "./interface/IDisplayObject";
+
 /**
  * @type {string}
  * @const
@@ -72,4 +75,54 @@ export const $setMainElement = (element: HTMLDivElement): void =>
 export const $getMainElement = (): HTMLDivElement =>
 {
     return $mainElement as NonNullable<HTMLDivElement>;
+};
+
+/**
+ * @description マウス、タップがヒットしたDisplayObjectを取得します。
+ *              Get the DisplayObject that the mouse or tap hit.
+ *
+ * @type {IPlayerHitObject}
+ * @private
+ */
+export const $hitObject: IPlayerHitObject = {
+    "x": 0,
+    "y": 0,
+    "pointer": "",
+    "hit": null
+};
+
+/**
+ * @description マウス、タップがヒットしたDisplayObjectを取得します。
+ *             Get the DisplayObject that the mouse or tap hit.
+ *
+ * @type {IDisplayObject<any> | null}
+ * @private
+ */
+let $rollOverDisplayObject: IDisplayObject<any> | null = null;
+
+/**
+ * @description マウス、タップがヒットしたDisplayObjectを取得します。
+ *              Get the DisplayObject that the mouse or tap hit.
+ *
+ * @param  {IDisplayObject<any>} displayObject
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setRollOverDisplayObject = (displayObject: IDisplayObject<any> | null): void =>
+{
+    $rollOverDisplayObject = displayObject;
+};
+
+/**
+ * @description マウス、タップがヒットしたDisplayObjectを取得します。
+ *              Get the DisplayObject that the mouse or tap hit.
+ *
+ * @return {IDisplayObject<any>}
+ * @method
+ * @protected
+ */
+export const $getRollOverDisplayObject = (): IDisplayObject<any> | null =>
+{
+    return $rollOverDisplayObject;
 };

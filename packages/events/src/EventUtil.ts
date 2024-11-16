@@ -37,10 +37,13 @@ export const $poolArray = (array: any[]): void =>
     }
 };
 
-type IEvent = PointerEvent | KeyboardEvent | Event | null;
+/**
+ * @private
+ */
+type IEvent = PointerEvent | KeyboardEvent | WheelEvent | Event | null;
 
 /**
- * @type {Event}
+ * @type {IEvent}
  * @private
  */
 let $event: IEvent = null;

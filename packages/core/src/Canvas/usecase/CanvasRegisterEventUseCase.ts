@@ -1,7 +1,12 @@
 import { execute as canvasPointerDownEventUseCase } from "./CanvasPointerDownEventUseCase";
 import { execute as canvasPointerUpEventUseCase } from "./CanvasPointerUpEventUseCase";
 import { execute as canvasPointerMoveEventUseCase } from "./CanvasPointerMoveEventUseCase";
-import { PointerEvent } from "@next2d/events";
+import { execute as canvasPointerLeaveEventUseCase } from "./CanvasPointerLeaveEventUseCase";
+import { execute as canvasWheelEventUseCase } from "./CanvasWheelEventUseCase";
+import {
+    PointerEvent,
+    WheelEvent
+} from "@next2d/events";
 import {
     $bootAudioContext,
     $getMutedVideos
@@ -42,4 +47,6 @@ export const execute = (canvas: HTMLCanvasElement): void =>
     canvas.addEventListener(PointerEvent.POINTER_DOWN, canvasPointerDownEventUseCase);
     canvas.addEventListener(PointerEvent.POINTER_UP, canvasPointerUpEventUseCase);
     canvas.addEventListener(PointerEvent.POINTER_MOVE, canvasPointerMoveEventUseCase, { "passive": false });
+    canvas.addEventListener(PointerEvent.POINTER_LEAVE, canvasPointerLeaveEventUseCase);
+    canvas.addEventListener(WheelEvent.WHEEL, canvasWheelEventUseCase);
 };

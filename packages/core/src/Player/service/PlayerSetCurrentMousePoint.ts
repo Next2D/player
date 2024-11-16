@@ -4,7 +4,7 @@ import {
     $setCurrentMousePoint
 } from "@next2d/display";
 import {
-    $PREFIX,
+    $getMainElement,
     $devicePixelRatio
 } from "../../CoreUtil";
 
@@ -22,9 +22,7 @@ export const execute = (event: PointerEvent): void =>
     let x = window.scrollX;
     let y = window.scrollY;
 
-    const div: HTMLElement | null = document
-        .getElementById($PREFIX);
-
+    const div: HTMLDivElement = $getMainElement();
     if (div) {
         const rect = div.getBoundingClientRect();
         x += rect.left;

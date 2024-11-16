@@ -1,4 +1,4 @@
-import { $PREFIX } from "../../CoreUtil";
+import { $getMainElement } from "../../CoreUtil";
 import { $canvas } from "../../Canvas";
 
 /**
@@ -11,7 +11,7 @@ import { $canvas } from "../../Canvas";
  */
 export const execute = (): void =>
 {
-    const element: HTMLElement | null = document.getElementById($PREFIX);
+    const element: HTMLDivElement = $getMainElement();
     if (!element) {
         return ;
     }

@@ -1,4 +1,4 @@
-import { $PREFIX } from "../../CoreUtil";
+import { $getMainElement } from "../../CoreUtil";
 
 /**
  * @description ローディングのelementを削除
@@ -10,7 +10,7 @@ import { $PREFIX } from "../../CoreUtil";
  */
 export const execute = (): void =>
 {
-    const element: HTMLElement | null = document.getElementById($PREFIX);
+    const element: HTMLDivElement = $getMainElement();
     if (!element) {
         return ;
     }

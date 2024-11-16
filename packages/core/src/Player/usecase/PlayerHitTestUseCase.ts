@@ -1,11 +1,11 @@
-import type { IPlayerHitObject } from "../../interface/IPlayerHitObject";
 import { $player } from "../../Player";
 import { $stage } from "@next2d/display";
 import { PointerEvent as Next2D_PointerEvent } from "@next2d/events";
 import {
     $devicePixelRatio,
     $hitContext,
-    $getMainElement
+    $getMainElement,
+    $hitObject
 } from "../../CoreUtil";
 
 /**
@@ -13,17 +13,6 @@ import {
  * @private
  */
 const $matrix: Float32Array = new Float32Array([1, 0, 0, 1, 0, 0]);
-
-/**
- * @type {IPlayerHitObject}
- * @private
- */
-const $hitObject: IPlayerHitObject = {
-    "x": 0,
-    "y": 0,
-    "pointer": "",
-    "hit": null
-};
 
 /**
  * @type {string}
@@ -97,6 +86,17 @@ export const execute = (event: PointerEvent, canvas: HTMLCanvasElement): void =>
     // カーソルの表示を更新
     if ($currentCursor !== $hitObject.pointer) {
         canvas.style.cursor = $currentCursor = $hitObject.pointer;
+    }
+
+    switch (true) {
+
+        // ヒットしたオブジェクトがある場合
+        case $hitObject.hit === null:
+            break;
+
+            // ヒットしたオブジェクトがない場合
+        default:
+            break;
     }
 
     switch (event.type) {

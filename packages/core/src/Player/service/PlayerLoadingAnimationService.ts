@@ -11,7 +11,7 @@ import { $PREFIX } from "../../CoreUtil";
  */
 export const execute = (element: HTMLDivElement): void =>
 {
-    const loadingId: string = `${$PREFIX}_loading`;
+    const loadingId = `${$PREFIX}_loading`;
 
     element.innerHTML = `<style>
 #${loadingId} {
