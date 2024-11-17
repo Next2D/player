@@ -21,8 +21,13 @@
         sprite.x = 50;
         sprite.y = 50;
 
-        // const textFiled = sprite.addChild(new TextField());
-        // textFiled.text = "Hello Next2D";
+        const textFiled = sprite.addChild(new TextField());
+        textFiled.x = 150;
+        textFiled.y = 100;
+        textFiled.border = true;
+        textFiled.type = "input";
+        textFiled.multiline = true;
+        textFiled.text = "Hello Next2D\nTest Mode On\n\nText Field";
 
         const shape = sprite.addChild(new Shape());
         shape

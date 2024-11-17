@@ -49,7 +49,7 @@ export const execute = (
     point_y: number
 ): void => {
 
-    if (!text_field.visible || !text_field.text) {
+    if (!text_field.visible) {
         render_queue.push(0);
         return ;
     }
@@ -253,6 +253,7 @@ export const execute = (
         render_queue.push(Math.abs(text_field.xMax - text_field.xMin));
         render_queue.push(Math.abs(text_field.yMax - text_field.yMin));
         render_queue.push(text_field.focusIndex);
+        render_queue.push(text_field.selectIndex);
         render_queue.push(+text_field.focusVisible);
         render_queue.push(text_field.thickness);
         render_queue.push(text_field.thicknessColor);

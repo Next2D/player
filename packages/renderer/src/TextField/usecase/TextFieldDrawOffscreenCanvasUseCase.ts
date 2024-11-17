@@ -87,6 +87,76 @@ export const execute = (
     context.setTransform(x_scale, 0, 0, y_scale, tx * x_scale, ty * y_scale);
     context.beginPath();
 
+    if (text_setting.selectIndex > -1
+        && text_setting.focusIndex > -1
+    ) {
+        const range = text_data.textTable.length - 1;
+
+        let minIndex = 0;
+        let maxIndex = 0;
+        if (text_setting.focusIndex <= text_setting.selectIndex) {
+            minIndex = Math.min(text_setting.focusIndex, range);
+            maxIndex = Math.min(text_setting.selectIndex, range);
+        } else {
+            minIndex = Math.min(text_setting.selectIndex, range);
+            maxIndex = Math.min(text_setting.focusIndex - 1, range);
+        }
+
+        const textObject = text_data.textTable[minIndex];
+        const lineObject = text_data.lineTable[textObject.line];
+        const offsetAlign = textFiledGetAlignOffsetService(
+            text_data, lineObject, text_setting
+        );
+
+        let x = 0;
+        if (minIndex && textObject.mode === "text") {
+            let idx = minIndex;
+            while (idx) {
+                const textObject = text_data.textTable[--idx];
+                if (textObject.mode !== "text") {
+                    break;
+                }
+                x += textObject.w;
+            }
+        }
+
+        context.fillStyle = "#b4d7ff";
+
+        let w = 0;
+        for (let idx = minIndex; idx <= maxIndex; ++idx) {
+
+            const textObject = text_data.textTable[idx];
+            if (textObject.mode === "text") {
+
+                w += textObject.w;
+
+                if (idx !== maxIndex) {
+                    continue;
+                }
+            }
+
+            let y = 0;
+            const line = textObject.mode === "text"
+                ? textObject.line
+                : textObject.line - 1;
+
+            for (let idx = 0; idx < line; ++idx) {
+                y += text_data.heightTable[idx];
+            }
+
+            context.beginPath();
+            context.rect(
+                x, y,
+                w + offsetAlign,
+                text_data.heightTable[line]
+            );
+            context.fill();
+
+            x = 0;
+            w = 0;
+        }
+    }
+
     const rawWidth = text_setting.rawWidth;
     let scrollX = 0;
     if (text_setting.scrollX > 0) {
@@ -102,22 +172,6 @@ export const execute = (
         scrollY = text_setting.scrollY * scaleY;
     }
     const limitHeight = rawHeight + scrollY;
-
-    if (!text_data.textTable.length
-        && text_setting.focusIndex > -1
-        && text_setting.focusVisible
-    ) {
-
-        const color = $intToRGBA(text_setting.defaultColor);
-
-        context.strokeStyle = `rgba(${color.R},${color.G},${color.B},${color.A})`;
-        context.beginPath();
-        context.moveTo(0, 0);
-        context.lineTo(0, 0 + (text_setting.defaultSize || 12));
-        context.stroke();
-
-        return canvas;
-    }
 
     // setup
     let offsetWidth   = 0;
@@ -172,7 +226,9 @@ export const execute = (
         context.fillStyle = `rgba(${color.R},${color.G},${color.B},${color.A})`;
 
         // focus line
-        if (text_setting.focusVisible && text_setting.focusIndex === idx) {
+        if (text_setting.focusVisible
+            && text_setting.focusIndex === idx
+        ) {
 
             const x = offsetWidth + offsetAlign + 0.1;
             let line = textObject.line;
@@ -185,12 +241,11 @@ export const execute = (
                     ? textObject.h
                     : text_data.ascentTable[line - 1];
 
-                if (line > 0 && !text_data.ascentTable[line - 1]) {
-                    line = textObject.line;
-                    y = text_data.ascentTable[line - 1];
-                } else {
+                if (line > 0) {
                     line = textObject.line - 1;
                     y = text_data.ascentTable[line];
+                } else {
+                    y = textObject.h;
                 }
             }
 
@@ -271,6 +326,28 @@ export const execute = (
             default:
                 break;
 
+        }
+    }
+
+    if (text_setting.focusVisible
+        && text_setting.focusIndex >= text_data.textTable.length
+    ) {
+        const textObject = text_data.textTable[text_setting.focusIndex - 1];
+        if (textObject) {
+            const color = $intToRGBA(textObject.textFormat.color || 0);
+            context.strokeStyle = `rgba(${color.R},${color.G},${color.B},${color.A})`;
+
+            const x = offsetWidth + offsetAlign + 0.1;
+            const y = offsetHeight + verticalAlign;
+
+            context.beginPath();
+            if (textObject.mode === "text") {
+                context.moveTo(x, y - textObject.y);
+            } else {
+                context.moveTo(x, y + textObject.h);
+            }
+            context.lineTo(x, y);
+            context.stroke();
         }
     }
 

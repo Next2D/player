@@ -1,8 +1,12 @@
 import type { TextField } from "../../TextField";
 import { FocusEvent } from "@next2d/events";
-import { $textArea } from "../../TextUtil";
 import { execute as textFieldApplyChangesService } from "../service/TextFieldApplyChangesService";
 import { execute as textFieldBlinkingClearTimeoutService } from "../service/TextFieldBlinkingClearTimeoutService";
+import { execute as textFieldBlinkingUseCase } from "./TextFieldBlinkingUseCase";
+import {
+    $textArea,
+    $getBlinkingTimerId
+} from "../../TextUtil";
 
 /**
  * @description フォーカス
@@ -23,7 +27,13 @@ export const execute = (text_field: TextField, name: string): void =>
     if (text_field.focus) {
         $textArea.focus();
 
-        // todo set stage x,y
+        if ($getBlinkingTimerId() === undefined) {
+            if (text_field.focusIndex === -1) {
+                text_field.focusIndex  = 1;
+                text_field.selectIndex = -1;
+            }
+            textFieldBlinkingUseCase(text_field);
+        }
 
     } else {
         // params reset

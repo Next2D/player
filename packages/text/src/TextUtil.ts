@@ -183,7 +183,7 @@ export const $clamp = (
  * @type {NodeJS.Timeout}
  * @private
  */
-let $timerId: NodeJS.Timeout;
+let $timerId: NodeJS.Timeout | void;
 
 /**
  * @description テキスト点滅のタイマーIDを返却
@@ -192,7 +192,7 @@ let $timerId: NodeJS.Timeout;
  * @return {NodeJS.Timeout}
  * @protected
  */
-export const $getBlinkingTimerId = (): NodeJS.Timeout =>
+export const $getBlinkingTimerId = (): NodeJS.Timeout | void =>
 {
     return $timerId;
 };
@@ -205,7 +205,7 @@ export const $getBlinkingTimerId = (): NodeJS.Timeout =>
  * @return {void}
  * @protected
  */
-export const $setBlinkingTimerId = (timer_id: NodeJS.Timeout): void =>
+export const $setBlinkingTimerId = (timer_id: NodeJS.Timeout | void): void =>
 {
     $timerId = timer_id;
 };

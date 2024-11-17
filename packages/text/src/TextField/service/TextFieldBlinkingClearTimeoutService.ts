@@ -1,4 +1,7 @@
-import { $getBlinkingTimerId } from "../../TextUtil";
+import {
+    $getBlinkingTimerId,
+    $setBlinkingTimerId
+} from "../../TextUtil";
 
 /**
  * @description テキストの点滅のタイマーをクリアします。
@@ -10,5 +13,9 @@ import { $getBlinkingTimerId } from "../../TextUtil";
  */
 export const execute = (): void =>
 {
-    clearTimeout($getBlinkingTimerId());
+    const timerId = $getBlinkingTimerId();
+    if (timerId !== undefined) {
+        clearTimeout(timerId);
+    }
+    $setBlinkingTimerId(void 0);
 };

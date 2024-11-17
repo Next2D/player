@@ -78,11 +78,20 @@ export const $getMainElement = (): HTMLDivElement =>
 };
 
 /**
+ * @description マウス、タップ時の画面のmatrix情報
+ *              Screen matrix information when mouse or tap is pressed
+ *
+ * @type {Float32Array}
+ * @protected
+ */
+export const $hitMatrix: Float32Array = new Float32Array([1, 0, 0, 1, 0, 0]);
+
+/**
  * @description マウス、タップがヒットしたDisplayObjectを取得します。
  *              Get the DisplayObject that the mouse or tap hit.
  *
  * @type {IPlayerHitObject}
- * @private
+ * @protected
  */
 export const $hitObject: IPlayerHitObject = {
     "x": 0,

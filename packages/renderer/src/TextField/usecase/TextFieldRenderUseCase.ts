@@ -125,6 +125,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             "rawWidth": render_queue[index++],
             "rawHeight": render_queue[index++],
             "focusIndex": render_queue[index++],
+            "selectIndex": render_queue[index++],
             "focusVisible": Boolean(render_queue[index++]),
             "thickness": render_queue[index++],
             "thicknessColor": render_queue[index++],

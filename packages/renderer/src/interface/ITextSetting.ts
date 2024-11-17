@@ -12,6 +12,7 @@ export interface ITextSetting {
     rawHeight: number;
     autoSize: ITextFieldAutoSize;
     focusIndex: number;
+    selectIndex: number;
     focusVisible: boolean;
     thickness: number;
     thicknessColor: number;
