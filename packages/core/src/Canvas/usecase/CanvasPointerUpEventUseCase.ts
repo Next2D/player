@@ -1,7 +1,8 @@
 import { $setEvent } from "@next2d/events";
 import { $player } from "../../Player";
 import { execute as playerHitTestUseCase } from "../../Player/usecase/PlayerHitTestUseCase";
-import { execute as playerSetCurrentMousePoint } from "../../Player/service/PlayerSetCurrentMousePoint";
+import { execute as playerSetCurrentMousePoint } from "../../Player/service/PlayerSetCurrentMousePointService";
+import { execute as playerPointerUpEventService } from "../../Player/service/PlayerPointerUpEventService";
 
 /**
  * @description プレイヤーのポインターアップイベントを処理します。
@@ -27,4 +28,8 @@ export const execute = (event: PointerEvent): void =>
 
     // start position
     playerHitTestUseCase(event, element);
+
+    // fixed logic
+    // ポインターアップイベントを発火します。
+    playerPointerUpEventService();
 };

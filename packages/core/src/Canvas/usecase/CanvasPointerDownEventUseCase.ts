@@ -1,7 +1,21 @@
 import { $setEvent } from "@next2d/events";
 import { $player } from "../../Player";
 import { execute as playerHitTestUseCase } from "../../Player/usecase/PlayerHitTestUseCase";
-import { execute as playerSetCurrentMousePoint } from "../../Player/service/PlayerSetCurrentMousePoint";
+import { execute as playerSetCurrentMousePointService } from "../../Player/service/PlayerSetCurrentMousePointService";
+import { execute as playerPointerDownEventService } from "../../Player/service/PlayerPointerDownEventService";
+import { execute as playerDoubleClickEventService } from "../../Player/service/PlayerDoubleClickEventService";
+
+/**
+ * @type {NodeJS.Timeout}
+ * @private
+ */
+let $timerId: NodeJS.Timeout;
+
+/**
+ * @type {boolean}
+ * @private
+ */
+let $wait: boolean = false;
 
 /**
  * @description プレイヤーのポインターダウンイベントを処理します。
@@ -23,8 +37,36 @@ export const execute = (event: PointerEvent): void =>
     element.setPointerCapture(event.pointerId);
 
     $setEvent(event);
-    playerSetCurrentMousePoint(event);
+    playerSetCurrentMousePointService(event);
 
     // start position
     playerHitTestUseCase(event, element);
+
+    // fixed logic
+    clearTimeout($timerId);
+
+    if (!$wait) {
+
+        // 初回のタップであればダブルタップを待機モードに変更
+        $wait = true;
+
+        // ダブルタップ有効期限をセット
+        $timerId = setTimeout((): void =>
+        {
+            $wait = false;
+        }, 300);
+
+        playerPointerDownEventService(
+            event.pageX,
+            event.pageY
+        );
+
+    } else {
+
+        // ダブルタップを終了
+        $wait = false;
+
+        playerDoubleClickEventService();
+
+    }
 };
