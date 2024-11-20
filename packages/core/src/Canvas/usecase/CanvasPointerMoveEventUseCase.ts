@@ -2,6 +2,7 @@ import { $setEvent } from "@next2d/events";
 import { execute as playerHitTestUseCase } from "../../Player/usecase/PlayerHitTestUseCase";
 import { execute as playerSetCurrentMousePoint } from "../../Player/service/PlayerSetCurrentMousePointService";
 import { execute as playerPointerMoveEventService } from "../../Player/service/PlayerPointerMoveEventService";
+import { $hitObject } from "../../CoreUtil";
 
 /**
  * @description プレイヤーのポインタームーブイベントを処理します。
@@ -24,6 +25,11 @@ export const execute = (event: PointerEvent): void =>
 
     // start position
     playerHitTestUseCase(event, element);
+
+    // ヒットしたオブジェクトがある場合
+    if ($hitObject.hit !== null) {
+        event.preventDefault();
+    }
 
     // fixed logic
     // ポインタームーブイベントを発火

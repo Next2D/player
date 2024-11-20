@@ -60,13 +60,10 @@ export const execute = (event: PointerEvent, canvas: HTMLCanvasElement): void =>
     // ヒット判定
     $stage.$mouseHit($hitContext, $hitMatrix, $hitObject);
 
-    // ヒットしたオブジェクトがある場合
-    if ($hitObject.hit !== null) {
-        event.preventDefault();
-    }
-
     // カーソルの表示を更新
-    if ($currentCursor !== $hitObject.pointer) {
+    if ($player.mouseState === "up"
+        && $currentCursor !== $hitObject.pointer
+    ) {
         canvas.style.cursor = $currentCursor = $hitObject.pointer;
     }
 };

@@ -249,6 +249,9 @@ export const execute = (
                 }
             }
 
+            if (line > 0 && text_data.ascentTable[line] === 0) {
+                line++;
+            }
             for (let idx = 0; idx < line; ++idx) {
                 y += text_data.heightTable[idx];
             }

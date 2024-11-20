@@ -78,16 +78,14 @@ export const execute = (
                 ) {
                     const index = idx;
                     if (selected) {
-                        if (text_field.selectIndex !== index
-                            && text_field.focusIndex === index
-                        ) {
+                        if (text_field.selectIndex !== index) {
                             text_field.selectIndex = index;
 
-                            if (text_field.focusIndex !== index) {
+                            if (text_field.focusVisible) {
                                 text_field.focusVisible = false;
                                 textFieldBlinkingClearTimeoutService();
-                                textFieldApplyChangesService(text_field);
                             }
+                            textFieldApplyChangesService(text_field);
                         }
                     } else {
                         if (text_field.focusIndex !== index || text_field.selectIndex > -1) {
@@ -172,11 +170,12 @@ export const execute = (
                         if (text_field.selectIndex !== index) {
                             text_field.selectIndex = index;
 
-                            if (text_field.focusIndex !== index) {
+                            if (text_field.focusVisible) {
                                 text_field.focusVisible = false;
                                 textFieldBlinkingClearTimeoutService();
-                                textFieldApplyChangesService(text_field);
                             }
+
+                            textFieldApplyChangesService(text_field);
                         }
                     } else {
                         if (text_field.focusIndex !== index || text_field.selectIndex > -1) {
@@ -202,6 +201,23 @@ export const execute = (
             if ($getBlinkingTimerId() === undefined) {
                 textFieldBlinkingUseCase(text_field);
             } else {
+                textFieldApplyChangesService(text_field);
+            }
+        } else {
+            let height = 0;
+            for (let idx = 0; textData.heightTable.length > idx; ++idx) {
+                height += textData.heightTable[idx];
+            }
+
+            if (y > height || 2 > y) {
+                text_field.selectIndex = 2 > y
+                    ? 1
+                    : textData.textTable.length;
+
+                if (text_field.focusVisible) {
+                    text_field.focusVisible = false;
+                    textFieldBlinkingClearTimeoutService();
+                }
                 textFieldApplyChangesService(text_field);
             }
         }
