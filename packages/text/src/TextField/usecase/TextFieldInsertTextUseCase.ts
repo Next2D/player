@@ -28,6 +28,7 @@ export const execute = (text_field: TextField, texts: string): void =>
 
     const textData = textFieldGetTextDataUseCase(text_field);
     if (2 > textData.textTable.length) {
+        text_field.focusIndex = 2;
         text_field.appendText(texts);
         return ;
     }

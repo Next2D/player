@@ -4,6 +4,7 @@ import { execute as playerRemoveLoadingElementService } from "../../Player/servi
 import { execute as playerAppendElementService } from "../../Player/service/PlayerAppendElementService";
 import { execute as playerReadyCompleteUseCase } from "../../Player/usecase/PlayerReadyCompleteUseCase";
 import { execute as playerBootUseCase } from "../../Player/usecase/PlayerBootUseCase";
+import { execute as canvasSetPositionService } from "../../Canvas/service/CanvasSetPositionService";
 import {
     Sprite,
     $stage
@@ -49,6 +50,9 @@ export const execute = async (
 
     // append canvas
     playerAppendElementService();
+
+    // set position
+    canvasSetPositionService();
 
     return root;
 };

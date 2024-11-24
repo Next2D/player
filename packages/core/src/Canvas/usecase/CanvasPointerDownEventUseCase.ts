@@ -56,10 +56,7 @@ export const execute = (event: PointerEvent): void =>
             $wait = false;
         }, 300);
 
-        playerPointerDownEventService(
-            event.pageX,
-            event.pageY
-        );
+        playerPointerDownEventService();
 
     } else {
 

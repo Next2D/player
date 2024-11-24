@@ -1,4 +1,5 @@
 import type { IRGBA } from "./interface/IRGBA";
+import type { IElementPosition } from "./interface/IElementPosition";
 import type { TextField } from "./TextField";
 import { execute as textAreaRegisterEventUseCase } from "./TextArea/usecase/TextAreaRegisterEventUseCase";
 
@@ -54,9 +55,9 @@ style += "position: fixed;";
 style += "top: 0;";
 style += "left: 0;";
 style += "font-size: 16px;";
-// style += "border: 0;";
+style += "border: 0;";
 style += "resize: none;";
-// style += "opacity: 0;";
+style += "opacity: 0;";
 style += "z-index: -1;";
 style += "pointer-events: none;";
 $textArea.setAttribute("style", style);
@@ -208,4 +209,16 @@ export const $getBlinkingTimerId = (): NodeJS.Timeout | void =>
 export const $setBlinkingTimerId = (timer_id: NodeJS.Timeout | void): void =>
 {
     $timerId = timer_id;
+};
+
+/**
+ * @description canvasの位置をセット
+ *              Set the position of the canvas
+ * 
+ * @type {IElementPosition}
+ * @public
+ */
+export const $mainCanvasPosition: IElementPosition = {
+    "x": 0,
+    "y": 0
 };

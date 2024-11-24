@@ -16,16 +16,12 @@ import {
  * @description ポインターダウンイベントを処理します。
  *              Processes the pointer down event.
  *
- * @param  {number} page_x
- * @param  {number} page_y
  * @return {void}
  * @method
  * @protected
  */
-export const execute = <D extends DisplayObject> (
-    page_x: number = 0,
-    page_y: number = 0
-): void => {
+export const execute = <D extends DisplayObject> (): void =>
+{
 
     const displayObject = $hitObject.hit as unknown as D;
 
@@ -45,15 +41,17 @@ export const execute = <D extends DisplayObject> (
             if (!(displayObject as unknown as TextField).focus) {
                 (displayObject as unknown as TextField).focus = true;
                 $setSelectedTextField(displayObject as unknown as TextField);
+            } else {
+                setTimeout((): void =>
+                {
+                    $textArea.focus();
+                }, 300);
             }
 
             (displayObject as unknown as TextField).setFocusIndex(
                 $hitObject.x - $hitMatrix[4],
                 $hitObject.y - $hitMatrix[5]
             );
-
-            $textArea.style.left = `${page_x}px`;
-            $textArea.style.top  = `${page_y}px`;
         }
 
         // ヒットしたDisplayObjectポインターダウンイベントを発火します。

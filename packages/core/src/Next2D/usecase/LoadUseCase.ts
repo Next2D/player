@@ -9,6 +9,7 @@ import { execute as playerRemoveLoadingElementService } from "../../Player/servi
 import { execute as playerAppendCanvasElementService } from "../../Player/service/PlayerAppendElementService";
 import { execute as playerReadyCompleteUseCase } from "../../Player/usecase/PlayerReadyCompleteUseCase";
 import { execute as playerBootUseCase } from "../../Player/usecase/PlayerBootUseCase";
+import { execute as canvasSetPositionService } from "../../Canvas/service/CanvasSetPositionService";
 import {
     Loader,
     $stage
@@ -83,4 +84,7 @@ export const execute = async (url: string, options: IPlayerOptions | null = null
 
     // append canvas
     playerAppendCanvasElementService();
+
+    // set position
+    canvasSetPositionService();
 };

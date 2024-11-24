@@ -80,7 +80,7 @@ export const execute = (text_field: TextField): void =>
     if (!newText) {
         // reset
         text_field.text = "";
-        text_field.focusIndex = 0;
+        text_field.focusIndex = 1;
     } else {
 
         const beforeTextWidth  = text_field.textWidth;

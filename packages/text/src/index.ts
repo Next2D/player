@@ -3,5 +3,6 @@ export * from "./TextFormat";
 export {
     $textArea,
     $getSelectedTextField,
-    $setSelectedTextField
+    $setSelectedTextField,
+    $mainCanvasPosition
 } from "./TextUtil";

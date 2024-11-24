@@ -1,12 +1,13 @@
 import { $player } from "../../Player";
 import { $stage } from "@next2d/display";
 import { execute as playerResizePostMessageService } from "../service/PlayerResizePostMessageService";
+import { execute as canvasSetPositionService } from "../../Canvas/service/CanvasSetPositionService";
+import { $cacheStore } from "@next2d/cache";
 import {
     $PREFIX,
     $getMainElement,
     $devicePixelRatio
 } from "../../CoreUtil";
-import { $cacheStore } from "@next2d/cache";
 
 /**
  * @description 画面リサイズ時にcanvasのリサイズを行う
@@ -83,4 +84,7 @@ export const execute = (): void =>
             new Event(`${$PREFIX}_blur`)
         );
     }
+
+    // set canvas position
+    canvasSetPositionService();
 };
