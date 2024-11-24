@@ -1,9 +1,9 @@
 import type { IPlayerOptions } from "../../interface/IPlayerOptions";
-import { $player } from "../../Player";
 import { $clamp } from "../../CoreUtil";
 import { execute as playerRemoveLoadingElementService } from "../../Player/service/PlayerRemoveLoadingElementService";
-import { execute as playerAppendCanvasElementService } from "../../Player/service/PlayerAppendCanvasElementService";
+import { execute as playerAppendElementService } from "../../Player/service/PlayerAppendElementService";
 import { execute as playerReadyCompleteUseCase } from "../../Player/usecase/PlayerReadyCompleteUseCase";
+import { execute as playerBootUseCase } from "../../Player/usecase/PlayerBootUseCase";
 import {
     Sprite,
     $stage
@@ -37,7 +37,7 @@ export const execute = async (
     }
 
     // boot player
-    $player.boot(options);
+    playerBootUseCase(options);
 
     const root = $stage.addChild<Sprite>(new Sprite());
 
@@ -48,7 +48,7 @@ export const execute = async (
     playerRemoveLoadingElementService();
 
     // append canvas
-    playerAppendCanvasElementService();
+    playerAppendElementService();
 
     return root;
 };

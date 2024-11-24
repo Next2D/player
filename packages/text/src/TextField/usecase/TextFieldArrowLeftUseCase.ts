@@ -8,11 +8,12 @@ import { execute as textFieldBlinkingUseCase } from "../../TextField/usecase/Tex
  *              Moves the focus index of the text field to the left.
  *
  * @param  {TextField} text_field
+ * @param  {boolean} shift_key
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (text_field: TextField): void =>
+export const execute = (text_field: TextField, shift_key: boolean): void =>
 {
     if (!text_field.focusIndex) {
         return ;
@@ -24,8 +25,21 @@ export const execute = (text_field: TextField): void =>
         return ;
     }
 
+    // fixed logic
     text_field.focusIndex--;
-    text_field.selectIndex = -1;
+    if (!shift_key) {
+        text_field.selectIndex = -1;
+    } else {
+        if (text_field.selectIndex === -1) {
+            text_field.selectIndex = text_field.focusIndex;
+        } else {
+            if (text_field.selectIndex === text_field.focusIndex) {
+                text_field.selectIndex = -1;
+            }
+        }
+    }
+
+    text_field.focusVisible = false;
     textFieldBlinkingClearTimeoutService();
     textFieldBlinkingUseCase(text_field);
 };

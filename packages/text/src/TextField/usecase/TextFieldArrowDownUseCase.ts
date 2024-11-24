@@ -1,4 +1,5 @@
 import type { TextField } from "../../TextField";
+import { $textArea } from "../../TextUtil";
 import { execute as textFieldGetTextDataUseCase } from "../../TextField/usecase/TextFieldGetTextDataUseCase";
 import { execute as textFieldBlinkingClearTimeoutService } from "../../TextField/service/TextFieldBlinkingClearTimeoutService";
 import { execute as textFieldBlinkingUseCase } from "../../TextField/usecase/TextFieldBlinkingUseCase";
@@ -8,11 +9,12 @@ import { execute as textFieldBlinkingUseCase } from "../../TextField/usecase/Tex
  *              Moves the focus index of the text field down.
  *
  * @param  {TextField} text_field
+ * @param  {boolean} shift_key
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (text_field: TextField): void =>
+export const execute = (text_field: TextField, shift_key: boolean): void =>
 {
     if (text_field.focusIndex === -1) {
         return ;
@@ -32,7 +34,24 @@ export const execute = (text_field: TextField): void =>
         ? textObject.line
         : textObject.line - 1;
 
+    // 最終行の場合は、フォーカスインデックスを最終位置に設定
     if (line === textData.lineTable.length - 1) {
+        if (!shift_key) {
+            text_field.selectIndex = -1;
+        } else {
+            if (text_field.selectIndex === -1) {
+                text_field.selectIndex = text_field.focusIndex;
+            } else {
+                if (text_field.selectIndex === text_field.focusIndex) {
+                    text_field.selectIndex = -1;
+                }
+            }
+        }
+
+        text_field.focusVisible = false;
+        text_field.focusIndex = textData.textTable.length;
+        textFieldBlinkingClearTimeoutService();
+        textFieldBlinkingUseCase(text_field);
         return ;
     }
 
@@ -72,8 +91,21 @@ export const execute = (text_field: TextField): void =>
         }
 
         if (textObject.line > targetLine) {
-            text_field.focusIndex  = textObject.mode === "text" ? idx - 1 : idx;
-            text_field.selectIndex = -1;
+            if (!shift_key) {
+                text_field.selectIndex = -1;
+            } else {
+                if (text_field.selectIndex === -1) {
+                    text_field.selectIndex = text_field.focusIndex;
+                } else {
+                    if (text_field.selectIndex === text_field.focusIndex) {
+                        text_field.selectIndex = -1;
+                    }
+                }
+            }
+
+            $textArea.style.top = `${$textArea.offsetTop + textObject.h}px`;
+            text_field.focusVisible = false;
+            text_field.focusIndex = textObject.mode === "text" ? idx - 1 : idx;
             textFieldBlinkingClearTimeoutService();
             textFieldBlinkingUseCase(text_field);
             return ;
@@ -85,16 +117,38 @@ export const execute = (text_field: TextField): void =>
 
         textWidth += textObject.w;
         if (textWidth > currentWidth) {
-            text_field.focusIndex  = idx;
-            text_field.selectIndex = -1;
+
+            if (!shift_key) {
+                text_field.selectIndex = -1;
+            } else {
+                if (text_field.selectIndex === -1) {
+                    text_field.selectIndex = text_field.focusIndex;
+                } else {
+                    if (text_field.selectIndex === idx - 1) {
+                        text_field.selectIndex = -1;
+                    }
+                }
+            }
+
+            $textArea.style.top = `${$textArea.offsetTop + textObject.h}px`;
+            text_field.focusVisible = false;
+            text_field.focusIndex = idx;
             textFieldBlinkingClearTimeoutService();
             textFieldBlinkingUseCase(text_field);
             return ;
         }
     }
 
-    text_field.focusIndex  = textData.textTable.length;
-    text_field.selectIndex = -1;
+    if (!shift_key) {
+        text_field.selectIndex = -1;
+    } else {
+        if (text_field.selectIndex === -1) {
+            text_field.selectIndex = text_field.focusIndex;
+        }
+    }
+
+    text_field.focusVisible = false;
+    text_field.focusIndex = textData.textTable.length;
     textFieldBlinkingClearTimeoutService();
     textFieldBlinkingUseCase(text_field);
 };

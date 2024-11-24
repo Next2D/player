@@ -1,9 +1,10 @@
 import { $getMainElement } from "../../CoreUtil";
 import { $canvas } from "../../Canvas";
+import { $textArea } from "@next2d/text";
 
 /**
- * @description canvas elementをメインのdivに追加
- *              Add canvas element to main div
+ * @description canvas と textarea elementをメインのdivに追加
+ *              Add canvas and textarea element to main div.
  *
  * @return {void}
  * @method
@@ -16,4 +17,5 @@ export const execute = (): void =>
         return ;
     }
     element.appendChild($canvas);
+    element.appendChild($textArea);
 };

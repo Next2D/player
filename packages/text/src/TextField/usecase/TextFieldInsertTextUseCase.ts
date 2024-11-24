@@ -27,6 +27,10 @@ export const execute = (text_field: TextField, texts: string): void =>
     }
 
     const textData = textFieldGetTextDataUseCase(text_field);
+    if (2 > textData.textTable.length) {
+        text_field.appendText(texts);
+        return ;
+    }
 
     const textFormats: TextFormat[] = [];
 
@@ -76,7 +80,7 @@ export const execute = (text_field: TextField, texts: string): void =>
         }
 
         for (let idx = 0; idx < texts.length; ++idx) {
-            textFormats.push(new TextFormat(...Object.values(textFormat)));
+            textFormats.push(new TextFormat(...Object.values(textFormat.toObject())));
             newText += texts[idx];
         }
     }

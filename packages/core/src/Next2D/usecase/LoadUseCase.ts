@@ -1,14 +1,14 @@
 import type { IPlayerOptions } from "../../interface/IPlayerOptions";
 import type { IStageData } from "../../interface/IStageData";
 import type { MovieClip } from "@next2d/display";
-import { $player } from "../../Player";
 import { $clamp } from "../../CoreUtil";
 import { URLRequest } from "@next2d/net";
 import { IOErrorEvent } from "@next2d/events";
 import { execute as playerResizeEventUseCase } from "../../Player/usecase/PlayerResizeEventUseCase";
 import { execute as playerRemoveLoadingElementService } from "../../Player/service/PlayerRemoveLoadingElementService";
-import { execute as playerAppendCanvasElementService } from "../../Player/service/PlayerAppendCanvasElementService";
+import { execute as playerAppendCanvasElementService } from "../../Player/service/PlayerAppendElementService";
 import { execute as playerReadyCompleteUseCase } from "../../Player/usecase/PlayerReadyCompleteUseCase";
+import { execute as playerBootUseCase } from "../../Player/usecase/PlayerBootUseCase";
 import {
     Loader,
     $stage
@@ -47,7 +47,7 @@ export const execute = async (url: string, options: IPlayerOptions | null = null
     }
 
     // player
-    $player.boot(options);
+    playerBootUseCase(options);
 
     const loader: Loader = new Loader();
 

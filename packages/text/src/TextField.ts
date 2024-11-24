@@ -20,6 +20,9 @@ import { execute as textFieldCopyUseCase } from "./TextField/usecase/TextFieldCo
 import { execute as textFieldInsertTextUseCase } from "./TextField/usecase/TextFieldInsertTextUseCase";
 import { execute as textFieldApplyChangesService } from "./TextField/service/TextFieldApplyChangesService";
 import { execute as textFieldSetFocusIndexUseCase } from "./TextField/usecase/TextFieldSetFocusIndexUseCase";
+import { execute as textFieldKeyDownEventUseCase } from "./TextField/usecase/TextFieldKeyDownEventUseCase";
+import { execute as textFieldDeleteTextUseCase } from "./TextField/usecase/TextFieldDeleteTextUseCase";
+import { execute as textFieldSelectAllUseCase } from "./TextField/usecase/TextFieldSelectAllUseCase";
 import {
     $clamp,
     $toColorInt
@@ -1138,6 +1141,33 @@ export class TextField extends InteractiveObject
     }
 
     /**
+     * @description テキストフィールドのフォーカス位置にテキスtを追加します。
+     *              Adds text to the focus position of the text field.
+     *
+     * @param  {string} new_text
+     * @return {void}
+     * @method
+     * @public
+     */
+    insertText (new_text: string): void
+    {
+        textFieldInsertTextUseCase(this, new_text);
+    }
+
+    /**
+     * @description テキストフィールドの選択範囲を削除します。
+     *              Deletes the selection range of the text field.
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    deleteText (): void
+    {
+        textFieldDeleteTextUseCase(this);
+    }
+
+    /**
      * @description lineIndex パラメーターで指定された行のテキストを返します。
      *              Returns the text of the line specified by the lineIndex parameter.
      *
@@ -1180,13 +1210,7 @@ export class TextField extends InteractiveObject
      */
     selectAll (): void
     {
-        const textData = textFieldGetTextDataUseCase(this);
-        if (2 > textData.textTable.length) {
-            return ;
-        }
-
-        this.selectIndex = 1;
-        this.focusIndex  = textData.textTable.length;
+        textFieldSelectAllUseCase(this);
     }
 
     /**
@@ -1218,7 +1242,7 @@ export class TextField extends InteractiveObject
         if (!this._$copyText || this.focusIndex === -1) {
             return ;
         }
-        textFieldInsertTextUseCase(this, this._$copyText);
+        this.insertText(this._$copyText);
     }
 
     /**
@@ -1230,7 +1254,7 @@ export class TextField extends InteractiveObject
      * @param  {boolean} [selected=false]
      * @return {void}
      * @method
-     * @private
+     * @public
      */
     setFocusIndex (
         stage_x: number,
@@ -1238,5 +1262,19 @@ export class TextField extends InteractiveObject
         selected: boolean = false
     ): void {
         textFieldSetFocusIndexUseCase(this, stage_x, stage_y, selected);
+    }
+
+    /**
+     * @description キーダウンイベントを処理します。
+     *              Processes the key down event.
+     *
+     * @param {KeyboardEvent} event
+     * @return {void}
+     * @method
+     * @public
+     */
+    keyDown (event: KeyboardEvent): void
+    {
+        textFieldKeyDownEventUseCase(this, event);
     }
 }

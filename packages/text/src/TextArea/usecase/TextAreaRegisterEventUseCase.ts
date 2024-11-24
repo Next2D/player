@@ -2,7 +2,6 @@ import { execute as textAreaCompositionStartUseCase } from "./TextAreaCompositio
 import { execute as textAreaCompositionUpdateUseCase } from "./TextAreaCompositionUpdateUseCase";
 import { execute as textAreaCompositionEndUseCase } from "./TextAreaCompositionEndUseCase";
 import { execute as textAreaInputUseCase } from "./TextAreaInputUseCase";
-import { execute as textAreaKeydownUseCase } from "./TextAreaKeydownUseCase";
 
 /**
  * @description テキストエリアにイベントを登録します。
@@ -22,7 +21,4 @@ export const execute = (text_area: HTMLTextAreaElement): void =>
 
     // input event
     text_area.addEventListener("input", textAreaInputUseCase);
-
-    // keydown event
-    text_area.addEventListener("keydown", textAreaKeydownUseCase);
 };

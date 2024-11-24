@@ -25,7 +25,11 @@ export const execute = (text_field: TextField, name: string): void =>
 
     $textArea.value = "";
     if (text_field.focus) {
-        $textArea.focus();
+
+        setTimeout((): void =>
+        {
+            $textArea.focus();
+        }, 300);
 
         if ($getBlinkingTimerId() === undefined) {
             if (text_field.focusIndex === -1) {

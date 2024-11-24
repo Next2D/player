@@ -30,4 +30,18 @@ describe("TextFieldCopyUseCase.js test", () =>
 
         expect(execute(textField)).toBe("かきくけこ");
     });
+
+    it("execute test case2", () =>
+    {
+        const textField = new TextField();
+        textField.multiline = true;
+        textField.focusIndex  = 1;
+        textField.selectIndex = 99;
+
+        textField.text = `あいうえお
+かきくけこ
+さしすせそ`;
+
+        expect(execute(textField)).toBe("あいうえお\nかきくけこ\nさしすせそ");
+    });
 });

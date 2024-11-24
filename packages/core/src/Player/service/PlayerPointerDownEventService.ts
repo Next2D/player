@@ -27,18 +27,20 @@ export const execute = <D extends DisplayObject> (
     page_y: number = 0
 ): void => {
 
-    const displayObject = $hitObject.hit as D;
+    const displayObject = $hitObject.hit as unknown as D;
+
+    // 選択中のTextFieldがある場合はフォーカスを解除します。
+    const selectedTextField = $getSelectedTextField();
+    if (selectedTextField) {
+        if (!displayObject || selectedTextField.instanceId !== displayObject.instanceId) {
+            selectedTextField.focus = false;
+            $setSelectedTextField(null);
+        }
+    }
+
     if (displayObject) {
 
         if (displayObject.isText) {
-
-            // 選択中のTextFieldがある場合はフォーカスを解除します。
-            const selectedTextField = $getSelectedTextField();
-            if (selectedTextField
-                && selectedTextField.instanceId !== displayObject.instanceId
-            ) {
-                selectedTextField.focus = false;
-            }
 
             if (!(displayObject as unknown as TextField).focus) {
                 (displayObject as unknown as TextField).focus = true;
@@ -50,8 +52,8 @@ export const execute = <D extends DisplayObject> (
                 $hitObject.y - $hitMatrix[5]
             );
 
-            $textArea.style.top  = `${page_x}px`;
-            $textArea.style.left = `${page_y}px`;
+            $textArea.style.left = `${page_x}px`;
+            $textArea.style.top  = `${page_y}px`;
         }
 
         // ヒットしたDisplayObjectポインターダウンイベントを発火します。
@@ -62,14 +64,6 @@ export const execute = <D extends DisplayObject> (
         }
 
     } else {
-
-        // 選択中のTextFieldがある場合はフォーカスを解除します。
-        const selectedTextField = $getSelectedTextField();
-        if (selectedTextField) {
-            selectedTextField.focus = false;
-            $setSelectedTextField(null);
-        }
-
         // ステージ全体のポインターダウンイベントを発火します。
         if ($stage.willTrigger(PointerEvent.POINTER_DOWN)) {
             $stage.dispatchEvent(
