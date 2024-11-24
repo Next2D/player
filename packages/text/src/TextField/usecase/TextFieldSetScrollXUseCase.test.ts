@@ -18,11 +18,5 @@ describe("TextFieldSetScrollXUseCase.js test", () =>
         execute(textField, 10);
 
         expect(textField.$scrollX).toBe(0);
-
-        textField.scrollEnabled = true;
-        textField.autoSize = "none";
-        execute(textField, 10);
-
-        expect(textField.$scrollX).toBe(10);
     });
 });

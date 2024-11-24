@@ -66,6 +66,5 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         }
     }
 
-    display_object.changed = true;
-    displayObjectApplyChangesService(display_object_container);
+    displayObjectApplyChangesService(display_object);
 };

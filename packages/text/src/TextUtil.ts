@@ -214,7 +214,7 @@ export const $setBlinkingTimerId = (timer_id: NodeJS.Timeout | void): void =>
 /**
  * @description canvasの位置をセット
  *              Set the position of the canvas
- * 
+ *
  * @type {IElementPosition}
  * @public
  */

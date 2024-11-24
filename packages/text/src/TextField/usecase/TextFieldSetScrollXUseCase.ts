@@ -29,7 +29,7 @@ export const execute = (text_field: TextField, scroll_x: number): void =>
     }
 
     const width = text_field.width;
-    scroll_x = $clamp(scroll_x, 0, width + 0.5, 0);
+    scroll_x = $clamp(scroll_x, 0, width + 4, 0);
     if (text_field.scrollX === scroll_x) {
         return ;
     }
@@ -56,7 +56,7 @@ export const execute = (text_field: TextField, scroll_x: number): void =>
             xScrollShape.x = text_field.x + 1
                 + (width - 1 - xScrollShape.width)
                 / (width - 1)
-                * (text_field.scrollX - 1);
+                * (scroll_x - 1);
 
             xScrollShape.y = text_field.y + text_field.height
                 - xScrollShape.height - 0.5;
@@ -85,11 +85,11 @@ export const execute = (text_field: TextField, scroll_x: number): void =>
 
             xScrollShape.setLocalVariable("job", job);
         }
+
+        text_field.$scrollX = scroll_x;
     }
 
     if (text_field.willTrigger(Event.SCROLL)) {
         text_field.dispatchEvent(new Event(Event.SCROLL, true));
     }
-
-    text_field.$scrollX = scroll_x;
 };

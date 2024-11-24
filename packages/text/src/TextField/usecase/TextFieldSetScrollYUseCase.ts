@@ -30,7 +30,7 @@ export const execute = (text_field: TextField, scroll_y: number): void =>
     }
 
     const height = text_field.height;
-    scroll_y = $clamp(scroll_y, 0, height, 0);
+    scroll_y = $clamp(scroll_y, 0, height + 2, 0);
     if (text_field.scrollY === scroll_y) {
         return ;
     }
@@ -58,7 +58,7 @@ export const execute = (text_field: TextField, scroll_y: number): void =>
             yScrollShape.y = text_field.y + 0.5
                 + (height - 1 - yScrollShape.height)
                 / (height - 1)
-                * (text_field.scrollY - 1);
+                * (scroll_y - 1);
 
             // added sprite
             parent.addChildAt(
@@ -83,12 +83,12 @@ export const execute = (text_field: TextField, scroll_y: number): void =>
             job.start();
 
             yScrollShape.setLocalVariable("job", job);
+
+            text_field.$scrollY = scroll_y;
         }
     }
 
     if (text_field.willTrigger(Event.SCROLL)) {
         text_field.dispatchEvent(new Event(Event.SCROLL, true));
     }
-
-    text_field.$scrollY = scroll_y;
 };

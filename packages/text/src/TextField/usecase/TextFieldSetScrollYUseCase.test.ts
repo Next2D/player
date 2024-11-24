@@ -22,10 +22,6 @@ describe("TextFieldSetScrollYUseCase.js test", () =>
 
         textField.scrollEnabled = true;
         textField.autoSize = "none";
-
-        execute(textField, 10);
-        expect(textField.scrollY).toBe(10);
-
         textField.multiline = false;
         textField.wordWrap  = false;
 

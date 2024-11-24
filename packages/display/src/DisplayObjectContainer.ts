@@ -1,6 +1,7 @@
 import type { DisplayObject } from "./DisplayObject";
 import type { IDisplayObject } from "./interface/IDisplayObject";
 import { execute as displayObjectContainerAddChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerAddChildUseCase";
+import { execute as displayObjectContainerRemoveChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerRemoveChildUseCase";
 import { $getArray } from "./DisplayObjectUtil";
 import { InteractiveObject } from "./InteractiveObject";
 
@@ -238,8 +239,8 @@ export class DisplayObjectContainer extends InteractiveObject
         // if (display_object.parent && display_object.parent !== this) {
         //     throw new Error("ArgumentError: Parent-child relationship does not match.");
         // }
-        return display_object;
-        // return this._$remove(child);
+
+        return displayObjectContainerRemoveChildUseCase(this, display_object);
     }
 
     // /**
