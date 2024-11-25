@@ -1,5 +1,4 @@
 import type { TextField } from "../../TextField";
-import { $textArea } from "../../TextUtil";
 import { execute as textFieldGetTextDataUseCase } from "../../TextField/usecase/TextFieldGetTextDataUseCase";
 import { execute as textFieldBlinkingClearTimeoutService } from "../../TextField/service/TextFieldBlinkingClearTimeoutService";
 import { execute as textFieldBlinkingUseCase } from "../../TextField/usecase/TextFieldBlinkingUseCase";
@@ -44,7 +43,8 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
         }
 
         text_field.focusVisible = false;
-        text_field.focusIndex  = 1;
+        text_field.focusIndex   = 1;
+        text_field.scrollX      = 0;
         textFieldBlinkingClearTimeoutService();
         textFieldBlinkingUseCase(text_field);
         return ;
@@ -53,6 +53,21 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
     const line = textObject.mode === "text"
         ? textObject.line
         : textObject.line - 1;
+
+    const height = text_field.height;
+    const scaleY = (text_field.textHeight - height) / height;
+
+    let startLine = 0;
+    let currentHeight = -text_field.scrollY * scaleY - 2;
+    for (let idx = 0; idx < textData.heightTable.length; ++idx) {
+
+        currentHeight += textData.heightTable[idx];
+        if (currentHeight > 0) {
+            break;
+        }
+
+        startLine++;
+    }
 
     let currentWidth = 2;
     for (let idx = 1; idx < textData.textTable.length; ++idx) {
@@ -102,8 +117,11 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
                 }
             }
 
+            if (startLine > textObject.line) {
+                text_field.scrollY -= textData.heightTable[textObject.line] / scaleY;
+            }
+
             // fixed logic
-            $textArea.style.top = `${$textArea.offsetTop - textObject.h}px`;
             text_field.focusVisible = false;
             text_field.focusIndex = textObject.mode === "text" ? idx - 1 : idx;
             textFieldBlinkingClearTimeoutService();
@@ -129,10 +147,13 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
                 }
             }
 
+            if (startLine > textObject.line) {
+                text_field.scrollY -= textData.heightTable[textObject.line] / scaleY;
+            }
+
             // fixed logic
-            $textArea.style.top = `${$textArea.offsetTop - textObject.h}px`;
             text_field.focusVisible = false;
-            text_field.focusIndex = idx + 1;
+            text_field.focusIndex = idx;
             textFieldBlinkingClearTimeoutService();
             textFieldBlinkingUseCase(text_field);
             return ;

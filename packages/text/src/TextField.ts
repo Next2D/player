@@ -17,6 +17,7 @@ import { execute as textFieldHtmlTextToRawTextUseCase } from "./TextField/usecas
 import { execute as textFieldGetLineTextUseCase } from "./TextField/usecase/TextFieldGetLineTextUseCase";
 import { execute as textFieldReplaceTextUseCase } from "./TextField/usecase/TextFieldReplaceTextUseCase";
 import { execute as textFieldCopyUseCase } from "./TextField/usecase/TextFieldCopyUseCase";
+import { execute as textFieldPasteService } from "./TextField/service/TextFieldPasteService";
 import { execute as textFieldInsertTextUseCase } from "./TextField/usecase/TextFieldInsertTextUseCase";
 import { execute as textFieldApplyChangesService } from "./TextField/service/TextFieldApplyChangesService";
 import { execute as textFieldSetFocusIndexUseCase } from "./TextField/usecase/TextFieldSetFocusIndexUseCase";
@@ -291,7 +292,6 @@ export class TextField extends InteractiveObject
     private _$autoSize: ITextFieldAutoSize;
     private _$autoFontSize: boolean;
     private _$focus: boolean;
-    private _$copyText: string;
     private _$thickness: number;
     private _$thicknessColor: number;
     private _$stopIndex: number;
@@ -550,13 +550,6 @@ export class TextField extends InteractiveObject
          * @private
          */
         this._$focus = false;
-
-        /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$copyText = "";
 
         /**
          * @type {number}
@@ -1223,10 +1216,7 @@ export class TextField extends InteractiveObject
      */
     copy (): void
     {
-        if (this.focusIndex === -1 || this.selectIndex === -1) {
-            return ;
-        }
-        this._$copyText = textFieldCopyUseCase(this);
+        textFieldCopyUseCase(this);
     }
 
     /**
@@ -1239,10 +1229,7 @@ export class TextField extends InteractiveObject
      */
     paste (): void
     {
-        if (!this._$copyText || this.focusIndex === -1) {
-            return ;
-        }
-        this.insertText(this._$copyText);
+        textFieldPasteService(this);
     }
 
     /**

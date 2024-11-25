@@ -74,13 +74,13 @@ export const execute = (
 
     let tx = 2;
     if (text_setting.scrollX > 0) {
-        const scaleX = (text_setting.textWidth - text_setting.rawWidth) / text_setting.rawWidth;
+        const scaleX = (text_setting.textWidth + 4 - text_setting.rawWidth) / text_setting.rawWidth;
         tx += -text_setting.scrollX * scaleX;
     }
 
     let ty = 2;
     if (text_setting.scrollY > 0) {
-        const scaleY = (text_setting.textHeight - text_setting.rawHeight) / text_setting.rawHeight;
+        const scaleY = (text_setting.textHeight + 2 - text_setting.rawHeight) / text_setting.rawHeight;
         ty += -text_setting.scrollY * scaleY;
     }
 

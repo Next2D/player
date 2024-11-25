@@ -1,10 +1,31 @@
 import { execute } from "./TextFieldCopyUseCase";
 import { TextField } from "../../TextField";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach, afterAll } from "vitest";
 
 describe("TextFieldCopyUseCase.js test", () =>
 {
-    it("execute test case1", () =>
+    beforeEach(() => {
+        Object.assign(navigator, {
+            "clipboard": {
+                "text": "",
+                readText () 
+                {
+                    return Promise.resolve(this.text);
+                },
+                writeText (data: string) 
+                {
+                    this.text = data;
+                    return Promise.resolve();
+                }
+            }
+        });
+    });
+
+    afterAll(() => {
+        Object.assign(navigator, { "clipboard": undefined });
+    });
+
+    it("execute test case1", async () =>
     {
         const textField = new TextField();
         textField.focusIndex  = 11;
@@ -15,10 +36,18 @@ describe("TextFieldCopyUseCase.js test", () =>
 <p>line2</p>
 <p>line3</p>
 `;
-        expect(execute(textField)).toBe("line3");
+
+        await execute(textField);
+
+        navigator
+            .clipboard
+            .readText().then((text) =>
+            {
+                expect(text).toBe("line3");
+            });
     });
 
-    it("execute test case2", () =>
+    it("execute test case2", async () =>
     {
         const textField = new TextField();
         textField.focusIndex  = 6;
@@ -28,10 +57,17 @@ describe("TextFieldCopyUseCase.js test", () =>
 かきくけこ
 さしすせそ`;
 
-        expect(execute(textField)).toBe("かきくけこ");
+        await execute(textField);
+
+        navigator
+            .clipboard
+            .readText().then((text) =>
+            {
+                expect(text).toBe("かきくけこ");
+            });
     });
 
-    it("execute test case2", () =>
+    it("execute test case3", async () =>
     {
         const textField = new TextField();
         textField.multiline = true;
@@ -42,6 +78,13 @@ describe("TextFieldCopyUseCase.js test", () =>
 かきくけこ
 さしすせそ`;
 
-        expect(execute(textField)).toBe("あいうえお\nかきくけこ\nさしすせそ");
+        await execute(textField);
+
+        navigator
+            .clipboard
+            .readText().then((text) =>
+            {
+                expect(text).toBe("あいうえお\nかきくけこ\nさしすせそ");
+            });
     });
 });

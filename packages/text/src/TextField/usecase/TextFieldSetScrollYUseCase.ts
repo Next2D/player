@@ -30,7 +30,7 @@ export const execute = (text_field: TextField, scroll_y: number): void =>
     }
 
     const height = text_field.height;
-    scroll_y = $clamp(scroll_y, 0, height + 2, 0);
+    scroll_y = $clamp(scroll_y, 0, height, 0);
     if (text_field.scrollY === scroll_y) {
         return ;
     }

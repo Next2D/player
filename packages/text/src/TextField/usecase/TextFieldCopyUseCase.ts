@@ -6,12 +6,16 @@ import { execute as textFieldGetTextDataUseCase } from "./TextFieldGetTextDataUs
  *              Returns the text of the selection in the text field.
  *
  * @param  {TextField} text_field
- * @return {string}
+ * @return {Promise<void>}
  * @method
  * @protected
  */
-export const execute = (text_field: TextField): string =>
+export const execute = async (text_field: TextField): Promise<void> =>
 {
+    if (text_field.focusIndex === -1 || text_field.selectIndex === -1) {
+        return ;
+    }
+
     let text = "";
 
     const minIndex = Math.min(text_field.focusIndex, text_field.selectIndex);
@@ -41,5 +45,7 @@ export const execute = (text_field: TextField): string =>
         }
     }
 
-    return text;
+    await navigator
+        .clipboard
+        .writeText(text);
 };
