@@ -60,6 +60,9 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
         }
 
         if (line >= endLine) {
+            if (text_field.xScrollShape.hasLocalVariable("job")) {
+                text_field.xScrollShape.deleteLocalVariable("job");
+            }
             text_field.scrollY += textData.heightTable[line] / scaleY;
         }
 
