@@ -68,6 +68,9 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
             scrollX += textObject.w;
         }
 
+        if (text_field.yScrollShape.hasLocalVariable("job")) {
+            text_field.yScrollShape.deleteLocalVariable("job");
+        }
         text_field.scrollX = (scrollX - width) / scaleX;
 
         textFieldBlinkingClearTimeoutService();
@@ -144,6 +147,14 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
 
             text_field.focusVisible = false;
             text_field.focusIndex = textObject.mode === "text" ? idx - 1 : idx;
+
+            if (text_field.scrollX && textWidth < currentWidth) {
+                if (text_field.yScrollShape.hasLocalVariable("job")) {
+                    text_field.yScrollShape.deleteLocalVariable("job");
+                }
+                text_field.scrollX = text_field.width * ((textWidth - 2) / text_field.textWidth);
+            }
+
             textFieldBlinkingClearTimeoutService();
             textFieldBlinkingUseCase(text_field);
             return ;
@@ -170,6 +181,18 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
 
             if (textObject.line >= endLine) {
                 text_field.scrollY += textData.heightTable[textObject.line] / scaleY;
+            }
+
+            if (text_field.scrollX) {
+                const width = text_field.width;
+                const scaleX = (text_field.textWidth - width) / width;
+                const scrollWidth = text_field.scrollX * scaleX - 2;
+                if (scrollWidth > textWidth) {
+                    if (text_field.yScrollShape.hasLocalVariable("job")) {
+                        text_field.yScrollShape.deleteLocalVariable("job");
+                    }
+                    text_field.scrollX = text_field.width * ((textWidth - 2) / text_field.textWidth);
+                }
             }
 
             text_field.focusVisible = false;

@@ -64,6 +64,49 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
         if (startLine > line) {
             text_field.scrollY -= textData.heightTable[textObject.line] / scaleY;
         }
+
+        const currentTextObject = textData.textTable[text_field.focusIndex + 1];
+        if (currentTextObject) {
+            const currentLine = currentTextObject.mode === "text"
+                ? currentTextObject.line
+                : currentTextObject.line - 1;
+
+            let textWidth = 2;
+            for (let idx = 1; text_field.focusIndex > idx; ++idx) {
+                const textObject = textData.textTable[idx];
+                if (!textObject || textObject.line > line) {
+                    break;
+                }
+    
+                if (textObject.line !== line) {
+                    continue;
+                }
+    
+                textWidth += textObject.w;
+            }
+
+            const width = text_field.width;
+            const scaleX = (text_field.textWidth - width) / width;
+    
+            const scrollWidth = text_field.scrollX * scaleX - 2;
+            if (textWidth > width && currentTextObject && line < currentLine) {
+                if (text_field.yScrollShape.hasLocalVariable("job")) {
+                    text_field.yScrollShape.deleteLocalVariable("job");
+                }
+    
+                text_field.scrollX = text_field.width;
+                return ;
+            }
+
+            if (scrollWidth > textWidth) {
+                if (text_field.yScrollShape.hasLocalVariable("job")) {
+                    text_field.yScrollShape.deleteLocalVariable("job");
+                }
+    
+                text_field.scrollX = text_field.width * ((textWidth - 2) / text_field.textWidth);
+                return ;
+            }
+        }
     }
 
     text_field.focusVisible = false;

@@ -42,6 +42,10 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
             }
         }
 
+        if (text_field.yScrollShape.hasLocalVariable("job")) {
+            text_field.yScrollShape.deleteLocalVariable("job");
+        }
+
         text_field.focusVisible = false;
         text_field.focusIndex   = 1;
         text_field.scrollX      = 0;
@@ -119,6 +123,13 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
 
             if (startLine > textObject.line) {
                 text_field.scrollY -= textData.heightTable[textObject.line] / scaleY;
+            }
+
+            if (text_field.scrollX) {
+                if (text_field.yScrollShape.hasLocalVariable("job")) {
+                    text_field.yScrollShape.deleteLocalVariable("job");
+                }
+                text_field.scrollX = text_field.width * ((textWidth - 2) / text_field.textWidth);
             }
 
             // fixed logic
