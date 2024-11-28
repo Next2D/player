@@ -11,15 +11,12 @@ import {
  * @description ポインタームーブイベントを処理します。
  *              Processes the pointer move event.
  *
- * @param  {D | null} display_object
  * @return {void}
  * @method
  * @protected
  */
-export const execute = <D extends DisplayObject> (
-    page_x: number = 0,
-    page_y: number = 0
-): void => {
+export const execute = <D extends DisplayObject> (): void =>
+{
 
     // text field
     const selectedTextField = $getSelectedTextField();

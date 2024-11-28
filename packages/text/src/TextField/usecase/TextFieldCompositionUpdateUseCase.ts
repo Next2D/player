@@ -1,7 +1,5 @@
 import type { TextField } from "../../TextField";
 import { TextFormat } from "../../TextFormat";
-// import { Point } from "@next2d/geom";
-// import { $textArea } from "../../TextUtil";
 import { execute as textFieldGetTextDataUseCase } from "../../TextField/usecase/TextFieldGetTextDataUseCase";
 import { execute as textFieldDeleteTextUseCase } from "../../TextField/usecase/TextFieldDeleteTextUseCase";
 
@@ -137,53 +135,4 @@ export const execute = (text_field: TextField, texts: string): void =>
     }
 
     text_field.compositionEndIndex = text_field.focusIndex = index;
-
-    const lastIndex = Math.min(textData.textTable.length - 1, index);
-    const textObject = textData.textTable[lastIndex];
-    if (!textObject) {
-        return ;
-    }
-
-    const line = textObject.line;
-
-    let offsetHeight = 0;
-    for (let idx = 0; idx < line; ++idx) {
-        offsetHeight += textData.heightTable[idx];
-    }
-
-    // const verticalAlign = textData.ascentTable[line];
-
-    let offsetWidth = 0;
-    let targetIndex = text_field.compositionEndIndex;
-    for (;;) {
-
-        const textObject = textData.textTable[targetIndex--];
-        if (!textObject || textObject.line !== line) {
-            break;
-        }
-
-        offsetWidth += textObject.w;
-    }
-
-    // const lineObject  = textData.lineTable[line];
-    // const offsetAlign = text_field._$getAlignOffset(lineObject, text_field.width);
-
-    // const point = text_field.localToGlobal(new Point(
-    //     offsetWidth  + offsetAlign   + player.tx,
-    //     offsetHeight + verticalAlign + player.ty
-    // ));
-
-    // const div: HTMLElement | null = document
-    //     .getElementById(player.contentElementId);
-
-    // let left = point.x * player._$scale;
-    // let top  = point.y * player._$scale;
-    // if (div) {
-    //     const rect = div.getBoundingClientRect();
-    //     left += rect.left;
-    //     top  += rect.top;
-    // }
-
-    // $textArea.style.left = `${left}px`;
-    // $textArea.style.top  = `${top}px`;
 };

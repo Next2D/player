@@ -33,5 +33,5 @@ export const execute = (event: PointerEvent): void =>
 
     // fixed logic
     // ポインタームーブイベントを発火
-    playerPointerMoveEventService(event.pageX, event.pageY);
+    playerPointerMoveEventService();
 };
