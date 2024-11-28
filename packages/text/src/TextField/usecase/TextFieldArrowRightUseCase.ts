@@ -102,6 +102,6 @@ export const execute = (text_field: TextField, shift_key: boolean): void =>
             text_field.scrollX += textObject.w / scaleX;
             break;
         }
-        
+
     }
 };
