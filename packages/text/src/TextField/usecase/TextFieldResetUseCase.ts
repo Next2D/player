@@ -15,8 +15,6 @@ import { execute as textFieldApplyChangesService } from "../service/TextFieldApp
 export const execute = (text_field: TextField): void =>
 {
     text_field.$textData = null;
-    text_field.$scrollX  = 0;
-    text_field.$scrollY  = 0;
 
     textFieldApplyChangesService(text_field);
 

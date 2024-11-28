@@ -954,7 +954,17 @@ export class TextField extends InteractiveObject
     set text (text: string)
     {
         text = `${text}`;
-        if (text !== "" && text === this._$text) {
+        if (text === "") {
+            if (this.scrollX) {
+                this.scrollX = 0;
+            }
+            if (this.scrollY) {
+                this.scrollY = 0;
+            }
+            return ;
+        }
+
+        if (text === this._$text) {
             return ;
         }
 
