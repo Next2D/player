@@ -961,7 +961,6 @@ export class TextField extends InteractiveObject
             if (this.scrollY) {
                 this.scrollY = 0;
             }
-            return ;
         }
 
         if (text === this._$text) {

@@ -22,6 +22,7 @@ describe("TextFieldDeleteTextUseCase.js test", () =>
         const textField = new TextField();
 
         textField.text = "あいうえおかきくけこさしすせそ";
+        textField.compositionStartIndex = -1;
         textField.focusIndex  = 0;
         textField.selectIndex = 15;
 

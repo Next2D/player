@@ -4,6 +4,7 @@ import { execute as textFieldGetTextDataUseCase } from "./TextFieldGetTextDataUs
 import { execute as textFieldBlinkingUseCase } from "./TextFieldBlinkingUseCase";
 import { execute as textFieldApplyChangesService } from "../service/TextFieldApplyChangesService";
 import { execute as textFieldBlinkingClearTimeoutService } from "../service/TextFieldBlinkingClearTimeoutService";
+import { execute as textFieldSelectedFocusMoveUseCase } from "./TextFieldSelectedFocusMoveUseCase";
 import { $getBlinkingTimerId } from "../../TextUtil";
 
 /**
@@ -85,6 +86,8 @@ export const execute = (
                                 text_field.focusVisible = false;
                                 textFieldBlinkingClearTimeoutService();
                             }
+
+                            textFieldSelectedFocusMoveUseCase(text_field);
                             textFieldApplyChangesService(text_field);
                         }
                     } else {
@@ -142,6 +145,7 @@ export const execute = (
                                 textFieldBlinkingClearTimeoutService();
                             }
 
+                            textFieldSelectedFocusMoveUseCase(text_field);
                             textFieldApplyChangesService(text_field);
                         }
                     } else {
