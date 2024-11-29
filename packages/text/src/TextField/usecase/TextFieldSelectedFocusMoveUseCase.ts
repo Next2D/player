@@ -30,6 +30,50 @@ export const execute = (text_field: TextField): void =>
         ? textObject.line
         : textObject.line - 1;
 
+    const height = text_field.height;
+    const scaleY = (text_field.textHeight - height) / height;
+
+    let currentHeight = -text_field.scrollY * scaleY - 2;
+
+    let endLine = 0;
+    for (let idx = 0; idx < textData.heightTable.length; ++idx) {
+
+        currentHeight += textData.heightTable[idx];
+        if (currentHeight > height) {
+            break;
+        }
+
+        endLine++;
+    }
+
+    currentHeight = -text_field.scrollY * scaleY - 2;
+    let startLine = 0;
+    for (let idx = 0; idx < textData.heightTable.length; ++idx) {
+
+        currentHeight += textData.heightTable[idx];
+        if (currentHeight > 0) {
+            break;
+        }
+
+        startLine++;
+    }
+
+    if (startLine >= textObject.line) {
+        if (text_field.xScrollShape.hasLocalVariable("job")) {
+            text_field.xScrollShape.deleteLocalVariable("job");
+        }
+
+        text_field.scrollY -= textData.heightTable[textObject.line] / scaleY;
+    }
+
+    if (textObject.line >= endLine) {
+        if (text_field.xScrollShape.hasLocalVariable("job")) {
+            text_field.xScrollShape.deleteLocalVariable("job");
+        }
+
+        text_field.scrollY += textData.heightTable[textObject.line] / scaleY;
+    }
+
     const width  = text_field.width;
     const scaleX = (text_field.textWidth - width) / width;
 
