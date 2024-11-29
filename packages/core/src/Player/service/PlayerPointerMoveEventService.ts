@@ -1,10 +1,13 @@
 import type { DisplayObject } from "@next2d/display";
+import { $stage } from "@next2d/display";
 import { $getSelectedTextField } from "@next2d/text";
 import { PointerEvent } from "@next2d/events";
 import { $player } from "../../Player";
 import {
     $hitObject,
-    $hitMatrix
+    $hitMatrix,
+    $setRollOverDisplayObject,
+    $getRollOverDisplayObject
 } from "../../CoreUtil";
 
 /**
@@ -30,14 +33,65 @@ export const execute = <D extends DisplayObject> (): void =>
         return ;
     }
 
+    const rollOverDisplayObject = $getRollOverDisplayObject();
     const displayObject = $hitObject.hit as D;
     if (displayObject) {
+
+        // pointerMove
         if (displayObject.willTrigger(PointerEvent.POINTER_MOVE)) {
             displayObject.dispatchEvent(new PointerEvent(
                 PointerEvent.POINTER_MOVE
             ));
         }
+
+        // rollOut and rollOver
+        if (rollOverDisplayObject) {
+
+            if (rollOverDisplayObject.instanceId !== displayObject.instanceId) {
+
+                // rollOut
+                if (rollOverDisplayObject.willTrigger(PointerEvent.POINTER_OUT)) {
+                    rollOverDisplayObject.dispatchEvent(new PointerEvent(
+                        PointerEvent.POINTER_OUT
+                    ));
+                }
+
+                // rollOver
+                if (displayObject.willTrigger(PointerEvent.POINTER_OVER)) {
+                    displayObject.dispatchEvent(new PointerEvent(
+                        PointerEvent.POINTER_OVER
+                    ));
+                }
+            }
+
+        } else {
+            // rollOver
+            if (displayObject.willTrigger(PointerEvent.POINTER_OVER)) {
+                displayObject.dispatchEvent(new PointerEvent(
+                    PointerEvent.POINTER_OVER
+                ));
+            }
+        }
+
+        // set rollOver DisplayObject
+        $setRollOverDisplayObject(displayObject);
+
     } else {
-        // console.log(page_x, page_y);
+
+        // rollOut
+        if (rollOverDisplayObject) {
+            if (rollOverDisplayObject.willTrigger(PointerEvent.POINTER_OUT)) {
+                rollOverDisplayObject.dispatchEvent(new PointerEvent(
+                    PointerEvent.POINTER_OUT
+                ));
+            }
+            $setRollOverDisplayObject(null);
+        }
+
+        if ($stage.hasEventListener(PointerEvent.POINTER_MOVE)) {
+            $stage.dispatchEvent(new PointerEvent(
+                PointerEvent.POINTER_MOVE
+            ));
+        }
     }
 };
