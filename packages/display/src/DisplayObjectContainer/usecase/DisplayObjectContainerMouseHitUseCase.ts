@@ -175,38 +175,38 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
 
             let hitTest = false;
             switch (true) {
-    
+
                 case maskInstance.isContainerEnabled:
                     hitTest = execute(
                         maskInstance as unknown as DisplayObjectContainer,
                         hit_context, maskMatrix, hit_object, mouseChildren
                     );
                     break;
-    
+
                 case maskInstance.isShape:
                     hitTest = shapeHitTestUseCase(
                         maskInstance as unknown as Shape,
                         hit_context, maskMatrix, hit_object
                     );
                     break;
-        
+
                 case maskInstance.isText:
                     hitTest = textFieldHitTestUseCase(
                         maskInstance as unknown as TextField,
                         hit_context, maskMatrix, hit_object
                     );
                     break;
-    
+
                 case maskInstance.isVideo:
                     hitTest = videoHitTestUseCase(
                         maskInstance as unknown as Video,
                         hit_context, maskMatrix, hit_object
                     );
                     break;
-    
+
                 default:
                     break;
-    
+
             }
 
             if (maskInstance.parent) {
