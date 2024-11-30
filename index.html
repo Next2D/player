@@ -16,35 +16,45 @@
         const { Sprite, Shape } = next2d.display;
         const { TextField } = next2d.text;
         const { PointerEvent } = next2d.events;
+        const { Rectangle } = next2d.geom;
 
         const sprite = root.addChild(new Sprite());
         sprite.buttonMode = true;
-        sprite.x = 50;
-        sprite.y = 50;
-        sprite.addEventListener(PointerEvent.POINTER_DOWN, () =>
+        sprite.addEventListener(PointerEvent.POINTER_DOWN, (event) => 
         {
             sprite.startDrag();
         });
-        sprite.addEventListener(PointerEvent.POINTER_UP, () =>
+        sprite.addEventListener(PointerEvent.POINTER_UP, (event) => 
         {
             sprite.stopDrag();
         });
 
-        const textFiled = root.addChild(new TextField());
-        textFiled.x = 250;
-        textFiled.y = 100;
-        textFiled.border = true;
-        textFiled.type = "input";
-        textFiled.multiline = true;
-        // textFiled.wordWrap = true;
-        textFiled.text = "Hello Next2D\nTest Mode On Test Mode On Test Mode On Test Mode On Test Mode On Test Mode On Test Mode On\nText Field\nText Field\n\n\n\nText Field\nTest Mode On Test Mode On Test Mode On Test Mode On Test Mode On";
+        // const textFiled = root.addChild(new TextField());
+        // textFiled.x = 250;
+        // textFiled.y = 100;
+        // textFiled.border = true;
+        // textFiled.type = "input";
+        // textFiled.multiline = true;
+        // // textFiled.wordWrap = true;
+        // textFiled.text = "Hello Next2D\nTest Mode On Test Mode On Test Mode On Test Mode On Test Mode On Test Mode On Test Mode On\nText Field\nText Field\n\n\n\nText Field\nTest Mode On Test Mode On Test Mode On Test Mode On Test Mode On";
 
-        const shape = sprite.addChild(new Shape());
-        shape
+        const maskShape = sprite.addChild(new Shape());
+        const viewShape = sprite.addChild(new Shape());
+        viewShape.x = 100;
+        viewShape.y = 100;
+        viewShape
             .graphics
             .beginFill("#0eff0e")
+            .drawRect(0, 0, 100, 100);
+
+        maskShape.x = 100;
+        maskShape.y = 100;
+        maskShape
+            .graphics
+            .beginFill("#000")
             .drawCircle(50, 50, 50);
 
+        sprite.mask = maskShape;
     });
 </script>
 </body>

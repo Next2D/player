@@ -16,7 +16,8 @@ import {
     $getArray,
     $poolArray,
     $getMap,
-    $poolMap
+    $poolMap,
+    $MATRIX_ARRAY_IDENTITY
 } from "../../DisplayObjectUtil";
 
 /**
@@ -166,21 +167,55 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         const maskInstance = instance.mask as D | null;
         if (maskInstance) {
 
-            if (display_object_container === maskInstance.parent) {
-
-                if (!maskInstance._$hit(hit_context, tMatrix, hit_object, true)) {
-                    continue;
-                }
-
-            } else {
-
-                const matrix = displayObjectConcatenatedMatrixUseCase(maskInstance);
-                if (!maskInstance._$hit(hit_context, matrix.rawData, hit_object, true)) {
-                    continue;
-                }
-
+            let maskMatrix = $MATRIX_ARRAY_IDENTITY;
+            if (maskInstance.parent) {
+                const matrix = displayObjectConcatenatedMatrixUseCase(maskInstance.parent);
+                maskMatrix = matrix.rawData;
             }
 
+            let hitTest = false;
+            switch (true) {
+    
+                case maskInstance.isContainerEnabled:
+                    hitTest = execute(
+                        maskInstance as unknown as DisplayObjectContainer,
+                        hit_context, maskMatrix, hit_object, mouseChildren
+                    );
+                    break;
+    
+                case maskInstance.isShape:
+                    hitTest = shapeHitTestUseCase(
+                        maskInstance as unknown as Shape,
+                        hit_context, maskMatrix, hit_object
+                    );
+                    break;
+        
+                case maskInstance.isText:
+                    hitTest = textFieldHitTestUseCase(
+                        maskInstance as unknown as TextField,
+                        hit_context, maskMatrix, hit_object
+                    );
+                    break;
+    
+                case maskInstance.isVideo:
+                    hitTest = videoHitTestUseCase(
+                        maskInstance as unknown as Video,
+                        hit_context, maskMatrix, hit_object
+                    );
+                    break;
+    
+                default:
+                    break;
+    
+            }
+
+            if (maskInstance.parent) {
+                Matrix.release(maskMatrix);
+            }
+
+            if (!hitTest) {
+                continue;
+            }
         }
 
         let hitTest = false;
