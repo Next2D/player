@@ -1,4 +1,5 @@
 import type { IAjaxOption } from "./interface/IAjaxOption";
+import type { ISprite } from "./interface/ISprite";
 import type { IDisplayObject } from "./interface/IDisplayObject";
 import type { IParent } from "./interface/IParent";
 import type { IURLRequestHeader } from "./interface/IURLRequestHeader";
@@ -14,36 +15,7 @@ import { Point } from "@next2d/geom";
  * @type {Point}
  * @private
  */
-const $point: Point = new Point();
-
-/**
- * @description 現在のマウスの座標情報を設定
- *              Set the current mouse coordinate information
- *
- * @param  {number} x
- * @param  {number} y
- * @return {void}
- * @method
- * @protected
- */
-export const $setCurrentMousePoint = (x: number, y: number): void =>
-{
-    $point.x = x;
-    $point.y = y;
-};
-
-/**
- * @description 現在のマウスの座標情報を返却
- *              Returns the current mouse coordinate information
- *
- * @return {Point}
- * @method
- * @public
- */
-export const $getCurrentMousePoint = (): Point =>
-{
-    return $point;
-};
+export const $pointer: Point = new Point();
 
 /**
  * @type {number}
@@ -507,3 +479,39 @@ export const $actions: Array<MovieClip | Map<number, Function[]>> = [];
  * @protected
  */
 export const $variables: Map<any, any> = new Map();
+
+/**
+ * @description ドラッグ中のDisplayObject
+ *              DisplayObject being dragged
+ *
+ * @type {ISprite}
+ * @private
+ */
+let $draggingDisplayObject: ISprite<any> | null = null;
+
+/**
+ * @description ドラッグ中のDisplayObjectを設定
+ *              Set the DisplayObject being dragged
+ *
+ * @param  {ISprite} display_object
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setDraggingDisplayObject = (display_object: ISprite<any> | null): void =>
+{
+    $draggingDisplayObject = display_object;
+};
+
+/**
+ * @description ドラッグ中のDisplayObjectを返却
+ *              Returns the DisplayObject being dragged
+ *
+ * @return {ISprite}
+ * @method
+ * @protected
+ */
+export const $getDraggingDisplayObject = (): ISprite<any> | null =>
+{
+    return $draggingDisplayObject;
+};

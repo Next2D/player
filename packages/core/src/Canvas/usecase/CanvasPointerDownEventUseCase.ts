@@ -4,6 +4,7 @@ import { execute as playerHitTestUseCase } from "../../Player/usecase/PlayerHitT
 import { execute as playerSetCurrentMousePointService } from "../../Player/service/PlayerSetCurrentMousePointService";
 import { execute as playerPointerDownEventService } from "../../Player/service/PlayerPointerDownEventService";
 import { execute as playerDoubleClickEventService } from "../../Player/service/PlayerDoubleClickEventService";
+import { $hitObject } from "../../CoreUtil";
 
 /**
  * @type {NodeJS.Timeout}
@@ -41,6 +42,10 @@ export const execute = (event: PointerEvent): void =>
 
     // start position
     playerHitTestUseCase(event, element);
+
+    if ($hitObject.hit) {
+        event.preventDefault();
+    }
 
     // fixed logic
     clearTimeout($timerId);

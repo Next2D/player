@@ -1,6 +1,9 @@
 import type { ISprite } from "./interface/ISprite";
+import type { Rectangle } from "@next2d/geom";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { SoundTransform } from "@next2d/media";
+import { execute as spriteStartDragService } from "./Sprite/service/SpriteStartDragService";
+import { execute as spriteStopDragService } from "./Sprite/service/SpriteStopDragService";
 
 /**
  * @description Sprite クラスは、表示リストの基本的要素です。
@@ -48,8 +51,53 @@ export class Sprite extends DisplayObjectContainer
      */
     public readonly isSprite: boolean;
 
-    protected _$hitArea: ISprite<any> | null;
-    protected _$soundTransform: SoundTransform | null;
+    /**
+     * @type {Sprite|null}
+     * @private
+     */
+    private _$hitArea: ISprite<any> | null;
+
+    /**
+     * @type {SoundTransform|null}
+     * @private
+     */
+    private _$soundTransform: SoundTransform | null;
+
+    /**
+     * @description ドラッグ時のオフセットX
+     *              Offset X during drag
+     *
+     * @type {number}
+     * @public
+     */
+    public $offsetX: number = 0;
+
+    /**
+     * @description ドラッグ時のオフセットY
+     *              Offset Y during drag
+     *
+     * @type {number}
+     * @public
+     */
+    public $offsetY: number = 0;
+
+    /**
+     * @description 中心をロックするかどうか
+     *              Whether to lock the center
+     *
+     * @type {boolean}
+     * @public
+     */
+    public $lockCenter: boolean = false;
+
+    /**
+     * @description バウンドされた矩形
+     *              Bounded rectangle
+     *
+     * @type {Rectangle|null}
+     * @public
+     */
+    public $boundedRect: Rectangle | null = null;
 
     /**
      * @constructor
@@ -59,62 +107,33 @@ export class Sprite extends DisplayObjectContainer
     {
         super();
 
-        this.isSprite = true;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @public
-         */
-        this.buttonMode = false;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @public
-         */
+        // public
+        this.isSprite      = true;
+        this.buttonMode    = false;
         this.useHandCursor = true;
 
-        /**
-         * @type {Sprite|null}
-         * @default null
-         * @private
-         */
-        this._$hitArea = null;
+        // drag rules
+        this.$offsetX      = 0;
+        this.$offsetY      = 0;
+        this.$lockCenter   = false;
+        this.$boundedRect  = null;
 
-        /**
-         * @type {SoundTransform}
-         * @default null
-         * @private
-         */
+        // private
+        this._$hitArea        = null;
         this._$soundTransform = null;
     }
 
-    // /**
-    //  * @description スプライトのドラッグ先またはスプライトがドロップされた先の表示オブジェクトを指定します。
-    //  *              Specifies the display object over which the sprite is being dragged,
-    //  *              or on which the sprite was dropped.
-    //  *
-    //  * @member  {DisplayObject|null}
-    //  * @readonly
-    //  * @public
-    //  */
-    // get dropTarget (): DropTargetImpl
-    // {
-    //     return $dropTarget;
-    // }
-
-    // /**
-    //  * @description スプライトのヒット領域となる別のスプライトを指定します。
-    //  *              Designates another sprite to serve as the hit area for a sprite.
-    //  *
-    //  * @member {Sprite|null}
-    //  * @public
-    //  */
-    // get hitArea (): SpriteImpl<any> | null
-    // {
-    //     return this._$hitArea;
-    // }
+    /**
+     * @description スプライトのヒット領域となる別のスプライトを指定します。
+     *              Designates another sprite to serve as the hit area for a sprite.
+     *
+     * @member {ISprite|null}
+     * @public
+     */
+    get hitArea (): ISprite<any> | null
+    {
+        return this._$hitArea;
+    }
     // set hitArea (hit_area: SpriteImpl<any> | null)
     // {
     //     // reset
@@ -147,64 +166,33 @@ export class Sprite extends DisplayObjectContainer
         this._$soundTransform = sound_transform;
     }
 
-    // /**
-    //  * @description 指定されたスプライトをユーザーがドラッグできるようにします。
-    //  *              Lets the user drag the specified sprite.
-    //  *
-    //  * @param  {boolean}   [lock_center=false]
-    //  * @param  {Rectangle} [bounds=null]
-    //  * @return {void}
-    //  * @method
-    //  * @public
-    //  */
-    // startDrag (
-    //     lock_center: boolean = false,
-    //     bounds: Rectangle | null = null
-    // ): void {
+    /**
+     * @description 指定されたスプライトをユーザーがドラッグできるようにします。
+     *              Lets the user drag the specified sprite.
+     *
+     * @param  {boolean}   [lock_center=false]
+     * @param  {Rectangle} [bounds=null]
+     * @return {void}
+     * @method
+     * @public
+     */
+    startDrag (
+        lock_center: boolean = false,
+        bounds: Rectangle | null = null
+    ): void {
+        spriteStartDragService(this, lock_center, bounds);
+    }
 
-    //     let x: number = 0;
-    //     let y: number = 0;
-
-    //     if (!lock_center) {
-    //         const point: Point = this._$dragMousePoint();
-    //         x = this.x - point.x;
-    //         y = this.y - point.y;
-    //     }
-
-    //     $setDropTarget(this);
-    //     $dragRules.lock       = lock_center;
-    //     $dragRules.position.x = x;
-    //     $dragRules.position.y = y;
-    //     $dragRules.bounds     = bounds;
-    // }
-
-    // /**
-    //  * @description startDrag() メソッドを終了します。
-    //  *              Ends the startDrag() method.
-    //  *
-    //  * @return void
-    //  * @method
-    //  * @public
-    //  */
-    // stopDrag ()
-    // {
-    //     // reset
-    //     $setDropTarget(null);
-    //     $dragRules.lock       = false;
-    //     $dragRules.position.x = 0;
-    //     $dragRules.position.y = 0;
-    //     $dragRules.bounds     = null;
-    // }
-
-    // /**
-    //  * @return {Point}
-    //  * @method
-    //  * @private
-    //  */
-    // _$dragMousePoint (): Point
-    // {
-    //     return this._$parent
-    //         ? this._$parent.globalToLocal($currentMousePoint())
-    //         : this.globalToLocal($currentMousePoint());
-    // }
+    /**
+     * @description startDrag() メソッドを終了します。
+     *              Ends the startDrag() method.
+     *
+     * @return void
+     * @method
+     * @public
+     */
+    stopDrag ()
+    {
+        spriteStopDragService(this);
+    }
 }

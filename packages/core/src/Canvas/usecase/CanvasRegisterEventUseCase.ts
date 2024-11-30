@@ -44,7 +44,7 @@ export const execute = (canvas: HTMLCanvasElement): void =>
     };
     canvas.addEventListener(PointerEvent.POINTER_UP, $loadAudioContext);
 
-    canvas.addEventListener(PointerEvent.POINTER_DOWN, canvasPointerDownEventUseCase);
+    canvas.addEventListener(PointerEvent.POINTER_DOWN, canvasPointerDownEventUseCase, { "passive": false });
     canvas.addEventListener(PointerEvent.POINTER_UP, canvasPointerUpEventUseCase);
     canvas.addEventListener(PointerEvent.POINTER_MOVE, canvasPointerMoveEventUseCase, { "passive": false });
     canvas.addEventListener(PointerEvent.POINTER_LEAVE, canvasPointerLeaveEventUseCase);

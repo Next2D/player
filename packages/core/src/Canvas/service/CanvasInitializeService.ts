@@ -16,6 +16,7 @@ export const execute = (
     let style: string = "";
     style += "-webkit-tap-highlight-color: rgba(0,0,0,0);";
     style += "backface-visibility: hidden;";
+    style += "touch-action: none;";
 
     if (ratio > 1) {
         style += `transform: scale(${1 / ratio});`;

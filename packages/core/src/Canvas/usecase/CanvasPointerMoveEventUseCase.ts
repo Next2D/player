@@ -26,8 +26,7 @@ export const execute = (event: PointerEvent): void =>
     // start position
     playerHitTestUseCase(event, element);
 
-    // ヒットしたオブジェクトがある場合
-    if ($hitObject.hit !== null) {
+    if ($hitObject.hit) {
         event.preventDefault();
     }
 

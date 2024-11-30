@@ -21,7 +21,7 @@ export const execute = (event: PointerEvent): void =>
     }
 
     $player.mouseState = "up";
-    element.setPointerCapture(event.pointerId);
+    element.releasePointerCapture(event.pointerId);
 
     $setEvent(event);
     playerSetCurrentMousePoint(event);

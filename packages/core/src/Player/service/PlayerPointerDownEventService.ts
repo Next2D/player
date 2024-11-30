@@ -22,7 +22,6 @@ import {
  */
 export const execute = <D extends DisplayObject> (): void =>
 {
-
     const displayObject = $hitObject.hit as unknown as D;
 
     // 選択中のTextFieldがある場合はフォーカスを解除します。

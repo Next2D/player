@@ -1,11 +1,13 @@
 import type { DisplayObject } from "./DisplayObject";
 import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
+import type { Point } from "@next2d/geom";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { execute as stageReadyUseCase } from "./Stage/usecase/StageReadyUseCase";
 import { execute as displayObjectContainerGenerateRenderQueueUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerGenerateRenderQueueUseCase";
 import { execute as stageTickerUseCase } from "./Stage/usecase/StageTickerUseCase";
 import { execute as displayObjectContainerMouseHitUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerMouseHitUseCase";
 import {
+    $pointer,
     $rootMap,
     $stageAssignedMap
 } from "./DisplayObjectUtil";
@@ -150,6 +152,19 @@ export class Stage extends DisplayObjectContainer
         this._$backgroundColor = color === "transparent"
             ? -1
             : parseInt(color.replace("#", ""), 16);
+    }
+
+    /**
+     * @description ポインターの最終座標
+     *              The final coordinates of the pointer
+     *
+     * @type {Point}
+     * @readonly
+     * @public
+     */
+    get pointer (): Point
+    {
+        return $pointer;
     }
 
     /**

@@ -6,6 +6,7 @@ import type { IBlendMode } from "./interface/IBlendMode";
 import type { IFilterArray } from "./interface/IFilterArray";
 import type { IDisplayObject } from "./interface/IDisplayObject";
 import type { MovieClip } from "./MovieClip";
+import type { ISprite } from "./interface/ISprite";
 import type {
     ColorTransform,
     Matrix,
@@ -42,7 +43,8 @@ import {
     $parentMap,
     $loaderInfoMap,
     $rootMap,
-    $variables
+    $variables,
+    $getDraggingDisplayObject
 } from "./DisplayObjectUtil";
 
 /**
@@ -513,6 +515,20 @@ export class DisplayObject extends EventDispatcher
     set filters (filters: IFilterArray | null)
     {
         displayObjectSetFiltersUseCase(this, filters);
+    }
+
+    /**
+     * @description スプライトのドラッグ先またはスプライトがドロップされた先の表示オブジェクトを指定します。
+     *              Specifies the display object over which the sprite is being dragged,
+     *              or on which the sprite was dropped.
+     *
+     * @member  {ISprite|null}
+     * @readonly
+     * @public
+     */
+    get dropTarget (): ISprite<any> | null
+    {
+        return $getDraggingDisplayObject();
     }
 
     /**

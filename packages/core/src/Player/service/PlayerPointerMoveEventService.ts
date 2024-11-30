@@ -1,4 +1,4 @@
-import type { DisplayObject } from "@next2d/display";
+import type { DisplayObject, Sprite } from "@next2d/display";
 import { $stage } from "@next2d/display";
 import { $getSelectedTextField } from "@next2d/text";
 import { PointerEvent } from "@next2d/events";
@@ -7,7 +7,8 @@ import {
     $hitObject,
     $hitMatrix,
     $setRollOverDisplayObject,
-    $getRollOverDisplayObject
+    $getRollOverDisplayObject,
+    $clamp
 } from "../../CoreUtil";
 
 /**
@@ -20,6 +21,34 @@ import {
  */
 export const execute = <D extends DisplayObject> (): void =>
 {
+    const dropTarget = $stage.dropTarget as Sprite | null;
+    if (dropTarget) {
+
+        const point = dropTarget.parent
+            ? dropTarget.parent.globalToLocal($stage.pointer)
+            : dropTarget.globalToLocal($stage.pointer);
+
+        let dragX = 0;
+        let dragY = 0;
+
+        if (!(dropTarget as Sprite).$lockCenter) {
+            dragX = point.x + (dropTarget as Sprite).$offsetX;
+            dragY = point.y + (dropTarget as Sprite).$offsetY;
+        } else {
+            dragX = point.x - dropTarget.width  / 2;
+            dragY = point.y - dropTarget.height / 2;
+        }
+
+        const bounds = (dropTarget as Sprite).$boundedRect;
+        if (bounds) {
+            dragX = $clamp(dragX, bounds.left, bounds.right);
+            dragY = $clamp(dragY, bounds.top, bounds.bottom);
+        }
+
+        // set move xy
+        dropTarget.x = dragX;
+        dropTarget.y = dragY;
+    }
 
     // text field
     const selectedTextField = $getSelectedTextField();

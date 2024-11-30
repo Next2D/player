@@ -1,8 +1,5 @@
 import { $player } from "../../Player";
-import {
-    $stage,
-    $setCurrentMousePoint
-} from "@next2d/display";
+import { $stage } from "@next2d/display";
 import {
     $getMainElement,
     $devicePixelRatio
@@ -29,12 +26,17 @@ export const execute = (event: PointerEvent): void =>
         y += rect.top;
     }
 
+    const canvas = event.target as HTMLCanvasElement;
+    if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        x += rect.left;
+        y += rect.top;
+    }
+
     const tx = ($player.rendererWidth - $stage.stageWidth * $player.rendererScale) / 2;
     const ty = ($player.rendererHeight - $stage.stageHeight * $player.rendererScale) / 2;
 
     const scale = $player.rendererScale / $devicePixelRatio;
-    $setCurrentMousePoint(
-        (event.pageX - x) / scale - tx / $player.rendererScale,
-        (event.pageY - y) / scale - ty / $player.rendererScale
-    );
+    $stage.pointer.x = (event.pageX - x) / scale - tx / $player.rendererScale;
+    $stage.pointer.y = (event.pageY - y) / scale - ty / $player.rendererScale;
 };
