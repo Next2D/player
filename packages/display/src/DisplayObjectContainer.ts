@@ -1,5 +1,6 @@
 import type { DisplayObject } from "./DisplayObject";
 import type { IDisplayObject } from "./interface/IDisplayObject";
+import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
 import { execute as displayObjectContainerAddChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerAddChildUseCase";
 import { execute as displayObjectContainerRemoveChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerRemoveChildUseCase";
 import { $getArray } from "./DisplayObjectUtil";
@@ -35,6 +36,16 @@ export class DisplayObjectContainer extends InteractiveObject
     protected readonly _$children: IDisplayObject<any>[];
 
     /**
+     * @description セットされてるDisplayObjectがマスクとして使用されます。
+     *              The DisplayObject set is used as a mask.
+     *
+     * @type {IDisplayObject<any>|null}
+     * @default null
+     * @private
+     */
+    private _$mask: IDisplayObject<any> | null;
+
+    /**
      * @description オブジェクトの子がマウスまたはユーザー入力デバイスに対応しているかどうかを判断します。
      *              Determine if the object's children are compatible with mouse or user input devices.
      *
@@ -62,9 +73,12 @@ export class DisplayObjectContainer extends InteractiveObject
     {
         super();
 
+        // public
         this.isContainerEnabled = true;
         this.mouseChildren      = true;
 
+        // private
+        this._$mask     = null;
         this._$children = $getArray();
     }
 
@@ -79,6 +93,37 @@ export class DisplayObjectContainer extends InteractiveObject
     get numChildren (): number
     {
         return this.children.length;
+    }
+
+    /**
+     * @description 呼び出し元の表示オブジェクトは、指定された mask オブジェクトによってマスクされます。
+     *              The calling display object is masked by the specified mask object.
+     *
+     * @member {DisplayObject|null}
+     * @public
+     */
+    get mask (): IDisplayObject<any> | null
+    {
+        return this._$mask;
+    }
+    set mask (mask: IDisplayObject<any> | null)
+    {
+        if (mask === this._$mask) {
+            return ;
+        }
+
+        // 初期化
+        if (this._$mask) {
+            this._$mask.isMask = false;
+            this._$mask = null;
+        }
+
+        if (mask) {
+            mask.isMask = true;
+            this._$mask = mask;
+        }
+
+        displayObjectApplyChangesService(this);
     }
 
     /**

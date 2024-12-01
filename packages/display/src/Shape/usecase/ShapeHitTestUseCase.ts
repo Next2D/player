@@ -24,7 +24,7 @@ export const execute = (
 ): boolean => {
 
     const graphics = shape.graphics;
-    if (!graphics.$recodes) {
+    if (!graphics.isDrawable) {
         return false;
     }
 
@@ -46,7 +46,7 @@ export const execute = (
     );
 
     const hit = graphicsHitTestService(
-        hit_context, graphics.$recodes, hit_object
+        hit_context, graphics.buffer, hit_object
     );
 
     if (tMatrix !== matrix) {

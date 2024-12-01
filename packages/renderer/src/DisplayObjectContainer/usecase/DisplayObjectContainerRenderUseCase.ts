@@ -20,6 +20,46 @@ export const execute = (
     index: number,
     image_bitmaps: ImageBitmap[] | null
 ): number => {
+
+    const useMask = render_queue[index++];
+    if (useMask) {
+
+        // これまでの描画データを描画して初期化
+        $context.drawArraysInstanced();
+
+        // 設定値を保存
+        $context.save();
+
+        // マスク描画の開始準備
+        $context.beginMask();
+
+        $context.startMask(
+            render_queue[index++],
+            render_queue[index++],
+            render_queue[index++],
+            render_queue[index++]
+        );
+
+        const type = render_queue[index++];
+        switch (type) {
+
+            case 0x00: // container
+                break;
+
+            case 0x01: // shape
+                index = shapeClipRenderUseCase(render_queue, index);
+                break;
+
+            case 0x02: // text
+                break;
+
+            case 0x03: // video
+                break;
+
+        }
+        $context.endMask();
+    }
+
     let endClipDepth = 0;
     let canRenderMask = true;
 
@@ -122,7 +162,7 @@ export const execute = (
     }
 
     // end mask
-    if (endClipDepth) {
+    if (endClipDepth || useMask) {
         $context.restore();
         $context.leaveMask();
     }

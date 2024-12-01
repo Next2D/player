@@ -14,7 +14,7 @@ import { Graphics } from "../../Graphics";
  */
 export const execute = (
     context: CanvasRenderingContext2D,
-    recodes: any[],
+    recodes: Float32Array,
     hit_object: IPlayerHitObject
 ): boolean => {
 

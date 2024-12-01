@@ -109,6 +109,57 @@ export const execute = <P extends DisplayObjectContainer>(
         // todo
     }
 
+    // mask
+    const maskInstance = display_object_container.mask;
+    if (maskInstance) {
+
+        const bounds = displayObjectIsMaskReflectedInDisplayUseCase(
+            maskInstance,
+            tMatrix,
+            renderer_width,
+            renderer_height,
+            point_x,
+            point_y
+        );
+
+        if (!bounds) {
+            maskInstance.changed = false;
+            render_queue.push(0);
+        } else {
+
+            render_queue.push(1);
+
+            // マスクの描画範囲
+            render_queue.push(...bounds);
+
+            switch (true) {
+
+                case maskInstance.isContainerEnabled: // 0x00
+                    break;
+
+                case maskInstance.isShape: // 0x01
+                    shapeGenerateClipQueueUseCase(
+                        maskInstance as Shape,
+                        render_queue,
+                        tMatrix
+                    );
+                    break;
+
+                case maskInstance.isText: // 0x02
+                    break;
+
+                case maskInstance.isVideo: // 0x03
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+    } else {
+        render_queue.push(0);
+    }
+
     const colorTransform = isLayer
         ? $COLOR_ARRAY_IDENTITY
         : tColorTransform;
@@ -120,6 +171,9 @@ export const execute = <P extends DisplayObjectContainer>(
     for (let idx = 0; idx < children.length; ++idx) {
 
         const child = children[idx] as DisplayObject;
+        if (child.isMask) {
+            continue;
+        }
 
         render_queue.push(child.placeId, child.clipDepth);
         if (clipDepth && child.placeId > clipDepth) {

@@ -4,7 +4,6 @@ import type { IParent } from "./interface/IParent";
 import type { IPlaceObject } from "./interface/IPlaceObject";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IFilterArray } from "./interface/IFilterArray";
-import type { IDisplayObject } from "./interface/IDisplayObject";
 import type { MovieClip } from "./MovieClip";
 import type { ISprite } from "./interface/ISprite";
 import type {
@@ -373,16 +372,6 @@ export class DisplayObject extends EventDispatcher
     private _$variables: Map<any, any> | null;
 
     /**
-     * @description セットされてるDisplayObjectがマスクとして使用されます。
-     *              The DisplayObject set is used as a mask.
-     *
-     * @type {IDisplayObject<any>|null}
-     * @default null
-     * @private
-     */
-    private _$mask: IDisplayObject<any> | null;
-
-    /**
      * @description マスクとしてDisplayObjectにセットされているかを示します。
      *              Indicates whether the DisplayObject is set as a mask.
      *
@@ -437,7 +426,6 @@ export class DisplayObject extends EventDispatcher
         this.$blendMode      = null;
 
         this._$visible    = true;
-        this._$mask       = null;
         this._$scale9Grid = null;
         this._$variables  = null;
 
@@ -562,37 +550,6 @@ export class DisplayObject extends EventDispatcher
         return $loaderInfoMap.has(this)
             ? $loaderInfoMap.get(this) as NonNullable<LoaderInfo>
             : null;
-    }
-
-    /**
-     * @description 呼び出し元の表示オブジェクトは、指定された mask オブジェクトによってマスクされます。
-     *              The calling display object is masked by the specified mask object.
-     *
-     * @member {DisplayObject|null}
-     * @public
-     */
-    get mask (): IDisplayObject<any> | null
-    {
-        return this._$mask;
-    }
-    set mask (mask: IDisplayObject<any> | null)
-    {
-        if (mask === this._$mask) {
-            return ;
-        }
-
-        // 初期化
-        if (this._$mask) {
-            this._$mask.isMask = false;
-            this._$mask = null;
-        }
-
-        if (mask) {
-            mask.isMask = true;
-            this._$mask = mask;
-        }
-
-        displayObjectApplyChangesService(this);
     }
 
     /**
