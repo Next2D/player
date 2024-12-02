@@ -110,11 +110,11 @@ export const execute = <P extends DisplayObjectContainer>(
     }
 
     // mask
-    const maskInstance = display_object_container.mask;
-    if (maskInstance) {
+    const maskDisplayObject = display_object_container.mask;
+    if (maskDisplayObject) {
 
         const bounds = displayObjectIsMaskReflectedInDisplayUseCase(
-            maskInstance,
+            maskDisplayObject,
             tMatrix,
             renderer_width,
             renderer_height,
@@ -123,7 +123,7 @@ export const execute = <P extends DisplayObjectContainer>(
         );
 
         if (!bounds) {
-            maskInstance.changed = false;
+            maskDisplayObject.changed = false;
             render_queue.push(0);
         } else {
 
@@ -134,21 +134,21 @@ export const execute = <P extends DisplayObjectContainer>(
 
             switch (true) {
 
-                case maskInstance.isContainerEnabled: // 0x00
+                case maskDisplayObject.isContainerEnabled: // 0x00
                     break;
 
-                case maskInstance.isShape: // 0x01
+                case maskDisplayObject.isShape: // 0x01
                     shapeGenerateClipQueueUseCase(
-                        maskInstance as Shape,
+                        maskDisplayObject as Shape,
                         render_queue,
                         tMatrix
                     );
                     break;
 
-                case maskInstance.isText: // 0x02
+                case maskDisplayObject.isText: // 0x02
                     break;
 
-                case maskInstance.isVideo: // 0x03
+                case maskDisplayObject.isVideo: // 0x03
                     break;
 
                 default:

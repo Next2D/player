@@ -8,7 +8,6 @@ import type { TextField } from "@next2d/text";
 import type { Video } from "@next2d/media";
 import { Matrix } from "@next2d/geom";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
-import { execute as displayObjectConcatenatedMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectConcatenatedMatrixUseCase";
 import { execute as shapeHitTestUseCase } from "../../Shape/usecase/ShapeHitTestUseCase";
 import { execute as textFieldHitTestUseCase } from "../../TextField/usecase/TextFieldHitTestUseCase";
 import { execute as videoHitTestUseCase } from "../../Video/usecase/VideoHitTestUseCase";
@@ -16,8 +15,7 @@ import {
     $getArray,
     $poolArray,
     $getMap,
-    $poolMap,
-    $MATRIX_ARRAY_IDENTITY
+    $poolMap
 } from "../../DisplayObjectUtil";
 
 /**
@@ -98,6 +96,50 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     const mouseChildren = display_object_container.mouseChildren && mouse_children;
 
     let hit = false;
+
+    const maskDisplayObject = display_object_container.mask as D;
+    if (maskDisplayObject) {
+        let hitTest = false;
+        switch (true) {
+
+            case maskDisplayObject.isContainerEnabled:
+                hitTest = execute(
+                    maskDisplayObject as unknown as DisplayObjectContainer,
+                    hit_context, tMatrix, hit_object, mouseChildren
+                );
+                break;
+
+            case maskDisplayObject.isShape:
+                hitTest = shapeHitTestUseCase(
+                    maskDisplayObject as unknown as Shape,
+                    hit_context, tMatrix, hit_object
+                );
+                break;
+
+            case maskDisplayObject.isText:
+                hitTest = textFieldHitTestUseCase(
+                    maskDisplayObject as unknown as TextField,
+                    hit_context, tMatrix, hit_object
+                );
+                break;
+
+            case maskDisplayObject.isVideo:
+                hitTest = videoHitTestUseCase(
+                    maskDisplayObject as unknown as Video,
+                    hit_context, tMatrix, hit_object
+                );
+                break;
+
+            default:
+                break;
+
+        }
+
+        if (!hitTest) {
+            return false;
+        }
+    }
+
     while (targets.length) {
 
         const instance = targets.pop();
@@ -164,96 +206,39 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         }
 
         let hitTest = false;
+        switch (true) {
 
-        // mask hit test
-        const maskInstance = instance.mask as D | null;
-        if (maskInstance) {
+            case instance.isContainerEnabled:
+                hitTest = execute(
+                    instance as unknown as DisplayObjectContainer,
+                    hit_context, tMatrix, hit_object, mouseChildren
+                );
+                break;
 
-            let maskMatrix = $MATRIX_ARRAY_IDENTITY;
-            if (maskInstance.parent) {
-                const matrix = displayObjectConcatenatedMatrixUseCase(maskInstance.parent);
-                maskMatrix = matrix.rawData;
-            }
+            case instance.isShape:
+                hitTest = shapeHitTestUseCase(
+                    instance as unknown as Shape,
+                    hit_context, tMatrix, hit_object
+                );
+                break;
 
-            switch (true) {
+            case instance.isText:
+                hitTest = textFieldHitTestUseCase(
+                    instance as unknown as TextField,
+                    hit_context, tMatrix, hit_object
+                );
+                break;
 
-                case maskInstance.isContainerEnabled:
-                    hitTest = execute(
-                        maskInstance as unknown as DisplayObjectContainer,
-                        hit_context, maskMatrix, hit_object, mouseChildren
-                    );
-                    break;
+            case instance.isVideo:
+                hitTest = videoHitTestUseCase(
+                    instance as unknown as Video,
+                    hit_context, tMatrix, hit_object
+                );
+                break;
 
-                case maskInstance.isShape:
-                    hitTest = shapeHitTestUseCase(
-                        maskInstance as unknown as Shape,
-                        hit_context, maskMatrix, hit_object
-                    );
-                    break;
+            default:
+                break;
 
-                case maskInstance.isText:
-                    hitTest = textFieldHitTestUseCase(
-                        maskInstance as unknown as TextField,
-                        hit_context, maskMatrix, hit_object
-                    );
-                    break;
-
-                case maskInstance.isVideo:
-                    hitTest = videoHitTestUseCase(
-                        maskInstance as unknown as Video,
-                        hit_context, maskMatrix, hit_object
-                    );
-                    break;
-
-                default:
-                    break;
-
-            }
-
-            if (maskInstance.parent) {
-                Matrix.release(maskMatrix);
-            }
-
-            if (!hitTest) {
-                continue;
-            }
-
-        } else {
-
-            switch (true) {
-
-                case instance.isContainerEnabled:
-                    hitTest = execute(
-                        instance as unknown as DisplayObjectContainer,
-                        hit_context, tMatrix, hit_object, mouseChildren
-                    );
-                    break;
-
-                case instance.isShape:
-                    hitTest = shapeHitTestUseCase(
-                        instance as unknown as Shape,
-                        hit_context, tMatrix, hit_object
-                    );
-                    break;
-
-                case instance.isText:
-                    hitTest = textFieldHitTestUseCase(
-                        instance as unknown as TextField,
-                        hit_context, tMatrix, hit_object
-                    );
-                    break;
-
-                case instance.isVideo:
-                    hitTest = videoHitTestUseCase(
-                        instance as unknown as Video,
-                        hit_context, tMatrix, hit_object
-                    );
-                    break;
-
-                default:
-                    break;
-
-            }
         }
 
         if (!hitTest) {

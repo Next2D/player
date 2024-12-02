@@ -21,8 +21,8 @@ export const execute = (
     image_bitmaps: ImageBitmap[] | null
 ): number => {
 
-    const useMask = render_queue[index++];
-    if (useMask) {
+    const useMaskDisplayObject = render_queue[index++];
+    if (useMaskDisplayObject) {
 
         // これまでの描画データを描画して初期化
         $context.drawArraysInstanced();
@@ -162,7 +162,7 @@ export const execute = (
     }
 
     // end mask
-    if (endClipDepth || useMask) {
+    if (endClipDepth || useMaskDisplayObject) {
         $context.restore();
         $context.leaveMask();
     }
