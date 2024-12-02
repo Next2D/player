@@ -52,10 +52,13 @@ export class Sprite extends DisplayObjectContainer
     public readonly isSprite: boolean;
 
     /**
+     * @description スプライトのヒット領域となる別のスプライトを指定します。
+     *              Designates another sprite to serve as the hit area for a sprite.
+     *
      * @type {Sprite|null}
      * @private
      */
-    private _$hitArea: ISprite<any> | null;
+    public hitArea: ISprite<any> | null;
 
     /**
      * @type {SoundTransform|null}
@@ -111,6 +114,7 @@ export class Sprite extends DisplayObjectContainer
         this.isSprite      = true;
         this.buttonMode    = false;
         this.useHandCursor = true;
+        this.hitArea       = null;
 
         // drag rules
         this.$offsetX      = 0;
@@ -119,33 +123,8 @@ export class Sprite extends DisplayObjectContainer
         this.$boundedRect  = null;
 
         // private
-        this._$hitArea        = null;
         this._$soundTransform = null;
     }
-
-    /**
-     * @description スプライトのヒット領域となる別のスプライトを指定します。
-     *              Designates another sprite to serve as the hit area for a sprite.
-     *
-     * @member {ISprite|null}
-     * @public
-     */
-    get hitArea (): ISprite<any> | null
-    {
-        return this._$hitArea;
-    }
-    // set hitArea (hit_area: SpriteImpl<any> | null)
-    // {
-    //     // reset
-    //     if (this._$hitArea) {
-    //         this._$hitArea._$hitObject = null;
-    //     }
-
-    //     this._$hitArea = hit_area;
-    //     if (hit_area) {
-    //         hit_area._$hitObject = this;
-    //     }
-    // }
 
     /**
      * @description このスプライト内のサウンドを制御します。

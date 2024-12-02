@@ -10,14 +10,23 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        // next2d.load("develop");
-        const root = await next2d.createRootMovieClip(480, 480);
-
         const { Sprite, Shape } = next2d.display;
         const { TextField } = next2d.text;
         const { PointerEvent } = next2d.events;
         const { Rectangle } = next2d.geom;
 
+        // next2d.load("develop");
+        const root = await next2d.createRootMovieClip(480, 480);
+
+        const hitSprite = root.addChild(new Sprite());
+        const hitShape  = hitSprite.addChild(new Shape());
+        hitShape.x = 250;
+        hitShape.y = 250;
+        hitShape
+            .graphics
+            .beginFill("#ff00ee")
+            .drawCircle(50, 50, 50);
+        
         const sprite = root.addChild(new Sprite());
         sprite.buttonMode = true;
         sprite.addEventListener(PointerEvent.POINTER_DOWN, (event) => 
@@ -28,15 +37,6 @@
         {
             sprite.stopDrag();
         });
-
-        // const textFiled = root.addChild(new TextField());
-        // textFiled.x = 250;
-        // textFiled.y = 100;
-        // textFiled.border = true;
-        // textFiled.type = "input";
-        // textFiled.multiline = true;
-        // // textFiled.wordWrap = true;
-        // textFiled.text = "Hello Next2D\nTest Mode On Test Mode On Test Mode On Test Mode On Test Mode On Test Mode On Test Mode On\nText Field\nText Field\n\n\n\nText Field\nTest Mode On Test Mode On Test Mode On Test Mode On Test Mode On";
 
         const maskShape = new Shape(); //sprite.addChild(new Shape());
         const viewShape = sprite.addChild(new Shape());
@@ -54,7 +54,9 @@
             .beginFill("#000")
             .drawCircle(50, 50, 50);
 
+        sprite.hitArea = hitSprite;
         sprite.mask = maskShape;
+
     });
 </script>
 </body>
