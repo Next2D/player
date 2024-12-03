@@ -129,10 +129,11 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             const currentAttachment = $context.currentAttachmentObject;
             $context.bind($context.atlasAttachmentObject);
 
-            // 初期化して、描画範囲とmatrix設定
+            // 初期化して、描画範囲を初期化
             $context.reset();
             $context.beginNodeRendering(node);
 
+            // matrix設定
             const offsetY = $context.atlasAttachmentObject.height - node.y - height;
             $context.setTransform(
                 xScale, 0, 0, yScale,
@@ -144,6 +145,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
                 $context.setGridOffset(node.x, offsetY);
             }
 
+            // 描画コマンドを実行
             shapeCommandService(commands);
 
             // 描画終了
@@ -156,7 +158,6 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             if (isGridEnabled) {
                 $context.endGrid();
             }
-
         }
 
         index += length;

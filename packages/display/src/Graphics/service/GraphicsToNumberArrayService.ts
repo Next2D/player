@@ -287,7 +287,7 @@ export const execute = (recodes : any[] | null): any[] =>
                     );
 
                     for (let idx = 0; idx < imageArray.length; idx += 4096) {
-                        array.push(...imageArray.slice(idx, idx + 4096));
+                        array.push(...imageArray.subarray(idx, idx + 4096));
                     }
 
                     const matrix: Float32Array = recodes[idx++];

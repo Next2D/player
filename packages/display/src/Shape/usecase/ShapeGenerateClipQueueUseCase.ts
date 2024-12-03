@@ -42,6 +42,6 @@ export const execute = (
     const buffer = shape.graphics.buffer;
     render_queue.push(buffer.length);
     for (let idx = 0; idx < buffer.length; idx += 4096) {
-        render_queue.push(...buffer.slice(idx, idx + 4096));
+        render_queue.push(...buffer.subarray(idx, idx + 4096));
     }
 };

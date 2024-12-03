@@ -47,8 +47,13 @@ import { execute as contextBeginGridService } from "./Context/service/ContextBeg
 import { execute as contextEndGridService } from "./Context/service/ContextEndGridService";
 import { execute as contextSetGridOffsetService } from "./Context/service/ContextSetGridOffsetService";
 import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
-import { $getAtlasAttachmentObject } from "./AtlasManager";
+import { execute as contextUpdateTransferBoundsService } from "./Context/service/ContextUpdateTransferBoundsService";
+import { execute as contextUpdateAllTransferBoundsService } from "./Context/service/ContextUpdateAllTransferBoundsService";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
+import {
+    $getAtlasAttachmentObject,
+    $clearTransferBounds
+} from "./AtlasManager";
 import {
     $setReadFrameBuffer,
     $setDrawFrameBuffer,
@@ -307,6 +312,19 @@ export class Context
 
         // コンテキストをセット
         $setContext(this);
+    }
+
+    /**
+     * @description 転送範囲をリセット
+     *              Reset the transfer range
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    clearTransferBounds (): void
+    {
+        $clearTransferBounds();
     }
 
     /**
@@ -834,9 +852,11 @@ export class Context
      */
     beginNodeRendering (node: Node): void
     {
-        contextBeginNodeRenderingService(
-            node.x, node.y, node.w, node.h
-        );
+        // 転送範囲を更新
+        contextUpdateTransferBoundsService(node);
+
+        // ノードの描画を開始
+        contextBeginNodeRenderingService(node.x, node.y, node.w, node.h);
     }
 
     /**
@@ -873,6 +893,7 @@ export class Context
         y_max: number,
         color_transform: Float32Array
     ): void {
+        contextUpdateAllTransferBoundsService(node);
         blnedDrawDisplayObjectUseCase(
             node, x_min, y_min, x_max, y_max, color_transform
         );

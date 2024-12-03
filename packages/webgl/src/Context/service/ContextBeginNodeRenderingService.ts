@@ -2,8 +2,8 @@
 import { $gl } from "../../WebGLUtil";
 
 /**
- * @description アトラスへの描画範囲を設定
- *              Set the drawing range for the atlas
+ * @description 描画範囲を設定
+ *              Set the drawing range.
  *
  * @param  {number} x
  * @param  {number} y

@@ -29,6 +29,9 @@ export const execute = (
     image_bitmaps: ImageBitmap[] | null
 ): void => {
 
+    // reset transfer bounds
+    $context.clearTransferBounds();
+
     let index = 0;
 
     // update background color

@@ -17,7 +17,7 @@ self.addEventListener("message", (event: MessageEvent): void =>
 
     let json = "";
     for (let idx: number = 0; idx < buffer.length; idx += 4096) {
-        json += String.fromCharCode(...buffer.slice(idx, idx + 4096));
+        json += String.fromCharCode(...buffer.subarray(idx, idx + 4096));
     }
 
     self.postMessage(JSON.parse(decodeURIComponent(json)));

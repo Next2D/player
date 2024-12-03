@@ -4,18 +4,20 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Next2D</title>
-    <script type="module" src="./src/index.ts" defer></script>
+    <!-- <script type="module" src="./src/index.ts" defer></script> -->
+    <script type="module" src="./dist/next2d.js" defer></script>
 </head>
 <body style="margin: 0; padding: 0;">
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
+        // next2d.load("develop");
+
         const { Sprite, Shape } = next2d.display;
         const { TextField } = next2d.text;
         const { PointerEvent } = next2d.events;
         const { Rectangle } = next2d.geom;
 
-        // next2d.load("develop");
         const root = await next2d.createRootMovieClip(480, 480);
 
         const hitSprite = root.addChild(new Sprite());

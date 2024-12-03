@@ -1,6 +1,7 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { TexturePacker } from "@next2d/texture-packer";
 import type { ITextureObject } from "./interface/ITextureObject";
+import type { IBounds } from "./interface/IBounds";
 import { execute as textureManagerCreateAtlasTextureUseCase } from "./TextureManager/usecase/TextureManagerCreateAtlasTextureUseCase";
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "./FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 import { $RENDER_MAX_SIZE } from "./WebGLUtil";
@@ -140,4 +141,91 @@ export const $getAtlasTextureObject = (): ITextureObject =>
         $atlasTexture = textureManagerCreateAtlasTextureUseCase();
     }
     return $atlasTexture as ITextureObject;
+};
+
+/**
+ * @type {IBounds[]}
+ * @private
+ */
+const $transferBounds: IBounds[] = [];
+
+/**
+ * @description アトラステクスチャの転送範囲を返却
+ *              Return the transfer range of the atlas texture
+ *
+ * @param  {number} index
+ * @return {IBounds}
+ * @method
+ * @protected
+ */
+export const $getActiveTransferBounds = (index: number): IBounds =>
+{
+    if (!(index in $transferBounds)) {
+        $transferBounds[index] = {
+            "xMin": Number.MAX_VALUE,
+            "yMin": Number.MAX_VALUE,
+            "xMax": -Number.MAX_VALUE,
+            "yMax": -Number.MAX_VALUE
+        };
+    }
+    return $transferBounds[index];
+};
+
+/**
+ * @type {IBounds[]}
+ * @private
+ */
+const $allTransferBounds: IBounds[] = [];
+
+/**
+ * @description アトラステクスチャの切り替え時の転送範囲を返却
+ *              Return the transfer range when switching the atlas texture
+ *
+ * @param  {number} index
+ * @return {IBounds}
+ * @method
+ * @protected
+ */
+export const $getActiveAllTransferBounds = (index: number): IBounds =>
+{
+    if (!(index in $allTransferBounds)) {
+        $allTransferBounds[index] = {
+            "xMin": Number.MAX_VALUE,
+            "yMin": Number.MAX_VALUE,
+            "xMax": -Number.MAX_VALUE,
+            "yMax": -Number.MAX_VALUE
+        };
+    }
+    return $allTransferBounds[index];
+};
+
+/**
+ * @description アトラステクスチャの転送範囲をクリア
+ *              Clear the transfer range of the atlas texture
+ *
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $clearTransferBounds = (): void =>
+{
+    for (let idx = 0; idx < $transferBounds.length; ++idx) {
+        const bounds = $transferBounds[idx];
+        if (!bounds) {
+            continue;
+        }
+
+        bounds.xMin = bounds.yMin = Number.MAX_VALUE;
+        bounds.xMax = bounds.yMax = -Number.MAX_VALUE;
+    }
+
+    for (let idx = 0; idx < $allTransferBounds.length; ++idx) {
+        const bounds = $allTransferBounds[idx];
+        if (!bounds) {
+            continue;
+        }
+
+        bounds.xMin = bounds.yMin = Number.MAX_VALUE;
+        bounds.xMax = bounds.yMax = -Number.MAX_VALUE;
+    }
 };
