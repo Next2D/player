@@ -216,7 +216,7 @@ class Player
      */
     play (): void
     {
-        playerPlayUseCase(this);
+        playerPlayUseCase();
     }
 
     /**
@@ -229,7 +229,7 @@ class Player
      */
     stop (): void
     {
-        playerStopService(this);
+        playerStopService();
     }
 
     /**
@@ -270,4 +270,8 @@ class Player
     }
 }
 
-export const $player = new Player();
+/**
+ * @type {Player}
+ * @protected
+ */
+export const $player: Player = new Player();

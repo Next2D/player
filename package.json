@@ -73,6 +73,7 @@
     "@next2d/net": "file:packages/net",
     "@next2d/renderer": "file:packages/renderer",
     "@next2d/text": "file:packages/text",
+    "@next2d/texture-packer": "file:packages/texture-packer",
     "@next2d/ui": "file:packages/ui",
     "@next2d/webgl": "file:packages/webgl"
   }

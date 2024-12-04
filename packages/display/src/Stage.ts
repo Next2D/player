@@ -269,5 +269,9 @@ export class Stage extends DisplayObjectContainer
     }
 }
 
+/**
+ * @type {Stage}
+ * @public
+ */
 export const stage: Stage = new Stage();
 $stageAssignedMap.add(stage);

@@ -19,18 +19,21 @@
         const sprite = root.addChild(new Sprite());
         sprite.buttonMode = true;
 
-        const shape1 = sprite.addChild(new Shape());
-        shape1
+        const shape = sprite.addChild(new Shape());
+        shape
             .graphics
-            .beginFill("#ff0000")
+            .beginFill("#00aa00")
             .drawCircle(0, 50, 50);
 
         sprite.x = 100;
         sprite.y = 100;
-        sprite.addEventListener(PointerEvent.POINTER_MOVE, () =>
+        sprite.addEventListener(PointerEvent.POINTER_DOWN, () =>
         {
-            console.log(stage.mouseX, stage.mouseY);
-            console.log(sprite.hitTestPoint(stage.mouseX, stage.mouseY));
+            sprite.startDrag();
+        });
+        sprite.addEventListener(PointerEvent.POINTER_UP, () =>
+        {
+            sprite.stopDrag();
         });
     });
 </script>
