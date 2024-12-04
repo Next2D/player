@@ -4,8 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Next2D</title>
-    <!-- <script type="module" src="./src/index.ts" defer></script> -->
-    <script type="module" src="./dist/next2d.js" defer></script>
+    <script type="module" src="./src/index.ts" defer></script>
 </head>
 <body style="margin: 0; padding: 0;">
 <script>
@@ -20,15 +19,6 @@
 
         const root = await next2d.createRootMovieClip(480, 480);
 
-        const hitSprite = root.addChild(new Sprite());
-        const hitShape  = hitSprite.addChild(new Shape());
-        hitShape.x = 250;
-        hitShape.y = 250;
-        hitShape
-            .graphics
-            .beginFill("#ff00ee")
-            .drawCircle(50, 50, 50);
-        
         const sprite = root.addChild(new Sprite());
         sprite.buttonMode = true;
         sprite.addEventListener(PointerEvent.POINTER_DOWN, (event) => 
@@ -39,6 +29,15 @@
         {
             sprite.stopDrag();
         });
+
+        const hitSprite = root.addChild(new Sprite());
+        const hitShape  = hitSprite.addChild(new Shape());
+        hitShape.x = 250;
+        hitShape.y = 250;
+        hitShape
+            .graphics
+            .beginFill("#ff00ee")
+            .drawRect(0, 0, 150, 150);
 
         const maskShape = new Shape(); //sprite.addChild(new Shape());
         const viewShape = sprite.addChild(new Shape());
@@ -58,7 +57,6 @@
 
         sprite.hitArea = hitSprite;
         sprite.mask = maskShape;
-
     });
 </script>
 </body>

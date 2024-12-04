@@ -95,8 +95,34 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
 
     const mouseChildren = display_object_container.mouseChildren && mouse_children;
 
-    let hit = false;
+    // fixed logic
+    if (display_object_container.isSprite
+        && (display_object_container as unknown as Sprite).hitArea
+    ) {
+        const hitTest = execute(
+            (display_object_container as unknown as Sprite).hitArea as unknown as DisplayObjectContainer,
+            hit_context, tMatrix, hit_object, mouseChildren
+        );
 
+        if (hitTest
+            && mouseChildren
+            && display_object_container.mouseEnabled
+        ) {
+            if ((display_object_container as unknown as Sprite).buttonMode
+                && (display_object_container as unknown as Sprite).useHandCursor
+            ) {
+                hit_object.pointer = "pointer";
+            }
+
+            if (!hit_object.hit) {
+                hit_object.hit = display_object_container;
+            }
+        }
+
+        return hitTest;
+    }
+
+    let hit = false;
     const maskDisplayObject = display_object_container.mask as D;
     if (maskDisplayObject) {
         let hitTest = false;
