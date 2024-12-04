@@ -38,13 +38,17 @@ import { execute as displayObjectGlobalToLocalService } from "./DisplayObject/se
 import { execute as displayObjectGetHeightUseCase } from "./DisplayObject/usecase/DisplayObjectGetHeightUseCase";
 import { execute as displayObjectSetHeightUseCase } from "./DisplayObject/usecase/DisplayObjectSetHeightUseCase";
 import { execute as displayObjectRemoveService } from "./DisplayObject/service/DisplayObjectRemoveService";
+import { execute as displayObjectGetBoundsUseCase } from "./DisplayObject/usecase/DisplayObjectGetBoundsUseCase";
+import { execute as displayObjectHitTestObjectUseCase } from "./DisplayObject/usecase/DisplayObjectHitTestObjectUseCase";
+import { execute as displayObjectHitTestPointUseCase } from "./DisplayObject/usecase/DisplayObjectHitTestPointUseCase";
 import {
     $getInstanceId,
     $parentMap,
     $loaderInfoMap,
     $rootMap,
     $variables,
-    $getDraggingDisplayObject
+    $getDraggingDisplayObject,
+    $pointer
 } from "./DisplayObjectUtil";
 
 /**
@@ -554,36 +558,32 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @description マウスまたはユーザー入力デバイスの x 軸の位置をピクセルで示します。
-     *              Indicates the x coordinate of the mouse or user input device position, in pixels.
+     * @description 対象のDisplayObjectの基準点からの x 軸の位置をピクセルで示します。
+     *              Indicates the x coordinate of the DisplayObject instance relative to the local coordinates of the parent DisplayObjectContainer.
      *
      * @member  {number}
      * @default 0
      * @readonly
      * @public
      */
-    // get mouseX (): number
-    // {
-    //     return $getEvent()
-    //         ? this.globalToLocal($currentMousePoint()).x
-    //         : 0;
-    // }
+    get mouseX (): number
+    {
+        return this.globalToLocal($pointer).x;
+    }
 
-    // /**
-    //  * @description マウスまたはユーザー入力デバイスの y 軸の位置をピクセルで示します。
-    //  *              Indicates the y coordinate of the mouse or user input device position, in pixels.
-    //  *
-    //  * @member  {number}
-    //  * @default 0
-    //  * @readonly
-    //  * @public
-    //  */
-    // get mouseY (): number
-    // {
-    //     return $getEvent()
-    //         ? this.globalToLocal($currentMousePoint()).y
-    //         : 0;
-    // }
+    /**
+     * @description 対象のDisplayObjectの基準点からの y 軸の位置をピクセルで示します。
+     *              Indicates the y coordinate of the DisplayObject instance relative to the local coordinates of the parent DisplayObjectContainer.
+     *
+     * @member  {number}
+     * @default 0
+     * @readonly
+     * @public
+     */
+    get mouseY (): number
+    {
+        return this.globalToLocal($pointer).y;
+    }
 
     /**
      * @description このDisplayObjectの親のDisplayObjectContainerを返却します。
@@ -762,68 +762,16 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @description targetCoordinateSpace オブジェクトの座標系を基準にして、
-     *              表示オブジェクトの領域を定義する矩形を返します。
-     *              Returns a rectangle that defines the area
-     *              of the display object relative to the coordinate system
-     *              of the targetCoordinateSpace object.
+     * @description 指定したDisplayObject の座標系を基準にして、表示オブジェクトの領域を定義する矩形を返します。
+     *              Returns a rectangle that defines the area of the display object relative to the coordinate system of the targetDisplayObject.
      *
-     * @param  {DisplayObject} [target=null]
+     * @param  {DisplayObject} [target_display_object=null]
      * @return {Rectangle}
      */
-    // getBounds (target: DisplayObjectImpl<any> | null = null): Rectangle
-    // {
-    //     const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-    //         ? this._$getBounds() as BoundsImpl
-    //         : $getBoundsObject();
-
-    //     const matrix: Matrix = this._$transform.concatenatedMatrix;
-
-    //     // to global
-    //     const bounds: BoundsImpl = $boundsMatrix(baseBounds, matrix._$matrix);
-
-    //     // pool
-    //     $poolMatrix(matrix);
-    //     $poolBoundsObject(baseBounds);
-
-    //     // create bounds object
-    //     const targetBaseBounds: BoundsImpl = $getBoundsObject(
-    //         bounds.xMin,
-    //         bounds.xMax,
-    //         bounds.yMin,
-    //         bounds.yMax
-    //     );
-
-    //     // pool
-    //     $poolBoundsObject(bounds);
-
-    //     if (!target) {
-    //         target = this;
-    //     }
-
-    //     const targetMatrix: Matrix = target._$transform.concatenatedMatrix;
-    //     targetMatrix.invert();
-
-    //     const resultBounds: BoundsImpl = $boundsMatrix(
-    //         targetBaseBounds, targetMatrix._$matrix
-    //     );
-    //     $poolBoundsObject(targetBaseBounds);
-    //     $poolMatrix(targetMatrix);
-
-    //     const xMin: number = resultBounds.xMin;
-    //     const yMin: number = resultBounds.yMin;
-    //     const xMax: number = resultBounds.xMax;
-    //     const yMax: number = resultBounds.yMax;
-
-    //     // pool
-    //     $poolBoundsObject(resultBounds);
-
-    //     return new Rectangle(
-    //         xMin, yMin,
-    //         $Math.abs(xMax - xMin),
-    //         $Math.abs(yMax - yMin)
-    //     );
-    // }
+    getBounds <D extends DisplayObject>(target_display_object: D | null = null): Rectangle
+    {
+        return displayObjectGetBoundsUseCase(this as unknown as D, target_display_object);
+    }
 
     /**
      * @description point オブジェクトをステージ（グローバル）座標から
@@ -841,48 +789,17 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @description 表示オブジェクトの境界ボックスを評価して、
-     *              obj 表示オブジェクトの境界ボックスと重複または交差するかどうかを調べます。
-     *              Evaluates the bounding box of the display object to see
-     *              if it overlaps or intersects with the bounding box of the obj display object.
+     * @description DisplayObject の描画範囲を評価して、重複または交差するかどうかを調べます。
+     *              Evaluates a DisplayObject's drawing range to see if it overlaps or intersects.
      *
-     * @param   {DisplayObject} object
+     * @param   {DisplayObject} target_display_object
      * @returns {boolean}
      * @public
      */
-    // hitTestObject (object: DisplayObjectImpl<any>): boolean
-    // {
-    //     const baseBounds1: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-    //         ? this._$getBounds() as BoundsImpl
-    //         : $getBoundsObject();
-
-    //     const matrix1: Matrix = this._$transform.concatenatedMatrix;
-    //     const bounds1: BoundsImpl = $boundsMatrix(baseBounds1, matrix1._$matrix);
-
-    //     // pool
-    //     $poolMatrix(matrix1);
-    //     $poolBoundsObject(baseBounds1);
-
-    //     const baseBounds2: BoundsImpl = object._$getBounds(null);
-    //     const matrix2: Matrix = object._$transform.concatenatedMatrix;
-    //     const bounds2: BoundsImpl = $boundsMatrix(baseBounds2, matrix2._$matrix);
-
-    //     // pool
-    //     $poolMatrix(matrix2);
-    //     $poolBoundsObject(baseBounds2);
-
-    //     // calc
-    //     const sx: number = $Math.max(bounds1.xMin, bounds2.xMin);
-    //     const sy: number = $Math.max(bounds1.yMin, bounds2.yMin);
-    //     const ex: number = $Math.min(bounds1.xMax, bounds2.xMax);
-    //     const ey: number = $Math.min(bounds1.yMax, bounds2.yMax);
-
-    //     // pool
-    //     $poolBoundsObject(bounds1);
-    //     $poolBoundsObject(bounds2);
-
-    //     return ex - sx >= 0 && ey - sy >= 0;
-    // }
+    hitTestObject <D extends DisplayObject>(target_display_object: D): boolean
+    {
+        return displayObjectHitTestObjectUseCase(this as unknown as DisplayObject, target_display_object);
+    }
 
     /**
      * @description 表示オブジェクトを評価して、x および y パラメーターで指定された
@@ -896,63 +813,12 @@ export class DisplayObject extends EventDispatcher
      * @returns {boolean}
      * @public
      */
-    // hitTestPoint (
-    //     x: number, y: number,
-    //     shape_flag: boolean = false
-    // ): boolean {
-
-    //     if (shape_flag) {
-
-    //         let matrix: Float32Array = $MATRIX_ARRAY_IDENTITY;
-
-    //         let parent: ParentImpl<any> | null = this._$parent;
-    //         while (parent) {
-
-    //             matrix = $multiplicationMatrix(
-    //                 parent._$transform._$rawMatrix(),
-    //                 matrix
-    //             );
-
-    //             parent = parent._$parent;
-    //         }
-
-    //         $hitContext.setTransform(1, 0, 0, 1, 0, 0);
-    //         $hitContext.beginPath();
-
-    //         let result: boolean = false;
-    //         if ("_$hit" in this && typeof this._$hit === "function") {
-    //             result = this._$hit($hitContext, matrix, { "x": x, "y": y }, true);
-    //         }
-
-    //         if (matrix !== $MATRIX_ARRAY_IDENTITY) {
-    //             $poolFloat32Array6(matrix);
-    //         }
-
-    //         return result;
-    //     }
-
-    //     const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-    //         ? this._$getBounds() as BoundsImpl
-    //         : $getBoundsObject();
-
-    //     const bounds: BoundsImpl = $boundsMatrix(baseBounds, this._$transform._$rawMatrix());
-    //     $poolBoundsObject(baseBounds);
-
-    //     const rectangle: Rectangle = new Rectangle(
-    //         bounds.xMin, bounds.yMin,
-    //         bounds.xMax - bounds.xMin,
-    //         bounds.yMax - bounds.yMin
-    //     );
-
-    //     // pool
-    //     $poolBoundsObject(bounds);
-
-    //     const point: Point = this._$parent
-    //         ? this._$parent.globalToLocal(new Point(x, y))
-    //         : new Point(x, y);
-
-    //     return rectangle.containsPoint(point);
-    // }
+    hitTestPoint (
+        x: number, y: number,
+        shape_flag: boolean = false
+    ): boolean {
+        return displayObjectHitTestPointUseCase(this, x, y, shape_flag);
+    }
 
     /**
      * @description point オブジェクトを表示オブジェクトの（ローカル）座標からステージ（グローバル）座標に変換します。
