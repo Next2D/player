@@ -6,6 +6,10 @@ import { execute as displayObjectDispatchRemovedEventService } from "../../Displ
 import { execute as displayObjectDispatchRemovedToStageEventService } from "../../DisplayObject/service/DisplayObjectDispatchRemovedToStageEventService";
 import { execute as displayObjectContainerRemovedToStageService } from "../service/DisplayObjectContainerRemovedToStageService";
 import {
+    Event,
+    KeyboardEvent
+} from "@next2d/events";
+import {
     $parentMap,
     $rootMap,
     $stageAssignedMap
@@ -17,19 +21,37 @@ import {
  *
  * @param  {DisplayObjectContainer} display_object_container
  * @param  {DisplayObject} display_object
- * @return {DisplayObject}
+ * @return {void}
  * @method
  * @protected
  */
 export const execute = <P extends DisplayObjectContainer, D extends DisplayObject>(
     display_object_container: P,
     display_object: D
-): D => {
+): void => {
+
+    const parent = display_object.parent;
+    if (parent
+        && (parent as unknown as DisplayObjectContainer).instanceId === display_object_container.instanceId
+    ) {
+        return ;
+    }
 
     const children = display_object_container.children;
     const depth = children.indexOf(display_object);
     if (depth > -1) {
         children.splice(depth, 1);
+    }
+
+    // remove all broadcast events
+    if (display_object.hasEventListener(Event.ENTER_FRAME)) {
+        display_object.removeAllEventListener(Event.ENTER_FRAME);
+    }
+    if (display_object.hasEventListener(KeyboardEvent.KEY_DOWN)) {
+        display_object.removeAllEventListener(KeyboardEvent.KEY_DOWN);
+    }
+    if (display_object.hasEventListener(KeyboardEvent.KEY_UP)) {
+        display_object.removeAllEventListener(KeyboardEvent.KEY_UP);
     }
 
     // dispatch removed event
@@ -71,6 +93,4 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
 
     // apply changes
     displayObjectApplyChangesService(display_object_container);
-
-    return display_object;
 };

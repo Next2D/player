@@ -17,7 +17,7 @@ import { $intToRGBA } from "../../RendererUtil";
  * @protected
  */
 export const execute = (
-    text_data: ITextData,
+    text_data: ITextData | null,
     text_setting: ITextSetting,
     x_scale: number,
     y_scale: number
@@ -61,6 +61,10 @@ export const execute = (
             context.stroke();
         }
 
+    }
+
+    if (!text_data) {
+        return canvas;
     }
 
     context.save();

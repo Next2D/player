@@ -17,7 +17,7 @@ import {
  *
  * @param  {DisplayObjectContainer} display_object_container
  * @param  {DisplayObject} display_object
- * @return {void}
+ * @return {DisplayObject}
  * @method
  * @public
  */
@@ -25,11 +25,20 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     display_object_container: P,
     display_object: D,
     index: number = -1
-): void => {
+): D => {
+
+    const parent = display_object.parent;
+    if (parent) {
+        parent.removeChild(display_object);
+    }
 
     // added display object
     const children = display_object_container.children;
-    children.splice(index, 0, display_object);
+    if (0 > index) {
+        children.push(display_object);
+    } else {
+        children.splice(index, 0, display_object);
+    }
 
     // Set parent-child relationship
     $parentMap.set(display_object, display_object_container);
@@ -67,4 +76,6 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     }
 
     displayObjectApplyChangesService(display_object);
+
+    return display_object;
 };
