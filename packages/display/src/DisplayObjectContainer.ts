@@ -3,7 +3,11 @@ import type { IDisplayObject } from "./interface/IDisplayObject";
 import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
 import { execute as displayObjectContainerAddChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerAddChildUseCase";
 import { execute as displayObjectContainerRemoveChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerRemoveChildUseCase";
+import { execute as displayObjectContainerRemoveChildAtUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerRemoveChildAtUseCase";
 import { execute as displayObjectContainerGetChildAtService } from "./DisplayObjectContainer/service/DisplayObjectContainerGetChildAtService";
+import { execute as displayObjectContainerContainsService } from "./DisplayObjectContainer/service/DisplayObjectContainerContainsService";
+import { execute as displayObjectContainerGetChildByNameService } from "./DisplayObjectContainer/service/DisplayObjectContainerGetChildByNameService";
+import { execute as displayObjectContainerRemoveChildrenUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerRemoveChildrenUseCase";
 import { $getArray } from "./DisplayObjectUtil";
 import { InteractiveObject } from "./InteractiveObject";
 
@@ -159,43 +163,20 @@ export class DisplayObjectContainer extends InteractiveObject
     }
 
     /**
-     * @description 指定された表示オブジェクトが、DisplayObjectContainer インスタンスの子であるか
-     *              インスタンス自体であるかを指定します。
-     *              Determines whether the specified display object is a child
-     *              of the DisplayObjectContainer instance or the instance itself.
+     * @description 指定された DisplayObject が、DisplayObjectContainer インスタンスの子孫であるか
+     *              もしくは、インスタンス自体であるかを指定します。
+     *              Whether the specified DisplayObject is a descendant of a DisplayObjectContainer instance.
+     *              or the instance itself.
      *
-     * @param  {DisplayObject} child
+     * @param  {DisplayObject} display_object
      * @return {boolean}
      * @method
      * @public
      */
-    // contains (child: DisplayObjectImpl<any>): boolean
-    // {
-    //     if (this._$instanceId === child._$instanceId) {
-    //         return true;
-    //     }
-
-    //     const children: DisplayObjectImpl<any>[] = this._$getChildren();
-    //     for (let idx: number = 0; idx < children.length; ++idx) {
-
-    //         const instance: DisplayObjectImpl<any> = children[idx];
-
-    //         if (instance._$instanceId === child._$instanceId) {
-    //             return true;
-    //         }
-
-    //         if (instance instanceof DisplayObjectContainer) {
-
-    //             if (instance.contains(child)) {
-    //                 return true;
-    //             }
-
-    //         }
-
-    //     }
-
-    //     return false;
-    // }
+    contains<D extends DisplayObject> (display_object: D): boolean
+    {
+        return displayObjectContainerContainsService(this, display_object);
+    }
 
     /**
      * @description 指定のインデックス位置にある子表示オブジェクトインスタンスを返します。
@@ -220,26 +201,10 @@ export class DisplayObjectContainer extends InteractiveObject
      * @method
      * @public
      */
-    // getChildByName (name: string): DisplayObjectImpl<any> | null
-    // {
-    //     if (!name) {
-    //         return null;
-    //     }
-
-    //     // fixed logic
-    //     const children: DisplayObjectImpl<any>[] = this._$getChildren();
-    //     for (let idx: number = 0; idx < children.length; ++idx) {
-
-    //         const child: DisplayObjectImpl<any> = children[idx];
-    //         if (child.name !== name) {
-    //             continue;
-    //         }
-
-    //         return child;
-    //     }
-
-    //     return null;
-    // }
+    getChildByName<D extends DisplayObject> (name: string): D | null
+    {
+        return displayObjectContainerGetChildByNameService(this, name);
+    }
 
     /**
      * @description 子 DisplayObject インスタンスのインデックス位置を返します。
@@ -283,41 +248,22 @@ export class DisplayObjectContainer extends InteractiveObject
      */
     removeChildAt (index: number): void
     {
-        const child = this.getChildAt(index);
-        if (child) {
-            this.removeChild(child);
-        }
+        displayObjectContainerRemoveChildAtUseCase(this, index);
     }
 
     /**
-     * @description DisplayObjectContainer インスタンスの子リストから
-     *              すべての child DisplayObject インスタンスを削除します。
-     *              Removes all child DisplayObject instances from
-     *              the child list of the DisplayObjectContainer instance.
+     * @description 配列で指定されたインデックスの子をコンテナから削除します
+     *              Removes children of the index specified in the array from the container
      *
-     * @param  {number} [begin_index=0]
-     * @param  {number} [end_index=0x7fffffff]
+     * @param  {number[]} indexes
      * @return {void}
      * @method
      * @public
      */
-    // removeChildren (
-    //     begin_index: number = 0,
-    //     end_index: number = 0x7fffffff
-    // ): void {
-
-    //     const children: DisplayObjectImpl<any>[] = this._$getChildren();
-    //     if (!children.length) {
-    //         return ;
-    //     }
-
-    //     begin_index = $clamp(begin_index, 0, 0x7ffffffe, 0) - 1;
-    //     end_index   = $clamp(end_index, 1, 0x7ffffff, 0x7ffffff);
-
-    //     for (let idx: number = $Math.min(end_index, children.length - 1); idx > begin_index; --idx) {
-    //         this._$remove(children[idx]);
-    //     }
-    // }
+    removeChildren (...indexes: number[]): void
+    {
+        displayObjectContainerRemoveChildrenUseCase(this, indexes);
+    }
 
     /**
      * @description 表示オブジェクトコンテナの既存の子の位置を変更します。

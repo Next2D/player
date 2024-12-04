@@ -37,6 +37,7 @@ import { execute as displayObjectLocalToGlobalService } from "./DisplayObject/se
 import { execute as displayObjectGlobalToLocalService } from "./DisplayObject/service/DisplayObjectGlobalToLocalService";
 import { execute as displayObjectGetHeightUseCase } from "./DisplayObject/usecase/DisplayObjectGetHeightUseCase";
 import { execute as displayObjectSetHeightUseCase } from "./DisplayObject/usecase/DisplayObjectSetHeightUseCase";
+import { execute as displayObjectRemoveService } from "./DisplayObject/service/DisplayObjectRemoveService";
 import {
     $getInstanceId,
     $parentMap,
@@ -1114,78 +1115,16 @@ export class DisplayObject extends EventDispatcher
         return $variables.clear();
     }
 
-    // /**
-    //  * @param   {Float32Array} multi_matrix
-    //  * @returns {object}
-    //  * @private
-    //  */
-    // _$getLayerBounds (multi_matrix: Float32Array): BoundsImpl
-    // {
-    //     const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-    //         ? this._$getBounds() as BoundsImpl
-    //         : $getBoundsObject();
-
-    //     const bounds: BoundsImpl = $boundsMatrix(baseBounds, multi_matrix);
-    //     $poolBoundsObject(baseBounds);
-
-    //     const filters: FilterArrayImpl = this._$filters || this.filters;
-    //     if (!filters.length) {
-    //         return bounds;
-    //     }
-
-    //     let filterBounds: BoundsImpl = $getBoundsObject(
-    //         0,
-    //         $Math.abs(bounds.xMax - bounds.xMin),
-    //         0,
-    //         $Math.abs(bounds.yMax - bounds.yMin)
-    //     );
-    //     $poolBoundsObject(bounds);
-
-    //     let xScale: number = +$Math.sqrt(
-    //         multi_matrix[0] * multi_matrix[0]
-    //         + multi_matrix[1] * multi_matrix[1]
-    //     );
-    //     let yScale: number = +$Math.sqrt(
-    //         multi_matrix[2] * multi_matrix[2]
-    //         + multi_matrix[3] * multi_matrix[3]
-    //     );
-
-    //     xScale /= $devicePixelRatio;
-    //     yScale /= $devicePixelRatio;
-
-    //     xScale *= 2;
-    //     yScale *= 2;
-
-    //     for (let idx: number = 0; idx < filters.length; ++idx) {
-    //         filterBounds = filters[idx]
-    //             ._$generateFilterRect(filterBounds, xScale, yScale);
-    //     }
-
-    //     return filterBounds;
-    // }
-
-    // /**
-    //  * @description AnimationToolのシンボルと同期
-    //  *              Synchronize with AnimationTool symbol
-    //  *
-    //  * @param {number} character_id
-    //  * @param {object} character
-    //  * @param {LoaderInfo} loaderInfo
-    //  * @return {void}
-    //  * @method
-    //  * @protected
-    //  */
-    // _$sync (
-    //     character_id: number,
-    //     character: ICharacter,
-    //     loaderInfo: LoaderInfo
-    // ): void {
-
-    //     // setup
-    //     this.characterId = character_id;
-    //     $loaderInfoMap.set(this, loaderInfo);
-
-    //     // build
-    //     this._$buildCharacter(character);
-    // }
+    /**
+     * @description 親子関係を解除します。
+     *              Removes the parent-child relationship.
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    remove (): void
+    {
+        displayObjectRemoveService(this);
+    }
 }

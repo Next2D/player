@@ -11,6 +11,9 @@ describe("DisplayObjectContainerRemoveChildUseCase.js test", () =>
         const shape1 = container.addChild(new Shape());
         const shape2 = container.addChild(new Shape());
 
+        container.changed = false;
+        expect(container.changed).toBe(false);
+
         expect(shape1.$added).toBe(true);
         expect(shape1.parent?.instanceId).toBe(container.instanceId);
 
@@ -29,6 +32,8 @@ describe("DisplayObjectContainerRemoveChildUseCase.js test", () =>
         expect(container.children.length).toBe(0);
         expect(shape2.$added).toBe(false);
         expect(shape2.parent).toBe(null);
+
+        expect(container.changed).toBe(true);
     });
 
 });
