@@ -28,7 +28,7 @@ describe("DisplayObjectContainerAddChildUseCase.js test", () =>
         expect(shape2.$added).toBe(false);
         expect(shape2.parent).toBe(null);
         expect(container.children.length).toBe(1);
-        execute(container, shape2);
+        execute(container, shape2, container.numChildren);
         expect(shape2.$added).toBe(true);
         expect((shape2.parent as NonNullable<DisplayObjectContainer>).instanceId).toBe(container.instanceId);
         expect(container.changed).toBe(true);

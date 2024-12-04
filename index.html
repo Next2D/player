@@ -10,53 +10,7 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        // next2d.load("develop");
-
-        const { Sprite, Shape } = next2d.display;
-        const { TextField } = next2d.text;
-        const { PointerEvent } = next2d.events;
-        const { Rectangle } = next2d.geom;
-
-        const root = await next2d.createRootMovieClip(480, 480);
-        
-        const hitSprite = root.addChild(new Sprite());
-        const hitShape  = hitSprite.addChild(new Shape());
-        hitShape.x = 250;
-        hitShape.y = 250;
-        hitShape
-            .graphics
-            .beginFill("#ff00ee")
-            .drawRect(0, 0, 150, 150);
-
-        const sprite = root.addChild(new Sprite());
-        sprite.buttonMode = true;
-        sprite.addEventListener(PointerEvent.POINTER_DOWN, (event) => 
-        {
-            sprite.startDrag();
-        });
-        sprite.addEventListener(PointerEvent.POINTER_UP, (event) => 
-        {
-            sprite.stopDrag();
-        });
-
-        const maskShape = new Shape(); //sprite.addChild(new Shape());
-        const viewShape = sprite.addChild(new Shape());
-        viewShape.x = 100;
-        viewShape.y = 100;
-        viewShape
-            .graphics
-            .beginFill("#0eff0e")
-            .drawRect(0, 0, 100, 100);
-
-        maskShape.x = 100;
-        maskShape.y = 100;
-        maskShape
-            .graphics
-            .beginFill("#000")
-            .drawCircle(50, 50, 50);
-
-        // sprite.hitArea = hitSprite;
-        sprite.mask = maskShape;
+        next2d.load("develop");
     });
 </script>
 </body>
