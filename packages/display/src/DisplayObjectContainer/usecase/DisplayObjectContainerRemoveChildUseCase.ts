@@ -32,7 +32,7 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
 
     const parent = display_object.parent;
     if (parent
-        && (parent as unknown as DisplayObjectContainer).instanceId === display_object_container.instanceId
+        && (parent as unknown as DisplayObjectContainer).instanceId !== display_object_container.instanceId
     ) {
         return ;
     }
