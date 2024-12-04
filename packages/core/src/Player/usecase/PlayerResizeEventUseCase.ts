@@ -1,5 +1,5 @@
 import { $player } from "../../Player";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import { execute as playerResizePostMessageService } from "../service/PlayerResizePostMessageService";
 import { execute as canvasSetPositionService } from "../../Canvas/service/CanvasSetPositionService";
 import { $cacheStore } from "@next2d/cache";
@@ -41,22 +41,22 @@ export const execute = (): void =>
     style.width  = `${screenWidth}px`;
     style.height = `${screenHeight}px`;
 
-    if (!$stage.stageWidth || !$stage.stageHeight) {
+    if (!stage.stageWidth || !stage.stageHeight) {
         return ;
     }
 
     const scale = Math.min(
-        screenWidth  / $stage.stageWidth,
-        screenHeight / $stage.stageHeight
+        screenWidth  / stage.stageWidth,
+        screenHeight / stage.stageHeight
     ) * $devicePixelRatio;
 
     const width = $player.fullScreen
         ? window.innerWidth * $devicePixelRatio
-        : $stage.stageWidth * scale | 0;
+        : stage.stageWidth * scale | 0;
 
     const height = $player.fullScreen
         ? window.innerHeight * $devicePixelRatio
-        : $stage.stageHeight * scale | 0;
+        : stage.stageHeight * scale | 0;
 
     // 同じサイズの場合は、ここれで終了
     if (width === $player.screenWidth
@@ -68,10 +68,10 @@ export const execute = (): void =>
     // update
     $player.screenWidth   = screenWidth;
     $player.screenHeight  = screenHeight;
-    $stage.rendererScale  = $player.rendererScale  = scale;
-    $stage.rendererWidth  = $player.rendererWidth  = width;
-    $stage.rendererHeight = $player.rendererHeight = height;
-    $stage.changed = true;
+    stage.rendererScale  = $player.rendererScale  = scale;
+    stage.rendererWidth  = $player.rendererWidth  = width;
+    stage.rendererHeight = $player.rendererHeight = height;
+    stage.changed = true;
 
     // worker postMessage
     playerResizePostMessageService();

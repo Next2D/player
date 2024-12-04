@@ -1,5 +1,5 @@
 import { $player } from "../../Player";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import {
     $devicePixelRatio,
     $hitContext,
@@ -50,15 +50,15 @@ export const execute = (event: PointerEvent, canvas: HTMLCanvasElement): void =>
     $hitObject.hit = null;
 
     // hit test
-    $hitMatrix[4] = ($player.rendererWidth  - $stage.stageWidth  * $player.rendererScale) / 2;
-    $hitMatrix[5] = ($player.rendererHeight - $stage.stageHeight * $player.rendererScale) / 2;
+    $hitMatrix[4] = ($player.rendererWidth  - stage.stageWidth  * $player.rendererScale) / 2;
+    $hitMatrix[5] = ($player.rendererHeight - stage.stageHeight * $player.rendererScale) / 2;
 
     // reset
     $hitContext.beginPath();
     $hitContext.setTransform(1, 0, 0, 1, 0, 0);
 
     // ヒット判定
-    $stage.$mouseHit($hitContext, $hitMatrix, $hitObject);
+    stage.$mouseHit($hitContext, $hitMatrix, $hitObject);
 
     // カーソルの表示を更新
     if ($player.mouseState === "up"

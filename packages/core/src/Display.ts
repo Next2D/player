@@ -11,7 +11,7 @@ import {
     InteractiveObject,
     Loader,
     Shape,
-    Stage
+    stage
 } from "@next2d/display";
 
 const display: IDisplay = {
@@ -26,7 +26,7 @@ const display: IDisplay = {
     InteractiveObject,
     Loader,
     Shape,
-    Stage
+    stage
 };
 
 Object.entries(display).forEach(([key, DisplayClass]) =>

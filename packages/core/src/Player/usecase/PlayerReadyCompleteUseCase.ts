@@ -1,4 +1,4 @@
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import { $player } from "../../Player";
 import { execute as playerRenderingPostMessageService } from "../service/PlayerRenderingPostMessageService";
 
@@ -9,7 +9,7 @@ import { execute as playerRenderingPostMessageService } from "../service/PlayerR
 export const execute = (): void =>
 {
     // stage complete
-    $stage.ready = true;
+    stage.ready = true;
 
     // postMessage
     playerRenderingPostMessageService();

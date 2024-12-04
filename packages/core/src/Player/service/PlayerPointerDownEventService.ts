@@ -1,6 +1,6 @@
 import type { DisplayObject } from "@next2d/display";
 import type { TextField } from "@next2d/text";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import { PointerEvent } from "@next2d/events";
 import {
     $setSelectedTextField,
@@ -62,8 +62,8 @@ export const execute = <D extends DisplayObject> (): void =>
 
     } else {
         // ステージ全体のポインターダウンイベントを発火します。
-        if ($stage.willTrigger(PointerEvent.POINTER_DOWN)) {
-            $stage.dispatchEvent(
+        if (stage.willTrigger(PointerEvent.POINTER_DOWN)) {
+            stage.dispatchEvent(
                 new PointerEvent(PointerEvent.POINTER_DOWN)
             );
         }

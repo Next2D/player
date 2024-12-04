@@ -12,7 +12,7 @@ import { execute as playerBootUseCase } from "../../Player/usecase/PlayerBootUse
 import { execute as canvasSetPositionService } from "../../Canvas/service/CanvasSetPositionService";
 import {
     Loader,
-    $stage
+    stage
 } from "@next2d/display";
 
 /**
@@ -66,12 +66,12 @@ export const execute = async (url: string, options: IPlayerOptions | null = null
 
     // update properties
     const stageData: IStageData = loaderInfo.data.stage;
-    $stage.stageWidth      = stageData.width;
-    $stage.stageHeight     = stageData.height;
-    $stage.frameRate       = $clamp(stageData.fps, 1, 60, 60);
-    $stage.backgroundColor = stageData.bgColor;
+    stage.stageWidth      = stageData.width;
+    stage.stageHeight     = stageData.height;
+    stage.frameRate       = $clamp(stageData.fps, 1, 60, 60);
+    stage.backgroundColor = stageData.bgColor;
 
-    $stage.addChild<MovieClip>(loaderInfo.content as MovieClip);
+    stage.addChild<MovieClip>(loaderInfo.content as MovieClip);
 
     // resize
     playerResizeEventUseCase();

@@ -1,5 +1,5 @@
 import { $mainCanvasPosition } from "@next2d/text";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import { $getMainElement } from "../../CoreUtil";
 
 /**
@@ -31,6 +31,6 @@ export const execute = (): void =>
         return ;
     }
 
-    $mainCanvasPosition.x = (element.clientWidth  - $stage.rendererWidth  / $devicePixelRatio) / 2;
-    $mainCanvasPosition.y = (element.clientHeight - $stage.rendererHeight / $devicePixelRatio) / 2;
+    $mainCanvasPosition.x = (element.clientWidth  - stage.rendererWidth  / $devicePixelRatio) / 2;
+    $mainCanvasPosition.y = (element.clientHeight - stage.rendererHeight / $devicePixelRatio) / 2;
 };

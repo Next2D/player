@@ -13,7 +13,7 @@ import { execute as playerRegisterEventUseCase } from "./Player/usecase/PlayerRe
  * @class
  * @public
  */
-export class Player
+class Player
 {
     /**
      * @description devicePixelRatioを含んだcanvasの描画領域の幅

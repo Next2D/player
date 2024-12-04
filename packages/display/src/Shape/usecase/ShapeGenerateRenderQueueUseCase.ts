@@ -6,7 +6,7 @@ import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayOb
 import { execute as shapeGetRawBoundsService } from "../../Shape/service/ShapeGetRawBoundsService";
 import { execute as shapeGenerateHashService } from "../service/ShapeGenerateHashService";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
-import { $stage } from "../../Stage";
+import { stage } from "../../Stage";
 import { $cacheStore } from "@next2d/cache";
 import {
     $clamp,
@@ -233,7 +233,7 @@ export const execute = (
 
         if (isGridEnabled) {
 
-            const scale = $stage.rendererScale;
+            const scale = stage.rendererScale;
 
             const stageMatrix = $getFloat32Array6(
                 scale, 0, 0, scale, 0, 0

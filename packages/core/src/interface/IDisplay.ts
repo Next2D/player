@@ -25,5 +25,5 @@ export interface IDisplay {
     MovieClip: typeof MovieClip;
     Shape: typeof Shape;
     Sprite: typeof Sprite;
-    Stage: typeof Stage;
+    stage: Stage;
 }

@@ -214,7 +214,7 @@ export class Stage extends DisplayObjectContainer
      */
     $ticker (): void
     {
-        stageTickerUseCase(this);
+        stageTickerUseCase();
     }
 
     /**
@@ -269,5 +269,5 @@ export class Stage extends DisplayObjectContainer
     }
 }
 
-export const $stage: Stage = new Stage();
-$stageAssignedMap.add($stage);
+export const stage: Stage = new Stage();
+$stageAssignedMap.add(stage);

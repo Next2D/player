@@ -1,5 +1,5 @@
 import type { DisplayObject } from "@next2d/display";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import { PointerEvent } from "@next2d/events";
 import { $hitObject } from "../../CoreUtil";
 
@@ -13,7 +13,7 @@ import { $hitObject } from "../../CoreUtil";
  */
 export const execute = <D extends DisplayObject> (): void =>
 {
-    const dropTarget = $stage.dropTarget as D | null;
+    const dropTarget = stage.dropTarget as D | null;
     const displayObject = $hitObject.hit as D;
     if (displayObject) {
         if (displayObject.willTrigger(PointerEvent.POINTER_UP)) {
@@ -36,8 +36,8 @@ export const execute = <D extends DisplayObject> (): void =>
                 new PointerEvent(PointerEvent.POINTER_UP)
             );
         } else {
-            if ($stage.willTrigger(PointerEvent.POINTER_UP)) {
-                $stage.dispatchEvent(
+            if (stage.willTrigger(PointerEvent.POINTER_UP)) {
+                stage.dispatchEvent(
                     new PointerEvent(PointerEvent.POINTER_UP)
                 );
             }

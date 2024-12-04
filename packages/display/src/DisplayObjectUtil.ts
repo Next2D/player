@@ -416,7 +416,12 @@ export const $graphicMap: WeakMap<Graphics, IDisplayObject<any>> = new WeakMap()
 
 const canvas = document.createElement("canvas");
 canvas.width = canvas.height = 1;
-const colorContext = canvas.getContext("2d");
+
+/**
+ * @type {CanvasRenderingContext2D}
+ * @protected
+ */
+export const $colorContext: CanvasRenderingContext2D = canvas.getContext("2d") as CanvasRenderingContext2D;
 
 /**
  * @description カラー文字列を数値に変換
@@ -428,12 +433,12 @@ const colorContext = canvas.getContext("2d");
  */
 export const $convertColorStringToNumber = (value: string): number =>
 {
-    if (!colorContext) {
+    if (!$colorContext) {
         return 0;
     }
 
-    colorContext.fillStyle = value;
-    return +`0x${colorContext.fillStyle.slice(1)}`;
+    $colorContext.fillStyle = value;
+    return +`0x${$colorContext.fillStyle.slice(1)}`;
 };
 
 /**

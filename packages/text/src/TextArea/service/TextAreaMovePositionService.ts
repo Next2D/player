@@ -1,6 +1,6 @@
 import type { TextField } from "../../TextField";
 import { Point } from "@next2d/geom";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import {
     $textArea,
     $mainCanvasPosition
@@ -48,7 +48,7 @@ export const execute = (text_field: TextField): void =>
         }
     }
 
-    const scale = $stage.rendererScale / $devicePixelRatio;
+    const scale = stage.rendererScale / $devicePixelRatio;
     $textArea.style.left = `${$mainCanvasPosition.x + point.x * scale}px`;
     $textArea.style.top  = `${$mainCanvasPosition.y + point.y * scale}px`;
 };

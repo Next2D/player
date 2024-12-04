@@ -2,7 +2,7 @@
 import type { IRenderMessage } from "../../interface/IRenderMessage";
 import { $rendererWorker } from "../../RendererWorker";
 import { $player } from "../../Player";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 
 /**
  * @type {array}
@@ -57,13 +57,13 @@ export const execute = (): void =>
     const scale = $player.rendererScale;
 
     $matrix[0] = $matrix[3] = scale;
-    $matrix[4] = ($player.rendererWidth - $stage.stageWidth * scale) / 2;
-    $matrix[5] = ($player.rendererHeight - $stage.stageHeight * scale) / 2;
+    $matrix[4] = ($player.rendererWidth  - stage.stageWidth * scale) / 2;
+    $matrix[5] = ($player.rendererHeight - stage.stageHeight * scale) / 2;
 
     $options.length = 0;
     $renderQueue.length = 0;
     $bitmaps.length = 0;
-    $stage.$generateRenderQueue(
+    stage.$generateRenderQueue(
         $renderQueue, $bitmaps, $matrix
     );
 

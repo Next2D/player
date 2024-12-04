@@ -1,5 +1,5 @@
-import type { Player } from "../../Player";
-import { $stage } from "@next2d/display";
+import { $player } from "../../Player";
+import { stage } from "@next2d/display";
 import { execute as playerRenderingPostMessageService } from "../service/PlayerRenderingPostMessageService";
 import { execute as playerRemoveCachePostMessageService } from "../service/PlayerRemoveCachePostMessageService";
 
@@ -7,30 +7,29 @@ import { execute as playerRemoveCachePostMessageService } from "../service/Playe
  * @description Playerの定期処理
  *              Regular processing of Player
  *
- * @param  {Player} player
  * @param  {number} timestamp
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (player: Player, timestamp: number): void =>
+export const execute = (timestamp: number): void =>
 {
-    if (player.stopFlag) {
+    if ($player.stopFlag) {
         return ;
     }
 
-    const time = timestamp - player.startTime;
-    if (time > player.fps) {
-        player.startTime = timestamp - time % player.fps;
+    const time = timestamp - $player.startTime;
+    if (time > $player.fps) {
+        $player.startTime = timestamp - time % $player.fps;
 
         // 定期処理
-        $stage.$ticker();
+        stage.$ticker();
 
-        if ($stage.$remoceCacheKeys.length) {
+        if (stage.$remoceCacheKeys.length) {
             playerRemoveCachePostMessageService();
         }
 
-        if ($stage.changed) {
+        if (stage.changed) {
             // 描画情報をworkerに送る
             playerRenderingPostMessageService();
 
@@ -41,8 +40,8 @@ export const execute = (player: Player, timestamp: number): void =>
     }
 
     // next frame
-    player.timerId = requestAnimationFrame((timestamp: number): void =>
+    $player.timerId = requestAnimationFrame((timestamp: number): void =>
     {
-        execute(player, timestamp);
+        execute(timestamp);
     });
 };

@@ -17,18 +17,9 @@ import {
 } from "@next2d/geom";
 import {
     $MATRIX_ARRAY_IDENTITY,
-    $poolArray
+    $poolArray,
+    $colorContext
 } from "../../DisplayObjectUtil";
-
-const canvas  = document.createElement("canvas");
-canvas.width  = 1;
-canvas.height = 1;
-
-/**
- * @type {CanvasRenderingContext2D}
- * @private
- */
-const $hitContext: CanvasRenderingContext2D = canvas.getContext("2d") as CanvasRenderingContext2D;
 
 /**
  * @type {IPlayerHitObject}
@@ -68,8 +59,8 @@ export const execute = <D extends DisplayObject>(
             ? parent.concatenatedMatrix.rawData
             : $MATRIX_ARRAY_IDENTITY;
 
-        $hitContext.setTransform(1, 0, 0, 1, 0, 0);
-        $hitContext.beginPath();
+        $colorContext.setTransform(1, 0, 0, 1, 0, 0);
+        $colorContext.beginPath();
 
         $hitObject.x = x;
         $hitObject.y = y;
@@ -80,7 +71,7 @@ export const execute = <D extends DisplayObject>(
             case display_object.isContainerEnabled:
                 return displayObjectContainerMouseHitUseCase(
                     display_object as unknown as DisplayObjectContainer,
-                    $hitContext,
+                    $colorContext,
                     matrix,
                     $hitObject
                 );
@@ -88,7 +79,7 @@ export const execute = <D extends DisplayObject>(
             case display_object.isShape:
                 return shapeHitTestUseCase(
                     display_object as unknown as Shape,
-                    $hitContext,
+                    $colorContext,
                     matrix,
                     $hitObject
                 );
@@ -96,7 +87,7 @@ export const execute = <D extends DisplayObject>(
             case display_object.isText:
                 return textFieldHitTestUseCase(
                     display_object as unknown as TextField,
-                    $hitContext,
+                    $colorContext,
                     matrix,
                     $hitObject
                 );
@@ -104,7 +95,7 @@ export const execute = <D extends DisplayObject>(
             case display_object.isVideo:
                 return videoHitTestUseCase(
                     display_object as unknown as Video,
-                    $hitContext,
+                    $colorContext,
                     matrix,
                     $hitObject
                 );

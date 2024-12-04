@@ -1,5 +1,5 @@
 import type { DisplayObject, Sprite } from "@next2d/display";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import { $getSelectedTextField } from "@next2d/text";
 import { PointerEvent } from "@next2d/events";
 import { $player } from "../../Player";
@@ -21,12 +21,12 @@ import {
  */
 export const execute = <D extends DisplayObject> (): void =>
 {
-    const dropTarget = $stage.dropTarget as Sprite | null;
+    const dropTarget = stage.dropTarget as Sprite | null;
     if (dropTarget) {
 
         const point = dropTarget.parent
-            ? dropTarget.parent.globalToLocal($stage.pointer)
-            : dropTarget.globalToLocal($stage.pointer);
+            ? dropTarget.parent.globalToLocal(stage.pointer)
+            : dropTarget.globalToLocal(stage.pointer);
 
         let dragX = 0;
         let dragY = 0;
@@ -117,8 +117,8 @@ export const execute = <D extends DisplayObject> (): void =>
             $setRollOverDisplayObject(null);
         }
 
-        if ($stage.hasEventListener(PointerEvent.POINTER_MOVE)) {
-            $stage.dispatchEvent(new PointerEvent(
+        if (stage.hasEventListener(PointerEvent.POINTER_MOVE)) {
+            stage.dispatchEvent(new PointerEvent(
                 PointerEvent.POINTER_MOVE
             ));
         }

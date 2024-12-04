@@ -12,7 +12,7 @@
     {
         // next2d.load("develop");
 
-        const { Sprite, Shape } = next2d.display;
+        const { Sprite, Shape, stage } = next2d.display;
         const { PointerEvent } = next2d.events;
 
         const root = await next2d.createRootMovieClip(480, 480);
@@ -23,25 +23,14 @@
         shape1
             .graphics
             .beginFill("#ff0000")
-            .drawRect(0, 0, 100, 100);
-
-        const shape2 = sprite.addChild(new Shape());
-        shape2
-            .graphics
-            .beginFill("#00ff00")
-            .drawRect(30, 30, 100, 100);
-
-        const shape3 = sprite.addChild(new Shape());
-        shape3
-            .graphics
-            .beginFill("#0000ff")
-            .drawRect(60, 60, 100, 100);
+            .drawCircle(0, 50, 50);
 
         sprite.x = 100;
         sprite.y = 100;
-        sprite.addEventListener(PointerEvent.POINTER_DOWN, () =>
+        sprite.addEventListener(PointerEvent.POINTER_MOVE, () =>
         {
-            console.log(sprite.getBounds(root));
+            console.log(stage.mouseX, stage.mouseY);
+            console.log(sprite.hitTestPoint(stage.mouseX, stage.mouseY));
         });
     });
 </script>

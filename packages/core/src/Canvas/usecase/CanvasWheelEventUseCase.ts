@@ -1,6 +1,6 @@
 import type { DisplayObject } from "@next2d/display";
 import type { TextField } from "@next2d/text";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import { $hitObject } from "../../CoreUtil";
 import {
     $setEvent,
@@ -38,11 +38,11 @@ export const execute = <D extends DisplayObject>(event: WheelEvent): void =>
         return ;
     }
 
-    if ($stage.willTrigger(Next2D_WheelEvent.WHEEL)) {
+    if (stage.willTrigger(Next2D_WheelEvent.WHEEL)) {
         // イベントの伝播を止める
         event.preventDefault();
 
-        $stage.dispatchEvent(new Next2D_WheelEvent(
+        stage.dispatchEvent(new Next2D_WheelEvent(
             Next2D_WheelEvent.WHEEL
         ));
     }

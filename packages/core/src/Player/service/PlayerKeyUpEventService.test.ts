@@ -1,5 +1,5 @@
 import { execute } from "./PlayerKeyUpEventService";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import { describe, expect, it, vi } from "vitest";
 
 describe("PlayerKeyUpEventService.js test", () =>
@@ -11,8 +11,8 @@ describe("PlayerKeyUpEventService.js test", () =>
         } as unknown as KeyboardEvent;
 
         let result = "ok"
-        $stage.hasEventListener = vi.fn().mockReturnValue(false);
-        $stage.dispatchEvent = vi.fn((event) =>
+        stage.hasEventListener = vi.fn().mockReturnValue(false);
+        stage.dispatchEvent = vi.fn((event) =>
         {
             result = event.type;
         });
@@ -28,8 +28,8 @@ describe("PlayerKeyUpEventService.js test", () =>
         } as unknown as KeyboardEvent;
 
         let result = "ok"
-        $stage.hasEventListener = vi.fn().mockReturnValue(true);
-        $stage.dispatchEvent = vi.fn((event) =>
+        stage.hasEventListener = vi.fn().mockReturnValue(true);
+        stage.dispatchEvent = vi.fn((event) =>
         {
             result = event.type;
         });

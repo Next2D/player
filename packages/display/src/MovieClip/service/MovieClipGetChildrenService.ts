@@ -5,7 +5,7 @@ import type { MovieClip } from "../../MovieClip";
 import { execute as movieClipBuildDictionaryCharacterUseCase } from "../usecase/MovieClipBuildDictionaryCharacterUseCase";
 import { $cacheStore } from "@next2d/cache";
 import { Event } from "@next2d/events";
-import { $stage } from "../../Stage";
+import { stage } from "../../Stage";
 
 /**
  * @description MovieClip の子要素で次のフレームに移動するDisplayObjectの格納マップ
@@ -104,7 +104,7 @@ export const execute = <D extends DisplayObject>(
 
         // remove
         if (displayObject.uniqueKey && $cacheStore.has(displayObject.uniqueKey)) {
-            $stage.$remoceCacheKeys.push(+displayObject.uniqueKey);
+            stage.$remoceCacheKeys.push(+displayObject.uniqueKey);
             $cacheStore.removeById(displayObject.uniqueKey);
         }
 

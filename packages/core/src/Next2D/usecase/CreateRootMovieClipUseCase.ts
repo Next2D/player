@@ -7,7 +7,7 @@ import { execute as playerBootUseCase } from "../../Player/usecase/PlayerBootUse
 import { execute as canvasSetPositionService } from "../../Canvas/service/CanvasSetPositionService";
 import {
     Sprite,
-    $stage
+    stage
 } from "@next2d/display";
 
 /**
@@ -30,17 +30,17 @@ export const execute = async (
 ): Promise<Sprite> => {
 
     // setup
-    $stage.stageWidth  = width | 0;
-    $stage.stageHeight = height | 0;
-    $stage.frameRate   = $clamp(fps, 1, 60, 60);
+    stage.stageWidth  = width | 0;
+    stage.stageHeight = height | 0;
+    stage.frameRate   = $clamp(fps, 1, 60, 60);
     if (options && options.bgColor) {
-        $stage.backgroundColor = options.bgColor;
+        stage.backgroundColor = options.bgColor;
     }
 
     // boot player
     playerBootUseCase(options);
 
-    const root = $stage.addChild<Sprite>(new Sprite());
+    const root = stage.addChild<Sprite>(new Sprite());
 
     // ready complete
     playerReadyCompleteUseCase();

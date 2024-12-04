@@ -1,5 +1,5 @@
 import type { IRemoveCacheMessage } from "../../interface/IRemoveCacheMessage";
-import { $stage } from "@next2d/display";
+import { stage } from "@next2d/display";
 import { $rendererWorker } from "../../RendererWorker";
 
 /**
@@ -33,8 +33,8 @@ const options: Transferable[] = [];
  */
 export const execute = (): void =>
 {
-    const buffer = new Float32Array($stage.$remoceCacheKeys);
-    $stage.$remoceCacheKeys.length = 0;
+    const buffer = new Float32Array(stage.$remoceCacheKeys);
+    stage.$remoceCacheKeys.length = 0;
 
     message.buffer = buffer;
     options[0] = buffer.buffer;
