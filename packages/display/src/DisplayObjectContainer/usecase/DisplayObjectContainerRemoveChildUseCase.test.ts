@@ -35,5 +35,4 @@ describe("DisplayObjectContainerRemoveChildUseCase.js test", () =>
 
         expect(container.changed).toBe(true);
     });
-
 });

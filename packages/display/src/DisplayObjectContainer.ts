@@ -8,6 +8,9 @@ import { execute as displayObjectContainerGetChildAtService } from "./DisplayObj
 import { execute as displayObjectContainerContainsService } from "./DisplayObjectContainer/service/DisplayObjectContainerContainsService";
 import { execute as displayObjectContainerGetChildByNameService } from "./DisplayObjectContainer/service/DisplayObjectContainerGetChildByNameService";
 import { execute as displayObjectContainerRemoveChildrenUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerRemoveChildrenUseCase";
+import { execute as displayObjectContainerSetChildIndexUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerSetChildIndexUseCase";
+import { execute as displayObjectContainerSwapChildrenUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerSwapChildrenUseCase";
+import { execute as displayObjectContainerSwapChildrenAtUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerSwapChildrenAtUseCase";
 import { $getArray } from "./DisplayObjectUtil";
 import { InteractiveObject } from "./InteractiveObject";
 
@@ -85,6 +88,19 @@ export class DisplayObjectContainer extends InteractiveObject
         // private
         this._$mask     = null;
         this._$children = $getArray();
+    }
+
+    /**
+     * @description コンテナのアクティブな子要素を返却
+     *              Returns the active child elements of the container.
+     *
+     * @return {array}
+     * @method
+     * @protected
+     */
+    get children (): IDisplayObject<any>[]
+    {
+        return this._$children;
     }
 
     /**
@@ -215,7 +231,7 @@ export class DisplayObjectContainer extends InteractiveObject
      * @method
      * @public
      */
-    getChildIndex <D extends DisplayObject>(display_object: D): number
+    getChildIndex<D extends DisplayObject> (display_object: D): number
     {
         return this.children.indexOf(display_object);
     }
@@ -231,7 +247,7 @@ export class DisplayObjectContainer extends InteractiveObject
      * @method
      * @public
      */
-    removeChild <D extends DisplayObject>(display_object: D): void
+    removeChild<D extends DisplayObject> (display_object: D): void
     {
         displayObjectContainerRemoveChildUseCase(this, display_object);
     }
@@ -269,61 +285,35 @@ export class DisplayObjectContainer extends InteractiveObject
      * @description 表示オブジェクトコンテナの既存の子の位置を変更します。
      *              Changes the position of an existing child in the display object container.
      *
-     * @param  {DisplayObject} child
+     * @param  {DisplayObject} display_object
      * @param  {number} index
      * @return {void}
      * @method
      * @public
      */
-    // setChildIndex (
-    //     child: DisplayObjectImpl<any>,
-    //     index: number
-    // ): void {
-
-    //     const currentIndex: number = this.getChildIndex(child);
-    //     if (currentIndex === index) {
-    //         return ;
-    //     }
-
-    //     const children: DisplayObjectImpl<any>[] = this._$getChildren();
-    //     children.splice(currentIndex, 1);
-    //     children.splice(index, 0, child);
-
-    //     if ($rendererWorker) {
-    //         this._$postChildrenIds();
-    //     }
-
-    //     this._$doChanged();
-    // }
+    setChildIndex<D extends DisplayObject> (
+        display_object: D,
+        index: number
+    ): void {
+        displayObjectContainerSetChildIndexUseCase(this, display_object, index);
+    }
 
     /**
      * @description 指定された 2 つの子オブジェクトの z 順序（重ね順）を入れ替えます。
      *              Swaps the z-order (front-to-back order) of the two specified child objects.
      *
-     * @param  {DisplayObject} child1
-     * @param  {DisplayObject} child2
+     * @param  {DisplayObject} display_object1
+     * @param  {DisplayObject} display_object2
      * @return {void}
      * @method
      * @public
      */
-    // swapChildren (
-    //     child1: DisplayObjectImpl<any>,
-    //     child2: DisplayObjectImpl<any>
-    // ): void {
-
-    //     const children: DisplayObjectImpl<any>[] = this._$getChildren();
-    //     const index1: number = this.getChildIndex(child1);
-    //     const index2: number = this.getChildIndex(child2);
-
-    //     children[index1] = child2;
-    //     children[index2] = child1;
-
-    //     if ($rendererWorker) {
-    //         this._$postChildrenIds();
-    //     }
-
-    //     this._$doChanged();
-    // }
+    swapChildren<D extends DisplayObject> (
+        display_object1: D,
+        display_object2: D
+    ): void {
+        displayObjectContainerSwapChildrenUseCase(this, display_object1, display_object2);
+    }
 
     /**
      * @description 子リスト内の指定されたインデックス位置に該当する 2 つの子オブジェクトの z 順序（重ね順）を入れ替えます。
@@ -336,24 +326,8 @@ export class DisplayObjectContainer extends InteractiveObject
      * @method
      * @public
      */
-    // swapChildrenAt (index1: number, index2: number): void
-    // {
-    //     this.swapChildren(
-    //         this.getChildAt(index1),
-    //         this.getChildAt(index2)
-    //     );
-    // }
-
-    /**
-     * @description コンテナのアクティブな子要素を返却
-     *              Returns the active child elements of the container.
-     *
-     * @return {array}
-     * @method
-     * @protected
-     */
-    get children (): IDisplayObject<any>[]
+    swapChildrenAt (index1: number, index2: number): void
     {
-        return this._$children;
+        displayObjectContainerSwapChildrenAtUseCase(this, index1, index2);
     }
 }

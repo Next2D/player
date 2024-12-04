@@ -1,4 +1,3 @@
-import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import { DisplayObject } from "./DisplayObject";
 import { Graphics } from "./Graphics";
 import { execute as shapeClearBitmapBufferService } from "./Shape/usecase/ShapeClearBitmapBufferUseCase";
@@ -200,70 +199,5 @@ export class Shape extends DisplayObject
             height,
             buffer
         );
-    }
-
-    /**
-     * @description マウスイベントのヒットテストを行います。
-     *              Performs a hit test on a display object by testing a point against all visible children.
-     *
-     * @param  {CanvasRenderingContext2D} context
-     * @param  {Float32Array} matrix
-     * @param  {object}  options
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$mouseHit (
-        context: CanvasRenderingContext2D,
-        matrix: Float32Array,
-        options: IPlayerHitObject
-    ): boolean {
-
-        if (!this.visible) {
-            return false;
-        }
-
-        return this._$hit(context, matrix, options);
-    }
-
-    /**
-     * @param  {CanvasRenderingContext2D} context
-     * @param  {Float32Array} matrix
-     * @param  {object} options
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$hit (
-        context: CanvasRenderingContext2D,
-        matrix: Float32Array,
-        options: IPlayerHitObject
-    ): boolean {
-
-        const graphics: Graphics | null = this._$graphics;
-        if (!graphics || !graphics.isDrawable) {
-            return false;
-        }
-
-        const multiMatrix: Float32Array = matrix;
-        // const rawMatrix: Float32Array = this._$transform._$rawMatrix();
-        // if (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
-        //     || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
-        //     || rawMatrix[4] !== 0 || rawMatrix[5] !== 0
-        // ) {
-        //     multiMatrix = $multiplicationMatrix(matrix, rawMatrix);
-        // }
-
-        const hit = graphics._$hit(
-            context,
-            multiMatrix,
-            options
-        );
-
-        // if (multiMatrix !== matrix) {
-        //     $poolFloat32Array6(multiMatrix);
-        // }
-
-        return hit;
     }
 }

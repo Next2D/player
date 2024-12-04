@@ -3,7 +3,6 @@ import type { IJointStyle } from "./interface/IJointStyle";
 import type { IGradientType } from "./interface/IGradientType";
 import type { ISpreadMethod } from "./interface/ISpreadMethod";
 import type { IInterpolationMethod } from "./interface/IInterpolationMethod";
-import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import type { BitmapData } from "./BitmapData";
 import type { Matrix } from "@next2d/geom";
 import { GraphicsBitmapFill } from "./GraphicsBitmapFill";
@@ -14,7 +13,6 @@ import { execute as graphicsDrawEllipseService } from "./Graphics/service/Graphi
 import { execute as graphicsDrawRectService } from "./Graphics/service/GraphicsDrawRectService";
 import { execute as graphicsDrawRoundRectService } from "./Graphics/service/GraphicsDrawRoundRectService";
 import { execute as graphicsToNumberArrayService } from "./Graphics/service/GraphicsToNumberArrayService";
-import { execute as graphicsHitTestService } from "./Graphics/service/GraphicsHitTestService";
 import {
     $getArray,
     $poolArray,
@@ -1444,67 +1442,6 @@ export class Graphics
 
         return this;
     }
-
-    /**
-     * @description 指定のxy座標が描画範囲にヒットしてるかの判定
-     *              Judges whether the specified xy coordinate hits the drawing range.
-     *
-     * @param  {CanvasRenderingContext2D} context
-     * @param  {Float32Array} matrix
-     * @param  {object} options
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$hit (
-        context: CanvasRenderingContext2D,
-        matrix: Float32Array,
-        options: IPlayerHitObject
-    ): boolean {
-
-        // fixed logic
-        if (this._$hasLineEnabled) {
-            this.endLine();
-        }
-
-        // fixed logic
-        if (this._$hasFillEnabled) {
-            this.endFill();
-        }
-
-        if (!this.$recodes) {
-            return false;
-        }
-
-        context.beginPath();
-        context.setTransform(
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4], matrix[5]
-        );
-
-        return graphicsHitTestService(context, this.$recodes, options);
-    }
-
-    // /**
-    //  * @return {object}
-    //  * @method
-    //  * @private
-    //  */
-    // _$getBounds (): BoundsImpl
-    // {
-    //     const displayObject: DisplayObjectImpl<any> = this._$displayObject;
-    //     if (displayObject && displayObject._$bounds) {
-    //         return $getBoundsObject(
-    //             displayObject._$bounds.xMin, displayObject._$bounds.xMax,
-    //             displayObject._$bounds.yMin, displayObject._$bounds.yMax
-    //         );
-    //     }
-
-    //     return $getBoundsObject(
-    //         this.xMin, this.xMax,
-    //         this.yMin, this.yMax
-    //     );
-    // }
 
     /**
      * @description この Graphics オブジェクトに描画されているパス情報をFloat32Arrayで返却
