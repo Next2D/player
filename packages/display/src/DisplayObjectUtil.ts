@@ -6,6 +6,7 @@ import type { IURLRequestHeader } from "./interface/IURLRequestHeader";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Graphics } from "./Graphics";
 import type { MovieClip } from "./MovieClip";
+import type { Sound, SoundTransform } from "@next2d/media";
 import { Point } from "@next2d/geom";
 
 /**
@@ -475,6 +476,15 @@ export const $clamp = (
  * @protected
  */
 export const $actions: Array<MovieClip | Map<number, Function[]>> = [];
+
+/**
+ * @description フレームで実行するサウンドを格納する配列
+ *              Array to store sounds to be played on the frame
+ *
+ * @type {array}
+ * @protected
+ */
+export const $sounds: Array<SoundTransform | Sound[]> = [];
 
 /**
  * @description グローバル変数を格納するMap

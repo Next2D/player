@@ -1,5 +1,6 @@
 import type { MovieClip } from "../../MovieClip";
 import { execute as displayObjectApplyChangesService } from "../../DisplayObject/service/DisplayObjectApplyChangesService";
+import { execute as movieClipSetSoundsService } from "../service/MovieClipSetSoundsService";
 
 /**
  * @description フレームを進める
@@ -10,12 +11,24 @@ import { execute as displayObjectApplyChangesService } from "../../DisplayObject
  * @method
  * @protected
  */
-export const execute = <M extends MovieClip>(movie_clip: M): void =>
+export const execute = (movie_clip: MovieClip): void =>
 {
+    // sound
+    if (movie_clip.$canSound) {
+        movie_clip.$canSound = false;
+        movieClipSetSoundsService(movie_clip);
+    }
+
     if (movie_clip.totalFrames === 1 || !movie_clip.isPlaying) {
         return ;
     }
 
+    if (movie_clip.$wait) {
+        movie_clip.$wait = false;
+        return ;
+    }
+
+    movie_clip.$canSound  = true;
     movie_clip.$canAction = true;
     movie_clip.$hasTimelineHeadMoved = true;
 

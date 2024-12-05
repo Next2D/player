@@ -1,8 +1,10 @@
 import type { DisplayObject } from "../../DisplayObject";
+import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { IDisplayObject } from "../../interface/IDisplayObject";
 import type { IMovieClipCharacter } from "../../interface/IMovieClipCharacter";
 import type { MovieClip } from "../../MovieClip";
 import { execute as movieClipBuildDictionaryCharacterUseCase } from "../usecase/MovieClipBuildDictionaryCharacterUseCase";
+import { execute as displayObjectContainerRemovedToStageService } from "../../DisplayObjectContainer/service/DisplayObjectContainerRemovedToStageService";
 import { $cacheStore } from "@next2d/cache";
 import { Event } from "@next2d/events";
 import { stage } from "../../Stage";
@@ -121,9 +123,10 @@ export const execute = <D extends DisplayObject>(
         }
 
         if (displayObject.isContainerEnabled) {
-            // todo
+            displayObjectContainerRemovedToStageService(
+                displayObject as unknown as DisplayObjectContainer
+            );
         }
-
     }
 
     children.length = 0;

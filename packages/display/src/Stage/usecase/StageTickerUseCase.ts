@@ -1,5 +1,6 @@
 import { stage } from "../../Stage";
 import { execute as displayObjectContainerAdvanceFrameUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerAdvanceFrameUseCase";
+import { execute as stageExecuteFrameActionsService } from "../service/StageExecuteFrameActionsService";
 
 /**
  * @description ステージに配置されたDisplayObjectの定期処理
@@ -14,5 +15,6 @@ export const execute = (): void =>
     // next frame
     displayObjectContainerAdvanceFrameUseCase(stage);
 
-    // todo action
+    // action
+    stageExecuteFrameActionsService();
 };

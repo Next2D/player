@@ -18,25 +18,25 @@ export class SoundTransform
     public volume: number;
 
     /**
-     * @description ループ設定です。
-     *              loop setting.
+     * @description ループ回数の設定
+     *              Loop count setting.
      *
      * @type {boolean}
      * @default false
      * @public
      */
-    public loop: boolean;
+    public loopCount: number;
 
     /**
-     * @param {number}  [volume=1]
-     * @param {boolean} [loop=false]
+     * @param {number} [volume=1]
+     * @param {number} [loop_count=0]
      *
      * @constructor
      * @public
      */
-    constructor (volume: number = 1, loop: boolean = false)
+    constructor (volume: number = 1, loop_count: number = 0)
     {
-        this.volume = volume;
-        this.loop   = loop;
+        this.volume    = volume;
+        this.loopCount = loop_count;
     }
 }

@@ -3,6 +3,14 @@ import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
 import { execute as movieClipGetChildrenService } from "./MovieClip/service/MovieClipGetChildrenService";
+import { execute as movieClipAddFrameLabelService } from "./MovieClip/service/MovieClipAddFrameLabelService";
+import { execute as movieClipCurrentFrameLabelService } from "./MovieClip/service/MovieClipCurrentFrameLabelService";
+import { execute as movieClipCurrentLabelsService } from "./MovieClip/service/MovieClipCurrentLabelsService";
+import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
+import { execute as movieClipGotoAndPlayUseCase } from "./MovieClip/usecase/MovieClipGotoAndPlayUseCase";
+import { execute as movieClipGotoAndStopUseCase } from "./MovieClip/usecase/MovieClipGotoAndStopUseCase";
+import { execute as movieClipNextFrameUseCase } from "./MovieClip/usecase/MovieClipNextFrameUseCase";
+import { execute as movieClipPrevFrameUseCase } from "./MovieClip/usecase/MovieClipPrevFrameUseCase";
 
 /**
  * @description MovieClip クラスは、Sprite、DisplayObjectContainer、InteractiveObject、DisplayObject
@@ -63,6 +71,16 @@ export class MovieClip extends Sprite
     public $canAction: boolean;
 
     /**
+     * @description 待機フラグ
+     *              Wait flag
+     *
+     * @type {boolean}
+     * @default false
+     * @private
+     */
+    public $wait: boolean;
+
+    /**
      * @description MovieClip インスタンス内のフレーム総数です。
      *              The total number of frames in the MovieClip instance.
      *
@@ -102,7 +120,7 @@ export class MovieClip extends Sprite
      * @default true
      * @private
      */
-    private _$canSound: boolean;
+    public $canSound: boolean;
 
     /**
      * @description タイムラインヘッドが移動したかどうか
@@ -113,11 +131,6 @@ export class MovieClip extends Sprite
      * @private
      */
     public $hasTimelineHeadMoved: boolean;
-
-    // private _$actionProcess: boolean;
-    // private _$frameCache: Map<string, any> | null;
-    // private _$actionOffset: number;
-    // private _$actionLimit: number;
 
     /**
      * @description MovieClipの機能を所持しているかを返却
@@ -137,19 +150,22 @@ export class MovieClip extends Sprite
     {
         super();
 
+        // public
         this.currentFrame = 1;
         this.totalFrames  = 1;
         this.isTimelineEnabled = true;
 
+        // protected
         this.$actions   = null;
         this.$labels    = null;
         this.$sounds    = null;
         this.$canAction = true;
-
+        this.$wait      = false;
+        this.$canSound  = true;
         this.$hasTimelineHeadMoved = true;
 
+        // private
         this._$stopFlag = false;
-        this._$canSound = true;
     }
 
     /**
@@ -179,6 +195,25 @@ export class MovieClip extends Sprite
     }
 
     /**
+     * @description コンテナのアクティブな子要素を返却
+     *              Returns the active child elements of the container.
+     *
+     * @return {array}
+     * @method
+     * @protected
+     */
+    get children (): IDisplayObject<any>
+    {
+        if (!this.$hasTimelineHeadMoved || this.characterId === -1) {
+            return this._$children;
+        }
+
+        this.$hasTimelineHeadMoved = false;
+
+        return movieClipGetChildrenService(this, this._$children);
+    }
+
+    /**
      * @description MovieClip インスタンスのタイムライン内の現在のフレームにあるラベルです。
      *              The label at the current frame in the timeline of the MovieClip instance.
      *
@@ -188,31 +223,20 @@ export class MovieClip extends Sprite
      */
     get currentFrameLabel (): FrameLabel | null
     {
-        if (!this.$labels) {
-            return null;
-        }
-
-        const frame = this.currentFrame;
-        if (!this.$labels.has(frame)) {
-            return null;
-        }
-
-        return this.$labels.get(frame) || null;
+        return movieClipCurrentFrameLabelService(this);
     }
 
     /**
      * @description 現在のシーンの FrameLabel オブジェクトの配列を返します。
      *              Returns an array of FrameLabel objects from the current scene.
      *
-     * @member  {array|null}
+     * @member  {FrameLabel[]|null}
      * @readonly
      * @public
      */
     get currentLabels (): FrameLabel[] | null
     {
-        return !this.$labels || !this.$labels.size
-            ? null
-            : Array.from(this.$labels.values());
+        return movieClipCurrentLabelsService(this);
     }
 
     /**
@@ -273,16 +297,15 @@ export class MovieClip extends Sprite
      * @description 指定されたフレームで SWF ファイルの再生を開始します。
      *              Starts playing the SWF file at the specified frame.
      *
-     * @param  {number|string} frame
+     * @param  {string|number} frame
      * @return {void}
      * @method
      * @public
      */
-    // gotoAndPlay (frame: string | number): void
-    // {
-    //     this.play();
-    //     this._$goToFrame(frame);
-    // }
+    gotoAndPlay (frame: string | number): void
+    {
+        movieClipGotoAndPlayUseCase(this, frame);
+    }
 
     /**
      * @description このムービークリップの指定されたフレームに再生ヘッドを送り、そこで停止させます。
@@ -294,11 +317,10 @@ export class MovieClip extends Sprite
      * @method
      * @public
      */
-    // gotoAndStop (frame: string | number): void
-    // {
-    //     this.stop();
-    //     this._$goToFrame(frame);
-    // }
+    gotoAndStop (frame: string | number): void
+    {
+        movieClipGotoAndStopUseCase(this, frame);
+    }
 
     /**
      * @description 次のフレームに再生ヘッドを送り、停止します。
@@ -308,13 +330,10 @@ export class MovieClip extends Sprite
      * @method
      * @public
      */
-    // nextFrame (): void
-    // {
-    //     this.stop();
-    //     if (this._$totalFrames > this._$currentFrame) {
-    //         this._$goToFrame(this._$currentFrame + 1);
-    //     }
-    // }
+    nextFrame (): void
+    {
+        movieClipNextFrameUseCase(this);
+    }
 
     /**
      * @description ムービークリップのタイムライン内で再生ヘッドを移動します。
@@ -324,11 +343,11 @@ export class MovieClip extends Sprite
      * @method
      * @public
      */
-    // play (): void
-    // {
-    //     this._$stopFlag = false;
-    //     this._$updateState();
-    // }
+    play (): void
+    {
+        this._$stopFlag = false;
+        displayObjectApplyChangesService(this);
+    }
 
     /**
      * @description 直前のフレームに再生ヘッドを戻し、停止します。
@@ -338,14 +357,10 @@ export class MovieClip extends Sprite
      * @method
      * @public
      */
-    // prevFrame (): void
-    // {
-    //     const frame: number = this._$currentFrame - 1;
-    //     if (frame) {
-    //         this.stop();
-    //         this._$goToFrame(frame);
-    //     }
-    // }
+    prevFrame (): void
+    {
+        movieClipPrevFrameUseCase(this);
+    }
 
     /**
      * @description ムービークリップ内の再生ヘッドを停止します。
@@ -370,97 +385,6 @@ export class MovieClip extends Sprite
      */
     addFrameLabel (frame_label: FrameLabel): void
     {
-        if (!this.$labels) {
-            this.$labels = new Map();
-        }
-
-        this.$labels.set(frame_label.frame, frame_label);
-    }
-
-    // /**
-    //  * @description 指定のフレームのアクションを追加できます
-    //  *              You can add an action for a given frame.
-    //  *
-    //  * @example <caption>Example1 usage of addFrameScript.</caption>
-    //  * // case 1
-    //  * const {MovieClip} = next2d.display;
-    //  * const movieClip = new MovieClip();
-    //  * movieClip.addFrameScript(1 , function ()
-    //  * {
-    //  *     this.stop();
-    //  * });
-    //  *
-    //  * @example <caption>Example3 usage of addFrameScript.</caption>
-    //  * // case 2
-    //  * const {MovieClip} = next2d.display;
-    //  * const movieClip = new MovieClip();
-    //  * movieClip.addFrameScript(1, method_1, 2, method_2, 10, method_10);
-    //  *
-    //  * @return {void}
-    //  * @method
-    //  * @public
-    //  */
-    // addFrameScript (...args: any[]): void
-    // {
-    //     for (let idx = 0; idx < args.length; idx += 2) {
-
-    //         const value: string | number = args[idx];
-
-    //         let frame: number = +value;
-    //         if ($isNaN(frame)) {
-    //             frame = this._$getFrameForLabel(`${value}`);
-    //         }
-
-    //         const script: Function = args[idx + 1];
-    //         if (script && frame && this._$totalFrames >= frame) {
-    //             this._$addAction(frame, script);
-    //         }
-
-    //         // end action add
-    //         if (frame === this._$currentFrame) {
-
-    //             // set action position
-    //             const player: Player = $currentPlayer();
-    //             player._$actionOffset = player._$actions.length;
-
-    //             // execute action stack
-    //             this._$canAction = true;
-    //             this._$setAction();
-
-    //             // adjustment
-    //             if (player._$actionOffset !== player._$actions.length) {
-
-    //                 // marge
-    //                 const actions: MovieClip[] = player._$actions.splice(0, player._$actionOffset);
-    //                 player._$actions.push(
-    //                     ...player._$actions,
-    //                     ...actions
-    //                 );
-
-    //                 // reset
-    //                 player._$actionOffset = 0;
-    //             }
-
-    //         }
-    //     }
-    // }
-
-    /**
-     * @description コンテナのアクティブな子要素を返却
-     *              Returns the active child elements of the container.
-     *
-     * @return {array}
-     * @method
-     * @protected
-     */
-    get children (): IDisplayObject<any>
-    {
-        if (!this.$hasTimelineHeadMoved || this.characterId === -1) {
-            return this._$children;
-        }
-
-        this.$hasTimelineHeadMoved = false;
-
-        return movieClipGetChildrenService(this, this._$children);
+        movieClipAddFrameLabelService(this, frame_label);
     }
 }
