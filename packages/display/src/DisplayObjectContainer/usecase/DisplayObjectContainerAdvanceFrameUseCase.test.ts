@@ -15,13 +15,11 @@ describe("DisplayObjectContainerAdvanceFrameUseCase.js test", () =>
         movieClip.$hasTimelineHeadMoved = false;
 
         expect(movieClip.currentFrame).toBe(1);
-        expect(movieClip.$canAction).toBe(false);
         expect(movieClip.$hasTimelineHeadMoved).toBe(false);
 
         execute(container);
 
         expect(movieClip.currentFrame).toBe(2);
-        expect(movieClip.$canAction).toBe(true); 
         expect(movieClip.$hasTimelineHeadMoved).toBe(true);       
     });
 });

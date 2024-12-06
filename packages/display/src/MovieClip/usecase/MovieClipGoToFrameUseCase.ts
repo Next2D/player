@@ -58,6 +58,9 @@ export const execute = (movie_clip: MovieClip, value: string | number): void =>
         return ;
     }
 
+    // フレームをセット
+    movie_clip.currentFrame = frame;
+
     // フラグを更新
     movie_clip.$wait                 = true;
     movie_clip.$canSound             = true;

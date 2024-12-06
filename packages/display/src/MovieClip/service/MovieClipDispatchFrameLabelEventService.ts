@@ -7,7 +7,7 @@ import { Event } from "@next2d/events";
  *              Execute the frame label event of MovieClip
  *
  * @param  {MovieClip} movie_clip
- * @param  {Map} labels
+ * @param  {Map} [labels=null]
  * @return {void}
  * @method
  * @protected
@@ -24,10 +24,6 @@ export const execute = (movie_clip: MovieClip, labels: Map<number, FrameLabel> |
     }
 
     const frameLabel = labels.get(frame) as FrameLabel;
-    if (!frameLabel) {
-        return ;
-    }
-
     if (frameLabel.willTrigger(Event.FRAME_LABEL)) {
         frameLabel.dispatchEvent(new Event(Event.FRAME_LABEL));
     }

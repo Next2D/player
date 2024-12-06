@@ -10,31 +10,7 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        // next2d.load("develop");
-
-        const { Sprite, Shape, stage } = next2d.display;
-        const { PointerEvent } = next2d.events;
-
-        const root = await next2d.createRootMovieClip(480, 480);
-        const sprite = root.addChild(new Sprite());
-        sprite.buttonMode = true;
-
-        const shape = sprite.addChild(new Shape());
-        shape
-            .graphics
-            .beginFill("#00aa00")
-            .drawCircle(0, 50, 50);
-
-        sprite.x = 100;
-        sprite.y = 100;
-        sprite.addEventListener(PointerEvent.POINTER_DOWN, () =>
-        {
-            sprite.startDrag();
-        });
-        sprite.addEventListener(PointerEvent.POINTER_UP, () =>
-        {
-            sprite.stopDrag();
-        });
+        next2d.load("develop");
     });
 </script>
 </body>

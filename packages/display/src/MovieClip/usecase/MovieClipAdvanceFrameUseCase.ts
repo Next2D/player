@@ -1,6 +1,7 @@
 import type { MovieClip } from "../../MovieClip";
 import { execute as displayObjectApplyChangesService } from "../../DisplayObject/service/DisplayObjectApplyChangesService";
 import { execute as movieClipSetSoundsService } from "../service/MovieClipSetSoundsService";
+import { execute as movieClipPrepareActionUseCase } from "./MovieClipPrepareActionUseCase";
 
 /**
  * @description フレームを進める
@@ -16,7 +17,7 @@ export const execute = (movie_clip: MovieClip): void =>
     // sound
     if (movie_clip.$canSound) {
         movie_clip.$canSound = false;
-        movieClipSetSoundsService(movie_clip);
+        movieClipSetSoundsService(movie_clip, movie_clip.$sounds);
     }
 
     if (movie_clip.totalFrames === 1 || !movie_clip.isPlaying) {
@@ -37,5 +38,9 @@ export const execute = (movie_clip: MovieClip): void =>
         movie_clip.currentFrame = 1;
     }
 
+    // アクションがあればセット
+    movieClipPrepareActionUseCase(movie_clip);
+
+    // 表示オブジェクトの変更を適用
     displayObjectApplyChangesService(movie_clip);
 };
