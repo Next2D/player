@@ -65,6 +65,38 @@ export const $setMainElement = (element: HTMLDivElement): void =>
 };
 
 /**
+ * @type {HTMLCanvasElement | null}
+ * @private
+ */
+let $canvas: HTMLCanvasElement | null = null;
+
+/**
+ * @description メインのCanvasになるCanvasElementを設定します。
+ *              Set the CanvasElement to be the main canvas.
+ *
+ * @param  {HTMLCanvasElement} element
+ * @method
+ * @protected
+ */
+export const $setCanvas = (element: HTMLCanvasElement): void =>
+{
+    $canvas = element;
+};
+
+/**
+ * @description メインのCanvasになるCanvasElementを取得します。
+ *              Get the CanvasElement to be the main canvas.
+ *
+ * @return {HTMLCanvasElement}
+ * @method
+ * @protected
+ */
+export const $getCanvas = (): HTMLCanvasElement =>
+{
+    return $canvas as NonNullable<HTMLCanvasElement>;
+};
+
+/**
  * @description メインのコンテナになるDivElementを取得します。
  *             Get the DivElement to be the main container.
  *

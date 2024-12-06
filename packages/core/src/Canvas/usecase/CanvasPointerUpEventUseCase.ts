@@ -27,7 +27,7 @@ export const execute = (event: PointerEvent): void =>
     playerSetCurrentMousePoint(event);
 
     // start position
-    playerHitTestUseCase(event, element);
+    playerHitTestUseCase();
 
     // fixed logic
     // ポインターアップイベントを発火します。

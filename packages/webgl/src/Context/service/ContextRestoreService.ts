@@ -25,6 +25,4 @@ export const execute = (context: Context): void =>
     context.$matrix[7] = matrix[7];
 
     $poolFloat32Array9(matrix);
-
-    // todo mask
 };

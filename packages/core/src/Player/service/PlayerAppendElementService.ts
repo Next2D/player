@@ -1,5 +1,4 @@
-import { $getMainElement } from "../../CoreUtil";
-import { $canvas } from "../../Canvas";
+import { $getMainElement, $getCanvas } from "../../CoreUtil";
 import { $textArea } from "@next2d/text";
 
 /**
@@ -16,6 +15,11 @@ export const execute = (): void =>
     if (!element) {
         return ;
     }
-    element.appendChild($canvas);
+    const canvas: HTMLCanvasElement = $getCanvas();
+    if (!canvas) {
+        return ;
+    }
+
+    element.appendChild(canvas);
     element.appendChild($textArea);
 };

@@ -13,6 +13,4 @@ import { $getFloat32Array9 } from "../../WebGLUtil";
 export const execute = (context: Context): void =>
 {
     context.$stack.push($getFloat32Array9(...context.$matrix));
-
-    // todo mask
 };

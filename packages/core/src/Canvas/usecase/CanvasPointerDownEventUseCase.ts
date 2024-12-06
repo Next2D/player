@@ -41,7 +41,7 @@ export const execute = (event: PointerEvent): void =>
     playerSetCurrentMousePointService(event);
 
     // start position
-    playerHitTestUseCase(event, element);
+    playerHitTestUseCase();
 
     if ($hitObject.hit) {
         event.preventDefault();
