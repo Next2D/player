@@ -6,7 +6,8 @@ import { $cacheStore } from "@next2d/cache";
 import {
     $PREFIX,
     $getMainElement,
-    $devicePixelRatio
+    $devicePixelRatio,
+    $hitMatrix
 } from "../../CoreUtil";
 
 /**
@@ -66,12 +67,16 @@ export const execute = (): void =>
     }
 
     // update
-    $player.screenWidth   = screenWidth;
-    $player.screenHeight  = screenHeight;
+    $player.screenWidth  = screenWidth;
+    $player.screenHeight = screenHeight;
     stage.rendererScale  = $player.rendererScale  = scale;
     stage.rendererWidth  = $player.rendererWidth  = width;
     stage.rendererHeight = $player.rendererHeight = height;
     stage.changed = true;
+
+    // update hit matrix
+    $hitMatrix[4] = ($player.rendererWidth  - stage.stageWidth  * $player.rendererScale) / 2;
+    $hitMatrix[5] = ($player.rendererHeight - stage.stageHeight * $player.rendererScale) / 2;
 
     // worker postMessage
     playerResizePostMessageService();

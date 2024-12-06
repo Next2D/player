@@ -12,33 +12,33 @@
     {
         // next2d.load("develop");
 
-        const { Sprite, Shape } = next2d.display;
-        const { PointerEvent, Event } = next2d.events;
+        // const { Sprite, Shape } = next2d.display;
+        // const { PointerEvent, Event } = next2d.events;
 
-        const root = await next2d.createRootMovieClip(480, 480);
+        // const root = await next2d.createRootMovieClip(480, 480);
 
-        const sprite = root.addChild(new Sprite());
-        sprite.buttonMode = true;
+        // const sprite = root.addChild(new Sprite());
+        // sprite.buttonMode = true;
 
-        const shape = sprite.addChild(new Shape());
-        shape
-            .graphics
-            .beginFill(0x0000ff)
-            .drawCircle(0, 50, 50);
+        // const shape = sprite.addChild(new Shape());
+        // shape
+        //     .graphics
+        //     .beginFill(0x0000ff)
+        //     .drawCircle(0, 50, 50);
 
-        sprite.addEventListener(PointerEvent.POINTER_DOWN, () => 
-        {
-            sprite.startDrag();
-        });
-        sprite.addEventListener(PointerEvent.POINTER_UP, () => 
-        {
-            sprite.stopDrag();
-        });
-        sprite.addEventListener(Event.ENTER_FRAME, () => 
-        {
-            sprite.x++;
-            sprite.y++;
-        });
+        // sprite.addEventListener(PointerEvent.POINTER_DOWN, () => 
+        // {
+        //     sprite.startDrag();
+        // });
+        // sprite.addEventListener(PointerEvent.POINTER_UP, () => 
+        // {
+        //     sprite.stopDrag();
+        // });
+        // sprite.addEventListener(Event.ENTER_FRAME, () => 
+        // {
+        //     sprite.x++;
+        //     sprite.y++;
+        // });
     });
 </script>
 </body>

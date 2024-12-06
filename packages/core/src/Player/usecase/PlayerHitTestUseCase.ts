@@ -32,10 +32,6 @@ export const execute = (): void =>
     $hitObject.pointer = "auto";
     $hitObject.hit = null;
 
-    // hit test
-    $hitMatrix[4] = ($player.rendererWidth  - stage.stageWidth  * $player.rendererScale) / 2;
-    $hitMatrix[5] = ($player.rendererHeight - stage.stageHeight * $player.rendererScale) / 2;
-
     // reset
     $hitContext.beginPath();
     $hitContext.setTransform(1, 0, 0, 1, 0, 0);
