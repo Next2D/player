@@ -13,8 +13,11 @@ export const execute = (): void =>
 {
     while ($actions.length) {
 
-        const actionMap = $actions.pop() as Map<number, Function[]>;
         const movieClip = $actions.pop() as MovieClip;
+        const actionMap = movieClip.$actions;
+        if (!actionMap) {
+            continue;
+        }
 
         const frame = movieClip.currentFrame;
         if (!actionMap.has(frame)) {

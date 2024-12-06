@@ -23,5 +23,5 @@ export const execute = (movie_clip: MovieClip, sounds: Map<number, Sound[]> | nu
         return ;
     }
 
-    $sounds.push(movie_clip.soundTransform, sounds.get(frame) as Sound[]);
+    $sounds.push(movie_clip);
 };

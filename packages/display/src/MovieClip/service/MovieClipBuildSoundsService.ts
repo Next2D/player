@@ -35,7 +35,7 @@ export const execute = async (
     }
 
     const characters = data.characters;
-    for (let idx: number = 0; idx < sound_objects.length; ++idx) {
+    for (let idx = 0; idx < sound_objects.length; ++idx) {
 
         const object = sound_objects[idx];
         if (!object) {
@@ -43,7 +43,7 @@ export const execute = async (
         }
 
         const sounds: Sound[] = $getArray();
-        for (let idx: number = 0; idx < object.sound.length; ++idx) {
+        for (let idx = 0; idx < object.sound.length; ++idx) {
 
             const tag = object.sound[idx];
             if (!tag) {

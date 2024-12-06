@@ -15,7 +15,7 @@ describe("MovieClipSetActionService.js test", () =>
         $actions.length = 0;
         expect($actions.length).toBe(0);
         execute(movieClip, actions);
-        expect($actions.length).toBe(2);
+        expect($actions.length).toBe(1);
     });
 
     it("execute test case2", () =>

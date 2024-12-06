@@ -22,5 +22,5 @@ export const execute = (movie_clip: MovieClip, actions: Map<number, Function[]> 
         return ;
     }
 
-    $actions.push(movie_clip, actions);
+    $actions.push(movie_clip);
 };

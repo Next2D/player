@@ -16,7 +16,7 @@ describe("MovieClipSetSoundsService.js test", () =>
         $sounds.length = 0;
         expect($sounds.length).toBe(0);
         execute(movieClip, sounds);
-        expect($sounds.length).toBe(2);
+        expect($sounds.length).toBe(1);
     });
 
     it("execute test case2", () =>

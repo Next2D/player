@@ -11,11 +11,10 @@ describe("StageExecuteFrameActionsService.js test", () =>
         $actions.push(movieClip);
         
         let result = false;
-        const map = new Map();
-        map.set(1, [() => { result = true; }]);
-        $actions.push(map);
+        movieClip.$actions = new Map();
+        movieClip.$actions.set(1, [() => { result = true; }]);
 
-        expect($actions.length).toBe(2);
+        expect($actions.length).toBe(1);
         expect(result).toBe(false);
         
         execute();

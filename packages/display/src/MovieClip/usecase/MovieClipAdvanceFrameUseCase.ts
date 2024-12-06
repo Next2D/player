@@ -1,7 +1,7 @@
 import type { MovieClip } from "../../MovieClip";
 import { execute as displayObjectApplyChangesService } from "../../DisplayObject/service/DisplayObjectApplyChangesService";
-import { execute as movieClipSetSoundsService } from "../service/MovieClipSetSoundsService";
 import { execute as movieClipPrepareActionUseCase } from "./MovieClipPrepareActionUseCase";
+import { execute as movieClipPrepareSoundUseCase } from "./MovieClipPrepareSoundUseCase";
 
 /**
  * @description フレームを進める
@@ -14,12 +14,6 @@ import { execute as movieClipPrepareActionUseCase } from "./MovieClipPrepareActi
  */
 export const execute = (movie_clip: MovieClip): void =>
 {
-    // sound
-    if (movie_clip.$canSound) {
-        movie_clip.$canSound = false;
-        movieClipSetSoundsService(movie_clip, movie_clip.$sounds);
-    }
-
     if (movie_clip.totalFrames === 1 || !movie_clip.isPlaying) {
         return ;
     }
@@ -37,6 +31,9 @@ export const execute = (movie_clip: MovieClip): void =>
     if (movie_clip.currentFrame > movie_clip.totalFrames) {
         movie_clip.currentFrame = 1;
     }
+
+    // サウンドがあればセット
+    movieClipPrepareSoundUseCase(movie_clip);
 
     // アクションがあればセット
     movieClipPrepareActionUseCase(movie_clip);

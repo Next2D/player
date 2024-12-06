@@ -1,6 +1,7 @@
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import { execute as stageExecuteFrameActionsService } from "../../Stage/service/StageExecuteFrameActionsService";
-import { execute as displayObjectContainerPrepareActionService } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerPrepareActionUseCase";
+import { execute as stageExecuteFrameSoundsService } from "../../Stage/service/StageExecuteFrameSoundsService";
+import { execute as displayObjectContainerPrepareUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerPrepareUseCase";
 
 /**
  * @description Stageの起動準備完了時のユースーケース
@@ -13,8 +14,11 @@ import { execute as displayObjectContainerPrepareActionService } from "../../Dis
  */
 export const execute = (display_object_container: DisplayObjectContainer): void =>
 {
-    // フレームアクションの実行準備
-    displayObjectContainerPrepareActionService(display_object_container);
+    // 1フレーム目の実行準備
+    displayObjectContainerPrepareUseCase(display_object_container);
+
+    // サウンドの実行
+    stageExecuteFrameSoundsService();
 
     // フレームアクションを実行
     stageExecuteFrameActionsService();
