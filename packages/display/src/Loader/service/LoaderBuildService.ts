@@ -52,7 +52,6 @@ export const execute = async (loader: Loader, object: IAnimationToolData): Promi
 
     $parentMap.delete(movieClip);
     loaderInfo.content = movieClip;
-    console.log(movieClip);
 
     // dispatch complete event
     if (loaderInfo.willTrigger(Event.COMPLETE)) {

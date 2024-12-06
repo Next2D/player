@@ -12,8 +12,10 @@ import { execute as movieClipGoToFrameUseCase } from "./MovieClipGoToFrameUseCas
  */
 export const execute = (movie_clip: MovieClip): void =>
 {
-    movie_clip.stop();
-    if (movie_clip.totalFrames > movie_clip.currentFrame) {
-        movieClipGoToFrameUseCase(movie_clip, movie_clip.currentFrame + 1);
+    if (movie_clip.totalFrames <= movie_clip.currentFrame) {
+        return ;
     }
+
+    movie_clip.stop();
+    movieClipGoToFrameUseCase(movie_clip, movie_clip.currentFrame + 1);
 };

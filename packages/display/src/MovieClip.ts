@@ -65,7 +65,7 @@ export class MovieClip extends Sprite
      *              Action execution flag
      *
      * @type {boolean}
-     * @default false
+     * @default true
      * @private
      */
     public $canAction: boolean;
