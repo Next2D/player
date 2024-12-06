@@ -35,8 +35,11 @@ export const execute = (): void =>
                 continue;
             }
 
-            sound.volume    = soundTransform.volume;
-            sound.loopCount = soundTransform.loopCount;
+            if (soundTransform) {
+                sound.volume    = soundTransform.volume;
+                sound.loopCount = soundTransform.loopCount;
+            }
+
             sound.play();
         }
     }

@@ -1,7 +1,7 @@
 import type { ISprite } from "./interface/ISprite";
 import type { Rectangle } from "@next2d/geom";
+import type { SoundTransform } from "@next2d/media";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
-import { SoundTransform } from "@next2d/media";
 import { execute as spriteStartDragService } from "./Sprite/service/SpriteStartDragService";
 import { execute as spriteStopDragService } from "./Sprite/service/SpriteStopDragService";
 
@@ -130,14 +130,11 @@ export class Sprite extends DisplayObjectContainer
      * @description このスプライト内のサウンドを制御します。
      *              Controls sound within this sprite.
      *
-     * @member  {SoundTransform}
+     * @member {SoundTransform | null}
      * @public
      */
-    get soundTransform (): SoundTransform
+    get soundTransform (): SoundTransform | null
     {
-        if (!this._$soundTransform) {
-            this._$soundTransform = new SoundTransform();
-        }
         return this._$soundTransform;
     }
     set soundTransform (sound_transform: SoundTransform | null)

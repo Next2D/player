@@ -18,19 +18,19 @@ export const execute = (movie_clip: MovieClip): void =>
         return ;
     }
 
-    if (movie_clip.$wait) {
-        movie_clip.$wait = false;
-        return ;
+    // 待機でなければフレームを進める
+    if (!movie_clip.$wait) {
+        ++movie_clip.currentFrame;
+        if (movie_clip.currentFrame > movie_clip.totalFrames) {
+            movie_clip.currentFrame = 1;
+        }
     }
 
-    movie_clip.$canSound  = true;
-    movie_clip.$canAction = true;
+    // フラグをリセット
+    movie_clip.$wait                 = false;
+    movie_clip.$canSound             = true;
+    movie_clip.$canAction            = true;
     movie_clip.$hasTimelineHeadMoved = true;
-
-    ++movie_clip.currentFrame;
-    if (movie_clip.currentFrame > movie_clip.totalFrames) {
-        movie_clip.currentFrame = 1;
-    }
 
     // サウンドがあればセット
     movieClipPrepareSoundUseCase(movie_clip);
