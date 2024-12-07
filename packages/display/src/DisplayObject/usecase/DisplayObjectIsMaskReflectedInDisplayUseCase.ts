@@ -1,6 +1,12 @@
 import type { DisplayObject } from "../../DisplayObject";
+import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { Shape } from "../../Shape";
+import type { TextField } from "@next2d/text";
+import type { Video } from "@next2d/media";
 import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeCalcBoundsMatrixUseCase";
+import { execute as textFieldCalcBoundsMatrixUseCase } from "../../TextField/usecase/TextFieldCalcBoundsMatrixUseCase";
+import { execute as videoCalcBoundsMatrixUseCase } from "../../Video/usecase/VideoCalcBoundsMatrixUseCase";
+import { execute as displayObjectContainerCalcBoundsMatrixUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerCalcBoundsMatrixUseCase";
 
 /**
  * @description DisplayObjectのマスク描画範囲を計算して、マスク描画が実行可能かどうかを返します。
@@ -28,22 +34,28 @@ export const execute = <D extends DisplayObject>(
     let bounds: number[] | null = null;
     switch (true) {
 
+        case display_object.isContainerEnabled:
+            bounds = displayObjectContainerCalcBoundsMatrixUseCase(
+                display_object as unknown as DisplayObjectContainer, matrix
+            );
+            break;
+
         case display_object.isShape:
             bounds = shapeCalcBoundsMatrixUseCase(
                 display_object as unknown as Shape, matrix
             );
             break;
 
-        case display_object.isContainerEnabled:
-            // todo
-            break;
-
         case display_object.isText:
-            // todo
+            bounds = textFieldCalcBoundsMatrixUseCase(
+                display_object as unknown as TextField, matrix
+            );
             break;
 
         case display_object.isVideo:
-            // todo
+            bounds = videoCalcBoundsMatrixUseCase(
+                display_object as unknown as Video, matrix
+            );
             break;
 
         default:

@@ -11,6 +11,7 @@ import { execute as shapeGenerateClipQueueUseCase } from "../../Shape/usecase/Sh
 import { execute as textFieldGenerateRenderQueueUseCase } from "../../TextField/usecase/TextFieldGenerateRenderQueueUseCase";
 import { execute as videoGenerateRenderQueueUseCase } from "../../Video/usecase/VideoGenerateRenderQueueUseCase";
 import { execute as displayObjectIsMaskReflectedInDisplayUseCase } from "../../DisplayObject/usecase/DisplayObjectIsMaskReflectedInDisplayUseCase";
+import { execute as displayObjectContainerGenerateClipQueueUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerGenerateClipQueueUseCase";
 import {
     $clamp,
     $RENDERER_CONTAINER_TYPE
@@ -135,6 +136,11 @@ export const execute = <P extends DisplayObjectContainer>(
             switch (true) {
 
                 case maskDisplayObject.isContainerEnabled: // 0x00
+                    displayObjectContainerGenerateClipQueueUseCase(
+                        maskDisplayObject as DisplayObjectContainer,
+                        render_queue,
+                        tMatrix
+                    );
                     break;
 
                 case maskDisplayObject.isShape: // 0x01
@@ -146,9 +152,11 @@ export const execute = <P extends DisplayObjectContainer>(
                     break;
 
                 case maskDisplayObject.isText: // 0x02
+                    // todo
                     break;
 
                 case maskDisplayObject.isVideo: // 0x03
+                    // todo
                     break;
 
                 default:
@@ -187,7 +195,6 @@ export const execute = <P extends DisplayObjectContainer>(
         }
 
         if (child.clipDepth) {
-
             clipDepth = child.clipDepth;
 
             // マスクの描画開始判定
@@ -212,6 +219,11 @@ export const execute = <P extends DisplayObjectContainer>(
             switch (true) {
 
                 case child.isContainerEnabled: // 0x00
+                    displayObjectContainerGenerateClipQueueUseCase(
+                        child as DisplayObjectContainer,
+                        render_queue,
+                        tMatrix
+                    );
                     break;
 
                 case child.isShape: // 0x01
@@ -223,9 +235,13 @@ export const execute = <P extends DisplayObjectContainer>(
                     break;
 
                 case child.isText: // 0x02
+                    // todo
+                    console.log("mask text");
                     break;
 
                 case child.isVideo: // 0x03
+                    // todo
+                    console.log("mask video");
                     break;
 
                 default:

@@ -44,6 +44,7 @@ export const execute = (
         switch (type) {
 
             case 0x00: // container
+                console.log("container");
                 break;
 
             case 0x01: // shape
@@ -51,9 +52,11 @@ export const execute = (
                 break;
 
             case 0x02: // text
+                // todo
                 break;
 
             case 0x03: // video
+                // todo
                 break;
 
         }
@@ -112,6 +115,7 @@ export const execute = (
             switch (type) {
 
                 case 0x00: // container
+                    console.log("container");
                     break;
 
                 case 0x01: // shape
@@ -119,9 +123,11 @@ export const execute = (
                     break;
 
                 case 0x02: // text
+                    // todo
                     break;
 
                 case 0x03: // video
+                    // todo
                     break;
 
             }
