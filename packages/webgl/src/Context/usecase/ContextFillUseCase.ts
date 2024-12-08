@@ -27,24 +27,21 @@ export const execute = (): void =>
 
     // mask on
     $gl.enable($gl.STENCIL_TEST);
-    // $gl.stencilMask(0xff);
+    $gl.stencilMask(0xff);
 
-    $gl.enable($gl.CULL_FACE);
-    // $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
+    $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
     $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
-    // $gl.stencilOp($gl.KEEP, $gl.INVERT, $gl.INVERT);
+    $gl.stencilOp($gl.KEEP, $gl.INVERT, $gl.INVERT);
     $gl.colorMask(false, false, false, false);
-    $gl.stencilOpSeparate($gl.FRONT, $gl.KEEP, $gl.KEEP, $gl.INCR_WRAP);
-    $gl.stencilOpSeparate($gl.BACK,  $gl.KEEP, $gl.KEEP, $gl.DECR_WRAP);
 
     const coverageShader = variantsShapeMaskShaderService(false);
     shaderManagerSetMaskUniformService(coverageShader);
     shaderManagerFillUseCase(coverageShader, vertexArrayObject);
-    // $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
+    $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
 
     // draw shape range
     $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
-    $gl.stencilOp($gl.KEEP, $gl.KEEP, $gl.KEEP);
+    $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
     $gl.colorMask(true, true, true, true);
 
     const shaderManager = variantsShapeSolidColorShaderService(false);
@@ -53,7 +50,6 @@ export const execute = (): void =>
 
     // mask off
     $gl.disable($gl.STENCIL_TEST);
-    $gl.disable($gl.CULL_FACE);
 
     // release vertex array
     vertexArrayObjectReleaseVertexArrayObjectService(vertexArrayObject);
