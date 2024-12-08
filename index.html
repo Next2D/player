@@ -10,32 +10,22 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        // next2d.load("develop");
+        next2d.load("develop");
 
-        const { Sprite, Shape } = next2d.display;
-        const root = await next2d.createRootMovieClip(480, 480);
-        const shape = root.addChild(new Shape());
-        shape
-            .graphics
-            .beginFill(0x0000ff)
-            .moveTo(0, 0)
-            .lineTo(100, 0)
-            .lineTo(100, 100)
-            .lineTo(0, 100)
-            .lineTo(0, 0)
-            // non-zero
-            // .moveTo(75, 75)
-            // .lineTo(50, 75)
-            // .lineTo(50, 50)
-            // .lineTo(75, 50)
-            // .lineTo(75, 75)
-            // even-odd
-            .moveTo(50, 50)
-            .lineTo(75, 50)
-            .lineTo(75, 75)
-            .lineTo(50, 75)
-            .lineTo(50, 50)
-            .endFill();
+        // const { Sprite, Shape } = next2d.display;
+        // const root = await next2d.createRootMovieClip(480, 480);
+        // const shape = root.addChild(new Shape());
+        // shape.x = 75;
+        // shape.y = 75;
+        // shape
+        //     .graphics
+        //     .beginFill(0x0000ff)
+        //     .moveTo(0, 0).lineTo(100, 0).lineTo(100, 100).lineTo(0, 100).lineTo(0, 0)
+        //     // non-zero
+        //     .moveTo(75, 75).lineTo(75, 50).lineTo(50, 50).lineTo(50, 75).lineTo(75, 75)
+        //     // even-odd
+        //     .moveTo(25, 25).lineTo(60, 25).lineTo(60, 60).lineTo(25, 60).lineTo(25, 25)
+        //     .endFill();
     });
 </script>
 </body>

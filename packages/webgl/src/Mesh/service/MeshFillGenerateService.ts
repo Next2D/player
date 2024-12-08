@@ -40,6 +40,7 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
         let position = index * 17;
         if (vertex[idx + 2]) {
 
+            // 座標A
             buffer[position++] = vertex[idx - 3] as number;
             buffer[position++] = vertex[idx - 2] as number;
             buffer[position++] = 0;
@@ -60,6 +61,7 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
             buffer[position++] = ty;
             buffer[position++] = 0;
 
+            // 座標B
             buffer[position++] = vertex[idx] as number;
             buffer[position++] = vertex[idx + 1] as number;
             buffer[position++] = 0.5;
@@ -80,6 +82,7 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
             buffer[position++] = ty;
             buffer[position++] = 0;
 
+            // 座標C
             buffer[position++] = vertex[idx + 3] as number;
             buffer[position++] = vertex[idx + 4] as number;
             buffer[position++] = 1;
@@ -102,6 +105,7 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
         } else if (vertex[idx + 5]) {
 
+            // 座標A
             buffer[position++] = vertex[0] as number;
             buffer[position++] = vertex[1] as number;
             buffer[position++] = 0.5;
@@ -122,6 +126,7 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
             buffer[position++] = ty;
             buffer[position++] = 0;
 
+            // 座標B
             buffer[position++] = vertex[idx] as number;
             buffer[position++] = vertex[idx + 1] as number;
             buffer[position++] = 0.5;
@@ -142,6 +147,7 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
             buffer[position++] = ty;
             buffer[position++] = 0;
 
+            // 座標C
             buffer[position++] = vertex[idx + 6] as number;
             buffer[position++] = vertex[idx + 7] as number;
             buffer[position++] = 0.5;
@@ -164,6 +170,7 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
 
         } else {
 
+            // 座標A
             buffer[position++] = vertex[0] as number;
             buffer[position++] = vertex[1] as number;
             buffer[position++] = 0.5;
@@ -184,6 +191,7 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
             buffer[position++] = ty;
             buffer[position++] = 0;
 
+            // 座標B
             buffer[position++] = vertex[idx] as number;
             buffer[position++] = vertex[idx + 1] as number;
             buffer[position++] = 0.5;
@@ -204,6 +212,7 @@ export const execute = (vertex: IPath, buffer: Float32Array, index: number): num
             buffer[position++] = ty;
             buffer[position++] = 0;
 
+            // 座標C
             buffer[position++] = vertex[idx + 3] as number;
             buffer[position++] = vertex[idx + 4] as number;
             buffer[position++] = 0.5;

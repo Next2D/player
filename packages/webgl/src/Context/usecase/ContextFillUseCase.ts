@@ -28,18 +28,21 @@ export const execute = (): void =>
     // mask on
     $gl.enable($gl.STENCIL_TEST);
     $gl.stencilMask(0xff);
+    $gl.frontFace($gl.CCW);
 
-    $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
+    // mask setting
     $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
-    $gl.stencilOp($gl.KEEP, $gl.INVERT, $gl.INVERT);
+    $gl.stencilOpSeparate($gl.FRONT, $gl.KEEP, $gl.INVERT, $gl.INCR_WRAP);
+    $gl.stencilOpSeparate($gl.BACK,  $gl.KEEP, $gl.INVERT, $gl.DECR_WRAP);
     $gl.colorMask(false, false, false, false);
 
+    $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
     const coverageShader = variantsShapeMaskShaderService(false);
     shaderManagerSetMaskUniformService(coverageShader);
     shaderManagerFillUseCase(coverageShader, vertexArrayObject);
     $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
 
-    // draw shape range
+    // draw shape setting
     $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
     $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
     $gl.colorMask(true, true, true, true);
