@@ -96,7 +96,7 @@ export const execute = (
                     node.w / $RENDER_MAX_SIZE, node.h / $RENDER_MAX_SIZE,
                     // texture width, height and viewport width, height
                     node.w, node.h, $getViewportWidth(), $getViewportHeight(),
-                    // matrix tx, ty and with_color_transform
+                    // matrix tx, ty
                     matrix[6], matrix[7],
                     // matrix scale0, rotate0, scale1, rotate1
                     matrix[0], matrix[1], matrix[3], matrix[4],

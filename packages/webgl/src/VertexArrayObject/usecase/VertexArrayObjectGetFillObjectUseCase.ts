@@ -29,12 +29,12 @@ export const execute = (): IVertexArrayObject =>
     $gl.enableVertexAttribArray(3);
     $gl.enableVertexAttribArray(4);
     $gl.enableVertexAttribArray(5);
-    $gl.vertexAttribPointer(0, 2, $gl.FLOAT, false, 68, 0);
-    $gl.vertexAttribPointer(1, 2, $gl.FLOAT, false, 68, 8);
-    $gl.vertexAttribPointer(2, 4, $gl.FLOAT, false, 68, 16);
-    $gl.vertexAttribPointer(3, 3, $gl.FLOAT, false, 68, 32);
-    $gl.vertexAttribPointer(4, 3, $gl.FLOAT, false, 68, 44);
-    $gl.vertexAttribPointer(5, 3, $gl.FLOAT, false, 68, 56);
+    $gl.vertexAttribPointer(0, 2, $gl.FLOAT, false, 68, 0);  // vertex
+    $gl.vertexAttribPointer(1, 2, $gl.FLOAT, false, 68, 8);  // bezier or uv
+    $gl.vertexAttribPointer(2, 4, $gl.FLOAT, false, 68, 16); // color
+    $gl.vertexAttribPointer(3, 3, $gl.FLOAT, false, 68, 32); // matrix_a
+    $gl.vertexAttribPointer(4, 3, $gl.FLOAT, false, 68, 44); // matrix_b
+    $gl.vertexAttribPointer(5, 3, $gl.FLOAT, false, 68, 56); // matrix_c
 
     return vertexArrayObject;
 };

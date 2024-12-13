@@ -22,7 +22,6 @@ const command: CommandController = new CommandController();
  */
 self.addEventListener("message", (event: MessageEvent): void =>
 {
-    // console.log(event.data);
     command.queue.push(event.data);
     if (command.state === "deactivate") {
         command.execute();
