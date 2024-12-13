@@ -70,13 +70,13 @@ layout (location = 5) in vec4 a_mul;
 layout (location = 6) in vec4 a_add;
 
 out vec2 v_coord;
-out vec4 mul;
-out vec4 add;
+out vec4 v_mul;
+out vec4 v_add;
 
 void main() {
     v_coord = a_vertex * a_rect.zw + a_rect.xy;
-    mul = a_mul;
-    add = a_add;
+    v_mul = a_mul;
+    v_add = a_add;
 
     vec2 position = vec2(a_vertex.x, 1.0 - a_vertex.y);
     position = position * a_size.xy;

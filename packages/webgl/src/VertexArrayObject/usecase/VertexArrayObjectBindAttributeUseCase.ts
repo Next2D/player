@@ -1,6 +1,9 @@
 import type { ShaderInstancedManager } from "../../Shader/ShaderInstancedManager";
 import { execute as vertexArrayObjectBindService } from "../service/VertexArrayObjectBindService";
-import { $gl } from "../../WebGLUtil";
+import {
+    $gl,
+    $upperPowerOfTwo
+} from "../../WebGLUtil";
 import {
     $instancedVertexArrayObject,
     $getAttributeBuffer,
@@ -27,7 +30,7 @@ export const execute = (shader_instanced_manager: ShaderInstancedManager): void 
     if (shader_instanced_manager.attributes.length > attributeBuffer.length) {
 
         attributeBuffer = new Float32Array(
-            shader_instanced_manager.attributes.length
+            $upperPowerOfTwo(shader_instanced_manager.attributes.length)
         );
         $setAttributeBuffer(attributeBuffer);
 
