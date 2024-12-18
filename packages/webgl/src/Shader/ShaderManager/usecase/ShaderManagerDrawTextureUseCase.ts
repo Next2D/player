@@ -25,5 +25,5 @@ export const execute = (shader_manager: ShaderManager): void =>
     vertexArrayObjectBindService($getRectVertexArrayObject());
 
     // draw fill
-    $gl.drawArrays($gl.TRIANGLE_STRIP, 0, 4);
+    $gl.drawArrays($gl.TRIANGLES, 0, 6);
 };

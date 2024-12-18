@@ -71,12 +71,16 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const hasCache = render_queue[index++];
     if (!hasCache) {
 
-        if (isGridEnabled) {
-            $context.beginGrid(
-                render_queue.subarray(index, index + 24)
-            );
+        const gridData = isGridEnabled
+            ? new Float32Array(28)
+            : null;
+
+        if (gridData) {
+            gridData.set(render_queue.subarray(index, index + 24));
             index += 24;
         }
+
+        $context.useGrid(gridData);
 
         const length = render_queue[index++];
         const commands = render_queue.subarray(index, index + length);
@@ -141,22 +145,22 @@ export const execute = (render_queue: Float32Array, index: number): number =>
                 -yMin * yScale + offsetY
             );
 
-            if (isGridEnabled) {
-                $context.setGridOffset(node.x, offsetY);
+            if (gridData) {
+                gridData[24] = node.x;
+                gridData[25] = offsetY;
             }
 
             // 描画コマンドを実行
             shapeCommandService(commands);
+
+            // 描画実行
+            $context.drawFill();
 
             // 描画終了
             $context.endNodeRendering();
 
             if (currentAttachment) {
                 $context.bind(currentAttachment);
-            }
-
-            if (isGridEnabled) {
-                $context.endGrid();
             }
         }
 

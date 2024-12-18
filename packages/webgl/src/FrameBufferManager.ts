@@ -31,7 +31,6 @@ export let $readFrameBuffer: WebGLFramebuffer;
 export const $setReadFrameBuffer = (gl: WebGL2RenderingContext): void =>
 {
     $readFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
-    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, $readFrameBuffer);
 };
 
 /**

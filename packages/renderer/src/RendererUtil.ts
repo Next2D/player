@@ -8,26 +8,6 @@ import type { IRGBA } from "./interface/IRGBA";
 export const $samples: number = 4;
 
 /**
- * @type {number}
- * @public
- */
-export let $devicePixelRatio: number = 1;
-
-/**
- * @description 画面の解像度を設定
- *              Set screen resolution
- *
- * @param  {number} ratio
- * @return {void}
- * @method
- * @public
- */
-export const $setDevicePixelRatio = (ratio: number): void =>
-{
-    $devicePixelRatio = ratio;
-};
-
-/**
  * @type {Context}
  * @public
  */
@@ -68,36 +48,42 @@ export const $setCanvas = (canvas: OffscreenCanvas): void =>
 };
 
 /**
- * @type {WebGL2RenderingContext}
+ * @type {number}
  * @public
  */
-export let $gl: WebGL2RenderingContext;
+let $rendererWidth: number = 0;
 
 /**
- * @description WebGL2のコンテキストをセット
- *              Set WebGL2 context
+ * @description 描画エリアの幅を返却
+ *              Returns the width of the drawing area
  *
- * @param  {WebGL2RenderingContext} gl
- * @return {void}
+ * @return {number}
  * @method
- * @public
+ * @protected
  */
-export const $setWebGL2RenderingContext = (gl: WebGL2RenderingContext): void =>
+export const $getRendererWidth = (): number =>
 {
-    $gl = gl;
+    return $rendererWidth;
 };
 
 /**
  * @type {number}
  * @public
  */
-export let $rendererWidth: number = 0;
+let $rendererHeight: number = 0;
 
 /**
- * @type {number}
- * @public
+ * @description 描画エリアの高さを返却
+ *              Returns the height of the drawing area
+ *
+ * @return {number}
+ * @method
+ * @protected
  */
-export let $rendererHeight: number = 0;
+export const $getRendererHeight = (): number =>
+{
+    return $rendererHeight;
+};
 
 /**
  * @type {boolean}

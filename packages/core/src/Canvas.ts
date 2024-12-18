@@ -17,4 +17,4 @@ canvasInitializeService($canvas, $devicePixelRatio);
 canvasRegisterEventUseCase($canvas);
 
 // Boot offscreen canvas
-canvasBootOffscreenCanvasService($canvas, $devicePixelRatio);
+canvasBootOffscreenCanvasService($canvas);

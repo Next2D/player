@@ -91,18 +91,18 @@ export const execute = (
 
                 const matrix = $context.$matrix;
                 shaderInstancedManager.attributes.push(
-                    // texture rectangle
+                    // texture rectangle (vec4)
                     node.x / $RENDER_MAX_SIZE, node.y / $RENDER_MAX_SIZE,
                     node.w / $RENDER_MAX_SIZE, node.h / $RENDER_MAX_SIZE,
-                    // texture width, height and viewport width, height
+                    // texture width, height and viewport width, height (vec4)
                     node.w, node.h, $getViewportWidth(), $getViewportHeight(),
-                    // matrix tx, ty
+                    // matrix tx, ty (vec2)
                     matrix[6], matrix[7],
-                    // matrix scale0, rotate0, scale1, rotate1
+                    // matrix scale0, rotate0, scale1, rotate1 (vec4)
                     matrix[0], matrix[1], matrix[3], matrix[4],
-                    // mulColor
+                    // mulColor (vec4)
                     ct0, ct1, ct2, ct3,
-                    // addColor
+                    // addColor (vec4)
                     ct4, ct5, ct6, ct7
                 );
                 shaderInstancedManager.count++;

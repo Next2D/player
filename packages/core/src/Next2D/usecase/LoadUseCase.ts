@@ -76,15 +76,15 @@ export const execute = async (url: string, options: IPlayerOptions | null = null
     // resize
     playerResizeEventUseCase();
 
-    // ready complete
+    // // ready complete
     playerReadyCompleteUseCase();
 
-    // remove loading
+    // // remove loading
     playerRemoveLoadingElementService();
 
-    // append canvas
+    // // append canvas
     playerAppendCanvasElementService();
 
-    // set position
+    // // set position
     canvasSetPositionService();
 };

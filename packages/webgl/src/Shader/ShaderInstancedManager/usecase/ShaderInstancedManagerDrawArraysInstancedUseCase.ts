@@ -21,5 +21,5 @@ export const execute = (shader_instanced_manager: ShaderInstancedManager): void 
     vertexArrayObjectBindAttributeUseCase(shader_instanced_manager);
 
     // draw
-    $gl.drawArraysInstanced($gl.TRIANGLE_STRIP, 0, 4, shader_instanced_manager.count);
+    $gl.drawArraysInstanced($gl.TRIANGLES, 0, 6, shader_instanced_manager.count);
 };

@@ -73,8 +73,7 @@ export class CommandController
 
                 case "initialize":
                     commandInitializeContextService(
-                        object.canvas as OffscreenCanvas,
-                        object.buffer[0] as number
+                        object.canvas as OffscreenCanvas
                     );
                     break;
 

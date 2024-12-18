@@ -1,9 +1,5 @@
 import type { ShaderManager } from "../../ShaderManager";
 import {
-    $gridEnabled,
-    $gridData
-} from "../../../Grid";
-import {
     $getViewportWidth,
     $getViewportHeight,
     $clamp
@@ -19,6 +15,7 @@ import {
  * @param  {Float32Array} inverse_matrix
  * @param  {number} [focal_point_ratio=0]
  * @param  {Float32Array} [points=null]
+ * @param  {Float32Array | null} [grid_data=null]
  * @return {void}
  * @method
  * @public
@@ -29,7 +26,8 @@ export const execute = (
     matrix: Float32Array,
     inverse_matrix: Float32Array,
     focal_point_ratio: number = 0,
-    points: Float32Array | null = null
+    points: Float32Array | null = null,
+    grid_data: Float32Array | null = null
 ): void => {
 
     const highp: Float32Array | Int32Array = shader_manager.highp;
@@ -65,54 +63,54 @@ export const execute = (
     highp[7] = $getViewportHeight();
 
     let index = 20;
-    if ($gridEnabled()) {
+    if (grid_data) {
         // vertex: u_parent_matrix
-        highp[20]  = $gridData[0];
-        highp[21]  = $gridData[1];
+        highp[20]  = grid_data[0];
+        highp[21]  = grid_data[1];
         highp[22]  = 0;
 
-        highp[24]  = $gridData[2];
-        highp[25]  = $gridData[3];
+        highp[24]  = grid_data[2];
+        highp[25]  = grid_data[3];
         highp[26]  = 0;
 
-        highp[28]  = $gridData[4];
-        highp[29]  = $gridData[5];
+        highp[28]  = grid_data[4];
+        highp[29]  = grid_data[5];
         highp[30] = 1;
 
         // vertex: u_ancestor_matrix
-        highp[32] = $gridData[6];
-        highp[33] = $gridData[7];
+        highp[32] = grid_data[6];
+        highp[33] = grid_data[7];
         highp[34] = 0;
 
-        highp[36] = $gridData[8];
-        highp[37] = $gridData[9];
+        highp[36] = grid_data[8];
+        highp[37] = grid_data[9];
         highp[38] = 0;
 
-        highp[40] = $gridData[10];
-        highp[41] = $gridData[11];
+        highp[40] = grid_data[10];
+        highp[41] = grid_data[11];
         highp[42] = 1;
 
         // vertex: u_parent_viewport
-        highp[31] = $gridData[12];
-        highp[35] = $gridData[13];
-        highp[39] = $gridData[14];
-        highp[43] = $gridData[15];
+        highp[31] = grid_data[12];
+        highp[35] = grid_data[13];
+        highp[39] = grid_data[14];
+        highp[43] = grid_data[15];
 
         // vertex: u_grid_min
-        highp[44] = $gridData[16];
-        highp[45] = $gridData[17];
-        highp[46] = $gridData[18];
-        highp[47] = $gridData[19];
+        highp[44] = grid_data[16];
+        highp[45] = grid_data[17];
+        highp[46] = grid_data[18];
+        highp[47] = grid_data[19];
 
         // vertex: u_grid_max
-        highp[48] = $gridData[20];
-        highp[49] = $gridData[21];
-        highp[50] = $gridData[22];
-        highp[51] = $gridData[23];
+        highp[48] = grid_data[20];
+        highp[49] = grid_data[21];
+        highp[50] = grid_data[22];
+        highp[51] = grid_data[23];
 
         // vertex: u_offset
-        highp[52] = $gridData[24];
-        highp[53] = $gridData[25];
+        highp[52] = grid_data[24];
+        highp[53] = grid_data[25];
 
         index = 56;
     }

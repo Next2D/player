@@ -2,8 +2,8 @@ import { $cacheStore } from "@next2d/cache";
 import {
     $setRendererSize,
     $context,
-    $rendererWidth,
-    $rendererHeight
+    $getRendererWidth,
+    $getRendererHeight
 } from "../../RendererUtil";
 
 /**
@@ -21,8 +21,8 @@ export const execute = (
     renderer_height: number
 ): void => {
 
-    if ($rendererWidth === renderer_width
-        && $rendererHeight === renderer_height
+    if ($getRendererWidth() === renderer_width
+        && $getRendererHeight() === renderer_height
     ) {
         return ;
     }

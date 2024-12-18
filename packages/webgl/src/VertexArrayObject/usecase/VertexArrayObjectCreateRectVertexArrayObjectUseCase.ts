@@ -18,7 +18,16 @@ export const execute = (): IVertexArrayObject =>
 
     $gl.bindBuffer($gl.ARRAY_BUFFER, vertexArrayObject.vertexBuffer);
 
-    const vertexBufferData = new Float32Array([0, 0, 0, 1, 1, 0, 1, 1]);
+    const vertexBufferData = new Float32Array([
+        // 第1三角形
+        -1.0, -1.0, // 左下
+        1.0, -1.0, // 右下
+        -1.0,  1.0, // 左上
+        // 第2三角形
+        -1.0,  1.0, // 左上
+        1.0, -1.0, // 右下
+        1.0,  1.0, // 右上
+    ]);
     $gl.bufferData($gl.ARRAY_BUFFER, vertexBufferData, $gl.STATIC_DRAW);
 
     $gl.enableVertexAttribArray(0);

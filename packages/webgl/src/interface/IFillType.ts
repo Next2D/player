@@ -1,0 +1,1 @@
+export type IFillType = "fill" | "gradient" | "pattern";

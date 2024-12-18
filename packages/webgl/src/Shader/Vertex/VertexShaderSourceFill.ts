@@ -107,6 +107,9 @@ export const STATEMENT_COLOR_ON = (): string =>
 };
 
 /**
+ * @description 各種、塗りのシェーダのテンプレートを返却
+ *              Returns a template for various fill shaders
+ *
  * @param  {number}  highp_length
  * @param  {boolean} with_uv
  * @param  {boolean} for_mask
@@ -180,5 +183,22 @@ void main() {
     vec2 pos = applyMatrix(a_vertex);
     pos = pos * 2.0 - 1.0;
     gl_Position = vec4(pos.x, -pos.y, 0.0, 1.0);
+}`;
+};
+
+/**
+ * @description 矩形の塗りのシェーダのテンプレートを返却
+ *              Returns a template for filling rectangles
+ *
+ * @return {string}
+ * @method
+ * @static
+ */
+export const FILL_RECT_TEMPLATE = (): string =>
+{
+    return `#version 300 es
+layout (location = 0) in vec2 a_vertex;
+void main() {
+    gl_Position = vec4(a_vertex, 0.0, 1.0);
 }`;
 };

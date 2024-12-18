@@ -1,8 +1,8 @@
 import { execute } from "./CommandResizeService";
 import { $cacheStore } from "@next2d/cache";
 import {
-    $rendererWidth,
-    $rendererHeight,
+    $getRendererWidth,
+    $getRendererHeight,
 } from "../../RendererUtil";
 import { describe, expect, it, vi } from "vitest";
 
@@ -36,8 +36,8 @@ describe("CommandResizeService.js test", () =>
         });
         const spyResetFunction = vi.spyOn($cacheStore, "reset");
         
-        expect($rendererWidth).toBe(0);
-        expect($rendererHeight).toBe(0);
+        expect($getRendererWidth()).toBe(0);
+        expect($getRendererHeight()).toBe(0);
         execute(500, 600);
 
         

@@ -10,18 +10,13 @@ import { $rendererWorker } from "../../RendererWorker";
  * @method
  * @public
  */
-export const execute = (
-    canvas: HTMLCanvasElement,
-    ratio: number
-): void => {
-
+export const execute = (canvas: HTMLCanvasElement): void =>
+{
     const offscreenCanvas = canvas.transferControlToOffscreen();
-    const buffer = new Float32Array([ratio]);
 
     // postMessage
     $rendererWorker.postMessage({
         "command": "initialize",
-        "canvas": offscreenCanvas,
-        "buffer": buffer
-    }, [offscreenCanvas, buffer.buffer]);
+        "canvas": offscreenCanvas
+    }, [offscreenCanvas]);
 };

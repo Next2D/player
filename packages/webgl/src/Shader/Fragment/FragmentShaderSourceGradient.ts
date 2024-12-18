@@ -38,7 +38,7 @@ const STATEMENT_FOCAL_POINT_OFF = (): string =>
  */
 const STATEMENT_GRADIENT_TYPE_RADIAL = (index: number, has_focal_point: boolean): string =>
 {
-    const focalPointStatement: string = has_focal_point
+    const focalPointStatement = has_focal_point
         ? STATEMENT_FOCAL_POINT_ON(index)
         : STATEMENT_FOCAL_POINT_OFF();
 
@@ -85,7 +85,7 @@ export const GRADIENT_TEMPLATE = (
     spread_method: number
 ): string => {
 
-    const gradientTypeStatement: string = is_radial
+    const gradientTypeStatement = is_radial
         ? STATEMENT_GRADIENT_TYPE_RADIAL(fragment_index, has_focal_point)
         : STATEMENT_GRADIENT_TYPE_LINEAR(fragment_index);
 

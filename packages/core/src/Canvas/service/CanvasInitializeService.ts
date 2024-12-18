@@ -3,6 +3,7 @@
  *              Initial setting of canvas style
  *
  * @param  {HTMLCanvasElement} canvas
+ * @param  {number} [ratio=1]
  * @return {void}
  * @method
  * @public
@@ -13,7 +14,7 @@ export const execute = (
 ): void => {
 
     // Set canvas style
-    let style: string = "";
+    let style = "";
     style += "-webkit-tap-highlight-color: rgba(0,0,0,0);";
     style += "backface-visibility: hidden;";
     style += "touch-action: none;";

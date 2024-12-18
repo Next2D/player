@@ -3,6 +3,7 @@ import { execute as shapeRenderUseCase } from "../../Shape/usecase/ShapeRenderUs
 import { execute as shapeClipRenderUseCase } from "../../Shape/usecase/ShapeClipRenderUseCase";
 import { execute as textFieldRenderUseCase } from "../../TextField/usecase/TextFieldRenderUseCase";
 import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUseCase";
+import { execute as displayObjectContainerClipRenderUseCase } from "./DisplayObjectContainerClipRenderUseCase";
 
 /**
  * @description DisplayObjectContainerの描画を実行します。
@@ -21,7 +22,7 @@ export const execute = (
     image_bitmaps: ImageBitmap[] | null
 ): number => {
 
-    const useMaskDisplayObject = render_queue[index++];
+    const useMaskDisplayObject = Boolean(render_queue[index++]);
     if (useMaskDisplayObject) {
 
         // これまでの描画データを描画して初期化
@@ -44,7 +45,10 @@ export const execute = (
         switch (type) {
 
             case 0x00: // container
-                console.log("container");
+                $context.containerClip = true;
+                index = displayObjectContainerClipRenderUseCase(render_queue, index);
+                $context.clip();
+                $context.containerClip = false;
                 break;
 
             case 0x01: // shape
@@ -90,6 +94,7 @@ export const execute = (
 
         // start mask
         if (clipDepth) {
+
             endClipDepth  = clipDepth;
             canRenderMask = Boolean(render_queue[index++]);
             if (!canRenderMask) {
@@ -111,11 +116,15 @@ export const execute = (
                 render_queue[index++],
                 render_queue[index++]
             );
+
             const type = render_queue[index++];
             switch (type) {
 
                 case 0x00: // container
-                    console.log("container");
+                    $context.containerClip = true;
+                    index = displayObjectContainerClipRenderUseCase(render_queue, index);
+                    $context.clip();
+                    $context.containerClip = false;
                     break;
 
                 case 0x01: // shape

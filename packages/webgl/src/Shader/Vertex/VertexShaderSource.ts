@@ -80,6 +80,7 @@ void main() {
 
     vec2 position = vec2(a_vertex.x, 1.0 - a_vertex.y);
     position = position * a_size.xy;
+
     mat3 matrix = mat3(a_matrix.x, a_matrix.y, 0.0, a_matrix.z, a_matrix.w, 0.0, a_offset.x, a_offset.y, 1.0);
     position = (matrix * vec3(position, 1.0)).xy;
     position /= a_size.zw;

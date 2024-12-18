@@ -10,26 +10,29 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        next2d.load("develop");
-        // const { Sprite, Shape } = next2d.display;
-        // const root = await next2d.createRootMovieClip(480, 480);
-        // const shape = root.addChild(new Shape());
-        // shape.x = 75;
-        // shape.y = 75;
-        // shape
-        //     .graphics
-        //     .beginFill(0x0000ff)
-        //     .moveTo(0, 0).curveTo(50, -25, 100, 0).curveTo(125, 50, 100, 100).lineTo(0, 100).curveTo(20, 50, 0, 0)
-        //     .endFill()
+        // next2d.load("develop");
+        const { Sprite, Shape } = next2d.display;
+        const root = await next2d.createRootMovieClip(480, 480, 1);
+        const shape = root.addChild(new Shape());
+        shape.x = 75;
+        shape.y = 75;
+        shape
+            .graphics
+            .beginFill(0x0000ff)
+        //     // 半時計回り
+            .moveTo(75, 75).curveTo(65, 60, 75, 50).curveTo(60, 60, 50, 50).curveTo(60, 60, 50, 75).curveTo(60, 60, 75, 75)
+        // //     // 時計回り
+        // //     .moveTo(0, 0).curveTo(50, 25, 100, 0).curveTo(70, 50, 100, 100).curveTo(50, 50, 0, 100).curveTo(20, 50, 0, 0)
+            .endFill()
         //     // non-zero
         //     // .beginFill(0x00ff00)
-        //     .moveTo(75, 75).curveTo(170, 30, 75, 50).curveTo(50, 10, 50, 50).curveTo(95, 25+35/2, 50, 75).lineTo(75, 75)
+        //     // .moveTo(75, 75).curveTo(170, 30, 75, 50).curveTo(50, 10, 50, 50).curveTo(95, 25+35/2, 50, 75).lineTo(75, 75)
         //     // .endFill()
         //     // even-odd
-        //     // .beginFill(0xff0000)
-        //     // .moveTo(25, 25).lineTo(60, 25).lineTo(60, 60).lineTo(25, 60).curveTo(-55, 25+35/2, 25, 25)
-        //     // .beginFill(0x00ff00)
-        //     // .moveTo(35, 35).lineTo(70, 35).curveTo(100, 52, 70, 70).lineTo(35, 70).curveTo(100, 52, 35, 35)
+        //     .beginFill(0xff0000)
+        //     .moveTo(25, 25).lineTo(60, 25).lineTo(60, 60).lineTo(25, 60).curveTo(55, 25+35/2, 25, 25)
+        //     .beginFill(0x00ff00)
+        //     .moveTo(35, 35).lineTo(70, 35).curveTo(100, 52, 70, 70).lineTo(35, 70).curveTo(100, 52, 35, 35)
         //     .endFill();
     });
 </script>

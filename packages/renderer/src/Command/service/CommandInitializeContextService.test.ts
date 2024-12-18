@@ -1,5 +1,4 @@
 import { execute } from "./CommandInitializeContextService";
-import { $devicePixelRatio } from "../../RendererUtil";
 import { describe, expect, it, vi } from "vitest";
 
 describe("CommandInitializeContextService.js test", () =>
@@ -16,7 +15,6 @@ describe("CommandInitializeContextService.js test", () =>
                     expect(options.premultipliedAlpha).toBe(true);
                     expect(options.antialias).toBe(false);
                     expect(options.depth).toBe(false);
-                    expect(options.preserveDrawingBuffer).toBe(true);
 
                     return {
                         "clearColor": vi.fn(),
@@ -64,8 +62,6 @@ describe("CommandInitializeContextService.js test", () =>
             } as unknown as HTMLCanvasElement;
         });
 
-        expect($devicePixelRatio).toBe(1);
-        execute(new MockCanvas(), 2);
-        expect($devicePixelRatio).toBe(2);
+        execute(new MockCanvas());
     });
 });

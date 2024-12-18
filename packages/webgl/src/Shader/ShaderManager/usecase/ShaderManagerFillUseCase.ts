@@ -16,7 +16,9 @@ import { execute as blendResetService } from "../../../Blend/service/BlendResetS
  */
 export const execute = (
     shader_manager: ShaderManager,
-    vertex_array_object: IVertexArrayObject
+    vertex_array_object: IVertexArrayObject,
+    offset: number,
+    count: number
 ): void => {
 
     // setup
@@ -30,5 +32,5 @@ export const execute = (
     vertexArrayObjectBindService(vertex_array_object);
 
     // draw fill
-    $gl.drawArrays($gl.TRIANGLES, 0, vertex_array_object.indexCount);
+    $gl.drawArrays($gl.TRIANGLES, offset, count);
 };

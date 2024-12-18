@@ -25,10 +25,11 @@ export const execute = (): void =>
         mask |= (1 << clipLevel - idx) - 1;
     }
 
-    $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
     $gl.stencilFunc($gl.EQUAL, mask & 0xff, mask);
     $gl.stencilOp($gl.KEEP, $gl.KEEP, $gl.KEEP);
     $gl.stencilMask(0xff);
     $gl.colorMask(true, true, true, true);
+
+    $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
     $gl.disable($gl.SCISSOR_TEST);
 };

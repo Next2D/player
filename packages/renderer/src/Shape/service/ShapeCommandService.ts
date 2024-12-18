@@ -71,10 +71,6 @@ export const execute = (
                 break;
 
             case END_FILL:
-                if (is_clip) {
-                    break;
-                }
-
                 $context.fill();
                 break;
 
@@ -122,6 +118,7 @@ export const execute = (
             case GRADIENT_FILL:
                 {
                     if (is_clip) {
+                        $context.fill();
                         index += 1;
                         const length = commands[index++];
                         index += length * 5;
@@ -162,6 +159,7 @@ export const execute = (
             case BITMAP_FILL:
                 {
                     if (is_clip) {
+                        $context.fill();
                         index += 2;
                         const length = commands[index++];
                         index += length;
@@ -196,6 +194,11 @@ export const execute = (
 
             case GRADIENT_STROKE:
                 {
+                    if (is_clip) {
+                        index += 20;
+                        break;
+                    }
+
                     $context.thickness  = commands[index++];
                     $context.caps       = commands[index++];
                     $context.joints     = commands[index++];
@@ -233,6 +236,14 @@ export const execute = (
 
             case BITMAP_STROKE:
                 {
+                    if (is_clip) {
+                        index += 6;
+                        const length = commands[index++];
+                        index += length;
+                        index += 8;
+                        break;
+                    }
+
                     $context.thickness  = commands[index++];
                     $context.caps       = commands[index++];
                     $context.joints     = commands[index++];

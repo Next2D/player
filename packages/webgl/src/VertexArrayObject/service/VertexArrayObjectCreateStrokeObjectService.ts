@@ -15,7 +15,6 @@ export const execute = (): IStrokeVertexArrayObject =>
     return {
         "id": $getId(),
         "resource": $gl.createVertexArray() as NonNullable<WebGLVertexArrayObject>,
-        "indexRanges": [],
         "vertexBuffer": $gl.createBuffer() as NonNullable<WebGLBuffer>,
         "vertexLength": 0,
         "indexBuffer": $gl.createBuffer() as NonNullable<WebGLBuffer>,

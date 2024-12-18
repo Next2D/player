@@ -1,4 +1,3 @@
-import type { IIndexRange } from "../../interface/IIndexRange";
 import { execute } from "./VertexArrayObjectBindFillMeshUseCase";
 import { describe, expect, it, vi } from "vitest";
 
@@ -28,15 +27,9 @@ describe("VertexArrayObjectBindFillMeshUseCase.js method test", () =>
             }
         });
 
-        const vertexArrayObject = execute([[
-            0, 0, false,
-            0, 120, false,
-            120, 120, true,
-            0, 0, false
-        ]]);
+        const vertexArrayObject = execute();
 
         expect(vertexArrayObject.resource).toBe("createVertexArray");
-        expect(vertexArrayObject.indexCount).toBe(6);
         expect(vertexArrayObject.vertexBuffer).toBe("createBuffer");
         expect(vertexArrayObject.vertexLength).toBe(128);
     });

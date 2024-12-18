@@ -25,6 +25,7 @@ import { execute as contextEndNodeRenderingService } from "./Context/service/Con
 import { execute as contextFillUseCase } from "./Context/usecase/ContextFillUseCase";
 import { execute as contextGradientFillUseCase } from "./Context/usecase/ContextGradientFillUseCase";
 import { execute as contextGradientStrokeUseCase } from "./Context/usecase/ContextGradientStrokeUseCase";
+import { execute as contextUseGridService } from "./Context/service/ContextUseGridService";
 import { execute as contextClipUseCase } from "./Context/usecase/ContextClipUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
 import { execute as atlasManagerRemoveNodeService } from "./AtlasManager/service/AtlasManagerRemoveNodeService";
@@ -37,18 +38,16 @@ import { execute as blendEnableUseCase } from "./Blend/usecase/BlendEnableUseCas
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
 import { execute as maskStartMaskService } from "./Mask/service/MaskStartMaskService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
-import { execute as maskLeaveMaskService } from "./Mask/service/MaskLeaveMaskService";
+import { execute as maskLeaveMaskUseCase } from "./Mask/usecase/MaskLeaveMaskUseCase";
 import { execute as contextDrawPixelsUseCase } from "./Context/usecase/ContextDrawPixelsUseCase";
 import { execute as contextDrawElementUseCase } from "./Context/usecase/ContextDrawElementUseCase";
 import { execute as contextBitmapFillUseCase } from "./Context/usecase/ContextBitmapFillUseCase";
 import { execute as contextBitmapStrokeUseCase } from "./Context/usecase/ContextBitmapStrokeUseCase";
 import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStrokeUseCase";
-import { execute as contextBeginGridService } from "./Context/service/ContextBeginGridService";
-import { execute as contextEndGridService } from "./Context/service/ContextEndGridService";
-import { execute as contextSetGridOffsetService } from "./Context/service/ContextSetGridOffsetService";
 import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
 import { execute as contextUpdateTransferBoundsService } from "./Context/service/ContextUpdateTransferBoundsService";
 import { execute as contextUpdateAllTransferBoundsService } from "./Context/service/ContextUpdateAllTransferBoundsService";
+import { execute as contextDrawFillUseCase } from "./Context/usecase/ContextDrawFillUseCase";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
 import {
     $getAtlasAttachmentObject,
@@ -212,6 +211,7 @@ export class Context
      *              Stroke thickness
      *
      * @type {number}
+     * @default 1
      * @public
      */
     public thickness: number;
@@ -221,6 +221,7 @@ export class Context
      *              Stroke cap
      *
      * @type {number}
+     * @default 1
      * @public
      */
     public caps: number;
@@ -230,6 +231,7 @@ export class Context
      *              Stroke joint
      *
      * @type {number}
+     * @default 2
      * @public
      */
     public joints: number;
@@ -239,9 +241,20 @@ export class Context
      *              Stroke miter limit
      *
      * @type {number}
+     * @default 0
      * @public
      */
     public miterLimit: number;
+
+    /**
+     * @description コンテナクリップ
+     *             Container clip
+     *
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public containerClip: boolean;
 
     /**
      * @param {WebGL2RenderingContext} gl
@@ -282,6 +295,9 @@ export class Context
         // 塗りつぶしタイプ、ストロークタイプ
         this.$fillStyle   = new Float32Array([1, 1, 1, 1]);
         this.$strokeStyle = new Float32Array([1, 1, 1, 1]);
+
+        // コンテナクリップ
+        this.containerClip = false;
 
         // マスクの描画範囲
         this.maskBounds = {
@@ -651,7 +667,7 @@ export class Context
      */
     fill (): void
     {
-        contextFillUseCase();
+        contextFillUseCase("fill");
     }
 
     /**
@@ -873,6 +889,19 @@ export class Context
     }
 
     /**
+     * @description 塗りの描画を実行
+     *              Perform fill drawing
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    drawFill (): void
+    {
+        contextDrawFillUseCase();
+    }
+
+    /**
      * @description インスタンスを描画
      *              Draw an instance
      *
@@ -1026,49 +1055,21 @@ export class Context
     leaveMask (): void
     {
         this.drawArraysInstanced();
-        maskLeaveMaskService();
+        maskLeaveMaskUseCase();
     }
 
     /**
-     * @description グリッドの描画を開始
-     *              Start drawing the grid
+     * @description グリッドの描画データをセット
+     *              Set the grid drawing data
      *
-     * @param {Float32Array} grid_data
+     * @param  {Float32Array} grid_data
      * @return {void}
      * @method
      * @public
      */
-    beginGrid (grid_data: Float32Array): void
+    useGrid (grid_data: Float32Array | null): void
     {
-        contextBeginGridService(grid_data);
-    }
-
-    /**
-     * @description グリッドの描画を終了
-     *              End drawing the grid
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
-    endGrid (): void
-    {
-        contextEndGridService();
-    }
-
-    /**
-     * @description グリッドのオフセットを設定
-     *              Set the grid offset
-     *
-     * @param  {number} x
-     * @param  {number} y
-     * @return {void}
-     * @method
-     * @public
-     */
-    setGridOffset (x: number, y: number): void
-    {
-        contextSetGridOffsetService(x, y);
+        contextUseGridService(grid_data);
     }
 
     /**

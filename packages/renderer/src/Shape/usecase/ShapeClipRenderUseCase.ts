@@ -23,12 +23,15 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     );
 
     const isGridEnabled = Boolean(render_queue[index++]);
-    if (isGridEnabled) {
-        $context.beginGrid(
-            render_queue.subarray(index, index + 24)
-        );
+    const gridData = isGridEnabled
+        ? new Float32Array(28)
+        : null;
+
+    $context.useGrid(gridData);
+
+    if (gridData) {
+        gridData.set(render_queue.subarray(index, index + 24));
         index += 24;
-        $context.setGridOffset(0, 0);
     }
 
     const length = render_queue[index++];
@@ -37,10 +40,8 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     index += length;
 
-    $context.clip();
-
-    if (isGridEnabled) {
-        $context.endGrid();
+    if (!$context.containerClip) {
+        $context.clip();
     }
 
     return index;

@@ -1,5 +1,8 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
-import { $readFrameBuffer } from "../../FrameBufferManager";
+import {
+    $readFrameBuffer,
+    $drawFrameBuffer
+} from "../../FrameBufferManager";
 import {
     $gl,
     $context
@@ -18,6 +21,7 @@ export const execute = (): void =>
     const mainAttachmentObject = $context.$mainAttachmentObject as IAttachmentObject;
     $context.bind(mainAttachmentObject);
 
+    // fixed logic
     $gl.bindFramebuffer($gl.READ_FRAMEBUFFER, $readFrameBuffer);
 
     // use main Framebuffer
@@ -29,7 +33,6 @@ export const execute = (): void =>
     const width  = mainAttachmentObject.width;
     const height = mainAttachmentObject.height;
 
-    // execute
     $gl.blitFramebuffer(
         0, 0, width, height,
         0, 0, width, height,
@@ -37,5 +40,7 @@ export const execute = (): void =>
         $gl.NEAREST
     );
 
+    // fixed logic
+    $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, $drawFrameBuffer);
     $gl.bindFramebuffer($gl.FRAMEBUFFER, $readFrameBuffer);
 };

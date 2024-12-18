@@ -27,6 +27,14 @@ export const execute = (): void =>
 
     if (!$isMaskDrawing()) {
         $setMaskDrawing(true);
+
         $gl.enable($gl.STENCIL_TEST);
+        $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
+        $gl.frontFace($gl.CCW);
+
+        $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
+        $gl.stencilOpSeparate($gl.FRONT, $gl.KEEP, $gl.KEEP, $gl.INCR_WRAP);
+        $gl.stencilOpSeparate($gl.BACK,  $gl.KEEP, $gl.KEEP, $gl.DECR_WRAP);
+        $gl.colorMask(false, false, false, false);
     }
 };

@@ -21,7 +21,11 @@ export const execute = (): IVertexArrayObject =>
     vertexArrayObjectBindService(vertexArrayObject);
 
     $gl.bindBuffer($gl.ARRAY_BUFFER, vertexArrayObject.vertexBuffer);
-    $gl.bufferData($gl.ARRAY_BUFFER, new Float32Array([0, 0, 0, 1, 1, 0, 1, 1]), $gl.STATIC_DRAW);
+    $gl.bufferData($gl.ARRAY_BUFFER, new Float32Array([
+        0, 0, 1, 0, 0, 1,
+        1, 1, 0, 1, 1, 0
+    ]), $gl.STATIC_DRAW);
+
     $gl.enableVertexAttribArray(0);
     $gl.vertexAttribPointer(0, 2, $gl.FLOAT, false, 0, 0);
 

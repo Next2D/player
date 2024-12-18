@@ -1,4 +1,7 @@
 /**
+ * @description 頂点シェーダから受け取ったカラー情報をそのまま出力。
+ *              Outputs the color information received from the vertex shader as it is.
+ *
  * @return {string}
  * @method
  * @static
@@ -17,6 +20,9 @@ void main() {
 };
 
 /**
+ * @description 線の場合は、uniformで設定したカラー情報をそのまま出力。
+ *              In the case of a line, the color information set by uniform is output as it is.
+ *
  * @return {string}
  * @method
  * @static
@@ -36,6 +42,9 @@ void main() {
 };
 
 /**
+ * @description ビットマップの繰り返しではない場合の塗りつぶし。
+ *              Filling when the bitmap is not repeated.
+ *
  * @return {string}
  * @method
  * @static
@@ -60,6 +69,9 @@ void main() {
 };
 
 /**
+ * @description ビットマップの繰り返しの場合の塗りつぶし。
+ *              Filling in the case of repeating the bitmap.
+ *
  * @return {string}
  * @method
  * @static
@@ -84,6 +96,9 @@ void main() {
 };
 
 /**
+ * @description マスク専用のシェーダ。
+ *              Shader dedicated to masks.
+ *
  * @return {string}
  * @method
  * @static
@@ -108,5 +123,23 @@ void main() {
     } else {
         discard;
     }    
+}`;
+};
+
+/**
+ * @description 矩形の塗りつぶし、カラーは固定。
+ *              Fill the rectangle, the color is fixed.
+ *
+ * @return {string}
+ * @method
+ * @static
+ */
+export const FILL_RECT_COLOR = (): string =>
+{
+    return `#version 300 es
+precision mediump float;
+out vec4 o_color;
+void main() {
+    o_color = vec4(0.2, 0.6, 0.8, 1.0);
 }`;
 };

@@ -13,6 +13,7 @@ export const execute = (): void =>
 
     // postMessage
     playerRenderingPostMessageService();
+    stage.changed = false;
 
     // run player
     $player.play();

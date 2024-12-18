@@ -45,13 +45,13 @@ export const execute = async (
     // ready complete
     playerReadyCompleteUseCase();
 
-    // remove loading
+    // // remove loading
     playerRemoveLoadingElementService();
 
-    // append canvas
+    // // append canvas
     playerAppendElementService();
 
-    // set position
+    // // set position
     canvasSetPositionService();
 
     return root;
