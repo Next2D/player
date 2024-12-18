@@ -26,7 +26,7 @@ export const execute = (): IVertexArrayObject =>
         // 第2三角形
         -1.0,  1.0, // 左上
         1.0, -1.0, // 右下
-        1.0,  1.0, // 右上
+        1.0,  1.0 // 右上
     ]);
     $gl.bufferData($gl.ARRAY_BUFFER, vertexBufferData, $gl.STATIC_DRAW);
 

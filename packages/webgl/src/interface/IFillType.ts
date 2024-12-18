@@ -1,1 +1,1 @@
-export type IFillType = "fill" | "gradient" | "pattern";
+export type IFillType = "fill" | "linear" | "radial";

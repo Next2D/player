@@ -7,7 +7,6 @@ import type { ShaderManager } from "../../ShaderManager";
  * @param  {ShaderManager} shader_manager
  * @param  {number} width
  * @param  {number} height
- * @param  {Float32Array} grid_data
  * @return {void}
  * @method
  * @protected
@@ -15,8 +14,7 @@ import type { ShaderManager } from "../../ShaderManager";
 export const execute = (
     shader_manager: ShaderManager,
     width: number,
-    height: number,
-    grid_data: Float32Array
+    height: number
 ): void => {
 
     const highp: Int32Array | Float32Array = shader_manager.highp;

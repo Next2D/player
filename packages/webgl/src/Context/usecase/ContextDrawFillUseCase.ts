@@ -1,10 +1,8 @@
 import { execute as vertexArrayObjectCreateFillObjectUseCase } from "../../VertexArrayObject/usecase/VertexArrayObjectBindFillMeshUseCase";
 import { execute as vertexArrayObjectReleaseVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseVertexArrayObjectService";
-import { execute as variantsShapeSolidColorShaderService } from "../../Shader/Variants/Shape/service/VariantsShapeSolidColorShaderService";
-import { execute as variantsShapeMaskShaderService } from "../../Shader/Variants/Shape/service/VariantsShapeMaskShaderService";
-import { execute as shaderManagerSetFillUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetFillUniformService";
-import { execute as shaderManagerSetMaskUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMaskUniformService";
-import { execute as shaderManagerFillUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerFillUseCase";
+import { execute as contextNormalFillUseCase } from "./ContextNormalFillUseCase";
+import { execute as contextLinearGradientFillUseCase } from "./ContextLinearGradientFillUseCase";
+import { execute as contextRadialGradientUseCase } from "./ContextRadialGradientUseCase";
 import { $gl } from "../../WebGLUtil";
 import {
     $terminateGrid,
@@ -34,7 +32,6 @@ export const execute = (): void =>
     $gl.stencilMask(0xff);
 
     let offset = 0;
-    let useGrid: boolean = false;
     let gridData: Float32Array | null = null;
     for (let idx = 0; idx < $fillBufferIndexes.length; idx++) {
 
@@ -42,50 +39,27 @@ export const execute = (): void =>
 
         if ($gridDataMap.has(idx)) {
             gridData = $gridDataMap.get(idx) as Float32Array | null;
-            useGrid  = !!gridData;
         }
-
-        // mask setting
-        $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
-        $gl.stencilOpSeparate($gl.FRONT, $gl.KEEP, $gl.KEEP, $gl.INCR_WRAP);
-        $gl.stencilOpSeparate($gl.BACK,  $gl.KEEP, $gl.KEEP, $gl.DECR_WRAP);
-        $gl.colorMask(false, false, false, false);
-
-        $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
-
-        const coverageShader = variantsShapeMaskShaderService(false, useGrid);
-        if (gridData) {
-            shaderManagerSetMaskUniformService(coverageShader, gridData);
-        }
-        shaderManagerFillUseCase(
-            coverageShader, vertexArrayObject, offset, indexCount
-        );
-        $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
-
-        // draw shape setting
-        $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
-        $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
-        $gl.colorMask(true, true, true, true);
 
         const type = $fillTypes[idx];
         switch (type) {
 
-            case "fill":
-                {
-                    const shaderManager = variantsShapeSolidColorShaderService(false, useGrid);
-                    if (gridData) {
-                        shaderManagerSetFillUniformService(shaderManager, gridData);
-                    }
-                    shaderManagerFillUseCase(
-                        shaderManager, vertexArrayObject, offset, indexCount
-                    );
-                }
+            case "fill": // 通常のShapeの塗り
+                contextNormalFillUseCase(
+                    vertexArrayObject, offset, indexCount, gridData
+                );
                 break;
 
-            case "gradient":
+            case "linear": // 線形グラデーションの塗り
+                contextLinearGradientFillUseCase(
+                    vertexArrayObject, offset, indexCount, gridData
+                );
                 break;
 
-            case "pattern":
+            case "radial": // 円形グラデーションの塗り
+                contextRadialGradientUseCase(
+                    vertexArrayObject, offset, indexCount, gridData
+                );
                 break;
 
         }

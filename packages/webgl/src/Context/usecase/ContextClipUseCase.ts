@@ -50,7 +50,7 @@ export const execute = (): void =>
         const useGrid = !!gridData;
 
         if ($context.containerClip) {
-            $gl.stencilMask(1 << (level - 1));
+            $gl.stencilMask(1 << level - 1);
         }
 
         const shaderManager = variantsShapeMaskShaderService(false, useGrid);
@@ -95,7 +95,7 @@ export const execute = (): void =>
             // 比較して 00001000 以上であれば 00001*** で更新し、そうでなければ 00000*** で更新する。
             // 下位3ビットは元の値を保持する必要があるので 11111000 でマスクする。
 
-            const mask = 1 << (level - 1);
+            const mask = 1 << level - 1;
             $gl.stencilMask(~(mask - 1));
             $gl.stencilFunc($gl.LEQUAL, 0, 0xff);
             $gl.stencilOp($gl.ZERO, $gl.REPLACE, $gl.REPLACE);
@@ -115,7 +115,7 @@ export const execute = (): void =>
     }
 
     if ($context.containerClip) {
-        const mask = 1 << (level - 1);
+        const mask = 1 << level - 1;
         $gl.stencilMask(~(mask - 1));
         $gl.stencilFunc($gl.LEQUAL, 0, 0xff);
         $gl.stencilOp($gl.ZERO, $gl.REPLACE, $gl.REPLACE);
