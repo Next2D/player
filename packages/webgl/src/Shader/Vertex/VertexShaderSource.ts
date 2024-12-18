@@ -30,7 +30,7 @@ export const BLEND_TEMPLATE = (): string =>
 
 layout (location = 0) in vec2 a_vertex;
 
-uniform vec4 u_highp[4];
+uniform vec4 u_highp[2];
 
 out vec2 v_coord;
 
@@ -39,12 +39,10 @@ void main() {
 
     vec2 offset   = u_highp[0].xy;
     vec2 size     = u_highp[0].zw;
-    mat3 matrix   = mat3(u_highp[1].xyz, u_highp[2].xyz, u_highp[3].xyz);
-    vec2 viewport = vec2(u_highp[1].w, u_highp[2].w);
+    vec2 viewport = vec2(u_highp[1].x, u_highp[1].y);
 
     vec2 position = vec2(a_vertex.x, 1.0 - a_vertex.y);
     position = position * size + offset;
-    position = (matrix * vec3(position, 1.0)).xy;
     position /= viewport;
 
     position = position * 2.0 - 1.0;
@@ -81,7 +79,12 @@ void main() {
     vec2 position = vec2(a_vertex.x, 1.0 - a_vertex.y);
     position = position * a_size.xy;
 
-    mat3 matrix = mat3(a_matrix.x, a_matrix.y, 0.0, a_matrix.z, a_matrix.w, 0.0, a_offset.x, a_offset.y, 1.0);
+    mat3 matrix = mat3(
+        a_matrix.x, a_matrix.y, 0.0,
+        a_matrix.z, a_matrix.w, 0.0,
+        a_offset.x, a_offset.y, 1.0
+    );
+
     position = (matrix * vec3(position, 1.0)).xy;
     position /= a_size.zw;
 

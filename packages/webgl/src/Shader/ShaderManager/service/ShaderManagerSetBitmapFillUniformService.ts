@@ -13,7 +13,7 @@ import {
  * @param  {ShaderManager} shader_manager
  * @param  {number} width
  * @param  {number} height
- * @param  {Float32Array | null} [grid_data=null]
+ * @param  {Float32Array | null} grid_data
  * @return {void}
  * @method
  * @protected

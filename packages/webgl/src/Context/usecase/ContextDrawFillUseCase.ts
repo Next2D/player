@@ -2,7 +2,8 @@ import { execute as vertexArrayObjectCreateFillObjectUseCase } from "../../Verte
 import { execute as vertexArrayObjectReleaseVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseVertexArrayObjectService";
 import { execute as contextNormalFillUseCase } from "./ContextNormalFillUseCase";
 import { execute as contextLinearGradientFillUseCase } from "./ContextLinearGradientFillUseCase";
-import { execute as contextRadialGradientUseCase } from "./ContextRadialGradientUseCase";
+import { execute as contextRadialGradientFillUseCase } from "./ContextRadialGradientFillUseCase";
+import { execute as contextPatternBitmapFillUseCase } from "./ContextPatternBitmapFillUseCase";
 import { $gl } from "../../WebGLUtil";
 import {
     $terminateGrid,
@@ -57,7 +58,13 @@ export const execute = (): void =>
                 break;
 
             case "radial": // 円形グラデーションの塗り
-                contextRadialGradientUseCase(
+                contextRadialGradientFillUseCase(
+                    vertexArrayObject, offset, indexCount, gridData
+                );
+                break;
+
+            case "bitmap": // 画像の塗りつぶし
+                contextPatternBitmapFillUseCase(
                     vertexArrayObject, offset, indexCount, gridData
                 );
                 break;

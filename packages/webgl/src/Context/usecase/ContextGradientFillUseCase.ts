@@ -44,10 +44,7 @@ export const execute = (
     // 塗りのインデックスを追加
     $fillBufferIndexes.push(fillMesh.indexCount);
 
-    $gradientData.push(stops);
-    $gradientData.push(matrix);
-    $gradientData.push(spread);
-    $gradientData.push(interpolation);
+    $gradientData.push(stops, matrix, spread, interpolation);
     if (type === 1) {
         $gradientData.push(focal);
     }

@@ -53,13 +53,13 @@ export const execute = (
     $gl.stencilOpSeparate($gl.BACK,  $gl.KEEP, $gl.KEEP, $gl.DECR_WRAP);
     $gl.colorMask(false, false, false, false);
 
-    $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
-
     const useGrid = !!grid_data;
     const coverageShader = variantsShapeMaskShaderService(false, useGrid);
     if (grid_data) {
         shaderManagerSetMaskUniformService(coverageShader, grid_data);
     }
+
+    $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
     shaderManagerFillUseCase(
         coverageShader, vertex_array_object, offset, index_count
     );

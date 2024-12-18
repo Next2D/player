@@ -176,19 +176,16 @@ export const execute = (
                     );
                     index += length;
 
-                    $context.save();
-                    $context.transform(
+                    const matrix = new Float32Array([
                         commands[index++], commands[index++], commands[index++],
                         commands[index++], commands[index++], commands[index++]
-                    );
+                    ]);
 
                     $context.bitmapFill(
-                        buffer, width, height,
+                        buffer, matrix, width, height,
                         Boolean(commands[index++]),
                         Boolean(commands[index++])
                     );
-
-                    $context.restore();
                 }
                 break;
 

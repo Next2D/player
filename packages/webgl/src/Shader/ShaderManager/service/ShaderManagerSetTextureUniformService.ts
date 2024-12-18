@@ -22,19 +22,14 @@ export const execute = (shader_manager: ShaderManager, width: number, height: nu
     const matrix = $context.$matrix;
 
     // vertex: u_offset
-    highp[0] = matrix[6];
-    highp[1] = matrix[7];
+    highp[0] = matrix[6]; // x
+    highp[1] = matrix[7]; // y
 
     // vertex: u_size
     highp[2] = width;
     highp[3] = height;
 
-    // vertex: u_matrix
-    highp[4]  = 1;
-    highp[9]  = 1;
-    highp[14] = 1;
-
     // vertex: u_viewport
-    highp[7]  = $getViewportWidth();
-    highp[11] = $getViewportHeight();
+    highp[4] = $getViewportWidth();
+    highp[5] = $getViewportHeight();
 };

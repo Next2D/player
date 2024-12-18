@@ -110,6 +110,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             if (isDrawable) {
                 shapeCommandService(commands);
+                $context.drawFill();
             } else {
                 $context.drawPixels(node, new Uint8Array(commands));
             }

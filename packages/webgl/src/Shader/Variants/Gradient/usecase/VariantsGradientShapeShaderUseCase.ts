@@ -37,17 +37,9 @@ export const execute = (
     const highpLength = (use_grid ? 14 : 5) + (is_stroke ? 1 : 0) + 1;
     const fragmentIndex = highpLength - 1;
 
-    let vertexShaderSource: string;
-    if (is_stroke) {
-        vertexShaderSource = STROKE_TEMPLATE(
-            highpLength, fragmentIndex,
-            true, use_grid
-        );
-    } else {
-        vertexShaderSource = FILL_TEMPLATE(
-            highpLength, true, false, use_grid
-        );
-    }
+    const vertexShaderSource = is_stroke
+        ? STROKE_TEMPLATE(highpLength, fragmentIndex, true, use_grid)
+        : FILL_TEMPLATE(highpLength, true, false, use_grid);
 
     const shaderManager = new ShaderManager(
         vertexShaderSource,
