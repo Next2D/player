@@ -771,6 +771,7 @@ export class Context
      *              Draw pixel data of the line
      *
      * @param  {Uint8Array} pixels
+     * @param  {Float32Array} matrix
      * @param  {number} width
      * @param  {number} height
      * @param  {boolean} repeat
@@ -781,13 +782,14 @@ export class Context
      */
     bitmapStroke (
         pixels: Uint8Array,
+        matrix: Float32Array,
         width: number,
         height: number,
         repeat: boolean,
         smooth: boolean
     ): void {
         contextBitmapStrokeUseCase(
-            pixels, width, height, repeat, smooth
+            pixels, matrix, width, height, repeat, smooth
         );
     }
 

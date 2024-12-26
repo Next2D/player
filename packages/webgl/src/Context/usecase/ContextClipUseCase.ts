@@ -53,7 +53,7 @@ export const execute = (): void =>
             $gl.stencilMask(1 << level - 1);
         }
 
-        const shaderManager = variantsShapeMaskShaderService(false, useGrid);
+        const shaderManager = variantsShapeMaskShaderService(useGrid);
         if (gridData) {
             shaderManagerSetMaskUniformService(shaderManager, gridData);
         }

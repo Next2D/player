@@ -34,7 +34,5 @@ export const execute = (): IVertexArrayObject =>
 
     $gl.bufferSubData($gl.ARRAY_BUFFER, 0, buffer.subarray(0, offset));
 
-    vertexArrayObject.indexCount = 0;
-
     return vertexArrayObject;
 };

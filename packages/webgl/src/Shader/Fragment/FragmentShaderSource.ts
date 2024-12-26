@@ -20,28 +20,6 @@ void main() {
 };
 
 /**
- * @description 線の場合は、uniformで設定したカラー情報をそのまま出力。
- *              In the case of a line, the color information set by uniform is output as it is.
- *
- * @return {string}
- * @method
- * @static
- */
-export const SOLID_STROKE_COLOR = (): string =>
-{
-    return `#version 300 es
-precision mediump float;
-
-uniform vec4 u_mediump;
-
-out vec4 o_color;
-
-void main() {
-    o_color = vec4(u_mediump.rgb * u_mediump.a, u_mediump.a);
-}`;
-};
-
-/**
  * @description ビットマップの繰り返しではない場合の塗りつぶし。
  *              Filling when the bitmap is not repeated.
  *

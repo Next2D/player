@@ -16,32 +16,11 @@ vec2 applyMatrix(in vec2 vertex) {
 };
 
 /**
- * @description グリッドがオフの場合の頂点シェーダー
- *              Vertex shader when grid is off
- *
- * @return {string}
- * @method
- * @static
- */
-export const FUNCTION_GRID_OFF_TO_STROKE = (): string =>
-{
-    return `
-vec2 applyMatrix(in vec2 vertex) {
-    mat3 matrix = mat3(
-        u_highp[0].xyz,
-        u_highp[1].xyz,
-        u_highp[2].xyz
-    );
-    return (matrix * vec3(vertex, 1.0)).xy;
-}`;
-};
-
-/**
  * @description グリッドがオンの場合の頂点シェーダー
  *              Vertex shader when grid is on
  *
  * @param  {number} index
- * @return {string}
+ * @return {STRing}
  * @method
  * @static
  */

@@ -5,11 +5,11 @@ describe("VariantsGradientCreateCollectionKeyService.js method test", () =>
 {
     it("test case", () =>
     {
-        expect(execute(true, true, true, true, 0)).toBe("yyyy0");
-        expect(execute(true, true, true, true, 1)).toBe("yyyy1");
-        expect(execute(true, true, true, false, 0)).toBe("yyyn0");
-        expect(execute(true, true, false, false, 0)).toBe("yynn0");
-        expect(execute(true, false, false, false, 0)).toBe("ynnn0");
-        expect(execute(false, false, false, false, 0)).toBe("nnnn0");
+        expect(execute(true, true, true, 0)).toBe("yyy0");
+        expect(execute(true, true, true, 1)).toBe("yyy1");
+        expect(execute(true, true, false, 0)).toBe("yyn0");
+        expect(execute(true, false, false, 0)).toBe("ynn0");
+        expect(execute(false, false, false, 0)).toBe("nnn0");
+        expect(execute(false, false, false, 0)).toBe("nnn0");
     });
 });

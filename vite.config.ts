@@ -2,7 +2,7 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/config" />
 
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import path from "path";
 
 export default defineConfig({
@@ -30,6 +30,7 @@ export default defineConfig({
         "globals": true,
         "environment": "jsdom",
         "setupFiles": [
+            "test.setup.ts",
             "@vitest/web-worker",
             "vitest-webgl-canvas-mock"
         ],

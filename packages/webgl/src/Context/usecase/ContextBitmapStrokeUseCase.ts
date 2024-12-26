@@ -1,17 +1,18 @@
 import { $getVertices } from "../../PathCommand";
-import { execute as textureManagerCreateFromPixelsUseCase } from "../../TextureManager/usecase/TextureManagerCreateFromPixelsUseCase";
-import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
-import { execute as vertexArrayObjectBindStrokeMeshUseCase } from "../../VertexArrayObject/usecase/VertexArrayObjectBindStrokeMeshUseCase";
-import { execute as vertexArrayObjectReleaseStrokeVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseStrokeVertexArrayObjectService";
-import { execute as shaderManagerStrokeUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerStrokeUseCase";
-import { execute as variantsBitmapShaderService } from "../../Shader/Variants/Bitmap/service/VariantsBitmapShaderService";
-import { execute as shaderManagerSetBitmapStrokeUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetBitmapStrokeUniformService";
+import { execute as meshStrokeGenerateUseCase } from "../../Mesh/usecase/MeshStrokeGenerateUseCase";
+import { $bitmapData } from "../../Bitmap";
+import {
+    $addFillBuffer,
+    $fillTypes,
+    $fillBufferIndexes
+} from "../../Mesh";
 
 /**
  * @description パスコマンドの線のビットマップの描画を実行します。
  *              Execute drawing of bitmap of line of path command.
  *
  * @param  {Uint8Array} pixels
+ * @param  {Float32Array} matrix
  * @param  {number} width
  * @param  {number} height
  * @param  {boolean} repeat
@@ -22,31 +23,28 @@ import { execute as shaderManagerSetBitmapStrokeUniformService } from "../../Sha
  */
 export const execute = (
     pixels: Uint8Array,
+    matrix: Float32Array,
     width: number,
     height: number,
     repeat: boolean,
     smooth: boolean
 ): void => {
 
-    const textureObject = textureManagerCreateFromPixelsUseCase(width, height, pixels, smooth);
-
     const vertices = $getVertices(true);
     if (!vertices.length) {
         return ;
     }
-    const vertexArrayObject = vertexArrayObjectBindStrokeMeshUseCase(vertices);
 
-    const shaderManager = variantsBitmapShaderService(true, repeat);
-    shaderManagerSetBitmapStrokeUniformService(shaderManager, width, height);
+    // 塗りの種類を追加
+    $fillTypes.push("bitmap");
 
-    shaderManagerStrokeUseCase(
-        shaderManager,
-        vertexArrayObject
+    const mesh = meshStrokeGenerateUseCase(vertices);
+    $addFillBuffer(mesh.buffer);
+
+    // 塗りのインデックスを追加
+    $fillBufferIndexes.push(mesh.indexCount);
+
+    $bitmapData.push(
+        pixels, matrix, width, height, repeat, smooth
     );
-
-    // release vertex array object
-    vertexArrayObjectReleaseStrokeVertexArrayObjectService(vertexArrayObject);
-
-    // release texture
-    textureManagerReleaseTextureObjectUseCase(textureObject);
 };

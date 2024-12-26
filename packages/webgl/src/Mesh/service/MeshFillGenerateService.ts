@@ -1,9 +1,4 @@
 import type { IPath } from "../../interface/IPath";
-import {
-    $context,
-    $getViewportWidth,
-    $getViewportHeight
-} from "../../WebGLUtil";
 
 /**
  * @description 塗りのメッシュを生成する
@@ -12,27 +7,35 @@ import {
  * @param  {IPath} vertex
  * @param  {Float32Array} buffer
  * @param  {number} index
+ * @param  {number} a
+ * @param  {number} b
+ * @param  {number} c
+ * @param  {number} d
+ * @param  {number} tx
+ * @param  {number} ty
+ * @param  {number} red
+ * @param  {number} green
+ * @param  {number} blue
+ * @param  {number} alpha
  * @return {number}
  * @method
  * @protected
  */
-export const execute = (vertex: IPath, buffer: Float32Array, index: number): number =>
-{
-    const red   = $context.$fillStyle[0];
-    const green = $context.$fillStyle[1];
-    const blue  = $context.$fillStyle[2];
-    const alpha = $context.$fillStyle[3];
-
-    const matrix = $context.$matrix;
-    const width  = $getViewportWidth();
-    const height = $getViewportHeight();
-
-    const a  = matrix[0] / width;
-    const b  = matrix[1] / width;
-    const c  = matrix[3] / height;
-    const d  = matrix[4] / height;
-    const tx = matrix[6] / width;
-    const ty = matrix[7] / height;
+export const execute = (
+    vertex: IPath,
+    buffer: Float32Array,
+    index: number,
+    a: number,
+    b: number,
+    c: number,
+    d: number,
+    tx: number,
+    ty: number,
+    red: number,
+    green: number,
+    blue: number,
+    alpha: number
+): number => {
 
     const length = vertex.length - 5;
     for (let idx = 3; idx < length; idx += 3) {

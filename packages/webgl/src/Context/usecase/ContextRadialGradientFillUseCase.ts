@@ -54,7 +54,7 @@ export const execute = (
     $gl.colorMask(false, false, false, false);
 
     const useGrid = !!grid_data;
-    const coverageShader = variantsShapeMaskShaderService(false, useGrid);
+    const coverageShader = variantsShapeMaskShaderService(useGrid);
     if (grid_data) {
         shaderManagerSetMaskUniformService(coverageShader, grid_data);
     }
@@ -80,7 +80,7 @@ export const execute = (
     const inverseMatrix = $inverseMatrix($context.$matrix);
 
     const shaderManager = variantsGradientShapeShaderUseCase(
-        false, true, Boolean(focal), spread, useGrid
+        true, Boolean(focal), spread, useGrid
     );
     shaderManagerSetGradientFillUniformService(
         shaderManager, 1, prevMatrix,

@@ -13,7 +13,7 @@ import {
  *
  * @param  {number} width
  * @param  {number} height
- * @return {ICachePositionObject}
+ * @return {Node}
  * @method
  * @protected
  */

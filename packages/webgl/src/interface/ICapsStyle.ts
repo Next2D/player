@@ -1,1 +1,0 @@
-export type ICapsStyle = "none" | "round" | "square";

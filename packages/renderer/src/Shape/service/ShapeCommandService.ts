@@ -3,21 +3,95 @@ import {
     $getArray
 } from "../../RendererUtil";
 
-const MOVE_TO: number         = 0;
-const CURVE_TO: number        = 1;
-const LINE_TO: number         = 2;
-const CUBIC: number           = 3;
-const ARC: number             = 4;
-const FILL_STYLE: number      = 5;
-const STROKE_STYLE: number    = 6;
-const END_FILL: number        = 7;
-const END_STROKE: number      = 8;
-const BEGIN_PATH: number      = 9;
-const GRADIENT_FILL: number   = 10;
+/**
+ * @type {number}
+ * @private
+ */
+const MOVE_TO: number = 0;
+
+/**
+ * @type {number}
+ * @private
+ */
+const CURVE_TO: number = 1;
+
+/**
+ * @type {number}
+ * @private
+ */
+const LINE_TO: number = 2;
+
+/**
+ * @type {number}
+ * @private
+ */
+const CUBIC: number = 3;
+
+/**
+ * @type {number}
+ * @private
+ */
+const ARC: number = 4;
+
+/**
+ * @type {number}
+ * @private
+ */
+const FILL_STYLE: number = 5;
+
+/**
+ * @type {number}
+ * @private
+ */
+const STROKE_STYLE: number = 6;
+
+/**
+ * @type {number}
+ * @private
+ */
+const END_FILL: number = 7;
+
+/**
+ * @type {number}
+ * @private
+ */
+const END_STROKE: number = 8;
+
+/**
+ * @type {number}
+ * @private
+ */
+const BEGIN_PATH: number = 9;
+
+/**
+ * @type {number}
+ * @private
+ */
+const GRADIENT_FILL: number = 10;
+
+/**
+ * @type {number}
+ * @private
+ */
 const GRADIENT_STROKE: number = 11;
-const CLOSE_PATH: number      = 12;
-const BITMAP_FILL: number     = 13;
-const BITMAP_STROKE: number   = 14;
+
+/**
+ * @type {number}
+ * @private
+ */
+const CLOSE_PATH: number = 12;
+
+/**
+ * @type {number}
+ * @private
+ */
+const BITMAP_FILL: number = 13;
+
+/**
+ * @type {number}
+ * @private
+ */
+const BITMAP_STROKE: number = 14;
 
 /**
  * @description Shapeのグラフィックコマンドを実行します。
@@ -255,21 +329,16 @@ export const execute = (
                     );
                     index += length;
 
-                    $context.save();
-                    $context.transform(
+                    const matrix = new Float32Array([
                         commands[index++], commands[index++], commands[index++],
                         commands[index++], commands[index++], commands[index++]
-                    );
-
-                    const repeat = Boolean(commands[index++]);
-                    const smooth = Boolean(commands[index++]);
+                    ]);
 
                     $context.bitmapStroke(
-                        buffer, width, height,
-                        repeat, smooth
+                        buffer, matrix, width, height,
+                        Boolean(commands[index++]),
+                        Boolean(commands[index++])
                     );
-
-                    $context.restore();
                 }
                 break;
 

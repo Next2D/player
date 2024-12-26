@@ -38,7 +38,7 @@ export const execute = (
     $gl.colorMask(false, false, false, false);
 
     const useGrid = !!grid_data;
-    const coverageShader = variantsShapeMaskShaderService(false, useGrid);
+    const coverageShader = variantsShapeMaskShaderService(useGrid);
     if (grid_data) {
         shaderManagerSetMaskUniformService(coverageShader, grid_data);
     }
@@ -72,7 +72,7 @@ export const execute = (
     $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
     $gl.colorMask(true, true, true, true);
 
-    const shaderManager = variantsBitmapShaderService(false, repeat, useGrid);
+    const shaderManager = variantsBitmapShaderService(repeat, useGrid);
     shaderManagerSetBitmapFillUniformService(
         shaderManager, width, height, grid_data
     );

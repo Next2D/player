@@ -1125,6 +1125,7 @@ export class Graphics
 
             case Graphics.GRADIENT_STROKE:
                 if (this._$lineGradient) {
+                    console.log(this._$lineWidth);
                     this.$recodes.push(
                         this._$lineType,
                         this._$lineWidth,
@@ -1183,9 +1184,8 @@ export class Graphics
         smooth: boolean = false
     ): Graphics {
 
-        // end fill
-        if (this._$hasLineEnabled) {
-            this.endLine();
+        if (!this._$hasLineEnabled) {
+            return this;
         }
 
         if (!this._$lines) {
@@ -1325,7 +1325,7 @@ export class Graphics
         const red   = color >>> 16 & 0xff;
         const green = color >>> 8 & 0xff;
         const blue  = color & 0xff;
-        this._$lineColor = red << 24 | green << 16 | blue << 8 | alpha;
+        this._$lineColor = red << 24 | green << 16 | blue << 8 | alpha * 255;
 
         // param
         this._$lineWidth = thickness;

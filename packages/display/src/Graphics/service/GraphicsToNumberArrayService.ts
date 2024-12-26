@@ -307,7 +307,6 @@ export const execute = (recodes : any[] | null): any[] =>
 
             case Graphics.BITMAP_STROKE:
                 {
-
                     array.push(recodes[idx++]);
 
                     const lineCap: ICapsStyle = recodes[idx++];
@@ -385,8 +384,8 @@ export const execute = (recodes : any[] | null): any[] =>
                         buffer.length
                     );
 
-                    for (let idx: number = 0; idx < buffer.length; ++idx) {
-                        array.push(buffer[idx]);
+                    for (let idx = 0; idx < buffer.length; idx += 4096) {
+                        array.push(...buffer.subarray(idx, idx + 4096));
                     }
 
                     const matrix: Float32Array = recodes[idx++];

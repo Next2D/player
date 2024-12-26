@@ -7,6 +7,7 @@ import {
     $graphicMap,
     $getArray
 } from "./DisplayObjectUtil";
+import { BitmapData } from "./BitmapData";
 
 /**
  * @description Shape クラスは、ベクターグラフィックスを表示するための表示オブジェクトです。
@@ -166,6 +167,23 @@ export class Shape extends DisplayObject
         this._$src = src;
 
         shapeLoadSrcUseCase(this, src);
+    }
+
+    /**
+     * @description ビットマップデータを返します
+     *              Returns the bitmap data.
+     *
+     * @return {BitmapData}
+     * @readonly
+     * @public
+     */
+    get bitmapData (): BitmapData
+    {
+        const bitmapData = new BitmapData(this.width, this.height);
+        if (this.$bitmapBuffer) {
+            bitmapData.buffer = this.$bitmapBuffer;
+        }
+        return bitmapData;
     }
 
     /**

@@ -25,9 +25,9 @@ export const execute = (type: IFillType): void =>
     // 塗りの種類を追加
     $fillTypes.push(type);
 
-    const fillMesh = meshFillGenerateUseCase(vertices);
-    $addFillBuffer(fillMesh.buffer);
+    const mesh = meshFillGenerateUseCase(vertices);
+    $addFillBuffer(mesh.buffer);
 
     // 塗りのインデックスを追加
-    $fillBufferIndexes.push(fillMesh.indexCount);
+    $fillBufferIndexes.push(mesh.indexCount);
 };

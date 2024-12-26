@@ -27,7 +27,7 @@ describe("MeshFillGenerateService.js method test", () =>
             1.25, 0.25, true,
             1.149999976158142, -0.30000001192092896, false,
             0.8999999761581421, -1.25, true,
-            -0.10000000149011612, -1.149999976158142, false,
+            -1, -1.149999976158142, false,
             -1.149999976158142, -1.100000023841858, true,
             -1.2000000476837158, 0, false,
             -1.25, 0.550000011920929, true,
@@ -35,7 +35,11 @@ describe("MeshFillGenerateService.js method test", () =>
         ];
 
         const buffer = new Float32Array((vertices.length / 3 - 2) * 51);
-        const index = execute(vertices, buffer, 0);
+        const index = execute(
+            vertices, buffer, 0,
+            1, 0, 0, 1, 0, 0,
+            0, 0, 0, 1
+        );
         expect(index).toBe(27);
         expect(buffer.length).toBe(459);
 
@@ -47,11 +51,11 @@ describe("MeshFillGenerateService.js method test", () =>
         expect(buffer[5]).toBe(0);
         expect(buffer[6]).toBe(0);
         expect(buffer[7]).toBe(1);
-        expect(buffer[8]).toBe(0.10000000149011612);
+        expect(buffer[8]).toBe(1);
         expect(buffer[9]).toBe(0);
         expect(buffer[10]).toBe(0);
-        expect(buffer[11]).toBe(0.10000000149011612);
-        expect(buffer[12]).toBe(0);
+        expect(buffer[11]).toBe(0);
+        expect(buffer[12]).toBe(1);
         expect(buffer[13]).toBe(0);
         expect(buffer[14]).toBe(0);
         expect(buffer[15]).toBe(0);
@@ -64,11 +68,11 @@ describe("MeshFillGenerateService.js method test", () =>
         expect(buffer[22]).toBe(0);
         expect(buffer[23]).toBe(0);
         expect(buffer[24]).toBe(1);
-        expect(buffer[25]).toBe(0.10000000149011612);
+        expect(buffer[25]).toBe(1);
         expect(buffer[26]).toBe(0);
         expect(buffer[27]).toBe(0);
-        expect(buffer[28]).toBe(0.10000000149011612);
-        expect(buffer[29]).toBe(0);
+        expect(buffer[28]).toBe(0);
+        expect(buffer[29]).toBe(1);
         expect(buffer[30]).toBe(0);
         expect(buffer[31]).toBe(0);
         expect(buffer[32]).toBe(0);
@@ -81,11 +85,11 @@ describe("MeshFillGenerateService.js method test", () =>
         expect(buffer[39]).toBe(0);
         expect(buffer[40]).toBe(0);
         expect(buffer[41]).toBe(1);
-        expect(buffer[42]).toBe(0.10000000149011612);
+        expect(buffer[42]).toBe(1);
         expect(buffer[43]).toBe(0);
         expect(buffer[44]).toBe(0);
-        expect(buffer[45]).toBe(0.10000000149011612);
-        expect(buffer[46]).toBe(0);
+        expect(buffer[45]).toBe(0);
+        expect(buffer[46]).toBe(1);
         expect(buffer[47]).toBe(0);
         expect(buffer[48]).toBe(0);
         expect(buffer[49]).toBe(0);
@@ -98,11 +102,11 @@ describe("MeshFillGenerateService.js method test", () =>
         expect(buffer[56]).toBe(0);
         expect(buffer[57]).toBe(0);
         expect(buffer[58]).toBe(1);
-        expect(buffer[59]).toBe(0.10000000149011612);
+        expect(buffer[59]).toBe(1);
         expect(buffer[60]).toBe(0);
         expect(buffer[61]).toBe(0);
-        expect(buffer[62]).toBe(0.10000000149011612);
-        expect(buffer[63]).toBe(0);
+        expect(buffer[62]).toBe(0);
+        expect(buffer[63]).toBe(1);
         expect(buffer[64]).toBe(0);
         expect(buffer[65]).toBe(0);
         expect(buffer[66]).toBe(0);
@@ -115,11 +119,11 @@ describe("MeshFillGenerateService.js method test", () =>
         expect(buffer[73]).toBe(0);
         expect(buffer[74]).toBe(0);
         expect(buffer[75]).toBe(1);
-        expect(buffer[76]).toBe(0.10000000149011612);
+        expect(buffer[76]).toBe(1);
         expect(buffer[77]).toBe(0);
         expect(buffer[78]).toBe(0);
-        expect(buffer[79]).toBe(0.10000000149011612);
-        expect(buffer[80]).toBe(0);
+        expect(buffer[79]).toBe(0);
+        expect(buffer[80]).toBe(1);
         expect(buffer[81]).toBe(0);
         expect(buffer[82]).toBe(0);
         expect(buffer[83]).toBe(0);
@@ -132,11 +136,11 @@ describe("MeshFillGenerateService.js method test", () =>
         expect(buffer[90]).toBe(0);
         expect(buffer[91]).toBe(0);
         expect(buffer[92]).toBe(1);
-        expect(buffer[93]).toBe(0.10000000149011612);
+        expect(buffer[93]).toBe(1);
         expect(buffer[94]).toBe(0);
         expect(buffer[95]).toBe(0);
-        expect(buffer[96]).toBe(0.10000000149011612);
-        expect(buffer[97]).toBe(0);
+        expect(buffer[96]).toBe(0);
+        expect(buffer[97]).toBe(1);
         expect(buffer[98]).toBe(0);
         expect(buffer[99]).toBe(0);
         expect(buffer[100]).toBe(0);

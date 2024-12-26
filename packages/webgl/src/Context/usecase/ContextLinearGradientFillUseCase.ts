@@ -55,7 +55,7 @@ export const execute = (
     $gl.colorMask(false, false, false, false);
 
     const useGrid = !!grid_data;
-    const coverageShader = variantsShapeMaskShaderService(false, useGrid);
+    const coverageShader = variantsShapeMaskShaderService(useGrid);
     if (grid_data) {
         shaderManagerSetMaskUniformService(coverageShader, grid_data);
     }
@@ -71,7 +71,7 @@ export const execute = (
     $gl.colorMask(true, true, true, true);
 
     const shaderManager = variantsGradientShapeShaderUseCase(
-        false, false, false, spread, useGrid
+        false, false, spread, useGrid
     );
 
     const points = $linearGradientXY(matrix);

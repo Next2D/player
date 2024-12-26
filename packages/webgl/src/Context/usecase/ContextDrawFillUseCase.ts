@@ -1,4 +1,4 @@
-import { execute as vertexArrayObjectCreateFillObjectUseCase } from "../../VertexArrayObject/usecase/VertexArrayObjectBindFillMeshUseCase";
+import { execute as vertexArrayObjectBindFillMeshUseCase } from "../../VertexArrayObject/usecase/VertexArrayObjectBindFillMeshUseCase";
 import { execute as vertexArrayObjectReleaseVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseVertexArrayObjectService";
 import { execute as contextNormalFillUseCase } from "./ContextNormalFillUseCase";
 import { execute as contextLinearGradientFillUseCase } from "./ContextLinearGradientFillUseCase";
@@ -25,18 +25,16 @@ import {
  */
 export const execute = (): void =>
 {
-    const vertexArrayObject = vertexArrayObjectCreateFillObjectUseCase();
+    const fillVertexArrayObject = vertexArrayObjectBindFillMeshUseCase();
 
     // mask on
     $gl.enable($gl.STENCIL_TEST);
     $gl.frontFace($gl.CCW);
     $gl.stencilMask(0xff);
 
-    let offset = 0;
+    let fillOffset = 0;
     let gridData: Float32Array | null = null;
-    for (let idx = 0; idx < $fillBufferIndexes.length; idx++) {
-
-        const indexCount = $fillBufferIndexes[idx];
+    for (let idx = 0; idx < $fillTypes.length; idx++) {
 
         if ($gridDataMap.has(idx)) {
             gridData = $gridDataMap.get(idx) as Float32Array | null;
@@ -46,39 +44,53 @@ export const execute = (): void =>
         switch (type) {
 
             case "fill": // 通常のShapeの塗り
-                contextNormalFillUseCase(
-                    vertexArrayObject, offset, indexCount, gridData
-                );
+                {
+                    const count = $fillBufferIndexes.shift() as number;
+                    contextNormalFillUseCase(
+                        fillVertexArrayObject, fillOffset, count, gridData
+                    );
+                    fillOffset += count;
+                }
                 break;
 
             case "linear": // 線形グラデーションの塗り
-                contextLinearGradientFillUseCase(
-                    vertexArrayObject, offset, indexCount, gridData
-                );
+                {
+                    const count = $fillBufferIndexes.shift() as number;
+                    contextLinearGradientFillUseCase(
+                        fillVertexArrayObject, fillOffset, count, gridData
+                    );
+                    fillOffset += count;
+                }
                 break;
 
             case "radial": // 円形グラデーションの塗り
-                contextRadialGradientFillUseCase(
-                    vertexArrayObject, offset, indexCount, gridData
-                );
+                {
+                    const count = $fillBufferIndexes.shift() as number;
+                    contextRadialGradientFillUseCase(
+                        fillVertexArrayObject, fillOffset, count, gridData
+                    );
+                    fillOffset += count;
+                }
                 break;
 
             case "bitmap": // 画像の塗りつぶし
-                contextPatternBitmapFillUseCase(
-                    vertexArrayObject, offset, indexCount, gridData
-                );
+                {
+                    const count = $fillBufferIndexes.shift() as number;
+                    contextPatternBitmapFillUseCase(
+                        fillVertexArrayObject, fillOffset, count, gridData
+                    );
+                    fillOffset += count;
+                }
                 break;
 
         }
-
-        offset += indexCount;
     }
 
     // mask off
     $gl.disable($gl.STENCIL_TEST);
 
     // release vertex array
-    vertexArrayObjectReleaseVertexArrayObjectService(vertexArrayObject);
+    vertexArrayObjectReleaseVertexArrayObjectService(fillVertexArrayObject);
 
     // 設定値を初期化
     $clearFillBufferSetting();

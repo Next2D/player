@@ -46,8 +46,22 @@ export class BitmapData
      */
     public height: number;
 
+    /**
+     * @type {Uint8Array | null}
+     * @private
+     */
     private _$buffer: Uint8Array | null;
+
+    /**
+     * @type {HTMLImageElement | null}
+     * @private
+     */
     private _$image: HTMLImageElement | null;
+
+    /**
+     * @type {HTMLCanvasElement | null}
+     * @private
+     */
     private _$canvas: HTMLCanvasElement | null;
 
     /**
@@ -211,18 +225,18 @@ export class BitmapData
         return bitmapData;
     }
 
-    // /**
-    //  * @description 指定された DisplayObject を指定のcanvasに描画します。
-    //  *              Draws the specified DisplayObject to the specified canvas.
-    //  *
-    //  * @param  {DisplayObject}     source
-    //  * @param  {Matrix}            [matrix=null]
-    //  * @param  {ColorTransform}    [color_transform=null]
-    //  * @param  {HTMLCanvasElement} [canvas=null]
-    //  * @param  {function}          [callback=null]
-    //  * @return {void}
-    //  * @public
-    //  */
+    /**
+     * @description 指定された DisplayObject を指定のcanvasに描画します。
+     *              Draws the specified DisplayObject to the specified canvas.
+     *
+     * @param  {DisplayObject}     source
+     * @param  {Matrix}            [matrix=null]
+     * @param  {ColorTransform}    [color_transform=null]
+     * @param  {HTMLCanvasElement} [canvas=null]
+     * @param  {function}          [callback=null]
+     * @return {void}
+     * @public
+     */
     // drawToCanvas <D extends DisplayObject>(
     //     source: D,
     //     matrix: Matrix | null = null,
