@@ -18,18 +18,19 @@
         const { Event } = next2d.events;
 
         const shape = root.addChild(new Shape());
-        shape.addEventListener(Event.COMPLETE, () =>
-        {
+        // shape.addEventListener(Event.COMPLETE, () =>
+        // {
             shape.x = 75;
             shape.y = 75;
             shape
                 .graphics
-                .beginBitmapFill(shape.bitmapData)
-                // .lineStyle(10, 0, 0.5)
-                // .lineBitmapStyle(shape.bitmapData)
-                .drawRoundRect(0, 0, 100, 100, 10);
-        });
-        shape.src = "http://localhost:5173/json/image/logo.png";
+                .lineStyle(10, 0xff0000, 0.75, "square", "round")
+                .moveTo(50, 50)
+                .lineTo(100, 50)
+                .curveTo(100, 100, 50, 100)
+                .curveTo(50, 10, 100, 150);
+        // });
+        // shape.src = "http://localhost:5173/json/image/logo.png";
 
     });
 </script>

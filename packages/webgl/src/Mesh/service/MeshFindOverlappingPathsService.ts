@@ -38,10 +38,6 @@ export const execute = (
         }
 
         points.push(dx, dy);
-
-        if (points.length === 4) {
-            //break;
-        }
     }
 
     return points;

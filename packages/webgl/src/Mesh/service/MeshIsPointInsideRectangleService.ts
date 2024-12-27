@@ -48,7 +48,7 @@ export const execute = (
         const x = points[idx];
         const y = points[idx + 1];
 
-        if (!$context.isPointInPath(x, y)) {
+        if ($context.isPointInPath(x, y)) {
             continue;
         }
 

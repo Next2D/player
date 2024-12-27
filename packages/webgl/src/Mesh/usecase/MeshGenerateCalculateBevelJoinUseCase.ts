@@ -8,6 +8,7 @@ import { execute as meshIsPointInsideRectangleService } from "../service/MeshIsP
  *
  * @param  {number} x
  * @param  {number} y
+ * @param  {number} r
  * @param  {IPath[]} rectangles
  * @return {void}
  * @method
@@ -16,12 +17,13 @@ import { execute as meshIsPointInsideRectangleService } from "../service/MeshIsP
 export const execute = (
     x: number,
     y: number,
+    r: number,
     rectangles: IPath[]
 ): void => {
 
     const length = rectangles.length;
-    const pathsA = meshFindOverlappingPathsUseCase(x, y, rectangles[length - 1]);
-    const pathsB = meshFindOverlappingPathsUseCase(x, y, rectangles[length - 2]);
+    const pathsA = meshFindOverlappingPathsUseCase(x, y, r, rectangles[length - 1]);
+    const pathsB = meshFindOverlappingPathsUseCase(x, y, r, rectangles[length - 2]);
 
     // パスが並行であれば終了
     if (pathsA[0] === pathsB[0] && pathsA[1] === pathsB[1]

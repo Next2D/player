@@ -5,6 +5,7 @@ import { execute as meshCalculateCurveRectangleUseCase } from "./MeshCalculateCu
 import { execute as meshGenerateCalculateRoundJoinUseCase } from "./MeshGenerateCalculateRoundJoinUseCase";
 import { execute as meshGenerateCalculateBevelJoinUseCase } from "./MeshGenerateCalculateBevelJoinUseCase";
 import { execute as meshGenerateCalculateRoundCapService } from "../service/MeshGenerateCalculateRoundCapService";
+import { execute as meshGenerateCalculateSquareCapService } from "../service/MeshGenerateCalculateSquareCapService";
 import { $context } from "../../WebGLUtil";
 
 /**
@@ -63,13 +64,13 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
 
                 case 0: // bevel
                     meshGenerateCalculateBevelJoinUseCase(
-                        startPoint.x, startPoint.y, rectangles
+                        startPoint.x, startPoint.y, thickness, rectangles
                     );
                     break;
 
                 case 1: // miter
                     meshGenerateCalculateBevelJoinUseCase(
-                        startPoint.x, startPoint.y, rectangles
+                        startPoint.x, startPoint.y, thickness, rectangles
                     );
                     break;
 
@@ -100,6 +101,9 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
                 break;
 
             case 2: // square:
+                meshGenerateCalculateSquareCapService(
+                    vertices, thickness, rectangles
+                );
                 break;
 
         }
