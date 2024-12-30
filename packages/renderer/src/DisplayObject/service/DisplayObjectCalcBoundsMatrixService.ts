@@ -25,17 +25,17 @@ export const execute = (
     const x1 = x_min * matrix[0];
     const y0 = y_max * matrix[2];
     const y1 = y_min * matrix[2];
-    
+
     const tx0 = x0 + y0 + matrix[4];
     const tx1 = x0 + y1 + matrix[4];
     const tx2 = x1 + y0 + matrix[4];
     const tx3 = x1 + y1 + matrix[4];
-    
+
     const y0_1 = x_max * matrix[1];
     const y1_1 = x_min * matrix[1];
     const z0 = y_max * matrix[3];
     const z1 = y_min * matrix[3];
-    
+
     const ty0 = y0_1 + z0 + matrix[5];
     const ty1 = y0_1 + z1 + matrix[5];
     const ty2 = y1_1 + z0 + matrix[5];

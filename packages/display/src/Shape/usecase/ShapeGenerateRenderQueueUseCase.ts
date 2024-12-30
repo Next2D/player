@@ -206,7 +206,7 @@ export const execute = (
         shape.$cache = null;
     }
 
-    const cache = shape.$cache 
+    const cache = shape.$cache
         ? shape.$cache.get(`${cacheKey}`)
         : $cacheStore.get(shape.uniqueKey, `${cacheKey}`);
 

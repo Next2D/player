@@ -370,7 +370,7 @@ export class DisplayObject extends EventDispatcher
     /**
      * @description 描画情報を保持するキャッシュ
      *              Cache that holds drawing information
-     * 
+     *
      * @type {Map<any, any> | null}
      * @default null
      * @protected

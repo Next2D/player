@@ -7,7 +7,7 @@ import { $upperPowerOfTwo } from "../../core/src/CoreUtil";
  * @class
  * @public
  */
-class RenderQueue 
+class RenderQueue
 {
     /**
      * @description バッファ
@@ -31,7 +31,7 @@ class RenderQueue
      * @constructor
      * @public
      */
-    constructor () 
+    constructor ()
     {
         this.buffer = new Float32Array(256);
         this.offset = 0;
@@ -90,7 +90,7 @@ class RenderQueue
         const newBuffer = new Float32Array(
             $upperPowerOfTwo(this.offset + length)
         );
-    
+
         if (this.buffer.length) {
             newBuffer.set(this.buffer);
         }
