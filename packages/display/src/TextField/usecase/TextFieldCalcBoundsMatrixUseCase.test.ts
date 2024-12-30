@@ -24,8 +24,9 @@ describe("TextFieldCalcBoundsMatrixUseCase.js test", () =>
 
         expect(bounds[0]).toBe(110);
         expect(bounds[1]).toBe(220);
-        expect(bounds[2]).toBe(259.99999552965164);
-        expect(bounds[3]).toBe(390.0000047683716);
+        expect(bounds[2]).toBe(260);
+        expect(bounds[3]).toBe(390);
+
     });
 
     it("execute test case3", () =>
@@ -35,8 +36,8 @@ describe("TextFieldCalcBoundsMatrixUseCase.js test", () =>
 
         expect(bounds[0]).toBe(110);
         expect(bounds[1]).toBe(220);
-        expect(bounds[2]).toBe(259.99999552965164);
-        expect(bounds[3]).toBe(390.0000047683716);
+        expect(bounds[2]).toBe(260);
+        expect(bounds[3]).toBe(390);
     });
 
     it("execute test case4", () =>
@@ -47,7 +48,7 @@ describe("TextFieldCalcBoundsMatrixUseCase.js test", () =>
         
         expect(bounds[0]).toBe(127);
         expect(bounds[1]).toBe(249);
-        expect(bounds[2]).toBe(252.99999196827412);
-        expect(bounds[3]).toBe(494.0000047683716);
+        expect(bounds[2]).toBe(252.99998474121094);
+        expect(bounds[3]).toBe(494);
     });
 });

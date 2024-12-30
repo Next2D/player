@@ -4,33 +4,57 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Next2D</title>
-    <script type="module" src="./src/index.ts" defer></script>
+    <script defer type="module" src="./src/index.ts"></script>
 </head>
 <body style="margin: 0; padding: 0;">
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        // next2d.load("develop");
+        next2d.load("develop");
 
-        const root = await next2d.createRootMovieClip(480, 480, 1);
+        // const count = 8000;
+        // const root = next2d
+        //     .createRootMovieClip(1000, 416, 60)
+        //     .then((root) => 
+        //     {
+        //         const { Shape } = next2d.display;
 
-        const { Sprite, Shape, BitmapData } = next2d.display;
-        const { Event } = next2d.events;
+        //         const rects = [];
+        //         for (let i = 0; i < count; i++) {
+        //             const x = Math.random() * 1000;
+        //             const y = Math.random() * 416;
+        //             const size = 10 + Math.random() * 40;
+        //             const speed = 1 + Math.random();
 
-        const shape = root.addChild(new Shape());
-        // shape.addEventListener(Event.COMPLETE, () =>
-        // {
-            shape.x = 75;
-            shape.y = 75;
-            shape
-                .graphics
-                .lineStyle(10, 0xff0000, 0.75, "square", "round")
-                .moveTo(50, 50)
-                .lineTo(100, 50)
-                .curveTo(100, 100, 50, 100)
-                .curveTo(50, 10, 100, 150);
-        // });
-        // shape.src = "http://localhost:5173/json/image/logo.png";
+        //             var rect = new Shape();
+
+        //             rect
+        //                 .graphics
+        //                 .beginFill("#fff")
+        //                 .lineStyle(1, "#000")
+        //                 .drawRect(0, 0, size, size);
+
+        //             rect.x = x;
+        //             rect.y = y;
+
+        //             root.addChild(rect);
+
+        //             rects.push({ size, speed, el: rect });
+        //         }
+
+        //         root.addEventListener("enterFrame", () =>
+        //         {
+        //             for (let i = 0; i < count; i++) {
+        //                 const rect = rects[i];
+
+        //                 if (rect.el.x + rect.size < 0) {
+        //                     rect.el.x = 1000 + rect.size / 2;
+        //                 }
+
+        //                 rect.el.x -= rect.speed;
+        //             }
+        //         });
+        //     });
 
     });
 </script>

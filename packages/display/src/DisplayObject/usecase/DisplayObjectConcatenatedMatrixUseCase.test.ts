@@ -1,6 +1,5 @@
 import { execute } from "./DisplayObjectConcatenatedMatrixUseCase";
 import { DisplayObject } from "../../DisplayObject";
-import { $parentMap } from "../../DisplayObjectUtil";
 import { describe, expect, it } from "vitest";
 import { Matrix } from "@next2d/geom";
 
@@ -39,9 +38,8 @@ describe("DisplayObjectConcatenatedMatrixUseCase.js test", () =>
         displayObject.$matrix = new Matrix(1, 2, 3, 4, 5, 6);
 
         const parent = new DisplayObject();
+        displayObject.parent = parent;
         parent.$matrix = new Matrix(2, 1.12, 1.3, 3, 120, 600);
-
-        $parentMap.set(displayObject, parent);
 
         const matrix = execute(displayObject);
         expect(matrix.a).toBe(4.599999904632568);
@@ -50,8 +48,6 @@ describe("DisplayObjectConcatenatedMatrixUseCase.js test", () =>
         expect(matrix.d).toBe(15.359999656677246);
         expect(matrix.tx).toBe(137.8000030517578);
         expect(matrix.ty).toBe(623.5999755859375);
-
-        $parentMap.delete(displayObject);
     });
     
 });

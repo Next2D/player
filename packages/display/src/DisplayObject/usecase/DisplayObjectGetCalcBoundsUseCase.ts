@@ -3,7 +3,7 @@ import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { Shape } from "../../Shape";
 import type { Video } from "@next2d/media";
 import type { TextField } from "@next2d/text";
-import { $getArray } from "../../DisplayObjectUtil";
+import { $getBoundsArray } from "../../DisplayObjectUtil";
 import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/ShapeCalcBoundsMatrixUseCase";
 import { execute as videoCalcBoundsMatrixUseCase } from "../../Video/usecase/VideoCalcBoundsMatrixUseCase";
 import { execute as textFieldCalcBoundsMatrixUseCase } from "../../TextField/usecase/TextFieldCalcBoundsMatrixUseCase";
@@ -18,7 +18,7 @@ import { execute as displayObjectContainerCalcBoundsMatrixUseCase } from "../../
  * @method
  * @protected
  */
-export const execute = <D extends DisplayObject>(display_object: D): number[] =>
+export const execute = <D extends DisplayObject>(display_object: D): Float32Array =>
 {
     switch (true) {
 
@@ -43,7 +43,7 @@ export const execute = <D extends DisplayObject>(display_object: D): number[] =>
             );
 
         default:
-            return $getArray(0, 0, 0, 0);
+            return $getBoundsArray(0, 0, 0, 0);
 
     }
 };

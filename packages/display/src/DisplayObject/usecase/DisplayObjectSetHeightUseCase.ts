@@ -30,7 +30,7 @@ export const execute = <D extends DisplayObject>(display_object: D, height: numb
             return ;
 
         default:
-            rawHeight = +rawHeight.toFixed(2);
+            rawHeight = Math.round(rawHeight * 100) / 100;
             break;
 
     }

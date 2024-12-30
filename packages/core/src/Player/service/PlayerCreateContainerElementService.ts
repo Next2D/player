@@ -1,3 +1,4 @@
+import { $player } from "../../Player";
 import {
     $PREFIX,
     $setMainElement
@@ -7,12 +8,11 @@ import {
  * @description コンテナとなるElementを作成して返却
  *              Create and return an Element that serves as a container
  *
- * @param  {string} [tag_id=""]
  * @return {HTMLDivElement}
  * @method
  * @protected
  */
-export const execute = (tag_id: string = ""): HTMLDivElement =>
+export const execute = (): HTMLDivElement =>
 {
     const div: HTMLDivElement = document.createElement("div");
     $setMainElement(div);
@@ -20,12 +20,12 @@ export const execute = (tag_id: string = ""): HTMLDivElement =>
     div.id       = $PREFIX;
     div.tabIndex = -1;
 
-    if (!tag_id) {
+    if (!$player.tagId) {
         document.body.appendChild(div);
     } else {
-        const element: HTMLElement | null = document.getElementById(tag_id);
+        const element: HTMLElement | null = document.getElementById($player.tagId);
         if (!element) {
-            alert(`Element not found with tag ID: ${tag_id}`);
+            alert(`Element not found with tag ID: ${$player.tagId}`);
             return div;
         }
         element.appendChild(div);

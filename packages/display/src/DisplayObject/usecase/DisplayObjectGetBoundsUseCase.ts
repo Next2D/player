@@ -2,7 +2,7 @@ import type { DisplayObject } from "../../DisplayObject";
 import { execute as displayObjectGetRawBoundsUseCase } from "./DisplayObjectGetRawBoundsUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../service/DisplayObjectCalcBoundsMatrixService";
 import { Rectangle, Matrix } from "@next2d/geom";
-import { $poolArray } from "../../DisplayObjectUtil";
+import { $poolBoundsArray } from "../../DisplayObjectUtil";
 
 /**
  * @description DisplayObjectのmatrixを考慮した描画範囲を計算
@@ -30,7 +30,7 @@ export const execute = <D extends DisplayObject>(
     );
 
     // pool
-    $poolArray(rawBounds);
+    $poolBoundsArray(rawBounds);
     Matrix.release(matrix.rawData);
 
     if (!target_display_object) {
@@ -47,7 +47,7 @@ export const execute = <D extends DisplayObject>(
     );
 
     // pool
-    $poolArray(bounds);
+    $poolBoundsArray(bounds);
     Matrix.release(targetMatrix.rawData);
 
     const rectangle = new Rectangle(
@@ -56,7 +56,7 @@ export const execute = <D extends DisplayObject>(
         Math.abs(targetBounds[3] - targetBounds[1])
     );
 
-    $poolArray(targetBounds);
+    $poolBoundsArray(targetBounds);
 
     return rectangle;
 };

@@ -24,8 +24,9 @@ describe("VideoCalcBoundsMatrixUseCase.js test", () =>
         const bounds = execute(video);
         expect(bounds[0]).toBe(110);
         expect(bounds[1]).toBe(220);
-        expect(bounds[2]).toBe(114.69999986886978);
-        expect(bounds[3]).toBe(226.30000019073486);
+        expect(bounds[2]).toBe(114.69999694824219);
+        expect(bounds[3]).toBe(226.3000030517578);
+    
     });
 
     it("execute test case3", () =>
@@ -34,8 +35,8 @@ describe("VideoCalcBoundsMatrixUseCase.js test", () =>
         const bounds = execute(video, new Float32Array([1.3, 0.5, 0.2, 1.2, 110, 220]));
         expect(bounds[0]).toBe(110);
         expect(bounds[1]).toBe(220);
-        expect(bounds[2]).toBe(114.69999986886978);
-        expect(bounds[3]).toBe(226.30000019073486);
+        expect(bounds[2]).toBe(114.69999694824219);
+        expect(bounds[3]).toBe(226.3000030517578);
     });
 
     it("execute test case4", () =>
@@ -46,7 +47,7 @@ describe("VideoCalcBoundsMatrixUseCase.js test", () =>
         const bounds = execute(video, new Float32Array([1.3, 0.5, 0.2, 1.2, 110, 220]));
         expect(bounds[0]).toBe(127);
         expect(bounds[1]).toBe(249);
-        expect(bounds[2]).toBe(130.81999976933002);
-        expect(bounds[3]).toBe(258.05000019073486);
+        expect(bounds[2]).toBe(130.82000732421875);
+        expect(bounds[3]).toBe(258.04998779296875);
     });
 });

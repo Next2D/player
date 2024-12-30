@@ -14,19 +14,12 @@ describe("DisplayObjectGetScaleXUseCase.js test", () =>
     it("execute test case2", () =>
     {
         const displayObject = new DisplayObject();
-        displayObject.$scaleX = 4;
-        expect(execute(displayObject)).toBe(4);
-    });
-
-    it("execute test case3", () =>
-    {
-        const displayObject = new DisplayObject();
         displayObject.$matrix = new Matrix();
         displayObject.$matrix.scale(3, 1);
         expect(execute(displayObject)).toBe(3);
     });
 
-    it("execute test case4", () =>
+    it("execute test case3", () =>
     {
         const displayObject = new DisplayObject();
         displayObject.placeObject = {

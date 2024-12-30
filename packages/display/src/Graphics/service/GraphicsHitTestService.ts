@@ -56,9 +56,6 @@ export const execute = (
                 continue;
 
             case Graphics.END_STROKE:
-                if (context.isPointInStroke(hit_object.x, hit_object.y)) {
-                    return true;
-                }
                 break;
 
             case Graphics.CLOSE_PATH:
@@ -88,9 +85,6 @@ export const execute = (
                 continue;
 
             case Graphics.GRADIENT_STROKE:
-                if (context.isPointInStroke(hit_object.x, hit_object.y)) {
-                    return true;
-                }
                 idx += 12;
                 continue;
 
@@ -102,9 +96,6 @@ export const execute = (
                 continue;
 
             case Graphics.BITMAP_STROKE:
-                if (context.isPointInStroke(hit_object.x, hit_object.y)) {
-                    return true;
-                }
                 idx += 9;
                 continue;
 

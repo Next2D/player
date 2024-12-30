@@ -2,14 +2,13 @@ import type { Node } from "@next2d/texture-packer";
 import type { ITextFieldAutoSize } from "../../interface/ITextFieldAutoSize";
 import type { ITextSetting } from "../../interface/ITextSetting";
 import { $cacheStore } from "@next2d/cache";
-import { $context } from "../../RendererUtil";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
 import { execute as textFieldDrawOffscreenCanvasUseCase } from "./TextFieldDrawOffscreenCanvasUseCase";
 import {
-    $clamp,
-    $poolArray
-} from "../../../../webgl/src/WebGLUtil";
+    $context,
+    $poolBoundsArray
+} from "../../RendererUtil";
 
 /**
  * @type {TextDecoder}
@@ -45,31 +44,15 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const uniqueKey = `${render_queue[index++]}`;
     const cacheKey  = render_queue[index++];
 
-    let xScale = Math.sqrt(
+    const xScale = Math.round(Math.sqrt(
         matrix[0] * matrix[0]
         + matrix[1] * matrix[1]
-    );
-    if (!Number.isInteger(xScale)) {
-        const value = xScale.toString();
-        const index = value.indexOf("e");
-        if (index !== -1) {
-            xScale = +value.slice(0, index);
-        }
-        xScale = +xScale.toFixed(4);
-    }
+    ) * 10000) / 10000;
 
-    let yScale = Math.sqrt(
+    const yScale = Math.round(Math.sqrt(
         matrix[2] * matrix[2]
         + matrix[3] * matrix[3]
-    );
-    if (!Number.isInteger(yScale)) {
-        const value = yScale.toString();
-        const index = value.indexOf("e");
-        if (index !== -1) {
-            yScale = +value.slice(0, index);
-        }
-        yScale = +yScale.toFixed(4);
-    }
+    ) * 10000) / 10000;
 
     let node: Node;
     const hasCache = render_queue[index++];
@@ -174,7 +157,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     const blendMode = render_queue[index++];
 
-    $context.globalAlpha = $clamp(colorTransform[3] + colorTransform[7] / 255, 0, 1, 0);
+    $context.globalAlpha = Math.min(Math.max(0, colorTransform[3] + colorTransform[7] / 255), 1);
     $context.imageSmoothingEnabled = true;
     $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
 
@@ -221,7 +204,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         colorTransform
     );
 
-    $poolArray(bounds);
+    $poolBoundsArray(bounds);
 
     return index;
 };

@@ -17,7 +17,7 @@ import {
 } from "@next2d/geom";
 import {
     $MATRIX_ARRAY_IDENTITY,
-    $poolArray,
+    $poolBoundsArray,
     $colorContext
 } from "../../DisplayObjectUtil";
 
@@ -115,7 +115,7 @@ export const execute = <D extends DisplayObject>(
     );
 
     // pool
-    $poolArray(rawBounds);
+    $poolBoundsArray(rawBounds);
 
     const rectangle = new Rectangle(
         bounds[0], bounds[1],
@@ -124,7 +124,7 @@ export const execute = <D extends DisplayObject>(
     );
 
     // pool
-    $poolArray(bounds);
+    $poolBoundsArray(bounds);
 
     const parent = display_object.parent;
     const point = parent

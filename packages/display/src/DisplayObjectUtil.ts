@@ -1,7 +1,6 @@
 import type { IAjaxOption } from "./interface/IAjaxOption";
 import type { ISprite } from "./interface/ISprite";
 import type { IDisplayObject } from "./interface/IDisplayObject";
-import type { IParent } from "./interface/IParent";
 import type { IURLRequestHeader } from "./interface/IURLRequestHeader";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Graphics } from "./Graphics";
@@ -71,9 +70,19 @@ export const $getInstanceId = (): number =>
  *
  * @type {array[]}
  * @const
- * @protected
+ * @private
  */
-export const $arrays: any[] = [];
+const $arrays: any[] = [];
+
+/**
+ * @description 使用済みになったBoundsのArrayのプール配列
+ *              Pool array of used Bounds Array.
+ *
+ * @type {Float32Array[]}
+ * @const
+ * @private
+ */
+const $boundsArrays: Float32Array[] = [];
 
 /**
  * @description 使用済みになったFloat32Arrayをプール、サイズは6固定
@@ -81,9 +90,9 @@ export const $arrays: any[] = [];
  *
  * @type {Float32Array[]}
  * @const
- * @protected
+ * @private
  */
-export const $float32Array6: Float32Array[] = [];
+const $float32Array6: Float32Array[] = [];
 
 /**
  * @description 使用済みになったFloat32Arrayをプール、サイズは8固定
@@ -91,9 +100,9 @@ export const $float32Array6: Float32Array[] = [];
  *
  * @type {Float32Array[]}
  * @const
- * @protected
+ * @private
  */
-export const $float32Array8: Float32Array[] = [];
+const $float32Array8: Float32Array[] = [];
 
 /**
  * @description プールされたFloat32Arrayがあればプールから。なければ新規作成して返却、サイズは6固定
@@ -268,6 +277,49 @@ export const $poolArray = (array: any[]): void =>
 };
 
 /**
+ * @description プールされたArrayがあればプールから、なければ新規作成して返却
+ *              If there is a pooled Array, return it from the pool,
+ *              otherwise create a new one and return it.
+ *
+ * @param  {number} x_min
+ * @param  {number} y_min
+ * @param  {number} x_max
+ * @param  {number} y_max
+ * @return {number[]}
+ * @method
+ * @protected
+ */
+export const $getBoundsArray = (
+    x_min: number, y_min: number,
+    x_max: number, y_max: number
+): Float32Array => {
+
+    const array = $boundsArrays.length
+        ? $boundsArrays.pop() as unknown as Float32Array
+        : new Float32Array(4);
+
+    array[0] = x_min;
+    array[1] = y_min;
+    array[2] = x_max;
+    array[3] = y_max;
+
+    return array;
+};
+
+/**
+ * @description 使用済みになったBoundsのArrayをプール
+ *              Pool used Bounds Array.
+ *
+ * @param {Float32Array} array
+ * @method
+ * @protected
+ */
+export const $poolBoundsArray = (array: Float32Array): void =>
+{
+    $boundsArrays.push(array);
+};
+
+/**
  * @param  {object} option
  * @return {void}
  * @method
@@ -368,15 +420,6 @@ export const $headerStringToArray = (header: string): IURLRequestHeader[] =>
     }
     return results;
 };
-
-/**
- * @description 親子関係のマップデータ
- *              Parent-child relationship map data
- *
- * @type {Map}
- * @protected
- */
-export const $parentMap: WeakMap<IDisplayObject<any>, IParent<any>> = new WeakMap();
 
 /**
  * @description 親子関係のマップデータ

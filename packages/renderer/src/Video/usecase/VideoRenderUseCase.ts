@@ -2,7 +2,6 @@ import type { Node } from "@next2d/texture-packer";
 import { $cacheStore } from "@next2d/cache";
 import { $context } from "../../RendererUtil";
 import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
-import { $clamp } from "../../../../webgl/src/WebGLUtil";
 
 /**
  * @description Videoの描画を実行します。
@@ -36,32 +35,6 @@ export const execute = (
     // cache uniqueKey
     const uniqueKey = `${render_queue[index++]}`;
     const cacheKey  = "0";
-
-    let xScale = Math.sqrt(
-        matrix[0] * matrix[0]
-        + matrix[1] * matrix[1]
-    );
-    if (!Number.isInteger(xScale)) {
-        const value = xScale.toString();
-        const index = value.indexOf("e");
-        if (index !== -1) {
-            xScale = +value.slice(0, index);
-        }
-        xScale = +xScale.toFixed(4);
-    }
-
-    let yScale = Math.sqrt(
-        matrix[2] * matrix[2]
-        + matrix[3] * matrix[3]
-    );
-    if (!Number.isInteger(yScale)) {
-        const value = yScale.toString();
-        const index = value.indexOf("e");
-        if (index !== -1) {
-            yScale = +value.slice(0, index);
-        }
-        yScale = +yScale.toFixed(4);
-    }
 
     let node: Node;
     const hasCache = render_queue[index++];
@@ -115,7 +88,7 @@ export const execute = (
 
     const blendMode = render_queue[index++];
 
-    $context.globalAlpha = $clamp(colorTransform[3] + colorTransform[7] / 255, 0, 1, 0);
+    $context.globalAlpha = Math.min(Math.max(0, colorTransform[3] + colorTransform[7] / 255), 1);
     $context.imageSmoothingEnabled = true;
     $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
 

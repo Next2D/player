@@ -1,7 +1,7 @@
 {
-  "name": "@next2d/display",
+  "name": "@next2d/render-queue",
   "version": "*",
-  "description": "Next2D Display Packages",
+  "description": "Next2D Renderer Queue Packages",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
   "homepage": "https://next2d.app",
@@ -19,20 +19,10 @@
   },
   "keywords": [
     "Next2D",
-    "Next2D Display"
+    "Next2D Renderer Queue"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Next2D/Player.git"
-  },
-  "peerDependencies": {
-    "@next2d/ui": "file:../ui",
-    "@next2d/text": "file:../text",
-    "@next2d/geom": "file:../geom",
-    "@next2d/media": "file:../media",
-    "@next2d/net": "file:../net",
-    "@next2d/events": "file:../events",
-    "@next2d/filters": "file:../filters",
-    "@next2d/render-queue": "file:../render-queue"
   }
 }

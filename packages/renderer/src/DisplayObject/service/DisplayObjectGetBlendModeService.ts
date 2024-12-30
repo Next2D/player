@@ -1,4 +1,4 @@
-import type { IBlendMode } from "../../../../webgl/src/interface/IBlendMode";
+import type { IBlendMode } from "../../interface/IBlendMode";
 
 /**
  * @description ブレンドモードを取得します。

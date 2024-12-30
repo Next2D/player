@@ -1,5 +1,6 @@
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import { Matrix } from "@next2d/geom";
+import { renderQueue } from "@next2d/render-queue";
 import { $RENDERER_CONTAINER_TYPE } from "../../DisplayObjectUtil";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as shapeGenerateClipQueueUseCase } from "../../Shape/usecase/ShapeGenerateClipQueueUseCase";
@@ -17,11 +18,8 @@ import { execute as shapeGenerateClipQueueUseCase } from "../../Shape/usecase/Sh
  */
 export const execute = <P extends DisplayObjectContainer>(
     display_object_container: P,
-    render_queue: number[],
     matrix: Float32Array
 ): void => {
-
-    render_queue.push($RENDERER_CONTAINER_TYPE);
 
     // transformed matrix(tMatrix)
     const rawMatrix = displayObjectGetRawMatrixUseCase(display_object_container);
@@ -30,7 +28,7 @@ export const execute = <P extends DisplayObjectContainer>(
         : matrix;
 
     const children = display_object_container.children;
-    render_queue.push(children.length);
+    renderQueue.push($RENDERER_CONTAINER_TYPE, children.length);
 
     for (let idx = 0; idx < children.length; idx++) {
 
@@ -47,11 +45,11 @@ export const execute = <P extends DisplayObjectContainer>(
         switch (true) {
 
             case child.isContainerEnabled:
-                execute(child, render_queue, tMatrix);
+                execute(child, tMatrix);
                 break;
 
             case child.isShape:
-                shapeGenerateClipQueueUseCase(child, render_queue, tMatrix);
+                shapeGenerateClipQueueUseCase(child, tMatrix);
                 break;
 
             case child.isText:

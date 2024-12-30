@@ -1,6 +1,5 @@
 import { execute } from "./DisplayObjectApplyChangesService";
 import { DisplayObject } from "../../DisplayObject";
-import { $parentMap } from "../../DisplayObjectUtil";
 import { describe, expect, it } from "vitest";
 
 describe("DisplayObjectApplyChangesService.js test", () =>
@@ -20,7 +19,7 @@ describe("DisplayObjectApplyChangesService.js test", () =>
     {
         const displayObject = new DisplayObject();
         const parent = new DisplayObject();
-        $parentMap.set(displayObject, parent);
+        displayObject.parent = parent;
 
         parent.changed = false;
         displayObject.changed = false;
@@ -30,7 +29,5 @@ describe("DisplayObjectApplyChangesService.js test", () =>
         execute(displayObject);
         expect(parent.changed).toBe(true);
         expect(displayObject.changed).toBe(true);
-
-        $parentMap.delete(displayObject);
     });
 });

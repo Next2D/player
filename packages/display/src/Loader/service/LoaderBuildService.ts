@@ -2,7 +2,6 @@ import type { IAnimationToolData } from "../../interface/IAnimationToolData";
 import type { Loader } from "../../Loader";
 import { Event } from "@next2d/events";
 import { MovieClip } from "../../MovieClip";
-import { $parentMap } from "../../DisplayObjectUtil";
 import { execute as displayObjectBaseBuildService } from "../../DisplayObject/service/DisplayObjectBaseBuildService";
 import { execute as movieClipBuildFromCharacterUseCase } from "../../MovieClip/usecase/MovieClipBuildFromCharacterUseCase";
 
@@ -50,7 +49,7 @@ export const execute = async (loader: Loader, object: IAnimationToolData): Promi
         }, loader);
     movieClipBuildFromCharacterUseCase(movieClip, character);
 
-    $parentMap.delete(movieClip);
+    movieClip.parent   = null;
     loaderInfo.content = movieClip;
 
     // dispatch complete event

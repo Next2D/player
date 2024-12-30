@@ -1,17 +1,17 @@
 import type { TextField } from "@next2d/text";
-import { $getArray } from "../../DisplayObjectUtil";
+import { $getBoundsArray } from "../../DisplayObjectUtil";
 
 /**
  * @description TextFieldのローカルバウンディングボックスを取得します。
  *              Get the local bounding box of the TextField.
  *
  * @param  {TextField} text_field
- * @return {number[]}
+ * @return {Float32Array}
  * @protected
  */
-export const execute = (text_field: TextField): number[] =>
+export const execute = (text_field: TextField): Float32Array =>
 {
-    return $getArray(
+    return $getBoundsArray(
         text_field.xMin,
         text_field.yMin,
         text_field.xMax,

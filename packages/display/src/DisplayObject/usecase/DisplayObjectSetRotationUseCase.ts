@@ -30,7 +30,7 @@ export const execute = <D extends DisplayObject>(display_object: D, rotation: nu
     let matrix = display_object.$matrix;
     if (!matrix) {
         const rawData = displayObjectGetRawMatrixUseCase(display_object);
-        matrix = rawData
+        display_object.$matrix = matrix = rawData
             ? new Matrix(...rawData)
             : new Matrix();
     }
@@ -67,6 +67,5 @@ export const execute = <D extends DisplayObject>(display_object: D, rotation: nu
     }
 
     display_object.$rotation = rotation;
-    display_object.$matrix   = matrix;
     displayObjectApplyChangesService(display_object);
 };

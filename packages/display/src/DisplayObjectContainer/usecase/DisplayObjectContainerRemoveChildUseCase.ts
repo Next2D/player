@@ -10,7 +10,6 @@ import {
     KeyboardEvent
 } from "@next2d/events";
 import {
-    $parentMap,
     $rootMap,
     $stageAssignedMap
 } from "../../DisplayObjectUtil";
@@ -87,9 +86,7 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     }
 
     // remove parent-child relationship
-    if ($parentMap.has(display_object)) {
-        $parentMap.delete(display_object);
-    }
+    display_object.parent = null;
 
     // apply changes
     displayObjectApplyChangesService(display_object_container);

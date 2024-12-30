@@ -7,18 +7,18 @@ import { execute as displayObjectContainerRawBoundsMatrixUseCase } from "../../D
 import { execute as shapeGetRawBoundsService } from "../../Shape/service/ShapeGetRawBoundsService";
 import { execute as textFieldGetRawBoundsService } from "../../TextField/service/TextFieldGetRawBoundsService";
 import { execute as videoGetRawBoundsService } from "../../Video/service/VideoGetRawBoundsService";
-import { $getArray } from "../../DisplayObjectUtil";
+import { $getBoundsArray } from "../../DisplayObjectUtil";
 
 /**
  * @description matrixを含まないバウンディングボックスを返却
  *              Return bounding box without matrix
  *
  * @param  {DisplayObject} display_object
- * @return {number[]}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const execute = <D extends DisplayObject>(display_object: D): number[] =>
+export const execute = <D extends DisplayObject>(display_object: D): Float32Array =>
 {
     switch (true) {
 
@@ -43,7 +43,7 @@ export const execute = <D extends DisplayObject>(display_object: D): number[] =>
             );
 
         default:
-            return $getArray(0, 0, 0, 0);
+            return $getBoundsArray(0, 0, 0, 0);
 
     }
 };

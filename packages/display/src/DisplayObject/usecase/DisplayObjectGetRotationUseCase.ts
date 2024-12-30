@@ -20,10 +20,6 @@ const $Rad2Deg: number = 180 / Math.PI;
  */
 export const execute = <D extends DisplayObject>(display_object: D): number =>
 {
-    if (display_object.$rotation !== null) {
-        return display_object.$rotation;
-    }
-
     const matrix = display_object.$matrix
         ? display_object.$matrix.rawData
         : displayObjectGetRawMatrixUseCase(display_object);

@@ -6,7 +6,6 @@ import { execute as displayObjectApplyChangesService } from "../../DisplayObject
 import { execute as displayObjectDispatchAddedEventService } from "../../DisplayObject/service/DisplayObjectDispatchAddedEventService";
 import { execute as displayObjectDispatchAddedToStageEventService } from "../../DisplayObject/service/DisplayObjectDispatchAddedToStageEventService";
 import {
-    $parentMap,
     $rootMap,
     $stageAssignedMap
 } from "../../DisplayObjectUtil";
@@ -41,7 +40,7 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     }
 
     // Set parent-child relationship
-    $parentMap.set(display_object, display_object_container);
+    display_object.parent = display_object_container;
 
     // 親が Stage に追加されている場合は、マップデータに情報を追加
     if ($stageAssignedMap.has(display_object_container)) {

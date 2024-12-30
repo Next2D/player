@@ -50,6 +50,7 @@ export const execute = <D extends DisplayObject>(
         return children;
     }
 
+    const caches = [];
     const dictionary = character.dictionary;
     if (!children.length) {
 
@@ -83,7 +84,13 @@ export const execute = <D extends DisplayObject>(
             }
 
             children.push(displayObject);
+
+            if (displayObject.isContainerEnabled) {
+                caches.push(displayObject as unknown as DisplayObjectContainer);
+            }
         }
+
+        movie_clip.$container = caches;
 
         return children;
     }
@@ -167,7 +174,13 @@ export const execute = <D extends DisplayObject>(
         }
 
         children.push(displayObject);
+
+        if (displayObject.isContainerEnabled) {
+            caches.push(displayObject as unknown as DisplayObjectContainer);
+        }
     }
+
+    movie_clip.$container = caches;
 
     $stayDisplayObjectMap.clear();
 

@@ -123,7 +123,7 @@ class Player
      * @default ""
      * @private
      */
-    private _$tagId: string;
+    public tagId: string;
 
     /**
      * @description フルスクリーンモードの設定
@@ -176,7 +176,7 @@ class Player
         // options
         this.fixedWidth   = 0;
         this.fixedHeight  = 0;
-        this._$tagId      = "";
+        this.tagId        = "";
         this._$fullScreen = false;
 
         playerRegisterEventUseCase();
@@ -265,7 +265,7 @@ class Player
 
         this.fixedWidth   = options.width   || this.fixedWidth;
         this.fixedHeight  = options.height  || this.fixedHeight;
-        this._$tagId      = options.tagId   || this._$tagId;
+        this.tagId        = options.tagId   || this.tagId;
         this._$fullScreen = !!options.fullScreen;
     }
 }

@@ -14,19 +14,12 @@ describe("DisplayObjectGetRotationUseCase.js test", () =>
     it("execute test case2", () =>
     {
         const displayObject = new DisplayObject();
-        displayObject.$rotation = 90;
-        expect(execute(displayObject)).toBe(90);
-    });
-
-    it("execute test case3", () =>
-    {
-        const displayObject = new DisplayObject();
         displayObject.$matrix = new Matrix();
         displayObject.$matrix.rotate(50 / 180 * Math.PI);
         expect(execute(displayObject)).toBe(49.99999868188683);
     });
 
-    it("execute test case4", () =>
+    it("execute test case3", () =>
     {
         const displayObject = new DisplayObject();
         displayObject.placeObject = {

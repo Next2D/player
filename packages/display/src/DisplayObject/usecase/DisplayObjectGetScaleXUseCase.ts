@@ -12,10 +12,6 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../usecase/DisplayO
  */
 export const execute = <D extends DisplayObject>(display_object: D): number =>
 {
-    if (display_object.$scaleX !== null) {
-        return display_object.$scaleX;
-    }
-
     const matrix = display_object.$matrix
         ? display_object.$matrix.rawData
         : displayObjectGetRawMatrixUseCase(display_object);
@@ -35,7 +31,8 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
         if (index !== -1) {
             xScale = +value.slice(0, index);
         }
-        xScale = +xScale.toFixed(4);
+
+        xScale = Math.round(xScale * 10000) / 10000;
     }
 
     return 0 > matrix[0] ? xScale * -1 : xScale;

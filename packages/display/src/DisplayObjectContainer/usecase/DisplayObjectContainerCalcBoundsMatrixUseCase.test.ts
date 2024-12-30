@@ -31,8 +31,8 @@ describe("DisplayObjectContainerCalcBoundsMatrixUseCase.js test", () =>
         container.addChild(video);
 
         const bounds = execute(container);
-        expect(bounds[0]).toBe(-264.0000057220459);
-        expect(bounds[1]).toBe(-432.0000171661377);
+        expect(bounds[0]).toBe(-264);
+        expect(bounds[1]).toBe(-432.0000305175781);
         expect(bounds[2]).toBe(200);
         expect(bounds[3]).toBe(900);
     });

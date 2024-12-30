@@ -3,7 +3,7 @@ import { Matrix } from "@next2d/geom";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as textFieldGetRawBoundsService } from "../service/TextFieldGetRawBoundsService";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
-import { $poolArray } from "../../DisplayObjectUtil";
+import { $poolBoundsArray } from "../../DisplayObjectUtil";
 
 /**
  * @description TextFieldの描画範囲を計算します。
@@ -11,11 +11,11 @@ import { $poolArray } from "../../DisplayObjectUtil";
  *
  * @param  {TextField} text_field
  * @param  {Float32Array | null} [matrix=null]
- * @return {number[]}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const execute = (text_field: TextField, matrix: Float32Array | null = null): number[] =>
+export const execute = (text_field: TextField, matrix: Float32Array | null = null): Float32Array =>
 {
     const rawBounds = textFieldGetRawBoundsService(text_field);
 
@@ -27,7 +27,7 @@ export const execute = (text_field: TextField, matrix: Float32Array | null = nul
                 rawBounds[2], rawBounds[3],
                 matrix
             );
-            $poolArray(rawBounds);
+            $poolBoundsArray(rawBounds);
 
             return calcBounds;
         }
@@ -41,7 +41,7 @@ export const execute = (text_field: TextField, matrix: Float32Array | null = nul
         matrix ? Matrix.multiply(matrix, rawMatrix) : rawMatrix
     );
 
-    $poolArray(rawBounds);
+    $poolBoundsArray(rawBounds);
 
     return calcBounds;
 };

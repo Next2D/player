@@ -9,8 +9,8 @@ import { execute as shapeCalcBoundsMatrixUseCase } from "../../Shape/usecase/Sha
 import { execute as videoCalcBoundsMatrixUseCase } from "../../Video/usecase/VideoCalcBoundsMatrixUseCase";
 import { execute as textFieldCalcBoundsMatrixUseCase } from "../../TextField/usecase/TextFieldCalcBoundsMatrixUseCase";
 import {
-    $getArray,
-    $poolArray
+    $getBoundsArray,
+    $poolBoundsArray
 } from "../../DisplayObjectUtil";
 
 /**
@@ -18,18 +18,18 @@ import {
  *              Calculate the bounding box of the DisplayObjectContainer
  *
  * @param  {DisplayObjectContainer} display_object_container
- * @return {number[]}
+ * @return {Float32Array}
  * @method
  * @protected
  */
 export const execute = <C extends DisplayObjectContainer>(
     display_object_container: C,
     matrix: Float32Array | null = null
-): number[] => {
+): Float32Array => {
 
     const children = display_object_container.children;
     if (!children.length) {
-        return $getArray(0, 0, 0, 0);
+        return $getBoundsArray(0, 0, 0, 0);
     }
 
     const rawMatrix = displayObjectGetRawMatrixUseCase(display_object_container);
@@ -51,7 +51,7 @@ export const execute = <C extends DisplayObjectContainer>(
             continue;
         }
 
-        let bounds: number[] | null = null;
+        let bounds: Float32Array | null = null;
         switch (true) {
 
             case child.isContainerEnabled:
@@ -81,8 +81,8 @@ export const execute = <C extends DisplayObjectContainer>(
         xMax = Math.max(xMax, bounds[2]);
         yMax = Math.max(yMax, bounds[3]);
 
-        $poolArray(bounds);
+        $poolBoundsArray(bounds);
     }
 
-    return $getArray(xMin, yMin, xMax, yMax);
+    return $getBoundsArray(xMin, yMin, xMax, yMax);
 };

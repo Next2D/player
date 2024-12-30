@@ -2,7 +2,7 @@ import type { DisplayObject } from "../../DisplayObject";
 import { execute as displayObjectGetRawBoundsUseCase } from "./DisplayObjectGetRawBoundsUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../service/DisplayObjectCalcBoundsMatrixService";
 import { Matrix } from "@next2d/geom";
-import { $poolArray } from "../../DisplayObjectUtil";
+import { $poolBoundsArray } from "../../DisplayObjectUtil";
 
 /**
  * @description
@@ -26,7 +26,7 @@ export const execute = <D extends DisplayObject>(
     );
 
     // pool
-    $poolArray(rawBounds1);
+    $poolBoundsArray(rawBounds1);
     Matrix.release(matrix1.rawData);
 
     const rawBounds2 = displayObjectGetRawBoundsUseCase(target_display_object);
@@ -38,7 +38,7 @@ export const execute = <D extends DisplayObject>(
     );
 
     // pool
-    $poolArray(rawBounds2);
+    $poolBoundsArray(rawBounds2);
     Matrix.release(matrix2.rawData);
 
     // calc
@@ -48,8 +48,8 @@ export const execute = <D extends DisplayObject>(
     const ey = Math.min(bounds1[3], bounds2[3]);
 
     // pool
-    $poolArray(bounds1);
-    $poolArray(bounds2);
+    $poolBoundsArray(bounds1);
+    $poolBoundsArray(bounds2);
 
     return ex - sx >= 0 && ey - sy >= 0;
 };

@@ -6,7 +6,7 @@
   "license": "MIT",
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
-  "main": "dist/index.js",
+  "main": "dist/next2d.js",
   "type": "module",
   "types": "dist/index.d.ts",
   "files": [
@@ -44,21 +44,21 @@
   },
   "dependencies": {
     "fflate": "^0.8.2",
-    "htmlparser2": "^9.1.0"
+    "htmlparser2": "^10.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.17.0",
     "@types/node": "^22.10.2",
-    "@typescript-eslint/eslint-plugin": "^8.18.1",
-    "@typescript-eslint/parser": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
     "@vitest/web-worker": "^2.1.8",
     "eslint": "^9.17.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^15.14.0",
     "jsdom": "^25.0.1",
     "typescript": "^5.7.2",
-    "vite": "^6.0.5",
+    "vite": "^6.0.6",
     "vitest": "^2.1.8",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },

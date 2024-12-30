@@ -1,6 +1,7 @@
 import type { DisplayObject } from "./DisplayObject";
 import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import type { Point } from "@next2d/geom";
+import { renderQueue } from "@next2d/render-queue";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { execute as stageReadyUseCase } from "./Stage/usecase/StageReadyUseCase";
 import { execute as displayObjectContainerGenerateRenderQueueUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerGenerateRenderQueueUseCase";
@@ -221,7 +222,6 @@ export class Stage extends DisplayObjectContainer
      * @description renderer workerに渡す描画データを生成
      *              Generate drawing data to pass to the renderer worker
      *
-     * @param  {array} render_queue
      * @param  {Array<Promise<ImageBitmap>>} image_bitmaps
      * @param  {Float32Array} matrix
      * @return {void}
@@ -229,16 +229,15 @@ export class Stage extends DisplayObjectContainer
      * @protected
      */
     $generateRenderQueue (
-        render_queue: number[],
         image_bitmaps: Array<Promise<ImageBitmap>>,
         matrix: Float32Array
     ): void {
 
         // set background color
-        render_queue.push(this._$backgroundColor);
+        renderQueue.push(this._$backgroundColor);
 
         displayObjectContainerGenerateRenderQueueUseCase(
-            this, render_queue, image_bitmaps,
+            this, image_bitmaps,
             matrix, $COLOR_ARRAY_IDENTITY,
             this.rendererWidth, this.rendererHeight,
             matrix[4], matrix[5]

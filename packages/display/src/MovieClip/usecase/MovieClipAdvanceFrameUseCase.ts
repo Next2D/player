@@ -31,6 +31,7 @@ export const execute = (movie_clip: MovieClip): void =>
     movie_clip.$canSound             = true;
     movie_clip.$canAction            = true;
     movie_clip.$hasTimelineHeadMoved = true;
+    movie_clip.$container            = null;
 
     // サウンドがあればセット
     movieClipPrepareSoundUseCase(movie_clip);

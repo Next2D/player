@@ -36,26 +36,6 @@ describe("DisplayObjectSetYUseCase.js test", () =>
 
         expect(displayObject.changed).toBe(false);
         execute(displayObject, 0);
-        expect(displayObject.changed).toBe(false);
-    });
-
-    it("execute test case3", () =>
-    {
-        const displayObject = new DisplayObject();
-
-        execute(displayObject, 100);
-        execute(displayObject, "a" as unknown as number);
-        
-        const rawData = displayObject.$matrix?.rawData;
-        if (!rawData) {
-            throw new Error("rawData is null");
-        }
-
-        expect(rawData[0]).toBe(1);
-        expect(rawData[1]).toBe(0);
-        expect(rawData[2]).toBe(0);
-        expect(rawData[3]).toBe(1);
-        expect(rawData[4]).toBe(0);
-        expect(rawData[5]).toBe(0);
+        expect(displayObject.changed).toBe(true);
     });
 });

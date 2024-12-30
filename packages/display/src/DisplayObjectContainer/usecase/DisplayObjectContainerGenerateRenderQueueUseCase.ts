@@ -3,6 +3,7 @@ import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { Shape } from "../../Shape";
 import type { TextField } from "@next2d/text";
 import type { Video } from "@next2d/media";
+import { renderQueue } from "@next2d/render-queue";
 import { $COLOR_ARRAY_IDENTITY } from "../../Stage";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
@@ -26,7 +27,6 @@ import {
  *              Generate rendering data of the container to be passed to the renderer worker
  *
  * @param  {DisplayObjectContainer} display_object_container
- * @param  {array} render_queue
  * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
@@ -39,7 +39,6 @@ import {
  */
 export const execute = <P extends DisplayObjectContainer>(
     display_object_container: P,
-    render_queue: number[],
     bitmaps: Array<Promise<ImageBitmap>>,
     matrix: Float32Array,
     color_transform: Float32Array,
@@ -50,7 +49,7 @@ export const execute = <P extends DisplayObjectContainer>(
 ): void => {
 
     if (!display_object_container.visible) {
-        render_queue.push(0);
+        renderQueue.push(0);
         return ;
     }
 
@@ -65,7 +64,7 @@ export const execute = <P extends DisplayObjectContainer>(
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        render_queue.push(0);
+        renderQueue.push(0);
         return ;
     }
 
@@ -74,7 +73,7 @@ export const execute = <P extends DisplayObjectContainer>(
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        render_queue.push(0);
+        renderQueue.push(0);
         return ;
     }
 
@@ -94,12 +93,11 @@ export const execute = <P extends DisplayObjectContainer>(
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
-        render_queue.push(0);
+        renderQueue.push(0);
         return ;
     }
 
-    render_queue.push(1);
-    render_queue.push($RENDERER_CONTAINER_TYPE);
+    renderQueue.push(1, $RENDERER_CONTAINER_TYPE);
 
     const filters = display_object_container.filters;
     const blendMode = display_object_container.blendMode;
@@ -125,20 +123,17 @@ export const execute = <P extends DisplayObjectContainer>(
 
         if (!bounds) {
             maskDisplayObject.changed = false;
-            render_queue.push(0);
+            renderQueue.push(0);
         } else {
 
-            render_queue.push(1);
-
             // マスクの描画範囲
-            render_queue.push(...bounds);
+            renderQueue.push(1, ...bounds);
 
             switch (true) {
 
                 case maskDisplayObject.isContainerEnabled: // 0x00
                     displayObjectContainerGenerateClipQueueUseCase(
                         maskDisplayObject as DisplayObjectContainer,
-                        render_queue,
                         tMatrix
                     );
                     break;
@@ -146,7 +141,6 @@ export const execute = <P extends DisplayObjectContainer>(
                 case maskDisplayObject.isShape: // 0x01
                     shapeGenerateClipQueueUseCase(
                         maskDisplayObject as Shape,
-                        render_queue,
                         tMatrix
                     );
                     break;
@@ -165,14 +159,14 @@ export const execute = <P extends DisplayObjectContainer>(
         }
 
     } else {
-        render_queue.push(0);
+        renderQueue.push(0);
     }
 
     const colorTransform = isLayer
         ? $COLOR_ARRAY_IDENTITY
         : tColorTransform;
 
-    render_queue.push(children.length);
+    renderQueue.push(children.length);
 
     let clipDepth = 0;
     let canRenderMask = true;
@@ -183,7 +177,7 @@ export const execute = <P extends DisplayObjectContainer>(
             continue;
         }
 
-        render_queue.push(child.placeId, child.clipDepth);
+        renderQueue.push(child.placeId, child.clipDepth);
         if (clipDepth && child.placeId > clipDepth) {
             clipDepth = 0;
             canRenderMask = true;
@@ -208,20 +202,19 @@ export const execute = <P extends DisplayObjectContainer>(
             );
 
             canRenderMask = bounds ? true : false;
-            render_queue.push(+canRenderMask);
+            renderQueue.push(+canRenderMask);
 
             if (!bounds) {
                 child.changed = false;
                 continue;
             }
 
-            render_queue.push(...bounds);
+            renderQueue.push(...bounds);
             switch (true) {
 
                 case child.isContainerEnabled: // 0x00
                     displayObjectContainerGenerateClipQueueUseCase(
                         child as DisplayObjectContainer,
-                        render_queue,
                         tMatrix
                     );
                     break;
@@ -229,7 +222,6 @@ export const execute = <P extends DisplayObjectContainer>(
                 case child.isShape: // 0x01
                     shapeGenerateClipQueueUseCase(
                         child as Shape,
-                        render_queue,
                         tMatrix
                     );
                     break;
@@ -256,7 +248,6 @@ export const execute = <P extends DisplayObjectContainer>(
             case child.isContainerEnabled: // 0x00
                 execute(
                     child as DisplayObjectContainer,
-                    render_queue,
                     bitmaps,
                     tMatrix,
                     colorTransform,
@@ -270,7 +261,6 @@ export const execute = <P extends DisplayObjectContainer>(
             case child.isShape: // 0x01
                 shapeGenerateRenderQueueUseCase(
                     child as Shape,
-                    render_queue,
                     tMatrix,
                     colorTransform,
                     renderer_width,
@@ -283,7 +273,6 @@ export const execute = <P extends DisplayObjectContainer>(
             case child.isText: // 0x02
                 textFieldGenerateRenderQueueUseCase(
                     child as TextField,
-                    render_queue,
                     tMatrix,
                     colorTransform,
                     renderer_width,
@@ -296,7 +285,6 @@ export const execute = <P extends DisplayObjectContainer>(
             case child.isVideo: // 0x03
                 videoGenerateRenderQueueUseCase(
                     child as Video,
-                    render_queue,
                     bitmaps,
                     tMatrix,
                     colorTransform,

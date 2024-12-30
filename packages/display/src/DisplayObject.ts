@@ -43,7 +43,6 @@ import { execute as displayObjectHitTestObjectUseCase } from "./DisplayObject/us
 import { execute as displayObjectHitTestPointUseCase } from "./DisplayObject/usecase/DisplayObjectHitTestPointUseCase";
 import {
     $getInstanceId,
-    $parentMap,
     $loaderInfoMap,
     $rootMap,
     $variables,
@@ -339,6 +338,26 @@ export class DisplayObject extends EventDispatcher
     public $rotation: number | null;
 
     /**
+     * @description キャッシュした x の値を返却します。
+     *              Returns the cached x value.
+     *
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $x: number | null;
+
+    /**
+     * @description キャッシュした y の値を返却します。
+     *              Returns the cached y value.
+     *
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $y: number | null;
+
+    /**
      * @description キャッシュした alpha の値を返却します。
      *              Returns the cached alpha value.
      *
@@ -347,6 +366,16 @@ export class DisplayObject extends EventDispatcher
      * @protected
      */
     public $alpha: number | null;
+
+    /**
+     * @description 描画情報を保持するキャッシュ
+     *              Cache that holds drawing information
+     * 
+     * @type {Map<any, any> | null}
+     * @default null
+     * @protected
+     */
+    public $cache: Map<any, any> | null;
 
     /**
      * @description 表示オブジェクトのスケール9グリッドを示します。
@@ -387,6 +416,17 @@ export class DisplayObject extends EventDispatcher
     public isMask: boolean;
 
     /**
+     * @description このDisplayObjectの親のDisplayObjectContainerを返却します。
+     *              通常であれば、親のDisplayObjectContainerを継承しているのは、Sprite、または MovieClip となります。
+     *              Returns the DisplayObjectContainer of this DisplayObject's parent.
+     *              Under normal circumstances, the parent DisplayObjectContainer would inherit from Sprite or MovieClip.
+     *
+     * @member {Sprite | MovieClip | null}
+     * @public
+     */
+    public parent: ISprite<any> | null;
+
+    /**
      * @constructor
      * @public
      */
@@ -417,6 +457,7 @@ export class DisplayObject extends EventDispatcher
         this.name        = "";
         this.startFrame  = 1;
         this.endFrame    = 0;
+        this.parent      = null;
 
         // フラグ
         this.isMask        = false;
@@ -435,10 +476,13 @@ export class DisplayObject extends EventDispatcher
         this._$variables  = null;
 
         // キャッシュ
+        this.$x        = null;
+        this.$y        = null;
         this.$alpha    = null;
         this.$scaleX   = null;
         this.$scaleY   = null;
         this.$rotation = null;
+        this.$cache    = null;
     }
 
     /**
@@ -586,23 +630,6 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @description このDisplayObjectの親のDisplayObjectContainerを返却します。
-     *              通常であれば、親のDisplayObjectContainerを継承しているのは、Sprite、または MovieClip となります。
-     *              Returns the DisplayObjectContainer of this DisplayObject's parent.
-     *              Under normal circumstances, the parent DisplayObjectContainer would inherit from Sprite or MovieClip.
-     *
-     * @member  {Sprite | MovieClip | null}
-     * @readonly
-     * @public
-     */
-    get parent (): IParent<MovieClip | Sprite> | null
-    {
-        return $parentMap.has(this)
-            ? $parentMap.get(this) as NonNullable<IParent<MovieClip | Sprite>>
-            : null;
-    }
-
-    /**
      * @description DisplayObject のルートである DisplayObjectContainer を返します。
      *              Returns the DisplayObjectContainer object that contains this display object.
      *
@@ -627,7 +654,9 @@ export class DisplayObject extends EventDispatcher
      */
     get rotation (): number
     {
-        return displayObjectGetRotationUseCase(this);
+        return this.$rotation === null
+            ? displayObjectGetRotationUseCase(this)
+            : this.$rotation;
     }
     set rotation (rotation: number)
     {
@@ -663,7 +692,9 @@ export class DisplayObject extends EventDispatcher
      */
     get scaleX (): number
     {
-        return displayObjectGetScaleXUseCase(this);
+        return this.$scaleX === null
+            ? displayObjectGetScaleXUseCase(this)
+            : this.$scaleX;
     }
     set scaleX (scale_x: number)
     {
@@ -680,7 +711,9 @@ export class DisplayObject extends EventDispatcher
      */
     get scaleY (): number
     {
-        return displayObjectGetScaleYUseCase(this);
+        return this.$scaleY === null
+            ? displayObjectGetScaleYUseCase(this)
+            : this.$scaleY;
     }
     set scaleY (scale_y: number)
     {
@@ -724,18 +757,17 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @description 親 DisplayObjectContainer のローカル座標を基準にした
-     *              DisplayObject インスタンスの x 座標を示します。
-     *              Indicates the x coordinate
-     *              of the DisplayObject instance relative to the local coordinates
-     *              of the parent DisplayObjectContainer.
+     * @description 親 DisplayObjectContainer のローカル座標を基準にした DisplayObject インスタンスの x 座標を示します。
+     *              Indicates the x coordinate of the DisplayObject instance relative to the local coordinates of the parent DisplayObjectContainer.
      *
      * @member {number}
      * @public
      */
     get x (): number
     {
-        return displayObjectGetXUseCase(this);
+        return this.$x === null
+            ? displayObjectGetXUseCase(this)
+            : this.$x;
     }
     set x (x: number)
     {
@@ -743,18 +775,17 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @description 親 DisplayObjectContainer のローカル座標を基準にした
-     *              DisplayObject インスタンスの y 座標を示します。
-     *              Indicates the y coordinate
-     *              of the DisplayObject instance relative to the local coordinates
-     *              of the parent DisplayObjectContainer.
+     * @description 親 DisplayObjectContainer のローカル座標を基準にした DisplayObject インスタンスの y 座標を示します。
+     *              Indicates the y coordinate of the DisplayObject instance relative to the local coordinates of the parent DisplayObjectContainer.
      *
      * @member {number}
      * @public
      */
     get y (): number
     {
-        return displayObjectGetYUseCase(this);
+        return this.$y === null
+            ? displayObjectGetYUseCase(this)
+            : this.$y;
     }
     set y (y: number)
     {
@@ -774,10 +805,8 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @description point オブジェクトをステージ（グローバル）座標から
-     *              表示オブジェクトの（ローカル）座標に変換します。
-     *              Converts the point object from the Stage (global) coordinates
-     *              to the display object's (local) coordinates.
+     * @description point オブジェクトをステージ（グローバル）座標から表示オブジェクトの（ローカル）座標に変換します。
+     *              Converts the point object from the Stage (global) coordinates to the display object's (local) coordinates.
      *
      * @param  {Point} point
      * @return {Point}
@@ -802,10 +831,8 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @description 表示オブジェクトを評価して、x および y パラメーターで指定された
-     *              ポイントと重複または交差するかどうかを調べます。
-     *              Evaluates the display object to see if it overlaps
-     *              or intersects with the point specified by the x and y parameters.
+     * @description 表示オブジェクトを評価して、x および y パラメーターで指定されたポイントと重複または交差するかどうかを調べます。
+     *              Evaluates the display object to see if it overlaps or intersects with the point specified by the x and y parameters.
      *
      * @param   {number}  x
      * @param   {number}  y

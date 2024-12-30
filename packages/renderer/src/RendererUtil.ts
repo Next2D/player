@@ -137,14 +137,67 @@ export const $resizeComplete = (): void =>
 };
 
 /**
+ * @description 使用済みになったBoundsのArrayのプール配列
+ *              Pool array of used Bounds Array.
+ *
+ * @type {Float32Array[]}
+ * @const
+ * @private
+ */
+const $boundsArrays: Float32Array[] = [];
+
+/**
+ * @description プールされたArrayがあればプールから、なければ新規作成して返却
+ *              If there is a pooled Array, return it from the pool,
+ *              otherwise create a new one and return it.
+ *
+ * @param  {number} x_min
+ * @param  {number} y_min
+ * @param  {number} x_max
+ * @param  {number} y_max
+ * @return {number[]}
+ * @method
+ * @protected
+ */
+export const $getBoundsArray = (
+    x_min: number, y_min: number,
+    x_max: number, y_max: number
+): Float32Array => {
+
+    const array = $boundsArrays.length
+        ? $boundsArrays.pop() as unknown as Float32Array
+        : new Float32Array(4);
+
+    array[0] = x_min;
+    array[1] = y_min;
+    array[2] = x_max;
+    array[3] = y_max;
+
+    return array;
+};
+
+/**
+ * @description 使用済みになったBoundsのArrayをプール
+ *              Pool used Bounds Array.
+ *
+ * @param {Float32Array} array
+ * @method
+ * @protected
+ */
+export const $poolBoundsArray = (array: Float32Array): void =>
+{
+    $boundsArrays.push(array);
+};
+
+/**
  * @description 使用済みになったArrayのプール配列
  *              Pool array of used Array.
  *
  * @type {array[]}
  * @const
- * @protected
+ * @private
  */
-export const $arrays: any[] = [];
+const $arrays: Array<any[]> = [];
 
 /**
  * @description プールされたArrayがあればプールから、なければ新規作成して返却
@@ -179,7 +232,6 @@ export const $poolArray = (array: any[]): void =>
     if (array.length) {
         array.length = 0;
     }
-
     $arrays.push(array);
 };
 

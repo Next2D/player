@@ -1,5 +1,5 @@
 import type { DisplayObject } from "../../DisplayObject";
-import { $poolArray } from "../../DisplayObjectUtil";
+import { $poolBoundsArray } from "../../DisplayObjectUtil";
 import { execute as displayObjectGetCalcBoundsUseCase } from "./DisplayObjectGetCalcBoundsUseCase";
 
 /**
@@ -16,7 +16,7 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
     const bounds = displayObjectGetCalcBoundsUseCase(display_object);
 
     const width: number = Math.abs(bounds[2] - bounds[0]);
-    $poolArray(bounds);
+    $poolBoundsArray(bounds);
 
     switch (true) {
 
@@ -26,7 +26,7 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
             return 0;
 
         default:
-            return +width.toFixed(2);
+            return Math.round(width * 100) / 100;
 
     }
 };

@@ -3,13 +3,14 @@ import { execute as displayObjectGetRawColorTransformUseCase } from "../../Displ
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
-import { execute as textFieldGetRawBoundsService } from "../service/TextFieldGetRawBoundsService";
 import { $cacheStore } from "@next2d/cache";
+import { renderQueue } from "@next2d/render-queue";
 import {
     $clamp,
     $RENDERER_TEXT_TYPE,
     $getArray,
-    $poolArray
+    $poolArray,
+    $poolBoundsArray
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
@@ -27,7 +28,6 @@ const $textEncoder: TextEncoder = new TextEncoder();
  *              Generate drawing data of TextField to pass to renderer
  *
  * @param  {TextField} text_field
- * @param  {array} render_queue
  * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
@@ -40,7 +40,6 @@ const $textEncoder: TextEncoder = new TextEncoder();
  */
 export const execute = (
     text_field: TextField,
-    render_queue: number[],
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
@@ -50,7 +49,7 @@ export const execute = (
 ): void => {
 
     if (!text_field.visible) {
-        render_queue.push(0);
+        renderQueue.push(0);
         return ;
     }
 
@@ -65,7 +64,7 @@ export const execute = (
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        render_queue.push(0);
+        renderQueue.push(0);
         return ;
     }
 
@@ -76,10 +75,9 @@ export const execute = (
         : matrix;
 
     // draw text
-    const rawBounds = textFieldGetRawBoundsService(text_field);
     const bounds = displayObjectCalcBoundsMatrixService(
-        rawBounds[0], rawBounds[1],
-        rawBounds[2], rawBounds[3],
+        text_field.xMin, text_field.yMin,
+        text_field.xMax, text_field.yMax,
         tMatrix
     );
 
@@ -87,7 +85,7 @@ export const execute = (
     const yMin = bounds[1];
     const xMax = bounds[2];
     const yMax = bounds[3];
-    $poolArray(bounds);
+    $poolBoundsArray(bounds);
 
     const width  = Math.ceil(Math.abs(xMax - xMin));
     const height = Math.ceil(Math.abs(yMax - yMin));
@@ -105,9 +103,8 @@ export const execute = (
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
-            $poolArray(rawBounds);
 
-            render_queue.push(0);
+            renderQueue.push(0);
             return;
 
         default:
@@ -126,20 +123,10 @@ export const execute = (
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
-        $poolArray(rawBounds);
 
-        render_queue.push(0);
+        renderQueue.push(0);
         return;
     }
-
-    // rennder on
-    render_queue.push(1);
-    render_queue.push($RENDERER_TEXT_TYPE);
-    render_queue.push(...tMatrix, ...tColorTransform);
-
-    // base bounds
-    render_queue.push(...rawBounds);
-    $poolArray(rawBounds);
 
     if (!text_field.uniqueKey) {
         if (text_field.characterId && text_field.loaderInfo) {
@@ -165,33 +152,15 @@ export const execute = (
         }
     }
 
-    render_queue.push(+text_field.uniqueKey);
-
-    let xScale: number = Math.sqrt(
+    const xScale = Math.round(Math.sqrt(
         tMatrix[0] * tMatrix[0]
         + tMatrix[1] * tMatrix[1]
-    );
-    if (!Number.isInteger(xScale)) {
-        const value: string = xScale.toString();
-        const index: number = value.indexOf("e");
-        if (index !== -1) {
-            xScale = +value.slice(0, index);
-        }
-        xScale = +xScale.toFixed(4);
-    }
+    ) * 10000) / 10000;
 
-    let yScale: number = Math.sqrt(
+    const yScale = Math.round(Math.sqrt(
         tMatrix[2] * tMatrix[2]
         + tMatrix[3] * tMatrix[3]
-    );
-    if (!Number.isInteger(yScale)) {
-        const value: string = yScale.toString();
-        const index: number = value.indexOf("e");
-        if (index !== -1) {
-            yScale = +value.slice(0, index);
-        }
-        yScale = +yScale.toFixed(4);
-    }
+    ) * 10000) / 10000;
 
     if (text_field.changed
         && !text_field.cacheKey
@@ -206,70 +175,77 @@ export const execute = (
     }
 
     const cacheKey = text_field.cacheKey;
-    render_queue.push(cacheKey);
+    
+    // rennder on
+    renderQueue.push(
+        1, $RENDERER_TEXT_TYPE,
+        tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
+        tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
+        tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
+        text_field.xMin, text_field.yMin,
+        text_field.xMax, text_field.yMax,
+        +text_field.uniqueKey, cacheKey
+    );
 
     const cache = $cacheStore.get(text_field.uniqueKey, `${cacheKey}`);
     if (!cache || text_field.changed) {
 
         // cache none
-        render_queue.push(0);
-
-        // has cache
-        render_queue.push(+cache);
+        renderQueue.push(0, +cache);
 
         const buffer = $textEncoder.encode(JSON.stringify(text_field.$textData));
 
-        render_queue.push(buffer.length);
-        for (let idx = 0; idx < buffer.length; idx += 4096) {
-            render_queue.push(...buffer.subarray(idx, idx + 4096));
-        }
+        renderQueue.push(buffer.length);
+        renderQueue.set(buffer);
 
         // text setting
         switch (text_field.autoSize) {
 
             case "center":
-                render_queue.push(0);
+                renderQueue.push(0);
                 break;
 
             case "left":
-                render_queue.push(1);
+                renderQueue.push(1);
                 break;
 
             case "none":
-                render_queue.push(2);
+                renderQueue.push(2);
                 break;
 
             case "right":
-                render_queue.push(3);
+                renderQueue.push(3);
                 break;
 
         }
 
-        render_queue.push(text_field.stopIndex);
-        render_queue.push(text_field.scrollX);
-        render_queue.push(text_field.scrollY);
-        render_queue.push(text_field.textWidth);
-        render_queue.push(text_field.textHeight);
-        render_queue.push(Math.abs(text_field.xMax - text_field.xMin));
-        render_queue.push(Math.abs(text_field.yMax - text_field.yMin));
-        render_queue.push(text_field.focusIndex);
-        render_queue.push(text_field.selectIndex);
-        render_queue.push(+text_field.focusVisible);
-        render_queue.push(text_field.thickness);
-        render_queue.push(text_field.thicknessColor);
-        render_queue.push(+text_field.wordWrap);
-        render_queue.push(+text_field.border);
-        render_queue.push(text_field.borderColor);
-        render_queue.push(+text_field.background);
-        render_queue.push(text_field.backgroundColor);
-        render_queue.push(text_field.defaultTextFormat.color || 0);
-        render_queue.push(text_field.defaultTextFormat.size || 0);
+        renderQueue.push(
+            text_field.stopIndex,
+            text_field.scrollX,
+            text_field.scrollY,
+            text_field.textWidth,
+            text_field.textHeight,
+            Math.abs(text_field.xMax - text_field.xMin),
+            Math.abs(text_field.yMax - text_field.yMin),
+            text_field.focusIndex,
+            text_field.selectIndex,
+            +text_field.focusVisible,
+            text_field.thickness,
+            text_field.thicknessColor,
+            +text_field.wordWrap,
+            +text_field.border,
+            text_field.borderColor,
+            +text_field.background,
+            text_field.backgroundColor,
+            text_field.defaultTextFormat.color || 0,
+            text_field.defaultTextFormat.size || 0
+        );
 
         if (!cache) {
             $cacheStore.set(text_field.uniqueKey, `${cacheKey}`, true);
         }
     } else {
-        render_queue.push(1);
+        renderQueue.push(1);
     }
 
     const params  = [];
@@ -284,15 +260,14 @@ export const execute = (
         }
     }
 
-    render_queue.push(
+    renderQueue.push(
         displayObjectBlendToNumberService(text_field.blendMode)
     );
 
     const useFilfer = params.length > 0;
-    render_queue.push(+useFilfer);
+    renderQueue.push(+useFilfer);
     if (useFilfer) {
-        render_queue.push(params.length);
-        render_queue.push(...params);
+        renderQueue.push(params.length, ...params);
     }
 
     if (tColorTransform !== color_transform) {

@@ -4,7 +4,6 @@ import type { MovieClip } from "../../MovieClip";
 import type { DisplayObject } from "../../DisplayObject";
 import {
     $loaderInfoMap,
-    $parentMap,
     $rootMap
 } from "../../DisplayObjectUtil";
 
@@ -33,7 +32,7 @@ export const execute = <D extends DisplayObject>(
     }
 
     // set parent data
-    $parentMap.set(display_object, parent);
+    display_object.parent = parent as MovieClip;
     $rootMap.set(display_object, parent.root);
     $loaderInfoMap.set(display_object, loaderInfo);
 

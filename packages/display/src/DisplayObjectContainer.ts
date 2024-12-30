@@ -1,5 +1,6 @@
 import type { DisplayObject } from "./DisplayObject";
 import type { IDisplayObject } from "./interface/IDisplayObject";
+import type { IParent } from "./interface/IParent";
 import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
 import { execute as displayObjectContainerAddChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerAddChildUseCase";
 import { execute as displayObjectContainerRemoveChildUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerRemoveChildUseCase";
@@ -64,6 +65,15 @@ export class DisplayObjectContainer extends InteractiveObject
     public mouseChildren: boolean;
 
     /**
+     * @description このコンテナ何にセットされているコンテナだけの配列
+     *              An array of containers set in this container
+     *
+     * @type {IParent<any>[] | null}
+     * @public
+     */
+    public $container: IParent<any>[] | null;
+
+    /**
      * @description コンテナの機能を所持しているかを返却
      *              Returns whether the display object has container functionality.
      *
@@ -88,6 +98,9 @@ export class DisplayObjectContainer extends InteractiveObject
         // private
         this._$mask     = null;
         this._$children = $getArray();
+
+        // protected
+        this.$container = null;
     }
 
     /**

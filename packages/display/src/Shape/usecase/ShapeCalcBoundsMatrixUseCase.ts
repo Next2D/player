@@ -3,7 +3,7 @@ import { Matrix } from "@next2d/geom";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as shapeGetRawBoundsService } from "../service/ShapeGetRawBoundsService";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
-import { $poolArray } from "../../DisplayObjectUtil";
+import { $poolBoundsArray } from "../../DisplayObjectUtil";
 
 /**
  * @description Shapeの描画範囲を計算します。
@@ -15,7 +15,7 @@ import { $poolArray } from "../../DisplayObjectUtil";
  * @method
  * @protected
  */
-export const execute = (shape: Shape, matrix: Float32Array | null = null): number[] =>
+export const execute = (shape: Shape, matrix: Float32Array | null = null): Float32Array =>
 {
     const rawBounds = shapeGetRawBoundsService(shape);
 
@@ -27,7 +27,7 @@ export const execute = (shape: Shape, matrix: Float32Array | null = null): numbe
                 rawBounds[2], rawBounds[3],
                 matrix
             );
-            $poolArray(rawBounds);
+            $poolBoundsArray(rawBounds);
 
             return calcBounds;
         }
@@ -41,7 +41,7 @@ export const execute = (shape: Shape, matrix: Float32Array | null = null): numbe
         matrix ? Matrix.multiply(matrix, rawMatrix) : rawMatrix
     );
 
-    $poolArray(rawBounds);
+    $poolBoundsArray(rawBounds);
 
     return calcBounds;
 };

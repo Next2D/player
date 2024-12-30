@@ -30,7 +30,7 @@ export const execute = <D extends DisplayObject>(display_object: D, width: numbe
             return ;
 
         default:
-            rawWidth = +rawWidth.toFixed(2);
+            rawWidth = Math.round(rawWidth * 100) / 100;
             break;
 
     }

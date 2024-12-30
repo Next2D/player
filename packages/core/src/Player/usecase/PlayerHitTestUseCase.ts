@@ -24,7 +24,7 @@ let $currentCursor: string = "auto";
 export const execute = (): void =>
 {
     if ($player.stopFlag) {
-        return ;
+        v
     }
 
     $hitObject.x = stage.pointer.x;

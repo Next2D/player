@@ -1,5 +1,6 @@
 import type { Shape } from "../../Shape";
 import { Matrix } from "@next2d/geom";
+import { renderQueue } from "@next2d/render-queue";
 import { $RENDERER_SHAPE_TYPE } from "../../DisplayObjectUtil";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 
@@ -8,7 +9,6 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject
  *              Generate mask drawing data of Shape to pass to renderer worker
  *
  * @param  {Shape} shape
- * @param  {array} render_queue
  * @param  {Float32Array} matrix
  * @return {void}
  * @method
@@ -16,11 +16,8 @@ import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject
  */
 export const execute = (
     shape: Shape,
-    render_queue: number[],
     matrix: Float32Array
 ): void => {
-
-    render_queue.push($RENDERER_SHAPE_TYPE);
 
     // transformed matrix(tMatrix)
     const rawMatrix = displayObjectGetRawMatrixUseCase(shape);
@@ -28,7 +25,6 @@ export const execute = (
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
 
-    render_queue.push(...tMatrix);
     if (tMatrix !== matrix) {
         Matrix.release(tMatrix);
     }
@@ -37,11 +33,10 @@ export const execute = (
         ? Math.abs(rawMatrix[1]) < 0.001 && Math.abs(rawMatrix[2]) < 0.0001
         : false;
 
-    render_queue.push(+hasGrid);
-
     const buffer = shape.graphics.buffer;
-    render_queue.push(buffer.length);
-    for (let idx = 0; idx < buffer.length; idx += 4096) {
-        render_queue.push(...buffer.subarray(idx, idx + 4096));
-    }
+    renderQueue.push(
+        $RENDERER_SHAPE_TYPE, ...tMatrix,
+        +hasGrid, buffer.length
+    );
+    renderQueue.set(buffer);
 };

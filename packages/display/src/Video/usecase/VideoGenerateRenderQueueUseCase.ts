@@ -3,12 +3,13 @@ import { execute as displayObjectGetRawColorTransformUseCase } from "../../Displ
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
-import { execute as videoGetRawBoundsService } from "../service/VideoGetRawBoundsService";
 import { $cacheStore } from "@next2d/cache";
+import { renderQueue } from "@next2d/render-queue";
 import {
     $clamp,
     $RENDERER_VIDEO_TYPE,
     $getArray,
+    $poolBoundsArray,
     $poolArray
 } from "../../DisplayObjectUtil";
 import {
@@ -21,7 +22,6 @@ import {
  *              Generate drawing data of Video to pass to renderer
  *
  * @param  {Video} video
- * @param  {array} render_queue
  * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
@@ -34,7 +34,6 @@ import {
  */
 export const execute = (
     video: Video,
-    render_queue: number[],
     bitmaps: Array<Promise<ImageBitmap>>,
     matrix: Float32Array,
     color_transform: Float32Array,
@@ -45,7 +44,7 @@ export const execute = (
 ): void => {
 
     if (!video.visible || !video.$videoElement || !video.loaded) {
-        render_queue.push(0);
+        renderQueue.push(0);
         return ;
     }
 
@@ -60,7 +59,7 @@ export const execute = (
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        render_queue.push(0);
+        renderQueue.push(0);
         return ;
     }
 
@@ -71,10 +70,8 @@ export const execute = (
         : matrix;
 
     // draw text
-    const rawBounds = videoGetRawBoundsService(video);
     const bounds = displayObjectCalcBoundsMatrixService(
-        rawBounds[0], rawBounds[1],
-        rawBounds[2], rawBounds[3],
+        0, 0, video.videoWidth, video.videoHeight,
         tMatrix
     );
 
@@ -82,7 +79,7 @@ export const execute = (
     const yMin = bounds[1];
     const xMax = bounds[2];
     const yMax = bounds[3];
-    $poolArray(bounds);
+    $poolBoundsArray(bounds);
 
     const width  = Math.ceil(Math.abs(xMax - xMin));
     const height = Math.ceil(Math.abs(yMax - yMin));
@@ -100,9 +97,8 @@ export const execute = (
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
-            $poolArray(rawBounds);
 
-            render_queue.push(0);
+            renderQueue.push(0);
             return;
 
         default:
@@ -121,20 +117,10 @@ export const execute = (
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
-        $poolArray(rawBounds);
 
-        render_queue.push(0);
+        renderQueue.push(0);
         return;
     }
-
-    // rennder on
-    render_queue.push(1);
-    render_queue.push($RENDERER_VIDEO_TYPE);
-    render_queue.push(...tMatrix, ...tColorTransform);
-
-    // base bounds
-    render_queue.push(...rawBounds);
-    $poolArray(rawBounds);
 
     if (!video.uniqueKey) {
         if (video.characterId && video.loaderInfo) {
@@ -160,42 +146,21 @@ export const execute = (
         }
     }
 
-    render_queue.push(+video.uniqueKey);
-
-    let xScale: number = Math.sqrt(
-        tMatrix[0] * tMatrix[0]
-        + tMatrix[1] * tMatrix[1]
+    // rennder on
+    renderQueue.push(
+        1, $RENDERER_VIDEO_TYPE,
+        tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
+        tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
+        tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
+        0, 0, video.videoWidth, video.videoHeight,
+        +video.uniqueKey
     );
-    if (!Number.isInteger(xScale)) {
-        const value: string = xScale.toString();
-        const index: number = value.indexOf("e");
-        if (index !== -1) {
-            xScale = +value.slice(0, index);
-        }
-        xScale = +xScale.toFixed(4);
-    }
-
-    let yScale: number = Math.sqrt(
-        tMatrix[2] * tMatrix[2]
-        + tMatrix[3] * tMatrix[3]
-    );
-    if (!Number.isInteger(yScale)) {
-        const value: string = yScale.toString();
-        const index: number = value.indexOf("e");
-        if (index !== -1) {
-            yScale = +value.slice(0, index);
-        }
-        yScale = +yScale.toFixed(4);
-    }
 
     const cache = $cacheStore.get(video.uniqueKey, "0");
     if (cache || video.changed) {
 
         // cache none
-        render_queue.push(0);
-
-        // has cache
-        render_queue.push(+cache);
+        renderQueue.push(0, +cache);
 
         bitmaps.push(createImageBitmap(video.$videoElement, {
             "imageOrientation": "flipY"
@@ -205,7 +170,7 @@ export const execute = (
             $cacheStore.set(video.uniqueKey, "0", true);
         }
     } else {
-        render_queue.push(1);
+        renderQueue.push(1);
     }
 
     const params  = [];
@@ -220,15 +185,14 @@ export const execute = (
         }
     }
 
-    render_queue.push(
+    renderQueue.push(
         displayObjectBlendToNumberService(video.blendMode)
     );
 
     const useFilfer = params.length > 0;
-    render_queue.push(+useFilfer);
+    renderQueue.push(+useFilfer);
     if (useFilfer) {
-        render_queue.push(params.length);
-        render_queue.push(...params);
+        renderQueue.push(params.length, ...params);
     }
 
     if (tColorTransform !== color_transform) {

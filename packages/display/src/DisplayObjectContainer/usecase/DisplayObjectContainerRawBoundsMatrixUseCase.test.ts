@@ -31,8 +31,8 @@ describe("DisplayObjectContainerRawBoundsMatrixUseCase.js test", () =>
         container.addChild(video);
 
         const bounds = execute(container);
-        expect(bounds[0]).toBe(-144.0000057220459);
-        expect(bounds[1]).toBe(-155.9999942779541);
+        expect(bounds[0]).toBe(-144);
+        expect(bounds[1]).toBe(-156);
         expect(bounds[2]).toBe(100);
         expect(bounds[3]).toBe(300);
     });

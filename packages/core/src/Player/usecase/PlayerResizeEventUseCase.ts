@@ -69,20 +69,11 @@ export const execute = (): void =>
     // update
     $player.screenWidth  = screenWidth;
     $player.screenHeight = screenHeight;
-    stage.rendererScale  = $player.rendererScale  = scale;
-    stage.rendererWidth  = $player.rendererWidth  = width;
-    stage.rendererHeight = $player.rendererHeight = height;
     stage.changed = true;
 
     // update hit matrix
     $hitMatrix[4] = ($player.rendererWidth  - stage.stageWidth  * $player.rendererScale) / 2;
     $hitMatrix[5] = ($player.rendererHeight - stage.stageHeight * $player.rendererScale) / 2;
-
-    // worker postMessage
-    playerResizePostMessageService();
-
-    // cache clear
-    $cacheStore.reset();
 
     if (element.children.length > 1) {
         element.children[1].dispatchEvent(
@@ -92,4 +83,21 @@ export const execute = (): void =>
 
     // set canvas position
     canvasSetPositionService();
+
+    if (width === $player.rendererWidth
+        && height === $player.rendererHeight
+    ) {
+        return ;
+    }
+
+    // update
+    stage.rendererScale  = $player.rendererScale  = scale;
+    stage.rendererWidth  = $player.rendererWidth  = width;
+    stage.rendererHeight = $player.rendererHeight = height;
+
+    // cache clear
+    $cacheStore.reset();
+
+    // worker postMessage
+    playerResizePostMessageService();
 };

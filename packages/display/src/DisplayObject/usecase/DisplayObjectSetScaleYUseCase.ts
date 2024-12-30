@@ -24,7 +24,7 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_y: num
         if (index !== -1) {
             scale_y = +value.slice(0, index);
         }
-        scale_y = +scale_y.toFixed(4);
+        scale_y = Math.round(scale_y * 10000) / 10000;
     }
 
     if (display_object.$scaleY === scale_y) {
@@ -34,7 +34,7 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_y: num
     let matrix = display_object.$matrix;
     if (!matrix) {
         const rawData = displayObjectGetRawMatrixUseCase(display_object);
-        matrix = rawData
+        display_object.$matrix = matrix = rawData
             ? new Matrix(...rawData)
             : new Matrix();
     }
@@ -54,7 +54,6 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_y: num
 
     }
 
-    display_object.$matrix = matrix;
     display_object.$scaleY = scale_y;
     displayObjectApplyChangesService(display_object);
 };

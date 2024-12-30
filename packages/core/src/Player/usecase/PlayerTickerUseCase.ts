@@ -3,7 +3,6 @@ import { stage } from "@next2d/display";
 import { Event } from "@next2d/events";
 import { execute as playerRenderingPostMessageService } from "../service/PlayerRenderingPostMessageService";
 import { execute as playerRemoveCachePostMessageService } from "../service/PlayerRemoveCachePostMessageService";
-import { execute as playerHitTestUseCase } from "../usecase/PlayerHitTestUseCase";
 
 /**
  * @description Playerの定期処理
@@ -42,9 +41,6 @@ export const execute = (timestamp: number): void =>
         if (stage.changed) {
             playerRenderingPostMessageService();
         }
-
-        // pointer check
-        playerHitTestUseCase();
     }
 
     // next frame
