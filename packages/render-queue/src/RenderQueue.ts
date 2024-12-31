@@ -1,4 +1,4 @@
-import { $upperPowerOfTwo } from "../../core/src/CoreUtil";
+import { $upperPowerOfTwo } from "./RenderQueueUtil";
 
 /**
  * @description レンダーキューの管理クラス

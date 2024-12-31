@@ -27,14 +27,11 @@ describe("BlnedClearArraysInstancedUseCase.js method test", () =>
     {
         const shaderInstancedManager = variantsBlendInstanceShaderService();
         shaderInstancedManager.count++;
-        shaderInstancedManager.attributes.push(1,2,3);
 
         expect(shaderInstancedManager.count).toBe(1);
-        expect(shaderInstancedManager.attributes.length).toBe(3);
         
         execute();
 
         expect(shaderInstancedManager.count).toBe(0);
-        expect(shaderInstancedManager.attributes.length).toBe(0);
     });
 });

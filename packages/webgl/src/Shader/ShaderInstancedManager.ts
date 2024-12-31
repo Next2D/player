@@ -1,4 +1,5 @@
 import { ShaderManager } from "./ShaderManager";
+import { renderQueue } from "@next2d/render-queue";
 
 /**
  * @class
@@ -6,15 +7,6 @@ import { ShaderManager } from "./ShaderManager";
  */
 export class ShaderInstancedManager extends ShaderManager
 {
-    /**
-     * @description attribute変数の配列
-     *              Array of attribute variables
-     *
-     * @type {number[]}
-     * @public
-     */
-    public attributes: number[];
-
     /**
      * @description attribute変数の数
      *              Number of attribute variables
@@ -34,8 +26,7 @@ export class ShaderInstancedManager extends ShaderManager
     constructor (vertex_source: string, fragment_source: string, atlas: boolean = true)
     {
         super(vertex_source, fragment_source, atlas);
-        this.attributes = [];
-        this.count      = 0;
+        this.count = 0;
     }
 
     /**
@@ -48,6 +39,6 @@ export class ShaderInstancedManager extends ShaderManager
      */
     clear (): void
     {
-        this.count = this.attributes.length = 0;
+        this.count = renderQueue.offset = 0;
     }
 }

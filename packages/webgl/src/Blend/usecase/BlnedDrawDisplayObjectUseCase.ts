@@ -24,6 +24,7 @@ import {
     $getCurrentAtlasIndex,
     $setCurrentAtlasIndex
 } from "../../Blend";
+import { renderQueue } from "@next2d/render-queue";
 
 /**
  * @description DisplayObject単体の描画を実行
@@ -48,14 +49,14 @@ export const execute = (
     color_transform: Float32Array
 ): void => {
 
-    const ct0: number = color_transform[0];
-    const ct1: number = color_transform[1];
-    const ct2: number = color_transform[2];
-    const ct3: number = $context.globalAlpha;
-    const ct4: number = color_transform[4] / 255;
-    const ct5: number = color_transform[5] / 255;
-    const ct6: number = color_transform[6] / 255;
-    const ct7: number = 0;
+    const ct0 = color_transform[0];
+    const ct1 = color_transform[1];
+    const ct2 = color_transform[2];
+    const ct3 = $context.globalAlpha;
+    const ct4 = color_transform[4] / 255;
+    const ct5 = color_transform[5] / 255;
+    const ct6 = color_transform[6] / 255;
+    const ct7 = 0;
 
     switch ($context.globalCompositeOperation) {
 
@@ -90,7 +91,7 @@ export const execute = (
                 const shaderInstancedManager = variantsBlendInstanceShaderService();
 
                 const matrix = $context.$matrix;
-                shaderInstancedManager.attributes.push(
+                renderQueue.push(
                     // texture rectangle (vec4)
                     node.x / $RENDER_MAX_SIZE, node.y / $RENDER_MAX_SIZE,
                     node.w / $RENDER_MAX_SIZE, node.h / $RENDER_MAX_SIZE,

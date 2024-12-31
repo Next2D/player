@@ -1,49 +1,44 @@
-import type { ShaderInstancedManager } from "../../Shader/ShaderInstancedManager";
 import { execute as vertexArrayObjectBindService } from "../service/VertexArrayObjectBindService";
-import {
-    $gl,
-    $upperPowerOfTwo
-} from "../../WebGLUtil";
+import { $gl } from "../../WebGLUtil";
 import {
     $instancedVertexArrayObject,
-    $getAttributeBuffer,
-    $setAttributeBuffer,
     $attributeWebGLBuffer
 } from "../../VertexArrayObject";
+import { renderQueue } from "@next2d/render-queue";
+
+/**
+ * @type {number}
+ * @private
+ */
+let $attributeBufferLength: number = 0;
 
 /**
  * @description インスタンス用のデータをバインドします。
  *              Binds data for instances.
  *
- * @param  {ShaderInstancedManager} shader_instanced_manager
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (shader_instanced_manager: ShaderInstancedManager): void =>
+export const execute = (): void =>
 {
     vertexArrayObjectBindService($instancedVertexArrayObject);
 
-    let attributeBuffer = $getAttributeBuffer();
-
     $gl.bindBuffer($gl.ARRAY_BUFFER, $attributeWebGLBuffer);
-    if (shader_instanced_manager.attributes.length > attributeBuffer.length) {
 
-        attributeBuffer = new Float32Array(
-            $upperPowerOfTwo(shader_instanced_manager.attributes.length)
-        );
-        $setAttributeBuffer(attributeBuffer);
+    if (renderQueue.buffer.length > $attributeBufferLength) {
+
+        $attributeBufferLength = renderQueue.buffer.length;
 
         $gl.bufferData(
             $gl.ARRAY_BUFFER,
-            attributeBuffer.byteLength,
+            $attributeBufferLength * 4, // renderQueue.buffer.byteLength
             $gl.DYNAMIC_DRAW
         );
     }
 
-    attributeBuffer.set(shader_instanced_manager.attributes);
     $gl.bufferSubData(
         $gl.ARRAY_BUFFER, 0,
-        attributeBuffer.subarray(0, shader_instanced_manager.attributes.length)
+        renderQueue.buffer.subarray(0, renderQueue.offset)
     );
 };

@@ -2,10 +2,8 @@ import type { IVertexArrayObject } from "../../interface/IVertexArrayObject";
 import { execute as vertexArrayObjectCreateFillObjectService } from "../service/VertexArrayObjectCreateFillObjectService";
 import { execute as vertexArrayObjectBindService } from "../service/VertexArrayObjectBindService";
 import { $gl } from "../../WebGLUtil";
-import {
-    $getAttributeBuffer,
-    $attributeWebGLBuffer
-} from "../../VertexArrayObject";
+import { renderQueue } from "@next2d/render-queue";
+import { $attributeWebGLBuffer } from "../../VertexArrayObject";
 
 /**
  * @description インスタンス用の頂点配列オブジェクトを生成します。
@@ -30,9 +28,7 @@ export const execute = (): IVertexArrayObject =>
     $gl.vertexAttribPointer(0, 2, $gl.FLOAT, false, 0, 0);
 
     $gl.bindBuffer($gl.ARRAY_BUFFER, $attributeWebGLBuffer);
-
-    const attributeBuffer = $getAttributeBuffer();
-    $gl.bufferData($gl.ARRAY_BUFFER, attributeBuffer.byteLength, $gl.DYNAMIC_DRAW);
+    $gl.bufferData($gl.ARRAY_BUFFER, renderQueue.buffer.length, $gl.DYNAMIC_DRAW);
 
     // texture rectangle
     $gl.enableVertexAttribArray(1);

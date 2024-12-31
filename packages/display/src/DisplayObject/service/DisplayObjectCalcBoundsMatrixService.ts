@@ -41,10 +41,45 @@ export const execute = (
     const ty2 = y1_1 + z0 + matrix[5];
     const ty3 = y1_1 + z1 + matrix[5];
 
-    return $getBoundsArray(
-        Math.min(tx0, tx1, tx2, tx3),  // x_min
-        Math.min(ty0, ty1, ty2, ty3),  // y_min
-        Math.max(tx0, tx1, tx2, tx3),  // x_max
-        Math.max(ty0, ty1, ty2, ty3)   // y_max
-    );
+    // x座標 Math.min(tx0, tx1, tx2, tx3) と Math.max(tx0, tx1, tx2, tx3) で計算すると処理が重くなるため、以下のように計算
+    let minX = tx0, maxX = tx0;
+    if (tx1 < minX) {
+        minX = tx1;
+    } else if (tx1 > maxX) {
+        maxX = tx1;
+    }
+
+    if (tx2 < minX) {
+        minX = tx2;
+    } else if (tx2 > maxX) {
+        maxX = tx2;
+    }
+
+    if (tx3 < minX) {
+        minX = tx3;
+    } else if (tx3 > maxX) {
+        maxX = tx3;
+    }
+
+    // y座標 Math.min(ty0, ty1, ty2, ty3) と Math.max(ty0, ty1, ty2, ty3) で計算すると処理が重くなるため、以下のように計算
+    let minY = ty0, maxY = ty0;
+    if (ty1 < minY) {
+        minY = ty1;
+    } else if (ty1 > maxY) {
+        maxY = ty1;
+    }
+
+    if (ty2 < minY) {
+        minY = ty2;
+    } else if (ty2 > maxY) {
+        maxY = ty2;
+    }
+
+    if (ty3 < minY) {
+        minY = ty3;
+    } else if (ty3 > maxY) {
+        maxY = ty3;
+    }
+
+    return $getBoundsArray(minX, minY, maxX, maxY);
 };

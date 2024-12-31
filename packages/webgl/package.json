@@ -26,6 +26,7 @@
     "url": "git+https://github.com/Next2D/Player.git"
   },
   "peerDependencies": {
-    "@next2d/texture-packer": "file:../texture-packer"
+    "@next2d/texture-packer": "file:../texture-packer",
+    "@next2d/render-queue": "file:../render-queue"
   }
 }
