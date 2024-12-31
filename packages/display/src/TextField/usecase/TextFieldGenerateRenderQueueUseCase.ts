@@ -74,7 +74,6 @@ export const execute = (
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
 
-    // draw text
     const bounds = displayObjectCalcBoundsMatrixService(
         text_field.xMin, text_field.yMin,
         text_field.xMax, text_field.yMax,
@@ -103,7 +102,7 @@ export const execute = (
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
-
+            $poolBoundsArray(bounds);
             renderQueue.push(0);
             return;
 
@@ -123,7 +122,7 @@ export const execute = (
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
-
+        $poolBoundsArray(bounds);
         renderQueue.push(0);
         return;
     }
@@ -182,6 +181,7 @@ export const execute = (
         tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
         tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
+        xMin, yMin, xMax, yMax,
         text_field.xMin, text_field.yMin,
         text_field.xMax, text_field.yMax,
         +text_field.uniqueKey, cacheKey

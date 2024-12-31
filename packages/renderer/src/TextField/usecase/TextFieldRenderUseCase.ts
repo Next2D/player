@@ -2,13 +2,9 @@ import type { Node } from "@next2d/texture-packer";
 import type { ITextFieldAutoSize } from "../../interface/ITextFieldAutoSize";
 import type { ITextSetting } from "../../interface/ITextSetting";
 import { $cacheStore } from "@next2d/cache";
-import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
 import { execute as textFieldDrawOffscreenCanvasUseCase } from "./TextFieldDrawOffscreenCanvasUseCase";
-import {
-    $context,
-    $poolBoundsArray
-} from "../../RendererUtil";
+import { $context } from "../../RendererUtil";
 
 /**
  * @type {TextDecoder}
@@ -33,6 +29,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     const colorTransform = render_queue.subarray(index, index + 8);
     index += 8;
+
+    const bounds = render_queue.subarray(index, index + 4);
+    index += 4;
 
     // baseBounds
     const xMin = render_queue[index++];
@@ -166,11 +165,6 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         // todo
     }
 
-    // calc bounds
-    const bounds = displayObjectCalcBoundsMatrixService(
-        xMin, yMin, xMax, yMax, matrix
-    );
-
     const radianX = Math.atan2(matrix[1], matrix[0]);
     const radianY = Math.atan2(-matrix[2], matrix[3]);
     if (radianX || radianY) {
@@ -203,8 +197,6 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         bounds[0], bounds[1], bounds[2], bounds[3],
         colorTransform
     );
-
-    $poolBoundsArray(bounds);
 
     return index;
 };

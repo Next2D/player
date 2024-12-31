@@ -1,12 +1,8 @@
 import type { Node } from "@next2d/texture-packer";
 import { $cacheStore } from "@next2d/cache";
 import { execute as shapeCommandService } from "../service/ShapeCommandService";
-import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
-import {
-    $context,
-    $poolBoundsArray
-} from "../../RendererUtil";
+import { $context } from "../../RendererUtil";
 
 /**
  * @description Shapeの描画を実行します。
@@ -25,6 +21,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     const colorTransform = render_queue.subarray(index, index + 8);
     index += 8;
+
+    const bounds = render_queue.subarray(index, index + 4);
+    index += 4;
 
     // baseBounds
     const xMin = render_queue[index++];
@@ -169,12 +168,6 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const length = render_queue[index++];
         const params = render_queue.subarray(index, index + length);
 
-        // draw graphics
-        const bounds = displayObjectCalcBoundsMatrixService(
-            xMin, yMin, xMax, yMax,
-            matrix
-        );
-
         const width  = Math.ceil(Math.abs(bounds[2] - bounds[0]));
         const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
 
@@ -202,11 +195,6 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             colorTransform
         );
     } else {
-
-        // calc bounds
-        const bounds = displayObjectCalcBoundsMatrixService(
-            xMin, yMin, xMax, yMax, matrix
-        );
 
         const radianX = Math.atan2(matrix[1], matrix[0]);
         const radianY = Math.atan2(-matrix[2], matrix[3]);
@@ -240,8 +228,6 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             bounds[0], bounds[1], bounds[2], bounds[3],
             colorTransform
         );
-
-        $poolBoundsArray(bounds);
 
     }
 

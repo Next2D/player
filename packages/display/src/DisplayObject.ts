@@ -434,9 +434,10 @@ export class DisplayObject extends EventDispatcher
     {
         super();
 
-        this.instanceId   = $getInstanceId();
-        this.dictionaryId = -1;
-        this.uniqueKey    = "";
+        this.instanceId    = $getInstanceId();
+        this.dictionaryId  = -1;
+        this.uniqueKey     = "";
+        this.boundsHashKey = "";
 
         // 各小クラスの機能を所持しているか
         this.isSprite           = false;
@@ -483,6 +484,7 @@ export class DisplayObject extends EventDispatcher
         this.$scaleY   = null;
         this.$rotation = null;
         this.$cache    = null;
+        this.$bounds   = null;
     }
 
     /**

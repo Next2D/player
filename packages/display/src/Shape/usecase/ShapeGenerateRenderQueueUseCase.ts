@@ -82,7 +82,6 @@ export const execute = (
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
 
-    // draw graphics
     const bounds = displayObjectCalcBoundsMatrixService(
         graphics.xMin, graphics.yMin,
         graphics.xMax, graphics.yMax,
@@ -111,6 +110,7 @@ export const execute = (
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
+            $poolBoundsArray(bounds);
             renderQueue.push(0);
             return;
 
@@ -130,6 +130,7 @@ export const execute = (
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
+        $poolBoundsArray(bounds);
         renderQueue.push(0);
         return;
     }
@@ -196,6 +197,7 @@ export const execute = (
         tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
         tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
+        xMin, yMin, xMax, yMax,
         graphics.xMin, graphics.yMin,
         graphics.xMax, graphics.yMax,
         +isGridEnabled, +isDrawable, +shape.isBitmap,
