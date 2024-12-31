@@ -10,6 +10,7 @@ import { execute as meshIsPointInsideRectangleService } from "../service/MeshIsP
  * @param  {number} y
  * @param  {number} r
  * @param  {IPath[]} rectangles
+ * @param  {boolean} [is_last=false]
  * @return {void}
  * @method
  * @protected
@@ -18,15 +19,17 @@ export const execute = (
     x: number,
     y: number,
     r: number,
-    rectangles: IPath[]
+    rectangles: IPath[],
+    is_last: boolean = false
 ): void => {
 
-    const length = rectangles.length;
-    const pathsA = meshFindOverlappingPathsService(x, y, r, rectangles[length - 1]);
-    const pathsB = meshFindOverlappingPathsService(x, y, r, rectangles[length - 2]);
+    const indexA = is_last ? 0 : rectangles.length - 1;
+    const indexB = is_last ? rectangles.length - 1 : rectangles.length - 2;
+    const pathsA = meshFindOverlappingPathsService(x, y, r, rectangles[indexA]);
+    const pathsB = meshFindOverlappingPathsService(x, y, r, rectangles[indexB]);
 
     const pointA = meshIsPointInsideRectangleService(
-        pathsA, rectangles[length - 2]
+        pathsA, rectangles[indexB]
     );
 
     // 接続点が矩形の内部にある場合は終了
@@ -35,7 +38,7 @@ export const execute = (
     }
 
     const pointB = meshIsPointInsideRectangleService(
-        pathsB, rectangles[length - 1]
+        pathsB, rectangles[indexA]
     );
 
     // 接続点が矩形の内部にある場合は終了

@@ -37,6 +37,11 @@ export const execute = (
                 position_x, position_y,
                 line_width, caps
             );
+            graphicsCalcLineBoundsService(
+                graphics, position_x, position_y,
+                x, y,
+                line_width, caps
+            );
         }
     }
 };

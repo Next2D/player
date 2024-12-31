@@ -10,6 +10,7 @@ import { execute as meshIsPointInsideRectangleService } from "../service/MeshIsP
  * @param  {number} y
  * @param  {number} r
  * @param  {IPath[]} rectangles
+ * @param  {boolean} [is_last=false]
  * @return {void}
  * @method
  * @protected
@@ -18,12 +19,14 @@ export const execute = (
     x: number,
     y: number,
     r: number,
-    rectangles: IPath[]
+    rectangles: IPath[],
+    is_last: boolean = false
 ): void => {
 
-    const length = rectangles.length;
-    const pathsA = meshFindOverlappingPathsUseCase(x, y, r, rectangles[length - 1]);
-    const pathsB = meshFindOverlappingPathsUseCase(x, y, r, rectangles[length - 2]);
+    const indexA = is_last ? 0 : rectangles.length - 1;
+    const indexB = is_last ? rectangles.length - 1 : rectangles.length - 2;
+    const pathsA = meshFindOverlappingPathsUseCase(x, y, r, rectangles[indexA]);
+    const pathsB = meshFindOverlappingPathsUseCase(x, y, r, rectangles[indexB]);
 
     // パスが並行であれば終了
     if (pathsA[0] === pathsB[0] && pathsA[1] === pathsB[1]
@@ -33,7 +36,7 @@ export const execute = (
     }
 
     const pointA = meshIsPointInsideRectangleService(
-        pathsA, rectangles[length - 2]
+        pathsA, rectangles[indexB]
     );
 
     if (!pointA) {
@@ -41,7 +44,7 @@ export const execute = (
     }
 
     const pointB = meshIsPointInsideRectangleService(
-        pathsB, rectangles[length - 1]
+        pathsB, rectangles[indexA]
     );
 
     if (!pointB) {

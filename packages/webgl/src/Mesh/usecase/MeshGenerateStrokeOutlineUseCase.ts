@@ -87,11 +87,37 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
         startPoint.y = endPoint.y;
     }
 
-    // 始点と終点が繋がってない時はcapsの設定を適用
-    if ($context.caps
-        && vertices[0] !== vertices[vertices.length - 3]
-        || vertices[1] !== vertices[vertices.length - 2]
+    if (vertices[0] === vertices[vertices.length - 3]
+        && vertices[1] === vertices[vertices.length - 2]
     ) {
+        // 始点と終点が繋がっている時はjointsの設定を適用
+        switch ($context.joints) {
+
+            case 0: // bevel
+                meshGenerateCalculateBevelJoinUseCase(
+                    startPoint.x, startPoint.y, thickness, rectangles, true
+                );
+                break;
+
+            case 1: // miter
+                meshGenerateCalculateBevelJoinUseCase(
+                    startPoint.x, startPoint.y, thickness, rectangles, true
+                );
+                break;
+
+            case 2: // round
+                meshGenerateCalculateRoundJoinUseCase(
+                    startPoint.x, startPoint.y, thickness, rectangles, true
+                );
+                break;
+
+            default:
+                break;
+
+        }
+    } else {
+
+        // 始点と終点が繋がってない時はcapsの設定を適用
         switch ($context.caps) {
 
             case 1: // round
@@ -104,6 +130,9 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
                 meshGenerateCalculateSquareCapService(
                     vertices, thickness, rectangles
                 );
+                break;
+
+            default:
                 break;
 
         }
