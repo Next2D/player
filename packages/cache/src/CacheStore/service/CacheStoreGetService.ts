@@ -15,14 +15,9 @@ export const execute = (
     key: string
 ): any => {
 
-    if (!data_store.has(unique_key)) {
+    const data = data_store.get(unique_key) || null;
+    if (!data) {
         return null;
     }
-
-    const data = data_store.get(unique_key) as NonNullable<Map<string, any>>;
-    if (!data.size || !data.has(key)) {
-        return null;
-    }
-
-    return data.get(key);
+    return data.get(key) || null;
 };

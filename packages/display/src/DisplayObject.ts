@@ -484,7 +484,6 @@ export class DisplayObject extends EventDispatcher
         this.$scaleY   = null;
         this.$rotation = null;
         this.$cache    = null;
-        this.$bounds   = null;
     }
 
     /**
