@@ -6,6 +6,7 @@ import { execute as meshGenerateCalculateRoundJoinUseCase } from "./MeshGenerate
 import { execute as meshGenerateCalculateBevelJoinUseCase } from "./MeshGenerateCalculateBevelJoinUseCase";
 import { execute as meshGenerateCalculateRoundCapService } from "../service/MeshGenerateCalculateRoundCapService";
 import { execute as meshGenerateCalculateSquareCapService } from "../service/MeshGenerateCalculateSquareCapService";
+import { execute as meshGenerateCalculateMiterJoinUseCase } from "../usecase/MeshGenerateCalculateMiterJoinUseCase";
 import { $context } from "../../WebGLUtil";
 
 /**
@@ -31,6 +32,11 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
     };
 
     const endPoint: IPoint = {
+        "x": 0,
+        "y": 0
+    };
+
+    const prevPoint: IPoint = {
         "x": 0,
         "y": 0
     };
@@ -69,8 +75,11 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
                     break;
 
                 case 1: // miter
-                    meshGenerateCalculateBevelJoinUseCase(
-                        startPoint.x, startPoint.y, thickness, rectangles
+                    prevPoint.x = vertices[idx - 6] as number;
+                    prevPoint.y = vertices[idx - 5] as number;
+                    meshGenerateCalculateMiterJoinUseCase(
+                        startPoint, endPoint, prevPoint, 
+                        thickness, rectangles
                     );
                     break;
 
@@ -100,8 +109,15 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
                 break;
 
             case 1: // miter
-                meshGenerateCalculateBevelJoinUseCase(
-                    startPoint.x, startPoint.y, thickness, rectangles, true
+                startPoint.x = vertices[0] as number;
+                startPoint.y = vertices[1] as number;
+                endPoint.x   = vertices[3] as number;
+                endPoint.y   = vertices[4] as number;
+                prevPoint.x  = vertices[vertices.length - 6] as number;
+                prevPoint.y  = vertices[vertices.length - 5] as number;
+                meshGenerateCalculateMiterJoinUseCase(
+                    startPoint, endPoint, prevPoint, 
+                    thickness, rectangles, true
                 );
                 break;
 

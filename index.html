@@ -12,49 +12,64 @@
     {
         // next2d.load("develop");
 
-        const count = 8000;
-        const root = next2d
-            .createRootMovieClip(1000, 416, 60)
-            .then((root) => 
-            {
-                const { Shape } = next2d.display;
+        const { Shape } = next2d.display;
+        const root = await next2d.createRootMovieClip(1000, 416, 60);
+        const shape = root.addChild(new Shape());
 
-                const rects = [];
-                for (let i = 0; i < count; i++) {
-                    const x = Math.random() * 1000;
-                    const y = Math.random() * 416;
-                    const size = 10 + Math.random() * 40;
-                    const speed = 1 + Math.random();
+        shape.x = 400;
+        shape.y = 100;
+        shape
+            .graphics
+            .lineStyle(20, "#ff0000", 0.5, "round", "miter")
+            .moveTo(0, 0)
+            .lineTo(100, -30)
+            .lineTo(120, 100)
+            .lineTo(50, 100)
+            .lineTo(0, 0);
 
-                    var rect = new Shape();
+        // const count = 8000;
+        // const root = next2d
+        //     .createRootMovieClip(1000, 416, 60)
+        //     .then((root) => 
+        //     {
+        //         const { Shape } = next2d.display;
 
-                    rect
-                        .graphics
-                        .beginFill("#fff")
-                        .lineStyle(1, "#000")
-                        .drawRect(0, 0, size, size);
+        //         const rects = [];
+        //         for (let i = 0; i < count; i++) {
+        //             const x = Math.random() * 1000;
+        //             const y = Math.random() * 416;
+            //         const size = 10 + Math.random() * 40;
+            //         const speed = 1 + Math.random();
 
-                    rect.x = x;
-                    rect.y = y;
+            //         var rect = new Shape();
 
-                    root.addChild(rect);
+            //         rect
+            //             .graphics
+            //             .beginFill("#fff")
+            //             .lineStyle(1, "#000")
+            //             .drawRect(0, 0, size, size);
 
-                    rects.push({ size, speed, el: rect });
-                }
+            //         rect.x = x;
+            //         rect.y = y;
 
-                root.addEventListener("enterFrame", () =>
-                {
-                    for (let i = 0; i < count; i++) {
-                        const rect = rects[i];
+            //         root.addChild(rect);
 
-                        if (rect.el.x + rect.size < 0) {
-                            rect.el.x = 1000 + rect.size / 2;
-                        }
+            //         rects.push({ size, speed, el: rect });
+            //     }
 
-                        rect.el.x -= rect.speed;
-                    }
-                });
-            });
+            //     root.addEventListener("enterFrame", () =>
+            //     {
+            //         for (let i = 0; i < count; i++) {
+            //             const rect = rects[i];
+
+            //             if (rect.el.x + rect.size < 0) {
+            //                 rect.el.x = 1000 + rect.size / 2;
+            //             }
+
+            //             rect.el.x -= rect.speed;
+            //         }
+            //     });
+            // });
 
     });
 </script>
