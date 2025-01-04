@@ -19,5 +19,7 @@ export const execute = (
     if (!data) {
         return null;
     }
+
+    data.delete("trash");
     return data.get(key) || null;
 };

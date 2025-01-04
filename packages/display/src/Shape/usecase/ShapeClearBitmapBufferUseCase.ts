@@ -1,5 +1,4 @@
 import type { Shape } from "../../Shape";
-import { stage } from "../../Stage";
 import { $cacheStore } from "@next2d/cache";
 import { execute as displayObjectApplyChangesService } from "../../DisplayObject/service/DisplayObjectApplyChangesService";
 
@@ -21,8 +20,8 @@ export const execute = (shape: Shape): void =>
     shape.graphics.clear();
 
     // cache clear
-    stage.$remoceCacheKeys.push(+shape.uniqueKey);
     $cacheStore.removeById(shape.uniqueKey);
+    $cacheStore.$removeIds.push(+shape.uniqueKey);
 
     // apply changes
     displayObjectApplyChangesService(shape);

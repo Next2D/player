@@ -7,6 +7,7 @@ import { execute as cacheStoreSetService } from "./CacheStore/service/CacheStore
 import { execute as cacheStoreHasService } from "./CacheStore/service/CacheStoreHasService";
 import { execute as cacheStoreGenerateKeysService } from "./CacheStore/service/CacheStoreGenerateKeysService";
 import { execute as cacheStoreGenerateFilterKeysService } from "./CacheStore/service/CacheStoreGenerateFilterKeysService";
+import { execute as cacheStoreRemoveTimerService } from "./CacheStore/service/CacheStoreRemoveTimerService";
 
 /**
  * @description キャッシュ管理クラス
@@ -19,6 +20,9 @@ export class CacheStore
 {
     private readonly _$pool: HTMLCanvasElement[];
     private readonly _$store: Map<string, any>;
+    private readonly _$trash: Map<string, any>;
+    public $timerId: NodeJS.Timeout | null;
+    public readonly $removeIds: number[];
 
     /**
      * @constructor
@@ -36,6 +40,24 @@ export class CacheStore
          * @private
          */
         this._$store = new Map();
+
+        /**
+         * @type {Map}
+         * @private
+         */
+        this._$trash = new Map();
+
+        /**
+         * @type {NodeJS.Timeout}
+         * @public
+         */
+        this.$timerId = null;
+
+        /**
+         * @type {array}
+         * @public
+         */
+        this.$removeIds = [];
     }
 
     /**
@@ -91,6 +113,20 @@ export class CacheStore
     remove (id: string, type: string): void
     {
         cacheStoreRemoveService(this._$store, id, type);
+    }
+
+    /**
+     * @description 指定IDのキャッシュを削除タイマーに登録
+     *              Register the cache for the specified ID in the delete timer
+     *
+     * @param   {string} id
+     * @returns {void}
+     * @method
+     * @public
+     */
+    removeTimer (id: string): void
+    {
+        cacheStoreRemoveTimerService(this, this._$store, this._$trash, id);
     }
 
     /**

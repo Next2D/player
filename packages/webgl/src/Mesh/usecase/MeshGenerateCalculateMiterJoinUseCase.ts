@@ -18,9 +18,9 @@ import { execute as meshIsPointInsideRectangleService } from "../service/MeshIsP
  * @protected
  */
 export const execute = (
-    start_point: IPoint, 
-    end_point: IPoint, 
-    prev_point: IPoint, 
+    start_point: IPoint,
+    end_point: IPoint,
+    prev_point: IPoint,
     r: number,
     rectangles: IPath[],
     is_last: boolean = false
@@ -54,39 +54,22 @@ export const execute = (
         return ;
     }
 
-    // 1. ベクトルAB
-    const ABx = pointB[0] - pointA[0];
-    const ABy = pointB[1] - pointA[1];
-
-    // 2. ベクトルAS
-    const ASx = start_point.x - pointA[0];
-    const ASy = start_point.y - pointA[1];
-
-    // 3. 射影係数t = (AS・AB) / (AB・AB)
-    const dotABAB = ABx * ABx + ABy * ABy;      // (AB・AB)
-    const dotASAB = ASx * ABx + ASy * ABy;      // (AS・AB)
-    const t1 = dotASAB / dotABAB;
-
-    // 4. 足P = A + t * AB
-    const px = pointA[0] + t1 * ABx;
-    const py = pointA[1] + t1 * ABy;
-
     const aVx = end_point.x - start_point.x;
     const aVy = end_point.y - start_point.y;
     const lengthA = Math.hypot(aVx, aVy);
-    const normalizeA = { 
-        "x": aVx / lengthA, 
+    const normalizeA = {
+        "x": aVx / lengthA,
         "y": aVy / lengthA
     };
 
     const bVx = prev_point.x - start_point.x;
     const bVy = prev_point.y - start_point.y;
     const lengthB = Math.hypot(bVx, bVy);
-    const normalizeB = { 
-        "x": bVx / lengthB, 
+    const normalizeB = {
+        "x": bVx / lengthB,
         "y": bVy / lengthB
     };
-    
+
     const d1x = normalizeA.x, d1y = normalizeA.y;
     const d2x = normalizeB.x, d2y = normalizeB.y;
 
@@ -110,6 +93,6 @@ export const execute = (
         ix, iy, false,
         start_point.x, start_point.y, false,
         pointB[0], pointB[1], false,
-        ix, iy, false,
+        ix, iy, false
     ]);
 };

@@ -1,6 +1,7 @@
 import { $player } from "../../Player";
 import { stage } from "@next2d/display";
 import { Event } from "@next2d/events";
+import { $cacheStore } from "@next2d/cache";
 import { execute as playerRenderingPostMessageService } from "../service/PlayerRenderingPostMessageService";
 import { execute as playerRemoveCachePostMessageService } from "../service/PlayerRemoveCachePostMessageService";
 
@@ -32,8 +33,8 @@ export const execute = (timestamp: number): void =>
             stage.dispatchEvent(new Event(Event.ENTER_FRAME));
         }
 
-        // キャッシュを削除する
-        if (stage.$remoceCacheKeys.length) {
+        // キャッシュ削除
+        if ($cacheStore.$removeIds.length) {
             playerRemoveCachePostMessageService();
         }
 

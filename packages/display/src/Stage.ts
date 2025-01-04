@@ -106,15 +106,6 @@ export class Stage extends DisplayObjectContainer
     private _$backgroundColor: number;
 
     /**
-     * @description キャッシュキーの削除リスト
-     *              List of cache keys to delete
-     *
-     * @type {number[]}
-     * @public
-     */
-    public readonly $remoceCacheKeys: number[];
-
-    /**
      * @constructor
      * @public
      */
@@ -129,8 +120,6 @@ export class Stage extends DisplayObjectContainer
         this.rendererScale  = 1;
         this.rendererWidth  = 0;
         this.rendererHeight = 0;
-
-        this.$remoceCacheKeys = [];
 
         // private
         this._$ready           = false;

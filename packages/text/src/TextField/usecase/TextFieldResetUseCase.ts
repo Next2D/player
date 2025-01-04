@@ -1,6 +1,5 @@
 import type { TextField } from "../../TextField";
 import { $cacheStore } from "@next2d/cache";
-import { stage } from "@next2d/display";
 import { execute as textFieldApplyChangesService } from "../service/TextFieldApplyChangesService";
 
 /**
@@ -20,7 +19,7 @@ export const execute = (text_field: TextField): void =>
 
     // Remove cache
     if (text_field.uniqueKey && $cacheStore.has(text_field.uniqueKey)) {
-        stage.$remoceCacheKeys.push(+text_field.uniqueKey);
         $cacheStore.removeById(text_field.uniqueKey);
+        $cacheStore.$removeIds.push(+text_field.uniqueKey);
     }
 };

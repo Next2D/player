@@ -10,22 +10,7 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        // next2d.load("develop");
-
-        const { Shape } = next2d.display;
-        const root = await next2d.createRootMovieClip(1000, 416, 60);
-        const shape = root.addChild(new Shape());
-
-        shape.x = 400;
-        shape.y = 100;
-        shape
-            .graphics
-            .lineStyle(20, "#ff0000", 0.5, "round", "miter")
-            .moveTo(0, 0)
-            .lineTo(100, -30)
-            .lineTo(120, 100)
-            .lineTo(50, 100)
-            .lineTo(0, 0);
+        next2d.load("develop");
 
         // const count = 8000;
         // const root = next2d
@@ -38,38 +23,38 @@
         //         for (let i = 0; i < count; i++) {
         //             const x = Math.random() * 1000;
         //             const y = Math.random() * 416;
-            //         const size = 10 + Math.random() * 40;
-            //         const speed = 1 + Math.random();
+        //             const size = 10 + Math.random() * 40;
+        //             const speed = 1 + Math.random();
 
-            //         var rect = new Shape();
+        //             var rect = new Shape();
 
-            //         rect
-            //             .graphics
-            //             .beginFill("#fff")
-            //             .lineStyle(1, "#000")
-            //             .drawRect(0, 0, size, size);
+        //             rect
+        //                 .graphics
+        //                 .beginFill("#fff")
+        //                 .lineStyle(1, "#000")
+        //                 .drawRect(0, 0, size, size);
 
-            //         rect.x = x;
-            //         rect.y = y;
+        //             rect.x = x;
+        //             rect.y = y;
 
-            //         root.addChild(rect);
+        //             root.addChild(rect);
 
-            //         rects.push({ size, speed, el: rect });
-            //     }
+        //             rects.push({ size, speed, el: rect });
+        //         }
 
-            //     root.addEventListener("enterFrame", () =>
-            //     {
-            //         for (let i = 0; i < count; i++) {
-            //             const rect = rects[i];
+        //         root.addEventListener("enterFrame", () =>
+        //         {
+        //             for (let i = 0; i < count; i++) {
+        //                 const rect = rects[i];
 
-            //             if (rect.el.x + rect.size < 0) {
-            //                 rect.el.x = 1000 + rect.size / 2;
-            //             }
+        //                 if (rect.el.x + rect.size < 0) {
+        //                     rect.el.x = 1000 + rect.size / 2;
+        //                 }
 
-            //             rect.el.x -= rect.speed;
-            //         }
-            //     });
-            // });
+        //                 rect.el.x -= rect.speed;
+        //             }
+        //         });
+        //     });
 
     });
 </script>

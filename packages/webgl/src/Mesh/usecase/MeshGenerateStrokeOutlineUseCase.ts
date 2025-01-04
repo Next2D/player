@@ -78,7 +78,7 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
                     prevPoint.x = vertices[idx - 6] as number;
                     prevPoint.y = vertices[idx - 5] as number;
                     meshGenerateCalculateMiterJoinUseCase(
-                        startPoint, endPoint, prevPoint, 
+                        startPoint, endPoint, prevPoint,
                         thickness, rectangles
                     );
                     break;
@@ -116,7 +116,7 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
                 prevPoint.x  = vertices[vertices.length - 6] as number;
                 prevPoint.y  = vertices[vertices.length - 5] as number;
                 meshGenerateCalculateMiterJoinUseCase(
-                    startPoint, endPoint, prevPoint, 
+                    startPoint, endPoint, prevPoint,
                     thickness, rectangles, true
                 );
                 break;
