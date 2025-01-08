@@ -35,7 +35,8 @@ export const execute = (
 
     const buffer = shape.graphics.buffer;
     renderQueue.push(
-        $RENDERER_SHAPE_TYPE, ...tMatrix,
+        $RENDERER_SHAPE_TYPE,
+        tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
         +hasGrid, buffer.length
     );
     renderQueue.set(buffer);

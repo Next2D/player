@@ -35,10 +35,10 @@ export const execute = (
     const height = $getViewportHeight();
 
     const a  = matrix[0] / width;
-    const b  = matrix[1] / width;
-    const c  = matrix[3] / height;
-    const d  = matrix[4] / height;
+    const c  = matrix[3] / width;
     const tx = matrix[6] / width;
+    const b  = matrix[1] / height;
+    const d  = matrix[4] / height;
     const ty = matrix[7] / height;
 
     let length = 0;

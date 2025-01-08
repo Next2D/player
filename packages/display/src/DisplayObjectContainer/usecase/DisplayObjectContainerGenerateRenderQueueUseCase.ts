@@ -127,7 +127,7 @@ export const execute = <P extends DisplayObjectContainer>(
         } else {
 
             // マスクの描画範囲
-            renderQueue.push(1, ...bounds);
+            renderQueue.push(1, bounds[0], bounds[1], bounds[2], bounds[3]);
 
             switch (true) {
 
@@ -209,7 +209,7 @@ export const execute = <P extends DisplayObjectContainer>(
                 continue;
             }
 
-            renderQueue.push(...bounds);
+            renderQueue.push(bounds[0], bounds[1], bounds[2], bounds[3]);
             switch (true) {
 
                 case child.isContainerEnabled: // 0x00

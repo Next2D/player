@@ -34,7 +34,8 @@ export const execute = (
         // マスク描画の開始準備
         $context.beginMask();
 
-        $context.startMask(
+        // マスクの範囲を設定
+        $context.setMaskBounds(
             render_queue[index++],
             render_queue[index++],
             render_queue[index++],
@@ -45,10 +46,7 @@ export const execute = (
         switch (type) {
 
             case 0x00: // container
-                $context.containerClip = true;
                 index = displayObjectContainerClipRenderUseCase(render_queue, index);
-                $context.clip();
-                $context.containerClip = false;
                 break;
 
             case 0x01: // shape
@@ -75,7 +73,7 @@ export const execute = (
 
         const depth = render_queue[index++];
         const clipDepth = render_queue[index++];
-
+        
         // end mask
         if (endClipDepth && depth > endClipDepth) {
             if (canRenderMask) {
@@ -110,7 +108,8 @@ export const execute = (
             // マスク描画の開始準備
             $context.beginMask();
 
-            $context.startMask(
+            // マスクの範囲を設定
+            $context.setMaskBounds(
                 render_queue[index++],
                 render_queue[index++],
                 render_queue[index++],
@@ -121,10 +120,7 @@ export const execute = (
             switch (type) {
 
                 case 0x00: // container
-                    $context.containerClip = true;
                     index = displayObjectContainerClipRenderUseCase(render_queue, index);
-                    $context.clip();
-                    $context.containerClip = false;
                     break;
 
                 case 0x01: // shape
@@ -140,8 +136,8 @@ export const execute = (
                     break;
 
             }
-            $context.endMask();
 
+            $context.endMask();
             continue;
         }
 

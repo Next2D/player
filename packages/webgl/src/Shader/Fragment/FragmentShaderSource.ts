@@ -118,6 +118,6 @@ export const FILL_RECT_COLOR = (): string =>
 precision mediump float;
 out vec4 o_color;
 void main() {
-    o_color = vec4(0.2, 0.6, 0.8, 1.0);
+    o_color = vec4(1.0);
 }`;
 };

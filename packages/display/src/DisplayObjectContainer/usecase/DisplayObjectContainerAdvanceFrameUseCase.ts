@@ -19,6 +19,7 @@ export const execute = <C extends DisplayObjectContainer>(
         for (let idx = 0; container.length > idx; ++idx) {
 
             const child = container[idx];
+
             if (child.isTimelineEnabled) {
                 movieClipAdvanceFrameUseCase(child);
             }

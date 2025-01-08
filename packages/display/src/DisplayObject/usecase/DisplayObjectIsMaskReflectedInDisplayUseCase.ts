@@ -29,9 +29,9 @@ export const execute = <D extends DisplayObject>(
     renderer_height: number,
     point_x: number,
     point_y: number
-): number[] | null => {
+): Float32Array | null => {
 
-    let bounds: number[] | null = null;
+    let bounds: Float32Array | null = null;
     switch (true) {
 
         case display_object.isContainerEnabled:

@@ -34,3 +34,15 @@ export const $isMaskDrawing = (): boolean =>
 {
     return $maskDrawingState;
 };
+
+/**
+ * @type {Map<number, Float32Array>}
+ * @private
+ */
+export const $clipBounds: Map<number, Float32Array> = new Map();
+
+/**
+ * @type {Map<number, number>}
+ * @private
+ */
+export const $clipLevels: Map<number, number> = new Map();

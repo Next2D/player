@@ -36,7 +36,7 @@ import { execute as vertexArrayObjectBootUseCase } from "./VertexArrayObject/use
 import { execute as frameBufferManagerTransferMainCanvasService } from "./FrameBufferManager/service/FrameBufferManagerTransferMainCanvasService";
 import { execute as blendEnableUseCase } from "./Blend/usecase/BlendEnableUseCase";
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
-import { execute as maskStartMaskService } from "./Mask/service/MaskStartMaskService";
+import { execute as maskSetMaskBoundsService } from "./Mask/service/MaskSetMaskBoundsService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
 import { execute as maskLeaveMaskUseCase } from "./Mask/usecase/MaskLeaveMaskUseCase";
 import { execute as contextDrawPixelsUseCase } from "./Context/usecase/ContextDrawPixelsUseCase";
@@ -85,6 +85,8 @@ export class Context
      * @protected
      */
     public readonly $stack: Float32Array[];
+
+    public readonly $clipBounds: Float32Array;
 
     /**
      * @description 2D変換行列
@@ -247,16 +249,6 @@ export class Context
     public miterLimit: number;
 
     /**
-     * @description コンテナクリップ
-     *             Container clip
-     *
-     * @type {boolean}
-     * @default false
-     * @public
-     */
-    public containerClip: boolean;
-
-    /**
      * @param {WebGL2RenderingContext} gl
      * @param {number} samples
      * @constructor
@@ -295,9 +287,6 @@ export class Context
         // 塗りつぶしタイプ、ストロークタイプ
         this.$fillStyle   = new Float32Array([1, 1, 1, 1]);
         this.$strokeStyle = new Float32Array([1, 1, 1, 1]);
-
-        // コンテナクリップ
-        this.containerClip = false;
 
         // マスクの描画範囲
         this.maskBounds = {
@@ -1026,13 +1015,13 @@ export class Context
      * @method
      * @public
      */
-    startMask (
+    setMaskBounds (
         x_min: number,
         y_min: number,
         x_max: number,
         y_max: number
     ): void {
-        maskStartMaskService(x_min, y_min, x_max, y_max);
+        maskSetMaskBoundsService(x_min, y_min, x_max, y_max);
     }
 
     /**

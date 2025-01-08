@@ -41,6 +41,6 @@ export const execute = (context: Context, width: number, height: number): void =
     frameBufferManagerUnBindAttachmentObjectService();
 
     // new attachment object
-    context.$mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, false);
+    context.$mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, true);
     context.bind(context.$mainAttachmentObject);
 };

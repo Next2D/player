@@ -1,6 +1,7 @@
 import {
     $isMaskDrawing,
-    $setMaskDrawing
+    $setMaskDrawing,
+    $clipLevels
 } from "../../Mask";
 import {
     $context,
@@ -24,6 +25,10 @@ export const execute = (): void =>
 
     currentAttachmentObject.mask = true;
     currentAttachmentObject.clipLevel++;
+    $clipLevels.set(
+        currentAttachmentObject.clipLevel,
+        currentAttachmentObject.clipLevel - 1
+    );
 
     if (!$isMaskDrawing()) {
         $setMaskDrawing(true);

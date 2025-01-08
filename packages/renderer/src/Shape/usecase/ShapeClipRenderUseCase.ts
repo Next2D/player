@@ -40,9 +40,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     index += length;
 
-    if (!$context.containerClip) {
-        $context.clip();
-    }
+    $context.clip();
 
     return index;
 };

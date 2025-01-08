@@ -1,11 +1,13 @@
+import { $clipBounds } from "../../Mask";
 import {
     $gl,
-    $context
+    $context,
+    $getFloat32Array4
 } from "../../WebGLUtil";
 
 /**
- * @description マスクの描画を開始
- *              Start mask drawing
+ * @description マスクの描画範囲をセット
+ *              Set the drawing range of the mask.
  *
  * @param  {number} x_min
  * @param  {number} y_min
@@ -27,8 +29,14 @@ export const execute = (
         return ;
     }
 
-    const width  = Math.abs(x_max - x_min);
-    const height = Math.abs(y_max - y_min);
+    // レベルと描画範囲をセット
+    $clipBounds.set(
+        currentAttachmentObject.clipLevel,
+        $getFloat32Array4(x_min, y_min, x_max, y_max)
+    );
+
+    const width  = Math.ceil(Math.abs(x_max - x_min));
+    const height = Math.ceil(Math.abs(y_max - y_min));
     $gl.enable($gl.SCISSOR_TEST);
     $gl.scissor(
         x_min,
