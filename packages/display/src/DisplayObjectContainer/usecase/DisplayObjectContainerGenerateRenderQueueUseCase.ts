@@ -122,7 +122,6 @@ export const execute = <P extends DisplayObjectContainer>(
         );
 
         if (!bounds) {
-            maskDisplayObject.changed = false;
             renderQueue.push(0);
         } else {
 
@@ -158,6 +157,7 @@ export const execute = <P extends DisplayObjectContainer>(
             }
         }
 
+        maskDisplayObject.changed = false;
     } else {
         renderQueue.push(0);
     }
@@ -240,6 +240,7 @@ export const execute = <P extends DisplayObjectContainer>(
                     break;
             }
 
+            child.changed = false;
             continue;
         }
 

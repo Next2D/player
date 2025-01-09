@@ -44,7 +44,5 @@ export const execute = (): void =>
 
     // base mask setting
     $gl.stencilMask(0xff);
-    $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
-    $gl.stencilOpSeparate($gl.FRONT, $gl.KEEP, $gl.KEEP, $gl.INCR_WRAP);
-    $gl.stencilOpSeparate($gl.BACK,  $gl.KEEP, $gl.KEEP, $gl.DECR_WRAP);
+    $gl.stencilOp($gl.ZERO, $gl.INVERT, $gl.INVERT);
 };

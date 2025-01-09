@@ -27,7 +27,7 @@ export const execute = (): void =>
     currentAttachmentObject.clipLevel++;
     $clipLevels.set(
         currentAttachmentObject.clipLevel,
-        currentAttachmentObject.clipLevel - 1
+        currentAttachmentObject.clipLevel
     );
 
     if (!$isMaskDrawing()) {
@@ -35,11 +35,9 @@ export const execute = (): void =>
 
         $gl.enable($gl.STENCIL_TEST);
         $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
-        $gl.frontFace($gl.CCW);
 
         $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
-        $gl.stencilOpSeparate($gl.FRONT, $gl.KEEP, $gl.KEEP, $gl.INCR_WRAP);
-        $gl.stencilOpSeparate($gl.BACK,  $gl.KEEP, $gl.KEEP, $gl.DECR_WRAP);
+        $gl.stencilOp($gl.ZERO, $gl.INVERT, $gl.INVERT);
         $gl.colorMask(false, false, false, false);
     }
 };

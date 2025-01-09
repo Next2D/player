@@ -192,11 +192,11 @@ export const execute = (
             case GRADIENT_FILL:
                 {
                     if (is_clip) {
-                        $context.fill();
                         index += 1;
                         const length = commands[index++];
                         index += length * 5;
                         index += 9;
+                        $context.fill();
                         break;
                     }
 
@@ -233,11 +233,11 @@ export const execute = (
             case BITMAP_FILL:
                 {
                     if (is_clip) {
-                        $context.fill();
                         index += 2;
                         const length = commands[index++];
                         index += length;
                         index += 8;
+                        $context.fill();
                         break;
                     }
 
@@ -267,6 +267,7 @@ export const execute = (
                 {
                     if (is_clip) {
                         index += 20;
+                        $context.fill();
                         break;
                     }
 
@@ -312,6 +313,7 @@ export const execute = (
                         const length = commands[index++];
                         index += length;
                         index += 8;
+                        $context.fill();
                         break;
                     }
 
