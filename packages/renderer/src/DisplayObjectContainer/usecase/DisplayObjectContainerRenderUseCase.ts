@@ -127,12 +127,8 @@ export const execute = (
                     index = shapeClipRenderUseCase(render_queue, index);
                     break;
 
-                case 0x02: // text
-                    // todo
-                    break;
-
-                case 0x03: // video
-                    // todo
+                // text, videoはマスク対象外
+                default:
                     break;
 
             }

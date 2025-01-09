@@ -52,12 +52,8 @@ export const execute = <P extends DisplayObjectContainer>(
                 shapeGenerateClipQueueUseCase(child, tMatrix);
                 break;
 
-            case child.isText:
-                // todo
-                break;
-
-            case child.isVideo:
-                // todo
+            // text, videoはマスク対象外
+            default:
                 break;
 
         }
