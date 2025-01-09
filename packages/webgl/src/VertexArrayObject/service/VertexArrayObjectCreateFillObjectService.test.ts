@@ -1,4 +1,3 @@
-import type { IIndexRange } from "../../interface/IIndexRange.ts";
 import { execute } from "./VertexArrayObjectCreateFillObjectService";
 import { describe, expect, it, vi } from "vitest";
 
