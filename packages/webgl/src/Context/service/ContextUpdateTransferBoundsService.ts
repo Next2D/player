@@ -13,8 +13,13 @@ import { $getActiveTransferBounds } from "../../AtlasManager";
 export const execute = (node: Node): void =>
 {
     const bounds = $getActiveTransferBounds(node.index);
-    bounds.xMin = Math.min(node.x, bounds.xMin);
-    bounds.yMin = Math.min(node.y, bounds.yMin);
-    bounds.xMax = Math.max(node.x + node.w, bounds.xMax);
-    bounds.yMax = Math.max(node.y + node.h, bounds.yMax);
+    const xMin = bounds[0];
+    const yMin = bounds[1];
+    const xMax = bounds[2];
+    const yMax = bounds[3];
+
+    bounds[0] = Math.min(node.x, xMin);
+    bounds[1] = Math.min(node.y, yMin);
+    bounds[2] = Math.max(node.x + node.w, xMax);
+    bounds[3] = Math.max(node.y + node.h, yMax);
 };

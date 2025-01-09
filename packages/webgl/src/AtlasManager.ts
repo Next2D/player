@@ -1,7 +1,6 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { TexturePacker } from "@next2d/texture-packer";
 import type { ITextureObject } from "./interface/ITextureObject";
-import type { IBounds } from "./interface/IBounds";
 import { execute as textureManagerCreateAtlasTextureUseCase } from "./TextureManager/usecase/TextureManagerCreateAtlasTextureUseCase";
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "./FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 import { $RENDER_MAX_SIZE } from "./WebGLUtil";
@@ -144,57 +143,57 @@ export const $getAtlasTextureObject = (): ITextureObject =>
 };
 
 /**
- * @type {IBounds[]}
+ * @type {Float32Array[]}
  * @private
  */
-const $transferBounds: IBounds[] = [];
+const $transferBounds: Float32Array[] = [];
 
 /**
  * @description アトラステクスチャの転送範囲を返却
  *              Return the transfer range of the atlas texture
  *
  * @param  {number} index
- * @return {IBounds}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const $getActiveTransferBounds = (index: number): IBounds =>
+export const $getActiveTransferBounds = (index: number): Float32Array =>
 {
     if (!(index in $transferBounds)) {
-        $transferBounds[index] = {
-            "xMin": Number.MAX_VALUE,
-            "yMin": Number.MAX_VALUE,
-            "xMax": -Number.MAX_VALUE,
-            "yMax": -Number.MAX_VALUE
-        };
+        $transferBounds[index] = new Float32Array([
+            Number.MAX_VALUE,
+            Number.MAX_VALUE,
+            -Number.MAX_VALUE,
+            -Number.MAX_VALUE
+        ]);
     }
     return $transferBounds[index];
 };
 
 /**
- * @type {IBounds[]}
+ * @type {Float32Array[]}
  * @private
  */
-const $allTransferBounds: IBounds[] = [];
+const $allTransferBounds: Float32Array[] = [];
 
 /**
  * @description アトラステクスチャの切り替え時の転送範囲を返却
  *              Return the transfer range when switching the atlas texture
  *
  * @param  {number} index
- * @return {IBounds}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const $getActiveAllTransferBounds = (index: number): IBounds =>
+export const $getActiveAllTransferBounds = (index: number): Float32Array =>
 {
     if (!(index in $allTransferBounds)) {
-        $allTransferBounds[index] = {
-            "xMin": Number.MAX_VALUE,
-            "yMin": Number.MAX_VALUE,
-            "xMax": -Number.MAX_VALUE,
-            "yMax": -Number.MAX_VALUE
-        };
+        $allTransferBounds[index] = new Float32Array([
+            Number.MAX_VALUE,
+            Number.MAX_VALUE,
+            -Number.MAX_VALUE,
+            -Number.MAX_VALUE
+        ]);
     }
     return $allTransferBounds[index];
 };
@@ -215,8 +214,8 @@ export const $clearTransferBounds = (): void =>
             continue;
         }
 
-        bounds.xMin = bounds.yMin = Number.MAX_VALUE;
-        bounds.xMax = bounds.yMax = -Number.MAX_VALUE;
+        bounds[0] = bounds[1] = Number.MAX_VALUE;
+        bounds[2] = bounds[3] = -Number.MAX_VALUE;
     }
 
     for (let idx = 0; idx < $allTransferBounds.length; ++idx) {
@@ -225,7 +224,7 @@ export const $clearTransferBounds = (): void =>
             continue;
         }
 
-        bounds.xMin = bounds.yMin = Number.MAX_VALUE;
-        bounds.xMax = bounds.yMax = -Number.MAX_VALUE;
+        bounds[0] = bounds[1] = Number.MAX_VALUE;
+        bounds[2] = bounds[3] = -Number.MAX_VALUE;
     }
 };

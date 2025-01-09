@@ -41,13 +41,13 @@ export const execute = (): void =>
 
     if ($currentIndex === $getActiveAtlasIndex()) {
         const bounds = $getActiveTransferBounds($getActiveAtlasIndex());
-        if (bounds.xMax !== -Number.MAX_VALUE
-            && bounds.yMax !== -Number.MAX_VALUE
+        if (bounds[2] !== -Number.MAX_VALUE
+            && bounds[3] !== -Number.MAX_VALUE
         ) {
             $gl.enable($gl.SCISSOR_TEST);
             $gl.scissor(
-                bounds.xMin, bounds.yMin,
-                bounds.xMax, bounds.yMax
+                bounds[0], bounds[1],
+                bounds[2], bounds[3]
             );
 
             $gl.blitFramebuffer(
@@ -63,8 +63,8 @@ export const execute = (): void =>
 
         $gl.enable($gl.SCISSOR_TEST);
         $gl.scissor(
-            bounds.xMin, bounds.yMin,
-            bounds.xMax, bounds.yMax
+            bounds[0], bounds[1],
+            bounds[2], bounds[3]
         );
 
         $gl.blitFramebuffer(

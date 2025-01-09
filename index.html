@@ -10,14 +10,29 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        next2d.load("develop");
+        // next2d.load("develop");
+
+        const root = await next2d.createRootMovieClip(400, 400, 60);
+        const { Shape } = next2d.display;
+        const { BlurFilter } = next2d.filters;
+        const shape = root.addChild(new Shape());
+
+        shape.x = 150;
+        shape.y = 150;
+
+        shape
+            .graphics
+            .beginFill("#ff0000", 0.5)
+            .drawRect(0, 0, 100, 100);
+
+        shape.filters = [new BlurFilter(10, 10)];
 
         // const count = 8000;
         // const root = next2d
         //     .createRootMovieClip(1000, 416, 60)
         //     .then((root) => 
         //     {
-        //         const { Shape } = next2d.display;
+        //         
 
         //         const rects = [];
         //         for (let i = 0; i < count; i++) {
