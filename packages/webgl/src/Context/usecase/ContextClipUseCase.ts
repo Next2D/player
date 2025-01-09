@@ -38,12 +38,6 @@ export const execute = (): void =>
 
     if (level > 0) {
         $gl.stencilMask(1 << level - 1);
-        $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
-    }
-
-    if (level > 6) {
-        console.log(level);
-        return ;
     }
 
     let offset = 0;
