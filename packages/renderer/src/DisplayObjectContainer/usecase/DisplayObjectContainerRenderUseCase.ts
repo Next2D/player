@@ -73,7 +73,7 @@ export const execute = (
 
         const depth = render_queue[index++];
         const clipDepth = render_queue[index++];
-        
+
         // end mask
         if (endClipDepth && depth > endClipDepth) {
             if (canRenderMask) {

@@ -9,7 +9,7 @@ import {
 /**
  * @description マスクの合成処理
  *              Mask synthesis processing
- * 
+ *
  * @return {void}
  * @method
  * @protected
