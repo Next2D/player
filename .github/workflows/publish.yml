@@ -15,8 +15,6 @@ jobs:
           node-version: "22.x"
           registry-url: "https://registry.npmjs.org"
       - run: npm install
-      - run: npm run build
-      - run: npm run clean
       - run: npm run publish:dist
       - run: cd ~/work/player/player/dist/src && npm publish --access public
         env:
@@ -43,6 +41,9 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/net && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+      - run: cd ~/work/player/player/dist/packages/render-queue && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/renderer && npm publish --access public

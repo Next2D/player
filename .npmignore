@@ -3,9 +3,10 @@
 .github
 json
 node_modules
+build
 src
-DOCS.md
 DEVELOP.md
 eslint.config.mjs
-next2d.js
+index.html
 vite.config.ts
+test.setup.ts

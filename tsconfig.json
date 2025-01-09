@@ -34,16 +34,16 @@
   },
   "include": [
     "src/index.ts",
+    "packages/**/*.ts",
     "@types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "**/dist/**",
     "**/build/**",
-    "worker",
     "scripts",
-    "__tests__",
     "dist",
-    "*.test.ts",
+    "**/*.test.ts",
+    "**/.github",
   ]
 }

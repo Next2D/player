@@ -437,7 +437,6 @@ export class DisplayObject extends EventDispatcher
         this.instanceId    = $getInstanceId();
         this.dictionaryId  = -1;
         this.uniqueKey     = "";
-        this.boundsHashKey = "";
 
         // 各小クラスの機能を所持しているか
         this.isSprite           = false;

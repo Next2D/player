@@ -6,9 +6,10 @@
   "license": "MIT",
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
-  "main": "dist/next2d.js",
+  "main": "index.js",
+  "bundle": "next2d.js",
   "type": "module",
-  "types": "dist/index.d.ts",
+  "types": "index.d.ts",
   "files": [
     "dist"
   ],
@@ -34,9 +35,9 @@
     "lint": "eslint src/**/*.ts packages/**/*.ts",
     "test": "vitest",
     "clean": "node ./scripts/clean.js",
-    "build": "tsc && node ./scripts/build.js && vite build",
+    "build": "node ./scripts/clean.js && tsc && node ./scripts/build.js",
     "build:vite": "vite build",
-    "publish:dist": "tsc && node ./scripts/publish.js"
+    "publish:dist": "node ./scripts/clean.js && tsc && vite build && node ./scripts/publish.js"
   },
   "funding": {
     "type": "github",
@@ -57,7 +58,7 @@
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^15.14.0",
     "jsdom": "^25.0.1",
-    "typescript": "^5.7.2",
+    "typescript": "^5.7.3",
     "vite": "^6.0.7",
     "vitest": "^2.1.8",
     "vitest-webgl-canvas-mock": "^1.1.0"
@@ -71,6 +72,7 @@
     "@next2d/geom": "file:packages/geom",
     "@next2d/media": "file:packages/media",
     "@next2d/net": "file:packages/net",
+    "@next2d/render-queue": "file:packages/render-queue",
     "@next2d/renderer": "file:packages/renderer",
     "@next2d/text": "file:packages/text",
     "@next2d/texture-packer": "file:packages/texture-packer",

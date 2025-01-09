@@ -1,6 +1,7 @@
 node_modules
 json
 dist
+build
 coverage
 .DS_Store
 .idea

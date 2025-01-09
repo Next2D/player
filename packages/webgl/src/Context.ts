@@ -86,8 +86,6 @@ export class Context
      */
     public readonly $stack: Float32Array[];
 
-    public readonly $clipBounds: Float32Array;
-
     /**
      * @description 2D変換行列
      *              2D transformation matrix
