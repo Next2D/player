@@ -6,13 +6,10 @@
   "license": "MIT",
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
-  "main": "index.js",
+  "main": "src/index.js",
   "bundle": "next2d.js",
   "type": "module",
-  "types": "index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "types": "src/index.d.ts",
   "exports": {
     ".": {
       "import": "./src/index.js",
@@ -35,7 +32,6 @@
     "lint": "eslint src/**/*.ts packages/**/*.ts",
     "test": "vitest",
     "clean": "node ./scripts/clean.js",
-    "build": "node ./scripts/clean.js && tsc && node ./scripts/build.js",
     "build:vite": "vite build",
     "publish:dist": "node ./scripts/clean.js && tsc && vite build && node ./scripts/publish.js"
   },

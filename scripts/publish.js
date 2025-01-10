@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { readdirSync, statSync, readFileSync, existsSync, writeFileSync } from "fs";
+import { readdirSync, statSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { spawnSync } from "child_process";
 
@@ -27,18 +27,8 @@ const execute = () =>
 
         basePackageJson.dependencies[`@next2d/${dirName}`] = basePackageJson.version;
 
-        const targetPath  = join(process.cwd(), `dist/packages/${dirName}/src`);
+        const outDir  = join(process.cwd(), `dist/packages/${dirName}`);
         const packagePath = join(process.cwd(), `packages/${dirName}`);
-
-        const outDir = join(process.cwd(), `dist/packages/${dirName}`);
-        if (existsSync(`${outDir}/dist`)) {
-            spawnSync(`rm -rf ${outDir}`, { "shell": true });
-        }
-
-        spawnSync(
-            `mv ${targetPath} ${outDir}/dist`,
-            { "shell": true }
-        );
 
         // LICENSE
         spawnSync(
@@ -61,10 +51,13 @@ const execute = () =>
         packageJson.version = basePackageJson.version;
 
         if (packageJson.peerDependencies) {
+            packageJson.dependencies = {};
             const keys = Object.keys(packageJson.peerDependencies);
             for (let idx = 0; idx < keys.length; ++idx) {
-                packageJson.peerDependencies[keys[idx]] = basePackageJson.version;
+                packageJson.dependencies[keys[idx]] = basePackageJson.version;
             }
+
+            delete packageJson.peerDependencies;
         }
 
         // write package.json
@@ -99,6 +92,20 @@ const execute = () =>
     // README
     spawnSync(
         `cp -r ${process.cwd()}/README.md ${process.cwd()}/dist/src/README.md`,
+        { "shell": true }
+    );
+
+    // move
+    spawnSync(
+        `mkdir ${process.cwd()}/dist/src/src`,
+        { "shell": true }
+    );
+    spawnSync(
+        `mv ${process.cwd()}/dist/src/index.js ${process.cwd()}/dist/src/src/index.js`,
+        { "shell": true }
+    );
+    spawnSync(
+        `mv ${process.cwd()}/dist/src/index.d.ts ${process.cwd()}/dist/src/src/index.d.ts`,
         { "shell": true }
     );
 };

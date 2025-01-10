@@ -6,11 +6,8 @@
   "license": "MIT",
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
   "exports": {
     ".": {
       "import": "./src/index.js",
