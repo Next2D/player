@@ -1,7 +1,7 @@
 {
   "name": "@next2d/render-queue",
   "version": "*",
-  "description": "Next2D Renderer Queue Packages",
+  "description": "Next2D Renderer Queue Package",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
   "homepage": "https://next2d.app",

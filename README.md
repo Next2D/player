@@ -47,7 +47,7 @@ If Next2D is useful to you, we hope you will support our project.
 ## Related Sites
 * [Website](https://next2d.app)
 * [Player API Documentation](https://next2d.app/ja/docs/player)
-* [NoCode Tool](https://tool.next2d.app)
+* [Animation Tool](https://tool.next2d.app)
 * [Framework](https://github.com/Next2D/framework)
 
 ## Examples

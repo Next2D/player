@@ -1,7 +1,7 @@
 {
   "name": "@next2d/cache",
   "version": "*",
-  "description": "Next2D Cache Packages",
+  "description": "Next2D Cache Package",
   "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
   "license": "MIT",
   "homepage": "https://next2d.app",

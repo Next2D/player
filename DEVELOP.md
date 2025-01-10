@@ -48,12 +48,12 @@ class => method => usecase => service
 ## packages
 `packages` ディレクトリの依存関係で注意する点は以下の通りです。
 - `@next2d/core` は他の `packages` からの参照を禁止しています。
-- `@next2d/events`, `@next2d/cache`, `@next2d/filters`, `@next2d/geom`, `@next2d/texture-packer`, `@next2d/render-queue`, `@next2d/webgl` は疎結合で設計されている為、他の `packages` の `import` を禁止しています。
+- `@next2d/events`, `@next2d/cache`, `@next2d/filters`, `@next2d/geom`, `@next2d/texture-packer`, `@next2d/render-queue` は疎結合で設計されている為、他の `packages` の `import` を禁止しています。
 - `@next2d/renderer` はOffscreenCanvasがworkerで処理されるため、 `@next2d/webgl` のみ `import` を許可しています。
 
 The dependencies to note in the `packages` directory are as follows
 - `@next2d/core` does not allow references from other `packages`.
-- `@next2d/events`, `@next2d/cache`, `@next2d/filters`, `@next2d/geom`, `@next2d/texture-packer`, `@next2d/render-queue`, and `@next2d/webgl` are designed to be loosely coupled, so `import` of other `packages` is prohibited.
+- `@next2d/events`, `@next2d/cache`, `@next2d/filters`, `@next2d/geom`, `@next2d/texture-packer` and `@next2d/render-queue` are designed to be loosely coupled, so `import` of other `packages` is prohibited.
 - `@next2d/renderer` allows `import` only for `@next2d/webgl`, because OffscreenCanvas is processed by the worker.
 
 ## License
