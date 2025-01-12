@@ -66,7 +66,8 @@ import {
     $setSamples,
     $getFloat32Array9,
     $getArray,
-    $setContext
+    $setContext,
+    $setDevicePixelRatio
 } from "./WebGLUtil";
 
 /**
@@ -249,14 +250,20 @@ export class Context
     /**
      * @param {WebGL2RenderingContext} gl
      * @param {number} samples
+     * @param {number} [device_pixel_ratio=1]
      * @constructor
      * @public
      */
-    constructor (gl: WebGL2RenderingContext, samples: number)
-    {
+    constructor (
+        gl: WebGL2RenderingContext,
+        samples: number,
+        device_pixel_ratio: number = 1
+    ) {
+
         $setWebGL2RenderingContext(gl);
         $setRenderMaxSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
         $setSamples(samples);
+        $setDevicePixelRatio(device_pixel_ratio);
 
         this.$stack = $getArray();
         this.$stackAttachmentObject = $getArray();
@@ -1072,6 +1079,9 @@ export class Context
      * @param  {number} width
      * @param  {number} height
      * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {IBlendMode} blend_mode
+     * @param  {Float32Array} bounds
      * @param  {Float32Array} params
      * @return {void}
      * @method
@@ -1083,10 +1093,16 @@ export class Context
         width: number,
         height: number,
         matrix: Float32Array,
+        color_transform: Float32Array,
+        blend_mode: IBlendMode,
+        bounds: Float32Array,
         params: Float32Array
     ): void {
+        this.drawArraysInstanced();
         contextApplyFilterUseCase(
-            node, unique_key, width, height, matrix, params
+            node, unique_key, width, height,
+            matrix, color_transform, blend_mode,
+            bounds, params
         );
     }
 }

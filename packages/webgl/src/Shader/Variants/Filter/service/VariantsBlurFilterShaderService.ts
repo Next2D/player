@@ -1,27 +1,28 @@
-import { TEXTURE } from "../../../Fragment/FragmentShaderSourceTexture";
+import { BLUR_FILTER_TEMPLATE } from "../../../Fragment/Filter/FragmentShaderSourceBlurFilter";
 import { ShaderManager } from "../../../ShaderManager";
-import { BLEND_TEMPLATE } from "../../../Vertex/VertexShaderSource";
-import { $collection } from "../../BlendVariants";
+import { TEXTURE_TEMPLATE } from "../../../Vertex/VertexShaderSource";
+import { $collection } from "../../FilterVariants";
 
 /**
  * @description Textureのシェーダーを生成して返却
  *              Generate and return the shader of Texture
  *
+ * @param  {number} half_blur
  * @return {ShaderManager}
  * @method
  * @protected
  */
-export const execute = (): ShaderManager =>
+export const execute = (half_blur: number): ShaderManager =>
 {
-    const key = "p";
+    const key = `b${half_blur}`;
 
     if ($collection.has(key)) {
         return $collection.get(key) as NonNullable<ShaderManager>;
     }
 
     const shaderManager = new ShaderManager(
-        BLEND_TEMPLATE(),
-        TEXTURE(false)
+        TEXTURE_TEMPLATE(),
+        BLUR_FILTER_TEMPLATE(half_blur)
     );
 
     $collection.set(key, shaderManager);

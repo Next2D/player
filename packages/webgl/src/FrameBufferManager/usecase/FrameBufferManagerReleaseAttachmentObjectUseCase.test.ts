@@ -15,12 +15,13 @@ describe("FrameBufferManagerReleaseAttachmentObjectUseCase.js method test", () =
             return {
                 ...mod,
                 $gl: {
-                    "deleteTexture": vi.fn(() => { return "deleteTexture" }),
+                    "deleteTexture": vi.fn(() => { return "deleteTexture" })
                 }
             }
         });
 
         const attachmentObject: IAttachmentObject = {
+            "id": 0,
             "width": 100,
             "height": 100,
             "clipLevel": 0,
@@ -28,12 +29,15 @@ describe("FrameBufferManagerReleaseAttachmentObjectUseCase.js method test", () =
             "mask": false,
             "color": null,
             "texture": {
+                "id": 0,
                 "resource": "createTexture",
                 "width": 100,
                 "height": 100,
                 "area": 100 * 100,
+                "smooth": false
             },
             "stencil": {
+                "id": 0,
                 "resource": "createRenderbuffer",
                 "width": 100,
                 "height": 100,
@@ -77,6 +81,7 @@ describe("FrameBufferManagerReleaseAttachmentObjectUseCase.js method test", () =
             "area": 100 * 100,
             "dirty": false,
             "stencil": {
+                "id": 0,
                 "resource": "createRenderbuffer",
                 "width": 0,
                 "height": 0,
@@ -86,6 +91,7 @@ describe("FrameBufferManagerReleaseAttachmentObjectUseCase.js method test", () =
         };
 
         const attachmentObject: IAttachmentObject = {
+            "id": 0,
             "width": 100,
             "height": 100,
             "clipLevel": 0,
@@ -93,10 +99,12 @@ describe("FrameBufferManagerReleaseAttachmentObjectUseCase.js method test", () =
             "mask": false,
             "color": colorBufferObject,
             "texture": {
+                "id": 0,
                 "resource": "createTexture",
                 "width": 100,
                 "height": 100,
                 "area": 100 * 100,
+                "smooth": false
             },
             "stencil": colorBufferObject.stencil
         }

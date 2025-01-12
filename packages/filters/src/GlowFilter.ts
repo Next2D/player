@@ -1,5 +1,4 @@
 import type { IFilterQuality } from "./interface/IFilterQuality";
-import type { IBounds } from "./interface/IBounds";
 import { BitmapFilter } from "./BitmapFilter";
 import { BlurFilter } from "./BlurFilter";
 import {
@@ -342,12 +341,12 @@ export class GlowFilter extends BitmapFilter
      * @description フィルターの描画範囲のバウンディングボックスを返します。
      *              Returns the bounding box of the filter drawing area.
      *
-     * @param  {object} bounds
-     * @return {object}
+     * @param  {Float32Array} bounds
+     * @return {Float32Array}
      * @method
      * @public
      */
-    getBounds (bounds: IBounds): IBounds
+    getBounds (bounds: Float32Array): Float32Array
     {
         if (!this.canApplyFilter() || this._$inner) {
             return bounds;

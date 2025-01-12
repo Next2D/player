@@ -24,6 +24,7 @@ export const execute = (width: number, height: number): ITextureObject =>
         "resource": $gl.createTexture() as NonNullable<WebGLTexture>,
         "width": width,
         "height": height,
-        "area": width * height
+        "area": width * height,
+        "smooth": false
     };
 };

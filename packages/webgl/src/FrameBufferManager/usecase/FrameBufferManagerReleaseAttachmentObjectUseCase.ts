@@ -12,20 +12,31 @@ import { $objectPool } from "../../FrameBufferManager";
  *              Pool each object for reuse, and initialize and return the attachment object to the pool
  *
  * @param  {IAttachmentObject} attachment_object
+ * @param  {boolean} [release_texture=true]
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (attachment_object: IAttachmentObject): void =>
-{
+export const execute = (
+    attachment_object: IAttachmentObject,
+    release_texture: boolean = true
+): void => {
     if (attachment_object.msaa) {
-        colorBufferObjectReleaseColorBufferObjectUseCase(attachment_object.color as IColorBufferObject);
+        colorBufferObjectReleaseColorBufferObjectUseCase(
+            attachment_object.color as IColorBufferObject
+        );
         attachment_object.color   = null;
         attachment_object.stencil = null;
     } else {
-        textureManagerReleaseTextureObjectUseCase(attachment_object.texture as ITextureObject);
+        if (release_texture) {
+            textureManagerReleaseTextureObjectUseCase(
+                attachment_object.texture as ITextureObject
+            );
+        }
         attachment_object.texture = null;
-        stencilBufferObjectReleaseColorBufferObjectUseCase(attachment_object.stencil as IStencilBufferObject);
+        stencilBufferObjectReleaseColorBufferObjectUseCase(
+            attachment_object.stencil as IStencilBufferObject
+        );
         attachment_object.stencil = null;
     }
 

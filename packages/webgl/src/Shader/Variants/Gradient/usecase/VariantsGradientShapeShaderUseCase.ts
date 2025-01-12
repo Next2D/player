@@ -23,7 +23,7 @@ export const execute = (
     use_grid: boolean
 ): ShaderManager => {
 
-    const key: string = variantsGradientCreateCollectionKeyService(
+    const key = variantsGradientCreateCollectionKeyService(
         use_grid, is_radial, has_focal_point, spread_method
     );
 

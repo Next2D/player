@@ -1,5 +1,4 @@
 import type { IFilterQuality } from "./interface/IFilterQuality";
-import type { IBounds } from "./interface/IBounds";
 import { BitmapFilter } from "./BitmapFilter";
 import { BlurFilter } from "./BlurFilter";
 import {
@@ -445,12 +444,12 @@ export class DropShadowFilter extends BitmapFilter
      * @description フィルターの描画範囲のバウンディングボックスを返します。
      *              Returns the bounding box of the filter drawing area.
      *
-     * @param  {object} bounds
-     * @return {object}
+     * @param  {Float32Array} bounds
+     * @return {Float32Array}
      * @method
      * @public
      */
-    getBounds (bounds: IBounds): IBounds
+    getBounds (bounds: Float32Array): Float32Array
     {
         if (!this.canApplyFilter()) {
             return bounds;
@@ -465,13 +464,14 @@ export class DropShadowFilter extends BitmapFilter
         const x = Math.cos(radian) * this._$distance;
         const y = Math.sin(radian) * this._$distance;
 
-        bounds.xMin = Math.min(bounds.xMin, x);
+        bounds[0] = Math.min(bounds[0], x);
         if (x > 0) {
-            bounds.xMax += x;
+            bounds[2] += x;
         }
-        bounds.yMin = Math.min(bounds.yMin, y);
+
+        bounds[1] = Math.min(bounds[1], y);
         if (y > 0) {
-            bounds.yMax += y;
+            bounds[3] += y;
         }
 
         return bounds;

@@ -492,3 +492,36 @@ export const $linearGradientXY = (matrix: Float32Array): Float32Array =>
 
     return $getFloat32Array4(x0 + r2 * vx2, y0 + r2 * vy2, x1, y1);
 };
+
+/**
+ * @type {number}
+ * @public
+ */
+let $devicePixelRatio: number = 1;
+
+/**
+ * @description デバイスのピクセル比率を設定
+ *              Set the device's pixel ratio
+ *
+ * @param  {number} device_pixel_ratio
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $setDevicePixelRatio = (device_pixel_ratio: number): void =>
+{
+    $devicePixelRatio = device_pixel_ratio;
+};
+
+/**
+ * @description デバイスのピクセル比率を取得
+ *              Get the device's pixel ratio
+ *
+ * @return {number}
+ * @method
+ * @public
+ */
+export const $getDevicePixelRatio = (): number =>
+{
+    return $devicePixelRatio;
+};

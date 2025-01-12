@@ -8,11 +8,11 @@ import { STATEMENT_COLOR_TRANSFORM_ON } from "./FragmentShaderLibrary";
  */
 export const TEXTURE = (with_color_transform: boolean): string =>
 {
-    const colorTransformUniform: string = with_color_transform
+    const colorTransformUniform = with_color_transform
         ? "uniform vec4 u_mediump[2];"
         : "";
 
-    const colorTransformStatement: string = with_color_transform
+    const colorTransformStatement = with_color_transform
         ? STATEMENT_COLOR_TRANSFORM_ON(0)
         : "";
 

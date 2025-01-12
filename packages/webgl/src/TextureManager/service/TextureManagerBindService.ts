@@ -13,6 +13,7 @@ import {
  * @param  {number} index
  * @param  {number} unit
  * @param  {ITextureObject} [texture_object=null]
+ * @param  {boolean} [smooth=false]
  * @return {void}
  * @method
  * @protected
@@ -20,7 +21,8 @@ import {
 export const execute = (
     index: number,
     unit: number,
-    texture_object: ITextureObject | null = null
+    texture_object: ITextureObject | null = null,
+    smooth: boolean = false
 ): void => {
 
     if ($activeTextureUnit === -1 || unit !== $activeTextureUnit) {
@@ -38,4 +40,10 @@ export const execute = (
 
     $boundTextures[index] = texture_object;
     $gl.bindTexture($gl.TEXTURE_2D, texture_object ? texture_object.resource : null);
+
+    if (texture_object && texture_object.smooth !== smooth) {
+        texture_object.smooth = smooth;
+        $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MIN_FILTER, smooth ? $gl.LINEAR : $gl.NEAREST);
+        $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MAG_FILTER, smooth ? $gl.LINEAR : $gl.NEAREST);
+    }
 };

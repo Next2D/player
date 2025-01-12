@@ -13,7 +13,7 @@ import { $collection } from "../../BlendVariants";
  */
 export const execute = (): ShaderInstancedManager =>
 {
-    const key: string = "i";
+    const key = "i";
 
     if ($collection.has(key)) {
         return $collection.get(key) as NonNullable<ShaderInstancedManager>;

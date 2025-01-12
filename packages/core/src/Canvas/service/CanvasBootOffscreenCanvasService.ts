@@ -5,7 +5,6 @@ import { $rendererWorker } from "../../RendererWorker";
  *              Boot offscreen canvas
  *
  * @param  {HTMLCanvasElement} canvas
- * @param  {number} ratio
  * @return {void}
  * @method
  * @public
@@ -17,6 +16,7 @@ export const execute = (canvas: HTMLCanvasElement): void =>
     // postMessage
     $rendererWorker.postMessage({
         "command": "initialize",
-        "canvas": offscreenCanvas
+        "canvas": offscreenCanvas,
+        "devicePixelRatio": window.devicePixelRatio
     }, [offscreenCanvas]);
 };

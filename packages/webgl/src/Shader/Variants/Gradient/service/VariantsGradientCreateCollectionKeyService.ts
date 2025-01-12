@@ -17,10 +17,10 @@ export const execute = (
     spread_method: number
 ): string => {
 
-    const key1: string = has_grid  ? "y" : "n";
-    const key2: string = is_radial ? "y" : "n";
-    const key3: string = is_radial && has_focal_point ? "y" : "n";
-    const key4: string = `${spread_method}`;
+    const key1 = has_grid  ? "y" : "n";
+    const key2 = is_radial ? "y" : "n";
+    const key3 = is_radial && has_focal_point ? "y" : "n";
+    const key4 = `${spread_method}`;
 
     return `${key1}${key2}${key3}${key4}`;
 };

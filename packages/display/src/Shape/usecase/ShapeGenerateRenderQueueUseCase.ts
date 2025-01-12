@@ -16,7 +16,8 @@ import {
     $poolBoundsArray,
     $MATRIX_ARRAY_IDENTITY,
     $getFloat32Array6,
-    $poolFloat32Array6
+    $poolFloat32Array6,
+    $getBoundsArray
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
@@ -321,26 +322,38 @@ export const execute = (
         renderQueue.push(1);
     }
 
-    const params  = [];
+    renderQueue.push(
+        displayObjectBlendToNumberService(shape.blendMode)
+    );
+
     if (shape.filters?.length) {
+
+        const params = [];
+        const bounds = $getBoundsArray(0, 0, 0, 0);
         for (let idx = 0; idx < shape.filters.length; idx++) {
+
             const filter = shape.filters[idx];
             if (!filter || !filter.canApplyFilter()) {
                 continue;
             }
 
+            filter.getBounds(bounds);
+
             params.push(...filter.toNumberArray());
         }
-    }
 
-    renderQueue.push(
-        displayObjectBlendToNumberService(shape.blendMode)
-    );
+        const useFilfer = params.length > 0;
+        if (useFilfer) {
+            renderQueue.push(
+                +useFilfer,
+                bounds[0], bounds[1], bounds[2], bounds[3],
+                params.length, ...params
+            );
+        }
 
-    const useFilfer = params.length > 0;
-    renderQueue.push(+useFilfer);
-    if (useFilfer) {
-        renderQueue.push(params.length, ...params);
+        $poolBoundsArray(bounds);
+    } else {
+        renderQueue.push(0);
     }
 
     if (tColorTransform !== color_transform) {

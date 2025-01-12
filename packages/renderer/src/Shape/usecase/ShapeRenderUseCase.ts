@@ -158,13 +158,12 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     const blendMode = render_queue[index++];
 
-    $context.globalAlpha = Math.min(Math.max(0, colorTransform[3] + colorTransform[7] / 255), 1);
-    $context.imageSmoothingEnabled = true;
-    $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
-
     // フィルター設定があればフィルターを実行
     const useFilfer = Boolean(render_queue[index++]);
     if (useFilfer) {
+        const filterBounds = render_queue.subarray(index, index + 4);
+        index += 4;
+
         const length = render_queue[index++];
         const params = render_queue.subarray(index, index + length);
 
@@ -174,13 +173,18 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         $context.applyFilter(
             node, uniqueKey,
             width, height,
-            matrix, params
+            matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
+            filterBounds, params
         );
 
         index += length;
 
         return index;
     }
+
+    $context.globalAlpha = Math.min(Math.max(0, colorTransform[3] + colorTransform[7] / 255), 1);
+    $context.imageSmoothingEnabled = true;
+    $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
 
     if (isBitmap && !isGridEnabled) {
         $context.setTransform(

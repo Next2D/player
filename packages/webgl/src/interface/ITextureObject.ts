@@ -4,4 +4,5 @@ export interface ITextureObject {
     width: number;
     height: number;
     area: number;
+    smooth: boolean;
 }

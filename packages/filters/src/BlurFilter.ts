@@ -1,5 +1,4 @@
 import type { IFilterQuality } from "./interface/IFilterQuality";
-import type { IBounds } from "./interface/IBounds";
 import { BitmapFilter } from "./BitmapFilter";
 import { $clamp } from "./FilterUtil";
 
@@ -208,25 +207,25 @@ export class BlurFilter extends BitmapFilter
      * @description フィルターの描画範囲のバウンディングボックスを返します。
      *              Returns the bounding box of the filter drawing area.
      *
-     * @param  {object} bounds
-     * @return {object}
+     * @param  {Float32Array} bounds
+     * @return {Float32Array}
      * @method
      * @public
      */
-    getBounds (bounds: IBounds): IBounds
+    getBounds (bounds: Float32Array): Float32Array
     {
         if (!this.canApplyFilter()) {
             return bounds;
         }
 
         const step = STEP[this._$quality - 1];
-        const dx = 0 >= this._$blurX ? 1 : Math.round(this._$blurX * step);
-        const dy = 0 >= this._$blurY ? 1 : Math.round(this._$blurY * step);
+        const dx = Math.round(this._$blurX * step);
+        const dy = Math.round(this._$blurY * step);
 
-        bounds.xMin -= dx;
-        bounds.xMax += dx * 2;
-        bounds.yMin -= dy;
-        bounds.yMax += dy * 2;
+        bounds[0] -= dx;
+        bounds[2] += dx;
+        bounds[1] -= dy;
+        bounds[3] += dy;
 
         return bounds;
     }

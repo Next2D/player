@@ -18,6 +18,7 @@ describe("TextureManagerBind0UseCase.js method test", () =>
                 $gl: {
                     "activeTexture": vi.fn(() => { return "activeTexture" }),
                     "bindTexture": vi.fn(() => { return "bindTexture" }),
+                    "texParameteri": vi.fn(() => { return "bindTexture" }),
                     "TEXTURE0": 0,
                     "TEXTURE1": 1,
                     "TEXTURE2": 2

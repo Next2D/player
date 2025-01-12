@@ -18,6 +18,7 @@ describe("TextureManagerBindService.js method test", () =>
                 $gl: {
                     "activeTexture": vi.fn(() => { return "activeTexture" }),
                     "bindTexture": vi.fn(() => { return "bindTexture" }),
+                    "texParameteri": vi.fn(() => { return "texParameteri" }),
                 }
             }
         });

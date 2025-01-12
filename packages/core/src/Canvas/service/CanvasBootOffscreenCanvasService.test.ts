@@ -14,7 +14,7 @@ describe("CanvasBootOffscreenCanvasService.js test", () =>
         });
 
         expect(state).toBe("");
-        execute(new MockCanvas(), 1);
+        execute(new MockCanvas());
         expect(state).toBe("ok");
     });
 });

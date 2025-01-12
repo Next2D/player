@@ -32,11 +32,13 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
                     "bindRenderbuffer": vi.fn(() => { return "bindRenderbuffer" }),
                     "framebufferTexture2D": vi.fn(() => { return "framebufferTexture2D" }),
                     "framebufferRenderbuffer": vi.fn(() => { return "framebufferRenderbuffer" }),
+                    "texParameteri": vi.fn(() => { return "texParameteri" }),
                 }
             }
         });
 
         const attachmentObject: IAttachmentObject = {
+            "id": 0,
             "width": 100,
             "height": 120,
             "msaa": false,
@@ -44,12 +46,15 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
             "clipLevel": 0,
             "color": null,
             "texture": {
+                "id": 0,
                 "resource": {} as WebGLTexture,
                 "width": 100,
                 "height": 120,
-                "area": 100 * 120
+                "area": 100 * 120,
+                "smooth": false,
             },
             "stencil": {
+                "id": 0,
                 "resource": {} as WebGLRenderbuffer,
                 "width": 100,
                 "height": 120,
@@ -96,6 +101,7 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
         const colorBufferObject: IColorBufferObject = {
             "resource": {} as WebGLRenderbuffer,
             "stencil": {
+                "id": 0,
                 "resource": {} as WebGLRenderbuffer,
                 "width": 0,
                 "height": 0,
@@ -109,6 +115,7 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
         };
 
         const attachmentObject: IAttachmentObject = {
+            "id": 0,
             "width": 100,
             "height": 120,
             "msaa": true,

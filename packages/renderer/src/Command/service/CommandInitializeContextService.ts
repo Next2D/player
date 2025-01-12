@@ -10,11 +10,12 @@ import {
  *              Get WebGL2 context from OffscreenCanvas
  *
  * @param  {OffscreenCanvas} canvas
+ * @param  {number} device_pixel_ratio
  * @return {void}
  * @method
  * @public
  */
-export const execute = (canvas: OffscreenCanvas): void =>
+export const execute = (canvas: OffscreenCanvas, device_pixel_ratio: number): void =>
 {
     // Set OffscreenCanvas
     $setCanvas(canvas);
@@ -32,5 +33,5 @@ export const execute = (canvas: OffscreenCanvas): void =>
     }
 
     // Set CanvasToWebGLContext
-    $setContext(new Context(gl, $samples));
+    $setContext(new Context(gl, $samples, device_pixel_ratio));
 };

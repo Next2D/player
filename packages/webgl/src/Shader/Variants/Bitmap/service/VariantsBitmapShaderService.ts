@@ -21,7 +21,7 @@ export const execute = (
     use_grid: boolean
 ): ShaderManager => {
 
-    const key: string = `b${repeat ? "y" : "n"}${use_grid ? "y" : "n"}`;
+    const key = `b${repeat ? "y" : "n"}${use_grid ? "y" : "n"}`;
 
     if ($collection.has(key)) {
         return $collection.get(key) as NonNullable<ShaderManager>;

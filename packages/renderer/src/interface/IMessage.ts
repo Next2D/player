@@ -4,5 +4,6 @@ export interface IMessage {
     length?: number;
     imageBitmaps?: ImageBitmap[] | null;
     canvas?: OffscreenCanvas;
+    devicePixelRatio?: number;
     id?: string;
 }

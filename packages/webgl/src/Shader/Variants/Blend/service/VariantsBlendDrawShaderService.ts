@@ -16,7 +16,7 @@ import { $collection } from "../../BlendVariants";
  */
 export const execute = (operation: IBlendMode, with_color_transform: boolean): ShaderManager =>
 {
-    const key: string = `i${operation}${with_color_transform ? "y" : "n"}`;
+    const key = `i${operation}${with_color_transform ? "y" : "n"}`;
 
     if ($collection.has(key)) {
         return $collection.get(key) as NonNullable<ShaderManager>;

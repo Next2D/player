@@ -15,7 +15,43 @@ void main() {
     v_coord = a_vertex;
 
     vec2 position = a_vertex * 2.0 - 1.0;
-    gl_Position = vec4(position, 0.0, 1.0);
+    gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
+}`;
+};
+
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
+export const BLEND_MATRIX_TEMPLATE = (): string =>
+{
+    return `#version 300 es
+
+layout (location = 0) in vec2 a_vertex;
+uniform vec4 u_highp[3];
+
+out vec2 v_coord;
+
+void main() {
+    v_coord = a_vertex;
+
+    mat3 matrix = mat3(
+        u_highp[0].x, u_highp[0].y, 0.0,
+        u_highp[0].z, u_highp[0].w, 0.0,
+        u_highp[1].x, u_highp[1].y, 1.0
+    );
+
+    vec2 size     = u_highp[1].zw;
+    vec2 viewport = vec2(u_highp[2].x, u_highp[2].y);
+
+    vec2 position = vec2(a_vertex.x, 1.0 - a_vertex.y);
+    position = position * size;
+    position = (matrix * vec3(position, 1.0)).xy;
+    position /= viewport;
+
+    position = position * 2.0 - 1.0;
+    gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
 }`;
 };
 
@@ -29,7 +65,6 @@ export const BLEND_TEMPLATE = (): string =>
     return `#version 300 es
 
 layout (location = 0) in vec2 a_vertex;
-
 uniform vec4 u_highp[2];
 
 out vec2 v_coord;

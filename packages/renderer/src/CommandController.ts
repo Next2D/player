@@ -77,7 +77,8 @@ export class CommandController
 
                 case "initialize":
                     commandInitializeContextService(
-                        object.canvas as OffscreenCanvas
+                        object.canvas as OffscreenCanvas,
+                        object.devicePixelRatio as number
                     );
                     break;
 
