@@ -1,16 +1,11 @@
 /**
- * @class
+ * @return {string}
+ * @method
+ * @static
  */
-export class FragmentShaderSourceColorMatrixFilter
+export const COLOR_MATRIX_FILTER_TEMPLATE = (): string =>
 {
-    /**
-     * @return {string}
-     * @method
-     * @static
-     */
-    static TEMPLATE (): string
-    {
-        return `#version 300 es
+    return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_texture;
@@ -31,5 +26,4 @@ void main() {
 
     o_color = color;
 }`;
-    }
-}
+};

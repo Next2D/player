@@ -46,7 +46,6 @@ export const execute = (
     const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
     const devicePixelRatio = $getDevicePixelRatio();
-
     const baseBlurX = blur_x * (xScale / devicePixelRatio * 2);
     const baseBlurY = blur_y * (yScale / devicePixelRatio * 2);
 

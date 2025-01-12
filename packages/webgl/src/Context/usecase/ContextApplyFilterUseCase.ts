@@ -12,6 +12,7 @@ import { execute as shaderManagerSetMatrixTextureWithColorTransformUniformServic
 import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
+import { execute as filterApplyColorMatrixFilterUseCase } from "../../Filter/ColorMatrixFilter/usecase/FilterApplyColorMatrixFilterUseCase";
 import { $cacheStore } from "@next2d/cache";
 import {
     $context,
@@ -148,6 +149,16 @@ export const execute = (
                 break;
 
             case 2: // ColorMatrixFilter
+                textureObject = filterApplyColorMatrixFilterUseCase(
+                    textureObject,
+                    new Float32Array([
+                        params[idx++], params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], params[idx++], params[idx++]
+                    ])
+                );
                 break;
 
             case 3: // ConvolutionFilter
