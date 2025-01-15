@@ -473,10 +473,25 @@ export class BevelFilter extends BitmapFilter
      */
     toNumberArray (): number[]
     {
+        let type = 0;
+        switch (this._$type) {
+            case "full":
+                type = 0;
+                break;
+
+            case "inner":
+                type = 1;
+                break;
+
+            case "outer":
+                type = 2;
+                break;
+        }
+
         return [0,
             this._$distance, this._$angle, this._$highlightColor, this._$highlightAlpha,
             this._$shadowColor, this._$shadowAlpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
-            this._$strength, this._$blurFilter.quality
+            this._$strength, this._$blurFilter.quality, type, +this._$knockout
         ];
     }
 

@@ -4,8 +4,8 @@ import { TEXTURE_TEMPLATE } from "../../../Vertex/VertexShaderSource";
 import { $collection } from "../../FilterVariants";
 
 /**
- * @description Textureのシェーダーを生成して返却
- *              Generate and return the shader of Texture
+ * @description ColorMatrixFilterShaderを生成する
+ *              Create ColorMatrixFilterShader
  *
  * @return {ShaderManager}
  * @method

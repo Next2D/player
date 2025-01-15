@@ -8,6 +8,8 @@ import { execute as textureManagerBind0UseCase } from "../../../TextureManager/u
 import { execute as filterApplyDirectionalBlurFilterUseCase } from "../../../Filter/BlurFilter/usecase/FilterApplyDirectionalBlurFilterUseCase";
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
+import { execute as blendOneZeroService } from "../../../Blend/service/BlendOneZeroService";
+import { $offset } from "../../../Filter";
 import {
     $context,
     $getDevicePixelRatio
@@ -28,6 +30,7 @@ const $STEP: number[] = [0.5, 1.05, 1.4, 1.55, 1.75, 1.9, 2, 2.15, 2.2, 2.3, 2.5
  * @param  {number} [blur_x=4]
  * @param  {number} [blur_y=4]
  * @param  {number} [quality=1]
+ * @param  {boolean} [removed=false]
  * @return {ITextureObject}
  * @method
  * @protected
@@ -37,10 +40,12 @@ export const execute = (
     matrix: Float32Array,
     blur_x: number = 4,
     blur_y: number = 4,
-    quality: number = 1
+    quality: number = 1,
+    removed: boolean = true
 ): ITextureObject => {
 
     const currentAttachmentObject = $context.currentAttachmentObject;
+    blendOneZeroService();
 
     const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
     const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
@@ -52,6 +57,9 @@ export const execute = (
     const step = $STEP[quality - 1];
     const dx = Math.round(baseBlurX * step);
     const dy = Math.round(baseBlurY * step);
+
+    $offset.x += dx;
+    $offset.y += dy;
 
     const width  = texture_object.width  + dx * 2;
     const height = texture_object.height + dy * 2;
@@ -104,7 +112,9 @@ export const execute = (
     shaderManagerDrawTextureUseCase(shaderManager);
 
     // 描画元のテクスチャを解放
-    textureManagerReleaseTextureObjectUseCase(texture_object);
+    if (removed) {
+        textureManagerReleaseTextureObjectUseCase(texture_object);
+    }
 
     const bufferBlurX = baseBlurX * bufferScaleX;
     const bufferBlurY = baseBlurY * bufferScaleY;

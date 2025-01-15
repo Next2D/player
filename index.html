@@ -14,7 +14,12 @@
 
         const root = await next2d.createRootMovieClip(400, 400, 60);
         const { Shape } = next2d.display;
-        const { BlurFilter, ColorMatrixFilter } = next2d.filters;
+        const {
+            BlurFilter,
+            ColorMatrixFilter,
+            GlowFilter,
+            BevelFilter
+        } = next2d.filters;
         const shape = root.addChild(new Shape());
 
         shape.x = 150;
@@ -26,13 +31,15 @@
             .drawRect(0, 0, 100, 100);
 
         shape.filters = [
-            new BlurFilter(10, 10, 1),
-            new ColorMatrixFilter([
-                0.393, 0.769, 0.189, 0, 0,
-                0.349, 0.686, 0.168, 0, 0,
-                0.272, 0.534, 0.131, 0, 0,
-                0, 0, 0, 1, 0
-            ])
+            // new BevelFilter(),
+            // new BlurFilter(10, 10, 1),
+            // new ColorMatrixFilter([
+            //     0.393, 0.769, 0.189, 0, 0,
+            //     0.349, 0.686, 0.168, 0, 0,
+            //     0.272, 0.534, 0.131, 0, 0,
+            //     0, 0, 0, 1, 0
+            // ]),
+            // new GlowFilter(0, 0.5, 25, 25, 1, 1, false, false)   
         ];
 
         // const count = 8000;

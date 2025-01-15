@@ -13,7 +13,10 @@ import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderM
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
 import { execute as filterApplyColorMatrixFilterUseCase } from "../../Filter/ColorMatrixFilter/usecase/FilterApplyColorMatrixFilterUseCase";
+import { execute as filterApplyGlowFilterUseCase } from "../../Filter/GlowFilter/usecase/FilterApplyGlowFilterUseCase";
+import { execute as filterApplyBevelFilterUseCase } from "../../Filter/BevelFilter/usecase/FilterApplyBevelFilterUseCase";
 import { $cacheStore } from "@next2d/cache";
+import { $offset } from "../../Filter";
 import {
     $context,
     $getFloat32Array6
@@ -134,12 +137,23 @@ export const execute = (
         }
     }
 
+    // オフセットを初期化
+    $offset.x = 0;
+    $offset.y = 0;
+
+    // フィルターを適用
     for (let idx = 0; params.length > idx; ) {
 
         const type = params[idx++];
         switch (type) {
 
             case 0: // BevelFilter
+                textureObject = filterApplyBevelFilterUseCase(
+                    textureObject, matrix, 
+                    params[idx++], params[idx++], params[idx++], params[idx++],
+                    params[idx++], params[idx++], params[idx++], params[idx++],
+                    params[idx++], params[idx++], params[idx++], Boolean(params[idx++])
+                );
                 break;
 
             case 1: // BlurFilter
@@ -171,6 +185,11 @@ export const execute = (
                 break;
 
             case 6: // GlowFilter
+                textureObject = filterApplyGlowFilterUseCase(
+                    textureObject, matrix,
+                    params[idx++], params[idx++], params[idx++], params[idx++],
+                    params[idx++], params[idx++], Boolean(params[idx++]), Boolean(params[idx++])
+                );
                 break;
 
             case 7: // GradientBevelFilter
@@ -185,6 +204,7 @@ export const execute = (
 
     // メインのAttachmentObjectに描画して終了
     $context.bind($context.$mainAttachmentObject as IAttachmentObject);
+    textureManagerBind0UseCase(textureObject);
 
     const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
     const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
@@ -193,14 +213,13 @@ export const execute = (
     const yMin = bounds[1] * scaleY;
 
     $context.reset();
+    // todo
     $context.globalCompositeOperation = blend_mode;
     $context.setTransform(
         1, 0, 0, 1,
         xMin + matrix[4],
         yMin + matrix[5]
     );
-
-    textureManagerBind0UseCase(textureObject);
 
     const shaderManager = variantsBlendMatrixTextureShaderService(true);
     shaderManagerSetMatrixTextureWithColorTransformUniformService(

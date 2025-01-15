@@ -14,7 +14,7 @@ import { $collection } from "../../BlendVariants";
  */
 export const execute = (with_color_transform: boolean = false): ShaderManager =>
 {
-    const key = `m${with_color_transform ? 1 : 0}`;
+    const key = `m${with_color_transform ? "y" : "n"}`;
 
     if ($collection.has(key)) {
         return $collection.get(key) as NonNullable<ShaderManager>;

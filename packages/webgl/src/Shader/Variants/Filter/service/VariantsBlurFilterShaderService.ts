@@ -4,8 +4,8 @@ import { TEXTURE_TEMPLATE } from "../../../Vertex/VertexShaderSource";
 import { $collection } from "../../FilterVariants";
 
 /**
- * @description Textureのシェーダーを生成して返却
- *              Generate and return the shader of Texture
+ * @description BlurFilterShaderを生成する
+ *              Create BlurFilterShader
  *
  * @param  {number} half_blur
  * @return {ShaderManager}

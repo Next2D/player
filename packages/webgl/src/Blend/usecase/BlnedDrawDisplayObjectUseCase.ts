@@ -12,7 +12,7 @@ import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
 import { execute as frameBufferManagerTransferTextureFromRectService } from "../../FrameBufferManager/service/FrameBufferManagerTransferTextureFromRectService";
-import { execute as shaderManagerSetBlendUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetBlendUniformService";
+import { execute as shaderManagerSetBlendWithColorTransformUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetBlendWithColorTransformUniformService";
 import {
     $context,
     $getViewportHeight,
@@ -133,7 +133,7 @@ export const execute = (
 
                 // blend用のシェーダーを取得
                 const shaderManager = variantsBlendDrawShaderService($context.globalCompositeOperation, true);
-                shaderManagerSetBlendUniformService(
+                shaderManagerSetBlendWithColorTransformUniformService(
                     shaderManager,
                     ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
                 );

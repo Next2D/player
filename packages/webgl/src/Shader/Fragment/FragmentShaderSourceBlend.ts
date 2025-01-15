@@ -5,7 +5,7 @@ import { STATEMENT_COLOR_TRANSFORM_ON } from "./FragmentShaderLibrary";
  * @method
  * @static
  */
-export const FUNCTION_NORMAL = (): string =>
+const FUNCTION_NORMAL = (): string =>
 {
     return `
 vec4 blend (in vec4 src, in vec4 dst) {
@@ -30,7 +30,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
  * @method
  * @static
  */
-export const FUNCTION_SUBTRACT = (): string =>
+const FUNCTION_SUBTRACT = (): string =>
 {
     // [合成色計算式]
     // dst - src
@@ -57,7 +57,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
  * @method
  * @static
  */
-export const FUNCTION_MULTIPLY = (): string =>
+const FUNCTION_MULTIPLY = (): string =>
 {
     // [合成色計算式]
     // src * dst
@@ -76,7 +76,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
  * @method
  * @static
  */
-export const FUNCTION_LIGHTEN = (): string =>
+const FUNCTION_LIGHTEN = (): string =>
 {
     // [合成色計算式]
     // (src > dst) ? src : dst
@@ -103,7 +103,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
  * @method
  * @static
  */
-export const FUNCTION_DARKEN = (): string =>
+const FUNCTION_DARKEN = (): string =>
 {
     // [合成色計算式]
     // (src < dst) ? src : dst
@@ -130,7 +130,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
  * @method
  * @static
  */
-export const FUNCTION_OVERLAY = (): string =>
+const FUNCTION_OVERLAY = (): string =>
 {
     // [合成色計算式]
     // if (dst < 0.5) {
@@ -164,7 +164,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
  * @method
  * @static
  */
-export const FUNCTION_HARDLIGHT = (): string =>
+const FUNCTION_HARDLIGHT = (): string =>
 {
     // [合成色計算式]
     // if (src < 0.5) {
@@ -198,7 +198,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
  * @method
  * @static
  */
-export const FUNCTION_DIFFERENCE = (): string =>
+const FUNCTION_DIFFERENCE = (): string =>
 {
     // [合成色計算式]
     // abs(src - dst)
@@ -225,7 +225,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
  * @method
  * @static
  */
-export const FUNCTION_INVERT = (): string =>
+const FUNCTION_INVERT = (): string =>
 {
     // [基本計算式]
     // ((1.0 - dst) * src.a) + (dst * (1.0 - src.a))
@@ -240,6 +240,7 @@ vec4 blend (in vec4 src, in vec4 dst) {
     return b + c;
 }`;
 };
+
 /**
  * @param  {string}  operation
  * @param  {boolean} with_color_transform
@@ -290,11 +291,11 @@ export const BLEND_TEMPLATE = (operation: string, with_color_transform: boolean)
 
     }
 
-    const colorTransformUniform: string = with_color_transform
+    const colorTransformUniform = with_color_transform
         ? "uniform vec4 u_mediump[2];"
         : "";
 
-    const colorTransformStatement: string = with_color_transform
+    const colorTransformStatement = with_color_transform
         ? STATEMENT_COLOR_TRANSFORM_ON(0)
         : "";
 
