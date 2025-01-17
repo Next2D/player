@@ -28,13 +28,15 @@
         } = next2d.filters;
 
         const shape = root.addChild(new Shape());
+        shape.x = 50;
+        shape.y = 50;
+
         shape.addEventListener(Event.COMPLETE, () => {
-            shape.x = 50;
-            shape.y = 50;
             shape.scaleX = 0.5;
             shape.scaleY = 0.5;
             shape.filters = [
                 // new BlurFilter(14, 14, 1),
+                // new DropShadowFilter(20, 45, 0, 0.5),
                 // new ColorMatrixFilter([
                 //     0.393, 0.769, 0.189, 0, 0,
                 //     0.349, 0.686, 0.168, 0, 0,
@@ -54,6 +56,7 @@
         //     .drawRect(0, 0, 100, 100);
 
         // shape.filters = [
+        //     // new DropShadowFilter(10, 45, 0, 0.5, 4, 4, 1, 1, true, false, false),
         // //     new BlurFilter(4, 4, 1),
         // //     // new ColorMatrixFilter([
         // //     //     0.393, 0.769, 0.189, 0, 0,

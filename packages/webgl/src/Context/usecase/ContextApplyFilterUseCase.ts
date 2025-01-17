@@ -14,6 +14,7 @@ import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
 import { execute as filterApplyColorMatrixFilterUseCase } from "../../Filter/ColorMatrixFilter/usecase/FilterApplyColorMatrixFilterUseCase";
 import { execute as filterApplyGlowFilterUseCase } from "../../Filter/GlowFilter/usecase/FilterApplyGlowFilterUseCase";
+import { execute as filterApplyDropShadowFilterUseCase } from "../../Filter/DropShadowFilter/usecase/FilterApplyDropShadowFilterUseCase";
 import { execute as filterApplyBevelFilterUseCase } from "../../Filter/BevelFilter/usecase/FilterApplyBevelFilterUseCase";
 import { $cacheStore } from "@next2d/cache";
 import { $offset } from "../../Filter";
@@ -188,6 +189,12 @@ export const execute = (
                 break;
 
             case 5: // DropShadowFilter
+                textureObject = filterApplyDropShadowFilterUseCase(
+                    textureObject, matrix,
+                    params[idx++], params[idx++], params[idx++], params[idx++],
+                    params[idx++], params[idx++], params[idx++], params[idx++],
+                    Boolean(params[idx++]), Boolean(params[idx++]), Boolean(params[idx++])
+                );
                 break;
 
             case 6: // GlowFilter
