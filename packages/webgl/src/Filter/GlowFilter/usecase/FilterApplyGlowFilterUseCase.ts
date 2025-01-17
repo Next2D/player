@@ -83,6 +83,7 @@ export const execute = (
         0, 0, 0, 0
     );
 
+    textureManagerReleaseTextureObjectUseCase(texture_object);
     textureManagerReleaseTextureObjectUseCase(blurTextureObject);
 
     if (currentAttachmentObject) {

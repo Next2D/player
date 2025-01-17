@@ -28,8 +28,9 @@ export const execute = (texture_object: ITextureObject, matrix: Float32Array): I
     );
     $context.bind(attachmentObject);
     $context.reset();
+    $context.setTransform(1, 0, 0, 1, 0, 0);
 
-    textureManagerBind0UseCase(texture_object, true);
+    textureManagerBind0UseCase(texture_object);
     blendResetService();
 
     const shaderManager = variantsColorMatrixFilterShaderService();

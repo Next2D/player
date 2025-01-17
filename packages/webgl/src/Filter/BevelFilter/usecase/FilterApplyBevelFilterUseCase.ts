@@ -9,6 +9,7 @@ import { execute as blendResetService } from "../../../Blend/service/BlendResetS
 import { execute as filterApplyBlurFilterUseCase } from "../../BlurFilter/usecase/FilterApplyBlurFilterUseCase";
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import { execute as filterApplyBitmapFilterUseCase } from "../../BitmapFilter/usecase/FilterApplyBitmapFilterUseCase";
+import { execute as textureManagerReleaseTextureObjectUseCase } from "../../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
 import {
     $offset,
     $intToR,
@@ -74,8 +75,8 @@ export const execute = (
     // pointer
     const devicePixelRatio = $getDevicePixelRatio();
     const radian = angle * $Deg2Rad;
-    const x = Math.cos(radian) * distance * xScale / devicePixelRatio * 2;
-    const y = Math.sin(radian) * distance * yScale / devicePixelRatio * 2;
+    const x = Math.cos(radian) * distance * (xScale / devicePixelRatio);
+    const y = Math.sin(radian) * distance * (yScale / devicePixelRatio);
 
     const currentAttachmentObject = $context.currentAttachmentObject;
 
@@ -167,6 +168,9 @@ export const execute = (
 
     $offset.x = baseOffsetX + baseTextureX;
     $offset.y = baseOffsetY + baseTextureY;
+
+    textureManagerReleaseTextureObjectUseCase(texture_object);
+    textureManagerReleaseTextureObjectUseCase(blurTextureObject);
 
     return textureObject;
 };

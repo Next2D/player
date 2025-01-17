@@ -14,33 +14,56 @@
 
         const root = await next2d.createRootMovieClip(400, 400, 60);
         const { Shape } = next2d.display;
+        const { Event } = next2d.events;
         const {
             BlurFilter,
             ColorMatrixFilter,
             GlowFilter,
-            BevelFilter
+            BevelFilter,
+            GradientBevelFilter,
+            GradientGlowFilter,
+            DropShadowFilter,
+            DisplacementMapFilter,
+            ConvolutionFilter
         } = next2d.filters;
+
         const shape = root.addChild(new Shape());
+        shape.addEventListener(Event.COMPLETE, () => {
+            shape.x = 50;
+            shape.y = 50;
+            shape.scaleX = 0.5;
+            shape.scaleY = 0.5;
+            shape.filters = [
+                // new BlurFilter(14, 14, 1),
+                // new ColorMatrixFilter([
+                //     0.393, 0.769, 0.189, 0, 0,
+                //     0.349, 0.686, 0.168, 0, 0,
+                //     0.272, 0.534, 0.131, 0, 0,
+                //     0, 0, 0, 1, 0
+                // ]),
+                // new GlowFilter(0, 1, 10, 10, 1, 1),
+                // new BevelFilter(4, 45, 0x0000ff, 1, 0, 1, 10, 10, 2, 1)
+            ];
+        });
 
-        shape.x = 150;
-        shape.y = 150;
+        shape.src = "http://localhost:5173/json/image/logo.png";
 
-        shape
-            .graphics
-            .beginFill("#ff0000", 0.5)
-            .drawRect(0, 0, 100, 100);
+        // shape
+        //     .graphics
+        //     .beginFill("#ff0000", 0.5)
+        //     .drawRect(0, 0, 100, 100);
 
-        shape.filters = [
-            // new BlurFilter(10, 10, 1),
-            // new ColorMatrixFilter([
-            //     0.393, 0.769, 0.189, 0, 0,
-            //     0.349, 0.686, 0.168, 0, 0,
-            //     0.272, 0.534, 0.131, 0, 0,
-            //     0, 0, 0, 1, 0
-            // ]),
-            // new GlowFilter(0, 1, 10, 10, 1, 1),
-            // new BevelFilter(4, 45, 0x0000ff, 1, 2, 1, 10, 10, 1, 1, "full")
-        ];
+        // shape.filters = [
+        // //     new BlurFilter(4, 4, 1),
+        // //     // new ColorMatrixFilter([
+        // //     //     0.393, 0.769, 0.189, 0, 0,
+        // //     //     0.349, 0.686, 0.168, 0, 0,
+        // //     //     0.272, 0.534, 0.131, 0, 0,
+        // //     //     0, 0, 0, 1, 0
+        // //     // ]),
+        // //     // new GlowFilter(0, 1, 10, 10, 1, 1),
+        //     // new BevelFilter(4, 45, 0x0000ff, 1, 0, 1, 10, 10, 2, 1)
+        // ];
 
         // const count = 8000;
         // const root = next2d

@@ -51,8 +51,8 @@ export const execute = (
     const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
     const devicePixelRatio = $getDevicePixelRatio();
-    const baseBlurX = blur_x * (xScale / devicePixelRatio * 2);
-    const baseBlurY = blur_y * (yScale / devicePixelRatio * 2);
+    const baseBlurX = blur_x * (xScale / devicePixelRatio);
+    const baseBlurY = blur_y * (yScale / devicePixelRatio);
 
     const step = $STEP[quality - 1];
     const dx = Math.round(baseBlurX * step);
@@ -103,7 +103,8 @@ export const execute = (
         dx * bufferScaleX,
         dy * bufferScaleY
     );
-    textureManagerBind0UseCase(texture_object, true);
+
+    textureManagerBind0UseCase(texture_object);
 
     const shaderManager = variantsBlendMatrixTextureShaderService();
     shaderManagerSetMatrixTextureUniformService(
