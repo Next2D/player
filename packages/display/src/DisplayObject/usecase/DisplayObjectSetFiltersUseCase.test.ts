@@ -19,21 +19,4 @@ describe("DisplayObjectSetFiltersUseCase.js test", () =>
         expect(displayObject.changed).toBe(true);
         expect(displayObject.$filters).toBe(filters);
     });
-
-    it("execute test case2", () =>
-    {
-        const filters = [new BlurFilter()];
-
-        const displayObject = new DisplayObject();
-        displayObject.$filters = filters;
-        displayObject.changed  = false;
-
-        expect(displayObject.changed).toBe(false);
-        expect(displayObject.$filters).toBe(filters);
-
-        execute(displayObject, filters);
-        
-        expect(displayObject.changed).toBe(false);
-        expect(displayObject.$filters).toBe(filters);
-    });
 });

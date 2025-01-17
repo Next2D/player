@@ -228,3 +228,40 @@ export const $clearTransferBounds = (): void =>
         bounds[2] = bounds[3] = -Number.MAX_VALUE;
     }
 };
+
+/**
+ * @description 現在設定されているアトラスアタッチメントオブジェクトのインデックス値
+ *              Index value of the currently set atlas attachment object
+ *
+ * @type {number}
+ * @default 0
+ * @private
+ */
+let $currentAtlasIndex: number = 0;
+
+/**
+ * @description 現在設定されているアトラスアタッチメントオブジェクトのインデックス値をセット
+ *              Set the index value of the currently set atlas attachment object
+ *
+ * @param  {number} index
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setCurrentAtlasIndex = (index: number): void =>
+{
+    $currentAtlasIndex = index;
+};
+
+/**
+ * @description 現在設定されているアトラスアタッチメントオブジェクトのインデックス値を返却
+ *              Returns the index value of the currently set atlas attachment object
+ *
+ * @return {number}
+ * @method
+ * @protected
+ */
+export const $getCurrentAtlasIndex = (): number =>
+{
+    return $currentAtlasIndex;
+};

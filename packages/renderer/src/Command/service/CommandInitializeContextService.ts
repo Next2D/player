@@ -25,7 +25,6 @@ export const execute = (canvas: OffscreenCanvas, device_pixel_ratio: number): vo
         "premultipliedAlpha": true,
         "antialias": false,
         "depth": false
-        // "preserveDrawingBuffer": true
     });
 
     if (!gl) {

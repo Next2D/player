@@ -4,6 +4,7 @@ import { execute as textureManagerReleaseTextureObjectUseCase } from "../../Text
 import { execute as variantsBlendTextureShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendTextureShaderService";
 import { execute as shaderManagerSetTextureUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetTextureUniformService";
 import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
+import { execute as blendResetService } from "../../Blend/service/BlendResetService";
 
 /**
  * @description ピクセルを描画します。
@@ -23,6 +24,7 @@ export const execute = (node: Node, pixels: Uint8Array): void =>
     shaderManagerSetTextureUniformService(shaderManager, node.w, node.h);
 
     // テクスチャを描画
+    blendResetService();
     shaderManagerDrawTextureUseCase(shaderManager);
 
     // テクスチャオブジェクトを解放

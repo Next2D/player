@@ -7,7 +7,7 @@ import { execute as textureManagerReleaseTextureObjectUseCase } from "../../../T
 import { execute as variantsColorMatrixFilterShaderService } from "../../../Shader/Variants/Filter/service/VariantsColorMatrixFilterShaderService";
 import { execute as shaderManagerSetColorMatrixFilterUniformService } from "../../../Shader/ShaderManager/service/ShaderManagerSetColorMatrixFilterUniformService";
 import { execute as shaderManagerDrawTextureUseCase } from "../../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
-import { execute as blendOneZeroService } from "../../../Blend/service/BlendOneZeroService";
+import { execute as blendResetService } from "../../../Blend/service/BlendResetService";
 
 /**
  * @description カラーマトリックスフィルターを適用します。
@@ -22,7 +22,6 @@ import { execute as blendOneZeroService } from "../../../Blend/service/BlendOneZ
 export const execute = (texture_object: ITextureObject, matrix: Float32Array): ITextureObject =>
 {
     const currentAttachmentObject = $context.currentAttachmentObject;
-    blendOneZeroService();
 
     const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(
         texture_object.width, texture_object.height, false
@@ -30,7 +29,8 @@ export const execute = (texture_object: ITextureObject, matrix: Float32Array): I
     $context.bind(attachmentObject);
     $context.reset();
 
-    textureManagerBind0UseCase(texture_object);
+    textureManagerBind0UseCase(texture_object, true);
+    blendResetService();
 
     const shaderManager = variantsColorMatrixFilterShaderService();
     shaderManagerSetColorMatrixFilterUniformService(shaderManager, matrix);

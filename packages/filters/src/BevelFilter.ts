@@ -525,24 +525,20 @@ export class BevelFilter extends BitmapFilter
             return bounds;
         }
 
-        this._$blurFilter.getBounds(bounds);
         if (this._$type === "inner") {
             return bounds;
         }
 
-        const radian: number = this._$angle * $Deg2Rad;
-        const x: number = Math.abs(Math.cos(radian) * this._$distance);
-        const y: number = Math.abs(Math.sin(radian) * this._$distance);
+        this._$blurFilter.getBounds(bounds);
 
-        bounds[0] = Math.min(bounds[0], x);
-        if (x > 0) {
-            bounds[2] += x;
-        }
+        const radian = this._$angle * $Deg2Rad;
+        const x = Math.abs(Math.cos(radian) * this._$distance);
+        const y = Math.abs(Math.sin(radian) * this._$distance);
 
-        bounds[1] = Math.min(bounds[1], y);
-        if (y > 0) {
-            bounds[3] += y;
-        }
+        bounds[0] -= x;
+        bounds[2] += x;
+        bounds[1] -= y;
+        bounds[3] += y;
 
         return bounds;
     }

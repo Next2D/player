@@ -161,6 +161,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     // フィルター設定があればフィルターを実行
     const useFilfer = Boolean(render_queue[index++]);
     if (useFilfer) {
+        const updated = Boolean(render_queue[index++]);
         const filterBounds = render_queue.subarray(index, index + 4);
         index += 4;
 
@@ -171,7 +172,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
 
         $context.applyFilter(
-            node, uniqueKey,
+            node, uniqueKey, updated,
             width, height,
             matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
             filterBounds, params

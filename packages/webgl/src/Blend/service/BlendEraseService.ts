@@ -1,8 +1,8 @@
+import { $gl } from "../../WebGLUtil";
 import {
     $setFuncCode,
     $getFuncCode
 } from "../../Blend";
-import { $gl } from "../../WebGLUtil";
 
 /**
  * @description ブレンドモードを消去に設定します。

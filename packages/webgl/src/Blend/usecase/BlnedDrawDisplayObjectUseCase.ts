@@ -20,10 +20,12 @@ import {
 } from "../../WebGLUtil";
 import {
     $getCurrentBlendMode,
-    $setCurrentBlendMode,
+    $setCurrentBlendMode
+} from "../../Blend";
+import {
     $getCurrentAtlasIndex,
     $setCurrentAtlasIndex
-} from "../../Blend";
+} from "../../AtlasManager";
 import { renderQueue } from "@next2d/render-queue";
 
 /**

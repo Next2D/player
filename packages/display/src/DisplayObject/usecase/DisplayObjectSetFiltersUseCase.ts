@@ -14,9 +14,6 @@ import { execute as displayObjectApplyChangesService } from "../service/DisplayO
  */
 export const execute = <D extends DisplayObject>(display_object: D, filters: IFilterArray | null): void =>
 {
-    if (display_object.$filters === filters) {
-        return ;
-    }
     display_object.$filters = filters;
     displayObjectApplyChangesService(display_object);
 };

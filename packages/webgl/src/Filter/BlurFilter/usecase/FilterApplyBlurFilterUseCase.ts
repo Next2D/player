@@ -9,6 +9,7 @@ import { execute as filterApplyDirectionalBlurFilterUseCase } from "../../../Fil
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
 import { execute as blendOneZeroService } from "../../../Blend/service/BlendOneZeroService";
+import { execute as blendResetService } from "../../../Blend/service/BlendResetService";
 import { $offset } from "../../../Filter";
 import {
     $context,
@@ -45,7 +46,6 @@ export const execute = (
 ): ITextureObject => {
 
     const currentAttachmentObject = $context.currentAttachmentObject;
-    blendOneZeroService();
 
     const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
     const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
@@ -103,7 +103,7 @@ export const execute = (
         dx * bufferScaleX,
         dy * bufferScaleY
     );
-    textureManagerBind0UseCase(texture_object);
+    textureManagerBind0UseCase(texture_object, true);
 
     const shaderManager = variantsBlendMatrixTextureShaderService();
     shaderManagerSetMatrixTextureUniformService(
@@ -121,17 +121,15 @@ export const execute = (
 
     let attachmentIndex = 0;
     let textureObject = attachmentObject0.texture as ITextureObject;
-    textureManagerBind0UseCase(textureObject);
+    textureManagerBind0UseCase(textureObject, true);
 
+    blendOneZeroService();
     for (let q = 0; q < quality; ++q) {
 
         if (blur_x > 0) {
             attachmentIndex = (attachmentIndex + 1) % 2;
 
             const attachmentObject = attachments[attachmentIndex];
-            if (attachmentObject.stencil && !attachmentObject.stencil.dirty) {
-                attachmentObject.stencil.dirty = true;
-            }
             $context.bind(attachmentObject);
 
             filterApplyDirectionalBlurFilterUseCase(
@@ -145,9 +143,6 @@ export const execute = (
             attachmentIndex = (attachmentIndex + 1) % 2;
 
             const attachmentObject = attachments[attachmentIndex];
-            if (attachmentObject.stencil && !attachmentObject.stencil.dirty) {
-                attachmentObject.stencil.dirty = true;
-            }
             $context.bind(attachmentObject);
 
             filterApplyDirectionalBlurFilterUseCase(
@@ -157,6 +152,7 @@ export const execute = (
             textureObject = attachmentObject.texture as ITextureObject;
         }
     }
+    blendResetService();
 
     if (bufferScaleX !== 1 || bufferScaleY !== 1) {
 
@@ -167,7 +163,7 @@ export const execute = (
             1 / bufferScaleX, 0, 0, 1 / bufferScaleY, 0, 0
         );
 
-        textureManagerBind0UseCase(textureObject);
+        textureManagerBind0UseCase(textureObject, true);
 
         shaderManagerSetMatrixTextureUniformService(
             shaderManager, textureObject.width, textureObject.height

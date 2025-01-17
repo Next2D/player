@@ -5,6 +5,7 @@ import { execute as textureManagerBind0UseCase } from "../../../TextureManager/u
 import { execute as blendOneZeroService } from "../../../Blend/service/BlendOneZeroService";
 import { execute as blendSourceInService } from "../../../Blend/service/BlendSourceInService";
 import { execute as blendSourceAtopService } from "../../../Blend/service/BlendSourceAtopService";
+import { execute as blendResetService } from "../../../Blend/service/BlendResetService";
 import { execute as variantsBitmapFilterShaderService } from "../../../Shader/Variants/Filter/service/VariantsBitmapFilterShaderService";
 import { execute as shaderManagerDrawTextureUseCase } from "../../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
 import { execute as shaderManagerSetBitmapFilterUniformService } from "../../../Shader/ShaderManager/service/ShaderManagerSetBitmapFilterUniformService";
@@ -17,33 +18,33 @@ import { $context } from "../../../WebGLUtil";
  * @description BitmapFilterを適用する
  *              Apply BitmapFilter
  *
- * @param  {ITextureObject} texture_object 
- * @param  {ITextureObject} blur_texture_object 
- * @param  {number} width 
- * @param  {number} height 
- * @param  {number} base_width 
- * @param  {number} base_height 
- * @param  {number} base_offset_x 
- * @param  {number} base_offset_y 
- * @param  {number} blur_width 
- * @param  {number} blur_height 
- * @param  {number} blur_offset_x 
- * @param  {number} blur_offset_y 
- * @param  {boolean} is_glow 
- * @param  {string} type 
- * @param  {boolean} knockout 
- * @param  {number} strength 
- * @param  {number[] | null} ratios 
- * @param  {number[] | null} colors 
- * @param  {number[] | null} alphas 
- * @param  {number} color_r1 
- * @param  {number} color_g1 
- * @param  {number} color_b1 
- * @param  {number} color_a1 
- * @param  {number} color_r2 
- * @param  {number} color_g2 
- * @param  {number} color_b2 
- * @param  {number} color_a2 
+ * @param  {ITextureObject} texture_object
+ * @param  {ITextureObject} blur_texture_object
+ * @param  {number} width
+ * @param  {number} height
+ * @param  {number} base_width
+ * @param  {number} base_height
+ * @param  {number} base_offset_x
+ * @param  {number} base_offset_y
+ * @param  {number} blur_width
+ * @param  {number} blur_height
+ * @param  {number} blur_offset_x
+ * @param  {number} blur_offset_y
+ * @param  {boolean} is_glow
+ * @param  {string} type
+ * @param  {boolean} knockout
+ * @param  {number} strength
+ * @param  {number[] | null} ratios
+ * @param  {number[] | null} colors
+ * @param  {number[] | null} alphas
+ * @param  {number} color_r1
+ * @param  {number} color_g1
+ * @param  {number} color_b1
+ * @param  {number} color_a1
+ * @param  {number} color_r2
+ * @param  {number} color_g2
+ * @param  {number} color_b2
+ * @param  {number} color_a2
  * @return {ITextureObject}
  * @method
  * @protected
@@ -86,31 +87,30 @@ export const execute = (
     const isInner    = type === "inner";
     const isGradient = ratios !== null && colors !== null && alphas !== null;
 
-    let lut: WebGLTexture | null = null;
+    const lut: WebGLTexture | null = null;
     if (isGradient) {
         // todo
     }
 
     if (isInner) {
 
-        if (!knockout) {
-            textureManagerBind0UseCase(texture_object);
+        $context.reset();
+        $context.setTransform(1, 0, 0, 1, 0, 0);
 
-            $context.reset();
-            $context.setTransform(1, 0, 0, 1, 0, 0);
-    
-            const shaderManager = variantsBlendTextureShaderService();
-            shaderManagerSetTextureUniformService(
-                shaderManager, texture_object.width, texture_object.height
-            );
-            shaderManagerDrawTextureUseCase(shaderManager);
-        }
+        textureManagerBind0UseCase(texture_object, true);
+
+        const shaderManager = variantsBlendTextureShaderService();
+        shaderManagerSetTextureUniformService(
+            shaderManager, texture_object.width, texture_object.height
+        );
+        shaderManagerDrawTextureUseCase(shaderManager);
 
         if (isGradient && lut) {
             // todo
         } else {
-            textureManagerBind0UseCase(blur_texture_object);
+            textureManagerBind0UseCase(blur_texture_object, true);
         }
+
     } else {
 
         if (isGradient && lut) {
@@ -118,7 +118,8 @@ export const execute = (
         } else {
             textureManagerBind01UseCase(
                 blur_texture_object,
-                texture_object
+                texture_object,
+                true
             );
         }
     }
@@ -161,6 +162,9 @@ export const execute = (
 
     const textureObject = attachmentObject.texture as ITextureObject;
     frameBufferManagerReleaseAttachmentObjectUseCase(attachmentObject, false);
+
+    // ブレンドモードをリセット
+    blendResetService();
 
     if (currentAttachmentObject) {
         $context.bind(currentAttachmentObject);

@@ -34,7 +34,7 @@ import { execute as blnedClearArraysInstancedUseCase } from "./Blend/usecase/Bln
 import { execute as blnedDrawArraysInstancedUseCase } from "./Blend/usecase/BlnedDrawArraysInstancedUseCase";
 import { execute as vertexArrayObjectBootUseCase } from "./VertexArrayObject/usecase/VertexArrayObjectBootUseCase";
 import { execute as frameBufferManagerTransferMainCanvasService } from "./FrameBufferManager/service/FrameBufferManagerTransferMainCanvasService";
-import { execute as blendEnableUseCase } from "./Blend/usecase/BlendEnableUseCase";
+import { execute as blendBootUseCase } from "./Blend/usecase/BlendBootUseCase";
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
 import { execute as maskSetMaskBoundsService } from "./Mask/service/MaskSetMaskBoundsService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
@@ -314,8 +314,8 @@ export class Context
         // VertexArrayObjectの初期起動
         vertexArrayObjectBootUseCase(gl);
 
-        // ブレンドモードを有効にする
-        blendEnableUseCase();
+        // ブレンドモードを起動する
+        blendBootUseCase();
 
         // グラデーションの最大長を設定
         $setGradientLUTGeneratorMaxLength(gl);
@@ -1076,6 +1076,7 @@ export class Context
      *
      * @param  {Node} node
      * @param  {string} unique_key
+     * @param  {boolean} updated
      * @param  {number} width
      * @param  {number} height
      * @param  {Float32Array} matrix
@@ -1090,6 +1091,7 @@ export class Context
     applyFilter (
         node: Node,
         unique_key: string,
+        updated: boolean,
         width: number,
         height: number,
         matrix: Float32Array,
@@ -1100,7 +1102,8 @@ export class Context
     ): void {
         this.drawArraysInstanced();
         contextApplyFilterUseCase(
-            node, unique_key, width, height,
+            node, unique_key, updated,
+            width, height,
             matrix, color_transform, blend_mode,
             bounds, params
         );

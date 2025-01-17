@@ -328,6 +328,7 @@ export const execute = (
 
     if (shape.filters?.length) {
 
+        let updated = false;
         const params = [];
         const bounds = $getBoundsArray(0, 0, 0, 0);
         for (let idx = 0; idx < shape.filters.length; idx++) {
@@ -337,6 +338,12 @@ export const execute = (
                 continue;
             }
 
+            // フィルターが更新されたかをチェック
+            if (filter.$updated) {
+                updated = true;
+            }
+            filter.$updated = false;
+
             filter.getBounds(bounds);
 
             params.push(...filter.toNumberArray());
@@ -345,7 +352,7 @@ export const execute = (
         const useFilfer = params.length > 0;
         if (useFilfer) {
             renderQueue.push(
-                +useFilfer,
+                +useFilfer, +updated,
                 bounds[0], bounds[1], bounds[2], bounds[3],
                 params.length, ...params
             );

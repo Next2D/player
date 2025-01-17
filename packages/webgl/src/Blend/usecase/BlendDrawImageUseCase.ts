@@ -41,9 +41,9 @@ export const execute = (
 
     const withColorTransform = color_transform === null
         ? false
-        : color_transform[0] !== 1 
-            || color_transform[1] !== 1 
-            || color_transform[2] !== 1 
+        : color_transform[0] !== 1
+            || color_transform[1] !== 1
+            || color_transform[2] !== 1
             || color_transform[3] !== 1
             || color_transform[4] !== 0
             || color_transform[5] !== 0

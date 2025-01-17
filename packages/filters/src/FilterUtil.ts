@@ -48,4 +48,4 @@ export const $convertColorStringToNumber = (value: string): number =>
  * @type {number}
  * @private
  */
-export const $Deg2Rad: number = 180 / Math.PI;
+export const $Deg2Rad: number = Math.PI / 180;

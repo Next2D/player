@@ -28,6 +28,7 @@ import {
  *
  * @param  {Node} node
  * @param  {string} unique_key
+ * @param  {boolean} updated
  * @param  {number} width
  * @param  {number} height
  * @param  {Float32Array} matrix
@@ -42,6 +43,7 @@ import {
 export const execute = (
     node: Node,
     unique_key: string,
+    updated: boolean,
     width: number,
     height: number,
     matrix: Float32Array,
@@ -56,6 +58,10 @@ export const execute = (
     );
 
     if ($cacheStore.has(unique_key, "fKey")) {
+
+        // todo updated
+        console.log(updated);
+
         const fKey = $cacheStore.get(unique_key, "fKey");
         const texture = $cacheStore.get(unique_key, "fTexture");
         if (fKey === key) {
@@ -149,7 +155,7 @@ export const execute = (
 
             case 0: // BevelFilter
                 textureObject = filterApplyBevelFilterUseCase(
-                    textureObject, matrix, 
+                    textureObject, matrix,
                     params[idx++], params[idx++], params[idx++], params[idx++],
                     params[idx++], params[idx++], params[idx++], params[idx++],
                     params[idx++], params[idx++], params[idx++], Boolean(params[idx++])
@@ -213,7 +219,7 @@ export const execute = (
     const yMin = bounds[1] * scaleY;
 
     $context.reset();
-    // todo
+    // todo blend mode
     $context.globalCompositeOperation = blend_mode;
     $context.setTransform(
         1, 0, 0, 1,

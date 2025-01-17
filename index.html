@@ -31,7 +31,6 @@
             .drawRect(0, 0, 100, 100);
 
         shape.filters = [
-            // new BevelFilter(),
             // new BlurFilter(10, 10, 1),
             // new ColorMatrixFilter([
             //     0.393, 0.769, 0.189, 0, 0,
@@ -39,7 +38,8 @@
             //     0.272, 0.534, 0.131, 0, 0,
             //     0, 0, 0, 1, 0
             // ]),
-            // new GlowFilter(0, 0.5, 25, 25, 1, 1, false, false)   
+            // new GlowFilter(0, 1, 10, 10, 1, 1),
+            // new BevelFilter(4, 45, 0x0000ff, 1, 2, 1, 10, 10, 1, 1, "full")
         ];
 
         // const count = 8000;
