@@ -1,11 +1,13 @@
 import type { IBitmapFilterType } from "./interface/IBitmapFilterType";
 import type { IFilterQuality } from "./interface/IFilterQuality";
 import { BitmapFilter } from "./BitmapFilter";
-import { BlurFilter } from "./BlurFilter";
+import { execute as bevelFilterGetBoundsService } from "./BevelFilter/usecase/BevelFilterGetBoundsUseCase";
+import { execute as bevelFilterCanApplyFilterService } from "./BevelFilter/service/BevelFilterCanApplyFilterService";
+import { execute as bevelFilterToArrayService } from "./BevelFilter/service/BevelFilterToArrayService";
+import { execute as bevelFilterToNumberArrayService } from "./BevelFilter/service/BevelFilterToNumberArrayService";
 import {
     $clamp,
-    $convertColorStringToNumber,
-    $Deg2Rad
+    $convertColorStringToNumber
 } from "./FilterUtil";
 
 /**
@@ -27,11 +29,37 @@ import {
 export class BevelFilter extends BitmapFilter
 {
     /**
-     * @type {BlurFilter}
-     * @default BlurFilter
+     * @description フィルタータイプ
+     *              Filter type
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    public $filterType = 0;
+
+    /**
+     * @description BevelFilterの認識番号
+     *              The recognition number of the BevelFilter.
+     *
+     * @member {number}
+     * @public
+     */
+    private _$blurX: number;
+
+    /**
+     * @type {number}
+     * @default 4
      * @private
      */
-    private _$blurFilter: BlurFilter;
+    private _$blurY: number;
+
+    /**
+     * @type {IFilterQuality}
+     * @default 1
+     * @private
+     */
+    private _$quality: IFilterQuality;
 
     /**
      * @type {number}
@@ -131,11 +159,13 @@ export class BevelFilter extends BitmapFilter
         super();
 
         // default
-        this._$blurFilter     = new BlurFilter(blur_x, blur_y, quality);
         this._$distance       = 4;
         this._$angle          = 45;
         this._$highlightColor = 0xffffff;
         this._$highlightAlpha = 1;
+        this._$blurX          = 4;
+        this._$blurY          = 4;
+        this._$quality        = 1;
         this._$shadowColor    = 0;
         this._$shadowAlpha    = 1;
         this._$strength       = 1;
@@ -143,6 +173,9 @@ export class BevelFilter extends BitmapFilter
         this._$knockout       = false;
 
         // setup
+        this.blurX          = blur_x;
+        this.blurY          = blur_y;
+        this.quality        = quality;
         this.distance       = distance;
         this.angle          = angle;
         this.highlightColor = highlight_color;
@@ -186,12 +219,16 @@ export class BevelFilter extends BitmapFilter
      */
     get blurX (): number
     {
-        return this._$blurFilter.blurX;
+        return this._$blurX;
     }
     set blurX (blur_x: number)
     {
-        this._$blurFilter.blurX = blur_x;
-        this.$updated = this._$blurFilter.$updated;
+        blur_x = $clamp(+blur_x, 0, 255, 0);
+        if (blur_x === this._$blurX) {
+            return ;
+        }
+        this._$blurX  = blur_x;
+        this.$updated = true;
     }
 
     /**
@@ -204,12 +241,16 @@ export class BevelFilter extends BitmapFilter
      */
     get blurY (): number
     {
-        return this._$blurFilter.blurY;
+        return this._$blurY;
     }
     set blurY (blur_y: number)
     {
-        this._$blurFilter.blurY = blur_y;
-        this.$updated = this._$blurFilter.$updated;
+        blur_y = $clamp(+blur_y, 0, 255, 0);
+        if (blur_y === this._$blurY) {
+            return ;
+        }
+        this._$blurY  = blur_y;
+        this.$updated = true;
     }
 
     /**
@@ -315,12 +356,16 @@ export class BevelFilter extends BitmapFilter
      */
     get quality (): IFilterQuality
     {
-        return this._$blurFilter.quality;
+        return this._$quality;
     }
     set quality (quality: IFilterQuality)
     {
-        this._$blurFilter.quality = quality;
-        this.$updated = this._$blurFilter.$updated;
+        quality = $clamp(quality | 0, 0, 15, 1) as IFilterQuality;
+        if (quality === this._$quality) {
+            return ;
+        }
+        this._$quality = quality;
+        this.$updated  = true;
     }
 
     /**
@@ -441,8 +486,8 @@ export class BevelFilter extends BitmapFilter
     {
         return new BevelFilter(
             this._$distance, this._$angle, this._$highlightColor, this._$highlightAlpha,
-            this._$shadowColor, this._$shadowAlpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
-            this._$strength, this._$blurFilter.quality, this._$type, this._$knockout
+            this._$shadowColor, this._$shadowAlpha, this._$blurX, this._$blurY,
+            this._$strength, this._$quality, this._$type, this._$knockout
         );
     }
 
@@ -456,11 +501,7 @@ export class BevelFilter extends BitmapFilter
      */
     toArray (): Array<number | string | boolean>
     {
-        return [0,
-            this._$distance, this._$angle, this._$highlightColor, this._$highlightAlpha,
-            this._$shadowColor, this._$shadowAlpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
-            this._$strength, this._$blurFilter.quality, this._$type, this._$knockout
-        ];
+        return bevelFilterToArrayService(this);
     }
 
     /**
@@ -473,26 +514,7 @@ export class BevelFilter extends BitmapFilter
      */
     toNumberArray (): number[]
     {
-        let type = 0;
-        switch (this._$type) {
-            case "full":
-                type = 0;
-                break;
-
-            case "inner":
-                type = 1;
-                break;
-
-            case "outer":
-                type = 2;
-                break;
-        }
-
-        return [0,
-            this._$distance, this._$angle, this._$highlightColor, this._$highlightAlpha,
-            this._$shadowColor, this._$shadowAlpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
-            this._$strength, this._$blurFilter.quality, type, +this._$knockout
-        ];
+        return bevelFilterToNumberArrayService(this);
     }
 
     /**
@@ -505,9 +527,7 @@ export class BevelFilter extends BitmapFilter
      */
     canApplyFilter (): boolean
     {
-        return this._$strength > 0
-            && this._$distance !== 0
-            && this._$blurFilter.canApplyFilter();
+        return bevelFilterCanApplyFilterService(this);
     }
 
     /**
@@ -521,25 +541,6 @@ export class BevelFilter extends BitmapFilter
      */
     getBounds (bounds: Float32Array): Float32Array
     {
-        if (!this.canApplyFilter()) {
-            return bounds;
-        }
-
-        if (this._$type === "inner") {
-            return bounds;
-        }
-
-        this._$blurFilter.getBounds(bounds);
-
-        const radian = this._$angle * $Deg2Rad;
-        const x = Math.abs(Math.cos(radian) * this._$distance);
-        const y = Math.abs(Math.sin(radian) * this._$distance);
-
-        bounds[0] -= x;
-        bounds[2] += x;
-        bounds[1] -= y;
-        bounds[3] += y;
-
-        return bounds;
+        return bevelFilterGetBoundsService(this, bounds);
     }
 }

@@ -27,7 +27,7 @@ export class DropShadowFilter extends BitmapFilter
      * @type {BlurFilter}
      * @private
      */
-    private _$blurFilter: BlurFilter;
+    private readonly _$blurFilter: BlurFilter;
 
     /**
      * @type {number}

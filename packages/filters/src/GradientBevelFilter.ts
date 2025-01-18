@@ -28,7 +28,7 @@ export class GradientBevelFilter  extends BitmapFilter
      * @type {BlurFilter}
      * @private
      */
-    private _$blurFilter: BlurFilter;
+    public readonly $blurFilter: BlurFilter;
 
     /**
      * @type {number}
@@ -119,15 +119,15 @@ export class GradientBevelFilter  extends BitmapFilter
         super();
 
         // default
-        this._$blurFilter = new BlurFilter(blur_x, blur_y, quality);
-        this._$distance   = 4;
-        this._$angle      = 45;
-        this._$colors     = null;
-        this._$alphas     = null;
-        this._$ratios     = null;
-        this._$strength   = 1;
-        this._$type       = "inner";
-        this._$knockout   = false;
+        this.$blurFilter = new BlurFilter(blur_x, blur_y, quality);
+        this._$distance  = 4;
+        this._$angle     = 45;
+        this._$colors    = null;
+        this._$alphas    = null;
+        this._$ratios    = null;
+        this._$strength  = 1;
+        this._$type      = "inner";
+        this._$knockout  = false;
 
         // setup
         this.distance = distance;
@@ -200,12 +200,12 @@ export class GradientBevelFilter  extends BitmapFilter
      */
     get blurX (): number
     {
-        return this._$blurFilter.blurX;
+        return this.$blurFilter.blurX;
     }
     set blurX (blur_x: number)
     {
-        this._$blurFilter.blurX = blur_x;
-        this.$updated = this._$blurFilter.$updated;
+        this.$blurFilter.blurX = blur_x;
+        this.$updated = this.$blurFilter.$updated;
     }
 
     /**
@@ -218,12 +218,12 @@ export class GradientBevelFilter  extends BitmapFilter
      */
     get blurY (): number
     {
-        return this._$blurFilter.blurY;
+        return this.$blurFilter.blurY;
     }
     set blurY (blur_y: number)
     {
-        this._$blurFilter.blurY = blur_y;
-        this.$updated = this._$blurFilter.$updated;
+        this.$blurFilter.blurY = blur_y;
+        this.$updated = this.$blurFilter.$updated;
     }
 
     /**
@@ -312,12 +312,12 @@ export class GradientBevelFilter  extends BitmapFilter
      */
     get quality (): IFilterQuality
     {
-        return this._$blurFilter.quality;
+        return this.$blurFilter.quality;
     }
     set quality (quality: IFilterQuality)
     {
-        this._$blurFilter.quality = quality;
-        this.$updated = this._$blurFilter.$updated;
+        this.$blurFilter.quality = quality;
+        this.$updated = this.$blurFilter.$updated;
     }
 
     /**
@@ -407,8 +407,8 @@ export class GradientBevelFilter  extends BitmapFilter
             this._$colors ? this._$colors.slice() : null,
             this._$alphas ? this._$alphas.slice() : null,
             this._$ratios ? this._$ratios.slice() : null,
-            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
-            this._$blurFilter.quality, this._$type, this._$knockout
+            this.$blurFilter.blurX, this.$blurFilter.blurY, this._$strength,
+            this.$blurFilter.quality, this._$type, this._$knockout
         );
     }
 
@@ -424,8 +424,8 @@ export class GradientBevelFilter  extends BitmapFilter
     {
         return [7,
             this._$distance, this._$angle, this._$colors, this._$alphas, this._$ratios,
-            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
-            this._$blurFilter.quality, this._$type, this._$knockout
+            this.$blurFilter.blurX, this.$blurFilter.blurY, this._$strength,
+            this.$blurFilter.quality, this._$type, this._$knockout
         ];
     }
 
@@ -459,7 +459,6 @@ export class GradientBevelFilter  extends BitmapFilter
                 break;
 
             default:
-                type = 0;
                 break;
 
         }
@@ -469,8 +468,8 @@ export class GradientBevelFilter  extends BitmapFilter
             colors.length, ...colors,
             alphas.length, ...alphas,
             ratios.length, ...ratios,
-            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
-            this._$blurFilter.quality, type, +this._$knockout
+            this.$blurFilter.blurX, this.$blurFilter.blurY, this._$strength,
+            this.$blurFilter.quality, type, +this._$knockout
         ];
     }
 
@@ -486,7 +485,7 @@ export class GradientBevelFilter  extends BitmapFilter
     {
         return this._$strength > 0 && this._$distance > 0
             && this._$alphas !== null && this._$ratios !== null && this._$colors !== null
-            && this._$blurFilter.canApplyFilter();
+            && this.$blurFilter.canApplyFilter();
     }
 
     /**
@@ -504,23 +503,20 @@ export class GradientBevelFilter  extends BitmapFilter
             return bounds;
         }
 
-        this._$blurFilter.getBounds(bounds);
         if (this._$type === "inner") {
             return bounds;
         }
 
-        const radian: number = this._$angle * $Deg2Rad;
-        const x: number = Math.abs(Math.cos(radian) * this._$distance);
-        const y: number = Math.abs(Math.sin(radian) * this._$distance);
+        this.$blurFilter.getBounds(bounds);
 
-        bounds[0] = Math.min(bounds[0], x);
-        if (x > 0) {
-            bounds[2] += x;
-        }
-        bounds[1] = Math.min(bounds[1], y);
-        if (y > 0) {
-            bounds[3] += y;
-        }
+        const radian = this._$angle * $Deg2Rad;
+        const x = Math.abs(Math.cos(radian) * this._$distance);
+        const y = Math.abs(Math.sin(radian) * this._$distance);
+
+        bounds[0] -= x;
+        bounds[2] += x;
+        bounds[1] -= y;
+        bounds[3] += y;
 
         return bounds;
     }

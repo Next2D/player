@@ -27,7 +27,7 @@ export class GradientGlowFilter extends BitmapFilter
      * @type {BlurFilter}
      * @private
      */
-    private _$blurFilter: BlurFilter;
+    private readonly _$blurFilter: BlurFilter;
 
     /**
      * @type {number}
@@ -453,7 +453,6 @@ export class GradientGlowFilter extends BitmapFilter
                 break;
 
             default:
-                type = 0;
                 break;
 
         }
@@ -503,9 +502,9 @@ export class GradientGlowFilter extends BitmapFilter
             return bounds;
         }
 
-        const radian: number = this._$angle * $Deg2Rad;
-        const x: number = Math.abs(Math.cos(radian) * this._$distance);
-        const y: number = Math.abs(Math.sin(radian) * this._$distance);
+        const radian = this._$angle * $Deg2Rad;
+        const x = Math.abs(Math.cos(radian) * this._$distance);
+        const y = Math.abs(Math.sin(radian) * this._$distance);
 
         bounds[0] = Math.min(bounds[0], x);
         if (x > 0) {

@@ -1,12 +1,9 @@
 import type { IFilterQuality } from "./interface/IFilterQuality";
 import { BitmapFilter } from "./BitmapFilter";
 import { $clamp } from "./FilterUtil";
-
-/**
- * @return {array}
- * @private
- */
-const STEP: number[] = [0.5, 1.05, 1.4, 1.55, 1.75, 1.9, 2, 2.15, 2.2, 2.3, 2.5, 3, 3, 3.5, 3.5];
+import { execute as blurFilterToArrayService } from "./BlurFilter/service/BlurFilterToArrayService";
+import { execute as blurFilterGetBoundsUseCase } from "./BlurFilter/usecase/BlurFilterGetBoundsUseCase";
+import { execute as blurFilterCanApplyFilterService } from "./BlurFilter/service/BlurFilterCanApplyFilterService";
 
 /**
  * @description BlurFilter クラスを使用すると、表示オブジェクトにぼかし効果を適用できます。
@@ -28,6 +25,15 @@ const STEP: number[] = [0.5, 1.05, 1.4, 1.55, 1.75, 1.9, 2, 2.15, 2.2, 2.3, 2.5,
  */
 export class BlurFilter extends BitmapFilter
 {
+    /**
+     * @description BlurFilterの認識番号
+     *              The recognition number of the BlurFilter.
+     *
+     * @member {number}
+     * @public
+     */
+    public readonly $filterType: number = 1;
+
     /**
      * @description 水平方向のぼかし量。
      *              The amount of horizontal blur.
@@ -170,9 +176,7 @@ export class BlurFilter extends BitmapFilter
      */
     toArray (): number[]
     {
-        return [1,
-            this._$blurX, this._$blurY, this._$quality
-        ];
+        return blurFilterToArrayService(this);
     }
 
     /**
@@ -185,9 +189,7 @@ export class BlurFilter extends BitmapFilter
      */
     toNumberArray (): number[]
     {
-        return [1,
-            this._$blurX, this._$blurY, this._$quality
-        ];
+        return blurFilterToArrayService(this);
     }
 
     /**
@@ -200,7 +202,7 @@ export class BlurFilter extends BitmapFilter
      */
     canApplyFilter (): boolean
     {
-        return this._$blurX > 0 && this._$blurY > 0 && this._$quality > 0;
+        return blurFilterCanApplyFilterService(this);
     }
 
     /**
@@ -214,19 +216,6 @@ export class BlurFilter extends BitmapFilter
      */
     getBounds (bounds: Float32Array): Float32Array
     {
-        if (!this.canApplyFilter()) {
-            return bounds;
-        }
-
-        const step = STEP[this._$quality - 1];
-        const dx = Math.round(this._$blurX * step);
-        const dy = Math.round(this._$blurY * step);
-
-        bounds[0] -= dx;
-        bounds[2] += dx;
-        bounds[1] -= dy;
-        bounds[3] += dy;
-
-        return bounds;
+        return blurFilterGetBoundsUseCase(this, bounds);
     }
 }
