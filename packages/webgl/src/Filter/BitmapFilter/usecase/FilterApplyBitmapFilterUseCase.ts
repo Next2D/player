@@ -2,6 +2,8 @@ import type { ITextureObject } from "../../../interface/ITextureObject";
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 import { execute as textureManagerBind01UseCase } from "../../../TextureManager/usecase/TextureManagerBind01UseCase";
 import { execute as textureManagerBind0UseCase } from "../../../TextureManager/usecase/TextureManagerBind0UseCase";
+import { execute as textureManagerBind02UseCase } from "../../../TextureManager/usecase/TextureManagerBind02UseCase";
+import { execute as textureManagerBind012UseCase } from "../../../TextureManager/usecase/TextureManagerBind012UseCase";
 import { execute as blendOneZeroService } from "../../../Blend/service/BlendOneZeroService";
 import { execute as blendSourceInService } from "../../../Blend/service/BlendSourceInService";
 import { execute as blendSourceAtopService } from "../../../Blend/service/BlendSourceAtopService";
@@ -12,6 +14,7 @@ import { execute as shaderManagerSetBitmapFilterUniformService } from "../../../
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import { execute as variantsBlendTextureShaderService } from "../../../Shader/Variants/Blend/service/VariantsBlendTextureShaderService";
 import { execute as shaderManagerSetTextureUniformService } from "../../../Shader/ShaderManager/service/ShaderManagerSetTextureUniformService";
+import { execute as gradientLUTGenerateFilterTextureUseCase } from "../../../Shader/GradientLUTGenerator/usecase/GradientLUTGenerateFilterTextureUseCase";
 import { $context } from "../../../WebGLUtil";
 
 /**
@@ -34,9 +37,9 @@ import { $context } from "../../../WebGLUtil";
  * @param  {string} type
  * @param  {boolean} knockout
  * @param  {number} strength
- * @param  {number[] | null} ratios
- * @param  {number[] | null} colors
- * @param  {number[] | null} alphas
+ * @param  {Float32Array | null} ratios
+ * @param  {Float32Array | null} colors
+ * @param  {Float32Array | null} alphas
  * @param  {number} color_r1
  * @param  {number} color_g1
  * @param  {number} color_b1
@@ -66,9 +69,9 @@ export const execute = (
     type: string,
     knockout: boolean,
     strength: number,
-    ratios: number[] | null = null,
-    colors: number[] | null = null,
-    alphas: number[] | null = null,
+    ratios: Float32Array | null = null,
+    colors: Float32Array | null = null,
+    alphas: Float32Array | null = null,
     color_r1: number = 0,
     color_g1: number = 0,
     color_b1: number = 0,
@@ -87,9 +90,11 @@ export const execute = (
     const isInner    = type === "inner";
     const isGradient = ratios !== null && colors !== null && alphas !== null;
 
-    const lut: WebGLTexture | null = null;
+    let gradientTextureObject: ITextureObject | null = null;
     if (isGradient) {
-        // todo
+        gradientTextureObject = gradientLUTGenerateFilterTextureUseCase(
+            ratios as Float32Array, colors as Float32Array, alphas as Float32Array
+        );
     }
 
     if (isInner) {
@@ -105,16 +110,25 @@ export const execute = (
         );
         shaderManagerDrawTextureUseCase(shaderManager);
 
-        if (isGradient && lut) {
-            // todo
+        if (isGradient && gradientTextureObject) {
+            textureManagerBind02UseCase(
+                blur_texture_object,
+                gradientTextureObject,
+                true
+            );
         } else {
             textureManagerBind0UseCase(blur_texture_object, true);
         }
 
     } else {
 
-        if (isGradient && lut) {
-            // todo
+        if (isGradient && gradientTextureObject) {
+            textureManagerBind012UseCase(
+                blur_texture_object,
+                texture_object,
+                gradientTextureObject,
+                true
+            );
         } else {
             textureManagerBind01UseCase(
                 blur_texture_object,

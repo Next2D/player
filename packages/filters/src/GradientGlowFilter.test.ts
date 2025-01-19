@@ -15,7 +15,7 @@ describe("GradientGlowFilter.js property test", () =>
         expect(gradientGlowFilter.blurY).toBe(4);
         expect(gradientGlowFilter.strength).toBe(1);
         expect(gradientGlowFilter.quality).toBe(1);
-        expect(gradientGlowFilter.type).toBe("inner");
+        expect(gradientGlowFilter.type).toBe("outer");
         expect(gradientGlowFilter.knockout).toBe(false);
     });
 });

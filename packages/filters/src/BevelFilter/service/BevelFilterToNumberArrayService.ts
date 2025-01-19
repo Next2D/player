@@ -1,4 +1,5 @@
 import type { BevelFilter } from "../../BevelFilter";
+import { $typeToNumber } from "../../FilterUtil";
 
 /**
  * @description フィルターの設定値を数値配列で返却します。
@@ -11,26 +12,6 @@ import type { BevelFilter } from "../../BevelFilter";
  */
 export const execute = (bevel_filter: BevelFilter): number[] =>
 {
-    let type = 0;
-    switch (bevel_filter.type) {
-
-        case "full":
-            type = 0;
-            break;
-
-        case "inner":
-            type = 1;
-            break;
-
-        case "outer":
-            type = 2;
-            break;
-
-        default:
-            break;
-
-    }
-
     return [
         bevel_filter.$filterType,
         bevel_filter.distance,
@@ -43,7 +24,7 @@ export const execute = (bevel_filter: BevelFilter): number[] =>
         bevel_filter.blurY,
         bevel_filter.strength,
         bevel_filter.quality,
-        type,
+        $typeToNumber(bevel_filter.type),
         +bevel_filter.knockout
     ];
 };

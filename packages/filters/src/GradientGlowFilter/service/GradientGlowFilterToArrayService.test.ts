@@ -18,7 +18,7 @@ describe("GradientGlowFilterToArrayService.js test", () =>
         expect(array[7]).toBe(4);
         expect(array[8]).toBe(1);
         expect(array[9]).toBe(1);
-        expect(array[10]).toBe("inner");
+        expect(array[10]).toBe("outer");
         expect(array[11]).toBe(false);
     });
 });

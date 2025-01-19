@@ -1,3 +1,5 @@
+import type { IBitmapFilterType } from "./interface/IBitmapFilterType";
+
 /**
  * @param  {number} value
  * @param  {number} min
@@ -49,3 +51,31 @@ export const $convertColorStringToNumber = (value: string): number =>
  * @private
  */
 export const $Deg2Rad: number = Math.PI / 180;
+
+/**
+ * @description 種類を数値に変換
+ *              Convert type to number
+ *
+ * @param {IBitmapFilterType} type
+ * @return {number}
+ * @method
+ * @protected
+ */
+export const $typeToNumber = (type: IBitmapFilterType): number =>
+{
+    switch (type) {
+
+        case "full":
+            return 0;
+
+        case "inner":
+            return 1;
+
+        case "outer":
+            return 2;
+
+        default:
+            return 0;
+
+    }
+};

@@ -1,4 +1,5 @@
 import type { GradientBevelFilter } from "../../GradientBevelFilter";
+import { $typeToNumber } from "../../FilterUtil";
 
 /**
  * @description フィルターの設定値を数値配列で返却します。
@@ -15,26 +16,6 @@ export const execute = (gradient_bevel_filter: GradientBevelFilter): number[] =>
     const alphas: number[] = gradient_bevel_filter.alphas ? gradient_bevel_filter.alphas : [];
     const ratios: number[] = gradient_bevel_filter.ratios ? gradient_bevel_filter.ratios : [];
 
-    let type: number = 0;
-    switch (gradient_bevel_filter.type) {
-
-        case "inner":
-            type = 0;
-            break;
-
-        case "outer":
-            type = 1;
-            break;
-
-        case "full":
-            type = 2;
-            break;
-
-        default:
-            break;
-
-    }
-
     return [
         gradient_bevel_filter.$filterType,
         gradient_bevel_filter.distance,
@@ -46,7 +27,7 @@ export const execute = (gradient_bevel_filter: GradientBevelFilter): number[] =>
         gradient_bevel_filter.blurY,
         gradient_bevel_filter.strength,
         gradient_bevel_filter.quality,
-        type,
+        $typeToNumber(gradient_bevel_filter.type),
         +gradient_bevel_filter.knockout
     ];
 };

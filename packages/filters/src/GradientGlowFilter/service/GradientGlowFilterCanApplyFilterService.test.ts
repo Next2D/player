@@ -7,7 +7,7 @@ describe("GradientGlowFilterCanApplyFilterService.js test", () =>
     it("test case", () =>
     {
         const gradientGlowFilter = new GradientGlowFilter(
-            4, 45, [0, 0], [0, 255], [0x000000, 0xFFFFFF], 4, 4, 1
+            4, 45, [0x000000, 0xFFFFFF], [0, 1], [0, 255], 4, 4, 1
         );
         expect(execute(gradientGlowFilter)).toBe(true);
 

@@ -16,11 +16,14 @@ import { execute as filterApplyColorMatrixFilterUseCase } from "../../Filter/Col
 import { execute as filterApplyGlowFilterUseCase } from "../../Filter/GlowFilter/usecase/FilterApplyGlowFilterUseCase";
 import { execute as filterApplyDropShadowFilterUseCase } from "../../Filter/DropShadowFilter/usecase/FilterApplyDropShadowFilterUseCase";
 import { execute as filterApplyBevelFilterUseCase } from "../../Filter/BevelFilter/usecase/FilterApplyBevelFilterUseCase";
+import { execute as filterApplyGradientBevelFilterUseCase } from "../../Filter/GradientBevelFilter/usecase/FilterApplyGradientBevelFilterUseCase";
+import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/GradientGlowFilter/usecase/FilterApplyGradientGlowFilterUseCase";
 import { $cacheStore } from "@next2d/cache";
 import { $offset } from "../../Filter";
 import {
     $context,
-    $getFloat32Array6
+    $getFloat32Array6,
+    $getDevicePixelRatio
 } from "../../WebGLUtil";
 
 /**
@@ -206,9 +209,55 @@ export const execute = (
                 break;
 
             case 7: // GradientBevelFilter
+                {
+                    const distance = params[idx++];
+                    const angle    = params[idx++];
+
+                    let length = params[idx++];
+                    const colors = params.subarray(idx, idx + length);
+                    idx += length;
+
+                    length = params[idx++];
+                    const alphas = params.subarray(idx, idx + length);
+                    idx += length;
+
+                    length = params[idx++];
+                    const ratios = params.subarray(idx, idx + length);
+                    idx += length;
+
+                    textureObject = filterApplyGradientBevelFilterUseCase(
+                        textureObject, matrix,
+                        distance, angle, colors, alphas, ratios,
+                        params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], Boolean(params[idx++])
+                    );
+                }
                 break;
 
             case 8: // GradientGlowFilter
+                {
+                    const distance = params[idx++];
+                    const angle    = params[idx++];
+
+                    let length = params[idx++];
+                    const colors = params.subarray(idx, idx + length);
+                    idx += length;
+
+                    length = params[idx++];
+                    const alphas = params.subarray(idx, idx + length);
+                    idx += length;
+
+                    length = params[idx++];
+                    const ratios = params.subarray(idx, idx + length);
+                    idx += length;
+
+                    textureObject = filterApplyGradientGlowFilterUseCase(
+                        textureObject, matrix,
+                        distance, angle, colors, alphas, ratios,
+                        params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], Boolean(params[idx++])
+                    );
+                }
                 break;
 
         }
@@ -222,8 +271,11 @@ export const execute = (
     const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
     const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
-    const xMin = bounds[0] * scaleX;
-    const yMin = bounds[1] * scaleY;
+    const devicePixelRatio = $getDevicePixelRatio();
+
+    const xMin = bounds[0] * (scaleX / devicePixelRatio);
+    const yMin = bounds[1] * (scaleY / devicePixelRatio);
+    console.log(xMin, yMin);
 
     $context.reset();
     // todo blend mode

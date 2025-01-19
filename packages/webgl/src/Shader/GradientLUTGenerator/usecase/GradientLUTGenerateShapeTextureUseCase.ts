@@ -1,6 +1,7 @@
 import type { ITextureObject } from "../../../interface/ITextureObject";
 import { execute as variantsGradientLUTShaderService } from "../../Variants/GradientLUT/service/VariantsGradientLUTShaderService";
 import { execute as blendOneZeroService } from "../../../Blend/service/BlendOneZeroService";
+import { execute as blendResetService } from "../../../Blend/service/BlendResetService";
 import { execute as gradientLUTSetUniformService } from "../service/GradientLUTSetUniformService";
 import { execute as gradientLUTGeneratorFillTextureUseCase } from "./GradientLUTGeneratorFillTextureUseCase";
 import { execute as contextBeginNodeRenderingService } from "../../../Context/service/ContextBeginNodeRenderingService";
@@ -62,6 +63,7 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
             stops[stops.length - 5]
         );
     }
+    blendResetService();
 
     if (currentAttachment) {
         $context.bind(currentAttachment);

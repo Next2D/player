@@ -1,4 +1,5 @@
 import type { GradientGlowFilter } from "../../GradientGlowFilter";
+import { $typeToNumber } from "../../FilterUtil";
 
 /**
  * @description フィルターの設定値を数値配列で返却します。
@@ -15,26 +16,6 @@ export const execute = (gradient_glow_filter: GradientGlowFilter): number[] =>
     const alphas: number[] = gradient_glow_filter.alphas ? gradient_glow_filter.alphas : [];
     const ratios: number[] = gradient_glow_filter.ratios ? gradient_glow_filter.ratios : [];
 
-    let type: number = 0;
-    switch (gradient_glow_filter.type) {
-
-        case "inner":
-            type = 0;
-            break;
-
-        case "outer":
-            type = 1;
-            break;
-
-        case "full":
-            type = 2;
-            break;
-
-        default:
-            break;
-
-    }
-
     return [
         gradient_glow_filter.$filterType,
         gradient_glow_filter.distance,
@@ -46,7 +27,7 @@ export const execute = (gradient_glow_filter: GradientGlowFilter): number[] =>
         gradient_glow_filter.blurY,
         gradient_glow_filter.strength,
         gradient_glow_filter.quality,
-        type,
+        $typeToNumber(gradient_glow_filter.type),
         +gradient_glow_filter.knockout
     ];
 };

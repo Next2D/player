@@ -99,7 +99,7 @@ export class GradientGlowFilter extends BitmapFilter
 
     /**
      * @type {string}
-     * @default "inner"
+     * @default "outer"
      * @private
      */
     private _$type: IBitmapFilterType;
@@ -121,7 +121,7 @@ export class GradientGlowFilter extends BitmapFilter
      * @param {number}  [blur_y=4.0]
      * @param {number}  [strength=1]
      * @param {number}  [quality=1]
-     * @param {string}  [type=BitmapFilterType.INNER]
+     * @param {string}  [type=BitmapFilterType.OUTER]
      * @param {boolean} [knockout=false]
      *
      * @constructor
@@ -137,7 +137,7 @@ export class GradientGlowFilter extends BitmapFilter
         blur_y: number = 4,
         strength: number = 1,
         quality: IFilterQuality = 1,
-        type: IBitmapFilterType = "inner",
+        type: IBitmapFilterType = "outer",
         knockout: boolean = false
     ) {
 
@@ -153,7 +153,7 @@ export class GradientGlowFilter extends BitmapFilter
         this._$alphas     = null;
         this._$ratios     = null;
         this._$strength   = 1;
-        this._$type       = "inner";
+        this._$type       = "outer";
         this._$knockout   = false;
 
         // setup
