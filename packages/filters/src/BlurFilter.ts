@@ -30,7 +30,6 @@ export class BlurFilter extends BitmapFilter
      *              Filter Recognition Number
      *
      * @member {number}
-     * @default 1
      * @public
      */
     public readonly $filterType: number = 1;

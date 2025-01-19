@@ -2,6 +2,8 @@ import type { BlurFilter } from "../../BlurFilter";
 import type { BevelFilter } from "../../BevelFilter";
 import type { DropShadowFilter } from "../../DropShadowFilter";
 import type { GlowFilter } from "../../GlowFilter";
+import type { GradientBevelFilter } from "../../GradientBevelFilter";
+import type { GradientGlowFilter } from "../../GradientGlowFilter";
 import { execute as blurFilterCanApplyFilterService } from "../service/BlurFilterCanApplyFilterService";
 
 /**
@@ -20,7 +22,7 @@ const $STEP: number[] = [0.5, 1.05, 1.4, 1.55, 1.75, 1.9, 2, 2.15, 2.2, 2.3, 2.5
  * @method
  * @protected
  */
-export const execute = (filter: BlurFilter | BevelFilter | DropShadowFilter | GlowFilter, bounds: Float32Array): Float32Array =>
+export const execute = (filter: BlurFilter | BevelFilter | DropShadowFilter | GlowFilter | GradientBevelFilter | GradientGlowFilter, bounds: Float32Array): Float32Array =>
 {
     if (!blurFilterCanApplyFilterService(filter)) {
         return bounds;

@@ -30,7 +30,6 @@ export class GlowFilter extends BitmapFilter
      *              Filter Recognition Number
      *
      * @member {number}
-     * @default 5
      * @public
      */
     public readonly $filterType: number = 6;

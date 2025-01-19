@@ -33,7 +33,6 @@ export class BevelFilter extends BitmapFilter
      *              Filter Recognition Number
      *
      * @member {number}
-     * @default 0
      * @public
      */
     public readonly $filterType: number = 0;

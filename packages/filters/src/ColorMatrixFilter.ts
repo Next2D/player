@@ -27,7 +27,6 @@ export class ColorMatrixFilter extends BitmapFilter
      *              Filter Recognition Number
      *
      * @member {number}
-     * @default 2
      * @public
      */
     public $filterType: number = 2;
