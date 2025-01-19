@@ -1,4 +1,6 @@
 import { BitmapFilter } from "./BitmapFilter";
+import { execute as colorMatrixFilterToArrayService } from "./ColorMatrixFilter/service/ColorMatrixFilterToArrayService";
+import { execute as colorMatrixFilterToNumberArrayService } from "./ColorMatrixFilter/service/ColorMatrixFilterToNumberArrayService";
 
 /**
  * @description ColorMatrixFilter クラスを使用すると、表示オブジェクトにぼかし効果を適用できます。
@@ -20,6 +22,16 @@ import { BitmapFilter } from "./BitmapFilter";
  */
 export class ColorMatrixFilter extends BitmapFilter
 {
+    /**
+     * @description フィルター認識番号
+     *              Filter Recognition Number
+     *
+     * @member {number}
+     * @default 2
+     * @public
+     */
+    public $filterType: number = 2;
+
     /**
      * @type {array}
      * @private
@@ -111,7 +123,7 @@ export class ColorMatrixFilter extends BitmapFilter
      */
     toArray (): Array<number | number[]>
     {
-        return [2, this._$matrix];
+        return colorMatrixFilterToArrayService(this);
     }
 
     /**
@@ -124,6 +136,6 @@ export class ColorMatrixFilter extends BitmapFilter
      */
     toNumberArray (): number[]
     {
-        return [2, ...this._$matrix];
+        return colorMatrixFilterToNumberArrayService(this);
     }
 }

@@ -4,8 +4,8 @@ import { execute as bevelFilterCanApplyFilterService } from "../service/BevelFil
 import { execute as blurFilterGetBoundsUseCase } from "../../BlurFilter/usecase/BlurFilterGetBoundsUseCase";
 
 /**
- * @description BevelFilterの描画後の描画範囲を返却
- *              Returns the drawing range after drawing BevelFilter
+ * @description Filterの描画後の描画範囲を返却
+ *              Returns the drawing range after drawing Filter
  *
  * @param  {BevelFilter} bevel_filter
  * @param  {Float32Array} bounds

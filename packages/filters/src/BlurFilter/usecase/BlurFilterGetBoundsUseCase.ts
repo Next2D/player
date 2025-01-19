@@ -1,5 +1,7 @@
 import type { BlurFilter } from "../../BlurFilter";
 import type { BevelFilter } from "../../BevelFilter";
+import type { DropShadowFilter } from "../../DropShadowFilter";
+import type { GlowFilter } from "../../GlowFilter";
 import { execute as blurFilterCanApplyFilterService } from "../service/BlurFilterCanApplyFilterService";
 
 /**
@@ -9,8 +11,8 @@ import { execute as blurFilterCanApplyFilterService } from "../service/BlurFilte
 const $STEP: number[] = [0.5, 1.05, 1.4, 1.55, 1.75, 1.9, 2, 2.15, 2.2, 2.3, 2.5, 3, 3, 3.5, 3.5];
 
 /**
- * @description BlurFilterの描画後の描画範囲を返却
- *              Returns the drawing range after drawing BlurFilter
+ * @description Filterの描画後の描画範囲を返却
+ *              Returns the drawing range after drawing Filter
  *
  * @param  {BlurFilter} filter
  * @param  {Float32Array} bounds
@@ -18,7 +20,7 @@ const $STEP: number[] = [0.5, 1.05, 1.4, 1.55, 1.75, 1.9, 2, 2.15, 2.2, 2.3, 2.5
  * @method
  * @protected
  */
-export const execute = (filter: BlurFilter | BevelFilter, bounds: Float32Array): Float32Array =>
+export const execute = (filter: BlurFilter | BevelFilter | DropShadowFilter | GlowFilter, bounds: Float32Array): Float32Array =>
 {
     if (!blurFilterCanApplyFilterService(filter)) {
         return bounds;

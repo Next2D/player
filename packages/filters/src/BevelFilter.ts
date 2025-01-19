@@ -29,14 +29,14 @@ import {
 export class BevelFilter extends BitmapFilter
 {
     /**
-     * @description フィルタータイプ
-     *              Filter type
+     * @description フィルター認識番号
+     *              Filter Recognition Number
      *
      * @member {number}
      * @default 0
      * @public
      */
-    public $filterType = 0;
+    public readonly $filterType: number = 0;
 
     /**
      * @description BevelFilterの認識番号

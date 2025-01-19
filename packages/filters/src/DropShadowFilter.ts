@@ -1,10 +1,12 @@
 import type { IFilterQuality } from "./interface/IFilterQuality";
 import { BitmapFilter } from "./BitmapFilter";
-import { BlurFilter } from "./BlurFilter";
+import { execute as dropShadowFilterToArrayService } from "./DropShadowFilter/service/DropShadowFilterToArrayService";
+import { execute as dropShadowFilterToNumberArrayService } from "./DropShadowFilter/service/DropShadowFilterToNumberArrayService";
+import { execute as dropShadowFilterCanApplyFilterService } from "./DropShadowFilter/service/DropShadowFilterCanApplyFilterService";
+import { execute as dropShadowFilterGetBoundsUseCase } from "./DropShadowFilter/usecase/DropShadowFilterGetBoundsUseCase";
 import {
     $clamp,
-    $convertColorStringToNumber,
-    $Deg2Rad
+    $convertColorStringToNumber
 } from "./FilterUtil";
 
 /**
@@ -24,10 +26,35 @@ import {
 export class DropShadowFilter extends BitmapFilter
 {
     /**
-     * @type {BlurFilter}
+     * @description フィルター認識番号
+     *              Filter Recognition Number
+     *
+     * @member {number}
+     * @default 5
+     * @public
+     */
+    public readonly $filterType: number = 5;
+
+    /**
+     * @type {number}
+     * @default 4
      * @private
      */
-    private readonly _$blurFilter: BlurFilter;
+    private _$blurX: number;
+
+    /**
+     * @type {number}
+     * @default 4
+     * @private
+     */
+    private _$blurY: number;
+
+    /**
+     * @type {IFilterQuality}
+     * @default 1
+     * @private
+     */
+    private _$quality: IFilterQuality;
 
     /**
      * @type {number}
@@ -118,7 +145,9 @@ export class DropShadowFilter extends BitmapFilter
         super();
 
         // default
-        this._$blurFilter = new BlurFilter(blur_x, blur_y, quality);
+        this._$blurX      = 4;
+        this._$blurY      = 4;
+        this._$quality    = 1;
         this._$distance   = 4;
         this._$angle      = 45;
         this._$color      = 0;
@@ -129,6 +158,9 @@ export class DropShadowFilter extends BitmapFilter
         this._$hideObject = false;
 
         // setup
+        this.blurX      = blur_x;
+        this.blurY      = blur_y;
+        this.quality    = quality;
         this.distance   = distance;
         this.angle      = angle;
         this.color      = color;
@@ -193,12 +225,16 @@ export class DropShadowFilter extends BitmapFilter
      */
     get blurX (): number
     {
-        return this._$blurFilter.blurX;
+        return this._$blurX;
     }
     set blurX (blur_x: number)
     {
-        this._$blurFilter.blurX = blur_x;
-        this.$updated = this._$blurFilter.$updated;
+        blur_x = $clamp(+blur_x, 0, 255, 0);
+        if (blur_x === this._$blurX) {
+            return ;
+        }
+        this._$blurX  = blur_x;
+        this.$updated = true;
     }
 
     /**
@@ -211,12 +247,16 @@ export class DropShadowFilter extends BitmapFilter
      */
     get blurY (): number
     {
-        return this._$blurFilter.blurY;
+        return this._$blurY;
     }
     set blurY (blur_y: number)
     {
-        this._$blurFilter.blurY = blur_y;
-        this.$updated = this._$blurFilter.$updated;
+        blur_y = $clamp(+blur_y, 0, 255, 0);
+        if (blur_y === this._$blurY) {
+            return ;
+        }
+        this._$blurY  = blur_y;
+        this.$updated = true;
     }
 
     /**
@@ -345,12 +385,16 @@ export class DropShadowFilter extends BitmapFilter
      */
     get quality (): IFilterQuality
     {
-        return this._$blurFilter.quality;
+        return this._$quality;
     }
     set quality (quality: IFilterQuality)
     {
-        this._$blurFilter.quality = quality;
-        this.$updated = this._$blurFilter.$updated;
+        quality = $clamp(quality | 0, 0, 15, 1) as IFilterQuality;
+        if (quality === this._$quality) {
+            return ;
+        }
+        this._$quality = quality;
+        this.$updated  = true;
     }
 
     /**
@@ -387,8 +431,8 @@ export class DropShadowFilter extends BitmapFilter
     {
         return new DropShadowFilter(
             this._$distance, this._$angle, this._$color, this._$alpha,
-            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
-            this._$blurFilter.quality, this._$inner, this._$knockout, this._$hideObject
+            this._$blurX, this._$blurY, this._$strength,
+            this._$quality, this._$inner, this._$knockout, this._$hideObject
         );
     }
 
@@ -402,11 +446,7 @@ export class DropShadowFilter extends BitmapFilter
      */
     toArray (): Array<number | boolean>
     {
-        return [5,
-            this._$distance, this._$angle, this._$color, this._$alpha,
-            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
-            this._$blurFilter.quality, this._$inner, this._$knockout, this._$hideObject
-        ];
+        return dropShadowFilterToArrayService(this);
     }
 
     /**
@@ -419,11 +459,7 @@ export class DropShadowFilter extends BitmapFilter
      */
     toNumberArray (): number[]
     {
-        return [5,
-            this._$distance, this._$angle, this._$color, this._$alpha,
-            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
-            this._$blurFilter.quality, +this._$inner, +this._$knockout, +this._$hideObject
-        ];
+        return dropShadowFilterToNumberArrayService(this);
     }
 
     /**
@@ -436,8 +472,7 @@ export class DropShadowFilter extends BitmapFilter
      */
     canApplyFilter (): boolean
     {
-        return this._$alpha > 0 && this._$strength > 0
-            && this._$blurFilter.canApplyFilter();
+        return dropShadowFilterCanApplyFilterService(this);
     }
 
     /**
@@ -451,29 +486,6 @@ export class DropShadowFilter extends BitmapFilter
      */
     getBounds (bounds: Float32Array): Float32Array
     {
-        if (!this.canApplyFilter()) {
-            return bounds;
-        }
-
-        this._$blurFilter.getBounds(bounds);
-        if (this._$inner) {
-            return bounds;
-        }
-
-        const radian = this._$angle * $Deg2Rad;
-        const x = Math.cos(radian) * this._$distance;
-        const y = Math.sin(radian) * this._$distance;
-
-        bounds[0] = Math.min(bounds[0], x);
-        if (x > 0) {
-            bounds[2] += x;
-        }
-
-        bounds[1] = Math.min(bounds[1], y);
-        if (y > 0) {
-            bounds[3] += y;
-        }
-
-        return bounds;
+        return dropShadowFilterGetBoundsUseCase(this, bounds);
     }
 }

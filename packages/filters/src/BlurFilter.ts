@@ -26,10 +26,11 @@ import { execute as blurFilterCanApplyFilterService } from "./BlurFilter/service
 export class BlurFilter extends BitmapFilter
 {
     /**
-     * @description BlurFilterの認識番号
-     *              The recognition number of the BlurFilter.
+     * @description フィルター認識番号
+     *              Filter Recognition Number
      *
      * @member {number}
+     * @default 1
      * @public
      */
     public readonly $filterType: number = 1;

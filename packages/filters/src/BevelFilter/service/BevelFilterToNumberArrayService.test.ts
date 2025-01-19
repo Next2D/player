@@ -7,6 +7,7 @@ describe("BevelFilterToNumberArrayService.js test", () =>
     it("test case", () =>
     {
         const array = execute(new BevelFilter());
+        expect(array.length).toBe(13);
         expect(array[0]).toBe(0);
         expect(array[1]).toBe(4);
         expect(array[2]).toBe(45);

@@ -1,6 +1,9 @@
 import type { IFilterQuality } from "./interface/IFilterQuality";
 import { BitmapFilter } from "./BitmapFilter";
-import { BlurFilter } from "./BlurFilter";
+import { execute as glowFilterToArrayService } from "./GlowFilter/service/GlowFilterToArrayService";
+import { execute as glowFilterToNumberArrayService } from "./GlowFilter/service/GlowFilterToNumberArrayService";
+import { execute as glowFilterCanApplyFilterService } from "./GlowFilter/service/GlowFilterCanApplyFilterService";
+import { execute as glowFilterGetBoundsUseCase } from "./GlowFilter/usecase/GlowFilterGetBoundsUseCase";
 import {
     $clamp,
     $convertColorStringToNumber
@@ -23,10 +26,35 @@ import {
 export class GlowFilter extends BitmapFilter
 {
     /**
-     * @type {BlurFilter}
+     * @description フィルター認識番号
+     *              Filter Recognition Number
+     *
+     * @member {number}
+     * @default 5
+     * @public
+     */
+    public readonly $filterType: number = 6;
+
+    /**
+     * @type {number}
+     * @default 4
      * @private
      */
-    private readonly _$blurFilter: BlurFilter;
+    private _$blurX: number;
+
+    /**
+     * @type {number}
+     * @default 4
+     * @private
+     */
+    private _$blurY: number;
+
+    /**
+     * @type {IFilterQuality}
+     * @default 1
+     * @private
+     */
+    private _$quality: IFilterQuality;
 
     /**
      * @type {number}
@@ -90,7 +118,9 @@ export class GlowFilter extends BitmapFilter
         super();
 
         // default
-        this._$blurFilter = new BlurFilter(blur_x, blur_y, quality);
+        this._$blurX      = 4;
+        this._$blurY      = 4;
+        this._$quality    = 1;
         this._$color      = 0;
         this._$alpha      = 1;
         this._$strength   = 1;
@@ -98,6 +128,9 @@ export class GlowFilter extends BitmapFilter
         this._$knockout   = false;
 
         // setup
+        this.blurX    = blur_x;
+        this.blurY    = blur_y;
+        this.quality  = quality;
         this.color    = color;
         this.alpha    = alpha;
         this.strength = strength;
@@ -137,12 +170,16 @@ export class GlowFilter extends BitmapFilter
      */
     get blurX (): number
     {
-        return this._$blurFilter.blurX;
+        return this._$blurX;
     }
     set blurX (blur_x: number)
     {
-        this._$blurFilter.blurX = blur_x;
-        this.$updated = this._$blurFilter.$updated;
+        blur_x = $clamp(+blur_x, 0, 255, 0);
+        if (blur_x === this._$blurX) {
+            return ;
+        }
+        this._$blurX  = blur_x;
+        this.$updated = true;
     }
 
     /**
@@ -155,12 +192,16 @@ export class GlowFilter extends BitmapFilter
      */
     get blurY (): number
     {
-        return this._$blurFilter.blurY;
+        return this._$blurY;
     }
     set blurY (blur_y: number)
     {
-        this._$blurFilter.blurY = blur_y;
-        this.$updated = this._$blurFilter.$updated;
+        blur_y = $clamp(+blur_y, 0, 255, 0);
+        if (blur_y === this._$blurY) {
+            return ;
+        }
+        this._$blurY  = blur_y;
+        this.$updated = true;
     }
 
     /**
@@ -244,12 +285,16 @@ export class GlowFilter extends BitmapFilter
      */
     get quality (): IFilterQuality
     {
-        return this._$blurFilter.quality;
+        return this._$quality;
     }
     set quality (quality: IFilterQuality)
     {
-        this._$blurFilter.quality = quality;
-        this.$updated = this._$blurFilter.$updated;
+        quality = $clamp(quality | 0, 0, 15, 1) as IFilterQuality;
+        if (quality === this._$quality) {
+            return ;
+        }
+        this._$quality = quality;
+        this.$updated  = true;
     }
 
     /**
@@ -285,8 +330,8 @@ export class GlowFilter extends BitmapFilter
     clone (): GlowFilter
     {
         return new GlowFilter(
-            this._$color, this._$alpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
-            this._$strength, this._$blurFilter.quality, this._$inner, this._$knockout
+            this._$color, this._$alpha, this._$blurX, this._$blurY,
+            this._$strength, this._$quality, this._$inner, this._$knockout
         );
     }
 
@@ -300,10 +345,7 @@ export class GlowFilter extends BitmapFilter
      */
     toArray (): Array<number | boolean>
     {
-        return [6,
-            this._$color, this._$alpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
-            this._$strength, this._$blurFilter.quality, this._$inner, this._$knockout
-        ];
+        return glowFilterToArrayService(this);
     }
 
     /**
@@ -316,10 +358,7 @@ export class GlowFilter extends BitmapFilter
      */
     toNumberArray (): number[]
     {
-        return [6,
-            this._$color, this._$alpha, this._$blurFilter.blurX, this._$blurFilter.blurY,
-            this._$strength, this._$blurFilter.quality, +this._$inner, +this._$knockout
-        ];
+        return glowFilterToNumberArrayService(this);
     }
 
     /**
@@ -332,9 +371,7 @@ export class GlowFilter extends BitmapFilter
      */
     canApplyFilter (): boolean
     {
-        return this._$alpha > 0
-            && this._$strength > 0
-            && this._$blurFilter.canApplyFilter();
+        return glowFilterCanApplyFilterService(this);
     }
 
     /**
@@ -348,10 +385,6 @@ export class GlowFilter extends BitmapFilter
      */
     getBounds (bounds: Float32Array): Float32Array
     {
-        if (!this.canApplyFilter() || this._$inner) {
-            return bounds;
-        }
-
-        return this._$blurFilter.getBounds(bounds);
+        return glowFilterGetBoundsUseCase(this, bounds);
     }
 }
