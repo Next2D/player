@@ -37,16 +37,16 @@ export const execute = (gradient_bevel_filter: GradientBevelFilter): number[] =>
 
     return [
         gradient_bevel_filter.$filterType,
-        gradient_bevel_filter.distance, 
+        gradient_bevel_filter.distance,
         gradient_bevel_filter.angle,
         colors.length, ...colors,
         alphas.length, ...alphas,
         ratios.length, ...ratios,
-        gradient_bevel_filter.blurX, 
-        gradient_bevel_filter.blurY, 
+        gradient_bevel_filter.blurX,
+        gradient_bevel_filter.blurY,
         gradient_bevel_filter.strength,
-        gradient_bevel_filter.quality, 
-        type, 
+        gradient_bevel_filter.quality,
+        type,
         +gradient_bevel_filter.knockout
     ];
 };

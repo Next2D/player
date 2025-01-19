@@ -7,8 +7,7 @@ import { execute as gradientGlowFilterToNumberArrayService } from "./GradientGlo
 import { execute as gradientGlowFilterGetBoundsUseCase } from "./GradientGlowFilter/usecase/GradientGlowFilterGetBoundsUseCase";
 import {
     $clamp,
-    $convertColorStringToNumber,
-    $Deg2Rad
+    $convertColorStringToNumber
 } from "./FilterUtil";
 
 /**

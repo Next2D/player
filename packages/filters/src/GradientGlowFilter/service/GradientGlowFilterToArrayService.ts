@@ -13,16 +13,16 @@ export const execute = (gradient_glow_filter: GradientGlowFilter): Array<number 
 {
     return [
         gradient_glow_filter.$filterType,
-        gradient_glow_filter.distance, 
-        gradient_glow_filter.angle, 
-        gradient_glow_filter.colors, 
-        gradient_glow_filter.alphas, 
+        gradient_glow_filter.distance,
+        gradient_glow_filter.angle,
+        gradient_glow_filter.colors,
+        gradient_glow_filter.alphas,
         gradient_glow_filter.ratios,
-        gradient_glow_filter.blurX, 
-        gradient_glow_filter.blurY, 
+        gradient_glow_filter.blurX,
+        gradient_glow_filter.blurY,
         gradient_glow_filter.strength,
-        gradient_glow_filter.quality, 
-        gradient_glow_filter.type, 
+        gradient_glow_filter.quality,
+        gradient_glow_filter.type,
         gradient_glow_filter.knockout
     ];
 };

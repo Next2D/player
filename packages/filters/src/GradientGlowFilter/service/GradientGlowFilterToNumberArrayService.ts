@@ -37,16 +37,16 @@ export const execute = (gradient_glow_filter: GradientGlowFilter): number[] =>
 
     return [
         gradient_glow_filter.$filterType,
-        gradient_glow_filter.distance, 
+        gradient_glow_filter.distance,
         gradient_glow_filter.angle,
         colors.length, ...colors,
         alphas.length, ...alphas,
         ratios.length, ...ratios,
-        gradient_glow_filter.blurX, 
-        gradient_glow_filter.blurY, 
+        gradient_glow_filter.blurX,
+        gradient_glow_filter.blurY,
         gradient_glow_filter.strength,
-        gradient_glow_filter.quality, 
-        type, 
+        gradient_glow_filter.quality,
+        type,
         +gradient_glow_filter.knockout
     ];
 };
