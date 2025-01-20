@@ -1,4 +1,7 @@
 import { BitmapFilter } from "./BitmapFilter";
+import { execute as convolutionFilterCanApplyFilterService } from "./ConvolutionFilter/service/ConvolutionFilterCanApplyFilterService";
+import { execute as convolutionFilterToArrayService } from "./ConvolutionFilter/service/ConvolutionFilterToArrayService";
+import { execute as convolutionFilterToNumberArrayService } from "./ConvolutionFilter/service/ConvolutionFilterToNumberArrayService";
 import {
     $clamp,
     $convertColorStringToNumber
@@ -20,6 +23,14 @@ import {
  */
 export class ConvolutionFilter extends BitmapFilter
 {
+    /**
+     * @description フィルター認識番号
+     *              Filter Recognition Number
+     *
+     * @member {number}
+     * @public
+     */
+    public $filterType: number = 3;
 
     /**
      * @type {number}
@@ -366,11 +377,7 @@ export class ConvolutionFilter extends BitmapFilter
      */
     toArray (): Array<number | number[] | boolean | null>
     {
-        return [3,
-            this._$matrixX, this._$matrixY, this._$matrix,
-            this._$divisor, this._$bias, this._$preserveAlpha,
-            this._$clamp, this._$color, this._$alpha
-        ];
+        return convolutionFilterToArrayService(this);
     }
 
     /**
@@ -383,12 +390,7 @@ export class ConvolutionFilter extends BitmapFilter
      */
     toNumberArray (): number[]
     {
-        const matrix: number[] = this._$matrix || [];
-        return [3,
-            this._$matrixX, this._$matrixY, matrix.length, ...matrix,
-            this._$divisor, this._$bias, +this._$preserveAlpha,
-            +this._$clamp, this._$color, this._$alpha
-        ];
+        return convolutionFilterToNumberArrayService(this);
     }
 
     /**
@@ -401,7 +403,6 @@ export class ConvolutionFilter extends BitmapFilter
      */
     canApplyFilter (): boolean
     {
-        return this._$matrix !== null
-            && this._$matrixX * this._$matrixY === this._$matrix.length;
+        return convolutionFilterCanApplyFilterService(this);
     }
 }

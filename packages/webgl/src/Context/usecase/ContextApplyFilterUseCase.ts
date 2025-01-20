@@ -18,6 +18,7 @@ import { execute as filterApplyDropShadowFilterUseCase } from "../../Filter/Drop
 import { execute as filterApplyBevelFilterUseCase } from "../../Filter/BevelFilter/usecase/FilterApplyBevelFilterUseCase";
 import { execute as filterApplyGradientBevelFilterUseCase } from "../../Filter/GradientBevelFilter/usecase/FilterApplyGradientBevelFilterUseCase";
 import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/GradientGlowFilter/usecase/FilterApplyGradientGlowFilterUseCase";
+import { execute as filterApplyConvolutionFilterUseCase } from "../../Filter/ConvolutionFilter/usecase/FilterApplyConvolutionFilterUseCase";
 import { $cacheStore } from "@next2d/cache";
 import { $offset } from "../../Filter";
 import {
@@ -186,6 +187,20 @@ export const execute = (
                 break;
 
             case 3: // ConvolutionFilter
+                {
+                    const matrix_x = params[idx++];
+                    const matrix_y = params[idx++];
+
+                    const length = matrix_x * matrix_y;
+                    const matrix = params.subarray(idx, idx + length);
+                    idx += length;
+
+                    textureObject = filterApplyConvolutionFilterUseCase(
+                        textureObject, matrix_x, matrix_y, matrix,
+                        params[idx++], params[idx++], Boolean(params[idx++]), Boolean(params[idx++]),
+                        params[idx++], params[idx++]
+                    );
+                }
                 break;
 
             case 4: // DisplacementMapFilter
@@ -275,7 +290,6 @@ export const execute = (
 
     const xMin = bounds[0] * (scaleX / devicePixelRatio);
     const yMin = bounds[1] * (scaleY / devicePixelRatio);
-    console.log(xMin, yMin);
 
     $context.reset();
     // todo blend mode
