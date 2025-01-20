@@ -1,54 +1,51 @@
 import { FUNCTION_IS_INSIDE } from "../FragmentShaderLibrary";
 
 /**
- * @class
+ * @param  {number}  mediump_length
+ * @param  {number}  x
+ * @param  {number}  y
+ * @param  {boolean} preserve_alpha
+ * @param  {boolean} clamp
+ * @return {string}
+ * @method
+ * @static
  */
-export class FragmentShaderSourceConvolutionFilter
-{
-    /**
-     * @param  {number}  mediump_length
-     * @param  {number}  x
-     * @param  {number}  y
-     * @param  {boolean} preserve_alpha
-     * @param  {boolean} clamp
-     * @return {string}
-     * @method
-     * @static
-     */
-    static TEMPLATE (
-        mediump_length: number,
-        x: number, y: number,
-        preserve_alpha: boolean, clamp: boolean
-    ): string {
+export const CONVOLUTION_FILTER_TEMPLATE = (
+    mediump_length: number,
+    x: number,
+    y: number,
+    preserve_alpha: boolean, 
+    clamp: boolean
+): string => {
 
-        const halfX: number = Math.floor(x * 0.5);
-        const halfY: number = Math.floor(y * 0.5);
-        const size: number  = x * y;
+    const halfX = Math.floor(x * 0.5);
+    const halfY = Math.floor(y * 0.5);
+    const size  = x * y;
 
-        let matrixStatement: string = "";
-        const matrixIndex: number = clamp ? 1 : 2;
-        for (let idx: number = 0; idx < size; ++idx) {
+    let matrixStatement = "";
+    const matrixIndex = clamp ? 1 : 2;
+    for (let idx = 0; idx < size; ++idx) {
 
-            const index: number = matrixIndex + Math.floor(idx / 4);
+        const index = matrixIndex + Math.floor(idx / 4);
 
-            const component: number = idx % 4;
+        const component = idx % 4;
 
-            matrixStatement += `
+        matrixStatement += `
     result += getWeightedColor(${idx}, u_mediump[${index}][${component}]);
 `;
-        }
+    }
 
-        const preserve_alphaStatement: string = preserve_alpha
-            ? "result.a = texture(u_texture, v_coord).a;"
-            : "";
-        const clampStatement: string = clamp
-            ? ""
-            : `
+    const preserve_alphaStatement = preserve_alpha
+        ? "result.a = texture(u_texture, v_coord).a;"
+        : "";
+    const clampStatement = clamp
+        ? ""
+        : `
     vec4 substitute_color = u_mediump[1];
     color = mix(substitute_color, color, isInside(uv));
 `;
 
-        return `#version 300 es
+    return `#version 300 es
 precision mediump float;
 
 uniform sampler2D u_texture;
@@ -86,5 +83,4 @@ void main() {
     result.rgb *= result.a;
     o_color = result;
 }`;
-    }
-}
+};
