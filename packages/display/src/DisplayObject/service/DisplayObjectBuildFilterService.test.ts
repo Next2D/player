@@ -129,7 +129,9 @@ describe("DisplayObjectBuildFilterService.js test", () =>
         expect(filters.length).toBe(1);
 
         const filter = filters[0];
-        expect(filter.mapBitmap).toBe(null);
+        expect(filter.bitmapBuffer).toBe(null);
+        expect(filter.bitmapWidth).toBe(0);
+        expect(filter.bitmapHeight).toBe(0);
         expect(filter.mapPointX).toBe(0);
         expect(filter.mapPointY).toBe(0);
         expect(filter.componentX).toBe(0);

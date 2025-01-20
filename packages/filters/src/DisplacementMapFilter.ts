@@ -1,6 +1,9 @@
 import type { IDisplacementMapFilterMode } from "./interface/IDisplacementMapFilterMode";
 import type { IBitmapDataChannel } from "./interface/IBitmapDataChannel";
 import { BitmapFilter } from "./BitmapFilter";
+import { execute as displacementMapFilterCanApplyFilterService } from "./DisplacementMapFilter/service/DisplacementMapFilterCanApplyFilterService";
+import { execute as displacementMapFilterToArrayService } from "./DisplacementMapFilter/service/DisplacementMapFilterToArrayService";
+import { execute as displacementMapFilterToNumberArrayService } from "./DisplacementMapFilter/service/DisplacementMapFilterToNumberArrayService";
 import {
     $clamp,
     $convertColorStringToNumber
@@ -20,11 +23,34 @@ import {
 export class DisplacementMapFilter extends BitmapFilter
 {
     /**
-     * @type {HTMLImageElement}
+     * @description フィルター認識番号
+     *              Filter Recognition Number
+     *
+     * @member {number}
+     * @public
+     */
+    public $filterType: number = 4;
+
+    /**
+     * @type {Uint8Array}
      * @default null
      * @private
      */
-    private _$mapBitmap: HTMLImageElement | null;
+    private _$bitmapBuffer: Uint8Array | null;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$bitmapWidth: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$bitmapHeight: number;
 
     /**
      * @type {number}
@@ -90,9 +116,11 @@ export class DisplacementMapFilter extends BitmapFilter
     private _$alpha: number;
 
     /**
-     * @param {HTMLImageElement} [map_bitmap = null]
-     * @param {object} [map_point_x = 0]
-     * @param {object} [map_point_y = 0]
+     * @param {Uint8Array} [bitmap_buffer = null]
+     * @param {number} [bitmap_width = 0]
+     * @param {number} [bitmap_height = 0]
+     * @param {number} [map_point_x = 0]
+     * @param {number} [map_point_y = 0]
      * @param {number} [component_x = 0]
      * @param {number} [component_y = 0]
      * @param {number} [scale_x = 0.0]
@@ -105,7 +133,9 @@ export class DisplacementMapFilter extends BitmapFilter
      * @public
      */
     constructor (
-        map_bitmap: HTMLImageElement | null = null,
+        bitmap_buffer: Uint8Array | null = null,
+        bitmap_width: number = 0,
+        bitmap_height: number = 0,
         map_point_x: number = 0,
         map_point_y: number = 0,
         component_x: IBitmapDataChannel = 0,
@@ -120,28 +150,32 @@ export class DisplacementMapFilter extends BitmapFilter
         super();
 
         // default
-        this._$mapBitmap  = null;
-        this._$mapPointX  = 0;
-        this._$mapPointY  = 0;
-        this._$componentX = 0;
-        this._$componentY = 0;
-        this._$scaleX     = 0;
-        this._$scaleY     = 0;
-        this._$mode       = "wrap";
-        this._$color      = 0;
-        this._$alpha      = 0;
+        this._$bitmapBuffer = null;
+        this._$bitmapWidth  = 0;
+        this._$bitmapHeight = 0;
+        this._$mapPointX    = 0;
+        this._$mapPointY    = 0;
+        this._$componentX   = 0;
+        this._$componentY   = 0;
+        this._$scaleX       = 0;
+        this._$scaleY       = 0;
+        this._$mode         = "wrap";
+        this._$color        = 0;
+        this._$alpha        = 0;
 
         // setup
-        this.mapBitmap  = map_bitmap;
-        this.mapPointX  = map_point_x;
-        this.mapPointY  = map_point_y;
-        this.componentX = component_x;
-        this.componentY = component_y;
-        this.scaleX     = scale_x;
-        this.scaleY     = scale_y;
-        this.mode       = mode;
-        this.color      = color;
-        this.alpha      = alpha;
+        this.bitmapBuffer = bitmap_buffer;
+        this.bitmapWidth  = bitmap_width;
+        this.bitmapHeight = bitmap_height;
+        this.mapPointX    = map_point_x;
+        this.mapPointY    = map_point_y;
+        this.componentX   = component_x;
+        this.componentY   = component_y;
+        this.scaleX       = scale_x;
+        this.scaleY       = scale_y;
+        this.mode         = mode;
+        this.color        = color;
+        this.alpha        = alpha;
     }
 
     /**
@@ -244,16 +278,58 @@ export class DisplacementMapFilter extends BitmapFilter
      * @default null
      * @public
      */
-    get mapBitmap (): HTMLImageElement | null
+    get bitmapBuffer (): Uint8Array | null
     {
-        return this._$mapBitmap;
+        return this._$bitmapBuffer;
     }
-    set mapBitmap (map_bitmap: HTMLImageElement | null)
+    set bitmapBuffer (bitmap_buffer: Uint8Array | null)
     {
-        if (map_bitmap === this._$mapBitmap) {
+        if (bitmap_buffer === this._$bitmapBuffer) {
             return ;
         }
-        this._$mapBitmap = map_bitmap;
+        this._$bitmapBuffer = bitmap_buffer;
+        this.$updated = true;
+    }
+
+    /**
+     * @description 置き換えマップデータの幅です。
+     *              The width of the displacement map image.
+     *
+     * @member  {number}
+     * @default 0
+     * @public
+     */
+    get bitmapWidth (): number
+    {
+        return this._$bitmapWidth;
+    }
+    set bitmapWidth (bitmap_width: number)
+    {
+        if (bitmap_width === this._$bitmapWidth) {
+            return ;
+        }
+        this._$bitmapWidth = bitmap_width;
+        this.$updated = true;
+    }
+
+    /**
+     * @description 置き換えマップデータの高さです。
+     *              The height of the displacement map image.
+     *
+     * @member  {number}
+     * @default 0
+     * @public
+     */
+    get bitmapHeight (): number
+    {
+        return this._$bitmapHeight;
+    }
+    set bitmapHeight (bitmap_height: number)
+    {
+        if (bitmap_height === this._$bitmapHeight) {
+            return ;
+        }
+        this._$bitmapHeight = bitmap_height;
         this.$updated = true;
     }
 
@@ -379,8 +455,12 @@ export class DisplacementMapFilter extends BitmapFilter
     clone (): DisplacementMapFilter
     {
         return new DisplacementMapFilter(
-            this._$mapBitmap, this._$mapPointX, this._$mapPointX, this._$componentX, this._$componentY,
-            this._$scaleX, this._$scaleY, this._$mode, this._$color, this._$alpha
+            this._$bitmapBuffer?.slice(),
+            this._$bitmapWidth, this._$bitmapHeight, 
+            this._$mapPointX, this._$mapPointX, 
+            this._$componentX, this._$componentY,
+            this._$scaleX, this._$scaleY, 
+            this._$mode, this._$color, this._$alpha
         );
     }
 
@@ -392,12 +472,9 @@ export class DisplacementMapFilter extends BitmapFilter
      * @method
      * @public
      */
-    toArray (): Array<number | string | HTMLImageElement | null>
+    toArray (): Array<number | string | number[] | null>
     {
-        return [4,
-            this._$mapBitmap, this._$mapPointX, this._$mapPointY, this._$componentX, this._$componentY,
-            this._$scaleX, this._$scaleY, this._$mode, this._$color, this._$alpha
-        ];
+        return displacementMapFilterToArrayService(this);
     }
 
     /**
@@ -410,40 +487,7 @@ export class DisplacementMapFilter extends BitmapFilter
      */
     toNumberArray (): number[]
     {
-        let mode = 2;
-        switch (this._$mode) {
-
-            case "clamp":
-                mode = 0;
-                break;
-
-            case "color":
-                mode = 1;
-                break;
-
-            case "wrap":
-                mode = 2;
-                break;
-
-            case "ignore":
-                mode = 3;
-                break;
-
-            default:
-                mode = 2;
-                break;
-
-        }
-
-        const mapBitmap = this._$mapBitmap
-            ? []
-            : [];
-
-        return [4,
-            mapBitmap.length, ...mapBitmap,
-            this._$mapPointX, this._$mapPointY, this._$componentX, this._$componentY,
-            this._$scaleX, this._$scaleY, mode, this._$color, this._$alpha
-        ];
+        return displacementMapFilterToNumberArrayService(this);
     }
 
     /**
@@ -456,8 +500,6 @@ export class DisplacementMapFilter extends BitmapFilter
      */
     canApplyFilter (): boolean
     {
-        return this._$mapBitmap !== null
-            && this._$componentX > 0 && this._$componentY > 0
-            && this._$scaleX !== 0 && this._$scaleY !== 0;
+        return displacementMapFilterCanApplyFilterService(this);
     }
 }
