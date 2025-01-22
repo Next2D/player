@@ -6,17 +6,17 @@ import { $typeToNumber } from "../../FilterUtil";
  *              Returns a numeric array of filter settings.
  *
  * @param  {GradientBevelFilter} gradient_bevel_filter
- * @return {number[]}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const execute = (gradient_bevel_filter: GradientBevelFilter): number[] =>
+export const execute = (gradient_bevel_filter: GradientBevelFilter): Float32Array =>
 {
     const colors: number[] = gradient_bevel_filter.colors ? gradient_bevel_filter.colors : [];
     const alphas: number[] = gradient_bevel_filter.alphas ? gradient_bevel_filter.alphas : [];
     const ratios: number[] = gradient_bevel_filter.ratios ? gradient_bevel_filter.ratios : [];
 
-    return [
+    return new Float32Array([
         gradient_bevel_filter.$filterType,
         gradient_bevel_filter.distance,
         gradient_bevel_filter.angle,
@@ -29,5 +29,5 @@ export const execute = (gradient_bevel_filter: GradientBevelFilter): number[] =>
         gradient_bevel_filter.quality,
         $typeToNumber(gradient_bevel_filter.type),
         +gradient_bevel_filter.knockout
-    ];
+    ]);
 };

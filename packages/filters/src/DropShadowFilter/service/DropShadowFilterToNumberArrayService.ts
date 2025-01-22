@@ -5,13 +5,13 @@ import type { DropShadowFilter } from "../../DropShadowFilter";
  *              Returns a numeric array of filter settings.
  *
  * @param  {DropShadowFilter} drop_shadow_filter
- * @return {number[]}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const execute = (drop_shadow_filter: DropShadowFilter): number[] =>
+export const execute = (drop_shadow_filter: DropShadowFilter): Float32Array =>
 {
-    return [
+    return new Float32Array([
         drop_shadow_filter.$filterType,
         drop_shadow_filter.distance,
         drop_shadow_filter.angle,
@@ -24,5 +24,5 @@ export const execute = (drop_shadow_filter: DropShadowFilter): number[] =>
         +drop_shadow_filter.inner,
         +drop_shadow_filter.knockout,
         +drop_shadow_filter.hideObject
-    ];
+    ]);
 };

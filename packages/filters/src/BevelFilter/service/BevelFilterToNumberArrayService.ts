@@ -6,13 +6,13 @@ import { $typeToNumber } from "../../FilterUtil";
  *              Returns a numeric array of filter settings.
  *
  * @param  {BevelFilter} bevel_filter
- * @return {number[]}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const execute = (bevel_filter: BevelFilter): number[] =>
+export const execute = (bevel_filter: BevelFilter): Float32Array =>
 {
-    return [
+    return new Float32Array([
         bevel_filter.$filterType,
         bevel_filter.distance,
         bevel_filter.angle,
@@ -26,5 +26,5 @@ export const execute = (bevel_filter: BevelFilter): number[] =>
         bevel_filter.quality,
         $typeToNumber(bevel_filter.type),
         +bevel_filter.knockout
-    ];
+    ]);
 };

@@ -5,14 +5,14 @@ import type { ColorMatrixFilter } from "../../ColorMatrixFilter";
  *              Returns a numeric array of filter settings.
  *
  * @param  {ColorMatrixFilter} color_matrix_filter
- * @return {number[]}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const execute = (color_matrix_filter: ColorMatrixFilter): number[] =>
+export const execute = (color_matrix_filter: ColorMatrixFilter): Float32Array =>
 {
-    return [
+    return new Float32Array([
         color_matrix_filter.$filterType,
         ...color_matrix_filter.matrix
-    ];
+    ]);
 };

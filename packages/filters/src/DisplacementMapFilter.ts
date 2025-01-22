@@ -455,12 +455,12 @@ export class DisplacementMapFilter extends BitmapFilter
     clone (): DisplacementMapFilter
     {
         return new DisplacementMapFilter(
-            this._$bitmapBuffer?.slice(),
-            this._$bitmapWidth, this._$bitmapHeight, 
-            this._$mapPointX, this._$mapPointX, 
-            this._$componentX, this._$componentY,
-            this._$scaleX, this._$scaleY, 
-            this._$mode, this._$color, this._$alpha
+            this._$bitmapBuffer
+                ? this._$bitmapBuffer.slice()
+                : null,
+            this._$bitmapWidth, this._$bitmapHeight,
+            this._$mapPointX, this._$mapPointX, this._$componentX, this._$componentY,
+            this._$scaleX, this._$scaleY, this._$mode, this._$color, this._$alpha
         );
     }
 
@@ -481,11 +481,11 @@ export class DisplacementMapFilter extends BitmapFilter
      * @description 設定されたフィルターの値を数値配列で返します。
      *              Returns the value of the specified filter as a number array.
      *
-     * @return {number[]}
+     * @return {Float32Array}
      * @method
      * @public
      */
-    toNumberArray (): number[]
+    toNumberArray (): Float32Array
     {
         return displacementMapFilterToNumberArrayService(this);
     }

@@ -15,17 +15,17 @@ export const execute = (displacement_map_filter: DisplacementMapFilter): Array<n
         displacement_map_filter.$filterType,
         displacement_map_filter.bitmapBuffer
             ? Array.from(displacement_map_filter.bitmapBuffer)
-            : null, 
-        displacement_map_filter.bitmapWidth, 
+            : null,
+        displacement_map_filter.bitmapWidth,
         displacement_map_filter.bitmapHeight,
-        displacement_map_filter.mapPointX, 
-        displacement_map_filter.mapPointY, 
-        displacement_map_filter.componentX, 
+        displacement_map_filter.mapPointX,
+        displacement_map_filter.mapPointY,
+        displacement_map_filter.componentX,
         displacement_map_filter.componentY,
-        displacement_map_filter.scaleX, 
-        displacement_map_filter.scaleY, 
-        displacement_map_filter.mode, 
-        displacement_map_filter.color, 
+        displacement_map_filter.scaleX,
+        displacement_map_filter.scaleY,
+        displacement_map_filter.mode,
+        displacement_map_filter.color,
         displacement_map_filter.alpha
     ];
 };

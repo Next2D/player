@@ -5,14 +5,14 @@ import type { ConvolutionFilter } from "../../ConvolutionFilter";
  *              Returns a numeric array of filter settings.
  *
  * @param  {ConvolutionFilter} convolution_filter
- * @return {number[]}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const execute = (convolution_filter: ConvolutionFilter): number[] =>
+export const execute = (convolution_filter: ConvolutionFilter): Float32Array =>
 {
     const matrix: number[] = convolution_filter.matrix || [];
-    return [
+    return new Float32Array([
         convolution_filter.$filterType,
         convolution_filter.matrixX,
         convolution_filter.matrixY,
@@ -23,5 +23,5 @@ export const execute = (convolution_filter: ConvolutionFilter): number[] =>
         +convolution_filter.clamp,
         convolution_filter.color,
         convolution_filter.alpha
-    ];
+    ]);
 };

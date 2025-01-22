@@ -16,9 +16,9 @@ import { $collection } from "../../FilterVariants";
  * @protected
  */
 export const execute = (
-    x: number, 
+    x: number,
     y: number,
-    preserve_alpha: boolean, 
+    preserve_alpha: boolean,
     clamp: boolean
 ): ShaderManager => {
 

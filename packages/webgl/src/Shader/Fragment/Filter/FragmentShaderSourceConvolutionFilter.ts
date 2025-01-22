@@ -14,7 +14,7 @@ export const CONVOLUTION_FILTER_TEMPLATE = (
     mediump_length: number,
     x: number,
     y: number,
-    preserve_alpha: boolean, 
+    preserve_alpha: boolean,
     clamp: boolean
 ): string => {
 

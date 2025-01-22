@@ -5,11 +5,11 @@ import type { DisplacementMapFilter } from "../../DisplacementMapFilter";
  *              Returns a numeric array of filter settings.
  *
  * @param  {DisplacementMapFilter} displacement_map_filter
- * @return {number[]}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const execute = (displacement_map_filter: DisplacementMapFilter): number[] =>
+export const execute = (displacement_map_filter: DisplacementMapFilter): Float32Array =>
 {
     let mode = 2;
     switch (displacement_map_filter.mode) {
@@ -57,5 +57,5 @@ export const execute = (displacement_map_filter: DisplacementMapFilter): number[
         displacement_map_filter.alpha
     );
 
-    return array;
+    return new Float32Array(array);
 };

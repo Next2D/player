@@ -358,7 +358,7 @@ export const execute = (recodes : any[] | null): any[] =>
                         canvas.width  = width;
                         canvas.height = height;
 
-                        const context: CanvasRenderingContext2D | null = canvas.getContext("2d");
+                        const context: CanvasRenderingContext2D | null = canvas.getContext("2d", { "willReadFrequently": true });
                         if (!context) {
                             throw new Error("the context is null.");
                         }

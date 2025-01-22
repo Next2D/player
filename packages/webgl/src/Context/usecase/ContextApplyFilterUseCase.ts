@@ -19,6 +19,7 @@ import { execute as filterApplyBevelFilterUseCase } from "../../Filter/BevelFilt
 import { execute as filterApplyGradientBevelFilterUseCase } from "../../Filter/GradientBevelFilter/usecase/FilterApplyGradientBevelFilterUseCase";
 import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/GradientGlowFilter/usecase/FilterApplyGradientGlowFilterUseCase";
 import { execute as filterApplyConvolutionFilterUseCase } from "../../Filter/ConvolutionFilter/usecase/FilterApplyConvolutionFilterUseCase";
+import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter/DisplacementMapFilter/usecase/FilterApplyDisplacementMapFilterUseCase";
 import { $cacheStore } from "@next2d/cache";
 import { $offset } from "../../Filter";
 import {
@@ -204,6 +205,18 @@ export const execute = (
                 break;
 
             case 4: // DisplacementMapFilter
+                {
+                    const length = params[idx++];
+                    const buffer = new Uint8Array(length);
+                    buffer.set(params.subarray(idx, idx + length));
+                    idx += length;
+
+                    textureObject = filterApplyDisplacementMapFilterUseCase(
+                        textureObject, matrix, buffer, params[idx++], params[idx++],
+                        params[idx++], params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], params[idx++]
+                    );
+                }
                 break;
 
             case 5: // DropShadowFilter

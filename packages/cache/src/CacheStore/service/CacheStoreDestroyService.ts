@@ -20,8 +20,8 @@ export const execute = (
     if ("canvas" in object) {
 
         const canvas: HTMLCanvasElement = object.canvas;
-        const width: number  = canvas.width;
-        const height: number = canvas.height;
+        const width  = canvas.width;
+        const height = canvas.height;
 
         object.clearRect(0, 0, width + 1, height + 1);
 

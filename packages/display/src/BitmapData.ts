@@ -1,5 +1,10 @@
-
-import { $getInstanceId } from "./DisplayObjectUtil";
+import type { DisplayObject } from "./DisplayObject";
+import type {
+    Matrix,
+    ColorTransform
+} from "@next2d/geom";
+import { execute as bitmapDataImageToBufferService } from "./BitmapData/service/BitmapDataImageToBufferService";
+import { execute as bitmapDataCanvasToBufferService } from "./BitmapData/service/BitmapDataCanvasToBufferService";
 import { $cacheStore } from "@next2d/cache";
 
 /**
@@ -16,16 +21,6 @@ import { $cacheStore } from "@next2d/cache";
  */
 export class BitmapData
 {
-    /**
-     * @description DisplayObject のユニークなインスタンスID
-     *              Unique instance ID of DisplayObject
-     *
-     * @type {number}
-     * @readonly
-     * @public
-     */
-    public readonly instanceId: number;
-
     /**
      * @description ビットマップイメージの幅（ピクセル単位）です。
      *              The width of the bitmap image in pixels.
@@ -50,19 +45,7 @@ export class BitmapData
      * @type {Uint8Array | null}
      * @private
      */
-    private _$buffer: Uint8Array | null;
-
-    /**
-     * @type {HTMLImageElement | null}
-     * @private
-     */
-    private _$image: HTMLImageElement | null;
-
-    /**
-     * @type {HTMLCanvasElement | null}
-     * @private
-     */
-    private _$canvas: HTMLCanvasElement | null;
+    public buffer: Uint8Array | null;
 
     /**
      * @param {number} [width=0]
@@ -72,12 +55,6 @@ export class BitmapData
      */
     constructor (width: number = 0, height: number = 0)
     {
-        /**
-         * @type {number}
-         * @private
-         */
-        this.instanceId = $getInstanceId();
-
         /**
          * @type {number}
          * @default 0
@@ -97,62 +74,26 @@ export class BitmapData
          * @default null
          * @private
          */
-        this._$buffer = null;
-
-        /**
-         * @type {HTMLImageElement}
-         * @default null
-         * @private
-         */
-        this._$image = null;
-
-        /**
-         * @type {HTMLCanvasElement}
-         * @default null
-         * @private
-         */
-        this._$canvas = null;
-    }
-
-    /**
-     * @description Uint8Arrayを利用して BitmapData を生成します。
-     *              Generates BitmapData using Uint8Array.
-     *
-     * @return {Uint8Array}
-     * @public
-     */
-    get buffer (): Uint8Array | null
-    {
-        return this._$buffer;
-    }
-    set buffer (buffer: Uint8Array | null)
-    {
-        this._$canvas = null;
-        this._$image  = null;
-        this._$buffer = buffer;
+        this.buffer = null;
     }
 
     /**
      * @description Imageクラスを利用して BitmapData を生成します。
      *              Use the Image class to generate BitmapData.
      *
-     * @return {HTMLImageElement | null}
+     * @writeonly
      * @public
      */
-    get image (): HTMLImageElement | null
-    {
-        return this._$image;
-    }
     set image (image: HTMLImageElement | null)
     {
-        this._$canvas = null;
-        this._$buffer = null;
-        this._$image  = image;
-
         if (!image) {
+            this.width  = 0;
+            this.height = 0;
+            this.buffer = null;
             return ;
         }
 
+        this.buffer = bitmapDataImageToBufferService(image);
         this.width  = image.width;
         this.height = image.height;
     }
@@ -161,23 +102,19 @@ export class BitmapData
      * @description Canvasクラス利用して BitmapData を生成します。
      *              Use the Canvas class to generate BitmapData.
      *
-     * @return {HTMLCanvasElement | null}
+     * @writeonly
      * @public
      */
-    get canvas (): HTMLCanvasElement | null
-    {
-        return this._$canvas;
-    }
     set canvas (canvas: HTMLCanvasElement | null)
     {
-        this._$image  = null;
-        this._$buffer = null;
-        this._$canvas = canvas;
-
         if (!canvas) {
+            this.width  = 0;
+            this.height = 0;
+            this.buffer = null;
             return ;
         }
 
+        this.buffer = bitmapDataCanvasToBufferService(canvas);
         this.width  = canvas.width;
         this.height = canvas.height;
     }
@@ -194,34 +131,10 @@ export class BitmapData
      */
     clone (): BitmapData
     {
-        const bitmapData: BitmapData = new BitmapData(this.width, this.height);
-        if (this._$image !== null || this._$canvas !== null) {
-
-            const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
-            canvas.width  = this.width;
-            canvas.height = this.height;
-
-            const context: CanvasRenderingContext2D | null = canvas.getContext("2d");
-            if (!context) {
-                throw new Error("the context is null.");
-            }
-
-            if (this._$image) {
-                context.drawImage(this._$image, 0, 0);
-            }
-
-            if (this._$canvas) {
-                context.drawImage(this._$canvas, 0, 0);
-            }
-
-            bitmapData.canvas = canvas;
-
-        } else if (this._$buffer !== null) {
-
-            bitmapData._$buffer = this._$buffer.slice();
-
+        const bitmapData = new BitmapData(this.width, this.height);
+        if (this.buffer !== null) {
+            bitmapData.buffer = this.buffer.slice();
         }
-
         return bitmapData;
     }
 
@@ -232,18 +145,22 @@ export class BitmapData
      * @param  {DisplayObject}     source
      * @param  {Matrix}            [matrix=null]
      * @param  {ColorTransform}    [color_transform=null]
-     * @param  {HTMLCanvasElement} [canvas=null]
-     * @param  {function}          [callback=null]
-     * @return {void}
+     * @param  {HTMLCanvasElement} [transferred_canvas=null]
+     * @return {Promise<HTMLCanvasElement>}
      * @public
      */
-    // drawToCanvas <D extends DisplayObject>(
-    //     source: D,
-    //     matrix: Matrix | null = null,
-    //     color_transform: ColorTransform | null = null,
-    //     canvas: HTMLCanvasElement | null = null,
-    //     callback: Function | null = null
-    // ): void {
-    //     // todo
-    // }
+    async drawToCanvas <D extends DisplayObject>(
+        source: D,
+        matrix: Matrix | null = null,
+        color_transform: ColorTransform | null = null,
+        transferred_canvas: HTMLCanvasElement | null = null
+    ): Promise<HTMLCanvasElement> {
+
+        // todo
+        console.log(source, matrix, color_transform);
+
+        const canvas = transferred_canvas || $cacheStore.getCanvas();
+
+        return canvas;
+    }
 }

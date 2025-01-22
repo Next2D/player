@@ -13,7 +13,7 @@
         // next2d.load("develop");
 
         const root = await next2d.createRootMovieClip(400, 400, 60);
-        const { Shape } = next2d.display;
+        const { Shape, BitmapData } = next2d.display;
         const { Event } = next2d.events;
         const {
             BlurFilter,
@@ -27,52 +27,48 @@
             DisplacementMapFilter
         } = next2d.filters;
 
-        const shape = root.addChild(new Shape());
-        shape.x = 150;
-        shape.y = 150;
+        const image = new Image();
+        image.addEventListener("load", () => 
+        {
+            const bitmapData = new BitmapData();
+            bitmapData.image = image;
 
-        shape.addEventListener(Event.COMPLETE, () => {
-            shape.scaleX = 0.5;
-            shape.scaleY = 0.5;
-            shape.filters = [
-                // new BlurFilter(10, 10, 3),
-                // new DropShadowFilter(20, 45, 0, 0.5),
-                // new ColorMatrixFilter([
-                //     0.393, 0.769, 0.189, 0, 0,
-                //     0.349, 0.686, 0.168, 0, 0,
-                //     0.272, 0.534, 0.131, 0, 0,
-                //     0, 0, 0, 1, 0
-                // ]),
-                // new GlowFilter(0, 1, 30, 20, 1, 1),
-                // new BevelFilter(4, 45, 0x0000ff, 1, 0, 1, 10, 10, 2, 1),
-                // new GradientBevelFilter(80, 45, [0x0000ff, 0x00ff00, 0xff0000], [0, 0.5, 1], [0, 128, 255], 4, 4, 1, 1),
-                // new GradientGlowFilter(4, 45, [0x000000, 0xffffff], [0, 1], [0, 255], 4, 4, 1, 1),
-                new ConvolutionFilter(3, 3, [
-                    0, -0.25, 0,
-                    -0.25, 4, -0.25,
-                    0, -0.25, 0
-                ], 1, 3, false, false),
-            ];
+            const shape = root.addChild(new Shape());
+            shape.x = 150;
+            shape.y = 150;
+
+            shape.addEventListener(Event.COMPLETE, () => 
+            {
+                shape.scaleX = 0.5;
+                shape.scaleY = 0.5;
+                shape.filters = [
+                    // new BlurFilter(10, 10, 3),
+                    // new DropShadowFilter(20, 45, 0, 0.5),
+                    // new ColorMatrixFilter([
+                    //     0.393, 0.769, 0.189, 0, 0,
+                    //     0.349, 0.686, 0.168, 0, 0,
+                    //     0.272, 0.534, 0.131, 0, 0,
+                    //     0, 0, 0, 1, 0
+                    // ]),
+                    // new GlowFilter(0, 1, 30, 20, 1, 1),
+                    // new BevelFilter(4, 45, 0x0000ff, 1, 0, 1, 10, 10, 2, 1),
+                    // new GradientBevelFilter(80, 45, [0x0000ff, 0x00ff00, 0xff0000], [0, 0.5, 1], [0, 128, 255], 4, 4, 1, 1),
+                    // new GradientGlowFilter(4, 45, [0x000000, 0xffffff], [0, 1], [0, 255], 4, 4, 1, 1),
+                    // new ConvolutionFilter(3, 3, [
+                    //     0, -0.25, 0,
+                    //     -0.25, 4, -0.25,
+                    //     0, -0.25, 0
+                    // ], 1, 3, false, false),
+                    new DisplacementMapFilter(
+                        bitmapData.buffer, bitmapData.width, bitmapData.height, 40, 40,
+                        1, 2, 32, 32
+                    )
+                ];
+            });
+
+            shape.src = "http://localhost:5173/json/image/logo.png";
         });
-
-        shape.src = "http://localhost:5173/json/image/logo.png";
-
-        // shape
-        //     .graphics
-        //     .beginFill("#ff0000", 0.5)
-        //     .drawRect(0, 0, 100, 100);
-
-        // shape.filters = [
-        //     // new BlurFilter(10, 10, 3),
-        //     // new DropShado    wFilter(20, 45, 0, 0.5),
-        //     // new GradientBevelFilter(80, 45, [0x0000ff, 0x00ff00, 0xff0000], [1, 1, 1], [0, 128, 255], 4, 4, 1, 1, "inner"),
-        //     // new GradientGlowFilter(14, 45, [0x00ff00, 0xff0000], [0, 1], [0, 255], 4, 4, 1, 1, "inner"),
-        //     new ConvolutionFilter(3, 3, [
-        //         0, -0.75, 0,
-        //         -0.75, 4, -0.75,
-        //         0, -0.75, 0
-        //     ], 7, 0),
-        // ];
+        image.src = "http://localhost:5173/json/image/image.png";
 
         // const count = 8000;
         // const root = next2d

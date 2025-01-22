@@ -472,11 +472,11 @@ export class GradientBevelFilter  extends BitmapFilter
      * @description 設定されたフィルターの値を数値配列で返します。
      *              Returns the value of the specified filter as a number array.
      *
-     * @return {number[]}
+     * @return {Float32Array}
      * @method
      * @public
      */
-    toNumberArray (): number[]
+    toNumberArray (): Float32Array
     {
         return gradientBevelFilterToNumberArrayService(this);
     }

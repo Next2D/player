@@ -5,13 +5,13 @@ import type { GlowFilter } from "../../GlowFilter";
  *              Returns a numeric array of filter settings.
  *
  * @param  {GlowFilter} glow_filter
- * @return {number[]}
+ * @return {Float32Array}
  * @method
  * @protected
  */
-export const execute = (glow_filter: GlowFilter): number[] =>
+export const execute = (glow_filter: GlowFilter): Float32Array =>
 {
-    return [
+    return new Float32Array([
         glow_filter.$filterType,
         glow_filter.color,
         glow_filter.alpha,
@@ -21,5 +21,5 @@ export const execute = (glow_filter: GlowFilter): number[] =>
         glow_filter.quality,
         +glow_filter.inner,
         +glow_filter.knockout
-    ];
+    ]);
 };

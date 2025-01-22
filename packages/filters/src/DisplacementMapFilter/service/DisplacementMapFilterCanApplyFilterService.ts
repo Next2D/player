@@ -12,8 +12,8 @@ import type { DisplacementMapFilter } from "../../DisplacementMapFilter";
 export const execute = (displacement_map_filter: DisplacementMapFilter): boolean =>
 {
     return displacement_map_filter.bitmapBuffer !== null
-        && displacement_map_filter.componentX > 0 
+        && displacement_map_filter.componentX > 0
         && displacement_map_filter.componentY > 0
-        && displacement_map_filter.scaleX !== 0 
+        && displacement_map_filter.scaleX !== 0
         && displacement_map_filter.scaleY !== 0;
 };

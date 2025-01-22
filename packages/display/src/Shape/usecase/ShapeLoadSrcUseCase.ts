@@ -25,7 +25,7 @@ export const execute = (shape: Shape, src: string): void =>
         canvas.width  = width;
         canvas.height = height;
 
-        const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+        const context = canvas.getContext("2d", { "willReadFrequently": true }) as CanvasRenderingContext2D;
         context.drawImage(image, 0, 0, width, height);
 
         shapeSetBitmapBufferUseCase(

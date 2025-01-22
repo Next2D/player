@@ -346,7 +346,11 @@ export const execute = (
 
             filter.getBounds(bounds);
 
-            params.push(...filter.toNumberArray());
+            const buffer = filter.toNumberArray();
+
+            for (let idx = 0; idx < buffer.length; idx += 4096) {
+                params.push(...buffer.subarray(idx, idx + 4096));
+            }
         }
 
         const useFilfer = params.length > 0;
@@ -354,8 +358,9 @@ export const execute = (
             renderQueue.push(
                 +useFilfer, +updated,
                 bounds[0], bounds[1], bounds[2], bounds[3],
-                params.length, ...params
+                params.length
             );
+            renderQueue.set(params);
         }
 
         $poolBoundsArray(bounds);
