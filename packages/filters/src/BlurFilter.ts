@@ -4,6 +4,7 @@ import { $clamp } from "./FilterUtil";
 import { execute as blurFilterToArrayService } from "./BlurFilter/service/BlurFilterToArrayService";
 import { execute as blurFilterGetBoundsUseCase } from "./BlurFilter/usecase/BlurFilterGetBoundsUseCase";
 import { execute as blurFilterCanApplyFilterService } from "./BlurFilter/service/BlurFilterCanApplyFilterService";
+import { execute as blurFilterToNumberArrayService } from "./BlurFilter/service/BlurFilterToNumberArrayService";
 
 /**
  * @description BlurFilter クラスを使用すると、表示オブジェクトにぼかし効果を適用できます。
@@ -189,7 +190,7 @@ export class BlurFilter extends BitmapFilter
      */
     toNumberArray (): Float32Array
     {
-        return blurFilterToArrayService(this);
+        return blurFilterToNumberArrayService(this);
     }
 
     /**
