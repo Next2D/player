@@ -15,6 +15,7 @@
         const root = await next2d.createRootMovieClip(400, 400, 60);
 
         const { Shape, BitmapData } = next2d.display;
+        const { TextField } = next2d.text;
         const { Event } = next2d.events;
         const {
             BlurFilter,
@@ -80,16 +81,30 @@
             .beginFill("#ff0000")
             .drawRect(0, 0, 100, 100);
 
-        const shape2 = root.addChild(new Shape());
-        shape2.x = 100;
-        shape2.y = 100;
+        // const shape2 = root.addChild(new Shape());
+        // shape2.x = 100;
+        // shape2.y = 100;
+        // // shape2.rotation = 10;
+        // shape2
+        //     .graphics
+        //     .beginFill("#00ff00")
+        //     .moveTo(0, 0)
+        //     .lineTo(100, 0)
+        //     .lineTo(100, 100)
+        //     .lineTo(0, 0)
+        //     .endFill();
 
-        shape2
-            .graphics
-            .beginFill("#00ff00")
-            .drawRect(0, 0, 100, 100);
+        // shape2.blendMode = "invert";
 
-        shape2.blendMode = "subtract";
+        const shape3 = root.addChild(new Shape());
+        shape3.x = 200;
+        shape3.y = 100;
+        shape3.scaleX = 0.5;
+        shape3.scaleY = 0.5;
+        shape3.rotation = 5;
+        shape3.src = "http://localhost:5173/json/image/logo.png";
+
+        shape3.blendMode = "multiply";
 
         // const count = 8000;
         // const root = next2d

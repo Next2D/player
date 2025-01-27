@@ -2,17 +2,20 @@ import type { Node } from "@next2d/texture-packer";
 import type { ITextureObject } from "../../interface/ITextureObject";
 import { execute as variantsBlendInstanceShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService";
 import { execute as variantsBlendDrawShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendDrawShaderService";
-import { $RENDER_MAX_SIZE } from "../../WebGLUtil";
+import { $getFloat32Array6, $RENDER_MAX_SIZE } from "../../WebGLUtil";
 import { $setActiveAtlasIndex } from "../../AtlasManager";
 import { execute as frameBufferManagerGetTextureFromNodeUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromNodeUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
+import { execute as textureManagerBind0UseCase } from "../../TextureManager/usecase/TextureManagerBind0UseCase";
 import { execute as textureManagerBind01UseCase } from "../../TextureManager/usecase/TextureManagerBind01UseCase";
 import { execute as frameBufferManagerGetTextureFromBoundsUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromBoundsUseCase";
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
-import { execute as frameBufferManagerTransferTextureFromRectService } from "../../FrameBufferManager/service/FrameBufferManagerTransferTextureFromRectService";
+import { execute as frameBufferManagerTransferTextureFromRectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerTransferTextureFromRectUseCase";
 import { execute as shaderManagerSetBlendWithColorTransformUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetBlendWithColorTransformUniformService";
+import { execute as variantsBlendMatrixTextureShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendMatrixTextureShaderService";
+import { execute as shaderManagerSetMatrixTextureUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMatrixTextureUniformService";
 import {
     $context,
     $getViewportHeight,
@@ -60,6 +63,7 @@ export const execute = (
     const ct6 = color_transform[6] / 255;
     const ct7 = 0;
 
+    const matrix = $context.$matrix;
     switch ($context.globalCompositeOperation) {
 
         case "normal":
@@ -92,7 +96,6 @@ export const execute = (
                 // 描画するまで配列に変数を保持
                 const shaderInstancedManager = variantsBlendInstanceShaderService();
 
-                const matrix = $context.$matrix;
                 renderQueue.push(
                     // texture rectangle (vec4)
                     node.x / $RENDER_MAX_SIZE, node.y / $RENDER_MAX_SIZE,
@@ -114,19 +117,91 @@ export const execute = (
 
         default:
             {
+                const currentAttachmentObject = $context.currentAttachmentObject;
+
                 // これまでの描画を実行
                 $context.drawArraysInstanced();
 
-                const srcTextureObject = frameBufferManagerGetTextureFromNodeUseCase(node);
-
-                const x = x_min | 0;
-                const y = y_min | 0;
                 const width  = Math.ceil(Math.abs(x_max - x_min));
                 const height = Math.ceil(Math.abs(y_max - y_min));
 
-                const dstTextureObject = frameBufferManagerGetTextureFromBoundsUseCase(x, y, width, height);
+                let offsetX = 0;
+                let offsetY = 0;
 
-                const currentAttachmentObject = $context.currentAttachmentObject;
+                let srcTextureObject = frameBufferManagerGetTextureFromNodeUseCase(node);
+                if (matrix[0] !== 1 || matrix[1] !== 0
+                    || matrix[3] !== 0 || matrix[4] !== 1
+                ) {
+
+                    const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(
+                        width, height, false
+                    );
+
+                    const a = $getFloat32Array6(
+                        matrix[0], matrix[1],
+                        matrix[3], matrix[4],
+                        width / 2, height / 2
+                    );
+
+                    const b = $getFloat32Array6(
+                        1, 0, 0, 1,
+                        -node.w / 2,
+                        -node.h / 2
+                    );
+
+                    const tMatrix = $getFloat32Array6(
+                        a[0] * b[0] + a[2] * b[1],
+                        a[1] * b[0] + a[3] * b[1],
+                        a[0] * b[2] + a[2] * b[3],
+                        a[1] * b[2] + a[3] * b[3],
+                        a[0] * b[4] + a[2] * b[5] + a[4],
+                        a[1] * b[4] + a[3] * b[5] + a[5]
+                    );
+
+                    $context.save();
+                    $context.bind(attachmentObject);
+                    $context.setTransform(
+                        tMatrix[0], tMatrix[1],
+                        tMatrix[2], tMatrix[3],
+                        tMatrix[4], tMatrix[5]
+                    );
+
+                    offsetX = tMatrix[4];
+                    offsetY = tMatrix[5];
+
+                    // 元の描画をフィルター用のテクスチャに描画
+                    const shaderManager = variantsBlendMatrixTextureShaderService();
+                    shaderManagerSetMatrixTextureUniformService(
+                        shaderManager, srcTextureObject.width, srcTextureObject.height
+                    );
+
+                    textureManagerBind0UseCase(srcTextureObject, true);
+                    shaderManagerDrawTextureUseCase(shaderManager);
+
+                    // 元のテクスチャを解放
+                    textureManagerReleaseTextureObjectUseCase(srcTextureObject);
+
+                    // フィルター用のテクスチャをセットしてコピー用のAttachmentObjectをリリース
+                    srcTextureObject = attachmentObject.texture as ITextureObject;
+                    frameBufferManagerReleaseAttachmentObjectUseCase(attachmentObject, false);
+
+                    if (currentAttachmentObject) {
+                        $context.bind(currentAttachmentObject);
+                    }
+
+                    $context.restore();
+                }
+
+                // offset値があれば、座標を移動
+                if (offsetX || offsetY) {
+                    matrix[6] -= offsetX;
+                    matrix[7] -= offsetY;
+                }
+
+                const dstTextureObject = frameBufferManagerGetTextureFromBoundsUseCase(
+                    matrix[6], matrix[7], width, height
+                );
+
                 const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, false);
                 $context.bind(attachmentObject);
 
@@ -147,9 +222,15 @@ export const execute = (
                 }
 
                 // ブレンドしたtextureを元の座標に描画
-                frameBufferManagerTransferTextureFromRectService(
-                    x, y, attachmentObject.texture as ITextureObject
+                frameBufferManagerTransferTextureFromRectUseCase(
+                    attachmentObject.texture as ITextureObject
                 );
+
+                // matrixを元に戻す
+                if (offsetX || offsetY) {
+                    matrix[6] += offsetX;
+                    matrix[7] += offsetY;
+                }
 
                 // テクスチャを解放
                 textureManagerReleaseTextureObjectUseCase(srcTextureObject);

@@ -24,6 +24,27 @@ void main() {
  * @method
  * @static
  */
+export const VECTOR_TEMPLATE = (): string =>
+{
+    return `#version 300 es
+
+layout (location = 0) in vec2 a_vertex;
+
+out vec2 v_coord;
+
+void main() {
+    v_coord = a_vertex;
+
+    vec2 position = a_vertex * 2.0 - 1.0;
+    gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
+}`;
+};
+
+/**
+ * @return {string}
+ * @method
+ * @static
+ */
 export const BLEND_MATRIX_TEMPLATE = (): string =>
 {
     return `#version 300 es

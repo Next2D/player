@@ -29,9 +29,7 @@ export const execute = (shape: Shape, src: string): void =>
         context.drawImage(image, 0, 0, width, height);
 
         shapeSetBitmapBufferUseCase(
-            shape,
-            width,
-            height,
+            shape, width, height,
             new Uint8Array(context.getImageData(0, 0, width, height).data)
         );
 

@@ -196,7 +196,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
         $context.drawDisplayObject(
             node,
-            xMin, yMin, xMax, yMax,
+            bounds[0], bounds[1], bounds[2], bounds[3],
             colorTransform
         );
     } else {

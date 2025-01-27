@@ -12,7 +12,7 @@ import { execute as variantsBlendDrawShaderService } from "../../Shader/Variants
 import { execute as shaderManagerSetBlendUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetBlendUniformService";
 import { execute as shaderManagerSetBlendWithColorTransformUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetBlendWithColorTransformUniformService";
 import { execute as shaderManagerSetMatrixTextureWithColorTransformUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMatrixTextureWithColorTransformUniformService";
-import { execute as frameBufferManagerTransferTextureFromRectService } from "../../FrameBufferManager/service/FrameBufferManagerTransferTextureFromRectService";
+import { execute as frameBufferManagerTransferTextureFromRectService } from "../../FrameBufferManager/usecase/FrameBufferManagerTransferTextureFromRectUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
 import { execute as blendResetService } from "../../Blend/service/BlendResetService";
 

@@ -360,7 +360,7 @@ export const execute = (
                 bounds[0], bounds[1], bounds[2], bounds[3],
                 params.length
             );
-            renderQueue.set(params);
+            renderQueue.set(new Float32Array(params));
         }
 
         $poolBoundsArray(bounds);
