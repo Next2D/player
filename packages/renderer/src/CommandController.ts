@@ -97,10 +97,6 @@ export class CommandController
                     $cacheStore.reset();
                     break;
 
-                case "bitmapDraw":
-                    // todo
-                    break;
-
                 default:
                     break;
 

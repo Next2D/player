@@ -145,14 +145,6 @@ export const execute = <P extends DisplayObjectContainer>(
                     );
                     break;
 
-                case maskDisplayObject.isText: // 0x02
-                    // todo
-                    break;
-
-                case maskDisplayObject.isVideo: // 0x03
-                    // todo
-                    break;
-
                 default:
                     break;
             }
@@ -225,16 +217,6 @@ export const execute = <P extends DisplayObjectContainer>(
                         child as Shape,
                         tMatrix
                     );
-                    break;
-
-                case child.isText: // 0x02
-                    // todo
-                    console.log("mask text");
-                    break;
-
-                case child.isVideo: // 0x03
-                    // todo
-                    console.log("mask video");
                     break;
 
                 default:
