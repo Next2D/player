@@ -16,6 +16,7 @@ import { execute as shapeSetBitmapBufferUseCase } from "./ShapeSetBitmapBufferUs
 export const execute = (shape: Shape, src: string): void =>
 {
     const image = new Image();
+    image.crossOrigin = "anonymous";
     image.addEventListener("load", (): void =>
     {
         const width  = image.width;
