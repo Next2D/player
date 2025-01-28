@@ -60,275 +60,283 @@ export const execute = (
     params: Float32Array
 ): void => {
 
+    const currentAttachmentObject = $context.currentAttachmentObject;
+
+    let textureObject: ITextureObject | null = null;
+    const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+    const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+
     const key = $cacheStore.generateFilterKeys(
         matrix[0], matrix[1], matrix[2], matrix[3]
     );
 
-    if ($cacheStore.has(unique_key, "fKey")) {
-
-        // todo updated
-        console.log(updated);
-
-        const fKey = $cacheStore.get(unique_key, "fKey");
-        const texture = $cacheStore.get(unique_key, "fTexture");
-        if (fKey === key) {
-            // todo
-            return ;
-        }
-
-        if (texture) {
-            // todo
+    let useCache = false;
+    const fKey = $cacheStore.get(unique_key, "fKey");
+    if (fKey === key) {
+        const cacheTextureObject = $cacheStore.get(unique_key, "fTexture") as ITextureObject;
+        if (updated) {
+            textureManagerReleaseTextureObjectUseCase(cacheTextureObject);
+        } else {
+            useCache = true;
+            textureObject = cacheTextureObject;
         }
     }
-
-    const currentAttachmentObject = $context.currentAttachmentObject;
-
-    // 描画元のテクスチャを取得
-    let textureObject = frameBufferManagerGetTextureFromNodeUseCase(node);
-
-    const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-    const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
-
-    const radianX = Math.atan2(matrix[1], matrix[0]);
-    const radianY = Math.atan2(-matrix[2], matrix[3]);
-
-    const a0 = is_bitmap ? scaleX  * Math.cos(radianX) :  Math.cos(radianX);
-    const b1 = is_bitmap ? scaleX  * Math.sin(radianX) :  Math.sin(radianX);
-    const c2 = is_bitmap ? -scaleY * Math.sin(radianY) : -Math.sin(radianY);
-    const d3 = is_bitmap ? scaleY  * Math.cos(radianY) :  Math.cos(radianY);
-    const a = $getFloat32Array6(
-        a0, b1, c2, d3,
-        width / 2,
-        height / 2
-    );
-
-    const b = $getFloat32Array6(
-        1, 0, 0, 1,
-        -node.w / 2,
-        -node.h / 2
-    );
-
-    const tMatrix = $getFloat32Array6(
-        a[0] * b[0] + a[2] * b[1],
-        a[1] * b[0] + a[3] * b[1],
-        a[0] * b[2] + a[2] * b[3],
-        a[1] * b[2] + a[3] * b[3],
-        a[0] * b[4] + a[2] * b[5] + a[4],
-        a[1] * b[4] + a[3] * b[5] + a[5]
-    );
 
     let offsetX = 0;
     let offsetY = 0;
-    if (tMatrix[0] !== 1 || tMatrix[1] !== 0 || tMatrix[2] !== 0 || tMatrix[3] !== 1) {
+    if (!useCache) {
 
-        const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(
-            width, height, false
+        // 描画元のテクスチャを取得
+        textureObject = frameBufferManagerGetTextureFromNodeUseCase(node);
+
+        const radianX = Math.atan2(matrix[1], matrix[0]);
+        const radianY = Math.atan2(-matrix[2], matrix[3]);
+
+        const a0 = is_bitmap ? scaleX  * Math.cos(radianX) :  Math.cos(radianX);
+        const b1 = is_bitmap ? scaleX  * Math.sin(radianX) :  Math.sin(radianX);
+        const c2 = is_bitmap ? -scaleY * Math.sin(radianY) : -Math.sin(radianY);
+        const d3 = is_bitmap ? scaleY  * Math.cos(radianY) :  Math.cos(radianY);
+        const a = $getFloat32Array6(
+            a0, b1, c2, d3,
+            width / 2,
+            height / 2
         );
 
-        $context.bind(attachmentObject);
-
-        // $context.save();
-        $context.reset();
-        $context.setTransform(
-            tMatrix[0], tMatrix[1],
-            tMatrix[2], tMatrix[3],
-            tMatrix[4], tMatrix[5]
+        const b = $getFloat32Array6(
+            1, 0, 0, 1,
+            -node.w / 2,
+            -node.h / 2
         );
 
-        offsetX = tMatrix[4];
-        offsetY = tMatrix[5];
+        const tMatrix = $getFloat32Array6(
+            a[0] * b[0] + a[2] * b[1],
+            a[1] * b[0] + a[3] * b[1],
+            a[0] * b[2] + a[2] * b[3],
+            a[1] * b[2] + a[3] * b[3],
+            a[0] * b[4] + a[2] * b[5] + a[4],
+            a[1] * b[4] + a[3] * b[5] + a[5]
+        );
 
+        if (tMatrix[0] !== 1 || tMatrix[1] !== 0 || tMatrix[2] !== 0 || tMatrix[3] !== 1) {
+
+            const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(
+                width, height, false
+            );
+
+            $context.bind(attachmentObject);
+
+            $context.reset();
+            $context.setTransform(
+                tMatrix[0], tMatrix[1],
+                tMatrix[2], tMatrix[3],
+                tMatrix[4], tMatrix[5]
+            );
+
+            offsetX = tMatrix[4];
+            offsetY = tMatrix[5];
+
+            textureManagerBind0UseCase(textureObject);
+
+            // 元の描画をフィルター用のテクスチャに描画
+            const shaderManager = variantsBlendMatrixTextureShaderService();
+            shaderManagerSetMatrixTextureUniformService(
+                shaderManager, textureObject.width, textureObject.height
+            );
+            shaderManagerDrawTextureUseCase(shaderManager);
+
+            // 元のテクスチャを解放
+            textureManagerReleaseTextureObjectUseCase(textureObject);
+
+            // フィルター用のテクスチャをセットしてコピー用のAttachmentObjectをリリース
+            textureObject = attachmentObject.texture as ITextureObject;
+            frameBufferManagerReleaseAttachmentObjectUseCase(attachmentObject, false);
+
+            if (currentAttachmentObject) {
+                $context.bind(currentAttachmentObject);
+            }
+        }
+
+        // オフセットを初期化
+        $offset.x = 0;
+        $offset.y = 0;
+
+        // フィルターを適用
+        for (let idx = 0; params.length > idx; ) {
+
+            const type = params[idx++];
+            switch (type) {
+
+                case 0: // BevelFilter
+                    textureObject = filterApplyBevelFilterUseCase(
+                        textureObject, matrix,
+                        params[idx++], params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], params[idx++], Boolean(params[idx++])
+                    );
+                    break;
+
+                case 1: // BlurFilter
+                    textureObject = filterApplyBlurFilterUseCase(
+                        textureObject, matrix, params[idx++], params[idx++], params[idx++]
+                    );
+                    break;
+
+                case 2: // ColorMatrixFilter
+                    textureObject = filterApplyColorMatrixFilterUseCase(
+                        textureObject,
+                        new Float32Array([
+                            params[idx++], params[idx++], params[idx++], params[idx++],
+                            params[idx++], params[idx++], params[idx++], params[idx++],
+                            params[idx++], params[idx++], params[idx++], params[idx++],
+                            params[idx++], params[idx++], params[idx++], params[idx++],
+                            params[idx++], params[idx++], params[idx++], params[idx++]
+                        ])
+                    );
+                    break;
+
+                case 3: // ConvolutionFilter
+                    {
+                        const matrix_x = params[idx++];
+                        const matrix_y = params[idx++];
+
+                        const length = matrix_x * matrix_y;
+                        const matrix = params.subarray(idx, idx + length);
+                        idx += length;
+
+                        textureObject = filterApplyConvolutionFilterUseCase(
+                            textureObject, matrix_x, matrix_y, matrix,
+                            params[idx++], params[idx++], Boolean(params[idx++]), Boolean(params[idx++]),
+                            params[idx++], params[idx++]
+                        );
+                    }
+                    break;
+
+                case 4: // DisplacementMapFilter
+                    {
+                        const length = params[idx++];
+                        const buffer = new Uint8Array(length);
+                        buffer.set(params.subarray(idx, idx + length));
+                        idx += length;
+
+                        textureObject = filterApplyDisplacementMapFilterUseCase(
+                            textureObject, matrix, buffer, params[idx++], params[idx++],
+                            params[idx++], params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
+                            params[idx++], params[idx++], params[idx++]
+                        );
+                    }
+                    break;
+
+                case 5: // DropShadowFilter
+                    textureObject = filterApplyDropShadowFilterUseCase(
+                        textureObject, matrix,
+                        params[idx++], params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], params[idx++], params[idx++],
+                        Boolean(params[idx++]), Boolean(params[idx++]), Boolean(params[idx++])
+                    );
+                    break;
+
+                case 6: // GlowFilter
+                    textureObject = filterApplyGlowFilterUseCase(
+                        textureObject, matrix,
+                        params[idx++], params[idx++], params[idx++], params[idx++],
+                        params[idx++], params[idx++], Boolean(params[idx++]), Boolean(params[idx++])
+                    );
+                    break;
+
+                case 7: // GradientBevelFilter
+                    {
+                        const distance = params[idx++];
+                        const angle    = params[idx++];
+
+                        let length = params[idx++];
+                        const colors = params.subarray(idx, idx + length);
+                        idx += length;
+
+                        length = params[idx++];
+                        const alphas = params.subarray(idx, idx + length);
+                        idx += length;
+
+                        length = params[idx++];
+                        const ratios = params.subarray(idx, idx + length);
+                        idx += length;
+
+                        textureObject = filterApplyGradientBevelFilterUseCase(
+                            textureObject, matrix,
+                            distance, angle, colors, alphas, ratios,
+                            params[idx++], params[idx++], params[idx++],
+                            params[idx++], params[idx++], Boolean(params[idx++])
+                        );
+                    }
+                    break;
+
+                case 8: // GradientGlowFilter
+                    {
+                        const distance = params[idx++];
+                        const angle    = params[idx++];
+
+                        let length = params[idx++];
+                        const colors = params.subarray(idx, idx + length);
+                        idx += length;
+
+                        length = params[idx++];
+                        const alphas = params.subarray(idx, idx + length);
+                        idx += length;
+
+                        length = params[idx++];
+                        const ratios = params.subarray(idx, idx + length);
+                        idx += length;
+
+                        textureObject = filterApplyGradientGlowFilterUseCase(
+                            textureObject, matrix,
+                            distance, angle, colors, alphas, ratios,
+                            params[idx++], params[idx++], params[idx++],
+                            params[idx++], params[idx++], Boolean(params[idx++])
+                        );
+                    }
+                    break;
+
+            }
+
+        }
+
+    } else {
+        offsetX = $cacheStore.get(unique_key, "offsetX");
+        offsetY = $cacheStore.get(unique_key, "offsetY");
+    }
+
+    if (textureObject) {
+        // メインのAttachmentObjectに描画して終了
+        $context.bind($context.$mainAttachmentObject as IAttachmentObject);
         textureManagerBind0UseCase(textureObject);
 
-        // 元の描画をフィルター用のテクスチャに描画
-        const shaderManager = variantsBlendMatrixTextureShaderService();
-        shaderManagerSetMatrixTextureUniformService(
-            shaderManager, textureObject.width, textureObject.height
+        const devicePixelRatio = $getDevicePixelRatio();
+        const xMin = bounds[0] * (scaleX / devicePixelRatio);
+        const yMin = bounds[1] * (scaleY / devicePixelRatio);
+
+        $context.reset();
+
+        $context.globalCompositeOperation = blend_mode;
+        $context.setTransform(
+            1, 0, 0, 1,
+            -offsetX + xMin + matrix[4],
+            -offsetY + yMin + matrix[5]
+        );
+
+        // todo blend mode
+        const shaderManager = variantsBlendMatrixTextureShaderService(true);
+        shaderManagerSetMatrixTextureWithColorTransformUniformService(
+            shaderManager, color_transform,
+            textureObject.width, textureObject.height
         );
         shaderManagerDrawTextureUseCase(shaderManager);
-
-        // 元のテクスチャを解放
-        textureManagerReleaseTextureObjectUseCase(textureObject);
-
-        // フィルター用のテクスチャをセットしてコピー用のAttachmentObjectをリリース
-        textureObject = attachmentObject.texture as ITextureObject;
-        frameBufferManagerReleaseAttachmentObjectUseCase(attachmentObject, false);
-
-        if (currentAttachmentObject) {
-            $context.bind(currentAttachmentObject);
-        }
-
-        // $context.restore();
     }
 
-    // オフセットを初期化
-    $offset.x = 0;
-    $offset.y = 0;
-
-    // フィルターを適用
-    for (let idx = 0; params.length > idx; ) {
-
-        const type = params[idx++];
-        switch (type) {
-
-            case 0: // BevelFilter
-                textureObject = filterApplyBevelFilterUseCase(
-                    textureObject, matrix,
-                    params[idx++], params[idx++], params[idx++], params[idx++],
-                    params[idx++], params[idx++], params[idx++], params[idx++],
-                    params[idx++], params[idx++], params[idx++], Boolean(params[idx++])
-                );
-                break;
-
-            case 1: // BlurFilter
-                textureObject = filterApplyBlurFilterUseCase(
-                    textureObject, matrix, params[idx++], params[idx++], params[idx++]
-                );
-                break;
-
-            case 2: // ColorMatrixFilter
-                textureObject = filterApplyColorMatrixFilterUseCase(
-                    textureObject,
-                    new Float32Array([
-                        params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++]
-                    ])
-                );
-                break;
-
-            case 3: // ConvolutionFilter
-                {
-                    const matrix_x = params[idx++];
-                    const matrix_y = params[idx++];
-
-                    const length = matrix_x * matrix_y;
-                    const matrix = params.subarray(idx, idx + length);
-                    idx += length;
-
-                    textureObject = filterApplyConvolutionFilterUseCase(
-                        textureObject, matrix_x, matrix_y, matrix,
-                        params[idx++], params[idx++], Boolean(params[idx++]), Boolean(params[idx++]),
-                        params[idx++], params[idx++]
-                    );
-                }
-                break;
-
-            case 4: // DisplacementMapFilter
-                {
-                    const length = params[idx++];
-                    const buffer = new Uint8Array(length);
-                    buffer.set(params.subarray(idx, idx + length));
-                    idx += length;
-
-                    textureObject = filterApplyDisplacementMapFilterUseCase(
-                        textureObject, matrix, buffer, params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++]
-                    );
-                }
-                break;
-
-            case 5: // DropShadowFilter
-                textureObject = filterApplyDropShadowFilterUseCase(
-                    textureObject, matrix,
-                    params[idx++], params[idx++], params[idx++], params[idx++],
-                    params[idx++], params[idx++], params[idx++], params[idx++],
-                    Boolean(params[idx++]), Boolean(params[idx++]), Boolean(params[idx++])
-                );
-                break;
-
-            case 6: // GlowFilter
-                textureObject = filterApplyGlowFilterUseCase(
-                    textureObject, matrix,
-                    params[idx++], params[idx++], params[idx++], params[idx++],
-                    params[idx++], params[idx++], Boolean(params[idx++]), Boolean(params[idx++])
-                );
-                break;
-
-            case 7: // GradientBevelFilter
-                {
-                    const distance = params[idx++];
-                    const angle    = params[idx++];
-
-                    let length = params[idx++];
-                    const colors = params.subarray(idx, idx + length);
-                    idx += length;
-
-                    length = params[idx++];
-                    const alphas = params.subarray(idx, idx + length);
-                    idx += length;
-
-                    length = params[idx++];
-                    const ratios = params.subarray(idx, idx + length);
-                    idx += length;
-
-                    textureObject = filterApplyGradientBevelFilterUseCase(
-                        textureObject, matrix,
-                        distance, angle, colors, alphas, ratios,
-                        params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], Boolean(params[idx++])
-                    );
-                }
-                break;
-
-            case 8: // GradientGlowFilter
-                {
-                    const distance = params[idx++];
-                    const angle    = params[idx++];
-
-                    let length = params[idx++];
-                    const colors = params.subarray(idx, idx + length);
-                    idx += length;
-
-                    length = params[idx++];
-                    const alphas = params.subarray(idx, idx + length);
-                    idx += length;
-
-                    length = params[idx++];
-                    const ratios = params.subarray(idx, idx + length);
-                    idx += length;
-
-                    textureObject = filterApplyGradientGlowFilterUseCase(
-                        textureObject, matrix,
-                        distance, angle, colors, alphas, ratios,
-                        params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], Boolean(params[idx++])
-                    );
-                }
-                break;
-
-        }
-
+    if (!useCache) {
+        $cacheStore.set(unique_key, "fKey", key);
+        $cacheStore.set(unique_key, "fTexture", textureObject);
+        $cacheStore.set(unique_key, "offsetX", offsetX);
+        $cacheStore.set(unique_key, "offsetY", offsetY);
     }
-
-    // メインのAttachmentObjectに描画して終了
-    $context.bind($context.$mainAttachmentObject as IAttachmentObject);
-    textureManagerBind0UseCase(textureObject);
-
-    const devicePixelRatio = $getDevicePixelRatio();
-    const xMin = bounds[0] * (scaleX / devicePixelRatio);
-    const yMin = bounds[1] * (scaleY / devicePixelRatio);
-
-    $context.reset();
-    // todo blend mode
-    $context.globalCompositeOperation = blend_mode;
-    $context.setTransform(
-        1, 0, 0, 1,
-        -offsetX + xMin + matrix[4],
-        -offsetY + yMin + matrix[5]
-    );
-
-    const shaderManager = variantsBlendMatrixTextureShaderService(true);
-    shaderManagerSetMatrixTextureWithColorTransformUniformService(
-        shaderManager, color_transform,
-        textureObject.width, textureObject.height
-    );
-    shaderManagerDrawTextureUseCase(shaderManager);
-
-    // $cacheStore.set(unique_key, "fTexture", texture);
 
     if (currentAttachmentObject) {
         $context.bind(currentAttachmentObject);

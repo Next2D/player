@@ -39,6 +39,9 @@ export const execute = (
     const uniqueKey = `${render_queue[index++]}`;
     const cacheKey  = "0";
 
+    // video state
+    const paused = !render_queue[index++];
+
     let node: Node;
     const hasCache = render_queue[index++];
     if (!hasCache) {
@@ -103,7 +106,7 @@ export const execute = (
         const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
 
         $context.applyFilter(
-            node, uniqueKey, updated,
+            node, uniqueKey, Boolean(Math.max(+paused, +updated)),
             width, height, true,
             matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
             filterBounds, params
