@@ -160,7 +160,7 @@ export const execute = (
         tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
         xMin, yMin, xMax, yMax,
         0, 0, video.videoWidth, video.videoHeight,
-        +video.uniqueKey, +video.paused
+        +video.uniqueKey, +video.changed
     );
 
     const cache = $cacheStore.get(video.uniqueKey, "0");

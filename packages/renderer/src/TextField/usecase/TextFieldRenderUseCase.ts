@@ -43,6 +43,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const uniqueKey = `${render_queue[index++]}`;
     const cacheKey  = render_queue[index++];
 
+    // text state
+    const changed = Boolean(render_queue[index++]);
+
     const xScale = Math.round(Math.sqrt(
         matrix[0] * matrix[0]
         + matrix[1] * matrix[1]
@@ -170,7 +173,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
 
         $context.applyFilter(
-            node, uniqueKey, updated,
+            node, uniqueKey, Boolean(Math.max(+changed, +updated)),
             width, height, false,
             matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
             filterBounds, params

@@ -185,7 +185,7 @@ export const execute = (
         xMin, yMin, xMax, yMax,
         text_field.xMin, text_field.yMin,
         text_field.xMax, text_field.yMax,
-        +text_field.uniqueKey, cacheKey
+        +text_field.uniqueKey, cacheKey, +text_field.changed
     );
 
     const cache = $cacheStore.get(text_field.uniqueKey, `${cacheKey}`);
