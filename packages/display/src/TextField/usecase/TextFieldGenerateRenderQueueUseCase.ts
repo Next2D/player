@@ -10,7 +10,8 @@ import {
     $RENDERER_TEXT_TYPE,
     $getArray,
     $poolArray,
-    $poolBoundsArray
+    $poolBoundsArray,
+    $getBoundsArray
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
@@ -248,26 +249,50 @@ export const execute = (
         renderQueue.push(1);
     }
 
-    const params  = [];
+    renderQueue.push(
+        displayObjectBlendToNumberService(text_field.blendMode)
+    );
+
     if (text_field.filters?.length) {
+
+        let updated = false;
+        const params = [];
+        const bounds = $getBoundsArray(0, 0, 0, 0);
         for (let idx = 0; idx < text_field.filters.length; idx++) {
+
             const filter = text_field.filters[idx];
             if (!filter || !filter.canApplyFilter()) {
                 continue;
             }
 
-            params.push(...filter.toNumberArray());
+            // フィルターが更新されたかをチェック
+            if (filter.$updated) {
+                updated = true;
+            }
+            filter.$updated = false;
+
+            filter.getBounds(bounds);
+
+            const buffer = filter.toNumberArray();
+
+            for (let idx = 0; idx < buffer.length; idx += 4096) {
+                params.push(...buffer.subarray(idx, idx + 4096));
+            }
         }
-    }
 
-    renderQueue.push(
-        displayObjectBlendToNumberService(text_field.blendMode)
-    );
+        const useFilfer = params.length > 0;
+        if (useFilfer) {
+            renderQueue.push(
+                +useFilfer, +updated,
+                bounds[0], bounds[1], bounds[2], bounds[3],
+                params.length
+            );
+            renderQueue.set(new Float32Array(params));
+        }
 
-    const useFilfer = params.length > 0;
-    renderQueue.push(+useFilfer);
-    if (useFilfer) {
-        renderQueue.push(params.length, ...params);
+        $poolBoundsArray(bounds);
+    } else {
+        renderQueue.push(0);
     }
 
     if (tColorTransform !== color_transform) {

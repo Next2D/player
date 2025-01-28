@@ -26,6 +26,9 @@ export const execute = (
     const colorTransform = render_queue.subarray(index, index + 8);
     index += 8;
 
+    const bounds = render_queue.subarray(index, index + 4);
+    index += 4;
+
     // baseBounds
     const xMin = render_queue[index++];
     const yMin = render_queue[index++];
@@ -76,8 +79,6 @@ export const execute = (
             if (currentAttachment) {
                 $context.bind(currentAttachment);
             }
-
-            imageBitmap.close();
         }
     } else {
         node = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node;
@@ -88,14 +89,34 @@ export const execute = (
 
     const blendMode = render_queue[index++];
 
+    // フィルター設定があればフィルターを実行
+    const useFilfer = Boolean(render_queue[index++]);
+    if (useFilfer) {
+        const updated = Boolean(render_queue[index++]);
+        const filterBounds = render_queue.subarray(index, index + 4);
+        index += 4;
+
+        const length = render_queue[index++];
+        const params = render_queue.subarray(index, index + length);
+
+        const width  = Math.ceil(Math.abs(bounds[2] - bounds[0]));
+        const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
+
+        $context.applyFilter(
+            node, uniqueKey, updated,
+            width, height, true,
+            matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
+            filterBounds, params
+        );
+
+        index += length;
+
+        return index;
+    }
+
     $context.globalAlpha = Math.min(Math.max(0, colorTransform[3] + colorTransform[7] / 255), 1);
     $context.imageSmoothingEnabled = true;
     $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
-
-    const useFilfer = Boolean(render_queue[index++]);
-    if (useFilfer) {
-        // todo
-    }
 
     $context.setTransform(
         matrix[0], matrix[1],

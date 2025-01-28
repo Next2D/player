@@ -52,6 +52,7 @@ export const execute = (
     updated: boolean,
     width: number,
     height: number,
+    is_bitmap: boolean,
     matrix: Float32Array,
     color_transform: Float32Array,
     blend_mode: IBlendMode,
@@ -85,16 +86,18 @@ export const execute = (
     // 描画元のテクスチャを取得
     let textureObject = frameBufferManagerGetTextureFromNodeUseCase(node);
 
-    const xScale  = width  / node.w;
-    const yScale  = height / node.h;
-    const radianX = Math.atan2(matrix[1], matrix[0])  * xScale;
-    const radianY = Math.atan2(-matrix[2], matrix[3]) * yScale;
+    const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+    const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
+    const radianX = Math.atan2(matrix[1], matrix[0]);
+    const radianY = Math.atan2(-matrix[2], matrix[3]);
+
+    const a0 = is_bitmap ? scaleX  * Math.cos(radianX) :  Math.cos(radianX);
+    const b1 = is_bitmap ? scaleX  * Math.sin(radianX) :  Math.sin(radianX);
+    const c2 = is_bitmap ? -scaleY * Math.sin(radianY) : -Math.sin(radianY);
+    const d3 = is_bitmap ? scaleY  * Math.cos(radianY) :  Math.cos(radianY);
     const a = $getFloat32Array6(
-        xScale  * Math.cos(radianX),
-        xScale  * Math.sin(radianX),
-        -yScale * Math.sin(radianY),
-        yScale  * Math.cos(radianY),
+        a0, b1, c2, d3,
         width / 2,
         height / 2
     );
@@ -114,6 +117,8 @@ export const execute = (
         a[1] * b[4] + a[3] * b[5] + a[5]
     );
 
+    let offsetX = 0;
+    let offsetY = 0;
     if (tMatrix[0] !== 1 || tMatrix[1] !== 0 || tMatrix[2] !== 0 || tMatrix[3] !== 1) {
 
         const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(
@@ -121,12 +126,17 @@ export const execute = (
         );
 
         $context.bind(attachmentObject);
+
+        // $context.save();
         $context.reset();
         $context.setTransform(
             tMatrix[0], tMatrix[1],
             tMatrix[2], tMatrix[3],
             tMatrix[4], tMatrix[5]
         );
+
+        offsetX = tMatrix[4];
+        offsetY = tMatrix[5];
 
         textureManagerBind0UseCase(textureObject);
 
@@ -147,6 +157,8 @@ export const execute = (
         if (currentAttachmentObject) {
             $context.bind(currentAttachmentObject);
         }
+
+        // $context.restore();
     }
 
     // オフセットを初期化
@@ -296,11 +308,7 @@ export const execute = (
     $context.bind($context.$mainAttachmentObject as IAttachmentObject);
     textureManagerBind0UseCase(textureObject);
 
-    const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-    const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
-
     const devicePixelRatio = $getDevicePixelRatio();
-
     const xMin = bounds[0] * (scaleX / devicePixelRatio);
     const yMin = bounds[1] * (scaleY / devicePixelRatio);
 
@@ -309,8 +317,8 @@ export const execute = (
     $context.globalCompositeOperation = blend_mode;
     $context.setTransform(
         1, 0, 0, 1,
-        xMin + matrix[4],
-        yMin + matrix[5]
+        -offsetX + xMin + matrix[4],
+        -offsetY + yMin + matrix[5]
     );
 
     const shaderManager = variantsBlendMatrixTextureShaderService(true);

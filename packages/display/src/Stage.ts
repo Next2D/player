@@ -211,14 +211,14 @@ export class Stage extends DisplayObjectContainer
      * @description renderer workerに渡す描画データを生成
      *              Generate drawing data to pass to the renderer worker
      *
-     * @param  {Array<Promise<ImageBitmap>>} image_bitmaps
+     * @param  {ImageBitmap[]} image_bitmaps
      * @param  {Float32Array} matrix
      * @return {void}
      * @method
      * @protected
      */
     $generateRenderQueue (
-        image_bitmaps: Array<Promise<ImageBitmap>>,
+        image_bitmaps: ImageBitmap[],
         matrix: Float32Array
     ): void {
 

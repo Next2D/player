@@ -132,6 +132,20 @@ export class Video extends DisplayObject
     public $videoElement: HTMLVideoElement | null;
 
     /**
+     * @type {OffscreenCanvas}
+     * @default null
+     * @public
+     */
+    public $offscreenCanvas: OffscreenCanvas | null;
+
+    /**
+     * @type {OffscreenCanvasRenderingContext2D}
+     * @default null
+     * @public
+     */
+    public $context: OffscreenCanvasRenderingContext2D | null;
+
+    /**
      * @type {boolean}
      * @default true
      * @public
@@ -173,6 +187,7 @@ export class Video extends DisplayObject
         this.videoWidth  = width;
         this.videoHeight = height;
 
+        // public params
         this.isVideo     = true;
         this.duration    = 0;
         this.smoothing   = true;
@@ -184,10 +199,14 @@ export class Video extends DisplayObject
         this.currentTime = 0;
 
         // private params
-        this._$src         = "";
-        this._$timerId     = -1;
-        this.$videoElement = null;
-        this._$volume      = 1;
+        this._$src       = "";
+        this._$timerId   = -1;
+        this._$volume    = 1;
+
+        // element
+        this.$videoElement    = null;
+        this.$offscreenCanvas = null;
+        this.$context         = null;
     }
 
     /**
@@ -235,12 +254,13 @@ export class Video extends DisplayObject
         }
 
         // reset
-        this.loaded = false;
-        this.currentTime = 0;
+        this.loaded           = false;
+        this.currentTime      = 0;
+        this.$videoElement    = null;
+        this.$offscreenCanvas = null;
+        this.$context         = null;
 
-        this.$videoElement = null;
         this.$videoElement = videoCreateElementService();
-
         videoRegisterEventUseCase(this.$videoElement, this);
 
         this._$src = this.$videoElement.src = src;

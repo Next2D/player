@@ -6,10 +6,10 @@ import { stage } from "@next2d/display";
 import { renderQueue } from "@next2d/render-queue";
 
 /**
- * @type {array}
+ * @type {ImageBitmap[]}
  * @private
  */
-const $bitmaps: Array<Promise<ImageBitmap>> = [];
+const $imageBitmaps: ImageBitmap[] = [];
 
 /**
  * @type {Float32Array}
@@ -73,8 +73,8 @@ export const execute = (): void =>
 
     renderQueue.offset = 0;
     $options.length    = 0;
-    $bitmaps.length    = 0;
-    stage.$generateRenderQueue($bitmaps, $matrix);
+    $imageBitmaps.length = 0;
+    stage.$generateRenderQueue($imageBitmaps, $matrix);
 
     if (!renderQueue.offset) {
         return ;
@@ -87,16 +87,10 @@ export const execute = (): void =>
 
     // postMessage
     $message.imageBitmaps = null;
-    if ($bitmaps.length) {
-        Promise
-            .all($bitmaps)
-            .then((bitmaps: ImageBitmap[]): void =>
-            {
-                $message.imageBitmaps = bitmaps;
-                $options.push(...bitmaps);
-                $rendererWorker.postMessage($message, $options);
-            });
-    } else {
-        $rendererWorker.postMessage($message, $options);
+    if ($imageBitmaps.length) {
+        $message.imageBitmaps = $imageBitmaps;
+        $options.push(...$imageBitmaps);
     }
+
+    $rendererWorker.postMessage($message, $options);
 };

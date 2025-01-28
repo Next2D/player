@@ -20,7 +20,7 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
         return 1;
     }
 
-    let yScale: number = Math.sqrt(
+    let yScale = Math.sqrt(
         matrix[2] * matrix[2]
         + matrix[3] * matrix[3]
     );

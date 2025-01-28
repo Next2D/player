@@ -10,7 +10,8 @@ import {
     $RENDERER_VIDEO_TYPE,
     $getArray,
     $poolBoundsArray,
-    $poolArray
+    $poolArray,
+    $getBoundsArray
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
@@ -22,6 +23,7 @@ import {
  *              Generate drawing data of Video to pass to renderer
  *
  * @param  {Video} video
+ * @param  {ImageBitmap[]} image_bitmaps
  * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
@@ -34,7 +36,7 @@ import {
  */
 export const execute = (
     video: Video,
-    bitmaps: Array<Promise<ImageBitmap>>,
+    image_bitmaps: ImageBitmap[],
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
@@ -43,7 +45,11 @@ export const execute = (
     point_y: number
 ): void => {
 
-    if (!video.visible || !video.$videoElement || !video.loaded) {
+    if (!video.visible
+        || !video.$videoElement
+        || !video.$offscreenCanvas
+        || !video.loaded
+    ) {
         renderQueue.push(0);
         return ;
     }
@@ -152,19 +158,38 @@ export const execute = (
         tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
         tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
+        xMin, yMin, xMax, yMax,
         0, 0, video.videoWidth, video.videoHeight,
         +video.uniqueKey
     );
 
     const cache = $cacheStore.get(video.uniqueKey, "0");
-    if (cache || video.changed) {
+    if (!cache || video.changed) {
 
-        // cache none
+        // cache, node
         renderQueue.push(0, +cache);
 
-        bitmaps.push(createImageBitmap(video.$videoElement, {
-            "imageOrientation": "flipY"
-        }));
+        const context = video.$context;
+        if (context) {
+
+            const x = video.videoWidth / 2;
+            const y = video.videoHeight / 2;
+
+            // 反転して転送
+            context.save();
+            context.translate(x, y);
+            context.rotate(Math.PI);
+            context.scale(-1, 1);
+            context.drawImage(
+                video.$videoElement, -x, -y,
+                video.videoWidth, video.videoHeight
+            );
+            context.restore();
+
+            image_bitmaps.push(
+                video.$offscreenCanvas.transferToImageBitmap()
+            );
+        }
 
         if (!cache) {
             $cacheStore.set(video.uniqueKey, "0", true);
@@ -173,26 +198,50 @@ export const execute = (
         renderQueue.push(1);
     }
 
-    const params  = [];
+    renderQueue.push(
+        displayObjectBlendToNumberService(video.blendMode)
+    );
+
     if (video.filters?.length) {
+
+        let updated = false;
+        const params = [];
+        const bounds = $getBoundsArray(0, 0, 0, 0);
         for (let idx = 0; idx < video.filters.length; idx++) {
+
             const filter = video.filters[idx];
             if (!filter || !filter.canApplyFilter()) {
                 continue;
             }
 
-            params.push(...filter.toNumberArray());
+            // フィルターが更新されたかをチェック
+            if (filter.$updated) {
+                updated = true;
+            }
+            filter.$updated = false;
+
+            filter.getBounds(bounds);
+
+            const buffer = filter.toNumberArray();
+
+            for (let idx = 0; idx < buffer.length; idx += 4096) {
+                params.push(...buffer.subarray(idx, idx + 4096));
+            }
         }
-    }
 
-    renderQueue.push(
-        displayObjectBlendToNumberService(video.blendMode)
-    );
+        const useFilfer = params.length > 0;
+        if (useFilfer) {
+            renderQueue.push(
+                +useFilfer, +updated,
+                bounds[0], bounds[1], bounds[2], bounds[3],
+                params.length
+            );
+            renderQueue.set(new Float32Array(params));
+        }
 
-    const useFilfer = params.length > 0;
-    renderQueue.push(+useFilfer);
-    if (useFilfer) {
-        renderQueue.push(params.length, ...params);
+        $poolBoundsArray(bounds);
+    } else {
+        renderQueue.push(0);
     }
 
     if (tColorTransform !== color_transform) {

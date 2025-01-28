@@ -27,6 +27,7 @@ import {
  *              Generate rendering data of the container to be passed to the renderer worker
  *
  * @param  {DisplayObjectContainer} display_object_container
+ * @param  {ImageBitmap[]} image_bitmaps
  * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
@@ -39,7 +40,7 @@ import {
  */
 export const execute = <P extends DisplayObjectContainer>(
     display_object_container: P,
-    bitmaps: Array<Promise<ImageBitmap>>,
+    image_bitmaps: ImageBitmap[],
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
@@ -249,7 +250,7 @@ export const execute = <P extends DisplayObjectContainer>(
             case child.isContainerEnabled: // 0x00
                 execute(
                     child as DisplayObjectContainer,
-                    bitmaps,
+                    image_bitmaps,
                     tMatrix,
                     colorTransform,
                     renderer_width,
@@ -286,7 +287,7 @@ export const execute = <P extends DisplayObjectContainer>(
             case child.isVideo: // 0x03
                 videoGenerateRenderQueueUseCase(
                     child as Video,
-                    bitmaps,
+                    image_bitmaps,
                     tMatrix,
                     colorTransform,
                     renderer_width,

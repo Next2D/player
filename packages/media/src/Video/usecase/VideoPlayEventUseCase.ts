@@ -14,6 +14,10 @@ import { execute as videoApplyChangesService } from "../service/VideoApplyChange
  */
 export const execute = (video: Video): number =>
 {
+    if (video.paused) {
+        return 0;
+    }
+
     if (video.willTrigger(VideoEvent.PLAY)) {
         video.dispatchEvent(new VideoEvent(VideoEvent.PLAY));
     }
@@ -23,6 +27,12 @@ export const execute = (video: Video): number =>
     const playingVideos = $getPlayingVideos();
     if (playingVideos.indexOf(video) === -1) {
         playingVideos.push(video);
+    }
+
+    if (video.$context && video.$videoElement) {
+        video.$context.drawImage(video.$videoElement,
+            0, 0, video.videoWidth, video.videoHeight
+        );
     }
 
     return requestAnimationFrame((): void =>

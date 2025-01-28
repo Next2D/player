@@ -173,7 +173,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
         $context.applyFilter(
             node, uniqueKey, updated,
-            width, height,
+            width, height, isBitmap,
             matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
             filterBounds, params
         );

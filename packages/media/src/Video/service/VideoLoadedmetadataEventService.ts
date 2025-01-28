@@ -20,4 +20,9 @@ export const execute = (
     video.duration    = element.duration;
     video.videoWidth  = element.videoWidth;
     video.videoHeight = element.videoHeight;
+
+    // reset
+    const offscreenCanvas = new OffscreenCanvas(video.videoWidth, video.videoHeight);
+    video.$context = offscreenCanvas.getContext("2d");
+    video.$offscreenCanvas = offscreenCanvas;
 };

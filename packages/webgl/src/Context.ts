@@ -1094,6 +1094,7 @@ export class Context
         updated: boolean,
         width: number,
         height: number,
+        is_bitmap: boolean,
         matrix: Float32Array,
         color_transform: Float32Array,
         blend_mode: IBlendMode,
@@ -1103,7 +1104,7 @@ export class Context
         this.drawArraysInstanced();
         contextApplyFilterUseCase(
             node, unique_key, updated,
-            width, height,
+            width, height, is_bitmap,
             matrix, color_transform, blend_mode,
             bounds, params
         );

@@ -156,14 +156,34 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     const blendMode = render_queue[index++];
 
+    // フィルター設定があればフィルターを実行
+    const useFilfer = Boolean(render_queue[index++]);
+    if (useFilfer) {
+        const updated = Boolean(render_queue[index++]);
+        const filterBounds = render_queue.subarray(index, index + 4);
+        index += 4;
+
+        const length = render_queue[index++];
+        const params = render_queue.subarray(index, index + length);
+
+        const width  = Math.ceil(Math.abs(bounds[2] - bounds[0]));
+        const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
+
+        $context.applyFilter(
+            node, uniqueKey, updated,
+            width, height, false,
+            matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
+            filterBounds, params
+        );
+
+        index += length;
+
+        return index;
+    }
+
     $context.globalAlpha = Math.min(Math.max(0, colorTransform[3] + colorTransform[7] / 255), 1);
     $context.imageSmoothingEnabled = true;
     $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
-
-    const useFilfer = Boolean(render_queue[index++]);
-    if (useFilfer) {
-        // todo
-    }
 
     const radianX = Math.atan2(matrix[1], matrix[0]);
     const radianY = Math.atan2(-matrix[2], matrix[3]);

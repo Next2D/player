@@ -21,6 +21,7 @@ export const execute = (video: Video): void =>
         return ;
     }
 
-    video.ended = true;
+    video.ended   = true;
+    video.changed = false;
     video.pause();
 };

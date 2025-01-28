@@ -19,6 +19,9 @@ export const execute = (
     for (const data of data_store.values()) {
 
         for (const value of data.values()) {
+            if (!value) {
+                continue;
+            }
             cache_store.destroy(value);
         }
 

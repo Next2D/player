@@ -62,10 +62,17 @@ export class CommandController
 
                 case "render":
                     commandRenderUseCase(
-                        object.buffer.subarray(0, object.length), object.imageBitmaps as ImageBitmap[] | null
+                        object.buffer.subarray(0, object.length),
+                        object.imageBitmaps as ImageBitmap[] | null
                     );
+
+                    // 描画完了したらメインスレッドにbufferを返却する
+                    globalThis.postMessage({
+                        "message": "render",
+                        "buffer": object.buffer
                     // @ts-ignore
-                    globalThis.postMessage({ "message": "render", "buffer": object.buffer }, [object.buffer.buffer]);
+                    }, [object.buffer.buffer]);
+
                     break;
 
                 case "resize":
