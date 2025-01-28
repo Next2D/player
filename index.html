@@ -98,10 +98,10 @@
         textField.text = "Hello World!";
 
         textField.filters = [
-            new BlurFilter(4, 4, 2),
+            new GlowFilter(0, 1, 30, 20, 1, 1)
         ];
 
-        // textField.blendMode = "invert";
+        textField.blendMode = "invert";
 
         const shape2 = root.addChild(new Shape());
         shape2.x = 100;
@@ -117,6 +117,9 @@
             .endFill();
 
         shape2.blendMode = "invert";
+        shape2.filters = [
+            new BlurFilter(30, 30, 2),
+        ];
 
         const shape3 = root.addChild(new Shape());
         shape3.x = 200;
@@ -127,11 +130,9 @@
         shape3.src = "http://localhost:5173/json/image/logo.png";
 
         shape3.filters = [
-            new BlurFilter(10, 10, 2),
+            new BevelFilter(4, 45, 0x0000ff, 1, 0, 1, 10, 10, 2, 1)
         ];
-
-
-        // shape3.blendMode = "multiply";
+        shape3.blendMode = "screen";
 
         const video = root.addChild(new Video());
         video.x = 130;
@@ -140,16 +141,16 @@
         video.scaleX = 0.12;
         video.scaleY = 0.12; 
         video.src = "http://localhost:5173/json/image/video.mp4";
-        // video.blendMode = "multiply";
+        video.blendMode = "subtract";
 
         video.filters = [
-            // new BlurFilter(30, 20, 3),
-            new ColorMatrixFilter([
-                0.393, 0.769, 0.189, 0, 0,
-                0.349, 0.686, 0.168, 0, 0,
-                0.272, 0.534, 0.131, 0, 0,
-                0, 0, 0, 1, 0
-            ]),
+            new BlurFilter(40, 40, 3),
+            // new ColorMatrixFilter([
+            //     0.393, 0.769, 0.189, 0, 0,
+            //     0.349, 0.686, 0.168, 0, 0,
+            //     0.272, 0.534, 0.131, 0, 0,
+            //     0, 0, 0, 1, 0
+            // ]),
         ];
 
         // const count = 8000;

@@ -1,5 +1,4 @@
 import type { Node } from "@next2d/texture-packer";
-import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { ITextureObject } from "../../interface/ITextureObject";
 import type { IBlendMode } from "../../interface/IBlendMode";
 import { execute as frameBufferManagerGetTextureFromNodeUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromNodeUseCase";
@@ -8,7 +7,6 @@ import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../F
 import { execute as textureManagerBind0UseCase } from "../../TextureManager/usecase/TextureManagerBind0UseCase";
 import { execute as variantsBlendMatrixTextureShaderService } from "../../Shader/Variants/Blend/service/VariantsBlendMatrixTextureShaderService";
 import { execute as shaderManagerSetMatrixTextureUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMatrixTextureUniformService";
-import { execute as shaderManagerSetMatrixTextureWithColorTransformUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMatrixTextureWithColorTransformUniformService";
 import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
@@ -20,6 +18,7 @@ import { execute as filterApplyGradientBevelFilterUseCase } from "../../Filter/G
 import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/GradientGlowFilter/usecase/FilterApplyGradientGlowFilterUseCase";
 import { execute as filterApplyConvolutionFilterUseCase } from "../../Filter/ConvolutionFilter/usecase/FilterApplyConvolutionFilterUseCase";
 import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter/DisplacementMapFilter/usecase/FilterApplyDisplacementMapFilterUseCase";
+import { execute as blendDrawFilterToMainUseCase } from "../../Blend/usecase/BlendDrawFilterToMainUseCase";
 import { $cacheStore } from "@next2d/cache";
 import { $offset } from "../../Filter";
 import {
@@ -296,39 +295,26 @@ export const execute = (
                     break;
 
             }
-
         }
-
     } else {
         offsetX = $cacheStore.get(unique_key, "offsetX");
         offsetY = $cacheStore.get(unique_key, "offsetY");
     }
 
     if (textureObject) {
-        // メインのAttachmentObjectに描画して終了
-        $context.bind($context.$mainAttachmentObject as IAttachmentObject);
-        textureManagerBind0UseCase(textureObject);
 
         const devicePixelRatio = $getDevicePixelRatio();
         const xMin = bounds[0] * (scaleX / devicePixelRatio);
         const yMin = bounds[1] * (scaleY / devicePixelRatio);
 
         $context.reset();
-
+        $context.setTransform(1, 0, 0, 1, 0, 0);
         $context.globalCompositeOperation = blend_mode;
-        $context.setTransform(
-            1, 0, 0, 1,
+        blendDrawFilterToMainUseCase(
+            textureObject, color_transform,
             -offsetX + xMin + matrix[4],
             -offsetY + yMin + matrix[5]
         );
-
-        // todo blend mode
-        const shaderManager = variantsBlendMatrixTextureShaderService(true);
-        shaderManagerSetMatrixTextureWithColorTransformUniformService(
-            shaderManager, color_transform,
-            textureObject.width, textureObject.height
-        );
-        shaderManagerDrawTextureUseCase(shaderManager);
     }
 
     if (!useCache) {
