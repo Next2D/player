@@ -5,7 +5,7 @@ import type {
 } from "@next2d/geom";
 import { execute as bitmapDataImageToBufferService } from "./BitmapData/service/BitmapDataImageToBufferService";
 import { execute as bitmapDataCanvasToBufferService } from "./BitmapData/service/BitmapDataCanvasToBufferService";
-import { $cacheStore } from "@next2d/cache";
+import { execute as bitmapDataDrawToCanvasUseCase } from "./BitmapData/usecase/BitmapDataDrawToCanvasUseCase";
 
 /**
  * @description BitmapData クラスを使用すると、Bitmap オブジェクトのデータ (ピクセル) を処理できます。
@@ -147,6 +147,7 @@ export class BitmapData
      * @param  {ColorTransform}    [color_transform=null]
      * @param  {HTMLCanvasElement} [transferred_canvas=null]
      * @return {Promise<HTMLCanvasElement>}
+     * @method
      * @public
      */
     async drawToCanvas <D extends DisplayObject>(
@@ -155,12 +156,10 @@ export class BitmapData
         color_transform: ColorTransform | null = null,
         transferred_canvas: HTMLCanvasElement | null = null
     ): Promise<HTMLCanvasElement> {
-
-        // todo
-        console.log(source, matrix, color_transform);
-
-        const canvas = transferred_canvas || $cacheStore.getCanvas();
-
-        return canvas;
+        return await bitmapDataDrawToCanvasUseCase(
+            this, source,
+            matrix, color_transform,
+            transferred_canvas
+        );
     }
 }
