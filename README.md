@@ -55,7 +55,6 @@ If Next2D is useful to you, we hope you will support our project.
 ```javascript
 next2d.load("Path to JSON output from Animation Tool");
 ```
-[CodePen](https://codepen.io/next2d/pen/rNGMrZG)
 
 ### Use Program Sample For JavaScript
 ```javascript
