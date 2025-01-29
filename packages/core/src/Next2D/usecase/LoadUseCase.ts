@@ -1,5 +1,4 @@
 import type { IPlayerOptions } from "../../interface/IPlayerOptions";
-import type { IStageData } from "../../interface/IStageData";
 import type { MovieClip } from "@next2d/display";
 import { $clamp } from "../../CoreUtil";
 import { URLRequest } from "@next2d/net";
@@ -50,7 +49,7 @@ export const execute = async (url: string, options: IPlayerOptions | null = null
     // player
     playerBootUseCase(options);
 
-    const loader: Loader = new Loader();
+    const loader = new Loader();
 
     const loaderInfo = loader.contentLoaderInfo;
     loaderInfo.addEventListener(IOErrorEvent.IO_ERROR, (event: IOErrorEvent): void =>
@@ -65,11 +64,11 @@ export const execute = async (url: string, options: IPlayerOptions | null = null
     }
 
     // update properties
-    const stageData: IStageData = loaderInfo.data.stage;
+    const stageData = loaderInfo.data.stage;
     stage.stageWidth      = stageData.width;
     stage.stageHeight     = stageData.height;
     stage.frameRate       = $clamp(stageData.fps, 1, 60, 60);
-    stage.backgroundColor = stageData.bgColor;
+    stage.backgroundColor = options && options.bgColor ? options.bgColor : stageData.bgColor;
 
     stage.addChild<MovieClip>(loaderInfo.content as MovieClip);
 

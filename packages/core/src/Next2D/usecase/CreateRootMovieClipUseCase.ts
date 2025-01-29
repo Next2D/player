@@ -18,7 +18,7 @@ import {
  * @param  {number} [height=240]
  * @param  {number} [fps=60]
  * @param  {object} [options=null]
- * @return {Promise}
+ * @return {Promise<Sprite>}
  * @method
  * @protected
  */
@@ -33,9 +33,6 @@ export const execute = async (
     stage.stageWidth  = width | 0;
     stage.stageHeight = height | 0;
     stage.frameRate   = $clamp(fps, 1, 60, 60);
-    if (options && options.bgColor) {
-        stage.backgroundColor = options.bgColor;
-    }
 
     // boot player
     playerBootUseCase(options);

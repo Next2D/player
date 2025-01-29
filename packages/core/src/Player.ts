@@ -1,5 +1,6 @@
 import type { IPlayerOptions } from "./interface/IPlayerOptions";
 import { $cacheStore } from "@next2d/cache";
+import { stage } from "@next2d/display";
 import { $rendererWorker } from "./RendererWorker";
 import { execute as playerResizeEventService } from "./Player/usecase/PlayerResizeEventUseCase";
 import { execute as playerPlayUseCase } from "./Player/usecase/PlayerPlayUseCase";
@@ -263,10 +264,14 @@ class Player
             return ;
         }
 
-        this.fixedWidth   = options.width   || this.fixedWidth;
-        this.fixedHeight  = options.height  || this.fixedHeight;
-        this.tagId        = options.tagId   || this.tagId;
+        this.fixedWidth   = options.width  || this.fixedWidth;
+        this.fixedHeight  = options.height || this.fixedHeight;
+        this.tagId        = options.tagId  || this.tagId;
         this._$fullScreen = !!options.fullScreen;
+
+        if (options.bgColor) {
+            stage.backgroundColor = options.bgColor;
+        }
     }
 }
 

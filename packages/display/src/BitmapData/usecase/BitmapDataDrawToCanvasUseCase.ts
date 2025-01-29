@@ -10,11 +10,11 @@ import { $cacheStore } from "@next2d/cache";
  * @description 指定の DisplayObject インスタンスをビットマップイメージに描画します。
  *              Draws the specified DisplayObject instance to the bitmap image.
  *
- * @param  {BitmapData} bitmap_data 
- * @param  {D} source 
- * @param  {Matrix} [matrix=null] 
- * @param  {ColorTransform} [color_transform=null] 
- * @param  {HTMLCanvasElement} [transferred_canvas=null] 
+ * @param  {BitmapData} bitmap_data
+ * @param  {D} source
+ * @param  {Matrix} [matrix=null]
+ * @param  {ColorTransform} [color_transform=null]
+ * @param  {HTMLCanvasElement} [transferred_canvas=null]
  * @return {HTMLCanvasElement}
  * @method
  * @protected
