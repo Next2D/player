@@ -46,7 +46,6 @@ If Next2D is useful to you, we hope you will support our project.
 
 ## Related Sites
 * [Website](https://next2d.app)
-* [Player API Documentation](https://next2d.app/ja/docs/player)
 * [Animation Tool](https://tool.next2d.app)
 * [Framework](https://github.com/Next2D/framework)
 
@@ -54,7 +53,7 @@ If Next2D is useful to you, we hope you will support our project.
 
 ### Use Simple Sample
 ```javascript
-next2d.load("Path to JSON output from NoCode Tool");
+next2d.load("Path to JSON output from Animation Tool");
 ```
 [CodePen](https://codepen.io/next2d/pen/rNGMrZG)
 
@@ -97,11 +96,6 @@ const start = async (): Promise<void> =>
 
 start();
 ```
-
-### Use Program Sample
-
-[CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
-@see [API Documentation](https://next2d.app/en/docs/player)
 
 ## Option settings
 
