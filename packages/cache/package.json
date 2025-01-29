@@ -8,6 +8,7 @@
   "bugs": "https://github.com/Next2D/Player/issues",
   "main": "src/index.js",
   "types": "src/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "import": "./src/index.js",
