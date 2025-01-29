@@ -176,7 +176,7 @@ export class Next2D
         options: IPlayerOptions | null = null
     ): Promise<Sprite> {
         await Promise.all([this._$promise]);
-        return await createRootMovieClipUseCase(
+        return createRootMovieClipUseCase(
             width, height, fps, options
         );
     }

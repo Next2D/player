@@ -18,16 +18,16 @@ import {
  * @param  {number} [height=240]
  * @param  {number} [fps=60]
  * @param  {object} [options=null]
- * @return {Promise<Sprite>}
+ * @return {Sprite}
  * @method
  * @protected
  */
-export const execute = async (
+export const execute = (
     width: number = 240,
     height: number = 240,
     fps: number = 60,
     options: IPlayerOptions | null = null
-): Promise<Sprite> => {
+): Sprite => {
 
     // setup
     stage.stageWidth  = width | 0;
