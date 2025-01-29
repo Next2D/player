@@ -1,3 +1,4 @@
+import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import { execute as displayObjectDispatchRemovedToStageEventService } from "../../DisplayObject/service/DisplayObjectDispatchRemovedToStageEventService";
 
@@ -10,11 +11,11 @@ import { execute as displayObjectDispatchRemovedToStageEventService } from "../.
  * @method
  * @protected
  */
-export const execute = <C extends DisplayObjectContainer>(
+export const execute = <C extends DisplayObjectContainer, D extends DisplayObject>(
     display_object_container: C
 ): void => {
 
-    const children = display_object_container.children;
+    const children = display_object_container.children as D[];
     for (let idx = 0; idx < children.length; ++idx) {
 
         const child = children[idx];

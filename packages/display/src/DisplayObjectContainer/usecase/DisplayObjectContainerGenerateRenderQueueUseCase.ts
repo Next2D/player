@@ -3,8 +3,6 @@ import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { Shape } from "../../Shape";
 import type { TextField } from "@next2d/text";
 import type { Video } from "@next2d/media";
-import { renderQueue } from "@next2d/render-queue";
-import { $COLOR_ARRAY_IDENTITY } from "../../Stage";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as shapeGenerateRenderQueueUseCase } from "../../Shape/usecase/ShapeGenerateRenderQueueUseCase";
@@ -13,6 +11,7 @@ import { execute as textFieldGenerateRenderQueueUseCase } from "../../TextField/
 import { execute as videoGenerateRenderQueueUseCase } from "../../Video/usecase/VideoGenerateRenderQueueUseCase";
 import { execute as displayObjectIsMaskReflectedInDisplayUseCase } from "../../DisplayObject/usecase/DisplayObjectIsMaskReflectedInDisplayUseCase";
 import { execute as displayObjectContainerGenerateClipQueueUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerGenerateClipQueueUseCase";
+import { renderQueue } from "@next2d/render-queue";
 import {
     $clamp,
     $RENDERER_CONTAINER_TYPE
@@ -100,15 +99,6 @@ export const execute = <P extends DisplayObjectContainer>(
 
     renderQueue.push(1, $RENDERER_CONTAINER_TYPE);
 
-    const filters = display_object_container.filters;
-    const blendMode = display_object_container.blendMode;
-
-    let isLayer = false;
-    if (filters && filters.length > 0 || blendMode !== "normal") {
-        isLayer = true;
-        // todo
-    }
-
     // mask
     const maskDisplayObject = display_object_container.mask;
     if (maskDisplayObject) {
@@ -154,10 +144,6 @@ export const execute = <P extends DisplayObjectContainer>(
     } else {
         renderQueue.push(0);
     }
-
-    const colorTransform = isLayer
-        ? $COLOR_ARRAY_IDENTITY
-        : tColorTransform;
 
     renderQueue.push(children.length);
 
@@ -234,7 +220,7 @@ export const execute = <P extends DisplayObjectContainer>(
                     child as DisplayObjectContainer,
                     image_bitmaps,
                     tMatrix,
-                    colorTransform,
+                    tColorTransform,
                     renderer_width,
                     renderer_height,
                     point_x,
@@ -246,7 +232,7 @@ export const execute = <P extends DisplayObjectContainer>(
                 shapeGenerateRenderQueueUseCase(
                     child as Shape,
                     tMatrix,
-                    colorTransform,
+                    tColorTransform,
                     renderer_width,
                     renderer_height,
                     point_x,
@@ -258,7 +244,7 @@ export const execute = <P extends DisplayObjectContainer>(
                 textFieldGenerateRenderQueueUseCase(
                     child as TextField,
                     tMatrix,
-                    colorTransform,
+                    tColorTransform,
                     renderer_width,
                     renderer_height,
                     point_x,
@@ -271,7 +257,7 @@ export const execute = <P extends DisplayObjectContainer>(
                     child as Video,
                     image_bitmaps,
                     tMatrix,
-                    colorTransform,
+                    tColorTransform,
                     renderer_width,
                     renderer_height,
                     point_x,
@@ -287,7 +273,7 @@ export const execute = <P extends DisplayObjectContainer>(
         child.changed = false;
     }
 
-    if (!isLayer && tColorTransform !== color_transform) {
+    if (tColorTransform !== color_transform) {
         ColorTransform.release(tColorTransform);
     }
     if (tMatrix !== matrix) {

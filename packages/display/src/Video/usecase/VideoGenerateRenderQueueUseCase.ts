@@ -163,7 +163,14 @@ export const execute = (
         +video.uniqueKey, +video.changed
     );
 
-    const cache = $cacheStore.get(video.uniqueKey, "0");
+    if (video.$cache && !video.$cache.has(video.uniqueKey)) {
+        video.$cache = null;
+    }
+
+    const cache = video.$cache
+        ? video.$cache.get("0")
+        : $cacheStore.get(video.uniqueKey, "0");
+
     if (!cache || video.changed) {
 
         // cache, node
@@ -194,7 +201,15 @@ export const execute = (
         if (!cache) {
             $cacheStore.set(video.uniqueKey, "0", true);
         }
+
+        if (video.$cache) {
+            video.$cache = null;
+        }
     } else {
+        if (!video.$cache) {
+            video.$cache = $cacheStore.getById(video.uniqueKey);
+            video.$cache.set(video.uniqueKey, true);
+        }
         renderQueue.push(1);
     }
 

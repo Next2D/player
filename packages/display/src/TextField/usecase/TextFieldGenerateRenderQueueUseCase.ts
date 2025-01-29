@@ -188,7 +188,14 @@ export const execute = (
         +text_field.uniqueKey, cacheKey, +text_field.changed
     );
 
-    const cache = $cacheStore.get(text_field.uniqueKey, `${cacheKey}`);
+    if (text_field.$cache && !text_field.$cache.has(text_field.uniqueKey)) {
+        text_field.$cache = null;
+    }
+
+    const cache = text_field.$cache
+        ? text_field.$cache.get(`${cacheKey}`)
+        : $cacheStore.get(text_field.uniqueKey, `${cacheKey}`);
+
     if (!cache || text_field.changed) {
 
         // cache none
@@ -245,7 +252,15 @@ export const execute = (
         if (!cache) {
             $cacheStore.set(text_field.uniqueKey, `${cacheKey}`, true);
         }
+
+        if (text_field.$cache) {
+            text_field.$cache = null;
+        }
     } else {
+        if (!text_field.$cache) {
+            text_field.$cache = $cacheStore.getById(text_field.uniqueKey);
+            text_field.$cache.set(text_field.uniqueKey, true);
+        }
         renderQueue.push(1);
     }
 
