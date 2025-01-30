@@ -41,6 +41,8 @@ import { execute as displayObjectRemoveService } from "./DisplayObject/service/D
 import { execute as displayObjectGetBoundsUseCase } from "./DisplayObject/usecase/DisplayObjectGetBoundsUseCase";
 import { execute as displayObjectHitTestObjectUseCase } from "./DisplayObject/usecase/DisplayObjectHitTestObjectUseCase";
 import { execute as displayObjectHitTestPointUseCase } from "./DisplayObject/usecase/DisplayObjectHitTestPointUseCase";
+import { execute as displayObjectGetMatrixUseCase } from "./DisplayObject/usecase/DisplayObjectGetMatrixUseCase";
+import { execute as displayObjectGetColorTransformUseCase } from "./DisplayObject/usecase/DisplayObjectGetColorTransformUseCase";
 import {
     $getInstanceId,
     $loaderInfoMap,
@@ -599,6 +601,38 @@ export class DisplayObject extends EventDispatcher
         return $loaderInfoMap.has(this)
             ? $loaderInfoMap.get(this) as NonNullable<LoaderInfo>
             : null;
+    }
+
+    /**
+     * @description 表示オブジェクトの ColorTransform を返します。
+     *              Returns the ColorTransform object of the display object.
+     *
+     * @member {ColorTransform}
+     * @public
+     */
+    get colorTransform (): ColorTransform
+    {
+        return displayObjectGetColorTransformUseCase(this);
+    }
+    set colorTransform (color_transform: ColorTransform)
+    {
+        this.$colorTransform = color_transform;
+    }
+
+    /**
+     * @description 表示オブジェクトの Matrix を返します。
+     *              Returns the Matrix of the display object.
+     *
+     * @member {Matrix}
+     * @public
+     */
+    get matrix (): Matrix
+    {
+        return displayObjectGetMatrixUseCase(this);
+    }
+    set matrix (matrix: Matrix)
+    {
+        this.$matrix = matrix;
     }
 
     /**

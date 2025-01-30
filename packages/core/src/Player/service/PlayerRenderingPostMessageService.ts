@@ -6,6 +6,12 @@ import { stage } from "@next2d/display";
 import { renderQueue } from "@next2d/render-queue";
 
 /**
+ * @type {Float32Array}
+ * @private
+ */
+export const $COLOR_ARRAY_IDENTITY: Float32Array = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
+
+/**
  * @type {ImageBitmap[]}
  * @private
  */
@@ -18,8 +24,8 @@ const $imageBitmaps: ImageBitmap[] = [];
 const $matrix: Float32Array = new Float32Array([1, 0, 0, 1, 0, 0]);
 
 /**
- * @description リサイズメッセージ
- *              Resize message
+ * @description レンダリングメッセージ
+ *              Rendering message
  *
  * @type {object}
  * @private
@@ -71,10 +77,12 @@ export const execute = (): void =>
     $matrix[4] = ($player.rendererWidth  - stage.stageWidth * scale) / 2;
     $matrix[5] = ($player.rendererHeight - stage.stageHeight * scale) / 2;
 
-    renderQueue.offset = 0;
-    $options.length    = 0;
+    renderQueue.offset   = 0;
+    $options.length      = 0;
     $imageBitmaps.length = 0;
-    stage.$generateRenderQueue($imageBitmaps, $matrix);
+    stage.$generateRenderQueue(
+        stage, $imageBitmaps, $matrix, $COLOR_ARRAY_IDENTITY
+    );
 
     if (!renderQueue.offset) {
         return ;

@@ -1,10 +1,9 @@
 import type { DisplayObject } from "./DisplayObject";
 import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
 import type { Point } from "@next2d/geom";
-import { renderQueue } from "@next2d/render-queue";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
 import { execute as stageReadyUseCase } from "./Stage/usecase/StageReadyUseCase";
-import { execute as displayObjectContainerGenerateRenderQueueUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerGenerateRenderQueueUseCase";
+import { execute as stageGenerateRenderQueueUseCase } from "./Stage/usecase/StageGenerateRenderQueueUseCase";
 import { execute as stageTickerUseCase } from "./Stage/usecase/StageTickerUseCase";
 import { execute as displayObjectContainerMouseHitUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerMouseHitUseCase";
 import {
@@ -12,12 +11,6 @@ import {
     $rootMap,
     $stageAssignedMap
 } from "./DisplayObjectUtil";
-
-/**
- * @type {Float32Array}
- * @private
- */
-export const $COLOR_ARRAY_IDENTITY: Float32Array = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 /**
  * @description Stage クラスはメイン描画領域を表します。
@@ -217,22 +210,22 @@ export class Stage extends DisplayObjectContainer
      * @method
      * @protected
      */
-    $generateRenderQueue (
+    $generateRenderQueue <D extends DisplayObject> (
+        display_object: D,
         image_bitmaps: ImageBitmap[],
-        matrix: Float32Array
+        matrix: Float32Array,
+        color_transform: Float32Array
     ): void {
-
-        // set background color
-        renderQueue.push(this._$backgroundColor);
-
-        displayObjectContainerGenerateRenderQueueUseCase(
-            this, image_bitmaps,
-            matrix, $COLOR_ARRAY_IDENTITY,
-            this.rendererWidth, this.rendererHeight,
-            matrix[4], matrix[5]
+        stageGenerateRenderQueueUseCase(
+            display_object,
+            image_bitmaps,
+            matrix,
+            color_transform,
+            this.rendererWidth,
+            this.rendererHeight,
+            matrix[4],
+            matrix[5]
         );
-
-        this.changed = false;
     }
 
     /**

@@ -7,7 +7,8 @@ import type { INet } from "./interface/INet";
 import type { IText } from "./interface/IText";
 import type { IUI } from "./interface/IUI";
 import type { IPlayerOptions } from "./interface/IPlayerOptions";
-import type { Sprite } from "@next2d/display";
+import type { Sprite, DisplayObject } from "@next2d/display";
+import type { Matrix, ColorTransform } from "@next2d/geom";
 import { events } from "./Events";
 import { display } from "./Display";
 import { filters } from "./Filters";
@@ -18,6 +19,7 @@ import { text } from "./Text";
 import { ui } from "./UI";
 import { execute as loadService } from "./Next2D/usecase/LoadUseCase";
 import { execute as createRootMovieClipUseCase } from "./Next2D/usecase/CreateRootMovieClipUseCase";
+import { execute as captureToCanvasUseCase } from "./Next2D/usecase/CaptureToCanvasUseCase";
 
 /**
  * @description Next2Dの起動管理クラス
@@ -178,6 +180,29 @@ export class Next2D
         await Promise.all([this._$promise]);
         return createRootMovieClipUseCase(
             width, height, fps, options
+        );
+    }
+
+    /**
+     * @description 指定のDisplayObjectをcanvasにキャプチャする
+     *              Capture the specified DisplayObject to the canvas
+     *
+     * @param  {D} display_object
+     * @param  {Matrix} [matrix=null]
+     * @param  {ColorTransform} [color_transform=null]
+     * @param  {HTMLCanvasElement} [transferred_canvas=null]
+     * @return {void}
+     * @method
+     * @public
+     */
+    async captureToCanvas <D extends DisplayObject> (
+        display_object: D,
+        matrix: Matrix | null = null,
+        color_transform: ColorTransform | null = null,
+        transferred_canvas: HTMLCanvasElement | null = null
+    ): Promise<HTMLCanvasElement> {
+        return captureToCanvasUseCase(
+            display_object, matrix, color_transform, transferred_canvas
         );
     }
 }

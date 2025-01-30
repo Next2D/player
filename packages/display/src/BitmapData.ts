@@ -1,11 +1,5 @@
-import type { DisplayObject } from "./DisplayObject";
-import type {
-    Matrix,
-    ColorTransform
-} from "@next2d/geom";
 import { execute as bitmapDataImageToBufferService } from "./BitmapData/service/BitmapDataImageToBufferService";
 import { execute as bitmapDataCanvasToBufferService } from "./BitmapData/service/BitmapDataCanvasToBufferService";
-import { execute as bitmapDataDrawToCanvasUseCase } from "./BitmapData/usecase/BitmapDataDrawToCanvasUseCase";
 
 /**
  * @description BitmapData クラスを使用すると、Bitmap オブジェクトのデータ (ピクセル) を処理できます。
@@ -136,30 +130,5 @@ export class BitmapData
             bitmapData.buffer = this.buffer.slice();
         }
         return bitmapData;
-    }
-
-    /**
-     * @description 指定された DisplayObject を指定のcanvasに描画します。
-     *              Draws the specified DisplayObject to the specified canvas.
-     *
-     * @param  {DisplayObject}     source
-     * @param  {Matrix}            [matrix=null]
-     * @param  {ColorTransform}    [color_transform=null]
-     * @param  {HTMLCanvasElement} [transferred_canvas=null]
-     * @return {Promise<HTMLCanvasElement>}
-     * @method
-     * @public
-     */
-    async drawToCanvas <D extends DisplayObject>(
-        source: D,
-        matrix: Matrix | null = null,
-        color_transform: ColorTransform | null = null,
-        transferred_canvas: HTMLCanvasElement | null = null
-    ): Promise<HTMLCanvasElement> {
-        return await bitmapDataDrawToCanvasUseCase(
-            this, source,
-            matrix, color_transform,
-            transferred_canvas
-        );
     }
 }
