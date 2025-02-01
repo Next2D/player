@@ -5,23 +5,10 @@ import { execute as shaderManagerSetTextureUniformService } from "../../Shader/S
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 import { execute as shaderManagerDrawTextureUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
 import { execute as frameBufferManagerReleaseAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase";
-import { execute as textureManagerGetTextureUseCase } from "../../TextureManager/usecase/TextureManagerGetTextureUseCase";
 import { execute as textureManagerBind0UseCase } from "../../TextureManager/usecase/TextureManagerBind0UseCase";
+import { execute as textureManagerGetMainTextureFromBoundsUseCase } from "../../TextureManager/usecase/TextureManagerGetMainTextureFromBoundsUseCase";
 import { execute as blendResetService } from "../../Blend/service/BlendResetService";
-import {
-    $context,
-    $gl
-} from "../../WebGLUtil";
-import {
-    $getDrawBitmapFrameBuffer,
-    $readFrameBuffer
-} from "../../FrameBufferManager";
-
-/**
- * @type {ITextureObject}
- * @private
- */
-let $mainTextureObject: ITextureObject | null = null;
+import { $context } from "../../WebGLUtil";
 
 /**
  * @description 現在のアタッチメントオブジェクトから指定の範囲のtextureを取得します。
@@ -44,46 +31,7 @@ export const execute = (
 
     const currentAttachmentObject = $context.currentAttachmentObject as IAttachmentObject;
 
-    const drawBitmapFrameBuffer = $getDrawBitmapFrameBuffer();
-    $gl.bindFramebuffer($gl.FRAMEBUFFER, drawBitmapFrameBuffer);
-
-    if (!$mainTextureObject
-        || $mainTextureObject.width !== currentAttachmentObject.width
-        || $mainTextureObject.height !== currentAttachmentObject.height
-    ) {
-        $mainTextureObject = textureManagerGetTextureUseCase(
-            currentAttachmentObject.width, currentAttachmentObject.height
-        );
-    }
-
-    textureManagerBind0UseCase($mainTextureObject);
-    $gl.framebufferTexture2D(
-        $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
-        $gl.TEXTURE_2D, $mainTextureObject.resource, 0
-    );
-
-    $gl.bindFramebuffer($gl.FRAMEBUFFER, null);
-    $gl.bindFramebuffer($gl.READ_FRAMEBUFFER, $readFrameBuffer);
-    $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, drawBitmapFrameBuffer);
-
-    $gl.enable($gl.SCISSOR_TEST);
-    $gl.scissor(
-        x,
-        currentAttachmentObject.height - y - height,
-        width + 1,
-        height + 1
-    );
-
-    // execute
-    $gl.blitFramebuffer(
-        0, 0, currentAttachmentObject.width, currentAttachmentObject.height,
-        0, 0, currentAttachmentObject.width, currentAttachmentObject.height,
-        $gl.COLOR_BUFFER_BIT,
-        $gl.NEAREST
-    );
-    $gl.disable($gl.SCISSOR_TEST);
-
-    $gl.bindFramebuffer($gl.FRAMEBUFFER, $readFrameBuffer);
+    const mainTextureObject = textureManagerGetMainTextureFromBoundsUseCase(x, y, width, height);
 
     const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, false);
     $context.bind(attachmentObject);
@@ -93,11 +41,11 @@ export const execute = (
 
     const shaderManager = variantsBlendTextureShaderService();
     shaderManagerSetTextureUniformService(
-        shaderManager, $mainTextureObject.width, $mainTextureObject.height
+        shaderManager, mainTextureObject.width, mainTextureObject.height
     );
 
     blendResetService();
-    textureManagerBind0UseCase($mainTextureObject);
+    textureManagerBind0UseCase(mainTextureObject);
     shaderManagerDrawTextureUseCase(shaderManager);
 
     const textureObject = attachmentObject.texture as ITextureObject;

@@ -130,7 +130,7 @@ export const execute = (
     // 描画範囲をinstanced arrayに設定
     $context.drawDisplayObject(
         node,
-        xMin, yMin, xMax, yMax,
+        bounds[0], bounds[1], bounds[2], bounds[3],
         colorTransform
     );
 

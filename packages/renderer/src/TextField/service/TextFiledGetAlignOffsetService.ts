@@ -1,4 +1,4 @@
-import { ITextData } from "../../interface/ITextData";
+import type { ITextData } from "../../interface/ITextData";
 import type { ITextObject } from "../../interface/ITextObject";
 import type { ITextSetting } from "../../interface/ITextSetting";
 

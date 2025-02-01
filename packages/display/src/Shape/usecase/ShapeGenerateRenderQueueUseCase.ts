@@ -1,5 +1,6 @@
 import type { Shape } from "../../Shape";
 import type { Rectangle } from"@next2d/geom";
+import type { MovieClip } from "../../MovieClip";
 import { renderQueue } from"@next2d/render-queue";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
@@ -23,7 +24,6 @@ import {
     ColorTransform,
     Matrix
 } from "@next2d/geom";
-import { MovieClip } from "../../MovieClip";
 
 /**
  * @description renderer workerに渡すShapeの描画データを生成

@@ -17,6 +17,7 @@ export const execute = (): void =>
     }
 
     $player.stopFlag = false;
+    stage.changed = true;
 
     if ($player.timerId > -1) {
         cancelAnimationFrame($player.timerId);

@@ -34,7 +34,14 @@ export const execute = <D extends DisplayObject>(
     Matrix.release(matrix.rawData);
 
     if (!target_display_object) {
-        target_display_object = display_object;
+        const rectangle = new Rectangle(
+            bounds[0], bounds[1],
+            Math.abs(bounds[2] - bounds[0]),
+            Math.abs(bounds[3] - bounds[1])
+        );
+
+        $poolBoundsArray(bounds);
+        return rectangle;
     }
 
     const targetMatrix: Matrix = target_display_object.concatenatedMatrix;

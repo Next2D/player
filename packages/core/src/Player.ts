@@ -237,14 +237,13 @@ class Player
      * @description Playerの描画キャッシュを全て初期化
      *              Initialize all drawing caches of Player
      *
-     * @param  {string} id
      * @return {void}
      * @method
      * @public
      */
-    cacheClear (id: string): void
+    cacheClear (): void
     {
-        $cacheStore.removeById(id);
+        $cacheStore.reset();
         $rendererWorker.postMessage({
             "command": "cacheClear"
         });

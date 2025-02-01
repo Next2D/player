@@ -1,4 +1,5 @@
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
+import type { Video } from "@next2d/media";
 import {
     $rootMap,
     $stageAssignedMap
@@ -28,6 +29,10 @@ export const execute = <C extends DisplayObjectContainer>(
         // set root and stage
         $rootMap.delete(child);
         $stageAssignedMap.delete(child);
+
+        if (child.isVideo) {
+            (child as unknown as Video).pause();
+        }
 
         if (!child.isContainerEnabled) {
             continue;

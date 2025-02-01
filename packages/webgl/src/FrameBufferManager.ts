@@ -183,6 +183,21 @@ let $readBitmapFramebuffer: WebGLFramebuffer | null = null;
 let $drawBitmapFramebuffer: WebGLFramebuffer | null = null;
 
 /**
+ * @type {WebGLFramebuffer}
+ * @private
+ */
+let $pixelFrameBuffer: WebGLFramebuffer | null = null;
+
+/**
+ * @description PBO
+ *              Pixel Buffer Object
+ *
+ * @type {WebGLBuffer}
+ * @private
+ */
+let $pixelBufferObject: WebGLBuffer | null = null;
+
+/**
  * @description ビットマップの読み込み専用のFrameBufferオブジェクトを設定
  *              Set the FrameBuffer object for reading bitmaps only
  *
@@ -193,8 +208,14 @@ let $drawBitmapFramebuffer: WebGLFramebuffer | null = null;
  */
 export const $setBitmapFrameBuffer = (gl: WebGL2RenderingContext): void =>
 {
+    // blitFramebuffer
     $drawBitmapFramebuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
     $readBitmapFramebuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+
+    // PBO
+    $pixelFrameBuffer  = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+    $pixelBufferObject = gl.createBuffer();
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, $pixelBufferObject);
 };
 
 /**
@@ -221,4 +242,30 @@ export const $getReadBitmapFrameBuffer = (): WebGLFramebuffer =>
 export const $getDrawBitmapFrameBuffer = (): WebGLFramebuffer =>
 {
     return $drawBitmapFramebuffer as NonNullable<WebGLFramebuffer>;
+};
+
+/**
+ * @description PBO用のFrameBufferオブジェクトを返却
+ *              Returns the FrameBuffer object for PBO
+ *
+ * @return {WebGLFramebuffer}
+ * @method
+ * @protected
+ */
+export const $getPixelFrameBuffer = (): WebGLFramebuffer =>
+{
+    return $pixelFrameBuffer as NonNullable<WebGLFramebuffer>;
+};
+
+/**
+ * @description PBO
+ *              Pixel Buffer Object
+ *
+ * @return {WebGLBuffer}
+ * @method
+ * @protected
+ */
+export const $getPixelBufferObject = (): WebGLBuffer =>
+{
+    return $pixelBufferObject as NonNullable<WebGLBuffer>;
 };

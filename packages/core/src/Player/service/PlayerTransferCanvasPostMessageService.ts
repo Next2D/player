@@ -15,6 +15,8 @@ import { $rendererWorker } from "../../RendererWorker";
 const $message: ICaptureMessage = {
     "command": "capture",
     "buffer": null,
+    "width": 0,
+    "height": 0,
     "length": 0,
     "imageBitmaps": null
 };
@@ -41,7 +43,7 @@ const $imageBitmaps: ImageBitmap[] = [];
  * @param  {D} display_object
  * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
- * @return {void}
+ * @return {Promise<HTMLCanvasElement>}
  * @method
  * @protected
  */
@@ -52,59 +54,53 @@ export const execute = async <D extends DisplayObject> (
     transferred_canvas: HTMLCanvasElement
 ): Promise<HTMLCanvasElement> => {
 
-    renderQueue.offset   = 0;
-    $options.length      = 0;
-    $imageBitmaps.length = 0;
-
-    stage.$generateRenderQueue(
-        display_object, $imageBitmaps, matrix, color_transform
-    );
-
-    if (!renderQueue.offset) {
-        return transferred_canvas;
-    }
-
-    // update buffer
-    $message.buffer = renderQueue.buffer;
-    $message.length = renderQueue.offset;
-    $options.push(renderQueue.buffer.buffer);
-
-    // postMessage
-    $message.imageBitmaps = null;
-    if ($imageBitmaps.length) {
-        $message.imageBitmaps = $imageBitmaps;
-        $options.push(...$imageBitmaps);
-    }
-
-    $rendererWorker.postMessage($message, $options);
-
-    // canvasに描画
-    await new Promise<void>((resolve): void =>
+    return await new Promise<HTMLCanvasElement>((resolve): void =>
     {
+        renderQueue.offset   = 0;
+        $options.length      = 0;
+        $imageBitmaps.length = 0;
+
+        stage.$generateRenderQueue(
+            display_object, $imageBitmaps, matrix, color_transform
+        );
+
+        if (!renderQueue.offset) {
+            return resolve(transferred_canvas);
+        }
+
+        // update buffer
+        $message.buffer = renderQueue.buffer;
+        $message.width  = transferred_canvas.width;
+        $message.height = transferred_canvas.height;
+        $message.length = renderQueue.offset;
+        $options.push(renderQueue.buffer.buffer);
+
+        // postMessage
+        $message.imageBitmaps = null;
+        if ($imageBitmaps.length) {
+            $message.imageBitmaps = $imageBitmaps;
+            $options.push(...$imageBitmaps);
+        }
+
         const drawCanvas = (event: MessageEvent): void =>
         {
-            $rendererWorker.removeEventListener("message", drawCanvas);
             if (event.data.message !== "capture") {
                 return ;
             }
 
             const buffer = event.data.buffer;
-            if (renderQueue.buffer.length > buffer.length) {
-                return ;
+            if (renderQueue.buffer.length < buffer.length) {
+                renderQueue.buffer = buffer;
             }
 
-            renderQueue.buffer = buffer;
-
             const context = transferred_canvas.getContext("2d") as CanvasRenderingContext2D;
-            context.drawImage(event.data.imageBitmap, 0, 0,
-                transferred_canvas.width, transferred_canvas.height
-            );
+            context.drawImage(event.data.imageBitmap, 0, 0);
 
-            resolve();
+            $rendererWorker.removeEventListener("message", drawCanvas);
+            return resolve(transferred_canvas);
         };
 
         $rendererWorker.addEventListener("message", drawCanvas);
+        $rendererWorker.postMessage($message, $options);
     });
-
-    return transferred_canvas;
 };

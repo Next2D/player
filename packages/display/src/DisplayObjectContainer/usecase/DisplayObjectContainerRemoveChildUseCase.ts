@@ -1,5 +1,6 @@
 import type { DisplayObject } from "../../DisplayObject";
 import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
+import type { Video } from "@next2d/media";
 import { execute as displayObjectApplyChangesService } from "../../DisplayObject/service/DisplayObjectApplyChangesService";
 import { execute as displayObjectContainerUnAssignStageAndRootService } from "../service/DisplayObjectContainerUnAssignStageAndRootService";
 import { execute as displayObjectDispatchRemovedEventService } from "../../DisplayObject/service/DisplayObjectDispatchRemovedEventService";
@@ -75,6 +76,10 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
 
         if ($stageAssignedMap.has(display_object)) {
             $stageAssignedMap.delete(display_object);
+        }
+
+        if (display_object.isVideo) {
+            (display_object as unknown as Video).pause();
         }
 
         // コンテナであれば子孫の DisplayObject に対しても Stage と Root を解除

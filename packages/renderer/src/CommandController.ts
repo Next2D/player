@@ -3,6 +3,7 @@ import { execute as commandInitializeContextService } from "./Command/service/Co
 import { execute as commandResizeService } from "./Command/service/CommandResizeService";
 import { execute as commandRenderUseCase } from "./Command/usecase/CommandRenderUseCase";
 import { execute as commandRemoveCacheService } from "./Command/service/CommandRemoveCacheService";
+import { execute as commandCaptureUseCase } from "./Command/usecase/CommandCaptureUseCase";
 import { $cacheStore } from "@next2d/cache";
 
 /**
@@ -44,11 +45,11 @@ export class CommandController
      * @description 処理を実行
      *              Execute process
      *
-     * @return {void}
+     * @return {Promise<void>}
      * @method
      * @public
      */
-    execute (): void
+    async execute (): Promise<void>
     {
         this.state = "active";
         while (this.queue.length) {
@@ -72,7 +73,6 @@ export class CommandController
                         "buffer": object.buffer
                     // @ts-ignore
                     }, [object.buffer.buffer]);
-
                     break;
 
                 case "resize":
@@ -95,6 +95,25 @@ export class CommandController
 
                 case "cacheClear":
                     $cacheStore.reset();
+                    break;
+
+                case "capture":
+                    {
+                        const imageBitmap = await commandCaptureUseCase(
+                            object.buffer.subarray(0, object.length),
+                            object.width as number,
+                            object.height as number,
+                            object.imageBitmaps as ImageBitmap[] | null
+                        );
+
+                        // 描画完了したらメインスレッドにbufferを返却する
+                        globalThis.postMessage({
+                            "message": "capture",
+                            "buffer": object.buffer,
+                            "imageBitmap": imageBitmap
+                        // @ts-ignore
+                        }, [object.buffer.buffer, imageBitmap]);
+                    }
                     break;
 
                 default:

@@ -16,15 +16,15 @@ const command: CommandController = new CommandController();
  *              OffscreenCanvas message event
  *
  * @params {MessageEvent} event
- * @return {void}
+ * @return {Promise<void>}
  * @method
  * @public
  */
-self.addEventListener("message", (event: MessageEvent): void =>
+self.addEventListener("message", async (event: MessageEvent): Promise<void> =>
 {
     command.queue.push(event.data);
     if (command.state === "deactivate") {
-        command.execute();
+        await command.execute();
     }
 });
 

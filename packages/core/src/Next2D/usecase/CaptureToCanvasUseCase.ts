@@ -45,45 +45,24 @@ export const execute = async <D extends DisplayObject> (
         ? color_transform.rawData
         : $COLOR_ARRAY_IDENTITY;
 
-    let tMatrix = $MATRIX_ARRAY_IDENTITY;
-    if (matrix) {
+    const rectangle = display_object.getBounds();
+    const translateMatrix = new Float32Array([
+        1, 0, 0, 1, -rectangle.x, -rectangle.y
+    ]);
 
-        const displayObjectMatrix = display_object.matrix;
-        displayObjectMatrix.invert();
-
-        tMatrix = Matrix.multiply(
-            matrix.rawData, displayObjectMatrix.rawData
-        );
-    }
+    const tMatrix = matrix
+        ? Matrix.multiply(matrix.rawData, translateMatrix)
+        : Matrix.multiply($MATRIX_ARRAY_IDENTITY, translateMatrix);
 
     if (!transferred_canvas) {
         transferred_canvas = $cacheStore.getCanvas();
     }
 
-    const rectangle = display_object.getBounds();
-    const m0 = tMatrix[0];
-    const m1 = tMatrix[1];
-    const m2 = tMatrix[2];
-    const m3 = tMatrix[3];
-    const m4 = tMatrix[4];
-    const m5 = tMatrix[5];
+    const xScale = Math.sqrt(tMatrix[0] * tMatrix[0] + tMatrix[1] * tMatrix[1]);
+    const yScale = Math.sqrt(tMatrix[2] * tMatrix[2] + tMatrix[3] * tMatrix[3]);
 
-    const xMin = rectangle.x;
-    const yMin = rectangle.y;
-    const xMax = rectangle.right;
-    const yMax = rectangle.bottom;
-
-    const x0 = xMax * m0 + yMax * m2 + m4;
-    const x1 = xMax * m0 + yMin * m2 + m4;
-    const x2 = xMin * m0 + yMax * m2 + m4;
-    const x3 = xMin * m0 + yMin * m2 + m4;
-    const y0 = xMax * m1 + yMax * m3 + m5;
-    const y1 = xMax * m1 + yMin * m3 + m5;
-    const y2 = xMin * m1 + yMax * m3 + m5;
-    const y3 = xMin * m1 + yMin * m3 + m5;
-
-    const width  = Math.max(x0, x1, x2, x3) - Math.min(x0, x1, x2, x3);
-    const height = Math.max(y0, y1, y2, y3) - Math.min(y0, y1, y2, y3);
+    const width  = display_object.width * xScale;
+    const height = display_object.height * yScale;
     if (width <= 0 || height <= 0) {
         return transferred_canvas;
     }
@@ -91,6 +70,11 @@ export const execute = async <D extends DisplayObject> (
     // resize canvas
     transferred_canvas.width  = width;
     transferred_canvas.height = height;
+
+    const stopFlag = $player.stopFlag;
+    if (!stopFlag) {
+        $player.stop();
+    }
 
     // resize
     let isResize = false;
@@ -128,6 +112,10 @@ export const execute = async <D extends DisplayObject> (
 
         // workerにリサイズを通知
         playerResizePostMessageService();
+    }
+
+    if (!stopFlag) {
+        $player.play();
     }
 
     if (matrix) {

@@ -10,27 +10,28 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        next2d.load("develop");
+        // next2d.load("develop");
 
-        // const root = await next2d.createRootMovieClip(400, 400, 60, {
-        //     bgColor: "#0000ff"
-        // });
+        const root = await next2d.createRootMovieClip(400, 400, 60, {
+            bgColor: "#0000ff"
+        });
 
-        // const { Shape, BitmapData } = next2d.display;
-        // const { TextField } = next2d.text;
-        // const { Video } = next2d.media;
-        // const { Event } = next2d.events;
-        // const {
-        //     BlurFilter,
-        //     ColorMatrixFilter,
-        //     GlowFilter,
-        //     BevelFilter,
-        //     GradientBevelFilter,
-        //     GradientGlowFilter,
-        //     DropShadowFilter,
-        //     ConvolutionFilter,
-        //     DisplacementMapFilter
-        // } = next2d.filters;
+        const { Shape, BitmapData } = next2d.display;
+        const { TextField } = next2d.text;
+        const { Video } = next2d.media;
+        const { Event } = next2d.events;
+        const { Matrix } = next2d.geom;
+        const {
+            BlurFilter,
+            ColorMatrixFilter,
+            GlowFilter,
+            BevelFilter,
+            GradientBevelFilter,
+            GradientGlowFilter,
+            DropShadowFilter,
+            ConvolutionFilter,
+            DisplacementMapFilter
+        } = next2d.filters;
 
         // const image = new Image();
         // image.addEventListener("load", () => 
@@ -88,7 +89,7 @@
         // textField.x = 50;
         // textField.y = 80;
         // textField.width = 240;
-        // // textField.border = true;
+        // textField.border = true;
         // textField.rotation = 35;
 
         // const textFormat = textField.defaultTextFormat;
@@ -104,18 +105,18 @@
 
         // textField.blendMode = "invert";
 
-        // const shape2 = root.addChild(new Shape());
-        // shape2.x = 100;
-        // shape2.y = 100;
-        // shape2.rotation = 25;
-        // shape2
-        //     .graphics
-        //     .beginFill("#00ff00")
-        //     .moveTo(0, 0)
-        //     .lineTo(100, 0)
-        //     .lineTo(100, 100)
-        //     .lineTo(0, 0)
-        //     .endFill();
+        const shape2 = root.addChild(new Shape());
+        shape2.x = 100;
+        shape2.y = 100;
+        shape2.rotation = 25;
+        shape2
+            .graphics
+            .beginFill("#00ff00")
+            .moveTo(0, 0)
+            .lineTo(100, 0)
+            .lineTo(100, 100)
+            .lineTo(0, 0)
+            .endFill();
 
         // shape2.blendMode = "invert";
         // shape2.filters = [
@@ -123,8 +124,9 @@
         // ];
 
         // const shape3 = root.addChild(new Shape());
-        // shape3.x = 200;
-        // shape3.y = 100;
+
+        // shape3.x = 0;
+        // shape3.y = 0;
         // shape3.scaleX = 0.5;
         // shape3.scaleY = 0.5;
         // shape3.rotation = 15;
@@ -133,16 +135,16 @@
         // shape3.filters = [
         //     new BlurFilter(10, 10, 5),
         // ];
-        // shape3.blendMode = "screen";
+        // shape3.blendMode = "multiply";
 
         // const video = root.addChild(new Video());
-        // video.x = 130;
-        // video.y = 40;
+        // video.x = 120;
+        // video.y = 50;
         // video.rotation = 40;
-        // video.scaleX = 0.12;
-        // video.scaleY = 0.12; 
+        // video.scaleX = 0.14;
+        // video.scaleY = 0.14; 
         // video.src = "http://localhost:5173/json/image/video.mp4";
-        // video.blendMode = "screen";
+        // video.blendMode = "multiply";
 
         // video.filters = [
         //     // new BlurFilter(40, 40, 3),
@@ -155,21 +157,28 @@
         //     ]),
         // ];
 
+        // setTimeout(async () => 
+        // {
+        //     const canvas = await next2d.captureToCanvas(shape3, new Matrix(2, 0, 0, 2, 0, 0));
+        //     console.log(canvas.toDataURL());
+        // }, 3000);
+
+        
         // const count = 8000;
         // const root = next2d
         //     .createRootMovieClip(1000, 416, 60)
         //     .then((root) => 
-            // {
-            //     const { Shape } = next2d.display;
+        //     {
+        //         const { Shape } = next2d.display;
                 
-            //     const rects = [];
-            //     for (let i = 0; i < count; i++) {
-            //         const x = Math.random() * 1000;
-            //         const y = Math.random() * 416;
-            //         const size = 10 + Math.random() * 40;
-            //         const speed = 1 + Math.random();
+                // const rects = [];
+                // for (let i = 0; i < count; i++) {
+                //     const x = Math.random() * 1000;
+                //     const y = Math.random() * 416;
+                //     const size = 10 + Math.random() * 40;
+                //     const speed = 1 + Math.random();
 
-            //         var rect = new Shape();
+                //     var rect = new Shape();
 
                 //     rect
                 //         .graphics
@@ -185,7 +194,7 @@
                 //     rects.push({ size, speed, el: rect });
                 // }
 
-                // root.addEventListener("enterFrame", () =>
+            //     root.addEventListener("enterFrame", () =>
             //     {
             //         for (let i = 0; i < count; i++) {
             //             const rect = rects[i];

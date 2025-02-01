@@ -3,6 +3,7 @@ import type { DisplayObjectContainer } from "../../DisplayObjectContainer";
 import type { IDisplayObject } from "../../interface/IDisplayObject";
 import type { IMovieClipCharacter } from "../../interface/IMovieClipCharacter";
 import type { MovieClip } from "../../MovieClip";
+import type { Video } from "@next2d/media";
 import { execute as movieClipBuildDictionaryCharacterUseCase } from "../usecase/MovieClipBuildDictionaryCharacterUseCase";
 import { execute as displayObjectContainerRemovedToStageService } from "../../DisplayObjectContainer/service/DisplayObjectContainerRemovedToStageService";
 import { $cacheStore } from "@next2d/cache";
@@ -125,6 +126,10 @@ export const execute = <D extends DisplayObject>(
             displayObject.dispatchEvent(
                 new Event(Event.REMOVED_FROM_STAGE, true)
             );
+        }
+
+        if (displayObject.isVideo) {
+            (displayObject as unknown as Video).pause();
         }
 
         if (displayObject.isContainerEnabled) {

@@ -48,6 +48,7 @@ import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextA
 import { execute as contextUpdateTransferBoundsService } from "./Context/service/ContextUpdateTransferBoundsService";
 import { execute as contextUpdateAllTransferBoundsService } from "./Context/service/ContextUpdateAllTransferBoundsService";
 import { execute as contextDrawFillUseCase } from "./Context/usecase/ContextDrawFillUseCase";
+import { execute as contextCreateImageBitmapService } from "./Context/service/ContextCreateImageBitmapService";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
 import {
     $getAtlasAttachmentObject,
@@ -1108,5 +1109,20 @@ export class Context
             matrix, color_transform, blend_mode,
             bounds, params
         );
+    }
+
+    /**
+     * @description 現在のメインのframe bufferからImageBitmapを生成
+     *              Generate an ImageBitmap from the current main frame buffer
+     *
+     * @param  {number} width
+     * @param  {number} height
+     * @return {Promise<ImageBitmap>}
+     * @method
+     * @public
+     */
+    async createImageBitmap (width: number, height: number): Promise<ImageBitmap>
+    {
+        return await contextCreateImageBitmapService(width, height);
     }
 }
