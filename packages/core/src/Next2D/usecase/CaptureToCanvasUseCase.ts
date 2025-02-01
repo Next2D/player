@@ -1,4 +1,5 @@
 import type { DisplayObject } from "@next2d/display";
+import type { ICaptureOptions } from "../../interface/ICaptureOptions";
 import { stage } from "@next2d/display";
 import { $cacheStore } from "@next2d/cache";
 import { $player } from "../../Player";
@@ -27,22 +28,17 @@ const $COLOR_ARRAY_IDENTITY: Float32Array = new Float32Array([1, 1, 1, 1, 0, 0, 
  *              Draw the specified DisplayObject in Canvas
  *
  * @param  {D} display_object
- * @param  {Matrix} [matrix=null]
- * @param  {ColorTransform} [color_transform=null]
- * @param  {HTMLCanvasElement} [transferred_canvas=null]
- * @return {Promise<HTMLCanvasElement>}
+ * @param  {ICaptureOptions} [opstions=null]
  * @method
  * @protected
  */
 export const execute = async <D extends DisplayObject> (
     display_object: D,
-    matrix: Matrix | null = null,
-    color_transform: ColorTransform | null = null,
-    transferred_canvas: HTMLCanvasElement | null = null
+    opstions: ICaptureOptions | null = null
 ): Promise<HTMLCanvasElement> => {
 
-    const tColorTransform = color_transform
-        ? color_transform.rawData
+    const tColorTransform = opstions && opstions.colorTransform
+        ? opstions.colorTransform.rawData
         : $COLOR_ARRAY_IDENTITY;
 
     const rectangle = display_object.getBounds();
@@ -50,13 +46,13 @@ export const execute = async <D extends DisplayObject> (
         1, 0, 0, 1, -rectangle.x, -rectangle.y
     ]);
 
-    const tMatrix = matrix
-        ? Matrix.multiply(matrix.rawData, translateMatrix)
+    const tMatrix = opstions && opstions.matrix
+        ? Matrix.multiply(opstions.matrix.rawData, translateMatrix)
         : Matrix.multiply($MATRIX_ARRAY_IDENTITY, translateMatrix);
 
-    if (!transferred_canvas) {
-        transferred_canvas = $cacheStore.getCanvas();
-    }
+    const transferredCanvas = opstions && opstions.canvas
+        ? opstions.canvas
+        : $cacheStore.getCanvas();
 
     const xScale = Math.sqrt(tMatrix[0] * tMatrix[0] + tMatrix[1] * tMatrix[1]);
     const yScale = Math.sqrt(tMatrix[2] * tMatrix[2] + tMatrix[3] * tMatrix[3]);
@@ -64,12 +60,12 @@ export const execute = async <D extends DisplayObject> (
     const width  = display_object.width * xScale;
     const height = display_object.height * yScale;
     if (width <= 0 || height <= 0) {
-        return transferred_canvas;
+        return transferredCanvas;
     }
 
     // resize canvas
-    transferred_canvas.width  = width;
-    transferred_canvas.height = height;
+    transferredCanvas.width  = width;
+    transferredCanvas.height = height;
 
     const stopFlag = $player.stopFlag;
     if (!stopFlag) {
@@ -101,7 +97,7 @@ export const execute = async <D extends DisplayObject> (
 
     // draw
     await playerTransferCanvasPostMessageService(
-        display_object, tMatrix, tColorTransform, transferred_canvas
+        display_object, tMatrix, tColorTransform, transferredCanvas
     );
 
     // restore
@@ -118,13 +114,13 @@ export const execute = async <D extends DisplayObject> (
         $player.play();
     }
 
-    if (matrix) {
+    if (opstions && opstions.matrix) {
         Matrix.release(tMatrix);
     }
 
-    if (color_transform) {
+    if (opstions && opstions.colorTransform) {
         ColorTransform.release(tColorTransform);
     }
 
-    return transferred_canvas;
+    return transferredCanvas;
 };

@@ -6,9 +6,12 @@ import type { IMedia } from "./interface/IMedia";
 import type { INet } from "./interface/INet";
 import type { IText } from "./interface/IText";
 import type { IUI } from "./interface/IUI";
+import type { ICaptureOptions } from "./interface/ICaptureOptions";
 import type { IPlayerOptions } from "./interface/IPlayerOptions";
-import type { Sprite, DisplayObject } from "@next2d/display";
-import type { Matrix, ColorTransform } from "@next2d/geom";
+import type {
+    Sprite,
+    DisplayObject
+} from "@next2d/display";
 import { events } from "./Events";
 import { display } from "./Display";
 import { filters } from "./Filters";
@@ -188,21 +191,15 @@ export class Next2D
      *              Capture the specified DisplayObject to the canvas
      *
      * @param  {D} display_object
-     * @param  {Matrix} [matrix=null]
-     * @param  {ColorTransform} [color_transform=null]
-     * @param  {HTMLCanvasElement} [transferred_canvas=null]
+     * @param  {ICaptureOptions} [opstions=null]
      * @return {void}
      * @method
      * @public
      */
     async captureToCanvas <D extends DisplayObject> (
         display_object: D,
-        matrix: Matrix | null = null,
-        color_transform: ColorTransform | null = null,
-        transferred_canvas: HTMLCanvasElement | null = null
+        opstions: ICaptureOptions | null = null
     ): Promise<HTMLCanvasElement> {
-        return captureToCanvasUseCase(
-            display_object, matrix, color_transform, transferred_canvas
-        );
+        return captureToCanvasUseCase(display_object, opstions);
     }
 }

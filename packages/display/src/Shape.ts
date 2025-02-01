@@ -1,5 +1,6 @@
 import { DisplayObject } from "./DisplayObject";
 import { Graphics } from "./Graphics";
+import { BitmapData } from "./BitmapData";
 import { execute as shapeClearBitmapBufferService } from "./Shape/usecase/ShapeClearBitmapBufferUseCase";
 import { execute as shapeSetBitmapBufferUseCase } from "./Shape/usecase/ShapeSetBitmapBufferUseCase";
 import { execute as shapeLoadSrcUseCase } from "./Shape/usecase/ShapeLoadSrcUseCase";
@@ -7,7 +8,6 @@ import {
     $graphicMap,
     $getArray
 } from "./DisplayObjectUtil";
-import { BitmapData } from "./BitmapData";
 
 /**
  * @description Shape クラスは、ベクターグラフィックスを表示するための表示オブジェクトです。
