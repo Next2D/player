@@ -1054,4 +1054,18 @@ export class DisplayObject extends EventDispatcher
     {
         displayObjectRemoveService(this);
     }
+
+    /**
+     * @description 指定の LoaderInfo を DisplayObject に同期します。
+     *              Synchronizes the specified LoaderInfo with the DisplayObject.
+     *
+     * @param  {LoaderInfo} loader_info
+     * @return {void}
+     * @method
+     * @protected
+     */
+    $syncLoaderInfo (loader_info: LoaderInfo): void
+    {
+        $loaderInfoMap.set(this, loader_info);
+    }
 }

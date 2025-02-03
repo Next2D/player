@@ -99,6 +99,7 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
     if (vertices[0] === vertices[vertices.length - 3]
         && vertices[1] === vertices[vertices.length - 2]
     ) {
+
         // 始点と終点が繋がっている時はjointsの設定を適用
         switch ($context.joints) {
 

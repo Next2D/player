@@ -1,9 +1,9 @@
 import type { IAnimationToolData } from "../../interface/IAnimationToolData";
 import type { Loader } from "../../Loader";
+import type { IMovieClipCharacter } from "../../interface/IMovieClipCharacter";
 import { Event } from "@next2d/events";
 import { MovieClip } from "../../MovieClip";
 import { execute as displayObjectBaseBuildService } from "../../DisplayObject/service/DisplayObjectBaseBuildService";
-import { execute as movieClipBuildFromCharacterUseCase } from "../../MovieClip/usecase/MovieClipBuildFromCharacterUseCase";
 
 /**
  * @description 読み込んだJSONオブジェクトからrootのMovieClipを構築
@@ -37,7 +37,7 @@ export const execute = async (loader: Loader, object: IAnimationToolData): Promi
     // build root content
     const movieClip = new MovieClip();
 
-    const character = object.characters[0];
+    const character = object.characters[0] as IMovieClipCharacter;
     displayObjectBaseBuildService(movieClip, -1, {
         "characterId": 0,
         "name": "main",
@@ -46,7 +46,7 @@ export const execute = async (loader: Loader, object: IAnimationToolData): Promi
         "endFrame": character.controller.length,
         "startFrame": 1
     }, loader);
-    movieClipBuildFromCharacterUseCase(movieClip, character);
+    movieClip.$sync(character, loaderInfo);
 
     movieClip.parent   = null;
     loaderInfo.content = movieClip;

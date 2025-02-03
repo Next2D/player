@@ -1,8 +1,9 @@
-import { IStageData } from "./IStageData";
+import type { IStageData } from "./IStageData";
+import type { ICharacter } from "./ICharacter";
 
 export interface IAnimationToolData {
     type: "json";
     stage: IStageData;
-    characters: any[]; // todo
-    symbols: any[]; // todo
+    characters: ICharacter[];
+    symbols: Array<Array<string | number>>;
 }

@@ -83,7 +83,7 @@ export const execute = <D extends DisplayObject>(
                 continue;
             }
 
-            children.push(displayObject);
+            children.push(displayObject as D);
 
             if (displayObject.isContainerEnabled) {
                 caches.push(displayObject as unknown as DisplayObjectContainer);
@@ -176,7 +176,7 @@ export const execute = <D extends DisplayObject>(
             continue;
         }
 
-        children.push(displayObject);
+        children.push(displayObject as D);
 
         if (displayObject.isContainerEnabled) {
             caches.push(displayObject as unknown as DisplayObjectContainer);

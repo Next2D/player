@@ -10,28 +10,28 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        // next2d.load("develop");
+        next2d.load("develop");
 
-        const root = await next2d.createRootMovieClip(400, 400, 60, {
-            bgColor: "#0000ff"
-        });
+        // const root = await next2d.createRootMovieClip(400, 400, 60, {
+        //     bgColor: "#0000ff"
+        // });
 
-        const { Shape, BitmapData } = next2d.display;
-        const { TextField } = next2d.text;
-        const { Video } = next2d.media;
-        const { Event } = next2d.events;
-        const { Matrix } = next2d.geom;
-        const {
-            BlurFilter,
-            ColorMatrixFilter,
-            GlowFilter,
-            BevelFilter,
-            GradientBevelFilter,
-            GradientGlowFilter,
-            DropShadowFilter,
-            ConvolutionFilter,
-            DisplacementMapFilter
-        } = next2d.filters;
+        // const { Shape, BitmapData } = next2d.display;
+        // const { TextField } = next2d.text;
+        // const { Video } = next2d.media;
+        // const { Event } = next2d.events;
+        // const { Matrix } = next2d.geom;
+        // const {
+        //     BlurFilter,
+        //     ColorMatrixFilter,
+        //     GlowFilter,
+        //     BevelFilter,
+        //     GradientBevelFilter,
+        //     GradientGlowFilter,
+        //     DropShadowFilter,
+        //     ConvolutionFilter,
+        //     DisplacementMapFilter
+        // } = next2d.filters;
 
         // const image = new Image();
         // image.addEventListener("load", () => 
@@ -82,6 +82,7 @@
 
         // shape1
         //     .graphics
+        //     // .lineStyle(15, "#ff0000")
         //     .beginFill("#ff0000")
         //     .drawRect(0, 0, 100, 100);
 
@@ -105,18 +106,18 @@
 
         // textField.blendMode = "invert";
 
-        const shape2 = root.addChild(new Shape());
-        shape2.x = 100;
-        shape2.y = 100;
-        shape2.rotation = 25;
-        shape2
-            .graphics
-            .beginFill("#00ff00")
-            .moveTo(0, 0)
-            .lineTo(100, 0)
-            .lineTo(100, 100)
-            .lineTo(0, 0)
-            .endFill();
+        // const shape2 = root.addChild(new Shape());
+        // shape2.x = 100;
+        // shape2.y = 100;
+        // shape2.rotation = 25;
+        // shape2
+        //     .graphics
+        //     .beginFill("#00ff00")
+        //     .moveTo(0, 0)
+        //     .lineTo(100, 0)
+        //     .lineTo(100, 100)
+        //     .lineTo(0, 0)
+        //     .endFill();
 
         // shape2.blendMode = "invert";
         // shape2.filters = [

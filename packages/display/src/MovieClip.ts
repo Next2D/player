@@ -1,4 +1,7 @@
 import type { IDisplayObject } from "./interface/IDisplayObject";
+import type { ICharacter } from "./interface/ICharacter";
+import type { LoaderInfo } from "./LoaderInfo";
+import type { IMovieClipCharacter } from "./interface/IMovieClipCharacter";
 import { Sprite } from "./Sprite";
 import { FrameLabel } from "./FrameLabel";
 import { Sound } from "@next2d/media";
@@ -11,6 +14,7 @@ import { execute as movieClipGotoAndPlayUseCase } from "./MovieClip/usecase/Movi
 import { execute as movieClipGotoAndStopUseCase } from "./MovieClip/usecase/MovieClipGotoAndStopUseCase";
 import { execute as movieClipNextFrameUseCase } from "./MovieClip/usecase/MovieClipNextFrameUseCase";
 import { execute as movieClipPrevFrameUseCase } from "./MovieClip/usecase/MovieClipPrevFrameUseCase";
+import { execute as movieClipBuildFromCharacterUseCase } from "./MovieClip/usecase/MovieClipBuildFromCharacterUseCase";
 
 /**
  * @description MovieClip クラスは、Sprite、DisplayObjectContainer、InteractiveObject、DisplayObject
@@ -386,5 +390,23 @@ export class MovieClip extends Sprite
     addFrameLabel (frame_label: FrameLabel): void
     {
         movieClipAddFrameLabelService(this, frame_label);
+    }
+
+    /**
+     * @description character 情報を元に DisplayObject を構築
+     *              Build DisplayObject based on character
+     *
+     * @param  {ICharacter} character
+     * @param  {LoaderInfo} [loader_info=null]
+     * @return {void}
+     * @method
+     * @protected
+     */
+    $sync (character: ICharacter, loader_info: LoaderInfo | null = null): void
+    {
+        if (loader_info) {
+            super.$syncLoaderInfo(loader_info);
+        }
+        movieClipBuildFromCharacterUseCase(this, character as IMovieClipCharacter);
     }
 }

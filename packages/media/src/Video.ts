@@ -1,9 +1,12 @@
+import type { IVideoCharacter } from "./interface/IVideoCharacter";
+import type { LoaderInfo } from "@next2d/display";
 import { SoundMixer } from "./SoundMixer";
 import { DisplayObject } from "@next2d/display";
 import { VideoEvent } from "@next2d/events";
 import { execute as videoCreateElementService } from "./Video/service/VideoCreateElementService";
 import { execute as videoRegisterEventUseCase } from "./Video/usecase/VideoRegisterEventUseCase";
 import { execute as videoPlayEventUseCase } from "./Video/usecase/VideoPlayEventUseCase";
+import { execute as videoBuildFromCharacterUseCase } from "./Video/usecase/VideoBuildFromCharacterUseCase";
 import {
     $clamp,
     $getPlayingVideos
@@ -384,5 +387,23 @@ export class Video extends DisplayObject
         if (this.willTrigger(VideoEvent.SEEK)) {
             this.dispatchEvent(new VideoEvent(VideoEvent.SEEK));
         }
+    }
+
+    /**
+     * @description character 情報を元に DisplayObject を構築
+     *              Build DisplayObject based on character
+     *
+     * @param  {ICharacter} character
+     * @param  {LoaderInfo} [loader_info=null]
+     * @return {void}
+     * @method
+     * @protected
+     */
+    $sync (character: IVideoCharacter, loader_info: LoaderInfo | null = null): void
+    {
+        if (loader_info) {
+            super.$syncLoaderInfo(loader_info);
+        }
+        videoBuildFromCharacterUseCase(this, character as IVideoCharacter);
     }
 }

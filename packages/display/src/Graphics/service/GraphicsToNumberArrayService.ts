@@ -7,7 +7,6 @@ import type { IJointStyle } from "../../interface/IJointStyle";
 import { $getArray } from "../../DisplayObjectUtil";
 import { Graphics } from "../../Graphics";
 import { BitmapData } from "../../BitmapData";
-import { $cacheStore } from "@next2d/cache";
 
 /**
  * @description Graphicsのrecodesを解析して数値配列を生成します。
@@ -253,41 +252,20 @@ export const execute = (recodes : any[] | null): any[] =>
             case Graphics.BITMAP_FILL:
                 {
                     const bitmapData: BitmapData = recodes[idx++];
-
-                    let imageArray: Uint8Array;
-                    if (bitmapData.image !== null || bitmapData.canvas !== null) {
-
-                        const canvas  = $cacheStore.getCanvas();
-                        const width   = bitmapData.width;
-                        const height  = bitmapData.height;
-                        canvas.width  = width;
-                        canvas.height = height;
-
-                        const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-                        context.drawImage(
-                            bitmapData.image as HTMLImageElement
-                            || bitmapData.canvas as HTMLCanvasElement,
-                            0, 0
-                        );
-
-                        imageArray = new Uint8Array(context.getImageData(0, 0, width, height).data);
-
-                        $cacheStore.destroy(context);
-
-                    } else if (bitmapData.buffer !== null) {
-                        imageArray = bitmapData.buffer;
-                    } else {
+                    const buffer = bitmapData.buffer;
+                    if (!buffer) {
+                        idx += 3;
                         break;
                     }
 
                     array.push(
                         bitmapData.width,
                         bitmapData.height,
-                        imageArray.length
+                        buffer.length
                     );
 
-                    for (let idx = 0; idx < imageArray.length; idx += 4096) {
-                        array.push(...imageArray.subarray(idx, idx + 4096));
+                    for (let idx = 0; idx < buffer.length; idx += 4096) {
+                        array.push(...buffer.subarray(idx, idx + 4096));
                     }
 
                     const matrix: Float32Array = recodes[idx++];
@@ -347,34 +325,9 @@ export const execute = (recodes : any[] | null): any[] =>
                     array.push(recodes[idx++]);
 
                     const bitmapData: BitmapData = recodes[idx++];
-
-                    let buffer: Uint8Array;
-                    if (bitmapData.image !== null || bitmapData.canvas !== null) {
-
-                        const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
-
-                        const width: number  = bitmapData.width;
-                        const height: number = bitmapData.height;
-                        canvas.width  = width;
-                        canvas.height = height;
-
-                        const context: CanvasRenderingContext2D | null = canvas.getContext("2d", { "willReadFrequently": true });
-                        if (!context) {
-                            throw new Error("the context is null.");
-                        }
-
-                        // @ts-ignore
-                        context.drawImage(bitmapData.image || bitmapData.canvas, 0, 0);
-
-                        buffer = new Uint8Array(
-                            context.getImageData(0, 0, width, height).data
-                        );
-
-                        $cacheStore.destroy(context);
-
-                    } else if (bitmapData.buffer !== null) {
-                        buffer = bitmapData.buffer;
-                    } else {
+                    const buffer = bitmapData.buffer;
+                    if (!buffer) {
+                        idx += 3;
                         break;
                     }
 

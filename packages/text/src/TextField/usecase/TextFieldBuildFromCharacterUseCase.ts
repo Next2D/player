@@ -1,4 +1,4 @@
-import type { TextField } from "@next2d/text";
+import type { TextField } from "../../TextField";
 import type { ITextFieldCharacter } from "../../interface/ITextFieldCharacter";
 
 /**
@@ -13,7 +13,7 @@ import type { ITextFieldCharacter } from "../../interface/ITextFieldCharacter";
  */
 export const execute = (text_field: TextField, character: ITextFieldCharacter): void =>
 {
-    const textFormat = text_field.defaultTextFormat;
+    const textFormat         = text_field.defaultTextFormat;
     textFormat.font          = character.font;
     textFormat.size          = character.size;
     textFormat.align         = character.align;

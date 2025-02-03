@@ -1,3 +1,5 @@
+import type { IBounds } from "./IBounds";
+
 export interface IVideoCharacter {
     symbol?: string;
     extends: string;
@@ -6,4 +8,5 @@ export interface IVideoCharacter {
     volume: number;
     loop: boolean;
     autoPlay: boolean;
+    bounds: IBounds;
 }

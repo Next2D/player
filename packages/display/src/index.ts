@@ -6,6 +6,7 @@ export * from "./FrameLabel";
 export * from "./Graphics";
 export * from "./InteractiveObject";
 export * from "./Loader";
+export * from "./LoaderInfo";
 export * from "./LoopConfig";
 export * from "./LoopType";
 export * from "./MovieClip";

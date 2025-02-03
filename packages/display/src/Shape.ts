@@ -1,9 +1,13 @@
+import type { ICharacter } from "./interface/ICharacter";
+import type { LoaderInfo } from "./LoaderInfo";
+import type { IShapeCharacter } from "./interface/IShapeCharacter";
 import { DisplayObject } from "./DisplayObject";
 import { Graphics } from "./Graphics";
 import { BitmapData } from "./BitmapData";
 import { execute as shapeClearBitmapBufferService } from "./Shape/usecase/ShapeClearBitmapBufferUseCase";
 import { execute as shapeSetBitmapBufferUseCase } from "./Shape/usecase/ShapeSetBitmapBufferUseCase";
 import { execute as shapeLoadSrcUseCase } from "./Shape/usecase/ShapeLoadSrcUseCase";
+import { execute as shapeBuildFromCharacterUseCase } from "./Shape/usecase/ShapeBuildFromCharacterUseCase";
 import {
     $graphicMap,
     $getArray
@@ -217,5 +221,23 @@ export class Shape extends DisplayObject
             height,
             buffer
         );
+    }
+
+    /**
+     * @description character 情報を元に DisplayObject を構築
+     *              Build DisplayObject based on character
+     *
+     * @param  {ICharacter} character
+     * @param  {LoaderInfo} [loader_info=null]
+     * @return {void}
+     * @method
+     * @protected
+     */
+    $sync (character: ICharacter, loader_info: LoaderInfo | null = null): void
+    {
+        if (loader_info) {
+            super.$syncLoaderInfo(loader_info);
+        }
+        shapeBuildFromCharacterUseCase(this, character as IShapeCharacter);
     }
 }

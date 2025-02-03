@@ -13,8 +13,8 @@ import { execute as pathCommandBezierCurveToUseCase } from "./PathCommandBezierC
  */
 export const execute = (x: number, y: number, radius: number): void =>
 {
-    const r: number = radius;
-    const k: number = radius * 0.5522847498307936;
+    const r = radius;
+    const k = radius * 0.5522847498307936;
 
     pathCommandBezierCurveToUseCase(
         x + r, y + k, x + k, y + r, x, y + r

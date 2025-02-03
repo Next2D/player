@@ -29,9 +29,9 @@ export const execute = (
         const dx = paths[idx    ] as number;
         const dy = paths[idx + 1] as number;
 
-        const distance = Math.round(Math.sqrt(
+        const distance = Math.sqrt(
             Math.pow(dx - x, 2) + Math.pow(dy - y, 2)
-        ) * 10) / 10;
+        );
 
         if (distance !== r) {
             continue;

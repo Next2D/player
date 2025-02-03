@@ -1,6 +1,8 @@
 import type { IBounds } from "./interface/IBounds";
 import type { ITextFieldAutoSize } from "./interface/ITextFieldAutoSize";
 import type { ITextFieldType } from "./interface/ITextFieldType";
+import type { ITextFieldCharacter } from "./interface/ITextFieldCharacter";
+import type { LoaderInfo } from "@next2d/display";
 import { FocusEvent } from "@next2d/events";
 import { Rectangle } from "@next2d/geom";
 import { TextData } from "./TextData";
@@ -24,6 +26,7 @@ import { execute as textFieldSetFocusIndexUseCase } from "./TextField/usecase/Te
 import { execute as textFieldKeyDownEventUseCase } from "./TextField/usecase/TextFieldKeyDownEventUseCase";
 import { execute as textFieldDeleteTextUseCase } from "./TextField/usecase/TextFieldDeleteTextUseCase";
 import { execute as textFieldSelectAllUseCase } from "./TextField/usecase/TextFieldSelectAllUseCase";
+import { execute as textFieldBuildFromCharacterUseCase } from "./TextField/usecase/TextFieldBuildFromCharacterUseCase";
 import {
     $clamp,
     $toColorInt
@@ -1272,5 +1275,23 @@ export class TextField extends InteractiveObject
     keyDown (event: KeyboardEvent): void
     {
         textFieldKeyDownEventUseCase(this, event);
+    }
+
+    /**
+     * @description character 情報を元に DisplayObject を構築
+     *              Build DisplayObject based on character
+     *
+     * @param  {ICharacter} character
+     * @param  {LoaderInfo} [loader_info=null]
+     * @return {void}
+     * @method
+     * @protected
+     */
+    $sync (character: ITextFieldCharacter, loader_info: LoaderInfo | null = null): void
+    {
+        if (loader_info) {
+            super.$syncLoaderInfo(loader_info);
+        }
+        textFieldBuildFromCharacterUseCase(this, character as ITextFieldCharacter);
     }
 }
