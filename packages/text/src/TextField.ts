@@ -2,6 +2,7 @@ import type { IBounds } from "./interface/IBounds";
 import type { ITextFieldAutoSize } from "./interface/ITextFieldAutoSize";
 import type { ITextFieldType } from "./interface/ITextFieldType";
 import type { ITextFieldCharacter } from "./interface/ITextFieldCharacter";
+import type { ICharacter } from "./interface/ICharacter";
 import type { LoaderInfo } from "@next2d/display";
 import { FocusEvent } from "@next2d/events";
 import { Rectangle } from "@next2d/geom";
@@ -1287,7 +1288,7 @@ export class TextField extends InteractiveObject
      * @method
      * @protected
      */
-    $sync (character: ITextFieldCharacter, loader_info: LoaderInfo | null = null): void
+    $sync (character: ICharacter, loader_info: LoaderInfo | null = null): void
     {
         if (loader_info) {
             super.$syncLoaderInfo(loader_info);

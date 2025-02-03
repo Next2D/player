@@ -1,4 +1,5 @@
 import type { IVideoCharacter } from "./interface/IVideoCharacter";
+import type { ICharacter } from "./interface/ICharacter";
 import type { LoaderInfo } from "@next2d/display";
 import { SoundMixer } from "./SoundMixer";
 import { DisplayObject } from "@next2d/display";
@@ -399,7 +400,7 @@ export class Video extends DisplayObject
      * @method
      * @protected
      */
-    $sync (character: IVideoCharacter, loader_info: LoaderInfo | null = null): void
+    $sync (character: ICharacter, loader_info: LoaderInfo | null = null): void
     {
         if (loader_info) {
             super.$syncLoaderInfo(loader_info);
