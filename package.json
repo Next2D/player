@@ -49,13 +49,13 @@
     "@types/node": "^22.13.0",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
     "@typescript-eslint/parser": "^8.22.0",
-    "@vitest/web-worker": "^3.0.4",
+    "@vitest/web-worker": "^3.0.5",
     "eslint": "^9.19.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "jsdom": "^26.0.0",
     "typescript": "^5.7.3",
     "vite": "^6.0.11",
-    "vitest": "^3.0.4",
+    "vitest": "^3.0.5",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "peerDependencies": {
