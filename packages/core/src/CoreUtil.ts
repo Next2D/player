@@ -110,6 +110,15 @@ export const $getMainElement = (): HTMLDivElement =>
 };
 
 /**
+ * @description 描画用のmatrix情報
+ *              Matrix information for drawing
+ *
+ * @type {Float32Array}
+ * @protected
+ */
+export const $renderMatrix: Float32Array = new Float32Array([1, 0, 0, 1, 0, 0]);
+
+/**
  * @description マウス、タップ時の画面のmatrix情報
  *              Screen matrix information when mouse or tap is pressed
  *

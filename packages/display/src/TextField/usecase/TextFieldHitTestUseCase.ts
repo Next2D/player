@@ -33,7 +33,6 @@ export const execute = (
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
 
-    hit_context.beginPath();
     hit_context.setTransform(
         tMatrix[0], tMatrix[1], tMatrix[2],
         tMatrix[3], tMatrix[4], tMatrix[5]

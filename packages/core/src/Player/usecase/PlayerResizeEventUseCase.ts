@@ -7,7 +7,7 @@ import {
     $PREFIX,
     $getMainElement,
     $devicePixelRatio,
-    $hitMatrix
+    $renderMatrix
 } from "../../CoreUtil";
 
 /**
@@ -71,10 +71,6 @@ export const execute = (): void =>
     $player.screenHeight = screenHeight;
     stage.changed = true;
 
-    // update hit matrix
-    $hitMatrix[4] = ($player.rendererWidth  - stage.stageWidth  * $player.rendererScale) / 2;
-    $hitMatrix[5] = ($player.rendererHeight - stage.stageHeight * $player.rendererScale) / 2;
-
     if (element.children.length > 1) {
         element.children[1].dispatchEvent(
             new Event(`${$PREFIX}_blur`)
@@ -94,6 +90,11 @@ export const execute = (): void =>
     stage.rendererScale  = $player.rendererScale  = scale;
     stage.rendererWidth  = $player.rendererWidth  = width;
     stage.rendererHeight = $player.rendererHeight = height;
+
+    // 描画用の matrix を更新
+    $renderMatrix[0] = $renderMatrix[3] = scale;
+    $renderMatrix[4] = ($player.rendererWidth  - stage.stageWidth  * scale) / 2;
+    $renderMatrix[5] = ($player.rendererHeight - stage.stageHeight * scale) / 2;
 
     // cache clear
     $cacheStore.reset();

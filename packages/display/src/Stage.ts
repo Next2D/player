@@ -223,8 +223,8 @@ export class Stage extends DisplayObjectContainer
             color_transform,
             this.rendererWidth,
             this.rendererHeight,
-            matrix[4],
-            matrix[5]
+            -matrix[4],
+            -matrix[5]
         );
     }
 

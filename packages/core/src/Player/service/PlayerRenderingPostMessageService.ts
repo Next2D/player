@@ -1,9 +1,9 @@
 
 import type { IRenderMessage } from "../../interface/IRenderMessage";
 import { $rendererWorker } from "../../RendererWorker";
-import { $player } from "../../Player";
 import { stage } from "@next2d/display";
 import { renderQueue } from "@next2d/render-queue";
+import { $renderMatrix } from "../../CoreUtil";
 
 /**
  * @type {Float32Array}
@@ -16,12 +16,6 @@ export const $COLOR_ARRAY_IDENTITY: Float32Array = new Float32Array([1, 1, 1, 1,
  * @private
  */
 const $imageBitmaps: ImageBitmap[] = [];
-
-/**
- * @type {Float32Array}
- * @private
- */
-const $matrix: Float32Array = new Float32Array([1, 0, 0, 1, 0, 0]);
 
 /**
  * @description レンダリングメッセージ
@@ -71,17 +65,11 @@ $rendererWorker.addEventListener("message", (event: MessageEvent): void =>
  */
 export const execute = (): void =>
 {
-    const scale = $player.rendererScale;
-
-    $matrix[0] = $matrix[3] = scale;
-    $matrix[4] = ($player.rendererWidth  - stage.stageWidth * scale) / 2;
-    $matrix[5] = ($player.rendererHeight - stage.stageHeight * scale) / 2;
-
     renderQueue.offset   = 0;
     $options.length      = 0;
     $imageBitmaps.length = 0;
     stage.$generateRenderQueue(
-        stage, $imageBitmaps, $matrix, $COLOR_ARRAY_IDENTITY
+        stage, $imageBitmaps, $renderMatrix, $COLOR_ARRAY_IDENTITY
     );
 
     if (!renderQueue.offset) {
