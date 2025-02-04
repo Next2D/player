@@ -1,4 +1,5 @@
 import { $player } from "../../Player";
+import { Event as ResizeEvent } from "@next2d/events";
 import { stage } from "@next2d/display";
 import { execute as playerResizePostMessageService } from "../service/PlayerResizePostMessageService";
 import { execute as canvasSetPositionService } from "../../Canvas/service/CanvasSetPositionService";
@@ -101,4 +102,9 @@ export const execute = (): void =>
 
     // worker postMessage
     playerResizePostMessageService();
+
+    // ステージのリサイズイベントを実行
+    if (stage.hasEventListener(ResizeEvent.RESIZE)) {
+        stage.dispatchEvent(new ResizeEvent(ResizeEvent.RESIZE));
+    }
 };
