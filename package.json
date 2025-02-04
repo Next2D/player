@@ -32,8 +32,8 @@
     "lint": "eslint src/**/*.ts packages/**/*.ts",
     "test": "vitest",
     "clean": "node ./scripts/clean.js",
-    "build:vite": "vite build",
-    "publish:dist": "node ./scripts/clean.js && tsc && vite build && node ./scripts/publish.js"
+    "build:vite": "node ./scripts/version.js && vite build",
+    "publish:dist": "node ./scripts/clean.js && node ./scripts/version.js && tsc && vite build && node ./scripts/publish.js"
   },
   "funding": {
     "type": "github",
@@ -46,9 +46,9 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.19.0",
-    "@types/node": "^22.13.0",
-    "@typescript-eslint/eslint-plugin": "^8.22.0",
-    "@typescript-eslint/parser": "^8.22.0",
+    "@types/node": "^22.13.1",
+    "@typescript-eslint/eslint-plugin": "^8.23.0",
+    "@typescript-eslint/parser": "^8.23.0",
     "@vitest/web-worker": "^3.0.5",
     "eslint": "^9.19.0",
     "eslint-plugin-unused-imports": "^4.1.4",
