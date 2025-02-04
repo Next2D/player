@@ -39,6 +39,9 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         children.splice(index, 0, display_object);
     }
 
+    // cache clear
+    display_object_container.$container = null;
+
     // Set parent-child relationship
     display_object.parent = display_object_container;
 

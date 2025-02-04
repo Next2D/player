@@ -43,6 +43,9 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         children.splice(depth, 1);
     }
 
+    // cache clear
+    display_object_container.$container = null;
+
     // remove all broadcast events
     if (display_object.hasEventListener(Event.ENTER_FRAME)) {
         display_object.removeAllEventListener(Event.ENTER_FRAME);
