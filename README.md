@@ -90,7 +90,7 @@ const start = async (): Promise<void> =>
     await loader.load(request);
 
     const root = await next2d.createRootMovieClip();
-    root.addChild(loader.contentLoaderInfo.content);
+    root.addChild(loader.content);
 };
 
 start();
