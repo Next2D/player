@@ -16,4 +16,18 @@ describe("JobUpdateFrameService.js test", () =>
         const job = new MockJob();
         expect(execute(job, 0)).toBe(-1);
     });
+
+    it("execute test case2", () =>
+    {
+        const MockJob = vi.fn().mockImplementation(() =>
+        {
+            return {
+                "stopFlag": false,
+                "entries": null
+            } as unknown as Job;
+        });
+
+        const job = new MockJob();
+        expect(execute(job, 0)).toBe(-1);
+    });
 });
