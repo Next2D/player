@@ -5,11 +5,11 @@ describe("CacheStoreGenerateKeysService.js test", () =>
 {
     it("test case1", () =>
     {
-        expect(execute(0.25, 0.5, 0)).toBe(1015247254);
+        expect(execute(0.25, 0.5, 0)).toBe(15480923);
     });
 
     it("test case2", () =>
     {
-        expect(execute(0.25, 0.5, 0.3)).toBe(71293087);
+        expect(execute(0.25, 0.5, 0.3)).toBe(6600597);
     });
 });

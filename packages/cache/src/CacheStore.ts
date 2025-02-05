@@ -229,11 +229,11 @@ export class CacheStore
      * @param  {number} b
      * @param  {number} c
      * @param  {number} d
-     * @return {number}
+     * @return {string}
      * @method
      * @public
      */
-    generateFilterKeys (a: number, b: number, c: number, d: number): number
+    generateFilterKeys (a: number, b: number, c: number, d: number): string
     {
         return cacheStoreGenerateFilterKeysService(a, b, c, d);
     }

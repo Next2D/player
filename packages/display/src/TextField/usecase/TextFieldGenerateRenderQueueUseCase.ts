@@ -3,6 +3,7 @@ import { execute as displayObjectGetRawColorTransformUseCase } from "../../Displ
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
+import { execute as displayObjectGenerateHashService } from "../../DisplayObject/service/DisplayObjectGenerateHashService";
 import { $cacheStore } from "@next2d/cache";
 import { renderQueue } from "@next2d/render-queue";
 import {
@@ -136,14 +137,8 @@ export const execute = (
                 text_field.characterId
             );
 
-            let hash = 0;
-            for (let idx = 0; idx < values.length; idx++) {
-                hash = (hash << 5) - hash + values[idx];
-                hash |= 0;
-            }
-
+            text_field.uniqueKey = `${displayObjectGenerateHashService(new Float32Array(values))}`;
             $poolArray(values);
-            text_field.uniqueKey = `${hash}`;
 
         } else {
 

@@ -5,7 +5,7 @@ import { renderQueue } from"@next2d/render-queue";
 import { execute as displayObjectGetRawColorTransformUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawColorTransformUseCase";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
-import { execute as shapeGenerateHashService } from "../service/ShapeGenerateHashService";
+import { execute as displayObjectGenerateHashService } from "../../DisplayObject/service/DisplayObjectGenerateHashService";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
 import { stage } from "../../Stage";
 import { $cacheStore } from "@next2d/cache";
@@ -148,20 +148,14 @@ export const execute = (
                 shape.characterId
             );
 
-            let hash = 0;
-            for (let idx = 0; idx < values.length; idx++) {
-                hash = (hash << 5) - hash + values[idx];
-                hash |= 0;
-            }
-
+            shape.uniqueKey = `${displayObjectGenerateHashService(new Float32Array(values))}`;
             $poolArray(values);
-            shape.uniqueKey = `${hash}`;
 
         } else {
 
             shape.uniqueKey = shape.isBitmap
                 ? `${shape.instanceId}`
-                : `${shapeGenerateHashService(graphics.buffer)}`;
+                : `${displayObjectGenerateHashService(graphics.buffer)}`;
 
         }
     }
@@ -214,6 +208,7 @@ export const execute = (
         : $cacheStore.get(shape.uniqueKey, `${cacheKey}`);
 
     if (!cache) {
+
         renderQueue.push(0);
 
         if (isGridEnabled) {

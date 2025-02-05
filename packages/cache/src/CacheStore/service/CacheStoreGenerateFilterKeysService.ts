@@ -6,22 +6,11 @@
  * @param  {number} b
  * @param  {number} c
  * @param  {number} d
- * @return {number}
+ * @return {string}
  * @method
  * @public
  */
-export const execute = (a: number, b: number, c: number, d: number): number =>
+export const execute = (a: number, b: number, c: number, d: number): string =>
 {
-    const value = `${a}${b}${c}${d}`;
-
-    let hash = 0;
-    for (let idx = 0; idx < value.length; idx++) {
-
-        const chr = value.charCodeAt(idx);
-
-        hash  = (hash << 5) - hash + chr;
-        hash |= 0;
-    }
-
-    return hash;
+    return `${a}${b}${c}${d}`;
 };

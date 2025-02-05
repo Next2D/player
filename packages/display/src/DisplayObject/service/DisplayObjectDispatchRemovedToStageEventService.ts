@@ -26,7 +26,9 @@ export const execute = <D extends DisplayObject>(display_object: D): void =>
     }
 
     // キャッシュストアから削除
-    if (display_object.uniqueKey && $cacheStore.has(display_object.uniqueKey)) {
+    if (display_object.uniqueKey
+        && $cacheStore.has(display_object.uniqueKey)
+    ) {
         $cacheStore.removeTimer(display_object.uniqueKey);
     }
 };

@@ -57,8 +57,8 @@ export const execute = async <D extends DisplayObject> (
     const xScale = Math.sqrt(tMatrix[0] * tMatrix[0] + tMatrix[1] * tMatrix[1]);
     const yScale = Math.sqrt(tMatrix[2] * tMatrix[2] + tMatrix[3] * tMatrix[3]);
 
-    const width  = display_object.width * xScale;
-    const height = display_object.height * yScale;
+    const width  = Math.ceil(display_object.width  * xScale);
+    const height = Math.ceil(display_object.height * yScale);
     if (width <= 0 || height <= 0) {
         return transferredCanvas;
     }
@@ -114,10 +114,7 @@ export const execute = async <D extends DisplayObject> (
         $player.play();
     }
 
-    if (opstions && opstions.matrix) {
-        Matrix.release(tMatrix);
-    }
-
+    Matrix.release(tMatrix);
     if (opstions && opstions.colorTransform) {
         ColorTransform.release(tColorTransform);
     }

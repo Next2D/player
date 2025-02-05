@@ -16,6 +16,7 @@ export const execute = (canvas: HTMLCanvasElement): Uint8Array =>
     cloneCanvas.height = canvas.height;
 
     const context = cloneCanvas.getContext("2d") as CanvasRenderingContext2D;
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.drawImage(canvas, 0, 0);
 
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);

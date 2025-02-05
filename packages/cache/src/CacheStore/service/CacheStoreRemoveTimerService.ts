@@ -39,6 +39,7 @@ export const execute = (
     cache_store.$timerId = setTimeout((): void =>
     {
         for (const [id, data] of trash_store) {
+
             if (!data.has("trash")) {
                 continue ;
             }
@@ -47,6 +48,7 @@ export const execute = (
             cache_store.$removeIds.push(+id);
         }
 
+        trash_store.clear();
         cache_store.$timerId = null;
     }, 5000);
 };
