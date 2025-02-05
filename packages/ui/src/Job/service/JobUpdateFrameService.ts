@@ -15,7 +15,7 @@ import { JobEvent } from "@next2d/events";
  */
 export const execute = (job: Job, timestamp: number): number =>
 {
-    if (job.stopFlag) {
+    if (job.stopFlag || !job.entries) {
         return -1;
     }
 
