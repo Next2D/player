@@ -1,12 +1,9 @@
 import type { IObject } from "./interface/IObject";
 import type { IEntriesObject } from "./interface/IEntriesObject";
 import { Easing } from "./Easing";
-import { execute as jobEntriesService } from "./Job/service/JobEntriesService";
-import { execute as jobUpdateFrameService } from "./Job/service/JobUpdateFrameService";
-import {
-    EventDispatcher,
-    JobEvent
-} from "@next2d/events";
+import { execute as jobStopService } from "./Job/service/JobStopService";
+import { execute as jobStartUseCase } from "./Job/usecase/JobStartUseCase";
+import { EventDispatcher } from "@next2d/events";
 
 /**
  * @class
@@ -21,9 +18,9 @@ export class Job extends EventDispatcher
      *
      * @type {object}
      * @default null
-     * @private
+     * @public
      */
-    private readonly _$target: any;
+    public readonly target: any;
 
     /**
      * @description イージングのエントリーオブジェクト
@@ -31,9 +28,9 @@ export class Job extends EventDispatcher
      *
      * @type {array}
      * @default null
-     * @private
+     * @public
      */
-    private _$entries: IEntriesObject[] | null;
+    public entries: IEntriesObject[] | null;
 
     /**
      * @description イージングの開始時間
@@ -41,9 +38,9 @@ export class Job extends EventDispatcher
      *
      * @type {number}
      * @default 0
-     * @private
+     * @public
      */
-    private _$startTime: number;
+    public startTime: number;
 
     /**
      * @description イージングの強制停止フラグ
@@ -51,9 +48,9 @@ export class Job extends EventDispatcher
      *
      * @type {boolean}
      * @default false
-     * @private
+     * @public
      */
-    private _$stopFlag: boolean;
+    public stopFlag: boolean;
 
     /**
      * @description イージングの遅延実行のタイマーID
@@ -61,9 +58,9 @@ export class Job extends EventDispatcher
      *
      * @type {number}
      * @default -1
-     * @private
+     * @protected
      */
-    private _$timerId: number;
+    public $timerId: number;
 
     /**
      * @description イージングの開始までの遅延時間を返します。
@@ -149,83 +146,28 @@ export class Job extends EventDispatcher
      */
     constructor (
         target: any,
-        from: IObject, to: IObject,
-        delay: number = 0, duration: number = 1,
+        from: IObject,
+        to: IObject,
+        delay: number = 0,
+        duration: number = 1,
         ease: Function | null = null
     ) {
-
         super();
 
+        this.target      = target;
+        this.from        = from;
+        this.to          = to;
         this.delay       = delay;
         this.duration    = duration;
         this.ease        = ease || Easing.linear;
-        this.from        = from;
-        this.to          = to;
+
+        // default value
         this.currentTime = 0;
         this.nextJob     = null;
-
-        // private params
-        this._$target    = target;
-        this._$entries   = null;
-        this._$startTime = 0;
-        this._$stopFlag  = false;
-        this._$timerId   = -1;
-    }
-
-    /**
-     * @description イージングの対象オブジェクトを返します（読み取り専用）
-     *              Returns the target object of the easing (read-only)
-     *
-     * @member {object}
-     * @default null
-     * @readonly
-     * @public
-     */
-    get target (): any
-    {
-        return this._$target;
-    }
-
-    /**
-     * @description イージングのエントリーオブジェクトを返します。
-     *              Returns the entry object of the easing.
-     *
-     * @member {array | null}
-     * @default null
-     * @readonly
-     * @public
-     */
-    get entries (): IEntriesObject[] | null
-    {
-        return this._$entries;
-    }
-
-    /**
-     * @description イージングの強制停止フラグを返します。
-     *              Returns the forced stop flag of the easing.
-     *
-     * @member {boolean}
-     * @default false
-     * @readonly
-     * @public
-     */
-    get stopFlag (): boolean
-    {
-        return this._$stopFlag;
-    }
-
-    /**
-     * @description イージングの開始時間を返します。
-     *              Returns the start time of the easing.
-     *
-     * @member {number}
-     * @default 0
-     * @readonly
-     * @public
-     */
-    get startTime (): number
-    {
-        return this._$startTime;
+        this.entries     = null;
+        this.startTime   = 0;
+        this.stopFlag    = false;
+        this.$timerId    = -1;
     }
 
     /**
@@ -252,45 +194,7 @@ export class Job extends EventDispatcher
      */
     start (): void
     {
-        // stop job
-        cancelAnimationFrame(this._$timerId);
-
-        // reset
-        this._$stopFlag = false;
-
-        /**
-         * @description イージングの起動関数
-         *              Easing boot function
-         *
-         * @return {void}
-         * @method
-         * @private
-         */
-        const boot = (): void =>
-        {
-            if (this._$stopFlag) {
-                return ;
-            }
-
-            // create entries
-            this._$entries = jobEntriesService(this.from);
-            if (!this._$entries) {
-                return ;
-            }
-
-            // setup
-            this._$startTime = performance.now();
-
-            // start
-            this._$timerId = jobUpdateFrameService(this, this._$startTime);
-        };
-
-        // delayed start
-        if (this.delay) {
-            setTimeout(boot, this.delay * 1000);
-        } else {
-            boot();
-        }
+        jobStartUseCase(this);
     }
 
     /**
@@ -303,14 +207,6 @@ export class Job extends EventDispatcher
      */
     stop (): void
     {
-        cancelAnimationFrame(this._$timerId);
-
-        if (this.hasEventListener(JobEvent.STOP)) {
-            this.dispatchEvent(new JobEvent(JobEvent.STOP));
-        }
-
-        // reset
-        this._$entries  = null;
-        this._$stopFlag = true;
+        jobStopService(this);
     }
 }
