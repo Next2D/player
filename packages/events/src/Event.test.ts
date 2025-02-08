@@ -58,4 +58,9 @@ describe("Event.js property test", () =>
     {
         expect(Event.SCROLL).toBe("scroll");
     });
+
+    it("INPUT test", () =>
+    {
+        expect(Event.INPUT).toBe("input");
+    }); 
 });

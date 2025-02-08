@@ -23,7 +23,7 @@ export const execute = (
 
     const textFormat = text_object.textFormat;
     const leftMargin = textFormat.leftMargin || 0;
-    if (!text_setting.wordWrap && lineWidth > text_setting.width) {
+    if (!text_setting.wordWrap && lineWidth > text_setting.rawWidth) {
         return Math.max(0, leftMargin);
     }
 
@@ -31,13 +31,13 @@ export const execute = (
     if (textFormat.align === "center" // format CENTER
         || text_setting.autoSize === "center" // autoSize CENTER
     ) {
-        return Math.max(0, text_setting.width / 2 - leftMargin - rightMargin - lineWidth / 2 - 2);
+        return Math.max(0, text_setting.rawWidth / 2 - leftMargin - rightMargin - lineWidth / 2 - 2);
     }
 
     if (textFormat.align === "right" // format RIGHT
         || text_setting.autoSize === "right" // autoSize RIGHT
     ) {
-        return Math.max(0, text_setting.width - leftMargin - lineWidth - rightMargin - 4);
+        return Math.max(0, text_setting.rawWidth - leftMargin - lineWidth - rightMargin - 4);
     }
 
     // autoSize LEFT

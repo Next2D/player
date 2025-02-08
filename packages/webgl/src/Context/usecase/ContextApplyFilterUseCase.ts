@@ -24,7 +24,9 @@ import { $offset } from "../../Filter";
 import {
     $context,
     $getFloat32Array6,
-    $getDevicePixelRatio
+    $getDevicePixelRatio,
+    $multiplyMatrices,
+    $poolFloat32Array6
 } from "../../WebGLUtil";
 
 /**
@@ -107,15 +109,9 @@ export const execute = (
             -node.h / 2
         );
 
-        const tMatrix = $getFloat32Array6(
-            a[0] * b[0] + a[2] * b[1],
-            a[1] * b[0] + a[3] * b[1],
-            a[0] * b[2] + a[2] * b[3],
-            a[1] * b[2] + a[3] * b[3],
-            a[0] * b[4] + a[2] * b[5] + a[4],
-            a[1] * b[4] + a[3] * b[5] + a[5]
-        );
-
+        const tMatrix = $multiplyMatrices(a, b);
+        $poolFloat32Array6(a);
+        $poolFloat32Array6(b);
         if (tMatrix[0] !== 1 || tMatrix[1] !== 0 || tMatrix[2] !== 0 || tMatrix[3] !== 1) {
 
             const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(
@@ -154,6 +150,8 @@ export const execute = (
                 $context.bind(currentAttachmentObject);
             }
         }
+
+        $poolFloat32Array6(tMatrix);
 
         // オフセットを初期化
         $offset.x = 0;

@@ -244,7 +244,19 @@ export class Event
      *              Occurs when sound data loading starts.
      *
      * @return {string}
-     * @default "soundopen"
+     * @const
+     * @static
+     */
+    static get INPUT (): string
+    {
+        return "input";
+    }
+
+    /**
+     * @description データの読み込み開始時に発生します。
+     *              Occurs when sound data loading starts.
+     *
+     * @return {string}
      * @const
      * @static
      */

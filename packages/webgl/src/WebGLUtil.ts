@@ -525,3 +525,28 @@ export const $getDevicePixelRatio = (): number =>
 {
     return $devicePixelRatio;
 };
+
+/**
+ * @description 2つの行列を乗算
+ *              Multiply two matrices
+ *
+ * @param  {Float32Array} a
+ * @param  {Float32Array} b
+ * @return {Float32Array}
+ * @method
+ * @protected
+ */
+export const $multiplyMatrices = (a: Float32Array, b: Float32Array): Float32Array =>
+{
+    const a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5];
+    const b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3], b4 = b[4], b5 = b[5];
+
+    return $getFloat32Array6(
+        a0 * b0 + a2 * b1,
+        a1 * b0 + a3 * b1,
+        a0 * b2 + a2 * b3,
+        a1 * b2 + a3 * b3,
+        a0 * b4 + a2 * b5 + a4,
+        a1 * b4 + a3 * b5 + a5
+    );
+};

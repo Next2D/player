@@ -1,4 +1,5 @@
 import { $getSelectedTextField } from "../../TextUtil";
+import { Event } from "@next2d/events";
 import { execute as textFieldInsertTextUseCase } from "../../TextField/usecase/TextFieldInsertTextUseCase";
 
 /**
@@ -21,4 +22,8 @@ export const execute = (event: InputEvent): void =>
         return ;
     }
     textFieldInsertTextUseCase(textField, event.data);
+
+    if (textField.hasEventListener(Event.INPUT)) {
+        textField.dispatchEvent(new Event(Event.INPUT));
+    }
 };
