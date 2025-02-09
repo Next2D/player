@@ -1467,7 +1467,7 @@ export class Graphics
             this.endFill();
         }
 
-        const array: any[] = graphicsToNumberArrayService(this.$recodes);
+        const array = graphicsToNumberArrayService(this.$recodes);
         this._$buffer = new Float32Array(array);
         $poolArray(array);
 
