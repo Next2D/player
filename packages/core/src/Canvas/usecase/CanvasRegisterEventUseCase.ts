@@ -40,13 +40,13 @@ export const execute = (canvas: HTMLCanvasElement): void =>
         }
         mutedVideos.length = 0;
 
-        canvas.removeEventListener(PointerEvent.POINTER_UP, $loadAudioContext);
+        canvas.removeEventListener(PointerEvent.POINTER_UP, $loadAudioContext as EventListener);
     };
-    canvas.addEventListener(PointerEvent.POINTER_UP, $loadAudioContext);
+    canvas.addEventListener(PointerEvent.POINTER_UP, $loadAudioContext as EventListener);
 
-    canvas.addEventListener(PointerEvent.POINTER_DOWN, canvasPointerDownEventUseCase, { "passive": false });
-    canvas.addEventListener(PointerEvent.POINTER_UP, canvasPointerUpEventUseCase);
-    canvas.addEventListener(PointerEvent.POINTER_MOVE, canvasPointerMoveEventUseCase, { "passive": false });
-    canvas.addEventListener(PointerEvent.POINTER_LEAVE, canvasPointerLeaveEventUseCase);
-    canvas.addEventListener(WheelEvent.WHEEL, canvasWheelEventUseCase);
+    canvas.addEventListener(PointerEvent.POINTER_DOWN, canvasPointerDownEventUseCase as EventListener, { "passive": false });
+    canvas.addEventListener(PointerEvent.POINTER_UP, canvasPointerUpEventUseCase as EventListener);
+    canvas.addEventListener(PointerEvent.POINTER_MOVE, canvasPointerMoveEventUseCase as EventListener, { "passive": false });
+    canvas.addEventListener(PointerEvent.POINTER_LEAVE, canvasPointerLeaveEventUseCase as EventListener);
+    canvas.addEventListener(WheelEvent.WHEEL, canvasWheelEventUseCase as EventListener);
 };

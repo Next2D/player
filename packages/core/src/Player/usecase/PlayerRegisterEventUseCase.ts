@@ -12,6 +12,6 @@ import { KeyboardEvent } from "@next2d/events";
  */
 export const execute = (): void =>
 {
-    window.addEventListener(KeyboardEvent.KEY_DOWN, playerKeyDownEventService);
-    window.addEventListener(KeyboardEvent.KEY_UP, playerKeyUpEventService);
+    window.addEventListener(KeyboardEvent.KEY_DOWN, playerKeyDownEventService as EventListener);
+    window.addEventListener(KeyboardEvent.KEY_UP, playerKeyUpEventService as EventListener);
 };

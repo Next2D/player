@@ -15,10 +15,10 @@ import { execute as textAreaInputUseCase } from "./TextAreaInputUseCase";
 export const execute = (text_area: HTMLTextAreaElement): void =>
 {
     // omposition evnet
-    text_area.addEventListener("compositionstart", textAreaCompositionStartUseCase);
-    text_area.addEventListener("compositionupdate", textAreaCompositionUpdateUseCase);
-    text_area.addEventListener("compositionend", textAreaCompositionEndUseCase);
+    text_area.addEventListener("compositionstart", textAreaCompositionStartUseCase as EventListener);
+    text_area.addEventListener("compositionupdate", textAreaCompositionUpdateUseCase as EventListener);
+    text_area.addEventListener("compositionend", textAreaCompositionEndUseCase as EventListener);
 
     // input event
-    text_area.addEventListener("input", textAreaInputUseCase);
+    text_area.addEventListener("input", textAreaInputUseCase as EventListener);
 };
