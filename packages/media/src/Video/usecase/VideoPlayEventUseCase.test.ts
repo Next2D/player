@@ -15,6 +15,7 @@ describe("VideoPlayEventService.js test", () =>
         {
             return {
                 "pause": vi.fn(() => { pauseState = "pause" }),
+                "loaded": true,
                 "willTrigger": vi.fn(() => true),
                 "dispatchEvent": vi.fn((event: VideoEvent) => { eventState = event.type }),
             } as unknown as Video;
