@@ -14,7 +14,7 @@ import { execute as videoApplyChangesService } from "../service/VideoApplyChange
  */
 export const execute = (video: Video): number =>
 {
-    if (video.paused) {
+    if (video.paused || !video.loaded) {
         return 0;
     }
 

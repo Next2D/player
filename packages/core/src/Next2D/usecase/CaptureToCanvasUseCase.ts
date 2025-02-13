@@ -6,6 +6,7 @@ import { $player } from "../../Player";
 import { $devicePixelRatio } from "../../CoreUtil";
 import { execute as playerResizePostMessageService } from "../../Player/service/PlayerResizePostMessageService";
 import { execute as playerTransferCanvasPostMessageService } from "../../Player/service/PlayerTransferCanvasPostMessageService";
+import { execute as videoSyncService } from "../service/VideoSyncService";
 import {
     Matrix,
     ColorTransform
@@ -36,6 +37,10 @@ export const execute = async <D extends DisplayObject> (
     display_object: D,
     opstions: ICaptureOptions | null = null
 ): Promise<HTMLCanvasElement> => {
+
+    if (opstions && opstions.videoSync) {
+        await videoSyncService(display_object);
+    }
 
     const tColorTransform = opstions && opstions.colorTransform
         ? opstions.colorTransform.rawData
