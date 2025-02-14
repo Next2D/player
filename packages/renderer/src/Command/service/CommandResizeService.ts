@@ -12,13 +12,15 @@ import {
  *
  * @param  {number} renderer_width
  * @param  {number} renderer_height
+ * @param  {boolean} cache_clear
  * @return {void}
  * @method
  * @public
  */
 export const execute = (
     renderer_width: number,
-    renderer_height: number
+    renderer_height: number,
+    cache_clear: boolean = true
 ): void => {
 
     if ($getRendererWidth() === renderer_width
@@ -34,5 +36,7 @@ export const execute = (
     $context.resize(renderer_width, renderer_height);
 
     // cache clear
-    $cacheStore.reset();
+    if (cache_clear) {
+        $cacheStore.reset();
+    }  
 };

@@ -11,6 +11,12 @@ import {
 } from "@next2d/display";
 
 /**
+ * @type {boolean}
+ * @private
+ */
+let $boot: boolean = false;
+
+/**
  * @description RootのMovieClipを作成します。
  *              Create a MovieClip for Root.
  *
@@ -29,6 +35,11 @@ export const execute = (
     options: IPlayerOptions | null = null
 ): Sprite => {
 
+    if ($boot) {
+        return stage.getChildAt(0) as Sprite;
+    }
+    $boot = true;
+
     // setup
     stage.stageWidth  = width | 0;
     stage.stageHeight = height | 0;
@@ -42,13 +53,13 @@ export const execute = (
     // ready complete
     playerReadyCompleteUseCase();
 
-    // // remove loading
+    // remove loading
     playerRemoveLoadingElementService();
 
-    // // append canvas
+    // append canvas
     playerAppendElementService();
 
-    // // set position
+    // set position
     canvasSetPositionService();
 
     return root;

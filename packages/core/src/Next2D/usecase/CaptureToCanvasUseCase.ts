@@ -97,7 +97,7 @@ export const execute = async <D extends DisplayObject> (
         stage.rendererHeight = $player.rendererHeight = height;
 
         // workerにリサイズを通知
-        playerResizePostMessageService();
+        playerResizePostMessageService(false);
     }
 
     // draw
@@ -112,7 +112,7 @@ export const execute = async <D extends DisplayObject> (
         stage.rendererHeight = $player.rendererHeight = cacheHeight;
 
         // workerにリサイズを通知
-        playerResizePostMessageService();
+        playerResizePostMessageService(false);
     }
 
     if (!stopFlag) {

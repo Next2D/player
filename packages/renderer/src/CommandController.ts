@@ -78,7 +78,8 @@ export class CommandController
                 case "resize":
                     commandResizeService(
                         object.buffer[0] as number,
-                        object.buffer[1] as number
+                        object.buffer[1] as number,
+                        Boolean(object.buffer[2])
                     );
                     break;
 
