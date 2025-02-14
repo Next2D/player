@@ -27,8 +27,13 @@ export const execute = async <D extends DisplayObject> (display_object: D): Prom
                     }
 
                     if (displayObject.isVideo) {
+
+                        const muted = displayObject.muted;
+                        displayObject.muted = true;
+
                         await displayObject.play();
                         displayObject.pause();
+                        displayObject.muted = muted;
 
                         await new Promise<void>((resolve) =>
                         {
