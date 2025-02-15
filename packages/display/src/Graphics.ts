@@ -1271,7 +1271,7 @@ export class Graphics
      * @param  {number}  [alpha=1]
      * @param  {string}  [caps=CapsStyle.NONE]
      * @param  {string}  [joints=JointStyle.ROUND]
-     * @deprecated {number}  [miter_limit=3]
+     * @param  {number}  [miter_limit=3]
      * @return {Graphics}
      * @method
      * @public
