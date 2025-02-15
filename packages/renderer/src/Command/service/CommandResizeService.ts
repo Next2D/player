@@ -38,5 +38,5 @@ export const execute = (
     // cache clear
     if (cache_clear) {
         $cacheStore.reset();
-    }  
+    }
 };
