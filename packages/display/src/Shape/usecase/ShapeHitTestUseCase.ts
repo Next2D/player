@@ -24,9 +24,6 @@ export const execute = (
 ): boolean => {
 
     const graphics = shape.graphics;
-    if (!graphics.isDrawable) {
-        return false;
-    }
 
     const width  = graphics.xMax - graphics.xMin;
     const height = graphics.yMax - graphics.yMin;
