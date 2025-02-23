@@ -1,4 +1,4 @@
 export interface IRemoveCacheMessage {
-    command: "removeClear";
+    command: "removeCache";
     buffer: Float32Array | null;
 }

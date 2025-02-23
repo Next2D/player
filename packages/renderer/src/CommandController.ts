@@ -90,7 +90,7 @@ export class CommandController
                     );
                     break;
 
-                case "removeClear":
+                case "removeCache":
                     commandRemoveCacheService(object.buffer);
                     break;
 

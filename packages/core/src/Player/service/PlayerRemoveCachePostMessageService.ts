@@ -10,7 +10,7 @@ import { $rendererWorker } from "../../RendererWorker";
  * @private
  */
 const message: IRemoveCacheMessage = {
-    "command": "removeClear",
+    "command": "removeCache",
     "buffer": null
 };
 
