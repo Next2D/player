@@ -1125,7 +1125,6 @@ export class Graphics
 
             case Graphics.GRADIENT_STROKE:
                 if (this._$lineGradient) {
-                    console.log(this._$lineWidth);
                     this.$recodes.push(
                         this._$lineType,
                         this._$lineWidth,
