@@ -20,8 +20,10 @@ export const execute = (shape: Shape): void =>
     shape.graphics.clear();
 
     // cache clear
-    $cacheStore.removeById(shape.uniqueKey);
-    $cacheStore.$removeIds.push(+shape.uniqueKey);
+    if (shape.uniqueKey && $cacheStore.has(shape.uniqueKey)) {
+        $cacheStore.removeById(shape.uniqueKey);
+        $cacheStore.$removeIds.push(+shape.uniqueKey);
+    }
 
     // apply changes
     displayObjectApplyChangesService(shape);
