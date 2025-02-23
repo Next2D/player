@@ -32,7 +32,7 @@ export const execute = (
     trash_store.set(id, data);
 
     if (cache_store.$timerId !== null) {
-        return ;
+        clearTimeout(cache_store.$timerId);
     }
 
     // 5秒後に削除処理を行う
