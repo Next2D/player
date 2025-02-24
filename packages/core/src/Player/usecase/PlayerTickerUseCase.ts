@@ -20,6 +20,11 @@ export const execute = (timestamp: number): void =>
         return ;
     }
 
+    // キャッシュ削除
+    if ($cacheStore.$removeIds.length) {
+        playerRemoveCachePostMessageService();
+    }
+
     const time = timestamp - $player.startTime;
     if (time > $player.fps) {
 
@@ -33,14 +38,18 @@ export const execute = (timestamp: number): void =>
             stage.dispatchEvent(new Event(Event.ENTER_FRAME));
         }
 
-        // キャッシュ削除
-        if ($cacheStore.$removeIds.length) {
-            playerRemoveCachePostMessageService();
-        }
-
-        // 描画情報をworkerに送る
+        // 描画情報を生成してworkerに送る
         if (stage.changed) {
             playerRenderingPostMessageService();
+        }
+
+        // タイマーにセットされたキャッシュを削除
+        if ($cacheStore.$removeCache) {
+            $cacheStore.removeTimerScheduledCache();
+            // キャッシュ削除
+            if ($cacheStore.$removeIds.length) {
+                playerRemoveCachePostMessageService();
+            }
         }
     }
 

@@ -379,13 +379,14 @@ export class Context
      *
      * @param  {number} width
      * @param  {number} height
+     * @param  {boolean} [cache_clear=true]
      * @return {void}
      * @method
      * @public
      */
-    resize (width: number, height: number): void
+    resize (width: number, height: number, cache_clear: boolean = true): void
     {
-        contextResizeUseCase(this, width, height);
+        contextResizeUseCase(this, width, height, cache_clear);
     }
 
     /**

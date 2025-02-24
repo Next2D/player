@@ -13,13 +13,13 @@ describe("DisplayObjectContainerRemovedToStageService.js test", () =>
         const container = new DisplayObjectContainer();
 
         const shape = container.addChild(new Shape());
-        $stageAssignedMap.add(shape);
+        $stageAssignedMap.add(shape.instanceId);
 
         const textField = container.addChild(new TextField());
-        $stageAssignedMap.add(textField);
+        $stageAssignedMap.add(textField.instanceId);
 
         const video = container.addChild(new Video(100, 300));
-        $stageAssignedMap.add(video);
+        $stageAssignedMap.add(video.instanceId);
 
         expect(container.children.length).toBe(3);
 
@@ -36,8 +36,8 @@ describe("DisplayObjectContainerRemovedToStageService.js test", () =>
         expect(textField.$addedToStage).toBe(false);
         expect(video.$addedToStage).toBe(false);
 
-        $stageAssignedMap.delete(shape);
-        $stageAssignedMap.delete(textField);
-        $stageAssignedMap.delete(video);
+        $stageAssignedMap.delete(shape.instanceId);
+        $stageAssignedMap.delete(textField.instanceId);
+        $stageAssignedMap.delete(video.instanceId);
     });
 });

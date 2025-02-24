@@ -27,7 +27,7 @@ export const execute = <C extends DisplayObjectContainer>(
 
         // set root and stage
         $rootMap.set(child, display_object_container.root);
-        $stageAssignedMap.add(child);
+        $stageAssignedMap.add(child.instanceId);
 
         if (!child.isContainerEnabled) {
             continue;

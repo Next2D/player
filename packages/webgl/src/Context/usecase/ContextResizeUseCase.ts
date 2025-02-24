@@ -11,12 +11,18 @@ import { execute as atlasManagerResetUseCase } from "../../AtlasManager/usecase/
  * @param  {Context} context
  * @param  {number} width
  * @param  {number} height
+ * @param  {boolean} [cache_clear=true]
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (context: Context, width: number, height: number): void =>
-{
+export const execute = (
+    context: Context,
+    width: number,
+    height: number,
+    cache_clear: boolean = true
+): void => {
+
     // clear InstacedArray
     context.clearArraysInstanced();
 
@@ -35,7 +41,9 @@ export const execute = (context: Context, width: number, height: number): void =
     }
 
     // reset node
-    atlasManagerResetUseCase();
+    if (cache_clear) {
+        atlasManagerResetUseCase();
+    }
 
     // unbind
     frameBufferManagerUnBindAttachmentObjectService();

@@ -446,7 +446,7 @@ export const $rootMap: WeakMap<IDisplayObject<any>, IDisplayObject<any>> = new W
  * @type {Map}
  * @protected
  */
-export const $stageAssignedMap: WeakSet<IDisplayObject<any>> = new WeakSet();
+export const $stageAssignedMap: Set<IDisplayObject<any>> = new Set();
 
 /**
  * @description GraphicsとDisplayObjectのマップデータ

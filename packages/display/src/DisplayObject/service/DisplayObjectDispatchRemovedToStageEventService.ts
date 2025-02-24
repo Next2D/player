@@ -15,7 +15,7 @@ import { $cacheStore } from "@next2d/cache";
 export const execute = <D extends DisplayObject>(display_object: D): void =>
 {
     if (!display_object.$addedToStage
-        || !$stageAssignedMap.has(display_object)
+        || !$stageAssignedMap.has(display_object.instanceId)
     ) {
         return ;
     }

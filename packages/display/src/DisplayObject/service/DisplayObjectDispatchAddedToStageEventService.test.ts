@@ -8,12 +8,12 @@ describe("DisplayObjectDispatchAddedToStageEventService.js test", () =>
     it("execute test case", () =>
     {
         const displayObject = new DisplayObject();
-        $stageAssignedMap.add(displayObject);
+        $stageAssignedMap.add(displayObject.instanceId);
 
         expect(displayObject.$addedToStage).toBe(false);
         execute(displayObject);
 
-        $stageAssignedMap.delete(displayObject);
+        $stageAssignedMap.delete(displayObject.instanceId);
         expect(displayObject.$addedToStage).toBe(true);
     });
 });

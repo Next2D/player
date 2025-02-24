@@ -33,7 +33,7 @@ export const execute = (
     $setRendererSize(renderer_width, renderer_height);
 
     // context reset and update
-    $context.resize(renderer_width, renderer_height);
+    $context.resize(renderer_width, renderer_height, cache_clear);
 
     // cache clear
     if (cache_clear) {

@@ -61,7 +61,8 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     displayObjectDispatchRemovedEventService(display_object);
 
     // ステージに登録されている場合はステージからの削除イベントを実行
-    if ($stageAssignedMap.has(display_object_container)) {
+    if ($stageAssignedMap.has(display_object_container.instanceId)) {
+
         displayObjectDispatchRemovedToStageEventService(display_object);
 
         if (display_object.isContainerEnabled) {
@@ -72,14 +73,10 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     }
 
     // remove root and stage
-    if ($stageAssignedMap.has(display_object_container)) {
-        if (!$rootMap.has(display_object)) {
-            $rootMap.delete(display_object);
-        }
+    if ($stageAssignedMap.has(display_object_container.instanceId)) {
 
-        if ($stageAssignedMap.has(display_object)) {
-            $stageAssignedMap.delete(display_object);
-        }
+        $rootMap.delete(display_object);
+        $stageAssignedMap.delete(display_object.instanceId);
 
         if (display_object.isVideo) {
             (display_object as unknown as Video).pause();

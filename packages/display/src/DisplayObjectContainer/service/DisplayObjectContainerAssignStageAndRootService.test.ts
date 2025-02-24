@@ -19,26 +19,26 @@ describe("DisplayObjectContainerAssignStageAndRootService.js test", () =>
         expect(container.children.length).toBe(3);
 
         expect($rootMap.has(shape)).toBe(false);
-        expect($stageAssignedMap.has(shape)).toBe(false);
+        expect($stageAssignedMap.has(shape.instanceId)).toBe(false);
         expect($rootMap.has(textField)).toBe(false);
-        expect($stageAssignedMap.has(textField)).toBe(false);
+        expect($stageAssignedMap.has(textField.instanceId)).toBe(false);
         expect($rootMap.has(video)).toBe(false);
-        expect($stageAssignedMap.has(video)).toBe(false);
+        expect($stageAssignedMap.has(video.instanceId)).toBe(false);
 
         execute(container);
 
         expect($rootMap.has(shape)).toBe(true);
-        expect($stageAssignedMap.has(shape)).toBe(true);
+        expect($stageAssignedMap.has(shape.instanceId)).toBe(true);
         expect($rootMap.has(textField)).toBe(true);
-        expect($stageAssignedMap.has(textField)).toBe(true);
+        expect($stageAssignedMap.has(textField.instanceId)).toBe(true);
         expect($rootMap.has(video)).toBe(true);
-        expect($stageAssignedMap.has(video)).toBe(true);
+        expect($stageAssignedMap.has(video.instanceId)).toBe(true);
 
         $rootMap.delete(shape);
         $rootMap.delete(textField);
         $rootMap.delete(video);
-        $stageAssignedMap.delete(shape);
-        $stageAssignedMap.delete(textField);
-        $stageAssignedMap.delete(video);
+        $stageAssignedMap.delete(shape.instanceId);
+        $stageAssignedMap.delete(textField.instanceId);
+        $stageAssignedMap.delete(video.instanceId);
     });
 });

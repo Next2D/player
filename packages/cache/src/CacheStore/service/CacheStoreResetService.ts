@@ -13,8 +13,15 @@ import { $poolMap } from "../../CacheUtil";
  */
 export const execute = (
     cache_store: CacheStore,
-    data_store: Map<string, Map<string, any>>
+    data_store: Map<string, Map<string, any>>,
+    trash_store: Map<string, Map<string, any>>
 ): void => {
+
+    // タイマーをクリア
+    trash_store.clear();
+    if (cache_store.$timerId !== null) {
+        clearTimeout(cache_store.$timerId);
+    }
 
     for (const data of data_store.values()) {
 

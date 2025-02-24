@@ -46,15 +46,10 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     display_object.parent = display_object_container;
 
     // 親が Stage に追加されている場合は、マップデータに情報を追加
-    if ($stageAssignedMap.has(display_object_container)) {
+    if ($stageAssignedMap.has(display_object_container.instanceId)) {
 
-        if (!$rootMap.has(display_object)) {
-            $rootMap.set(display_object, display_object_container.root);
-        }
-
-        if ($stageAssignedMap.has(display_object)) {
-            $stageAssignedMap.add(display_object);
-        }
+        $rootMap.set(display_object, display_object_container.root);
+        $stageAssignedMap.add(display_object.instanceId);
 
         // If container functionality is available, set stage and root for small elements
         if (display_object.isContainerEnabled) {
@@ -67,7 +62,7 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     // Dispatch added event
     displayObjectDispatchAddedEventService(display_object);
 
-    if ($stageAssignedMap.has(display_object_container)) {
+    if ($stageAssignedMap.has(display_object_container.instanceId)) {
         displayObjectDispatchAddedToStageEventService(display_object);
 
         if (display_object.isContainerEnabled) {

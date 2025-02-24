@@ -35,20 +35,11 @@ export const execute = (
         clearTimeout(cache_store.$timerId);
     }
 
-    // 5秒後に削除処理を行う
+    // 1秒後に削除処理を行う
+    cache_store.$removeCache = false;
     cache_store.$timerId = setTimeout((): void =>
     {
-        for (const [id, data] of trash_store) {
-
-            if (!data.has("trash")) {
-                continue ;
-            }
-
-            cache_store.removeById(id);
-            cache_store.$removeIds.push(+id);
-        }
-
-        trash_store.clear();
-        cache_store.$timerId = null;
-    }, 5000);
+        cache_store.$removeCache = true;
+        cache_store.$timerId     = null;
+    }, 1000);
 };

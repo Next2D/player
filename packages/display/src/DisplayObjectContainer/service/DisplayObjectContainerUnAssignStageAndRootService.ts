@@ -28,7 +28,7 @@ export const execute = <C extends DisplayObjectContainer>(
 
         // set root and stage
         $rootMap.delete(child);
-        $stageAssignedMap.delete(child);
+        $stageAssignedMap.delete(child.instanceId);
 
         if (child.isVideo) {
             (child as unknown as Video).pause();

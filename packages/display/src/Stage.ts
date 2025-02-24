@@ -182,7 +182,7 @@ export class Stage extends DisplayObjectContainer
     addChild<T extends DisplayObject>(display_object: T): T
     {
         $rootMap.set(display_object, display_object);
-        $stageAssignedMap.add(display_object);
+        $stageAssignedMap.add(display_object.instanceId);
 
         return super.addChild(display_object);
     }
@@ -255,4 +255,4 @@ export class Stage extends DisplayObjectContainer
  * @public
  */
 export const stage: Stage = new Stage();
-$stageAssignedMap.add(stage);
+$stageAssignedMap.add(stage.instanceId);
