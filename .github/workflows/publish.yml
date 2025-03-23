@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,19 +49,19 @@ jobs:
       - run: cd ~/work/player/player/dist/packages/render-queue && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/packages/renderer && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+      # - run: cd ~/work/player/player/dist/packages/renderer && npm publish --access public
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/text && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/packages/texture-packer && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+      # - run: cd ~/work/player/player/dist/packages/texture-packer && npm publish --access public
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/ui && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/packages/webgl && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+      # - run: cd ~/work/player/player/dist/packages/webgl && npm publish --access public
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player && npm run clean
