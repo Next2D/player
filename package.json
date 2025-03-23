@@ -1,6 +1,6 @@
 {
   "name": "@next2d/player",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Experience the fast and beautiful anti-aliased rendering of WebGL. You can create rich, interactive graphics, cross-platform applications and games without worrying about browser or device compatibility.",
   "author": "Toshiyuki Ienaga<ienaga@next2d.app> (https://github.com/ienaga/)",
   "license": "MIT",
@@ -32,8 +32,9 @@
     "lint": "eslint src/**/*.ts packages/**/*.ts",
     "test": "vitest",
     "clean": "node ./scripts/clean.js",
+    "build:worker": "rollup -c rollup.renderer.worker.config.js && rollup -c rollup.unzip.worker.config.js",
     "build:vite": "node ./scripts/version.js && vite build",
-    "publish:dist": "node ./scripts/clean.js && node ./scripts/version.js && tsc && vite build && node ./scripts/publish.js"
+    "publish:dist": "npm run clean && node ./scripts/version.js && npm run build:worker && tsc && node ./scripts/worker.js && vite build && node ./scripts/publish.js"
   },
   "funding": {
     "type": "github",
@@ -46,6 +47,10 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.23.0",
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@types/node": "^22.13.11",
     "@typescript-eslint/eslint-plugin": "^8.27.0",
     "@typescript-eslint/parser": "^8.27.0",
@@ -54,6 +59,8 @@
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.0.0",
     "jsdom": "^26.0.0",
+    "rollup": "^4.37.0",
+    "tslib": "^2.8.1",
     "typescript": "^5.8.2",
     "vite": "^6.2.2",
     "vitest": "^3.0.9",
