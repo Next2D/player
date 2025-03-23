@@ -1,447 +1,290 @@
+import type { ICapsStyle } from "./interface/ICapsStyle";
+import type { IJointStyle } from "./interface/IJointStyle";
+import type { IGradientType } from "./interface/IGradientType";
+import type { ISpreadMethod } from "./interface/ISpreadMethod";
+import type { IInterpolationMethod } from "./interface/IInterpolationMethod";
+import type { BitmapData } from "./BitmapData";
+import type { Matrix } from "@next2d/geom";
 import { GraphicsBitmapFill } from "./GraphicsBitmapFill";
 import { GraphicsGradientFill } from "./GraphicsGradientFill";
-import type { BitmapData } from "./BitmapData";
-import type { Player } from "@next2d/core";
-import type { Matrix, Rectangle } from "@next2d/geom";
-import type {
-    GraphicsParentImpl,
-    CapsStyleImpl,
-    JointStyleImpl,
-    FilterArrayImpl,
-    BlendModeImpl,
-    BoundsImpl,
-    DisplayObjectImpl,
-    AttachmentImpl,
-    PlayerHitObjectImpl,
-    ColorStopImpl,
-    SpreadMethodImpl,
-    GradientTypeImpl,
-    InterpolationMethodImpl,
-    CachePositionImpl,
-    ShapeModeImpl,
-    GridImpl
-} from "@next2d/interface";
-import type {
-    CanvasToWebGLContext,
-    FrameBufferManager,
-    CanvasGradientToWebGL
-} from "@next2d/webgl";
-import { $currentPlayer } from "@next2d/util";
+import { execute as graphicsCalcBoundsUseCase } from "./Graphics/usecase/GraphicsCalcBoundsUseCase";
+import { execute as graphicsMargePathService } from "./Graphics/service/GraphicsMargePathService";
+import { execute as graphicsDrawEllipseService } from "./Graphics/service/GraphicsDrawEllipseService";
+import { execute as graphicsDrawRectService } from "./Graphics/service/GraphicsDrawRectService";
+import { execute as graphicsDrawRoundRectService } from "./Graphics/service/GraphicsDrawRoundRectService";
+import { execute as graphicsToNumberArrayService } from "./Graphics/service/GraphicsToNumberArrayService";
 import {
-    $cacheStore,
-    $doUpdated,
-    $Math,
-    $Number,
     $getArray,
     $poolArray,
-    $toColorInt,
-    $intToRGBA,
     $clamp,
-    $boundsMatrix,
-    $poolBoundsObject,
-    $Infinity,
-    $getFloat32Array6,
-    $multiplicationMatrix,
-    $poolFloat32Array6,
-    $getBoundsObject,
-    $Float32Array,
-    $getFloat32Array4,
-    $getInt32Array4,
-    $linearGradientXY
-} from "@next2d/share";
+    $convertColorStringToNumber
+} from "./DisplayObjectUtil";
 
 /**
- * Graphics クラスには、ベクターシェイプの作成に使用できる一連のメソッドがあります。
- * 描画をサポートする表示オブジェクトには、Sprite および Shape オブジェクトがあります。
- * これらの各クラスには、Graphics オブジェクトである graphics プロパティがあります。
- * 以下は、簡単に使用できるように用意されているヘルパー関数の一例です。
- * drawRect()、drawRoundRect()、drawCircle()、および drawEllipse()。
+ * @description Graphics クラスには、ベクターシェイプの作成に使用できる一連のメソッドがあります。
+ *              描画をサポートする表示オブジェクトには、Sprite および Shape オブジェクトがあります。
+ *              これらの各クラスには、Graphics オブジェクトである graphics プロパティがあります。
+ *              以下は、簡単に使用できるように用意されているヘルパー関数の一例です。
+ *              drawRect()、drawRoundRect()、drawCircle()、および drawEllipse()。
  *
- * The Graphics class contains a set of methods that you can use to create a vector shape.
- * Display objects that support drawing include Sprite and Shape objects.
- * Each of these classes includes a graphics property that is a Graphics object.
- * The following are among those helper functions provided for ease of use:
- * drawRect(), drawRoundRect(), drawCircle(), and drawEllipse().
+ *              The Graphics class contains a set of methods that you can use to create a vector shape.
+ *              Display objects that support drawing include Sprite and Shape objects.
+ *              Each of these classes includes a graphics property that is a Graphics object.
+ *              The following are among those helper functions provided for ease of use:
+ *              drawRect(), drawRoundRect(), drawCircle(), and drawEllipse().
  *
  * @class
  * @memberOf next2d.display
  */
 export class Graphics
 {
-    private readonly _$displayObject: GraphicsParentImpl<any> | null;
-    public _$maxAlpha: number;
-    private _$pointerX: number;
-    private _$pointerY: number;
-    public _$canDraw: boolean;
-    private _$fillType: number;
-    private _$fillGradient: GraphicsGradientFill | null;
-    private _$fillBitmap: GraphicsBitmapFill | null;
-    private _$fillStyleR: number;
-    private _$fillStyleG: number;
-    private _$fillStyleB: number;
-    private _$fillStyleA: number;
-    private _$doFill: boolean;
-    private _$lineType: number;
-    private _$lineGradient: GraphicsGradientFill | null;
-    private _$caps: CapsStyleImpl;
-    private _$joints: JointStyleImpl;
-    private _$miterLimit: number;
-    private _$lineWidth: number;
-    private _$lineStyleR: number;
-    private _$lineStyleG: number;
-    private _$lineStyleB: number;
-    private _$lineStyleA: number;
-    private _$doLine: boolean;
-    public _$xMin: number;
-    public _$xMax: number;
-    public _$yMin: number;
-    public _$yMax: number;
-    public _$buffer: Float32Array | null;
-    public _$recode: any[] | null;
-    private _$fills: any[] | null;
-    private _$lines: any[] | null;
-    private _$uniqueKey: string;
-    private _$cacheKeys: string[];
-    private readonly _$cacheParams: number[];
-    public _$bitmapId: number;
-    public _$mode: ShapeModeImpl;
-    public _$posted: boolean;
+    /**
+     * @description グラフィックの確認フラグ
+     *              Graphic confirmation flag
+     *
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public isConfirmed: boolean;
 
     /**
-     * @param {DisplayObject} src
+     * @description グラフィックの最小x座標
+     *              Minimum x coordinate of graphic
      *
+     * @type {number}
+     * @default Number.MAX_VALUE
+     * @public
+     */
+    public xMin: number;
+
+    /**
+     * @description グラフィックの最小y座標
+     *              Minimum y coordinate of graphic
+     *
+     * @type {number}
+     * @default Number.MAX_VALUE
+     * @public
+     */
+    public yMin: number;
+
+    /**
+     * @description グラフィックの最大x座標
+     *              Maximum x coordinate of graphic
+     *
+     * @type {number}
+     * @default -Number.MAX_VALUE
+     * @public
+     */
+    public xMax: number;
+
+    /**
+     * @description グラフィックの最大y座標
+     *              Maximum y coordinate of graphic
+     *
+     * @type {number}
+     * @default -Number.MAX_VALUE
+     * @public
+     */
+    public yMax: number;
+
+    /**
+     * @description グラフィックのコマンド配列
+     *              Graphic command array
+     *
+     * @type {array}
+     * @default null
+     * @public
+     */
+    public $recodes: any[] | null;
+
+    /**
+     * @type {Float32Array}
+     * @default null
+     * @private
+     */
+    private _$buffer: Float32Array | null;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$maxAlpha: number;
+
+    /**
+     * @type {boolean}
+     * @default false
+     * @private
+     */
+    private _$isBeginning: boolean;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$positionX: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$positionY: number;
+
+    /**
+     * @type {boolean}
+     * @default false
+     * @private
+     */
+    private _$hasFillEnabled: boolean;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$fillType: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$fillColor: number;
+
+    /**
+     * @type {GraphicsGradientFill}
+     * @default null
+     * @private
+     */
+    private _$fillGradient: GraphicsGradientFill | null;
+
+    /**
+     * @type {GraphicsBitmapFill}
+     * @default null
+     * @private
+     */
+    private _$fillBitmap: GraphicsBitmapFill | null;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
+    private _$fills: any[] | null;
+
+    /**
+     * @type {boolean}
+     * @default false
+     * @private
+     */
+    private _$hasLineEnabled: boolean;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$lineType: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$lineColor: number;
+
+    /**
+     * @type {GraphicsGradientFill}
+     * @default null
+     * @private
+     */
+    private _$lineGradient: GraphicsGradientFill | null;
+
+    /**
+     * @type {string}
+     * @default "round"
+     * @private
+     */
+    private _$joints: IJointStyle;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
+    private _$miterLimit: number;
+
+    /**
+     * @type {string}
+     * @default "none"
+     * @private
+     */
+    private _$caps: ICapsStyle;
+
+    /**
+     * @type {number}
+     * @default 1
+     * @private
+     */
+    private _$lineWidth: number;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
+    private _$lines: any[] | null;
+
+    /**
      * @constructor
      * @public
      */
-    constructor (src: GraphicsParentImpl<any> | null = null)
+    constructor ()
     {
-        /**
-         * @type {DisplayObject}
-         * @default null
-         * @private
-         */
-        this._$displayObject = src;
+        this.isConfirmed = false;
+        this.xMin        = Number.MAX_VALUE;
+        this.yMin        = Number.MAX_VALUE;
+        this.xMax        = -Number.MAX_VALUE;
+        this.yMax        = -Number.MAX_VALUE;
 
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$maxAlpha = 0;
+        // private
+        this.$recodes     = null;
+        this._$buffer      = null;
+        this._$positionX   = 0;
+        this._$positionY   = 0;
+        this._$maxAlpha    = 0;
+        this._$isBeginning = false;
 
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$pointerX = 0;
+        // fill
+        this._$fills          = null;
+        this._$hasFillEnabled = false;
+        this._$fillType       = 0;
+        this._$fillGradient   = null;
+        this._$fillBitmap     = null;
+        this._$fillColor      = 0;
 
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$pointerY = 0;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$canDraw = false;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$fillType = 0;
-
-        /**
-         * @type {GraphicsGradientFill}
-         * @default null
-         * @private
-         */
-        this._$fillGradient = null;
-
-        /**
-         * @type {GraphicsGradientFill}
-         * @default null
-         * @private
-         */
-        this._$fillBitmap = null;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$fillStyleR = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$fillStyleG = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$fillStyleB = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$fillStyleA = 0;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$doFill = false;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$lineType = 0;
-
-        /**
-         * @type {GraphicsGradientFill}
-         * @default 0
-         * @private
-         */
-        this._$lineGradient = null;
-
-        /**
-         * @type {string}
-         * @default none
-         * @private
-         */
-        this._$caps = "none";
-
-        /**
-         * @type {string}
-         * @default round
-         * @private
-         */
-        this._$joints = "round";
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$miterLimit = 0;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$lineWidth = 1;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$lineStyleR = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$lineStyleG = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$lineStyleB = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$lineStyleA = 0;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$doLine = false;
-
-        /**
-         * @type {number}
-         * @default Number.MAX_VALUE
-         * @private
-         */
-        this._$xMin = $Number.MAX_VALUE;
-
-        /**
-         * @type {number}
-         * @default -Number.MAX_VALUE
-         * @private
-         */
-        this._$xMax = -$Number.MAX_VALUE;
-
-        /**
-         * @type {number}
-         * @default Number.MAX_VALUE
-         * @private
-         */
-        this._$yMin = $Number.MAX_VALUE;
-
-        /**
-         * @type {number}
-         * @default -Number.MAX_VALUE
-         * @private
-         */
-        this._$yMax = -$Number.MAX_VALUE;
-
-        /**
-         * @type {Float32Array}
-         * @default null
-         * @private
-         */
-        this._$buffer = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$recode = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$fills = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$lines = null;
-
-        /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$uniqueKey = "";
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$cacheKeys = $getArray();
-
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$cacheParams = $getArray(0, 0, 0);
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bitmapId = 0;
-
-        /**
-         * @type {string}
-         * @default "shape"
-         * @private
-         */
-        this._$mode = "shape";
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$posted = false;
+        // stroke
+        this._$caps           = "none";
+        this._$lineWidth      = 1;
+        this._$lines          = null;
+        this._$hasLineEnabled = false;
+        this._$lineType       = 0;
+        this._$lineGradient   = null;
+        this._$joints         = "round";
+        this._$miterLimit     = 0;
+        this._$lineColor      = 0;
     }
 
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
+     * @description 描画コマンド、MoveToの識別番号
+     *              Drawing command, MoveTo identification number
      *
-     * @return  {string}
-     * @default [class Graphics]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Graphics]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default next2d.display.Bitmap
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.display.Graphics";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object Graphics]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Graphics]";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default next2d.display.Graphics
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.display.Graphics";
-    }
-
-    /**
      * @return {number}
-     * @default 0
      * @const
      * @static
-     * @private
      */
     static get MOVE_TO (): number
     {
@@ -449,11 +292,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、2次ベジェ曲線の識別番号
+     *              Drawing command, 2nd Bezier curve identification number
+     *
      * @return {number}
-     * @default 1
      * @const
      * @static
-     * @private
      */
     static get CURVE_TO (): number
     {
@@ -461,11 +305,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、直線の識別番号
+     *              Drawing command, straight line identification number
+     *
      * @return {number}
-     * @default 2
      * @const
      * @static
-     * @private
      */
     static get LINE_TO (): number
     {
@@ -473,11 +318,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、3次ベジェ曲線の識別番号
+     *              Drawing command, 3rd Bezier curve identification number
+     *
      * @return {number}
-     * @default 3
      * @const
      * @static
-     * @private
      */
     static get CUBIC (): number
     {
@@ -485,11 +331,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、円弧の識別番号
+     *              Drawing command, arc identification number
+     *
      * @return {number}
-     * @default 4
      * @const
      * @static
-     * @private
      */
     static get ARC (): number
     {
@@ -497,11 +344,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、塗りの識別番号
+     *              Drawing command, fill identification number
+     *
      * @return {number}
-     * @default 5
      * @const
      * @static
-     * @private
      */
     static get FILL_STYLE (): number
     {
@@ -509,11 +357,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、線の識別番号
+     *              Drawing command, line identification number
+     *
      * @return {number}
-     * @default 6
      * @const
      * @static
-     * @private
      */
     static get STROKE_STYLE (): number
     {
@@ -521,11 +370,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、塗りの終了の識別番号
+     *              Drawing command, fill end identification number
+     *
      * @return {number}
-     * @default 7
      * @const
      * @static
-     * @private
      */
     static get END_FILL (): number
     {
@@ -533,11 +383,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、線の終了の識別番号
+     *              Drawing command, line end identification number
+     *
      * @return {number}
-     * @default 8
      * @const
      * @static
-     * @private
      */
     static get END_STROKE (): number
     {
@@ -545,11 +396,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、描画開始の識別番号
+     *              Drawing command, drawing start identification number
+     *
      * @return {number}
-     * @default 9
      * @const
      * @static
-     * @private
      */
     static get BEGIN_PATH (): number
     {
@@ -557,11 +409,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、塗りのグラデーション開始の識別番号
+     *              Drawing command, gradient fill start identification number
+     *
      * @return {number}
-     * @default 10
      * @const
      * @static
-     * @private
      */
     static get GRADIENT_FILL (): number
     {
@@ -569,11 +422,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、線のグラデーション開始の識別番号
+     *              Drawing command, gradient line start identification number
+     *
      * @return {number}
-     * @default 11
      * @const
      * @static
-     * @private
      */
     static get GRADIENT_STROKE (): number
     {
@@ -581,11 +435,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、描画結合の識別番号
+     *              Drawing command, drawing join identification number
+     *
      * @return {number}
-     * @default 12
      * @const
      * @static
-     * @private
      */
     static get CLOSE_PATH (): number
     {
@@ -593,11 +448,12 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、Bitmapの塗りの識別番号
+     *              Drawing command, Bitmap fill identification number
+     *
      * @return {number}
-     * @default 13
      * @const
      * @static
-     * @private
      */
     static get BITMAP_FILL (): number
     {
@@ -605,15 +461,35 @@ export class Graphics
     }
 
     /**
+     * @description 描画コマンド、Bitmapの線の識別番号
+     *              Drawing command, Bitmap line identification number
+     *
      * @return {number}
-     * @default 14
      * @const
      * @static
-     * @private
      */
     static get BITMAP_STROKE (): number
     {
         return 14;
+    }
+
+    /**
+     * @description 描画コマンドが実行可能かを返却
+     *              Returns whether the drawing command can be executed
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    get isDrawable (): boolean
+    {
+        if (!this._$isBeginning || !this._$maxAlpha) {
+            return false;
+        }
+
+        const width  = Math.abs(this.xMax - this.xMin);
+        const height = Math.abs(this.yMax - this.yMin);
+        return width > 0 && height > 0;
     }
 
     /**
@@ -636,7 +512,7 @@ export class Graphics
     ): Graphics {
 
         // end fill
-        if (this._$doFill) {
+        if (this._$hasFillEnabled) {
             this.endFill();
         }
 
@@ -645,9 +521,9 @@ export class Graphics
         }
 
         // start
-        this._$maxAlpha = 1;
-        this._$doFill   = true;
-        this._$canDraw  = true;
+        this._$maxAlpha       = 1;
+        this._$hasFillEnabled = true;
+        this._$isBeginning    = true;
 
         // beginPath
         this._$fills.push(Graphics.BEGIN_PATH);
@@ -678,7 +554,7 @@ export class Graphics
     ): Graphics {
 
         // end fill
-        if (this._$doFill) {
+        if (this._$hasFillEnabled) {
             this.endFill();
         }
 
@@ -687,25 +563,28 @@ export class Graphics
         }
 
         // valid
-        color = $clamp($toColorInt(color), 0, 0xffffff, 0);
+        if (typeof color === "string") {
+            color = $convertColorStringToNumber(color);
+        }
+
+        color = $clamp(color, 0, 0xffffff, 0);
         alpha = $clamp(alpha, 0, 1, 1);
 
         // setup
-        this._$maxAlpha = $Math.max(this._$maxAlpha, alpha);
-        this._$doFill   = true;
-        this._$canDraw  = true;
+        this._$maxAlpha       = Math.max(this._$maxAlpha, alpha);
+        this._$hasFillEnabled = true;
+        this._$isBeginning    = true;
 
         // beginPath
         this._$fills.push(Graphics.BEGIN_PATH);
 
-        // add Fill Style
-        const object = $intToRGBA(color, alpha);
+        this._$fillType = Graphics.FILL_STYLE;
 
-        this._$fillType   = Graphics.FILL_STYLE;
-        this._$fillStyleR = object.R;
-        this._$fillStyleG = object.G;
-        this._$fillStyleB = object.B;
-        this._$fillStyleA = object.A;
+        // Color Int 32bit(RGBA)
+        const red   = color >>> 16 & 0xff;
+        const green = color >>> 8 & 0xff;
+        const blue  = color & 0xff;
+        this._$fillColor = red << 24 | green << 16 | blue << 8 | alpha * 255;
 
         return this;
     }
@@ -729,17 +608,17 @@ export class Graphics
      * @public
      */
     beginGradientFill (
-        type: GradientTypeImpl,
+        type: IGradientType,
         colors: number[] | string[],
         alphas: number[],
         ratios: number[],
         matrix: Matrix | null = null,
-        spread_method: SpreadMethodImpl = "pad",
-        interpolation_method: InterpolationMethodImpl = "rgb",
+        spread_method: ISpreadMethod = "pad",
+        interpolation_method: IInterpolationMethod = "rgb",
         focal_point_ratio: number = 0
     ): Graphics {
 
-        if (this._$doFill) {
+        if (this._$hasFillEnabled) {
             this.endFill();
         }
 
@@ -749,10 +628,10 @@ export class Graphics
 
         // setup
         for (let idx: number = 0; idx < alphas.length; ++idx) {
-            this._$maxAlpha = $Math.max(this._$maxAlpha, alphas[idx]);
+            this._$maxAlpha = Math.max(this._$maxAlpha, alphas[idx]);
         }
-        this._$doFill  = true;
-        this._$canDraw = true;
+        this._$hasFillEnabled = true;
+        this._$isBeginning    = true;
 
         // beginPath
         this._$fills.push(Graphics.BEGIN_PATH);
@@ -780,46 +659,37 @@ export class Graphics
     clear (): Graphics
     {
         // param clear
-        this._$maxAlpha     = 0;
-        this._$pointerX     = 0;
-        this._$pointerY     = 0;
-        this._$canDraw      = false;
-        this._$bitmapId     = 0;
-        this._$mode         = "shape";
-        this._$posted       = false;
+        this._$maxAlpha    = 0;
+        this._$isBeginning = false;
+        this._$positionX   = 0;
+        this._$positionY   = 0;
 
         // fill
-        this._$fillType     = 0;
-        this._$fillGradient = null;
-        this._$fillBitmap   = null;
-        this._$fillStyleR   = 0;
-        this._$fillStyleG   = 0;
-        this._$fillStyleB   = 0;
-        this._$fillStyleA   = 0;
-        this._$doFill       = false;
+        this._$fillType       = 0;
+        this._$fillGradient   = null;
+        this._$fillBitmap     = null;
+        this._$fillColor      = 0;
+        this._$hasFillEnabled = false;
 
         // stroke
-        this._$lineType     = 0;
-        this._$lineGradient = null;
-        this._$caps         = "none";
-        this._$joints       = "round";
-        this._$miterLimit   = 0;
-        this._$lineWidth    = 1;
-        this._$lineStyleR   = 0;
-        this._$lineStyleG   = 0;
-        this._$lineStyleB   = 0;
-        this._$lineStyleA   = 0;
-        this._$doLine       = false;
+        this._$caps           = "none";
+        this._$lineWidth      = 1;
+        this._$lineType       = 0;
+        this._$lineGradient   = null;
+        this._$joints         = "round";
+        this._$miterLimit     = 0;
+        this._$lineColor      = 0;
+        this._$hasLineEnabled = false;
 
         // bounds size
-        this._$xMin         = $Number.MAX_VALUE;
-        this._$xMax         = -$Number.MAX_VALUE;
-        this._$yMin         = $Number.MAX_VALUE;
-        this._$yMax         = -$Number.MAX_VALUE;
+        this.xMin = Number.MAX_VALUE;
+        this.xMax = -Number.MAX_VALUE;
+        this.yMin = Number.MAX_VALUE;
+        this.yMax = -Number.MAX_VALUE;
 
         // init array
-        if (this._$recode) {
-            $poolArray(this._$recode);
+        if (this.$recodes) {
+            $poolArray(this.$recodes);
         }
         if (this._$fills) {
             $poolArray(this._$fills);
@@ -828,18 +698,10 @@ export class Graphics
             $poolArray(this._$lines);
         }
 
-        this._$buffer = null;
-        this._$recode = null;
-        this._$fills  = null;
-        this._$lines  = null;
-
-        // cache clear
-        this._$cacheKeys.length = 0;
-        this._$uniqueKey        = "";
-        this._$cacheParams.fill(0);
-
-        // restart
-        this._$restart();
+        this._$buffer  = null;
+        this.$recodes = null;
+        this._$fills   = null;
+        this._$lines   = null;
 
         return this;
     }
@@ -879,40 +741,34 @@ export class Graphics
         }
 
         // fill
-        this._$doFill       = graphics._$doFill;
-        this._$fillType     = graphics._$fillType;
-        this._$fillStyleR   = graphics._$fillStyleR;
-        this._$fillStyleG   = graphics._$fillStyleG;
-        this._$fillStyleB   = graphics._$fillStyleB;
-        this._$fillStyleA   = graphics._$fillStyleA;
+        this._$hasFillEnabled = graphics._$hasFillEnabled;
+        this._$fillType       = graphics._$fillType;
+        this._$fillColor      = graphics._$fillColor;
 
         if (graphics._$lineGradient) {
             this._$lineGradient = graphics._$lineGradient.clone();
         }
 
         // stroke
-        this._$doLine       = graphics._$doLine;
-        this._$lineType     = graphics._$lineType;
-        this._$caps         = graphics._$caps;
-        this._$joints       = graphics._$joints;
-        this._$miterLimit   = graphics._$miterLimit;
-        this._$lineWidth    = graphics._$lineWidth;
-        this._$lineStyleR   = graphics._$lineStyleR;
-        this._$lineStyleG   = graphics._$lineStyleG;
-        this._$lineStyleB   = graphics._$lineStyleB;
-        this._$lineStyleA   = graphics._$lineStyleA;
+        this._$hasLineEnabled = graphics._$hasLineEnabled;
+        this._$lineType       = graphics._$lineType;
+        this._$caps           = graphics._$caps;
+        this._$joints         = graphics._$joints;
+        this._$miterLimit     = graphics._$miterLimit;
+        this._$lineWidth      = graphics._$lineWidth;
+        this._$lineColor      = graphics._$lineColor;
 
         // bounds
-        this._$xMin         = graphics._$xMin;
-        this._$xMax         = graphics._$xMax;
-        this._$yMin         = graphics._$yMin;
-        this._$yMax         = graphics._$yMax;
+        this.xMin = graphics.xMin;
+        this.xMax = graphics.xMax;
+        this.yMin = graphics.yMin;
+        this.yMax = graphics.yMax;
 
         // params
-        this._$maxAlpha     = graphics._$maxAlpha;
-        this._$pointerX     = graphics._$pointerX;
-        this._$pointerY     = graphics._$pointerY;
-        this._$canDraw      = graphics._$canDraw;
+        this._$maxAlpha    = graphics._$maxAlpha;
+        this._$positionX   = graphics._$positionX;
+        this._$positionY   = graphics._$positionY;
+        this._$isBeginning = graphics._$isBeginning;
 
         // path params
         if (graphics._$fills) {
@@ -921,9 +777,11 @@ export class Graphics
         if (graphics._$lines) {
             this._$lines = graphics._$lines.slice(0);
         }
-        if (graphics._$recode) {
-            this._$recode = graphics._$recode.slice(0);
+        if (graphics.$recodes) {
+            this.$recodes = graphics.$recodes.slice(0);
         }
+
+        this._$buffer = null;
     }
 
     /**
@@ -949,7 +807,9 @@ export class Graphics
         anchor_x = +anchor_x || 0;
         anchor_y = +anchor_y || 0;
 
-        if (this._$pointerX === anchor_x && this._$pointerY === anchor_y) {
+        if (this._$positionX === anchor_x
+            && this._$positionY === anchor_y
+        ) {
             return this;
         }
 
@@ -958,23 +818,29 @@ export class Graphics
         control_x2 = +control_x2 || 0;
         control_y2 = +control_y2 || 0;
 
-        // set bounds
-        this._$setBounds(control_x1, control_y1);
-        this._$setBounds(control_x2, control_y2);
-        this._$setBounds(anchor_x, anchor_y);
+        // calc bounds
+        graphicsCalcBoundsUseCase(
+            this, this._$hasLineEnabled,
+            this._$positionX, this._$positionY,
+            this._$lineWidth, this._$caps,
+            control_x1, control_y1,
+            control_x2, control_y2,
+            anchor_x, anchor_y
+        );
 
-        this._$margePath($getArray(
+        // marge path
+        graphicsMargePathService(
+            this,
+            this._$hasFillEnabled, this._$hasLineEnabled,
+            this._$fills, this._$lines,
             Graphics.CUBIC,
             control_x1, control_y1,
             control_x2, control_y2,
             anchor_x, anchor_y
-        ));
+        );
 
-        this._$pointerX = anchor_x;
-        this._$pointerY = anchor_y;
-
-        // restart
-        this._$restart();
+        this._$positionX = anchor_x;
+        this._$positionY = anchor_y;
 
         return this;
     }
@@ -1002,27 +868,36 @@ export class Graphics
         anchor_x = +anchor_x || 0;
         anchor_y = +anchor_y || 0;
 
-        if (this._$pointerX === anchor_x && this._$pointerY === anchor_y) {
+        if (this._$positionX === anchor_x
+            && this._$positionY === anchor_y
+        ) {
             return this;
         }
 
         control_x = +control_x || 0;
         control_y = +control_y || 0;
 
-        this._$setBounds(control_x, control_y);
-        this._$setBounds(anchor_x,  anchor_y);
+        // calc bounds
+        graphicsCalcBoundsUseCase(
+            this, this._$hasLineEnabled,
+            this._$positionX, this._$positionY,
+            this._$lineWidth, this._$caps,
+            control_x, control_y,
+            anchor_x,  anchor_y
+        );
 
-        this._$margePath($getArray(
+        // marge path
+        graphicsMargePathService(
+            this,
+            this._$hasFillEnabled, this._$hasLineEnabled,
+            this._$fills, this._$lines,
             Graphics.CURVE_TO,
             control_x, control_y,
             anchor_x, anchor_y
-        ));
+        );
 
-        this._$pointerX = anchor_x;
-        this._$pointerY = anchor_y;
-
-        // restart
-        this._$restart();
+        this._$positionX = anchor_x;
+        this._$positionY = anchor_y;
 
         return this;
     }
@@ -1043,21 +918,28 @@ export class Graphics
         x      = +x || 0;
         y      = +y || 0;
         radius = +radius || 0;
-        radius = $Math.round(radius);
+        radius = Math.round(radius);
 
-        this._$setBounds(x - radius, y - radius);
-        this._$setBounds(x + radius, y + radius);
+        // calc bounds
+        graphicsCalcBoundsUseCase(
+            this, this._$hasLineEnabled,
+            this._$positionX, this._$positionY,
+            this._$lineWidth, this._$caps,
+            x - radius, y - radius,
+            x + radius, y + radius
+        );
 
-        this._$margePath($getArray(
+        // marge path
+        graphicsMargePathService(
+            this,
+            this._$hasFillEnabled, this._$hasLineEnabled,
+            this._$fills, this._$lines,
             Graphics.MOVE_TO, x + radius, y,
             Graphics.ARC, x, y, radius
-        ));
+        );
 
-        this._$pointerX = x;
-        this._$pointerY = y;
-
-        // restart
-        this._$restart();
+        this._$positionX = x;
+        this._$positionY = y;
 
         return this;
     }
@@ -1076,30 +958,7 @@ export class Graphics
      */
     drawEllipse (x: number, y: number, width: number, height: number): Graphics
     {
-        x = +x || 0;
-        y = +y || 0;
-        width  = +width  || 0;
-        height = +height || 0;
-
-        width  = $Math.round(width);
-        height = $Math.round(height);
-
-        const hw = width  / 2; // half width
-        const hh = height / 2; // half height
-        const x0 = x + hw;
-        const y0 = y + hh;
-        const x1 = x + width;
-        const y1 = y + height;
-        const c  = 4 / 3 * ($Math.SQRT2 - 1);
-        const cw = c * hw;
-        const ch = c * hh;
-
-        return this
-            .moveTo(x0, y)
-            .cubicCurveTo(x0 + cw, y,       x1,      y0 - ch, x1, y0)
-            .cubicCurveTo(x1,      y0 + ch, x0 + cw, y1,      x0, y1)
-            .cubicCurveTo(x0 - cw, y1,      x,       y0 + ch, x,  y0)
-            .cubicCurveTo(x,       y0 - ch, x0 - cw, y,       x0, y );
+        return graphicsDrawEllipseService(this, x, y, width, height);
     }
 
     /**
@@ -1116,22 +975,7 @@ export class Graphics
      */
     drawRect (x: number, y: number, width: number, height: number): Graphics
     {
-        // valid
-        x = +x || 0;
-        y = +y || 0;
-
-        width  = +width  || 0;
-        height = +height || 0;
-
-        const xMax = $Math.round(x + width);
-        const yMax = $Math.round(y + height);
-
-        return this
-            .moveTo(x,    y)
-            .lineTo(x,    yMax)
-            .lineTo(xMax, yMax)
-            .lineTo(xMax, y)
-            .lineTo(x,    y);
+        return graphicsDrawRectService(this, x, y, width, height);
     }
 
     /**
@@ -1153,45 +997,7 @@ export class Graphics
         width: number, height: number,
         ellipse_width: number, ellipse_height: number = NaN
     ): Graphics {
-
-        x = +x || 0;
-        y = +y || 0;
-
-        width  = +width  || 0;
-        height = +height || 0;
-
-        ellipse_width  = +ellipse_width  || 0;
-        ellipse_height = +ellipse_height || ellipse_width;
-
-        width  = $Math.round(width);
-        height = $Math.round(height);
-        ellipse_width  = $Math.round(ellipse_width);
-        ellipse_height = $Math.round(ellipse_height);
-
-        const hew = ellipse_width  / 2;
-        const heh = ellipse_height / 2;
-        const c   = 4 / 3 * ($Math.SQRT2 - 1);
-        const cw  = c * hew;
-        const ch  = c * heh;
-
-        const dx0 = x   + hew;
-        const dx1 = x   + width;
-        const dx2 = dx1 - hew;
-
-        const dy0 = y   + heh;
-        const dy1 = y   + height;
-        const dy2 = dy1 - heh;
-
-        return this
-            .moveTo(dx0, y)
-            .lineTo(dx2, y)
-            .cubicCurveTo(dx2 + cw, y, dx1, dy0 - ch, dx1, dy0)
-            .lineTo(dx1, dy2)
-            .cubicCurveTo(dx1, dy2 + ch, dx2 + cw, dy1, dx2, dy1)
-            .lineTo(dx0, dy1)
-            .cubicCurveTo(dx0 - cw, dy1, x, dy2 + ch, x, dy2)
-            .lineTo(x, dy0)
-            .cubicCurveTo(x, dy0 - ch, dx0 - cw, y, dx0, y);
+        return graphicsDrawRoundRectService(this, x, y, width, height, ellipse_width, ellipse_height);
     }
 
     /**
@@ -1207,76 +1013,68 @@ export class Graphics
      */
     endFill (): Graphics
     {
-        if (this._$doFill && this._$fills && this._$fills.length > 7) {
-
-            if (!this._$recode) {
-                this._$recode = $getArray();
-            }
-
-            if (this._$fills[2] !== this._$fills[this._$fills.length - 2]
-                || this._$fills[3] !== this._$fills[this._$fills.length - 1]
-            ) {
-                this._$fills.push(
-                    Graphics.LINE_TO,
-                    this._$fills[2],
-                    this._$fills[3]
-                );
-            }
-            this._$recode.push(...this._$fills);
-
-            // fill
-            switch (this._$fillType) {
-
-                case Graphics.FILL_STYLE:
-                    this._$recode.push(
-                        this._$fillType,
-                        this._$fillStyleR,
-                        this._$fillStyleG,
-                        this._$fillStyleB,
-                        this._$fillStyleA,
-                        Graphics.END_FILL
-                    );
-                    break;
-
-                case Graphics.GRADIENT_FILL:
-                    if (this._$fillGradient) {
-                        this._$recode.push(
-                            this._$fillType,
-                            ...this._$fillGradient.toArray()
-                        );
-                    }
-                    break;
-
-                case Graphics.BITMAP_FILL:
-                    if (this._$fillBitmap) {
-                        this._$recode.push(
-                            this._$fillType,
-                            ...this._$fillBitmap.toArray()
-                        );
-                    }
-                    break;
-
-            }
-
+        if (!this._$hasFillEnabled || !this._$fills || 8 > this._$fills.length) {
+            return this;
         }
 
-        if (this._$fills) {
-            $poolArray(this._$fills);
-            this._$fills = null;
+        if (!this.$recodes) {
+            this.$recodes = $getArray();
+        }
+
+        if (this._$fills[2] !== this._$fills[this._$fills.length - 2]
+            || this._$fills[3] !== this._$fills[this._$fills.length - 1]
+        ) {
+            this._$fills.push(
+                Graphics.LINE_TO,
+                this._$fills[2],
+                this._$fills[3]
+            );
+        }
+        this.$recodes.push(...this._$fills);
+
+        $poolArray(this._$fills);
+        this._$fills = null;
+
+        // fill
+        switch (this._$fillType) {
+
+            case Graphics.FILL_STYLE:
+                this.$recodes.push(
+                    this._$fillType,
+                    this._$fillColor >>> 24 & 0xff,
+                    this._$fillColor >>> 16 & 0xff,
+                    this._$fillColor >>> 8 & 0xff,
+                    this._$fillColor & 0xff,
+                    Graphics.END_FILL
+                );
+                break;
+
+            case Graphics.GRADIENT_FILL:
+                if (this._$fillGradient) {
+                    this.$recodes.push(
+                        this._$fillType,
+                        ...this._$fillGradient.toArray()
+                    );
+                }
+                break;
+
+            case Graphics.BITMAP_FILL:
+                if (this._$fillBitmap) {
+                    this.$recodes.push(
+                        this._$fillType,
+                        ...this._$fillBitmap.toArray()
+                    );
+                }
+                break;
+
         }
 
         // reset
-        this._$fillType     = 0;
-        this._$fillGradient = null;
-        this._$fillBitmap   = null;
-        this._$fillStyleR   = 0;
-        this._$fillStyleG   = 0;
-        this._$fillStyleB   = 0;
-        this._$fillStyleA   = 0;
-        this._$doFill       = false;
-
-        // restart
-        this._$restart();
+        this._$fillType       = 0;
+        this._$fillColor      = 0;
+        this._$fillGradient   = null;
+        this._$fillBitmap     = null;
+        this._$hasFillEnabled = false;
 
         return this;
     }
@@ -1293,80 +1091,75 @@ export class Graphics
      */
     endLine (): Graphics
     {
-        if (this._$doLine && this._$lines) {
+        if (!this._$hasLineEnabled || !this._$lines) {
+            return this;
+        }
 
-            if (!this._$recode) {
-                this._$recode = $getArray();
-            }
+        if (!this.$recodes) {
+            this.$recodes = $getArray();
+        }
 
-            this._$recode.push(...this._$lines);
+        this.$recodes.push(...this._$lines);
 
-            // clear
-            $poolArray(this._$lines);
-            this._$lines = null;
+        // clear
+        $poolArray(this._$lines);
+        this._$lines = null;
 
-            // fill
-            switch (this._$lineType) {
+        // fill
+        switch (this._$lineType) {
 
-                case Graphics.STROKE_STYLE:
-                    this._$recode.push(
+            case Graphics.STROKE_STYLE:
+                this.$recodes.push(
+                    this._$lineType,
+                    this._$lineWidth,
+                    this._$caps,
+                    this._$joints,
+                    this._$miterLimit,
+                    this._$lineColor >>> 24 & 0xff,
+                    this._$lineColor >>> 16 & 0xff,
+                    this._$lineColor >>> 8 & 0xff,
+                    this._$lineColor & 0xff,
+                    Graphics.END_STROKE
+                );
+                break;
+
+            case Graphics.GRADIENT_STROKE:
+                if (this._$lineGradient) {
+                    this.$recodes.push(
                         this._$lineType,
                         this._$lineWidth,
                         this._$caps,
                         this._$joints,
                         this._$miterLimit,
-                        this._$lineStyleR,
-                        this._$lineStyleG,
-                        this._$lineStyleB,
-                        this._$lineStyleA,
-                        Graphics.END_STROKE
+                        ...this._$lineGradient.toArray()
                     );
-                    break;
+                }
+                break;
 
-                case Graphics.GRADIENT_STROKE:
-                    if (this._$lineGradient) {
-                        this._$recode.push(
-                            this._$lineType,
-                            this._$lineWidth,
-                            this._$caps,
-                            this._$joints,
-                            this._$miterLimit,
-                            ...this._$lineGradient.toArray()
-                        );
-                    }
-                    break;
+            case Graphics.BITMAP_STROKE:
+                if (this._$fillBitmap) {
+                    this.$recodes.push(
+                        this._$lineType,
+                        this._$lineWidth,
+                        this._$caps,
+                        this._$joints,
+                        this._$miterLimit,
+                        ...this._$fillBitmap.toArray()
+                    );
+                }
+                break;
 
-                case Graphics.BITMAP_STROKE:
-                    if (this._$fillBitmap) {
-                        this._$recode.push(
-                            this._$lineType,
-                            this._$lineWidth,
-                            this._$caps,
-                            this._$joints,
-                            this._$miterLimit,
-                            ...this._$fillBitmap.toArray()
-                        );
-                    }
-                    break;
-
-            }
         }
 
         // reset
-        this._$lineType     = 0;
-        this._$lineWidth    = 0;
-        this._$lineGradient = null;
-        this._$lineStyleR   = 0;
-        this._$lineStyleG   = 0;
-        this._$lineStyleB   = 0;
-        this._$lineStyleA   = 0;
-        this._$caps         = "none";
-        this._$joints       = "round";
-        this._$miterLimit   = 0;
-        this._$doLine       = false;
-
-        // restart
-        this._$restart();
+        this._$lineType       = 0;
+        this._$lineWidth      = 0;
+        this._$lineGradient   = null;
+        this._$lineColor      = 0;
+        this._$caps           = "none";
+        this._$joints         = "round";
+        this._$miterLimit     = 0;
+        this._$hasLineEnabled = false;
 
         return this;
     }
@@ -1390,9 +1183,8 @@ export class Graphics
         smooth: boolean = false
     ): Graphics {
 
-        // end fill
-        if (this._$doLine) {
-            this.endLine();
+        if (!this._$hasLineEnabled) {
+            return this;
         }
 
         if (!this._$lines) {
@@ -1400,9 +1192,9 @@ export class Graphics
         }
 
         // start
-        this._$maxAlpha = 1;
-        this._$doLine   = true;
-        this._$canDraw  = true;
+        this._$maxAlpha       = 1;
+        this._$hasLineEnabled = true;
+        this._$isBeginning    = true;
 
         // beginPath
         this._$lines.push(Graphics.BEGIN_PATH);
@@ -1432,15 +1224,15 @@ export class Graphics
      * @public
      */
     lineGradientStyle (
-        type: GradientTypeImpl,
+        type: IGradientType,
         colors: number[], alphas: number[], ratios: number[],
         matrix: Matrix | null = null,
-        spread_method: SpreadMethodImpl = "pad",
-        interpolation_method: InterpolationMethodImpl = "rgb",
+        spread_method: ISpreadMethod = "pad",
+        interpolation_method: IInterpolationMethod = "rgb",
         focal_point_ratio: number = 0
     ): Graphics {
 
-        if (!this._$doLine) {
+        if (!this._$hasLineEnabled) {
             return this;
         }
 
@@ -1450,7 +1242,7 @@ export class Graphics
 
         // setup
         for (let idx: number = 0; idx < alphas.length; ++idx) {
-            this._$maxAlpha = $Math.max(this._$maxAlpha, alphas[idx]);
+            this._$maxAlpha = Math.max(this._$maxAlpha, alphas[idx]);
         }
 
         // beginPath
@@ -1487,12 +1279,12 @@ export class Graphics
         thickness: number = 1,
         color: string | number = 0,
         alpha: number = 1,
-        caps: CapsStyleImpl = "round",
-        joints: JointStyleImpl = "round",
+        caps: ICapsStyle = "round",
+        joints: IJointStyle = "round",
         miter_limit: number = 3
     ): Graphics {
 
-        if (this._$doLine) {
+        if (this._$hasLineEnabled) {
             this.endLine();
         }
 
@@ -1500,40 +1292,44 @@ export class Graphics
             this._$lines = $getArray();
         }
 
-        color = $clamp($toColorInt(color), 0, 0xffffff, 0);
-        alpha = $clamp(+alpha, 0, 1, 1);
-
         // setup
-        this._$maxAlpha = $Math.max(this._$maxAlpha, alpha);
-        this._$doLine   = true;
-        this._$canDraw  = true;
+        this._$maxAlpha       = Math.max(this._$maxAlpha, alpha);
+        this._$hasLineEnabled = true;
+        this._$isBeginning    = true;
 
         // beginPath
-        if (this._$pointerX || this._$pointerY) {
+        if (this._$positionX || this._$positionY) {
             this._$lines.push(
                 Graphics.BEGIN_PATH,
                 Graphics.MOVE_TO,
-                this._$pointerX,
-                this._$pointerY
+                this._$positionX,
+                this._$positionY
             );
         } else {
             this._$lines.push(Graphics.BEGIN_PATH);
         }
 
-        // add Fill Style
-        const object = $intToRGBA(color, alpha);
-
         // color
-        this._$lineType   = Graphics.STROKE_STYLE;
-        this._$lineStyleR = object.R;
-        this._$lineStyleG = object.G;
-        this._$lineStyleB = object.B;
-        this._$lineStyleA = object.A;
+        this._$lineType = Graphics.STROKE_STYLE;
+
+        // valid
+        if (typeof color === "string") {
+            color = $convertColorStringToNumber(color);
+        }
+
+        color = $clamp(color, 0, 0xffffff, 0);
+        alpha = $clamp(alpha, 0, 1, 1);
+
+        // Color Int 32bit(RGBA)
+        const red   = color >>> 16 & 0xff;
+        const green = color >>> 8 & 0xff;
+        const blue  = color & 0xff;
+        this._$lineColor = red << 24 | green << 16 | blue << 8 | alpha * 255;
 
         // param
-        this._$lineWidth  = thickness;
-        this._$caps       = `${caps}`;
-        this._$joints     = `${joints}`;
+        this._$lineWidth = thickness;
+        this._$caps      = `${caps}`;
+        this._$joints    = `${joints}`;
 
         // set miter limit
         if (this._$joints === "miter") {
@@ -1560,19 +1356,29 @@ export class Graphics
         x = +x || 0;
         y = +y || 0;
 
-        if (this._$pointerX === x && this._$pointerY === y) {
+        if (this._$positionX === x && this._$positionY === y) {
             return this;
         }
 
-        this._$setBounds(x, y);
+        // calc bounds
+        graphicsCalcBoundsUseCase(
+            this, this._$hasLineEnabled,
+            this._$positionX, this._$positionY,
+            this._$lineWidth, this._$caps,
+            x, y
+        );
 
-        this._$margePath($getArray(Graphics.LINE_TO, x, y));
+        // marge path
+        graphicsMargePathService(
+            this,
+            this._$hasFillEnabled, this._$hasLineEnabled,
+            this._$fills, this._$lines,
+            Graphics.LINE_TO,
+            x, y
+        );
 
-        this._$pointerX = x;
-        this._$pointerY = y;
-
-        // restart
-        this._$restart();
+        this._$positionX = x;
+        this._$positionY = y;
 
         return this;
     }
@@ -1592,13 +1398,19 @@ export class Graphics
         x = +x || 0;
         y = +y || 0;
 
-        this._$pointerX = x;
-        this._$pointerY = y;
+        this._$positionX = x;
+        this._$positionY = y;
 
-        this._$setBounds(x, y);
+        // calc bounds
+        graphicsCalcBoundsUseCase(
+            this, this._$hasLineEnabled,
+            this._$positionX, this._$positionY,
+            this._$lineWidth, this._$caps,
+            x, y
+        );
 
         let duplication = false;
-        if (this._$doFill && this._$fills) {
+        if (this._$hasFillEnabled && this._$fills) {
             const isMove = this._$fills[this._$fills.length - 3] === Graphics.MOVE_TO;
             if (isMove) {
                 duplication = true;
@@ -1607,7 +1419,7 @@ export class Graphics
             }
         }
 
-        if (this._$doLine && this._$lines) {
+        if (this._$hasLineEnabled && this._$lines) {
             const isMove = this._$lines[this._$lines.length - 3] === Graphics.MOVE_TO;
             if (isMove) {
                 duplication = true;
@@ -1616,1688 +1428,58 @@ export class Graphics
             }
         }
 
+        // marge path
         if (!duplication) {
-            this._$margePath($getArray(Graphics.MOVE_TO, x, y));
+            graphicsMargePathService(
+                this,
+                this._$hasFillEnabled, this._$hasLineEnabled,
+                this._$fills, this._$lines,
+                Graphics.MOVE_TO,
+                x, y
+            );
         }
-
-        // restart
-        this._$restart();
 
         return this;
     }
 
     /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
-     * @return {void}
+     * @description この Graphics オブジェクトに描画されているパス情報をFloat32Arrayで返却
+     *              Returns the path information drawn to this Graphics object in Float32Array.
+     *
+     * @member {Float32Array}
      * @method
-     * @private
+     * @public
      */
-    _$clip (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array
-    ): void {
-
-        // size
-        const baseBounds: BoundsImpl = this._$getBounds();
-
-        const bounds: BoundsImpl = $boundsMatrix(baseBounds, matrix);
-        $poolBoundsObject(baseBounds);
-
-        const width: number    = $Math.ceil($Math.abs(bounds.xMax - bounds.xMin));
-        const height: number   = $Math.ceil($Math.abs(bounds.yMax - bounds.yMin));
-        $poolBoundsObject(bounds);
-
-        switch (true) {
-
-            case width === 0:
-            case height === 0:
-            case width === -$Infinity:
-            case height === -$Infinity:
-            case width === $Infinity:
-            case height === $Infinity:
-                return;
-
-            default:
-                break;
-
-        }
-
-        context.reset();
-        context.setTransform(
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4], matrix[5]
-        );
-
-        this._$doDraw(context, null, true);
-
-        context.clip();
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
-     * @param  {string} [blend_mode=BlendMode.NORMAL]
-     * @param  {array}  [filters=null]
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$draw (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array,
-        color_transform: Float32Array,
-        blend_mode: BlendModeImpl = "normal",
-        filters: FilterArrayImpl | null = null
-    ): void {
-
-        if (!this._$maxAlpha) {
-            return ;
-        }
-
-        const alpha: number = $clamp(
-            color_transform[3] + color_transform[7] / 255, 0, 1
-        );
-
-        const displayObject: DisplayObjectImpl<any> = this._$displayObject;
-
-        // set grid data
-        let hasGrid: boolean = displayObject._$scale9Grid !== null;
-
-        // 9スライスを有効にしたオブジェクトが回転・傾斜成分を含む場合は
-        // 9スライスは無効になる
-        const rawMatrix: Float32Array = displayObject._$transform._$rawMatrix();
-        if (hasGrid) {
-            hasGrid = hasGrid
-                && $Math.abs(rawMatrix[1]) < 0.001
-                && $Math.abs(rawMatrix[2]) < 0.0001;
-        }
-
-        // size
-        const baseBounds: BoundsImpl = this._$getBounds();
-        const bounds: BoundsImpl = $boundsMatrix(baseBounds, matrix);
-        const xMax: number = bounds.xMax;
-        const xMin: number = bounds.xMin;
-        const yMax: number = bounds.yMax;
-        const yMin: number = bounds.yMin;
-        $poolBoundsObject(bounds);
-
-        const width: number  = $Math.ceil($Math.abs(xMax - xMin));
-        const height: number = $Math.ceil($Math.abs(yMax - yMin));
-        switch (true) {
-
-            case width === 0:
-            case height === 0:
-            case width === -$Infinity:
-            case height === -$Infinity:
-            case width === $Infinity:
-            case height === $Infinity:
-                return;
-
-            default:
-                break;
-
-        }
-
-        let xScale: number = +$Math.sqrt(
-            matrix[0] * matrix[0]
-            + matrix[1] * matrix[1]
-        );
-        if (!$Number.isInteger(xScale)) {
-            const value: string = xScale.toString();
-            const index: number = value.indexOf("e");
-            if (index !== -1) {
-                xScale = +value.slice(0, index);
-            }
-            xScale = +xScale.toFixed(4);
-        }
-
-        let yScale: number = +$Math.sqrt(
-            matrix[2] * matrix[2]
-            + matrix[3] * matrix[3]
-        );
-        if (!$Number.isInteger(yScale)) {
-            const value: string = yScale.toString();
-            const index: number = value.indexOf("e");
-            if (index !== -1) {
-                yScale = +value.slice(0, index);
-            }
-            yScale = +yScale.toFixed(4);
-        }
-
-        const canApply: boolean = filters !== null
-            && filters.length > 0
-            && displayObject._$canApply(filters);
-
-        let filterBounds: BoundsImpl = $getBoundsObject(0, width, 0, height);
-        if (canApply && filters) {
-            for (let idx: number = 0; idx < filters.length ; ++idx) {
-                filterBounds = filters[idx]
-                    ._$generateFilterRect(filterBounds, xScale, yScale);
-            }
-        }
-
-        // cache current buffer
-        const manager: FrameBufferManager = context.frameBuffer;
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-        if (!currentAttachment
-            || xMin - filterBounds.xMin > currentAttachment.width
-            || yMin - filterBounds.yMin > currentAttachment.height
-        ) {
-            $poolBoundsObject(filterBounds);
-            return;
-        }
-
-        if (0 > xMin + filterBounds.xMax || 0 > yMin + filterBounds.yMax) {
-            $poolBoundsObject(filterBounds);
-            return;
-        }
-
-        $poolBoundsObject(filterBounds);
-
-        // get cache
-        if (this._$uniqueKey === "") {
-            if (!hasGrid
-                && displayObject._$loaderInfo
-                && displayObject._$characterId
-            ) {
-                this._$uniqueKey = `${displayObject._$loaderInfo._$id}@${this._$bitmapId || displayObject._$characterId}`;
-            } else {
-                this._$uniqueKey = this._$createCacheKey();
-            }
-        }
-
-        const player: Player = $currentPlayer();
-
-        if (this._$mode === "bitmap") {
-
-            if (!this._$cacheKeys.length) {
-                this._$cacheKeys = $cacheStore.generateKeys(this._$uniqueKey);
-            }
-
-        } else {
-
-            if (!this._$cacheKeys.length
-                || this._$cacheParams[0] !== xScale
-                || this._$cacheParams[1] !== yScale
-                || this._$cacheParams[2] !== color_transform[7]
-            ) {
-
-                const keys: number[] = $getArray();
-                keys[0] = xScale;
-                keys[1] = yScale;
-
-                this._$cacheKeys = $cacheStore.generateKeys(
-                    this._$uniqueKey, keys, color_transform
-                );
-
-                $poolArray(keys);
-
-                this._$cacheParams[0] = xScale;
-                this._$cacheParams[1] = yScale;
-                this._$cacheParams[2] = color_transform[7];
-            }
-        }
-
-        context.cachePosition = $cacheStore.get(this._$cacheKeys);
-        if (!context.cachePosition) {
-
-            const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-
-            if (currentAttachment && currentAttachment.mask) {
-                context.stopStencil();
-            }
-
-            let width: number  = 0;
-            let height: number = 0;
-            if (this._$mode === "shape") {
-
-                width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin) * xScale);
-                height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin) * yScale);
-
-                // resize
-                const textureScale: number = context._$getTextureScale(width, height);
-                if (textureScale < 1) {
-                    width  *= textureScale;
-                    height *= textureScale;
-                }
-
-            } else {
-                width  = $Math.ceil($Math.abs(baseBounds.xMax - baseBounds.xMin));
-                height = $Math.ceil($Math.abs(baseBounds.yMax - baseBounds.yMin));
-            }
-
-            // create cache position
-            context.cachePosition = manager.createCachePosition(width, height);
-            context.bindRenderBuffer(context.cachePosition);
-
-            // reset
-            context.reset();
-
-            if (this._$mode === "shape") {
-                context.setTransform(
-                    xScale, 0, 0, yScale,
-                    -baseBounds.xMin * xScale,
-                    -baseBounds.yMin * yScale
-                );
-            } else {
-                context.setTransform(
-                    1, 0, 0, 1,
-                    -baseBounds.xMin,
-                    -baseBounds.yMin
-                );
-            }
-
-            if (hasGrid) {
-
-                const mScale: number = player.scaleX;
-
-                const baseMatrix: Float32Array = $getFloat32Array6(
-                    mScale, 0, 0, mScale, 0, 0
-                );
-
-                const pMatrix: Float32Array = $multiplicationMatrix(
-                    baseMatrix, rawMatrix
-                );
-
-                $poolFloat32Array6(baseMatrix);
-
-                const aMatrixBase: Float32Array = displayObject
-                    ._$parent
-                    ._$transform
-                    .concatenatedMatrix
-                    ._$matrix;
-
-                const aMatrix: Float32Array = $getFloat32Array6(
-                    aMatrixBase[0], aMatrixBase[1], aMatrixBase[2], aMatrixBase[3],
-                    aMatrixBase[4] * mScale - xMin,
-                    aMatrixBase[5] * mScale - yMin
-                );
-                $poolFloat32Array6(aMatrixBase);
-
-                const apMatrix: Float32Array = $multiplicationMatrix(
-                    aMatrix, pMatrix
-                );
-                const aOffsetX: number = apMatrix[4] - (matrix[4] - xMin);
-                const aOffsetY: number = apMatrix[5] - (matrix[5] - yMin);
-                $poolFloat32Array6(apMatrix);
-
-                const parentBounds: BoundsImpl = $boundsMatrix(baseBounds, pMatrix);
-                const parentXMax: number   = +parentBounds.xMax;
-                const parentXMin: number   = +parentBounds.xMin;
-                const parentYMax: number   = +parentBounds.yMax;
-                const parentYMin: number   = +parentBounds.yMin;
-                const parentWidth: number  = $Math.ceil($Math.abs(parentXMax - parentXMin));
-                const parentHeight: number = $Math.ceil($Math.abs(parentYMax - parentYMin));
-
-                $poolBoundsObject(parentBounds);
-
-                const scale9Grid: Rectangle = displayObject._$scale9Grid as NonNullable<Rectangle>;
-                const grid: GridImpl = {
-                    "x": scale9Grid.x,
-                    "y": scale9Grid.y,
-                    "w": scale9Grid.width,
-                    "h": scale9Grid.height
-                };
-
-                context.grid.enable(
-                    parentXMin, parentYMin, parentWidth, parentHeight,
-                    baseBounds, grid, mScale,
-                    pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
-                    aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY
-                );
-
-                $poolFloat32Array6(pMatrix);
-                $poolFloat32Array6(aMatrix);
-            }
-
-            // execute
-            this._$doDraw(context, color_transform, false);
-
-            if (hasGrid) {
-                context.grid.disable();
-            }
-
-            manager.transferTexture(context.cachePosition);
-
-            // set cache
-            $cacheStore.set(this._$cacheKeys, context.cachePosition);
-
-            // end draw and reset current buffer
-            context._$bind(currentAttachment);
-        }
-
-        let offsetX: number = 0;
-        let offsetY: number = 0;
-        if (canApply) {
-
-            const bitmapTexture: WebGLTexture | null = this._$createBitmapTexture(
-                context, context.cachePosition,
-                xScale, yScale, width, height
-            );
-
-            const position: CachePositionImpl = displayObject._$drawFilter(
-                context, matrix, filters,
-                width, height, bitmapTexture
-            );
-
-            if (position.offsetX) {
-                offsetX = position.offsetX;
-            }
-
-            if (position.offsetY) {
-                offsetY = position.offsetY;
-            }
-
-            // update
-            context.cachePosition = position;
-        }
-
-        if (!canApply && this._$mode === "bitmap") {
-
-            context.setTransform(
-                matrix[0], matrix[1],
-                matrix[2], matrix[3],
-                baseBounds.xMin * matrix[0] + baseBounds.yMin * matrix[2] + matrix[4],
-                baseBounds.xMin * matrix[1] + baseBounds.yMin * matrix[3] + matrix[5]
-            );
-
-        } else {
-
-            const radianX: number = $Math.atan2(matrix[1], matrix[0]);
-            const radianY: number = $Math.atan2(-matrix[2], matrix[3]);
-            if (!canApply && (radianX || radianY)) {
-
-                const tx: number = baseBounds.xMin * xScale;
-                const ty: number = baseBounds.yMin * yScale;
-
-                const cosX: number = $Math.cos(radianX);
-                const sinX: number = $Math.sin(radianX);
-                const cosY: number = $Math.cos(radianY);
-                const sinY: number = $Math.sin(radianY);
-
-                context.setTransform(
-                    cosX, sinX, -sinY, cosY,
-                    tx * cosX - ty * sinY + matrix[4],
-                    tx * sinX + ty * cosY + matrix[5]
-                );
-
-            } else {
-
-                context.setTransform(1, 0, 0, 1,
-                    xMin - offsetX, yMin - offsetY
-                );
-
-            }
-        }
-
-        // draw
-        if (context.cachePosition) {
-
-            context.globalAlpha = alpha;
-            context.imageSmoothingEnabled = this._$mode === "shape";
-            context.globalCompositeOperation = blend_mode;
-
-            context.drawInstance(
-                xMin - offsetX, yMin - offsetY, xMax, yMax,
-                color_transform
-            );
-
-            // cache position clear
-            context.cachePosition = null;
-        }
-
-        // pool
-        $poolBoundsObject(baseBounds);
-    }
-
-    /**
-     * @return {WebGLTexture | null}
-     * @method
-     * @private
-     */
-    _$createBitmapTexture (
-        context: CanvasToWebGLContext,
-        position: CachePositionImpl,
-        x_scale: number,
-        y_scale: number,
-        width: number,
-        height: number
-    ): WebGLTexture | null {
-
-        if (this._$mode !== "bitmap") {
-            return null;
-        }
-
-        context.drawInstacedArray();
-
-        const manager: FrameBufferManager = context.frameBuffer;
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-
-        const attachment: AttachmentImpl = manager
-            .createCacheAttachment(width, height);
-
-        context._$bind(attachment);
-
-        context.reset();
-
-        const parentMatrix: Float32Array = $getFloat32Array6(
-            x_scale, 0, 0, y_scale,
-            width / 2, height / 2
-        );
-
-        const texture: WebGLTexture = context.getTextureFromRect(position);
-
-        const baseMatrix: Float32Array = $getFloat32Array6(
-            1, 0, 0, 1,
-            -texture.width / 2,
-            -texture.height / 2
-        );
-
-        const scaleMatrix = $multiplicationMatrix(
-            parentMatrix, baseMatrix
-        );
-        $poolFloat32Array6(parentMatrix);
-        $poolFloat32Array6(baseMatrix);
-
-        context.setTransform(
-            scaleMatrix[0], scaleMatrix[1],
-            scaleMatrix[2], scaleMatrix[3],
-            scaleMatrix[4], scaleMatrix[5]
-        );
-
-        context.drawImage(texture, 0, 0, texture.width, texture.height);
-
-        const bitmapTexture: WebGLTexture = manager.getTextureFromCurrentAttachment();
-        context._$bind(currentAttachment);
-
-        manager.releaseAttachment(attachment);
-        manager.textureManager.release(texture);
-
-        return bitmapTexture;
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array}         [color_transform=null]
-     * @param  {boolean}              [is_clip=false]
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$doDraw (
-        context: CanvasToWebGLContext,
-        color_transform: Float32Array | null = null,
-        is_clip: boolean = false
-    ): void {
-
-        // draw
-        context.reset();
-        context.beginPath();
-        this._$runCommand(context, color_transform, is_clip);
-    }
-
-    /**
-     * @param  {CanvasRenderingContext2D} context
-     * @param  {Float32Array} matrix
-     * @param  {object}  options
-     * @param  {boolean} [is_clip=false]
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$hit (
-        context: CanvasRenderingContext2D,
-        matrix: Float32Array,
-        options: PlayerHitObjectImpl,
-        is_clip: boolean = false
-    ): boolean {
-
-        context.beginPath();
-        context.setTransform(
-            matrix[0], matrix[1], matrix[2],
-            matrix[3], matrix[4], matrix[5]
-        );
-        return this._$runCommand(context, null, is_clip, options);
-    }
-
-    /**
-     * @return {object}
-     * @method
-     * @private
-     */
-    _$getBounds (): BoundsImpl
+    get buffer (): Float32Array
     {
-        const displayObject: DisplayObjectImpl<any> = this._$displayObject;
-        if (displayObject && displayObject._$bounds) {
-            return $getBoundsObject(
-                displayObject._$bounds.xMin, displayObject._$bounds.xMax,
-                displayObject._$bounds.yMin, displayObject._$bounds.yMax
-            );
+        if (this.isConfirmed && this._$buffer) {
+            return this._$buffer;
         }
 
-        return $getBoundsObject(
-            this._$xMin, this._$xMax,
-            this._$yMin, this._$yMax
-        );
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$restart (): void
-    {
-        if (this._$displayObject) {
-
-            // reset
-            this._$displayObject._$posted = false;
-
-            if (!this._$displayObject._$isUpdated()) {
-
-                this._$displayObject._$doChanged();
-                $doUpdated();
-
-                $cacheStore.removeCache(this._$displayObject._$instanceId);
-
-                if (this._$displayObject._$characterId) {
-                    $cacheStore.removeCache(this._$displayObject._$characterId);
-                }
-            }
-        }
-    }
-
-    /**
-     * @param  {number} [x=0]
-     * @param  {number} [y=0]
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$setBounds (x: number = 0, y: number = 0): void
-    {
-        this._$setFillBounds(x, y);
-        if (this._$doLine) {
-            this._$setLineBounds(x, y);
-        }
-    }
-
-    /**
-     * @param  {number} x
-     * @param  {number} y
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$setFillBounds (x: number = 0, y: number = 0): void
-    {
-        this._$xMin = $Math.min(this._$xMin, x);
-        this._$xMax = $Math.max(this._$xMax, x);
-        this._$yMin = $Math.min(this._$yMin, y);
-        this._$yMax = $Math.max(this._$yMax, y);
-    }
-
-    /**
-     * @param  {number} x
-     * @param  {number} y
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$setLineBounds (x: number = 0, y: number = 0): void
-    {
-        this._$xMin = $Math.min(this._$xMin, $Math.min(x, this._$pointerX));
-        this._$xMax = $Math.max(this._$xMax, $Math.max(x, this._$pointerX));
-        this._$yMin = $Math.min(this._$yMin, $Math.min(y, this._$pointerY));
-        this._$yMax = $Math.max(this._$yMax, $Math.max(y, this._$pointerY));
-
-        // correction
-        const half: number     = this._$lineWidth / 2;
-        const radian90: number = 0.5 * $Math.PI;
-        const radian1: number  = $Math.atan2(y - this._$pointerY, x - this._$pointerX); // to end point
-        const radian2: number  = $Math.atan2(this._$pointerY - y, this._$pointerX - x); // to start point
-        const radian3: number  = radian1 + radian90;
-        const radian4: number  = radian1 - radian90;
-        const radian5: number  = radian2 + radian90;
-        const radian6: number  = radian2 - radian90;
-
-        // init
-        let x1: number = x + half;
-        let x2: number = -half + x;
-        let x3: number = this._$pointerX + half;
-        let x4: number = -half + this._$pointerX;
-        let y1: number = y + half;
-        let y2: number = -half + y;
-        let y3: number = this._$pointerY + half;
-        let y4: number = -half + this._$pointerY;
-
-        this._$xMin = $Math.min(this._$xMin, $Math.min(x1, $Math.min(x2, $Math.min(x3, x4))));
-        this._$xMax = $Math.max(this._$xMax, $Math.max(x1, $Math.max(x2, $Math.max(x3, x4))));
-        this._$yMin = $Math.min(this._$yMin, $Math.min(y1, $Math.min(y2, $Math.min(y3, y4))));
-        this._$yMax = $Math.max(this._$yMax, $Math.max(y1, $Math.max(y2, $Math.max(y3, y4))));
-
-        // pointer x
-        if ($Math.abs(radian3) % radian90 !== 0) {
-            x1 = x + $Math.cos(radian3) * half;
-        }
-
-        if ($Math.abs(radian4) % radian90 !== 0) {
-            x2 = x + $Math.cos(radian4) * half;
-        }
-
-        if ($Math.abs(radian5) % radian90 !== 0) {
-            x3 = this._$pointerX + $Math.cos(radian5) * half;
-        }
-
-        if ($Math.abs(radian6) % radian90 !== 0) {
-            x4 = this._$pointerX + $Math.cos(radian6) * half;
-        }
-
-        // pointer y
-        if (radian3 && $Math.abs(radian3) % $Math.PI !== 0) {
-            y1 = y + $Math.sin(radian3) * half;
-        }
-
-        if (radian4 && $Math.abs(radian4) % $Math.PI !== 0) {
-            y2 = y + $Math.sin(radian4) * half;
-        }
-
-        if (radian5 && $Math.abs(radian5) % $Math.PI !== 0) {
-            y3 = this._$pointerY + $Math.sin(radian5) * half;
-        }
-
-        if (radian6 && $Math.abs(radian6) % $Math.PI !== 0) {
-            y4 = this._$pointerY + $Math.sin(radian6) * half;
-        }
-
-        this._$xMin = $Math.min(this._$xMin, $Math.min(x1, $Math.min(x2, $Math.min(x3, x4))));
-        this._$xMax = $Math.max(this._$xMax, $Math.max(x1, $Math.max(x2, $Math.max(x3, x4))));
-        this._$yMin = $Math.min(this._$yMin, $Math.min(y1, $Math.min(y2, $Math.min(y3, y4))));
-        this._$yMax = $Math.max(this._$yMax, $Math.max(y1, $Math.max(y2, $Math.max(y3, y4))));
-
-        // case
-        switch (this._$caps) {
-
-            case "round":
-
-                if ($Math.abs(radian1) % radian90 !== 0) {
-                    const rx1: number = x + $Math.cos(radian1) * half;
-                    this._$xMin = $Math.min(this._$xMin, rx1);
-                    this._$xMax = $Math.max(this._$xMax, rx1);
-                }
-
-                if (radian1 && $Math.abs(radian1) % $Math.PI !== 0) {
-                    const ry1: number = y + $Math.sin(radian1) * half;
-                    this._$yMin = $Math.min(this._$yMin, ry1);
-                    this._$yMax = $Math.max(this._$yMax, ry1);
-                }
-
-                if ($Math.abs(radian2) % radian90 !== 0) {
-                    const rx2: number = this._$pointerX + $Math.cos(radian2) * half;
-                    this._$xMin = $Math.min(this._$xMin, rx2);
-                    this._$xMax = $Math.max(this._$xMax, rx2);
-                }
-
-                if (radian2 && $Math.abs(radian2) % $Math.PI !== 0) {
-                    const ry2: number = this._$pointerY + $Math.sin(radian2) * half;
-                    this._$yMin = $Math.min(this._$yMin, ry2);
-                    this._$yMax = $Math.max(this._$yMax, ry2);
-                }
-
-                break;
-
-            case "square":
-
-                if ($Math.abs(radian1) % radian90 !== 0) {
-                    const r1cos: number = $Math.cos(radian1) * half;
-                    const rx1: number = x1 + r1cos;
-                    const rx2: number = x2 + r1cos;
-                    this._$xMin = $Math.min(this._$xMin, $Math.min(rx1, rx2));
-                    this._$xMax = $Math.max(this._$xMax, $Math.max(rx1, rx2));
-                }
-
-                if ($Math.abs(radian2) % radian90 !== 0) {
-                    const r2cos: number = $Math.cos(radian2) * half;
-                    const rx3: number = x3 + r2cos;
-                    const rx4: number = x4 + r2cos;
-                    this._$xMin = $Math.min(this._$xMin, $Math.min(rx3, rx4));
-                    this._$xMax = $Math.max(this._$xMax, $Math.max(rx3, rx4));
-                }
-
-                if (radian1 && $Math.abs(radian1) % $Math.PI !== 0) {
-                    const r1sin: number = $Math.sin(radian1) * half;
-                    const ry1: number = y1 + r1sin;
-                    const ry2: number = y2 + r1sin;
-                    this._$yMin = $Math.min(this._$yMin, $Math.min(ry1, ry2));
-                    this._$yMax = $Math.max(this._$yMax, $Math.max(ry1, ry2));
-                }
-
-                if (radian2 && $Math.abs(radian2) % $Math.PI !== 0) {
-                    const r2sin: number = $Math.sin(radian2) * half;
-                    const ry3: number = y3 + r2sin;
-                    const ry4: number = y4 + r2sin;
-                    this._$yMin = $Math.min(this._$yMin, $Math.min(ry3, ry4));
-                    this._$yMax = $Math.max(this._$yMax, $Math.max(ry3, ry4));
-                }
-
-                break;
-
-            default:
-                break;
-
-        }
-    }
-
-    /**
-     * @param {array} data
-     * @method
-     * @private
-     */
-    _$margePath (data: any[]): void
-    {
-        if (this._$doFill && this._$fills) {
-            this._$fills.push(...data);
-        }
-
-        if (this._$doLine && this._$lines) {
-            this._$lines.push(...data);
-        }
-
-        $poolArray(data);
-    }
-
-    /**
-     * @return {string}
-     * @method
-     * @private
-     */
-    _$createCacheKey (): string
-    {
-        if (this._$doLine) {
+        // fixed logic
+        if (this._$hasLineEnabled) {
             this.endLine();
         }
 
         // fixed logic
-        if (this._$doFill) {
+        if (this._$hasFillEnabled) {
             this.endFill();
         }
 
-        if (!this._$recode) {
-            return "";
-        }
+        const array = graphicsToNumberArrayService(this.$recodes);
+        this._$buffer = new Float32Array(array);
+        $poolArray(array);
 
-        const recodes: Float32Array = this._$getRecodes();
+        // レコードの確定フラグを更新
+        this.isConfirmed = true;
 
-        let hash = 0;
-        for (let idx: number = 0; idx < recodes.length; idx++) {
-
-            const chr: number = recodes[idx];
-
-            hash  = (hash << 5) - hash + chr;
-            hash |= 0;
-        }
-
-        return `${hash}`;
+        return this._$buffer;
     }
-
-    /**
-     * @return {Float32Array}
-     * @method
-     * @private
-     */
-    _$getRecodes (): Float32Array
+    set buffer (buffer: Float32Array)
     {
-        // fixed logic
-        if (this._$doLine) {
-            this.endLine();
-        }
-
-        // fixed logic
-        if (this._$doFill) {
-            this.endFill();
-        }
-
-        if (!this._$recode) {
-            this._$recode = $getArray();
-        }
-
-        if (!this._$buffer) {
-
-            const array: number[] = $getArray();
-
-            const recode: any[] = this._$recode;
-            for (let idx: number = 0; idx < recode.length;) {
-
-                const type: number = recode[idx++];
-                array.push(type);
-                switch (type) {
-
-                    case Graphics.BEGIN_PATH:
-                    case Graphics.END_FILL:
-                    case Graphics.END_STROKE:
-                    case Graphics.CLOSE_PATH:
-                        break;
-
-                    case Graphics.MOVE_TO:
-                    case Graphics.LINE_TO:
-                        array.push(recode[idx++], recode[idx++]);
-                        break;
-
-                    case Graphics.CURVE_TO:
-                    case Graphics.FILL_STYLE:
-                        array.push(
-                            recode[idx++], recode[idx++],
-                            recode[idx++], recode[idx++]
-                        );
-                        break;
-
-                    case Graphics.CUBIC:
-                        array.push(
-                            recode[idx++], recode[idx++],
-                            recode[idx++], recode[idx++],
-                            recode[idx++], recode[idx++]
-                        );
-                        break;
-
-                    case Graphics.STROKE_STYLE:
-                        {
-                            array.push(recode[idx++]);
-
-                            const lineCap = recode[idx++];
-                            switch (lineCap) {
-
-                                case "none":
-                                    array.push(0);
-                                    break;
-
-                                case "round":
-                                    array.push(1);
-                                    break;
-
-                                case "square":
-                                    array.push(2);
-                                    break;
-
-                            }
-
-                            const lineJoin = recode[idx++];
-                            switch (lineJoin) {
-
-                                case "bevel":
-                                    array.push(0);
-                                    break;
-
-                                case "miter":
-                                    array.push(1);
-                                    break;
-
-                                case "round":
-                                    array.push(2);
-                                    break;
-
-                            }
-
-                            array.push(
-                                recode[idx++], // MITER LIMIT
-                                recode[idx++], recode[idx++],
-                                recode[idx++], recode[idx++]
-                            );
-                        }
-                        break;
-
-                    case Graphics.ARC:
-                        array.push(recode[idx++], recode[idx++], recode[idx++]);
-                        break;
-
-                    case Graphics.GRADIENT_FILL:
-                        {
-                            const type: GradientTypeImpl = recode[idx++];
-                            const stops: ColorStopImpl[] = recode[idx++];
-                            const matrix: Float32Array = recode[idx++];
-                            const spread: SpreadMethodImpl = recode[idx++];
-                            const interpolation: InterpolationMethodImpl = recode[idx++];
-                            const focal: number = recode[idx++];
-
-                            array.push(type === "linear" ? 0 : 1);
-
-                            array.push(stops.length);
-                            for (let idx: number = 0; idx < stops.length; ++idx) {
-                                const color: ColorStopImpl = stops[idx];
-                                array.push(
-                                    color.ratio,
-                                    color.R,
-                                    color.G,
-                                    color.B,
-                                    color.A
-                                );
-                            }
-
-                            array.push(
-                                matrix[0], matrix[1], matrix[2],
-                                matrix[3], matrix[4], matrix[5]
-                            );
-
-                            switch (spread) {
-
-                                case "reflect":
-                                    array.push(0);
-                                    break;
-
-                                case "repeat":
-                                    array.push(1);
-                                    break;
-
-                                default:
-                                    array.push(2);
-                                    break;
-
-                            }
-
-                            array.push(
-                                interpolation === "linearRGB" ? 0 : 1
-                            );
-
-                            array.push(focal);
-                        }
-                        break;
-
-                    case Graphics.GRADIENT_STROKE:
-                        {
-                            array.push(recode[idx++]);
-
-                            const lineCap: CapsStyleImpl = recode[idx++];
-                            switch (lineCap) {
-
-                                case "none":
-                                    array.push(0);
-                                    break;
-
-                                case "round":
-                                    array.push(1);
-                                    break;
-
-                                case "square":
-                                    array.push(2);
-                                    break;
-
-                            }
-
-                            const lineJoin: JointStyleImpl = recode[idx++];
-                            switch (lineJoin) {
-
-                                case "bevel":
-                                    array.push(0);
-                                    break;
-
-                                case "miter":
-                                    array.push(1);
-                                    break;
-
-                                case "round":
-                                    array.push(2);
-                                    break;
-
-                            }
-
-                            // miterLimit
-                            array.push(recode[idx++]);
-
-                            const type: GradientTypeImpl = recode[idx++];
-                            const stops: ColorStopImpl[] = recode[idx++];
-                            const matrix: Float32Array = recode[idx++];
-                            const spread: SpreadMethodImpl = recode[idx++];
-                            const interpolation: InterpolationMethodImpl = recode[idx++];
-                            const focal: number = recode[idx++];
-
-                            array.push(type === "linear" ? 0 : 1);
-
-                            array.push(stops.length);
-                            for (let idx: number = 0; idx < stops.length; ++idx) {
-                                const color: ColorStopImpl = stops[idx];
-                                array.push(
-                                    color.ratio,
-                                    color.R,
-                                    color.G,
-                                    color.B,
-                                    color.A
-                                );
-                            }
-
-                            array.push(
-                                matrix[0], matrix[1], matrix[2],
-                                matrix[3], matrix[4], matrix[5]
-                            );
-
-                            switch (spread) {
-
-                                case "reflect":
-                                    array.push(0);
-                                    break;
-
-                                case "repeat":
-                                    array.push(1);
-                                    break;
-
-                                default:
-                                    array.push(2);
-                                    break;
-
-                            }
-
-                            array.push(
-                                interpolation === "linearRGB" ? 0 : 1
-                            );
-
-                            array.push(focal);
-                        }
-                        break;
-
-                    case Graphics.BITMAP_FILL:
-                        {
-                            const bitmapData: BitmapData = recode[idx++];
-
-                            let buffer: Uint8Array;
-                            if (bitmapData.image !== null || bitmapData.canvas !== null) {
-
-                                const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
-
-                                const width: number  = bitmapData.width;
-                                const height: number = bitmapData.height;
-                                canvas.width  = width;
-                                canvas.height = height;
-
-                                const context: CanvasRenderingContext2D | null = canvas.getContext("2d");
-                                if (!context) {
-                                    throw new Error("the context is null.");
-                                }
-
-                                // @ts-ignore
-                                context.drawImage(bitmapData.image || bitmapData.canvas, 0, 0);
-
-                                buffer = new Uint8Array(
-                                    context.getImageData(0, 0, width, height).data
-                                );
-
-                                $cacheStore.destroy(context);
-
-                            } else if (bitmapData._$buffer !== null) {
-                                buffer = bitmapData._$buffer;
-                            } else {
-                                break;
-                            }
-
-                            array.push(
-                                bitmapData.width,
-                                bitmapData.height,
-                                this._$xMax - this._$xMin,
-                                this._$yMax - this._$yMin,
-                                buffer.length
-                            );
-
-                            for (let idx: number = 0; idx < buffer.length; ++idx) {
-                                array.push(buffer[idx]);
-                            }
-
-                            const matrix: Float32Array = recode[idx++];
-                            if (matrix) {
-                                array.push(
-                                    matrix[0], matrix[1], matrix[2],
-                                    matrix[3], matrix[4], matrix[5]
-                                );
-                            } else {
-                                array.push(1, 0, 0, 1, 0, 0);
-                            }
-
-                            const repeat: boolean = recode[idx++];
-                            array.push(repeat ? 1 : 0);
-
-                            const smooth: boolean = recode[idx++];
-                            array.push(smooth ? 1 : 0);
-                        }
-                        break;
-
-                    case Graphics.BITMAP_STROKE:
-                        {
-
-                            array.push(recode[idx++]);
-
-                            const lineCap: CapsStyleImpl = recode[idx++];
-                            switch (lineCap) {
-
-                                case "none":
-                                    array.push(0);
-                                    break;
-
-                                case "round":
-                                    array.push(1);
-                                    break;
-
-                                case "square":
-                                    array.push(2);
-                                    break;
-
-                            }
-
-                            const lineJoin: JointStyleImpl = recode[idx++];
-                            switch (lineJoin) {
-
-                                case "bevel":
-                                    array.push(0);
-                                    break;
-
-                                case "miter":
-                                    array.push(1);
-                                    break;
-
-                                case "round":
-                                    array.push(2);
-                                    break;
-
-                            }
-
-                            // MITER LIMIT
-                            array.push(recode[idx++]);
-
-                            const bitmapData: BitmapData = recode[idx++];
-
-                            let buffer: Uint8Array;
-                            if (bitmapData.image !== null || bitmapData.canvas !== null) {
-
-                                const canvas: HTMLCanvasElement = $cacheStore.getCanvas();
-
-                                const width: number  = bitmapData.width;
-                                const height: number = bitmapData.height;
-                                canvas.width  = width;
-                                canvas.height = height;
-
-                                const context: CanvasRenderingContext2D | null = canvas.getContext("2d");
-                                if (!context) {
-                                    throw new Error("the context is null.");
-                                }
-
-                                // @ts-ignore
-                                context.drawImage(bitmapData.image || bitmapData.canvas, 0, 0);
-
-                                buffer = new Uint8Array(
-                                    context.getImageData(0, 0, width, height).data
-                                );
-
-                                $cacheStore.destroy(context);
-
-                            } else if (bitmapData._$buffer !== null) {
-                                buffer = bitmapData._$buffer;
-                            } else {
-                                break;
-                            }
-
-                            array.push(
-                                bitmapData.width,
-                                bitmapData.height,
-                                this._$xMax - this._$xMin,
-                                this._$yMax - this._$yMin,
-                                buffer.length
-                            );
-
-                            for (let idx: number = 0; idx < buffer.length; ++idx) {
-                                array.push(buffer[idx]);
-                            }
-
-                            const matrix: Float32Array = recode[idx++];
-                            if (matrix) {
-                                array.push(
-                                    matrix[0], matrix[1], matrix[2],
-                                    matrix[3], matrix[4], matrix[5]
-                                );
-                            } else {
-                                array.push(1, 0, 0, 1, 0, 0);
-                            }
-
-                            const repeat: boolean = recode[idx++];
-                            array.push(repeat ? 1 : 0);
-
-                            const smooth: boolean = recode[idx++];
-                            array.push(smooth ? 1 : 0);
-                        }
-                        break;
-
-                    default:
-                        break;
-
-                }
-            }
-
-            this._$buffer = new $Float32Array(array);
-        }
-
-        return this._$buffer.slice();
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext|CanvasRenderingContext2D} context
-     * @param  {Float32Array} [color_transform=null]
-     * @param  {boolean}      [is_clip=false]
-     * @param  {object}       [options=null]
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$runCommand (
-        context: CanvasToWebGLContext | CanvasRenderingContext2D,
-        color_transform: Float32Array | null = null,
-        is_clip: boolean = false,
-        options: PlayerHitObjectImpl | null = null
-    ): boolean {
-
-        // fixed logic
-        if (this._$doLine) {
-            this.endLine();
-        }
-
-        // fixed logic
-        if (this._$doFill) {
-            this.endFill();
-        }
-
-        if (!this._$recode) {
-            return false;
-        }
-
-        const recode: any[] = this._$recode;
-        const length: number = recode.length;
-        for (let idx: number = 0; idx < length; ) {
-            switch (recode[idx++]) {
-
-                case Graphics.BEGIN_PATH:
-                    context.beginPath();
-                    break;
-
-                case Graphics.MOVE_TO:
-                    context.moveTo(recode[idx++], recode[idx++]);
-                    break;
-
-                case Graphics.LINE_TO:
-                    context.lineTo(recode[idx++], recode[idx++]);
-                    break;
-
-                case Graphics.CURVE_TO:
-                    context.quadraticCurveTo(
-                        recode[idx++], recode[idx++],
-                        recode[idx++], recode[idx++]
-                    );
-                    break;
-
-                case Graphics.FILL_STYLE:
-                    {
-                        if (is_clip || options) {
-                            idx += 4;
-                            continue;
-                        }
-
-                        const color: Float32Array = $getFloat32Array4();
-                        color[0] = recode[idx++] / 255;
-                        color[1] = recode[idx++] / 255;
-                        color[2] = recode[idx++] / 255;
-                        color[3] = recode[idx++] / 255;
-
-                        if (color_transform !== null) {
-                            if (color_transform[7] !== 0) {
-                                color[3] = $Math.max(0, $Math.min(
-                                    color[3] * color_transform[7], 255)
-                                ) / 255;
-                            }
-                        }
-
-                        context.fillStyle = color;
-                    }
-                    break;
-
-                case Graphics.END_FILL:
-
-                    if (options && "isPointInPath" in context
-                        && context.isPointInPath(options.x, options.y)
-                    ) {
-                        return true;
-                    }
-
-                    if (!is_clip && !options) {
-                        context.fill();
-                    }
-
-                    break;
-
-                case Graphics.STROKE_STYLE:
-                    {
-                        if (is_clip || options) {
-                            idx += 8;
-                            continue;
-                        }
-
-                        context.lineWidth  = recode[idx++];
-                        context.lineCap    = recode[idx++];
-                        context.lineJoin   = recode[idx++];
-                        context.miterLimit = recode[idx++];
-
-                        const color = $getFloat32Array4();
-
-                        color[0] = recode[idx++] / 255;
-                        color[1] = recode[idx++] / 255;
-                        color[2] = recode[idx++] / 255;
-                        color[3] = recode[idx++] / 255;
-
-                        if (color_transform !== null) {
-                            if (color_transform[7] !== 0) {
-                                color[3] = $Math.max(0, $Math.min(
-                                    color[3] + color_transform[7], 255)
-                                ) / 255;
-                            }
-                        }
-
-                        context.strokeStyle = color;
-                    }
-                    break;
-
-                case Graphics.END_STROKE:
-
-                    if (options && "isPointInStroke" in context
-                        && context.isPointInStroke(options.x, options.y)
-                    ) {
-                        return true;
-                    }
-
-                    if (!is_clip && !options) {
-                        context.stroke();
-                    }
-
-                    break;
-
-                case Graphics.CLOSE_PATH:
-                    context.closePath();
-                    break;
-
-                case Graphics.CUBIC:
-                    context.bezierCurveTo(
-                        recode[idx++], recode[idx++],
-                        recode[idx++], recode[idx++],
-                        recode[idx++], recode[idx++]
-                    );
-                    break;
-
-                case Graphics.ARC:
-                    context.arc(
-                        recode[idx++], recode[idx++], recode[idx++],
-                        0, 2 * $Math.PI
-                    );
-                    break;
-
-                case Graphics.GRADIENT_FILL:
-                    {
-                        if (options && "isPointInPath" in context
-                            && context.isPointInPath(options.x, options.y)
-                        ) {
-                            return true;
-                        }
-
-                        if (is_clip || options
-                            || context instanceof CanvasRenderingContext2D // fixed logic
-                        ) {
-                            idx += 6;
-                            continue;
-                        }
-
-                        const type: GradientTypeImpl = recode[idx++];
-                        const stops: ColorStopImpl[] = recode[idx++];
-                        const matrix: Float32Array = recode[idx++];
-                        const spread: SpreadMethodImpl = recode[idx++];
-                        const interpolation: InterpolationMethodImpl = recode[idx++];
-                        const focal: number = recode[idx++];
-
-                        let css: CanvasGradientToWebGL;
-                        if (type === "linear") {
-
-                            const xy: Float32Array = $linearGradientXY(matrix);
-                            css = context.createLinearGradient(
-                                xy[0], xy[1], xy[2], xy[3],
-                                interpolation, spread
-                            );
-
-                        } else {
-
-                            context.save();
-                            context.transform(
-                                matrix[0], matrix[1], matrix[2],
-                                matrix[3], matrix[4], matrix[5]
-                            );
-
-                            css = context.createRadialGradient(
-                                0, 0, 0, 0, 0, 819.2,
-                                interpolation, spread, focal
-                            );
-
-                        }
-
-                        for (let idx: number = 0; idx < stops.length; ++idx) {
-
-                            const color: ColorStopImpl = stops[idx];
-
-                            let alpha: number = color.A;
-                            if (color_transform) {
-                                if (color_transform[7] !== 0) {
-                                    alpha = $Math.max(0, $Math.min(color.A + color_transform[7], 255)) | 0;
-                                }
-                            }
-
-                            css.addColorStop(color.ratio, $getInt32Array4(
-                                color.R, color.G, color.B, alpha
-                            ));
-
-                        }
-
-                        context.fillStyle = css;
-                        context.fill();
-
-                        if (type === "radial") {
-                            context.restore();
-                        }
-                    }
-                    break;
-
-                case Graphics.GRADIENT_STROKE:
-                    {
-                        if (options && "isPointInStroke" in context
-                            && context.isPointInStroke(options.x, options.y)
-                        ) {
-                            return true;
-                        }
-
-                        if (is_clip || options
-                            || context instanceof CanvasRenderingContext2D // fixed logic
-                        ) {
-                            idx += 12;
-                            continue;
-                        }
-
-                        context.lineWidth  = recode[idx++];
-                        context.lineCap    = recode[idx++];
-                        context.lineJoin   = recode[idx++];
-                        context.miterLimit = recode[idx++];
-
-                        const type: GradientTypeImpl = recode[idx++];
-                        const stops: ColorStopImpl[] = recode[idx++];
-                        const matrix: Float32Array = recode[idx++];
-                        const spread: SpreadMethodImpl = recode[idx++];
-                        const interpolation: InterpolationMethodImpl = recode[idx++];
-                        const focal: number = recode[idx++];
-
-                        let css: CanvasGradientToWebGL;
-                        if (type === "linear") {
-
-                            const xy: Float32Array = $linearGradientXY(matrix);
-                            css = context.createLinearGradient(
-                                xy[0], xy[1], xy[2], xy[3],
-                                interpolation, spread
-                            );
-
-                        } else {
-
-                            context.save();
-                            context.transform(
-                                matrix[0], matrix[1], matrix[2],
-                                matrix[3], matrix[4], matrix[5]
-                            );
-
-                            css = context.createRadialGradient(
-                                0, 0, 0, 0, 0, 819.2,
-                                interpolation, spread, focal
-                            );
-
-                        }
-
-                        for (let idx = 0; idx < stops.length; ++idx) {
-
-                            const color: ColorStopImpl = stops[idx];
-
-                            let alpha: number = color.A;
-                            if (color_transform) {
-                                if (color_transform[7] !== 0) {
-                                    alpha = $Math.max(0, $Math.min(color.A + color_transform[7], 255)) | 0;
-                                }
-                            }
-
-                            css.addColorStop(color.ratio, $getInt32Array4(
-                                color.R, color.G, color.B, alpha
-                            ));
-
-                        }
-
-                        context.strokeStyle = css;
-                        context.stroke();
-
-                        if (type === "radial") {
-                            context.restore();
-                        }
-
-                    }
-                    break;
-
-                case Graphics.BITMAP_FILL:
-                    {
-                        if (options && "isPointInPath" in context
-                            && context.isPointInPath(options.x, options.y)
-                        ) {
-                            return true;
-                        }
-
-                        if (is_clip || options
-                            || context instanceof CanvasRenderingContext2D // fixed logic
-                        ) {
-                            idx += 6;
-                            continue;
-                        }
-
-                        context.save();
-
-                        const bitmapData: BitmapData = recode[idx++];
-                        const matrix: Float32Array = recode[idx++];
-                        const repeat: boolean = recode[idx++];
-                        const smooth: boolean = recode[idx++];
-
-                        if (matrix) {
-                            context.transform(
-                                matrix[0], matrix[1], matrix[2],
-                                matrix[3], matrix[4], matrix[5]
-                            );
-                        }
-
-                        const texture: WebGLTexture | null = bitmapData.getTexture();
-                        if (!texture || !color_transform) {
-                            break;
-                        }
-
-                        context.imageSmoothingEnabled = smooth;
-                        if (this._$bitmapId
-                            || bitmapData.width === this._$xMax - this._$xMin
-                            && bitmapData.height === this._$yMax - this._$yMin
-                        ) {
-
-                            context.drawBitmap(texture);
-
-                        } else {
-
-                            context.fillStyle = context.createPattern(
-                                texture, repeat, color_transform
-                            );
-
-                            context.fill();
-                        }
-
-                        // restore
-                        context.restore();
-
-                        context.imageSmoothingEnabled = false;
-                    }
-                    break;
-
-                case Graphics.BITMAP_STROKE:
-                    {
-                        if (options && "isPointInStroke" in context
-                            && context.isPointInStroke(options.x, options.y)
-                        ) {
-                            return true;
-                        }
-
-                        if (is_clip || options
-                            || context instanceof CanvasRenderingContext2D // fixed logic
-                        ) {
-                            idx += 9;
-                            continue;
-                        }
-
-                        context.save();
-
-                        context.lineWidth  = recode[idx++];
-                        context.lineCap    = recode[idx++];
-                        context.lineJoin   = recode[idx++];
-                        context.miterLimit = recode[idx++];
-
-                        const bitmapData: BitmapData = recode[idx++];
-                        const matrix: Float32Array = recode[idx++];
-                        const repeat: boolean = recode[idx++];
-                        const smooth: boolean = recode[idx++];
-
-                        if (matrix) {
-                            context.transform(
-                                matrix[0], matrix[1], matrix[2],
-                                matrix[3], matrix[4], matrix[5]
-                            );
-                        }
-
-                        const texture: WebGLTexture | null = bitmapData.getTexture();
-                        if (!texture || !color_transform) {
-                            break;
-                        }
-
-                        context.strokeStyle = context.createPattern(
-                            texture, repeat, color_transform
-                        );
-
-                        context.imageSmoothingEnabled = smooth;
-                        context.stroke();
-
-                        // restore
-                        context.restore();
-                        context.imageSmoothingEnabled = false;
-
-                    }
-                    break;
-
-                default:
-                    break;
-
-            }
-        }
-
-        return false;
+        this._$buffer      = buffer;
+        this.isConfirmed   = true;
+        this._$isBeginning = true;
+        this._$maxAlpha    = 1;
     }
 }

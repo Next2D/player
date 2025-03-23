@@ -1,13 +1,11 @@
-import { UIImpl } from "@next2d/interface";
+import type { IUI } from "./interface/IUI";
 import {
     Easing,
-    Job,
     Tween
 } from "@next2d/ui";
 
-const ui: UIImpl = {
+const ui: IUI = {
     Easing,
-    Job,
     Tween
 };
 

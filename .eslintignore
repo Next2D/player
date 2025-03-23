@@ -1,6 +1,0 @@
-**/node_modules/*
-dist
-json
-@types
-.github
-__tests__

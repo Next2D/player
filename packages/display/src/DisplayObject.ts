@@ -1,83 +1,67 @@
-import type { Stage } from "./Stage";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Sprite } from "./Sprite";
-import {
-    Event as Next2DEvent,
-    EventDispatcher
-} from "@next2d/events";
-import {
-    Transform,
-    Rectangle,
-    Point,
+import type { IParent } from "./interface/IParent";
+import type { IPlaceObject } from "./interface/IPlaceObject";
+import type { IBlendMode } from "./interface/IBlendMode";
+import type { IFilterArray } from "./interface/IFilterArray";
+import type { MovieClip } from "./MovieClip";
+import type { ISprite } from "./interface/ISprite";
+import type {
     ColorTransform,
-    Matrix
+    Matrix,
+    Rectangle,
+    Point
 } from "@next2d/geom";
-import type {
-    FilterArrayImpl,
-    BlendModeImpl,
-    ParentImpl,
-    PlaceObjectImpl,
-    BoundsImpl,
-    DictionaryTagImpl,
-    PropertyMessageMapImpl,
-    DisplayObjectImpl,
-    AttachmentImpl,
-    PropertyMessageImpl,
-    CachePositionImpl
-} from "@next2d/interface";
-import type {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
+import { EventDispatcher } from "@next2d/events";
+import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
+import { execute as displayObjectConcatenatedMatrixUseCase } from "./DisplayObject/usecase/DisplayObjectConcatenatedMatrixUseCase";
+import { execute as displayObjectGetAlphaUseCase } from "./DisplayObject/usecase/DisplayObjectGetAlphaUseCase";
+import { execute as displayObjectSetAlphaUseCase } from "./DisplayObject/usecase/DisplayObjectSetAlphaUseCase";
+import { execute as displayObjectGetFiltersUseCase } from "./DisplayObject/usecase/DisplayObjectGetFiltersUseCase";
+import { execute as displayObjectSetFiltersUseCase } from "./DisplayObject/usecase/DisplayObjectSetFiltersUseCase";
+import { execute as displayObjectGetBlendModeUseCase } from "./DisplayObject/usecase/DisplayObjectGetBlendModeUseCase";
+import { execute as displayObjectSetBlendModeUseCase } from "./DisplayObject/usecase/DisplayObjectSetBlendModeUseCase";
+import { execute as displayObjectGetRotationUseCase } from "./DisplayObject/usecase/DisplayObjectGetRotationUseCase";
+import { execute as displayObjectSetRotationUseCase } from "./DisplayObject/usecase/DisplayObjectSetRotationUseCase";
+import { execute as displayObjectGetScaleXUseCase } from "./DisplayObject/usecase/DisplayObjectGetScaleXUseCase";
+import { execute as displayObjectSetScaleXUseCase } from "./DisplayObject/usecase/DisplayObjectSetScaleXUseCase";
+import { execute as displayObjectGetScaleYUseCase } from "./DisplayObject/usecase/DisplayObjectGetScaleYUseCase";
+import { execute as displayObjectSetScaleYUseCase } from "./DisplayObject/usecase/DisplayObjectSetScaleYUseCase";
+import { execute as displayObjectGetXUseCase } from "./DisplayObject/usecase/DisplayObjectGetXUseCase";
+import { execute as displayObjectSetXUseCase } from "./DisplayObject/usecase/DisplayObjectSetXUseCase";
+import { execute as displayObjectGetYUseCase } from "./DisplayObject/usecase/DisplayObjectGetYUseCase";
+import { execute as displayObjectSetYUseCase } from "./DisplayObject/usecase/DisplayObjectSetYUseCase";
+import { execute as displayObjectGetWidthUseCase } from "./DisplayObject/usecase/DisplayObjectGetWidthUseCase";
+import { execute as displayObjectSetWidthUseCase } from "./DisplayObject/usecase/DisplayObjectSetWidthUseCase";
+import { execute as displayObjectLocalToGlobalService } from "./DisplayObject/service/DisplayObjectLocalToGlobalService";
+import { execute as displayObjectGlobalToLocalService } from "./DisplayObject/service/DisplayObjectGlobalToLocalService";
+import { execute as displayObjectGetHeightUseCase } from "./DisplayObject/usecase/DisplayObjectGetHeightUseCase";
+import { execute as displayObjectSetHeightUseCase } from "./DisplayObject/usecase/DisplayObjectSetHeightUseCase";
+import { execute as displayObjectRemoveService } from "./DisplayObject/service/DisplayObjectRemoveService";
+import { execute as displayObjectGetBoundsUseCase } from "./DisplayObject/usecase/DisplayObjectGetBoundsUseCase";
+import { execute as displayObjectHitTestObjectUseCase } from "./DisplayObject/usecase/DisplayObjectHitTestObjectUseCase";
+import { execute as displayObjectHitTestPointUseCase } from "./DisplayObject/usecase/DisplayObjectHitTestPointUseCase";
+import { execute as displayObjectGetMatrixUseCase } from "./DisplayObject/usecase/DisplayObjectGetMatrixUseCase";
+import { execute as displayObjectGetColorTransformUseCase } from "./DisplayObject/usecase/DisplayObjectGetColorTransformUseCase";
 import {
-    $getEvent,
     $getInstanceId,
-    $currentMousePoint,
-    $poolColorTransform,
-    $rendererWorker,
-    $poolMatrix,
-    $hitContext,
+    $loaderInfoMap,
+    $rootMap,
     $variables,
-    $blendToNumber
-} from "@next2d/util";
-import {
-    $doUpdated,
-    $clamp,
-    $getArray,
-    $boundsMatrix,
-    $Math,
-    $poolBoundsObject,
-    $Infinity,
-    $getBoundsObject,
-    $isNaN,
-    $Deg2Rad,
-    $Number,
-    $Rad2Deg,
-    $SHORT_INT_MIN,
-    $SHORT_INT_MAX,
-    $MATRIX_ARRAY_IDENTITY,
-    $multiplicationMatrix,
-    $poolFloat32Array6,
-    $getMap,
-    $poolMap,
-    $getFloat32Array6,
-    $devicePixelRatio,
-    $poolArray,
-    $cacheStore
-} from "@next2d/share";
+    $getDraggingDisplayObject,
+    $pointer
+} from "./DisplayObjectUtil";
 
 /**
- * DisplayObject クラスは、表示リストに含めることのできるすべてのオブジェクトに関する基本クラスです。
- * DisplayObject クラス自体は、画面上でのコンテンツの描画のための API を含みません。
- * そのため、DisplayObject クラスのカスタムサブクラスを作成する場合は、
- * Shape、Sprite、Bitmap、TextField または MovieClip など、
- * 画面上にコンテンツを描画する API を持つサブクラスの 1 つを拡張する必要があります。
+ * @description DisplayObject クラスは、表示リストに含めることのできるすべてのオブジェクトに関する基本クラスです。
+ *              DisplayObject クラス自体は、画面上でのコンテンツの描画のための API を含みません。
+ *              そのため、DisplayObject クラスのカスタムサブクラスを作成する場合は、
+ *              Shape、Sprite、TextField または MovieClip など、画面上にコンテンツを描画する API を持つサブクラスの 1 つを拡張する必要があります。
  *
- * The DisplayObject class is the base class for all objects that can be placed on the display list.
- * The DisplayObject class itself does not include any APIs for rendering content onscreen.
- * For that reason, if you want create a custom subclass of the DisplayObject class,
- * you will want to extend one of its subclasses that do have APIs for rendering content onscreen,
- * such as the Shape, Sprite, Bitmap, TextField, or MovieClip class.
+ *              The DisplayObject class is the base class for all objects that can be placed on the display list.
+ *              The DisplayObject class itself does not include any APIs for rendering content onscreen.
+ *              For that reason, if you want create a custom subclass of the DisplayObject class,
+ *              you will want to extend one of its subclasses that do have APIs for rendering content onscreen, such as the Shape, Sprite, TextField, or MovieClip class.
  *
  * @class
  * @memberOf next2d.display
@@ -85,41 +69,364 @@ import {
  */
 export class DisplayObject extends EventDispatcher
 {
-    public readonly _$instanceId: number;
-    protected _$id: number;
-    protected _$stage: Stage | null;
-    protected _$parent: ParentImpl<any> | null;
-    protected _$scale9Grid: Rectangle | null;
-    protected _$characterId: number;
-    protected _$active: boolean;
-    protected _$isMask: boolean;
-    public _$updated: boolean;
-    protected _$added: boolean;
-    protected _$addedStage: boolean;
-    protected _$filters: FilterArrayImpl | null;
-    protected _$blendMode: BlendModeImpl | null;
-    protected _$transform: Transform;
-    public _$hitObject: Sprite | null;
-    protected _$isNext: boolean;
-    protected _$created: boolean;
-    protected _$posted: boolean;
-    protected _$clipDepth: number;
-    protected _$name: string;
-    protected _$mask: DisplayObjectImpl<any> | null;
-    protected _$visible: boolean;
-    protected _$root: ParentImpl<any> | null;
-    public _$loaderInfo: LoaderInfo | null;
-    protected _$scaleX: number | null;
-    protected _$scaleY: number | null;
-    protected _$variables: Map<any, any> | null;
-    protected _$placeObject: PlaceObjectImpl | null;
-    protected _$rotation: number | null;
-    protected _$changePlace: boolean;
-    protected _$currentPlaceId: number;
-    protected _$placeId: number;
-    protected _$startFrame: number;
-    protected _$endFrame: number;
-    protected _$postArray: Float32Array | null;
+    /**
+     * @description DisplayObject のユニークなインスタンスID
+     *              Unique instance ID of DisplayObject
+     *
+     * @type {number}
+     * @readonly
+     * @public
+     */
+    public readonly instanceId: number;
+
+    /**
+     * @description DisplayObject の生成元ID
+     *              Source ID of DisplayObject
+     *
+     * @type {number}
+     * @default -1
+     * @public
+     */
+    public dictionaryId: number;
+
+    /**
+     * @description Spriteの機能を所持しているかを返却
+     *              Returns whether Sprite functions are possessed.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isSprite: boolean;
+
+    /**
+     * @description InteractiveObject の機能を所持しているかを返却
+     *              Returns whether InteractiveObject functions are possessed.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isInteractive: boolean;
+
+    /**
+     * @description コンテナの機能を所持しているかを返却
+     *              Returns whether the display object has container functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isContainerEnabled: boolean;
+
+    /**
+     * @description MovieClipの機能を所持しているかを返却
+     *              Returns whether the display object has MovieClip functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isTimelineEnabled: boolean;
+
+    /**
+     * @description Shapeの機能を所持しているかを返却
+     *              Returns whether the display object has Shape functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isShape: boolean;
+
+    /**
+     * @description Videoの機能を所持しているかを返却
+     *              Returns whether the display object has Video functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isVideo: boolean;
+
+    /**
+     * @description Textの機能を所持しているかを返却
+     *              Returns whether the display object has Text functionality.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isText: boolean;
+
+    /**
+     * @description 表示オブジェクトのPlaceObjectのIDを返却します。
+     *              Returns the ID of the PlaceObject of the display object.
+     *
+     * @type {number}
+     * @default -1
+     * @public
+     */
+    public placeId: number;
+
+    /**
+     * @description 現在のフレームの表示オブジェクトのPlaceObjectを返却します。
+     *             Returns the PlaceObject of the current frame of the display object.
+     *
+     * @type {IPlaceObject|null}
+     * @default null
+     * @public
+     */
+    public placeObject: IPlaceObject | null;
+
+    /**
+     * @description 構築に利用したキャラクターIDを返却します。
+     *              Returns the character ID used for construction.
+     *
+     * @type {number}
+     * @default -1
+     * @public
+     */
+    public characterId: number;
+
+    /**
+     * @description マスク対象の深度を返却します。
+     *              Returns the depth of the mask target.
+     *
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public clipDepth: number;
+
+    /**
+     * @description 名前を返却します。 getChildByName() で使用されます。
+     *              Returns the name. Used by getChildByName().
+     *
+     * @see {DisplayObjectContainer.getChildByName}
+     * @type {string}
+     * @default ""
+     * @public
+     */
+    public name: string;
+
+    /**
+     * @description 開始フレームを返却します。
+     *              Returns the start frame.
+     *
+     * @type {number}
+     * @default 1
+     * @public
+     */
+    public startFrame: number;
+
+    /**
+     * @description 終了フレームを返却します。
+     *              Returns the end frame.
+     *
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public endFrame: number;
+
+    /**
+     * @description 描画に関連する何らかの変更が加えられたかを示します。
+     *              Indicates whether any changes related to drawing have been made.
+     *
+     * @type {boolean}
+     * @default true
+     * @public
+     */
+    public changed: boolean;
+
+    /**
+     * @description DisplayObjectの追加イベントが発火したかを示します。
+     *              Indicates whether the DisplayObject addition event has been fired.
+     *
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public $added: boolean;
+
+    /**
+     * @description DisplayObjectのステージ追加イベントが発火したかを示します。
+     *              Indicates whether the DisplayObject stage addition event has been fired.
+     *
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public $addedToStage: boolean;
+
+    /**
+     * @description キャッシュで利用するユニークキー
+     *              Unique key used for caching
+     *
+     * @type {string}
+     * @public
+     */
+    public uniqueKey: string;
+
+    /**
+     * @description 固定された変換行列、nullの場合はPlaceObjectの変換行列を検索します。
+     *              Fixed transformation matrix, if null, search for PlaceObject transformation matrix.
+     *
+     * @type {Matrix}
+     * @default null
+     * @protected
+     */
+    public $matrix: Matrix | null;
+
+    /**
+     * @description 固定されたカラートランスフォーム、nullの場合はPlaceObjectのカラートランスフォームを検索します。
+     *              Fixed color transform, if null, search for PlaceObject color transform.
+     *
+     * @type {ColorTransform}
+     * @default null
+     * @protected
+     */
+    public $colorTransform: ColorTransform | null;
+
+    /**
+     * @description 表示オブジェクトに現在関連付けられている各フィルターオブジェクトの配列です。
+     *              An array of filter objects currently associated with the display object.
+     *
+     * @type {array}
+     * @default null
+     * @protected
+     */
+    public $filters: IFilterArray | null;
+
+    /**
+     * @description 使用するブレンドモードを指定する BlendMode クラスの値です。
+     *              A value from the BlendMode class that specifies which blend mode to use.
+     *
+     * @type {string}
+     * @default BlendMode.NORMAL
+     * @protected
+     */
+    public $blendMode: IBlendMode | null;
+
+    /**
+     * @description キャッシュした scaleX の値を返却します。
+     *              Returns the cached scaleX value.
+     *
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $scaleX: number | null;
+
+    /**
+     * @description キャッシュした scaleY の値を返却します。
+     *              Returns the cached scaleY value.
+     *
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $scaleY: number | null;
+
+    /**
+     * @description キャッシュした rotation の値を返却します。
+     *              Returns the cached rotation value.
+     *
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $rotation: number | null;
+
+    /**
+     * @description キャッシュした x の値を返却します。
+     *              Returns the cached x value.
+     *
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $x: number | null;
+
+    /**
+     * @description キャッシュした y の値を返却します。
+     *              Returns the cached y value.
+     *
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $y: number | null;
+
+    /**
+     * @description キャッシュした alpha の値を返却します。
+     *              Returns the cached alpha value.
+     *
+     * @type {number}
+     * @default null
+     * @protected
+     */
+    public $alpha: number | null;
+
+    /**
+     * @description 描画情報を保持するキャッシュ
+     *              Cache that holds drawing information
+     *
+     * @type {Map<any, any> | null}
+     * @default null
+     * @protected
+     */
+    public $cache: Map<any, any> | null;
+
+    /**
+     * @description 表示オブジェクトのスケール9グリッドを示します。
+     *              Indicates the scale9 grid of the display object.
+     *
+     * @type {Rectangle}
+     * @private
+     */
+    private _$scale9Grid: Rectangle | null;
+
+    /**
+     * @description 表示オブジェクトの可視性を示します。
+     *              Indicates the visibility of the display object.
+     *
+     * @type {boolean}
+     * @private
+     */
+    private _$visible: boolean;
+
+    /**
+     * @description 表示オブジェクト単位の変数を保持するマップ
+     *              Map that holds variables for display objects
+     *
+     * @type {Map<any, any>}
+     * @default null
+     * @private
+     */
+    private _$variables: Map<any, any> | null;
+
+    /**
+     * @description マスクとしてDisplayObjectにセットされているかを示します。
+     *              Indicates whether the DisplayObject is set as a mask.
+     *
+     * @type {boolean}
+     * @default false
+     * @private
+     */
+    public isMask: boolean;
+
+    /**
+     * @description このDisplayObjectの親のDisplayObjectContainerを返却します。
+     *              通常であれば、親のDisplayObjectContainerを継承しているのは、Sprite、または MovieClip となります。
+     *              Returns the DisplayObjectContainer of this DisplayObject's parent.
+     *              Under normal circumstances, the parent DisplayObjectContainer would inherit from Sprite or MovieClip.
+     *
+     * @member {Sprite | MovieClip | null}
+     * @public
+     */
+    public parent: ISprite<any> | null;
 
     /**
      * @constructor
@@ -129,246 +436,67 @@ export class DisplayObject extends EventDispatcher
     {
         super();
 
-        /**
-         * @type {number}
-         * @private
-         */
-        this._$id = -1;
+        this.instanceId    = $getInstanceId();
+        this.dictionaryId  = -1;
+        this.uniqueKey     = "";
 
-        /**
-         * @type {number}
-         * @private
-         */
-        this._$instanceId = $getInstanceId();
+        // 各小クラスの機能を所持しているか
+        this.isSprite           = false;
+        this.isContainerEnabled = false;
+        this.isTimelineEnabled  = false;
+        this.isShape            = false;
+        this.isVideo            = false;
+        this.isText             = false;
+        this.isInteractive      = false;
 
-        /**
-         * @type {number}
-         * @private
-         */
-        this._$characterId = 0;
+        // PlaceObject
+        this.placeId       = -1;
+        this.placeObject   = null;
 
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$active = false;
+        // Characterパラメーター
+        this.characterId = -1;
+        this.clipDepth   = 0;
+        this.name        = "";
+        this.startFrame  = 1;
+        this.endFrame    = 0;
+        this.parent      = null;
 
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$isMask = false;
+        // フラグ
+        this.isMask        = false;
+        this.changed       = true;
+        this.$added        = false;
+        this.$addedToStage = false;
 
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$updated = true;
+        // Transform変数
+        this.$matrix         = null;
+        this.$colorTransform = null;
+        this.$filters        = null;
+        this.$blendMode      = null;
 
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$added = false;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$addedStage = false;
-
-        /**
-         * @type {array|null}
-         * @default null
-         * @private
-         */
-        this._$filters = null;
-
-        /**
-         * @type {string|null}
-         * @default null
-         * @private
-         */
-        this._$blendMode = null;
-
-        /**
-         * @type {Sprite|null}
-         * @default null
-         * @private
-         */
-        this._$hitObject = null;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$isNext = true;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$created = false;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$posted = false;
-
-        /**
-         * @type {Float32Array}
-         * @default null
-         * @private
-         */
-        this._$postArray = null;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$clipDepth = 0;
-
-        /**
-         * @type {string}
-         * @default ""
-         * @private
-         */
-        this._$name = "";
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$visible = true;
-
-        /**
-         * @type {DisplayObject|null}
-         * @default null
-         * @private
-         */
-        this._$mask = null;
-
-        /**
-         * @type {Rectangle|null}
-         * @default null
-         * @private
-         */
+        this._$visible    = true;
         this._$scale9Grid = null;
+        this._$variables  = null;
 
-        /**
-         * @type {Sprite | null}
-         * @default null
-         * @private
-         */
-        this._$parent = null;
+        // キャッシュ
+        this.$x        = null;
+        this.$y        = null;
+        this.$alpha    = null;
+        this.$scaleX   = null;
+        this.$scaleY   = null;
+        this.$rotation = null;
+        this.$cache    = null;
+    }
 
-        /**
-         * @type {Stage|null}
-         * @default null
-         * @private
-         */
-        this._$stage = null;
-
-        /**
-         * @type {Sprite|null}
-         * @default null
-         * @private
-         */
-        this._$root = null;
-
-        /**
-         * @type {number|null}
-         * @default null
-         * @private
-         */
-        this._$loaderInfo = null;
-
-        /**
-         * @type {number|null}
-         * @default null
-         * @private
-         */
-        this._$placeId = -1;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$startFrame = 1;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$endFrame = 0;
-
-        /**
-         * @type {Transform}
-         * @private
-         */
-        this._$transform = new Transform(this);
-
-        /**
-         * @type {Map}
-         * @default null
-         * @private
-         */
-        this._$variables = null;
-
-        /**
-         * @type {object}
-         * @default null
-         * @private
-         */
-        this._$placeObject = null;
-
-        /**
-         * @type {number}
-         * @default -1
-         * @private
-         */
-        this._$currentPlaceId = -1;
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$changePlace = false;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$scaleX = null;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$scaleY = null;
-
-        /**
-         * @type {number}
-         * @default null
-         * @private
-         */
-        this._$rotation = null;
+    /**
+     * @description この表示オブジェクトおよびルートレベルまでのそのすべての親オブジェクトの結合された Matrix を返却します。
+     *              Returns a concatenated Matrix object representing the combined transformation matrixes of the display object and all of its parent objects, back to the root level.
+     *
+     * @member  {Matrix}
+     * @readonly
+     */
+    get concatenatedMatrix (): Matrix
+    {
+        return displayObjectConcatenatedMatrixUseCase(this);
     }
 
     /**
@@ -387,37 +515,11 @@ export class DisplayObject extends EventDispatcher
      */
     get alpha (): number
     {
-        const colorTransform: Float32Array = this
-            ._$transform
-            ._$rawColorTransform();
-
-        return colorTransform[3] + colorTransform[7] / 255;
+        return displayObjectGetAlphaUseCase(this);
     }
     set alpha (alpha: number)
     {
-        alpha = $clamp(alpha, 0, 1, 0);
-
-        const transform: Transform = this._$transform;
-
-        // clone
-        if (!transform._$colorTransform) {
-            const colorTransform: ColorTransform = transform.colorTransform;
-
-            colorTransform._$colorTransform[3] = alpha;
-            colorTransform._$colorTransform[7] = 0;
-
-            transform.colorTransform = colorTransform;
-            $poolColorTransform(colorTransform);
-
-        } else {
-            const colorTransform: ColorTransform = transform._$colorTransform;
-
-            colorTransform._$colorTransform[3] = alpha;
-            colorTransform._$colorTransform[7] = 0;
-
-            this._$doChanged();
-            $doUpdated();
-        }
+        displayObjectSetAlphaUseCase(this, alpha);
     }
 
     /**
@@ -428,127 +530,44 @@ export class DisplayObject extends EventDispatcher
      * @default BlendMode.NORMAL
      * @public
      */
-    get blendMode (): BlendModeImpl
+    get blendMode (): IBlendMode
     {
-        // use cache
-        if (this._$blendMode) {
-            return this._$blendMode;
-        }
-
-        const transform: Transform = this._$transform;
-        if (transform._$blendMode) {
-
-            // cache
-            this._$blendMode = transform._$blendMode;
-
-            return transform._$blendMode;
-        }
-
-        const placeObject: PlaceObjectImpl | null = this._$placeObject || this._$getPlaceObject();
-        if (placeObject && placeObject.blendMode) {
-
-            // cache
-            this._$blendMode = placeObject.blendMode;
-
-            return placeObject.blendMode;
-        }
-
-        // cache
-        this._$blendMode = "normal";
-
-        return "normal";
+        return displayObjectGetBlendModeUseCase(this);
     }
-    set blendMode (blend_mode: BlendModeImpl)
+    set blendMode (blend_mode: IBlendMode)
     {
-        const transform: Transform = this._$transform;
-        if (!transform._$blendMode) {
-            transform._$transform(null, null, null, blend_mode);
-        } else {
-            transform._$blendMode = blend_mode;
-            this._$doChanged();
-            $doUpdated();
-        }
-        this._$blendMode = blend_mode;
+        displayObjectSetBlendModeUseCase(this, blend_mode);
     }
 
     /**
-     * @description 表示オブジェクトに現在関連付けられている各フィルターオブジェクトが
-     *              格納されているインデックス付きの配列です。
-     *              An indexed array that contains each filter object
-     *              currently associated with the display object.
+     * @description 表示オブジェクトに現在関連付けられている各フィルターオブジェクトの配列です。
+     *              An array of filter objects currently associated with the display object.
      *
      * @member  {array}
-     * @default {array}
+     * @default null
      * @public
      */
-    get filters (): FilterArrayImpl
+    get filters (): IFilterArray | null
     {
-        // use cache
-        if (this._$filters) {
-            const filters: FilterArrayImpl = $getArray();
-            for (let idx: number = 0; idx < this._$filters.length; ++idx) {
-                filters[idx] = this._$filters[idx].clone();
-            }
-            return filters;
-        }
-
-        const transform: Transform = this._$transform;
-        if (transform._$filters) {
-
-            const clone: FilterArrayImpl   = $getArray();
-            const filters: FilterArrayImpl = $getArray();
-            for (let idx: number = 0; idx < transform._$filters.length; ++idx) {
-                const filter = transform._$filters[idx];
-                clone[idx]   = filter.clone();
-                filters[idx] = filter.clone();
-            }
-
-            // cache
-            this._$filters = clone;
-
-            return filters;
-        }
-
-        const placeObject: PlaceObjectImpl | null = this._$placeObject || this._$getPlaceObject();
-        if (placeObject && placeObject.surfaceFilterList) {
-
-            // create filter
-            if (!placeObject.filters) {
-                placeObject.filters = transform
-                    ._$buildFilter(placeObject.surfaceFilterList);
-            }
-
-            const clone: FilterArrayImpl = $getArray();
-
-            // @ts-ignore
-            const filters: FilterArrayImpl = $getArray();
-            for (let idx: number = 0; idx < placeObject.filters.length; ++idx) {
-                const filter = placeObject.filters[idx];
-                clone[idx]   = filter.clone();
-                filters[idx] = filter.clone();
-            }
-
-            // cache
-            this._$filters = clone;
-
-            return filters;
-        }
-
-        const filters: FilterArrayImpl = $getArray();
-
-        // cache
-        this._$filters = filters;
-
-        return filters;
+        return displayObjectGetFiltersUseCase(this);
     }
-    set filters (filters: FilterArrayImpl | null)
+    set filters (filters: IFilterArray | null)
     {
-        if (!filters) {
-            filters = $getArray();
-        }
+        displayObjectSetFiltersUseCase(this, filters);
+    }
 
-        this._$transform._$transform(null, null, filters);
-        this._$filters = filters;
+    /**
+     * @description スプライトのドラッグ先またはスプライトがドロップされた先の表示オブジェクトを指定します。
+     *              Specifies the display object over which the sprite is being dragged,
+     *              or on which the sprite was dropped.
+     *
+     * @member  {ISprite|null}
+     * @readonly
+     * @public
+     */
+    get dropTarget (): ISprite<any> | null
+    {
+        return $getDraggingDisplayObject();
     }
 
     /**
@@ -560,68 +579,11 @@ export class DisplayObject extends EventDispatcher
      */
     get height (): number
     {
-        const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-            ? this._$getBounds() as BoundsImpl
-            : $getBoundsObject();
-
-        const bounds: BoundsImpl = $boundsMatrix(
-            baseBounds,
-            this._$transform._$rawMatrix()
-        );
-        $poolBoundsObject(baseBounds);
-
-        const height: number = $Math.abs(bounds.yMax - bounds.yMin);
-
-        // object pool
-        $poolBoundsObject(bounds);
-
-        switch (height) {
-
-            case 0:
-            case $Infinity:
-            case -$Infinity:
-                return 0;
-
-            default:
-                return +height.toFixed(2);
-
-        }
+        return displayObjectGetHeightUseCase(this);
     }
     set height (height: number)
     {
-        height = +height;
-        if (!$isNaN(height) && height > -1) {
-
-            const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-                ? this._$getBounds() as BoundsImpl
-                : $getBoundsObject();
-
-            const rotation: number = this.rotation;
-            const bounds: BoundsImpl = rotation
-                ? $boundsMatrix(baseBounds, this._$transform._$rawMatrix())
-                : baseBounds;
-
-            if (rotation) {
-                $poolBoundsObject(baseBounds);
-            }
-
-            const exHeight: number = $Math.abs(bounds.yMax - bounds.yMin);
-            $poolBoundsObject(bounds);
-
-            switch (exHeight) {
-
-                case 0:
-                case $Infinity:
-                case -$Infinity:
-                    this.scaleY = 0;
-                    break;
-
-                default:
-                    this.scaleY = height / exHeight;
-                    break;
-
-            }
-        }
+        displayObjectSetHeightUseCase(this, height);
     }
 
     /**
@@ -636,54 +598,46 @@ export class DisplayObject extends EventDispatcher
      */
     get loaderInfo (): LoaderInfo | null
     {
-        return this._$loaderInfo;
+        return $loaderInfoMap.has(this)
+            ? $loaderInfoMap.get(this) as NonNullable<LoaderInfo>
+            : null;
     }
 
     /**
-     * @description 呼び出し元の表示オブジェクトは、指定された mask オブジェクトによってマスクされます。
-     *              The calling display object is masked by the specified mask object.
+     * @description 表示オブジェクトの ColorTransform を返します。
+     *              Returns the ColorTransform object of the display object.
      *
-     * @member {DisplayObject|null}
+     * @member {ColorTransform}
      * @public
      */
-    get mask (): DisplayObjectImpl<any> | null
+    get colorTransform (): ColorTransform
     {
-        return this._$mask;
+        return displayObjectGetColorTransformUseCase(this);
     }
-    set mask (mask: DisplayObjectImpl<any> | null)
+    set colorTransform (color_transform: ColorTransform)
     {
-        if (mask === this._$mask) {
-            return ;
-        }
-
-        // reset
-        if (this._$mask) {
-            if ($rendererWorker && this._$mask.stage) {
-                this._$mask._$removeWorkerInstance();
-            }
-
-            this._$mask._$isMask = false;
-            this._$mask = null;
-        }
-
-        if (mask) {
-            if ($rendererWorker
-                && "_$createWorkerInstance" in mask
-                && typeof mask._$createWorkerInstance === "function"
-            ) {
-                mask._$createWorkerInstance();
-            }
-
-            mask._$isMask = true;
-            this._$mask   = mask;
-        }
-
-        this._$doChanged();
+        this.$colorTransform = color_transform;
     }
 
     /**
-     * @description マウスまたはユーザー入力デバイスの x 軸の位置をピクセルで示します。
-     *              Indicates the x coordinate of the mouse or user input device position, in pixels.
+     * @description 表示オブジェクトの Matrix を返します。
+     *              Returns the Matrix of the display object.
+     *
+     * @member {Matrix}
+     * @public
+     */
+    get matrix (): Matrix
+    {
+        return displayObjectGetMatrixUseCase(this);
+    }
+    set matrix (matrix: Matrix)
+    {
+        this.$matrix = matrix;
+    }
+
+    /**
+     * @description 対象のDisplayObjectの基準点からの x 軸の位置をピクセルで示します。
+     *              Indicates the x coordinate of the DisplayObject instance relative to the local coordinates of the parent DisplayObjectContainer.
      *
      * @member  {number}
      * @default 0
@@ -692,14 +646,12 @@ export class DisplayObject extends EventDispatcher
      */
     get mouseX (): number
     {
-        return $getEvent()
-            ? this.globalToLocal($currentMousePoint()).x
-            : 0;
+        return this.globalToLocal($pointer).x;
     }
 
     /**
-     * @description マウスまたはユーザー入力デバイスの y 軸の位置をピクセルで示します。
-     *              Indicates the y coordinate of the mouse or user input device position, in pixels.
+     * @description 対象のDisplayObjectの基準点からの y 軸の位置をピクセルで示します。
+     *              Indicates the y coordinate of the DisplayObject instance relative to the local coordinates of the parent DisplayObjectContainer.
      *
      * @member  {number}
      * @default 0
@@ -708,71 +660,22 @@ export class DisplayObject extends EventDispatcher
      */
     get mouseY (): number
     {
-        return $getEvent()
-            ? this.globalToLocal($currentMousePoint()).y
-            : 0;
+        return this.globalToLocal($pointer).y;
     }
 
     /**
-     * @description DisplayObject のインスタンス名を示します。
-     *              Indicates the instance name of the DisplayObject.
+     * @description DisplayObject のルートである DisplayObjectContainer を返します。
+     *              Returns the DisplayObjectContainer object that contains this display object.
      *
-     * @member {string}
-     * @public
-     */
-    get name (): string
-    {
-        if (this._$name) {
-            return this._$name;
-        }
-        return `instance${this._$instanceId}`;
-    }
-    set name (name: string)
-    {
-        this._$name = `${name}`;
-
-        const parent: ParentImpl<any> | null = this._$parent;
-        if (parent && parent._$names) {
-
-            parent._$names.clear();
-
-            const children: DisplayObjectImpl<any>[] = parent._$getChildren();
-            for (let idx: number = 0; idx < children.length; ++idx) {
-                const child: DisplayObjectImpl<any> = children[idx];
-                if (child._$name) {
-                    parent._$names.set(child.name, child);
-                }
-            }
-        }
-    }
-
-    /**
-     * @description この表示オブジェクトを含む DisplayObjectContainer オブジェクトを示します。
-     *              Indicates the DisplayObjectContainer object that contains this display object.
-     *
-     * @member  {DisplayObjectContainer | null}
+     * @member   {MovieClip | Sprite | null}
      * @readonly
      * @public
      */
-    get parent (): ParentImpl<any> | null
+    get root (): IParent<MovieClip | Sprite> | null
     {
-        return this._$parent;
-    }
-
-    /**
-     * @description 読み込まれた SWF ファイル内の表示オブジェクトの場合、
-     *              root プロパティはその SWF ファイルが表す表示リストのツリー構造部分の一番上にある表示オブジェクトとなります。
-     *              For a display object in a loaded SWF file,
-     *              the root property is the top-most display object
-     *              in the portion of the display list's tree structure represented by that SWF file.
-     *
-     * @member   {DisplayObject|null}
-     * @readonly
-     * @public
-     */
-    get root (): ParentImpl<any>
-    {
-        return this._$root;
+        return $rootMap.has(this)
+            ? $rootMap.get(this) as NonNullable<IParent<MovieClip | Sprite>>
+            : null;
     }
 
     /**
@@ -785,70 +688,13 @@ export class DisplayObject extends EventDispatcher
      */
     get rotation (): number
     {
-        if (this._$rotation !== null) {
-            return this._$rotation;
-        }
-
-        const matrix: Float32Array = this._$transform._$rawMatrix();
-        return $Math.atan2(matrix[1], matrix[0]) * $Rad2Deg;
+        return this.$rotation === null
+            ? displayObjectGetRotationUseCase(this)
+            : this.$rotation;
     }
     set rotation (rotation: number)
     {
-        rotation = $clamp(rotation % 360, 0 - 360, 360, 0);
-        if (this._$rotation === rotation) {
-            return ;
-        }
-
-        const transform: Transform = this._$transform;
-
-        const hasMatrix: boolean = transform._$matrix !== null;
-
-        const matrix: Matrix = hasMatrix
-            ? transform._$matrix as NonNullable<Matrix>
-            : transform.matrix;
-
-        const scaleX: number = $Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
-        const scaleY: number = $Math.sqrt(matrix.c * matrix.c + matrix.d * matrix.d);
-        if (rotation === 0) {
-
-            matrix.a = scaleX;
-            matrix.b = 0;
-            matrix.c = 0;
-            matrix.d = scaleY;
-
-        } else {
-
-            let radianX: number = $Math.atan2(matrix.b,  matrix.a);
-            let radianY: number = $Math.atan2(0 - matrix.c, matrix.d);
-
-            const radian: number = rotation * $Deg2Rad;
-            radianY = radianY + radian - radianX;
-            radianX = radian;
-
-            matrix.b = scaleX * $Math.sin(radianX);
-            if (matrix.b === 1 || matrix.b === -1) {
-                matrix.a = 0;
-            } else {
-                matrix.a = scaleX * $Math.cos(radianX);
-            }
-
-            matrix.c = -scaleY * $Math.sin(radianY);
-            if (matrix.c === 1 || matrix.c === -1) {
-                matrix.d = 0;
-            } else {
-                matrix.d = scaleY * $Math.cos(radianY);
-            }
-        }
-
-        if (hasMatrix) {
-            this._$doChanged();
-            $doUpdated();
-        } else {
-            transform.matrix = matrix;
-            $poolMatrix(matrix);
-        }
-
-        this._$rotation = rotation;
+        displayObjectSetRotationUseCase(this, rotation);
     }
 
     /**
@@ -864,96 +710,29 @@ export class DisplayObject extends EventDispatcher
     }
     set scale9Grid (scale_9_grid: Rectangle | null)
     {
-        if (this._$scale9Grid !== scale_9_grid) {
-            this._$scale9Grid = scale_9_grid;
-            this._$doChanged();
-            $doUpdated();
+        if (this._$scale9Grid === scale_9_grid) {
+            return ;
         }
+        this._$scale9Grid = scale_9_grid;
+        displayObjectApplyChangesService(this);
     }
 
     /**
-     * @description 基準点から適用されるオブジェクトの水平スケール（パーセンテージ）を示します。
-     *              Indicates the horizontal scale (percentage)
-     *              of the object as applied from the registration point.
+     * @description 基準点から適用されるオブジェクトの水平スケール値を返却します。
+     *              Returns the horizontal scale value of the object applied from the reference point.
      *
      * @member {number}
      * @public
      */
     get scaleX (): number
     {
-        if (this._$scaleX !== null) {
-            return this._$scaleX;
-        }
-
-        const matrix: Float32Array = this._$transform._$rawMatrix();
-
-        let xScale: number = $Math.sqrt(
-            matrix[0] * matrix[0]
-            + matrix[1] * matrix[1]
-        );
-        if (!$Number.isInteger(xScale)) {
-            const value: string = xScale.toString();
-            const index: number = value.indexOf("e");
-            if (index !== -1) {
-                xScale = +value.slice(0, index);
-            }
-            xScale = +xScale.toFixed(4);
-        }
-
-        return 0 > matrix[0] ? xScale * -1 : xScale;
+        return this.$scaleX === null
+            ? displayObjectGetScaleXUseCase(this)
+            : this.$scaleX;
     }
     set scaleX (scale_x: number)
     {
-        scale_x = $clamp(+scale_x,
-            $SHORT_INT_MIN, $SHORT_INT_MAX
-        );
-
-        if (!$Number.isInteger(scale_x)) {
-            const value: string = scale_x.toString();
-            const index: number = value.indexOf("e");
-            if (index !== -1) {
-                scale_x = +value.slice(0, index);
-            }
-            scale_x = +scale_x.toFixed(4);
-        }
-
-        if (this._$scaleX === scale_x) {
-            return ;
-        }
-
-        const transform: Transform = this._$transform;
-
-        const hasMatrix: boolean = transform._$matrix !== null;
-
-        const matrix: Matrix = hasMatrix
-            ? transform._$matrix as NonNullable<Matrix>
-            : transform.matrix;
-
-        if (matrix.b === 0 || $isNaN(matrix.b)) {
-
-            matrix.a = scale_x;
-
-        } else {
-
-            let radianX = $Math.atan2(matrix.b, matrix.a);
-            if (radianX === -$Math.PI) {
-                radianX = 0;
-            }
-
-            matrix.b = scale_x * $Math.sin(radianX);
-            matrix.a = scale_x * $Math.cos(radianX);
-
-        }
-
-        if (hasMatrix) {
-            this._$doChanged();
-            $doUpdated();
-        } else {
-            transform.matrix = matrix;
-            $poolMatrix(matrix);
-        }
-
-        this._$scaleX = scale_x;
+        displayObjectSetScaleXUseCase(this, scale_x);
     }
 
     /**
@@ -966,120 +745,13 @@ export class DisplayObject extends EventDispatcher
      */
     get scaleY (): number
     {
-        if (this._$scaleY !== null) {
-            return this._$scaleY;
-        }
-
-        const matrix: Float32Array = this._$transform._$rawMatrix();
-
-        let yScale: number = $Math.sqrt(
-            matrix[2] * matrix[2]
-            + matrix[3] * matrix[3]
-        );
-
-        if (!$Number.isInteger(yScale)) {
-            const value: string = yScale.toString();
-            const index: number = value.indexOf("e");
-            if (index !== -1) {
-                yScale = +value.slice(0, index);
-            }
-            yScale = +yScale.toFixed(4);
-        }
-
-        return 0 > matrix[3] ? yScale * -1 : yScale;
+        return this.$scaleY === null
+            ? displayObjectGetScaleYUseCase(this)
+            : this.$scaleY;
     }
     set scaleY (scale_y: number)
     {
-        scale_y = $clamp(+scale_y,
-            $SHORT_INT_MIN, $SHORT_INT_MAX
-        );
-
-        if (!$Number.isInteger(scale_y)) {
-            const value: string = scale_y.toString();
-            const index: number = value.indexOf("e");
-            if (index !== -1) {
-                scale_y = +value.slice(0, index);
-            }
-            scale_y = +scale_y.toFixed(4);
-        }
-
-        if (this._$scaleY === scale_y) {
-            return ;
-        }
-
-        const transform: Transform = this._$transform;
-
-        const hasMatrix: boolean = transform._$matrix !== null;
-
-        const matrix: Matrix = hasMatrix
-            ? transform._$matrix as NonNullable<Matrix>
-            : transform.matrix;
-
-        if (matrix.c === 0 || $isNaN(matrix.c)) {
-
-            matrix.d = scale_y;
-
-        } else {
-
-            let radianY = $Math.atan2(-matrix.c, matrix.d);
-            if (radianY === -$Math.PI) {
-                radianY = 0;
-            }
-            matrix.c = -scale_y * $Math.sin(radianY);
-            matrix.d = scale_y  * $Math.cos(radianY);
-
-        }
-
-        if (hasMatrix) {
-            this._$doChanged();
-            $doUpdated();
-        } else {
-            transform.matrix = matrix;
-            $poolMatrix(matrix);
-        }
-
-        this._$scaleY = scale_y;
-    }
-
-    /**
-     * @description 表示オブジェクトのステージです。
-     *              The Stage of the display object.
-     *
-     * @member   {Stage}
-     * @readonly
-     * @public
-     */
-    get stage (): Stage | null
-    {
-        if (this._$stage) {
-            return this._$stage;
-        }
-
-        // find parent
-        const parent: ParentImpl<any> | null = this._$parent;
-        if (parent) {
-            return parent._$stage;
-        }
-
-        return null;
-    }
-
-    /**
-     * @description 表示オブジェクトのマトリックス、カラー変換、
-     *              ピクセル境界に関係するプロパティを持つオブジェクトです。
-     *              An object with properties pertaining
-     *              to a display object's matrix, color transform, and pixel bounds.
-     *
-     * @member {Transform}
-     * @public
-     */
-    get transform (): Transform
-    {
-        return this._$transform;
-    }
-    set transform (transform: Transform)
-    {
-        this._$transform = transform;
+        displayObjectSetScaleYUseCase(this, scale_y);
     }
 
     /**
@@ -1095,11 +767,11 @@ export class DisplayObject extends EventDispatcher
     }
     set visible (visible: boolean)
     {
-        if (this._$visible !== visible) {
-            this._$visible = !!visible;
-            this._$doChanged();
-            $doUpdated();
+        if (this._$visible === visible) {
+            return ;
         }
+        this._$visible = !!visible;
+        displayObjectApplyChangesService(this);
     }
 
     /**
@@ -1111,199 +783,64 @@ export class DisplayObject extends EventDispatcher
      */
     get width (): number
     {
-        const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-            ? this._$getBounds() as BoundsImpl
-            : $getBoundsObject();
-
-        const bounds: BoundsImpl = $boundsMatrix(
-            baseBounds,
-            this._$transform._$rawMatrix()
-        );
-
-        $poolBoundsObject(baseBounds);
-
-        const width: number = $Math.abs(bounds.xMax - bounds.xMin);
-        $poolBoundsObject(bounds);
-
-        switch (true) {
-
-            case width === 0:
-            case width === $Infinity:
-            case width === 0 - $Infinity:
-                return 0;
-
-            default:
-                return +width.toFixed(2);
-
-        }
+        return displayObjectGetWidthUseCase(this);
     }
     set width (width: number)
     {
-        width = +width;
-        if (!$isNaN(width) && width > -1) {
-
-            const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-                ? this._$getBounds() as BoundsImpl
-                : $getBoundsObject();
-
-            const rotation: number = this.rotation;
-            const bounds = rotation
-                ? $boundsMatrix(baseBounds, this._$transform._$rawMatrix())
-                : baseBounds;
-
-            if (rotation) {
-                $poolBoundsObject(baseBounds);
-            }
-
-            const exWidth = $Math.abs(bounds.xMax - bounds.xMin);
-            $poolBoundsObject(bounds);
-
-            switch (true) {
-
-                case exWidth === 0:
-                case exWidth === $Infinity:
-                case exWidth === -$Infinity:
-                    this.scaleX = 0;
-                    break;
-
-                default:
-                    this.scaleX = width / exWidth;
-                    break;
-
-            }
-        }
+        displayObjectSetWidthUseCase(this, width);
     }
 
     /**
-     * @description 親 DisplayObjectContainer のローカル座標を基準にした
-     *              DisplayObject インスタンスの x 座標を示します。
-     *              Indicates the x coordinate
-     *              of the DisplayObject instance relative to the local coordinates
-     *              of the parent DisplayObjectContainer.
+     * @description 親 DisplayObjectContainer のローカル座標を基準にした DisplayObject インスタンスの x 座標を示します。
+     *              Indicates the x coordinate of the DisplayObject instance relative to the local coordinates of the parent DisplayObjectContainer.
      *
      * @member {number}
      * @public
      */
     get x (): number
     {
-        return this._$transform._$rawMatrix()[4];
+        return this.$x === null
+            ? displayObjectGetXUseCase(this)
+            : this.$x;
     }
     set x (x: number)
     {
-        const transform: Transform = this._$transform;
-
-        if (!transform._$matrix) {
-            const matrix: Matrix = transform.matrix;
-            matrix.tx = x;
-            transform.matrix = matrix;
-            $poolMatrix(matrix);
-        } else {
-            transform._$matrix.tx = x;
-            this._$doChanged();
-            $doUpdated();
-        }
+        displayObjectSetXUseCase(this, x);
     }
 
     /**
-     * @description 親 DisplayObjectContainer のローカル座標を基準にした
-     *              DisplayObject インスタンスの y 座標を示します。
-     *              Indicates the y coordinate
-     *              of the DisplayObject instance relative to the local coordinates
-     *              of the parent DisplayObjectContainer.
+     * @description 親 DisplayObjectContainer のローカル座標を基準にした DisplayObject インスタンスの y 座標を示します。
+     *              Indicates the y coordinate of the DisplayObject instance relative to the local coordinates of the parent DisplayObjectContainer.
      *
      * @member {number}
      * @public
      */
     get y (): number
     {
-        return this._$transform._$rawMatrix()[5];
+        return this.$y === null
+            ? displayObjectGetYUseCase(this)
+            : this.$y;
     }
     set y (y: number)
     {
-        const transform: Transform = this._$transform;
-
-        if (!transform._$matrix) {
-            const matrix = transform.matrix;
-            matrix.ty = y;
-
-            transform.matrix = matrix;
-            $poolMatrix(matrix);
-        } else {
-            transform._$matrix.ty = y;
-            this._$doChanged();
-            $doUpdated();
-        }
+        displayObjectSetYUseCase(this, y);
     }
 
     /**
-     * @description targetCoordinateSpace オブジェクトの座標系を基準にして、
-     *              表示オブジェクトの領域を定義する矩形を返します。
-     *              Returns a rectangle that defines the area
-     *              of the display object relative to the coordinate system
-     *              of the targetCoordinateSpace object.
+     * @description 指定したDisplayObject の座標系を基準にして、表示オブジェクトの領域を定義する矩形を返します。
+     *              Returns a rectangle that defines the area of the display object relative to the coordinate system of the targetDisplayObject.
      *
-     * @param  {DisplayObject} [target=null]
+     * @param  {DisplayObject} [target_display_object=null]
      * @return {Rectangle}
      */
-    getBounds (target: DisplayObjectImpl<any> | null = null): Rectangle
+    getBounds <D extends DisplayObject>(target_display_object: D | null = null): Rectangle
     {
-        const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-            ? this._$getBounds() as BoundsImpl
-            : $getBoundsObject();
-
-        const matrix: Matrix = this._$transform.concatenatedMatrix;
-
-        // to global
-        const bounds: BoundsImpl = $boundsMatrix(baseBounds, matrix._$matrix);
-
-        // pool
-        $poolMatrix(matrix);
-        $poolBoundsObject(baseBounds);
-
-        // create bounds object
-        const targetBaseBounds: BoundsImpl = $getBoundsObject(
-            bounds.xMin,
-            bounds.xMax,
-            bounds.yMin,
-            bounds.yMax
-        );
-
-        // pool
-        $poolBoundsObject(bounds);
-
-        if (!target) {
-            target = this;
-        }
-
-        const targetMatrix: Matrix = target._$transform.concatenatedMatrix;
-        targetMatrix.invert();
-
-        const resultBounds: BoundsImpl = $boundsMatrix(
-            targetBaseBounds, targetMatrix._$matrix
-        );
-        $poolBoundsObject(targetBaseBounds);
-        $poolMatrix(targetMatrix);
-
-        const xMin: number = resultBounds.xMin;
-        const yMin: number = resultBounds.yMin;
-        const xMax: number = resultBounds.xMax;
-        const yMax: number = resultBounds.yMax;
-
-        // pool
-        $poolBoundsObject(resultBounds);
-
-        return new Rectangle(
-            xMin, yMin,
-            $Math.abs(xMax - xMin),
-            $Math.abs(yMax - yMin)
-        );
+        return displayObjectGetBoundsUseCase(this as unknown as D, target_display_object);
     }
 
     /**
-     * @description point オブジェクトをステージ（グローバル）座標から
-     *              表示オブジェクトの（ローカル）座標に変換します。
-     *              Converts the point object from the Stage (global) coordinates
-     *              to the display object's (local) coordinates.
+     * @description point オブジェクトをステージ（グローバル）座標から表示オブジェクトの（ローカル）座標に変換します。
+     *              Converts the point object from the Stage (global) coordinates to the display object's (local) coordinates.
      *
      * @param  {Point} point
      * @return {Point}
@@ -1311,68 +848,25 @@ export class DisplayObject extends EventDispatcher
      */
     globalToLocal (point: Point): Point
     {
-        const matrix: Matrix = this._$transform.concatenatedMatrix;
-        matrix.invert();
-
-        const newPoint: Point = new Point(
-            point.x * matrix.a + point.y * matrix.c + matrix.tx,
-            point.x * matrix.b + point.y * matrix.d + matrix.ty
-        );
-
-        $poolMatrix(matrix);
-
-        return newPoint;
+        return displayObjectGlobalToLocalService(this, point);
     }
 
     /**
-     * @description 表示オブジェクトの境界ボックスを評価して、
-     *              obj 表示オブジェクトの境界ボックスと重複または交差するかどうかを調べます。
-     *              Evaluates the bounding box of the display object to see
-     *              if it overlaps or intersects with the bounding box of the obj display object.
+     * @description DisplayObject の描画範囲を評価して、重複または交差するかどうかを調べます。
+     *              Evaluates a DisplayObject's drawing range to see if it overlaps or intersects.
      *
-     * @param   {DisplayObject} object
+     * @param   {DisplayObject} target_display_object
      * @returns {boolean}
      * @public
      */
-    hitTestObject (object: DisplayObjectImpl<any>): boolean
+    hitTestObject <D extends DisplayObject>(target_display_object: D): boolean
     {
-        const baseBounds1: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-            ? this._$getBounds() as BoundsImpl
-            : $getBoundsObject();
-
-        const matrix1: Matrix = this._$transform.concatenatedMatrix;
-        const bounds1: BoundsImpl = $boundsMatrix(baseBounds1, matrix1._$matrix);
-
-        // pool
-        $poolMatrix(matrix1);
-        $poolBoundsObject(baseBounds1);
-
-        const baseBounds2: BoundsImpl = object._$getBounds(null);
-        const matrix2: Matrix = object._$transform.concatenatedMatrix;
-        const bounds2: BoundsImpl = $boundsMatrix(baseBounds2, matrix2._$matrix);
-
-        // pool
-        $poolMatrix(matrix2);
-        $poolBoundsObject(baseBounds2);
-
-        // calc
-        const sx: number = $Math.max(bounds1.xMin, bounds2.xMin);
-        const sy: number = $Math.max(bounds1.yMin, bounds2.yMin);
-        const ex: number = $Math.min(bounds1.xMax, bounds2.xMax);
-        const ey: number = $Math.min(bounds1.yMax, bounds2.yMax);
-
-        // pool
-        $poolBoundsObject(bounds1);
-        $poolBoundsObject(bounds2);
-
-        return ex - sx >= 0 && ey - sy >= 0;
+        return displayObjectHitTestObjectUseCase(this as unknown as DisplayObject, target_display_object);
     }
 
     /**
-     * @description 表示オブジェクトを評価して、x および y パラメーターで指定された
-     *              ポイントと重複または交差するかどうかを調べます。
-     *              Evaluates the display object to see if it overlaps
-     *              or intersects with the point specified by the x and y parameters.
+     * @description 表示オブジェクトを評価して、x および y パラメーターで指定されたポイントと重複または交差するかどうかを調べます。
+     *              Evaluates the display object to see if it overlaps or intersects with the point specified by the x and y parameters.
      *
      * @param   {number}  x
      * @param   {number}  y
@@ -1384,66 +878,12 @@ export class DisplayObject extends EventDispatcher
         x: number, y: number,
         shape_flag: boolean = false
     ): boolean {
-
-        if (shape_flag) {
-
-            let matrix: Float32Array = $MATRIX_ARRAY_IDENTITY;
-
-            let parent: ParentImpl<any> | null = this._$parent;
-            while (parent) {
-
-                matrix = $multiplicationMatrix(
-                    parent._$transform._$rawMatrix(),
-                    matrix
-                );
-
-                parent = parent._$parent;
-            }
-
-            $hitContext.setTransform(1, 0, 0, 1, 0, 0);
-            $hitContext.beginPath();
-
-            let result: boolean = false;
-            if ("_$hit" in this && typeof this._$hit === "function") {
-                result = this._$hit($hitContext, matrix, { "x": x, "y": y }, true);
-            }
-
-            if (matrix !== $MATRIX_ARRAY_IDENTITY) {
-                $poolFloat32Array6(matrix);
-            }
-
-            return result;
-        }
-
-        const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-            ? this._$getBounds() as BoundsImpl
-            : $getBoundsObject();
-
-        const bounds: BoundsImpl = $boundsMatrix(baseBounds, this._$transform._$rawMatrix());
-        $poolBoundsObject(baseBounds);
-
-        const rectangle: Rectangle = new Rectangle(
-            bounds.xMin, bounds.yMin,
-            bounds.xMax - bounds.xMin,
-            bounds.yMax - bounds.yMin
-        );
-
-        // pool
-        $poolBoundsObject(bounds);
-
-        const point: Point = this._$parent
-            ? this._$parent.globalToLocal(new Point(x, y))
-            : new Point(x, y);
-
-        return rectangle.containsPoint(point);
+        return displayObjectHitTestPointUseCase(this, x, y, shape_flag);
     }
 
     /**
-     * @description point オブジェクトを表示オブジェクトの（ローカル）座標から
-     *              ステージ（グローバル）座標に変換します。
-     *              Converts the point object from the display object's (local) coordinates
-     *              to the Stage (global) coordinates.
-     *
+     * @description point オブジェクトを表示オブジェクトの（ローカル）座標からステージ（グローバル）座標に変換します。
+     *              Converts the point object from the display object's (local) coordinates to the Stage (global) coordinates.
      *
      * @param   {Point} point
      * @returns {Point}
@@ -1451,18 +891,7 @@ export class DisplayObject extends EventDispatcher
      */
     localToGlobal (point: Point): Point
     {
-        const matrix: Matrix = this
-            ._$transform
-            .concatenatedMatrix;
-
-        const newPoint: Point = new Point(
-            point.x * matrix.a + point.y * matrix.c + matrix.tx,
-            point.x * matrix.b + point.y * matrix.d + matrix.ty
-        );
-
-        $poolMatrix(matrix);
-
-        return newPoint;
+        return displayObjectLocalToGlobalService(this, point);
     }
 
     /**
@@ -1498,7 +927,7 @@ export class DisplayObject extends EventDispatcher
     setLocalVariable (key: any, value: any): void
     {
         if (!this._$variables) {
-            this._$variables = $getMap();
+            this._$variables = new Map();
         }
         this._$variables.set(key, value);
     }
@@ -1533,7 +962,6 @@ export class DisplayObject extends EventDispatcher
         if (this._$variables && this._$variables.has(key)) {
             this._$variables.delete(key);
             if (!this._$variables.size) {
-                $poolMap(this._$variables);
                 this._$variables = null;
             }
         }
@@ -1615,818 +1043,29 @@ export class DisplayObject extends EventDispatcher
     }
 
     /**
-     * @return {object}
-     * @method
-     * @private
-     */
-    _$getPlaceObject (): PlaceObjectImpl | null
-    {
-        if (!this._$placeObject) {
-
-            const placeId = this._$placeId;
-            if (placeId === -1) {
-                return null;
-            }
-
-            const parent: ParentImpl<any> | null = this._$parent;
-            if (!parent || !parent._$placeObjects) {
-                return null;
-            }
-
-            const placeMap: Array<Array<number>> | null = parent._$placeMap;
-            if (!placeMap || !placeMap.length) {
-                return null;
-            }
-
-            const frame: number = "currentFrame" in parent ? parent.currentFrame : 1;
-            const places: number[] | void = placeMap[frame];
-            if (!places) {
-                return null;
-            }
-
-            const currentPlaceId: number = places[placeId] | 0;
-            const placeObject: PlaceObjectImpl | void = parent._$placeObjects[currentPlaceId];
-            if (!placeObject) {
-                return null;
-            }
-
-            this._$changePlace    = currentPlaceId !== this._$currentPlaceId;
-            this._$currentPlaceId = currentPlaceId;
-            this._$placeObject    = placeObject;
-
-            return placeObject;
-        }
-
-        return this._$placeObject;
-    }
-
-    /**
-     * @param  {object} tag
-     * @param  {DisplayObjectContainer} parent
-     * @return {object}
-     * @method
-     * @private
-     */
-    _$baseBuild<T> (
-        tag: DictionaryTagImpl,
-        parent: ParentImpl<any>
-    ): T {
-
-        const loaderInfo: LoaderInfo | null = parent._$loaderInfo;
-        if (!loaderInfo || !loaderInfo._$data) {
-            throw new Error("the loaderInfo or data is nul.");
-        }
-
-        // setup
-        this._$parent     = parent;
-        this._$root       = parent._$root;
-        this._$stage      = parent._$stage;
-        this._$loaderInfo = loaderInfo;
-
-        // bind tag data
-        this._$characterId = tag.characterId | 0;
-        this._$clipDepth   = tag.clipDepth | 0;
-        this._$startFrame  = tag.startFrame | 0;
-        this._$endFrame    = tag.endFrame | 0;
-        this._$name        = tag.name || "";
-
-        return loaderInfo._$data.characters[tag.characterId];
-    }
-
-    /**
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$isUpdated (): boolean
-    {
-        return this._$updated;
-    }
-
-    /**
+     * @description 親子関係を解除します。
+     *              Removes the parent-child relationship.
+     *
      * @return {void}
      * @method
-     * @private
+     * @public
      */
-    _$updateState (): void
+    remove (): void
     {
-        this._$isNext = true;
-
-        const parent: ParentImpl<any> | null = this._$parent;
-        if (parent) {
-            parent._$updateState();
-        }
+        displayObjectRemoveService(this);
     }
 
     /**
+     * @description 指定の LoaderInfo を DisplayObject に同期します。
+     *              Synchronizes the specified LoaderInfo with the DisplayObject.
+     *
+     * @param  {LoaderInfo} loader_info
      * @return {void}
      * @method
-     * @private
+     * @protected
      */
-    _$doChanged (): void
+    $syncLoaderInfo (loader_info: LoaderInfo): void
     {
-        this._$posted  = false;
-        this._$isNext  = true;
-        this._$updated = true;
-
-        const parent: ParentImpl<any> | null = this._$parent;
-        if (parent) {
-            if (!parent._$updated) {
-                parent._$doChanged();
-            }
-        }
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array}         matrix
-     * @param  {array}                filters
-     * @param  {number}               width
-     * @param  {number}               height
-     * @param  {WebGLTexture}         [target_texture = null]
-     * @return {object}
-     * @method
-     * @private
-     */
-    _$drawFilter (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array,
-        filters: FilterArrayImpl,
-        width: number,
-        height: number,
-        target_texture: WebGLTexture | null = null
-    ): CachePositionImpl {
-
-        const cacheKeys: any[] = $getArray(this._$instanceId, "f");
-        let position: CachePositionImpl | void = $cacheStore.get(cacheKeys);
-
-        const updated: boolean = this._$isFilterUpdated(matrix, filters, true);
-
-        if (position && !updated) {
-            context.cachePosition = position;
-            return position;
-        }
-
-        // cache clear
-        if (position) {
-            $cacheStore.set(cacheKeys, null);
-        }
-
-        const manager: FrameBufferManager = context.frameBuffer;
-        const targetTexture: WebGLTexture = target_texture
-            ? target_texture
-            : context.getTextureFromRect(
-                context.cachePosition as NonNullable<CachePositionImpl>
-            );
-
-        const texture: WebGLTexture = this._$applyFilter(
-            context, filters, targetTexture,
-            matrix, width, height
-        );
-        manager.textureManager.release(targetTexture);
-
-        const bounds: BoundsImpl = this._$getLayerBounds(matrix);
-        position = manager.createCachePosition(
-            $Math.ceil($Math.abs(bounds.xMax - bounds.xMin)),
-            $Math.ceil($Math.abs(bounds.yMax - bounds.yMin))
-        );
-        $poolBoundsObject(bounds);
-
-        position.filterState = true;
-        position.matrix      = `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}_0_0`;
-        position.offsetX     = texture.offsetX;
-        position.offsetY     = texture.offsetY;
-
-        // 関数先でtextureがreleaseされる
-        context.drawTextureFromRect(texture, position);
-
-        $cacheStore.set(cacheKeys, position);
-        $poolArray(cacheKeys);
-
-        return position;
-    }
-
-    /**
-     * @param   {Float32Array} multi_matrix
-     * @returns {object}
-     * @private
-     */
-    _$getLayerBounds (multi_matrix: Float32Array): BoundsImpl
-    {
-        const baseBounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-            ? this._$getBounds() as BoundsImpl
-            : $getBoundsObject();
-
-        const bounds: BoundsImpl = $boundsMatrix(baseBounds, multi_matrix);
-        $poolBoundsObject(baseBounds);
-
-        const filters: FilterArrayImpl = this._$filters || this.filters;
-        if (!filters.length) {
-            return bounds;
-        }
-
-        let filterBounds: BoundsImpl = $getBoundsObject(
-            0,
-            $Math.abs(bounds.xMax - bounds.xMin),
-            0,
-            $Math.abs(bounds.yMax - bounds.yMin)
-        );
-        $poolBoundsObject(bounds);
-
-        let xScale: number = +$Math.sqrt(
-            multi_matrix[0] * multi_matrix[0]
-            + multi_matrix[1] * multi_matrix[1]
-        );
-        let yScale: number = +$Math.sqrt(
-            multi_matrix[2] * multi_matrix[2]
-            + multi_matrix[3] * multi_matrix[3]
-        );
-
-        xScale /= $devicePixelRatio;
-        yScale /= $devicePixelRatio;
-
-        xScale *= 2;
-        yScale *= 2;
-
-        for (let idx: number = 0; idx < filters.length; ++idx) {
-            filterBounds = filters[idx]
-                ._$generateFilterRect(filterBounds, xScale, yScale);
-        }
-
-        return filterBounds;
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$executeAddedEvent (): void
-    {
-        if (!this._$parent) {
-            return ;
-        }
-
-        // add event
-        if (!this._$added) {
-
-            // added event
-            if (this.willTrigger(Next2DEvent.ADDED)) {
-                this.dispatchEvent(new Next2DEvent(Next2DEvent.ADDED, true));
-            }
-
-            // update
-            this._$added = true;
-        }
-
-        if (!this._$addedStage && this._$stage !== null) {
-
-            if (this.willTrigger(Next2DEvent.ADDED_TO_STAGE)) {
-                this.dispatchEvent(new Next2DEvent(Next2DEvent.ADDED_TO_STAGE));
-            }
-
-            // update
-            this._$addedStage = true;
-        }
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$prepareActions (): void
-    {
-        this._$nextFrame();
-    }
-
-    /**
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$nextFrame (): boolean
-    {
-        // added event
-        this._$executeAddedEvent();
-
-        this._$isNext = false;
-
-        if (!this._$posted && $rendererWorker) {
-            // @ts-ignore
-            this._$postProperty();
-        }
-
-        return false;
-    }
-
-    /**
-     * @param  {array} [filters=null]
-     * @return {boolean}
-     * @private
-     */
-    _$canApply (filters: FilterArrayImpl | null = null): boolean
-    {
-        if (filters) {
-            for (let idx: number = 0; idx < filters.length; ++idx) {
-                if (filters[idx]._$canApply()) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @param  {Float32Array} matrix
-     * @param  {array}        [filters=null]
-     * @param  {boolean}      [can_apply=false]
-     * @param  {number}       [position_x=0]
-     * @param  {number}       [position_y=0]
-     * @return {boolean}
-     * @private
-     */
-    _$isFilterUpdated (
-        matrix: Float32Array,
-        filters: FilterArrayImpl | null = null,
-        can_apply: boolean = false
-    ): boolean {
-
-        // cache flag
-        if (this._$isUpdated()) {
-            return true;
-        }
-
-        // check filter data
-        if (can_apply && filters) {
-
-            for (let idx: number = 0; idx < filters.length; ++idx) {
-
-                if (!filters[idx]._$isUpdated()) {
-                    continue;
-                }
-
-                return true;
-            }
-
-        }
-
-        // check status
-        const cache: CachePositionImpl = $cacheStore.get([this._$instanceId, "f"]);
-        if (!cache) {
-            return true;
-        }
-
-        if (cache.filterState !== can_apply) {
-            return true;
-        }
-
-        if (cache.matrix !== `${matrix[0]}_${matrix[1]}_${matrix[2]}_${matrix[3]}`) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {array} filters
-     * @param  {WebGLTexture} target_texture
-     * @param  {Float32Array} matrix
-     * @param  {number} width
-     * @param  {number} height
-     * @return {WebGLTexture}
-     * @private
-     */
-    _$applyFilter (
-        context: CanvasToWebGLContext,
-        filters: FilterArrayImpl,
-        target_texture: WebGLTexture,
-        matrix: Float32Array,
-        width: number,
-        height: number
-    ): WebGLTexture {
-
-        const xScale: number = +$Math.sqrt(
-            matrix[0] * matrix[0]
-            + matrix[1] * matrix[1]
-        );
-        const yScale: number = +$Math.sqrt(
-            matrix[2] * matrix[2]
-            + matrix[3] * matrix[3]
-        );
-
-        const radianX: number = $Math.atan2(matrix[1], matrix[0]);
-        const radianY: number = $Math.atan2(-matrix[2], matrix[3]);
-
-        const parentMatrix: Float32Array = $getFloat32Array6(
-            $Math.cos(radianX), $Math.sin(radianX),
-            -$Math.sin(radianY), $Math.cos(radianY),
-            width / 2, height / 2
-        );
-
-        const baseMatrix: Float32Array = $getFloat32Array6(
-            1, 0, 0, 1,
-            -target_texture.width / 2,
-            -target_texture.height / 2
-        );
-
-        const multiMatrix: Float32Array = $multiplicationMatrix(
-            parentMatrix, baseMatrix
-        );
-        $poolFloat32Array6(parentMatrix);
-        $poolFloat32Array6(baseMatrix);
-
-        const manager: FrameBufferManager = context.frameBuffer;
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-
-        const attachment: AttachmentImpl = manager
-            .createCacheAttachment(width, height);
-        context._$bind(attachment);
-
-        context.reset();
-        context.setTransform(
-            multiMatrix[0], multiMatrix[1],
-            multiMatrix[2], multiMatrix[3],
-            multiMatrix[4], multiMatrix[5]
-        );
-        $poolFloat32Array6(multiMatrix);
-
-        context.drawImage(target_texture,
-            0, 0, target_texture.width, target_texture.height
-        );
-
-        // init
-        context._$offsetX = 0;
-        context._$offsetY = 0;
-
-        const filterMatrix: Float32Array = $getFloat32Array6(
-            xScale, 0, 0, yScale, 0, 0
-        );
-
-        let texture: WebGLTexture | null = null;
-        for (let idx: number = 0; idx < filters.length; ++idx) {
-            texture = filters[idx]._$applyFilter(context, filterMatrix);
-        }
-
-        $poolFloat32Array6(filterMatrix);
-
-        if (!texture) {
-            return target_texture;
-        }
-
-        const offsetX: number = context._$offsetX;
-        const offsetY: number = context._$offsetY;
-
-        // reset
-        context._$offsetX = 0;
-        context._$offsetY = 0;
-
-        // set offset
-        texture.offsetX = offsetX;
-        texture.offsetY = offsetY;
-
-        context._$bind(currentAttachment);
-        manager.releaseAttachment(attachment, false);
-
-        return texture;
-    }
-
-    /**
-     * @param  {Float32Array} matrix
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$shouldClip (matrix: Float32Array): boolean
-    {
-        const bounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-            ? this._$getBounds(matrix) as BoundsImpl
-            : $getBoundsObject();
-
-        const width  = $Math.abs(bounds.xMax - bounds.xMin);
-        const height = $Math.abs(bounds.yMax - bounds.yMin);
-        $poolBoundsObject(bounds);
-
-        // size 0
-        return !(!width || !height);
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array} matrix
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$startClip (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array
-    ): boolean {
-
-        context.drawInstacedArray();
-
-        // マスクの描画反映を限定
-        const bounds: BoundsImpl = "_$getBounds" in this && typeof this._$getBounds === "function"
-            ? this._$getBounds(matrix) as BoundsImpl
-            : $getBoundsObject();
-
-        const result = context._$startClip(bounds);
-        $poolBoundsObject(bounds);
-
-        if (!result) {
-            return false;
-        }
-
-        // start clip
-        context._$enterClip();
-
-        // mask start
-        context._$beginClipDef();
-
-        let containerClip = false;
-        if ("_$children" in this) {
-            containerClip = true;
-            context._$updateContainerClipFlag(true);
-        }
-
-        // @ts-ignore
-        this._$clip(context, matrix);
-        this._$updated = false;
-
-        // container clip
-        if (containerClip) {
-
-            // update flag
-            context._$updateContainerClipFlag(false);
-
-            // execute clip
-            context._$drawContainerClip();
-        }
-
-        // mask end
-        context._$endClipDef();
-
-        return true;
-    }
-
-    /**
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$removeWorkerInstance (): void
-    {
-        if ($rendererWorker) {
-            $rendererWorker.postMessage({
-                "command": "remove",
-                "instanceId": this._$instanceId
-            });
-        }
-    }
-
-    /**
-     * @param  {Float32Array} buffer
-     * @param  {number} [index = 0]
-     * @return {void}
-     * @method
-     * @private
-     */
-    _$registerProperty (buffer: Float32Array, index: number = 0): void
-    {
-        // visible
-        buffer[index++] = +this._$visible;
-
-        // depth
-        buffer[index++] = this._$placeId;
-
-        // clip depth
-        buffer[index++] = this._$clipDepth;
-
-        // isMask
-        buffer[index++] = +this._$isMask;
-
-        const mask: DisplayObjectImpl<any> | null = this._$mask;
-        buffer[index++] = +(mask !== null);
-        if (mask) {
-
-            // mask id
-            buffer[index++] = mask._$instanceId;
-
-            let maskMatrix: Float32Array = $MATRIX_ARRAY_IDENTITY;
-            let parent: ParentImpl<any> | null = mask._$parent;
-            while (parent) {
-
-                maskMatrix = $multiplicationMatrix(
-                    parent._$transform._$rawMatrix(),
-                    maskMatrix
-                );
-
-                parent = parent._$parent;
-            }
-
-            // mask matrix
-            buffer[index++] = maskMatrix[0];
-            buffer[index++] = maskMatrix[1];
-            buffer[index++] = maskMatrix[2];
-            buffer[index++] = maskMatrix[3];
-            buffer[index++] = maskMatrix[4];
-            buffer[index++] = maskMatrix[5];
-        } else {
-            index += 7;
-        }
-
-        if (this._$visible) {
-            const transform: Transform = this._$transform;
-
-            // matrix
-            const matrix: Float32Array = transform._$rawMatrix();
-            buffer[index++] = matrix[0];
-            buffer[index++] = matrix[1];
-            buffer[index++] = matrix[2];
-            buffer[index++] = matrix[3];
-            buffer[index++] = matrix[4];
-            buffer[index++] = matrix[5];
-
-            // colorTransform
-            const colorTransform = transform._$rawColorTransform();
-            buffer[index++] = colorTransform[0];
-            buffer[index++] = colorTransform[1];
-            buffer[index++] = colorTransform[2];
-            buffer[index++] = colorTransform[3];
-            buffer[index++] = colorTransform[4];
-            buffer[index++] = colorTransform[5];
-            buffer[index++] = colorTransform[6];
-            buffer[index++] = colorTransform[7];
-
-        } else {
-            index += 6; // matrix
-            index += 8; // colorTransform
-        }
-
-        // blend mode
-        const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
-        buffer[index++] = $blendToNumber(blendMode);
-
-        // scale9Grid
-        const scale9Grid: Rectangle | null  = this._$scale9Grid;
-        buffer[index++] = +(scale9Grid !== null);
-
-        if (scale9Grid) {
-            buffer[index++] = scale9Grid.x;
-            buffer[index++] = scale9Grid.y;
-            buffer[index++] = scale9Grid.width;
-            buffer[index++] = scale9Grid.height;
-        } else {
-            index += 4;
-        }
-
-        // filter
-    }
-
-    /**
-     * @return {object}
-     * @method
-     * @private
-     */
-    _$createMessage (): PropertyMessageMapImpl<any>
-    {
-        const message: PropertyMessageImpl = {
-            "command": "setProperty",
-            "buffer": new Float32Array(),
-            "instanceId": this._$instanceId,
-            "parentId": this._$parent ? this._$parent._$instanceId : -1,
-            "visible": this._$visible
-        };
-
-        if (this._$placeId > -1) {
-            message.depth = this._$placeId;
-        }
-
-        if (this._$clipDepth) {
-            message.clipDepth = this._$clipDepth;
-        }
-
-        if (this._$isMask) {
-            message.isMask = this._$isMask;
-        }
-
-        const mask: DisplayObjectImpl<any> | null = this._$mask;
-        if (mask) {
-            message.maskId = mask._$instanceId;
-
-            let maskMatrix: Float32Array = $MATRIX_ARRAY_IDENTITY;
-            let parent: ParentImpl<any> | null = mask._$parent;
-            while (parent) {
-
-                maskMatrix = $multiplicationMatrix(
-                    parent._$transform._$rawMatrix(),
-                    maskMatrix
-                );
-
-                parent = parent._$parent;
-            }
-
-            message.maskMatrix = maskMatrix;
-        }
-
-        if (this._$visible) {
-
-            const transform: Transform = this._$transform;
-
-            const matrix: Float32Array = transform._$rawMatrix();
-            if (matrix[0] !== 1) {
-                message.a = matrix[0];
-            }
-
-            if (matrix[1] !== 0) {
-                message.b = matrix[1];
-            }
-
-            if (matrix[2] !== 0) {
-                message.c = matrix[2];
-            }
-
-            if (matrix[3] !== 1) {
-                message.d = matrix[3];
-            }
-
-            if (matrix[4] !== 0) {
-                message.tx = matrix[4];
-            }
-
-            if (matrix[5] !== 0) {
-                message.ty = matrix[5];
-            }
-
-            const colorTransform = transform._$rawColorTransform();
-            if (colorTransform[0] !== 1) {
-                message.f0 = colorTransform[0];
-            }
-
-            if (colorTransform[1] !== 1) {
-                message.f1 = colorTransform[1];
-            }
-
-            if (colorTransform[2] !== 1) {
-                message.f2 = colorTransform[2];
-            }
-
-            if (colorTransform[3] !== 1) {
-                message.f3 = colorTransform[3];
-            }
-
-            if (colorTransform[4] !== 0) {
-                message.f4 = colorTransform[4];
-            }
-
-            if (colorTransform[5] !== 0) {
-                message.f5 = colorTransform[5];
-            }
-
-            if (colorTransform[6] !== 0) {
-                message.f6 = colorTransform[6];
-            }
-
-            if (colorTransform[7] !== 0) {
-                message.f7 = colorTransform[7];
-            }
-
-            const filters: FilterArrayImpl | null = this._$filters || this.filters;
-            if (filters && filters.length) {
-                const parameters: any[] = $getArray();
-                for (let idx: number = 0; idx < filters.length; ++idx) {
-                    parameters.push(filters[idx]._$toArray());
-                }
-
-                message.filters = parameters;
-            }
-
-            const blendMode: BlendModeImpl = this._$blendMode || this.blendMode;
-            if (blendMode !== "normal") {
-                message.blendMode = blendMode;
-            }
-
-            const scale9Grid: Rectangle | null = this._$scale9Grid;
-            if (scale9Grid && this._$isUpdated()) {
-
-                const baseMatrix: Matrix = this
-                    ._$parent
-                    ._$transform
-                    .concatenatedMatrix;
-
-                message.matrixBase = baseMatrix._$matrix.slice();
-                $poolMatrix(baseMatrix);
-
-                message.grid = {
-                    "x": scale9Grid.x,
-                    "y": scale9Grid.y,
-                    "w": scale9Grid.width,
-                    "h": scale9Grid.height
-                };
-            }
-        }
-
-        return message;
+        $loaderInfoMap.set(this, loader_info);
     }
 }

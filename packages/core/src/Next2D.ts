@@ -1,3 +1,17 @@
+import type { IDisplay } from "./interface/IDisplay";
+import type { IEvents } from "./interface/IEvents";
+import type { IFilters } from "./interface/IFilters";
+import type { IGeom } from "./interface/IGeom";
+import type { IMedia } from "./interface/IMedia";
+import type { INet } from "./interface/INet";
+import type { IText } from "./interface/IText";
+import type { IUI } from "./interface/IUI";
+import type { ICaptureOptions } from "./interface/ICaptureOptions";
+import type { IPlayerOptions } from "./interface/IPlayerOptions";
+import type {
+    Sprite,
+    DisplayObject
+} from "@next2d/display";
 import { events } from "./Events";
 import { display } from "./Display";
 import { filters } from "./Filters";
@@ -6,127 +20,124 @@ import { media } from "./Media";
 import { net } from "./Net";
 import { text } from "./Text";
 import { ui } from "./UI";
-import { Player } from "@next2d/core";
-import { URLRequest } from "@next2d/net";
-import {
-    Loader,
-    Sprite,
-    LoaderInfo
-} from "@next2d/display";
-import {
-    Event,
-    IOErrorEvent
-} from "@next2d/events";
-import {
-    PlayerOptionsImpl,
-    DisplayImpl,
-    EventsImpl,
-    FiltersImpl,
-    GeomImpl,
-    MediaImpl,
-    NetImpl,
-    TextImpl,
-    UIImpl,
-    StageDataImpl
-} from "@next2d/interface";
-import {
-    $clamp,
-    $poolArray
-} from "@next2d/share";
+import { execute as loadService } from "./Next2D/usecase/LoadUseCase";
+import { execute as createRootMovieClipUseCase } from "./Next2D/usecase/CreateRootMovieClipUseCase";
+import { execute as captureToCanvasUseCase } from "./Next2D/usecase/CaptureToCanvasUseCase";
 
 /**
- * playerの起動管理クラス
- * player startup management class
+ * @description Next2Dの起動管理クラス
+ *              Boot management class of Next2D
+ *
  * @class
+ * @public
  */
 export class Next2D
 {
-    private readonly _$promises: Promise<void>[];
-    private readonly _$player: Player;
-    public readonly display: DisplayImpl;
-    public readonly events: EventsImpl;
-    public readonly filters: FiltersImpl;
-    public readonly geom: GeomImpl;
-    public readonly media: MediaImpl;
-    public readonly net: NetImpl;
-    public readonly text: TextImpl;
-    public readonly ui: UIImpl;
+    /**
+     * @description Displayパッケージ
+     *              Display package
+     *
+     * @type {IDisplay}
+     * @public
+     */
+    public readonly display: IDisplay;
+
+    /**
+     * @description Eventsパッケージ
+     *              Events package
+     *
+     * @type {IEvents}
+     * @public
+     */
+    public readonly events: IEvents;
+
+    /**
+     * @description Filtersパッケージ
+     *              Filters package
+     *
+     * @type {IFilters}
+     * @public
+     */
+    public readonly filters: IFilters;
+
+    /**
+     * @description Geomパッケージ
+     *              Geom package
+     *
+     * @type {IGeom}
+     * @public
+     */
+    public readonly geom: IGeom;
+
+    /**
+     * @description Mediaパッケージ
+     *              Media package
+     *
+     * @type {IMedia}
+     * @public
+     */
+    public readonly media: IMedia;
+
+    /**
+     * @description Netパッケージ
+     *              Net package
+     *
+     * @type {INet}
+     * @public
+     */
+    public readonly net: INet;
+
+    /**
+     * @description Textパッケージ
+     *              Text package
+     *
+     * @type {IText}
+     * @public
+     */
+    public readonly text: IText;
+
+    /**
+     * @description UIパッケージ
+     *              UI package
+     *
+     * @type {IUI}
+     * @public
+     */
+    public readonly ui: IUI;
+
+    /**
+     * @description 初期起動Promise
+     *              Initial boot Promise
+     *
+     * @type {Promise}
+     * @private
+     */
+    private readonly _$promise: Promise<void>;
 
     /**
      * @constructor
      * @public
      */
-    constructor (promises: Promise<void>[])
+    constructor ()
     {
-        /**
-         * @type {array}
-         * @private
-         */
-        this._$promises = promises;
-
-        /**
-         * @type {Player}
-         * @private
-         */
-        this._$player = new Player();
-
-        /**
-         * @type {DisplayImpl}
-         * @public
-         */
+        // packages
         this.display = display;
-
-        /**
-         * @type {EventsImpl}
-         * @public
-         */
-        this.events = events;
-
-        /**
-         * @type {FiltersImpl}
-         * @public
-         */
+        this.events  = events;
         this.filters = filters;
+        this.geom    = geom;
+        this.media   = media;
+        this.net     = net;
+        this.text    = text;
+        this.ui      = ui;
 
-        /**
-         * @type {GeomImpl}
-         * @public
-         */
-        this.geom = geom;
-
-        /**
-         * @type {MediaImpl}
-         * @public
-         */
-        this.media = media;
-
-        /**
-         * @type {NetImpl}
-         * @public
-         */
-        this.net = net;
-
-        /**
-         * @type {TextImpl}
-         * @public
-         */
-        this.text = text;
-
-        /**
-         * @type {UIImpl}
-         * @public
-         */
-        this.ui = ui;
-    }
-
-    /**
-     * @member {Player}
-     * @readonly
-     * @return {Player}
-     */
-    get player (): Player
-    {
-        return this._$player;
+        this._$promise = new Promise((resolve): void =>
+        {
+            if (document.readyState === "loading") {
+                window.addEventListener("DOMContentLoaded", (): void => resolve(), { "once": true });
+            } else {
+                resolve();
+            }
+        });
     }
 
     /**
@@ -136,95 +147,19 @@ export class Next2D
      * @param  {string} url JSONファイルのURL
      *                      URL of the JSON file
      *
-     * @param  {object} [options=null] {number} width = Stageの幅 | Stage width
-     *                                 {number} height = Stageの高さ | Stage height
+     * @param  {object} [options=null] {number} width Stageの幅 | Stage width
+     *                                 {number} height Stageの高さ | Stage height
      *                                 {string} [tagId=null] canvasを追加対象のDOMのID | ID of the DOM to which the canvas is added
-     *                                 {string} [base="/"] Loaderが読み込む際の絶対パス | Absolute path for Loader to load.
-     *                                 {number|string|boolean} [bgColor=null] 背景色 | background color
+     *                                 {string} [bgColor=null] 背景色 | background color
      *
      * @return {void}
      * @method
      * @public
      */
-    load (url: string, options: PlayerOptionsImpl): void
+    async load (url: string, options: IPlayerOptions | null = null): Promise<void>
     {
-        Promise
-            .all(this._$promises)
-            .then(() =>
-            {
-                $poolArray(this._$promises);
-
-                if (url === "develop") {
-                    const path: string = location
-                        .search
-                        .slice(1)
-                        .split("&")[0];
-
-                    if (!path) {
-                        return ;
-                    }
-                    url = `${location.origin}/${path}`;
-                }
-
-                if (!url) {
-                    return ;
-                }
-
-                if (url.charAt(1) === "/") {
-                    url = url.slice(1);
-                }
-
-                // base set
-                if ((!options || !("base" in options)) && url.indexOf("//") > -1) {
-                    this._$player.base = url;
-                }
-
-                this._$player.setOptions(options);
-                this._$player._$initialize();
-
-                const loader: Loader = new Loader();
-
-                loader
-                    .contentLoaderInfo
-                    .addEventListener(IOErrorEvent.IO_ERROR, (event: IOErrorEvent) =>
-                    {
-                        if (event.target) {
-                            event.target.removeEventListener(IOErrorEvent.IO_ERROR, event.listener);
-                        }
-                        alert("Error: " + event.text);
-                    });
-
-                loader
-                    .contentLoaderInfo
-                    .addEventListener(Event.COMPLETE, (event: Event) =>
-                    {
-                        const loaderInfo: LoaderInfo = event.target as NonNullable<LoaderInfo>;
-                        const player: Player = this._$player;
-
-                        loaderInfo
-                            .removeEventListener(Event.COMPLETE, event.listener);
-
-                        if (loaderInfo._$data) {
-
-                            const stage: StageDataImpl = loaderInfo._$data.stage;
-
-                            player.bgColor = stage.bgColor;
-                            player._$setBackgroundColor(stage.bgColor);
-
-                            player.stage.addChild(loaderInfo.content);
-
-                            player.width  = stage.width;
-                            player.height = stage.height;
-
-                            // set fps fixed logic
-                            player.stage._$frameRate = $clamp(+stage.fps, 1, 60, 60);
-                        }
-
-                        player._$resize();
-                    });
-
-                loader.load(new URLRequest(url));
-            });
+        await Promise.all([this._$promise]);
+        await loadService(url, options);
     }
 
     /**
@@ -233,35 +168,38 @@ export class Next2D
      *
      * @param  {number} [width=240]
      * @param  {number} [height=240]
-     * @param  {number} [fps=24]
+     * @param  {number} [fps=60]
      * @param  {object} [options=null]
      * @return {Sprite}
      * @method
      * @public
      */
     async createRootMovieClip (
-        width: number = 240, height: number = 240,
-        fps: number = 24, options: PlayerOptionsImpl|null = null
+        width: number = 240,
+        height: number = 240,
+        fps: number = 60,
+        options: IPlayerOptions | null = null
     ): Promise<Sprite> {
+        await Promise.all([this._$promise]);
+        return createRootMovieClipUseCase(
+            width, height, fps, options
+        );
+    }
 
-        await Promise.all(this._$promises);
-        $poolArray(this._$promises);
-
-        const player: Player = this._$player;
-
-        // setup
-        player.width  = width | 0;
-        player.height = height | 0;
-        player.mode   = "create";
-        player.stage._$frameRate = fps | 0;
-        player.setOptions(options);
-        player._$initialize();
-
-        const root: Sprite = player.stage.addChild(new Sprite());
-
-        player._$loadStatus = Player.LOAD_END;
-        player.play();
-
-        return root;
+    /**
+     * @description 指定のDisplayObjectをcanvasにキャプチャする
+     *              Capture the specified DisplayObject to the canvas
+     *
+     * @param  {D} display_object
+     * @param  {ICaptureOptions} [opstions=null]
+     * @return {void}
+     * @method
+     * @public
+     */
+    async captureToCanvas <D extends DisplayObject> (
+        display_object: D,
+        opstions: ICaptureOptions | null = null
+    ): Promise<HTMLCanvasElement> {
+        return captureToCanvasUseCase(display_object, opstions);
     }
 }

@@ -1,41 +1,77 @@
 import { Point } from "./Point";
-import {
-    $Math,
-    $clamp,
-    $SHORT_INT_MIN,
-    $SHORT_INT_MAX
-} from "@next2d/share";
+import { execute as rectangleCloneService } from "../src/Rectangle/service/RectangleCloneService";
+import { execute as rectangleContainsService } from "../src/Rectangle/service/RectangleContainsService";
+import { execute as rectangleContainsPointService } from "../src/Rectangle/service/RectangleContainsPointService";
+import { execute as rectangleContainsRectService } from "../src/Rectangle/service/RectangleContainsRectService";
+import { execute as rectangleCopyFromService } from "../src/Rectangle/service/RectangleCopyFromService";
+import { execute as rectangleEqualsService } from "../src/Rectangle/service/RectangleEqualsService";
+import { execute as rectangleInflateService } from "../src/Rectangle/service/RectangleInflateService";
+import { execute as rectangleInflatePointService } from "../src/Rectangle/service/RectangleInflatePointService";
+import { execute as rectangleIntersectionService } from "../src/Rectangle/service/RectangleIntersectionService";
+import { execute as rectangleIntersectsService } from "../src/Rectangle/service/RectangleIntersectsService";
+import { execute as rectangleIsEmptyService } from "../src/Rectangle/service/RectangleIsEmptyService";
+import { execute as rectangleOffsetService } from "../src/Rectangle/service/RectangleOffsetService";
+import { execute as rectangleOffsetPointService } from "../src/Rectangle/service/RectangleOffsetPointService";
+import { execute as rectangleSetEmptyService } from "../src/Rectangle/service/RectangleSetEmptyService";
+import { execute as rectangleSetToService } from "../src/Rectangle/service/RectangleSetToService";
+import { execute as rectangleUnionService } from "../src/Rectangle/service/RectangleUnionService";
 
 /**
- * Rectangle オブジェクトは、その位置（左上隅のポイント (x, y) で示される)、および幅と高さで定義される領域です。
- * Rectangle クラスの x、y、width、および height の各プロパティは、互いに独立しているため、
- * あるプロパティの値を変更しても、他のプロパティに影響はありません。
- * ただし、right プロパティと bottom プロパティはこれら 4 つのプロパティと不可分に関連しています。
- * 例えば、right プロパティの値を変更すると width プロパティの値も変更されます。
- * bottom プロパティの値を変更すると、height プロパティの値も変更されます。
+ * @description Rectangle オブジェクトは、その位置（左上隅のポイント (x, y) で示される)、および幅と高さで定義される領域です。
+ *              Rectangle クラスの x、y、width、および height の各プロパティは、互いに独立しているため、
+ *              あるプロパティの値を変更しても、他のプロパティに影響はありません。
+ *              ただし、right プロパティと bottom プロパティはこれら 4 つのプロパティと不可分に関連しています。
+ *              例えば、right プロパティの値を変更すると width プロパティの値も変更されます。
+ *              bottom プロパティの値を変更すると、height プロパティの値も変更されます。
  *
- * A Rectangle object is an area defined by its position,
- * as indicated by its top-left corner point (x, y) and by its width and its height.
- * The x, y, width, and height properties of the Rectangle class are independent of each other;
- * changing the value of one property has no effect on the others. However,
- * the right and bottom properties are integrally related to those four properties.
- * For example, if you change the value of the right property, the value of the width property changes;
- * if you change the bottom property, the value of the height property changes.
- *
- * @example <caption>Example usage of Rectangle.</caption>
- * // new Rectangle
- * const {Rectangle} = next2d.geom;
- * const rectangle   = new Rectangle(0, 0, 100, 100);
+ *              A Rectangle object is an area defined by its position,
+ *              as indicated by its top-left corner point (x, y) and by its width and its height.
+ *              The x, y, width, and height properties of the Rectangle class are independent of each other;
+ *              changing the value of one property has no effect on the others. However,
+ *              the right and bottom properties are integrally related to those four properties.
+ *              For example, if you change the value of the right property, the value of the width property changes;
+ *              if you change the bottom property, the value of the height property changes.
  *
  * @class
  * @memberOf next2d.geom
  */
 export class Rectangle
 {
-    private _$x: number;
-    private _$y: number;
-    private _$width: number;
-    private _$height: number;
+    /**
+     * @description 矩形の左上隅の x 座標です。
+     *              The x coordinate of the top-left corner of the rectangle.
+     *
+     * @member {number}
+     * @public
+     */
+    public x: number;
+
+    /**
+     * @description 矩形の左上隅の y 座標です。
+     *              The y coordinate of the top-left corner of the rectangle.
+     *
+     * @member {number}
+     * @public
+     */
+    public y: number;
+
+    /**
+     * @description 矩形の幅（ピクセル単位）です。
+     *              The width of the rectangle, in pixels.
+     *
+     * @member {number}
+     * @public
+     */
+    public width: number;
+
+    /**
+     * @description 矩形の高さ（ピクセル単位）です。
+     *              The height of the rectangle, in pixels.
+     *
+     * @member {number}
+     * @public
+     */
+    public height: number;
 
     /**
      * @param   {number} [x=0]
@@ -50,91 +86,10 @@ export class Rectangle
         x: number = 0, y: number = 0,
         width: number = 0, height: number = 0
     ) {
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$x = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$y = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$width = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$height = 0;
-
-        // init
-        this.setTo(x, y, width, height);
-    }
-
-    /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class Rectangle]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Rectangle]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member  {string}
-     * @default next2d.geom.Rectangle
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.geom.Rectangle";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return `(x=${this.x}, y=${this.y}, w=${this.width}, h=${this.height})`;
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member  {string}
-     * @default next2d.geom.Rectangle
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.geom.Rectangle";
+        this.x = x;
+        this.y = y;
+        this.width  = width;
+        this.height = height;
     }
 
     /**
@@ -150,7 +105,7 @@ export class Rectangle
     }
     set bottom (bottom: number)
     {
-        this.height = +bottom - this.y;
+        this.height = bottom - this.y;
     }
 
     /**
@@ -173,22 +128,6 @@ export class Rectangle
     }
 
     /**
-     * @description 矩形の高さ（ピクセル単位）です。
-     *              The height of the rectangle, in pixels.
-     *
-     * @member {number}
-     * @public
-     */
-    get height (): number
-    {
-        return this._$height;
-    }
-    set height (height: number)
-    {
-        this._$height = $clamp(+height, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
-    }
-
-    /**
      * @description 矩形の左上隅の x 座標です。
      *              The x coordinate of the top-left corner of the rectangle.
      *
@@ -201,7 +140,7 @@ export class Rectangle
     }
     set left (left: number)
     {
-        this.width = this.right - +left;
+        this.width = this.right - left;
         this.x     = left;
     }
 
@@ -218,7 +157,7 @@ export class Rectangle
     }
     set right (right: number)
     {
-        this.width = +right - this.x;
+        this.width = right - this.x;
     }
 
     /**
@@ -253,7 +192,7 @@ export class Rectangle
     }
     set top (top: number)
     {
-        this.height = +(this.bottom - +top);
+        this.height = this.bottom - top;
         this.y      = top;
     }
 
@@ -277,54 +216,6 @@ export class Rectangle
     }
 
     /**
-     * @description 矩形の幅（ピクセル単位）です。
-     *              The width of the rectangle, in pixels.
-     *
-     * @member {number}
-     * @public
-     */
-    get width (): number
-    {
-        return this._$width;
-    }
-    set width (width: number)
-    {
-        this._$width = $clamp(+width, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
-    }
-
-    /**
-     * @description 矩形の左上隅の x 座標です。
-     *              The x coordinate of the top-left corner of the rectangle.
-     *
-     * @member {number}
-     * @public
-     */
-    get x (): number
-    {
-        return this._$x;
-    }
-    set x (x: number)
-    {
-        this._$x = $clamp(+x, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
-    }
-
-    /**
-     * @description 矩形の左上隅の y 座標です。
-     *              The y coordinate of the top-left corner of the rectangle.
-     *
-     * @member {number}
-     * @public
-     */
-    get y (): number
-    {
-        return this._$y;
-    }
-    set y (y: number)
-    {
-        this._$y = $clamp(+y, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
-    }
-
-    /**
      * @description 元の Rectangle オブジェクトと x、y、width、および height の各プロパティの値が同じである、
      *              新しい Rectangle オブジェクトを返します。
      *              Returns a new Rectangle object with the same values for the x, y, width,
@@ -336,7 +227,7 @@ export class Rectangle
      */
     clone (): Rectangle
     {
-        return new Rectangle(this.x, this.y, this.width, this.height);
+        return rectangleCloneService(this);
     }
 
     /**
@@ -352,7 +243,7 @@ export class Rectangle
      */
     contains (x: number, y: number): boolean
     {
-        return this.x <= x && this.y <= y && this.right > x && this.bottom > y;
+        return rectangleContainsService(this, x, y);
     }
 
     /**
@@ -367,8 +258,7 @@ export class Rectangle
      */
     containsPoint (point: Point): boolean
     {
-        return this.x <= point.x && this.y <= point.y &&
-            this.right > point.x && this.bottom > point.y;
+        return rectangleContainsPointService(this, point);
     }
 
     /**
@@ -376,15 +266,14 @@ export class Rectangle
      *              Determines whether the Rectangle object specified by
      *              the rect parameter is contained within this Rectangle object.
      *
-     * @param  {Rectangle} rect
+     * @param  {Rectangle} rectangle
      * @return {boolean}
      * @method
      * @public
      */
-    containsRect (rect: Rectangle): boolean
+    containsRect (rectangle: Rectangle): boolean
     {
-        return this.x <= rect.x && this.y <= rect.y &&
-            this.right >= rect.right && this.bottom >= rect.bottom;
+        return rectangleContainsRectService(this, rectangle);
     }
 
     /**
@@ -393,17 +282,14 @@ export class Rectangle
      *              Copies all of rectangle data from
      *              the source Rectangle object into the calling Rectangle object.
      *
-     * @param  {Rectangle} source_rect
+     * @param  {Rectangle} rectangle
      * @return {void}
      * @method
      * @public
      */
-    copyFrom (source_rect: Rectangle): void
+    copyFrom (rectangle: Rectangle): void
     {
-        this.x      = source_rect.x;
-        this.y      = source_rect.y;
-        this.width  = source_rect.width;
-        this.height = source_rect.height;
+        rectangleCopyFromService(this, rectangle);
     }
 
     /**
@@ -412,15 +298,14 @@ export class Rectangle
      *              Determines whether the object specified
      *              in the toCompare parameter is equal to this Rectangle object.
      *
-     * @param  {Rectangle} to_compare
+     * @param  {Rectangle} rectangle
      * @return {boolean}
      * @method
      * @public
      */
-    equals (to_compare: Rectangle): boolean
+    equals (rectangle: Rectangle): boolean
     {
-        return this.x === to_compare.x && this.y === to_compare.y &&
-            this.width === to_compare.width && this.height === to_compare.height;
+        return rectangleEqualsService(this, rectangle);
     }
 
     /**
@@ -429,17 +314,13 @@ export class Rectangle
      *
      * @param  {number} dx
      * @param  {number} dy
-     * @return void
+     * @return {void}
      * @method
      * @public
      */
     inflate (dx: number, dy: number): void
     {
-        this.x      = this.x - +dx;
-        this.width  = this.width + 2 * +dx;
-
-        this.y      = this.y - +dy;
-        this.height = this.height + 2 * +dy;
+        rectangleInflateService(this, dx, dy);
     }
 
     /**
@@ -453,11 +334,7 @@ export class Rectangle
      */
     inflatePoint (point: Point): void
     {
-        this.x      = this.x - point.x;
-        this.width  = this.width + 2 * point.x;
-
-        this.y      = this.y - point.y;
-        this.height = this.height + 2 * point.y;
+        rectangleInflatePointService(this, point);
     }
 
     /**
@@ -466,21 +343,14 @@ export class Rectangle
      *              If the Rectangle object specified in the toIntersect parameter intersects
      *              with this Rectangle object, returns the area of intersection as a Rectangle object.
      *
-     * @param  {Rectangle} to_intersect
+     * @param  {Rectangle} rectangle
      * @return {Rectangle}
      * @method
      * @public
      */
-    intersection (to_intersect: Rectangle): Rectangle
+    intersection (rectangle: Rectangle): Rectangle
     {
-        const sx = $Math.max(this.x, to_intersect.x);
-        const sy = $Math.max(this.y, to_intersect.y);
-        const ex = $Math.min(this.right,  to_intersect.right);
-        const ey = $Math.min(this.bottom, to_intersect.bottom);
-
-        const w = ex - sx;
-        const h = ey - sy;
-        return w > 0 && h > 0 ? new Rectangle(sx, sy, w, h) : new Rectangle(0, 0, 0, 0);
+        return rectangleIntersectionService(this, rectangle);
     }
 
     /**
@@ -489,18 +359,14 @@ export class Rectangle
      *              Determines whether the object specified
      *              in the toIntersect parameter intersects with this Rectangle object.
      *
-     * @param  {Rectangle} to_intersect
+     * @param  {Rectangle} rectangle
      * @return {boolean}
      * @method
      * @public
      */
-    intersects (to_intersect: Rectangle): boolean
+    intersects (rectangle: Rectangle): boolean
     {
-        const sx = $Math.max(this.x, to_intersect.x);
-        const sy = $Math.max(this.y, to_intersect.y);
-        const ex = $Math.min(this.right,  to_intersect.right);
-        const ey = $Math.min(this.bottom, to_intersect.bottom);
-        return ex - sx > 0 && ey - sy > 0;
+        return rectangleIntersectsService(this, rectangle);
     }
 
     /**
@@ -513,7 +379,7 @@ export class Rectangle
      */
     isEmpty (): boolean
     {
-        return this.width <= 0 || this.height <= 0;
+        return rectangleIsEmptyService(this);
     }
 
     /**
@@ -529,8 +395,7 @@ export class Rectangle
      */
     offset (dx: number ,dy: number): void
     {
-        this.x += dx;
-        this.y += dy;
+        rectangleOffsetService(this, dx, dy);
     }
 
     /**
@@ -544,8 +409,7 @@ export class Rectangle
      */
     offsetPoint (point: Point): void
     {
-        this.x += point.x;
-        this.y += point.y;
+        rectangleOffsetPointService(this, point);
     }
 
     /**
@@ -558,10 +422,7 @@ export class Rectangle
      */
     setEmpty (): void
     {
-        this._$x      = 0;
-        this._$y      = 0;
-        this._$width  = 0;
-        this._$height = 0;
+        rectangleSetEmptyService(this);
     }
 
     /**
@@ -578,10 +439,7 @@ export class Rectangle
      */
     setTo (x: number, y: number, width: number, height: number): void
     {
-        this.x      = x;
-        this.y      = y;
-        this.width  = width;
-        this.height = height;
+        rectangleSetToService(this, x, y, width, height);
     }
 
     /**
@@ -590,26 +448,13 @@ export class Rectangle
      *              Adds two rectangles together to create a new Rectangle object,
      *              by filling in the horizontal and vertical space between the two rectangles.
      *
-     * @param  {Rectangle} to_union
+     * @param  {Rectangle} rectangle
      * @return {Rectangle}
      * @method
      * @public
      */
-    union (to_union: Rectangle): Rectangle
+    union (rectangle: Rectangle): Rectangle
     {
-        if (this.isEmpty()) {
-            return to_union.clone();
-        }
-
-        if (to_union.isEmpty()) {
-            return this.clone();
-        }
-
-        return new Rectangle(
-            $Math.min(this.x, to_union.x),
-            $Math.min(this.y, to_union.y),
-            $Math.max(this.right - to_union.left, to_union.right - this.left),
-            $Math.max(this.bottom - to_union.top, to_union.bottom - this.top)
-        );
+        return rectangleUnionService(this, rectangle);
     }
 }

@@ -1,4 +1,4 @@
-import { EventsImpl } from "@next2d/interface";
+import type { IEvents } from "./interface/IEvents";
 import {
     Event,
     EventDispatcher,
@@ -6,19 +6,21 @@ import {
     FocusEvent,
     HTTPStatusEvent,
     IOErrorEvent,
-    MouseEvent,
+    PointerEvent,
+    JobEvent,
     ProgressEvent,
     VideoEvent
 } from "@next2d/events";
 
-const events: EventsImpl = {
+const events: IEvents = {
     Event,
     EventDispatcher,
     EventPhase,
     FocusEvent,
     HTTPStatusEvent,
     IOErrorEvent,
-    MouseEvent,
+    PointerEvent,
+    JobEvent,
     ProgressEvent,
     VideoEvent
 };

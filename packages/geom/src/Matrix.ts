@@ -1,33 +1,33 @@
 import { Point } from "./Point";
-import { $getMatrix } from "@next2d/util";
+import { execute as matrixCloneService } from "../src/Matrix/service/MatrixCloneService";
+import { execute as matirxConcatService } from "../src/Matrix/service/MatirxConcatService";
+import { execute as matrixCopyFromService } from "../src/Matrix/service/MatrixCopyFromService";
+import { execute as matrixCreateBoxService } from "../src/Matrix/service/MatrixCreateBoxService";
+import { execute as matrixCreateGradientBoxService } from "../src/Matrix/service/MatrixCreateGradientBoxService";
+import { execute as matrixDeltaTransformPointService } from "../src/Matrix/service/MatrixDeltaTransformPointService";
+import { execute as matrixIdentityService } from "../src/Matrix/service/MatrixIdentityService";
+import { execute as matrixInvertService } from "../src/Matrix/service/MatrixInvertService";
+import { execute as matrixRotateService } from "../src/Matrix/service/MatrixRotateService";
+import { execute as matrixScaleService } from "../src/Matrix/service/MatrixScaleService";
+import { execute as matrixSetToService } from "../src/Matrix/service/MatrixSetToService";
+import { execute as matrixTransformPointService } from "../src/Matrix/service/MatrixTransformPointService";
+import { execute as matrixTranslateService } from "../src/Matrix/service/MatrixTranslateService";
 import {
     $getFloat32Array6,
-    $clamp,
-    $Math,
-    $SHORT_INT_MIN,
-    $SHORT_INT_MAX
-} from "@next2d/share";
+    $poolFloat32Array6
+} from "./GeomUtil";
 
 /**
- * Matrix クラスは、2 つの座標空間の間におけるポイントのマッピング方法を決定する変換マトリックスを表します。
- * Matrix オブジェクトのプロパティを設定し、Matrix オブジェクトを Transform オブジェクトの matrix プロパティに適用し、
- * 次に Transform オブジェクトを表示オブジェクトの transform プロパティとして適用することで、表示オブジェクトに対する各種グラフィック変換を実行できます。
- * これらの変換機能には、平行移動（x と y の位置変更）、回転、拡大 / 縮小、傾斜などが含まれます。
+ * @description Matrix クラスは、2 つの座標空間の間におけるポイントのマッピング方法を決定する変換マトリックスを表します。
+ *              Matrix オブジェクトのプロパティを設定し、Matrix オブジェクトを Transform オブジェクトの matrix プロパティに適用し、
+ *              次に Transform オブジェクトを表示オブジェクトの transform プロパティとして適用することで、表示オブジェクトに対する各種グラフィック変換を実行できます。
+ *              これらの変換機能には、平行移動（x と y の位置変更）、回転、拡大 / 縮小、傾斜などが含まれます。
  *
- * The Matrix class represents a transformation matrix that determines how to map points from one coordinate space to another.
- * You can perform various graphical transformations on a display object by setting the properties of a Matrix object,
- * applying that Matrix object to the matrix property of a Transform object,
- * and then applying that Transform object as the transform property of the display object.
- * These transformation functions include translation (x and y repositioning), rotation, scaling, and skewing.
- *
- * @example <caption>Example usage of Matrix.</caption>
- * // new Matrix
- * const {Matrix} = next2d.geom;
- * const matrix   = new Matrix();
- * // set new Matrix
- * const {MovieClip} = next2d.display;
- * const movieClip   = new MovieClip();
- * movieClip.transform.matrix = matrix;
+ *              The Matrix class represents a transformation matrix that determines how to map points from one coordinate space to another.
+ *              You can perform various graphical transformations on a display object by setting the properties of a Matrix object,
+ *              applying that Matrix object to the matrix property of a Transform object,
+ *              and then applying that Transform object as the transform property of the display object.
+ *              These transformation functions include translation (x and y repositioning), rotation, scaling, and skewing.
  *
  * @class
  * @memberOf next2d.geom
@@ -56,70 +56,7 @@ export class Matrix
          * @type {Float32Array}
          * @private
          */
-        this._$matrix = $getFloat32Array6(1, 0, 0, 1, 0, 0);
-
-        // setup
-        this.a  = a;
-        this.b  = b;
-        this.c  = c;
-        this.d  = d;
-        this.tx = tx;
-        this.ty = ty;
-    }
-
-    /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class Matrix]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Matrix]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member  {string}
-     * @default next2d.geom.Matrix
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.geom.Matrix";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return `(a=${this.a}, b=${this.b}, c=${this.c}, d=${this.d}, tx=${this.tx}, ty=${this.ty})`;
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member  {string}
-     * @default next2d.geom.Matrix
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.geom.Matrix";
+        this._$matrix = $getFloat32Array6(a, b, c, d, tx, ty);
     }
 
     /**
@@ -137,7 +74,7 @@ export class Matrix
     }
     set a (a: number)
     {
-        this._$matrix[0] = $clamp(+a, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[0] = a;
     }
 
     /**
@@ -155,7 +92,7 @@ export class Matrix
     }
     set b (b: number)
     {
-        this._$matrix[1] = $clamp(+b, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[1] = b;
     }
 
     /**
@@ -173,7 +110,7 @@ export class Matrix
     }
     set c (c: number)
     {
-        this._$matrix[2] = $clamp(+c, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[2] = c;
     }
 
     /**
@@ -191,7 +128,7 @@ export class Matrix
     }
     set d (d: number)
     {
-        this._$matrix[3] = $clamp(+d, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[3] = d;
     }
 
     /**
@@ -208,7 +145,7 @@ export class Matrix
     }
     set tx (tx: number)
     {
-        this._$matrix[4] = $clamp(+tx, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[4] = tx;
     }
 
     /**
@@ -225,17 +162,20 @@ export class Matrix
     }
     set ty (ty: number)
     {
-        this._$matrix[5] = $clamp(+ty, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        this._$matrix[5] = ty;
     }
 
     /**
-     * @return {Matrix}
-     * @method
-     * @private
+     * @description Matrixの内部Float32Arrayデータを返却
+     *              Returns the internal Float32Array data of Matrix
+     *
+     * @member {Float32Array}
+     * @readonly
+     * @public
      */
-    _$clone (): Matrix
+    get rawData (): Float32Array
     {
-        return this.clone();
+        return this._$matrix;
     }
 
     /**
@@ -250,11 +190,7 @@ export class Matrix
      */
     clone (): Matrix
     {
-        return $getMatrix(
-            this._$matrix[0], this._$matrix[1],
-            this._$matrix[2], this._$matrix[3],
-            this._$matrix[4], this._$matrix[5]
-        );
+        return matrixCloneService(this);
     }
 
     /**
@@ -263,56 +199,28 @@ export class Matrix
      *              Concatenates a matrix with the current matrix,
      *              effectively combining the geometric effects of the two.
      *
-     * @param  {Matrix} m
+     * @param  {Matrix} matrix
      * @return {void}
      * @method
      * @public
      */
-    concat (m: Matrix): void
+    concat (matrix: Matrix): void
     {
-        const matrix = this._$matrix;
-        const target = m._$matrix;
-
-        let a =  matrix[0] * target[0];
-        let b =  0.0;
-        let c =  0.0;
-        let d =  matrix[3] * target[3];
-        let tx = matrix[4] * target[0] + target[4];
-        let ty = matrix[5] * target[3] + target[5];
-
-        if (matrix[1] || matrix[2] || target[1] || target[2]) {
-            a  += matrix[1] * target[2];
-            d  += matrix[2] * target[1];
-            b  += matrix[0] * target[1] + matrix[1] * target[3];
-            c  += matrix[2] * target[0] + matrix[3] * target[2];
-            tx += matrix[5] * target[2];
-            ty += matrix[4] * target[1];
-        }
-
-        this.a  = a;
-        this.b  = b;
-        this.c  = c;
-        this.d  = d;
-        this.tx = tx;
-        this.ty = ty;
+        matirxConcatService(this, matrix);
     }
 
     /**
      * @description すべてのマトリックスデータを、ソース Matrix オブジェクトから、
      *              呼び出し元の Matrix オブジェクトにコピーします。
      *
-     * @param  {Matrix} source_matrix
-     * @method
+     * @param  {Matrix} matrix
      * @return {void}
+     * @method
+     * @public
      */
-    copyFrom (source_matrix: Matrix): void
+    copyFrom (matrix: Matrix): void
     {
-        this.a  = source_matrix.a;
-        this.b  = source_matrix.b;
-        this.c  = source_matrix.c;
-        this.d  = source_matrix.d;
-        this.tx = source_matrix.tx;
-        this.ty = source_matrix.ty;
+        matrixCopyFromService(this, matrix);
     }
 
     /**
@@ -333,10 +241,7 @@ export class Matrix
         rotation: number = 0,
         tx: number = 0, ty: number = 0
     ): void {
-        this.identity();
-        this.rotate(rotation);
-        this.scale(scale_x, scale_y);
-        this.translate(tx, ty);
+        matrixCreateBoxService(this, scale_x, scale_y, rotation, tx, ty);
     }
 
     /**
@@ -358,25 +263,7 @@ export class Matrix
         rotation: number = 0,
         tx: number = 0, ty: number = 0
     ): void {
-
-        this.a = width  / 1638.4;
-        this.d = height / 1638.4;
-
-        if (rotation) {
-            const cos = $Math.cos(rotation);
-            const sin = $Math.sin(rotation);
-
-            this.b =  sin * this.d;
-            this.c = -sin * this.a;
-            this.a *= cos;
-            this.d *= cos;
-        } else {
-            this.b = 0;
-            this.c = 0;
-        }
-
-        this.tx = tx + width / 2;
-        this.ty = ty + height / 2;
+        matrixCreateGradientBoxService(this, width, height, rotation, tx, ty);
     }
 
     /**
@@ -391,10 +278,7 @@ export class Matrix
      */
     deltaTransformPoint (point: Point): Point
     {
-        return new Point(
-            point.x * this._$matrix[0] + point.y * this._$matrix[2],
-            point.x * this._$matrix[1] + point.y * this._$matrix[3]
-        );
+        return matrixDeltaTransformPointService(this, point);
     }
 
     /**
@@ -407,12 +291,7 @@ export class Matrix
      */
     identity (): void
     {
-        this._$matrix[0] = 1;
-        this._$matrix[1] = 0;
-        this._$matrix[2] = 0;
-        this._$matrix[3] = 1;
-        this._$matrix[4] = 0;
-        this._$matrix[5] = 0;
+        matrixIdentityService(this);
     }
 
     /**
@@ -425,40 +304,7 @@ export class Matrix
      */
     invert (): void
     {
-        const a: number  = this._$matrix[0];
-        const b: number  = this._$matrix[1];
-        const c: number  = this._$matrix[2];
-        const d: number  = this._$matrix[3];
-        const tx: number = this._$matrix[4];
-        const ty: number = this._$matrix[5];
-
-        if (b === 0 && c === 0) {
-
-            this.a  = 1 / a;
-            this.b  = 0;
-            this.c  = 0;
-            this.d  = 1 / d;
-            this.tx = -this.a * tx;
-            this.ty = -this.d * ty;
-
-        } else {
-
-            const det = a * d - b * c;
-
-            if (det) {
-
-                const rdet: number = 1 / det;
-
-                this.a  = d  * rdet;
-                this.b  = -b * rdet;
-                this.c  = -c * rdet;
-                this.d  = a  * rdet;
-                this.tx = -(this.a * tx + this.c * ty);
-                this.ty = -(this.b * tx + this.d * ty);
-
-            }
-
-        }
+        matrixInvertService(this);
     }
 
     /**
@@ -472,40 +318,22 @@ export class Matrix
      */
     rotate (rotation: number): void
     {
-        const a  = this._$matrix[0];
-        const b  = this._$matrix[1];
-        const c  = this._$matrix[2];
-        const d  = this._$matrix[3];
-        const tx = this._$matrix[4];
-        const ty = this._$matrix[5];
-
-        this.a  = a  * $Math.cos(rotation) - b  * $Math.sin(rotation);
-        this.b  = a  * $Math.sin(rotation) + b  * $Math.cos(rotation);
-        this.c  = c  * $Math.cos(rotation) - d  * $Math.sin(rotation);
-        this.d  = c  * $Math.sin(rotation) + d  * $Math.cos(rotation);
-        this.tx = tx * $Math.cos(rotation) - ty * $Math.sin(rotation);
-        this.ty = tx * $Math.sin(rotation) + ty * $Math.cos(rotation);
+        matrixRotateService(this, rotation);
     }
 
     /**
      * @description 行列に拡大 / 縮小の変換を適用します。
      *              Applies a scaling transformation to the matrix.
      *
-     * @param  {number} sx
-     * @param  {number} sy
+     * @param  {number} scale_x
+     * @param  {number} scale_y
      * @return {void}
      * @method
      * @public
      */
-    scale (sx: number, sy: number): void
+    scale (scale_x: number, scale_y: number): void
     {
-        this.a  *= sx;
-        this.c  *= sx;
-        this.tx *= sx;
-
-        this.b  *= sy;
-        this.d  *= sy;
-        this.ty *= sy;
+        matrixScaleService(this, scale_x, scale_y);
     }
 
     /**
@@ -527,12 +355,7 @@ export class Matrix
         c: number, d: number,
         tx: number, ty: number
     ): void {
-        this.a  = a;
-        this.b  = b;
-        this.c  = c;
-        this.d  = d;
-        this.tx = tx;
-        this.ty = ty;
+        matrixSetToService(this, a, b, c, d, tx, ty);
     }
 
     /**
@@ -547,10 +370,7 @@ export class Matrix
      */
     transformPoint (point: Point): Point
     {
-        return new Point(
-            point.x * this._$matrix[0] + point.y * this._$matrix[2] + this._$matrix[4],
-            point.x * this._$matrix[1] + point.y * this._$matrix[3] + this._$matrix[5]
-        );
+        return matrixTransformPointService(this, point);
     }
 
     /**
@@ -567,7 +387,44 @@ export class Matrix
      */
     translate (dx: number, dy: number): void
     {
-        this.tx += dx;
-        this.ty += dy;
+        matrixTranslateService(this, dx, dy);
+    }
+
+    /**
+     * @description 指定された配列の値を乗算します
+     *              Multiplies the value of the specified array.
+     *
+     * @param  {Float32Array} a
+     * @param  {Float32Array} b
+     * @return {Float32Array}
+     * @method
+     * @private
+     */
+    static multiply (a: Float32Array, b: Float32Array): Float32Array
+    {
+        const a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5];
+        const b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3], b4 = b[4], b5 = b[5];
+
+        return $getFloat32Array6(
+            a0 * b0 + a2 * b1,
+            a1 * b0 + a3 * b1,
+            a0 * b2 + a2 * b3,
+            a1 * b2 + a3 * b3,
+            a0 * b4 + a2 * b5 + a4,
+            a1 * b4 + a3 * b5 + a5
+        );
+    }
+
+    /**
+     * @description 利用したFloat32Arrayを再利用する為にプールします。
+     *              Pool the Float32Array used for reuse.
+     *
+     * @param {Float32Array} buffer
+     * @method
+     * @private
+     */
+    static release (buffer: Float32Array): void
+    {
+        $poolFloat32Array6(buffer);
     }
 }

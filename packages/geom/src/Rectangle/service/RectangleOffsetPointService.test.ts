@@ -1,0 +1,26 @@
+import { Point } from "../../Point";
+import { Rectangle } from "../../Rectangle";
+import { describe, expect, it } from "vitest";
+
+describe("Rectangle.js offsetPoint test", () =>
+{
+    it("offsetPoint test case1", () =>
+    {
+        const rectangle1 = new Rectangle(10, 10, 20, 20);
+        const rectangle2 = new Rectangle(-55, -55, 0, 0);
+
+        rectangle1.offsetPoint(new Point(5, 8));
+        rectangle2.offsetPoint(new Point(60, 30));
+
+        expect(rectangle1.x).toBe(15);
+        expect(rectangle1.y).toBe(18);
+        expect(rectangle1.width).toBe(20);
+        expect(rectangle1.height).toBe(20);
+
+        expect(rectangle2.x).toBe(5);
+        expect(rectangle2.y).toBe(-25);
+        expect(rectangle2.width).toBe(0);
+        expect(rectangle2.height).toBe(0);
+    });
+
+});

@@ -1,70 +1,44 @@
-import { $Math } from "@next2d/share";
+import { execute as easingLinearService } from "./Easing/service/EasingLinearService";
+import { execute as easingInQuadService } from "./Easing/service/EasingInQuadService";
+import { execute as easingOutQuadService } from "./Easing/service/EasingOutQuadService";
+import { execute as easingInOutQuadService } from "./Easing/service/EasingInOutQuadService";
+import { execute as easingInCubicService } from "./Easing/service/EasingInCubicService";
+import { execute as easingOutCubicService } from "./Easing/service/EasingOutCubicService";
+import { execute as easingInOutCubicService } from "./Easing/service/EasingInOutCubicService";
+import { execute as easingInQuartService } from "./Easing/service/EasingInQuartService";
+import { execute as easingOutQuartService } from "./Easing/service/EasingOutQuartService";
+import { execute as easingInOutQuartService } from "./Easing/service/EasingInOutQuartService";
+import { execute as easingInQuintService } from "./Easing/service/EasingInQuintService";
+import { execute as easingOutQuintService } from "./Easing/service/EasingOutQuintService";
+import { execute as easingInOutQuintService } from "./Easing/service/EasingInOutQuintService";
+import { execute as easingInSineService } from "./Easing/service/EasingInSineService";
+import { execute as easingOutSineService } from "./Easing/service/EasingOutSineService";
+import { execute as easingInOutSineService } from "./Easing/service/EasingInOutSineService";
+import { execute as easingInExpoService } from "./Easing/service/EasingInExpoService";
+import { execute as easingOutExpoService } from "./Easing/service/EasingOutExpoService";
+import { execute as easingInOutExpoService } from "./Easing/service/EasingInOutExpoService";
+import { execute as easingInCircService } from "./Easing/service/EasingInCircService";
+import { execute as easingOutCircService } from "./Easing/service/EasingOutCircService";
+import { execute as easingInOutCircService } from "./Easing/service/EasingInOutCircService";
+import { execute as easingInBackService } from "./Easing/service/EasingInBackService";
+import { execute as easingOutBackService } from "./Easing/service/EasingOutBackService";
+import { execute as easingInOutBackService } from "./Easing/service/EasingInOutBackService";
+import { execute as easingInElasticService } from "./Easing/service/EasingInElasticService";
+import { execute as easingOutElasticService } from "./Easing/service/EasingOutElasticService";
+import { execute as easingInOutElasticService } from "./Easing/service/EasingInOutElasticService";
+import { execute as easingOutBounceService } from "./Easing/service/EasingOutBounceService";
+import { execute as easingInBounceService } from "./Easing/service/EasingInBounceService";
+import { execute as easingInOutBounceService } from "./Easing/service/EasingInOutBounceService";
 
 /**
- * Easeクラスは、イージング機能の関数を提供します。
- * The Ease class provides a collection of easing functions
+ * @description Easeクラスは、イージング機能の関数を提供します。
+ *              The Ease class provides a collection of easing functions
  *
  * @class
  * @memberOf next2d.ui
  */
 export class Easing
 {
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class Easing]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Easing]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default next2d.ui.Easing
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.ui.Easing";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object Easing]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Easing]";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default next2d.ui.Easing
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.ui.Easing";
-    }
-
     /**
      * @param  {number} t
      * @param  {number} b
@@ -76,7 +50,7 @@ export class Easing
      */
     static linear (t: number, b: number, c: number, d: number): number
     {
-        return t / d * c + b;
+        return easingLinearService(t, b, c, d);
     }
 
     /**
@@ -90,7 +64,7 @@ export class Easing
      */
     static inQuad (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d) * t * c + b;
+        return easingInQuadService(t, b, c, d);
     }
 
     /**
@@ -104,7 +78,7 @@ export class Easing
      */
     static outQuad (t: number, b: number, c: number, d: number): number
     {
-        return -(t /= d) * (t - 2) * c + b;
+        return easingOutQuadService(t, b, c, d);
     }
 
     /**
@@ -118,9 +92,7 @@ export class Easing
      */
     static inOutQuad (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d / 2) < 1
-            ? t * t * c / 2 + b
-            : -((t -= 1) * (t - 2) - 1) * c / 2 + b;
+        return easingInOutQuadService(t, b, c, d);
     }
 
     /**
@@ -134,7 +106,7 @@ export class Easing
      */
     static inCubic (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d) * t * t * c + b;
+        return easingInCubicService(t, b, c, d);
     }
 
     /**
@@ -148,8 +120,7 @@ export class Easing
      */
     static outCubic (t: number, b: number, c: number, d: number): number
     {
-        t /= d;
-        return (--t * t * t + 1) * c + b;
+        return easingOutCubicService(t, b, c, d);
     }
 
     /**
@@ -163,9 +134,7 @@ export class Easing
      */
     static inOutCubic (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d / 2) < 1
-            ? t * t * t * c / 2 + b
-            : ((t -= 2) * t * t + 2) * c / 2 + b;
+        return easingInOutCubicService(t, b, c, d);
     }
 
     /**
@@ -179,7 +148,7 @@ export class Easing
      */
     static inQuart (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d) * t * t * t * c + b;
+        return easingInQuartService(t, b, c, d);
     }
 
     /**
@@ -193,8 +162,7 @@ export class Easing
      */
     static outQuart (t: number, b: number, c: number, d: number): number
     {
-        t /= d;
-        return (--t * t * t * t - 1) * -c + b;
+        return easingOutQuartService(t, b, c, d);
     }
 
     /**
@@ -208,9 +176,7 @@ export class Easing
      */
     static inOutQuart (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d / 2) < 1
-            ? t * t * t * t * c / 2 + b
-            : ((t -= 2) * t * t * t - 2) * -c / 2 + b;
+        return easingInOutQuartService(t, b, c, d);
     }
 
     /**
@@ -224,7 +190,7 @@ export class Easing
      */
     static inQuint (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d) * t * t * t * t * c + b;
+        return easingInQuintService(t, b, c, d);
     }
 
     /**
@@ -238,8 +204,7 @@ export class Easing
      */
     static outQuint (t: number, b: number, c: number, d: number): number
     {
-        t /= d;
-        return (--t * t * t * t * t + 1) * c + b;
+        return easingOutQuintService(t, b, c, d);
     }
 
     /**
@@ -253,9 +218,7 @@ export class Easing
      */
     static inOutQuint (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d / 2) < 1
-            ? t * t * t * t * t * c / 2 + b
-            : ((t -= 2) * t * t * t * t + 2) * c / 2 + b;
+        return easingInOutQuintService(t, b, c, d);
     }
 
     /**
@@ -269,7 +232,7 @@ export class Easing
      */
     static inSine (t: number, b: number, c: number, d: number): number
     {
-        return -c * $Math.cos(t / d * ($Math.PI / 2)) + c + b;
+        return easingInSineService(t, b, c, d);
     }
 
     /**
@@ -283,7 +246,7 @@ export class Easing
      */
     static outSine (t: number, b: number, c: number, d: number): number
     {
-        return c * $Math.sin(t / d * ($Math.PI / 2)) + b;
+        return easingOutSineService(t, b, c, d);
     }
 
     /**
@@ -297,7 +260,7 @@ export class Easing
      */
     static inOutSine (t: number, b: number, c: number, d: number): number
     {
-        return -c / 2 * ($Math.cos($Math.PI * t / d) - 1) + b;
+        return easingInOutSineService(t, b, c, d);
     }
 
     /**
@@ -311,7 +274,7 @@ export class Easing
      */
     static inExpo (t: number, b: number, c: number, d: number): number
     {
-        return c * $Math.pow(2, 10 * (t / d - 1) ) + b;
+        return easingInExpoService(t, b, c, d);
     }
 
     /**
@@ -325,7 +288,7 @@ export class Easing
      */
     static outExpo (t: number, b: number, c: number, d: number): number
     {
-        return c * (-$Math.pow(2, -10 * t / d) + 1) + b;
+        return easingOutExpoService(t, b, c, d);
     }
 
     /**
@@ -339,9 +302,7 @@ export class Easing
      */
     static inOutExpo (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d / 2) < 1
-            ? c / 2 * $Math.pow(2, 10 * (t - 1)) + b
-            : c / 2 * (-$Math.pow(2, -10 * (t - 1)) + 2) + b;
+        return easingInOutExpoService(t, b, c, d);
     }
 
     /**
@@ -355,7 +316,7 @@ export class Easing
      */
     static inCirc (t: number, b: number, c: number, d: number): number
     {
-        return (1 - $Math.sqrt(1 - (t /= d) * t)) * c + b;
+        return easingInCircService(t, b, c, d);
     }
 
     /**
@@ -369,8 +330,7 @@ export class Easing
      */
     static outCirc (t: number, b: number, c: number, d: number): number
     {
-        t /= d;
-        return $Math.sqrt(1 - --t * t) * c + b;
+        return easingOutCircService(t, b, c, d);
     }
 
     /**
@@ -384,9 +344,7 @@ export class Easing
      */
     static inOutCirc (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d * 2) < 1
-            ? ($Math.sqrt(1 - t * t) - 1) / -2 * c + b
-            : ($Math.sqrt(1 - (t -= 2) * t) + 1) / 2 * c + b;
+        return easingInOutCircService(t, b, c, d);
     }
 
     /**
@@ -400,7 +358,7 @@ export class Easing
      */
     static inBack (t: number, b: number, c: number, d: number): number
     {
-        return (2.70158 * (t /= d) * t * t - 1.70158 * t * t) * c + b;
+        return easingInBackService(t, b, c, d);
     }
 
     /**
@@ -414,10 +372,7 @@ export class Easing
      */
     static outBack (t: number, b: number, c: number, d: number): number
     {
-        return (1 + 2.70158
-            * $Math.pow((t /= d) - 1, 3) + 1.70158
-            * $Math.pow(t - 1, 2)
-        ) * c + b;
+        return easingOutBackService(t, b, c, d);
     }
 
     /**
@@ -431,11 +386,7 @@ export class Easing
      */
     static inOutBack (t: number, b: number, c: number, d: number): number
     {
-        let s = 1.70158;
-        if ((t /= d / 2) < 1) {
-            return t * t * (((s *= 1.525) + 1) * t - s) * c / 2 + b;
-        }
-        return ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2) * c / 2 + b;
+        return easingInOutBackService(t, b, c, d);
     }
 
     /**
@@ -449,13 +400,7 @@ export class Easing
      */
     static inElastic (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d) === 0
-            ? b
-            : t === 1
-                ? c + b
-                : -$Math.pow(2, (t *= 10) - 10)
-                    * $Math.sin((t - 10.75) * (2 * $Math.PI / 3))
-                        * c + b;
+        return easingInElasticService(t, b, c, d);
     }
 
     /**
@@ -469,13 +414,7 @@ export class Easing
      */
     static outElastic (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d) === 0
-            ? b
-            : t === 1
-                ? c + b
-                : ($Math.pow(2, -10 * t)
-                    * $Math.sin((t * 10 - 0.75) * (2 * $Math.PI / 3)) + 1)
-                        * c + b;
+        return easingOutElasticService(t, b, c, d);
     }
 
     /**
@@ -489,13 +428,7 @@ export class Easing
      */
     static inOutElastic (t: number, b: number, c: number, d: number): number
     {
-        return (t /= d) === 0
-            ? b
-            : t === 1
-                ? c + b
-                : t < 0.5
-                    ? -($Math.pow(2, 20  * t - 10) * $Math.sin((20 * t - 11.125) * (2 * $Math.PI / 4.5))) / 2    * c + b
-                    : ($Math.pow(2, -20 * t + 10) * $Math.sin((20 * t - 11.125) * (2 * $Math.PI / 4.5)) / 2 + 1) * c + b;
+        return easingInOutElasticService(t, b, c, d);
     }
 
     /**
@@ -509,16 +442,7 @@ export class Easing
      */
     static outBounce (t: number, b: number, c: number, d: number): number
     {
-        if ((t /= d) < 1 / 2.75) {
-            return 7.5625 * t * t * c + b;
-        }
-        if (t < 2 / 2.75) {
-            return (7.5625 * (t -= 1.5 / 2.75)   * t + 0.75) * c + b;
-        }
-        if (t < 2.5 / 2.75) {
-            return (7.5625 * (t -= 2.25 / 2.75) * t + 0.9375) * c + b;
-        }
-        return (7.5625 * (t -= 2.625 / 2.75) * t + 0.984375) * c + b;
+        return easingOutBounceService(t, b, c, d);
     }
 
     /**
@@ -532,7 +456,7 @@ export class Easing
      */
     static inBounce (t: number, b: number, c: number, d: number): number
     {
-        return c - Easing.outBounce(d - t, 0, c, d) + b;
+        return easingInBounceService(t, b, c, d);
     }
 
     /**
@@ -546,8 +470,6 @@ export class Easing
      */
     static inOutBounce (t: number, b: number, c: number, d: number): number
     {
-        return t < d / 2
-            ? Easing.inBounce(t * 2, b, c / 2, d)
-            : Easing.outBounce(t * 2 - d, b + c / 2, c / 2, d);
+        return easingInOutBounceService(t, b, c, d);
     }
 }

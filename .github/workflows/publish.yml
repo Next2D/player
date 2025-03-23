@@ -3,22 +3,23 @@ name: Publish Package
 on:
   push:
     branches:
-      - publish
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "18.x"
+          node-version: "22.x"
           registry-url: "https://registry.npmjs.org"
       - run: npm install
-      - run: npm run build
-      - run: npm run clean
       - run: npm run publish:dist
       - run: cd ~/work/player/player/dist/src && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+      - run: cd ~/work/player/player/dist/packages/cache && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/core && npm publish --access public
@@ -36,25 +37,25 @@ jobs:
       - run: cd ~/work/player/player/dist/packages/geom && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/packages/interface && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/media && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/net && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/packages/share && npm publish --access public
+      - run: cd ~/work/player/player/dist/packages/render-queue && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+      - run: cd ~/work/player/player/dist/packages/renderer && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/text && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/packages/ui && npm publish --access public
+      - run: cd ~/work/player/player/dist/packages/texture-packer && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-      - run: cd ~/work/player/player/dist/packages/util && npm publish --access public
+      - run: cd ~/work/player/player/dist/packages/ui && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - run: cd ~/work/player/player/dist/packages/webgl && npm publish --access public

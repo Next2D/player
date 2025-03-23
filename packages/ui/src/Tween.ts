@@ -1,3 +1,4 @@
+import type { IObject } from "./interface/IObject";
 import { Job } from "./Job";
 
 /**
@@ -6,62 +7,6 @@ import { Job } from "./Job";
  */
 export class Tween
 {
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class Tween]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Tween]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default next2d.ui.Tween
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.ui.Tween";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object Tween]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object Tween]";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default next2d.ui.Tween
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.ui.Tween";
-    }
-
     /**
      * @description 新しいJobクラスを追加します
      *              Add a new Job class
@@ -77,7 +22,7 @@ export class Tween
      * @static
      */
     static add (
-        target: any, from: any, to: any,
+        target: any, from: IObject, to: IObject,
         delay: number = 0, duration: number = 1,
         ease: Function | null = null
     ): Job {

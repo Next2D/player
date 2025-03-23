@@ -46,49 +46,55 @@ If Next2D is useful to you, we hope you will support our project.
 
 ## Related Sites
 * [Website](https://next2d.app)
-* [Player API Documentation](https://next2d.app/ja/docs/player)
-* [NoCode Tool](https://tool.next2d.app)
+* [Animation Tool](https://tool.next2d.app)
 * [Framework](https://github.com/Next2D/framework)
 
 ## Examples
 
 ### Use Simple Sample
 ```javascript
-next2d.load("Path to JSON output from NoCode Tool");
+next2d.load("Path to JSON output from Animation Tool");
 ```
-[CodePen](https://codepen.io/next2d/pen/rNGMrZG)
 
-### Use Program Sample
+### Use Program Sample For JavaScript
 ```javascript
 const { Loader }     = next2d.display;
 const { URLRequest } = next2d.net;
 const { Event }      = next2d.events;
 
 // create root MovieClip
-const start = async () => 
+const start = async () =>
 {
-    const root = await next2d.createRootMovieClip();
-
     const request = new URLRequest("JSON path");
-    const loader  = new Loader(request);
-    
-    loader
-        .contentLoaderInfo
-        .addEventListener(Event.COMPLETE, (event) =>
-        {
-            root.addChild(event.currentTarget.content);
-        });
-    
-    loader.load(request);
+    const loader  = new Loader();
+    await loader.load(request);
+
+    const root = await next2d.createRootMovieClip();
+    root.addChild(loader.contentLoaderInfo.content);
 };
 
 start();
 ```
 
-### Use Program Sample
+### Use Program Sample For TypeScript
+```typescript
+import { Loader } from "@next2d/display";
+import { URLRequest } from "@next2d/net";
+import { Event } from "@next2d/events";
 
-[CodePen](https://codepen.io/next2d/pen/VwMKGEv)\
-@see [API Documentation](https://next2d.app/en/docs/player)
+// create root MovieClip
+const start = async (): Promise<void> =>
+{
+    const request = new URLRequest("JSON path");
+    const loader  = new Loader();
+    await loader.load(request);
+
+    const root = await next2d.createRootMovieClip();
+    root.addChild(loader.content);
+};
+
+start();
+```
 
 ## Option settings
 
@@ -96,7 +102,6 @@ start();
 
 | プロパティ名       | 型       | デフォルト値        | 説明                                                                    |
 |--------------|---------|---------------|-----------------------------------------------------------------------|
-| `base`       | string  | empty         | 相対パスでJSONを取得する場合、ここで設定したURLがrootとして適用されます。絶対パスの場合はここで設定したURLは適用されません。 |
 | `fullScreen` | boolean | false         | Stageクラスで設定した幅と高さを超えて画面全体に描画されます。                                     |
 | `tagId`      | string  | empty         | IDを指定すると、指定したIDのエレメント内で描画を行います。                                       |
 | `bgColor`    | string  | "transparent" | 背景色を16進数で指定できます。デフォルトは無色透明です。                                         |
@@ -105,7 +110,6 @@ start();
 
 | name           | type    | default       | description                                                                                                                         |
 |----------------|---------|---------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| `base`         | string  | empty         | When JSON is acquired by a relative path, the URL set here is applied as root. For absolute paths, the URL set here is not applied. |
 | `fullScreen`   | boolean | false         | The entire screen is drawn beyond the width and height set in the Stage class.                                                      |
 | `tagId`        | string  | empty         | When an ID is specified, drawing is performed within the element of the specified ID.                                               |
 | `bgColor`      | string  | "transparent" | You can specify a background color in hexadecimal. The default is colorless.                                                        |
@@ -114,7 +118,6 @@ start();
 
 | 名称           | 值类型     | 默认值           | 说明                                                |
 |--------------|---------|---------------|---------------------------------------------------|
-| `base`       | string  | empty         | 当JSON是由相对路径获得的，这里设置的URL被应用为根。对于绝对路径，这里设置的URL不被应用。 |
 | `fullScreen` | boolean | false         | 整个屏幕的绘制超出了Stage类中设置的宽度和高度。                        |
 | `tagId`      | string  | empty         | 当一个ID被指定时，在指定ID的元素内进行绘图。                          |
 | `bgColor`    | string  | "transparent" | 你可以指定一个十六进制的背景颜色。默认为无色。                           |

@@ -1,111 +1,56 @@
-import {
-    $Math,
-    $clamp,
-    $SHORT_INT_MIN,
-    $SHORT_INT_MAX
-} from "@next2d/share";
+import { execute as pointAddService } from "./Point/service/PointAddService";
+import { execute as pointCloneService } from "./Point/service/PointCloneService";
+import { execute as pointCopyFromService } from "./Point/service/PointCopyFromService";
+import { execute as pointDistanceService } from "./Point/service/PointDistanceService";
+import { execute as pointEqualsService } from "./Point/service/PointEqualsService";
+import { execute as pointInterpolateService } from "./Point/service/PointInterpolateService";
+import { execute as pointNormalizeService } from "./Point/service/PointNormalizeService";
+import { execute as pointOffsetService } from "./Point/service/PointOffsetService";
+import { execute as pointPolarService } from "./Point/service/PointPolarService";
+import { execute as pointSetToService } from "./Point/service/PointSetToService";
+import { execute as pointSubtractService } from "./Point/service/PointSubtractService";
 
 /**
- * Point オブジェクトは 2 次元の座標系の位置を表します。
- * x は水平方向の軸を表し、y は垂直方向の軸を表します。
- *
- * The Point object represents a location in a two-dimensional coordinate system,
- * where x represents the horizontal axis and y represents the vertical axis.
- *
- * @example <caption>Example usage of Point.</caption>
- * // new Point
- * const {Point} = next2d.geom;
- * const point   = new Point();
+ * @description Point オブジェクトは 2 次元の座標系の位置を表します。
+ *              x は水平方向の軸を表し、y は垂直方向の軸を表します。
+ *              The Point object represents a location in a two-dimensional coordinate system,
+ *              where x represents the horizontal axis and y represents the vertical axis.
  *
  * @class
  * @memberOf next2d.geom
  */
 export class Point
 {
-    private _$x: number;
-    private _$y: number;
+    /**
+     * @description ポイントの水平座標です。
+     *              The horizontal coordinate of the point.
+     *
+     * @member  {number}
+     * @default 0
+     * @public
+     */
+    public x: number;
 
     /**
-     * @param {number} [x=0]
-     * @param {number} [y=0]
+     * @description ポイントの垂直座標です。
+     *              The vertical coordinate of the point.
      *
+     * @member  {number}
+     * @default 0
+     * @public
+     */
+    public y: number;
+
+    /**
+     * @param {number} [x = 0]
+     * @param {number} [y = 0]
      * @constructor
      * @public
      */
     constructor (x: number = 0, y: number = 0)
     {
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$x = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$y = 0;
-
-        // setup
         this.x = x;
         this.y = y;
-    }
-
-    /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class Point]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class Point]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member  {string}
-     * @default next2d.geom.Point
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.geom.Point";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return `(x=${this.x}, y=${this.y})`;
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member  {string}
-     * @default next2d.geom.Point
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.geom.Point";
     }
 
     /**
@@ -119,41 +64,7 @@ export class Point
      */
     get length (): number
     {
-        return $Math.sqrt($Math.pow(this.x, 2) + $Math.pow(this.y, 2));
-    }
-
-    /**
-     * @description ポイントの水平座標です。
-     *              The horizontal coordinate of the point.
-     *
-     * @member  {number}
-     * @default 0
-     * @public
-     */
-    get x (): number
-    {
-        return this._$x;
-    }
-    set x (x: number)
-    {
-        this._$x = $clamp(+x, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
-    }
-
-    /**
-     * @description ポイントの垂直座標です。
-     *              The vertical coordinate of the point.
-     *
-     * @member  {number}
-     * @default 0
-     * @public
-     */
-    get y (): number
-    {
-        return this._$y;
-    }
-    set y (y: number)
-    {
-        this._$y = $clamp(+y, $SHORT_INT_MIN, $SHORT_INT_MAX, 0);
+        return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
     }
 
     /**
@@ -161,14 +72,14 @@ export class Point
      *              Adds the coordinates of another point
      *              to the coordinates of this point to create a new point.
      *
-     * @param   {Point} v
+     * @param   {Point} point
      * @returns {Point}
      * @method
      * @public
      */
-    add (v: Point): Point
+    add (point: Point): Point
     {
-        return new Point(this.x + v.x, this.y + v.y);
+        return pointAddService(this, point);
     }
 
     /**
@@ -181,7 +92,7 @@ export class Point
      */
     clone (): Point
     {
-        return new Point(this.x, this.y);
+        return pointCloneService(this);
     }
 
     /**
@@ -190,14 +101,14 @@ export class Point
      *              Copies all of the point data from
      *              the source Point object into the calling Point object.
      *
-     * @param   {Point} source_point
+     * @param   {Point} point
      * @returns void
+     * @method
      * @public
      */
-    copyFrom (source_point: Point): void
+    copyFrom (point: Point): void
     {
-        this._$x = source_point._$x;
-        this._$y = source_point._$y;
+        pointCopyFromService(this, point);
     }
 
     /**
@@ -212,24 +123,21 @@ export class Point
      */
     static distance (point1: Point, point2: Point): number
     {
-        return $Math.sqrt(
-            $Math.pow(point1._$x - point2._$x, 2)
-            + $Math.pow(point1._$y - point2._$y, 2)
-        );
+        return pointDistanceService(point1, point2);
     }
 
     /**
      * @description 2 つのポイントが等しいかどうかを判別します。
      *              Determines whether two points are equal.
      *
-     * @param  {Point} to_compare
+     * @param  {Point} point
      * @return {boolean}
      * @method
      * @public
      */
-    equals (to_compare: Point): boolean
+    equals (point: Point): boolean
     {
-        return this._$x === to_compare._$x && this._$y === to_compare._$y;
+        return pointEqualsService(this, point);
     }
 
     /**
@@ -240,14 +148,12 @@ export class Point
      * @param  {Point}  point2
      * @param  {number} f
      * @return {Point}
+     * @method
      * @static
      */
     static interpolate (point1: Point, point2: Point, f: number): Point
     {
-        return new Point(
-            point1.x + (point2.x - point1.x) * (1 - f),
-            point1.y + (point2.y - point1.y) * (1 - f)
-        );
+        return pointInterpolateService(point1, point2, f);
     }
 
     /**
@@ -261,9 +167,7 @@ export class Point
      */
     normalize (thickness: number): void
     {
-        const length = this.length;
-        this.x = this.x * thickness / length;
-        this.y = this.y * thickness / length;
+        pointNormalizeService(this, thickness);
     }
 
     /**
@@ -272,45 +176,43 @@ export class Point
      *
      * @param  {number} dx
      * @param  {number} dy
-     * @return {Point}
+     * @return {void}
      * @method
      * @public
      */
-    offset (dx: number, dy: number)
+    offset (dx: number, dy: number): void
     {
-        this.x += dx;
-        this.y += dy;
+        pointOffsetService(this, dx, dy);
     }
 
     /**
      * @description 極座標ペアを直交点座標に変換します。
      *              Converts a pair of polar coordinates to a Cartesian point coordinate.
      *
-     * @param  {number} len
+     * @param  {number} length
      * @param  {number} angle
      * @return {Point}
      * @method
      * @static
      */
-    static polar (len: number, angle: number): Point
+    static polar (length: number, angle: number): Point
     {
-        return new Point(len * $Math.cos(angle), len * $Math.sin(angle));
+        return pointPolarService(length, angle);
     }
 
     /**
      * @description Point のメンバーを指定の値に設定します。
      *              Sets the members of Point to the specified values
      *
-     * @param  {number} xa
-     * @param  {number} ya
+     * @param  {number} x
+     * @param  {number} y
      * @return {void}
      * @method
      * @public
      */
-    setTo (xa: number, ya: number): void
+    setTo (x: number, y: number): void
     {
-        this.x = xa;
-        this.y = ya;
+        pointSetToService(this, x, y);
     }
 
     /**
@@ -318,13 +220,13 @@ export class Point
      *              Subtracts the coordinates of another point
      *              from the coordinates of this point to create a new point.
      *
-     * @param  {Point} v
+     * @param  {Point} point
      * @return {Point}
      * @method
      * @public
      */
-    subtract (v: Point): Point
+    subtract (point: Point): Point
     {
-        return new Point(this.x - v.x, this.y - v.y);
+        return pointSubtractService(this, point);
     }
 }

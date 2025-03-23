@@ -1,1 +1,0 @@
-export type URLLoaderDataFormatImpl = "json" | "arraybuffer" | "text";

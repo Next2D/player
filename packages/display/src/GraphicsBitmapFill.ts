@@ -1,16 +1,15 @@
 import type { BitmapData } from "./BitmapData";
 import type { Matrix } from "@next2d/geom";
-import { $getArray } from "@next2d/share";
+import { $getArray } from "./DisplayObjectUtil";
 
 /**
- * ビットマップ塗りを定義します。ビットマップは、スムージング、繰り返し、
- * またはタイリング表示して領域を塗りつぶしたり、変換マトリックスを使用して操作できます。
+ * @description ビットマップ塗りを定義します。ビットマップは、スムージング、繰り返し、
+ *              またはタイリング表示して領域を塗りつぶしたり、変換マトリックスを使用して操作できます。
  *
- * Defines a bitmap fill. The bitmap can be smoothed,
- * repeated or tiled to fill the area; or manipulated using a transformation matrix.
+ *              Defines a bitmap fill. The bitmap can be smoothed,
+ *              repeated or tiled to fill the area; or manipulated using a transformation matrix.
  *
  * @class
- * @memberOf next2d.display
  * @private
  */
 export class GraphicsBitmapFill
@@ -106,7 +105,7 @@ export class GraphicsBitmapFill
      * @method
      * @public
      */
-    toArray ()
+    toArray (): any[]
     {
         return $getArray(
             this._$bitmapData,

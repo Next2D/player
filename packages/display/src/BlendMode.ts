@@ -1,77 +1,14 @@
 /**
- * ブレンドモードの視覚効果のために定数値を提供するクラスです。
- * 全てのDisplayObjectに設定が可能です。
- * A class that provides constant values for visual blend mode effects.
- * It can be set for all DisplayObjects.
- *
- * @example <caption>usage of BlendMode.</caption>
- * // static BlendMode
- * const {BlendMode, MovieClip} = next2d.display;
- * const movieClip = new MovieClip();
- * movieClip.blendMode = BlendMode.ADD;
+ * @description ブレンドモードの視覚効果のために定数値を提供するクラスです。
+ *              全てのDisplayObjectに設定が可能です。
+ *              A class that provides constant values for visual blend mode effects.
+ *              It can be set for all DisplayObjects.
  *
  * @class
  * @memberOf next2d.display
  */
 export class BlendMode
 {
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class BlendMode]
-     * @method
-     * @static
-     */
-    static toString ()
-    {
-        return "[class BlendMode]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default next2d.display.BlendMode
-     * @const
-     * @static
-     */
-    static get namespace ()
-    {
-        return "next2d.display.BlendMode";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object BlendMode]
-     * @method
-     * @public
-     */
-    toString ()
-    {
-        return "[object BlendMode]";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default next2d.display.BlendMode
-     * @const
-     * @public
-     */
-    get namespace ()
-    {
-        return "next2d.display.BlendMode";
-    }
-
     /**
      * @description 表示オブジェクトの要素カラーの値を背景色に加算し、その際に上限 0xFF を適用します。
      *              Adds the values of the constituent colors of the display object
@@ -82,7 +19,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get ADD ()
+    static get ADD (): string
     {
         return "add";
     }
@@ -96,7 +33,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get ALPHA ()
+    static get ALPHA (): string
     {
         return "alpha";
     }
@@ -111,7 +48,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get DARKEN ()
+    static get DARKEN (): string
     {
         return "darken";
     }
@@ -126,7 +63,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get DIFFERENCE ()
+    static get DIFFERENCE (): string
     {
         return "difference";
     }
@@ -140,7 +77,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get ERASE ()
+    static get ERASE (): string
     {
         return "erase";
     }
@@ -154,7 +91,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get HARDLIGHT ()
+    static get HARDLIGHT (): string
     {
         return "hardlight";
     }
@@ -168,7 +105,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get INVERT ()
+    static get INVERT (): string
     {
         return "invert";
     }
@@ -182,7 +119,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get LAYER ()
+    static get LAYER (): string
     {
         return "layer";
     }
@@ -197,7 +134,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get LIGHTEN ()
+    static get LIGHTEN (): string
     {
         return "lighten";
     }
@@ -212,7 +149,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get MULTIPLY ()
+    static get MULTIPLY (): string
     {
         return "multiply";
     }
@@ -226,7 +163,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get NORMAL ()
+    static get NORMAL (): string
     {
         return "normal";
     }
@@ -240,7 +177,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get OVERLAY ()
+    static get OVERLAY (): string
     {
         return "overlay";
     }
@@ -255,7 +192,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get SCREEN ()
+    static get SCREEN (): string
     {
         return "screen";
     }
@@ -270,7 +207,7 @@ export class BlendMode
      * @const
      * @static
      */
-    static get SUBTRACT ()
+    static get SUBTRACT (): string
     {
         return "subtract";
     }

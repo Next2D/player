@@ -1,9 +1,8 @@
 node_modules
 json
 dist
+build
 coverage
-*.html
-package-lock.json
 .DS_Store
 .idea
 Thumbs.db

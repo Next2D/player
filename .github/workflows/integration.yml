@@ -14,19 +14,15 @@ jobs:
   macos-browser-test:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
       - run: npm install
-      - run: npm run clean
-      - run: npm run build
       - run: npm run test
 
   windows-browser-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
       - run: npm install
-      - run: npm run clean
-      - run: npm run build
       - run: npm run test

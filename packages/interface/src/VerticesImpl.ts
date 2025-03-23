@@ -1,1 +1,0 @@
-export type VerticesImpl = Array<Array<number | boolean>>;

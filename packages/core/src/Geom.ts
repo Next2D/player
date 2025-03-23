@@ -1,18 +1,16 @@
-import { GeomImpl } from "@next2d/interface";
+import type { IGeom } from "./interface/IGeom";
 import {
     ColorTransform,
     Matrix,
     Point,
-    Rectangle,
-    Transform
+    Rectangle
 } from "@next2d/geom";
 
-const geom: GeomImpl = {
+const geom: IGeom = {
     ColorTransform,
     Matrix,
     Point,
-    Rectangle,
-    Transform
+    Rectangle
 };
 
 Object.entries(geom).forEach(([key, GeomClass]) =>

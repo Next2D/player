@@ -1,26 +1,18 @@
 {
   "name": "@next2d/text",
   "version": "*",
-  "description": "Next2D Text Packages",
-  "author": "Toshiyuki Ienaga<ienaga@tvon.jp> (https://github.com/ienaga/)",
+  "description": "Next2D Text Package",
+  "author": "Toshiyuki Ienaga<ienaga@next2d.app> (https://github.com/ienaga/)",
   "license": "MIT",
   "homepage": "https://next2d.app",
   "bugs": "https://github.com/Next2D/Player/issues",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "import": "./src/index.js",
+      "require": "./src/index.js"
     }
   },
   "keywords": [
@@ -31,7 +23,14 @@
     "type": "git",
     "url": "git+https://github.com/Next2D/Player.git"
   },
+  "dependencies": {
+    "htmlparser2": "^10.0.0"
+  },
   "peerDependencies": {
-    "@next2d/share": "file:../share"
+    "@next2d/display": "file:../display",
+    "@next2d/geom": "file:../geom",
+    "@next2d/events": "file:../events",
+    "@next2d/ui": "file:../ui",
+    "@next2d/cache": "file:../cache"
   }
 }

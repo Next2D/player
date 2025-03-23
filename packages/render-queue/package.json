@@ -1,0 +1,26 @@
+{
+  "name": "@next2d/render-queue",
+  "version": "*",
+  "description": "Next2D Renderer Queue Package",
+  "author": "Toshiyuki Ienaga<ienaga@next2d.app> (https://github.com/ienaga/)",
+  "license": "MIT",
+  "homepage": "https://next2d.app",
+  "bugs": "https://github.com/Next2D/Player/issues",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./src/index.js"
+    }
+  },
+  "keywords": [
+    "Next2D",
+    "Next2D Renderer Queue"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Next2D/Player.git"
+  }
+}

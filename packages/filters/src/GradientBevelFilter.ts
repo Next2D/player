@@ -1,33 +1,24 @@
+import type { IFilterQuality } from "./interface/IFilterQuality";
+import type { IBitmapFilterType } from "./interface/IBitmapFilterType";
 import { BitmapFilter } from "./BitmapFilter";
-import { BlurFilter } from "./BlurFilter";
-import type {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { FilterQualityImpl } from "./interface/FilterQualityImpl";
-import type { BitmapFilterTypeImpl } from "./interface/BitmapFilterTypeImpl";
-import type { BoundsImpl } from "./interface/BoundsImpl";
+import { execute as gradientBevelFilterCanApplyFilterService } from "./GradientBevelFilter/service/GradientBevelFilterCanApplyFilterService";
+import { execute as gradientBevelFilterToArrayService } from "./GradientBevelFilter/service/GradientBevelFilterToArrayService";
+import { execute as gradientBevelFilterToNumberArrayService } from "./GradientBevelFilter/service/GradientBevelFilterToNumberArrayService";
+import { execute as gradientBevelFilterGetBoundsUseCase } from "./GradientBevelFilter/usecase/GradientBevelFilterGetBoundsUseCase";
 import {
-    $Array,
     $clamp,
-    $Deg2Rad,
-    $devicePixelRatio,
-    $getArray,
-    $getBoundsObject,
-    $Math,
-    $toColorInt
-} from "@next2d/share";
+    $convertColorStringToNumber
+} from "./FilterUtil";
 
 /**
- * GradientBevelFilter クラスを使用すると、オブジェクトにグラデーションベベル効果を適用し、表示できます。
- * グラデーションベベルは、オブジェクトの外側、内側、または上側が斜めになったエッジであり、グラデーションカラーで強調されます。
- * 斜めのエッジによってオブジェクトが 3 次元に見えます。
+ * @description GradientBevelFilter クラスを使用すると、オブジェクトにグラデーションベベル効果を適用し、表示できます。
+ *              グラデーションベベルは、オブジェクトの外側、内側、または上側が斜めになったエッジであり、グラデーションカラーで強調されます。
+ *              斜めのエッジによってオブジェクトが 3 次元に見えます。
  *
- * The GradientBevelFilter class lets you apply a gradient bevel effect to display objects.
- * A gradient bevel is a beveled edge, enhanced with gradient color,
- * on the outside, inside, or top of an object.
- * Beveled edges make objects look three-dimensional.
+ *              The GradientBevelFilter class lets you apply a gradient bevel effect to display objects.
+ *              A gradient bevel is a beveled edge, enhanced with gradient color,
+ *              on the outside, inside, or top of an object.
+ *              Beveled edges make objects look three-dimensional.
  *
  * @class
  * @memberOf next2d.filters
@@ -35,14 +26,90 @@ import {
  */
 export class GradientBevelFilter  extends BitmapFilter
 {
-    private _$blurFilter: BlurFilter;
+    /**
+     * @description フィルター認識番号
+     *              Filter Recognition Number
+     *
+     * @member {number}
+     * @public
+     */
+    public readonly $filterType: number = 7;
+
+    /**
+     * @type {number}
+     * @default 4
+     * @private
+     */
+    private _$blurX: number;
+
+    /**
+     * @type {number}
+     * @default 4
+     * @private
+     */
+    private _$blurY: number;
+
+    /**
+     * @type {IFilterQuality}
+     * @default 1
+     * @private
+     */
+    private _$quality: IFilterQuality;
+
+    /**
+     * @type {number}
+     * @default 4
+     * @private
+     */
     private _$distance: number;
+
+    /**
+     * @type {number}
+     * @default 45
+     * @private
+     */
     private _$angle: number;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
     private _$colors: number[] | null;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
     private _$alphas: number[] | null;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
     private _$ratios: number[] | null;
+
+    /**
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$strength: number;
-    private _$type: BitmapFilterTypeImpl;
+
+    /**
+     * @type {string}
+     * @default "inner"
+     * @private
+     */
+    private _$type: IBitmapFilterType;
+
+    /**
+     * @type {boolean}
+     * @default false
+     * @private
+     */
     private _$knockout: boolean;
 
     /**
@@ -62,82 +129,38 @@ export class GradientBevelFilter  extends BitmapFilter
      * @public
      */
     constructor (
-        distance: number = 4, angle: number = 45,
+        distance: number = 4,
+        angle: number = 45,
         colors: number[] | null = null,
         alphas: number[] | null = null,
         ratios: number[] | null = null,
-        blur_x: number = 4, blur_y: number = 4, strength: number = 1,
-        quality: FilterQualityImpl = 1,
-        type: BitmapFilterTypeImpl = "inner",
+        blur_x: number = 4,
+        blur_y: number = 4,
+        strength: number = 1,
+        quality: IFilterQuality = 1,
+        type: IBitmapFilterType = "inner",
         knockout: boolean = false
     ) {
 
         super();
 
-        /**
-         * @type {BlurFilter}
-         * @default BlurFilter
-         * @private
-         */
-        this._$blurFilter = new BlurFilter(blur_x, blur_y, quality);
-
-        /**
-         * @type {number}
-         * @default 4
-         * @private
-         */
-        this._$distance = 4;
-
-        /**
-         * @type {number}
-         * @default 45
-         * @private
-         */
-        this._$angle = 45;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$colors = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$alphas = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$ratios = null;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$strength = 1;
-
-        /**
-         * @type {string}
-         * @default BitmapFilterType.INNER
-         * @private
-         */
-        this._$type = "inner";
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$knockout = false;
+        // default
+        this._$blurX     = 4;
+        this._$blurY     = 4;
+        this._$quality   = 1;
+        this._$distance  = 4;
+        this._$angle     = 45;
+        this._$colors    = null;
+        this._$alphas    = null;
+        this._$ratios    = null;
+        this._$strength  = 1;
+        this._$type      = "inner";
+        this._$knockout  = false;
 
         // setup
+        this.blurX    = blur_x;
+        this.blurY    = blur_y;
+        this.quality  = quality;
         this.distance = distance;
         this.angle    = angle;
         this.colors   = colors;
@@ -146,62 +169,6 @@ export class GradientBevelFilter  extends BitmapFilter
         this.strength = strength;
         this.type     = type;
         this.knockout = knockout;
-    }
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class GradientBevelFilter]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class GradientBevelFilter]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default next2d.filters.GradientBevelFilter
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.filters.GradientBevelFilter";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object GradientBevelFilter]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object GradientBevelFilter]";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default next2d.filters.GradientBevelFilter
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.filters.GradientBevelFilter";
     }
 
     /**
@@ -219,18 +186,17 @@ export class GradientBevelFilter  extends BitmapFilter
     }
     set alphas (alphas: number[] | null)
     {
-        if (alphas !== this._$alphas) {
-            this._$alphas = alphas;
-            if ($Array.isArray(alphas)) {
-                for (let idx: number = 0; idx < alphas.length; ++idx) {
-                    const alpha = alphas[idx];
-                    alphas[idx] = $clamp(+alpha, 0, 1, 0);
-                }
-
-                this._$alphas = alphas;
-            }
-            this._$doChanged();
+        if (alphas === this._$alphas) {
+            return ;
         }
+        if (Array.isArray(alphas)) {
+            for (let idx = 0; idx < alphas.length; ++idx) {
+                const alpha = alphas[idx];
+                alphas[idx] = $clamp(+alpha, 0, 1, 0);
+            }
+        }
+        this._$alphas = alphas;
+        this.$updated = true;
     }
 
     /**
@@ -248,11 +214,11 @@ export class GradientBevelFilter  extends BitmapFilter
     set angle (angle: number)
     {
         angle = $clamp(angle % 360, -360, 360, 45);
-        if (angle !== this._$angle) {
-            this._$angle = angle;
-            this._$doChanged();
+        if (angle === this._$angle) {
+            return ;
         }
-
+        this._$angle  = angle;
+        this.$updated = true;
     }
 
     /**
@@ -265,11 +231,16 @@ export class GradientBevelFilter  extends BitmapFilter
      */
     get blurX (): number
     {
-        return this._$blurFilter.blurX;
+        return this._$blurX;
     }
     set blurX (blur_x: number)
     {
-        this._$blurFilter.blurX = blur_x;
+        blur_x = $clamp(+blur_x, 0, 255, 0);
+        if (blur_x === this._$blurX) {
+            return ;
+        }
+        this._$blurX  = blur_x;
+        this.$updated = true;
     }
 
     /**
@@ -282,11 +253,16 @@ export class GradientBevelFilter  extends BitmapFilter
      */
     get blurY (): number
     {
-        return this._$blurFilter.blurY;
+        return this._$blurY;
     }
     set blurY (blur_y: number)
     {
-        this._$blurFilter.blurY = blur_y;
+        blur_y = $clamp(+blur_y, 0, 255, 0);
+        if (blur_y === this._$blurY) {
+            return ;
+        }
+        this._$blurY  = blur_y;
+        this.$updated = true;
     }
 
     /**
@@ -303,20 +279,22 @@ export class GradientBevelFilter  extends BitmapFilter
     }
     set colors (colors: number[] | null)
     {
-        if (this._$colors !== colors) {
-            this._$colors = colors;
-            if ($Array.isArray(colors)) {
-
-                for (let idx: number = 0; idx < colors.length; ++idx) {
-                    colors[idx] = $clamp(
-                        $toColorInt(colors[idx]), 0, 0xffffff, 0
-                    );
-                }
-
-                this._$colors = colors;
-            }
-            this._$doChanged();
+        if (this._$colors === colors) {
+            return ;
         }
+        if (Array.isArray(colors)) {
+            for (let idx = 0; idx < colors.length; ++idx) {
+                const color = colors[idx];
+                colors[idx] = $clamp(
+                    typeof color === "string"
+                        ? $convertColorStringToNumber(color)
+                        : color
+                    , 0, 0xffffff, 0
+                );
+            }
+        }
+        this._$colors = colors;
+        this.$updated = true;
     }
 
     /**
@@ -334,10 +312,11 @@ export class GradientBevelFilter  extends BitmapFilter
     set distance (distance: number)
     {
         distance = $clamp(+distance, -255, 255, 4);
-        if (distance !== this._$distance) {
-            this._$distance = distance;
-            this._$doChanged();
+        if (distance === this._$distance) {
+            return ;
         }
+        this._$distance = distance;
+        this.$updated   = true;
     }
 
     /**
@@ -354,10 +333,12 @@ export class GradientBevelFilter  extends BitmapFilter
     }
     set knockout (knockout: boolean)
     {
-        if (knockout !== this._$knockout) {
-            this._$knockout = !!knockout;
-            this._$doChanged();
+        knockout = !!knockout;
+        if (knockout === this._$knockout) {
+            return ;
         }
+        this._$knockout = knockout;
+        this.$updated   = true;
     }
 
     /**
@@ -368,13 +349,18 @@ export class GradientBevelFilter  extends BitmapFilter
      * @default 1
      * @public
      */
-    get quality (): FilterQualityImpl
+    get quality (): IFilterQuality
     {
-        return this._$blurFilter.quality;
+        return this._$quality;
     }
-    set quality (quality: FilterQualityImpl)
+    set quality (quality: IFilterQuality)
     {
-        this._$blurFilter.quality = quality;
+        quality = $clamp(quality | 0, 0, 15, 1) as IFilterQuality;
+        if (quality === this._$quality) {
+            return ;
+        }
+        this._$quality = quality;
+        this.$updated  = true;
     }
 
     /**
@@ -392,18 +378,18 @@ export class GradientBevelFilter  extends BitmapFilter
     }
     set ratios (ratios: number[] | null)
     {
-        if (this._$ratios !== ratios) {
-            this._$ratios = ratios;
-            if ($Array.isArray(ratios)) {
-
-                for (let idx: number = 0; idx < ratios.length; ++idx) {
-                    ratios[idx] = $clamp(+ratios[idx], 0, 255, 0);
-                }
-
-                this._$ratios = ratios;
-            }
-            this._$doChanged();
+        if (this._$ratios === ratios) {
+            return ;
         }
+        if (Array.isArray(ratios)) {
+            for (let idx = 0; idx < ratios.length; ++idx) {
+                const ratio = ratios[idx];
+                ratios[idx] = $clamp(+ratio, 0, 255, 0);
+            }
+        }
+
+        this._$ratios = ratios;
+        this.$updated = true;
     }
 
     /**
@@ -421,10 +407,11 @@ export class GradientBevelFilter  extends BitmapFilter
     set strength (strength: number)
     {
         strength = $clamp(strength | 0, 0, 255, 0);
-        if (strength !== this._$strength) {
-            this._$strength = strength;
-            this._$doChanged();
+        if (strength === this._$strength) {
+            return ;
         }
+        this._$strength = strength;
+        this.$updated   = true;
     }
 
     /**
@@ -435,16 +422,17 @@ export class GradientBevelFilter  extends BitmapFilter
      * @default BitmapFilterType.INNER
      * @public
      */
-    get type (): BitmapFilterTypeImpl
+    get type (): IBitmapFilterType
     {
         return this._$type;
     }
-    set type (type: BitmapFilterTypeImpl)
+    set type (type: IBitmapFilterType)
     {
-        if (type !== this._$type) {
-            this._$type = type;
-            this._$doChanged();
+        if (type === this._$type) {
+            return ;
         }
+        this._$type   = type;
+        this.$updated = true;
     }
 
     /**
@@ -462,198 +450,61 @@ export class GradientBevelFilter  extends BitmapFilter
             this._$colors ? this._$colors.slice() : null,
             this._$alphas ? this._$alphas.slice() : null,
             this._$ratios ? this._$ratios.slice() : null,
-            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
-            this._$blurFilter.quality, this._$type, this._$knockout
+            this._$blurX, this._$blurY, this._$strength,
+            this._$quality, this._$type, this._$knockout
         );
     }
 
     /**
+     * @description 設定されたフィルターの値を配列で返します。
+     *              Returns the value of the specified filter as an array.
+     *
      * @return {array}
      * @method
      * @public
      */
-    _$toArray (): any[]
+    toArray (): Array<number | boolean | number[] | null | boolean | string>
     {
-        return $getArray(7,
-            this._$distance, this._$angle, this._$colors, this._$alphas, this._$ratios,
-            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
-            this._$blurFilter.quality, this._$type, this._$knockout
-        );
+        return gradientBevelFilterToArrayService(this);
     }
 
     /**
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {Float32Array}
+     * @method
+     * @public
+     */
+    toNumberArray (): Float32Array
+    {
+        return gradientBevelFilterToNumberArrayService(this);
+    }
+
+    /**
+     * @description フィルターを適用できるかどうかを返します。
+     *              Returns whether the filter can be applied.
+     *
      * @return {boolean}
      * @method
-     * @private
+     * @public
      */
-    _$isUpdated (): boolean
+    canApplyFilter (): boolean
     {
-        return this._$updated || this._$blurFilter._$isUpdated();
+        return gradientBevelFilterCanApplyFilterService(this);
     }
 
     /**
-     * @param  {object} bounds
-     * @param  {number} [x_scale=0]
-     * @param  {number} [y_scale=0]
-     * @return {object}
+     * @description フィルターの描画範囲のバウンディングボックスを返します。
+     *              Returns the bounding box of the filter drawing area.
+     *
+     * @param  {Float32Array} bounds
+     * @return {Float32Array}
      * @method
-     * @private
+     * @public
      */
-    _$generateFilterRect (
-        bounds: BoundsImpl,
-        x_scale: number = 0,
-        y_scale: number = 0
-    ): BoundsImpl {
-
-        let clone: BoundsImpl = $getBoundsObject(
-            bounds.xMin, bounds.xMax,
-            bounds.yMin, bounds.yMax
-        );
-
-        if (!this._$canApply()) {
-            return clone;
-        }
-
-        clone = this
-            ._$blurFilter
-            ._$generateFilterRect(clone, x_scale, y_scale);
-
-        const radian: number = this._$angle * $Deg2Rad;
-
-        let x: number = $Math.abs($Math.cos(radian) * this._$distance);
-        let y: number = $Math.abs($Math.sin(radian) * this._$distance);
-
-        if (x_scale) {
-            x *= x_scale;
-        }
-
-        if (y_scale) {
-            y *= y_scale;
-        }
-
-        clone.xMin = $Math.min(clone.xMin, x);
-        if (x > 0) {
-            clone.xMax += x;
-        }
-        clone.yMin = $Math.min(clone.yMin, y);
-        if (y > 0) {
-            clone.yMax += y;
-        }
-
-        return clone;
-    }
-
-    /**
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$canApply (): boolean
+    getBounds (bounds: Float32Array): Float32Array
     {
-        return this._$strength > 0 && this._$distance > 0
-            && this._$alphas !== null && this._$ratios !== null && this._$colors !== null
-            && this._$blurFilter._$canApply();
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {Float32Array}  matrix
-     * @return {WebGLTexture}
-     * @method
-     * @private
-     */
-    _$applyFilter (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array
-    ): WebGLTexture {
-
-        this._$updated = false;
-
-        const manager: FrameBufferManager = context.frameBuffer;
-
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-
-        // reset
-        context.setTransform(1, 0, 0, 1, 0, 0);
-
-        const baseTexture: WebGLTexture = manager
-            .getTextureFromCurrentAttachment();
-
-        if (!this._$canApply() || !currentAttachment) {
-            return baseTexture;
-        }
-
-        const baseWidth: number   = currentAttachment.width;
-        const baseHeight: number  = currentAttachment.height;
-        const baseOffsetX: number = context._$offsetX;
-        const baseOffsetY: number = context._$offsetY;
-
-        // matrix to scale
-        let xScale: number = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        let yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
-
-        xScale /= $devicePixelRatio;
-        yScale /= $devicePixelRatio;
-
-        xScale *= 2;
-        yScale *= 2;
-
-        // pointer
-        const radian: number = +(this._$angle * $Deg2Rad);
-        const x: number = +($Math.cos(radian) * this._$distance * xScale);
-        const y: number = +($Math.sin(radian) * this._$distance * yScale);
-
-        // highlight buffer
-        const highlightTextureBaseAttachment: AttachmentImpl = manager
-            .createTextureAttachment(baseWidth, baseHeight);
-
-        context._$bind(highlightTextureBaseAttachment);
-
-        context.reset();
-        context.drawImage(baseTexture, 0, 0, baseWidth, baseHeight);
-
-        context.globalCompositeOperation = "erase";
-        context.drawImage(baseTexture, x * 2, y * 2, baseWidth, baseHeight);
-
-        const highlightTextureBase = this
-            ._$blurFilter
-            ._$applyFilter(context, matrix, false);
-
-        const blurWidth: number   = highlightTextureBase.width;
-        const blurHeight: number  = highlightTextureBase.height;
-        const bevelWidth: number  = $Math.ceil(blurWidth  + $Math.abs(x) * 2);
-        const bevelHeight: number = $Math.ceil(blurHeight + $Math.abs(y) * 2);
-
-        // bevel filter buffer
-        const isInner: boolean = this._$type === "inner";
-        const width: number    = isInner ? baseWidth  : bevelWidth;
-        const height: number   = isInner ? baseHeight : bevelHeight;
-
-        const absX: number = $Math.abs(x);
-        const absY: number = $Math.abs(y);
-        const blurOffsetX: number = (blurWidth  - baseWidth)  / 2;
-        const blurOffsetY: number = (blurHeight - baseHeight) / 2;
-
-        const baseTextureX = isInner ? 0 : absX + blurOffsetX;
-        const baseTextureY = isInner ? 0 : absY + blurOffsetY;
-        const blurTextureX = isInner ? -blurOffsetX - x : absX - x;
-        const blurTextureY = isInner ? -blurOffsetY - y : absY - y;
-
-        context._$bind(currentAttachment);
-        context._$applyBitmapFilter(
-            highlightTextureBase, width, height,
-            baseWidth, baseHeight, baseTextureX, baseTextureY,
-            blurWidth, blurHeight, blurTextureX, blurTextureY,
-            false, this._$type, this._$knockout,
-            this._$strength, this._$ratios, this._$colors, this._$alphas,
-            0, 0, 0, 0, 0, 0, 0, 0
-        );
-
-        context._$offsetX = baseOffsetX + baseTextureX;
-        context._$offsetY = baseOffsetY + baseTextureY;
-
-        manager.releaseAttachment(highlightTextureBaseAttachment, true);
-
-        return manager.getTextureFromCurrentAttachment();
+        return gradientBevelFilterGetBoundsUseCase(this, bounds);
     }
 }

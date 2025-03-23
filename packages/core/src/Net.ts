@@ -1,12 +1,8 @@
-import { NetImpl } from "@next2d/interface";
-import {
-    URLRequest,
-    URLRequestHeader
-} from "@next2d/net";
+import type { INet } from "./interface/INet";
+import { URLRequest } from "@next2d/net";
 
-const net: NetImpl = {
-    URLRequest,
-    URLRequestHeader
+const net: INet = {
+    URLRequest
 };
 
 Object.entries(net).forEach(([key, NetClass]) =>

@@ -1,4 +1,4 @@
-import type { FiltersImpl } from "@next2d/interface";
+import type { IFilters } from "./interface/IFilters";
 import {
     BevelFilter,
     BlurFilter,
@@ -11,7 +11,7 @@ import {
     GradientGlowFilter
 } from "@next2d/filters";
 
-const filters: FiltersImpl = {
+const filters: IFilters = {
     BevelFilter,
     BlurFilter,
     ColorMatrixFilter,

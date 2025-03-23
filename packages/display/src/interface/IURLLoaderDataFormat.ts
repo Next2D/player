@@ -1,0 +1,1 @@
+export type IURLLoaderDataFormat = "json" | "arraybuffer" | "text";

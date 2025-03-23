@@ -1,0 +1,1 @@
+export type IFillType = "fill" | "linear" | "radial" | "bitmap" | "stroke";

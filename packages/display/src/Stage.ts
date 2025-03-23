@@ -1,16 +1,20 @@
+import type { DisplayObject } from "./DisplayObject";
+import type { IPlayerHitObject } from "./interface/IPlayerHitObject";
+import type { Point } from "@next2d/geom";
 import { DisplayObjectContainer } from "./DisplayObjectContainer";
-import type { Player } from "@next2d/core";
-import type { DisplayObjectImpl } from "@next2d/interface";
+import { execute as stageReadyUseCase } from "./Stage/usecase/StageReadyUseCase";
+import { execute as stageGenerateRenderQueueUseCase } from "./Stage/usecase/StageGenerateRenderQueueUseCase";
+import { execute as stageTickerUseCase } from "./Stage/usecase/StageTickerUseCase";
+import { execute as displayObjectContainerMouseHitUseCase } from "./DisplayObjectContainer/usecase/DisplayObjectContainerMouseHitUseCase";
 import {
-    $clamp,
-    $toColorInt,
-    $uintToRGBA,
-    $devicePixelRatio
-} from "@next2d/share";
+    $pointer,
+    $rootMap,
+    $stageAssignedMap
+} from "./DisplayObjectUtil";
 
 /**
- * Stage クラスはメイン描画領域を表します。
- * The Stage class represents the main drawing area.
+ * @description Stage クラスはメイン描画領域を表します。
+ *              The Stage class represents the main drawing area.
  *
  * @class
  * @memberOf next2d.display
@@ -18,10 +22,81 @@ import {
  */
 export class Stage extends DisplayObjectContainer
 {
-    public _$player: Player | null;
-    public _$invalidate: boolean;
-    private _$color: number;
-    public _$frameRate: number;
+    /**
+     * @description 初期起動の準備完了したかどうか
+     *              Whether the initial startup is ready
+     *
+     * @type {boolean}
+     * @default false
+     * @private
+     */
+    private _$ready: boolean;
+
+    /**
+     * @description ステージ幅
+     *              Stage width
+     *
+     * @type {number}
+     * @public
+     */
+    public stageWidth: number;
+
+    /**
+     * @description ステージ高さ
+     *              Stage height
+     *
+     * @type {number}
+     * @public
+     */
+    public stageHeight: number;
+
+    /**
+     * @description フレームレート
+     *              Frame rate
+     *
+     * @type {number}
+     * @public
+     */
+    public frameRate: number;
+
+    /**
+     * @description devicePixelRatioを含んだcanvasの描画領域の拡大率
+     *              The magnification of the drawing area of the canvas including devicePixelRatio
+     *
+     * @member {number}
+     * @default 1
+     * @public
+     */
+    public rendererScale: number;
+
+    /**
+     * @description devicePixelRatioを含んだcanvasの描画領域の幅
+     *              The width of the drawing area of the canvas including devicePixelRatio
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    public rendererWidth: number;
+
+    /**
+     * @description devicePixelRatioを含んだcanvasの描画領域の高さ
+     *              The height of the drawing area of the canvas including devicePixelRatio
+     *
+     * @member {number}
+     * @default 0
+     * @public
+     */
+    public rendererHeight: number;
+
+    /**
+     * @description 背景色
+     *              Background color
+     *
+     * @type {number}
+     * @public
+     */
+    private _$backgroundColor: number;
 
     /**
      * @constructor
@@ -31,282 +106,153 @@ export class Stage extends DisplayObjectContainer
     {
         super();
 
-        /**
-         * @type {Player}
-         * @default null
-         * @private
-         */
-        this._$player = null;
+        this.stageWidth  = 0;
+        this.stageHeight = 0;
+        this.frameRate   = 1;
 
-        /**
-         * @type {Stage}
-         * @private
-         */
-        this._$root = this;
+        this.rendererScale  = 1;
+        this.rendererWidth  = 0;
+        this.rendererHeight = 0;
 
-        /**
-         * @type {Stage}
-         * @private
-         */
-        this._$stage = this;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$invalidate = true;
-
-        /**
-         * @type {number}
-         * @default 0xffffffff
-         * @private
-         */
-        this._$color = 0xffffffff;
-
-        /**
-         * @type {number}
-         * @default 60
-         * @private
-         */
-        this._$frameRate = 60;
+        // private
+        this._$ready           = false;
+        this._$backgroundColor = -1;
     }
 
     /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
+     * @description 背景色
+     *              Background color
      *
-     * @return  {string}
-     * @default [class Stage]
-     * @method
-     * @static
+     * @member {number}
+     * @public
      */
-    static toString (): string
+    get backgroundColor (): number
     {
-        return "[class Stage]";
+        return this._$backgroundColor;
+    }
+    set backgroundColor (color: string)
+    {
+        this._$backgroundColor = color === "transparent"
+            ? -1
+            : parseInt(color.replace("#", ""), 16);
     }
 
     /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
+     * @description ポインターの最終座標
+     *              The final coordinates of the pointer
      *
-     * @return  {string}
-     * @default next2d.display.Stage
-     * @const
-     * @static
+     * @type {Point}
+     * @readonly
+     * @public
      */
-    static get namespace (): string
+    get pointer (): Point
     {
-        return "next2d.display.Stage";
+        return $pointer;
     }
 
     /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
+     * @description 初期起動の準備完了したかどうか
+     *              Whether the initial startup is ready
      *
-     * @return  {string}
-     * @default [object Stage]
+     * @type {boolean}
+     * @writeonly
+     * @public
+     */
+    set ready (ready: boolean)
+    {
+        if (!ready || this._$ready) {
+            return ;
+        }
+
+        this._$ready = ready;
+
+        // Stage の起動準備完了のUseCase
+        stageReadyUseCase(this);
+    }
+
+    /**
+     * @description Stage に追加した DisplayObject は rootとして rootMap に追加
+     *              DisplayObject added to Stage is added to rootMap as root
+     *
+     * @param  {DisplayObject} display_object
+     * @return {DisplayObject}
      * @method
      * @public
      */
-    toString (): string
+    addChild<T extends DisplayObject>(display_object: T): T
     {
-        return "[object Stage]";
+        $rootMap.set(display_object, display_object);
+        $stageAssignedMap.add(display_object.instanceId);
+
+        return super.addChild(display_object);
     }
 
     /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default next2d.display.Stage
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.display.Stage";
-    }
-
-    /**
-     * @description 背景色です。
-     *              background color.
-     *
-     * @member {number}
-     * @public
-     */
-    get color (): number
-    {
-        return this._$color;
-    }
-    set color (color: number)
-    {
-        this._$color = $clamp($toColorInt(color), 0, 0xffffff, 0xffffff);
-        const player: Player | null = this._$player;
-        if (player && player.context) {
-            const rgba = $uintToRGBA(this._$color);
-            player
-                .context
-                ._$setColor(
-                    rgba.R / 255,
-                    rgba.G / 255,
-                    rgba.B / 255,
-                    rgba.A / 255
-                );
-        }
-    }
-
-    /**
-     * @description ステージのフレームレートを取得または設定します。
-     *              Gets and sets the frame rate of the stage.
-     *
-     * @member {number}
-     * @public
-     */
-    get frameRate ()
-    {
-        return this._$frameRate;
-    }
-    set frameRate (frame_rate)
-    {
-        this._$frameRate = $clamp(+frame_rate, 1, 60, 60);
-        if (this._$player && !this._$player._$stopFlag) {
-            this._$player.stop();
-            this._$player.play();
-        }
-    }
-
-    /**
-     * @description Player オブジェクトを返します。
-     *              Returns a Player object.
-     *
-     * @member {Player}
-     * @readonly
-     * @public
-     */
-    get player (): Player | null
-    {
-        return this._$player;
-    }
-
-    /**
-     * @description 現在のCanvasの高さをピクセル単位で指定します。
-     *              Specifies the height of the current Canvas in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get canvasHeight (): number
-    {
-        return this._$player
-            ? this._$player._$height / $devicePixelRatio
-            : 0;
-    }
-
-    /**
-     * @description 現在のCanvasの幅をピクセル単位で指定します。
-     *              Specifies the width of the current Canvas in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get canvasWidth (): number
-    {
-        return this._$player
-            ? this._$player._$width / $devicePixelRatio
-            : 0;
-    }
-
-    /**
-     * @description 現在のStageの高さをピクセル単位で指定します。
-     *              Specifies the height of the current Stage in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get currentStageHeight (): number
-    {
-        return this._$player
-            ? this._$player.height * this._$player._$scale
-            : 0;
-    }
-
-    /**
-     * @description 現在のStageの幅をピクセル単位で指定します。
-     *              Specifies the width of the current Stage in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get currentStageWidth (): number
-    {
-        return this._$player
-            ? this._$player.width * this._$player._$scale
-            : 0;
-    }
-
-    /**
-     * @description 初期設定したステージの高さをピクセル単位で指定します。
-     *              Specifies the height of the initially set stage in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get stageHeight (): number
-    {
-        return this._$player ? this._$player.height : 0;
-    }
-
-    /**
-     * @description 初期設定したステージの幅をピクセル単位で指定します。
-     *              Specifies the width of the initially set stage in pixels.
-     *
-     * @member {number}
-     * @readonly
-     * @public
-     */
-    get stageWidth (): number
-    {
-        return this._$player ? this._$player.width : 0;
-    }
-
-    /**
-     * @description 表示リストをレンダリングする必要のある次の機会に、
-     *              表示オブジェクトに警告するようランタイムに通知します。
-     *              (例えば、再生ヘッドを新しいフレームに進める場合などです。)
-     *              Calling the invalidate() method signals runtimes
-     *              to alert display objects on the next opportunity
-     *              it has to render the display list.
-     *              (for example, when the playhead advances to a new frame)
+     * @description Stage に追加した DisplayObject の定期処理、描画処理を実行
+     *              Execute regular processing and drawing processing of DisplayObject added to Stage
      *
      * @return {void}
      * @method
-     * @public
+     * @protected
      */
-    invalidate (): void
+    $ticker (): void
     {
-        this._$invalidate = true;
+        stageTickerUseCase();
     }
 
     /**
-     * @param  {DisplayObject} child
-     * @return {DisplayObject}
+     * @description renderer workerに渡す描画データを生成
+     *              Generate drawing data to pass to the renderer worker
+     *
+     * @param  {ImageBitmap[]} image_bitmaps
+     * @param  {Float32Array} matrix
+     * @return {void}
      * @method
-     * @private
+     * @protected
      */
-    _$addChild (child: DisplayObjectImpl<any>): DisplayObjectImpl<any>
-    {
-        child._$stage  = this;
-        child._$root   = child;
+    $generateRenderQueue <D extends DisplayObject> (
+        display_object: D,
+        image_bitmaps: ImageBitmap[],
+        matrix: Float32Array,
+        color_transform: Float32Array
+    ): void {
+        stageGenerateRenderQueueUseCase(
+            display_object,
+            image_bitmaps,
+            matrix,
+            color_transform,
+            this.rendererWidth,
+            this.rendererHeight,
+            -matrix[4],
+            -matrix[5]
+        );
+    }
 
-        // worker flag updated
-        this._$created = true;
-
-        return super._$addChild(child);
+    /**
+     * @description タップポイントの当たり判定
+     *              Hit test of tap point
+     *
+     * @param  {CanvasRenderingContext2D} hit_context
+     * @param  {Float32Array} matrix
+     * @param  {IPlayerHitObject} hit_object
+     * @return {void}
+     * @method
+     * @protected
+     */
+    $mouseHit (
+        hit_context: CanvasRenderingContext2D,
+        matrix: Float32Array,
+        hit_object: IPlayerHitObject
+    ): void {
+        displayObjectContainerMouseHitUseCase(
+            this, hit_context, matrix, hit_object, true
+        );
     }
 }
+
+/**
+ * @type {Stage}
+ * @public
+ */
+export const stage: Stage = new Stage();
+$stageAssignedMap.add(stage.instanceId);

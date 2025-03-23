@@ -1,8 +1,12 @@
-import { TextImpl } from "@next2d/interface";
-import { TextFormat } from "@next2d/text";
+import type { IText } from "./interface/IText";
+import {
+    TextFormat,
+    TextField
+} from "@next2d/text";
 
-const text: TextImpl = {
-    TextFormat
+const text: IText = {
+    TextFormat,
+    TextField
 };
 
 Object.entries(text).forEach(([key, TextClass]) =>

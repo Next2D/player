@@ -1,31 +1,23 @@
+import type { IFilterQuality } from "./interface/IFilterQuality";
+import type { IBitmapFilterType } from "./interface/IBitmapFilterType";
 import { BitmapFilter } from "./BitmapFilter";
-import { BlurFilter } from "./BlurFilter";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { FilterQualityImpl } from "./interface/FilterQualityImpl";
-import type { BitmapFilterTypeImpl } from "./interface/BitmapFilterTypeImpl";
-import type { BoundsImpl } from "./interface/BoundsImpl";
-import type {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
+import { execute as gradientGlowFilterToArrayService } from "./GradientGlowFilter/service/GradientGlowFilterToArrayService";
+import { execute as gradientGlowFilterCanApplyFilterService } from "./GradientGlowFilter/service/GradientGlowFilterCanApplyFilterService";
+import { execute as gradientGlowFilterToNumberArrayService } from "./GradientGlowFilter/service/GradientGlowFilterToNumberArrayService";
+import { execute as gradientGlowFilterGetBoundsUseCase } from "./GradientGlowFilter/usecase/GradientGlowFilterGetBoundsUseCase";
 import {
-    $Array,
     $clamp,
-    $Deg2Rad,
-    $getArray, $getBoundsObject,
-    $Math,
-    $toColorInt,
-    $devicePixelRatio
-} from "@next2d/share";
+    $convertColorStringToNumber
+} from "./FilterUtil";
 
 /**
- * GradientGlowFilter クラスを使用すると、表示オブジェクトにグラデーショングロー効果を適用できます。
- * グラデーショングローとは、制御可能なカラーグラデーションによるリアルな輝きです。
- * グラデーショングローは、オブジェクトの内側エッジや外側エッジの周囲、またはオブジェクトの上に適用できます。
+ * @description GradientGlowFilter クラスを使用すると、表示オブジェクトにグラデーショングロー効果を適用できます。
+ *              グラデーショングローとは、制御可能なカラーグラデーションによるリアルな輝きです。
+ *              グラデーショングローは、オブジェクトの内側エッジや外側エッジの周囲、またはオブジェクトの上に適用できます。
  *
- * The GradientGlowFilter class lets you apply a gradient glow effect to display objects.
- * A gradient glow is a realistic-looking glow with a color gradient that you can control.
- * You can apply a gradient glow around the inner or outer edge of an object or on top of an object.
+ *              The GradientGlowFilter class lets you apply a gradient glow effect to display objects.
+ *              A gradient glow is a realistic-looking glow with a color gradient that you can control.
+ *              You can apply a gradient glow around the inner or outer edge of an object or on top of an object.
  *
  * @class
  * @memberOf next2d.filters
@@ -33,14 +25,90 @@ import {
  */
 export class GradientGlowFilter extends BitmapFilter
 {
-    private _$blurFilter: BlurFilter;
+    /**
+     * @description フィルター認識番号
+     *              Filter Recognition Number
+     *
+     * @member {number}
+     * @public
+     */
+    public readonly $filterType: number = 8;
+
+    /**
+     * @type {number}
+     * @default 4
+     * @private
+     */
+    private _$blurX: number;
+
+    /**
+     * @type {number}
+     * @default 4
+     * @private
+     */
+    private _$blurY: number;
+
+    /**
+     * @type {IFilterQuality}
+     * @default 1
+     * @private
+     */
+    private _$quality: IFilterQuality;
+
+    /**
+     * @type {number}
+     * @default 4
+     * @private
+     */
     private _$distance: number;
+
+    /**
+     * @type {number}
+     * @default 45
+     * @private
+     */
     private _$angle: number;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
     private _$colors: number[] | null;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
     private _$alphas: number[] | null;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
     private _$ratios: number[] | null;
+
+    /**
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$strength: number;
-    private _$type: BitmapFilterTypeImpl;
+
+    /**
+     * @type {string}
+     * @default "outer"
+     * @private
+     */
+    private _$type: IBitmapFilterType;
+
+    /**
+     * @type {boolean}
+     * @default false
+     * @private
+     */
     private _$knockout: boolean;
 
     /**
@@ -53,89 +121,45 @@ export class GradientGlowFilter extends BitmapFilter
      * @param {number}  [blur_y=4.0]
      * @param {number}  [strength=1]
      * @param {number}  [quality=1]
-     * @param {string}  [type=BitmapFilterType.INNER]
+     * @param {string}  [type=BitmapFilterType.OUTER]
      * @param {boolean} [knockout=false]
      *
      * @constructor
      * @public
      */
     constructor (
-        distance: number = 4, angle: number = 45,
+        distance: number = 4,
+        angle: number = 45,
         colors: number[] | null = null,
         alphas: number[] | null = null,
         ratios: number[] | null = null,
-        blur_x: number = 4, blur_y: number = 4, strength: number = 1,
-        quality: FilterQualityImpl = 1,
-        type: BitmapFilterTypeImpl = "inner",
+        blur_x: number = 4,
+        blur_y: number = 4,
+        strength: number = 1,
+        quality: IFilterQuality = 1,
+        type: IBitmapFilterType = "outer",
         knockout: boolean = false
     ) {
 
         super();
 
-        /**
-         * @type {BlurFilter}
-         * @default BlurFilter
-         * @private
-         */
-        this._$blurFilter = new BlurFilter(blur_x, blur_y, quality);
-
-        /**
-         * @type {number}
-         * @default 4
-         * @private
-         */
-        this._$distance = 4;
-
-        /**
-         * @type {number}
-         * @default 45
-         * @private
-         */
-        this._$angle = 45;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$colors = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$alphas = null;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$ratios = null;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$strength = 1;
-
-        /**
-         * @type {string}
-         * @default BitmapFilterType.INNER
-         * @private
-         */
-        this._$type = "inner";
-
-        /**
-         * @type {boolean}
-         * @default false
-         * @private
-         */
-        this._$knockout = false;
+        // default
+        this._$blurX      = 4;
+        this._$blurY      = 4;
+        this._$quality    = 1;
+        this._$distance   = 4;
+        this._$angle      = 45;
+        this._$colors     = null;
+        this._$alphas     = null;
+        this._$ratios     = null;
+        this._$strength   = 1;
+        this._$type       = "outer";
+        this._$knockout   = false;
 
         // setup
+        this.blurX    = blur_x;
+        this.blurY    = blur_y;
+        this.quality  = quality;
         this.distance = distance;
         this.angle    = angle;
         this.colors   = colors;
@@ -144,62 +168,6 @@ export class GradientGlowFilter extends BitmapFilter
         this.strength = strength;
         this.type     = type;
         this.knockout = knockout;
-    }
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class GradientGlowFilter]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class GradientGlowFilter]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default next2d.filters.GradientGlowFilter
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.filters.GradientGlowFilter";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object GradientGlowFilter]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object GradientGlowFilter]";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default next2d.filters.GradientGlowFilter
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.filters.GradientGlowFilter";
     }
 
     /**
@@ -217,18 +185,17 @@ export class GradientGlowFilter extends BitmapFilter
     }
     set alphas (alphas: number[] | null)
     {
-        if (alphas !== this._$alphas) {
-            this._$alphas = alphas;
-            if ($Array.isArray(alphas)) {
-
-                for (let idx: number = 0; idx < alphas.length; ++idx) {
-                    alphas[idx] = $clamp(+alphas[idx], 0, 1, 0);
-                }
-
-                this._$alphas = alphas;
-            }
-            this._$doChanged();
+        if (alphas === this._$alphas) {
+            return ;
         }
+        if (Array.isArray(alphas)) {
+            for (let idx = 0; idx < alphas.length; ++idx) {
+                const alpha = alphas[idx];
+                alphas[idx] = $clamp(+alpha, 0, 1, 0);
+            }
+        }
+        this._$alphas = alphas;
+        this.$updated = true;
     }
 
     /**
@@ -246,10 +213,11 @@ export class GradientGlowFilter extends BitmapFilter
     set angle (angle: number)
     {
         angle = $clamp(angle % 360, -360, 360, 45);
-        if (angle !== this._$angle) {
-            this._$angle = angle;
-            this._$doChanged();
+        if (angle === this._$angle) {
+            return ;
         }
+        this._$angle  = angle;
+        this.$updated = true;
     }
 
     /**
@@ -262,11 +230,16 @@ export class GradientGlowFilter extends BitmapFilter
      */
     get blurX (): number
     {
-        return this._$blurFilter.blurX;
+        return this._$blurX;
     }
     set blurX (blur_x: number)
     {
-        this._$blurFilter.blurX = blur_x;
+        blur_x = $clamp(+blur_x, 0, 255, 0);
+        if (blur_x === this._$blurX) {
+            return ;
+        }
+        this._$blurX  = blur_x;
+        this.$updated = true;
     }
 
     /**
@@ -279,11 +252,16 @@ export class GradientGlowFilter extends BitmapFilter
      */
     get blurY (): number
     {
-        return this._$blurFilter.blurY;
+        return this._$blurY;
     }
     set blurY (blur_y: number)
     {
-        this._$blurFilter.blurY = blur_y;
+        blur_y = $clamp(+blur_y, 0, 255, 0);
+        if (blur_y === this._$blurY) {
+            return ;
+        }
+        this._$blurY  = blur_y;
+        this.$updated = true;
     }
 
     /**
@@ -300,20 +278,22 @@ export class GradientGlowFilter extends BitmapFilter
     }
     set colors (colors: number[] | null)
     {
-        if (this._$colors !== colors) {
-            this._$colors = colors;
-            if ($Array.isArray(colors)) {
-
-                for (let idx: number = 0; idx < colors.length; ++idx) {
-                    colors[idx] = $clamp(
-                        $toColorInt(colors[idx]), 0, 0xffffff, 0
-                    );
-                }
-
-                this._$colors = colors;
-            }
-            this._$doChanged();
+        if (this._$colors === colors) {
+            return ;
         }
+        if (Array.isArray(colors)) {
+            for (let idx = 0; idx < colors.length; ++idx) {
+                const color = colors[idx];
+                colors[idx] = $clamp(
+                    typeof color === "string"
+                        ? $convertColorStringToNumber(color)
+                        : color
+                    , 0, 0xffffff, 0
+                );
+            }
+        }
+        this._$colors = colors;
+        this.$updated = true;
     }
 
     /**
@@ -331,10 +311,11 @@ export class GradientGlowFilter extends BitmapFilter
     set distance (distance: number)
     {
         distance = $clamp(+distance, -255, 255, 4);
-        if (distance !== this._$distance) {
-            this._$distance = distance;
-            this._$doChanged();
+        if (distance === this._$distance) {
+            return ;
         }
+        this._$distance = distance;
+        this.$updated   = true;
     }
 
     /**
@@ -351,10 +332,12 @@ export class GradientGlowFilter extends BitmapFilter
     }
     set knockout (knockout: boolean)
     {
-        if (knockout !== this._$knockout) {
-            this._$knockout = !!knockout;
-            this._$doChanged();
+        knockout = !!knockout;
+        if (knockout === this._$knockout) {
+            return ;
         }
+        this._$knockout = knockout;
+        this.$updated   = true;
     }
 
     /**
@@ -365,13 +348,18 @@ export class GradientGlowFilter extends BitmapFilter
      * @default 1
      * @public
      */
-    get quality (): FilterQualityImpl
+    get quality (): IFilterQuality
     {
-        return this._$blurFilter.quality;
+        return this._$quality;
     }
-    set quality (quality: FilterQualityImpl)
+    set quality (quality: IFilterQuality)
     {
-        this._$blurFilter.quality = quality;
+        quality = $clamp(quality | 0, 0, 15, 1) as IFilterQuality;
+        if (quality === this._$quality) {
+            return ;
+        }
+        this._$quality = quality;
+        this.$updated  = true;
     }
 
     /**
@@ -389,18 +377,16 @@ export class GradientGlowFilter extends BitmapFilter
     }
     set ratios (ratios: number[] | null)
     {
-        if (this._$ratios !== ratios) {
-            this._$ratios = ratios;
-            if ($Array.isArray(ratios)) {
-
-                for (let idx: number = 0; idx < ratios.length; ++idx) {
-                    ratios[idx] = $clamp(+ratios[idx], 0, 255, 0);
-                }
-
-                this._$ratios = ratios;
-            }
-            this._$doChanged();
+        if (this._$ratios === ratios) {
+            return ;
         }
+        if (Array.isArray(ratios)) {
+            for (let idx = 0; idx < ratios.length; ++idx) {
+                ratios[idx] = $clamp(+ratios[idx], 0, 255, 0);
+            }
+        }
+        this._$ratios = ratios;
+        this.$updated = true;
     }
 
     /**
@@ -418,10 +404,11 @@ export class GradientGlowFilter extends BitmapFilter
     set strength (strength: number)
     {
         strength = $clamp(strength | 0, 0, 255, 0);
-        if (strength !== this._$strength) {
-            this._$strength = strength;
-            this._$doChanged();
+        if (strength === this._$strength) {
+            return ;
         }
+        this._$strength = strength;
+        this.$updated   = true;
     }
 
     /**
@@ -432,16 +419,17 @@ export class GradientGlowFilter extends BitmapFilter
      * @default BitmapFilterType.INNER
      * @public
      */
-    get type (): BitmapFilterTypeImpl
+    get type (): IBitmapFilterType
     {
         return this._$type;
     }
-    set type (type: BitmapFilterTypeImpl)
+    set type (type: IBitmapFilterType)
     {
-        if (type !== this._$type) {
-            this._$type = type;
-            this._$doChanged();
+        if (type === this._$type) {
+            return ;
         }
+        this._$type   = type;
+        this.$updated = true;
     }
 
     /**
@@ -456,185 +444,61 @@ export class GradientGlowFilter extends BitmapFilter
     {
         return new GradientGlowFilter(
             this._$distance, this._$angle, this._$colors, this._$alphas, this._$ratios,
-            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
-            this._$blurFilter.quality, this._$type, this._$knockout
+            this._$blurX, this._$blurY, this._$strength,
+            this._$quality, this._$type, this._$knockout
         );
     }
 
     /**
+     * @description 設定されたフィルターの値を配列で返します。
+     *              Returns the value of the specified filter as an array.
+     *
      * @return {array}
      * @method
      * @public
      */
-    _$toArray (): any[]
+    toArray (): Array<number | boolean | number[] | null | boolean | string>
     {
-        return $getArray(8,
-            this._$distance, this._$angle, this._$colors, this._$alphas, this._$ratios,
-            this._$blurFilter.blurX, this._$blurFilter.blurY, this._$strength,
-            this._$blurFilter.quality, this._$type, this._$knockout
-        );
+        return gradientGlowFilterToArrayService(this);
     }
 
     /**
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {Float32Array}
+     * @method
+     * @public
+     */
+    toNumberArray (): Float32Array
+    {
+        return gradientGlowFilterToNumberArrayService(this);
+    }
+
+    /**
+     * @description フィルターを適用できるかどうかを返します。
+     *              Returns whether the filter can be applied.
+     *
      * @return {boolean}
      * @method
-     * @private
+     * @public
      */
-    _$isUpdated (): boolean
+    canApplyFilter (): boolean
     {
-        return this._$updated || this._$blurFilter._$isUpdated();
+        return gradientGlowFilterCanApplyFilterService(this);
     }
 
     /**
-     * @param  {object} bounds
-     * @param  {number} [x_scale=0]
-     * @param  {number} [y_scale=0]
-     * @return {object}
+     * @description フィルターの描画範囲のバウンディングボックスを返します。
+     *              Returns the bounding box of the filter drawing area.
+     *
+     * @param  {Float32Array} bounds
+     * @return {Float32Array}
      * @method
-     * @private
+     * @public
      */
-    _$generateFilterRect (
-        bounds: BoundsImpl,
-        x_scale: number = 0,
-        y_scale: number = 0
-    ): BoundsImpl
+    getBounds (bounds: Float32Array): Float32Array
     {
-        let clone: BoundsImpl = $getBoundsObject(
-            bounds.xMin, bounds.xMax,
-            bounds.yMin, bounds.yMax
-        );
-
-        if (!this._$canApply()) {
-            return clone;
-        }
-
-        clone = this
-            ._$blurFilter
-            ._$generateFilterRect(clone, x_scale, y_scale);
-
-        const radian: number = this._$angle * $Deg2Rad;
-
-        let x: number = $Math.abs($Math.cos(radian) * this._$distance);
-        let y: number = $Math.abs($Math.sin(radian) * this._$distance);
-
-        if (x_scale) {
-            x *= x_scale;
-        }
-
-        if (y_scale) {
-            y *= y_scale;
-        }
-
-        clone.xMin = $Math.min(clone.xMin, x);
-        if (x > 0) {
-            clone.xMax += x;
-        }
-        clone.yMin = $Math.min(clone.yMin, y);
-        if (y > 0) {
-            clone.yMax += y;
-        }
-
-        return clone;
-    }
-
-    /**
-     /**
-     * @return {boolean}
-     * @method
-     * @private
-     */
-    _$canApply (): boolean
-    {
-        return this._$strength > 0 && this._$distance > 0
-            && this._$alphas !== null && this._$ratios !== null && this._$colors !== null
-            && this._$blurFilter._$canApply();
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @param  {array}  matrix
-     * @return {WebGLTexture}
-     * @method
-     * @private
-     */
-    _$applyFilter (
-        context: CanvasToWebGLContext,
-        matrix: Float32Array
-    ): WebGLTexture {
-
-        this._$updated = false;
-
-        const manager: FrameBufferManager = context.frameBuffer;
-
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-
-        // reset
-        context.setTransform(1, 0, 0, 1, 0, 0);
-
-        if (!this._$canApply() || !currentAttachment) {
-            return manager.getTextureFromCurrentAttachment();
-        }
-
-        const baseWidth: number   = currentAttachment.width;
-        const baseHeight: number  = currentAttachment.height;
-        const baseOffsetX: number = context._$offsetX;
-        const baseOffsetY: number = context._$offsetY;
-
-        const blurTexture: WebGLTexture = this
-            ._$blurFilter
-            ._$applyFilter(context, matrix, false);
-
-        const blurWidth: number   = blurTexture.width;
-        const blurHeight: number  = blurTexture.height;
-        const blurOffsetX: number = context._$offsetX;
-        const blurOffsetY: number = context._$offsetY;
-
-        const offsetDiffX: number = blurOffsetX - baseOffsetX;
-        const offsetDiffY: number = blurOffsetY - baseOffsetY;
-
-        // matrix to scale
-        let xScale: number = $Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        let yScale: number = $Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
-
-        xScale /= $devicePixelRatio;
-        yScale /= $devicePixelRatio;
-
-        xScale *= 2;
-        yScale *= 2;
-
-        // shadow point
-        const radian: number = +(this._$angle * $Deg2Rad);
-        const x: number = +($Math.cos(radian) * this._$distance * xScale);
-        const y: number = +($Math.sin(radian) * this._$distance * yScale);
-
-        const isInner: boolean = this.type === "inner";
-        const w: number = isInner ? baseWidth  : blurWidth  + $Math.max(0, $Math.abs(x) - offsetDiffX);
-        const h: number = isInner ? baseHeight : blurHeight + $Math.max(0, $Math.abs(y) - offsetDiffY);
-        const width: number  = $Math.ceil(w);
-        const height: number = $Math.ceil(h);
-        const fractionX: number = (width  - w) / 2;
-        const fractionY: number = (height - h) / 2;
-
-        const baseTextureX = isInner ? 0 : $Math.max(0, offsetDiffX - x) + fractionX;
-        const baseTextureY = isInner ? 0 : $Math.max(0, offsetDiffY - y) + fractionY;
-        const blurTextureX = isInner ? x - blurOffsetX : (x > 0 ? $Math.max(0, x - offsetDiffX) : 0) + fractionX;
-        const blurTextureY = isInner ? y - blurOffsetY : (y > 0 ? $Math.max(0, y - offsetDiffY) : 0) + fractionY;
-
-        context._$bind(currentAttachment);
-        context._$applyBitmapFilter(
-            blurTexture, width, height,
-            baseWidth, baseHeight, baseTextureX, baseTextureY,
-            blurWidth, blurHeight, blurTextureX, blurTextureY,
-            true, this._$type, this._$knockout,
-            this._$strength, this._$ratios, this._$colors, this._$alphas,
-            0, 0, 0, 0, 0, 0, 0, 0
-        );
-
-        context._$offsetX = baseOffsetX + baseTextureX;
-        context._$offsetY = baseOffsetY + baseTextureY;
-
-        manager.releaseTexture(blurTexture);
-
-        return manager.getTextureFromCurrentAttachment();
+        return gradientGlowFilterGetBoundsUseCase(this, bounds);
     }
 }

@@ -1,18 +1,14 @@
 import { Event } from "./Event";
+import { $getEvent } from "./EventUtil";
 
 /**
- * FocusEvent オブジェクトは、ユーザーが表示リストの1つのオブジェクトから
- * 別のオブジェクトにフォーカスを変更したときにオブジェクトによって送出されます。
- * 次の2種類のフォーカスイベントがあります。
+ * @description FocusEvent オブジェクトは、ユーザーが表示リストの1つのオブジェクトから
+ *              別のオブジェクトにフォーカスを変更したときにオブジェクトによって送出されます。
+ *              次の2種類のフォーカスイベントがあります。
  *
- * An object dispatches a FocusEvent object when the user changes
- * the focus from one object in the display list to another.
- * There are two types of focus events:
- *
- * <ul>
- *     <li>FocusEvent.FOCUS_IN</li>
- *     <li>FocusEvent.FOCUS_OUT</li>
- * </ul>
+ *              An object dispatches a FocusEvent object when the user changes
+ *              the focus from one object in the display list to another.
+ *              There are two types of focus events:
  *
  * @class
  * @memberOf next2d.events
@@ -23,71 +19,42 @@ export class FocusEvent extends Event
     /**
      * @param {string}  type
      * @param {boolean} [bubbles=true]
-     * @param {boolean} [cancelable=false]
      *
      * @constructor
      * @public
      */
-    constructor (type: string, bubbles: boolean = true, cancelable: boolean = false)
+    constructor (type: string, bubbles: boolean = true)
     {
-        super(type, bubbles, cancelable);
-    }
+        super(type, bubbles);
 
-    /**
-     * 指定されたクラスのストリングを返します。
-     * Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class FocusEvent]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class FocusEvent]";
-    }
+        return new Proxy(this, {
+            "get": (object: any, name: string) =>
+            {
+                if (name in object) {
+                    return object[name];
+                }
 
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @member  {string}
-     * @default next2d.events.FocusEvent
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.events.FocusEvent";
-    }
+                const event = $getEvent();
+                if (!event) {
+                    return undefined;
+                }
 
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return {string}
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return this.formatToString(
-            "FocusEvent", "type", "bubbles", "cancelable", "eventPhase"
-        );
-    }
+                switch (event.type) {
 
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @member  {string}
-     * @default next2d.events.FocusEvent
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.events.FocusEvent";
+                    case FocusEvent.FOCUS_IN:
+                    case FocusEvent.FOCUS_OUT:
+                        if (name in event) {
+                            // @ts-ignore
+                            return $event[name];
+                        }
+                        return undefined;
+
+                    default:
+                        return undefined;
+
+                }
+            }
+        });
     }
 
     /**
@@ -95,13 +62,12 @@ export class FocusEvent extends Event
      *              Defines the value of the type property of a focusIn event object.
      *
      * @return {string}
-     * @default focusIn
      * @const
      * @static
      */
     static get FOCUS_IN (): string
     {
-        return "focusIn";
+        return "focusin";
     }
 
     /**
@@ -109,12 +75,11 @@ export class FocusEvent extends Event
      *              Defines the value of the type property of a focusOut event object.
      *
      * @return {string}
-     * @default focusOut
      * @const
      * @static
      */
     static get FOCUS_OUT (): string
     {
-        return "focusOut";
+        return "focusout";
     }
 }

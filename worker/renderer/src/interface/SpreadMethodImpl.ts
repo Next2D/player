@@ -1,1 +1,0 @@
-export type SpreadMethodImpl = "pad" | "reflect" | "repeat";

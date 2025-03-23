@@ -1,1 +1,0 @@
-export type InterpolationMethodImpl = "rgb" | "linearRGB";

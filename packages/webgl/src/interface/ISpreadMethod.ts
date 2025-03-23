@@ -1,0 +1,1 @@
+export type ISpreadMethod = "pad" | "reflect" | "repeat";

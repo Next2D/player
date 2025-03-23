@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Next2D</title>
+    <script defer type="module" src="./src/index.ts"></script>
+</head>
+<body style="margin: 0; padding: 0;">
+<script>
+    window.addEventListener("DOMContentLoaded", async () => 
+    {
+        // next2d.load("develop");
+
+        // const root = await next2d.createRootMovieClip(400, 400, 60, {
+        //     bgColor: "#0000ff"
+        // });
+
+        // const { Shape, BitmapData } = next2d.display;
+        // const { TextField } = next2d.text;
+        // const { Video } = next2d.media;
+        // const { Event } = next2d.events;
+        // const { Matrix } = next2d.geom;
+        // const {
+        //     BlurFilter,
+        //     ColorMatrixFilter,
+        //     GlowFilter,
+        //     BevelFilter,
+        //     GradientBevelFilter,
+        //     GradientGlowFilter,
+        //     DropShadowFilter,
+        //     ConvolutionFilter,
+        //     DisplacementMapFilter
+        // } = next2d.filters;
+
+        // const image = new Image();
+        // image.addEventListener("load", () => 
+        // {
+        //     const bitmapData = new BitmapData();
+        //     bitmapData.image = image;
+
+        //     const shape = root.addChild(new Shape());
+        //     shape.x = 150;
+        //     shape.y = 150;
+
+        //     shape.addEventListener(Event.COMPLETE, () => 
+        //     {
+        //         shape.scaleX = 0.5;
+        //         shape.scaleY = 0.5;
+        //         shape.filters = [
+        //             // new BlurFilter(10, 10, 3),
+        //             // new DropShadowFilter(20, 45, 0, 0.5),
+        //             // new ColorMatrixFilter([
+        //             //     0.393, 0.769, 0.189, 0, 0,
+        //             //     0.349, 0.686, 0.168, 0, 0,
+        //             //     0.272, 0.534, 0.131, 0, 0,
+        //             //     0, 0, 0, 1, 0
+        //             // ]),
+        //             // new GlowFilter(0, 1, 30, 20, 1, 1),
+        //             // new BevelFilter(4, 45, 0x0000ff, 1, 0, 1, 10, 10, 2, 1),
+        //             // new GradientBevelFilter(80, 45, [0x0000ff, 0x00ff00, 0xff0000], [0, 0.5, 1], [0, 128, 255], 4, 4, 1, 1),
+        //             // new GradientGlowFilter(4, 45, [0x000000, 0xffffff], [0, 1], [0, 255], 4, 4, 1, 1),
+        //                 // new ConvolutionFilter(3, 3, [
+        //                 //     0, -0.25, 0,
+        //                 //     -0.25, 4, -0.25,
+        //                 //     0, -0.25, 0
+        //                 // ], 1, 3, false, false),
+        //             new DisplacementMapFilter(
+        //                 bitmapData.buffer, bitmapData.width, bitmapData.height, 40, 40,
+        //                 1, 4, 32, 32
+        //             )
+        //         ];
+        //     });
+
+        //     shape.src = "http://localhost:5173/json/image/logo.png";
+        // });
+        // image.src = "http://localhost:5173/json/image/image.png";
+
+        // const shape1 = root.addChild(new Shape());
+        // shape1.x = 150;
+        // shape1.y = 150;
+
+        // shape1
+        //     .graphics
+        //     // .lineStyle(15, "#ff0000")
+        //     .beginFill("#ff0000")
+        //     .drawRect(0, 0, 100, 100);
+
+        // const textField = root.addChild(new TextField());
+        // textField.x = 50;
+        // textField.y = 80;
+        // textField.width = 240;
+        // textField.border = true;
+        // textField.rotation = 35;
+
+        // const textFormat = textField.defaultTextFormat;
+        // textFormat.size  = 35;
+        // textFormat.color = "#00ff00";
+        // textField.defaultTextFormat = textFormat;
+
+        // textField.text = "Hello World!";
+
+        // textField.filters = [
+        //     new BlurFilter(10, 10, 1)
+        // ];
+
+        // textField.blendMode = "invert";
+
+        // const shape2 = root.addChild(new Shape());
+        // shape2.x = 100;
+        // shape2.y = 100;
+        // shape2.rotation = 25;
+        // shape2
+        //     .graphics
+        //     .beginFill("#00ff00")
+        //     .moveTo(0, 0)
+        //     .lineTo(100, 0)
+        //     .lineTo(100, 100)
+        //     .lineTo(0, 0)
+        //     .endFill();
+
+        // shape2.blendMode = "invert";
+        // shape2.filters = [
+        //     new BlurFilter(30, 30, 2),
+        // ];
+
+        // const shape3 = root.addChild(new Shape());
+
+        // shape3.x = 0;
+        // shape3.y = 0;
+        // shape3.scaleX = 0.5;
+        // shape3.scaleY = 0.5;
+        // shape3.rotation = 15;
+        // shape3.src = "http://localhost:5173/json/image/logo.png";
+
+        // shape3.filters = [
+        //     new BlurFilter(10, 10, 5),
+        // ];
+        // shape3.blendMode = "multiply";
+
+        // const video = root.addChild(new Video());
+        // video.x = 120;
+        // video.y = 50;
+        // video.rotation = 40;
+        // video.scaleX = 0.14;
+        // video.scaleY = 0.14; 
+        // video.src = "http://localhost:5173/json/image/video.mp4";
+        // video.blendMode = "multiply";
+
+        // video.filters = [
+        //     // new BlurFilter(40, 40, 3),
+        //     // new DropShadowFilter(180, 95, 0, 0.5),
+        //     new ColorMatrixFilter([
+        //         0.393, 0.769, 0.189, 0, 0,
+        //         0.349, 0.686, 0.168, 0, 0,
+        //         0.272, 0.534, 0.131, 0, 0,
+        //         0, 0, 0, 1, 0
+        //     ]),
+        // ];
+
+        // setTimeout(async () => 
+        // {
+        //     const canvas = await next2d.captureToCanvas(root, {
+        //         "matrix": new Matrix(2, 0, 0, 2, 0, 0)
+        //     });
+        //     console.log(canvas.toDataURL());
+        // }, 3000);
+
+        
+        const count = 8000;
+        const root = next2d
+            .createRootMovieClip(1000, 416, 60)
+            .then((root) => 
+            {
+                const { Shape } = next2d.display;
+                
+                const rects = [];
+                for (let i = 0; i < count; i++) {
+                    const x = Math.random() * 1000;
+                    const y = Math.random() * 416;
+                    const size = 10 + Math.random() * 40;
+                    const speed = 1 + Math.random();
+
+                    var rect = new Shape();
+
+                    rect
+                        .graphics
+                        .beginFill("#fff")
+                        .lineStyle(1, "#000")
+                        .drawRect(0, 0, size, size);
+
+                    rect.x = x;
+                    rect.y = y;
+
+                    root.addChild(rect);
+
+                    rects.push({ size, speed, el: rect });
+                }
+
+                root.addEventListener("enterFrame", () =>
+                {
+                    for (let i = 0; i < count; i++) {
+                        const rect = rects[i];
+
+                        if (rect.el.x + rect.size < 0) {
+                            rect.el.x = 1000 + rect.size / 2;
+                        }
+
+                        rect.el.x -= rect.speed;
+                    }
+                });
+            });
+
+    });
+</script>
+</body>
+</html>

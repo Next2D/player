@@ -1,30 +1,21 @@
 import { BitmapFilter } from "./BitmapFilter";
-import type { AttachmentImpl } from "./interface/AttachmentImpl";
-import type { BoundsImpl } from "./interface/BoundsImpl";
-import type {
-    CanvasToWebGLContext,
-    FrameBufferManager
-} from "@next2d/webgl";
+import { execute as convolutionFilterCanApplyFilterService } from "./ConvolutionFilter/service/ConvolutionFilterCanApplyFilterService";
+import { execute as convolutionFilterToArrayService } from "./ConvolutionFilter/service/ConvolutionFilterToArrayService";
+import { execute as convolutionFilterToNumberArrayService } from "./ConvolutionFilter/service/ConvolutionFilterToNumberArrayService";
 import {
-    $Array,
     $clamp,
-    $getArray,
-    $poolArray,
-    $toColorInt,
-    $intToR,
-    $intToG,
-    $intToB
-} from "@next2d/share";
+    $convertColorStringToNumber
+} from "./FilterUtil";
 
 /**
- * ConvolutionFilter クラスを使用すると、マトリックス畳み込みフィルター効果を適用できます。
- * 畳み込みでは、入力イメージ内のピクセルを、隣接するピクセルと組み合わせて、イメージを作成します。
- * 畳み込みを使用すると、ぼかし、エッジ検出、シャープ、エンボス、ベベルなど、幅広いイメージ効果を実現できます。
+ * @description ConvolutionFilter クラスを使用すると、マトリックス畳み込みフィルター効果を適用できます。
+ *              畳み込みでは、入力イメージ内のピクセルを、隣接するピクセルと組み合わせて、イメージを作成します。
+ *              畳み込みを使用すると、ぼかし、エッジ検出、シャープ、エンボス、ベベルなど、幅広いイメージ効果を実現できます。
  *
- * The ConvolutionFilter class applies a matrix convolution filter effect.
- * A convolution combines pixels in the input image with neighboring pixels to produce an image.
- * A wide variety of image effects can be achieved through convolutions, including blurring,
- * edge detection, sharpening, embossing, and beveling.
+ *              The ConvolutionFilter class applies a matrix convolution filter effect.
+ *              A convolution combines pixels in the input image with neighboring pixels to produce an image.
+ *              A wide variety of image effects can be achieved through convolutions, including blurring,
+ *              edge detection, sharpening, embossing, and beveling.
  *
  * @class
  * @memberOf next2d.filters
@@ -32,14 +23,76 @@ import {
  */
 export class ConvolutionFilter extends BitmapFilter
 {
+    /**
+     * @description フィルター認識番号
+     *              Filter Recognition Number
+     *
+     * @member {number}
+     * @public
+     */
+    public $filterType: number = 3;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$matrixX: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$matrixY: number;
+
+    /**
+     * @type {array}
+     * @default null
+     * @private
+     */
     private _$matrix: number[] | null;
+
+    /**
+     * @type {number}
+     * @default 1
+     * @private
+     */
     private _$divisor: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$bias: number;
+
+    /**
+     * @type {boolean}
+     * @default true
+     * @private
+     */
     private _$preserveAlpha: boolean;
+
+    /**
+     * @type {boolean}
+     * @default true
+     * @private
+     */
     private _$clamp: boolean;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$color: number;
+
+    /**
+     * @type {number}
+     * @default 0
+     * @private
+     */
     private _$alpha: number;
 
     /**
@@ -57,76 +110,29 @@ export class ConvolutionFilter extends BitmapFilter
      * @public
      */
     constructor (
-        matrix_x: number = 0, matrix_y: number = 0,
-        matrix: number[] | null = null, divisor: number = 1,
-        bias: number = 0, preserve_alpha: boolean = true,
-        clamp: boolean = true, color: number = 0, alpha: number = 0
+        matrix_x: number = 0,
+        matrix_y: number = 0,
+        matrix: number[] | null = null,
+        divisor: number = 1,
+        bias: number = 0,
+        preserve_alpha: boolean = true,
+        clamp: boolean = true,
+        color: number = 0,
+        alpha: number = 0
     ) {
 
         super();
 
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$matrixX = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$matrixY = 0;
-
-        /**
-         * @type {array}
-         * @default null
-         * @private
-         */
-        this._$matrix = null;
-
-        /**
-         * @type {number}
-         * @default 1
-         * @private
-         */
-        this._$divisor = 1;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$bias = 0;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
+        // default
+        this._$matrixX       = 0;
+        this._$matrixY       = 0;
+        this._$matrix        = null;
+        this._$divisor       = 1;
+        this._$bias          = 0;
         this._$preserveAlpha = true;
-
-        /**
-         * @type {boolean}
-         * @default true
-         * @private
-         */
-        this._$clamp = true;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$color = 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this._$alpha = 0;
+        this._$clamp         = true;
+        this._$color         = 0;
+        this._$alpha         = 0;
 
         // setup
         this.matrixX       = matrix_x;
@@ -138,62 +144,6 @@ export class ConvolutionFilter extends BitmapFilter
         this.clamp         = clamp;
         this.color         = color;
         this.alpha         = alpha;
-    }
-
-    /**
-     * @description 指定されたクラスのストリングを返します。
-     *              Returns the string representation of the specified class.
-     *
-     * @return  {string}
-     * @default [class ConvolutionFilter]
-     * @method
-     * @static
-     */
-    static toString (): string
-    {
-        return "[class ConvolutionFilter]";
-    }
-
-    /**
-     * @description 指定されたクラスの空間名を返します。
-     *              Returns the space name of the specified class.
-     *
-     * @return  {string}
-     * @default next2d.filters.ConvolutionFilter
-     * @const
-     * @static
-     */
-    static get namespace (): string
-    {
-        return "next2d.filters.ConvolutionFilter";
-    }
-
-    /**
-     * @description 指定されたオブジェクトのストリングを返します。
-     *              Returns the string representation of the specified object.
-     *
-     * @return  {string}
-     * @default [object ConvolutionFilter]
-     * @method
-     * @public
-     */
-    toString (): string
-    {
-        return "[object ConvolutionFilter]";
-    }
-
-    /**
-     * @description 指定されたオブジェクトの空間名を返します。
-     *              Returns the space name of the specified object.
-     *
-     * @return  {string}
-     * @default next2d.filters.ConvolutionFilter
-     * @const
-     * @public
-     */
-    get namespace (): string
-    {
-        return "next2d.filters.ConvolutionFilter";
     }
 
     /**
@@ -211,10 +161,11 @@ export class ConvolutionFilter extends BitmapFilter
     set alpha (alpha: number)
     {
         alpha = $clamp(+alpha, 0, 1, 0);
-        if (alpha !== this._$alpha) {
-            this._$alpha = alpha;
-            this._$doChanged();
+        if (alpha === this._$alpha) {
+            return ;
         }
+        this._$alpha  = alpha;
+        this.$updated = true;
     }
 
     /**
@@ -231,10 +182,12 @@ export class ConvolutionFilter extends BitmapFilter
     }
     set bias (bias: number)
     {
-        if (bias !== this._$bias) {
-            this._$bias = bias | 0;
-            this._$doChanged();
+        bias |= 0;
+        if (bias === this._$bias) {
+            return ;
         }
+        this._$bias   = bias;
+        this.$updated = true;
     }
 
     /**
@@ -251,10 +204,12 @@ export class ConvolutionFilter extends BitmapFilter
     }
     set clamp (clamp: boolean)
     {
-        if (clamp !== this._$clamp) {
-            this._$clamp = !!clamp;
-            this._$doChanged();
+        clamp = !!clamp;
+        if (clamp === this._$clamp) {
+            return ;
         }
+        this._$clamp  = clamp;
+        this.$updated = true;
     }
 
     /**
@@ -272,13 +227,16 @@ export class ConvolutionFilter extends BitmapFilter
     set color (color: number)
     {
         color = $clamp(
-            $toColorInt(color), 0, 0xffffff, 0
+            typeof color === "string"
+                ? $convertColorStringToNumber(color)
+                : color
+            , 0, 0xffffff, 0
         );
-
-        if (color !== this._$color) {
-            this._$color = color;
-            this._$doChanged();
+        if (color === this._$color) {
+            return ;
         }
+        this._$color  = color;
+        this.$updated = true;
     }
 
     /**
@@ -295,10 +253,12 @@ export class ConvolutionFilter extends BitmapFilter
     }
     set divisor (divisor: number)
     {
-        if (divisor !== this._$divisor) {
-            this._$divisor = divisor | 0;
-            this._$doChanged();
+        divisor |= 0;
+        if (divisor === this._$divisor) {
+            return ;
         }
+        this._$divisor = divisor;
+        this.$updated = true;
     }
 
     /**
@@ -315,14 +275,11 @@ export class ConvolutionFilter extends BitmapFilter
     }
     set matrix (matrix: number[] | null)
     {
-        if ($Array.isArray(this._$matrix)) {
-            $poolArray(this._$matrix);
+        if (this._$matrix === matrix) {
+            return ;
         }
-
-        // default
-        this._$matrix = $Array.isArray(matrix) ? matrix : null;
-
-        this._$doChanged();
+        this._$matrix = matrix;
+        this.$updated = true;
     }
 
     /**
@@ -340,10 +297,11 @@ export class ConvolutionFilter extends BitmapFilter
     set matrixX (matrix_x: number)
     {
         matrix_x = $clamp(matrix_x | 0, 0, 15, 0) | 0;
-        if (matrix_x !== this._$matrixX) {
-            this._$matrixX = matrix_x;
-            this._$doChanged();
+        if (matrix_x === this._$matrixX) {
+            return ;
         }
+        this._$matrixX = matrix_x;
+        this.$updated  = true;
     }
 
     /**
@@ -361,10 +319,11 @@ export class ConvolutionFilter extends BitmapFilter
     set matrixY (matrix_y: number)
     {
         matrix_y = $clamp(matrix_y | 0, 0, 15, 0) | 0;
-        if (matrix_y !== this._$matrixY) {
-            this._$matrixY = matrix_y;
-            this._$doChanged();
+        if (matrix_y === this._$matrixY) {
+            return ;
         }
+        this._$matrixY = matrix_y;
+        this.$updated  = true;
     }
 
     /**
@@ -383,10 +342,12 @@ export class ConvolutionFilter extends BitmapFilter
     }
     set preserveAlpha (preserve_alpha: boolean)
     {
-        if (preserve_alpha !== this._$preserveAlpha) {
-            this._$preserveAlpha = !!preserve_alpha;
-            this._$doChanged();
+        preserve_alpha = !!preserve_alpha;
+        if (preserve_alpha === this._$preserveAlpha) {
+            return ;
         }
+        this._$preserveAlpha = preserve_alpha;
+        this.$updated = true;
     }
 
     /**
@@ -407,82 +368,41 @@ export class ConvolutionFilter extends BitmapFilter
     }
 
     /**
+     * @description 設定されたフィルターの値を配列で返します。
+     *              Returns the value of the specified filter as an array.
+     *
      * @return {array}
      * @method
      * @public
      */
-    _$toArray (): any[]
+    toArray (): Array<number | number[] | boolean | null>
     {
-        return $getArray(3,
-            this._$matrixX, this._$matrixY, this._$matrix,
-            this._$divisor, this._$bias, this._$preserveAlpha,
-            this._$clamp, this._$color, this._$alpha
-        );
+        return convolutionFilterToArrayService(this);
     }
 
     /**
-     * @param  {object} rect
-     * @return {object}
+     * @description 設定されたフィルターの値を数値配列で返します。
+     *              Returns the value of the specified filter as a number array.
+     *
+     * @return {Float32Array}
      * @method
-     * @private
+     * @public
      */
-    _$generateFilterRect (rect: BoundsImpl): BoundsImpl
+    toNumberArray (): Float32Array
     {
-        return rect;
+        return convolutionFilterToNumberArrayService(this);
     }
 
     /**
+     * @description フィルターを適用できるかどうかを返します。
+     *              Returns whether the filter can be applied.
+     *
      * @return {boolean}
      * @method
-     * @private
+     * @public
      */
-    _$canApply (): boolean
+    canApplyFilter (): boolean
     {
-        return this._$matrix !== null
-            && this._$matrixX * this._$matrixY === this._$matrix.length;
-    }
-
-    /**
-     * @param  {CanvasToWebGLContext} context
-     * @return {WebGLTexture}
-     * @method
-     * @private
-     */
-    _$applyFilter (context: CanvasToWebGLContext): WebGLTexture
-    {
-        this._$updated = false;
-
-        const manager: FrameBufferManager = context.frameBuffer;
-
-        const currentAttachment: AttachmentImpl | null = manager.currentAttachment;
-
-        // reset
-        context.setTransform(1, 0, 0, 1, 0, 0);
-
-        const texture: WebGLTexture = manager
-            .getTextureFromCurrentAttachment();
-
-        if (!this._$canApply() || !this._$matrix) {
-            return texture;
-        }
-
-        context._$applyConvolutionFilter(
-            texture,
-            this._$matrixX,
-            this._$matrixY,
-            this._$matrix,
-            this._$divisor,
-            this._$bias,
-            this._$preserveAlpha,
-            this._$clamp,
-            $intToR(this._$color, this._$alpha, false),
-            $intToG(this._$color, this._$alpha, false),
-            $intToB(this._$color, this._$alpha, false),
-            this._$alpha
-        );
-
-        manager.releaseAttachment(currentAttachment, true);
-
-        return manager.getTextureFromCurrentAttachment();
+        return convolutionFilterCanApplyFilterService(this);
     }
 }

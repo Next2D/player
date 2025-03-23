@@ -1,36 +1,32 @@
-import type { DisplayImpl } from "@next2d/interface";
+import type { IDisplay } from "./interface/IDisplay";
 import {
-    DisplayObject,
-    InteractiveObject,
-    DisplayObjectContainer,
     Sprite,
     MovieClip,
     BitmapData,
     BlendMode,
+    DisplayObject,
+    DisplayObjectContainer,
     FrameLabel,
     Graphics,
+    InteractiveObject,
     Loader,
-    LoaderInfo,
     Shape,
-    Stage,
-    TextField
+    stage
 } from "@next2d/display";
 
-const display: DisplayImpl = {
-    DisplayObject,
-    InteractiveObject,
-    DisplayObjectContainer,
+const display: IDisplay = {
     Sprite,
     MovieClip,
     BitmapData,
     BlendMode,
+    DisplayObject,
+    DisplayObjectContainer,
     FrameLabel,
     Graphics,
+    InteractiveObject,
     Loader,
-    LoaderInfo,
     Shape,
-    Stage,
-    TextField
+    stage
 };
 
 Object.entries(display).forEach(([key, DisplayClass]) =>

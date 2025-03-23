@@ -1,0 +1,1 @@
+export type ITextFieldAutoSize = "center" | "left" | "none" | "right";
