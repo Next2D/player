@@ -54,6 +54,9 @@ const execute = () =>
             packageJson.dependencies = {};
             const keys = Object.keys(packageJson.peerDependencies);
             for (let idx = 0; idx < keys.length; ++idx) {
+                if ("@next2d/renderer" === keys[idx]) {
+                    continue;
+                }
                 packageJson.dependencies[keys[idx]] = basePackageJson.version;
             }
 
