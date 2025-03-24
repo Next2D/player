@@ -25,9 +25,20 @@ const execute = () =>
 
         const dirName = dirList[idx];
 
-        basePackageJson.dependencies[`@next2d/${dirName}`] = basePackageJson.version;
+        switch (dirName) {
 
-        const outDir  = join(process.cwd(), `dist/packages/${dirName}`);
+            case "renderer":
+            case "webgl":
+            case "texture-packer":
+                break;
+
+            default:
+                basePackageJson.dependencies[`@next2d/${dirName}`] = basePackageJson.version;
+                break;
+
+        }
+
+        const outDir = join(process.cwd(), `dist/packages/${dirName}`);
         const packagePath = join(process.cwd(), `packages/${dirName}`);
 
         // LICENSE
