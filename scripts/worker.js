@@ -14,7 +14,7 @@ const rendererWorker = () =>
         `export const workerInlineUrl = 'data:application/javascript;base64,${workerBase64}';`
     );
 
-    const src = `import workerInlineUrl from "./renderer.worker.inline.js";
+    const src = `import { workerInlineUrl } from "./renderer.worker.inline.js";
 export const $rendererWorker = new Worker(workerInlineUrl);
 `;
     writeFileSync(
@@ -33,7 +33,7 @@ const unzipWorker = () =>
         `export const workerInlineUrl = 'data:application/javascript;base64,${workerBase64}';`
     );
 
-    const src = `import workerInlineUrl from "./unzip.worker.inline.js";
+    const src = `import { workerInlineUrl } from "./unzip.worker.inline.js";
 export const $unzipWorker = new Worker(workerInlineUrl);
 `;
     writeFileSync(
