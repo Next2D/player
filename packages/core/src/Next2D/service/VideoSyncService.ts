@@ -1,4 +1,5 @@
 import type { DisplayObject, DisplayObjectContainer } from "@next2d/display";
+import type { Video } from "@next2d/media";
 
 /**
  * @description DisplayObject の子要素に Video が含まれている場合、ロードが完了するまで待機します。
@@ -14,6 +15,28 @@ export const execute = async <D extends DisplayObject> (display_object: D): Prom
     switch (true) {
 
         case display_object.isVideo:
+            {
+                const muted = (display_object as unknown as Video).muted;
+                (display_object as unknown as Video).muted = true;
+    
+                await (display_object as unknown as Video).play();
+                (display_object as unknown as Video).pause();
+                (display_object as unknown as Video).muted = muted;
+    
+                await new Promise<void>((resolve) =>
+                {
+                    const wait = async (): Promise<void> =>
+                    {
+                        if ((display_object as unknown as Video).loaded) {
+                            (display_object as unknown as Video).seek(0);
+                            resolve();
+                        } else {
+                            requestAnimationFrame(wait);
+                        }
+                    };
+                    requestAnimationFrame(wait);
+                });
+            }
             break;
 
         case display_object.isContainerEnabled:
@@ -26,33 +49,13 @@ export const execute = async <D extends DisplayObject> (display_object: D): Prom
                         continue;
                     }
 
-                    if (displayObject.isVideo) {
-
-                        const muted = displayObject.muted;
-                        displayObject.muted = true;
-
-                        await displayObject.play();
-                        displayObject.pause();
-                        displayObject.muted = muted;
-
-                        await new Promise<void>((resolve) =>
-                        {
-                            const wait = async (): Promise<void> =>
-                            {
-                                if (displayObject.loaded) {
-                                    displayObject.seek(0);
-                                    resolve();
-                                } else {
-                                    requestAnimationFrame(wait);
-                                }
-                            };
-                            requestAnimationFrame(wait);
-                        });
+                    if (!displayObject.isVideo
+                        && !displayObject.isContainerEnabled
+                    ) {
+                        continue;
                     }
 
-                    if (displayObject.isContainerEnabled) {
-                        await execute(displayObject as DisplayObjectContainer);
-                    }
+                    await execute(displayObject);
                 }
             }
             break;
