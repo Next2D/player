@@ -18,11 +18,11 @@ export const execute = async <D extends DisplayObject> (display_object: D): Prom
             {
                 const muted = (display_object as unknown as Video).muted;
                 (display_object as unknown as Video).muted = true;
-    
+
                 await (display_object as unknown as Video).play();
                 (display_object as unknown as Video).pause();
                 (display_object as unknown as Video).muted = muted;
-    
+
                 await new Promise<void>((resolve) =>
                 {
                     const wait = async (): Promise<void> =>
