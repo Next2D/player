@@ -7,9 +7,9 @@ describe("VideoSyncService.js test", () =>
 {
     it("execute test case1", async () =>
     {
-        let play = false;
+        let play  = false;
         let pause = false;
-        let seek = 100;
+        let seek  = 100;
         const mockDisplayObject = {
             "isVideo": true,
             "muted": false,
@@ -32,9 +32,9 @@ describe("VideoSyncService.js test", () =>
 
     it("execute test case2", async () =>
     {
-        let play = false;
+        let play  = false;
         let pause = false;
-        let seek = 100;
+        let seek  = 100;
         const mockDisplayObject = {
             "isVideo": true,
             "muted": false,
