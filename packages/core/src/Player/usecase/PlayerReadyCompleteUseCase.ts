@@ -5,6 +5,10 @@ import { execute as playerRenderingPostMessageService } from "../service/PlayerR
 /**
  * @description Playerの起動準備完了時のユースーケース
  *              Use case when Player is ready to start
+ *
+ * @return {void}
+ * @method
+ * @protected
  */
 export const execute = (): void =>
 {
