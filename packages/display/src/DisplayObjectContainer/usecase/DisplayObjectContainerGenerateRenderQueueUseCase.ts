@@ -67,7 +67,7 @@ export const execute = <P extends DisplayObjectContainer>(
         renderQueue.push(0);
         return ;
     }
-    
+
     const children = display_object_container.children;
     if (!children.length) {
         if (tColorTransform !== color_transform) {

@@ -17,9 +17,12 @@ import type { Graphics } from "../../Graphics";
  */
 export const execute = (
     graphics: Graphics,
-    x: number = 0, y: number = 0,
-    position_x: number = 0, position_y: number = 0,
-    line_width: number = 0, caps: string = "none"
+    x: number = 0,
+    y: number = 0,
+    position_x: number = 0,
+    position_y: number = 0,
+    line_width: number = 0,
+    caps: string = "none"
 ): void => {
 
     graphics.xMin = Math.min(graphics.xMin, Math.min(x, position_x));

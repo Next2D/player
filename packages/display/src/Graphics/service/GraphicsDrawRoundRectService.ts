@@ -17,9 +17,12 @@ import type { Graphics } from "../../Graphics";
  */
 export const execute = (
     graphics: Graphics,
-    x: number, y: number,
-    width: number, height: number,
-    ellipse_width: number, ellipse_height: number = NaN
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    ellipse_width: number,
+    ellipse_height: number = NaN
 ): Graphics => {
 
     x = +x || 0;
