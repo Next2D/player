@@ -59,7 +59,7 @@ export const execute = <P extends DisplayObjectContainer>(
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
 
-    const alpha: number = $clamp(tColorTransform[3] + tColorTransform[7] / 255, 0, 1, 0);
+    const alpha = $clamp(tColorTransform[3] + tColorTransform[7] / 255, 0, 1, 0);
     if (!alpha) {
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
@@ -67,7 +67,7 @@ export const execute = <P extends DisplayObjectContainer>(
         renderQueue.push(0);
         return ;
     }
-
+    
     const children = display_object_container.children;
     if (!children.length) {
         if (tColorTransform !== color_transform) {
