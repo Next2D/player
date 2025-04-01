@@ -1,3 +1,4 @@
+import type { IVertexArrayObject } from "../../interface/IVertexArrayObject.ts";
 import { execute } from "./VertexArrayObjectBindService";
 import { describe, expect, it, vi } from "vitest";
 
@@ -19,11 +20,11 @@ describe("VertexArrayObjectBindService.js method test", () =>
         });
 
         const vertexArrayObject = {
+            "id": 1,
             "resource": "createVertexArray",
-            "indexRanges": [],
             "vertexBuffer": "createBuffer",
             "vertexLength": 0,
-        };
+        } as IVertexArrayObject;
 
         execute(vertexArrayObject);
     });

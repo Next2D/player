@@ -1,4 +1,4 @@
-import { execute } from "./TextureManagerBind0UseCase";
+import { execute } from "./TextureManagerBind012UseCase";
 import { describe, expect, it, vi } from "vitest";
 import {
     $activeTextureUnit,
@@ -7,7 +7,7 @@ import {
 } from "../../TextureManager";
 import type { ITextureObject } from "../../interface/ITextureObject";
 
-describe("TextureManagerBind0UseCase.js method test", () =>
+describe("TextureManagerBind012UseCase.js method test", () =>
 {
     it("test case", async () =>
     {
@@ -27,12 +27,28 @@ describe("TextureManagerBind0UseCase.js method test", () =>
             }
         });
 
-        const textureObject = {
+        const textureObject0 = {
             "id": 2,
             "resource": {} as WebGLTexture,
             "width": 200,
             "height": 300,
             "area": 200 * 300
+        } as ITextureObject;
+
+        const textureObject1 = {
+            "id": 1,
+            "resource": {} as WebGLTexture,
+            "width": 400,
+            "height": 500,
+            "area": 400 * 500
+        } as ITextureObject;
+
+        const textureObject2 = {
+            "id": 1,
+            "resource": {} as WebGLTexture,
+            "width": 600,
+            "height": 700,
+            "area": 600 * 700
         } as ITextureObject;
 
         // not hit
@@ -54,10 +70,10 @@ describe("TextureManagerBind0UseCase.js method test", () =>
         expect($boundTextures[1]).toBe(mock);
         expect($boundTextures[2]).toBe(mock);
 
-        execute(textureObject)
+        execute(textureObject0, textureObject1, textureObject2)
         expect($activeTextureUnit).toBe(0);
-        expect($boundTextures[0]).toBe(textureObject);
-        expect($boundTextures[1]).toBe(null);
-        expect($boundTextures[2]).toBe(null);
+        expect($boundTextures[0]).toBe(textureObject0);
+        expect($boundTextures[1]).toBe(textureObject1);
+        expect($boundTextures[2]).toBe(textureObject2);
     });
 });

@@ -20,8 +20,10 @@ import { execute as graphicsCalcLineBoundsService } from "../service/GraphicsCal
 export const execute = (
     graphics: Graphics,
     has_line_enabled: boolean,
-    position_x: number = 0, position_y: number = 0,
-    line_width: number = 0, caps: string = "none",
+    position_x: number = 0,
+    position_y: number = 0,
+    line_width: number = 0,
+    caps: string = "none",
     ...args: number[]
 ): void => {
 

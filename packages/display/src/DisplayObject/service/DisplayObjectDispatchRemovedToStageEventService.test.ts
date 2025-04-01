@@ -1,10 +1,10 @@
-import { execute } from "./DisplayObjectDispatchAddedToStageEventService";
+import { execute } from "./DisplayObjectDispatchRemovedToStageEventService";
 import { DisplayObject } from "../../DisplayObject";
 import { $stageAssignedMap } from "../../DisplayObjectUtil";
 import { describe, expect, it, vi } from "vitest";
 import { Event } from "@next2d/events";
 
-describe("DisplayObjectDispatchAddedToStageEventService.js test", () =>
+describe("DisplayObjectDispatchRemovedToStageEventService.js test", () =>
 {
     it("execute test case", () =>
     {
@@ -19,12 +19,15 @@ describe("DisplayObjectDispatchAddedToStageEventService.js test", () =>
 
         $stageAssignedMap.add(displayObject.instanceId);
 
+        displayObject.$addedToStage = true;
         expect(type).toBe("");
-        expect(displayObject.$addedToStage).toBe(false);
+        expect(displayObject.$addedToStage).toBe(true);
+
         execute(displayObject);
 
-        expect(type).toBe(Event.ADDED_TO_STAGE);
+        expect(type).toBe(Event.REMOVED_FROM_STAGE);
+        expect(displayObject.$addedToStage).toBe(false);
+
         $stageAssignedMap.delete(displayObject.instanceId);
-        expect(displayObject.$addedToStage).toBe(true);
     });
 });

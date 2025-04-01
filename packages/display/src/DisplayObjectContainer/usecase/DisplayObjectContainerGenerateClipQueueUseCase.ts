@@ -10,7 +10,6 @@ import { execute as shapeGenerateClipQueueUseCase } from "../../Shape/usecase/Sh
  *              Generate mask drawing data of DisplayObjectContainer to pass to renderer
  *
  * @param  {DisplayObjectContainer} display_object_container
- * @param  {number[]} render_queue
  * @param  {Float32Array} matrix
  * @return {void}
  * @method

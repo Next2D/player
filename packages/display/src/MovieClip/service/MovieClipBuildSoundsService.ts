@@ -14,7 +14,7 @@ import {
  * @param  {MovieClip} movie_clip
  * @param  {Map} sound_map
  * @param  {array} sound_objects
- * @return {Promise}
+ * @return {Promise<void>}
  * @method
  * @public
  */
