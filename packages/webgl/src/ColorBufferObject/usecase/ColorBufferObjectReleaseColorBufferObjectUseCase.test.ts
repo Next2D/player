@@ -1,6 +1,7 @@
 import { execute } from "./ColorBufferObjectReleaseColorBufferObjectUseCase";
 import { describe, expect, it } from "vitest";
 import { $objectPool } from "../../ColorBufferObject";
+import type { IColorBufferObject } from "../../interface/IColorBufferObject";
 
 describe("ColorBufferObjectReleaseColorBufferObjectUseCase.js method test", () =>
 {
@@ -11,6 +12,7 @@ describe("ColorBufferObjectReleaseColorBufferObjectUseCase.js method test", () =
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 0,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
@@ -25,6 +27,7 @@ describe("ColorBufferObjectReleaseColorBufferObjectUseCase.js method test", () =
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 1,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
@@ -39,6 +42,7 @@ describe("ColorBufferObjectReleaseColorBufferObjectUseCase.js method test", () =
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 2,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
@@ -53,6 +57,7 @@ describe("ColorBufferObjectReleaseColorBufferObjectUseCase.js method test", () =
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 3,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
@@ -80,7 +85,7 @@ describe("ColorBufferObjectReleaseColorBufferObjectUseCase.js method test", () =
             "height": 480,
             "area": 620 * 480,
             "dirty": false,
-        };
+        } as IColorBufferObject;
         execute(colorBufferObject);
         expect($objectPool.length).toBe(5);
         expect($objectPool[2]).toBe(colorBufferObject);

@@ -28,6 +28,7 @@ describe("ColorBufferObjectAcquireObjectUseCase.js method test", () =>
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 0,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
@@ -42,6 +43,7 @@ describe("ColorBufferObjectAcquireObjectUseCase.js method test", () =>
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 1,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
@@ -56,6 +58,7 @@ describe("ColorBufferObjectAcquireObjectUseCase.js method test", () =>
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 2,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
@@ -70,6 +73,7 @@ describe("ColorBufferObjectAcquireObjectUseCase.js method test", () =>
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 3,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
