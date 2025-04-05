@@ -14,7 +14,7 @@ import { execute as textAreaInputUseCase } from "./TextAreaInputUseCase";
  */
 export const execute = (text_area: HTMLTextAreaElement): void =>
 {
-    // omposition evnet
+    // composition evnet
     text_area.addEventListener("compositionstart", textAreaCompositionStartUseCase as EventListener);
     text_area.addEventListener("compositionupdate", textAreaCompositionUpdateUseCase as EventListener);
     text_area.addEventListener("compositionend", textAreaCompositionEndUseCase as EventListener);
