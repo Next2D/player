@@ -2,7 +2,7 @@ import { execute } from "./TextFormatGenerateFontStyleService";
 import { TextFormat } from "../../TextFormat";
 import { describe, expect, it } from "vitest";
 
-describe("TextFormatGenerateFontStyleService.js length test", () =>
+describe("TextFormatGenerateFontStyleService.js test", () =>
 {
     it("test case1", () =>
     {

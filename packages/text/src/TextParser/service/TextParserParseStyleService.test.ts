@@ -1,7 +1,7 @@
 import { execute } from "./TextParserParseStyleService";
 import { describe, expect, it } from "vitest";
 
-describe("TextParserParseStyleService.js length test", () =>
+describe("TextParserParseStyleService.js Test", () =>
 {
     it("test case1", () =>
     {

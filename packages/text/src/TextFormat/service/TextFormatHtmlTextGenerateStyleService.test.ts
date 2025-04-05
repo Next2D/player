@@ -3,7 +3,7 @@ import { execute as textFormatSetDefaultService } from "./TextFormatSetDefaultSe
 import { TextFormat } from "../../TextFormat";
 import { describe, expect, it } from "vitest";
 
-describe("TextFormatHtmlTextGenerateStyleService.js length test", () =>
+describe("TextFormatHtmlTextGenerateStyleService.js test", () =>
 {
     it("test case1", () =>
     {

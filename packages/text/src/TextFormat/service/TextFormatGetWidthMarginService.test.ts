@@ -2,7 +2,7 @@ import { execute } from "./TextFormatGetWidthMarginService";
 import { TextFormat } from "../../TextFormat";
 import { describe, expect, it } from "vitest";
 
-describe("TextFormatGetWidthMarginService.js length test", () =>
+describe("TextFormatGetWidthMarginService.js test", () =>
 {
     it("test case1", () =>
     {

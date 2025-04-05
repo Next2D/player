@@ -2,7 +2,7 @@ import { execute } from "./TextFormatIsSameService";
 import { TextFormat } from "../../TextFormat";
 import { describe, expect, it } from "vitest";
 
-describe("TextFormatIsSameService.js length test", () =>
+describe("TextFormatIsSameService.js test", () =>
 {
     it("test case1", () =>
     {

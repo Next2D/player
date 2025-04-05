@@ -2,7 +2,7 @@ import { execute } from "./TextFormatSetDefaultService";
 import { TextFormat } from "../../TextFormat";
 import { describe, expect, it } from "vitest";
 
-describe("TextFormatSetDefaultService.js length test", () =>
+describe("TextFormatSetDefaultService.js test", () =>
 {
     it("default test case1", () =>
     {
