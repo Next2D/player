@@ -188,6 +188,19 @@ export class Event
     }
 
     /**
+     * @description 要素の値を変更したときに発行されます。
+     *              Occurs when the value of an element changes.
+     *
+     * @return {string}
+     * @const
+     * @static
+     */
+    static get CHANGE (): string
+    {
+        return "change";
+    }
+
+    /**
      * @description 読み込みや、処理完了時に発生します。
      *              Occurs when loading or processing is complete.
      *

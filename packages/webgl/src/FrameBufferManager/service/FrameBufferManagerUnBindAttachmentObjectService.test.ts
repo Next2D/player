@@ -23,7 +23,7 @@ describe("FrameBufferManagerUnBindAttachmentObjectService.js method test", () =>
             }
         });
 
-        const attachmentObject: IAttachmentObject = {
+        const attachmentObject = {
             "width": 100,
             "height": 100,
             "clipLevel": 0,
@@ -31,21 +31,24 @@ describe("FrameBufferManagerUnBindAttachmentObjectService.js method test", () =>
             "mask": false,
             "color": null,
             "texture": {
+                "id": 0,
                 "resource": "createTexture",
                 "width": 100,
                 "height": 100,
                 "area": 100 * 100,
+                "smooth": false
             },
             "stencil": {
+                "id": 0,
                 "resource": "createRenderbuffer",
                 "width": 100,
                 "height": 100,
                 "area": 100 * 100,
                 "dirty": false,
             }
-        }
+        } as unknown as IAttachmentObject;
 
-        $setCurrentAttachment(attachmentObject)
+        $setCurrentAttachment(attachmentObject);
         expect($getCurrentAttachment()).toBe(attachmentObject);
 
         $setFramebufferBound(true);

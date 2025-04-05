@@ -1,5 +1,5 @@
 import { execute } from "./ColorBufferObjectMeguruBinarySearchService";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { $objectPool } from "../../ColorBufferObject";
 
 describe("ColorBufferObjectMeguruBinarySearchService.js method test", () =>
@@ -11,6 +11,7 @@ describe("ColorBufferObjectMeguruBinarySearchService.js method test", () =>
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 0,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
@@ -25,6 +26,7 @@ describe("ColorBufferObjectMeguruBinarySearchService.js method test", () =>
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 1,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
@@ -39,6 +41,7 @@ describe("ColorBufferObjectMeguruBinarySearchService.js method test", () =>
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 2,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,
@@ -53,6 +56,7 @@ describe("ColorBufferObjectMeguruBinarySearchService.js method test", () =>
             {
                 "resource": {} as unknown as WebGLRenderbuffer,
                 "stencil": {
+                    "id": 3,
                     "resource": {} as unknown as WebGLRenderbuffer,
                     "width": 0,
                     "height": 0,

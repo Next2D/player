@@ -1,7 +1,6 @@
 import type { IRGBA } from "./interface/IRGBA";
 import type { IElementPosition } from "./interface/IElementPosition";
 import type { TextField } from "./TextField";
-import { execute as textAreaRegisterEventUseCase } from "./TextArea/usecase/TextAreaRegisterEventUseCase";
 
 /**
  * @description 選択中のテキストフィールド
@@ -46,7 +45,6 @@ export const $getSelectedTextField = (): TextField | null =>
  * @protected
  */
 export const $textArea: HTMLTextAreaElement = document.createElement("textarea") as HTMLTextAreaElement;
-textAreaRegisterEventUseCase($textArea);
 
 $textArea.tabIndex = -1;
 

@@ -4,7 +4,7 @@ import type { ITextFieldType } from "./interface/ITextFieldType";
 import type { ITextFieldCharacter } from "./interface/ITextFieldCharacter";
 import type { ICharacter } from "./interface/ICharacter";
 import type { LoaderInfo } from "@next2d/display";
-import { FocusEvent } from "@next2d/events";
+import { FocusEvent, Event } from "@next2d/events";
 import { Rectangle } from "@next2d/geom";
 import { TextData } from "./TextData";
 import { TextFormat } from "./TextFormat";
@@ -854,6 +854,10 @@ export class TextField extends InteractiveObject
         this._$text        = "";
         this._$isHTML      = true;
         textFieldReloadUseCase(this);
+
+        if (this.hasEventListener(Event.CHANGE)) {
+            this.dispatchEvent(new Event(Event.CHANGE));
+        }
     }
 
     /**
@@ -978,6 +982,10 @@ export class TextField extends InteractiveObject
 
         this._$text = text;
         textFieldReloadUseCase(this);
+
+        if (this.hasEventListener(Event.CHANGE)) {
+            this.dispatchEvent(new Event(Event.CHANGE));
+        }
     }
 
     /**
