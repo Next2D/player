@@ -205,8 +205,14 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const radianY = Math.atan2(-matrix[2], matrix[3]);
         if (radianX || radianY) {
 
-            const tx = xMin * xScale;
-            const ty = yMin * yScale;
+            const tx = xMin * Math.sqrt(
+                matrix[0] * matrix[0]
+                + matrix[1] * matrix[1]
+            );
+            const ty = yMin * Math.sqrt(
+                matrix[2] * matrix[2]
+                + matrix[3] * matrix[3]
+            );
 
             const cosX = Math.cos(radianX);
             const sinX = Math.sin(radianX);
