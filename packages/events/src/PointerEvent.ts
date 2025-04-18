@@ -149,4 +149,17 @@ export class PointerEvent extends Event
     {
         return "pointerup";
     }
+
+    /**
+     * @description ポインターのキャンセル時に発生します。
+     *              Occurs when the pointer is canceled.
+     *
+     * @return {string}
+     * @const
+     * @static
+     */
+    static get POINTER_CANCEl (): string
+    {
+        return "pointercancel";
+    }
 }
