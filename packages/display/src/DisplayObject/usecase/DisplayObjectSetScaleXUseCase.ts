@@ -24,7 +24,7 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_x: num
         if (index !== -1) {
             scale_x = +value.slice(0, index);
         }
-        scale_x = Math.round(scale_x * 10000) / 10000;
+        scale_x = Math.round(scale_x * 100) / 100;
     }
 
     if (display_object.$scaleX === scale_x) {
