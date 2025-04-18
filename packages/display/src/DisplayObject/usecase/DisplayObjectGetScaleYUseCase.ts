@@ -31,7 +31,7 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
         if (index !== -1) {
             yScale = +value.slice(0, index);
         }
-        yScale = Math.round(yScale * 10000) / 10000;
+        yScale = Math.round(yScale * 100) / 100;
     }
 
     return 0 > matrix[0] ? yScale * -1 : yScale;

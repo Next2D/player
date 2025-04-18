@@ -150,12 +150,12 @@ export const execute = (
     const xScale = Math.round(Math.sqrt(
         tMatrix[0] * tMatrix[0]
         + tMatrix[1] * tMatrix[1]
-    ) * 10000) / 10000;
+    ) * 10) / 10;
 
     const yScale = Math.round(Math.sqrt(
         tMatrix[2] * tMatrix[2]
         + tMatrix[3] * tMatrix[3]
-    ) * 10000) / 10000;
+    ) * 10) / 10;
 
     if (text_field.changed
         && !text_field.cacheKey

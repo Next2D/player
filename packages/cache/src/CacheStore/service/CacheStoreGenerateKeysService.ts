@@ -11,7 +11,7 @@
  */
 export const execute = (x_scale: number, y_scale: number, alpha: number): number =>
 {
-    const values = [x_scale * 10000, y_scale * 10000];
+    const values = [x_scale * 10, y_scale * 10];
     if (alpha) {
         values.push(alpha * 100);
     }

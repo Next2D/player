@@ -32,7 +32,7 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
             xScale = +value.slice(0, index);
         }
 
-        xScale = Math.round(xScale * 10000) / 10000;
+        xScale = Math.round(xScale * 100) / 100;
     }
 
     return 0 > matrix[0] ? xScale * -1 : xScale;
