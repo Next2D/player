@@ -163,12 +163,12 @@ export const execute = (
     const xScale = Math.round(Math.sqrt(
         tMatrix[0] * tMatrix[0]
         + tMatrix[1] * tMatrix[1]
-    ) * 10) / 10;
+    ) * 100) / 100;
 
     const yScale = Math.round(Math.sqrt(
         tMatrix[2] * tMatrix[2]
         + tMatrix[3] * tMatrix[3]
-    ) * 10) / 10;
+    ) * 100) / 100;
 
     if (!shape.isBitmap
         && !shape.cacheKey
