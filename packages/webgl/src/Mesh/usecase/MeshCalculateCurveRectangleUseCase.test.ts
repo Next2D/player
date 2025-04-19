@@ -7,7 +7,6 @@ describe("MeshCalculateCurveRectangleUseCase.js method test", () =>
     it("test case", () =>
     {
         const paths = execute({ x: 90, y: 120 }, { x: 91, y: 30 }, { x: 210, y: 100 }, 3);
-        console.log(paths);
         expect(paths).toEqual([
             92.99981483195982,  120.03333127591067, false,              
             93.05847547276832, 117.3240110485681,  true,

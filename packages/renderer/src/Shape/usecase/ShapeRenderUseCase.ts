@@ -39,15 +39,15 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const uniqueKey = `${render_queue[index++]}`;
     const cacheKey  = render_queue[index++];
 
-    const xScale = Math.round(Math.sqrt(
+    const xScale = Math.sqrt(
         matrix[0] * matrix[0]
         + matrix[1] * matrix[1]
-    ) * 10) / 10;
+    );
 
-    const yScale = Math.round(Math.sqrt(
+    const yScale = Math.sqrt(
         matrix[2] * matrix[2]
         + matrix[3] * matrix[3]
-    ) * 10) / 10;
+    );
 
     let node: Node;
     const hasCache = render_queue[index++];
@@ -205,14 +205,8 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const radianY = Math.atan2(-matrix[2], matrix[3]);
         if (radianX || radianY) {
 
-            const tx = xMin * Math.sqrt(
-                matrix[0] * matrix[0]
-                + matrix[1] * matrix[1]
-            );
-            const ty = yMin * Math.sqrt(
-                matrix[2] * matrix[2]
-                + matrix[3] * matrix[3]
-            );
+            const tx = xMin * xScale;
+            const ty = yMin * yScale;
 
             const cosX = Math.cos(radianX);
             const sinX = Math.sin(radianX);

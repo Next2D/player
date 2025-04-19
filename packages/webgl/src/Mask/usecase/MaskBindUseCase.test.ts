@@ -47,7 +47,6 @@ describe("MaskBindUseCase.js method test", () =>
                 "$gl": {
                     "disable": vi.fn((cap) =>
                     {
-                        console.log(cap);
                         switch (cap) {
                             case "STENCIL_TEST":
                             case "SCISSOR_TEST":

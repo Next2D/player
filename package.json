@@ -1,6 +1,6 @@
 {
   "name": "@next2d/player",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Experience the fast and beautiful anti-aliased rendering of WebGL. You can create rich, interactive graphics, cross-platform applications and games without worrying about browser or device compatibility.",
   "author": "Toshiyuki Ienaga<ienaga@next2d.app> (https://github.com/ienaga/)",
   "license": "MIT",
@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.24.0",
+    "@eslint/js": "^9.25.0",
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^0.4.4",
@@ -55,7 +55,7 @@
     "@typescript-eslint/eslint-plugin": "^8.30.1",
     "@typescript-eslint/parser": "^8.30.1",
     "@vitest/web-worker": "^3.1.1",
-    "eslint": "^9.24.0",
+    "eslint": "^9.25.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.0.0",
     "jsdom": "^26.1.0",
