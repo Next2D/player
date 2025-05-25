@@ -24,5 +24,5 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
         ? display_object.$matrix.rawData
         : displayObjectGetRawMatrixUseCase(display_object);
 
-    return matrix ? Math.atan2(matrix[1], matrix[0]) * $Rad2Deg : 0;
+    return matrix ? Math.atan2(matrix[1], Math.abs(matrix[0])) * $Rad2Deg : 0;
 };

@@ -34,4 +34,13 @@ describe("DisplayObjectGetRotationUseCase.js test", () =>
         };
         expect(execute(displayObject)).toBe(45);
     });
+
+    it("execute test case4", () =>
+    {
+        const displayObject = new DisplayObject();
+        displayObject.placeObject = {
+            matrix: [-1, 0, 0, 1, 0, 0]
+        };
+        expect(execute(displayObject)).toBe(0);
+    });
 });
