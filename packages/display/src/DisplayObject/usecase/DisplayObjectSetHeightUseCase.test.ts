@@ -94,7 +94,7 @@ describe("DisplayObjectSetHeightUseCase.js test", () =>
         expect(rawData[0]).toBe(1);
         expect(rawData[1]).toBe(0);
         expect(rawData[2]).toBe(0);
-        expect(rawData[3]).toBe(0.33000001311302185);
+        expect(rawData[3]).toBe(0.3333333432674408);
         expect(rawData[4]).toBe(0);
         expect(rawData[5]).toBe(0);
     });

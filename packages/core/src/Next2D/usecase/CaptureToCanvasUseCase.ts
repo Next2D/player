@@ -46,9 +46,8 @@ export const execute = async <D extends DisplayObject> (
         ? opstions.colorTransform.rawData
         : $COLOR_ARRAY_IDENTITY;
 
-    const rectangle = display_object.getBounds();
     const translateMatrix = new Float32Array([
-        1, 0, 0, 1, -rectangle.x, -rectangle.y
+        1, 0, 0, 1, -display_object.width / 2, -display_object.height / 2
     ]);
 
     const tMatrix = opstions && opstions.matrix
@@ -67,6 +66,9 @@ export const execute = async <D extends DisplayObject> (
     if (width <= 0 || height <= 0) {
         return transferredCanvas;
     }
+
+    tMatrix[4] += width / 2;
+    tMatrix[5] += height / 2;
 
     // resize canvas
     transferredCanvas.width  = width;

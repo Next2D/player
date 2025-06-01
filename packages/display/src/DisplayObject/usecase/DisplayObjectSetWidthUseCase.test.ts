@@ -91,7 +91,7 @@ describe("DisplayObjectSetWidthUseCase.js test", () =>
             throw new Error("rawData is null");
         }
 
-        expect(rawData[0]).toBe(0.44999998807907104);
+        expect(rawData[0]).toBe(0.4545454680919647);
         expect(rawData[1]).toBe(0);
         expect(rawData[2]).toBe(0);
         expect(rawData[3]).toBe(1);
