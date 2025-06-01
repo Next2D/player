@@ -18,16 +18,8 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_y: num
 {
     scale_y = $clamp(scale_y, -Number.MAX_VALUE, Number.MAX_VALUE, 1);
 
-    if (!Number.isInteger(scale_y)) {
-        const value: string = scale_y.toString();
-        const index: number = value.indexOf("e");
-        if (index !== -1) {
-            scale_y = +value.slice(0, index);
-        }
-        scale_y = Math.round(scale_y * 100) / 100;
-    }
-
-    if (display_object.$scaleY === scale_y) {
+    const scaleY = Math.round(scale_y * 10000) / 10000;
+    if (display_object.$scaleY === scaleY) {
         return ;
     }
 
@@ -54,6 +46,6 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_y: num
 
     }
 
-    display_object.$scaleY = scale_y;
+    display_object.$scaleY = scaleY;
     displayObjectApplyChangesService(display_object);
 };

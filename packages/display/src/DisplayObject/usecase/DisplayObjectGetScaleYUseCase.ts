@@ -20,19 +20,10 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
         return 1;
     }
 
-    let yScale = Math.sqrt(
+    const yScale = Math.round(Math.sqrt(
         matrix[2] * matrix[2]
         + matrix[3] * matrix[3]
-    );
+    ) * 10000) / 10000;
 
-    if (!Number.isInteger(yScale)) {
-        const value: string = yScale.toString();
-        const index: number = value.indexOf("e");
-        if (index !== -1) {
-            yScale = +value.slice(0, index);
-        }
-        yScale = Math.round(yScale * 100) / 100;
-    }
-
-    return 0 > matrix[0] ? yScale * -1 : yScale;
+    return 0 > matrix[3] ? yScale * -1 : yScale;
 };
