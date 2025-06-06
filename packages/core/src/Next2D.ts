@@ -200,6 +200,6 @@ export class Next2D
         display_object: D,
         opstions: ICaptureOptions | null = null
     ): Promise<HTMLCanvasElement> {
-        return captureToCanvasUseCase(display_object, opstions);
+        return await captureToCanvasUseCase(display_object, opstions);
     }
 }
