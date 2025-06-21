@@ -20,8 +20,6 @@ import { execute as textFieldGenerateRenderQueueUseCase } from "../../TextField/
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
  * @param  {number} renderer_height
- * @param  {number} point_x
- * @param  {number} point_y
  * @return {void}
  * @method
  * @protected
@@ -32,9 +30,7 @@ export const execute = <D extends DisplayObject> (
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
-    renderer_height: number,
-    point_x: number,
-    point_y: number
+    renderer_height: number
 ): void => {
 
     renderQueue.push(stage.backgroundColor);
@@ -48,9 +44,7 @@ export const execute = <D extends DisplayObject> (
                 matrix,
                 color_transform,
                 renderer_width,
-                renderer_height,
-                point_x,
-                point_y
+                renderer_height
             );
             break;
 
@@ -60,9 +54,7 @@ export const execute = <D extends DisplayObject> (
                 matrix,
                 color_transform,
                 renderer_width,
-                renderer_height,
-                point_x,
-                point_y
+                renderer_height
             );
             break;
 
@@ -72,9 +64,7 @@ export const execute = <D extends DisplayObject> (
                 matrix,
                 color_transform,
                 renderer_width,
-                renderer_height,
-                point_x,
-                point_y
+                renderer_height
             );
             break;
 
@@ -85,9 +75,7 @@ export const execute = <D extends DisplayObject> (
                 matrix,
                 color_transform,
                 renderer_width,
-                renderer_height,
-                point_x,
-                point_y
+                renderer_height
             );
             break;
 
