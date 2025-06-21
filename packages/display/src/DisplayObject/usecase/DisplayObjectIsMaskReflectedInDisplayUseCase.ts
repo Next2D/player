@@ -26,9 +26,7 @@ export const execute = <D extends DisplayObject>(
     display_object: D,
     matrix: Float32Array,
     renderer_width: number,
-    renderer_height: number,
-    point_x: number,
-    point_y: number
+    renderer_height: number
 ): Float32Array | null => {
 
     let bounds: Float32Array | null = null;
@@ -81,8 +79,8 @@ export const execute = <D extends DisplayObject>(
         return null;
     }
 
-    if (point_x > xMin + width
-        || point_y > yMin + height
+    if (0 > xMin + width
+        || 0 > yMin + height
         || xMin > renderer_width
         || yMin > renderer_height
     ) {

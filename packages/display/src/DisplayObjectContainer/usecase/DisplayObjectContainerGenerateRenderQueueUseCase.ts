@@ -31,8 +31,6 @@ import {
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
  * @param  {number} renderer_height
- * @param  {number} point_x
- * @param  {number} point_y
  * @return {void}
  * @method
  * @private
@@ -43,9 +41,7 @@ export const execute = <P extends DisplayObjectContainer>(
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
-    renderer_height: number,
-    point_x: number,
-    point_y: number
+    renderer_height: number
 ): void => {
 
     if (!display_object_container.visible) {
@@ -107,9 +103,7 @@ export const execute = <P extends DisplayObjectContainer>(
             maskDisplayObject,
             tMatrix,
             renderer_width,
-            renderer_height,
-            point_x,
-            point_y
+            renderer_height
         );
 
         if (!bounds) {
@@ -175,9 +169,7 @@ export const execute = <P extends DisplayObjectContainer>(
                 child,
                 tMatrix,
                 renderer_width,
-                renderer_height,
-                point_x,
-                point_y
+                renderer_height
             );
 
             canRenderMask = bounds ? true : false;
@@ -222,9 +214,7 @@ export const execute = <P extends DisplayObjectContainer>(
                     tMatrix,
                     tColorTransform,
                     renderer_width,
-                    renderer_height,
-                    point_x,
-                    point_y
+                    renderer_height
                 );
                 break;
 
@@ -234,9 +224,7 @@ export const execute = <P extends DisplayObjectContainer>(
                     tMatrix,
                     tColorTransform,
                     renderer_width,
-                    renderer_height,
-                    point_x,
-                    point_y
+                    renderer_height
                 );
                 break;
 
@@ -246,9 +234,7 @@ export const execute = <P extends DisplayObjectContainer>(
                     tMatrix,
                     tColorTransform,
                     renderer_width,
-                    renderer_height,
-                    point_x,
-                    point_y
+                    renderer_height
                 );
                 break;
 
@@ -259,9 +245,7 @@ export const execute = <P extends DisplayObjectContainer>(
                     tMatrix,
                     tColorTransform,
                     renderer_width,
-                    renderer_height,
-                    point_x,
-                    point_y
+                    renderer_height
                 );
                 break;
 

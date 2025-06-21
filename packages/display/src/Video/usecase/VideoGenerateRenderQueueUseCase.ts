@@ -29,8 +29,6 @@ import {
  * @param  {Float32Array} color_transform
  * @param  {number} renderer_width
  * @param  {number} renderer_height
- * @param  {number} point_x
- * @param  {number} point_y
  * @return {void}
  * @method
  * @protected
@@ -41,9 +39,7 @@ export const execute = (
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
-    renderer_height: number,
-    point_x: number,
-    point_y: number
+    renderer_height: number
 ): void => {
 
     if (!video.visible
@@ -113,8 +109,8 @@ export const execute = (
 
     }
 
-    if (point_x > xMin + width
-        || point_y > yMin + height
+    if (0 > xMin + width
+        || 0 > yMin + height
         || xMin > renderer_width
         || yMin > renderer_height
     ) {
