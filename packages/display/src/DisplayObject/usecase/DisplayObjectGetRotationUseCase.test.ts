@@ -41,6 +41,6 @@ describe("DisplayObjectGetRotationUseCase.js test", () =>
         displayObject.placeObject = {
             matrix: [-1, 0, 0, 1, 0, 0]
         };
-        expect(execute(displayObject)).toBe(0);
+        expect(execute(displayObject)).toBe(180);
     });
 });
