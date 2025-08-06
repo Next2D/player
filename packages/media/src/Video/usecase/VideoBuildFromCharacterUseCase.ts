@@ -25,7 +25,7 @@ export const execute = (video: Video, character: IVideoCharacter): void =>
     video.volume      = character.volume;
 
     video.src = URL.createObjectURL(new Blob(
-        [character.videoData],
+        [character.videoData.buffer as ArrayBuffer],
         { "type": "video/mp4" }
     ));
 };
