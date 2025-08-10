@@ -33,18 +33,26 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_x: num
 
     if (matrix.b === 0 || isNaN(matrix.b)) {
 
-        matrix.a = scale_x;
+        matrix.a = scaleX;
 
     } else {
+        const EPS = 1e-12;
+        const theta = Math.atan2(matrix.b, matrix.a);
 
-        let radianX = Math.atan2(matrix.b, matrix.a);
-        if (radianX === -Math.PI) {
-            radianX = 0;
-        }
+        // 現在の「符号付き scaleX」を推定（a が 0 近傍なら b で判定）
+        const sxAbs = Math.hypot(matrix.a, matrix.b);
+        const signX = (Math.abs(matrix.a) >= EPS ? Math.sign(matrix.a) : Math.sign(matrix.b)) || 1;
+        const sxSigned = sxAbs * signX;
 
-        matrix.b = scale_x * Math.sin(radianX);
-        matrix.a = scale_x * Math.cos(radianX);
+        // 角度正規化：scaleX を「非負」で表せる角度に直す（符号は角度から外す）
+        const thetaPos = sxSigned >= 0 ? theta : theta - Math.PI;
 
+        // ターゲットの符号を角度に載せる
+        const thetaUse = thetaPos + (scaleX < 0 ? Math.PI : 0);
+
+        const use = Math.abs(scaleX);
+        matrix.a = use * Math.cos(thetaUse);
+        matrix.b = use * Math.sin(thetaUse);
     }
 
     display_object.$scaleX = scaleX;
