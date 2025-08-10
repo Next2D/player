@@ -33,17 +33,28 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_y: num
 
     if (matrix.c === 0 || isNaN(matrix.c)) {
 
-        matrix.d = scale_y;
+        matrix.d = scaleY;
 
     } else {
 
-        let radianY = Math.atan2(-matrix.c, matrix.d);
-        if (radianY === -Math.PI) {
-            radianY = 0;
-        }
-        matrix.c = -scale_y * Math.sin(radianY);
-        matrix.d = scale_y  * Math.cos(radianY);
+        const targetAbs = Math.max(0, Math.abs(scaleY));
 
+        const EPS = 1e-12;
+        let theta = Math.atan2(matrix.b, matrix.a);
+        if (matrix.a < 0 || Math.abs(matrix.a) < EPS && matrix.b < 0) {
+            theta -= Math.PI;
+        }
+        if (theta <= -Math.PI) {
+            theta += 2 * Math.PI;
+        }
+        if (theta > Math.PI) {
+            theta -= 2 * Math.PI;
+        }
+
+        const thetaUse = theta + (scaleY < 0 ? Math.PI : 0);
+
+        matrix.c = -targetAbs * Math.sin(thetaUse);
+        matrix.d =  targetAbs * Math.cos(thetaUse);
     }
 
     display_object.$scaleY = scaleY;

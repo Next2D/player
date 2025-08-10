@@ -22,7 +22,7 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
 
     const EPS = 1e-12;
     const signX  = (Math.abs(matrix[0]) >= EPS ? Math.sign(matrix[0]) : Math.sign(matrix[1])) || 1;
-    const xScale = Math.round(Math.hypot(matrix[0], matrix[1]) * 10000) / 10000;
+    const xScale = Math.hypot(matrix[0], matrix[1]);
 
-    return xScale * signX;
+    return Math.round(xScale * signX * 10000) / 10000;
 };
