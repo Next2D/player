@@ -36,18 +36,14 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_x: num
         matrix.a = scaleX;
 
     } else {
-        const EPS = 1e-12;
+        const EPS   = 1e-12;
         const theta = Math.atan2(matrix.b, matrix.a);
 
-        // 現在の「符号付き scaleX」を推定（a が 0 近傍なら b で判定）
         const sxAbs = Math.hypot(matrix.a, matrix.b);
         const signX = (Math.abs(matrix.a) >= EPS ? Math.sign(matrix.a) : Math.sign(matrix.b)) || 1;
+        
         const sxSigned = sxAbs * signX;
-
-        // 角度正規化：scaleX を「非負」で表せる角度に直す（符号は角度から外す）
         const thetaPos = sxSigned >= 0 ? theta : theta - Math.PI;
-
-        // ターゲットの符号を角度に載せる
         const thetaUse = thetaPos + (scaleX < 0 ? Math.PI : 0);
 
         const use = Math.abs(scaleX);

@@ -34,4 +34,15 @@ describe("DisplayObjectGetScaleXUseCase.js test", () =>
         };
         expect(execute(displayObject)).toBe(1);
     });
+
+    it("execute test case4", () =>
+    {
+        const displayObject = new DisplayObject();
+        displayObject.rotation = 286;
+        displayObject.scaleX = -1.17;
+        expect(execute(displayObject)).toBe(-1.17);
+
+        displayObject.scaleX = 0.65;
+        expect(execute(displayObject)).toBe(0.65);
+    });
 });
