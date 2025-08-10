@@ -10,16 +10,16 @@
 <script>
     window.addEventListener("DOMContentLoaded", async () => 
     {
-        // await next2d.load("develop");
+        await next2d.load("develop");
 
-        const root = await next2d.createRootMovieClip(400, 400, 60, {
-            bgColor: "#0000ff"
-        });
+        // const root = await next2d.createRootMovieClip(400, 400, 60, {
+        //     bgColor: "#0000ff"
+        // });
 
-        const { Shape, BitmapData } = next2d.display;
+        // const { Shape, BitmapData } = next2d.display;
         // const { TextField } = next2d.text;
         // const { Video } = next2d.media;
-        const { Event } = next2d.events;
+        // const { Event } = next2d.events;
         // const { Matrix } = next2d.geom;
         // const {
         //     BlurFilter,
@@ -33,19 +33,19 @@
         //     DisplacementMapFilter
         // } = next2d.filters;
 
-        const shape = root.addChild(new Shape());
-        shape.x = 150;
-        shape.y = 150;
+        // const shape = root.addChild(new Shape());
+        // shape.x = 150;
+        // shape.y = 150;
 
-        shape.addEventListener(Event.COMPLETE, () => 
-        {
-            shape.rotation = 190;
-            shape.scaleX = 0.25;
-            shape.scaleY = 0.25;
-            console.log(shape.rotation);
-        });
+        // shape.addEventListener(Event.COMPLETE, () => 
+        // {
+        //     shape.rotation = 190;
+        //     shape.scaleX = 0.25;
+        //     shape.scaleY = 0.25;
+        //     console.log(shape.rotation);
+        // });
 
-        shape.src = "http://localhost:5173/json/image/logo.png";
+        // shape.src = "http://localhost:5173/json/image/logo.png";
 
         // const shape1 = root.addChild(new Shape());
         // shape1.x = 150;
