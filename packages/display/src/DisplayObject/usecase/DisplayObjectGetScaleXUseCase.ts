@@ -20,10 +20,9 @@ export const execute = <D extends DisplayObject>(display_object: D): number =>
         return 1;
     }
 
-    const xScale = Math.round(Math.sqrt(
-        matrix[0] * matrix[0]
-        + matrix[1] * matrix[1]
-    ) * 10000) / 10000;
+    const EPS = 1e-12;
+    const signX  = (Math.abs(matrix[0]) >= EPS ? Math.sign(matrix[0]) : Math.sign(matrix[1])) || 1;
+    const xScale = Math.hypot(matrix[0], matrix[1]);
 
-    return 0 > matrix[0] ? xScale * -1 : xScale;
+    return Math.round(xScale * signX * 10000) / 10000;
 };

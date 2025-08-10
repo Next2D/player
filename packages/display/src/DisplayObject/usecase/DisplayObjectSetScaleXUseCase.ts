@@ -33,20 +33,25 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_x: num
 
     if (matrix.b === 0 || isNaN(matrix.b)) {
 
-        matrix.a = scale_x;
+        matrix.a = scaleX;
 
     } else {
+        const EPS   = 1e-12;
+        const theta = Math.atan2(matrix.b, matrix.a);
 
-        let radianX = Math.atan2(matrix.b, matrix.a);
-        if (radianX === -Math.PI) {
-            radianX = 0;
-        }
+        const sxAbs = Math.hypot(matrix.a, matrix.b);
+        const signX = (Math.abs(matrix.a) >= EPS ? Math.sign(matrix.a) : Math.sign(matrix.b)) || 1;
 
-        matrix.b = scale_x * Math.sin(radianX);
-        matrix.a = scale_x * Math.cos(radianX);
+        const sxSigned = sxAbs * signX;
+        const thetaPos = sxSigned >= 0 ? theta : theta - Math.PI;
+        const thetaUse = thetaPos + (scaleX < 0 ? Math.PI : 0);
 
+        const use = Math.abs(scaleX);
+        matrix.a = use * Math.cos(thetaUse);
+        matrix.b = use * Math.sin(thetaUse);
     }
 
-    display_object.$scaleX = scaleX;
+    display_object.$scaleX   = scaleX;
+    display_object.$rotation = null;
     displayObjectApplyChangesService(display_object);
 };
