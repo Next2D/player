@@ -22,7 +22,7 @@ const $Deg2Rad: number = Math.PI / 180;
  */
 export const execute = <D extends DisplayObject>(display_object: D, rotation: number): void =>
 {
-    rotation = $clamp(rotation % 360, 0 - 360, 360, 0);
+    rotation = $clamp(rotation % 360, -360, 360, 0);
     if (display_object.$rotation === rotation) {
         return ;
     }
@@ -66,6 +66,8 @@ export const execute = <D extends DisplayObject>(display_object: D, rotation: nu
         }
     }
 
+    display_object.$scaleX   = null;
+    display_object.$scaleY   = null;
     display_object.$rotation = rotation;
     displayObjectApplyChangesService(display_object);
 };

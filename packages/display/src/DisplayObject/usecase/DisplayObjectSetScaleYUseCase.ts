@@ -57,6 +57,7 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_y: num
         matrix.d =  targetAbs * Math.cos(thetaUse);
     }
 
-    display_object.$scaleY = scaleY;
+    display_object.$scaleY   = scaleY;
+    display_object.$rotation = null;
     displayObjectApplyChangesService(display_object);
 };

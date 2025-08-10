@@ -51,6 +51,7 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_x: num
         matrix.b = use * Math.sin(thetaUse);
     }
 
-    display_object.$scaleX = scaleX;
+    display_object.$scaleX   = scaleX;
+    display_object.$rotation = null;
     displayObjectApplyChangesService(display_object);
 };
