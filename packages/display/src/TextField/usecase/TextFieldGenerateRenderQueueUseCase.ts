@@ -43,7 +43,7 @@ export const execute = (
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
-    renderer_height: number,
+    renderer_height: number
 ): void => {
 
     if (!text_field.visible) {
@@ -52,7 +52,7 @@ export const execute = (
     }
 
     // transformed ColorTransform(tColorTransform)
-    const rawColor = displayObjectGetRawColorTransformUseCase(text_field);
+    const rawColor = displayObjectGetRawColorTransformUseCase(text_field as any);
     const tColorTransform = rawColor
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
@@ -67,7 +67,7 @@ export const execute = (
     }
 
     // transformed matrix(tMatrix)
-    const rawMatrix = displayObjectGetRawMatrixUseCase(text_field);
+    const rawMatrix = displayObjectGetRawMatrixUseCase(text_field as any);
     const tMatrix = rawMatrix
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;

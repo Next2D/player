@@ -41,7 +41,7 @@ export const execute = <D extends DisplayObject>(display_object: D, scale_x: num
 
         const sxAbs = Math.hypot(matrix.a, matrix.b);
         const signX = (Math.abs(matrix.a) >= EPS ? Math.sign(matrix.a) : Math.sign(matrix.b)) || 1;
-        
+
         const sxSigned = sxAbs * signX;
         const thetaPos = sxSigned >= 0 ? theta : theta - Math.PI;
         const thetaUse = thetaPos + (scaleX < 0 ? Math.PI : 0);
