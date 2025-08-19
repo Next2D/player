@@ -28,9 +28,9 @@ export const $vertices: IPath[] = $getArray();
  * @method
  * @public
  */
-export const $getVertices = (stroke: boolean = false): IPath[] =>
+export const $getVertices = (_stroke: boolean = false): IPath[] =>
 {
     // TODO: WebGPU版のパス→頂点配列変換実装
-    // pathCommandPushCurrentPathToVerticesService(stroke);
+    // pathCommandPushCurrentPathToVerticesService(_stroke);
     return $vertices;
 };
