@@ -1,0 +1,1 @@
+export type IPath = Array<number | boolean>;
