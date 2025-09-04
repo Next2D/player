@@ -6,13 +6,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": false,
-    "target": "es6",
-    "module": "es6",
+    "target": "ES2022",
+    "module": "ESNext",
     "lib": [
-      "es6",
-      "dom"
+      "ES2022", "DOM", "DOM.Iterable"
     ],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "baseUrl": "./",
     "outDir": "./dist/",
     "paths": {
