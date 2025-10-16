@@ -53,13 +53,13 @@ void main() {
     vec4 src = texture(u_texture, v_coord);
 
     if (v_mul.x != 1.0 || v_mul.y != 1.0 || v_mul.z != 1.0 || v_mul.w != 1.0
-        || v_add.x != 0.0 || v_add.y != 0.0 || v_add.z != 0.0 || v_add.w != 0.0
+        || v_add.x != 0.0 || v_add.y != 0.0 || v_add.z != 0.0
     ) {
         src.rgb /= max(0.0001, src.a);
         src = clamp(src * v_mul + v_add, 0.0, 1.0);
         src.rgb *= src.a;
     }
-    
+
     o_color = src;
 }`;
 };
