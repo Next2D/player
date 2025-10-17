@@ -8,4 +8,6 @@ export interface IMessage {
     canvas?: OffscreenCanvas;
     devicePixelRatio?: number;
     id?: string;
+    bgColor: number;
+    bgAlpha: number;
 }

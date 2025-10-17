@@ -15,6 +15,8 @@ import { $rendererWorker } from "../../RendererWorker";
 const $message: ICaptureMessage = {
     "command": "capture",
     "buffer": null,
+    "bgColor": 0xffffff,
+    "bgAlpha": 0,
     "width": 0,
     "height": 0,
     "length": 0,
@@ -43,6 +45,9 @@ const $imageBitmaps: ImageBitmap[] = [];
  * @param  {D} display_object
  * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
+ * @param  {HTMLCanvasElement} transferred_canvas
+ * @param  {number} [bg_color=0xffffff]
+ * @param  {number} [bg_alpha=0]
  * @return {Promise<HTMLCanvasElement>}
  * @method
  * @protected
@@ -51,7 +56,9 @@ export const execute = async <D extends DisplayObject> (
     display_object: D,
     matrix: Float32Array,
     color_transform: Float32Array,
-    transferred_canvas: HTMLCanvasElement
+    transferred_canvas: HTMLCanvasElement,
+    bg_color: number = 0xffffff,
+    bg_alpha: number = 0
 ): Promise<HTMLCanvasElement> => {
 
     return await new Promise<HTMLCanvasElement>((resolve): void =>
@@ -69,10 +76,12 @@ export const execute = async <D extends DisplayObject> (
         }
 
         // update buffer
-        $message.buffer = renderQueue.buffer;
-        $message.width  = transferred_canvas.width;
-        $message.height = transferred_canvas.height;
-        $message.length = renderQueue.offset;
+        $message.buffer  = renderQueue.buffer;
+        $message.width   = transferred_canvas.width;
+        $message.height  = transferred_canvas.height;
+        $message.bgColor = bg_color;
+        $message.bgAlpha = bg_alpha;
+        $message.length  = renderQueue.offset;
         $options.push(renderQueue.buffer.buffer);
 
         // postMessage

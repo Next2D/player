@@ -8,4 +8,6 @@ export interface ICaptureOptions {
     colorTransform?: ColorTransform;
     canvas?: HTMLCanvasElement;
     videoSync?: boolean;
+    bgColor?: string | null;
+    bgAlpha?: number | null;
 }
