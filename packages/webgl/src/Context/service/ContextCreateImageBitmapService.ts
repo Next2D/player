@@ -64,9 +64,8 @@ export const execute = async (width: number, height: number): Promise<ImageBitma
         width, height, $gl.RGBA, $gl.UNSIGNED_BYTE, 0
     );
 
-    const sync = $gl.fenceSync($gl.SYNC_GPU_COMMANDS_COMPLETE, 0) as WebGLSync;
-
     // 非同期 readPixels 用 PBO の設定
+    const sync = $gl.fenceSync($gl.SYNC_GPU_COMMANDS_COMPLETE, 0) as WebGLSync;
     await new Promise<void>((resolve): void =>
     {
         const wait = (): void =>
@@ -86,10 +85,6 @@ export const execute = async (width: number, height: number): Promise<ImageBitma
     });
     $gl.bindFramebuffer($gl.FRAMEBUFFER, $readFrameBuffer);
 
-    // 描画用の OffscreenCanvas に pixelsを描画
-    const offscreenCanvas = new OffscreenCanvas(width, height);
-    const context = offscreenCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
-
     // アルファ補正
     for (let idx = 0; idx < pixels.length; idx += 4) {
 
@@ -106,12 +101,10 @@ export const execute = async (width: number, height: number): Promise<ImageBitma
         pixels[idx + 2] = Math.min(255, Math.round(pixels[idx + 2] * f));
     }
 
-    const imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
-    context.putImageData(imageData, 0, 0);
-
     // 反転してImageBitmapを返却
-    return await createImageBitmap(offscreenCanvas, {
+    return await createImageBitmap(new ImageData(new Uint8ClampedArray(pixels), width, height), {
         "imageOrientation": "flipY",
-        "premultiplyAlpha": "none"
+        "premultiplyAlpha": "none",
+        "colorSpaceConversion": "none"
     });
 };
