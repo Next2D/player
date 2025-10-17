@@ -25,8 +25,9 @@ let $byteLength: number = 0;
  * @private
  */
 const $inv: Float32Array = new Float32Array(256);
-$inv[0] = 0;
-for (let a = 1; a < 256; a++) $inv[a] = 255 / a;
+for (let a = 1; a < 256; a++) {
+    $inv[a] = 255 / a;
+}
 
 /**
  * @description OffscreenCanvas に描画して返却
@@ -88,7 +89,7 @@ export const execute = async (width: number, height: number): Promise<ImageBitma
     // 描画用の OffscreenCanvas に pixelsを描画
     const offscreenCanvas = new OffscreenCanvas(width, height);
     const context = offscreenCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
-        
+
     // アルファ補正
     for (let idx = 0; idx < pixels.length; idx += 4) {
 
@@ -98,7 +99,7 @@ export const execute = async (width: number, height: number): Promise<ImageBitma
         if (alpha === 0 || alpha === 255) {
             continue;
         }
-        
+
         const f = $inv[alpha];
         pixels[idx    ] = Math.min(255, Math.round(pixels[idx    ] * f));
         pixels[idx + 1] = Math.min(255, Math.round(pixels[idx + 1] * f));
