@@ -303,7 +303,7 @@ export class Context
         };
 
         // WebTextureの設定
-        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, true);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
         // FrameBufferManagerの初期起動

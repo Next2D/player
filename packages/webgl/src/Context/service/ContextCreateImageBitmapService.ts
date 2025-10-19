@@ -87,7 +87,6 @@ export const execute = async (width: number, height: number): Promise<ImageBitma
 
     // アルファ補正
     for (let idx = 0; idx < pixels.length; idx += 4) {
-
         const alpha = pixels[idx + 3];
 
         // a=0は何もしない / a=255は既にストレートと同等

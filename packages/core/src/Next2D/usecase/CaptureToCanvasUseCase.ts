@@ -105,7 +105,7 @@ export const execute = async <D extends DisplayObject> (
     // draw
     await playerTransferCanvasPostMessageService(
         display_object, tMatrix, tColorTransform, transferredCanvas,
-        opstions && opstions.bgColor ? parseInt(opstions.bgColor.replace("#", ""), 16) : 0xffffff,
+        opstions && opstions.bgColor ? parseInt(opstions.bgColor.replace("#", ""), 16) : 0x000000,
         opstions && opstions.bgAlpha ? opstions.bgAlpha : 0
     );
 

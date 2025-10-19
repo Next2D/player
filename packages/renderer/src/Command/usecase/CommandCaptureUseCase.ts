@@ -22,7 +22,7 @@ export const execute = async (
     render_queue: Float32Array,
     width: number,
     height: number,
-    bg_color: number = 0xffffff,
+    bg_color: number = 0x000000,
     bg_alpha: number = 0,
     image_bitmaps: ImageBitmap[] | null
 ): Promise<ImageBitmap> => {

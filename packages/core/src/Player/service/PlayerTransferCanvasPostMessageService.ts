@@ -46,7 +46,7 @@ const $imageBitmaps: ImageBitmap[] = [];
  * @param  {Float32Array} matrix
  * @param  {Float32Array} color_transform
  * @param  {HTMLCanvasElement} transferred_canvas
- * @param  {number} [bg_color=0xffffff]
+ * @param  {number} [bg_color=0x000000]
  * @param  {number} [bg_alpha=0]
  * @return {Promise<HTMLCanvasElement>}
  * @method
@@ -57,7 +57,7 @@ export const execute = async <D extends DisplayObject> (
     matrix: Float32Array,
     color_transform: Float32Array,
     transferred_canvas: HTMLCanvasElement,
-    bg_color: number = 0xffffff,
+    bg_color: number = 0x000000,
     bg_alpha: number = 0
 ): Promise<HTMLCanvasElement> => {
 
