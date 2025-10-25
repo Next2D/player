@@ -15,18 +15,15 @@ describe("CacheStoreDestroyService.js test", () =>
     it("test case2", () =>
     {
         let state = "";
-        const MockContext = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "canvas": {
-                    "width": 100,
-                    "height": 200
-                },
-                "clearRect": vi.fn(() => { state = "clear" })
-            } as unknown as CanvasRenderingContext2D;
-        });
-
-        const pool = [];
+        const MockContext = vi.fn(function(this: any) {
+            this.canvas = {
+                "width": 100,
+                "height": 200
+            };
+            this.clearRect = vi.fn(() => { state = "clear" });
+        }) as any;
+        
+        const pool: HTMLCanvasElement[] = [];
         const mockContext = new MockContext();
         expect(pool.length).toBe(0);
         expect(state).toBe("");

@@ -24,13 +24,10 @@ describe("SoundProgressEventService.js test", () =>
         expect(total).toBe(0);
 
         // mock event
-        const MockEvent = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "loaded": 1,
-                "total": 10
-            } as unknown as ProgressEvent;
-        });
+        const MockEvent = vi.fn(function(this: any) {
+            this.loaded = 1;
+            this.total = 10;
+        }) as any;
 
         execute(sound, new MockEvent());
 

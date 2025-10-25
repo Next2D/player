@@ -6,26 +6,20 @@ describe("VideoLoadedmetadataEventService.js test", () =>
 {
     it("execute test case1", () =>
     {
-        const MockVideo = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "currentTime": 100,
-                "duration": 0
-            } as unknown as Video;
-        });
+        const MockVideo = vi.fn(function(this: any) {
+            this.currentTime = 100;
+            this.duration = 0;
+        }) as any;
 
         const mockVideo = new MockVideo();
         expect(mockVideo.currentTime).toBe(100);
         expect(mockVideo.duration).toBe(0);
 
-        const MockHTMLVideoElement = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "duration": 100,
-                "videoWidth": 200,
-                "videoHeight": 300
-            } as unknown as HTMLVideoElement;
-        });
+        const MockHTMLVideoElement = vi.fn(function(this: any) {
+            this.duration = 100;
+            this.videoWidth = 200;
+            this.videoHeight = 300;
+        }) as any;
 
         const mockElement = new MockHTMLVideoElement();
         expect(mockElement.duration).toBe(100);

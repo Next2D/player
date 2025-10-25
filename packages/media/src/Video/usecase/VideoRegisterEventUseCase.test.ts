@@ -7,27 +7,21 @@ describe("VideoRegisterEventUseCase.js test", () =>
     it("execute test case1", () =>
     {
         const types: string[] = [];
-        const MockHTMLVideoElement = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "duration": 100,
-                "videoWidth": 200,
-                "videoHeight": 300,
-                "addEventListener": vi.fn((type: string) => {
-                    types.push(type);
-                })
-            } as unknown as HTMLVideoElement;
-        });
+        const MockHTMLVideoElement = vi.fn(function(this: any) {
+            this.duration = 100;
+            this.videoWidth = 200;
+            this.videoHeight = 300;
+            this.addEventListener = vi.fn((type: string) => {
+                types.push(type);
+            });
+        }) as any;
 
         const mockElement = new MockHTMLVideoElement();
 
-        const MockVideo = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "currentTime": 100,
-                "duration": 0
-            } as unknown as Video;
-        });
+        const MockVideo = vi.fn(function(this: any) {
+            this.currentTime = 100;
+            this.duration = 0;
+        }) as any;
 
         const mockVideo = new MockVideo();
 

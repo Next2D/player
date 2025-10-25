@@ -21,3 +21,36 @@ class MockOffscreenCanvas {
 if (typeof globalThis.OffscreenCanvas === "undefined") {
     (globalThis as any).OffscreenCanvas = MockOffscreenCanvas;
 }
+
+class MockWorker {
+    onmessage: ((event: MessageEvent) => void) | null = null;
+    onerror: ((event: ErrorEvent) => void) | null = null;
+    
+    constructor(scriptURL: string | URL, options?: WorkerOptions) {
+        // Mock worker that does nothing
+    }
+    
+    postMessage(message: any, transfer?: Transferable[]): void {
+        // Mock implementation
+    }
+    
+    terminate(): void {
+        // Mock implementation
+    }
+    
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+        // Mock implementation
+    }
+    
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void {
+        // Mock implementation
+    }
+    
+    dispatchEvent(event: Event): boolean {
+        return true;
+    }
+}
+
+if (typeof globalThis.Worker === "undefined") {
+    (globalThis as any).Worker = MockWorker;
+}

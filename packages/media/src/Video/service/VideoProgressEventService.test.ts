@@ -10,26 +10,20 @@ describe("VideoProgressEventService.js test", () =>
         let eventState = "";
         let loaded = 0;
         let total = 0;
-        const MockVideo = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "willTrigger": vi.fn(() => true),
-                "dispatchEvent": vi.fn((event: Next2DProgressEvent) =>
-                {
-                    eventState = event.type;
-                    loaded = event.bytesLoaded;
-                    total = event.bytesTotal;
-                })
-            } as unknown as Video;
-        });
+        const MockVideo = vi.fn(function(this: any) {
+            this.willTrigger = vi.fn(() => true);
+            this.dispatchEvent = vi.fn((event: Next2DProgressEvent) =>
+            {
+                eventState = event.type;
+                loaded = event.bytesLoaded;
+                total = event.bytesTotal;
+            });
+        }) as any;
 
-        const MockProgressEvent = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "loaded": 10,
-                "total": 20
-            } as unknown as ProgressEvent;
-        });
+        const MockProgressEvent = vi.fn(function(this: any) {
+            this.loaded = 10;
+            this.total = 20;
+        }) as any;
 
         expect(eventState).toBe("");
         expect(loaded).toBe(0);

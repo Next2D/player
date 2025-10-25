@@ -16,7 +16,9 @@ vi.mock("@next2d/display", () => {
     };
 
     return {
-        Loader: vi.fn(() => mockLoader),
+        Loader: vi.fn(function() {
+            return mockLoader;
+        }),
         stage: {
             stageWidth: 240,
             stageHeight: 240,

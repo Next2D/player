@@ -11,15 +11,12 @@ describe("VideoPlayEventService.js test", () =>
         let pauseState = "";
         let eventState = "";
         let state = "";
-        const MockVideo = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "pause": vi.fn(() => { pauseState = "pause" }),
-                "loaded": true,
-                "willTrigger": vi.fn(() => true),
-                "dispatchEvent": vi.fn((event: VideoEvent) => { eventState = event.type }),
-            } as unknown as Video;
-        });
+        const MockVideo = vi.fn(function(this: any) {
+            this.pause = vi.fn(() => { pauseState = "pause" });
+            this.loaded = true;
+            this.willTrigger = vi.fn(() => true);
+            this.dispatchEvent = vi.fn((event: VideoEvent) => { eventState = event.type });
+        }) as any;
 
         const mockVideo = new MockVideo();
         expect(pauseState).toBe("");

@@ -9,15 +9,12 @@ describe("VideoCanplaythroughEventService.js test", () =>
     {
         let playState = "stop";
         let eventState = "";
-        const MockVideo = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "autoPlay": true,
-                "play": vi.fn(() => { playState = "play" }),
-                "willTrigger": vi.fn(() => true),
-                "dispatchEvent": vi.fn(() => { eventState = Event.COMPLETE })
-            } as unknown as Video;
-        });
+        const MockVideo = vi.fn(function(this: any) {
+            this.autoPlay = true;
+            this.play = vi.fn(() => { playState = "play" });
+            this.willTrigger = vi.fn(() => true);
+            this.dispatchEvent = vi.fn(() => { eventState = Event.COMPLETE });
+        }) as any;
 
         const mockVideo = new MockVideo();
 
@@ -39,14 +36,11 @@ describe("VideoCanplaythroughEventService.js test", () =>
     it("execute test case2", async () =>
     {
         let eventState = "";
-        const MockVideo = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "autoPlay": false,
-                "willTrigger": vi.fn(() => true),
-                "dispatchEvent": vi.fn(() => { eventState = Event.COMPLETE })
-            } as unknown as Video;
-        });
+        const MockVideo = vi.fn(function(this: any) {
+            this.autoPlay = false;
+            this.willTrigger = vi.fn(() => true);
+            this.dispatchEvent = vi.fn(() => { eventState = Event.COMPLETE });
+        }) as any;
 
         const mockVideo = new MockVideo();
 
