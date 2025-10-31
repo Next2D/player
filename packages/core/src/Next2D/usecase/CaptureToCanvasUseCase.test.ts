@@ -1,7 +1,6 @@
 import { execute } from "./CaptureToCanvasUseCase";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { DisplayObject } from "@next2d/display";
-import { $cacheStore } from "@next2d/cache";
 import { $player } from "../../Player";
 
 vi.mock("@next2d/display", () => ({
