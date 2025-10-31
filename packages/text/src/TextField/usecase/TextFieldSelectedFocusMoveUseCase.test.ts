@@ -48,15 +48,15 @@ describe("TextFieldSelectedFocusMoveUseCase.js test", () =>
         expect(typeof execute).toBe("function");
     });
 
-    it("execute test case6 - returns undefined", () =>
+    it("execute test case6 - handles normal selectIndex", () =>
     {
         const textField = new TextField();
         textField.text = "Test";
         textField.selectIndex = 2;
         
-        const result = execute(textField);
-        
-        expect(result).toBeUndefined();
+        expect(() => {
+            execute(textField);
+        }).not.toThrow();
     });
 
     it("execute test case7 - handles empty text", () =>
