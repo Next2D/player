@@ -1,5 +1,5 @@
 export interface IVertexArrayObject {
-    id: number;
+    id: string;
     resource: WebGLVertexArrayObject;
     vertexBuffer: WebGLBuffer;
     vertexLength: number;

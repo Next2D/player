@@ -7,7 +7,7 @@ export default {
     "input": "./packages/renderer/src/index.ts",
     "output": {
         "file": "./dist/renderer.worker.bundle.js",
-        "format": "iife"
+        "format": "es"
     },
     "plugins": [
         resolve(),

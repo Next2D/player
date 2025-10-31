@@ -52,7 +52,8 @@ import { execute as contextCreateImageBitmapService } from "./Context/service/Co
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
 import {
     $getAtlasAttachmentObject,
-    $clearTransferBounds
+    $clearTransferBounds,
+    $getAtlasTextureObject
 } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
@@ -309,7 +310,7 @@ export class Context
         // FrameBufferManagerの初期起動
         $setReadFrameBuffer(gl);
         $setDrawFrameBuffer(gl);
-        $setAtlasFrameBuffer(gl);
+        $setAtlasFrameBuffer(gl, $getAtlasTextureObject());
         $setBitmapFrameBuffer(gl);
 
         // VertexArrayObjectの初期起動

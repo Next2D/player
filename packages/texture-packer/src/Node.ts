@@ -130,4 +130,22 @@ export class Node
     {
         return nodeDisposeService(this, x, y, width, height);
     }
+
+    /**
+     * @description 新規ノードを生成
+     *              Create a new node
+     * 
+     * @param  {number} index 
+     * @param  {number} x 
+     * @param  {number} y 
+     * @param  {number} w 
+     * @param  {number} h 
+     * @return {Node}
+     * @method
+     * @public
+     */
+    create (index: number, x: number, y: number, w: number, h: number): Node
+    {
+        return new Node(index, x, y, w, h);
+    }
 }

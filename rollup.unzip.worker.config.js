@@ -7,7 +7,7 @@ export default {
     "input": "./packages/display/src/Loader/worker/ZlibInflateWorker.ts",
     "output": {
         "file": "./dist/unzip.worker.bundle.js",
-        "format": "iife"
+        "format": "es"
     },
     "plugins": [
         resolve(),

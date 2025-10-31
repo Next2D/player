@@ -3,25 +3,6 @@ import type { IStrokeVertexArrayObject } from "./interface/IStrokeVertexArrayObj
 import { execute as vertexArrayObjectCreateRectVertexArrayObjectUseCase } from "./VertexArrayObject/usecase/VertexArrayObjectCreateRectVertexArrayObjectUseCase";
 
 /**
- * @type {number}
- * @private
- */
-let $id: number = 0;
-
-/**
- * @description VertexArrayObject管理用のユニークIDを返却
- *              Returns a unique ID for managing VertexArrayObject
- *
- * @return {number}
- * @method
- * @protected
- */
-export const $getId = (): number =>
-{
-    return $id++;
-};
-
-/**
  * @description VertexArrayObjectの再利用のための配列のオブジェクトプール
  *              Object pool of array for reusing VertexArrayObject
  *

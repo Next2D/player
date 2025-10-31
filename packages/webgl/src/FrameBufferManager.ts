@@ -1,5 +1,5 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
-import { $getAtlasTextureObject } from "./AtlasManager";
+import type { ITextureObject } from "./interface/ITextureObject";
 
 /**
  * @description 生成したFrameBufferの管理オブジェクトを配列にプールして再利用します。
@@ -70,20 +70,22 @@ export let $atlasFrameBuffer: WebGLFramebuffer | null = null;
  *              Set the FrameBuffer object for atlas only
  *
  * @param  {WebGL2RenderingContext} gl
+ * @param  {ITextureObject} texture_object
  * @return {void}
  * @method
  * @protected
  */
-export const $setAtlasFrameBuffer = (gl: WebGL2RenderingContext): void =>
-{
+export const $setAtlasFrameBuffer = (
+    gl: WebGL2RenderingContext,
+    texture_object: ITextureObject
+): void => {
+
     $atlasFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
     gl.bindFramebuffer(gl.FRAMEBUFFER, $atlasFrameBuffer);
 
-    const textureObject = $getAtlasTextureObject();
-
     gl.framebufferTexture2D(
         gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-        gl.TEXTURE_2D, textureObject.resource, 0
+        gl.TEXTURE_2D, texture_object.resource, 0
     );
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
