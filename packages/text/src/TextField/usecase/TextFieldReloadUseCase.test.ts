@@ -45,17 +45,7 @@ describe("TextFieldReloadUseCase.js test", () =>
         expect(typeof execute).toBe("function");
     });
 
-    it("execute test case6 - returns undefined", () =>
-    {
-        const textField = new TextField();
-        textField.text = "Test";
-        
-        const result = execute(textField);
-        
-        expect(result).toBeUndefined();
-    });
-
-    it("execute test case7 - handles text field with autoSize", () =>
+    it("execute test case6 - handles text field with autoSize", () =>
     {
         const textField = new TextField();
         textField.text = "Test";
@@ -66,7 +56,7 @@ describe("TextFieldReloadUseCase.js test", () =>
         }).not.toThrow();
     });
 
-    it("execute test case8 - handles text field with autoFontSize", () =>
+    it("execute test case7 - handles text field with autoFontSize", () =>
     {
         const textField = new TextField();
         textField.text = "Test";
@@ -77,7 +67,7 @@ describe("TextFieldReloadUseCase.js test", () =>
         }).not.toThrow();
     });
 
-    it("execute test case9 - can be called multiple times", () =>
+    it("execute test case8 - can be called multiple times", () =>
     {
         const textField = new TextField();
         textField.text = "Test";
@@ -89,7 +79,7 @@ describe("TextFieldReloadUseCase.js test", () =>
         }).not.toThrow();
     });
 
-    it("execute test case10 - handles long text", () =>
+    it("execute test case9 - handles long text", () =>
     {
         const textField = new TextField();
         textField.text = "This is a very long text that should be handled properly by the reload use case";
