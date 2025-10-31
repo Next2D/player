@@ -134,12 +134,12 @@ export class Node
     /**
      * @description 新規ノードを生成
      *              Create a new node
-     * 
-     * @param  {number} index 
-     * @param  {number} x 
-     * @param  {number} y 
-     * @param  {number} w 
-     * @param  {number} h 
+     *
+     * @param  {number} index
+     * @param  {number} x
+     * @param  {number} y
+     * @param  {number} w
+     * @param  {number} h
      * @return {Node}
      * @method
      * @public

@@ -13,7 +13,13 @@ class MockOffscreenCanvas {
         // CanvasRenderingContext2D などをモック
         return {
             // 必要に応じてメソッドを追加
-            "fillRect": (x: number, y: number, w: number, h: number) => {}
+            "fillRect": (x: number, y: number, w: number, h: number) => {},
+            "beginPath": () => {},
+            "moveTo": (x: number, y: number) => {},
+            "lineTo": (x: number, y: number) => {},
+            "quadraticCurveTo": (cpx: number, cpy: number, x: number, y: number) => {},
+            "closePath": () => {},
+            "isPointInPath": (x: number, y: number) => false
         };
     }
 }

@@ -39,6 +39,6 @@ export const $getVertices = (stroke: boolean = false): IPath[] =>
         $vertices.push($currentPath.slice(0));
         $currentPath.length = 0;
     }
-    
+
     return $vertices;
 };
