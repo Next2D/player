@@ -7,10 +7,10 @@ import { execute as playerDoubleClickEventService } from "../../Player/service/P
 import { $hitObject } from "../../CoreUtil";
 
 /**
- * @type {NodeJS.Timeout}
+ * @type {number}
  * @private
  */
-let $timerId: NodeJS.Timeout;
+let $timerId: number;
 
 /**
  * @type {boolean}

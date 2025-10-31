@@ -50,10 +50,10 @@ export class CacheStore
      * @description キャッシュ削除用のタイマーID
      *              Timer ID for cache deletion
      *
-     * @type {NodeJS.Timeout | null}
+     * @type {number | null}
      * @public
      */
-    public $timerId: NodeJS.Timeout | null;
+    public $timerId: number | null;
 
     /**
      * @description キャッシュタイマーの削除フラグ

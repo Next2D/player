@@ -47,14 +47,14 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.38.0",
-    "@rollup/plugin-commonjs": "^28.0.9",
+    "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.3.0",
-    "@types/node": "^24.9.1",
+    "@types/node": "^24.9.2",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
-    "@vitest/web-worker": "^4.0.3",
+    "@vitest/web-worker": "^4.0.5",
     "eslint": "^9.38.0",
     "eslint-plugin-unused-imports": "^4.3.0",
     "globals": "^16.4.0",
@@ -63,7 +63,7 @@
     "tslib": "^2.8.1",
     "typescript": "^5.9.3",
     "vite": "^7.1.12",
-    "vitest": "^4.0.3",
+    "vitest": "^4.0.5",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "peerDependencies": {
