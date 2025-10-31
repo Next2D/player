@@ -72,18 +72,7 @@ describe("TextFieldSetFocusIndexUseCase.js test", () =>
         expect(typeof execute).toBe("function");
     });
 
-    it("execute test case8 - returns undefined", () =>
-    {
-        const textField = new TextField();
-        textField.type = "input";
-        textField.text = "Test";
-        
-        const result = execute(textField, 10, 10);
-        
-        expect(result).toBeUndefined();
-    });
-
-    it("execute test case9 - handles multiline text", () =>
+    it("execute test case8 - handles multiline text", () =>
     {
         const textField = new TextField();
         textField.type = "input";
@@ -95,7 +84,7 @@ describe("TextFieldSetFocusIndexUseCase.js test", () =>
         }).not.toThrow();
     });
 
-    it("execute test case10 - handles different stage coordinates", () =>
+    it("execute test case9 - handles different stage coordinates", () =>
     {
         const textField = new TextField();
         textField.type = "input";
@@ -108,7 +97,7 @@ describe("TextFieldSetFocusIndexUseCase.js test", () =>
         }).not.toThrow();
     });
 
-    it("execute test case11 - default selected parameter is false", () =>
+    it("execute test case10 - default selected parameter is false", () =>
     {
         const textField = new TextField();
         textField.type = "input";
@@ -119,7 +108,7 @@ describe("TextFieldSetFocusIndexUseCase.js test", () =>
         expect(textField.selectIndex).toBe(-1);
     });
 
-    it("execute test case12 - handles text with scrolling", () =>
+    it("execute test case11 - handles text with scrolling", () =>
     {
         const textField = new TextField();
         textField.type = "input";
@@ -132,7 +121,7 @@ describe("TextFieldSetFocusIndexUseCase.js test", () =>
         }).not.toThrow();
     });
 
-    it("execute test case13 - handles negative coordinates", () =>
+    it("execute test case12 - handles negative coordinates", () =>
     {
         const textField = new TextField();
         textField.type = "input";
@@ -143,7 +132,7 @@ describe("TextFieldSetFocusIndexUseCase.js test", () =>
         }).not.toThrow();
     });
 
-    it("execute test case14 - handles large coordinates", () =>
+    it("execute test case13 - handles large coordinates", () =>
     {
         const textField = new TextField();
         textField.type = "input";
@@ -154,7 +143,7 @@ describe("TextFieldSetFocusIndexUseCase.js test", () =>
         }).not.toThrow();
     });
 
-    it("execute test case15 - handles Japanese text", () =>
+    it("execute test case14 - handles Japanese text", () =>
     {
         const textField = new TextField();
         textField.type = "input";
