@@ -12,11 +12,10 @@
       "ES2022", "DOM", "DOM.Iterable"
     ],
     "moduleResolution": "bundler",
-    "baseUrl": "./",
     "outDir": "./dist/",
     "paths": {
       "@next2d/*": [
-        "../packages/*/src"
+        "./packages/*/src"
       ]
     }
   },

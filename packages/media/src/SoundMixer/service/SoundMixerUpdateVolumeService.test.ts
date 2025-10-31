@@ -10,39 +10,33 @@ describe("SoundMixerUpdateVolumeService.js test", () =>
 {
     it("execute test case1", () =>
     {
-        const MockSound = vi.fn().mockImplementation(() =>
-        {
+        const MockSound = vi.fn(function(this: any) {
             let volume = 1;
-            return {
-                get volume (): number
-                {
-                    return volume
+            Object.defineProperty(this, 'volume', {
+                get(): number {
+                    return volume;
                 },
-                set volume(value: number)
-                {
+                set(value: number) {
                     volume = $clamp(value, 0, 1);
                 }
-            } as unknown as Sound;
-        });
+            });
+        }) as any;
 
         const mockSound = new MockSound();
         const playingSounds = $getPlayingSounds();
         playingSounds.push(mockSound);
 
-        const MockVideo = vi.fn().mockImplementation(() =>
-        {
+        const MockVideo = vi.fn(function(this: any) {
             let volume = 1;
-            return {
-                get volume (): number
-                {
-                    return volume
+            Object.defineProperty(this, 'volume', {
+                get(): number {
+                    return volume;
                 },
-                set volume(value: number)
-                {
+                set(value: number) {
                     volume = $clamp(value, 0, 1);
                 }
-            } as unknown as Video;
-        });
+            });
+        }) as any;
 
         const mockVideo = new MockVideo();
         const playingVideos = $getPlayingVideos();

@@ -20,13 +20,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    "baseUrl": ".",
     "outDir": "./dist",
-    "paths": {
-      "@next2d/*": [
-        "packages/*/src"
-      ]
-    },
     
     "types": [
       "vitest/globals"

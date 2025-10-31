@@ -104,6 +104,8 @@ export class CommandController
                             object.buffer.subarray(0, object.length),
                             object.width as number,
                             object.height as number,
+                            object.bgColor as number,
+                            object.bgAlpha as number,
                             object.imageBitmaps as ImageBitmap[] | null
                         );
 

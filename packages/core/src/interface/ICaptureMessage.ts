@@ -4,5 +4,7 @@ export interface ICaptureMessage {
     width: number;
     height: number;
     length: number;
+    bgColor: number;
+    bgAlpha: number;
     imageBitmaps: ImageBitmap[] | null;
 }

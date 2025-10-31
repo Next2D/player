@@ -11,6 +11,8 @@ import { $context } from "../../RendererUtil";
  * @param  {Float32Array} render_queue
  * @param  {number} width
  * @param  {number} height
+ * @param  {number} [bg_color=0xffffff]
+ * @param  {number} [bg_alpha=0]
  * @param  {ImageBitmap[]} [image_bitmaps=null]
  * @return {Promise<ImageBitmap>}
  * @method
@@ -20,6 +22,8 @@ export const execute = async (
     render_queue: Float32Array,
     width: number,
     height: number,
+    bg_color: number = 0x000000,
+    bg_alpha: number = 0,
     image_bitmaps: ImageBitmap[] | null
 ): Promise<ImageBitmap> => {
 
@@ -31,6 +35,12 @@ export const execute = async (
     // reset
     $context.reset();
     $context.setTransform(1, 0, 0, 1, 0, 0);
+    $context.updateBackgroundColor(
+        bg_color >> 16 & 0xff / 255,
+        bg_color >> 8 & 0xff / 255,
+        bg_color & 0xff / 255,
+        bg_alpha
+    );
     $context.fillBackgroundColor();
 
     while (render_queue.length > index) {

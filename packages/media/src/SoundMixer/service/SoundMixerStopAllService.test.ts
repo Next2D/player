@@ -9,23 +9,17 @@ describe("SoundMixerStopAllService.js test", () =>
     it("execute test case1", () =>
     {
         let soundState = "";
-        const MockSound = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "stop": vi.fn(() => { soundState = "stop" })
-            } as unknown as Sound;
-        });
+        const MockSound = vi.fn(function(this: any) {
+            this.stop = vi.fn(() => { soundState = "stop" });
+        }) as any;
 
         const playingSounds = $getPlayingSounds();
         playingSounds.push(new MockSound());
 
         let videoState = "";
-        const MockVideo = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "pause": vi.fn(() => { videoState = "pause" })
-            } as unknown as Video;
-        });
+        const MockVideo = vi.fn(function(this: any) {
+            this.pause = vi.fn(() => { videoState = "pause" });
+        }) as any;
 
         const playingVideos = $getPlayingVideos();
         playingVideos.push(new MockVideo());

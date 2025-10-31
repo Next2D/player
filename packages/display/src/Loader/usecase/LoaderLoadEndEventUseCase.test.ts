@@ -55,18 +55,15 @@ describe("LoaderLoadEndEventUseCase.js test", () =>
         };
 
         // mock event
-        const MockEvent = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "target": {
-                    "status": 200,
-                    "statusText": "OK",
-                    "response": object
-                },
-                "loaded": 1,
-                "total": 10
-            } as unknown as ProgressEvent;
-        });
+        const MockEvent = vi.fn(function(this: any) {
+            this.target = {
+                "status": 200,
+                "statusText": "OK",
+                "response": object
+            };
+            this.loaded = 1;
+            this.total = 10;
+        }) as any;
 
         await execute(loader, new MockEvent());
 
@@ -89,17 +86,14 @@ describe("LoaderLoadEndEventUseCase.js test", () =>
         expect(openState).toBe("");
 
         // mock event
-        const MockEvent = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "target": {
-                    "status": 404,
-                    "statusText": "Not Found"
-                },
-                "loaded": 1,
-                "total": 10
-            } as unknown as ProgressEvent;
-        });
+        const MockEvent = vi.fn(function(this: any) {
+            this.target = {
+                "status": 404,
+                "statusText": "Not Found"
+            };
+            this.loaded = 1;
+            this.total = 10;
+        }) as any;
 
         execute(loader, new MockEvent());
 

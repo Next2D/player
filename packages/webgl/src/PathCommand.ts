@@ -1,5 +1,4 @@
 import type { IPath } from "./interface/IPath";
-import { execute as pathCommandPushCurrentPathToVerticesService } from "./PathCommand/service/PathCommandPushCurrentPathToVerticesService";
 import { $getArray } from "./WebGLUtil";
 
 /**
@@ -31,6 +30,15 @@ export const $vertices: IPath[] = $getArray();
  */
 export const $getVertices = (stroke: boolean = false): IPath[] =>
 {
-    pathCommandPushCurrentPathToVerticesService(stroke);
+    const minVertices = stroke ? 4 : 10;
+    if ($currentPath.length < minVertices) {
+        $currentPath.length = 0;
+    }
+
+    if ($currentPath.length) {
+        $vertices.push($currentPath.slice(0));
+        $currentPath.length = 0;
+    }
+
     return $vertices;
 };

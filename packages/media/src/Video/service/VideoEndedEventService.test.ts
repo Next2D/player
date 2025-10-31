@@ -9,16 +9,13 @@ describe("VideoEndedEventService.js test", () =>
     {
         let eventType = "";
         let pauseState = "";
-        const MockVideo = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "willTrigger": vi.fn(() => true),
-                "dispatchEvent": vi.fn((event: VideoEvent) => { eventType = event.type }),
-                "loop": true,
-                "pause": vi.fn(() => { pauseState = "pause" }),
-                "currentTime": 100
-            } as unknown as Video;
-        });
+        const MockVideo = vi.fn(function(this: any) {
+            this.willTrigger = vi.fn(() => true);
+            this.dispatchEvent = vi.fn((event: VideoEvent) => { eventType = event.type });
+            this.loop = true;
+            this.pause = vi.fn(() => { pauseState = "pause" });
+            this.currentTime = 100;
+        }) as any;
 
         expect(eventType).toBe("");
         expect(pauseState).toBe("");
@@ -37,16 +34,13 @@ describe("VideoEndedEventService.js test", () =>
     {
         let eventType = "";
         let pauseState = "";
-        const MockVideo = vi.fn().mockImplementation(() =>
-        {
-            return {
-                "willTrigger": vi.fn(() => true),
-                "dispatchEvent": vi.fn((event: VideoEvent) => { eventType = event.type }),
-                "loop": false,
-                "pause": vi.fn(() => { pauseState = "pause" }),
-                "currentTime": 100
-            } as unknown as Video;
-        });
+        const MockVideo = vi.fn(function(this: any) {
+            this.willTrigger = vi.fn(() => true);
+            this.dispatchEvent = vi.fn((event: VideoEvent) => { eventType = event.type });
+            this.loop = false;
+            this.pause = vi.fn(() => { pauseState = "pause" });
+            this.currentTime = 100;
+        }) as any;
 
         expect(eventType).toBe("");
         expect(pauseState).toBe("");

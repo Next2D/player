@@ -1,4 +1,4 @@
-import { Node } from "../../Node";
+import type { Node } from "../../Node";
 
 /**
  * @description ノード挿入ロジック
@@ -31,11 +31,11 @@ export const execute = (node: Node, width: number, height: number): Node | null 
     const dh = node.h - height;
 
     if (dw > dh) {
-        node.left  = new Node(node.index, node.x, node.y, width, height);
-        node.right = new Node(node.index, node.x + width + 1, node.y, dw - 1, node.h);
+        node.left  = node.create(node.index, node.x, node.y, width, height);
+        node.right = node.create(node.index, node.x + width + 1, node.y, dw - 1, node.h);
     } else {
-        node.left  = new Node(node.index, node.x, node.y, node.w, height);
-        node.right = new Node(node.index, node.x, node.y + height + 1, node.w, dh - 1);
+        node.left  = node.create(node.index, node.x, node.y, node.w, height);
+        node.right = node.create(node.index, node.x, node.y + height + 1, node.w, dh - 1);
     }
 
     node.used = true;

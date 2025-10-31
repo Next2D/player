@@ -7,15 +7,15 @@ describe("PlayerReadyCompleteUseCase.js test", () =>
 {
     it("execute test case", () =>
     {
-        stage.changed = false;
+        stage.changed = true;
         $player.stopFlag = true;
         
-        expect(stage.changed).toBe(false);
+        expect(stage.changed).toBe(true);
         expect($player.stopFlag).toBe(true);
 
         execute();
 
-        expect(stage.changed).toBe(true);
+        expect(stage.changed).toBe(false);
         expect($player.stopFlag).toBe(false);
     });
 });

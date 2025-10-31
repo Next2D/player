@@ -12,19 +12,6 @@ float isInside(in vec2 uv) {
 };
 
 /**
- * @return {string}
- * @method
- * @static
- */
-export const STATEMENT_INSTANCED_COLOR_TRANSFORM_ON = (): string =>
-{
-    return `
-    src.rgb /= max(0.0001, src.a);
-    src = clamp(src * mul + add, 0.0, 1.0);
-    src.rgb *= src.a;`;
-};
-
-/**
  * @param  {number} mediump_index
  * @return {string}
  * @method
@@ -35,5 +22,13 @@ export const STATEMENT_COLOR_TRANSFORM_ON = (mediump_index: number): string =>
     return `
     vec4 mul = u_mediump[${mediump_index}];
     vec4 add = u_mediump[${mediump_index + 1}];
-${STATEMENT_INSTANCED_COLOR_TRANSFORM_ON()}`;
+
+    if (mul.x != 1.0 || mul.y != 1.0 || mul.z != 1.0 || mul.w != 1.0
+        || add.x != 0.0 || add.y != 0.0 || add.z != 0.0
+    ) {
+        src.rgb /= max(0.0001, src.a);
+        src = clamp(src * mul + add, 0.0, 1.0);
+        src.rgb *= src.a;
+    }
+`;
 };

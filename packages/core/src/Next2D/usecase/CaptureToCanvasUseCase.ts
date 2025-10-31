@@ -81,9 +81,9 @@ export const execute = async <D extends DisplayObject> (
 
     // resize
     let isResize = false;
-    const cacheWidth  = $player.rendererWidth;
-    const cacheHeight = $player.rendererHeight;
-    const cacheScale  = $player.rendererScale;
+    const cacheWidth   = $player.rendererWidth;
+    const cacheHeight  = $player.rendererHeight;
+    const cacheScale   = $player.rendererScale;
     if (width > cacheWidth || height > cacheHeight) {
 
         isResize = true;
@@ -104,7 +104,9 @@ export const execute = async <D extends DisplayObject> (
 
     // draw
     await playerTransferCanvasPostMessageService(
-        display_object, tMatrix, tColorTransform, transferredCanvas
+        display_object, tMatrix, tColorTransform, transferredCanvas,
+        opstions && opstions.bgColor ? parseInt(opstions.bgColor.replace("#", ""), 16) : 0x000000,
+        opstions && opstions.bgAlpha ? opstions.bgAlpha : 0
     );
 
     // restore
