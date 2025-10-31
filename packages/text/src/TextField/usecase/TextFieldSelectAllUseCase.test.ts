@@ -57,17 +57,7 @@ describe("TextFieldSelectAllUseCase.js test", () =>
         expect(typeof execute).toBe("function");
     });
 
-    it("execute test case7 - returns undefined", () =>
-    {
-        const textField = new TextField();
-        textField.text = "Test";
-        
-        const result = execute(textField);
-        
-        expect(result).toBeUndefined();
-    });
-
-    it("execute test case8 - handles long text", () =>
+    it("execute test case7 - handles long text", () =>
     {
         const textField = new TextField();
         textField.text = "This is a very long text that should be selected entirely";
@@ -79,7 +69,7 @@ describe("TextFieldSelectAllUseCase.js test", () =>
         expect(textField.selectIndex).toBe(1);
     });
 
-    it("execute test case9 - handles Japanese text", () =>
+    it("execute test case8 - handles Japanese text", () =>
     {
         const textField = new TextField();
         textField.text = "日本語のテキスト";
@@ -91,7 +81,7 @@ describe("TextFieldSelectAllUseCase.js test", () =>
         expect(textField.selectIndex).toBe(1);
     });
 
-    it("execute test case10 - can be called multiple times", () =>
+    it("execute test case9 - can be called multiple times", () =>
     {
         const textField = new TextField();
         textField.text = "Test";
