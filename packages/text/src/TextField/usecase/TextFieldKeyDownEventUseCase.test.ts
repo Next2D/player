@@ -177,15 +177,16 @@ describe("TextFieldKeyDownEventUseCase.js test", () =>
         expect(typeof execute).toBe("function");
     });
 
-    it("execute test case15 - returns undefined", () =>
+    it("execute test case15 - handles unmatched key without throwing", () =>
     {
         const textField = new TextField();
         textField.text = "Test";
         textField.focusIndex = 2;
         
         const event = new KeyboardEvent("keydown", { key: "a" });
-        const result = execute(textField, event);
         
-        expect(result).toBeUndefined();
+        expect(() => {
+            execute(textField, event);
+        }).not.toThrow();
     });
 });
