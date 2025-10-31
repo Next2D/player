@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { Sprite } from "@next2d/display";
 
 vi.mock("@next2d/display", () => ({
