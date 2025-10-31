@@ -2,32 +2,86 @@ import { execute } from "./BlnedDrawDisplayObjectUseCase";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Node } from "@next2d/texture-packer";
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
-import { $context } from "../../WebGLUtil";
 import * as BlendModule from "../../Blend";
 import * as AtlasManagerModule from "../../AtlasManager";
 import { renderQueue } from "@next2d/render-queue";
 
-vi.mock("../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService");
-vi.mock("../../Shader/Variants/Blend/service/VariantsBlendDrawShaderService");
-vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromNodeUseCase");
-vi.mock("../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase");
-vi.mock("../../TextureManager/usecase/TextureManagerBind0UseCase");
-vi.mock("../../TextureManager/usecase/TextureManagerBind01UseCase");
-vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromBoundsUseCase");
-vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase");
-vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase");
-vi.mock("../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase");
-vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerTransferTextureFromRectUseCase");
-vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetBlendWithColorTransformUniformService");
-vi.mock("../../Shader/Variants/Blend/service/VariantsBlendMatrixTextureShaderService");
-vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetMatrixTextureUniformService");
+vi.mock("../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService", () => ({
+    execute: vi.fn(() => ({ count: 0 }))
+}));
+vi.mock("../../Shader/Variants/Blend/service/VariantsBlendDrawShaderService", () => ({
+    execute: vi.fn(() => ({}))
+}));
+vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromNodeUseCase", () => ({
+    execute: vi.fn(() => ({ width: 100, height: 100 }))
+}));
+vi.mock("../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../TextureManager/usecase/TextureManagerBind0UseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../TextureManager/usecase/TextureManagerBind01UseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromBoundsUseCase", () => ({
+    execute: vi.fn(() => ({ width: 100, height: 100 }))
+}));
+vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase", () => ({
+    execute: vi.fn(() => ({ texture: { width: 100, height: 100 } }))
+}));
+vi.mock("../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerTransferTextureFromRectUseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetBlendWithColorTransformUniformService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Shader/Variants/Blend/service/VariantsBlendMatrixTextureShaderService", () => ({
+    execute: vi.fn(() => ({}))
+}));
+vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetMatrixTextureUniformService", () => ({
+    execute: vi.fn()
+}));
+
+vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $context: {
+            globalCompositeOperation: "normal",
+            globalAlpha: 1.0,
+            $matrix: new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+            currentAttachmentObject: null,
+            drawArraysInstanced: vi.fn(),
+            bind: vi.fn(),
+            save: vi.fn(),
+            restore: vi.fn(),
+            setTransform: vi.fn(),
+            reset: vi.fn()
+        },
+        $getViewportWidth: vi.fn(() => 800),
+        $getViewportHeight: vi.fn(() => 600),
+        $getFloat32Array6: vi.fn((...args: number[]) => new Float32Array(args)),
+        $RENDER_MAX_SIZE: 4096
+    };
+});
 
 describe("BlnedDrawDisplayObjectUseCase method test", () => {
     let mockNode: Node;
     let mockColorTransform: Float32Array;
     let mockShaderInstancedManager: any;
+    let $context: any;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        const WebGLUtil = await import("../../WebGLUtil");
+        $context = WebGLUtil.$context;
+
         mockNode = {
             index: 0,
             x: 0,

@@ -2,29 +2,75 @@ import { execute } from "./BlendDrawFilterToMainUseCase";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { ITextureObject } from "../../interface/ITextureObject";
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
-import { $context } from "../../WebGLUtil";
 
-vi.mock("./BlendOperationUseCase");
-vi.mock("../../TextureManager/usecase/TextureManagerBind0UseCase");
-vi.mock("../../Shader/Variants/Blend/service/VariantsBlendMatrixTextureShaderService");
-vi.mock("../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase");
-vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromBoundsUseCase");
-vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase");
-vi.mock("../../TextureManager/usecase/TextureManagerBind01UseCase");
-vi.mock("../../Shader/Variants/Blend/service/VariantsBlendDrawShaderService");
-vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetBlendWithColorTransformUniformService");
-vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetMatrixTextureWithColorTransformUniformService");
-vi.mock("../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase");
-vi.mock("../service/BlendResetService");
-vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerTransferTextureFromRectUseCase");
-vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase");
+vi.mock("./BlendOperationUseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../TextureManager/usecase/TextureManagerBind0UseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Shader/Variants/Blend/service/VariantsBlendMatrixTextureShaderService", () => ({
+    execute: vi.fn(() => ({}))
+}));
+vi.mock("../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerGetTextureFromBoundsUseCase", () => ({
+    execute: vi.fn(() => ({ width: 100, height: 100 }))
+}));
+vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase", () => ({
+    execute: vi.fn(() => ({ texture: { width: 100, height: 100 } }))
+}));
+vi.mock("../../TextureManager/usecase/TextureManagerBind01UseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Shader/Variants/Blend/service/VariantsBlendDrawShaderService", () => ({
+    execute: vi.fn(() => ({}))
+}));
+vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetBlendWithColorTransformUniformService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetMatrixTextureWithColorTransformUniformService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../service/BlendResetService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerTransferTextureFromRectUseCase", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../FrameBufferManager/usecase/FrameBufferManagerReleaseAttachmentObjectUseCase", () => ({
+    execute: vi.fn()
+}));
+
+vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $context: {
+            globalCompositeOperation: "normal",
+            currentAttachmentObject: null,
+            $mainAttachmentObject: null,
+            bind: vi.fn(),
+            setTransform: vi.fn(),
+            reset: vi.fn()
+        }
+    };
+});
 
 describe("BlendDrawFilterToMainUseCase method test", () => {
     let mockTextureObject: ITextureObject;
     let mockAttachmentObject: IAttachmentObject;
     let mockColorTransform: Float32Array;
+    let $context: any;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        const WebGLUtil = await import("../../WebGLUtil");
+        $context = WebGLUtil.$context;
+
         mockTextureObject = {
             width: 100,
             height: 100,

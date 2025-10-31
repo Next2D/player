@@ -1,6 +1,5 @@
 import { execute } from "./BlnedDrawArraysInstancedUseCase";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { $context } from "../../WebGLUtil";
 import * as variantsBlendInstanceShaderService from "../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService";
 
 vi.mock("../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService");
@@ -8,10 +7,24 @@ vi.mock("../../Shader/ShaderInstancedManager/usecase/ShaderInstancedManagerDrawA
 vi.mock("../../Blend/usecase/BlendOperationUseCase");
 vi.mock("../../FrameBufferManager/service/FrameBufferManagerTransferAtlasTextureService");
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $context: {
+            globalCompositeOperation: "normal"
+        }
+    };
+});
+
 describe("BlnedDrawArraysInstancedUseCase method test", () => {
     let mockShaderInstancedManager: any;
+    let $context: any;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        const WebGLUtil = await import("../../WebGLUtil");
+        $context = WebGLUtil.$context;
+
         mockShaderInstancedManager = {
             count: 0,
             clear: vi.fn()
