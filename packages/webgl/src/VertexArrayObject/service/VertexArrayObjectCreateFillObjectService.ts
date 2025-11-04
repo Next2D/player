@@ -1,5 +1,8 @@
 import type { IVertexArrayObject } from "../../interface/IVertexArrayObject";
-import { $gl } from "../../WebGLUtil";
+import {
+    $gl,
+    $getUUID
+} from "../../WebGLUtil";
 
 /**
  * @description 新規のVertexArrayObjectを生成する
@@ -12,7 +15,7 @@ import { $gl } from "../../WebGLUtil";
 export const execute = (): IVertexArrayObject =>
 {
     return {
-        "id": crypto.randomUUID(),
+        "id": $getUUID(),
         "resource": $gl.createVertexArray() as NonNullable<WebGLVertexArrayObject>,
         "vertexBuffer": $gl.createBuffer() as NonNullable<WebGLBuffer>,
         "vertexLength": 0

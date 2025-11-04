@@ -5,7 +5,7 @@ Next2D Player
 </div>
 
 [![UnitTest](https://github.com/Next2D/Player/actions/workflows/integration.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/integration.yml)
-[![CodeQL](https://github.com/Next2D/Player/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/codeql-analysis.yml)
+[![CodeQL](https://github.com/Next2D/player/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/Next2D/player/actions/workflows/github-code-scanning/codeql)
 [![Lint](https://github.com/Next2D/Player/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/Next2D/Player/actions/workflows/lint.yml)
 
 [![release](https://img.shields.io/github/v/release/Next2D/Player)](https://github.com/Next2D/Player/releases)
