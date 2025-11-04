@@ -550,3 +550,23 @@ export const $multiplyMatrices = (a: Float32Array, b: Float32Array): Float32Arra
         a1 * b4 + a3 * b5 + a5
     );
 };
+
+/**
+ * @description HTTPS環境外でもUUIDを取得
+ *              Get UUID even outside HTTPS environment
+ *
+ * @return {string}
+ * @method
+ * @public
+ */
+export const $getUUID = (typeof crypto?.randomUUID === "function")
+    ? (): string => crypto.randomUUID()
+    : (): string => {
+        // RFC4122準拠のUUIDv4を生成
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => 
+        {
+            const r = Math.random() * 16 | 0;
+            const v = c === "x" ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
