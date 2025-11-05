@@ -64,7 +64,8 @@
     "typescript": "^5.9.3",
     "vite": "^7.1.12",
     "vitest": "^4.0.7",
-    "vitest-webgl-canvas-mock": "^1.1.0"
+    "vitest-webgl-canvas-mock": "^1.1.0",
+    "xml2js": "^0.6.2"
   },
   "peerDependencies": {
     "@next2d/cache": "file:packages/cache",
