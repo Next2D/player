@@ -123,7 +123,60 @@ start();
 | `bgColor`    | string  | "transparent" | 你可以指定一个十六进制的背景颜色。默认为无色。                           |
 
 ##  Flowchart
-![Flowchart](./drawing_flow_chart.svg)
+
+### Drawing Flow Chart
+
+```mermaid
+flowchart TB
+    subgraph normal["Normal Rendering"]
+        Shape1["Shape<br/>(Bitmap or Vector)"]
+        TextField1["TextField<br/>(canvas2d)"]
+        Video1["Video<br/>(Video Element)"]
+        
+        Shape1 --> Cache1{Is there a cache?}
+        TextField1 --> Cache1
+        Video1 --> Cache1
+        
+        Cache1 -->|NO| Render1[Rendering]
+        Cache1 -->|YES| InstancedArray1
+    end
+    
+    subgraph filterBlend["Filter or Blend"]
+        Render1 --> NeedOffscreen{Need offscreen?}
+        
+        NeedOffscreen -->|NO| InstancedArray1
+        NeedOffscreen -->|YES| Framebuffer[Framebuffer<br/>offscreen rendering]
+        
+        Framebuffer --> InstancedArray1
+    end
+    
+    subgraph mask["Mask Processing"]
+        Shape2["Shape<br/>(Bitmap or Vector)"]
+        TextField2["TextField<br/>(canvas2d)"]
+        Video2["Video<br/>(Video Element)"]
+        
+        Shape2 --> Cache2{Is there a cache?}
+        TextField2 --> Cache2
+        Video2 --> Cache2
+        
+        Cache2 -->|NO| Render2[Rendering]
+        Cache2 -->|YES| InstancedArray2
+        
+        Render2 --> InstancedArray2
+    end
+    
+    InstancedArray1["Instanced Arrays<br/>matrix | colorTransform | Coordinates"]
+    InstancedArray2["Instanced Arrays<br/>matrix | colorTransform | Coordinates"]
+    
+    InstancedArray1 --> Rendering[Rendering<br/>drawArraysInstanced]
+    InstancedArray2 --> Rendering
+    
+    Rendering -->|60fps| MainFramebuffer[Main Framebuffer]
+    
+    style normal fill:#dae8fc,stroke:#6c8ebf
+    style Rendering fill:#ffe6cc,stroke:#d79b00
+    style MainFramebuffer fill:#d5e8d4,stroke:#82b366
+```
 
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.
