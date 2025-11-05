@@ -124,33 +124,37 @@ start();
 
 ##  Flowchart
 
-### Drawing Flow Chart
-
 ```mermaid
 flowchart TB
-    subgraph normal["Normal Rendering"]
+    subgraph Container1["Container (framebuffer - offscreen rendering)"]
         Shape1["Shape<br/>(Bitmap or Vector)"]
         TextField1["TextField<br/>(canvas2d)"]
         Video1["Video<br/>(Video Element)"]
         
-        Shape1 --> Cache1{Is there a cache?}
-        TextField1 --> Cache1
-        Video1 --> Cache1
+        Shape1 --> MaskRendering{mask rendering}
+        TextField1 --> MaskRendering
+        Video1 --> MaskRendering
         
-        Cache1 -->|NO| Render1[Rendering]
-        Cache1 -->|YES| InstancedArray1
+        MaskRendering -->|YES| Rendering1[rendering]
+        MaskRendering -->|NO| Cache1{Is there a cache?}
+        
+        Cache1 -->|NO| TextureAtlas[Texture Atlas<br/>Drawing with binary trees]
+        Cache1 -->|YES| Coordinates
+        
+        TextureAtlas --> Coordinates[(Coordinates<br/>{x, y, w, h})]
+        
+        Coordinates --> FilterOrBlend{Filter or Blend}
+        
+        FilterOrBlend -->|NO| InstancedArrays1
+        FilterOrBlend -->|YES| CacheCheck{Is there a cache?}
+        
+        CacheCheck -->|YES| TextureCache
+        CacheCheck -->|NO| Rendering2[rendering]
+        
+        Rendering2 --> TextureCache
     end
     
-    subgraph filterBlend["Filter or Blend"]
-        Render1 --> NeedOffscreen{Need offscreen?}
-        
-        NeedOffscreen -->|NO| InstancedArray1
-        NeedOffscreen -->|YES| Framebuffer[Framebuffer<br/>offscreen rendering]
-        
-        Framebuffer --> InstancedArray1
-    end
-    
-    subgraph mask["Mask Processing"]
+    subgraph Container2["Container (filter or blend or mask)"]
         Shape2["Shape<br/>(Bitmap or Vector)"]
         TextField2["TextField<br/>(canvas2d)"]
         Video2["Video<br/>(Video Element)"]
@@ -159,22 +163,35 @@ flowchart TB
         TextField2 --> Cache2
         Video2 --> Cache2
         
-        Cache2 -->|NO| Render2[Rendering]
-        Cache2 -->|YES| InstancedArray2
+        Cache2 -->|NO| Rendering3[rendering]
+        Cache2 -->|YES| InstancedArrays2
         
-        Render2 --> InstancedArray2
+        Rendering3 --> InstancedArrays2
     end
     
-    InstancedArray1["Instanced Arrays<br/>matrix | colorTransform | Coordinates"]
-    InstancedArray2["Instanced Arrays<br/>matrix | colorTransform | Coordinates"]
+    Container1 -->|filter or blend| Container2
     
-    InstancedArray1 --> Rendering[Rendering<br/>drawArraysInstanced]
-    InstancedArray2 --> Rendering
+    Container2 -->|filter or blend| CacheCheck2{Is there a cache?}
+    CacheCheck2 -->|YES| TextureCache
+    CacheCheck2 -->|NO| Rendering4[rendering]
+    Rendering4 -->|cache| TextureCache[(texture<br/>cache)]
     
-    Rendering -->|60fps| MainFramebuffer[Main Framebuffer]
+    Coordinates -->|Array of rendering information| InstancedArrays1["Instanced Arrays<br/>matrix | colorTransform | Coordinates"]
+    InstancedArrays2["Instanced Arrays<br/>matrix | colorTransform | Coordinates"] -->|Array of rendering information| InstancedArrays1
     
-    style normal fill:#dae8fc,stroke:#6c8ebf
-    style Rendering fill:#ffe6cc,stroke:#d79b00
+    InstancedArrays1 -->|drawArraysInstanced| FinalRendering[rendering]
+    InstancedArrays2 -->|drawArraysInstanced| Rendering5[rendering]
+    
+    TextureCache -->|drawArrays| FinalRendering
+    Rendering1 -->|drawArrays| FinalRendering
+    
+    Rendering5 -->|filter or blend| TextureCache
+    
+    FinalRendering -->|60fps| MainFramebuffer[main framebuffer]
+    
+    style Container1 fill:#dae8fc,stroke:#6c8ebf
+    style FinalRendering fill:#ffe6cc,stroke:#d79b00
+    style Rendering5 fill:#ffe6cc,stroke:#d79b00
     style MainFramebuffer fill:#d5e8d4,stroke:#82b366
 ```
 
