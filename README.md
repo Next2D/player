@@ -125,77 +125,84 @@ start();
 ##  Flowchart
 
 ```mermaid
-flowchart TB
-    subgraph Container1["Container (framebuffer - offscreen rendering)"]
-        Shape1["Shape<br/>(Bitmap or Vector)"]
-        TextField1["TextField<br/>(canvas2d)"]
-        Video1["Video<br/>(Video Element)"]
+flowchart LR
+    subgraph Left["Drawing Flow Chart"]
+        direction TB
+        subgraph Container1["Container (framebuffer - offscreen rendering)"]
+            direction TB
+            Shape1["Shape<br/>(Bitmap or Vector)"]
+            TextField1["TextField<br/>(canvas2d)"]
+            Video1["Video<br/>(Video Element)"]
+            
+            Shape1 --> MaskCheck{mask rendering?}
+            TextField1 --> MaskCheck
+            Video1 --> MaskCheck
+            
+            MaskCheck -->|NO| Cache1{Is there<br/>a cache?}
+            Cache1 -->|YES| CoordDB1["Coordinates<br/>x, y, w, h"]
+            CoordDB1 --> FilterCheck{Filter or<br/>Blend?}
+            FilterCheck -->|NO| Arrays1["Instanced Arrays<br/>matrix | colorTransform<br/>| Coordinates"]
+        end
         
-        Shape1 --> MaskRendering{mask rendering}
-        TextField1 --> MaskRendering
-        Video1 --> MaskRendering
+        MaskCheck -->|YES| Direct1[rendering]
+        Direct1 -->|drawArrays| Final[rendering]
         
-        MaskRendering -->|YES| Rendering1[rendering]
-        MaskRendering -->|NO| Cache1{Is there a cache?}
+        Arrays1 -->|drawArraysInstanced| Final
+        Final -->|60fps| Screen[main framebuffer]
         
-        Cache1 -->|NO| TextureAtlas[Texture Atlas<br/>Drawing with binary trees]
-        Cache1 -->|YES| CoordinatesDB
-        
-        TextureAtlas --> CoordinatesDB
-        CoordinatesDB["Coordinates<br/>x, y, w, h"]
-        
-        CoordinatesDB --> FilterOrBlend{Filter or Blend}
-        
-        FilterOrBlend -->|NO| InstancedArrays1
-        FilterOrBlend -->|YES| CacheCheck{Is there a cache?}
-        
-        CacheCheck -->|YES| TextureCache
-        CacheCheck -->|NO| Rendering2[rendering]
-        
-        Rendering2 --> TextureCache
+        FilterCheck -->|YES| CacheCheck1{Is there<br/>a cache?}
     end
     
-    subgraph Container2["Container (filter or blend or mask)"]
-        Shape2["Shape<br/>(Bitmap or Vector)"]
-        TextField2["TextField<br/>(canvas2d)"]
-        Video2["Video<br/>(Video Element)"]
+    subgraph Center["Middle Layer"]
+        direction TB
+        Cache1 -->|NO| Atlas["Texture Atlas<br/>(Drawing with<br/>binary trees)"]
+        Atlas --> CoordDB1
         
-        Shape2 --> Cache2{Is there a cache?}
-        TextField2 --> Cache2
-        Video2 --> Cache2
-        
-        Cache2 -->|NO| Rendering3[rendering]
-        Cache2 -->|YES| InstancedArrays2
-        
-        Rendering3 --> InstancedArrays2
+        CacheCheck1 -->|NO| Render2[rendering]
+        Render2 -->|cache| TexCache["texture cache"]
+        CacheCheck1 -->|YES| TexCache
+        TexCache -->|drawArrays| Final
     end
     
-    Container1 -->|filter or blend| Container2
+    subgraph Right["Filter/Blend/Mask Processing"]
+        direction TB
+        subgraph Container2["Container (filter or blend or mask)"]
+            direction TB
+            Shape2["Shape<br/>(Bitmap or Vector)"]
+            TextField2["TextField<br/>(canvas2d)"]
+            Video2["Video<br/>(Video Element)"]
+            
+            Shape2 --> Cache2{Is there<br/>a cache?}
+            TextField2 --> Cache2
+            Video2 --> Cache2
+            
+            Cache2 -->|NO| Render3[rendering]
+            Render3 --> Arrays2["Instanced Arrays<br/>matrix | colorTransform<br/>| Coordinates"]
+            Cache2 -->|YES| Arrays2
+        end
+        
+        Arrays2 -->|drawArraysInstanced| Render4[rendering]
+        Render4 -->|filter or blend| TexCache
+        
+        Arrays2 -.->|Array of rendering<br/>information| Arrays1
+    end
     
-    Container2 -->|filter or blend| CacheCheck2{Is there a cache?}
-    CacheCheck2 -->|YES| TextureCache
-    CacheCheck2 -->|NO| Rendering4[rendering]
-    Rendering4 -->|cache| TextureCache["texture cache"]
+    Container1 -.->|filter or blend| Container2
+    FilterCheck -.->|filter or blend| CacheCheck2{Is there<br/>a cache?}
+    CacheCheck2 -->|NO| Render5[rendering]
+    CacheCheck2 -->|YES| TexCache
+    Render5 -->|cache| TexCache
     
-    CoordinatesDB -->|Array of rendering information| InstancedArrays1["Instanced Arrays<br/>matrix | colorTransform | Coordinates"]
-    InstancedArrays2["Instanced Arrays<br/>matrix | colorTransform | Coordinates"] -->|Array of rendering information| InstancedArrays1
-    
-    InstancedArrays1 -->|drawArraysInstanced| FinalRendering[rendering]
-    InstancedArrays2 -->|drawArraysInstanced| Rendering5[rendering]
-    
-    TextureCache -->|drawArrays| FinalRendering
-    Rendering1 -->|drawArrays| FinalRendering
-    
-    Rendering5 -->|filter or blend| TextureCache
-    
-    FinalRendering -->|60fps| MainFramebuffer[main framebuffer]
-    
-    style Container1 fill:#dae8fc,stroke:#6c8ebf
-    style FinalRendering fill:#ffe6cc,stroke:#d79b00
-    style Rendering5 fill:#ffe6cc,stroke:#d79b00
-    style MainFramebuffer fill:#d5e8d4,stroke:#82b366
-    style CoordinatesDB fill:#f0f0f0,stroke:#666,stroke-width:2px
-    style TextureCache fill:#f0f0f0,stroke:#666,stroke-width:2px
+    style Left fill:#e6f3ff,stroke:#4d94ff,stroke-width:2px
+    style Center fill:#fff9e6,stroke:#ffcc00,stroke-width:2px
+    style Right fill:#ffe6f0,stroke:#ff66a3,stroke-width:2px
+    style Container1 fill:#dae8fc,stroke:#6c8ebf,stroke-width:2px
+    style Container2 fill:#dae8fc,stroke:#6c8ebf,stroke-width:2px
+    style Final fill:#ffe6cc,stroke:#d79b00,stroke-width:2px
+    style Render4 fill:#ffe6cc,stroke:#d79b00,stroke-width:2px
+    style Screen fill:#d5e8d4,stroke:#82b366,stroke-width:2px
+    style CoordDB1 fill:#f0f0f0,stroke:#666,stroke-width:2px
+    style TexCache fill:#f0f0f0,stroke:#666,stroke-width:2px
 ```
 
 ## License
