@@ -142,8 +142,9 @@ flowchart TB
         Cache1 -->|YES| CoordinatesDB
         
         TextureAtlas --> CoordinatesDB
+        CoordinatesDB[(Coordinates<br/>{x, y, w, h})]
         
-        CoordinatesDB[(Coordinates<br/>{x, y, w, h})] --> FilterOrBlend{Filter or Blend}
+        CoordinatesDB --> FilterOrBlend{Filter or Blend}
         
         FilterOrBlend -->|NO| InstancedArrays1
         FilterOrBlend -->|YES| CacheCheck{Is there a cache?}
