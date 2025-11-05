@@ -125,84 +125,95 @@ start();
 ##  Flowchart
 
 ```mermaid
-flowchart LR
-    subgraph Left["Drawing Flow Chart"]
+flowchart TB
+    %% Main Drawing Flow Chart
+    subgraph MainFlow["🎨 Drawing Flow Chart - Main Rendering Pipeline"]
         direction TB
-        subgraph Container1["Container (framebuffer - offscreen rendering)"]
-            direction TB
-            Shape1["Shape<br/>(Bitmap or Vector)"]
-            TextField1["TextField<br/>(canvas2d)"]
-            Video1["Video<br/>(Video Element)"]
-            
-            Shape1 --> MaskCheck{mask rendering?}
-            TextField1 --> MaskCheck
-            Video1 --> MaskCheck
-            
-            MaskCheck -->|NO| Cache1{Is there<br/>a cache?}
-            Cache1 -->|YES| CoordDB1["Coordinates<br/>x, y, w, h"]
-            CoordDB1 --> FilterCheck{Filter or<br/>Blend?}
-            FilterCheck -->|NO| Arrays1["Instanced Arrays<br/>matrix | colorTransform<br/>| Coordinates"]
+        
+        subgraph Inputs["Display Objects"]
+            Shape["Shape<br/>(Bitmap/Vector)"]
+            TextField["TextField<br/>(canvas2d)"]
+            Video["Video Element"]
         end
         
-        MaskCheck -->|YES| Direct1[rendering]
-        Direct1 -->|drawArrays| Final[rendering]
+        Shape --> MaskCheck
+        TextField --> MaskCheck
+        Video --> MaskCheck
         
-        Arrays1 -->|drawArraysInstanced| Final
-        Final -->|60fps| Screen[main framebuffer]
+        MaskCheck{"mask<br/>rendering?"}
         
-        FilterCheck -->|YES| CacheCheck1{Is there<br/>a cache?}
+        MaskCheck -->|YES| DirectRender["Direct Rendering"]
+        DirectRender -->|drawArrays| FinalRender
+        
+        MaskCheck -->|NO| CacheCheck1{"cache<br/>exists?"}
+        
+        CacheCheck1 -->|NO| TextureAtlas["📦 Texture Atlas<br/>(Binary Tree Packing)"]
+        TextureAtlas --> Coordinates
+        
+        CacheCheck1 -->|YES| Coordinates["📍 Coordinates DB<br/>(x, y, w, h)"]
+        
+        Coordinates --> FilterBlendCheck{"filter or<br/>blend?"}
+        
+        FilterBlendCheck -->|NO| MainArrays
+        FilterBlendCheck -->|YES| NeedCache{"cache<br/>exists?"}
+        
+        NeedCache -->|NO| CacheRender["Render to Cache"]
+        CacheRender --> TextureCache
+        NeedCache -->|YES| TextureCache["💾 Texture Cache"]
+        
+        TextureCache -->|drawArrays| FinalRender
+        
+        MainArrays["⚡ Instanced Arrays<br/>━━━━━━━━━━━━━━━<br/>matrix<br/>colorTransform<br/>Coordinates<br/>━━━━━━━━━━━━━━━<br/><b>Batch Rendering</b>"]
+        
+        MainArrays -->|drawArraysInstanced<br/><b>Multiple objects in one call</b>| FinalRender["🎬 Final Rendering"]
+        
+        FinalRender -->|60fps| MainFramebuffer["🖥️ Main Framebuffer<br/>(Display)"]
     end
     
-    subgraph Center["Middle Layer"]
+    %% Branch Flow for Filter/Blend/Mask
+    subgraph BranchFlow["🎭 Filter/Blend/Mask - Branch Processing"]
         direction TB
-        Cache1 -->|NO| Atlas["Texture Atlas<br/>(Drawing with<br/>binary trees)"]
-        Atlas --> CoordDB1
         
-        CacheCheck1 -->|NO| Render2[rendering]
-        Render2 -->|cache| TexCache["texture cache"]
-        CacheCheck1 -->|YES| TexCache
-        TexCache -->|drawArrays| Final
-    end
-    
-    subgraph Right["Filter/Blend/Mask Processing"]
-        direction TB
-        subgraph Container2["Container (filter or blend or mask)"]
-            direction TB
-            Shape2["Shape<br/>(Bitmap or Vector)"]
+        subgraph FilterInputs["Display Objects"]
+            Shape2["Shape<br/>(Bitmap/Vector)"]
             TextField2["TextField<br/>(canvas2d)"]
-            Video2["Video<br/>(Video Element)"]
-            
-            Shape2 --> Cache2{Is there<br/>a cache?}
-            TextField2 --> Cache2
-            Video2 --> Cache2
-            
-            Cache2 -->|NO| Render3[rendering]
-            Render3 --> Arrays2["Instanced Arrays<br/>matrix | colorTransform<br/>| Coordinates"]
-            Cache2 -->|YES| Arrays2
+            Video2["Video Element"]
         end
         
-        Arrays2 -->|drawArraysInstanced| Render4[rendering]
-        Render4 -->|filter or blend| TexCache
+        Shape2 --> CacheCheck2
+        TextField2 --> CacheCheck2
+        Video2 --> CacheCheck2
         
-        Arrays2 -.->|Array of rendering<br/>information| Arrays1
+        CacheCheck2{"cache<br/>exists?"}
+        
+        CacheCheck2 -->|NO| EffectRender["Effect Rendering"]
+        CacheCheck2 -->|YES| BranchArrays
+        EffectRender --> BranchArrays
+        
+        BranchArrays["⚡ Instanced Arrays<br/>━━━━━━━━━━━━━━━<br/>matrix<br/>colorTransform<br/>Coordinates<br/>━━━━━━━━━━━━━━━<br/><b>Batch Rendering</b>"]
+        
+        BranchArrays -->|drawArraysInstanced<br/><b>Multiple objects in one call</b>| BranchRender["Effect Result"]
+        
+        BranchRender -->|filter/blend| TextureCache
     end
     
-    Container1 -.->|filter or blend| Container2
-    FilterCheck -.->|filter or blend| CacheCheck2{Is there<br/>a cache?}
-    CacheCheck2 -->|NO| Render5[rendering]
-    CacheCheck2 -->|YES| TexCache
-    Render5 -->|cache| TexCache
+    %% Connections between flows
+    FilterBlendCheck -.->|"trigger<br/>branch flow"| BranchFlow
+    BranchArrays -.->|"rendering info<br/>(coordinates)"| MainArrays
     
-    style Left fill:#e6f3ff,stroke:#4d94ff,stroke-width:2px
-    style Center fill:#fff9e6,stroke:#ffcc00,stroke-width:2px
-    style Right fill:#ffe6f0,stroke:#ff66a3,stroke-width:2px
-    style Container1 fill:#dae8fc,stroke:#6c8ebf,stroke-width:2px
-    style Container2 fill:#dae8fc,stroke:#6c8ebf,stroke-width:2px
-    style Final fill:#ffe6cc,stroke:#d79b00,stroke-width:2px
-    style Render4 fill:#ffe6cc,stroke:#d79b00,stroke-width:2px
-    style Screen fill:#d5e8d4,stroke:#82b366,stroke-width:2px
-    style CoordDB1 fill:#f0f0f0,stroke:#666,stroke-width:2px
-    style TexCache fill:#f0f0f0,stroke:#666,stroke-width:2px
+    %% Styling
+    style MainFlow fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    style BranchFlow fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+    style Inputs fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px
+    style FilterInputs fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px
+    
+    style MainArrays fill:#c8e6c9,stroke:#388e3c,stroke-width:3px
+    style BranchArrays fill:#c8e6c9,stroke:#388e3c,stroke-width:3px
+    style FinalRender fill:#ffecb3,stroke:#f57f17,stroke-width:2px
+    style MainFramebuffer fill:#c5e1a5,stroke:#689f38,stroke-width:3px
+    style TextureCache fill:#e1bee7,stroke:#8e24aa,stroke-width:2px
+    style Coordinates fill:#b3e5fc,stroke:#0277bd,stroke-width:2px
+    style TextureAtlas fill:#fff9c4,stroke:#f9a825,stroke-width:2px
 ```
 
 ## License
