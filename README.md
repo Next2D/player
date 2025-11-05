@@ -139,11 +139,11 @@ flowchart TB
         MaskRendering -->|NO| Cache1{Is there a cache?}
         
         Cache1 -->|NO| TextureAtlas[Texture Atlas<br/>Drawing with binary trees]
-        Cache1 -->|YES| Coordinates
+        Cache1 -->|YES| CoordinatesDB
         
-        TextureAtlas --> Coordinates[(Coordinates<br/>{x, y, w, h})]
+        TextureAtlas --> CoordinatesDB
         
-        Coordinates --> FilterOrBlend{Filter or Blend}
+        CoordinatesDB[(Coordinates<br/>{x, y, w, h})] --> FilterOrBlend{Filter or Blend}
         
         FilterOrBlend -->|NO| InstancedArrays1
         FilterOrBlend -->|YES| CacheCheck{Is there a cache?}
@@ -176,7 +176,7 @@ flowchart TB
     CacheCheck2 -->|NO| Rendering4[rendering]
     Rendering4 -->|cache| TextureCache[(texture<br/>cache)]
     
-    Coordinates -->|Array of rendering information| InstancedArrays1["Instanced Arrays<br/>matrix | colorTransform | Coordinates"]
+    CoordinatesDB -->|Array of rendering information| InstancedArrays1["Instanced Arrays<br/>matrix | colorTransform | Coordinates"]
     InstancedArrays2["Instanced Arrays<br/>matrix | colorTransform | Coordinates"] -->|Array of rendering information| InstancedArrays1
     
     InstancedArrays1 -->|drawArraysInstanced| FinalRendering[rendering]
