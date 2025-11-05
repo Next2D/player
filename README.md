@@ -142,7 +142,7 @@ flowchart TB
         Cache1 -->|YES| CoordinatesDB
         
         TextureAtlas --> CoordinatesDB
-        CoordinatesDB[(Coordinates<br/>{x, y, w, h})]
+        CoordinatesDB[("Coordinates<br/>x, y, w, h")]
         
         CoordinatesDB --> FilterOrBlend{Filter or Blend}
         
@@ -175,7 +175,7 @@ flowchart TB
     Container2 -->|filter or blend| CacheCheck2{Is there a cache?}
     CacheCheck2 -->|YES| TextureCache
     CacheCheck2 -->|NO| Rendering4[rendering]
-    Rendering4 -->|cache| TextureCache[(texture<br/>cache)]
+    Rendering4 -->|cache| TextureCache[("texture<br/>cache")]
     
     CoordinatesDB -->|Array of rendering information| InstancedArrays1["Instanced Arrays<br/>matrix | colorTransform | Coordinates"]
     InstancedArrays2["Instanced Arrays<br/>matrix | colorTransform | Coordinates"] -->|Array of rendering information| InstancedArrays1
