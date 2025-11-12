@@ -123,7 +123,98 @@ start();
 | `bgColor`    | string  | "transparent" | 你可以指定一个十六进制的背景颜色。默认为无色。                           |
 
 ##  Flowchart
-![Flowchart](./drawing_flow_chart.svg)
+
+```mermaid
+flowchart TB
+    %% Main Drawing Flow Chart
+    subgraph MainFlow["🎨 Drawing Flow Chart - Main Rendering Pipeline"]
+        direction TB
+        
+        subgraph Inputs["Display Objects"]
+            Shape["Shape<br/>(Bitmap/Vector)"]
+            TextField["TextField<br/>(canvas2d)"]
+            Video["Video Element"]
+        end
+        
+        Shape --> MaskCheck
+        TextField --> MaskCheck
+        Video --> MaskCheck
+        
+        MaskCheck{"mask<br/>rendering?"}
+        
+        MaskCheck -->|YES| DirectRender["Direct Rendering"]
+        DirectRender -->|drawArrays| FinalRender
+        
+        MaskCheck -->|NO| CacheCheck1{"cache<br/>exists?"}
+        
+        CacheCheck1 -->|NO| TextureAtlas["📦 Texture Atlas<br/>(Binary Tree Packing)"]
+        TextureAtlas --> Coordinates
+        
+        CacheCheck1 -->|YES| Coordinates["📍 Coordinates DB<br/>(x, y, w, h)"]
+        
+        Coordinates --> FilterBlendCheck{"filter or<br/>blend?"}
+        
+        FilterBlendCheck -->|NO| MainArrays
+        FilterBlendCheck -->|YES| NeedCache{"cache<br/>exists?"}
+        
+        NeedCache -->|NO| CacheRender["Render to Cache"]
+        CacheRender --> TextureCache
+        NeedCache -->|YES| TextureCache["💾 Texture Cache"]
+        
+        TextureCache -->|drawArrays| FinalRender
+        
+        MainArrays["⚡ Instanced Arrays<br/>━━━━━━━━━━━━━━━<br/>matrix<br/>colorTransform<br/>Coordinates<br/>━━━━━━━━━━━━━━━<br/><b>Batch Rendering</b>"]
+        
+        MainArrays -->|drawArraysInstanced<br/><b>Multiple objects in one call</b>| FinalRender["🎬 Final Rendering"]
+        
+        FinalRender -->|60fps| MainFramebuffer["🖥️ Main Framebuffer<br/>(Display)"]
+    end
+    
+    %% Branch Flow for Filter/Blend/Mask
+    subgraph BranchFlow["🎭 Filter/Blend/Mask - Branch Processing"]
+        direction TB
+        
+        subgraph FilterInputs["Display Objects"]
+            Shape2["Shape<br/>(Bitmap/Vector)"]
+            TextField2["TextField<br/>(canvas2d)"]
+            Video2["Video Element"]
+        end
+        
+        Shape2 --> CacheCheck2
+        TextField2 --> CacheCheck2
+        Video2 --> CacheCheck2
+        
+        CacheCheck2{"cache<br/>exists?"}
+        
+        CacheCheck2 -->|NO| EffectRender["Effect Rendering"]
+        CacheCheck2 -->|YES| BranchArrays
+        EffectRender --> BranchArrays
+        
+        BranchArrays["⚡ Instanced Arrays<br/>━━━━━━━━━━━━━━━<br/>matrix<br/>colorTransform<br/>Coordinates<br/>━━━━━━━━━━━━━━━<br/><b>Batch Rendering</b>"]
+        
+        BranchArrays -->|drawArraysInstanced<br/><b>Multiple objects in one call</b>| BranchRender["Effect Result"]
+        
+        BranchRender -->|filter/blend| TextureCache
+    end
+    
+    %% Connections between flows
+    FilterBlendCheck -.->|"trigger<br/>branch flow"| BranchFlow
+    BranchArrays -.->|"rendering info<br/>(coordinates)"| MainArrays
+    
+    %% Styling
+    style MainFlow fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    style BranchFlow fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+    style Inputs fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px
+    style FilterInputs fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px
+    
+    style MainArrays fill:#c8e6c9,stroke:#388e3c,stroke-width:3px
+    style BranchArrays fill:#c8e6c9,stroke:#388e3c,stroke-width:3px
+    style FinalRender fill:#ffecb3,stroke:#f57f17,stroke-width:2px
+    style MainFramebuffer fill:#c5e1a5,stroke:#689f38,stroke-width:3px
+    style TextureCache fill:#e1bee7,stroke:#8e24aa,stroke-width:2px
+    style Coordinates fill:#b3e5fc,stroke:#0277bd,stroke-width:2px
+    style TextureAtlas fill:#fff9c4,stroke:#f9a825,stroke-width:2px
+```
 
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.

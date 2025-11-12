@@ -7,10 +7,12 @@ export default {
     "input": "./packages/display/src/Loader/worker/ZlibInflateWorker.ts",
     "output": {
         "file": "./dist/unzip.worker.bundle.js",
-        "format": "es"
+        "format": "iife",
+        "name": "UnzipWorker",
+        "inlineDynamicImports": true
     },
     "plugins": [
-        resolve(),
+        resolve({ "browser": true, "preferBuiltins": false }),
         commonjs(),
         typescript({ "tsconfig": "./tsconfig.json" }),
         terser()
