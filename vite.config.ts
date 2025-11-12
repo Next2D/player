@@ -27,6 +27,7 @@ export default defineConfig({
             "test.setup.ts",
             "vitest-webgl-canvas-mock"
         ],
+        "pool": "threads",
         "include": ["packages/**/*.test.ts"]
     }
 });
