@@ -7,10 +7,12 @@ export default {
     "input": "./packages/renderer/src/index.ts",
     "output": {
         "file": "./dist/renderer.worker.bundle.js",
-        "format": "es"
+        "format": "iife",
+        "name": "RendererWorker",
+        "inlineDynamicImports": true
     },
     "plugins": [
-        resolve(),
+        resolve({ "browser": true, "preferBuiltins": false }),
         commonjs(),
         typescript({ "tsconfig": "./tsconfig.json" }),
         terser()
