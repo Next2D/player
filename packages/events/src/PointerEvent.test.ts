@@ -17,6 +17,11 @@ describe("PointerEvent.js property test", () =>
     {
         expect(PointerEvent.POINTER_MOVE).toBe("pointermove");
     });
+    
+    it("POINTER_UP test", () =>
+    {
+        expect(PointerEvent.POINTER_UP).toBe("pointerup");
+    });
 
     it("POINTER_OUT test", () =>
     {
@@ -27,9 +32,14 @@ describe("PointerEvent.js property test", () =>
     {
         expect(PointerEvent.POINTER_OVER).toBe("pointerover");
     });
-
-    it("POINTER_UP test", () =>
+    
+    it("POINTER_LEAVE test", () =>
     {
-        expect(PointerEvent.POINTER_UP).toBe("pointerup");
+        expect(PointerEvent.POINTER_LEAVE).toBe("pointerleave");
+    });
+
+    it("POINTER_CANCEL test", () =>
+    {
+        expect(PointerEvent.POINTER_CANCEL).toBe("pointercancel");
     });
 });
