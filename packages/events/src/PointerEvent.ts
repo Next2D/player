@@ -158,7 +158,7 @@ export class PointerEvent extends Event
      * @const
      * @static
      */
-    static get POINTER_CANCEl (): string
+    static get POINTER_CANCEL (): string
     {
         return "pointercancel";
     }

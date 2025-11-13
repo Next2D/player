@@ -46,7 +46,7 @@ export const execute = (canvas: HTMLCanvasElement): void =>
 
     canvas.addEventListener(PointerEvent.POINTER_DOWN, canvasPointerDownEventUseCase as EventListener, { "passive": false });
     canvas.addEventListener(PointerEvent.POINTER_UP, canvasPointerUpEventUseCase as EventListener);
-    canvas.addEventListener(PointerEvent.POINTER_CANCEl, canvasPointerUpEventUseCase as EventListener);
+    canvas.addEventListener(PointerEvent.POINTER_CANCEL, canvasPointerUpEventUseCase as EventListener);
     canvas.addEventListener(PointerEvent.POINTER_MOVE, canvasPointerMoveEventUseCase as EventListener, { "passive": false });
     canvas.addEventListener(PointerEvent.POINTER_LEAVE, canvasPointerLeaveEventUseCase as EventListener);
     canvas.addEventListener(WheelEvent.WHEEL, canvasWheelEventUseCase as EventListener);
