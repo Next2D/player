@@ -23,7 +23,7 @@ describe("CanvasRegisterEventUseCase.js test", () =>
         expect(results[0]).toBe(PointerEvent.POINTER_UP);
         expect(results[1]).toBe(PointerEvent.POINTER_DOWN);
         expect(results[2]).toBe(PointerEvent.POINTER_UP);
-        expect(results[3]).toBe(PointerEvent.POINTER_CANCEl);
+        expect(results[3]).toBe(PointerEvent.POINTER_CANCEL);
         expect(results[4]).toBe(PointerEvent.POINTER_MOVE);
         expect(results[5]).toBe(PointerEvent.POINTER_LEAVE);
         expect(results[6]).toBe(WheelEvent.WHEEL);
