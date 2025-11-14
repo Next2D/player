@@ -42,9 +42,25 @@ export const execute = (
         tMatrix[3], tMatrix[4], tMatrix[5]
     );
 
-    const hit = graphicsHitTestService(
-        hit_context, graphics.buffer, hit_object
-    );
+    let hit = false;
+    if (graphics.buffer.length) {
+        hit = graphicsHitTestService(
+            hit_context, graphics.buffer, hit_object
+        );
+    } else {
+        hit_context.setTransform(
+            tMatrix[0], tMatrix[1], tMatrix[2],
+            tMatrix[3], tMatrix[4], tMatrix[5]
+        );
+        hit_context.beginPath();
+        hit_context.moveTo(0, 0);
+        hit_context.lineTo(width, 0);
+        hit_context.lineTo(width, height);
+        hit_context.lineTo(0, height);
+        hit_context.lineTo(0, 0);
+
+        hit = hit_context.isPointInPath(hit_object.x, hit_object.y);
+    }
 
     if (tMatrix !== matrix) {
         Matrix.release(tMatrix);
