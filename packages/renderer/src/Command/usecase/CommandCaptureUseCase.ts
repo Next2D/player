@@ -36,9 +36,9 @@ export const execute = async (
     $context.reset();
     $context.setTransform(1, 0, 0, 1, 0, 0);
     $context.updateBackgroundColor(
-        bg_color >> 16 & 0xff / 255,
-        bg_color >> 8 & 0xff / 255,
-        bg_color & 0xff / 255,
+        (bg_color >> 16 & 0xff) / 255,
+        (bg_color >> 8 & 0xff) / 255,
+        (bg_color & 0xff) / 255,
         bg_alpha
     );
     $context.fillBackgroundColor();
