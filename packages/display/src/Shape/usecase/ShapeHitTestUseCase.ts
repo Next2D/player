@@ -48,11 +48,6 @@ export const execute = (
             hit_context, graphics.buffer, hit_object
         );
     } else {
-        hit_context.setTransform(
-            tMatrix[0], tMatrix[1], tMatrix[2],
-            tMatrix[3], tMatrix[4], tMatrix[5]
-        );
-        hit_context.beginPath();
         hit_context.moveTo(0, 0);
         hit_context.lineTo(width, 0);
         hit_context.lineTo(width, height);
