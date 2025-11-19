@@ -168,7 +168,7 @@ export class GraphicsGradientFill
                     "R": color >>> 16 & 0xff,
                     "G": color >>> 8 & 0xff,
                     "B": color & 0xff,
-                    "A": this._$alphas[idx] * 255
+                    "A": this._$alphas[idx] * 255 & 0xff
                 };
 
             }
