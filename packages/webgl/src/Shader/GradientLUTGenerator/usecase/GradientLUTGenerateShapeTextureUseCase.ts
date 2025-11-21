@@ -68,7 +68,7 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
         $context.bind(currentAttachment);
     }
 
-    // bugfix: @see https://github.com/Next2D/player/issues/234 
+    // bugfix: @see https://github.com/Next2D/player/issues/234
     $gl.enable($gl.SCISSOR_TEST);
     $gl.scissor(scissorBox[0], scissorBox[1], scissorBox[2], scissorBox[3]);
 
