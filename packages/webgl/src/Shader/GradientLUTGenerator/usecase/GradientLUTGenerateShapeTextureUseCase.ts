@@ -4,7 +4,6 @@ import { execute as blendOneZeroService } from "../../../Blend/service/BlendOneZ
 import { execute as blendResetService } from "../../../Blend/service/BlendResetService";
 import { execute as gradientLUTSetUniformService } from "../service/GradientLUTSetUniformService";
 import { execute as gradientLUTGeneratorFillTextureUseCase } from "./GradientLUTGeneratorFillTextureUseCase";
-import { execute as contextBeginNodeRenderingService } from "../../../Context/service/ContextBeginNodeRenderingService";
 import {
     $gl,
     $context
@@ -69,9 +68,9 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
         $context.bind(currentAttachment);
     }
 
-    contextBeginNodeRenderingService(
-        scissorBox[0], scissorBox[1], scissorBox[2], scissorBox[3]
-    );
+    // bugfix: @see https://github.com/Next2D/player/issues/234 
+    $gl.enable($gl.SCISSOR_TEST);
+    $gl.scissor(scissorBox[0], scissorBox[1], scissorBox[2], scissorBox[3]);
 
     return gradientAttachmentObject.texture as NonNullable<ITextureObject>;
 };
