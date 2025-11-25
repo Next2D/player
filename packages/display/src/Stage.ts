@@ -181,10 +181,14 @@ export class Stage extends DisplayObjectContainer
      */
     addChild<T extends DisplayObject>(display_object: T): T
     {
-        $rootMap.set(display_object, display_object);
         $stageAssignedMap.add(display_object.instanceId);
 
-        return super.addChild(display_object);
+        super.addChild(display_object);
+
+        // fixed logic for root map
+        $rootMap.set(display_object, display_object);
+        
+        return display_object;
     }
 
     /**
