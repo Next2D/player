@@ -187,7 +187,7 @@ export class Stage extends DisplayObjectContainer
 
         // fixed logic for root map
         $rootMap.set(display_object, display_object);
-        
+
         return display_object;
     }
 
