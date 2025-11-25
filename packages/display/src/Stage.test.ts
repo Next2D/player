@@ -1,5 +1,4 @@
 import { Stage, stage } from "./Stage";
-import { DisplayObject } from "./DisplayObject";
 import { Sprite } from "./Sprite";
 import { describe, expect, it, beforeEach, vi } from "vitest";
 
