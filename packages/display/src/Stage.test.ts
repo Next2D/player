@@ -1,6 +1,6 @@
 import { Stage, stage } from "./Stage";
 import { Sprite } from "./Sprite";
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 describe("Stage class test", () =>
 {
