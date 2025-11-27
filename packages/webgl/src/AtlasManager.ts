@@ -6,6 +6,17 @@ import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "./Frame
 import { $RENDER_MAX_SIZE } from "./WebGLUtil";
 
 /**
+ * @description 最大値定数（パフォーマンス最適化のためキャッシュ）
+ *              Maximum value constants (cached for performance optimization)
+ *
+ * @type {number}
+ * @private
+ * @const
+ */
+const $MAX_VALUE: number = Number.MAX_VALUE;
+const $MIN_VALUE: number = -Number.MAX_VALUE;
+
+/**
  * @description アクティブなアトラスインデックス
  *              Active atlas index
  *
@@ -161,10 +172,10 @@ export const $getActiveTransferBounds = (index: number): Float32Array =>
 {
     if (!(index in $transferBounds)) {
         $transferBounds[index] = new Float32Array([
-            Number.MAX_VALUE,
-            Number.MAX_VALUE,
-            -Number.MAX_VALUE,
-            -Number.MAX_VALUE
+            $MAX_VALUE,
+            $MAX_VALUE,
+            $MIN_VALUE,
+            $MIN_VALUE
         ]);
     }
     return $transferBounds[index];
@@ -189,10 +200,10 @@ export const $getActiveAllTransferBounds = (index: number): Float32Array =>
 {
     if (!(index in $allTransferBounds)) {
         $allTransferBounds[index] = new Float32Array([
-            Number.MAX_VALUE,
-            Number.MAX_VALUE,
-            -Number.MAX_VALUE,
-            -Number.MAX_VALUE
+            $MAX_VALUE,
+            $MAX_VALUE,
+            $MIN_VALUE,
+            $MIN_VALUE
         ]);
     }
     return $allTransferBounds[index];
@@ -214,8 +225,8 @@ export const $clearTransferBounds = (): void =>
             continue;
         }
 
-        bounds[0] = bounds[1] = Number.MAX_VALUE;
-        bounds[2] = bounds[3] = -Number.MAX_VALUE;
+        bounds[0] = bounds[1] = $MAX_VALUE;
+        bounds[2] = bounds[3] = $MIN_VALUE;
     }
 
     for (let idx = 0; idx < $allTransferBounds.length; ++idx) {
@@ -224,8 +235,8 @@ export const $clearTransferBounds = (): void =>
             continue;
         }
 
-        bounds[0] = bounds[1] = Number.MAX_VALUE;
-        bounds[2] = bounds[3] = -Number.MAX_VALUE;
+        bounds[0] = bounds[1] = $MAX_VALUE;
+        bounds[2] = bounds[3] = $MIN_VALUE;
     }
 };
 

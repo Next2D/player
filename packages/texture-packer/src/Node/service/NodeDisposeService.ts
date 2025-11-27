@@ -23,6 +23,13 @@ export const execute = (
 
     if (node.left?.dispose(x, y, width, height)) {
         if (!node.left.used && !node.right?.used) {
+            // 子ノードをプールに返却
+            if (node.left) {
+                node.left.release();
+            }
+            if (node.right) {
+                node.right.release();
+            }
             node.left = node.right = null;
             node.used = false;
         }
@@ -31,6 +38,13 @@ export const execute = (
 
     if (node.right?.dispose(x, y, width, height)) {
         if (!node.right.used && !node.left?.used) {
+            // 子ノードをプールに返却
+            if (node.left) {
+                node.left.release();
+            }
+            if (node.right) {
+                node.right.release();
+            }
             node.left = node.right = null;
             node.used = false;
         }

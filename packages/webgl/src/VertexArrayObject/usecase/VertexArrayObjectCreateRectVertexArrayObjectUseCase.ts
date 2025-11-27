@@ -19,8 +19,8 @@ export const execute = (): IVertexArrayObject =>
     $gl.bindBuffer($gl.ARRAY_BUFFER, vertexArrayObject.vertexBuffer);
 
     const vertexBufferData = new Float32Array([
-        0, 0, 1, 0, 0, 1,
-        1, 1, 0, 1, 1, 0
+        0, 0, 1, 0, 1, 1,
+        0, 0, 1, 1, 0, 1
     ]);
     $gl.bufferData($gl.ARRAY_BUFFER, vertexBufferData, $gl.STATIC_DRAW);
 

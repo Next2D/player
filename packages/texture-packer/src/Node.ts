@@ -2,6 +2,15 @@ import { execute as nodeInsertService } from "./Node/service/NodeInsertService";
 import { execute as nodeDisposeService } from "./Node/service/NodeDisposeService";
 
 /**
+ * @description ノードオブジェクトプール（パフォーマンス最適化）
+ *              Node object pool (performance optimization)
+ *
+ * @type {Node[]}
+ * @private
+ */
+const $nodePool: Node[] = [];
+
+/**
  * @description テクスチャパッキングのノードクラス
  *              Node class for texture
  *
@@ -132,8 +141,8 @@ export class Node
     }
 
     /**
-     * @description 新規ノードを生成
-     *              Create a new node
+     * @description 新規ノードを生成（プールから取得または新規作成）
+     *              Create a new node (get from pool or create new)
      *
      * @param  {number} index
      * @param  {number} x
@@ -146,6 +155,42 @@ export class Node
      */
     create (index: number, x: number, y: number, w: number, h: number): Node
     {
-        return new Node(index, x, y, w, h);
+        let node: Node;
+        if ($nodePool.length > 0) {
+            node = $nodePool.pop() as Node;
+            node.index = index;
+            node.x = x;
+            node.y = y;
+            node.w = w;
+            node.h = h;
+            node.left = null;
+            node.right = null;
+            node.used = false;
+        } else {
+            node = new Node(index, x, y, w, h);
+        }
+        return node;
+    }
+
+    /**
+     * @description ノードをプールに返却（メモリ再利用）
+     *              Return node to pool (memory reuse)
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    release (): void
+    {
+        if (this.left) {
+            this.left.release();
+            this.left = null;
+        }
+        if (this.right) {
+            this.right.release();
+            this.right = null;
+        }
+        this.used = false;
+        $nodePool.push(this);
     }
 }
