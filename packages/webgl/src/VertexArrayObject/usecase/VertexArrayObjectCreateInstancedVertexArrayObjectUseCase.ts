@@ -13,7 +13,8 @@ import { $attributeWebGLBuffer } from "../../VertexArrayObject";
  * @method
  * @protected
  */
-export const execute = (): IVertexArrayObject => {
+export const execute = (): IVertexArrayObject =>
+{
     const vertexArrayObject = vertexArrayObjectCreateFillObjectService();
     vertexArrayObjectBindService(vertexArrayObject);
 
