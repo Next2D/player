@@ -155,20 +155,19 @@ export class Node
      */
     create (index: number, x: number, y: number, w: number, h: number): Node
     {
-        let node: Node;
-        if ($nodePool.length > 0) {
-            node = $nodePool.pop() as Node;
-            node.index = index;
-            node.x = x;
-            node.y = y;
-            node.w = w;
-            node.h = h;
-            node.left = null;
-            node.right = null;
-            node.used = false;
-        } else {
-            node = new Node(index, x, y, w, h);
-        }
+        const node = $nodePool.length
+            ? $nodePool.pop() as Node
+            : new Node(index, 0, 0, 0, 0);
+
+        node.index = index;
+        node.x     = x;
+        node.y     = y;
+        node.w     = w;
+        node.h     = h;
+        node.left  = null;
+        node.right = null;
+        node.used  = false;
+
         return node;
     }
 
