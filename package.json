@@ -1,6 +1,6 @@
 {
   "name": "@next2d/player",
-  "version": "2.13.1",
+  "version": "3.0.0",
   "description": "Experience the fast and beautiful anti-aliased rendering of WebGL. You can create rich, interactive graphics, cross-platform applications and games without worrying about browser or device compatibility.",
   "author": "Toshiyuki Ienaga<ienaga@next2d.app> (https://github.com/ienaga/)",
   "license": "MIT",
@@ -82,6 +82,7 @@
     "@next2d/text": "file:packages/text",
     "@next2d/texture-packer": "file:packages/texture-packer",
     "@next2d/ui": "file:packages/ui",
-    "@next2d/webgl": "file:packages/webgl"
+    "@next2d/webgl": "file:packages/webgl",
+    "@next2d/webgpu": "file:packages/webgpu"
   }
 }
