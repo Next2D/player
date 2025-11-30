@@ -82,7 +82,6 @@
     "@next2d/text": "file:packages/text",
     "@next2d/texture-packer": "file:packages/texture-packer",
     "@next2d/ui": "file:packages/ui",
-    "@next2d/webgl": "file:packages/webgl",
-    "@next2d/webgpu": "file:packages/webgpu"
+    "@next2d/webgl": "file:packages/webgl"
   }
 }
