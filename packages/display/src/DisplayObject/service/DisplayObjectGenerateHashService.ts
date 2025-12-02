@@ -10,19 +10,25 @@
 export const execute = (buffer: Float32Array): number =>
 {
     let hash = 2166136261; // FNV-1aオフセット basis
+
+    const view = new DataView(new ArrayBuffer(4));
     for (let idx = 0; idx < buffer.length; ++idx) {
 
-        let num = buffer[idx] | 0; // 整数として扱う
+        // Float32の値をそのままビット表現として使用
+        view.setFloat32(0, buffer[idx], true);
+        const bits = view.getUint32(0, true);
 
-        // 32bit整数の各バイトを処理
-        for (let i = 0; i < 4; i++) {
-            const byte = num & 0xff;
-            hash ^= byte;
-            hash = Math.imul(hash, 16777619); // FNV-1a の FNV prime
-            num >>>= 8;
-        }
+        // 32bitを4バイトに分解してFNV-1aハッシュ
+        hash ^= bits & 0xff;
+        hash = Math.imul(hash, 16777619);
+        hash ^= (bits >>> 8) & 0xff;
+        hash = Math.imul(hash, 16777619);
+        hash ^= (bits >>> 16) & 0xff;
+        hash = Math.imul(hash, 16777619);
+        hash ^= (bits >>> 24) & 0xff;
+        hash = Math.imul(hash, 16777619);
     }
 
-    // 32bitの符号なし整数にキャストし、24bitの範囲に収める
-    return (hash >>> 0) % 16777216;
+    // 32bitハッシュ値を24bitに圧縮
+    return ((hash >>> 8) ^ (hash & 0xff)) & 0xffffff;
 };

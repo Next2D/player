@@ -150,7 +150,7 @@ export const execute = (
         } else {
 
             shape.uniqueKey = shape.isBitmap
-                ? `${shape.instanceId}`
+                ? `${displayObjectGenerateHashService(new Float32Array((shape.$bitmapBuffer as Uint8Array).buffer))}`
                 : `${displayObjectGenerateHashService(graphics.buffer)}`;
 
         }
