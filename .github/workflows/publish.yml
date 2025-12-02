@@ -12,11 +12,12 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22.x"
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
+      - run: npm install -g npm@latest
       - run: npm install
       - run: npm run publish:dist
       - run: cd ~/work/player/player/dist/src && npm publish --access public
