@@ -9,6 +9,12 @@ import {
 } from "../../RendererUtil";
 
 /**
+ * @type {number}
+ * @private
+ */
+let $color: number = -1;
+
+/**
  * @description 描画コマンドから描画を実行
  *              Execute drawing from drawing command
  *
@@ -30,15 +36,18 @@ export const execute = (
 
     // update background color
     const color = render_queue[index++];
-    if (color === -1) {
-        $context.updateBackgroundColor(0, 0, 0, 0);
-    } else {
-        $context.updateBackgroundColor(
-            (color >> 16 & 0xff) / 255,
-            (color >> 8 & 0xff) / 255,
-            (color & 0xff) / 255,
-            1
-        );
+    if ($color !== color) {
+        $color = color;
+        if ($color === -1) {
+            $context.updateBackgroundColor(0, 0, 0, 0);
+        } else {
+            $context.updateBackgroundColor(
+                ($color >> 16 & 0xff) / 255,
+                ($color >> 8 & 0xff) / 255,
+                ($color & 0xff) / 255,
+                1
+            );
+        }
     }
 
     // reset
