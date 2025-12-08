@@ -577,7 +577,157 @@ export class ShaderSource
     }
 
     /**
-     * @description グラデーション用フラグメントシェーダー
+     * @description グラデーションフィル用頂点シェーダー（行列変換でUV座標を計算）
+     * @return {string}
+     */
+    static getGradientFillVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexInput {
+                @location(0) position: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+                @location(3) matrixRow0: vec3<f32>,
+                @location(4) matrixRow1: vec3<f32>,
+                @location(5) matrixRow2: vec3<f32>,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) gradientCoord: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+            }
+
+            struct GradientUniforms {
+                // グラデーション行列（UV変換用）
+                gradientMatrix: mat3x3<f32>,
+                // グラデーションタイプ (0: linear, 1: radial)
+                gradientType: f32,
+                // focal point for radial gradient
+                focal: f32,
+                // spread method (0: pad, 1: reflect, 2: repeat)
+                spread: f32,
+                // padding
+                _pad: f32,
+            }
+
+            @group(0) @binding(0) var<uniform> gradient: GradientUniforms;
+
+            @vertex
+            fn main(input: VertexInput) -> VertexOutput {
+                var output: VertexOutput;
+
+                // 頂点変換行列を構築
+                let matrix = mat3x3<f32>(
+                    input.matrixRow0,
+                    input.matrixRow1,
+                    input.matrixRow2
+                );
+
+                // NDC座標に変換
+                let pos = matrix * vec3<f32>(input.position, 1.0);
+                let ndc = vec2<f32>(pos.x * 2.0 - 1.0, pos.y * 2.0 - 1.0);
+                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
+
+                // グラデーション座標を計算（グラデーション行列で変換）
+                let gradPos = gradient.gradientMatrix * vec3<f32>(input.position, 1.0);
+                output.gradientCoord = gradPos.xy;
+
+                output.bezier = input.bezier;
+                output.color = input.color;
+
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description グラデーションフィル用フラグメントシェーダー
+     * @return {string}
+     */
+    static getGradientFillFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) gradientCoord: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+            }
+
+            struct GradientUniforms {
+                gradientMatrix: mat3x3<f32>,
+                gradientType: f32,
+                focal: f32,
+                spread: f32,
+                _pad: f32,
+            }
+
+            @group(0) @binding(0) var<uniform> gradient: GradientUniforms;
+            @group(0) @binding(1) var gradientSampler: sampler;
+            @group(0) @binding(2) var gradientTexture: texture_2d<f32>;
+
+            fn applySpread(t: f32, spread: f32) -> f32 {
+                if (spread < 0.5) {
+                    // pad
+                    return clamp(t, 0.0, 1.0);
+                } else if (spread < 1.5) {
+                    // reflect
+                    return 1.0 - abs(fract(t * 0.5) * 2.0 - 1.0);
+                } else {
+                    // repeat
+                    return fract(t);
+                }
+            }
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                // ベジェ曲線のディスカード（Loop-Blinn）
+                let f = input.bezier.x * input.bezier.x - input.bezier.y;
+                if (f >= 0.0 && input.bezier.x != 0.0) {
+                    discard;
+                }
+
+                var t: f32;
+
+                if (gradient.gradientType < 0.5) {
+                    // Linear gradient: t = x座標
+                    t = input.gradientCoord.x;
+                } else {
+                    // Radial gradient
+                    let x = input.gradientCoord.x;
+                    let y = input.gradientCoord.y;
+                    let focal = gradient.focal;
+
+                    if (abs(focal) < 0.001) {
+                        // 中心にフォーカル
+                        t = sqrt(x * x + y * y);
+                    } else {
+                        // フォーカルポイントがオフセットされている場合
+                        let fx = focal;
+                        let dx = x - fx;
+                        let dy = y;
+                        let d = sqrt(dx * dx + dy * dy);
+                        t = d / (1.0 - focal * focal);
+                    }
+                }
+
+                // スプレッドを適用
+                t = applySpread(t, gradient.spread);
+
+                // LUTテクスチャからサンプリング
+                let gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(t, 0.5));
+
+                // プリマルチプライドアルファ
+                let alpha = gradientColor.a * input.color.a;
+                return vec4<f32>(gradientColor.rgb * input.color.a, alpha);
+            }
+        `;
+    }
+
+    /**
+     * @description グラデーション用フラグメントシェーダー（レガシー）
      * @return {string}
      */
     static getGradientFragmentShader(): string
@@ -601,7 +751,7 @@ export class ShaderSource
             @fragment
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
                 var t: f32;
-                
+
                 if (gradient.gradientType < 0.5) {
                     // Linear gradient
                     t = input.texCoord.x;
@@ -611,11 +761,134 @@ export class ShaderSource
                     let dy = input.texCoord.y - 0.5;
                     t = sqrt(dx * dx + dy * dy) * 2.0;
                 }
-                
+
                 t = clamp(t, 0.0, 1.0);
                 let gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(t, 0.5));
-                
+
                 return gradientColor * input.color;
+            }
+        `;
+    }
+
+    /**
+     * @description ビットマップフィル用頂点シェーダー
+     *              17 floats頂点フォーマット対応
+     * @return {string}
+     */
+    static getBitmapFillVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexInput {
+                @location(0) position: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+                @location(3) matrix0: vec3<f32>,
+                @location(4) matrix1: vec3<f32>,
+                @location(5) matrix2: vec3<f32>,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) bezier: vec2<f32>,
+                @location(1) color: vec4<f32>,
+                @location(2) worldPos: vec2<f32>,
+            }
+
+            @vertex
+            fn main(input: VertexInput) -> VertexOutput {
+                var output: VertexOutput;
+
+                // 変換行列を構築
+                let matrix = mat3x3<f32>(
+                    input.matrix0,
+                    input.matrix1,
+                    input.matrix2
+                );
+
+                // 位置を変換
+                let transformedPos = matrix * vec3<f32>(input.position, 1.0);
+
+                // クリップ空間に変換 (0~1 → -1~1)
+                let clipX = transformedPos.x * 2.0 - 1.0;
+                let clipY = 1.0 - transformedPos.y * 2.0;
+
+                output.position = vec4<f32>(clipX, clipY, 0.0, 1.0);
+                output.bezier = input.bezier;
+                output.color = input.color;
+                output.worldPos = input.position;
+
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description ビットマップフィル用フラグメントシェーダー
+     *              テクスチャマッピングとLoop-Blinn曲線discard
+     * @return {string}
+     */
+    static getBitmapFillFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) bezier: vec2<f32>,
+                @location(1) color: vec4<f32>,
+                @location(2) worldPos: vec2<f32>,
+            }
+
+            struct BitmapUniforms {
+                bitmapMatrix: mat3x3<f32>,
+                textureWidth: f32,
+                textureHeight: f32,
+                repeat: f32,
+                _pad: f32,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: BitmapUniforms;
+            @group(0) @binding(1) var bitmapSampler: sampler;
+            @group(0) @binding(2) var bitmapTexture: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                // Loop-Blinn 曲線判定
+                let u = input.bezier.x;
+                let v = input.bezier.y;
+
+                // u*u - v の符号で内外判定
+                // bezier = (0.5, 0.5) の場合はスキップ（直線部分）
+                if (abs(u - 0.5) > 0.001 || abs(v - 0.5) > 0.001) {
+                    let d = u * u - v;
+                    if (d > 0.0) {
+                        discard;
+                    }
+                }
+
+                // ビットマップ変換行列でUV座標を計算
+                let transformedPos = uniforms.bitmapMatrix * vec3<f32>(input.worldPos, 1.0);
+                var uv = vec2<f32>(
+                    transformedPos.x / uniforms.textureWidth,
+                    transformedPos.y / uniforms.textureHeight
+                );
+
+                // Y座標を反転
+                uv.y = 1.0 - uv.y;
+
+                // リピートモードの場合はfractでラップ
+                if (uniforms.repeat > 0.5) {
+                    uv = fract(uv);
+                } else {
+                    // クリップモード: 範囲外は透明
+                    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+                        discard;
+                    }
+                }
+
+                let bitmapColor = textureSample(bitmapTexture, bitmapSampler, uv);
+
+                // プリマルチプライドアルファ
+                let alpha = bitmapColor.a * input.color.a;
+                return vec4<f32>(bitmapColor.rgb * input.color.a, alpha);
             }
         `;
     }

@@ -19,6 +19,10 @@ import { execute as maskSetMaskBoundsService } from "./Mask/service/MaskSetMaskB
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
 import { execute as maskLeaveMaskUseCase } from "./Mask/usecase/MaskLeaveMaskUseCase";
 import { execute as meshFillGenerateUseCase } from "./Mesh/usecase/MeshFillGenerateUseCase";
+import { $clipBounds, $clipLevels } from "./Mask";
+import { generateGradientLUT, getAdaptiveResolution } from "./Gradient/GradientLUTGenerator";
+import { execute as meshGradientStrokeGenerateUseCase } from "./Mesh/usecase/MeshGradientStrokeGenerateUseCase";
+import { execute as meshBitmapStrokeGenerateUseCase } from "./Mesh/usecase/MeshBitmapStrokeGenerateUseCase";
 
 /**
  * @description WebGPU版、Next2Dのコンテキスト
@@ -821,41 +825,245 @@ export class Context
 
     /**
      * @description グラデーションの塗りつぶしを実行
-     * @param {number} type
-     * @param {number[]} stops
-     * @param {Float32Array} matrix
-     * @param {number} spread
-     * @param {number} interpolation
-     * @param {number} focal
+     * @param {number} type - 0: linear, 1: radial
+     * @param {number[]} stops - グラデーションストップ配列 [offset, R, G, B, A, ...]
+     * @param {Float32Array} matrix - グラデーション変換行列 [a, b, c, d, tx, ty]
+     * @param {number} spread - スプレッドメソッド (0: pad, 1: reflect, 2: repeat)
+     * @param {number} interpolation - 補間方法 (0: RGB, 1: linearRGB)
+     * @param {number} focal - ラジアルグラデーションのフォーカルポイント
      * @return {void}
      */
     gradientFill (
-        _type: number,
-        _stops: number[],
-        _matrix: Float32Array,
-        _spread: number,
-        _interpolation: number,
-        _focal: number
+        type: number,
+        stops: number[],
+        matrix: Float32Array,
+        spread: number,
+        interpolation: number,
+        focal: number
     ): void {
-        // WebGPU gradient fill implementation
-        const vertices = this.pathCommand.generateVertices();
-        if (vertices.length === 0) return;
+        const pathVertices = this.pathCommand.$getVertices;
+        if (pathVertices.length === 0) return;
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
             this.beginFrame();
         }
 
-        // TODO: グラデーションLUTテクスチャを生成
-        // TODO: グラデーション用のシェーダーを使用
-        // 現在は基本的なfill()として実装
-        this.fill();
+        // コマンドエンコーダーを確保
+        this.ensureCommandEncoder();
+
+        // 既存のレンダーパスがない場合のみ新規作成
+        if (!this.renderPassEncoder) {
+            const textureView = this.getCurrentTextureView();
+            const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                textureView,
+                0, 0, 0, 0,
+                "load"
+            );
+            this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        }
+
+        // WebGL版と同じ: 現在のビューポートサイズを使用
+        const viewportWidth = this.viewportWidth;
+        const viewportHeight = this.viewportHeight;
+
+        // 色（グラデーション描画ではアルファ乗算用に使用）
+        const red = this.$fillStyle[0];
+        const green = this.$fillStyle[1];
+        const blue = this.$fillStyle[2];
+        const alpha = this.$fillStyle[3];
+
+        // 行列を取得
+        const a  = this.$matrix[0];
+        const b  = this.$matrix[1];
+        const c  = this.$matrix[3];
+        const d  = this.$matrix[4];
+        const tx = this.$matrix[6];
+        const ty = this.$matrix[7];
+
+        // MeshFillGenerateUseCaseで頂点データを生成
+        const mesh = meshFillGenerateUseCase(
+            pathVertices,
+            a, b, c, d, tx, ty,
+            red, green, blue, alpha,
+            viewportWidth, viewportHeight
+        );
+
+        if (mesh.indexCount === 0) {
+            return;
+        }
+
+        // 頂点バッファを作成
+        const vertexBuffer = this.bufferManager.createVertexBuffer(
+            `gradient_fill_${Date.now()}`,
+            mesh.buffer
+        );
+
+        // グラデーションLUTテクスチャを生成
+        const lutData = generateGradientLUT(stops, spread, interpolation);
+        const stopsLength = stops.length / 5;
+        const lutResolution = getAdaptiveResolution(stopsLength);
+
+        // LUTテクスチャを作成
+        const lutTexture = this.device.createTexture({
+            size: { width: lutResolution, height: 1 },
+            format: "rgba8unorm",
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+        });
+
+        // LUTデータをテクスチャに転送
+        this.device.queue.writeTexture(
+            { texture: lutTexture },
+            lutData.buffer,
+            { bytesPerRow: lutResolution * 4, rowsPerImage: 1, offset: lutData.byteOffset },
+            { width: lutResolution, height: 1 }
+        );
+
+        // グラデーション変換行列を計算
+        // WebGL版と同様: 逆行列を使ってグラデーション空間に変換
+        const gradientMatrix = this.computeGradientMatrix(matrix, type);
+
+        // Uniformバッファを作成
+        // GradientUniforms構造体:
+        // - gradientMatrix: mat3x3<f32> (各列がvec4にパディング = 48 bytes)
+        // - gradientType: f32 (4 bytes)
+        // - focal: f32 (4 bytes)
+        // - spread: f32 (4 bytes)
+        // - _pad: f32 (4 bytes)
+        // 合計: 64 bytes
+        const uniformData = new Float32Array(16);
+        // mat3x3 (各列がvec4にパディング)
+        uniformData[0] = gradientMatrix[0];
+        uniformData[1] = gradientMatrix[1];
+        uniformData[2] = gradientMatrix[2];
+        uniformData[3] = 0; // padding
+        uniformData[4] = gradientMatrix[3];
+        uniformData[5] = gradientMatrix[4];
+        uniformData[6] = gradientMatrix[5];
+        uniformData[7] = 0; // padding
+        uniformData[8] = gradientMatrix[6];
+        uniformData[9] = gradientMatrix[7];
+        uniformData[10] = gradientMatrix[8];
+        uniformData[11] = 0; // padding
+        // グラデーションパラメータ
+        uniformData[12] = type; // gradientType
+        uniformData[13] = focal; // focal
+        uniformData[14] = spread; // spread
+        uniformData[15] = 0; // padding
+
+        const uniformBuffer = this.bufferManager.createUniformBuffer(
+            `gradient_uniform_${Date.now()}`,
+            uniformData.byteLength
+        );
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
+
+        // サンプラーを作成
+        const sampler = this.device.createSampler({
+            magFilter: "linear",
+            minFilter: "linear",
+            addressModeU: "clamp-to-edge",
+            addressModeV: "clamp-to-edge"
+        });
+
+        // バインドグループを作成
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("gradient_fill");
+        if (!bindGroupLayout) {
+            console.error("[WebGPU] gradient_fill bind group layout not found");
+            lutTexture.destroy();
+            return;
+        }
+
+        const bindGroup = this.device.createBindGroup({
+            layout: bindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: uniformBuffer } },
+                { binding: 1, resource: sampler },
+                { binding: 2, resource: lutTexture.createView() }
+            ]
+        });
+
+        // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
+        const pipelineName = this.currentRenderTarget ? "gradient_fill" : "gradient_fill_bgra";
+        const pipeline = this.pipelineManager.getPipeline(pipelineName);
+        if (!pipeline) {
+            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
+            lutTexture.destroy();
+            return;
+        }
+
+        // 描画
+        this.renderPassEncoder!.setPipeline(pipeline);
+        this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
+        this.renderPassEncoder!.setBindGroup(0, bindGroup);
+        this.renderPassEncoder!.draw(mesh.indexCount, 1, 0, 0);
+
+        // LUTテクスチャは描画後に解放（次フレームで再作成）
+        // Note: GPUQueueにコマンドがsubmitされた後に解放する必要がある
+        // 現在は即座に解放せず、フレーム終了時に自動解放される
+    }
+
+    /**
+     * @description グラデーション変換行列を計算
+     *              WebGL版と同様の計算: 逆行列を使ってグラデーション空間に変換
+     * @param {Float32Array} matrix - グラデーション行列 [a, b, c, d, tx, ty]
+     * @param {number} type - グラデーションタイプ (0: linear, 1: radial)
+     * @return {Float32Array} - 3x3行列
+     */
+    private computeGradientMatrix(matrix: Float32Array, type: number): Float32Array
+    {
+        // グラデーション行列の逆行列を計算
+        // matrix = [a, b, c, d, tx, ty]
+        const a = matrix[0];
+        const b = matrix[1];
+        const c = matrix[2];
+        const d = matrix[3];
+        const tx = matrix[4];
+        const ty = matrix[5];
+
+        // 行列式
+        const det = a * d - b * c;
+        if (Math.abs(det) < 1e-10) {
+            // 特異行列の場合は単位行列を返す
+            return new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+        }
+
+        const invDet = 1 / det;
+
+        // 逆行列を計算
+        const ia = d * invDet;
+        const ib = -b * invDet;
+        const ic = -c * invDet;
+        const id = a * invDet;
+        const itx = (c * ty - d * tx) * invDet;
+        const ity = (b * tx - a * ty) * invDet;
+
+        // WebGL版のグラデーション座標系:
+        // Linear: x = -819.2 to 819.2 → 0 to 1
+        // Radial: 中心(0, 0)、半径819.2
+        const scale = 1 / 819.2;
+
+        if (type === 0) {
+            // Linear gradient: xを0-1に正規化
+            // x' = (x + 819.2) / 1638.4 = x * scale * 0.5 + 0.5
+            return new Float32Array([
+                ia * scale * 0.5, ib * scale * 0.5, 0,
+                ic * scale * 0.5, id * scale * 0.5, 0,
+                itx * scale * 0.5 + 0.5, ity * scale * 0.5 + 0.5, 1
+            ]);
+        } else {
+            // Radial gradient: 距離を0-1に正規化
+            return new Float32Array([
+                ia * scale, ib * scale, 0,
+                ic * scale, id * scale, 0,
+                itx * scale, ity * scale, 1
+            ]);
+        }
     }
 
     /**
      * @description ビットマップの塗りつぶしを実行
      * @param {Uint8Array} pixels
-     * @param {Float32Array} matrix
+     * @param {Float32Array} matrix - ビットマップ変換行列 [a, b, c, d, tx, ty]
      * @param {number} width
      * @param {number} height
      * @param {boolean} repeat
@@ -864,78 +1072,376 @@ export class Context
      */
     bitmapFill (
         pixels: Uint8Array,
-        _matrix: Float32Array,
+        matrix: Float32Array,
         width: number,
         height: number,
         repeat: boolean,
         smooth: boolean
     ): void {
-        // WebGPU bitmap fill implementation
-        const vertices = this.pathCommand.generateVertices();
-        if (vertices.length === 0) return;
+        const pathVertices = this.pathCommand.$getVertices;
+        if (pathVertices.length === 0) return;
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
             this.beginFrame();
         }
 
-        // テクスチャを作成
-        const textureName = `bitmap_fill_${Date.now()}`;
-        this.textureManager.createTextureFromPixels(
-            textureName,
-            pixels,
-            width,
-            height
+        // コマンドエンコーダーを確保
+        this.ensureCommandEncoder();
+
+        // 既存のレンダーパスがない場合のみ新規作成
+        if (!this.renderPassEncoder) {
+            const textureView = this.getCurrentTextureView();
+            const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                textureView,
+                0, 0, 0, 0,
+                "load"
+            );
+            this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        }
+
+        // WebGL版と同じ: 現在のビューポートサイズを使用
+        const viewportWidth = this.viewportWidth;
+        const viewportHeight = this.viewportHeight;
+
+        // 色（ビットマップ描画ではアルファ乗算用に使用）
+        const red = this.$fillStyle[0];
+        const green = this.$fillStyle[1];
+        const blue = this.$fillStyle[2];
+        const alpha = this.$fillStyle[3];
+
+        // 行列を取得
+        const a  = this.$matrix[0];
+        const b  = this.$matrix[1];
+        const c  = this.$matrix[3];
+        const d  = this.$matrix[4];
+        const tx = this.$matrix[6];
+        const ty = this.$matrix[7];
+
+        // MeshFillGenerateUseCaseで頂点データを生成
+        const mesh = meshFillGenerateUseCase(
+            pathVertices,
+            a, b, c, d, tx, ty,
+            red, green, blue, alpha,
+            viewportWidth, viewportHeight
         );
 
-        const texture = this.textureManager.getTexture(textureName);
-        if (!texture) {
-            console.error("[WebGPU] Failed to create bitmap texture");
+        if (mesh.indexCount === 0) {
             return;
         }
+
+        // 頂点バッファを作成
+        const vertexBuffer = this.bufferManager.createVertexBuffer(
+            `bitmap_fill_${Date.now()}`,
+            mesh.buffer
+        );
+
+        // ビットマップテクスチャを作成
+        const bitmapTexture = this.device.createTexture({
+            size: { width, height },
+            format: "rgba8unorm",
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+        });
+
+        // ピクセルデータをテクスチャに転送
+        this.device.queue.writeTexture(
+            { texture: bitmapTexture },
+            pixels.buffer,
+            { bytesPerRow: width * 4, rowsPerImage: height, offset: pixels.byteOffset },
+            { width, height }
+        );
+
+        // ビットマップ変換行列を計算（逆行列）
+        const bitmapMatrix = this.computeBitmapMatrix(matrix);
+
+        // Uniformバッファを作成
+        // BitmapUniforms構造体:
+        // - bitmapMatrix: mat3x3<f32> (各列がvec4にパディング = 48 bytes)
+        // - textureWidth: f32 (4 bytes)
+        // - textureHeight: f32 (4 bytes)
+        // - repeat: f32 (4 bytes)
+        // - _pad: f32 (4 bytes)
+        // 合計: 64 bytes
+        const uniformData = new Float32Array(16);
+        // mat3x3 (各列がvec4にパディング)
+        uniformData[0] = bitmapMatrix[0];
+        uniformData[1] = bitmapMatrix[1];
+        uniformData[2] = bitmapMatrix[2];
+        uniformData[3] = 0; // padding
+        uniformData[4] = bitmapMatrix[3];
+        uniformData[5] = bitmapMatrix[4];
+        uniformData[6] = bitmapMatrix[5];
+        uniformData[7] = 0; // padding
+        uniformData[8] = bitmapMatrix[6];
+        uniformData[9] = bitmapMatrix[7];
+        uniformData[10] = bitmapMatrix[8];
+        uniformData[11] = 0; // padding
+        // ビットマップパラメータ
+        uniformData[12] = width;
+        uniformData[13] = height;
+        uniformData[14] = repeat ? 1.0 : 0.0;
+        uniformData[15] = 0; // padding
+
+        const uniformBuffer = this.bufferManager.createUniformBuffer(
+            `bitmap_uniform_${Date.now()}`,
+            uniformData.byteLength
+        );
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
         // サンプラーを作成
-        const samplerName = repeat ? "repeat" : (smooth ? "linear" : "nearest");
-        const sampler = this.textureManager.getSampler(samplerName);
-        if (!sampler) {
-            console.error("[WebGPU] Sampler not found");
+        const sampler = this.device.createSampler({
+            magFilter: smooth ? "linear" : "nearest",
+            minFilter: smooth ? "linear" : "nearest",
+            addressModeU: repeat ? "repeat" : "clamp-to-edge",
+            addressModeV: repeat ? "repeat" : "clamp-to-edge"
+        });
+
+        // バインドグループを作成
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("bitmap_fill");
+        if (!bindGroupLayout) {
+            console.error("[WebGPU] bitmap_fill bind group layout not found");
+            bitmapTexture.destroy();
             return;
         }
 
-        // TODO: ビットマップ塗りつぶし用のシェーダーを使用
-        // 現在は基本的なfill()として実装
-        this.fill();
+        const bindGroup = this.device.createBindGroup({
+            layout: bindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: uniformBuffer } },
+                { binding: 1, resource: sampler },
+                { binding: 2, resource: bitmapTexture.createView() }
+            ]
+        });
 
-        // テクスチャをクリーンアップ
-        this.textureManager.destroyTexture(textureName);
+        // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
+        const pipelineName = this.currentRenderTarget ? "bitmap_fill" : "bitmap_fill_bgra";
+        const pipeline = this.pipelineManager.getPipeline(pipelineName);
+        if (!pipeline) {
+            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
+            bitmapTexture.destroy();
+            return;
+        }
+
+        // 描画
+        this.renderPassEncoder!.setPipeline(pipeline);
+        this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
+        this.renderPassEncoder!.setBindGroup(0, bindGroup);
+        this.renderPassEncoder!.draw(mesh.indexCount, 1, 0, 0);
+    }
+
+    /**
+     * @description ビットマップ変換行列を計算（逆行列）
+     * @param {Float32Array} matrix - ビットマップ行列 [a, b, c, d, tx, ty]
+     * @return {Float32Array} - 3x3行列
+     */
+    private computeBitmapMatrix(matrix: Float32Array): Float32Array
+    {
+        const a = matrix[0];
+        const b = matrix[1];
+        const c = matrix[2];
+        const d = matrix[3];
+        const tx = matrix[4];
+        const ty = matrix[5];
+
+        // 行列式
+        const det = a * d - b * c;
+        if (Math.abs(det) < 1e-10) {
+            // 特異行列の場合は単位行列を返す
+            return new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+        }
+
+        const invDet = 1 / det;
+
+        // 逆行列を計算
+        const ia = d * invDet;
+        const ib = -b * invDet;
+        const ic = -c * invDet;
+        const id = a * invDet;
+        const itx = (c * ty - d * tx) * invDet;
+        const ity = (b * tx - a * ty) * invDet;
+
+        return new Float32Array([
+            ia, ib, 0,
+            ic, id, 0,
+            itx, ity, 1
+        ]);
     }
 
     /**
      * @description グラデーション線の描画を実行
-     * @param {number} type
-     * @param {number[]} stops
-     * @param {Float32Array} matrix
-     * @param {number} spread
-     * @param {number} interpolation
-     * @param {number} focal
+     * @param {number} type - 0: linear, 1: radial
+     * @param {number[]} stops - グラデーションストップ配列 [offset, R, G, B, A, ...]
+     * @param {Float32Array} matrix - グラデーション変換行列 [a, b, c, d, tx, ty]
+     * @param {number} spread - スプレッドメソッド (0: pad, 1: reflect, 2: repeat)
+     * @param {number} interpolation - 補間方法 (0: RGB, 1: linearRGB)
+     * @param {number} focal - ラジアルグラデーションのフォーカルポイント
      * @return {void}
      */
     gradientStroke (
-        _type: number,
-        _stops: number[],
-        _matrix: Float32Array,
-        _spread: number,
-        _interpolation: number,
-        _focal: number
+        type: number,
+        stops: number[],
+        matrix: Float32Array,
+        spread: number,
+        interpolation: number,
+        focal: number
     ): void {
-        // TODO: グラデーションストローク実装
-        this.stroke();
+        const paths = this.pathCommand.getAllPaths();
+        if (paths.length === 0) return;
+
+        // フレームが開始されていない場合は開始
+        if (!this.frameStarted) {
+            this.beginFrame();
+        }
+
+        // コマンドエンコーダーを確保
+        this.ensureCommandEncoder();
+
+        // 既存のレンダーパスがない場合のみ新規作成
+        if (!this.renderPassEncoder) {
+            const textureView = this.getCurrentTextureView();
+            const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                textureView,
+                0, 0, 0, 0,
+                "load"
+            );
+            this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        }
+
+        // WebGL版と同じ: 現在のビューポートサイズを使用
+        const viewportWidth = this.viewportWidth;
+        const viewportHeight = this.viewportHeight;
+
+        // 色（グラデーション描画ではアルファ乗算用に使用）
+        const red = this.$strokeStyle[0];
+        const green = this.$strokeStyle[1];
+        const blue = this.$strokeStyle[2];
+        const alpha = this.$strokeStyle[3];
+
+        // 行列を取得
+        const a  = this.$matrix[0];
+        const b  = this.$matrix[1];
+        const c  = this.$matrix[3];
+        const d  = this.$matrix[4];
+        const tx = this.$matrix[6];
+        const ty = this.$matrix[7];
+
+        // ストロークの太さ
+        const thickness = this.thickness / 2;
+
+        // グラデーションストローク用メッシュを生成
+        const mesh = meshGradientStrokeGenerateUseCase(
+            paths,
+            thickness,
+            a, b, c, d, tx, ty,
+            red, green, blue, alpha,
+            viewportWidth, viewportHeight
+        );
+
+        if (mesh.indexCount === 0) {
+            return;
+        }
+
+        // 頂点バッファを作成
+        const vertexBuffer = this.bufferManager.createVertexBuffer(
+            `gradient_stroke_${Date.now()}`,
+            mesh.buffer
+        );
+
+        // グラデーションLUTテクスチャを生成
+        const lutData = generateGradientLUT(stops, spread, interpolation);
+        const stopsLength = stops.length / 5;
+        const lutResolution = getAdaptiveResolution(stopsLength);
+
+        // LUTテクスチャを作成
+        const lutTexture = this.device.createTexture({
+            size: { width: lutResolution, height: 1 },
+            format: "rgba8unorm",
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+        });
+
+        // LUTデータをテクスチャに転送
+        this.device.queue.writeTexture(
+            { texture: lutTexture },
+            lutData.buffer,
+            { bytesPerRow: lutResolution * 4, rowsPerImage: 1, offset: lutData.byteOffset },
+            { width: lutResolution, height: 1 }
+        );
+
+        // グラデーション変換行列を計算
+        const gradientMatrix = this.computeGradientMatrix(matrix, type);
+
+        // Uniformバッファを作成
+        const uniformData = new Float32Array(16);
+        // mat3x3 (各列がvec4にパディング)
+        uniformData[0] = gradientMatrix[0];
+        uniformData[1] = gradientMatrix[1];
+        uniformData[2] = gradientMatrix[2];
+        uniformData[3] = 0; // padding
+        uniformData[4] = gradientMatrix[3];
+        uniformData[5] = gradientMatrix[4];
+        uniformData[6] = gradientMatrix[5];
+        uniformData[7] = 0; // padding
+        uniformData[8] = gradientMatrix[6];
+        uniformData[9] = gradientMatrix[7];
+        uniformData[10] = gradientMatrix[8];
+        uniformData[11] = 0; // padding
+        // グラデーションパラメータ
+        uniformData[12] = type; // gradientType
+        uniformData[13] = focal; // focal
+        uniformData[14] = spread; // spread
+        uniformData[15] = 0; // padding
+
+        const uniformBuffer = this.bufferManager.createUniformBuffer(
+            `gradient_stroke_uniform_${Date.now()}`,
+            uniformData.byteLength
+        );
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
+
+        // サンプラーを作成
+        const sampler = this.device.createSampler({
+            magFilter: "linear",
+            minFilter: "linear",
+            addressModeU: "clamp-to-edge",
+            addressModeV: "clamp-to-edge"
+        });
+
+        // バインドグループを作成
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("gradient_fill");
+        if (!bindGroupLayout) {
+            console.error("[WebGPU] gradient_fill bind group layout not found");
+            lutTexture.destroy();
+            return;
+        }
+
+        const bindGroup = this.device.createBindGroup({
+            layout: bindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: uniformBuffer } },
+                { binding: 1, resource: sampler },
+                { binding: 2, resource: lutTexture.createView() }
+            ]
+        });
+
+        // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
+        const pipelineName = this.currentRenderTarget ? "gradient_fill" : "gradient_fill_bgra";
+        const pipeline = this.pipelineManager.getPipeline(pipelineName);
+        if (!pipeline) {
+            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
+            lutTexture.destroy();
+            return;
+        }
+
+        // 描画
+        this.renderPassEncoder!.setPipeline(pipeline);
+        this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
+        this.renderPassEncoder!.setBindGroup(0, bindGroup);
+        this.renderPassEncoder!.draw(mesh.indexCount, 1, 0, 0);
     }
 
     /**
      * @description ビットマップ線の描画を実行
      * @param {Uint8Array} pixels
-     * @param {Float32Array} matrix
+     * @param {Float32Array} matrix - ビットマップ変換行列 [a, b, c, d, tx, ty]
      * @param {number} width
      * @param {number} height
      * @param {boolean} repeat
@@ -943,31 +1449,260 @@ export class Context
      * @return {void}
      */
     bitmapStroke (
-        _pixels: Uint8Array,
-        _matrix: Float32Array,
-        _width: number,
-        _height: number,
-        _repeat: boolean,
-        _smooth: boolean
+        pixels: Uint8Array,
+        matrix: Float32Array,
+        width: number,
+        height: number,
+        repeat: boolean,
+        smooth: boolean
     ): void {
-        // TODO: ビットマップストローク実装
-        this.stroke();
+        const paths = this.pathCommand.getAllPaths();
+        if (paths.length === 0) return;
+
+        // フレームが開始されていない場合は開始
+        if (!this.frameStarted) {
+            this.beginFrame();
+        }
+
+        // コマンドエンコーダーを確保
+        this.ensureCommandEncoder();
+
+        // 既存のレンダーパスがない場合のみ新規作成
+        if (!this.renderPassEncoder) {
+            const textureView = this.getCurrentTextureView();
+            const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                textureView,
+                0, 0, 0, 0,
+                "load"
+            );
+            this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        }
+
+        // WebGL版と同じ: 現在のビューポートサイズを使用
+        const viewportWidth = this.viewportWidth;
+        const viewportHeight = this.viewportHeight;
+
+        // 色（ビットマップ描画ではアルファ乗算用に使用）
+        const red = this.$strokeStyle[0];
+        const green = this.$strokeStyle[1];
+        const blue = this.$strokeStyle[2];
+        const alpha = this.$strokeStyle[3];
+
+        // 行列を取得
+        const a  = this.$matrix[0];
+        const b  = this.$matrix[1];
+        const c  = this.$matrix[3];
+        const d  = this.$matrix[4];
+        const tx = this.$matrix[6];
+        const ty = this.$matrix[7];
+
+        // ストロークの太さ
+        const thickness = this.thickness / 2;
+
+        // ビットマップストローク用メッシュを生成
+        const mesh = meshBitmapStrokeGenerateUseCase(
+            paths,
+            thickness,
+            a, b, c, d, tx, ty,
+            red, green, blue, alpha,
+            viewportWidth, viewportHeight
+        );
+
+        if (mesh.indexCount === 0) {
+            return;
+        }
+
+        // 頂点バッファを作成
+        const vertexBuffer = this.bufferManager.createVertexBuffer(
+            `bitmap_stroke_${Date.now()}`,
+            mesh.buffer
+        );
+
+        // ビットマップテクスチャを作成
+        const bitmapTexture = this.device.createTexture({
+            size: { width, height },
+            format: "rgba8unorm",
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+        });
+
+        // ピクセルデータをテクスチャに転送
+        this.device.queue.writeTexture(
+            { texture: bitmapTexture },
+            pixels.buffer,
+            { bytesPerRow: width * 4, rowsPerImage: height, offset: pixels.byteOffset },
+            { width, height }
+        );
+
+        // ビットマップ変換行列を計算（逆行列）
+        const bitmapMatrix = this.computeBitmapMatrix(matrix);
+
+        // Uniformバッファを作成
+        const uniformData = new Float32Array(16);
+        // mat3x3 (各列がvec4にパディング)
+        uniformData[0] = bitmapMatrix[0];
+        uniformData[1] = bitmapMatrix[1];
+        uniformData[2] = bitmapMatrix[2];
+        uniformData[3] = 0; // padding
+        uniformData[4] = bitmapMatrix[3];
+        uniformData[5] = bitmapMatrix[4];
+        uniformData[6] = bitmapMatrix[5];
+        uniformData[7] = 0; // padding
+        uniformData[8] = bitmapMatrix[6];
+        uniformData[9] = bitmapMatrix[7];
+        uniformData[10] = bitmapMatrix[8];
+        uniformData[11] = 0; // padding
+        // ビットマップパラメータ
+        uniformData[12] = width;
+        uniformData[13] = height;
+        uniformData[14] = repeat ? 1.0 : 0.0;
+        uniformData[15] = 0; // padding
+
+        const uniformBuffer = this.bufferManager.createUniformBuffer(
+            `bitmap_stroke_uniform_${Date.now()}`,
+            uniformData.byteLength
+        );
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
+
+        // サンプラーを作成
+        const sampler = this.device.createSampler({
+            magFilter: smooth ? "linear" : "nearest",
+            minFilter: smooth ? "linear" : "nearest",
+            addressModeU: repeat ? "repeat" : "clamp-to-edge",
+            addressModeV: repeat ? "repeat" : "clamp-to-edge"
+        });
+
+        // バインドグループを作成
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("bitmap_fill");
+        if (!bindGroupLayout) {
+            console.error("[WebGPU] bitmap_fill bind group layout not found");
+            bitmapTexture.destroy();
+            return;
+        }
+
+        const bindGroup = this.device.createBindGroup({
+            layout: bindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: uniformBuffer } },
+                { binding: 1, resource: sampler },
+                { binding: 2, resource: bitmapTexture.createView() }
+            ]
+        });
+
+        // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
+        const pipelineName = this.currentRenderTarget ? "bitmap_fill" : "bitmap_fill_bgra";
+        const pipeline = this.pipelineManager.getPipeline(pipelineName);
+        if (!pipeline) {
+            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
+            bitmapTexture.destroy();
+            return;
+        }
+
+        // 描画
+        this.renderPassEncoder!.setPipeline(pipeline);
+        this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
+        this.renderPassEncoder!.setBindGroup(0, bindGroup);
+        this.renderPassEncoder!.draw(mesh.indexCount, 1, 0, 0);
     }
 
     /**
      * @description マスク処理を実行
+     *              WebGL版と同様にステンシルバッファを使用したクリッピング
      * @return {void}
      */
     clip (): void
     {
-        // WebGPU clip implementation
-        // ステンシルバッファを使用したクリッピング
-        const vertices = this.pathCommand.generateVertices();
-        if (vertices.length === 0) return;
+        const currentAttachment = this.frameBufferManager.getCurrentAttachment();
+        if (!currentAttachment) {
+            return;
+        }
 
-        // TODO: ステンシルバッファを使用したクリッピング実装
-        // 現在は基本的なfill()として実装
-        this.fill();
+        // クリップ境界を取得
+        const bounds = $clipBounds.get(currentAttachment.clipLevel);
+        if (!bounds) {
+            return;
+        }
+
+        const xMin = bounds[0];
+        const yMin = bounds[1];
+        const xMax = bounds[2];
+        const yMax = bounds[3];
+
+        const width = Math.ceil(Math.abs(xMax - xMin));
+        const height = Math.ceil(Math.abs(yMax - yMin));
+
+        // メッシュを生成
+        const viewportWidth = currentAttachment.width;
+        const viewportHeight = currentAttachment.height;
+
+        const red = this.$fillStyle[0];
+        const green = this.$fillStyle[1];
+        const blue = this.$fillStyle[2];
+        const alpha = this.$fillStyle[3] * this.globalAlpha;
+
+        const pathVertices = this.pathCommand.$getVertices;
+        if (pathVertices.length === 0) {
+            return;
+        }
+
+        const mesh = meshFillGenerateUseCase(
+            pathVertices,
+            this.$matrix[0], this.$matrix[1],
+            this.$matrix[3], this.$matrix[4],
+            this.$matrix[6], this.$matrix[7],
+            red, green, blue, alpha,
+            viewportWidth, viewportHeight
+        );
+
+        if (mesh.indexCount === 0) {
+            return;
+        }
+
+        // 頂点バッファを作成
+        const vertexBuffer = this.bufferManager.createVertexBuffer(
+            `clip_${Date.now()}`,
+            mesh.buffer
+        );
+
+        // クリップレベルを取得
+        let level = $clipLevels.get(currentAttachment.clipLevel) || 1;
+
+        // ステンシルパイプラインを取得
+        const pipeline = this.pipelineManager.getPipeline("clip_write");
+        if (!pipeline) {
+            console.error("[WebGPU] clip_write pipeline not found");
+            return;
+        }
+
+        // シザーレクトを設定
+        const scissorX = Math.max(0, xMin);
+        const scissorY = Math.max(0, currentAttachment.height - yMin - height);
+        const scissorW = Math.min(width, currentAttachment.width - scissorX);
+        const scissorH = Math.min(height, currentAttachment.height - scissorY);
+
+        if (scissorW > 0 && scissorH > 0 && this.renderPassEncoder) {
+            this.renderPassEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
+        }
+
+        // ステンシルマスクをビット単位で設定（WebGL版: stencilMask(1 << level - 1)）
+        const stencilMask = 1 << (level - 1);
+
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.setPipeline(pipeline);
+            this.renderPassEncoder.setStencilReference(stencilMask);
+            this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
+            this.renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+        }
+
+        // レベルをインクリメント
+        level++;
+        if (level > 7) {
+            // ユニオンマスク処理（レベルが7を超えた場合）
+            // TODO: MaskUnionMaskService相当の処理
+            level = currentAttachment.clipLevel + 1;
+        }
+
+        // クリップレベルを更新
+        $clipLevels.set(currentAttachment.clipLevel, level);
     }
 
     /**
