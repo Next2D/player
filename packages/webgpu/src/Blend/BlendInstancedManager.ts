@@ -36,6 +36,7 @@ export const getInstancedShaderManager = (): ShaderInstancedManager =>
  * @param {number} viewport_width
  * @param {number} viewport_height
  * @param {number} render_max_size
+ * @param {number} global_alpha
  * @return {void}
  */
 export const addDisplayObjectToInstanceArray = (
@@ -49,13 +50,15 @@ export const addDisplayObjectToInstanceArray = (
     blend_mode: string,
     viewport_width: number,
     viewport_height: number,
-    render_max_size: number
+    render_max_size: number,
+    global_alpha: number
 ): void => {
 
+    // WebGL版と同じ: mulColor.a には globalAlpha を使用
     const ct0 = color_transform[0];
     const ct1 = color_transform[1];
     const ct2 = color_transform[2];
-    const ct3 = color_transform[3]; // alpha
+    const ct3 = global_alpha; // WebGL: $context.globalAlpha
     const ct4 = color_transform[4] / 255;
     const ct5 = color_transform[5] / 255;
     const ct6 = color_transform[6] / 255;

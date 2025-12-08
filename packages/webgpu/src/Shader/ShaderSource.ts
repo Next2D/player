@@ -100,9 +100,11 @@ export class ShaderSource
                     discard;
                 }
 
-                // input.color is already premultiplied (RGB = baseRGB * alpha)
-                // Apply AA by multiplying the entire premultiplied color
-                return input.color * aa;
+                // WebGL版と同じ: o_color = vec4(v_color.rgb * v_color.a, v_color.a);
+                // 入力色はストレートアルファなので、ここでプリマルチプライド
+                // さらにAAを適用
+                let premultiplied = vec4<f32>(input.color.rgb * input.color.a, input.color.a);
+                return premultiplied * aa;
             }
         `;
     }
@@ -376,15 +378,26 @@ export class ShaderSource
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
                 var src = textureSample(textureData, textureSampler, input.texCoord);
 
-                // Always apply color transform (matches WebGL behavior)
-                // Unpremultiply: divide RGB by alpha
-                let unpremultiplied = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
+                // WebGL版と同じ条件: カラートランスフォームが必要かチェック
+                // if (v_mul.x != 1.0 || v_mul.y != 1.0 || v_mul.z != 1.0 || v_mul.w != 1.0
+                //     || v_add.x != 0.0 || v_add.y != 0.0 || v_add.z != 0.0)
+                let needsTransform =
+                    input.mulColor.x != 1.0 || input.mulColor.y != 1.0 ||
+                    input.mulColor.z != 1.0 || input.mulColor.w != 1.0 ||
+                    input.addColor.x != 0.0 || input.addColor.y != 0.0 || input.addColor.z != 0.0;
 
-                // Apply color transform: multiply + add
-                var transformed = clamp(unpremultiplied * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
+                if (needsTransform) {
+                    // Unpremultiply: divide RGB by alpha
+                    src = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
 
-                // Premultiply again: multiply RGB by alpha
-                return vec4<f32>(transformed.rgb * transformed.a, transformed.a);
+                    // Apply color transform: multiply + add
+                    src = clamp(src * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
+
+                    // Premultiply again: multiply RGB by alpha
+                    src = vec4<f32>(src.rgb * src.a, src.a);
+                }
+
+                return src;
             }
         `;
     }

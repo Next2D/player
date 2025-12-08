@@ -1713,8 +1713,3 @@ fn main(input: VertexInput) -> @builtin(position) vec4<f32> {
 | Atlas | `AtlasManager.ts` | requestNode, releaseNode |
 | VAO | `VertexArrayObject.ts` | create, bind, draw |
 | Gradient | `Shader/GradientLUTGenerator.ts` | generateLUT |
-
----
-
-*Document generated for WebGPU porting reference*
-*WebGPU移植参考用に生成されたドキュメント*

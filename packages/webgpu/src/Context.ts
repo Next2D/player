@@ -511,18 +511,24 @@ export class Context
         const canvasWidth = this.canvasContext.canvas.width;
         const canvasHeight = this.canvasContext.canvas.height;
 
-        // 色（プリマルチプライドアルファ）
-        const red = this.$fillStyle[0] * this.globalAlpha;
-        const green = this.$fillStyle[1] * this.globalAlpha;
-        const blue = this.$fillStyle[2] * this.globalAlpha;
+        // WebGL版と同じ: 色はストレート形式（プリマルチプライドはシェーダーで行う）
+        const red = this.$fillStyle[0];
+        const green = this.$fillStyle[1];
+        const blue = this.$fillStyle[2];
         const alpha = this.$fillStyle[3] * this.globalAlpha;
+
+        // WebGL版と同じ: 行列をビューポートサイズで正規化
+        const a  = this.$matrix[0] / canvasWidth;
+        const b  = this.$matrix[1] / canvasHeight;
+        const c  = this.$matrix[3] / canvasWidth;
+        const d  = this.$matrix[4] / canvasHeight;
+        const tx = this.$matrix[6] / canvasWidth;
+        const ty = this.$matrix[7] / canvasHeight;
 
         // MeshFillGenerateUseCaseでLoop-Blinn対応頂点データを生成
         const mesh = meshFillGenerateUseCase(
             pathVertices,
-            this.$matrix[0], this.$matrix[1],
-            this.$matrix[3], this.$matrix[4],
-            this.$matrix[6], this.$matrix[7],
+            a, b, c, d, tx, ty,
             red, green, blue, alpha
         );
 
@@ -1034,7 +1040,7 @@ export class Context
         const canvasWidth = this.canvasContext.canvas.width;
         const canvasHeight = this.canvasContext.canvas.height;
         const renderMaxSize = WebGPUUtil.getRenderMaxSize();
-        
+
         addDisplayObjectToInstanceArray(
             node,
             x_min, y_min, x_max, y_max,
@@ -1043,7 +1049,8 @@ export class Context
             this.globalCompositeOperation,
             canvasWidth,
             canvasHeight,
-            renderMaxSize
+            renderMaxSize,
+            this.globalAlpha  // WebGL版と同じ: globalAlphaを渡す
         );
     }
 
