@@ -39,6 +39,8 @@ let $currentFrame: number = 0;
 /**
  * @description グラデーションストップからキャッシュキーを生成
  *              Generate cache key from gradient stops
+ *              色の変化を正確に検出するため、全ての値を含むキーを生成
+ *              Generate a key that includes all values to accurately detect color changes
  *
  * @param  {number[]} stops
  * @param  {number} interpolation
@@ -48,13 +50,15 @@ let $currentFrame: number = 0;
  */
 export const $generateCacheKey = (stops: number[], interpolation: number): string =>
 {
-    // 簡易ハッシュ: stops配列とinterpolationを結合
-    // Simple hash: combine stops array and interpolation
-    let hash = interpolation;
+    // 全ての値を含むキーを生成して衝突を防ぐ
+    // Generate a key including all values to prevent collisions
+    // stops配列: [ratio, r, g, b, a, ratio, r, g, b, a, ...]
+    // 各値を固定小数点(3桁)で文字列化
+    const parts: string[] = new Array(stops.length);
     for (let i = 0; i < stops.length; i++) {
-        hash = ((hash << 5) - hash + (stops[i] * 1000 | 0)) | 0;
+        parts[i] = (stops[i] * 1000 | 0).toString(36);
     }
-    return `g${hash}_${stops.length}_${interpolation}`;
+    return `${interpolation}_${parts.join("_")}`;
 };
 
 /**

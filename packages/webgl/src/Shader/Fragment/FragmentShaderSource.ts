@@ -74,9 +74,10 @@ void main() {
 };
 
 /**
- * @description マスク専用のシェーダ。
- *              Shader dedicated to masks.
+ * @description マスク専用のシェーダ。Loop-Blinn法による高品質アンチエイリアシング。
+ *              Shader dedicated to masks. High-quality anti-aliasing using Loop-Blinn method.
  *
+ * @see GPU Gems 3, Chapter 25: Rendering Vector Art on the GPU
  * @return {string}
  * @method
  * @static
@@ -90,17 +91,28 @@ in vec2 v_bezier;
 out vec4 o_color;
 
 void main() {
-    vec2 px = dFdx(v_bezier);
-    vec2 py = dFdy(v_bezier);
+    // 2次ベジエ曲線の陰関数: f(u,v) = u² - v
+    // Implicit function for quadratic Bezier: f(u,v) = u² - v
+    float f_val = v_bezier.x * v_bezier.x - v_bezier.y;
 
-    vec2 f = (2.0 * v_bezier.x) * vec2(px.x, py.x) - vec2(px.y, py.y);
-    float alpha = 0.5 - (v_bezier.x * v_bezier.x - v_bezier.y) / length(f);
+    // スクリーン空間での勾配を計算（偏微分）
+    // Calculate screen-space gradient (partial derivatives)
+    float dx = dFdx(f_val);
+    float dy = dFdy(f_val);
 
-    if (alpha > 0.0) {
-        o_color = vec4(min(alpha, 1.0));
+    // 勾配の大きさで正規化した符号付き距離
+    // Signed distance normalized by gradient magnitude
+    float dist = f_val / length(vec2(dx, dy));
+
+    // smoothstepによる安定したアンチエイリアシング（約1ピクセル幅の遷移）
+    // Stable anti-aliasing with smoothstep (approximately 1 pixel wide transition)
+    float alpha = smoothstep(0.5, -0.5, dist);
+
+    if (alpha > 0.001) {
+        o_color = vec4(alpha);
     } else {
         discard;
-    }    
+    }
 }`;
 };
 

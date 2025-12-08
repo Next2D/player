@@ -15,15 +15,14 @@ import {
     $rgbIdentityTable,
     $rgbToLinearTable
 } from "../../GradientLUTGenerator";
-import {
-    $generateCacheKey,
-    $getCachedLUT,
-    $setCachedLUT
-} from "../../GradientLUTCache";
 
 /**
  * @description グラデーションのテクスチャを生成します。
  *              Generates a texture of the gradient.
+ *              注意: グラデーションLUTは共有テクスチャに描画されるため、
+ *              キャッシュは使用しません。各フレームで再描画が必要です。
+ *              Note: Gradient LUT is drawn to a shared texture, so caching
+ *              is not used. Re-drawing is required each frame.
  *
  * @param  {array} stops
  * @param  {number} interpolation
@@ -33,13 +32,6 @@ import {
  */
 export const execute = (stops: number[], interpolation: number): ITextureObject =>
 {
-    // キャッシュチェック
-    const cacheKey = $generateCacheKey(stops, interpolation);
-    const cachedTexture = $getCachedLUT(cacheKey);
-    if (cachedTexture) {
-        return cachedTexture;
-    }
-
     const currentAttachment = $context.currentAttachmentObject;
     const scissorBox = $gl.getParameter($gl.SCISSOR_BOX);
     $gl.disable($gl.SCISSOR_TEST);
@@ -87,10 +79,5 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
     $gl.enable($gl.SCISSOR_TEST);
     $gl.scissor(scissorBox[0], scissorBox[1], scissorBox[2], scissorBox[3]);
 
-    const texture = gradientAttachmentObject.texture as NonNullable<ITextureObject>;
-
-    // キャッシュに保存
-    $setCachedLUT(cacheKey, texture);
-
-    return texture;
+    return gradientAttachmentObject.texture as NonNullable<ITextureObject>;
 };

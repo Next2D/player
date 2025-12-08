@@ -1,12 +1,12 @@
 import { execute as pathCommandMoveToUseCase } from "./PathCommandMoveToUseCase";
 import { execute as pathCommandEqualsToLastPointService } from "../service/PathCommandEqualsToLastPointService";
 import { execute as pathCommandQuadraticCurveToUseCase } from "./PathCommandQuadraticCurveToUseCase";
-import { execute as bezierConverterCubicToQuadUseCase } from "../../BezierConverter/usecase/BezierConverterCubicToQuadUseCase";
+import { execute as bezierConverterAdaptiveCubicToQuadUseCase } from "../../BezierConverter/usecase/BezierConverterAdaptiveCubicToQuadUseCase";
 import { $currentPath } from "../../PathCommand";
 
 /**
- * @description 3次ベジェ曲線を描画します。
- *              Draw a cubic Bezier curve.
+ * @description 3次ベジェ曲線を描画します。適応的テッセレーションにより曲率に応じた分割を行います。
+ *              Draw a cubic Bezier curve. Uses adaptive tessellation based on curvature.
  *
  * @param  {number} cx1
  * @param  {number} cy1
@@ -36,8 +36,13 @@ export const execute = (
     const fromX: number = +$currentPath[length - 3];
     const fromY: number = +$currentPath[length - 2];
 
-    const buffer = bezierConverterCubicToQuadUseCase(fromX, fromY, cx1, cy1, cx2, cy2, x, y);
-    for (let idx = 0; 32 > idx; ) {
+    // 適応的テッセレーション: 曲率に基づいて分割数を動的に決定
+    // Adaptive tessellation: dynamically determine subdivision count based on curvature
+    const result = bezierConverterAdaptiveCubicToQuadUseCase(fromX, fromY, cx1, cy1, cx2, cy2, x, y);
+    const buffer = result.buffer;
+    const count = result.count;
+
+    for (let idx = 0; idx < count * 4; ) {
         pathCommandQuadraticCurveToUseCase(
             buffer[idx++],
             buffer[idx++],

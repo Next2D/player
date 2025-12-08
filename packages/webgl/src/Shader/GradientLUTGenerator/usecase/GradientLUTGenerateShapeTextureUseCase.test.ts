@@ -74,12 +74,6 @@ vi.mock("../../GradientLUTGenerator.ts", async (importOriginal) =>
     };
 });
 
-vi.mock("../../GradientLUTCache.ts", () => ({
-    $generateCacheKey: vi.fn(() => "test_cache_key"),
-    $getCachedLUT: vi.fn(() => null),
-    $setCachedLUT: vi.fn()
-}));
-
 vi.mock("../../../Blend/service/BlendOneZeroService.ts", () => ({
     execute: vi.fn()
 }));
