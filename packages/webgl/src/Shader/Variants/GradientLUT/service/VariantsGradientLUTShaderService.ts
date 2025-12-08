@@ -1,11 +1,14 @@
-import { $collection } from "../../GradientLUTVariants";
+import {
+    $getFromCache,
+    $addToCache
+} from "../../GradientLUTVariants";
 import { ShaderManager } from "../../../ShaderManager";
 import { TEXTURE_TEMPLATE } from "../../../Vertex/VertexShaderSource";
 import { GRADIENT_LUT_TEMPLATE } from "../../../Fragment/FragmentShaderSourceGradientLUT";
 
 /**
- * @description グラデーションLUTのシェーダーを返却
- *              Returns the shader of the gradient LUT
+ * @description グラデーションLUTのシェーダーを返却（LRUキャッシュ使用）
+ *              Returns the shader of the gradient LUT (using LRU cache)
  *
  * @param  {number} stops_length
  * @param  {boolean} is_linear_space
@@ -22,8 +25,10 @@ export const execute = (
     const key2 = is_linear_space ? "y" : "n";
     const key  = `l${key1}${key2}`;
 
-    if ($collection.has(key)) {
-        return $collection.get(key) as NonNullable<ShaderManager>;
+    // LRUキャッシュから取得を試みる
+    const cachedShader = $getFromCache(key);
+    if (cachedShader) {
+        return cachedShader;
     }
 
     const mediumpLength: number = Math.ceil(stops_length * 5 / 4);
@@ -33,7 +38,8 @@ export const execute = (
         GRADIENT_LUT_TEMPLATE(mediumpLength, stops_length, is_linear_space)
     );
 
-    $collection.set(key, shader);
+    // LRUキャッシュに追加
+    $addToCache(key, shader);
 
     return shader;
 };

@@ -9,11 +9,17 @@ import {
     $context
 } from "../../../WebGLUtil";
 import {
-    $getGradientAttachmentObject,
+    $getGradientAttachmentObjectWithResolution,
+    $getAdaptiveResolution,
     $getGradientLUTGeneratorMaxLength,
     $rgbIdentityTable,
     $rgbToLinearTable
 } from "../../GradientLUTGenerator";
+import {
+    $generateCacheKey,
+    $getCachedLUT,
+    $setCachedLUT
+} from "../../GradientLUTCache";
 
 /**
  * @description グラデーションのテクスチャを生成します。
@@ -27,15 +33,24 @@ import {
  */
 export const execute = (stops: number[], interpolation: number): ITextureObject =>
 {
+    // キャッシュチェック
+    const cacheKey = $generateCacheKey(stops, interpolation);
+    const cachedTexture = $getCachedLUT(cacheKey);
+    if (cachedTexture) {
+        return cachedTexture;
+    }
+
     const currentAttachment = $context.currentAttachmentObject;
     const scissorBox = $gl.getParameter($gl.SCISSOR_BOX);
     $gl.disable($gl.SCISSOR_TEST);
 
-    const gradientAttachmentObject = $getGradientAttachmentObject();
-    $context.bind(gradientAttachmentObject);
-
     const isLinearSpace = interpolation === 0;
     const stopsLength = stops.length / 5;
+
+    // 適応的解像度を使用
+    const resolution = $getAdaptiveResolution(stopsLength);
+    const gradientAttachmentObject = $getGradientAttachmentObjectWithResolution(resolution);
+    $context.bind(gradientAttachmentObject);
 
     const table: Float32Array = isLinearSpace
         ? $rgbToLinearTable
@@ -72,5 +87,10 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
     $gl.enable($gl.SCISSOR_TEST);
     $gl.scissor(scissorBox[0], scissorBox[1], scissorBox[2], scissorBox[3]);
 
-    return gradientAttachmentObject.texture as NonNullable<ITextureObject>;
+    const texture = gradientAttachmentObject.texture as NonNullable<ITextureObject>;
+
+    // キャッシュに保存
+    $setCachedLUT(cacheKey, texture);
+
+    return texture;
 };

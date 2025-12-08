@@ -2,22 +2,63 @@ import type { IAttachmentObject } from "../interface/IAttachmentObject";
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
 
 /**
- * @type {IAttachmentObject | null}
+ * @description 解像度別のAttachmentObjectキャッシュ
+ *              Attachment object cache by resolution
+ *
+ * @type {Map<number, IAttachmentObject>}
  * @private
  */
-let $gradientAttachmentObject: IAttachmentObject | null = null;
+const $gradientAttachmentObjects: Map<number, IAttachmentObject> = new Map();
 
 /**
+ * @description ストップ数に応じた適応的な解像度を返却
+ *              Returns adaptive resolution based on stop count
+ *
+ * @param  {number} stopsLength
+ * @return {number}
+ * @method
+ * @protected
+ */
+export const $getAdaptiveResolution = (stopsLength: number): number =>
+{
+    if (stopsLength <= 4) {
+        return 256;
+    }
+    if (stopsLength <= 8) {
+        return 512;
+    }
+    return 1024;
+};
+
+/**
+ * @description 指定解像度のAttachmentObjectを返却
+ *              Returns AttachmentObject with specified resolution
+ *
+ * @param  {number} resolution
+ * @return {IAttachmentObject}
+ * @method
+ * @protected
+ */
+export const $getGradientAttachmentObjectWithResolution = (resolution: number): IAttachmentObject =>
+{
+    if (!$gradientAttachmentObjects.has(resolution)) {
+        const attachment = frameBufferManagerGetAttachmentObjectUseCase(resolution, 1, false);
+        $gradientAttachmentObjects.set(resolution, attachment);
+    }
+    return $gradientAttachmentObjects.get(resolution) as NonNullable<IAttachmentObject>;
+};
+
+/**
+ * @description デフォルトの512解像度のAttachmentObjectを返却（後方互換性）
+ *              Returns default 512 resolution AttachmentObject (backward compatibility)
+ *
  * @return {IAttachmentObject}
  * @method
  * @protected
  */
 export const $getGradientAttachmentObject = (): IAttachmentObject =>
 {
-    if (!$gradientAttachmentObject) {
-        $gradientAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(512, 1, false);
-    }
-    return $gradientAttachmentObject as NonNullable<IAttachmentObject>;
+    return $getGradientAttachmentObjectWithResolution(512);
 };
 
 /**

@@ -29,7 +29,9 @@ export const execute = (): IVertexArrayObject =>
     $gl.bindBuffer($gl.ARRAY_BUFFER, vertexArrayObject.vertexBuffer);
     if (vertexArrayObject.vertexLength < buffer.length) {
         vertexArrayObject.vertexLength = $upperPowerOfTwo(buffer.length);
-        $gl.bufferData($gl.ARRAY_BUFFER, vertexArrayObject.vertexLength * 4, $gl.DYNAMIC_DRAW);
+        // STREAM_DRAW: 毎フレーム更新されるデータに最適
+        // STREAM_DRAW: Optimal for data updated every frame
+        $gl.bufferData($gl.ARRAY_BUFFER, vertexArrayObject.vertexLength * 4, $gl.STREAM_DRAW);
     }
 
     $gl.bufferSubData($gl.ARRAY_BUFFER, 0, buffer.subarray(0, offset));

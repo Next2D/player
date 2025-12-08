@@ -1,0 +1,151 @@
+import type { ITextureObject } from "../interface/ITextureObject";
+
+/**
+ * @description グラデーションLUTテクスチャのキャッシュエントリ
+ *              Cache entry for gradient LUT texture
+ */
+interface IGradientLUTCacheEntry {
+    texture: ITextureObject;
+    lastUsed: number;
+}
+
+/**
+ * @description グラデーションLUTテクスチャのキャッシュ
+ *              Cache for gradient LUT textures
+ *
+ * @type {Map<string, IGradientLUTCacheEntry>}
+ * @private
+ */
+const $lutCache: Map<string, IGradientLUTCacheEntry> = new Map();
+
+/**
+ * @description キャッシュの最大サイズ
+ *              Maximum cache size
+ *
+ * @type {number}
+ * @const
+ */
+const MAX_CACHE_SIZE: number = 32;
+
+/**
+ * @description 現在のフレーム番号
+ *              Current frame number
+ *
+ * @type {number}
+ * @private
+ */
+let $currentFrame: number = 0;
+
+/**
+ * @description グラデーションストップからキャッシュキーを生成
+ *              Generate cache key from gradient stops
+ *
+ * @param  {number[]} stops
+ * @param  {number} interpolation
+ * @return {string}
+ * @method
+ * @protected
+ */
+export const $generateCacheKey = (stops: number[], interpolation: number): string =>
+{
+    // 簡易ハッシュ: stops配列とinterpolationを結合
+    // Simple hash: combine stops array and interpolation
+    let hash = interpolation;
+    for (let i = 0; i < stops.length; i++) {
+        hash = ((hash << 5) - hash + (stops[i] * 1000 | 0)) | 0;
+    }
+    return `g${hash}_${stops.length}_${interpolation}`;
+};
+
+/**
+ * @description キャッシュからLUTテクスチャを取得
+ *              Get LUT texture from cache
+ *
+ * @param  {string} key
+ * @return {ITextureObject | null}
+ * @method
+ * @protected
+ */
+export const $getCachedLUT = (key: string): ITextureObject | null =>
+{
+    const entry = $lutCache.get(key);
+    if (entry) {
+        entry.lastUsed = $currentFrame;
+        return entry.texture;
+    }
+    return null;
+};
+
+/**
+ * @description LUTテクスチャをキャッシュに追加
+ *              Add LUT texture to cache
+ *
+ * @param  {string} key
+ * @param  {ITextureObject} texture
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setCachedLUT = (key: string, texture: ITextureObject): void =>
+{
+    // キャッシュサイズ制限を超える場合、最も古いエントリを削除
+    if ($lutCache.size >= MAX_CACHE_SIZE) {
+        let oldestKey: string | null = null;
+        let oldestFrame = Infinity;
+
+        for (const [k, v] of $lutCache) {
+            if (v.lastUsed < oldestFrame) {
+                oldestFrame = v.lastUsed;
+                oldestKey = k;
+            }
+        }
+
+        if (oldestKey) {
+            $lutCache.delete(oldestKey);
+        }
+    }
+
+    $lutCache.set(key, {
+        texture,
+        lastUsed: $currentFrame
+    });
+};
+
+/**
+ * @description フレームを進める（キャッシュの有効期限管理用）
+ *              Advance frame (for cache expiration management)
+ *
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $advanceFrame = (): void =>
+{
+    $currentFrame++;
+};
+
+/**
+ * @description キャッシュをクリア
+ *              Clear cache
+ *
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $clearLUTCache = (): void =>
+{
+    $lutCache.clear();
+};
+
+/**
+ * @description キャッシュサイズを返却
+ *              Returns cache size
+ *
+ * @return {number}
+ * @method
+ * @protected
+ */
+export const $getLUTCacheSize = (): number =>
+{
+    return $lutCache.size;
+};

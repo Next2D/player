@@ -60,17 +60,25 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) =>
     };
 });
 
-vi.mock("../../GradientLUTGenerator.ts", async (importOriginal) => 
+vi.mock("../../GradientLUTGenerator.ts", async (importOriginal) =>
 {
     const mod = await importOriginal<typeof import("../../GradientLUTGenerator.ts")>();
     return {
         ...mod,
         $getGradientAttachmentObject: vi.fn(() => mockAttachmentObject),
+        $getGradientAttachmentObjectWithResolution: vi.fn(() => mockAttachmentObject),
+        $getAdaptiveResolution: vi.fn(() => 512),
         $getGradientLUTGeneratorMaxLength: vi.fn(() => 10),
         $rgbToLinearTable: new Float32Array(256),
         $rgbIdentityTable: new Float32Array(256)
     };
 });
+
+vi.mock("../../GradientLUTCache.ts", () => ({
+    $generateCacheKey: vi.fn(() => "test_cache_key"),
+    $getCachedLUT: vi.fn(() => null),
+    $setCachedLUT: vi.fn()
+}));
 
 vi.mock("../../../Blend/service/BlendOneZeroService.ts", () => ({
     execute: vi.fn()
