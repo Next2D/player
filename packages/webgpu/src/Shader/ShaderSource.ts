@@ -1236,6 +1236,158 @@ export class ShaderSource
     }
 
     /**
+     * @description グラデーショングローフィルター用フラグメントシェーダー
+     *              グラデーションLUTを使用したグロー効果
+     * @return {string}
+     */
+    static getGradientGlowFilterFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct GradientGlowUniforms {
+                strength: f32,
+                inner: f32,
+                knockout: f32,
+                glowType: f32, // 0: full, 1: inner, 2: outer
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: GradientGlowUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var blurTexture: texture_2d<f32>;
+            @group(0) @binding(3) var baseTexture: texture_2d<f32>;
+            @group(0) @binding(4) var gradientLUT: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                var blur = textureSample(blurTexture, textureSampler, input.texCoord);
+                let base = textureSample(baseTexture, textureSampler, input.texCoord);
+
+                // インナーモードの場合はアルファを反転
+                let isInner = uniforms.inner > 0.5;
+                if (isInner) {
+                    blur.a = 1.0 - blur.a;
+                }
+
+                // 強度を適用
+                blur.a = clamp(blur.a * uniforms.strength, 0.0, 1.0);
+
+                // グラデーションLUTから色を取得
+                let glowColor = textureSample(gradientLUT, textureSampler, vec2<f32>(blur.a, 0.5));
+
+                // タイプに応じた合成
+                var result: vec4<f32>;
+                let glowType = uniforms.glowType;
+                let knockout = uniforms.knockout > 0.5;
+
+                if (glowType < 0.5) {
+                    // full
+                    if (knockout) {
+                        result = glowColor;
+                    } else {
+                        result = base - base * glowColor.a + glowColor;
+                    }
+                } else if (glowType < 1.5) {
+                    // inner
+                    result = glowColor;
+                } else {
+                    // outer
+                    if (knockout) {
+                        result = glowColor - glowColor * base.a;
+                    } else {
+                        result = base + glowColor - glowColor * base.a;
+                    }
+                }
+
+                return result;
+            }
+        `;
+    }
+
+    /**
+     * @description グラデーションベベルフィルター用フラグメントシェーダー
+     *              グラデーションLUTを使用したベベル効果
+     * @return {string}
+     */
+    static getGradientBevelFilterFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct GradientBevelUniforms {
+                strength: f32,
+                inner: f32,
+                knockout: f32,
+                bevelType: f32, // 0: full, 1: inner, 2: outer
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: GradientBevelUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var blurTexture: texture_2d<f32>;
+            @group(0) @binding(3) var baseTexture: texture_2d<f32>;
+            @group(0) @binding(4) var gradientLUT: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                let base = textureSample(baseTexture, textureSampler, input.texCoord);
+
+                // 正方向と逆方向のブラーをサンプリング
+                let blur1 = textureSample(blurTexture, textureSampler, input.texCoord);
+                let blur2 = textureSample(blurTexture, textureSampler, 1.0 - input.texCoord);
+
+                // ハイライトとシャドウのアルファを計算
+                var highlightAlpha = blur1.a - blur2.a;
+                var shadowAlpha = blur2.a - blur1.a;
+
+                // 強度を適用
+                highlightAlpha *= uniforms.strength;
+                shadowAlpha *= uniforms.strength;
+
+                // クランプ
+                highlightAlpha = clamp(highlightAlpha, 0.0, 1.0);
+                shadowAlpha = clamp(shadowAlpha, 0.0, 1.0);
+
+                // グラデーションLUTから色を取得
+                // 0.5を中心に、シャドウ側とハイライト側に分布
+                let lutCoord = 0.5019607843137255 - 0.5019607843137255 * shadowAlpha + 0.4980392156862745 * highlightAlpha;
+                let bevelColor = textureSample(gradientLUT, textureSampler, vec2<f32>(lutCoord, 0.5));
+
+                // タイプに応じた合成
+                var result: vec4<f32>;
+                let bevelType = uniforms.bevelType;
+                let knockout = uniforms.knockout > 0.5;
+
+                if (bevelType < 0.5) {
+                    // full
+                    if (knockout) {
+                        result = bevelColor;
+                    } else {
+                        result = base - base * bevelColor.a + bevelColor;
+                    }
+                } else if (bevelType < 1.5) {
+                    // inner
+                    result = bevelColor;
+                } else {
+                    // outer
+                    if (knockout) {
+                        result = bevelColor - bevelColor * base.a;
+                    } else {
+                        result = base + bevelColor - bevelColor * base.a;
+                    }
+                }
+
+                return result;
+            }
+        `;
+    }
+
+    /**
      * @description コンボリューションフィルター用フラグメントシェーダー
      *              畳み込み行列を使用した画像処理
      * @param {number} matrixX - 行列のX方向サイズ
@@ -1610,6 +1762,150 @@ export class ShaderSource
                 src = vec4<f32>(src.rgb * src.a, src.a); // プリマルチプライドアルファに変換
 
                 return blend(src, dst);
+            }
+        `;
+    }
+
+    /**
+     * @description DisplacementMapFilterフラグメントシェーダー
+     *              component_x, component_y: 0=none, 1=RED, 2=GREEN, 4=BLUE, 8=ALPHA
+     *              mode: 0=clamp, 1=color, 2=wrap, 3=ignore
+     * @param {number} componentX - X方向のチャンネル
+     * @param {number} componentY - Y方向のチャンネル
+     * @param {number} mode - モード
+     * @return {string}
+     */
+    static getDisplacementMapFilterFragmentShader(
+        componentX: number,
+        componentY: number,
+        mode: number
+    ): string
+    {
+        // チャンネル選択コードを生成
+        let cx: string;
+        let cy: string;
+
+        switch (componentX) {
+            case 1: // BitmapDataChannel.RED
+                cx = "mapColor.r";
+                break;
+            case 2: // BitmapDataChannel.GREEN
+                cx = "mapColor.g";
+                break;
+            case 4: // BitmapDataChannel.BLUE
+                cx = "mapColor.b";
+                break;
+            case 8: // BitmapDataChannel.ALPHA
+                cx = "mapColor.a";
+                break;
+            default:
+                cx = "0.5";
+                break;
+        }
+
+        switch (componentY) {
+            case 1: // BitmapDataChannel.RED
+                cy = "mapColor.r";
+                break;
+            case 2: // BitmapDataChannel.GREEN
+                cy = "mapColor.g";
+                break;
+            case 4: // BitmapDataChannel.BLUE
+                cy = "mapColor.b";
+                break;
+            case 8: // BitmapDataChannel.ALPHA
+                cy = "mapColor.a";
+                break;
+            default:
+                cy = "0.5";
+                break;
+        }
+
+        // モードごとの処理を生成
+        let modeStatement: string;
+        let needsSubstituteColor = false;
+
+        switch (mode) {
+            case 0: // clamp
+                modeStatement = `
+                    sourceColor = textureSample(srcTexture, textureSampler, uv);
+                `;
+                break;
+            case 1: // color
+                needsSubstituteColor = true;
+                modeStatement = `
+                    sourceColor = mix(uniforms.substituteColor, textureSample(srcTexture, textureSampler, uv), isInside(uv));
+                `;
+                break;
+            case 2: // wrap
+                modeStatement = `
+                    sourceColor = textureSample(srcTexture, textureSampler, fract(uv));
+                `;
+                break;
+            case 3: // ignore
+                modeStatement = `
+                    let insideUV = step(abs(uv - vec2<f32>(0.5)), vec2<f32>(0.5));
+                    sourceColor = textureSample(srcTexture, textureSampler, mix(input.texCoord, uv, insideUV));
+                `;
+                break;
+            default:
+                modeStatement = `
+                    sourceColor = textureSample(srcTexture, textureSampler, fract(uv));
+                `;
+                break;
+        }
+
+        const uniformsStruct = needsSubstituteColor
+            ? `struct DisplacementUniforms {
+                uvToStScale: vec2<f32>,
+                uvToStOffset: vec2<f32>,
+                scale: vec2<f32>,
+                padding: vec2<f32>,
+                substituteColor: vec4<f32>,
+            }`
+            : `struct DisplacementUniforms {
+                uvToStScale: vec2<f32>,
+                uvToStOffset: vec2<f32>,
+                scale: vec2<f32>,
+                padding: vec2<f32>,
+            }`;
+
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            ${uniformsStruct}
+
+            @group(0) @binding(0) var<uniform> uniforms: DisplacementUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var srcTexture: texture_2d<f32>;
+            @group(0) @binding(3) var mapTexture: texture_2d<f32>;
+
+            fn isInside(uv: vec2<f32>) -> f32 {
+                let s = step(vec2<f32>(0.0), uv) - step(vec2<f32>(1.0), uv);
+                return s.x * s.y;
+            }
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                // マップテクスチャのUV座標を計算
+                let st = input.texCoord * uniforms.uvToStScale - uniforms.uvToStOffset;
+
+                // マップテクスチャをサンプリング
+                let mapColor = textureSample(mapTexture, textureSampler, st);
+
+                // ディスプレイスメントオフセットを計算
+                let offset = vec2<f32>(${cx}, ${cy}) - 0.5;
+                let uv = input.texCoord + offset * uniforms.scale;
+
+                // モードに応じたソースカラーの取得
+                var sourceColor: vec4<f32>;
+                ${modeStatement}
+
+                // マップがある範囲内でのみディスプレイスメントを適用
+                return mix(textureSample(srcTexture, textureSampler, input.texCoord), sourceColor, isInside(st));
             }
         `;
     }

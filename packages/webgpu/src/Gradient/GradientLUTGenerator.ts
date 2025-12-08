@@ -186,3 +186,74 @@ const linearToSRGB = (value: number): number =>
 {
     return Math.pow(value, 1 / 2.2);
 };
+
+/**
+ * @description フィルター用グラデーションLUTテクスチャデータを生成
+ *              ratios, colors, alphas配列から1D LUTを生成
+ * @param {Float32Array} ratios - 比率配列 (0-255)
+ * @param {Float32Array} colors - 色配列 (32bit整数)
+ * @param {Float32Array} alphas - アルファ配列 (0-1)
+ * @return {Uint8Array}
+ */
+export const generateFilterGradientLUT = (
+    ratios: Float32Array,
+    colors: Float32Array,
+    alphas: Float32Array
+): Uint8Array =>
+{
+    const resolution = 256;
+    const lutData = new Uint8Array(resolution * 4);
+    const stopsLength = ratios.length;
+
+    // ストップデータを構築
+    const stops: Array<{ offset: number; r: number; g: number; b: number; a: number }> = [];
+    for (let i = 0; i < stopsLength; i++) {
+        const color = colors[i];
+        stops.push({
+            offset: ratios[i] / 255,
+            r: ((color >> 16) & 0xFF) / 255,
+            g: ((color >> 8) & 0xFF) / 255,
+            b: (color & 0xFF) / 255,
+            a: alphas[i]
+        });
+    }
+
+    // 各ピクセルの色を補間
+    for (let i = 0; i < resolution; i++) {
+        const t = i / (resolution - 1);
+
+        // ストップを見つける
+        let startIdx = 0;
+        let endIdx = stopsLength - 1;
+
+        for (let j = 0; j < stopsLength - 1; j++) {
+            if (stops[j].offset <= t && stops[j + 1].offset >= t) {
+                startIdx = j;
+                endIdx = j + 1;
+                break;
+            }
+        }
+
+        // 補間
+        const start = stops[startIdx];
+        const end = stops[endIdx];
+        let localT = 0;
+        if (end.offset !== start.offset) {
+            localT = (t - start.offset) / (end.offset - start.offset);
+        }
+
+        const r = lerp(start.r, end.r, localT);
+        const g = lerp(start.g, end.g, localT);
+        const b = lerp(start.b, end.b, localT);
+        const a = lerp(start.a, end.a, localT);
+
+        // プリマルチプライドアルファで書き込み
+        const offset = i * 4;
+        lutData[offset + 0] = Math.round(r * a * 255);
+        lutData[offset + 1] = Math.round(g * a * 255);
+        lutData[offset + 2] = Math.round(b * a * 255);
+        lutData[offset + 3] = Math.round(a * 255);
+    }
+
+    return lutData;
+};

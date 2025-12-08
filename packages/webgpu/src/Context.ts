@@ -30,6 +30,10 @@ import { execute as filterApplyColorMatrixFilterUseCase } from "./Filter/ColorMa
 import { execute as filterApplyGlowFilterUseCase } from "./Filter/GlowFilter/FilterApplyGlowFilterUseCase";
 import { execute as filterApplyDropShadowFilterUseCase } from "./Filter/DropShadowFilter/FilterApplyDropShadowFilterUseCase";
 import { execute as filterApplyBevelFilterUseCase } from "./Filter/BevelFilter/FilterApplyBevelFilterUseCase";
+import { execute as filterApplyConvolutionFilterUseCase } from "./Filter/ConvolutionFilter/FilterApplyConvolutionFilterUseCase";
+import { execute as filterApplyGradientBevelFilterUseCase } from "./Filter/GradientBevelFilter/FilterApplyGradientBevelFilterUseCase";
+import { execute as filterApplyGradientGlowFilterUseCase } from "./Filter/GradientGlowFilter/FilterApplyGradientGlowFilterUseCase";
+import { execute as filterApplyDisplacementMapFilterUseCase } from "./Filter/DisplacementMapFilter/FilterApplyDisplacementMapFilterUseCase";
 
 /**
  * @description WebGPU版、Next2Dのコンテキスト
@@ -2382,19 +2386,83 @@ export class Context
 
                 case 3: // ConvolutionFilter
                     {
-                        const matrixX = params[idx++];
-                        const matrixY = params[idx++];
-                        const length = matrixX * matrixY;
-                        idx += length; // matrix
-                        idx += 6; // divisor, bias, preserveAlpha, clamp, color, alpha
+                        const convMatrixX = params[idx++];
+                        const convMatrixY = params[idx++];
+                        const convLength = convMatrixX * convMatrixY;
+                        const convMatrix = new Float32Array(convLength);
+                        for (let i = 0; i < convLength; i++) {
+                            convMatrix[i] = params[idx++];
+                        }
+                        const convDivisor = params[idx++];
+                        const convBias = params[idx++];
+                        const convPreserveAlpha = Boolean(params[idx++]);
+                        const convClamp = Boolean(params[idx++]);
+                        const convColor = params[idx++];
+                        const convAlpha = params[idx++];
+
+                        const config = {
+                            device: this.device,
+                            commandEncoder: this.commandEncoder!,
+                            frameBufferManager: this.frameBufferManager,
+                            textureManager: this.textureManager
+                        };
+
+                        const newAttachment = filterApplyConvolutionFilterUseCase(
+                            filterAttachment,
+                            convMatrixX, convMatrixY, convMatrix,
+                            convDivisor, convBias, convPreserveAlpha, convClamp,
+                            convColor, convAlpha,
+                            config
+                        );
+
+                        if (filterAttachment !== newAttachment) {
+                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                        }
+                        filterAttachment = newAttachment;
                     }
                     break;
 
                 case 4: // DisplacementMapFilter
                     {
-                        const bufferLength = params[idx++];
-                        idx += bufferLength; // buffer
-                        idx += 11; // other params
+                        const dmBufferLength = params[idx++];
+                        const dmBuffer = new Uint8Array(dmBufferLength);
+                        for (let i = 0; i < dmBufferLength; i++) {
+                            dmBuffer[i] = params[idx++];
+                        }
+
+                        const dmBitmapWidth = params[idx++];
+                        const dmBitmapHeight = params[idx++];
+                        const dmMapPointX = params[idx++];
+                        const dmMapPointY = params[idx++];
+                        const dmComponentX = params[idx++];
+                        const dmComponentY = params[idx++];
+                        const dmScaleX = params[idx++];
+                        const dmScaleY = params[idx++];
+                        const dmMode = params[idx++];
+                        const dmColor = params[idx++];
+                        const dmAlpha = params[idx++];
+
+                        const config = {
+                            device: this.device,
+                            commandEncoder: this.commandEncoder!,
+                            frameBufferManager: this.frameBufferManager,
+                            textureManager: this.textureManager
+                        };
+
+                        const newAttachment = filterApplyDisplacementMapFilterUseCase(
+                            filterAttachment, matrix,
+                            dmBuffer, dmBitmapWidth, dmBitmapHeight,
+                            dmMapPointX, dmMapPointY,
+                            dmComponentX, dmComponentY,
+                            dmScaleX, dmScaleY,
+                            dmMode, dmColor, dmAlpha,
+                            devicePixelRatio, config
+                        );
+
+                        if (filterAttachment !== newAttachment) {
+                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                        }
+                        filterAttachment = newAttachment;
                     }
                     break;
 
@@ -2470,27 +2538,105 @@ export class Context
 
                 case 7: // GradientBevelFilter
                     {
-                        idx += 2; // distance, angle
-                        let len = params[idx++];
-                        idx += len; // colors
-                        len = params[idx++];
-                        idx += len; // alphas
-                        len = params[idx++];
-                        idx += len; // ratios
-                        idx += 6; // other params
+                        const gbDistance = params[idx++];
+                        const gbAngle = params[idx++];
+
+                        let gbColorsLen = params[idx++];
+                        const gbColors = new Float32Array(gbColorsLen);
+                        for (let i = 0; i < gbColorsLen; i++) {
+                            gbColors[i] = params[idx++];
+                        }
+
+                        let gbAlphasLen = params[idx++];
+                        const gbAlphas = new Float32Array(gbAlphasLen);
+                        for (let i = 0; i < gbAlphasLen; i++) {
+                            gbAlphas[i] = params[idx++];
+                        }
+
+                        let gbRatiosLen = params[idx++];
+                        const gbRatios = new Float32Array(gbRatiosLen);
+                        for (let i = 0; i < gbRatiosLen; i++) {
+                            gbRatios[i] = params[idx++];
+                        }
+
+                        const gbBlurX = params[idx++];
+                        const gbBlurY = params[idx++];
+                        const gbStrength = params[idx++];
+                        const gbQuality = params[idx++];
+                        const gbType = params[idx++];
+                        const gbKnockout = Boolean(params[idx++]);
+
+                        const config = {
+                            device: this.device,
+                            commandEncoder: this.commandEncoder!,
+                            frameBufferManager: this.frameBufferManager,
+                            pipelineManager: this.pipelineManager,
+                            textureManager: this.textureManager
+                        };
+
+                        const newAttachment = filterApplyGradientBevelFilterUseCase(
+                            filterAttachment, matrix,
+                            gbDistance, gbAngle, gbColors, gbAlphas, gbRatios,
+                            gbBlurX, gbBlurY, gbStrength, gbQuality, gbType, gbKnockout,
+                            devicePixelRatio, config
+                        );
+
+                        if (filterAttachment !== newAttachment) {
+                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                        }
+                        filterAttachment = newAttachment;
                     }
                     break;
 
                 case 8: // GradientGlowFilter
                     {
-                        idx += 2; // distance, angle
-                        let len = params[idx++];
-                        idx += len; // colors
-                        len = params[idx++];
-                        idx += len; // alphas
-                        len = params[idx++];
-                        idx += len; // ratios
-                        idx += 6; // other params
+                        const ggDistance = params[idx++];
+                        const ggAngle = params[idx++];
+
+                        let ggColorsLen = params[idx++];
+                        const ggColors = new Float32Array(ggColorsLen);
+                        for (let i = 0; i < ggColorsLen; i++) {
+                            ggColors[i] = params[idx++];
+                        }
+
+                        let ggAlphasLen = params[idx++];
+                        const ggAlphas = new Float32Array(ggAlphasLen);
+                        for (let i = 0; i < ggAlphasLen; i++) {
+                            ggAlphas[i] = params[idx++];
+                        }
+
+                        let ggRatiosLen = params[idx++];
+                        const ggRatios = new Float32Array(ggRatiosLen);
+                        for (let i = 0; i < ggRatiosLen; i++) {
+                            ggRatios[i] = params[idx++];
+                        }
+
+                        const ggBlurX = params[idx++];
+                        const ggBlurY = params[idx++];
+                        const ggStrength = params[idx++];
+                        const ggQuality = params[idx++];
+                        const ggType = params[idx++];
+                        const ggKnockout = Boolean(params[idx++]);
+
+                        const config = {
+                            device: this.device,
+                            commandEncoder: this.commandEncoder!,
+                            frameBufferManager: this.frameBufferManager,
+                            pipelineManager: this.pipelineManager,
+                            textureManager: this.textureManager
+                        };
+
+                        const newAttachment = filterApplyGradientGlowFilterUseCase(
+                            filterAttachment, matrix,
+                            ggDistance, ggAngle, ggColors, ggAlphas, ggRatios,
+                            ggBlurX, ggBlurY, ggStrength, ggQuality, ggType, ggKnockout,
+                            devicePixelRatio, config
+                        );
+
+                        if (filterAttachment !== newAttachment) {
+                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                        }
+                        filterAttachment = newAttachment;
                     }
                     break;
             }
