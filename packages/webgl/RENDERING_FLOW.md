@@ -389,6 +389,13 @@ $adaptiveSegmentCount: number      // 実際のセグメント数
    - if flatness < threshold² → MIN_SUBDIVISIONS
    - level = ceil(log2(sqrt(flatness)/threshold) / 2)
    - return clamp(level + MIN, MIN, MAX)
+
+3. $ensureAdaptiveBufferSize(size):
+   - バッファサイズ不足時に2倍のサイズで再確保
+   - if $adaptiveBuffer.length < size → new Float32Array(size * 2)
+
+4. $setAdaptiveSegmentCount(count):
+   - 適応的テッセレーション結果のセグメント数を設定
 ```
 
 ---
@@ -1304,25 +1311,28 @@ Shader/
 ├── GradientLUTCache.ts           # LUTキャッシュ
 │
 ├── ShaderManager/
-│   └── service/
-│       ├── ShaderManagerCreateProgramService.ts
-│       ├── ShaderManagerInitializeUniformService.ts
-│       ├── ShaderManagerUseProgramService.ts
-│       ├── ShaderManagerBindUniformService.ts
-│       ├── ShaderManagerSetFillUniformService.ts
-│       ├── ShaderManagerSetGradientFillUniformService.ts
-│       ├── ShaderManagerSetBlendUniformService.ts
-│       ├── ShaderManagerSetTextureUniformService.ts
-│       ├── ShaderManagerSetBitmapFillUniformService.ts
-│       ├── ShaderManagerSetMaskUniformService.ts
-│       ├── ShaderManagerSetMatrixTextureUniformService.ts
-│       ├── ShaderManagerSetMatrixTextureWithColorTransformUniformService.ts
-│       ├── ShaderManagerSetBlendWithColorTransformUniformService.ts
-│       ├── ShaderManagerSetBlurFilterUniformService.ts
-│       ├── ShaderManagerSetColorMatrixFilterUniformService.ts
-│       ├── ShaderManagerSetConvolutionFilterUniformService.ts
-│       ├── ShaderManagerSetBitmapFilterUniformService.ts
-│       └── ShaderManagerSetDisplacementMapFilterUniformService.ts
+│   ├── service/                  # 18 service files
+│   │   ├── ShaderManagerCreateProgramService.ts
+│   │   ├── ShaderManagerInitializeUniformService.ts
+│   │   ├── ShaderManagerUseProgramService.ts
+│   │   ├── ShaderManagerBindUniformService.ts
+│   │   ├── ShaderManagerSetFillUniformService.ts
+│   │   ├── ShaderManagerSetGradientFillUniformService.ts
+│   │   ├── ShaderManagerSetBlendUniformService.ts
+│   │   ├── ShaderManagerSetTextureUniformService.ts
+│   │   ├── ShaderManagerSetBitmapFillUniformService.ts
+│   │   ├── ShaderManagerSetMaskUniformService.ts
+│   │   ├── ShaderManagerSetMatrixTextureUniformService.ts
+│   │   ├── ShaderManagerSetMatrixTextureWithColorTransformUniformService.ts
+│   │   ├── ShaderManagerSetBlendWithColorTransformUniformService.ts
+│   │   ├── ShaderManagerSetBlurFilterUniformService.ts
+│   │   ├── ShaderManagerSetColorMatrixFilterUniformService.ts
+│   │   ├── ShaderManagerSetConvolutionFilterUniformService.ts
+│   │   ├── ShaderManagerSetBitmapFilterUniformService.ts
+│   │   └── ShaderManagerSetDisplacementMapFilterUniformService.ts
+│   └── usecase/                  # 2 usecase files
+│       ├── ShaderManagerDrawTextureUseCase.ts     # テクスチャ描画
+│       └── ShaderManagerFillUseCase.ts            # フィル描画
 │
 ├── Fragment/                     # フラグメントシェーダー
 │   ├── FragmentShaderSource.ts
@@ -1892,6 +1902,20 @@ bounds[2] = bounds[3] = $MIN_VALUE;
 
 ### VAO Management / VAO管理
 
+**VertexArrayObject.ts Global Variables / グローバル変数:**
+```typescript
+$objectPool: IVertexArrayObject[]        // フィル用VAOプール
+$strokeObjectPool: IStrokeVertexArrayObject[]  // ストローク用VAOプール
+$vertexBufferData: Float32Array          // 頂点バッファデータ [0,0,0,1,1,0,1,1]
+$attributeWebGLBuffer: WebGLBuffer       // インスタンス用WebGLBuffer
+$instancedVertexArrayObject: IVertexArrayObject  // インスタンス用VAO
+
+// Functions
+$setAttributeWebGLBuffer(gl): void       // インスタンス用バッファ初期化
+$setInstancedVertexArrayObject(vao): void  // インスタンス用VAOセット
+$getRectVertexArrayObject(): IVertexArrayObject  // 矩形描画用VAO取得（遅延初期化）
+```
+
 ```mermaid
 flowchart TB
     subgraph "Object Pool / オブジェクトプール"
@@ -2460,8 +2484,16 @@ packages/webgl/src/
 ├── Shader/
 │   ├── ShaderManager.ts          # シェーダープログラム管理
 │   ├── ShaderInstancedManager.ts # インスタンス描画用
-│   ├── GradientLUTGenerator.ts   # グラデーションLUT生成
-│   ├── GradientLUTCache.ts       # LUTキャッシュ
+│   ├── GradientLUTGenerator.ts   # グラデーションLUT生成（適応的解像度）
+│   ├── GradientLUTCache.ts       # LUTキャッシュ（LRU方式）
+│   ├── GradientLUTGenerator/     # LUT生成のservice/usecase
+│   │   ├── service/
+│   │   │   ├── GradientLUTSetUniformService.ts         # LUT uniform設定
+│   │   │   └── GradientLUTSetFilterUniformService.ts   # フィルタ用uniform設定
+│   │   └── usecase/
+│   │       ├── GradientLUTGeneratorFillTextureUseCase.ts      # フィルテクスチャ生成
+│   │       ├── GradientLUTGenerateShapeTextureUseCase.ts      # シェイプテクスチャ生成
+│   │       └── GradientLUTGenerateFilterTextureUseCase.ts     # フィルタテクスチャ生成
 │   ├── Fragment/                 # フラグメントシェーダー
 │   ├── Vertex/                   # 頂点シェーダー
 │   └── Variants/                 # シェーダーバリアント
@@ -2497,8 +2529,12 @@ packages/webgl/src/
 │   └── usecase/                  # 6 files
 │
 ├── BezierConverter/
-│   ├── service/                  # Split services
-│   └── usecase/                  # CubicToQuad conversion
+│   ├── service/                  # 2 service files
+│   │   ├── BezierConverterSplit2CubicService.ts    # 3次ベジェ分割
+│   │   └── BezierConverterSplit2QuadService.ts     # 2次ベジェ分割
+│   └── usecase/                  # 2 usecase files
+│       ├── BezierConverterCubicToQuadUseCase.ts    # 固定分割Cubic→Quad変換
+│       └── BezierConverterAdaptiveCubicToQuadUseCase.ts  # 適応的Cubic→Quad変換
 │
 ├── Stencil/
 │   └── service/                  # 5 service files
@@ -2521,11 +2557,18 @@ packages/webgl/src/
 │
 ├── VertexArrayObject/
 │   ├── service/                  # 3 service files
+│   │   ├── VertexArrayObjectBindService.ts              # VAOバインド
+│   │   ├── VertexArrayObjectCreateFillObjectService.ts  # フィルオブジェクト作成
+│   │   └── VertexArrayObjectReleaseVertexArrayObjectService.ts  # VAO解放
 │   └── usecase/                  # 8 usecase files
-│       ├── VertexArrayObjectBootUseCase.ts
-│       ├── VertexArrayObjectBindFillMeshUseCase.ts
-│       ├── VertexArrayObjectCreateInstancedVertexArrayObjectUseCase.ts
-│       └── ...
+│       ├── VertexArrayObjectBootUseCase.ts              # 初期化
+│       ├── VertexArrayObjectBindAttributeUseCase.ts     # アトリビュートバインド
+│       ├── VertexArrayObjectBindFillMeshUseCase.ts      # フィルメッシュバインド
+│       ├── VertexArrayObjectCreateInstancedVertexArrayObjectUseCase.ts  # インスタンスVAO作成
+│       ├── VertexArrayObjectCreateGradientVertexArrayObjectUseCase.ts   # グラデーションVAO作成
+│       ├── VertexArrayObjectCreateRectVertexArrayObjectUseCase.ts       # 矩形VAO作成
+│       ├── VertexArrayObjectGetFillObjectUseCase.ts     # フィルオブジェクト取得
+│       └── VertexArrayObjectGetGradientObjectUseCase.ts # グラデーションオブジェクト取得
 │
 ├── AtlasManager/, FrameBufferManager/, ColorBufferObject/
 │
@@ -2567,7 +2610,10 @@ packages/webgl/src/
 | **VertexArrayObject** | 3 | 8 | VAO管理 |
 | **FrameBufferManager** | 5 | 5 | フレームバッファ管理 |
 | **AtlasManager** | 2 | 1 | テクスチャアトラス管理 |
-| **ColorBufferObject** | 2 | 3 | カラーバッファ管理 |
+| **ColorBufferObject** | 1 | 3 | カラーバッファ管理 |
+| **StencilBufferObject** | 2 | 2 | ステンシルバッファ管理 |
+| **GradientLUTGenerator** | 2 | 3 | グラデーションLUT生成 |
+| **ShaderManager** | 18 | 2 | シェーダープログラム管理 |
 
 ### Key Service/UseCase Files / 主要なService/UseCaseファイル
 
@@ -2587,8 +2633,13 @@ packages/webgl/src/
 | Mask | MaskBeginMaskService | マスク開始 |
 | Mask | MaskLeaveMaskUseCase | マスク終了 |
 | PathCommand | PathCommandMoveToUseCase | パス移動 |
-| BezierConverter | BezierConverterCubicToQuadUseCase | Cubic→Quad変換 |
+| BezierConverter | BezierConverterCubicToQuadUseCase | 固定分割Cubic→Quad変換 |
+| BezierConverter | BezierConverterAdaptiveCubicToQuadUseCase | 適応的Cubic→Quad変換 |
 | Stencil | StencilSetFillModeService | フィルモード設定 |
 | Stencil | StencilSetMaskModeService | マスクモード設定 |
 | TextureManager | TextureManagerBind0UseCase | テクスチャユニット0にバインド |
 | VertexArrayObject | VertexArrayObjectBindFillMeshUseCase | フィルメッシュVAOバインド |
+| VertexArrayObject | VertexArrayObjectCreateGradientVertexArrayObjectUseCase | グラデーションVAO作成 |
+| VertexArrayObject | VertexArrayObjectCreateRectVertexArrayObjectUseCase | 矩形VAO作成 |
+| GradientLUTGenerator | GradientLUTGeneratorFillTextureUseCase | フィルテクスチャ生成 |
+| GradientLUTGenerator | GradientLUTGenerateShapeTextureUseCase | シェイプテクスチャ生成 |
