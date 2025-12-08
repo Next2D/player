@@ -1346,6 +1346,10 @@ Shader/
 │       ├── ShaderManagerDrawTextureUseCase.ts     # テクスチャ描画
 │       └── ShaderManagerFillUseCase.ts            # フィル描画
 │
+├── ShaderInstancedManager/
+│   └── usecase/                  # 1 usecase file
+│       └── ShaderInstancedManagerDrawArraysInstancedUseCase.ts  # インスタンス描画
+│
 ├── Fragment/                     # フラグメントシェーダー
 │   ├── FragmentShaderSource.ts
 │   ├── FragmentShaderSourceBlend.ts
@@ -2649,7 +2653,7 @@ packages/webgl/src/
 │   │   ├── PathCommandEqualsToLastPointService.ts      # 最後の点との比較
 │   │   ├── PathCommandPushCurrentPathToVerticesService.ts  # 現在パスを頂点に追加
 │   │   └── PathCommandPushPointToCurrentPathService.ts     # 点を現在パスに追加
-│   └── usecase/                  # 7 usecase files
+│   └── usecase/                  # 6 usecase files
 │       ├── PathCommandMoveToUseCase.ts             # moveTo
 │       ├── PathCommandLineToUseCase.ts             # lineTo
 │       ├── PathCommandQuadraticCurveToUseCase.ts   # quadraticCurveTo
@@ -2761,7 +2765,7 @@ packages/webgl/src/
 | **Blend** | 8 | 6 | ブレンドモード・合成 |
 | **Mask** | 4 | 2 | マスク・クリッピング |
 | **Stencil** | 5 | 0 | ステンシルバッファ管理 |
-| **PathCommand** | 5 | 7 | パス描画コマンド |
+| **PathCommand** | 5 | 6 | パス描画コマンド |
 | **BezierConverter** | 2 | 2 | ベジェ曲線変換 |
 | **TextureManager** | 3 | 10 | テクスチャ管理 |
 | **VertexArrayObject** | 3 | 8 | VAO管理 |
@@ -2771,6 +2775,8 @@ packages/webgl/src/
 | **StencilBufferObject** | 2 | 2 | ステンシルバッファ管理 |
 | **GradientLUTGenerator** | 2 | 3 | グラデーションLUT生成 |
 | **ShaderManager** | 18 | 2 | シェーダープログラム管理 |
+| **ShaderInstancedManager** | 0 | 1 | インスタンス描画管理 |
+| **Filter** | 0 | 11 | フィルター適用（各フィルタータイプ別） |
 
 ### Key Service/UseCase Files / 主要なService/UseCaseファイル
 
