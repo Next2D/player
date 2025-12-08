@@ -1,6 +1,12 @@
 @next2d/cache
 =============
 
+**Important**: `@next2d/cache` prohibits importing other packages. This package is a foundational module that must remain independent to avoid circular dependencies.
+
+**重要**: `@next2d/cache` は他の packages の import を禁止しています。このパッケージは基盤モジュールであり、循環依存を避けるために独立を維持する必要があります。
+
+---
+
 A package for managing rendering cache in Next2D Player. It caches position information on atlas textures corresponding to DisplayObject rendering results, improving performance during re-rendering.
 
 Next2Dプレイヤーのレンダリングキャッシュを管理するパッケージです。DisplayObjectの描画結果に対応するアトラステクスチャ上の位置情報をキャッシュし、再描画時のパフォーマンスを向上させます。
