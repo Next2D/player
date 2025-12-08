@@ -1,9 +1,15 @@
 @next2d/core
 =============
 
+The core package for Next2D Player. It provides central functionality for Next2D including player management, Canvas initialization, event processing, and rendering worker communication.
+
 Next2Dプレイヤーのコアパッケージです。プレイヤー管理、Canvas初期化、イベント処理、レンダリングワーカー通信など、Next2Dの中核機能を提供します。
 
-## Overview
+**Important / 重要**: `@next2d/core` must not be referenced from other packages. This package is the top-level entry point and depends on other packages, but other packages must not depend on it to avoid circular dependencies.
+
+**重要**: `@next2d/core` は他の packages からの参照を禁止しています。このパッケージはトップレベルのエントリーポイントであり、他のパッケージに依存しますが、循環依存を避けるため、他のパッケージからの依存は禁止されています。
+
+## Overview / 概要
 
 `@next2d/core`は、Next2Dプレイヤーのメインエントリーポイントとして以下の機能を提供します：
 
