@@ -125,11 +125,11 @@ export class TextureManager
         );
 
         this.device.queue.copyExternalImageToTexture(
-            { 
+            {
                 source: imageBitmap,
-                flipY: false
+                flipY: true
             },
-            { 
+            {
                 texture,
                 premultipliedAlpha: true
             },

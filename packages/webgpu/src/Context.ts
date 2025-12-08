@@ -60,7 +60,11 @@ export class Context
     
     // Current rendering target (could be main or atlas)
     private currentRenderTarget: GPUTextureView | null = null;
-    
+
+    // Current viewport size (WebGL版と同じ: アトラス描画時はアトラスサイズを使用)
+    private viewportWidth: number = 0;
+    private viewportHeight: number = 0;
+
     private pathCommand: PathCommand;
     private bufferManager: BufferManager;
     private textureManager: TextureManager;
@@ -133,6 +137,10 @@ export class Context
             alphaMode: "premultiplied"
         });
 
+        // 初期ビューポートサイズをキャンバスサイズに設定
+        this.viewportWidth = canvas_context.canvas.width;
+        this.viewportHeight = canvas_context.canvas.height;
+
         this.pathCommand = new PathCommand();
         this.bufferManager = new BufferManager(device);
         this.textureManager = new TextureManager(device);
@@ -181,16 +189,16 @@ export class Context
         if (!this.frameStarted) {
             this.beginFrame();
         }
-        
+
         // 既存のレンダーパスを終了
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
-        
+
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
-        
+
         const renderPassDescriptor: GPURenderPassDescriptor = {
             colorAttachments: [{
                 view: this.mainTextureView!,
@@ -205,8 +213,10 @@ export class Context
             }]
         };
 
-        const passEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-        passEncoder.end();
+        // 背景クリア用のレンダーパスを開始して即座に終了
+        this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        this.renderPassEncoder.end();
+        this.renderPassEncoder = null;
     }
 
     /**
@@ -248,33 +258,11 @@ export class Context
      * @param {number} h
      * @return {void}
      */
-    clearRect (x: number, y: number, w: number, h: number): void
+    clearRect (_x: number, _y: number, _w: number, _h: number): void
     {
         // WebGPU clear rect implementation
-        console.log("[WebGPU] clearRect()", { x, y, w, h });
-        
-        // フレームが開始されていない場合は開始
-        if (!this.frameStarted) {
-            this.beginFrame();
-        }
-
-        // コマンドエンコーダーを確保
-        this.ensureCommandEncoder();
-        const textureView = this.getCurrentTextureView();
-
-        const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-            textureView,
-            0, 0, 0, 0,
-            "load"
-        );
-
-        this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-        
-        // 指定領域を透明でクリア
-        // TODO: シザーとクリアを使用した実装
-        
-        this.renderPassEncoder.end();
-        this.renderPassEncoder = null;
+        // WebGPUではclearはレンダーパス開始時に行うため、ここでは何もしない
+        // 実際のクリアはbeginNodeRenderingやbeginFrameで行われる
     }
 
     /**
@@ -487,54 +475,53 @@ export class Context
             this.beginFrame();
         }
 
-        // 既存のレンダーパスを終了
-        if (this.renderPassEncoder) {
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-        }
-
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
-        // 現在のレンダーターゲットを取得（メインまたはオフスクリーン）
-        const textureView = this.getCurrentTextureView();
+        // 既存のレンダーパスがない場合のみ新規作成
+        if (!this.renderPassEncoder) {
+            // 現在のレンダーターゲットを取得（メインまたはオフスクリーン）
+            const textureView = this.getCurrentTextureView();
 
-        const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-            textureView,
-            0, 0, 0, 0,
-            "load"
-        );
+            const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                textureView,
+                0, 0, 0, 0,
+                "load"
+            );
 
-        this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        }
 
-        // ビューポートサイズ
-        const canvasWidth = this.canvasContext.canvas.width;
-        const canvasHeight = this.canvasContext.canvas.height;
+        // WebGL版と同じ: 現在のビューポートサイズを使用（アトラス描画時はアトラスサイズ）
+        const viewportWidth = this.viewportWidth;
+        const viewportHeight = this.viewportHeight;
 
         // WebGL版と同じ: 色はストレート形式（プリマルチプライドはシェーダーで行う）
+        // globalAlphaはアトラス描画時ではなく、インスタンス描画時に適用される
         const red = this.$fillStyle[0];
         const green = this.$fillStyle[1];
         const blue = this.$fillStyle[2];
-        const alpha = this.$fillStyle[3] * this.globalAlpha;
+        const alpha = this.$fillStyle[3];
 
-        // WebGL版と同じ: 行列をビューポートサイズで正規化
-        const a  = this.$matrix[0] / canvasWidth;
-        const b  = this.$matrix[1] / canvasHeight;
-        const c  = this.$matrix[3] / canvasWidth;
-        const d  = this.$matrix[4] / canvasHeight;
-        const tx = this.$matrix[6] / canvasWidth;
-        const ty = this.$matrix[7] / canvasHeight;
+        // WebGL版と同じ: 行列はそのまま渡す（MeshFillGenerateUseCaseで正規化）
+        const a  = this.$matrix[0];
+        const b  = this.$matrix[1];
+        const c  = this.$matrix[3];
+        const d  = this.$matrix[4];
+        const tx = this.$matrix[6];
+        const ty = this.$matrix[7];
 
-        // MeshFillGenerateUseCaseでLoop-Blinn対応頂点データを生成
+        // MeshFillGenerateUseCaseで頂点データを生成
+        // WebGL版と同じ: ビューポートサイズを渡して行列を正規化
         const mesh = meshFillGenerateUseCase(
             pathVertices,
             a, b, c, d, tx, ty,
-            red, green, blue, alpha
+            red, green, blue, alpha,
+            viewportWidth, viewportHeight
         );
 
         if (mesh.indexCount === 0) {
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
+            // メッシュがない場合は何もしない（レンダーパスは終了しない）
             return;
         }
 
@@ -544,10 +531,100 @@ export class Context
             mesh.buffer
         );
 
+        // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
+        const attachment = this.frameBufferManager.getAttachment("atlas");
+        if (this.currentRenderTarget && attachment?.stencilView) {
+            this.fillWithStencil(vertexBuffer, mesh.indexCount, red, green, blue, alpha);
+        } else {
+            // キャンバスへの描画またはステンシルなしの場合は単純なフィル
+            this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight);
+        }
+
+        // レンダーパスは終了しない（drawFill()またはendNodeRendering()で終了する）
+    }
+
+    /**
+     * @description 2パスステンシルフィル（WebGL版と同じアルゴリズム）
+     *              Pass 1: CCW面でステンシルインクリメント、CW面でデクリメント
+     *              Pass 2: ステンシル値 != 0 の部分に色を描画
+     * @param {GPUBuffer} vertexBuffer
+     * @param {number} vertexCount
+     * @param {number} red
+     * @param {number} green
+     * @param {number} blue
+     * @param {number} alpha
+     * @return {void}
+     */
+    private fillWithStencil(
+        vertexBuffer: GPUBuffer,
+        vertexCount: number,
+        red: number,
+        green: number,
+        blue: number,
+        alpha: number
+    ): void
+    {
+        // === Pass 1: ステンシル書き込み（CCW面 - インクリメント） ===
+        const ccwPipeline = this.pipelineManager.getPipeline("stencil_write_ccw");
+        if (ccwPipeline) {
+            this.renderPassEncoder!.setPipeline(ccwPipeline);
+            this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
+            this.renderPassEncoder!.draw(vertexCount, 1, 0, 0);
+        }
+
+        // === Pass 1: ステンシル書き込み（CW面 - デクリメント） ===
+        const cwPipeline = this.pipelineManager.getPipeline("stencil_write_cw");
+        if (cwPipeline) {
+            this.renderPassEncoder!.setPipeline(cwPipeline);
+            this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
+            this.renderPassEncoder!.draw(vertexCount, 1, 0, 0);
+        }
+
+        // === Pass 2: ステンシルフィル（色描画） ===
+        const fillPipeline = this.pipelineManager.getPipeline("stencil_fill");
+        const fillBindGroupLayout = this.pipelineManager.getBindGroupLayout("stencil_fill");
+        if (fillPipeline && fillBindGroupLayout) {
+            // カラーユニフォーム（vec4）
+            const colorData = new Float32Array([red, green, blue, alpha]);
+            const colorBuffer = this.bufferManager.createUniformBuffer(
+                `stencil_fill_color_${Date.now()}`,
+                colorData.byteLength
+            );
+            this.device.queue.writeBuffer(colorBuffer, 0, colorData.buffer, colorData.byteOffset, colorData.byteLength);
+
+            const fillBindGroup = this.device.createBindGroup({
+                layout: fillBindGroupLayout,
+                entries: [{
+                    binding: 0,
+                    resource: { buffer: colorBuffer }
+                }]
+            });
+
+            this.renderPassEncoder!.setPipeline(fillPipeline);
+            this.renderPassEncoder!.setBindGroup(0, fillBindGroup);
+            this.renderPassEncoder!.draw(6, 1, 0, 0); // フルスクリーンクワッド（6頂点）
+        }
+    }
+
+    /**
+     * @description 単純なフィル（ステンシルなし、キャンバス描画用）
+     * @param {GPUBuffer} vertexBuffer
+     * @param {number} vertexCount
+     * @param {number} viewportWidth
+     * @param {number} viewportHeight
+     * @return {void}
+     */
+    private fillSimple(
+        vertexBuffer: GPUBuffer,
+        vertexCount: number,
+        viewportWidth: number,
+        viewportHeight: number
+    ): void
+    {
         // Uniform data: viewport size only (8 bytes → 16 bytes aligned)
         const uniformData = new Float32Array(4);
-        uniformData[0] = canvasWidth;
-        uniformData[1] = canvasHeight;
+        uniformData[0] = viewportWidth;
+        uniformData[1] = viewportHeight;
         uniformData[2] = 0;
         uniformData[3] = 0;
 
@@ -561,8 +638,6 @@ export class Context
         const bindGroupLayout = this.pipelineManager.getBindGroupLayout("fill");
         if (!bindGroupLayout) {
             console.error("[WebGPU] Fill bind group layout not found");
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
             return;
         }
 
@@ -575,21 +650,17 @@ export class Context
         });
 
         // パイプラインを取得して描画
-        const pipeline = this.pipelineManager.getPipeline("fill");
+        const pipelineName = this.currentRenderTarget ? "fill" : "fill_bgra";
+        const pipeline = this.pipelineManager.getPipeline(pipelineName);
         if (!pipeline) {
-            console.error("[WebGPU] Fill pipeline not found");
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
+            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
             return;
         }
 
-        this.renderPassEncoder.setPipeline(pipeline);
-        this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-        this.renderPassEncoder.setBindGroup(0, bindGroup);
-        this.renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
-
-        this.renderPassEncoder.end();
-        this.renderPassEncoder = null;
+        this.renderPassEncoder!.setPipeline(pipeline);
+        this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
+        this.renderPassEncoder!.setBindGroup(0, bindGroup);
+        this.renderPassEncoder!.draw(vertexCount, 1, 0, 0);
     }
 
     /**
@@ -913,6 +984,10 @@ export class Context
     bind (attachment_object: IAttachmentObject): void
     {
         this.frameBufferManager.setCurrentAttachment(attachment_object);
+
+        // WebGL版と同じ: ビューポートサイズをアタッチメントのサイズに設定
+        this.viewportWidth = attachment_object.width;
+        this.viewportHeight = attachment_object.height;
     }
 
     /**
@@ -950,6 +1025,7 @@ export class Context
 
     /**
      * @description 指定のノード範囲で描画を開始（アトラステクスチャへの描画）
+     *              2パスステンシルフィル対応: ステンシルバッファ付きレンダーパスを使用
      * @param {Node} node
      * @return {void}
      */
@@ -960,33 +1036,53 @@ export class Context
             this.beginFrame();
         }
 
+        // 既存のレンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
         // アトラステクスチャの該当箇所をレンダーターゲットに設定
         const attachment = this.frameBufferManager.getAttachment("atlas");
         if (attachment) {
             this.currentRenderTarget = attachment.textureView;
-            
+
+            // WebGL版と同じ: ビューポートサイズはアトラスのサイズを使用
+            this.viewportWidth = attachment.width;
+            this.viewportHeight = attachment.height;
+
             // コマンドエンコーダーを確保
             this.ensureCommandEncoder();
-            
-            // ノード領域のビューポートを設定してレンダーパスを開始
-            const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                attachment.textureView,
-                0, 0, 0, 0,
-                "load" // 既存の内容を保持
-            );
-            
-            this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            
-            // ビューポートとシザーを設定（node範囲のみ描画）
-            this.renderPassEncoder.setViewport(
-                node.x, node.y,
-                node.w, node.h,
-                0, 1
-            );
-            this.renderPassEncoder.setScissorRect(
-                node.x, node.y,
-                node.w, node.h
-            );
+
+            // ステンシルバッファ付きレンダーパス（2パスステンシルフィル用）
+            if (attachment.stencilView) {
+                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                    attachment.textureView,
+                    attachment.stencilView,
+                    "load", // カラーは既存の内容を保持
+                    "clear" // ステンシルはクリア
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            } else {
+                // ステンシルがない場合は通常のレンダーパス（フォールバック）
+                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                    attachment.textureView,
+                    0, 0, 0, 0,
+                    "load"
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            }
+
+            // シザー矩形をテクスチャ境界内にクランプ
+            const scissorX = Math.max(0, node.x);
+            const scissorY = Math.max(0, node.y);
+            const scissorW = Math.min(node.w, attachment.width - scissorX);
+            const scissorH = Math.min(node.h, attachment.height - scissorY);
+
+            // WebGL版と同じ: シザーテストで描画範囲を制限
+            if (scissorW > 0 && scissorH > 0) {
+                this.renderPassEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
+            }
         }
     }
 
@@ -1001,9 +1097,13 @@ export class Context
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
-        
+
         // メインテクスチャに戻す
         this.currentRenderTarget = null;
+
+        // ビューポートをキャンバスサイズに戻す
+        this.viewportWidth = this.canvasContext.canvas.width;
+        this.viewportHeight = this.canvasContext.canvas.height;
     }
 
     /**
@@ -1012,9 +1112,14 @@ export class Context
      */
     drawFill (): void
     {
-        // WebGPU draw fill
-        // fill()と同じ処理
+        // fill()で描画を実行（レンダーパスは継続）
         this.fill();
+
+        // drawFill()呼び出し後、レンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
     }
 
     /**
@@ -1240,7 +1345,7 @@ export class Context
                 {
                     texture: attachment.texture,
                     origin: { x: node.x, y: node.y, z: 0 },
-                    premultipliedAlpha: true  // Use premultiplied alpha for consistency
+                    premultipliedAlpha: true
                 },
                 {
                     width: element.width || node.w,
@@ -1313,11 +1418,10 @@ export class Context
      */
     private ensureMainTexture(): void
     {
-        if (!this.mainTexture && !this.frameStarted) {
+        if (!this.mainTexture) {
             console.log("[WebGPU] Getting main canvas texture for new frame");
             this.mainTexture = this.canvasContext.getCurrentTexture();
             this.mainTextureView = this.mainTexture.createView();
-            this.frameStarted = true;
         }
     }
 
@@ -1345,12 +1449,9 @@ export class Context
      */
     private ensureCommandEncoder(): void
     {
-        // 既存のRenderPassEncoderがある場合は終了
-        if (this.renderPassEncoder) {
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-        }
-        
+        // Note: RenderPassEncoderの終了はここでは行わない
+        // 呼び出し側で適切に管理すること
+
         if (!this.commandEncoder) {
             this.commandEncoder = this.device.createCommandEncoder();
         }
@@ -1573,11 +1674,11 @@ export class Context
         
         // ImageBitmapを作成
         const imageData = new ImageData(new Uint8ClampedArray(resultPixels), width, height);
-        
+
         // グローバルのcreateBitmapが存在するかチェック
         if (typeof createImageBitmap !== 'undefined') {
             return await createImageBitmap(imageData, {
-                premultiplyAlpha: "premultiply",
+                premultiplyAlpha: "none",
                 colorSpaceConversion: "none"
             });
         } else {

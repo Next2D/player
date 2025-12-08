@@ -11,8 +11,8 @@ export interface IFillMesh {
 }
 
 /**
- * @description 塗りのメッシュを生成する
- *              Generate a fill mesh
+ * @description 塗りのメッシュを生成する（WebGL版と同じ行列正規化を行う）
+ *              Generate a fill mesh (with viewport matrix normalization like WebGL)
  *
  * @param  {IPath[]} vertices
  * @param  {number} a - 行列要素
@@ -25,6 +25,8 @@ export interface IFillMesh {
  * @param  {number} green
  * @param  {number} blue
  * @param  {number} alpha
+ * @param  {number} viewportWidth - ビューポート幅
+ * @param  {number} viewportHeight - ビューポート高さ
  * @return {IFillMesh}
  * @method
  * @protected
@@ -40,8 +42,18 @@ export const execute = (
     red: number,
     green: number,
     blue: number,
-    alpha: number
+    alpha: number,
+    viewportWidth: number,
+    viewportHeight: number
 ): IFillMesh => {
+
+    // WebGL版と同じ: 行列をビューポートサイズで正規化
+    const normalizedA  = a / viewportWidth;
+    const normalizedC  = c / viewportWidth;
+    const normalizedTx = tx / viewportWidth;
+    const normalizedB  = b / viewportHeight;
+    const normalizedD  = d / viewportHeight;
+    const normalizedTy = ty / viewportHeight;
 
     // 頂点数を計算（各パスの三角形数 × 3）
     let totalVertices = 0;
@@ -61,7 +73,7 @@ export const execute = (
             vertex,
             buffer,
             index,
-            a, b, c, d, tx, ty,
+            normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy,
             red, green, blue, alpha
         );
     }

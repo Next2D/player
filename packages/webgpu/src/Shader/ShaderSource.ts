@@ -5,7 +5,15 @@
 export class ShaderSource
 {
     /**
-     * @description 単色塗りつぶし用頂点シェーダー（Loop-Blinn対応・17 floats頂点フォーマット）
+     * @description 単色塗りつぶし用頂点シェーダー（17 floats頂点フォーマット）
+     *              行列はすでにビューポートサイズで正規化済み（WebGL版と同じ）
+     *
+     *              WebGL版のoffsetY調整: atlasHeight - node.y - height
+     *              これによりWebGL座標系（下から上）に変換されている
+     *
+     *              WebGPU座標系: 上から下（Y軸反転なし）
+     *              しかし、WebGL版のoffsetY調整がそのまま使われているため、
+     *              WebGL版と同じY軸反転を適用する
      * @return {string}
      */
     static getFillVertexShader(): string
@@ -37,28 +45,27 @@ export class ShaderSource
                 var output: VertexOutput;
 
                 // Build matrix from vertex attributes
+                // 行列はすでにビューポートで正規化済み（MeshFillGenerateUseCaseで実施）
                 let matrix = mat3x3<f32>(
                     input.matrix0,
                     input.matrix1,
                     input.matrix2
                 );
 
-                // Apply matrix transformation
+                // Apply matrix transformation (result is in 0-1 normalized space)
                 let transformed = matrix * vec3<f32>(input.position, 1.0);
 
-                // Normalize by viewport size
-                let pos = transformed.xy / uniforms.viewportSize;
-
                 // Convert to NDC: 0-1 → -1 to 1
-                let ndc = pos * 2.0 - 1.0;
+                let ndc = transformed.xy * 2.0 - 1.0;
 
-                // Flip Y axis (WebGL compatible)
+                // WebGL版と同じY軸反転
+                // WebGL版のoffsetY = atlasHeight - node.y - height の調整に対応
                 output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 
                 // Pass through bezier coordinates for fragment shader
                 output.bezier = input.bezier;
 
-                // Pass color as-is (premultiplication happens in fragment shader after AA)
+                // Pass color as-is (premultiplication happens in fragment shader)
                 output.color = input.color;
 
                 return output;
@@ -67,7 +74,13 @@ export class ShaderSource
     }
 
     /**
-     * @description 単色塗りつぶし用フラグメントシェーダー（Loop-Blinnアンチエイリアシング対応）
+     * @description 単色塗りつぶし用フラグメントシェーダー（1パスLoop-Blinn）
+     *              WebGL版は2パス（MASK + SOLID_FILL_COLOR）だが、
+     *              WebGPU版は1パスでLoop-Blinn曲線処理を行う
+     *
+     *              bezier座標:
+     *              - (0.5, 0.5): 内部三角形（直線）→ そのまま描画
+     *              - その他: ベジェ曲線三角形 → u² - v で曲線内外を判定
      * @return {string}
      */
     static getFillFragmentShader(): string
@@ -81,30 +94,145 @@ export class ShaderSource
 
             @fragment
             fn main(input: FragmentInput) -> @location(0) vec4<f32> {
-                // Loop-Blinn法による2次ベジエ曲線のアンチエイリアシング
-                // 暗黙的関数: f(u, v) = u² - v
-                let f_val = input.bezier.x * input.bezier.x - input.bezier.y;
+                // 内部三角形（直線セグメント）はbezier = (0.5, 0.5)
+                // この場合、u² - v = 0.25 - 0.5 = -0.25 < 0 なので曲線内部として描画される
 
-                // スクリーン空間での勾配を計算
-                let dx = dpdx(f_val);
-                let dy = dpdy(f_val);
+                // ベジェ曲線三角形の場合、Loop-Blinn法で曲線内外を判定
+                // 暗黙関数: f(u,v) = u² - v
+                // f < 0: 曲線の内側（描画）
+                // f >= 0: 曲線の外側（ディスカード）
+                let f = input.bezier.x * input.bezier.x - input.bezier.y;
 
-                // 符号付き距離（勾配で正規化）
-                let dist = f_val / length(vec2<f32>(dx, dy));
-
-                // smoothstepによるアンチエイリアシング（約1ピクセル幅の遷移）
-                let aa = smoothstep(0.5, -0.5, dist);
-
-                // アルファを適用
-                if (aa <= 0.001) {
+                if (f >= 0.0) {
                     discard;
                 }
 
-                // WebGL版と同じ: o_color = vec4(v_color.rgb * v_color.a, v_color.a);
-                // 入力色はストレートアルファなので、ここでプリマルチプライド
-                // さらにAAを適用
-                let premultiplied = vec4<f32>(input.color.rgb * input.color.a, input.color.a);
-                return premultiplied * aa;
+                // プリマルチプライドアルファで出力
+                return vec4<f32>(input.color.rgb * input.color.a, input.color.a);
+            }
+        `;
+    }
+
+    /**
+     * @description ステンシル書き込み用頂点シェーダー（Pass1）
+     *              WebGL版の2パスステンシルフィルのPass1に相当
+     * @return {string}
+     */
+    static getStencilWriteVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexInput {
+                @location(0) position: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+                @location(3) matrix0: vec3<f32>,
+                @location(4) matrix1: vec3<f32>,
+                @location(5) matrix2: vec3<f32>,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+            }
+
+            @vertex
+            fn main(input: VertexInput) -> VertexOutput {
+                var output: VertexOutput;
+
+                // Build matrix from vertex attributes
+                let matrix = mat3x3<f32>(
+                    input.matrix0,
+                    input.matrix1,
+                    input.matrix2
+                );
+
+                // Apply matrix transformation (result is in 0-1 normalized space)
+                let transformed = matrix * vec3<f32>(input.position, 1.0);
+
+                // Convert to NDC: 0-1 → -1 to 1
+                let ndc = transformed.xy * 2.0 - 1.0;
+
+                // WebGL版と同じY軸反転
+                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
+
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description ステンシル書き込み用フラグメントシェーダー（Pass1）
+     *              カラー書き込みなし、ステンシル値のみ更新
+     * @return {string}
+     */
+    static getStencilWriteFragmentShader(): string
+    {
+        return /* wgsl */`
+            @fragment
+            fn main() -> @location(0) vec4<f32> {
+                // ステンシルのみ更新、カラーは書き込まない（writeMaskで制御）
+                return vec4<f32>(0.0, 0.0, 0.0, 0.0);
+            }
+        `;
+    }
+
+    /**
+     * @description ステンシルフィル用頂点シェーダー（Pass2）
+     *              フルスクリーンクワッドを描画
+     * @return {string}
+     */
+    static getStencilFillVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+            }
+
+            struct Uniforms {
+                color: vec4<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+            // フルスクリーンクワッド用の固定頂点位置
+            var<private> positions: array<vec2<f32>, 6> = array<vec2<f32>, 6>(
+                vec2<f32>(-1.0, -1.0),
+                vec2<f32>( 1.0, -1.0),
+                vec2<f32>(-1.0,  1.0),
+                vec2<f32>(-1.0,  1.0),
+                vec2<f32>( 1.0, -1.0),
+                vec2<f32>( 1.0,  1.0),
+            );
+
+            @vertex
+            fn main(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {
+                var output: VertexOutput;
+                output.position = vec4<f32>(positions[vertexIndex], 0.0, 1.0);
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description ステンシルフィル用フラグメントシェーダー（Pass2）
+     *              ステンシルテストに合格した部分に色を描画
+     * @return {string}
+     */
+    static getStencilFillFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct Uniforms {
+                color: vec4<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+            @fragment
+            fn main() -> @location(0) vec4<f32> {
+                // プリマルチプライドアルファで出力
+                return vec4<f32>(
+                    uniforms.color.rgb * uniforms.color.a,
+                    uniforms.color.a
+                );
             }
         `;
     }
@@ -320,38 +448,38 @@ export class ShaderSource
                 @builtin(instance_index) instanceIdx: u32
             ) -> VertexOutput {
                 var output: VertexOutput;
-                
+
                 // テクスチャ座標を計算
                 let texW = instance.textureRect.z;
                 let texH = instance.textureRect.w;
                 let texX = instance.textureRect.x + input.texCoord.x * texW;
                 let texY = instance.textureRect.y + input.texCoord.y * texH;
                 output.texCoord = vec2<f32>(texX, texY);
-                
+
                 // 変換行列を適用
                 let scale0 = instance.matrixScale.x;
                 let rotate0 = instance.matrixScale.y;
                 let scale1 = instance.matrixScale.z;
                 let rotate1 = instance.matrixScale.w;
-                
+
                 let pos = vec2<f32>(
                     input.position.x * instance.textureDim.x,
                     input.position.y * instance.textureDim.y
                 );
-                
+
                 let transformedX = pos.x * scale0 + pos.y * scale1 + instance.matrixTx.x;
                 let transformedY = pos.x * rotate0 + pos.y * rotate1 + instance.matrixTx.y;
-                
+
                 // NDC座標に変換
                 let ndcX = (transformedX / instance.textureDim.z) * 2.0 - 1.0;
                 let ndcY = 1.0 - (transformedY / instance.textureDim.w) * 2.0;
-                
+
                 output.position = vec4<f32>(ndcX, ndcY, 0.0, 1.0);
-                
+
                 // カラー変換
                 output.mulColor = instance.mulColor;
                 output.addColor = instance.addColor;
-                
+
                 return output;
             }
         `;
@@ -378,22 +506,20 @@ export class ShaderSource
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
                 var src = textureSample(textureData, textureSampler, input.texCoord);
 
-                // WebGL版と同じ条件: カラートランスフォームが必要かチェック
-                // if (v_mul.x != 1.0 || v_mul.y != 1.0 || v_mul.z != 1.0 || v_mul.w != 1.0
-                //     || v_add.x != 0.0 || v_add.y != 0.0 || v_add.z != 0.0)
+                // カラートランスフォームが必要かチェック
                 let needsTransform =
                     input.mulColor.x != 1.0 || input.mulColor.y != 1.0 ||
                     input.mulColor.z != 1.0 || input.mulColor.w != 1.0 ||
                     input.addColor.x != 0.0 || input.addColor.y != 0.0 || input.addColor.z != 0.0;
 
                 if (needsTransform) {
-                    // Unpremultiply: divide RGB by alpha
+                    // Unpremultiply
                     src = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
 
-                    // Apply color transform: multiply + add
+                    // Apply color transform
                     src = clamp(src * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
 
-                    // Premultiply again: multiply RGB by alpha
+                    // Premultiply
                     src = vec4<f32>(src.rgb * src.a, src.a);
                 }
 

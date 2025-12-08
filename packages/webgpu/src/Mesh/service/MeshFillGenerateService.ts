@@ -10,7 +10,7 @@ import type { IPath } from "../../interface/IPath";
  * - color: r, g, b, a (4 floats)
  * - matrix row 0: a, b, 0 (3 floats)
  * - matrix row 1: c, d, 0 (3 floats)
- * - matrix row 2: tx, ty, 0 (3 floats)
+ * - matrix row 2: tx, ty, 0 (3 floats) - WebGL版と同じ
  *
  * @param  {IPath} vertex
  * @param  {Float32Array} buffer

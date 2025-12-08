@@ -46,9 +46,12 @@ export class FrameBufferManager
         mask: boolean = false
     ): IAttachmentObject
     {
+        // アトラステクスチャはRGBA8フォーマットを使用（copyExternalImageToTextureとの互換性のため）
+        const textureFormat = name === "atlas" ? "rgba8unorm" : this.format;
+
         const texture = this.device.createTexture({
             size: { width, height },
-            format: this.format,
+            format: textureFormat,
             usage: GPUTextureUsage.RENDER_ATTACHMENT |
                    GPUTextureUsage.TEXTURE_BINDING |
                    GPUTextureUsage.COPY_SRC |
@@ -56,6 +59,19 @@ export class FrameBufferManager
         });
 
         const textureView = texture.createView();
+
+        // アトラス用にステンシルテクスチャを作成（2パスフィルレンダリング用）
+        let stencilTexture: GPUTexture | null = null;
+        let stencilView: GPUTextureView | null = null;
+
+        if (name === "atlas") {
+            stencilTexture = this.device.createTexture({
+                size: { width, height },
+                format: "stencil8",
+                usage: GPUTextureUsage.RENDER_ATTACHMENT
+            });
+            stencilView = stencilTexture.createView();
+        }
 
         const attachment: IAttachmentObject = {
             id: this.nextId++,
@@ -69,8 +85,8 @@ export class FrameBufferManager
             color: null,
             stencil: null,
             colorTexture: null,
-            stencilTexture: null,
-            stencilView: null
+            stencilTexture,
+            stencilView
         };
 
         this.attachments.set(name, attachment);
@@ -131,6 +147,36 @@ export class FrameBufferManager
                 loadOp: loadOp,
                 storeOp: "store"
             }]
+        };
+    }
+
+    /**
+     * @description ステンシル付きレンダーパス記述子を作成（2パスフィルレンダリング用）
+     * @param {GPUTextureView} colorView - カラーテクスチャビュー
+     * @param {GPUTextureView} stencilView - ステンシルテクスチャビュー
+     * @param {GPULoadOp} colorLoadOp - カラーのロードオペレーション
+     * @param {GPULoadOp} stencilLoadOp - ステンシルのロードオペレーション
+     * @return {GPURenderPassDescriptor}
+     */
+    createStencilRenderPassDescriptor(
+        colorView: GPUTextureView,
+        stencilView: GPUTextureView,
+        colorLoadOp: GPULoadOp = "load",
+        stencilLoadOp: GPULoadOp = "clear"
+    ): GPURenderPassDescriptor {
+        return {
+            colorAttachments: [{
+                view: colorView,
+                clearValue: { r: 0, g: 0, b: 0, a: 0 },
+                loadOp: colorLoadOp,
+                storeOp: "store"
+            }],
+            depthStencilAttachment: {
+                view: stencilView,
+                stencilClearValue: 0,
+                stencilLoadOp: stencilLoadOp,
+                stencilStoreOp: "store"
+            }
         };
     }
 
