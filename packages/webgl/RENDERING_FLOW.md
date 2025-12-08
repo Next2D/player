@@ -194,12 +194,12 @@ stateDiagram-v2
 
     state Saved {
         [*] --> PushStack
-        PushStack: $stack.push({<br/>matrix, alpha, blend,<br/>fillStyle, strokeStyle,<br/>grid, imageSmoothingEnabled})
+        PushStack: $stack.push(Float32Array[9])<br/>行列データのみを保存
     }
 
     state Restored {
         [*] --> PopStack
-        PopStack: state = $stack.pop()<br/>$matrix = state.matrix<br/>$globalAlpha = state.alpha<br/>...
+        PopStack: matrix = $stack.pop()<br/>$matrix に復元
     }
 ```
 
@@ -207,41 +207,93 @@ stateDiagram-v2
 
 | Variable | Type | Description |
 |----------|------|-------------|
-| `$matrix` | `Float32Array[6]` | Current transformation matrix (a,b,c,d,tx,ty) |
-| `$stack` | `Array<CanvasState>` | Save/restore state stack |
-| `$globalAlpha` | `number` | Global alpha value (0.0-1.0) |
-| `$globalCompositeOperation` | `string` | Current blend mode |
-| `$fillStyle` | `IFillStyle` | Current fill style |
-| `$strokeStyle` | `IStrokeStyle` | Current stroke style |
-| `$imageSmoothingEnabled` | `boolean` | Texture smoothing flag |
-| `$grid` | `IGrid` | 9-slice grid settings |
+| `$matrix` | `Float32Array[9]` | Current 3x3 transformation matrix |
+| `$stack` | `Float32Array[]` | Save/restore matrix stack |
+| `globalAlpha` | `number` | Global alpha value (0.0-1.0) |
+| `globalCompositeOperation` | `IBlendMode` | Current blend mode |
+| `$fillStyle` | `Float32Array[4]` | Current fill RGBA color |
+| `$strokeStyle` | `Float32Array[4]` | Current stroke RGBA color |
+| `imageSmoothingEnabled` | `boolean` | Texture smoothing flag |
+| `$mainAttachmentObject` | `IAttachmentObject \| null` | Main attachment object |
+| `$stackAttachmentObject` | `IAttachmentObject[]` | Attachment object stack |
+| `maskBounds` | `IBounds` | Mask drawing bounds |
+| `thickness` | `number` | Stroke thickness (default: 1) |
+| `caps` | `number` | Stroke cap style (0=butt, 1=round, 2=square, default: 1) |
+| `joints` | `number` | Stroke joint style (0=bevel, 1=round, 2=miter, default: 2) |
+| `miterLimit` | `number` | Miter limit (default: 0) |
+| `$clearColorR/G/B/A` | `number` | Background clear color |
 
 ### Transformation Matrix Operations / 変換行列操作
 
 ```mermaid
 flowchart LR
     subgraph "Matrix Operations / 行列操作"
-        T[translate<br/>tx, ty]
-        S[scale<br/>sx, sy]
-        R[rotate<br/>angle]
-        TF[transform<br/>a,b,c,d,tx,ty]
-        SET[setTransform<br/>a,b,c,d,tx,ty]
+        TF[transform<br/>a,b,c,d,e,f]
+        SET[setTransform<br/>a,b,c,d,e,f]
     end
 
-    subgraph "Matrix Format / 行列フォーマット"
-        M["[a, b, c, d, tx, ty]<br/><br/>| a  c  tx |<br/>| b  d  ty |<br/>| 0  0   1 |"]
+    subgraph "Matrix Format / 行列フォーマット (3x3)"
+        M["Float32Array[9]<br/><br/>| m[0]  m[3]  m[6] |   | a  c  e |<br/>| m[1]  m[4]  m[7] | = | b  d  f |<br/>| m[2]  m[5]  m[8] |   | 0  0  1 |"]
     end
 
-    T --> M
-    S --> M
-    R --> M
     TF --> M
     SET --> M
+```
+
+### Global State Management (WebGLUtil.ts) / グローバル状態管理
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `$RENDER_MAX_SIZE` | `number` | Maximum render size (default: 2048, max: 4096) |
+| `$samples` | `number` | MSAA sample count (default: 4) |
+| `$gl` | `WebGL2RenderingContext` | WebGL2 context |
+| `$context` | `Context` | Context instance |
+| `$devicePixelRatio` | `number` | Device pixel ratio (default: 1) |
+| `$viewportWidth/Height` | `number` | Current viewport dimensions |
+
+### Array Pooling System / 配列プーリングシステム
+
+```mermaid
+flowchart TB
+    subgraph "Pool Types / プールタイプ"
+        ARR["$arrays<br/>Generic array pool"]
+        F4["$float32Array4<br/>4-element Float32Array"]
+        F6["$float32Array6<br/>6-element Float32Array"]
+        F9["$float32Array9<br/>9-element Float32Array"]
+        I4["$int32Array4<br/>4-element Int32Array"]
+    end
+
+    subgraph "Operations / 操作"
+        GET["$getArray()/$getFloat32Array*()"]
+        POOL["$poolArray()/$poolFloat32Array*()"]
+    end
+
+    GET --> ARR
+    GET --> F4
+    GET --> F6
+    GET --> F9
+    GET --> I4
+    POOL --> ARR
+    POOL --> F4
+    POOL --> F6
+    POOL --> F9
+    POOL --> I4
 ```
 
 ---
 
 ## 4. Path Command Processing
+
+### Path Data Structure / パスデータ構造
+
+```typescript
+// PathCommand.ts
+export const $currentPath: IPath = [];     // 現在操作中のパス配列
+export const $vertices: IPath[] = [];       // 完了したパス配列
+
+// IPath = number[] (x, y, flag の triplets)
+// flag: 0 = line point, 1 = quadratic control point
+```
 
 ### Path Data Flow / パスデータフロー
 
@@ -252,23 +304,23 @@ flowchart TB
         LINE[lineTo x,y]
         QUAD[quadraticCurveTo<br/>cx,cy, x,y]
         CUBIC[bezierCurveTo<br/>c1x,c1y, c2x,c2y, x,y]
-        ARC[arc<br/>cx,cy, r, start, end]
+        ARC[arc<br/>x,y, radius]
     end
 
     subgraph Process["PathCommand Processing / PathCommand処理"]
-        BEGIN[beginPath<br/>currentPath = empty<br/>vertices = empty]
-        ADD_MOVE["currentPath.push x, y, 0"]
-        ADD_LINE["currentPath.push x, y, 0"]
-        ADD_QUAD["currentPath.push<br/>cx, cy, 1<br/>x, y, 0"]
-        CONVERT_CUBIC[Cubic to Quadratic変換<br/>8分割]
-        ADD_QUADS["8個のQuadratic追加"]
-        CONVERT_ARC[Arc to Cubic変換<br/>4分割]
+        BEGIN[beginPath<br/>currentPath.length = 0<br/>vertices.length = 0]
+        ADD_MOVE["$currentPath.push(x, y, 0)"]
+        ADD_LINE["$currentPath.push(x, y, 0)"]
+        ADD_QUAD["$currentPath.push(<br/>cx, cy, 1,<br/>x, y, 0)"]
+        CONVERT_CUBIC[Adaptive Cubic→Quadratic変換<br/>2〜8分割（曲率依存）]
+        ADD_QUADS["適応的Quadratic追加"]
+        CONVERT_ARC[Arc→Cubic変換<br/>4分割後→Quadratic]
     end
 
     subgraph Output["Output / 出力"]
         CLOSE[closePath]
-        STORE["vertices.push currentPath<br/>currentPath = empty"]
-        RESULT["vertices = array of paths<br/>each path = x,y,flag triplets"]
+        STORE["$vertices.push($currentPath.slice())<br/>$currentPath.length = 0"]
+        RESULT["$vertices = IPath[]<br/>each path = [x,y,flag] triplets"]
     end
 
     BEGIN --> MOVE
@@ -288,33 +340,55 @@ flowchart TB
     STORE --> RESULT
 ```
 
-### Cubic to Quadratic Conversion / Cubic→Quadratic変換
+### Adaptive Cubic to Quadratic Conversion / 適応的Cubic→Quadratic変換
 
 ```mermaid
 flowchart LR
     subgraph "Input Cubic / 入力Cubic"
-        C["P0, C1, C2, P1<br/>(4点)"]
+        C["P0, C1, C2, P3<br/>(4点)"]
     end
 
-    subgraph "De Casteljau Subdivision / De Casteljau分割"
-        DIV["t = 0.5で分割<br/>×3回 = 8セグメント"]
+    subgraph "Adaptive Subdivision / 適応的分割"
+        FLAT["Flatness計算<br/>$calculateFlatness()"]
+        COUNT["分割数決定<br/>$getAdaptiveSubdivisionCount()<br/>MIN=2, MAX=8"]
+        DIV["De Casteljau分割<br/>2〜8セグメント"]
     end
 
     subgraph "Output Quadratics / 出力Quadratic"
-        Q["Q0(P0,C0,P1)<br/>Q1(P1,C1,P2)<br/>...<br/>Q7(P7,C7,P8)"]
+        Q["動的セグメント数<br/>$adaptiveBuffer<br/>$adaptiveSegmentCount"]
     end
 
-    C --> DIV --> Q
+    C --> FLAT
+    FLAT --> COUNT
+    COUNT --> DIV
+    DIV --> Q
+```
+
+**BezierConverter.ts Constants / 定数:**
+```typescript
+FLATNESS_THRESHOLD = 0.5     // 平坦度閾値
+MIN_SUBDIVISIONS = 2         // 最小分割数
+MAX_SUBDIVISIONS = 8         // 最大分割数
+
+$bezierBuffer: Float32Array(32)    // 固定サイズバッファ
+$adaptiveBuffer: Float32Array      // 動的サイズバッファ
+$adaptiveSegmentCount: number      // 実際のセグメント数
 ```
 
 **Algorithm / アルゴリズム:**
 ```
-for each cubic segment:
-    subdivide at t=0.5 → 2 cubics
-    subdivide each at t=0.5 → 4 cubics
-    subdivide each at t=0.5 → 8 cubics
-    approximate each cubic as quadratic:
-        Q_control = (3*C1 - P0 + 3*C2 - P1) / 4
+1. $calculateFlatness(p0, p1, p2, p3):
+   - 制御点から直線P0-P3への最大距離を計算
+   - ux = 3*p1 - 2*p0 - p3
+   - uy = 3*p1y - 2*p0y - p3y
+   - vx = 3*p2 - 2*p3 - p0
+   - vy = 3*p2y - 2*p3y - p0y
+   - return max(ux*ux + uy*uy, vx*vx + vy*vy)
+
+2. $getAdaptiveSubdivisionCount():
+   - if flatness < threshold² → MIN_SUBDIVISIONS
+   - level = ceil(log2(sqrt(flatness)/threshold) / 2)
+   - return clamp(level + MIN, MIN, MAX)
 ```
 
 ---
@@ -605,11 +679,16 @@ flowchart TB
         SPREAD["spreadMethod: pad|reflect|repeat"]
     end
 
+    subgraph "Adaptive Resolution / 適応解像度"
+        CHECK_STOPS{stopsLength?}
+        RES_256["256x1 (≤4 stops)"]
+        RES_512["512x1 (5-8 stops)"]
+        RES_1024["1024x1 (>8 stops)"]
+    end
+
     subgraph "LUT Generation / LUT生成"
-        CREATE_TEX["512x1 テクスチャ作成"]
-
-        INTERPOLATE["各ピクセル (i = 0..511):<br/>t = i / 511<br/>color = lerp(stops, t)"]
-
+        CREATE_TEX["テクスチャ作成"]
+        INTERPOLATE["各ピクセル補間<br/>color = lerp(stops, t)"]
         UPLOAD["WebGLテクスチャにアップロード"]
     end
 
@@ -617,10 +696,28 @@ flowchart TB
         SAMPLE["texture(u_gradient, vec2(t, 0.5))"]
     end
 
-    STOPS --> CREATE_TEX
+    STOPS --> CHECK_STOPS
+    CHECK_STOPS -->|≤4| RES_256
+    CHECK_STOPS -->|5-8| RES_512
+    CHECK_STOPS -->|>8| RES_1024
+    RES_256 --> CREATE_TEX
+    RES_512 --> CREATE_TEX
+    RES_1024 --> CREATE_TEX
     CREATE_TEX --> INTERPOLATE
     INTERPOLATE --> UPLOAD
     UPLOAD --> SAMPLE
+```
+
+**GradientLUTGenerator.ts - Adaptive Resolution / 適応解像度:**
+```typescript
+$getAdaptiveResolution(stopsLength: number): number
+  - stopsLength ≤ 4 → 256
+  - stopsLength ≤ 8 → 512
+  - stopsLength > 8 → 1024
+
+// Color space conversion tables
+$rgbToLinearTable: Float32Array(256)  // pow(t, 2.23333333)
+$rgbIdentityTable: Float32Array(256)  // linear t
 ```
 
 ### Linear Gradient Calculation / 線形グラデーション計算
@@ -831,21 +928,22 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph "Stencil Buffer / ステンシルバッファ"
-        STENCIL["8-bit Stencil<br/>0-255値"]
-        LEVELS["Level 0: no mask<br/>Level 1: 1st mask<br/>Level 2: nested mask<br/>...<br/>Level 7: max nested"]
+    subgraph "Stencil State (Stencil.ts) / ステンシル状態"
+        MODES["STENCIL_MODE_MASK = 1<br/>STENCIL_MODE_FILL = 2"]
+        STATE["$currentStencilMode<br/>$colorMaskEnabled<br/>$sampleAlphaToCoverageEnabled"]
+    end
+
+    subgraph "Mask State (Mask.ts) / マスク状態"
+        DRAWING["$maskDrawingState: boolean"]
+        BOUNDS["$clipBounds: Map<number, Float32Array>"]
+        LEVELS["$clipLevels: Map<number, number>"]
     end
 
     subgraph "Mask Operations / マスク操作"
-        BEGIN["beginMask(clipId)"]
+        BEGIN["beginMask()"]
+        SET_BOUNDS["setMaskBounds(xMin,yMin,xMax,yMax)"]
         END["endMask()"]
-        LEAVE["leaveMask(clipId)"]
-    end
-
-    subgraph "State Tracking / ステート追跡"
-        CLIP_LEVELS["$clipLevels: Map<clipId, level>"]
-        CLIP_BOUNDS["$clipBounds: Map<level, bounds>"]
-        CURRENT["$currentClipLevel: number"]
+        LEAVE["leaveMask()"]
     end
 ```
 
@@ -854,38 +952,34 @@ flowchart TB
 ```mermaid
 sequenceDiagram
     participant App as Application
-    participant Mask as MaskSystem
+    participant Mask as MaskServices
     participant GL as WebGL2
 
-    Note over App,GL: beginMask - マスク領域の定義開始
-    App->>Mask: beginMask(clipId)
-    Mask->>Mask: level = ++$currentClipLevel
-    Mask->>Mask: $clipLevels.set(clipId, level)
-    Mask->>GL: glEnable(STENCIL_TEST)
-    Mask->>GL: glStencilFunc(ALWAYS, level, 0xFF)
-    Mask->>GL: glStencilOp(KEEP, KEEP, REPLACE)
-    Mask->>GL: glColorMask(false, false, false, false)
+    Note over App,GL: beginMask - マスク描画準備
+    App->>Mask: beginMask()
+    Mask->>Mask: $setMaskDrawing(true)
+    Mask->>GL: ステンシル設定
 
-    Note over App,GL: Draw mask shape - マスク形状を描画
+    Note over App,GL: setMaskBounds - マスク範囲設定
+    App->>Mask: setMaskBounds(xMin,yMin,xMax,yMax)
+    Mask->>Mask: maskBounds更新
+
+    Note over App,GL: Draw mask shape with clip()
+    App->>App: clip()
     App->>GL: drawArrays(...) [mask geometry]
 
-    Note over App,GL: endMask - マスク領域の定義終了
+    Note over App,GL: endMask - マスク描画終了
     App->>Mask: endMask()
-    Mask->>GL: glColorMask(true, true, true, true)
-    Mask->>GL: glStencilFunc(EQUAL, level, 0xFF)
-    Mask->>GL: glStencilOp(KEEP, KEEP, KEEP)
+    Mask->>GL: ステンシル関数変更
 
     Note over App,GL: Draw content - コンテンツを描画
     App->>GL: drawArrays(...) [masked content]
 
-    Note over App,GL: leaveMask - マスクを解除
-    App->>Mask: leaveMask(clipId)
-    Mask->>Mask: level = $clipLevels.get(clipId)
-    Mask->>Mask: --$currentClipLevel
-    Mask->>GL: glStencilFunc(EQUAL, level-1, 0xFF)
-    alt level == 1
-        Mask->>GL: glDisable(STENCIL_TEST)
-    end
+    Note over App,GL: leaveMask - マスク終了処理
+    App->>App: drawArraysInstanced()
+    App->>Mask: leaveMask()
+    Mask->>Mask: $setMaskDrawing(false)
+    Mask->>GL: ステンシルリセット
 ```
 
 ### Union Mask (Level > 7) / ユニオンマスク (レベル > 7)
@@ -1009,6 +1103,7 @@ flowchart TB
 | **DisplacementMap** | mapTexture, mapPoint, componentX, componentY, scaleX, scaleY, mode, color, alpha | 1 | UV displacement |
 | **GradientBevel** | distance, angle, colors[], alphas[], ratios[], blurX, blurY, strength, quality, type, knockout | 2 × quality + 2 | Gradient emboss |
 | **GradientGlow** | distance, angle, colors[], alphas[], ratios[], blurX, blurY, strength, quality, type, knockout | 2 × quality + 2 | Gradient glow |
+| **Bitmap** | - | 1 | Basic bitmap rendering |
 
 ### Ping-Pong Buffer Rendering / ピンポンバッファレンダリング
 
@@ -1043,45 +1138,142 @@ sequenceDiagram
 
 ```mermaid
 flowchart TB
-    subgraph "Shader Templates / シェーダーテンプレート"
-        V_TEX["TEXTURE_TEMPLATE<br/>テクスチャ用頂点"]
-        V_FILL["FILL_TEMPLATE<br/>フィル用頂点"]
-        V_INST["INSTANCE_TEMPLATE<br/>インスタンス用頂点"]
+    subgraph "ShaderManager Class / ShaderManagerクラス"
+        PROG["_$programObject: IProgramObject"]
+        UNIFORM["_$uniformMap: Map<string, IUniformData>"]
 
-        F_SOLID["Solid Color Fragment"]
-        F_GRAD["Gradient Fragment"]
-        F_TEX["Texture Fragment"]
-        F_BLEND["Blend Mode Fragment"]
-        F_FILTER["Filter Fragment"]
+        METHODS["useProgram()<br/>bindUniform()<br/>get highp/mediump/textures"]
     end
 
-    subgraph "Shader Manager / シェーダーマネージャー"
-        CACHE["Shader Cache<br/>Map<key, WebGLProgram>"]
-
-        COMPILE["compile(source)"]
-        LINK["link(vertex, fragment)"]
-        GET["getProgram(key)"]
+    subgraph "Shader Sources / シェーダーソース"
+        V_SRC["Vertex/VertexShaderSource.ts<br/>VertexShaderSourceFill.ts"]
+        F_SRC["Fragment/FragmentShaderSource.ts<br/>FragmentShaderSourceBlend.ts<br/>FragmentShaderSourceGradient.ts<br/>FragmentShaderSourceTexture.ts"]
     end
 
-    subgraph "Variant System / バリアントシステム"
-        KEY_GEN["キー生成<br/>s{grid}, b{repeat}{grid}"]
-        VARIANT["シェーダーバリアント<br/>9-slice, repeat, etc."]
+    subgraph "Variants / バリアント"
+        SHAPE["Variants/Shape"]
+        GRADIENT["Variants/Gradient"]
+        GRADIENT_LUT["Variants/GradientLUT"]
+        BITMAP["Variants/Bitmap"]
+        BLEND["Variants/Blend"]
+        FILTER["Variants/Filter"]
     end
 
-    V_TEX --> COMPILE
-    V_FILL --> COMPILE
-    V_INST --> COMPILE
-    F_SOLID --> COMPILE
-    F_GRAD --> COMPILE
-    F_TEX --> COMPILE
-    F_BLEND --> COMPILE
-    F_FILTER --> COMPILE
+    subgraph "Uniform System / ユニフォームシステム"
+        HIGHP["u_highp: Int32Array | Float32Array"]
+        MEDIUMP["u_mediump: Int32Array | Float32Array"]
+        TEXTURES["u_textures: Int32Array | Float32Array"]
+    end
 
-    COMPILE --> LINK
-    LINK --> CACHE
-    KEY_GEN --> GET
-    GET --> CACHE
-    VARIANT --> KEY_GEN
+    V_SRC --> PROG
+    F_SRC --> PROG
+    PROG --> UNIFORM
+    UNIFORM --> HIGHP
+    UNIFORM --> MEDIUMP
+    UNIFORM --> TEXTURES
+```
+
+### ShaderManager Class / ShaderManagerクラス
+
+```typescript
+class ShaderManager {
+    private readonly _$programObject: IProgramObject;
+    private readonly _$uniformMap: Map<string, IUniformData>;
+
+    constructor(vertex_source: string, fragment_source: string, atlas?: boolean);
+
+    useProgram(): void;      // プログラムをアクティブ化
+    bindUniform(): void;     // ユニフォーム変数をバインド
+
+    get highp(): Int32Array | Float32Array;     // u_highp
+    get mediump(): Int32Array | Float32Array;   // u_mediump
+    get textures(): Int32Array | Float32Array;  // u_textures
+}
+```
+
+### Shader Directory Structure / シェーダーディレクトリ構成
+
+```
+Shader/
+├── ShaderManager.ts              # メインシェーダー管理クラス
+├── ShaderInstancedManager.ts     # インスタンス描画用
+├── GradientLUTGenerator.ts       # グラデーションLUT生成
+├── GradientLUTCache.ts           # LUTキャッシュ
+│
+├── ShaderManager/
+│   └── service/
+│       ├── ShaderManagerCreateProgramService.ts
+│       ├── ShaderManagerInitializeUniformService.ts
+│       ├── ShaderManagerUseProgramService.ts
+│       └── ShaderManagerBindUniformService.ts
+│
+├── Fragment/                     # フラグメントシェーダー
+│   ├── FragmentShaderSource.ts
+│   ├── FragmentShaderSourceBlend.ts
+│   ├── FragmentShaderSourceGradient.ts
+│   ├── FragmentShaderSourceGradientLUT.ts
+│   ├── FragmentShaderSourceTexture.ts
+│   ├── FragmentShaderLibrary.ts
+│   └── Filter/                   # フィルター用シェーダー
+│
+├── Vertex/                       # 頂点シェーダー
+│   ├── VertexShaderSource.ts
+│   ├── VertexShaderSourceFill.ts
+│   └── VertexShaderLibrary.ts
+│
+└── Variants/                     # シェーダーバリアント
+    ├── Shape/
+    ├── Gradient/
+    ├── GradientLUT/
+    ├── Bitmap/
+    ├── Blend/
+    └── Filter/
+```
+
+### LRU Cache System / LRUキャッシュシステム
+
+```mermaid
+flowchart TB
+    subgraph "GradientLUT Cache / グラデーションLUTキャッシュ"
+        LUT_CACHE["$lutCache: Map<string, IGradientLUTCacheEntry>"]
+        LUT_MAX["MAX_CACHE_SIZE = 32"]
+        LUT_FRAME["$currentFrame: フレームベース有効期限"]
+        LUT_KEY["$generateCacheKey(stops, interpolation)<br/>→ base36固定小数点キー"]
+    end
+
+    subgraph "Shader Variant Cache / シェーダーバリアントキャッシュ"
+        SHADER_CACHE["$collection: Map<string, ShaderManager>"]
+        SHADER_MAX["MAX_SHADER_CACHE_SIZE = 16"]
+        SHADER_ORDER["$usageOrder: string[]<br/>LRU順序追跡"]
+    end
+
+    subgraph "Operations / 操作"
+        GET["$getCachedLUT() / $getFromCache()"]
+        SET["$setCachedLUT() / $addToCache()"]
+        EVICT["古いエントリを自動削除"]
+    end
+
+    GET --> LUT_CACHE
+    GET --> SHADER_CACHE
+    SET --> EVICT
+    EVICT --> LUT_MAX
+    EVICT --> SHADER_MAX
+```
+
+**Cache Implementation / キャッシュ実装:**
+```typescript
+// GradientLUTCache.ts - LUTテクスチャキャッシュ
+interface IGradientLUTCacheEntry {
+    texture: ITextureObject;
+    lastUsed: number;           // フレーム番号
+}
+MAX_CACHE_SIZE = 32
+$generateCacheKey(stops, interpolation) // 衝突防止のためbase36キー生成
+
+// GradientLUTVariants.ts - シェーダーバリアントキャッシュ
+MAX_SHADER_CACHE_SIZE = 16
+$addToCache(key, shader)        // LRU方式で追加
+$getFromCache(key)              // 使用順序を更新して取得
 ```
 
 ### Uniform Packing / ユニフォームパッキング
@@ -1188,38 +1380,60 @@ void main() {
 
 ## 13. FrameBuffer Management
 
+### FrameBuffer Types / フレームバッファタイプ
+
+```mermaid
+flowchart TB
+    subgraph "FrameBuffer Objects / フレームバッファオブジェクト"
+        READ["$readFrameBuffer<br/>READ_FRAMEBUFFER専用"]
+        DRAW["$drawFrameBuffer<br/>DRAW_FRAMEBUFFER専用"]
+        ATLAS["$atlasFrameBuffer<br/>アトラス専用"]
+        READ_BMP["$readBitmapFramebuffer<br/>ビットマップ読み込み"]
+        DRAW_BMP["$drawBitmapFramebuffer<br/>ビットマップ書き込み"]
+        PIXEL["$pixelFrameBuffer<br/>PBO用"]
+    end
+
+    subgraph "PBO / Pixel Buffer Object"
+        PBO["$pixelBufferObject<br/>PIXEL_PACK_BUFFER"]
+    end
+```
+
+### Attachment Object Interface / アタッチメントオブジェクトインターフェース
+
+```typescript
+interface IAttachmentObject {
+    id: number;                           // 一意のID
+    width: number;                        // 幅
+    height: number;                       // 高さ
+    clipLevel: number;                    // クリップレベル
+    msaa: boolean;                        // MSAAフラグ
+    mask: boolean;                        // マスクフラグ
+    color: IColorBufferObject | null;     // カラーバッファ
+    texture: ITextureObject | null;       // テクスチャ
+    stencil: IStencilBufferObject | null; // ステンシルバッファ
+}
+```
+
 ### Attachment Object Pool / アタッチメントオブジェクトプール
 
 ```mermaid
 flowchart TB
     subgraph "Object Pool / オブジェクトプール"
         POOL["$objectPool: IAttachmentObject[]"]
-
-        CREATE["create()"]
-        RELEASE["release(obj)"]
-        GET["getFromPool()"]
+        CURRENT["$currentAttachment: IAttachmentObject | null"]
+        BOUND["$isFramebufferBound: boolean"]
     end
 
-    subgraph "Attachment Object / アタッチメントオブジェクト"
-        ATTACH["IAttachmentObject {<br/>  width, height,<br/>  clipLevel,<br/>  msaa: boolean,<br/>  mask: boolean,<br/>  color: WebGLRenderbuffer,<br/>  texture: WebGLTexture,<br/>  stencil: WebGLRenderbuffer,<br/>  frameBuffer: WebGLFramebuffer<br/>}"]
+    subgraph "Operations / 操作"
+        GET["FrameBufferManagerGetAttachmentObjectUseCase"]
+        BIND["FrameBufferManagerBindService"]
+        RELEASE["FrameBufferManagerReleaseAttachmentObjectUseCase"]
+        TRANSFER["FrameBufferManagerTransferMainCanvasService"]
     end
 
-    subgraph "Usage / 使用"
-        ALLOC["allocate(w, h, options)"]
-        BIND["bind()"]
-        UNBIND["unbind()"]
-        TRANSFER["transfer()"]
-    end
-
-    GET --> ATTACH
-    CREATE --> ATTACH
-    ATTACH --> POOL
+    GET --> POOL
+    BIND --> CURRENT
     RELEASE --> POOL
-
-    ALLOC --> GET
-    BIND --> ATTACH
-    UNBIND --> ATTACH
-    TRANSFER --> ATTACH
 ```
 
 ### FrameBuffer Workflow / フレームバッファワークフロー
@@ -1292,27 +1506,40 @@ flowchart TB
 
 ## 14. Atlas Management
 
+### Atlas Manager State / アトラスマネージャー状態
+
+```typescript
+// AtlasManager.ts
+$activeAtlasIndex: number = 0;                          // アクティブなアトラスインデックス
+$currentAtlasIndex: number = 0;                         // 現在のアトラスインデックス
+$atlasAttachmentObjects: IAttachmentObject[] = [];      // アタッチメントオブジェクト配列
+$rootNodes: TexturePacker[] = [];                       // ルートノード配列
+$atlasTexture: ITextureObject | null = null;            // アトラステクスチャ
+$transferBounds: Float32Array[] = [];                   // 転送範囲（ノード描画時）
+$allTransferBounds: Float32Array[] = [];                // 全転送範囲（切り替え時）
+```
+
 ### Binary Tree Packing Algorithm / バイナリツリーパッキングアルゴリズム
 
 ```mermaid
 flowchart TB
-    subgraph "TexturePacker / テクスチャパッカー"
-        ROOT["Root Node<br/>2048x2048"]
+    subgraph "TexturePacker (@next2d/texture-packer)"
+        ROOT["Root Node<br/>$RENDER_MAX_SIZE × $RENDER_MAX_SIZE"]
 
         subgraph "Binary Tree / バイナリツリー"
-            N1["Node A<br/>1024x2048"]
-            N2["Node B<br/>1024x2048"]
-            N3["Node C<br/>1024x1024"]
-            N4["Node D<br/>1024x1024"]
+            N1["Node A"]
+            N2["Node B"]
+            N3["Node C"]
+            N4["Node D"]
         end
     end
 
     subgraph "Insert Algorithm / 挿入アルゴリズム"
-        INSERT["insert(width, height)"]
+        INSERT["createNode(width, height)"]
         CHECK_FIT{fits in node?}
         CHECK_LEAF{is leaf?}
-        SPLIT["split node<br/>(horizontal or vertical)"]
-        OCCUPY["mark as occupied<br/>return node"]
+        SPLIT["split node"]
+        OCCUPY["return Node {x,y,w,h}"]
         TRY_CHILDREN["try children"]
     end
 
@@ -1335,32 +1562,34 @@ flowchart TB
 
 ```mermaid
 sequenceDiagram
-    participant RQ as RenderQueue
     participant CTX as Context
-    participant FBM as FrameBufferManager
     participant Atlas as AtlasManager
     participant GL as WebGL2
 
-    Note over RQ,GL: Object rendering and atlas transfer
+    Note over CTX,GL: Node creation and rendering
 
-    RQ->>CTX: Render DisplayObject
-    CTX->>FBM: Create temp buffer
-    CTX->>CTX: Render to temp buffer
+    CTX->>Atlas: createNode(width, height)
+    Atlas->>Atlas: atlasManagerCreateNodeService
+    Atlas-->>CTX: Return Node {x, y, w, h}
 
-    CTX->>Atlas: requestNode(width, height)
-    Atlas->>Atlas: Find or create space
-    Atlas-->>CTX: Return AtlasNode {x, y, atlasIndex}
+    CTX->>CTX: beginNodeRendering(node)
+    CTX->>CTX: contextUpdateTransferBoundsService(node)
+    CTX->>CTX: contextBeginNodeRenderingService
 
-    CTX->>FBM: transferToAtlas(buffer, node)
-    FBM->>GL: glBindFramebuffer(READ, tempBuffer)
-    FBM->>GL: glBindTexture(atlasTexture)
-    FBM->>GL: glCopyTexSubImage2D(x, y, width, height)
+    Note over CTX,GL: Draw content
+    CTX->>GL: fill(), stroke(), etc.
 
-    Atlas->>Atlas: Update $transferBounds
+    CTX->>CTX: endNodeRendering()
+    CTX->>CTX: contextEndNodeRenderingService
 
-    Note over Atlas,GL: Final composition
-    Atlas->>GL: Bind atlas texture
-    Atlas->>GL: Draw all nodes as instanced quads
+    Note over CTX,GL: DisplayObject rendering
+    CTX->>CTX: drawDisplayObject(node, ...)
+    CTX->>CTX: contextUpdateAllTransferBoundsService(node)
+    CTX->>CTX: blnedDrawDisplayObjectUseCase
+
+    Note over CTX,GL: Final instanced draw
+    CTX->>CTX: drawArraysInstanced()
+    CTX->>GL: Instanced quad rendering
 ```
 
 ### Multi-Atlas Management / マルチアトラス管理
@@ -1368,32 +1597,45 @@ sequenceDiagram
 ```mermaid
 flowchart TB
     subgraph "Atlas Manager / アトラスマネージャー"
-        ROOT_NODES["$rootNodes: Node[]"]
+        ROOT_NODES["$rootNodes: TexturePacker[]"]
         ATLAS_OBJS["$atlasAttachmentObjects: IAttachmentObject[]"]
-        TRANSFER_BOUNDS["$transferBounds: IBounds[]"]
+        TRANSFER["$transferBounds: Float32Array[]<br/>[xMin, yMin, xMax, yMax]"]
+        ALL_TRANSFER["$allTransferBounds: Float32Array[]"]
     end
 
-    subgraph "Allocation / 割り当て"
-        TRY_INSERT["Try insert in existing atlas"]
-        CHECK_ALL{All atlases full?}
-        CREATE_NEW["Create new atlas<br/>(2048x2048, max 4096)"]
-        INSERT_SUCCESS["Insert successful"]
+    subgraph "Index Management / インデックス管理"
+        ACTIVE["$activeAtlasIndex<br/>アクティブなアトラス"]
+        CURRENT["$currentAtlasIndex<br/>現在のアトラス"]
     end
 
     subgraph "Atlas Texture / アトラステクスチャ"
-        ATLAS_0["Atlas 0<br/>2048x2048"]
-        ATLAS_1["Atlas 1<br/>2048x2048"]
-        ATLAS_N["Atlas N..."]
+        TEX["$atlasTexture: ITextureObject"]
+        SIZE["Size: $RENDER_MAX_SIZE<br/>(default: 2048, max: 4096)"]
     end
 
-    TRY_INSERT --> CHECK_ALL
-    CHECK_ALL -->|No| INSERT_SUCCESS
-    CHECK_ALL -->|Yes| CREATE_NEW
-    CREATE_NEW --> INSERT_SUCCESS
+    ROOT_NODES --> ACTIVE
+    ATLAS_OBJS --> CURRENT
+    TEX --> SIZE
+```
 
-    ROOT_NODES --> ATLAS_0
-    ROOT_NODES --> ATLAS_1
-    ROOT_NODES --> ATLAS_N
+### Transfer Bounds Management / 転送範囲管理
+
+```typescript
+// 転送範囲の初期値
+const $MAX_VALUE = Number.MAX_VALUE;
+const $MIN_VALUE = -Number.MAX_VALUE;
+
+// 転送範囲の構造
+$transferBounds[index] = new Float32Array([
+    $MAX_VALUE,   // xMin
+    $MAX_VALUE,   // yMin
+    $MIN_VALUE,   // xMax
+    $MIN_VALUE    // yMax
+]);
+
+// クリア処理 ($clearTransferBounds)
+bounds[0] = bounds[1] = $MAX_VALUE;
+bounds[2] = bounds[3] = $MIN_VALUE;
 ```
 
 ---
@@ -1482,93 +1724,232 @@ flowchart TB
 ### Core Interfaces / コアインターフェース
 
 ```typescript
-// Fill Style / フィルスタイル
-interface IFillStyle {
-    type: "solid" | "gradient" | "bitmap";
-    color?: number;          // 0xRRGGBBAA
-    gradient?: IGradient;
-    bitmap?: IBitmapFill;
-}
-
-// Gradient / グラデーション
-interface IGradient {
-    type: "linear" | "radial";
-    colors: number[];        // 0xRRGGBBAA[]
-    ratios: number[];        // 0-255
-    matrix: Float32Array;    // 6 elements
-    spreadMethod: "pad" | "reflect" | "repeat";
-    focalPointRatio?: number;  // for radial
-}
-
-// Stroke Style / ストロークスタイル
-interface IStrokeStyle {
-    width: number;
-    caps: "none" | "round" | "square";
-    joints: "bevel" | "miter" | "round";
-    miterLimit: number;
-    fill: IFillStyle;
-}
-
-// Attachment Object / アタッチメントオブジェクト
+// IAttachmentObject - フレームバッファアタッチメント
 interface IAttachmentObject {
-    width: number;
-    height: number;
-    clipLevel: number;
-    msaa: boolean;
-    mask: boolean;
-    color: WebGLRenderbuffer | null;
-    texture: WebGLTexture | null;
-    stencil: WebGLRenderbuffer | null;
-    frameBuffer: WebGLFramebuffer;
+    id: number;                           // 一意のID
+    width: number;                        // 幅
+    height: number;                       // 高さ
+    clipLevel: number;                    // クリップレベル
+    msaa: boolean;                        // MSAAフラグ
+    mask: boolean;                        // マスクフラグ
+    color: IColorBufferObject | null;     // カラーバッファ
+    texture: ITextureObject | null;       // テクスチャ
+    stencil: IStencilBufferObject | null; // ステンシルバッファ
 }
 
-// Atlas Node / アトラスノード
-interface IAtlasNode {
+// IBounds - 境界情報
+interface IBounds {
+    xMin: number;
+    yMin: number;
+    xMax: number;
+    yMax: number;
+}
+
+// IBlendMode - ブレンドモード (15 modes)
+type IBlendMode =
+    | "normal" | "layer" | "add" | "subtract" | "multiply"
+    | "screen" | "lighten" | "darken" | "difference"
+    | "overlay" | "hardlight" | "invert" | "alpha" | "erase" | "copy";
+
+// IFillType - フィルタイプ
+type IFillType = "fill" | "linear" | "radial" | "bitmap" | "stroke";
+
+// IGradientType - グラデーションタイプ
+type IGradientType = 0 | 1; // 0: linear, 1: radial
+
+// ISpreadMethod - グラデーション拡張方法
+type ISpreadMethod = 0 | 1 | 2; // 0: pad, 1: reflect, 2: repeat
+
+// IInterpolationMethod - 補間方法
+type IInterpolationMethod = 0 | 1; // 0: RGB, 1: linearRGB
+
+// IJointStyle - 線接続スタイル
+type IJointStyle = 0 | 1 | 2; // 0: round, 1: bevel, 2: miter
+
+// IPath - パスデータ
+type IPath = number[]; // [x, y, flag, x, y, flag, ...]
+
+// IFillMesh - フィルメッシュ
+interface IFillMesh {
+    buffer: Float32Array;  // 頂点データバッファ
+    indexCount: number;    // インデックス数
+}
+
+// IPoint - 点情報
+interface IPoint {
     x: number;
     y: number;
+}
+
+// ITextureObject - テクスチャオブジェクト
+interface ITextureObject {
+    resource: WebGLTexture;
     width: number;
     height: number;
-    atlasIndex: number;
-    used: boolean;
+    smoothing: boolean;
+}
+
+// IColorBufferObject - カラーバッファオブジェクト
+interface IColorBufferObject {
+    id: number;
+    resource: WebGLRenderbuffer;
+    width: number;
+    height: number;
+    samples: number;
+}
+
+// IStencilBufferObject - ステンシルバッファオブジェクト
+interface IStencilBufferObject {
+    id: number;
+    resource: WebGLRenderbuffer;
+    width: number;
+    height: number;
+    samples: number;
+}
+
+// IProgramObject - シェーダープログラム
+interface IProgramObject {
+    id: number;
+    resource: WebGLProgram;
+}
+
+// IUniformData - ユニフォーム変数
+interface IUniformData {
+    location: WebGLUniformLocation;
+    type: string;
+    array: Int32Array | Float32Array;
+}
+
+// IVertexArrayObject - VAOオブジェクト
+interface IVertexArrayObject {
+    id: string;
+    resource: WebGLVertexArrayObject;
+    vertexBuffer: WebGLBuffer;
+    vertexLength: number;
+}
+
+// IStrokeVertexArrayObject - ストローク用VAO（IVertexArrayObject拡張）
+interface IStrokeVertexArrayObject extends IVertexArrayObject {
+    indexBuffer: WebGLBuffer;
+    indexLength: number;
+    indexCount: number;
+}
+
+// IClipObject - クリッピングオブジェクト（3x3行列+ビューポート）
+interface IClipObject {
+    vertexArrayObject: WebGLVertexArrayObject;
+    matrixA-I: number;                // 3x3 matrix components (9)
+    viewportWidth: number;
+    viewportHeight: number;
 }
 ```
 
-### Render Command Structure / レンダーコマンド構造
+### Context API Methods / Context APIメソッド
 
 ```typescript
-// From render-queue package
-interface IRenderCommand {
-    type: CommandType;
-    data: Float32Array | Uint32Array;
-}
+// Context.ts - Public API
 
-enum CommandType {
-    BEGIN_PATH = 0,
-    MOVE_TO = 1,
-    LINE_TO = 2,
-    CURVE_TO = 3,
-    FILL = 4,
-    STROKE = 5,
-    CLIP = 6,
-    SAVE = 7,
-    RESTORE = 8,
-    TRANSFORM = 9,
-    // ... etc
-}
+// コンテキスト管理
+constructor(gl: WebGL2RenderingContext, samples: number, device_pixel_ratio?: number)
+clearTransferBounds(): void
+updateBackgroundColor(red: number, green: number, blue: number, alpha: number): void
+fillBackgroundColor(): void
+resize(width: number, height: number, cache_clear?: boolean): void
+reset(): void
+
+// 変換管理
+save(): void
+restore(): void
+setTransform(a: number, b: number, c: number, d: number, e: number, f: number): void
+transform(a: number, b: number, c: number, d: number, e: number, f: number): void
+
+// パス描画
+beginPath(): void
+moveTo(x: number, y: number): void
+lineTo(x: number, y: number): void
+quadraticCurveTo(cx: number, cy: number, x: number, y: number): void
+bezierCurveTo(cx1: number, cy1: number, cx2: number, cy2: number, x: number, y: number): void
+arc(x: number, y: number, radius: number): void
+closePath(): void
+
+// スタイル設定
+fillStyle(red: number, green: number, blue: number, alpha: number): void
+strokeStyle(red: number, green: number, blue: number, alpha: number): void
+
+// 描画実行
+fill(): void
+stroke(): void
+clip(): void
+
+// グラデーション・ビットマップ
+gradientFill(type: number, stops: number[], matrix: Float32Array, spread: number, interpolation: number, focal: number): void
+gradientStroke(type: number, stops: number[], matrix: Float32Array, spread: number, interpolation: number, focal: number): void
+bitmapFill(pixels: Uint8Array, matrix: Float32Array, width: number, height: number, repeat: boolean, smooth: boolean): void
+bitmapStroke(pixels: Uint8Array, matrix: Float32Array, width: number, height: number, repeat: boolean, smooth: boolean): void
+
+// ノード・インスタンス描画
+createNode(width: number, height: number): Node
+removeNode(node: Node): void
+beginNodeRendering(node: Node): void
+endNodeRendering(): void
+drawFill(): void
+drawDisplayObject(node: Node, x_min: number, y_min: number, x_max: number, y_max: number, color_transform: Float32Array): void
+drawArraysInstanced(): void
+clearArraysInstanced(): void
+
+// フレームバッファ操作
+bind(attachment_object: IAttachmentObject): void
+transferMainCanvas(): void
+drawPixels(node: Node, pixels: Uint8Array): void
+drawElement(node: Node, element: OffscreenCanvas | ImageBitmap): void
+
+// マスク処理
+beginMask(): void
+setMaskBounds(x_min: number, y_min: number, x_max: number, y_max: number): void
+endMask(): void
+leaveMask(): void
+
+// その他
+useGrid(grid_data: Float32Array | null): void
+applyFilter(node: Node, unique_key: string, updated: boolean, width: number, height: number, is_bitmap: boolean, matrix: Float32Array, color_transform: Float32Array, blend_mode: IBlendMode, bounds: Float32Array, params: Float32Array): void
+createImageBitmap(width: number, height: number): Promise<ImageBitmap>
+
+// ゲッター
+get currentAttachmentObject(): IAttachmentObject | null
+get atlasAttachmentObject(): IAttachmentObject
 ```
 
-### Cache Key Generation / キャッシュキー生成
+### Utility Functions (WebGLUtil.ts) / ユーティリティ関数
 
 ```typescript
-// FNV-1a hash for cache keys
-function generateCacheKey(data: Uint32Array): number {
-    let hash = 2166136261; // FNV offset basis
-    for (let i = 0; i < data.length; i++) {
-        hash ^= data[i];
-        hash = Math.imul(hash, 16777619); // FNV prime
-    }
-    return hash >>> 0; // Convert to unsigned 32-bit
-}
+// 配列プーリング
+$getArray(...args: any[]): any[]
+$poolArray(array: any[]): void
+$getFloat32Array4/6/9(...): Float32Array
+$poolFloat32Array4/6/9(array: Float32Array): void
+$getInt32Array4(...): Int32Array
+$poolInt32Array4(array: Int32Array): void
+
+// 行列操作
+$inverseMatrix(m: Float32Array): Float32Array
+$multiplyMatrices(a: Float32Array, b: Float32Array): Float32Array
+$linearGradientXY(matrix: Float32Array): Float32Array
+
+// ユーティリティ
+$clamp(value: number, min: number, max: number, default_value?: number): number
+$upperPowerOfTwo(v: number): number
+$getUUID(): string
+
+// グローバル状態
+$setRenderMaxSize(size: number): void
+$setWebGL2RenderingContext(gl: WebGL2RenderingContext): void
+$setSamples(samples: number): void
+$setContext(context: Context): void
+$setDevicePixelRatio(device_pixel_ratio: number): void
+$getDevicePixelRatio(): number
+$setViewportSize(viewport_width: number, viewport_height: number): void
+$getViewportWidth(): number
+$getViewportHeight(): number
 ```
 
 ---
@@ -1698,18 +2079,241 @@ fn main(input: VertexInput) -> @builtin(position) vec4<f32> {
 
 ---
 
-## Appendix: File References / 付録: ファイル参照
+## Appendix A: Key Configuration / 付録A: 主要な設定値
 
-| Component | Main File | Key Functions |
-|-----------|-----------|---------------|
-| Context | `Context.ts` | save, restore, fill, stroke, clip |
-| PathCommand | `PathCommand.ts` | beginPath, moveTo, lineTo, curveTo |
-| Mesh | `Mesh.ts` | generateFillMesh, generateStrokeMesh |
-| Blend | `Blend.ts` | setBlendMode, blendDraw |
-| Mask | `Mask.ts` | beginMask, endMask, leaveMask |
-| Filter | `Filter.ts` | applyFilter |
-| Shader | `Shader/ShaderManager.ts` | getProgram, compile |
-| FrameBuffer | `FrameBufferManager.ts` | create, bind, transfer |
-| Atlas | `AtlasManager.ts` | requestNode, releaseNode |
-| VAO | `VertexArrayObject.ts` | create, bind, draw |
-| Gradient | `Shader/GradientLUTGenerator.ts` | generateLUT |
+### Constants & Limits / 定数と制限
+
+| Category | Constant | Value | Description |
+|----------|----------|-------|-------------|
+| **Rendering** | `$RENDER_MAX_SIZE` | 2048 (max: 4096) | 最大レンダリングサイズ |
+| **MSAA** | `$samples` | 4 | マルチサンプリング数 |
+| **Blend** | `IBlendMode` | 15 types | ブレンドモード数 |
+| **Stencil** | `STENCIL_MODE_MASK` | 1 | マスク描画モード |
+| **Stencil** | `STENCIL_MODE_FILL` | 2 | フィル描画モード |
+| **Bezier** | `FLATNESS_THRESHOLD` | 0.5 | 平坦度閾値 |
+| **Bezier** | `MIN_SUBDIVISIONS` | 2 | 最小分割数 |
+| **Bezier** | `MAX_SUBDIVISIONS` | 8 | 最大分割数 |
+| **Gradient** | Adaptive Resolution | 256/512/1024 | ストップ数に応じた解像度 |
+| **LUT Cache** | `MAX_CACHE_SIZE` | 32 | LUTテクスチャキャッシュ |
+| **Shader Cache** | `MAX_SHADER_CACHE_SIZE` | 16 | シェーダーバリアントキャッシュ |
+| **Texture** | Bound Slots | 3 | テクスチャスロット数 |
+| **Filter** | Types | 10 | フィルター種類数 |
+
+### Total Files Statistics / ファイル統計
+
+| Category | Count | Description |
+|----------|-------|-------------|
+| Total TypeScript Files | ~393 | 全TSファイル数 |
+| Interface Files | 20 | インターフェース定義 |
+| Filter Types | 10 | フィルター種類 |
+| Shader Variants | 6 | シェーダーバリアント |
+
+---
+
+## Appendix B: File References / 付録B: ファイル参照
+
+### Main Files / メインファイル
+
+| Component | Main File | Description |
+|-----------|-----------|-------------|
+| Context | `Context.ts` | メインコンテキストクラス (48 public methods) |
+| WebGLUtil | `WebGLUtil.ts` | グローバル状態管理、配列プーリング |
+| PathCommand | `PathCommand.ts` | パスデータ管理 ($currentPath, $vertices) |
+| BezierConverter | `BezierConverter.ts` | 適応的ベジェ曲線テッセレーション |
+| Mesh | `Mesh.ts` | メッシュ生成管理 |
+| AtlasManager | `AtlasManager.ts` | アトラステクスチャ管理 |
+| FrameBufferManager | `FrameBufferManager.ts` | フレームバッファプール管理 |
+| Blend | `Blend.ts` | ブレンドモード管理 |
+| Mask | `Mask.ts` | マスク状態管理 ($clipBounds, $clipLevels) |
+| Stencil | `Stencil.ts` | ステンシル状態管理 |
+| Filter | `Filter.ts` | フィルター管理 |
+| VertexArrayObject | `VertexArrayObject.ts` | VAO管理 |
+| TextureManager | `TextureManager.ts` | テクスチャリソース管理 |
+| ColorBufferObject | `ColorBufferObject.ts` | カラーバッファ管理 |
+| StencilBufferObject | `StencilBufferObject.ts` | ステンシルバッファ管理 |
+| Bitmap | `Bitmap.ts` | ビットマップ描画管理 |
+| Gradient | `Gradient.ts` | グラデーション管理 |
+| Grid | `Grid.ts` | 9-slice グリッド管理 |
+
+### Directory Structure / ディレクトリ構成
+
+```
+packages/webgl/src/
+├── Context.ts                    # メインコンテキスト
+├── WebGLUtil.ts                  # ユーティリティ
+├── PathCommand.ts                # パス管理
+├── BezierConverter.ts            # ベジェ変換
+├── Mesh.ts                       # メッシュ管理
+├── AtlasManager.ts               # アトラス管理
+├── FrameBufferManager.ts         # FBO管理
+├── Blend.ts                      # ブレンド管理
+├── Mask.ts                       # マスク管理
+├── Stencil.ts                    # ステンシル管理
+├── Filter.ts                     # フィルター管理
+├── VertexArrayObject.ts          # VAO管理
+├── TextureManager.ts             # テクスチャ管理
+├── ColorBufferObject.ts          # カラーバッファ
+├── StencilBufferObject.ts        # ステンシルバッファ
+├── Bitmap.ts, Gradient.ts, Grid.ts
+│
+├── Context/
+│   ├── service/                  # 14 service files
+│   │   ├── ContextSaveService.ts
+│   │   ├── ContextRestoreService.ts
+│   │   ├── ContextSetTransformService.ts
+│   │   ├── ContextTransformService.ts
+│   │   ├── ContextResetService.ts
+│   │   └── ...
+│   └── usecase/                  # 18 usecase files
+│       ├── ContextFillUseCase.ts
+│       ├── ContextStrokeUseCase.ts
+│       ├── ContextClipUseCase.ts
+│       ├── ContextGradientFillUseCase.ts
+│       ├── ContextBitmapFillUseCase.ts
+│       └── ...
+│
+├── Mesh/
+│   ├── service/                  # 10 service files
+│   │   ├── MeshFillGenerateService.ts
+│   │   ├── MeshCalculateNormalVectorService.ts
+│   │   └── ...
+│   └── usecase/                  # 11 usecase files
+│       ├── MeshFillGenerateUseCase.ts
+│       ├── MeshStrokeGenerateUseCase.ts
+│       └── ...
+│
+├── Shader/
+│   ├── ShaderManager.ts          # シェーダープログラム管理
+│   ├── ShaderInstancedManager.ts # インスタンス描画用
+│   ├── GradientLUTGenerator.ts   # グラデーションLUT生成
+│   ├── GradientLUTCache.ts       # LUTキャッシュ
+│   ├── Fragment/                 # フラグメントシェーダー
+│   ├── Vertex/                   # 頂点シェーダー
+│   └── Variants/                 # シェーダーバリアント
+│
+├── Filter/                       # 10 filter types
+│   ├── BevelFilter/
+│   ├── BitmapFilter/
+│   ├── BlurFilter/
+│   ├── ColorMatrixFilter/
+│   ├── ConvolutionFilter/
+│   ├── DisplacementMapFilter/
+│   ├── DropShadowFilter/
+│   ├── GlowFilter/
+│   ├── GradientBevelFilter/
+│   └── GradientGlowFilter/
+│
+├── Blend/
+│   ├── service/                  # 16 service files
+│   │   ├── BlendAddService.ts
+│   │   ├── BlendAlphaService.ts
+│   │   └── ...
+│   └── usecase/                  # 6 usecase files
+│       ├── BlendBootUseCase.ts
+│       ├── BlnedDrawDisplayObjectUseCase.ts
+│       └── ...
+│
+├── Mask/
+│   ├── service/                  # 4 files
+│   └── usecase/                  # 2 files
+│
+├── PathCommand/
+│   ├── service/                  # 5 files
+│   └── usecase/                  # 6 files
+│
+├── BezierConverter/
+│   ├── service/                  # Split services
+│   └── usecase/                  # CubicToQuad conversion
+│
+├── Stencil/
+│   └── service/                  # 5 service files
+│       ├── StencilSetFillModeService.ts
+│       ├── StencilSetMaskModeService.ts
+│       ├── StencilResetService.ts
+│       ├── StencilEnableSampleAlphaToCoverageService.ts
+│       └── StencilDisableSampleAlphaToCoverageService.ts
+│
+├── TextureManager/
+│   ├── service/                  # 3 service files
+│   └── usecase/                  # 10 usecase files
+│       ├── TextureManagerBind0UseCase.ts
+│       ├── TextureManagerBind01UseCase.ts
+│       ├── TextureManagerBind012UseCase.ts
+│       ├── TextureManagerCreateAtlasTextureUseCase.ts
+│       ├── TextureManagerCreateFromCanvasUseCase.ts
+│       ├── TextureManagerCreateFromPixelsUseCase.ts
+│       └── ...
+│
+├── VertexArrayObject/
+│   ├── service/                  # 3 service files
+│   └── usecase/                  # 8 usecase files
+│       ├── VertexArrayObjectBootUseCase.ts
+│       ├── VertexArrayObjectBindFillMeshUseCase.ts
+│       ├── VertexArrayObjectCreateInstancedVertexArrayObjectUseCase.ts
+│       └── ...
+│
+├── AtlasManager/, FrameBufferManager/, ColorBufferObject/
+│
+└── interface/                    # 20 interface files
+    ├── IAttachmentObject.ts
+    ├── IBlendMode.ts
+    ├── IBounds.ts
+    ├── IClipObject.ts
+    ├── IColorBufferObject.ts
+    ├── IFillMesh.ts
+    ├── IFillType.ts
+    ├── IGradientType.ts
+    ├── IGrid.ts
+    ├── IInterpolationMethod.ts
+    ├── IJointStyle.ts
+    ├── IPath.ts
+    ├── IPoint.ts
+    ├── IProgramObject.ts
+    ├── ISpreadMethod.ts
+    ├── IStencilBufferObject.ts
+    ├── IStrokeVertexArrayObject.ts
+    ├── ITextureObject.ts
+    ├── IUniformData.ts
+    └── IVertexArrayObject.ts
+```
+
+### Module Statistics / モジュール統計
+
+| Module | Services | Usecases | Purpose |
+|--------|----------|----------|---------|
+| **Context** | 14 | 18 | メインWebGLレンダリングコンテキスト |
+| **Mesh** | 10 | 11 | メッシュ生成・操作 |
+| **Blend** | 16 | 6 | ブレンドモード・合成 |
+| **Mask** | 4 | 2 | マスク・クリッピング |
+| **Stencil** | 5 | 0 | ステンシルバッファ管理 |
+| **PathCommand** | 5 | 6 | パス描画コマンド |
+| **BezierConverter** | 2 | 2 | ベジェ曲線変換 |
+| **TextureManager** | 3 | 10 | テクスチャ管理 |
+| **VertexArrayObject** | 3 | 8 | VAO管理 |
+| **FrameBufferManager** | 5 | 5 | フレームバッファ管理 |
+| **AtlasManager** | 2 | 1 | テクスチャアトラス管理 |
+| **ColorBufferObject** | 2 | 3 | カラーバッファ管理 |
+
+### Key Service/UseCase Files / 主要なService/UseCaseファイル
+
+| Category | Service/UseCase | Description |
+|----------|-----------------|-------------|
+| Context | ContextSaveService | 行列スタック保存 |
+| Context | ContextRestoreService | 行列スタック復元 |
+| Context | ContextFillUseCase | 塗りつぶし実行 |
+| Context | ContextStrokeUseCase | ストローク実行 |
+| Context | ContextClipUseCase | マスク処理実行 |
+| Context | ContextBindUseCase | FBOバインド |
+| Context | ContextResizeUseCase | リサイズ処理 |
+| Mesh | MeshFillGenerateUseCase | フィルメッシュ生成 |
+| Mesh | MeshStrokeGenerateUseCase | ストロークメッシュ生成 |
+| Blend | BlendBootUseCase | ブレンド初期化 |
+| Blend | BlnedDrawDisplayObjectUseCase | インスタンス描画 |
+| Mask | MaskBeginMaskService | マスク開始 |
+| Mask | MaskLeaveMaskUseCase | マスク終了 |
+| PathCommand | PathCommandMoveToUseCase | パス移動 |
+| BezierConverter | BezierConverterCubicToQuadUseCase | Cubic→Quad変換 |
+| Stencil | StencilSetFillModeService | フィルモード設定 |
+| Stencil | StencilSetMaskModeService | マスクモード設定 |
+| TextureManager | TextureManagerBind0UseCase | テクスチャユニット0にバインド |
+| VertexArrayObject | VertexArrayObjectBindFillMeshUseCase | フィルメッシュVAOバインド |
