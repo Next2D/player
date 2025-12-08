@@ -1,5 +1,9 @@
 # @next2d/filters
 
+**Important**: `@next2d/filters` prohibits importing other packages. This package is a foundational module that must remain independent to avoid circular dependencies.
+
+**重要**: `@next2d/filters` は他の packages の import を禁止しています。このパッケージは基盤モジュールであり、循環依存を避けるために独立を維持する必要があります。
+
 ## Overview / 概要
 
 **English:**

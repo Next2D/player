@@ -2,6 +2,10 @@
 
 English | [日本語](#日本語)
 
+**Important**: `@next2d/events` prohibits importing other packages. This package is a foundational module that must remain independent to avoid circular dependencies.
+
+**重要**: `@next2d/events` は他の packages の import を禁止しています。このパッケージは基盤モジュールであり、循環依存を避けるために独立を維持する必要があります。
+
 ## Overview
 
 The `@next2d/events` package provides a comprehensive event handling system based on the EventDispatcher pattern. This package implements a robust event flow mechanism with support for event bubbling, capturing, and various event types commonly used in interactive applications.

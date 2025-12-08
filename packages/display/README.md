@@ -83,22 +83,22 @@ src/
 │   ├── service/               # Service layer / サービス層
 │   └── usecase/               # Use case layer / ユースケース層
 │
-├── DisplayObjectContainer/    # DisplayObjectContainer implementation
-│   ├── service/
-│   └── usecase/
+├── DisplayObjectContainer/    # DisplayObjectContainer implementation / DisplayObjectContainer 実装
+│   ├── service/               # Service layer / サービス層
+│   └── usecase/               # Use case layer / ユースケース層
 │
-├── MovieClip/                 # MovieClip implementation
-│   ├── service/
-│   └── usecase/
+├── MovieClip/                 # MovieClip implementation / MovieClip 実装
+│   ├── service/               # Service layer / サービス層
+│   └── usecase/               # Use case layer / ユースケース層
 │
-├── Shape/                     # Shape implementation
-│   └── service/
+├── Shape/                     # Shape implementation / Shape 実装
+│   └── service/               # Service layer / サービス層
 │
-├── Sprite/                    # Sprite implementation
-│   └── service/
+├── Sprite/                    # Sprite implementation / Sprite 実装
+│   └── service/               # Service layer / サービス層
 │
-└── Stage/                     # Stage implementation
-    └── usecase/
+└── Stage/                     # Stage implementation / Stage 実装
+    └── usecase/               # Use case layer / ユースケース層
 ```
 
 ## Class Hierarchy / クラス階層
@@ -332,9 +332,14 @@ flowchart TD
 
 ## Loader / ローダー
 
-The Loader class handles loading external content such as images, videos, and Next2D animation data.
+The Loader class handles loading JSON files exported from Next2D AnimationTool only. It does not support loading images or other media files directly.
 
-Loader クラスは、画像、ビデオ、Next2D アニメーションデータなどの外部コンテンツの読み込みを処理します。
+Loader クラスは、Next2D AnimationTool で書き出された JSON ファイルの読み込みのみに対応しています。画像やその他のメディアファイルの直接読み込みには対応していません。
+
+**Important / 重要:**
+- Only supports JSON files exported from Next2D AnimationTool / Next2D AnimationTool で書き出された JSON ファイルのみ対応
+- Does not support loading images (PNG, JPG, etc.) directly / 画像（PNG、JPGなど）の直接読み込みには非対応
+- Does not support loading videos directly / ビデオの直接読み込みには非対応
 
 ```typescript
 import { Loader } from "@next2d/display";
@@ -342,12 +347,14 @@ import { URLRequest } from "@next2d/net";
 
 const loader = new Loader();
 loader.contentLoaderInfo.addEventListener("complete", (event) => {
-    // Content loaded successfully
-    // コンテンツの読み込みが成功
+    // JSON content loaded successfully
+    // JSONコンテンツの読み込みが成功
     console.log("Loaded:", loader.content);
 });
 
-loader.load(new URLRequest("path/to/content.png"));
+// Load Next2D AnimationTool exported JSON
+// Next2D AnimationTool で書き出した JSON を読み込み
+loader.load(new URLRequest("path/to/animation.json"));
 ```
 
 ## Architecture / アーキテクチャ
