@@ -1700,6 +1700,7 @@ flowchart TB
 $objectPool: IColorBufferObject[]              // カラーバッファプール
 
 // ColorBufferObject/service/
+ColorBufferObjectCreateService                 // 新規カラーバッファ作成
 ColorBufferObjectMeguruBinarySearchService     // 二分探索によるプール検索最適化
 
 // ColorBufferObject/usecase/
@@ -2542,13 +2543,28 @@ packages/webgl/src/
 │
 ├── Mesh/
 │   ├── service/                  # 10 service files
-│   │   ├── MeshFillGenerateService.ts
-│   │   ├── MeshCalculateNormalVectorService.ts
-│   │   └── ...
+│   │   ├── MeshFillGenerateService.ts               # フィルメッシュ生成
+│   │   ├── MeshCalculateNormalVectorService.ts      # 法線ベクトル計算
+│   │   ├── MeshCalculateNormalizeBezierService.ts   # ベジェ正規化計算
+│   │   ├── MeshFindOverlappingPathsService.ts       # 重複パス検出
+│   │   ├── MeshGenerateCalculateRoundCapService.ts  # ラウンドキャップ計算
+│   │   ├── MeshGenerateCalculateSquareCapService.ts # スクエアキャップ計算
+│   │   ├── MeshGetQuadraticBezierPointService.ts    # 2次ベジェ点取得
+│   │   ├── MeshGetQuadraticBezierTangentService.ts  # 2次ベジェ接線取得
+│   │   ├── MeshIsPointInsideRectangleService.ts     # 矩形内点判定
+│   │   └── MeshLerpService.ts                       # 線形補間
 │   └── usecase/                  # 11 usecase files
-│       ├── MeshFillGenerateUseCase.ts
-│       ├── MeshStrokeGenerateUseCase.ts
-│       └── ...
+│       ├── MeshFillGenerateUseCase.ts               # フィルメッシュ生成
+│       ├── MeshStrokeGenerateUseCase.ts             # ストロークメッシュ生成
+│       ├── MeshGenerateStrokeOutlineUseCase.ts      # ストロークアウトライン生成
+│       ├── MeshGenerateCalculateBevelJoinUseCase.ts # ベベル結合計算
+│       ├── MeshGenerateCalculateMiterJoinUseCase.ts # マイター結合計算
+│       ├── MeshGenerateCalculateRoundJoinUseCase.ts # ラウンド結合計算
+│       ├── MeshApproximateOffsetQuadraticUseCase.ts # オフセット2次ベジェ近似
+│       ├── MeshCalculateCurveRectangleUseCase.ts    # 曲線矩形計算
+│       ├── MeshCalculateLineRectangleUseCase.ts     # 線矩形計算
+│       ├── MeshSplitBezierMultipleTimesUseCase.ts   # ベジェ複数分割
+│       └── MeshSplitQuadraticBezierUseCase.ts       # 2次ベジェ分割
 │
 ├── Shader/
 │   ├── ShaderManager.ts          # シェーダープログラム管理
@@ -2734,7 +2750,7 @@ packages/webgl/src/
 | **VertexArrayObject** | 3 | 8 | VAO管理 |
 | **FrameBufferManager** | 5 | 5 | フレームバッファ管理 |
 | **AtlasManager** | 2 | 1 | テクスチャアトラス管理 |
-| **ColorBufferObject** | 1 | 3 | カラーバッファ管理 |
+| **ColorBufferObject** | 2 | 3 | カラーバッファ管理 |
 | **StencilBufferObject** | 2 | 2 | ステンシルバッファ管理 |
 | **GradientLUTGenerator** | 2 | 3 | グラデーションLUT生成 |
 | **ShaderManager** | 18 | 2 | シェーダープログラム管理 |
@@ -2752,6 +2768,10 @@ packages/webgl/src/
 | Context | ContextResizeUseCase | リサイズ処理 |
 | Mesh | MeshFillGenerateUseCase | フィルメッシュ生成 |
 | Mesh | MeshStrokeGenerateUseCase | ストロークメッシュ生成 |
+| Mesh | MeshGenerateStrokeOutlineUseCase | ストロークアウトライン生成 |
+| Mesh | MeshGenerateCalculateBevelJoinUseCase | ベベル結合計算 |
+| Mesh | MeshGenerateCalculateMiterJoinUseCase | マイター結合計算 |
+| Mesh | MeshGenerateCalculateRoundJoinUseCase | ラウンド結合計算 |
 | Blend | BlendBootUseCase | ブレンド初期化 |
 | Blend | BlnedDrawDisplayObjectUseCase | インスタンス描画 |
 | Mask | MaskBeginMaskService | マスク開始 |
