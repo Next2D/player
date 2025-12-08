@@ -534,6 +534,7 @@ export class Context
         // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
         const attachment = this.frameBufferManager.getAttachment("atlas");
         if (this.currentRenderTarget && attachment?.stencilView) {
+            // 2パスステンシルフィル（WebGL版と同じアルゴリズム）
             this.fillWithStencil(vertexBuffer, mesh.indexCount, red, green, blue, alpha);
         } else {
             // キャンバスへの描画またはステンシルなしの場合は単純なフィル
@@ -545,8 +546,13 @@ export class Context
 
     /**
      * @description 2パスステンシルフィル（WebGL版と同じアルゴリズム）
-     *              Pass 1: CCW面でステンシルインクリメント、CW面でデクリメント
+     *              Pass 1: Front面でインクリメント、Back面でデクリメント（1回の描画で両面処理）
      *              Pass 2: ステンシル値 != 0 の部分に色を描画
+     *
+     *              WebGL版:
+     *              - stencilOpSeparate(FRONT, INCR_WRAP) + stencilOpSeparate(BACK, DECR_WRAP)
+     *              - stencilFunc(NOTEQUAL, 0) + stencilOp(KEEP, ZERO, ZERO)
+     *
      * @param {GPUBuffer} vertexBuffer
      * @param {number} vertexCount
      * @param {number} red
@@ -558,51 +564,31 @@ export class Context
     private fillWithStencil(
         vertexBuffer: GPUBuffer,
         vertexCount: number,
-        red: number,
-        green: number,
-        blue: number,
-        alpha: number
+        _red: number,
+        _green: number,
+        _blue: number,
+        _alpha: number
     ): void
     {
-        // === Pass 1: ステンシル書き込み（CCW面 - インクリメント） ===
-        const ccwPipeline = this.pipelineManager.getPipeline("stencil_write_ccw");
-        if (ccwPipeline) {
-            this.renderPassEncoder!.setPipeline(ccwPipeline);
-            this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
-            this.renderPassEncoder!.draw(vertexCount, 1, 0, 0);
-        }
-
-        // === Pass 1: ステンシル書き込み（CW面 - デクリメント） ===
-        const cwPipeline = this.pipelineManager.getPipeline("stencil_write_cw");
-        if (cwPipeline) {
-            this.renderPassEncoder!.setPipeline(cwPipeline);
+        // === Pass 1: ステンシル書き込み（両面を1回で処理） ===
+        // Front面: INCR_WRAP, Back面: DECR_WRAP
+        const stencilWritePipeline = this.pipelineManager.getPipeline("stencil_write");
+        if (stencilWritePipeline) {
+            this.renderPassEncoder!.setPipeline(stencilWritePipeline);
+            this.renderPassEncoder!.setStencilReference(0); // ステンシル参照値を設定
             this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
             this.renderPassEncoder!.draw(vertexCount, 1, 0, 0);
         }
 
         // === Pass 2: ステンシルフィル（色描画） ===
+        // WebGL版と同じ: 同じメッシュデータを使って描画
+        // ステンシル値 != 0 の部分に色を描画し、ステンシルをクリア
         const fillPipeline = this.pipelineManager.getPipeline("stencil_fill");
-        const fillBindGroupLayout = this.pipelineManager.getBindGroupLayout("stencil_fill");
-        if (fillPipeline && fillBindGroupLayout) {
-            // カラーユニフォーム（vec4）
-            const colorData = new Float32Array([red, green, blue, alpha]);
-            const colorBuffer = this.bufferManager.createUniformBuffer(
-                `stencil_fill_color_${Date.now()}`,
-                colorData.byteLength
-            );
-            this.device.queue.writeBuffer(colorBuffer, 0, colorData.buffer, colorData.byteOffset, colorData.byteLength);
-
-            const fillBindGroup = this.device.createBindGroup({
-                layout: fillBindGroupLayout,
-                entries: [{
-                    binding: 0,
-                    resource: { buffer: colorBuffer }
-                }]
-            });
-
+        if (fillPipeline) {
             this.renderPassEncoder!.setPipeline(fillPipeline);
-            this.renderPassEncoder!.setBindGroup(0, fillBindGroup);
-            this.renderPassEncoder!.draw(6, 1, 0, 0); // フルスクリーンクワッド（6頂点）
+            this.renderPassEncoder!.setStencilReference(0); // ステンシル参照値を0に設定（not-equal to 0）
+            this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
+            this.renderPassEncoder!.draw(vertexCount, 1, 0, 0);
         }
     }
 
@@ -759,12 +745,37 @@ export class Context
             vertices
         );
 
-        // Uniformバッファを作成
-        const uniformData = new Float32Array([
-            ...this.$matrix,        // 9 floats for matrix
-            ...this.$strokeStyle,   // 4 floats for color
-            this.globalAlpha        // 1 float for alpha
-        ]);
+        // Uniformバッファを作成（WGSLのアライメントに合わせる）
+        // mat3x3<f32>は各列がvec4にパディングされる: 3 x vec4 = 48 bytes (12 floats)
+        // color: vec4<f32> = 16 bytes (4 floats)
+        // alpha: f32 + padding = 16 bytes (4 floats)
+        // 合計: 80 bytes (20 floats)
+        const uniformData = new Float32Array(20);
+        // matrix row 0 (vec4 padded)
+        uniformData[0] = this.$matrix[0];
+        uniformData[1] = this.$matrix[1];
+        uniformData[2] = this.$matrix[2];
+        uniformData[3] = 0; // padding
+        // matrix row 1 (vec4 padded)
+        uniformData[4] = this.$matrix[3];
+        uniformData[5] = this.$matrix[4];
+        uniformData[6] = this.$matrix[5];
+        uniformData[7] = 0; // padding
+        // matrix row 2 (vec4 padded)
+        uniformData[8] = this.$matrix[6];
+        uniformData[9] = this.$matrix[7];
+        uniformData[10] = this.$matrix[8];
+        uniformData[11] = 0; // padding
+        // color (vec4)
+        uniformData[12] = this.$strokeStyle[0];
+        uniformData[13] = this.$strokeStyle[1];
+        uniformData[14] = this.$strokeStyle[2];
+        uniformData[15] = this.$strokeStyle[3];
+        // alpha + padding
+        uniformData[16] = this.globalAlpha;
+        uniformData[17] = 0; // padding
+        uniformData[18] = 0; // padding
+        uniformData[19] = 0; // padding
 
         const uniformBuffer = this.bufferManager.createUniformBuffer(
             `stroke_uniform_${Date.now()}`,
@@ -789,10 +800,11 @@ export class Context
             }]
         });
 
-        // パイプラインを取得して描画
-        const pipeline = this.pipelineManager.getPipeline("basic");
+        // パイプラインを取得して描画（アトラス用かキャンバス用かで切り替え）
+        const pipelineName = this.currentRenderTarget ? "basic" : "basic_bgra";
+        const pipeline = this.pipelineManager.getPipeline(pipelineName);
         if (!pipeline) {
-            console.error("[WebGPU] Basic pipeline not found");
+            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
             return;
@@ -802,7 +814,7 @@ export class Context
         this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
         this.renderPassEncoder.setBindGroup(0, bindGroup);
         this.renderPassEncoder.draw(vertices.length / 4, 1, 0, 0);
-        
+
         this.renderPassEncoder.end();
         this.renderPassEncoder = null;
     }
@@ -818,8 +830,8 @@ export class Context
      * @return {void}
      */
     gradientFill (
-        type: number,
-        stops: number[],
+        _type: number,
+        _stops: number[],
         _matrix: Float32Array,
         _spread: number,
         _interpolation: number,
@@ -833,14 +845,6 @@ export class Context
         if (!this.frameStarted) {
             this.beginFrame();
         }
-
-        console.log("[WebGPU] gradientFill()", {
-            type,
-            stops: stops.length,
-            spread: _spread,
-            interpolation: _interpolation,
-            focal: _focal
-        });
 
         // TODO: グラデーションLUTテクスチャを生成
         // TODO: グラデーション用のシェーダーを使用
@@ -898,8 +902,6 @@ export class Context
             return;
         }
 
-        console.log("[WebGPU] bitmapFill()", { width, height, repeat, smooth });
-
         // TODO: ビットマップ塗りつぶし用のシェーダーを使用
         // 現在は基本的なfill()として実装
         this.fill();
@@ -919,16 +921,13 @@ export class Context
      * @return {void}
      */
     gradientStroke (
-        type: number,
-        stops: number[],
+        _type: number,
+        _stops: number[],
         _matrix: Float32Array,
         _spread: number,
         _interpolation: number,
         _focal: number
     ): void {
-        // WebGPU gradient stroke implementation
-        console.log("[WebGPU] gradientStroke()", { type, stops: stops.length });
-        
         // TODO: グラデーションストローク実装
         this.stroke();
     }
@@ -946,14 +945,11 @@ export class Context
     bitmapStroke (
         _pixels: Uint8Array,
         _matrix: Float32Array,
-        width: number,
-        height: number,
-        repeat: boolean,
-        smooth: boolean
+        _width: number,
+        _height: number,
+        _repeat: boolean,
+        _smooth: boolean
     ): void {
-        // WebGPU bitmap stroke implementation
-        console.log("[WebGPU] bitmapStroke()", { width, height, repeat, smooth });
-        
         // TODO: ビットマップストローク実装
         this.stroke();
     }
@@ -969,8 +965,6 @@ export class Context
         const vertices = this.pathCommand.generateVertices();
         if (vertices.length === 0) return;
 
-        console.log("[WebGPU] clip() - stencil clipping");
-        
         // TODO: ステンシルバッファを使用したクリッピング実装
         // 現在は基本的なfill()として実装
         this.fill();
@@ -1014,13 +1008,9 @@ export class Context
      * @param {Float32Array | null} grid_data
      * @return {void}
      */
-    useGrid (grid_data: Float32Array | null): void
+    useGrid (_grid_data: Float32Array | null): void
     {
-        // WebGPU grid implementation
-        if (grid_data) {
-            console.log("[WebGPU] useGrid() - 9-slice grid data set", grid_data.length);
-            // TODO: Grid/9-slice transformation implementation
-        }
+        // TODO: Grid/9-slice transformation implementation
     }
 
     /**
@@ -1073,13 +1063,16 @@ export class Context
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             }
 
-            // シザー矩形をテクスチャ境界内にクランプ
+            // シザーレクトで描画範囲を制限
+            // WebGPU座標系: Y軸が上から下（node.yをそのまま使用）
+            // ただし、ShapeRenderUseCaseでoffsetY = atlasHeight - node.y - heightを計算
+            // しているため、描画位置はWebGL座標系（下から上）になっている
+            // シザーレクトもそれに合わせてY座標を変換
             const scissorX = Math.max(0, node.x);
-            const scissorY = Math.max(0, node.y);
+            const scissorY = Math.max(0, attachment.height - node.y - node.h);
             const scissorW = Math.min(node.w, attachment.width - scissorX);
             const scissorH = Math.min(node.h, attachment.height - scissorY);
 
-            // WebGL版と同じ: シザーテストで描画範囲を制限
             if (scissorW > 0 && scissorH > 0) {
                 this.renderPassEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
             }
@@ -1177,8 +1170,6 @@ export class Context
             this.beginFrame();
         }
 
-        console.log(`[WebGPU] drawArraysInstanced: ${shaderManager.count} instances, offset: ${renderQueue.offset}`);
-
         // 既存のレンダーパスを終了
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
@@ -1215,9 +1206,7 @@ export class Context
             renderQueue.buffer.byteOffset,
             renderQueue.offset  // 要素数
         );
-        
-        console.log(`[WebGPU] Instance buffer: ${instanceData.length} floats (${instanceData.byteLength} bytes) for ${shaderManager.count} instances`);
-        
+
         const instanceBuffer = this.bufferManager.createVertexBuffer(
             `instance_${Date.now()}`,
             instanceData
@@ -1375,31 +1364,20 @@ export class Context
      */
     applyFilter (
         node: Node,
-        unique_key: string,
-        updated: boolean,
+        _unique_key: string,
+        _updated: boolean,
         _width: number,
         _height: number,
-        is_bitmap: boolean,
+        _is_bitmap: boolean,
         _matrix: Float32Array,
         color_transform: Float32Array,
-        blend_mode: IBlendMode,
+        _blend_mode: IBlendMode,
         bounds: Float32Array,
-        params: Float32Array
+        _params: Float32Array
     ): void {
         // インスタンス配列を先に描画
         this.drawArraysInstanced();
-        
-        // WebGPU filter application
-        console.log("[WebGPU] applyFilter()", {
-            unique_key,
-            updated,
-            width: _width,
-            height: _height,
-            is_bitmap,
-            blend_mode,
-            paramsLength: params.length
-        });
-        
+
         // TODO: フィルター実装
         // - Blur filter
         // - Glow filter
@@ -1419,7 +1397,6 @@ export class Context
     private ensureMainTexture(): void
     {
         if (!this.mainTexture) {
-            console.log("[WebGPU] Getting main canvas texture for new frame");
             this.mainTexture = this.canvasContext.getCurrentTexture();
             this.mainTextureView = this.mainTexture.createView();
         }
@@ -1465,7 +1442,6 @@ export class Context
     beginFrame(): void
     {
         if (!this.frameStarted) {
-            console.log("[WebGPU] Beginning new frame");
             this.ensureMainTexture();
             this.ensureCommandEncoder();
             this.frameStarted = true;
@@ -1484,8 +1460,6 @@ export class Context
             return;
         }
 
-        console.log("[WebGPU] endFrame: submitting commands");
-        
         // 開いているRenderPassEncoderがあれば終了
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
@@ -1497,7 +1471,6 @@ export class Context
             try {
                 const commandBuffer = this.commandEncoder.finish();
                 this.device.queue.submit([commandBuffer]);
-                console.log("[WebGPU] Commands submitted successfully");
             } catch (e) {
                 console.error("Failed to submit frame commands:", e);
             }
@@ -1512,8 +1485,6 @@ export class Context
         this.mainTexture = null;
         this.mainTextureView = null;
         this.frameStarted = false;
-        
-        console.log("[WebGPU] Frame ended, ready for next frame");
     }
 
     /**
@@ -1744,7 +1715,7 @@ export class Context
      */
     leaveMask(): void
     {
-        // drawArraysInstanced(); // TODO: WebGPU版のインスタンス描画を実装後に追加
+        this.drawArraysInstanced();
         maskLeaveMaskUseCase();
     }
 }

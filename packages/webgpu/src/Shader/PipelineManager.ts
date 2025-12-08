@@ -174,6 +174,12 @@ export class PipelineManager
     /**
      * @description 2パスステンシルフィル用パイプラインを作成
      *              WebGL版のステンシルフィルと同等の処理を実現
+     *
+     *              WebGL版:
+     *              - Pass 1: stencilOpSeparate(FRONT, INCR_WRAP) + stencilOpSeparate(BACK, DECR_WRAP)
+     *                        1回の描画で両面を処理（cullMode: none）
+     *              - Pass 2: stencilFunc(NOTEQUAL, 0) + stencilOp(KEEP, ZERO, ZERO)
+     *
      * @return {void}
      */
     private createStencilFillPipelines(): void
@@ -215,8 +221,10 @@ export class PipelineManager
             ]
         };
 
-        // === Pass 1: ステンシル書き込み（CCW面 - インクリメント） ===
-        const stencilWriteCCWPipeline = this.device.createRenderPipeline({
+        // === Pass 1: ステンシル書き込み（WebGL版と同じ: 両面を1回の描画で処理） ===
+        // Front面: INCR_WRAP, Back面: DECR_WRAP
+        // cullMode: none で両面を描画
+        const stencilWritePipeline = this.device.createRenderPipeline({
             layout: "auto",
             vertex: {
                 module: this.device.createShaderModule({
@@ -237,7 +245,7 @@ export class PipelineManager
             },
             primitive: {
                 topology: "triangle-list",
-                cullMode: "back", // CCW面（バックフェイスカリング = CW面をカリング）
+                cullMode: "none", // 両面を描画
                 frontFace: "ccw"
             },
             depthStencil: {
@@ -246,87 +254,31 @@ export class PipelineManager
                     compare: "always",
                     failOp: "keep",
                     depthFailOp: "keep",
-                    passOp: "increment-wrap" // CCW面でインクリメント
+                    passOp: "increment-wrap" // Front面（CCW）でインクリメント
                 },
                 stencilBack: {
                     compare: "always",
                     failOp: "keep",
                     depthFailOp: "keep",
-                    passOp: "keep"
+                    passOp: "decrement-wrap" // Back面（CW）でデクリメント
                 },
                 stencilReadMask: 0xFF,
                 stencilWriteMask: 0xFF
             }
         });
-        this.pipelines.set("stencil_write_ccw", stencilWriteCCWPipeline);
-
-        // === Pass 1: ステンシル書き込み（CW面 - デクリメント） ===
-        const stencilWriteCWPipeline = this.device.createRenderPipeline({
-            layout: "auto",
-            vertex: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilWriteVertexShader()
-                }),
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
-            },
-            fragment: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilWriteFragmentShader()
-                }),
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    writeMask: 0 // カラー書き込み無効
-                }]
-            },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "front", // CW面（フロントフェイスカリング = CCW面をカリング）
-                frontFace: "ccw"
-            },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "always",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
-                },
-                stencilBack: {
-                    compare: "always",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "decrement-wrap" // CW面でデクリメント
-                },
-                stencilReadMask: 0xFF,
-                stencilWriteMask: 0xFF
-            }
-        });
-        this.pipelines.set("stencil_write_cw", stencilWriteCWPipeline);
+        this.pipelines.set("stencil_write", stencilWritePipeline);
 
         // === Pass 2: ステンシルフィル（色描画） ===
-        const stencilFillBindGroupLayout = this.device.createBindGroupLayout({
-            entries: [{
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                buffer: { type: "uniform" }
-            }]
-        });
-        this.bindGroupLayouts.set("stencil_fill", stencilFillBindGroupLayout);
-
-        const stencilFillPipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [stencilFillBindGroupLayout]
-        });
-
+        // WebGL版と同じ: stencilFunc(NOTEQUAL, 0) + stencilOp(KEEP, ZERO, ZERO)
+        // WebGL版と同じく頂点バッファを使用（同じメッシュデータ）
         const stencilFillPipeline = this.device.createRenderPipeline({
-            layout: stencilFillPipelineLayout,
+            layout: "auto",
             vertex: {
                 module: this.device.createShaderModule({
                     code: ShaderSource.getStencilFillVertexShader()
                 }),
                 entryPoint: "main",
-                buffers: [] // 頂点バッファなし（vertex_indexで生成）
+                buffers: [vertexBufferLayout] // Pass 1と同じ頂点バッファを使用
             },
             fragment: {
                 module: this.device.createShaderModule({
@@ -358,13 +310,13 @@ export class PipelineManager
                 stencilFront: {
                     compare: "not-equal", // ステンシル値 != 0 の部分に描画
                     failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "zero" // 描画後にステンシルをクリア
+                    depthFailOp: "zero", // WebGL: ZERO
+                    passOp: "zero" // WebGL: ZERO - 描画後にステンシルをクリア
                 },
                 stencilBack: {
                     compare: "not-equal",
                     failOp: "keep",
-                    depthFailOp: "keep",
+                    depthFailOp: "zero",
                     passOp: "zero"
                 },
                 stencilReadMask: 0xFF,
@@ -457,6 +409,7 @@ export class PipelineManager
 
     /**
      * @description 基本的なパイプラインを作成
+     *              アトラステクスチャ（rgba8unorm）とキャンバス（bgra8unorm）の両方に対応
      * @return {void}
      */
     private createBasicPipeline(): void
@@ -483,44 +436,49 @@ export class PipelineManager
             code: ShaderSource.getBasicFragmentShader()
         });
 
-        const pipeline = this.device.createRenderPipeline({
+        const vertexBufferLayout: GPUVertexBufferLayout = {
+            arrayStride: 4 * 4, // 2 floats for position + 2 floats for texCoord
+            attributes: [
+                {
+                    shaderLocation: 0,
+                    offset: 0,
+                    format: "float32x2"
+                },
+                {
+                    shaderLocation: 1,
+                    offset: 2 * 4,
+                    format: "float32x2"
+                }
+            ]
+        };
+
+        const blendState: GPUBlendState = {
+            color: {
+                srcFactor: "one",
+                dstFactor: "one-minus-src-alpha",
+                operation: "add"
+            },
+            alpha: {
+                srcFactor: "one",
+                dstFactor: "one-minus-src-alpha",
+                operation: "add"
+            }
+        };
+
+        // アトラステクスチャ用パイプライン（rgba8unorm）
+        const pipelineRGBA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
                 module: vertexShaderModule,
                 entryPoint: "main",
-                buffers: [{
-                    arrayStride: 4 * 4, // 2 floats for position + 2 floats for texCoord
-                    attributes: [
-                        {
-                            shaderLocation: 0,
-                            offset: 0,
-                            format: "float32x2"
-                        },
-                        {
-                            shaderLocation: 1,
-                            offset: 2 * 4,
-                            format: "float32x2"
-                        }
-                    ]
-                }]
+                buffers: [vertexBufferLayout]
             },
             fragment: {
                 module: fragmentShaderModule,
                 entryPoint: "main",
                 targets: [{
-                    format: this.format,
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
-                        },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
-                        }
-                    }
+                    format: "rgba8unorm",
+                    blend: blendState
                 }]
             },
             primitive: {
@@ -529,7 +487,30 @@ export class PipelineManager
             }
         });
 
-        this.pipelines.set("basic", pipeline);
+        // キャンバス用パイプライン（bgra8unorm）
+        const pipelineBGRA = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModule,
+                entryPoint: "main",
+                buffers: [vertexBufferLayout]
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: this.format, // 通常はbgra8unorm
+                    blend: blendState
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            }
+        });
+
+        this.pipelines.set("basic", pipelineRGBA);      // アトラス用（デフォルト）
+        this.pipelines.set("basic_bgra", pipelineBGRA); // キャンバス用
     }
 
     /**

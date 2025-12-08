@@ -79,8 +79,6 @@ export const addDisplayObjectToInstanceArray = (
         // インスタンスデータを配列に追加
         const shaderManager = getInstancedShaderManager();
 
-        console.log(`[WebGPU] Adding instance: count=${shaderManager.count}, offset before=${renderQueue.offset}`);
-
         renderQueue.push(
             // texture rectangle (vec4) - normalized coordinates
             node.x / render_max_size, node.y / render_max_size,
@@ -96,8 +94,6 @@ export const addDisplayObjectToInstanceArray = (
             // addColor (vec4)
             ct4, ct5, ct6, ct7
         );
-
-        console.log(`[WebGPU] After push: offset=${renderQueue.offset}, expected=${(shaderManager.count + 1) * 24}`);
 
         shaderManager.count++;
     } else {
