@@ -442,6 +442,24 @@ Total: 68 bytes per vertex / 頂点あたり68バイト
 Stride = 72 bytes (aligned) / ストライド = 72バイト (アライン済み)
 ```
 
+### Fill Buffer Management (Mesh.ts) / フィルバッファ管理
+
+```typescript
+// 動的フィルバッファプーリング
+export let $fillBuffer: Float32Array = new Float32Array(128);  // 成長するバッファ
+export let $fillBufferOffset: number = 0;                       // 現在のオフセット
+
+export const $fillBufferIndexes: number[] = [];  // フィルごとの頂点数
+export const $fillTypes: IFillType[] = [];       // フィルタイプ配列
+
+// バッファ操作
+$getFillBuffer(): Float32Array
+$getFillBufferOffset(): number
+$addFillBuffer(buffer: Float32Array): void
+$clearFillBufferSetting(): void              // 新フレーム時にリセット
+$upperPowerOfTwo(v: number): number          // 2のべき乗に切り上げ
+```
+
 ### Stroke to Fill Conversion / ストロークからフィル変換
 
 ```mermaid
@@ -920,6 +938,15 @@ flowchart TB
     ATTR -.-> DRAW
 ```
 
+**Blend.ts State Functions / ブレンド状態関数:**
+```typescript
+$setCurrentBlendMode(blend_mode: IBlendMode): void
+$getCurrentBlendMode(): IBlendMode
+
+$setFuncCode(func_code: number): void    // default: 600
+$getFuncCode(): number
+```
+
 ---
 
 ## 10. Mask System
@@ -945,6 +972,30 @@ flowchart TB
         END["endMask()"]
         LEAVE["leaveMask()"]
     end
+```
+
+**Stencil.ts State Functions / ステンシル状態関数:**
+```typescript
+// モード管理
+$getStencilMode(): number
+$setStencilMode(mode: number): void
+$resetStencilMode(): void
+
+// カラーマスク状態
+$getColorMaskEnabled(): boolean
+$setColorMaskEnabled(enabled: boolean): void
+
+// MSAA SAMPLE_ALPHA_TO_COVERAGE状態
+$getSampleAlphaToCoverageEnabled(): boolean
+$setSampleAlphaToCoverageEnabled(enabled: boolean): void
+```
+
+**Mask.ts State Functions / マスク状態関数:**
+```typescript
+$setMaskDrawing(state: boolean): void
+$isMaskDrawing(): boolean
+$clipBounds: Map<number, Float32Array>  // レイヤーIDごとのクリップ境界
+$clipLevels: Map<number, number>        // マスクネストレベル追跡
 ```
 
 ### Mask Begin/End Flow / マスク開始/終了フロー
@@ -1105,6 +1156,31 @@ flowchart TB
 | **GradientGlow** | distance, angle, colors[], alphas[], ratios[], blurX, blurY, strength, quality, type, knockout | 2 × quality + 2 | Gradient glow |
 | **Bitmap** | - | 1 | Basic bitmap rendering |
 
+### Filter Color Utilities (Filter.ts) / フィルターカラーユーティリティ
+
+```typescript
+// オフセット位置追跡
+export const $offset: IPoint = { x: 0, y: 0 };
+
+// カラー成分抽出（プリマルチプライドアルファ対応）
+export const $intToR = (color: number, alpha: number, premultiplied: boolean): number
+export const $intToG = (color: number, alpha: number, premultiplied: boolean): number
+export const $intToB = (color: number, alpha: number, premultiplied: boolean): number
+```
+
+### DisplacementMap Component & Mode / ディスプレースメントマップコンポーネント＆モード
+
+```typescript
+// コンポーネントチャンネル選択
+RED = 1, GREEN = 2, BLUE = 4, ALPHA = 8
+
+// モードパラメータ
+Mode 0: 直接テクスチャサンプリング
+Mode 1: 代替色でクランプ
+Mode 2: 小数UV折り返し
+Mode 3: 軸ごとのフォールバック付きクランプ
+```
+
 ### Ping-Pong Buffer Rendering / ピンポンバッファレンダリング
 
 ```mermaid
@@ -1189,6 +1265,33 @@ class ShaderManager {
     get mediump(): Int32Array | Float32Array;   // u_mediump
     get textures(): Int32Array | Float32Array;  // u_textures
 }
+
+// ShaderInstancedManager - インスタンス描画用拡張
+class ShaderInstancedManager extends ShaderManager {
+    // drawArraysInstanced用のcount管理
+    // ShaderInstancedManagerDrawArraysInstancedUseCase.ts
+}
+```
+
+### GradientLUT Generator / グラデーションLUTジェネレーター
+
+```typescript
+// GradientLUTGenerator.ts
+$getAdaptiveResolution(stopsLength: number): number    // 256/512/1024
+$getGradientAttachmentObjectWithResolution(resolution: number): IAttachmentObject
+$getGradientAttachmentObject(): IAttachmentObject      // デフォルト512
+
+$getGradientLUTGeneratorMaxLength(): number
+$setGradientLUTGeneratorMaxLength(gl: WebGL2RenderingContext): void
+
+// プリコンパイルされたカラーテーブル
+$rgbToLinearTable: Float32Array(256)   // pow(t, 2.23333333)
+$rgbIdentityTable: Float32Array(256)   // linear t
+
+// GradientLUTGenerator usecases
+GradientLUTGenerateFilterTextureUseCase  // フィルター用LUT生成
+GradientLUTGenerateShapeTextureUseCase   // シェイプ用LUT生成
+GradientLUTGeneratorFillTextureUseCase   // フィル用LUT生成
 ```
 
 ### Shader Directory Structure / シェーダーディレクトリ構成
@@ -1205,7 +1308,21 @@ Shader/
 │       ├── ShaderManagerCreateProgramService.ts
 │       ├── ShaderManagerInitializeUniformService.ts
 │       ├── ShaderManagerUseProgramService.ts
-│       └── ShaderManagerBindUniformService.ts
+│       ├── ShaderManagerBindUniformService.ts
+│       ├── ShaderManagerSetFillUniformService.ts
+│       ├── ShaderManagerSetGradientFillUniformService.ts
+│       ├── ShaderManagerSetBlendUniformService.ts
+│       ├── ShaderManagerSetTextureUniformService.ts
+│       ├── ShaderManagerSetBitmapFillUniformService.ts
+│       ├── ShaderManagerSetMaskUniformService.ts
+│       ├── ShaderManagerSetMatrixTextureUniformService.ts
+│       ├── ShaderManagerSetMatrixTextureWithColorTransformUniformService.ts
+│       ├── ShaderManagerSetBlendWithColorTransformUniformService.ts
+│       ├── ShaderManagerSetBlurFilterUniformService.ts
+│       ├── ShaderManagerSetColorMatrixFilterUniformService.ts
+│       ├── ShaderManagerSetConvolutionFilterUniformService.ts
+│       ├── ShaderManagerSetBitmapFilterUniformService.ts
+│       └── ShaderManagerSetDisplacementMapFilterUniformService.ts
 │
 ├── Fragment/                     # フラグメントシェーダー
 │   ├── FragmentShaderSource.ts
@@ -1228,6 +1345,64 @@ Shader/
     ├── Bitmap/
     ├── Blend/
     └── Filter/
+```
+
+### Shader Variant Collections / シェーダーバリアントコレクション
+
+```typescript
+// 各バリアントタイプのランタイムキャッシュ
+ShapeVariants.$collection: Map<string, ShaderManager>
+GradientVariants.$collection: Map<string, ShaderManager>
+GradientLUTVariants.$collection: Map<string, ShaderManager>  // LRU: max 16
+BitmapVariants.$collection: Map<string, ShaderManager>
+BlendVariants.$collection: Map<string, ShaderManager | ShaderInstancedManager>
+FilterVariants.$collection: Map<string, ShaderManager>
+```
+
+### Shader Template Functions / シェーダーテンプレート関数
+
+```typescript
+// VertexShaderSource.ts - 頂点シェーダーバリアント
+TEXTURE_TEMPLATE(): string
+VECTOR_TEMPLATE(): string
+BLEND_MATRIX_TEMPLATE(): string
+BLEND_TEMPLATE(): string
+INSTANCE_TEMPLATE(): string
+
+// VertexShaderSourceFill.ts - フィル頂点シェーダー
+FILL_TEMPLATE(with_bezier, with_matrix, with_uv, with_color): string
+FILL_RECT_TEMPLATE(): string
+ATTRIBUTE_BEZIER_ON/VARYING_BEZIER_ON/STATEMENT_BEZIER_ON(): string
+ATTRIBUTE_MATRIX_ON/VARYING_UV_ON/STATEMENT_UV_ON(): string
+ATTRIBUTE_COLOR_ON/VARYING_COLOR_ON/STATEMENT_COLOR_ON(): string
+
+// FragmentShaderSource.ts - フラグメントシェーダーバリアント
+SOLID_FILL_COLOR(): string
+BITMAP_CLIPPED(): string
+BITMAP_PATTERN(): string
+MASK(): string
+FILL_RECT_COLOR(): string
+
+// FragmentShaderSourceTexture.ts
+TEXTURE(with_color_transform: boolean): string
+INSTANCE_TEXTURE(): string
+
+// FragmentShaderSourceBlend.ts
+BLEND_TEMPLATE(operation: string, with_color_transform: boolean): string
+
+// FragmentShaderSourceGradient.ts
+GRADIENT_TEMPLATE(gradient_type, with_focal_point, ...): string
+
+// FragmentShaderSourceGradientLUT.ts
+GRADIENT_LUT_TEMPLATE(mediump_length, ...): string
+
+// FragmentShaderLibrary.ts - ユーティリティ
+FUNCTION_IS_INSIDE(): string
+STATEMENT_COLOR_TRANSFORM_ON(mediump_index): string
+
+// VertexShaderLibrary.ts - グリッドヘルパー
+FUNCTION_GRID_OFF(): string
+FUNCTION_GRID_ON(index: number): string
 ```
 
 ### LRU Cache System / LRUキャッシュシステム
@@ -1268,7 +1443,12 @@ interface IGradientLUTCacheEntry {
     lastUsed: number;           // フレーム番号
 }
 MAX_CACHE_SIZE = 32
-$generateCacheKey(stops, interpolation) // 衝突防止のためbase36キー生成
+$generateCacheKey(stops, interpolation): string  // 衝突防止のためbase36キー生成
+$getCachedLUT(key): ITextureObject | null        // キャッシュから取得
+$setCachedLUT(key, texture): void                // キャッシュに追加
+$advanceFrame(): void                            // フレームカウンタ進行
+$clearLUTCache(): void                           // キャッシュクリア
+$getLUTCacheSize(): number                       // キャッシュサイズ取得
 
 // GradientLUTVariants.ts - シェーダーバリアントキャッシュ
 MAX_SHADER_CACHE_SIZE = 16
@@ -1398,6 +1578,24 @@ flowchart TB
     end
 ```
 
+**FrameBufferManager State Functions / フレームバッファ状態関数:**
+```typescript
+// ビットマップ専用フレームバッファ
+$setBitmapFrameBuffer(gl: WebGL2RenderingContext): void
+$getReadBitmapFrameBuffer(): WebGLFramebuffer
+$getDrawBitmapFrameBuffer(): WebGLFramebuffer
+
+// PBO (Pixel Buffer Object) 操作
+$getPixelFrameBuffer(): WebGLFramebuffer
+$getPixelBufferObject(): WebGLBuffer
+
+// アタッチメント状態管理
+$setCurrentAttachment(attachment_object: IAttachmentObject | null): void
+$getCurrentAttachment(): IAttachmentObject | null
+$setFramebufferBound(state: boolean): void
+$useFramebufferBound(): boolean
+```
+
 ### Attachment Object Interface / アタッチメントオブジェクトインターフェース
 
 ```typescript
@@ -1434,6 +1632,36 @@ flowchart TB
     GET --> POOL
     BIND --> CURRENT
     RELEASE --> POOL
+```
+
+### ColorBufferObject Pool Management / カラーバッファプール管理
+
+```typescript
+// ColorBufferObject.ts
+$objectPool: IColorBufferObject[]              // カラーバッファプール
+
+// ColorBufferObject/service/
+ColorBufferObjectMeguruBinarySearchService     // 二分探索によるプール検索最適化
+
+// ColorBufferObject/usecase/
+ColorBufferObjectAcquireObjectUseCase          // width/heightマッチでプールから取得
+ColorBufferObjectReleaseColorBufferObjectUseCase  // プールに返却
+ColorBufferObjectGetColorBufferObjectUseCase   // 取得または新規作成
+```
+
+### StencilBufferObject Pool Management / ステンシルバッファプール管理
+
+```typescript
+// StencilBufferObject.ts
+$objectPool: IStencilBufferObject[]            // ステンシルバッファプール
+
+// StencilBufferObject/service/
+StencilBufferObjectCreateService               // 新規ステンシルバッファ作成
+StencilBufferObjectReleaseColorBufferObjectService  // プールに返却
+
+// StencilBufferObject/usecase/
+StencilBufferObjectAcquireObjectUseCase        // width/heightマッチでプールから取得
+StencilBufferObjectGetStencilBufferObjectUseCase   // 取得または新規作成
 ```
 
 ### FrameBuffer Workflow / フレームバッファワークフロー
@@ -1509,7 +1737,7 @@ flowchart TB
 ### Atlas Manager State / アトラスマネージャー状態
 
 ```typescript
-// AtlasManager.ts
+// AtlasManager.ts - 状態変数
 $activeAtlasIndex: number = 0;                          // アクティブなアトラスインデックス
 $currentAtlasIndex: number = 0;                         // 現在のアトラスインデックス
 $atlasAttachmentObjects: IAttachmentObject[] = [];      // アタッチメントオブジェクト配列
@@ -1517,6 +1745,26 @@ $rootNodes: TexturePacker[] = [];                       // ルートノード配
 $atlasTexture: ITextureObject | null = null;            // アトラステクスチャ
 $transferBounds: Float32Array[] = [];                   // 転送範囲（ノード描画時）
 $allTransferBounds: Float32Array[] = [];                // 全転送範囲（切り替え時）
+
+// AtlasManager.ts - 状態関数
+$setActiveAtlasIndex(index: number): void
+$getActiveAtlasIndex(): number
+$setCurrentAtlasIndex(index: number): void
+$getCurrentAtlasIndex(): number
+
+// 転送範囲管理
+$getActiveTransferBounds(index: number): Float32Array
+$getActiveAllTransferBounds(index: number): Float32Array
+$clearTransferBounds(): void
+
+// アタッチメント管理
+$getAtlasAttachmentObjects(): IAttachmentObject[]
+$setAtlasAttachmentObject(attachment_object: IAttachmentObject): void
+$getAtlasAttachmentObject(): IAttachmentObject
+$hasAtlasAttachmentObject(): boolean
+
+// テクスチャ取得
+$getAtlasTextureObject(): ITextureObject
 ```
 
 ### Binary Tree Packing Algorithm / バイナリツリーパッキングアルゴリズム
@@ -1842,6 +2090,33 @@ interface IClipObject {
     viewportWidth: number;
     viewportHeight: number;
 }
+
+// IGrid - グリッド情報（9-slice用）
+interface IGrid {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+}
+```
+
+### Global Data Storage / グローバルデータストレージ
+
+```typescript
+// TextureManager.ts - テクスチャユニット管理
+export let $activeTextureUnit: number = -1;
+export const $boundTextures: Array<ITextureObject | null> = [null, null, null]; // 3スロット
+$setActiveTextureUnit(unit: number): void
+
+// Bitmap.ts - ビットマップデータ配列
+export const $bitmapData: Array<boolean | number | Uint8Array | Float32Array> = [];
+
+// Gradient.ts - グラデーションデータ配列
+export const $gradientData: Array<number | number[] | Float32Array> = [];
+
+// Grid.ts - グリッドデータキャッシュ
+export const $gridDataMap: Map<number, Float32Array | null> = new Map();
+export const $terminateGrid = (): void  // グリッドデータクリア
 ```
 
 ### Context API Methods / Context APIメソッド
