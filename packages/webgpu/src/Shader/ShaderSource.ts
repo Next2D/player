@@ -953,4 +953,664 @@ export class ShaderSource
             }
         `;
     }
+
+    /**
+     * @description ブラーフィルター用頂点シェーダー
+     *              フルスクリーンクワッド用
+     * @return {string}
+     */
+    static getBlurFilterVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            @vertex
+            fn main(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {
+                var output: VertexOutput;
+
+                // フルスクリーンクワッドの頂点座標を生成
+                var positions = array<vec2<f32>, 6>(
+                    vec2<f32>(-1.0, -1.0),
+                    vec2<f32>( 1.0, -1.0),
+                    vec2<f32>(-1.0,  1.0),
+                    vec2<f32>(-1.0,  1.0),
+                    vec2<f32>( 1.0, -1.0),
+                    vec2<f32>( 1.0,  1.0)
+                );
+
+                var texCoords = array<vec2<f32>, 6>(
+                    vec2<f32>(0.0, 1.0),
+                    vec2<f32>(1.0, 1.0),
+                    vec2<f32>(0.0, 0.0),
+                    vec2<f32>(0.0, 0.0),
+                    vec2<f32>(1.0, 1.0),
+                    vec2<f32>(1.0, 0.0)
+                );
+
+                output.position = vec4<f32>(positions[vertexIndex], 0.0, 1.0);
+                output.texCoord = texCoords[vertexIndex];
+
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description ブラーフィルター用フラグメントシェーダー
+     *              WebGL版と同じボックスブラーアルゴリズム
+     * @param {number} halfBlur - 半分のブラー値（サンプル数の決定に使用）
+     * @return {string}
+     */
+    static getBlurFilterFragmentShader(halfBlur: number): string
+    {
+        const halfBlurFixed = halfBlur.toFixed(1);
+
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct BlurUniforms {
+                offset: vec2<f32>,
+                fraction: f32,
+                samples: f32,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: BlurUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                let offset = uniforms.offset;
+                let fraction = uniforms.fraction;
+                let samples = uniforms.samples;
+
+                var color = textureSample(inputTexture, textureSampler, input.texCoord);
+
+                // ブラーサンプリング
+                for (var i: f32 = 1.0; i < ${halfBlurFixed}; i += 1.0) {
+                    color += textureSample(inputTexture, textureSampler, input.texCoord + offset * i);
+                    color += textureSample(inputTexture, textureSampler, input.texCoord - offset * i);
+                }
+
+                // 端のサンプル（フラクション適用）
+                color += textureSample(inputTexture, textureSampler, input.texCoord + offset * ${halfBlurFixed}) * fraction;
+                color += textureSample(inputTexture, textureSampler, input.texCoord - offset * ${halfBlurFixed}) * fraction;
+
+                // サンプル数で平均化
+                color /= samples;
+
+                return color;
+            }
+        `;
+    }
+
+    /**
+     * @description テクスチャコピー用フラグメントシェーダー
+     *              フィルター間のテクスチャ転送に使用
+     * @return {string}
+     */
+    static getTextureCopyFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct CopyUniforms {
+                scale: vec2<f32>,
+                offset: vec2<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: CopyUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                let uv = input.texCoord * uniforms.scale + uniforms.offset;
+                return textureSample(inputTexture, textureSampler, uv);
+            }
+        `;
+    }
+
+    /**
+     * @description カラーマトリックスフィルター用フラグメントシェーダー
+     *              4x4行列 + オフセットで色変換
+     * @return {string}
+     */
+    static getColorMatrixFilterFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct ColorMatrixUniforms {
+                matrix: mat4x4<f32>,
+                offset: vec4<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: ColorMatrixUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                var color = textureSample(inputTexture, textureSampler, input.texCoord);
+
+                // カラーマトリックス適用: result = matrix * color + offset
+                var result = uniforms.matrix * color + uniforms.offset;
+
+                // 0-1にクランプ
+                result = clamp(result, vec4<f32>(0.0), vec4<f32>(1.0));
+
+                return result;
+            }
+        `;
+    }
+
+    /**
+     * @description グローフィルター用フラグメントシェーダー
+     *              ブラー結果に単色を適用
+     * @return {string}
+     */
+    static getGlowFilterFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct GlowUniforms {
+                color: vec4<f32>,
+                strength: f32,
+                inner: f32,
+                knockout: f32,
+                _padding: f32,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: GlowUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var blurTexture: texture_2d<f32>;
+            @group(0) @binding(3) var baseTexture: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                let blurColor = textureSample(blurTexture, textureSampler, input.texCoord);
+                let baseColor = textureSample(baseTexture, textureSampler, input.texCoord);
+
+                // グロー強度を適用
+                let glowAlpha = clamp(blurColor.a * uniforms.strength, 0.0, 1.0);
+                let glowColor = vec4<f32>(uniforms.color.rgb * glowAlpha, glowAlpha);
+
+                // inner/outer/knockout モードに応じた合成
+                if (uniforms.inner > 0.5) {
+                    // インナーグロー: 元画像のアルファ内にグローを適用
+                    let innerGlow = glowColor * baseColor.a;
+                    if (uniforms.knockout > 0.5) {
+                        return innerGlow;
+                    } else {
+                        return baseColor + innerGlow * (1.0 - baseColor.a);
+                    }
+                } else {
+                    // アウターグロー
+                    if (uniforms.knockout > 0.5) {
+                        return glowColor * (1.0 - baseColor.a);
+                    } else {
+                        return baseColor + glowColor * (1.0 - baseColor.a);
+                    }
+                }
+            }
+        `;
+    }
+
+    /**
+     * @description ドロップシャドウフィルター用フラグメントシェーダー
+     * @return {string}
+     */
+    static getDropShadowFilterFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct DropShadowUniforms {
+                color: vec4<f32>,
+                offset: vec2<f32>,
+                strength: f32,
+                inner: f32,
+                knockout: f32,
+                hideObject: f32,
+                _padding: vec2<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: DropShadowUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var blurTexture: texture_2d<f32>;
+            @group(0) @binding(3) var baseTexture: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                let baseColor = textureSample(baseTexture, textureSampler, input.texCoord);
+
+                // オフセットを適用してシャドウをサンプリング
+                let shadowUV = input.texCoord + uniforms.offset;
+                let blurColor = textureSample(blurTexture, textureSampler, shadowUV);
+
+                // シャドウ強度を適用
+                let shadowAlpha = clamp(blurColor.a * uniforms.strength, 0.0, 1.0);
+                let shadowColor = vec4<f32>(uniforms.color.rgb * shadowAlpha, shadowAlpha);
+
+                if (uniforms.inner > 0.5) {
+                    // インナーシャドウ
+                    let innerShadow = shadowColor * baseColor.a;
+                    if (uniforms.knockout > 0.5) {
+                        return innerShadow;
+                    } else {
+                        return baseColor * (1.0 - shadowAlpha) + innerShadow;
+                    }
+                } else {
+                    // アウターシャドウ（ドロップシャドウ）
+                    if (uniforms.hideObject > 0.5) {
+                        return shadowColor;
+                    } else if (uniforms.knockout > 0.5) {
+                        return shadowColor * (1.0 - baseColor.a);
+                    } else {
+                        // 通常のドロップシャドウ: シャドウの上に元画像を重ねる
+                        return shadowColor * (1.0 - baseColor.a) + baseColor;
+                    }
+                }
+            }
+        `;
+    }
+
+    /**
+     * @description コンボリューションフィルター用フラグメントシェーダー
+     *              畳み込み行列を使用した画像処理
+     * @param {number} matrixX - 行列のX方向サイズ
+     * @param {number} matrixY - 行列のY方向サイズ
+     * @param {boolean} preserveAlpha - アルファを保持するか
+     * @param {boolean} clamp - 範囲外をクランプするか
+     * @return {string}
+     */
+    static getConvolutionFilterFragmentShader(
+        matrixX: number,
+        matrixY: number,
+        preserveAlpha: boolean,
+        clamp: boolean
+    ): string
+    {
+        const halfX = Math.floor(matrixX * 0.5);
+        const halfY = Math.floor(matrixY * 0.5);
+        const size = matrixX * matrixY;
+
+        // マトリクス要素を取得するコードを生成
+        let matrixCode = "";
+        for (let i = 0; i < size; i++) {
+            const arrayIndex = Math.floor(i / 4);
+            const component = i % 4;
+            const componentStr = ["x", "y", "z", "w"][component];
+            matrixCode += `
+                    weight = uniforms.matrix[${arrayIndex}].${componentStr};
+                    offsetX = ${i % matrixX} - ${halfX};
+                    offsetY = ${halfY} - ${Math.floor(i / matrixX)};
+                    uv = input.texCoord + vec2<f32>(f32(offsetX), f32(offsetY)) * rcpSize;
+                    color = textureSample(srcTexture, textureSampler, uv);
+                    color = vec4<f32>(color.rgb / max(0.0001, color.a), color.a);
+                    ${clamp ? "" : `color = mix(uniforms.substituteColor, color, isInside(uv));`}
+                    result += color * weight;
+`;
+        }
+
+        const preserveAlphaCode = preserveAlpha
+            ? "result.a = textureSample(srcTexture, textureSampler, input.texCoord).a;"
+            : "";
+
+        // マトリクスサイズに基づいて必要な配列サイズを計算
+        const matrixArraySize = Math.ceil(size / 4);
+
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct ConvolutionUniforms {
+                rcpSize: vec2<f32>,
+                rcpDivisor: f32,
+                bias: f32,
+                substituteColor: vec4<f32>,
+                matrix: array<vec4<f32>, ${matrixArraySize}>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: ConvolutionUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var srcTexture: texture_2d<f32>;
+
+            fn isInside(uv: vec2<f32>) -> f32 {
+                let s = step(vec2<f32>(0.0), uv) - step(vec2<f32>(1.0), uv);
+                return s.x * s.y;
+            }
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                let rcpSize = uniforms.rcpSize;
+                var result = vec4<f32>(0.0);
+                var weight: f32;
+                var offsetX: i32;
+                var offsetY: i32;
+                var uv: vec2<f32>;
+                var color: vec4<f32>;
+
+                ${matrixCode}
+
+                result = clamp(result * uniforms.rcpDivisor + uniforms.bias, vec4<f32>(0.0), vec4<f32>(1.0));
+                ${preserveAlphaCode}
+                result = vec4<f32>(result.rgb * result.a, result.a);
+
+                return result;
+            }
+        `;
+    }
+
+    /**
+     * @description ベベルフィルター用フラグメントシェーダー
+     *              ハイライトとシャドウを使用した立体効果
+     * @return {string}
+     */
+    static getBevelFilterFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct BevelUniforms {
+                highlightColor: vec4<f32>,
+                shadowColor: vec4<f32>,
+                strength: f32,
+                inner: f32,
+                knockout: f32,
+                bevelType: f32, // 0: full, 1: inner, 2: outer
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: BevelUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var blurTexture: texture_2d<f32>;
+            @group(0) @binding(3) var baseTexture: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                let baseColor = textureSample(baseTexture, textureSampler, input.texCoord);
+
+                // 正方向と逆方向のブラーをサンプリング
+                let blur1 = textureSample(blurTexture, textureSampler, input.texCoord);
+                let blur2 = textureSample(blurTexture, textureSampler, 1.0 - input.texCoord);
+
+                // ハイライトとシャドウのアルファを計算
+                var highlightAlpha = blur1.a - blur2.a;
+                var shadowAlpha = blur2.a - blur1.a;
+
+                // 強度を適用
+                highlightAlpha *= uniforms.strength;
+                shadowAlpha *= uniforms.strength;
+
+                // クランプ
+                highlightAlpha = clamp(highlightAlpha, 0.0, 1.0);
+                shadowAlpha = clamp(shadowAlpha, 0.0, 1.0);
+
+                // ベベルカラーを計算
+                let bevelColor = uniforms.highlightColor * highlightAlpha + uniforms.shadowColor * shadowAlpha;
+
+                // タイプに応じた合成
+                var result: vec4<f32>;
+                let typeVal = uniforms.bevelType;
+                let knockout = uniforms.knockout > 0.5;
+
+                if (typeVal < 0.5) {
+                    // full
+                    if (knockout) {
+                        result = bevelColor;
+                    } else {
+                        result = baseColor - baseColor * bevelColor.a + bevelColor;
+                    }
+                } else if (typeVal < 1.5) {
+                    // inner
+                    result = bevelColor;
+                } else {
+                    // outer
+                    if (knockout) {
+                        result = bevelColor - bevelColor * baseColor.a;
+                    } else {
+                        result = baseColor + bevelColor - bevelColor * baseColor.a;
+                    }
+                }
+
+                return result;
+            }
+        `;
+    }
+
+    /**
+     * @description 複雑なブレンドモード用フラグメントシェーダーを取得
+     *              WebGL版と同じブレンド計算式を使用
+     * @param {string} blendMode - ブレンドモード名
+     * @return {string}
+     */
+    static getComplexBlendFragmentShader(blendMode: string): string
+    {
+        let blendFunction: string;
+
+        switch (blendMode) {
+            case "subtract":
+                blendFunction = `
+                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+                        if (src.a == 0.0) { return dst; }
+                        if (dst.a == 0.0) { return src; }
+
+                        let a = src - src * dst.a;
+                        let b = dst - dst * src.a;
+
+                        let srcRgb = src.rgb / src.a;
+                        let dstRgb = dst.rgb / dst.a;
+
+                        var c = vec4<f32>(dstRgb - srcRgb, src.a * dst.a);
+                        c = vec4<f32>(c.rgb * c.a, c.a);
+
+                        return a + b + c;
+                    }
+                `;
+                break;
+
+            case "multiply":
+                blendFunction = `
+                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+                        let a = src - src * dst.a;
+                        let b = dst - dst * src.a;
+                        let c = src * dst;
+
+                        return a + b + c;
+                    }
+                `;
+                break;
+
+            case "lighten":
+                blendFunction = `
+                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+                        if (src.a == 0.0) { return dst; }
+                        if (dst.a == 0.0) { return src; }
+
+                        let a = src - src * dst.a;
+                        let b = dst - dst * src.a;
+
+                        let srcRgb = src.rgb / src.a;
+                        let dstRgb = dst.rgb / dst.a;
+
+                        // (src > dst) ? src : dst
+                        let mixed = mix(srcRgb, dstRgb, step(srcRgb, dstRgb));
+                        var c = vec4<f32>(mixed, src.a * dst.a);
+                        c = vec4<f32>(c.rgb * c.a, c.a);
+
+                        return a + b + c;
+                    }
+                `;
+                break;
+
+            case "darken":
+                blendFunction = `
+                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+                        if (src.a == 0.0) { return dst; }
+                        if (dst.a == 0.0) { return src; }
+
+                        let a = src - src * dst.a;
+                        let b = dst - dst * src.a;
+
+                        let srcRgb = src.rgb / src.a;
+                        let dstRgb = dst.rgb / dst.a;
+
+                        // (src < dst) ? src : dst
+                        let mixed = mix(srcRgb, dstRgb, step(dstRgb, srcRgb));
+                        var c = vec4<f32>(mixed, src.a * dst.a);
+                        c = vec4<f32>(c.rgb * c.a, c.a);
+
+                        return a + b + c;
+                    }
+                `;
+                break;
+
+            case "overlay":
+                blendFunction = `
+                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+                        if (src.a == 0.0) { return dst; }
+                        if (dst.a == 0.0) { return src; }
+
+                        let a = src - src * dst.a;
+                        let b = dst - dst * src.a;
+
+                        let srcRgb = src.rgb / src.a;
+                        let dstRgb = dst.rgb / dst.a;
+
+                        let mul = srcRgb * dstRgb;
+                        let c1 = 2.0 * mul;
+                        let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
+                        let mixed = mix(c1, c2, step(vec3<f32>(0.5), dstRgb));
+                        var c = vec4<f32>(mixed, src.a * dst.a);
+                        c = vec4<f32>(c.rgb * c.a, c.a);
+
+                        return a + b + c;
+                    }
+                `;
+                break;
+
+            case "hardlight":
+                blendFunction = `
+                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+                        if (src.a == 0.0) { return dst; }
+                        if (dst.a == 0.0) { return src; }
+
+                        let a = src - src * dst.a;
+                        let b = dst - dst * src.a;
+
+                        let srcRgb = src.rgb / src.a;
+                        let dstRgb = dst.rgb / dst.a;
+
+                        let mul = srcRgb * dstRgb;
+                        let c1 = 2.0 * mul;
+                        let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
+                        let mixed = mix(c1, c2, step(vec3<f32>(0.5), srcRgb));
+                        var c = vec4<f32>(mixed, src.a * dst.a);
+                        c = vec4<f32>(c.rgb * c.a, c.a);
+
+                        return a + b + c;
+                    }
+                `;
+                break;
+
+            case "difference":
+                blendFunction = `
+                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+                        if (src.a == 0.0) { return dst; }
+                        if (dst.a == 0.0) { return src; }
+
+                        let a = src - src * dst.a;
+                        let b = dst - dst * src.a;
+
+                        let srcRgb = src.rgb / src.a;
+                        let dstRgb = dst.rgb / dst.a;
+
+                        var c = vec4<f32>(abs(srcRgb - dstRgb), src.a * dst.a);
+                        c = vec4<f32>(c.rgb * c.a, c.a);
+
+                        return a + b + c;
+                    }
+                `;
+                break;
+
+            case "invert":
+                blendFunction = `
+                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+                        if (src.a == 0.0) { return dst; }
+                        if (dst.a == 0.0) { return src; }
+
+                        let b = dst - dst * src.a;
+                        let c = vec4<f32>(src.a - dst.rgb * src.a, src.a);
+
+                        return b + c;
+                    }
+                `;
+                break;
+
+            default: // normal
+                blendFunction = `
+                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+                        return src + dst - dst * src.a;
+                    }
+                `;
+                break;
+        }
+
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct BlendUniforms {
+                mulColor: vec4<f32>,
+                addColor: vec4<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: BlendUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var dstTexture: texture_2d<f32>;
+            @group(0) @binding(3) var srcTexture: texture_2d<f32>;
+
+            ${blendFunction}
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                var dst = textureSample(dstTexture, textureSampler, input.texCoord);
+                var src = textureSample(srcTexture, textureSampler, input.texCoord);
+
+                // カラートランスフォームを適用
+                src = src * uniforms.mulColor + uniforms.addColor;
+                src = clamp(src, vec4<f32>(0.0), vec4<f32>(1.0));
+                src = vec4<f32>(src.rgb * src.a, src.a); // プリマルチプライドアルファに変換
+
+                return blend(src, dst);
+            }
+        `;
+    }
 }

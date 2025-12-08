@@ -42,6 +42,13 @@ export class PipelineManager
         this.createGradientPipeline();
         this.createBitmapFillPipeline(); // ビットマップ塗りつぶし用
         this.createBlendPipeline();
+        this.createBlurFilterPipeline(); // ブラーフィルター用
+        this.createTextureCopyPipeline(); // テクスチャコピー用
+        this.createColorMatrixFilterPipeline(); // カラーマトリックスフィルター用
+        this.createGlowFilterPipeline(); // グローフィルター用
+        this.createDropShadowFilterPipeline(); // ドロップシャドウフィルター用
+        this.createBevelFilterPipeline(); // ベベルフィルター用
+        this.createComplexBlendPipelines(); // 複雑なブレンドモード用
     }
 
     /**
@@ -1171,6 +1178,570 @@ export class PipelineManager
         });
 
         this.pipelines.set("blend", pipeline);
+    }
+
+    /**
+     * @description ブラーフィルター用パイプラインを作成
+     *              動的にhalf_blur値に応じたシェーダーを生成
+     * @return {void}
+     */
+    private createBlurFilterPipeline(): void
+    {
+        const bindGroupLayout = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    buffer: { type: "uniform" }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {}
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                }
+            ]
+        });
+
+        this.bindGroupLayouts.set("blur_filter", bindGroupLayout);
+
+        // 一般的なブラー値用のパイプラインを事前に作成（halfBlur = 1〜16）
+        const vertexShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getBlurFilterVertexShader()
+        });
+
+        const pipelineLayout = this.device.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout]
+        });
+
+        for (let halfBlur = 1; halfBlur <= 16; halfBlur++) {
+            const fragmentShaderModule = this.device.createShaderModule({
+                code: ShaderSource.getBlurFilterFragmentShader(halfBlur)
+            });
+
+            const pipeline = this.device.createRenderPipeline({
+                layout: pipelineLayout,
+                vertex: {
+                    module: vertexShaderModule,
+                    entryPoint: "main",
+                    buffers: [] // フルスクリーンクワッドなので頂点バッファ不要
+                },
+                fragment: {
+                    module: fragmentShaderModule,
+                    entryPoint: "main",
+                    targets: [{
+                        format: "rgba8unorm",
+                        blend: {
+                            color: {
+                                srcFactor: "one",
+                                dstFactor: "zero",
+                                operation: "add"
+                            },
+                            alpha: {
+                                srcFactor: "one",
+                                dstFactor: "zero",
+                                operation: "add"
+                            }
+                        }
+                    }]
+                },
+                primitive: {
+                    topology: "triangle-list",
+                    cullMode: "none"
+                }
+            });
+
+            this.pipelines.set(`blur_filter_${halfBlur}`, pipeline);
+        }
+    }
+
+    /**
+     * @description テクスチャコピー用パイプラインを作成
+     *              フィルター処理間のテクスチャ転送に使用
+     * @return {void}
+     */
+    private createTextureCopyPipeline(): void
+    {
+        const bindGroupLayout = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    buffer: { type: "uniform" }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {}
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                }
+            ]
+        });
+
+        this.bindGroupLayouts.set("texture_copy", bindGroupLayout);
+
+        const pipelineLayout = this.device.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout]
+        });
+
+        const vertexShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getBlurFilterVertexShader() // 同じフルスクリーンクワッド
+        });
+
+        const fragmentShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getTextureCopyFragmentShader()
+        });
+
+        const pipeline = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModule,
+                entryPoint: "main",
+                buffers: []
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: "rgba8unorm",
+                    blend: {
+                        color: {
+                            srcFactor: "one",
+                            dstFactor: "zero",
+                            operation: "add"
+                        },
+                        alpha: {
+                            srcFactor: "one",
+                            dstFactor: "zero",
+                            operation: "add"
+                        }
+                    }
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            }
+        });
+
+        this.pipelines.set("texture_copy", pipeline);
+    }
+
+    /**
+     * @description カラーマトリックスフィルター用パイプラインを作成
+     * @return {void}
+     */
+    private createColorMatrixFilterPipeline(): void
+    {
+        const bindGroupLayout = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    buffer: { type: "uniform" }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {}
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                }
+            ]
+        });
+
+        this.bindGroupLayouts.set("color_matrix_filter", bindGroupLayout);
+
+        const pipelineLayout = this.device.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout]
+        });
+
+        const vertexShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getBlurFilterVertexShader() // 同じフルスクリーンクワッド
+        });
+
+        const fragmentShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getColorMatrixFilterFragmentShader()
+        });
+
+        const pipeline = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModule,
+                entryPoint: "main",
+                buffers: []
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: "rgba8unorm",
+                    blend: {
+                        color: {
+                            srcFactor: "one",
+                            dstFactor: "zero",
+                            operation: "add"
+                        },
+                        alpha: {
+                            srcFactor: "one",
+                            dstFactor: "zero",
+                            operation: "add"
+                        }
+                    }
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            }
+        });
+
+        this.pipelines.set("color_matrix_filter", pipeline);
+    }
+
+    /**
+     * @description グローフィルター用パイプラインを作成
+     * @return {void}
+     */
+    private createGlowFilterPipeline(): void
+    {
+        const bindGroupLayout = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    buffer: { type: "uniform" }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {}
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                },
+                {
+                    binding: 3,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                }
+            ]
+        });
+
+        this.bindGroupLayouts.set("glow_filter", bindGroupLayout);
+
+        const pipelineLayout = this.device.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout]
+        });
+
+        const vertexShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getBlurFilterVertexShader()
+        });
+
+        const fragmentShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getGlowFilterFragmentShader()
+        });
+
+        const pipeline = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModule,
+                entryPoint: "main",
+                buffers: []
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: "rgba8unorm",
+                    blend: {
+                        color: {
+                            srcFactor: "one",
+                            dstFactor: "one-minus-src-alpha",
+                            operation: "add"
+                        },
+                        alpha: {
+                            srcFactor: "one",
+                            dstFactor: "one-minus-src-alpha",
+                            operation: "add"
+                        }
+                    }
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            }
+        });
+
+        this.pipelines.set("glow_filter", pipeline);
+    }
+
+    /**
+     * @description ドロップシャドウフィルター用パイプラインを作成
+     * @return {void}
+     */
+    private createDropShadowFilterPipeline(): void
+    {
+        const bindGroupLayout = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    buffer: { type: "uniform" }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {}
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                },
+                {
+                    binding: 3,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                }
+            ]
+        });
+
+        this.bindGroupLayouts.set("drop_shadow_filter", bindGroupLayout);
+
+        const pipelineLayout = this.device.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout]
+        });
+
+        const vertexShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getBlurFilterVertexShader()
+        });
+
+        const fragmentShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getDropShadowFilterFragmentShader()
+        });
+
+        const pipeline = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModule,
+                entryPoint: "main",
+                buffers: []
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: "rgba8unorm",
+                    blend: {
+                        color: {
+                            srcFactor: "one",
+                            dstFactor: "one-minus-src-alpha",
+                            operation: "add"
+                        },
+                        alpha: {
+                            srcFactor: "one",
+                            dstFactor: "one-minus-src-alpha",
+                            operation: "add"
+                        }
+                    }
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            }
+        });
+
+        this.pipelines.set("drop_shadow_filter", pipeline);
+    }
+
+    /**
+     * @description ベベルフィルター用パイプラインを作成
+     * @return {void}
+     */
+    private createBevelFilterPipeline(): void
+    {
+        const bindGroupLayout = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    buffer: { type: "uniform" }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {}
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                },
+                {
+                    binding: 3,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                }
+            ]
+        });
+
+        this.bindGroupLayouts.set("bevel_filter", bindGroupLayout);
+
+        const pipelineLayout = this.device.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout]
+        });
+
+        const vertexShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getBlurFilterVertexShader()
+        });
+
+        const fragmentShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getBevelFilterFragmentShader()
+        });
+
+        const pipeline = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModule,
+                entryPoint: "main",
+                buffers: []
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: "rgba8unorm",
+                    blend: {
+                        color: {
+                            srcFactor: "one",
+                            dstFactor: "one-minus-src-alpha",
+                            operation: "add"
+                        },
+                        alpha: {
+                            srcFactor: "one",
+                            dstFactor: "one-minus-src-alpha",
+                            operation: "add"
+                        }
+                    }
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            }
+        });
+
+        this.pipelines.set("bevel_filter", pipeline);
+    }
+
+    /**
+     * @description 複雑なブレンドモード用パイプラインを作成
+     *              subtract, multiply, lighten, darken, overlay, hardlight, difference, invert
+     * @return {void}
+     */
+    private createComplexBlendPipelines(): void
+    {
+        const bindGroupLayout = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    buffer: { type: "uniform" }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {}
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                },
+                {
+                    binding: 3,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                }
+            ]
+        });
+
+        this.bindGroupLayouts.set("complex_blend", bindGroupLayout);
+
+        const pipelineLayout = this.device.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout]
+        });
+
+        const vertexShaderModule = this.device.createShaderModule({
+            code: ShaderSource.getBlurFilterVertexShader() // フルスクリーンクワッド
+        });
+
+        const blendModes = [
+            "subtract",
+            "multiply",
+            "lighten",
+            "darken",
+            "overlay",
+            "hardlight",
+            "difference",
+            "invert"
+        ];
+
+        for (const blendMode of blendModes) {
+            const fragmentShaderModule = this.device.createShaderModule({
+                code: ShaderSource.getComplexBlendFragmentShader(blendMode)
+            });
+
+            const pipeline = this.device.createRenderPipeline({
+                layout: pipelineLayout,
+                vertex: {
+                    module: vertexShaderModule,
+                    entryPoint: "main",
+                    buffers: []
+                },
+                fragment: {
+                    module: fragmentShaderModule,
+                    entryPoint: "main",
+                    targets: [{
+                        format: this.format,
+                        blend: {
+                            color: {
+                                srcFactor: "one",
+                                dstFactor: "zero",
+                                operation: "add"
+                            },
+                            alpha: {
+                                srcFactor: "one",
+                                dstFactor: "zero",
+                                operation: "add"
+                            }
+                        }
+                    }]
+                },
+                primitive: {
+                    topology: "triangle-list",
+                    cullMode: "none"
+                }
+            });
+
+            this.pipelines.set(`complex_blend_${blendMode}`, pipeline);
+        }
     }
 
     /**

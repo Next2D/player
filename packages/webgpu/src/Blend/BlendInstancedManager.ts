@@ -5,6 +5,48 @@ import { $getCurrentAtlasIndex, $setCurrentAtlasIndex, $setActiveAtlasIndex } fr
 import { renderQueue } from "@next2d/render-queue";
 
 /**
+ * @description 複雑なブレンドモードの描画キュー
+ *              Complex blend mode rendering queue
+ */
+interface IComplexBlendItem {
+    node: Node;
+    x_min: number;
+    y_min: number;
+    x_max: number;
+    y_max: number;
+    color_transform: Float32Array;
+    matrix: Float32Array;
+    blend_mode: string;
+    viewport_width: number;
+    viewport_height: number;
+    render_max_size: number;
+    global_alpha: number;
+}
+
+/**
+ * @description 複雑なブレンドモード描画キュー
+ */
+let $complexBlendQueue: IComplexBlendItem[] = [];
+
+/**
+ * @description 複雑なブレンドモードの描画キューを取得
+ * @return {IComplexBlendItem[]}
+ */
+export const getComplexBlendQueue = (): IComplexBlendItem[] =>
+{
+    return $complexBlendQueue;
+};
+
+/**
+ * @description 複雑なブレンドモードの描画キューをクリア
+ * @return {void}
+ */
+export const clearComplexBlendQueue = (): void =>
+{
+    $complexBlendQueue = [];
+};
+
+/**
  * @description インスタンスシェーダーマネージャーのキャッシュ
  * @private
  */
@@ -41,10 +83,10 @@ export const getInstancedShaderManager = (): ShaderInstancedManager =>
  */
 export const addDisplayObjectToInstanceArray = (
     node: Node,
-    _x_min: number,
-    _y_min: number,
-    _x_max: number,
-    _y_max: number,
+    x_min: number,
+    y_min: number,
+    x_max: number,
+    y_max: number,
     color_transform: Float32Array,
     matrix: Float32Array,
     blend_mode: string,
@@ -98,10 +140,23 @@ export const addDisplayObjectToInstanceArray = (
         shaderManager.count++;
     } else {
         // 複雑なブレンドモード（個別描画が必要）
-        // TODO: 複雑なブレンドモード処理を実装
-        console.log("[WebGPU] Complex blend mode not yet implemented:", blend_mode);
-        
-        // 現在のバッチを描画
+        // キューに追加して後で処理
+        $complexBlendQueue.push({
+            node,
+            x_min,
+            y_min,
+            x_max,
+            y_max,
+            color_transform: new Float32Array(color_transform),
+            matrix: new Float32Array(matrix),
+            blend_mode,
+            viewport_width,
+            viewport_height,
+            render_max_size,
+            global_alpha
+        });
+
+        // ブレンドモードをセット
         $setCurrentBlendMode(blend_mode as any);
         $setCurrentAtlasIndex(node.index);
         $setActiveAtlasIndex(node.index);

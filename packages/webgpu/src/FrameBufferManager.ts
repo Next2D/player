@@ -208,6 +208,37 @@ export class FrameBufferManager
     }
 
     /**
+     * @description 一時的なアタッチメントを作成（フィルター処理用）
+     *              Creates a temporary attachment for filter processing
+     * @param {number} width
+     * @param {number} height
+     * @return {IAttachmentObject}
+     */
+    createTemporaryAttachment(width: number, height: number): IAttachmentObject
+    {
+        const name = `temp_${this.nextId}`;
+        return this.createAttachment(name, width, height, false, false);
+    }
+
+    /**
+     * @description 一時的なアタッチメントを解放（フィルター処理用）
+     *              Releases a temporary attachment after filter processing
+     * @param {IAttachmentObject} attachment
+     * @return {void}
+     */
+    releaseTemporaryAttachment(attachment: IAttachmentObject): void
+    {
+        // 名前を検索して削除
+        for (const [name, att] of this.attachments.entries()) {
+            if (att.id === attachment.id) {
+                att.texture.destroy();
+                this.attachments.delete(name);
+                break;
+            }
+        }
+    }
+
+    /**
      * @description すべてのリソースを解放
      * @return {void}
      */

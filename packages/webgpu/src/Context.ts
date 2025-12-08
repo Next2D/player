@@ -11,7 +11,8 @@ import { FrameBufferManager } from "./FrameBufferManager";
 import { AttachmentManager } from "./AttachmentManager";
 import { PipelineManager } from "./Shader/PipelineManager";
 import { $rootNodes } from "./AtlasManager";
-import { addDisplayObjectToInstanceArray, getInstancedShaderManager } from "./Blend/BlendInstancedManager";
+import { addDisplayObjectToInstanceArray, getInstancedShaderManager, getComplexBlendQueue, clearComplexBlendQueue } from "./Blend/BlendInstancedManager";
+import { execute as blendApplyComplexBlendUseCase } from "./Blend/usecase/BlendApplyComplexBlendUseCase";
 import { renderQueue } from "@next2d/render-queue";
 import { generateStrokeMesh } from "./Mesh/usecase/MeshStrokeGenerateUseCase";
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
@@ -23,6 +24,12 @@ import { $clipBounds, $clipLevels } from "./Mask";
 import { generateGradientLUT, getAdaptiveResolution } from "./Gradient/GradientLUTGenerator";
 import { execute as meshGradientStrokeGenerateUseCase } from "./Mesh/usecase/MeshGradientStrokeGenerateUseCase";
 import { execute as meshBitmapStrokeGenerateUseCase } from "./Mesh/usecase/MeshBitmapStrokeGenerateUseCase";
+import { $offset } from "./Filter";
+import { execute as filterApplyBlurFilterUseCase } from "./Filter/BlurFilter/FilterApplyBlurFilterUseCase";
+import { execute as filterApplyColorMatrixFilterUseCase } from "./Filter/ColorMatrixFilter/FilterApplyColorMatrixFilterUseCase";
+import { execute as filterApplyGlowFilterUseCase } from "./Filter/GlowFilter/FilterApplyGlowFilterUseCase";
+import { execute as filterApplyDropShadowFilterUseCase } from "./Filter/DropShadowFilter/FilterApplyDropShadowFilterUseCase";
+import { execute as filterApplyBevelFilterUseCase } from "./Filter/BevelFilter/FilterApplyBevelFilterUseCase";
 
 /**
  * @description WebGPU版、Next2Dのコンテキスト
@@ -2001,6 +2008,142 @@ export class Context
 
         // インスタンスデータをクリア
         shaderManager.clear();
+
+        // 複雑なブレンドモードの処理
+        this.processComplexBlendQueue();
+    }
+
+    /**
+     * @description 複雑なブレンドモードのキューを処理
+     * @return {void}
+     */
+    private processComplexBlendQueue (): void
+    {
+        const queue = getComplexBlendQueue();
+        if (queue.length === 0) {
+            return;
+        }
+
+        // コマンドエンコーダーを確保
+        this.ensureCommandEncoder();
+
+        const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
+        if (!atlasAttachment) {
+            clearComplexBlendQueue();
+            return;
+        }
+
+        for (const item of queue) {
+            const { node, x_min, y_min, x_max, y_max, color_transform, matrix, blend_mode, global_alpha } = item;
+
+            const width = Math.ceil(Math.abs(x_max - x_min));
+            const height = Math.ceil(Math.abs(y_max - y_min));
+
+            if (width <= 0 || height <= 0) {
+                continue;
+            }
+
+            // ソーステクスチャを作成（ノードからコピー）
+            const srcAttachment = this.frameBufferManager.createTemporaryAttachment(node.w, node.h);
+            this.commandEncoder!.copyTextureToTexture(
+                {
+                    texture: atlasAttachment.texture,
+                    origin: { x: node.x, y: node.y, z: 0 }
+                },
+                {
+                    texture: srcAttachment.texture,
+                    origin: { x: 0, y: 0, z: 0 }
+                },
+                {
+                    width: node.w,
+                    height: node.h
+                }
+            );
+
+            // デスティネーションテクスチャを作成（現在の描画先からコピー）
+            const dstX = Math.floor(matrix[6]);
+            const dstY = Math.floor(matrix[7]);
+            const dstAttachment = this.frameBufferManager.createTemporaryAttachment(width, height);
+
+            // メインテクスチャから描画領域をコピー
+            if (this.mainTexture && dstX >= 0 && dstY >= 0) {
+                const copyWidth = Math.min(width, this.mainTexture.width - dstX);
+                const copyHeight = Math.min(height, this.mainTexture.height - dstY);
+                if (copyWidth > 0 && copyHeight > 0) {
+                    this.commandEncoder!.copyTextureToTexture(
+                        {
+                            texture: this.mainTexture,
+                            origin: { x: dstX, y: dstY, z: 0 }
+                        },
+                        {
+                            texture: dstAttachment.texture,
+                            origin: { x: 0, y: 0, z: 0 }
+                        },
+                        {
+                            width: copyWidth,
+                            height: copyHeight
+                        }
+                    );
+                }
+            }
+
+            // カラートランスフォームを準備
+            const ct = new Float32Array([
+                color_transform[0],
+                color_transform[1],
+                color_transform[2],
+                global_alpha,
+                color_transform[4] / 255,
+                color_transform[5] / 255,
+                color_transform[6] / 255,
+                0
+            ]);
+
+            // 複雑なブレンドを適用
+            const blendedAttachment = blendApplyComplexBlendUseCase(
+                srcAttachment,
+                dstAttachment,
+                blend_mode,
+                ct,
+                {
+                    device: this.device,
+                    commandEncoder: this.commandEncoder!,
+                    frameBufferManager: this.frameBufferManager,
+                    pipelineManager: this.pipelineManager,
+                    textureManager: this.textureManager
+                }
+            );
+
+            // 結果をメインテクスチャにコピー
+            if (this.mainTexture && dstX >= 0 && dstY >= 0) {
+                const copyWidth = Math.min(blendedAttachment.width, this.mainTexture.width - dstX);
+                const copyHeight = Math.min(blendedAttachment.height, this.mainTexture.height - dstY);
+                if (copyWidth > 0 && copyHeight > 0) {
+                    this.commandEncoder!.copyTextureToTexture(
+                        {
+                            texture: blendedAttachment.texture,
+                            origin: { x: 0, y: 0, z: 0 }
+                        },
+                        {
+                            texture: this.mainTexture,
+                            origin: { x: dstX, y: dstY, z: 0 }
+                        },
+                        {
+                            width: copyWidth,
+                            height: copyHeight
+                        }
+                    );
+                }
+            }
+
+            // 一時テクスチャを解放
+            this.frameBufferManager.releaseTemporaryAttachment(srcAttachment);
+            this.frameBufferManager.releaseTemporaryAttachment(dstAttachment);
+            this.frameBufferManager.releaseTemporaryAttachment(blendedAttachment);
+        }
+
+        // キューをクリア
+        clearComplexBlendQueue();
     }
 
     /**
@@ -2101,27 +2244,400 @@ export class Context
         node: Node,
         _unique_key: string,
         _updated: boolean,
-        _width: number,
-        _height: number,
+        width: number,
+        height: number,
         _is_bitmap: boolean,
-        _matrix: Float32Array,
+        matrix: Float32Array,
         color_transform: Float32Array,
-        _blend_mode: IBlendMode,
+        blend_mode: IBlendMode,
         bounds: Float32Array,
-        _params: Float32Array
+        params: Float32Array
     ): void {
         // インスタンス配列を先に描画
         this.drawArraysInstanced();
 
-        // TODO: フィルター実装
-        // - Blur filter
-        // - Glow filter
-        // - Drop shadow filter
-        // - Color matrix filter
-        // - Convolution filter
-        
-        // 現在は基本的な描画として実装
-        this.drawDisplayObject(node, bounds[0], bounds[1], bounds[2], bounds[3], color_transform);
+        // フレームが開始されていない場合は開始
+        if (!this.frameStarted) {
+            this.beginFrame();
+        }
+
+        // 既存のレンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
+        // コマンドエンコーダーを確保
+        this.ensureCommandEncoder();
+
+        // オフセットを初期化
+        $offset.x = 0;
+        $offset.y = 0;
+
+        // 描画元のテクスチャをアタッチメントとして取得
+        let filterAttachment = this.getTextureFromNode(node, width, height);
+
+        const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
+
+        // フィルターを適用
+        for (let idx = 0; params.length > idx; ) {
+            const type = params[idx++];
+
+            switch (type) {
+                case 0: // BevelFilter
+                    {
+                        const bevelDistance = params[idx++];
+                        const bevelAngle = params[idx++];
+                        const bevelHighlightColor = params[idx++];
+                        const bevelHighlightAlpha = params[idx++];
+                        const bevelShadowColor = params[idx++];
+                        const bevelShadowAlpha = params[idx++];
+                        const bevelBlurX = params[idx++];
+                        const bevelBlurY = params[idx++];
+                        const bevelStrength = params[idx++];
+                        const bevelQuality = params[idx++];
+                        const bevelType = params[idx++];
+                        const bevelKnockout = Boolean(params[idx++]);
+
+                        const config = {
+                            device: this.device,
+                            commandEncoder: this.commandEncoder!,
+                            frameBufferManager: this.frameBufferManager,
+                            pipelineManager: this.pipelineManager,
+                            textureManager: this.textureManager
+                        };
+
+                        const newAttachment = filterApplyBevelFilterUseCase(
+                            filterAttachment, matrix,
+                            bevelDistance, bevelAngle,
+                            bevelHighlightColor, bevelHighlightAlpha,
+                            bevelShadowColor, bevelShadowAlpha,
+                            bevelBlurX, bevelBlurY, bevelStrength, bevelQuality,
+                            bevelType, bevelKnockout,
+                            devicePixelRatio, config
+                        );
+
+                        if (filterAttachment !== newAttachment) {
+                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                        }
+                        filterAttachment = newAttachment;
+                    }
+                    break;
+
+                case 1: // BlurFilter
+                    {
+                        const blurX = params[idx++];
+                        const blurY = params[idx++];
+                        const quality = params[idx++];
+
+                        const config = {
+                            device: this.device,
+                            commandEncoder: this.commandEncoder!,
+                            frameBufferManager: this.frameBufferManager,
+                            pipelineManager: this.pipelineManager,
+                            textureManager: this.textureManager
+                        };
+
+                        const newAttachment = filterApplyBlurFilterUseCase(
+                            filterAttachment, matrix,
+                            blurX, blurY, quality,
+                            devicePixelRatio, config
+                        );
+
+                        // 前のアタッチメントを解放
+                        if (filterAttachment !== newAttachment) {
+                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                        }
+                        filterAttachment = newAttachment;
+                    }
+                    break;
+
+                case 2: // ColorMatrixFilter
+                    {
+                        const colorMatrix = new Float32Array([
+                            params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
+                            params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
+                            params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
+                            params[idx++], params[idx++], params[idx++], params[idx++], params[idx++]
+                        ]);
+
+                        const config = {
+                            device: this.device,
+                            commandEncoder: this.commandEncoder!,
+                            frameBufferManager: this.frameBufferManager,
+                            pipelineManager: this.pipelineManager,
+                            textureManager: this.textureManager
+                        };
+
+                        const newAttachment = filterApplyColorMatrixFilterUseCase(
+                            filterAttachment, colorMatrix, config
+                        );
+
+                        if (filterAttachment !== newAttachment) {
+                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                        }
+                        filterAttachment = newAttachment;
+                    }
+                    break;
+
+                case 3: // ConvolutionFilter
+                    {
+                        const matrixX = params[idx++];
+                        const matrixY = params[idx++];
+                        const length = matrixX * matrixY;
+                        idx += length; // matrix
+                        idx += 6; // divisor, bias, preserveAlpha, clamp, color, alpha
+                    }
+                    break;
+
+                case 4: // DisplacementMapFilter
+                    {
+                        const bufferLength = params[idx++];
+                        idx += bufferLength; // buffer
+                        idx += 11; // other params
+                    }
+                    break;
+
+                case 5: // DropShadowFilter
+                    {
+                        const dsDistance = params[idx++];
+                        const dsAngle = params[idx++];
+                        const dsColor = params[idx++];
+                        const dsAlpha = params[idx++];
+                        const dsBlurX = params[idx++];
+                        const dsBlurY = params[idx++];
+                        const dsStrength = params[idx++];
+                        const dsQuality = params[idx++];
+                        const dsInner = Boolean(params[idx++]);
+                        const dsKnockout = Boolean(params[idx++]);
+                        const dsHideObject = Boolean(params[idx++]);
+
+                        const config = {
+                            device: this.device,
+                            commandEncoder: this.commandEncoder!,
+                            frameBufferManager: this.frameBufferManager,
+                            pipelineManager: this.pipelineManager,
+                            textureManager: this.textureManager
+                        };
+
+                        const newAttachment = filterApplyDropShadowFilterUseCase(
+                            filterAttachment, matrix,
+                            dsDistance, dsAngle, dsColor, dsAlpha,
+                            dsBlurX, dsBlurY, dsStrength, dsQuality,
+                            dsInner, dsKnockout, dsHideObject,
+                            devicePixelRatio, config
+                        );
+
+                        if (filterAttachment !== newAttachment) {
+                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                        }
+                        filterAttachment = newAttachment;
+                    }
+                    break;
+
+                case 6: // GlowFilter
+                    {
+                        const glowColor = params[idx++];
+                        const glowAlpha = params[idx++];
+                        const glowBlurX = params[idx++];
+                        const glowBlurY = params[idx++];
+                        const glowStrength = params[idx++];
+                        const glowQuality = params[idx++];
+                        const glowInner = Boolean(params[idx++]);
+                        const glowKnockout = Boolean(params[idx++]);
+
+                        const config = {
+                            device: this.device,
+                            commandEncoder: this.commandEncoder!,
+                            frameBufferManager: this.frameBufferManager,
+                            pipelineManager: this.pipelineManager,
+                            textureManager: this.textureManager
+                        };
+
+                        const newAttachment = filterApplyGlowFilterUseCase(
+                            filterAttachment, matrix,
+                            glowColor, glowAlpha, glowBlurX, glowBlurY,
+                            glowStrength, glowQuality, glowInner, glowKnockout,
+                            devicePixelRatio, config
+                        );
+
+                        if (filterAttachment !== newAttachment) {
+                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                        }
+                        filterAttachment = newAttachment;
+                    }
+                    break;
+
+                case 7: // GradientBevelFilter
+                    {
+                        idx += 2; // distance, angle
+                        let len = params[idx++];
+                        idx += len; // colors
+                        len = params[idx++];
+                        idx += len; // alphas
+                        len = params[idx++];
+                        idx += len; // ratios
+                        idx += 6; // other params
+                    }
+                    break;
+
+                case 8: // GradientGlowFilter
+                    {
+                        idx += 2; // distance, angle
+                        let len = params[idx++];
+                        idx += len; // colors
+                        len = params[idx++];
+                        idx += len; // alphas
+                        len = params[idx++];
+                        idx += len; // ratios
+                        idx += 6; // other params
+                    }
+                    break;
+            }
+        }
+
+        // フィルター適用後のテクスチャをメインキャンバスに描画
+        const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        const xMin = bounds[0] * (scaleX / devicePixelRatio);
+        const yMin = bounds[1] * (scaleY / devicePixelRatio);
+
+        this.drawFilterToMain(
+            filterAttachment,
+            color_transform,
+            blend_mode,
+            -$offset.x + xMin + matrix[4],
+            -$offset.y + yMin + matrix[5]
+        );
+
+        // フィルター用アタッチメントを解放
+        this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+    }
+
+    /**
+     * @description ノードからテクスチャをアタッチメントとして取得
+     * @param {Node} node
+     * @param {number} _width - 未使用（node.wを使用）
+     * @param {number} _height - 未使用（node.hを使用）
+     * @return {IAttachmentObject}
+     * @private
+     */
+    private getTextureFromNode(node: Node, _width: number, _height: number): IAttachmentObject
+    {
+        // 一時アタッチメントを作成（ノードのサイズを使用）
+        const attachment = this.frameBufferManager.createTemporaryAttachment(node.w, node.h);
+
+        // アトラステクスチャから該当部分をコピー
+        const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
+        if (atlasAttachment) {
+            // commandEncoderを使ってコピー
+            this.commandEncoder!.copyTextureToTexture(
+                {
+                    texture: atlasAttachment.texture,
+                    origin: { x: node.x, y: node.y, z: 0 }
+                },
+                {
+                    texture: attachment.texture,
+                    origin: { x: 0, y: 0, z: 0 }
+                },
+                {
+                    width: node.w,
+                    height: node.h
+                }
+            );
+        }
+
+        return attachment;
+    }
+
+    /**
+     * @description フィルター結果をメインキャンバスに描画
+     * @param {IAttachmentObject} filterAttachment
+     * @param {Float32Array} colorTransform
+     * @param {IBlendMode} blendMode
+     * @param {number} x
+     * @param {number} y
+     * @private
+     */
+    private drawFilterToMain(
+        filterAttachment: IAttachmentObject,
+        colorTransform: Float32Array,
+        blendMode: IBlendMode,
+        x: number,
+        y: number
+    ): void {
+        // メインテクスチャにレンダリング
+        const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+            this.mainTextureView!,
+            0, 0, 0, 0,
+            "load"
+        );
+
+        this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+
+        // インスタンス描画パイプラインを使用
+        const pipeline = this.pipelineManager.getPipeline("instanced");
+        if (!pipeline) {
+            console.error("[WebGPU] Instanced pipeline not found for filter output");
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+            return;
+        }
+
+        // フィルター結果をインスタンス配列に追加
+        const canvasWidth = this.canvasContext.canvas.width;
+        const canvasHeight = this.canvasContext.canvas.height;
+
+        // 保存した状態を使って描画
+        this.reset();
+        this.setTransform(1, 0, 0, 1, x, y);
+        this.globalCompositeOperation = blendMode;
+
+        // フィルターテクスチャをサンプラーとバインドグループで描画
+        const sampler = this.textureManager.createSampler("filter_output_sampler", false);
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("instanced");
+
+        if (bindGroupLayout) {
+            const bindGroup = this.device.createBindGroup({
+                layout: bindGroupLayout,
+                entries: [
+                    { binding: 0, resource: sampler },
+                    { binding: 1, resource: filterAttachment.textureView }
+                ]
+            });
+
+            // シンプルな矩形描画
+            const vertices = this.bufferManager.createRectVertices(0, 0, 1, 1);
+            const vertexBuffer = this.bufferManager.createVertexBuffer(`filter_vertex_${Date.now()}`, vertices);
+
+            // インスタンスデータ（1つのインスタンス）
+            const instanceData = new Float32Array([
+                // position (2)
+                0, 0,
+                // size (2)
+                filterAttachment.width / canvasWidth * 2,
+                filterAttachment.height / canvasHeight * 2,
+                // offset (2) - NDC空間への変換
+                (x / canvasWidth) * 2 - 1,
+                1 - (y / canvasHeight) * 2,
+                // texCoord (4)
+                0, 0, 1, 1,
+                // colorTransform (8)
+                colorTransform[0], colorTransform[1], colorTransform[2], colorTransform[3],
+                colorTransform[4], colorTransform[5], colorTransform[6], colorTransform[7]
+            ]);
+
+            const instanceBuffer = this.bufferManager.createVertexBuffer(`filter_instance_${Date.now()}`, instanceData);
+
+            this.renderPassEncoder.setPipeline(pipeline);
+            this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
+            this.renderPassEncoder.setVertexBuffer(1, instanceBuffer);
+            this.renderPassEncoder.setBindGroup(0, bindGroup);
+            this.renderPassEncoder.draw(6, 1, 0, 0);
+        }
+
+        this.renderPassEncoder.end();
+        this.renderPassEncoder = null;
     }
 
     /**
