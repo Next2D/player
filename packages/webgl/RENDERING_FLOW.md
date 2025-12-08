@@ -1341,7 +1341,12 @@ Shader/
 │   ├── FragmentShaderSourceGradientLUT.ts
 │   ├── FragmentShaderSourceTexture.ts
 │   ├── FragmentShaderLibrary.ts
-│   └── Filter/                   # フィルター用シェーダー
+│   └── Filter/                   # フィルター用シェーダー（5 files）
+│       ├── FragmentShaderSourceFilter.ts             # フィルタ基本シェーダー
+│       ├── FragmentShaderSourceBlurFilter.ts         # ブラーフィルタ
+│       ├── FragmentShaderSourceColorMatrixFilter.ts  # 色行列フィルタ
+│       ├── FragmentShaderSourceConvolutionFilter.ts  # 畳み込みフィルタ
+│       └── FragmentShaderSourceDisplacementMapFilter.ts  # 変位マップフィルタ
 │
 ├── Vertex/                       # 頂点シェーダー
 │   ├── VertexShaderSource.ts
@@ -2638,14 +2643,20 @@ packages/webgl/src/
 │
 ├── TextureManager/
 │   ├── service/                  # 3 service files
+│   │   ├── TextureManagerBindService.ts             # テクスチャバインド
+│   │   ├── TextureManagerCreateTextureObjectService.ts  # テクスチャオブジェクト作成
+│   │   └── TextureManagerInitializeBindService.ts   # バインド初期化
 │   └── usecase/                  # 10 usecase files
-│       ├── TextureManagerBind0UseCase.ts
-│       ├── TextureManagerBind01UseCase.ts
-│       ├── TextureManagerBind012UseCase.ts
-│       ├── TextureManagerCreateAtlasTextureUseCase.ts
-│       ├── TextureManagerCreateFromCanvasUseCase.ts
-│       ├── TextureManagerCreateFromPixelsUseCase.ts
-│       └── ...
+│       ├── TextureManagerBind0UseCase.ts            # ユニット0バインド
+│       ├── TextureManagerBind01UseCase.ts           # ユニット0,1バインド
+│       ├── TextureManagerBind02UseCase.ts           # ユニット0,2バインド
+│       ├── TextureManagerBind012UseCase.ts          # ユニット0,1,2バインド
+│       ├── TextureManagerCreateAtlasTextureUseCase.ts   # アトラステクスチャ作成
+│       ├── TextureManagerCreateFromCanvasUseCase.ts     # Canvasからテクスチャ作成
+│       ├── TextureManagerCreateFromPixelsUseCase.ts     # ピクセルからテクスチャ作成
+│       ├── TextureManagerGetMainTextureFromBoundsUseCase.ts  # 範囲からメインテクスチャ取得
+│       ├── TextureManagerGetTextureUseCase.ts       # テクスチャ取得
+│       └── TextureManagerReleaseTextureObjectUseCase.ts  # テクスチャ解放
 │
 ├── VertexArrayObject/
 │   ├── service/                  # 3 service files
@@ -2662,7 +2673,28 @@ packages/webgl/src/
 │       ├── VertexArrayObjectGetFillObjectUseCase.ts     # フィルオブジェクト取得
 │       └── VertexArrayObjectGetGradientObjectUseCase.ts # グラデーションオブジェクト取得
 │
-├── AtlasManager/, FrameBufferManager/, ColorBufferObject/
+├── AtlasManager/
+│   ├── service/                  # 2 service files
+│   │   ├── AtlasManagerCreateNodeService.ts         # ノード作成
+│   │   └── AtlasManagerRemoveNodeService.ts         # ノード削除
+│   └── usecase/                  # 1 usecase file
+│       └── AtlasManagerResetUseCase.ts              # アトラスリセット
+│
+├── FrameBufferManager/
+│   ├── service/                  # 5 service files
+│   │   ├── FrameBufferManagerBindAttachmentObjectService.ts      # アタッチメントバインド
+│   │   ├── FrameBufferManagerUnBindAttachmentObjectService.ts    # アタッチメント解除
+│   │   ├── FrameBufferManagerCreateAttachmentObjectService.ts    # アタッチメント作成
+│   │   ├── FrameBufferManagerTransferAtlasTextureService.ts      # アトラステクスチャ転送
+│   │   └── FrameBufferManagerTransferMainCanvasService.ts        # メインキャンバス転送
+│   └── usecase/                  # 5 usecase files
+│       ├── FrameBufferManagerGetAttachmentObjectUseCase.ts       # アタッチメント取得
+│       ├── FrameBufferManagerReleaseAttachmentObjectUseCase.ts   # アタッチメント解放
+│       ├── FrameBufferManagerGetTextureFromBoundsUseCase.ts      # 範囲からテクスチャ取得
+│       ├── FrameBufferManagerGetTextureFromNodeUseCase.ts        # ノードからテクスチャ取得
+│       └── FrameBufferManagerTransferTextureFromRectUseCase.ts   # 矩形からテクスチャ転送
+│
+├── ColorBufferObject/, StencilBufferObject/
 │
 └── interface/                    # 20 interface files
     ├── IAttachmentObject.ts
