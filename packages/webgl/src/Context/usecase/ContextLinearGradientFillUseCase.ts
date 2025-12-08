@@ -6,6 +6,11 @@ import { execute as shaderManagerSetMaskUniformService } from "../../Shader/Shad
 import { execute as shaderManagerFillUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerFillUseCase";
 import { execute as variantsGradientShapeShaderUseCase } from "../../Shader/Variants/Gradient/usecase/VariantsGradientShapeShaderUseCase";
 import { execute as shaderManagerSetGradientFillUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetGradientFillUniformService";
+import { execute as stencilSetMaskModeService } from "../../Stencil/service/StencilSetMaskModeService";
+import { execute as stencilSetFillModeService } from "../../Stencil/service/StencilSetFillModeService";
+import { execute as stencilEnableSampleAlphaToCoverageService } from "../../Stencil/service/StencilEnableSampleAlphaToCoverageService";
+import { execute as stencilDisableSampleAlphaToCoverageService } from "../../Stencil/service/StencilDisableSampleAlphaToCoverageService";
+import { execute as stencilResetService } from "../../Stencil/service/StencilResetService";
 import { $gradientData } from "../../Gradient";
 import {
     $gl,
@@ -40,6 +45,9 @@ export const execute = (
     const spread = $gradientData.shift() as number;
     const interpolation = $gradientData.shift() as number;
 
+    // Reset stencil cache before disabling stencil test
+    stencilResetService();
+
     $gl.disable($gl.STENCIL_TEST);
     const textureObject = gradientLUTGenerateShapeTextureUseCase(stops, interpolation);
     textureManagerBind0UseCase(textureObject);
@@ -48,11 +56,8 @@ export const execute = (
     $gl.frontFace($gl.CCW);
     $gl.stencilMask(0xff);
 
-    // mask setting
-    $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
-    $gl.stencilOpSeparate($gl.FRONT, $gl.KEEP, $gl.KEEP, $gl.INCR_WRAP);
-    $gl.stencilOpSeparate($gl.BACK,  $gl.KEEP, $gl.KEEP, $gl.DECR_WRAP);
-    $gl.colorMask(false, false, false, false);
+    // mask setting (cached)
+    stencilSetMaskModeService();
 
     const useGrid = !!grid_data;
     const coverageShader = variantsShapeMaskShaderService(useGrid);
@@ -60,15 +65,14 @@ export const execute = (
         shaderManagerSetMaskUniformService(coverageShader, grid_data);
     }
 
-    $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
+    stencilEnableSampleAlphaToCoverageService();
     shaderManagerFillUseCase(
         coverageShader, vertex_array_object, offset, index_count
     );
-    $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
+    stencilDisableSampleAlphaToCoverageService();
 
-    $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
-    $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
-    $gl.colorMask(true, true, true, true);
+    // draw shape setting (cached)
+    stencilSetFillModeService();
 
     const shaderManager = variantsGradientShapeShaderUseCase(
         false, false, spread, useGrid

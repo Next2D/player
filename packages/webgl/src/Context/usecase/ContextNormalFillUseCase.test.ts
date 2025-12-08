@@ -17,29 +17,18 @@ vi.mock("../../Shader/Variants/Shape/service/VariantsShapeSolidColorShaderServic
 vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetFillUniformService", () => ({
     execute: vi.fn()
 }));
-
-vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
-    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-    return {
-        ...mod,
-        $gl: {
-            stencilFunc: vi.fn(),
-            stencilOpSeparate: vi.fn(),
-            colorMask: vi.fn(),
-            enable: vi.fn(),
-            disable: vi.fn(),
-            ALWAYS: 0,
-            KEEP: 1,
-            INCR_WRAP: 2,
-            DECR_WRAP: 3,
-            FRONT: 4,
-            BACK: 5,
-            SAMPLE_ALPHA_TO_COVERAGE: 6,
-            NOTEQUAL: 7,
-            stencilOp: vi.fn()
-        }
-    };
-});
+vi.mock("../../Stencil/service/StencilSetMaskModeService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilSetFillModeService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilEnableSampleAlphaToCoverageService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilDisableSampleAlphaToCoverageService", () => ({
+    execute: vi.fn()
+}));
 
 describe("ContextNormalFillUseCase.js method test", () =>
 {

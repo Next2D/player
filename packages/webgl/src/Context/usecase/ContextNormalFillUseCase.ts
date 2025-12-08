@@ -4,7 +4,10 @@ import { execute as shaderManagerSetMaskUniformService } from "../../Shader/Shad
 import { execute as shaderManagerFillUseCase } from "../../Shader/ShaderManager/usecase/ShaderManagerFillUseCase";
 import { execute as variantsShapeSolidColorShaderService } from "../../Shader/Variants/Shape/service/VariantsShapeSolidColorShaderService";
 import { execute as shaderManagerSetFillUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetFillUniformService";
-import { $gl } from "../../WebGLUtil";
+import { execute as stencilSetMaskModeService } from "../../Stencil/service/StencilSetMaskModeService";
+import { execute as stencilSetFillModeService } from "../../Stencil/service/StencilSetFillModeService";
+import { execute as stencilEnableSampleAlphaToCoverageService } from "../../Stencil/service/StencilEnableSampleAlphaToCoverageService";
+import { execute as stencilDisableSampleAlphaToCoverageService } from "../../Stencil/service/StencilDisableSampleAlphaToCoverageService";
 
 /**
  * @description 塗りのシェーダーを実行します。
@@ -25,11 +28,8 @@ export const execute = (
     grid_data: Float32Array | null
 ): void =>
 {
-    // mask setting
-    $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
-    $gl.stencilOpSeparate($gl.FRONT, $gl.KEEP, $gl.KEEP, $gl.INCR_WRAP);
-    $gl.stencilOpSeparate($gl.BACK,  $gl.KEEP, $gl.KEEP, $gl.DECR_WRAP);
-    $gl.colorMask(false, false, false, false);
+    // mask setting (cached)
+    stencilSetMaskModeService();
 
     const useGrid = !!grid_data;
     const coverageShader = variantsShapeMaskShaderService(useGrid);
@@ -37,16 +37,14 @@ export const execute = (
         shaderManagerSetMaskUniformService(coverageShader, grid_data);
     }
 
-    $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
+    stencilEnableSampleAlphaToCoverageService();
     shaderManagerFillUseCase(
         coverageShader, vertex_array_object, offset, index_count
     );
-    $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
+    stencilDisableSampleAlphaToCoverageService();
 
-    // draw shape setting
-    $gl.stencilFunc($gl.NOTEQUAL, 0, 0xff);
-    $gl.stencilOp($gl.KEEP, $gl.ZERO, $gl.ZERO);
-    $gl.colorMask(true, true, true, true);
+    // draw shape setting (cached)
+    stencilSetFillModeService();
 
     const shaderManager = variantsShapeSolidColorShaderService(useGrid);
     if (grid_data) {

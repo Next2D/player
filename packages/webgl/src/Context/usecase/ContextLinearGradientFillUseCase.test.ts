@@ -24,6 +24,21 @@ vi.mock("../../Shader/Variants/Gradient/usecase/VariantsGradientShapeShaderUseCa
 vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetGradientFillUniformService", () => ({
     execute: vi.fn()
 }));
+vi.mock("../../Stencil/service/StencilSetMaskModeService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilSetFillModeService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilEnableSampleAlphaToCoverageService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilDisableSampleAlphaToCoverageService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilResetService", () => ({
+    execute: vi.fn()
+}));
 
 vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
     const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
