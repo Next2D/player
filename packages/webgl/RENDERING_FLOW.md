@@ -35,39 +35,39 @@ This document provides a comprehensive analysis of the WebGL rendering pipeline 
 
 ```mermaid
 graph TB
-    subgraph "Application Layer / アプリケーション層"
-        RQ[RenderQueue<br/>レンダーキュー]
+    subgraph "Application Layer"
+        RQ[RenderQueue]
     end
 
-    subgraph "WebGL Package / WebGLパッケージ"
-        CTX[Context.ts<br/>メインコンテキスト]
+    subgraph "WebGL Package"
+        CTX[Context.ts]
 
-        subgraph "Path Processing / パス処理"
-            PC[PathCommand<br/>パスコマンド]
-            BC[BezierConverter<br/>ベジェ変換]
+        subgraph "Path Processing"
+            PC[PathCommand]
+            BC[BezierConverter]
         end
 
-        subgraph "Geometry / ジオメトリ"
-            MESH[Mesh<br/>メッシュ生成]
-            VAO[VertexArrayObject<br/>頂点配列]
+        subgraph "Geometry"
+            MESH[Mesh]
+            VAO[VertexArrayObject]
         end
 
-        subgraph "Rendering / レンダリング"
-            SHADER[ShaderManager<br/>シェーダー管理]
-            BLEND[Blend<br/>ブレンド]
-            MASK[Mask<br/>マスク]
-            FILTER[Filter<br/>フィルター]
+        subgraph "Rendering"
+            SHADER[ShaderManager]
+            BLEND[Blend]
+            MASK[Mask]
+            FILTER[Filter]
         end
 
-        subgraph "Resource Management / リソース管理"
-            FBM[FrameBufferManager<br/>FBO管理]
-            ATLAS[AtlasManager<br/>アトラス管理]
-            TEX[TextureManager<br/>テクスチャ管理]
-            GRAD[GradientLUTGenerator<br/>グラデーションLUT]
+        subgraph "Resource Management"
+            FBM[FrameBufferManager]
+            ATLAS[AtlasManager]
+            TEX[TextureManager]
+            GRAD[GradientLUTGenerator]
         end
     end
 
-    subgraph "GPU / GPU"
+    subgraph "GPU"
         GL[WebGL2 API]
     end
 
@@ -101,36 +101,36 @@ graph TB
 
 ```mermaid
 flowchart TB
-    subgraph "1. Initialization / 初期化"
-        INIT[Context初期化]
-        INIT --> CREATE_CTX[WebGL2Context作成]
-        CREATE_CTX --> INIT_MANAGERS[Manager初期化<br/>FBM, Atlas, Shader]
+    subgraph "1. Initialization"
+        INIT[Context Init]
+        INIT --> CREATE_CTX[Create WebGL2Context]
+        CREATE_CTX --> INIT_MANAGERS[Init Managers]
     end
 
-    subgraph "2. Frame Begin / フレーム開始"
-        FRAME_START[フレーム開始]
-        FRAME_START --> CLEAR[画面クリア]
-        CLEAR --> SETUP_STATE[初期ステート設定]
+    subgraph "2. Frame Begin"
+        FRAME_START[Frame Start]
+        FRAME_START --> CLEAR[Clear Screen]
+        CLEAR --> SETUP_STATE[Setup State]
     end
 
-    subgraph "3. DisplayObject Processing / DisplayObject処理"
-        PROCESS_DO[DisplayObject処理]
+    subgraph "3. DisplayObject Processing"
+        PROCESS_DO[Process DO]
         PROCESS_DO --> CHECK_VISIBLE{visible?}
-        CHECK_VISIBLE -->|No| SKIP[スキップ]
-        CHECK_VISIBLE -->|Yes| CALC_MATRIX[行列計算]
-        CALC_MATRIX --> CHECK_BOUNDS{bounds内?}
+        CHECK_VISIBLE -->|No| SKIP[Skip]
+        CHECK_VISIBLE -->|Yes| CALC_MATRIX[Calc Matrix]
+        CALC_MATRIX --> CHECK_BOUNDS{in bounds?}
         CHECK_BOUNDS -->|No| SKIP
-        CHECK_BOUNDS -->|Yes| CHECK_CACHE{キャッシュあり?}
-        CHECK_CACHE -->|Yes| USE_CACHE[キャッシュ使用]
-        CHECK_CACHE -->|No| RENDER_NEW[新規レンダリング]
+        CHECK_BOUNDS -->|Yes| CHECK_CACHE{cached?}
+        CHECK_CACHE -->|Yes| USE_CACHE[Use Cache]
+        CHECK_CACHE -->|No| RENDER_NEW[New Render]
     end
 
-    subgraph "4. Shape Rendering / シェイプレンダリング"
+    subgraph "4. Shape Rendering"
         RENDER_NEW --> BEGIN_PATH[beginPath]
-        BEGIN_PATH --> PATH_CMDS[パスコマンド実行<br/>moveTo/lineTo/curveTo]
+        BEGIN_PATH --> PATH_CMDS[Path Commands]
         PATH_CMDS --> FILL_OR_STROKE{fill/stroke?}
 
-        FILL_OR_STROKE -->|Fill| FILL_TYPE{fillタイプ?}
+        FILL_OR_STROKE -->|Fill| FILL_TYPE{fill type?}
         FILL_TYPE -->|Solid| SOLID_FILL[solidFill]
         FILL_TYPE -->|Gradient| GRADIENT_FILL[gradientFill]
         FILL_TYPE -->|Bitmap| BITMAP_FILL[bitmapFill]
@@ -138,32 +138,32 @@ flowchart TB
         FILL_OR_STROKE -->|Stroke| STROKE[stroke]
     end
 
-    subgraph "5. Post Processing / ポスト処理"
-        SOLID_FILL --> CHECK_FILTER{フィルターあり?}
+    subgraph "5. Post Processing"
+        SOLID_FILL --> CHECK_FILTER{has filter?}
         GRADIENT_FILL --> CHECK_FILTER
         BITMAP_FILL --> CHECK_FILTER
         STROKE --> CHECK_FILTER
         USE_CACHE --> CHECK_FILTER
 
-        CHECK_FILTER -->|Yes| APPLY_FILTER[フィルター適用]
-        CHECK_FILTER -->|No| CHECK_BLEND{ブレンドモード?}
+        CHECK_FILTER -->|Yes| APPLY_FILTER[Apply Filter]
+        CHECK_FILTER -->|No| CHECK_BLEND{blend mode?}
         APPLY_FILTER --> CHECK_BLEND
 
-        CHECK_BLEND -->|Complex| BLEND_COMPOSITE[シェーダーブレンド]
-        CHECK_BLEND -->|Simple| BLEND_SIMPLE[WebGLブレンド]
+        CHECK_BLEND -->|Complex| BLEND_COMPOSITE[Shader Blend]
+        CHECK_BLEND -->|Simple| BLEND_SIMPLE[WebGL Blend]
     end
 
-    subgraph "6. Compositing / 合成"
-        BLEND_COMPOSITE --> COMPOSITE[アトラスに転送]
+    subgraph "6. Compositing"
+        BLEND_COMPOSITE --> COMPOSITE[Transfer to Atlas]
         BLEND_SIMPLE --> COMPOSITE
-        COMPOSITE --> NEXT_DO{次のDO?}
+        COMPOSITE --> NEXT_DO{next DO?}
         NEXT_DO -->|Yes| PROCESS_DO
-        NEXT_DO -->|No| FINAL_COMPOSITE[最終合成]
+        NEXT_DO -->|No| FINAL_COMPOSITE[Final Composite]
     end
 
-    subgraph "7. Frame End / フレーム終了"
-        FINAL_COMPOSITE --> TRANSFER_CANVAS[Canvasに転送]
-        TRANSFER_CANVAS --> FRAME_END[フレーム終了]
+    subgraph "7. Frame End"
+        FINAL_COMPOSITE --> TRANSFER_CANVAS[Transfer to Canvas]
+        TRANSFER_CANVAS --> FRAME_END[Frame End]
     end
 
     INIT_MANAGERS --> FRAME_START
@@ -177,13 +177,13 @@ flowchart TB
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Initial: Context作成
+    [*] --> Initial: Context Create
 
     Initial --> Saved: save()
-    Saved --> Saved: save() (nested)
+    Saved --> Saved: save() nested
     Saved --> Restored: restore()
     Restored --> Saved: save()
-    Restored --> Initial: restore() (empty stack)
+    Restored --> Initial: restore() empty
 
     state Initial {
         [*] --> DefaultMatrix
@@ -194,12 +194,12 @@ stateDiagram-v2
 
     state Saved {
         [*] --> PushStack
-        PushStack: $stack.push(Float32Array[9])<br/>行列データのみを保存
+        PushStack: push matrix to stack
     }
 
     state Restored {
         [*] --> PopStack
-        PopStack: matrix = $stack.pop()<br/>$matrix に復元
+        PopStack: pop matrix from stack
     }
 ```
 
@@ -227,17 +227,24 @@ stateDiagram-v2
 
 ```mermaid
 flowchart LR
-    subgraph "Matrix Operations / 行列操作"
-        TF[transform<br/>a,b,c,d,e,f]
-        SET[setTransform<br/>a,b,c,d,e,f]
+    subgraph "Matrix Operations"
+        TF[transform]
+        SET[setTransform]
     end
 
-    subgraph "Matrix Format / 行列フォーマット (3x3)"
-        M["Float32Array[9]<br/><br/>| m[0]  m[3]  m[6] |   | a  c  e |<br/>| m[1]  m[4]  m[7] | = | b  d  f |<br/>| m[2]  m[5]  m[8] |   | 0  0  1 |"]
+    subgraph "Matrix Format 3x3"
+        M[Float32Array 9]
     end
 
     TF --> M
     SET --> M
+```
+
+**Matrix Layout / 行列レイアウト:**
+```
+| m[0]  m[3]  m[6] |   | a  c  e |
+| m[1]  m[4]  m[7] | = | b  d  f |
+| m[2]  m[5]  m[8] |   | 0  0  1 |
 ```
 
 ### Global State Management (WebGLUtil.ts) / グローバル状態管理
@@ -255,17 +262,17 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    subgraph "Pool Types / プールタイプ"
-        ARR["$arrays<br/>Generic array pool"]
-        F4["$float32Array4<br/>4-element Float32Array"]
-        F6["$float32Array6<br/>6-element Float32Array"]
-        F9["$float32Array9<br/>9-element Float32Array"]
-        I4["$int32Array4<br/>4-element Int32Array"]
+    subgraph "Pool Types"
+        ARR[$arrays]
+        F4[$float32Array4]
+        F6[$float32Array6]
+        F9[$float32Array9]
+        I4[$int32Array4]
     end
 
-    subgraph "Operations / 操作"
-        GET["$getArray()/$getFloat32Array*()"]
-        POOL["$poolArray()/$poolFloat32Array*()"]
+    subgraph "Operations"
+        GET[getArray/getFloat32Array]
+        POOL[poolArray/poolFloat32Array]
     end
 
     GET --> ARR
@@ -299,28 +306,28 @@ export const $vertices: IPath[] = [];       // 完了したパス配列
 
 ```mermaid
 flowchart TB
-    subgraph Input["Input / 入力"]
-        MOVE[moveTo x,y]
-        LINE[lineTo x,y]
-        QUAD[quadraticCurveTo<br/>cx,cy, x,y]
-        CUBIC[bezierCurveTo<br/>c1x,c1y, c2x,c2y, x,y]
-        ARC[arc<br/>x,y, radius]
+    subgraph Input["Input"]
+        MOVE[moveTo]
+        LINE[lineTo]
+        QUAD[quadraticCurveTo]
+        CUBIC[bezierCurveTo]
+        ARC[arc]
     end
 
-    subgraph Process["PathCommand Processing / PathCommand処理"]
-        BEGIN[beginPath<br/>currentPath.length = 0<br/>vertices.length = 0]
-        ADD_MOVE["$currentPath.push(x, y, 0)"]
-        ADD_LINE["$currentPath.push(x, y, 0)"]
-        ADD_QUAD["$currentPath.push(<br/>cx, cy, 1,<br/>x, y, 0)"]
-        CONVERT_CUBIC[Adaptive Cubic→Quadratic変換<br/>2〜8分割（曲率依存）]
-        ADD_QUADS["適応的Quadratic追加"]
-        CONVERT_ARC[Arc→Cubic変換<br/>4分割後→Quadratic]
+    subgraph Process["PathCommand Processing"]
+        BEGIN[beginPath]
+        ADD_MOVE[push to currentPath]
+        ADD_LINE[push to currentPath]
+        ADD_QUAD[push quad to currentPath]
+        CONVERT_CUBIC[Cubic to Quadratic]
+        ADD_QUADS[add Quadratics]
+        CONVERT_ARC[Arc to Cubic]
     end
 
-    subgraph Output["Output / 出力"]
+    subgraph Output["Output"]
         CLOSE[closePath]
-        STORE["$vertices.push($currentPath.slice())<br/>$currentPath.length = 0"]
-        RESULT["$vertices = IPath[]<br/>each path = [x,y,flag] triplets"]
+        STORE[store to vertices]
+        RESULT[vertices array]
     end
 
     BEGIN --> MOVE
@@ -344,18 +351,18 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    subgraph "Input Cubic / 入力Cubic"
-        C["P0, C1, C2, P3<br/>(4点)"]
+    subgraph "Input Cubic"
+        C[P0 C1 C2 P3]
     end
 
-    subgraph "Adaptive Subdivision / 適応的分割"
-        FLAT["Flatness計算<br/>$calculateFlatness()"]
-        COUNT["分割数決定<br/>$getAdaptiveSubdivisionCount()<br/>MIN=2, MAX=8"]
-        DIV["De Casteljau分割<br/>2〜8セグメント"]
+    subgraph "Adaptive Subdivision"
+        FLAT[calculateFlatness]
+        COUNT[getSubdivisionCount]
+        DIV[De Casteljau split]
     end
 
-    subgraph "Output Quadratics / 出力Quadratic"
-        Q["動的セグメント数<br/>$adaptiveBuffer<br/>$adaptiveSegmentCount"]
+    subgraph "Output Quadratics"
+        Q[adaptiveBuffer]
     end
 
     C --> FLAT
@@ -406,20 +413,20 @@ $adaptiveSegmentCount: number      // 実際のセグメント数
 
 ```mermaid
 flowchart TB
-    subgraph "Input Path / 入力パス"
-        PATH["vertices = [P0, P1, P2, P3, P4, ...]"]
+    subgraph "Input Path"
+        PATH[vertices array]
     end
 
-    subgraph "Fan Triangulation / ファン三角形分割"
-        CENTER["中心点 = P0"]
-        TRI1["Triangle 0: P0, P1, P2"]
-        TRI2["Triangle 1: P0, P2, P3"]
-        TRI3["Triangle 2: P0, P3, P4"]
-        TRIN["..."]
+    subgraph "Fan Triangulation"
+        CENTER[center = P0]
+        TRI1[Tri 0: P0 P1 P2]
+        TRI2[Tri 1: P0 P2 P3]
+        TRI3[Tri 2: P0 P3 P4]
+        TRIN[...]
     end
 
-    subgraph "Output Vertices / 出力頂点"
-        OUT["[P0,P1,P2, P0,P2,P3, P0,P3,P4, ...]"]
+    subgraph "Output Vertices"
+        OUT[triangle list]
     end
 
     PATH --> CENTER
@@ -471,38 +478,36 @@ $upperPowerOfTwo(v: number): number          // 2のべき乗に切り上げ
 
 ```mermaid
 flowchart TB
-    subgraph "Input / 入力"
-        STROKE_PATH["Stroke Path<br/>[P0 → P1 → P2 → ...]"]
-        WIDTH["lineWidth"]
-        CAP["lineCap: none/round/square"]
-        JOIN["lineJoin: bevel/miter/round"]
+    subgraph "Input"
+        STROKE_PATH[Stroke Path]
+        WIDTH[lineWidth]
+        CAP[lineCap]
+        JOIN[lineJoin]
     end
 
-    subgraph "Outline Generation / アウトライン生成"
-        CALC_NORMAL["各セグメントの法線計算<br/>n = normalize(perpendicular(P1-P0))"]
-
-        OFFSET["オフセット計算<br/>offset = n * (width/2)"]
-
-        OUTER["外側パス生成<br/>P0+offset → P1+offset → ..."]
-        INNER["内側パス生成<br/>P0-offset → P1-offset → ..."]
+    subgraph "Outline Generation"
+        CALC_NORMAL[calc normal]
+        OFFSET[calc offset]
+        OUTER[outer path]
+        INNER[inner path]
     end
 
-    subgraph "Join Processing / ジョイン処理"
-        JOIN_CHECK{joinタイプ?}
-        BEVEL["Bevel: 1三角形"]
-        MITER["Miter: 2三角形<br/>(miterLimitチェック)"]
-        ROUND_J["Round: 円弧分割"]
+    subgraph "Join Processing"
+        JOIN_CHECK{join type?}
+        BEVEL[Bevel]
+        MITER[Miter]
+        ROUND_J[Round]
     end
 
-    subgraph "Cap Processing / キャップ処理"
-        CAP_CHECK{capタイプ?}
-        NONE["None: キャップなし"]
-        SQUARE["Square: 矩形追加"]
-        ROUND_C["Round: 半円追加"]
+    subgraph "Cap Processing"
+        CAP_CHECK{cap type?}
+        NONE[None]
+        SQUARE[Square]
+        ROUND_C[Round]
     end
 
-    subgraph "Output / 出力"
-        FILL_MESH["Fill Mesh<br/>(三角形リスト)"]
+    subgraph "Output"
+        FILL_MESH[Fill Mesh]
     end
 
     STROKE_PATH --> CALC_NORMAL
@@ -576,32 +581,32 @@ sequenceDiagram
 
 ```mermaid
 flowchart TB
-    FILL[fill呼び出し]
+    FILL[fill call]
 
-    CHECK_STYLE{fillStyleタイプ?}
+    CHECK_STYLE{fillStyle type?}
 
-    subgraph "Solid Fill / ソリッドフィル"
+    subgraph "Solid Fill"
         SOLID[solidFill]
         SOLID --> SOLID_SHADER[SolidColorShader]
     end
 
-    subgraph "Gradient Fill / グラデーションフィル"
-        GRAD_TYPE{gradientタイプ?}
+    subgraph "Gradient Fill"
+        GRAD_TYPE{gradient type?}
         LINEAR[linearGradient]
         RADIAL[radialGradient]
 
-        LINEAR --> GEN_LUT_L[LUTテクスチャ生成]
-        RADIAL --> GEN_LUT_R[LUTテクスチャ生成]
+        LINEAR --> GEN_LUT_L[generate LUT]
+        RADIAL --> GEN_LUT_R[generate LUT]
 
         GEN_LUT_L --> LINEAR_SHADER[LinearGradientShader]
         GEN_LUT_R --> RADIAL_SHADER[RadialGradientShader]
     end
 
-    subgraph "Bitmap Fill / ビットマップフィル"
+    subgraph "Bitmap Fill"
         BITMAP[bitmapFill]
         BITMAP --> CHECK_REPEAT{repeat?}
-        CHECK_REPEAT -->|Yes| REPEAT_SHADER[RepeatTextureShader]
-        CHECK_REPEAT -->|No| CLAMP_SHADER[ClampTextureShader]
+        CHECK_REPEAT -->|Yes| REPEAT_SHADER[RepeatShader]
+        CHECK_REPEAT -->|No| CLAMP_SHADER[ClampShader]
     end
 
     FILL --> CHECK_STYLE
@@ -620,44 +625,44 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph "Input / 入力"
+    subgraph "Input"
         PATH[Path Data]
-        STYLE["strokeStyle {<br/>  width,<br/>  caps,<br/>  joints,<br/>  miterLimit<br/>}"]
+        STYLE[strokeStyle]
     end
 
-    subgraph "Stroke to Outline / ストロークからアウトライン"
-        EXPAND["各線分を幅で拡張<br/>MeshExpandStrokeUseCase"]
+    subgraph "Stroke to Outline"
+        EXPAND[expand stroke]
 
-        subgraph "Line Segment / 線分"
-            SEG_NORMAL["法線計算"]
-            SEG_OFFSET["オフセット頂点生成"]
+        subgraph "Line Segment"
+            SEG_NORMAL[calc normal]
+            SEG_OFFSET[offset vertices]
         end
 
-        subgraph "Bezier Segment / ベジェセグメント"
-            BEZ_SUBDIVIDE["細分化"]
-            BEZ_OFFSET["オフセット近似<br/>MeshApproximateOffsetQuadraticUseCase"]
+        subgraph "Bezier Segment"
+            BEZ_SUBDIVIDE[subdivide]
+            BEZ_OFFSET[offset approx]
         end
     end
 
-    subgraph "Join Generation / ジョイン生成"
-        JOIN_TYPE{joinタイプ}
+    subgraph "Join Generation"
+        JOIN_TYPE{join type}
 
-        BEVEL_JOIN["Bevel<br/>1三角形追加"]
-        MITER_JOIN["Miter<br/>角度チェック後<br/>2三角形 or bevel"]
-        ROUND_JOIN["Round<br/>円弧を三角形分割"]
+        BEVEL_JOIN[Bevel]
+        MITER_JOIN[Miter]
+        ROUND_JOIN[Round]
     end
 
-    subgraph "Cap Generation / キャップ生成"
-        CAP_TYPE{capタイプ}
+    subgraph "Cap Generation"
+        CAP_TYPE{cap type}
 
-        NONE_CAP["None<br/>追加なし"]
-        SQUARE_CAP["Square<br/>矩形追加<br/>width/2延長"]
-        ROUND_CAP["Round<br/>半円追加"]
+        NONE_CAP[None]
+        SQUARE_CAP[Square]
+        ROUND_CAP[Round]
     end
 
-    subgraph "Output / 出力"
-        OUTLINE["Outline Mesh<br/>(三角形リスト)"]
-        FILL_RENDER["fill()として描画"]
+    subgraph "Output"
+        OUTLINE[Outline Mesh]
+        FILL_RENDER[render as fill]
     end
 
     PATH --> EXPAND
@@ -699,32 +704,32 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph "Input / 入力"
-        STOPS["colorStops = [<br/>  {offset: 0.0, color: 0xFF0000FF},<br/>  {offset: 0.5, color: 0x00FF00FF},<br/>  {offset: 1.0, color: 0x0000FFFF}<br/>]"]
-        SPREAD["spreadMethod: pad|reflect|repeat"]
+    subgraph "Input"
+        STOPS[colorStops array]
+        SPREAD[spreadMethod]
     end
 
-    subgraph "Adaptive Resolution / 適応解像度"
-        CHECK_STOPS{stopsLength?}
-        RES_256["256x1 (≤4 stops)"]
-        RES_512["512x1 (5-8 stops)"]
-        RES_1024["1024x1 (>8 stops)"]
+    subgraph "Adaptive Resolution"
+        CHECK_STOPS{stops count?}
+        RES_256[256x1]
+        RES_512[512x1]
+        RES_1024[1024x1]
     end
 
-    subgraph "LUT Generation / LUT生成"
-        CREATE_TEX["テクスチャ作成"]
-        INTERPOLATE["各ピクセル補間<br/>color = lerp(stops, t)"]
-        UPLOAD["WebGLテクスチャにアップロード"]
+    subgraph "LUT Generation"
+        CREATE_TEX[create texture]
+        INTERPOLATE[interpolate pixels]
+        UPLOAD[upload to WebGL]
     end
 
-    subgraph "Shader Usage / シェーダー使用"
-        SAMPLE["texture(u_gradient, vec2(t, 0.5))"]
+    subgraph "Shader Usage"
+        SAMPLE[texture sample]
     end
 
     STOPS --> CHECK_STOPS
-    CHECK_STOPS -->|≤4| RES_256
+    CHECK_STOPS -->|1-4| RES_256
     CHECK_STOPS -->|5-8| RES_512
-    CHECK_STOPS -->|>8| RES_1024
+    CHECK_STOPS -->|9+| RES_1024
     RES_256 --> CREATE_TEX
     RES_512 --> CREATE_TEX
     RES_1024 --> CREATE_TEX
@@ -749,27 +754,27 @@ $rgbIdentityTable: Float32Array(256)  // linear t
 
 ```mermaid
 flowchart LR
-    subgraph "Input / 入力"
-        P0["始点 (x0, y0)"]
-        P1["終点 (x1, y1)"]
-        FRAG["フラグメント位置 P"]
+    subgraph "Input"
+        P0[start point]
+        P1[end point]
+        FRAG[fragment P]
     end
 
-    subgraph "Calculation / 計算"
-        AB["ab = P1 - P0"]
-        AP["ap = P - P0"]
-        DOT["t = dot(ap, ab) / dot(ab, ab)"]
+    subgraph "Calculation"
+        AB[ab = P1 - P0]
+        AP[ap = P - P0]
+        DOT[calc t value]
     end
 
-    subgraph "Spread / スプレッド"
-        SPREAD_CHECK{spreadMethod}
-        PAD["pad: t = clamp(t, 0, 1)"]
-        REPEAT["repeat: t = fract(t)"]
-        REFLECT["reflect: t = 1 - abs(fract(t*0.5)*2 - 1)"]
+    subgraph "Spread"
+        SPREAD_CHECK{spread}
+        PAD[pad: clamp]
+        REPEAT[repeat: fract]
+        REFLECT[reflect]
     end
 
-    subgraph "Output / 出力"
-        SAMPLE["color = texture(lut, t)"]
+    subgraph "Output"
+        SAMPLE[sample LUT]
     end
 
     P0 --> AB
@@ -793,27 +798,27 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    subgraph "Input / 入力"
-        CENTER["中心 (cx, cy)"]
-        RADIUS["半径 r"]
-        FOCAL["焦点 (fx, fy)"]
-        FRAG["フラグメント位置 P"]
+    subgraph "Input"
+        CENTER[center]
+        RADIUS[radius]
+        FOCAL[focal point]
+        FRAG[fragment P]
     end
 
-    subgraph "Basic Radial / 基本放射"
-        DIST["distance = length(P - center)"]
-        T_BASIC["t = distance / radius"]
+    subgraph "Basic Radial"
+        DIST[calc distance]
+        T_BASIC[t = dist / radius]
     end
 
-    subgraph "Focal Radial / 焦点付き放射"
-        RAY["焦点からPへのレイ"]
-        INTERSECT["レイと円の交点計算<br/>(2次方程式)"]
-        T_FOCAL["t = |P - focal| / |intersection - focal|"]
+    subgraph "Focal Radial"
+        RAY[ray from focal]
+        INTERSECT[ray-circle intersect]
+        T_FOCAL[calc focal t]
     end
 
-    subgraph "Output / 出力"
-        SPREAD["spread処理"]
-        COLOR["color = texture(lut, t)"]
+    subgraph "Output"
+        SPREAD[spread process]
+        COLOR[sample LUT]
     end
 
     CENTER --> DIST
@@ -843,27 +848,27 @@ flowchart TB
 flowchart TB
     BLEND[Blend Mode]
 
-    SIMPLE{Simple Mode?<br/>WebGL blendFunc}
-    COMPLEX{Complex Mode?<br/>Shader-based}
+    SIMPLE{Simple Mode?}
+    COMPLEX{Complex Mode?}
 
-    subgraph "Simple Modes / シンプルモード"
-        NORMAL["normal<br/>SRC_ALPHA, ONE_MINUS_SRC_ALPHA"]
-        ADD["add<br/>SRC_ALPHA, ONE"]
-        SCREEN["screen<br/>ONE, ONE_MINUS_SRC_COLOR"]
-        ERASE["erase<br/>ZERO, ONE_MINUS_SRC_ALPHA"]
-        COPY["copy<br/>ONE, ZERO"]
+    subgraph "Simple Modes"
+        NORMAL[normal]
+        ADD[add]
+        SCREEN[screen]
+        ERASE[erase]
+        COPY[copy]
     end
 
-    subgraph "Complex Modes / 複雑モード"
-        MULTIPLY["multiply"]
-        OVERLAY["overlay"]
-        HARDLIGHT["hardlight"]
-        DARKEN["darken"]
-        LIGHTEN["lighten"]
-        DIFFERENCE["difference"]
-        SUBTRACT["subtract"]
-        INVERT["invert"]
-        ALPHA["alpha"]
+    subgraph "Complex Modes"
+        MULTIPLY[multiply]
+        OVERLAY[overlay]
+        HARDLIGHT[hardlight]
+        DARKEN[darken]
+        LIGHTEN[lighten]
+        DIFFERENCE[difference]
+        SUBTRACT[subtract]
+        INVERT[invert]
+        ALPHA[alpha]
     end
 
     BLEND --> SIMPLE
@@ -886,56 +891,55 @@ flowchart TB
     COMPLEX --> ALPHA
 ```
 
+**Simple Blend Functions:**
+- normal: SRC_ALPHA, ONE_MINUS_SRC_ALPHA
+- add: SRC_ALPHA, ONE
+- screen: ONE, ONE_MINUS_SRC_COLOR
+- erase: ZERO, ONE_MINUS_SRC_ALPHA
+- copy: ONE, ZERO
+
 ### Complex Blend Mode Rendering / 複雑ブレンドモードレンダリング
 
 ```mermaid
 sequenceDiagram
-    participant SRC as Source FBO
-    participant DST as Destination FBO
-    participant TMP as Temp FBO
+    participant SRC as Source
+    participant DST as Destination
     participant SHADER as BlendShader
     participant OUT as Output
 
-    Note over SRC,OUT: 3-texture blend formula: result = f(src, dst, composite)
+    Note over SRC,OUT: 3-texture blend
 
-    rect rgb(240, 248, 255)
-    Note right of SRC: Step 1: Prepare textures
-    SRC->>SHADER: Bind as texture0 (foreground)
-    DST->>SHADER: Bind as texture1 (background)
-    end
+    SRC->>SHADER: Bind texture0
+    DST->>SHADER: Bind texture1
 
-    rect rgb(255, 248, 240)
-    Note right of SHADER: Step 2: Blend calculation in shader
-    SHADER->>SHADER: Sample foreground color
-    SHADER->>SHADER: Sample background color
+    SHADER->>SHADER: Sample colors
     SHADER->>SHADER: Apply blend formula
-    Note over SHADER: multiply: result = src * dst<br/>overlay: result = 2*src*dst (dark) or 1-2*(1-src)*(1-dst) (light)<br/>difference: result = abs(src - dst)
-    end
 
-    rect rgb(240, 255, 240)
-    Note right of OUT: Step 3: Output
-    SHADER->>TMP: Write blended result
-    TMP->>OUT: Transfer to destination
-    end
+    SHADER->>OUT: Write result
 ```
+
+**Complex Blend Formulas:**
+- multiply: result = src * dst
+- overlay: result = 2*src*dst (dark) or 1-2*(1-src)*(1-dst) (light)
+- difference: result = abs(src - dst)
 
 ### Instanced Blend Rendering / インスタンスブレンドレンダリング
 
 ```mermaid
 flowchart TB
-    subgraph "Batching / バッチング"
-        COLLECT["同じブレンドモードの<br/>オブジェクトを収集"]
-        INSTANCE_DATA["インスタンスデータ作成<br/>rect, size, offset, matrix, color"]
+    subgraph "Batching"
+        COLLECT[collect same blend objects]
+        INSTANCE_DATA[create instance data]
     end
 
-    subgraph "Instanced Draw / インスタンス描画"
-        BIND_VAO["VAOバインド"]
-        SET_UNIFORMS["ユニフォーム設定"]
-        DRAW["drawArraysInstanced<br/>(TRIANGLE_STRIP, 0, 4, instanceCount)"]
+    subgraph "Instanced Draw"
+        BIND_VAO[bind VAO]
+        SET_UNIFORMS[set uniforms]
+        DRAW[drawArraysInstanced]
     end
 
-    subgraph "Per-Instance Data / インスタンス毎データ"
-        ATTR["a_rect: vec4 (x,y,w,h)<br/>a_size: vec2 (texW,texH)<br/>a_offset: vec2 (u,v offset)<br/>a_matrix: mat3 (transform)<br/>a_mul: vec4 (color multiply)<br/>a_add: vec4 (color add)"]
+    subgraph "Per-Instance Data"
+        ATTR[attributes]
     end
 
     COLLECT --> INSTANCE_DATA
@@ -944,6 +948,14 @@ flowchart TB
     SET_UNIFORMS --> DRAW
     ATTR -.-> DRAW
 ```
+
+**Per-Instance Attributes:**
+- a_rect: vec4 (x,y,w,h)
+- a_size: vec2 (texW,texH)
+- a_offset: vec2 (u,v offset)
+- a_matrix: mat3 (transform)
+- a_mul: vec4 (color multiply)
+- a_add: vec4 (color add)
 
 **Blend.ts State Functions / ブレンド状態関数:**
 ```typescript
@@ -962,22 +974,22 @@ $getFuncCode(): number
 
 ```mermaid
 flowchart TB
-    subgraph "Stencil State (Stencil.ts) / ステンシル状態"
-        MODES["STENCIL_MODE_MASK = 1<br/>STENCIL_MODE_FILL = 2"]
-        STATE["$currentStencilMode<br/>$colorMaskEnabled<br/>$sampleAlphaToCoverageEnabled"]
+    subgraph "Stencil State"
+        MODES[MASK=1 FILL=2]
+        STATE[mode/colorMask/MSAA]
     end
 
-    subgraph "Mask State (Mask.ts) / マスク状態"
-        DRAWING["$maskDrawingState: boolean"]
-        BOUNDS["$clipBounds: Map<number, Float32Array>"]
-        LEVELS["$clipLevels: Map<number, number>"]
+    subgraph "Mask State"
+        DRAWING[maskDrawingState]
+        BOUNDS[clipBounds Map]
+        LEVELS[clipLevels Map]
     end
 
-    subgraph "Mask Operations / マスク操作"
-        BEGIN["beginMask()"]
-        SET_BOUNDS["setMaskBounds(xMin,yMin,xMax,yMax)"]
-        END["endMask()"]
-        LEAVE["leaveMask()"]
+    subgraph "Mask Operations"
+        BEGIN[beginMask]
+        SET_BOUNDS[setMaskBounds]
+        END[endMask]
+        LEAVE[leaveMask]
     end
 ```
 
@@ -1046,14 +1058,14 @@ sequenceDiagram
 flowchart TB
     CHECK{clipLevel > 7?}
 
-    subgraph "Normal Mask / 通常マスク"
-        NORMAL["レベルインクリメント<br/>ステンシル値 = level"]
+    subgraph "Normal Mask"
+        NORMAL[level increment]
     end
 
-    subgraph "Union Mask / ユニオンマスク"
-        UNION["複数マスクを1つに結合"]
-        RENDER_ALL["すべてのマスクパスを<br/>同じステンシル値で描画"]
-        OR_OP["OR演算でマスク結合"]
+    subgraph "Union Mask"
+        UNION[merge masks]
+        RENDER_ALL[render all paths]
+        OR_OP[OR operation]
     end
 
     CHECK -->|No| NORMAL
@@ -1070,23 +1082,23 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph "Input / 入力"
-        SRC_TEX["Source Texture<br/>フィルター対象"]
-        FILTERS["Filter Array<br/>[filter1, filter2, ...]"]
+    subgraph "Input"
+        SRC_TEX[Source Texture]
+        FILTERS[Filter Array]
     end
 
-    subgraph "Filter Chain / フィルターチェーン"
-        LOOP["for each filter"]
+    subgraph "Filter Chain"
+        LOOP[for each filter]
 
-        subgraph "Single Filter / 単一フィルター"
-            ALLOC["バッファ確保<br/>frameBufferManager"]
-            PROCESS["フィルター処理"]
-            SWAP["結果を次の入力に"]
+        subgraph "Single Filter"
+            ALLOC[alloc buffer]
+            PROCESS[process filter]
+            SWAP[swap to next input]
         end
     end
 
-    subgraph "Output / 出力"
-        RESULT["Filtered Texture"]
+    subgraph "Output"
+        RESULT[Filtered Texture]
     end
 
     SRC_TEX --> LOOP
@@ -1102,34 +1114,34 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph "Input / 入力"
-        SRC["Source"]
-        BLUR_X["blurX"]
-        BLUR_Y["blurY"]
-        QUALITY["quality (iterations)"]
+    subgraph "Input"
+        SRC[Source]
+        BLUR_X[blurX]
+        BLUR_Y[blurY]
+        QUALITY[quality]
     end
 
-    subgraph "Adaptive Scaling / 適応スケーリング"
+    subgraph "Adaptive Scaling"
         CHECK_SIZE{blur > threshold?}
-        SCALE_DOWN["ダウンスケール<br/>0.0625x ~ 1x"]
-        NO_SCALE["スケールなし"]
+        SCALE_DOWN[downscale]
+        NO_SCALE[no scale]
     end
 
-    subgraph "Horizontal Pass / 水平パス"
-        H_PASS["Horizontal Blur<br/>texture(src, uv + vec2(offset, 0))"]
+    subgraph "Horizontal Pass"
+        H_PASS[Horizontal Blur]
     end
 
-    subgraph "Vertical Pass / 垂直パス"
-        V_PASS["Vertical Blur<br/>texture(src, uv + vec2(0, offset))"]
+    subgraph "Vertical Pass"
+        V_PASS[Vertical Blur]
     end
 
-    subgraph "Quality Iterations / 品質イテレーション"
-        ITER["for i = 0 to quality:<br/>  H_PASS → V_PASS"]
+    subgraph "Quality Iterations"
+        ITER[iterate H+V passes]
     end
 
-    subgraph "Output / 出力"
-        SCALE_UP["アップスケール<br/>(必要な場合)"]
-        RESULT["Blurred Result"]
+    subgraph "Output"
+        SCALE_UP[upscale if needed]
+        RESULT[Blurred Result]
     end
 
     SRC --> CHECK_SIZE
@@ -1457,23 +1469,23 @@ FUNCTION_GRID_ON(index: number): string
 
 ```mermaid
 flowchart TB
-    subgraph "GradientLUT Cache / グラデーションLUTキャッシュ"
-        LUT_CACHE["$lutCache: Map<string, IGradientLUTCacheEntry>"]
-        LUT_MAX["MAX_CACHE_SIZE = 32"]
-        LUT_FRAME["$currentFrame: フレームベース有効期限"]
-        LUT_KEY["$generateCacheKey(stops, interpolation)<br/>→ base36固定小数点キー"]
+    subgraph "GradientLUT Cache"
+        LUT_CACHE[$lutCache Map]
+        LUT_MAX[MAX_SIZE = 32]
+        LUT_FRAME[currentFrame]
+        LUT_KEY[generateCacheKey]
     end
 
-    subgraph "Shader Variant Cache / シェーダーバリアントキャッシュ"
-        SHADER_CACHE["$collection: Map<string, ShaderManager>"]
-        SHADER_MAX["MAX_SHADER_CACHE_SIZE = 16"]
-        SHADER_ORDER["$usageOrder: string[]<br/>LRU順序追跡"]
+    subgraph "Shader Variant Cache"
+        SHADER_CACHE[$collection Map]
+        SHADER_MAX[MAX_SIZE = 16]
+        SHADER_ORDER[usageOrder LRU]
     end
 
-    subgraph "Operations / 操作"
-        GET["$getCachedLUT() / $getFromCache()"]
-        SET["$setCachedLUT() / $addToCache()"]
-        EVICT["古いエントリを自動削除"]
+    subgraph "Operations"
+        GET[getCachedLUT/getFromCache]
+        SET[setCachedLUT/addToCache]
+        EVICT[auto evict old entries]
     end
 
     GET --> LUT_CACHE
@@ -1508,19 +1520,19 @@ $getFromCache(key)              // 使用順序を更新して取得
 
 ```mermaid
 flowchart LR
-    subgraph "Input Uniforms / 入力ユニフォーム"
-        U1["float a"]
-        U2["float b"]
-        U3["float c"]
-        U4["float d"]
-        U5["vec2 e"]
-        U6["vec3 f"]
+    subgraph "Input Uniforms"
+        U1[float a]
+        U2[float b]
+        U3[float c]
+        U4[float d]
+        U5[vec2 e]
+        U6[vec3 f]
     end
 
-    subgraph "Packed vec4 / パックされたvec4"
-        V1["u_data0 = vec4(a, b, c, d)"]
-        V2["u_data1 = vec4(e.x, e.y, f.x, f.y)"]
-        V3["u_data2 = vec4(f.z, 0, 0, 0)"]
+    subgraph "Packed vec4"
+        V1[u_data0]
+        V2[u_data1]
+        V3[u_data2]
     end
 
     U1 --> V1
@@ -1531,6 +1543,11 @@ flowchart LR
     U6 --> V2
     U6 --> V3
 ```
+
+**Packing Example:**
+- u_data0 = vec4(a, b, c, d)
+- u_data1 = vec4(e.x, e.y, f.x, f.y)
+- u_data2 = vec4(f.z, 0, 0, 0)
 
 ### Vertex Shader Structure / 頂点シェーダー構造
 
@@ -1612,17 +1629,17 @@ void main() {
 
 ```mermaid
 flowchart TB
-    subgraph "FrameBuffer Objects / フレームバッファオブジェクト"
-        READ["$readFrameBuffer<br/>READ_FRAMEBUFFER専用"]
-        DRAW["$drawFrameBuffer<br/>DRAW_FRAMEBUFFER専用"]
-        ATLAS["$atlasFrameBuffer<br/>アトラス専用"]
-        READ_BMP["$readBitmapFramebuffer<br/>ビットマップ読み込み"]
-        DRAW_BMP["$drawBitmapFramebuffer<br/>ビットマップ書き込み"]
-        PIXEL["$pixelFrameBuffer<br/>PBO用"]
+    subgraph "FrameBuffer Objects"
+        READ[$readFrameBuffer]
+        DRAW[$drawFrameBuffer]
+        ATLAS[$atlasFrameBuffer]
+        READ_BMP[$readBitmapFramebuffer]
+        DRAW_BMP[$drawBitmapFramebuffer]
+        PIXEL[$pixelFrameBuffer]
     end
 
-    subgraph "PBO / Pixel Buffer Object"
-        PBO["$pixelBufferObject<br/>PIXEL_PACK_BUFFER"]
+    subgraph "PBO"
+        PBO[$pixelBufferObject]
     end
 ```
 
@@ -1675,17 +1692,17 @@ interface IAttachmentObject {
 
 ```mermaid
 flowchart TB
-    subgraph "Object Pool / オブジェクトプール"
-        POOL["$objectPool: IAttachmentObject[]"]
-        CURRENT["$currentAttachment: IAttachmentObject | null"]
-        BOUND["$isFramebufferBound: boolean"]
+    subgraph "Object Pool"
+        POOL[$objectPool]
+        CURRENT[$currentAttachment]
+        BOUND[$isFramebufferBound]
     end
 
-    subgraph "Operations / 操作"
-        GET["FrameBufferManagerGetAttachmentObjectUseCase"]
-        BIND["FrameBufferManagerBindService"]
-        RELEASE["FrameBufferManagerReleaseAttachmentObjectUseCase"]
-        TRANSFER["FrameBufferManagerTransferMainCanvasService"]
+    subgraph "Operations"
+        GET[GetAttachmentObject]
+        BIND[Bind]
+        RELEASE[ReleaseAttachmentObject]
+        TRANSFER[TransferMainCanvas]
     end
 
     GET --> POOL
@@ -1769,16 +1786,16 @@ sequenceDiagram
 flowchart TB
     CHECK{MSAA required?}
 
-    subgraph "MSAA Mode / MSAAモード"
-        MSAA_CREATE["Renderbuffer + MSAA samples"]
-        MSAA_RENDER["Render to MSAA buffer"]
-        MSAA_RESOLVE["glBlitFramebuffer to texture"]
+    subgraph "MSAA Mode"
+        MSAA_CREATE[Renderbuffer + MSAA]
+        MSAA_RENDER[Render to MSAA buffer]
+        MSAA_RESOLVE[glBlitFramebuffer]
     end
 
-    subgraph "Texture Mode / テクスチャモード"
-        TEX_CREATE["Texture attachment"]
-        TEX_RENDER["Render directly to texture"]
-        TEX_USE["Use texture directly"]
+    subgraph "Texture Mode"
+        TEX_CREATE[Texture attachment]
+        TEX_RENDER[Render to texture]
+        TEX_USE[Use texture directly]
     end
 
     CHECK -->|Yes| MSAA_CREATE
@@ -1831,24 +1848,24 @@ $getAtlasTextureObject(): ITextureObject
 
 ```mermaid
 flowchart TB
-    subgraph "TexturePacker (@next2d/texture-packer)"
-        ROOT["Root Node<br/>$RENDER_MAX_SIZE × $RENDER_MAX_SIZE"]
+    subgraph "TexturePacker"
+        ROOT[Root Node]
 
-        subgraph "Binary Tree / バイナリツリー"
-            N1["Node A"]
-            N2["Node B"]
-            N3["Node C"]
-            N4["Node D"]
+        subgraph "Binary Tree"
+            N1[Node A]
+            N2[Node B]
+            N3[Node C]
+            N4[Node D]
         end
     end
 
-    subgraph "Insert Algorithm / 挿入アルゴリズム"
-        INSERT["createNode(width, height)"]
-        CHECK_FIT{fits in node?}
+    subgraph "Insert Algorithm"
+        INSERT[createNode]
+        CHECK_FIT{fits?}
         CHECK_LEAF{is leaf?}
-        SPLIT["split node"]
-        OCCUPY["return Node {x,y,w,h}"]
-        TRY_CHILDREN["try children"]
+        SPLIT[split node]
+        OCCUPY[return Node]
+        TRY_CHILDREN[try children]
     end
 
     ROOT --> N1
@@ -1857,11 +1874,11 @@ flowchart TB
     N1 --> N4
 
     INSERT --> CHECK_FIT
-    CHECK_FIT -->|No| FAIL[return null]
+    CHECK_FIT -->|No| FAIL[null]
     CHECK_FIT -->|Yes| CHECK_LEAF
-    CHECK_LEAF -->|Yes, empty| SPLIT
-    CHECK_LEAF -->|Yes, occupied| FAIL
-    CHECK_LEAF -->|No| TRY_CHILDREN
+    CHECK_LEAF -->|empty| SPLIT
+    CHECK_LEAF -->|occupied| FAIL
+    CHECK_LEAF -->|not leaf| TRY_CHILDREN
     SPLIT --> OCCUPY
     TRY_CHILDREN --> CHECK_FIT
 ```
@@ -1904,21 +1921,21 @@ sequenceDiagram
 
 ```mermaid
 flowchart TB
-    subgraph "Atlas Manager / アトラスマネージャー"
-        ROOT_NODES["$rootNodes: TexturePacker[]"]
-        ATLAS_OBJS["$atlasAttachmentObjects: IAttachmentObject[]"]
-        TRANSFER["$transferBounds: Float32Array[]<br/>[xMin, yMin, xMax, yMax]"]
-        ALL_TRANSFER["$allTransferBounds: Float32Array[]"]
+    subgraph "Atlas Manager"
+        ROOT_NODES[$rootNodes]
+        ATLAS_OBJS[$atlasAttachmentObjects]
+        TRANSFER[$transferBounds]
+        ALL_TRANSFER[$allTransferBounds]
     end
 
-    subgraph "Index Management / インデックス管理"
-        ACTIVE["$activeAtlasIndex<br/>アクティブなアトラス"]
-        CURRENT["$currentAtlasIndex<br/>現在のアトラス"]
+    subgraph "Index Management"
+        ACTIVE[$activeAtlasIndex]
+        CURRENT[$currentAtlasIndex]
     end
 
-    subgraph "Atlas Texture / アトラステクスチャ"
-        TEX["$atlasTexture: ITextureObject"]
-        SIZE["Size: $RENDER_MAX_SIZE<br/>(default: 2048, max: 4096)"]
+    subgraph "Atlas Texture"
+        TEX[$atlasTexture]
+        SIZE[RENDER_MAX_SIZE]
     end
 
     ROOT_NODES --> ACTIVE
@@ -1968,24 +1985,24 @@ $getRectVertexArrayObject(): IVertexArrayObject  // 矩形描画用VAO取得（�
 
 ```mermaid
 flowchart TB
-    subgraph "Object Pool / オブジェクトプール"
-        FILL_POOL["$objectPool (fill)"]
-        STROKE_POOL["$strokeObjectPool"]
+    subgraph "Object Pool"
+        FILL_POOL[$objectPool fill]
+        STROKE_POOL[$strokeObjectPool]
     end
 
-    subgraph "VAO Structure / VAO構造"
-        VAO["WebGLVertexArrayObject"]
-        VBO["Vertex Buffer<br/>頂点データ"]
-        IBO["Index Buffer<br/>(optional)"]
-        ATTRS["Attribute Pointers<br/>location, size, type, stride, offset"]
+    subgraph "VAO Structure"
+        VAO[WebGLVertexArrayObject]
+        VBO[Vertex Buffer]
+        IBO[Index Buffer]
+        ATTRS[Attribute Pointers]
     end
 
-    subgraph "Operations / 操作"
-        CREATE["create()"]
-        BIND["bind()"]
-        UNBIND["unbind()"]
-        DRAW["draw()"]
-        RELEASE["release()"]
+    subgraph "Operations"
+        CREATE[create]
+        BINDVAO[bind]
+        UNBIND[unbind]
+        DRAW[draw]
+        RELEASE[release]
     end
 
     CREATE --> VAO
@@ -1993,7 +2010,7 @@ flowchart TB
     VAO --> IBO
     VAO --> ATTRS
 
-    BIND --> VAO
+    BINDVAO --> VAO
     DRAW --> VAO
     UNBIND --> VAO
     RELEASE --> FILL_POOL
@@ -2023,13 +2040,13 @@ Stride = 100 bytes (aligned to 4) / ストライド = 100バイト
 
 ```mermaid
 flowchart TB
-    CHECK{data size > buffer size?}
+    CHECK{data > buffer?}
 
-    GROW["新サイズ = 次の2のべき乗"]
-    REALLOC["gl.bufferData(newSize)"]
+    GROW[next power of 2]
+    REALLOC[bufferData newSize]
 
-    NO_GROW["既存バッファ使用"]
-    UPDATE["gl.bufferSubData(data)"]
+    NO_GROW[use existing buffer]
+    UPDATE[bufferSubData]
 
     CHECK -->|Yes| GROW
     GROW --> REALLOC
@@ -2324,20 +2341,20 @@ $getViewportHeight(): number
 
 ```mermaid
 flowchart TB
-    subgraph "WebGL (Immediate Mode) / WebGL (即時モード)"
-        GL_BIND["glBindTexture/Buffer/..."]
-        GL_SET["glUniform/VertexAttrib/..."]
-        GL_DRAW["glDraw*"]
+    subgraph "WebGL Immediate Mode"
+        GL_BIND[glBind...]
+        GL_SET[glUniform/VertexAttrib]
+        GL_DRAW[glDraw]
         GL_BIND --> GL_SET --> GL_DRAW
     end
 
-    subgraph "WebGPU (Command Buffer) / WebGPU (コマンドバッファ)"
-        GPU_ENCODER["GPUCommandEncoder"]
-        GPU_PASS["beginRenderPass"]
-        GPU_BIND["setBindGroup/Pipeline/VertexBuffer"]
-        GPU_DRAW["draw()"]
-        GPU_END["end()"]
-        GPU_SUBMIT["queue.submit([commandBuffer])"]
+    subgraph "WebGPU Command Buffer"
+        GPU_ENCODER[GPUCommandEncoder]
+        GPU_PASS[beginRenderPass]
+        GPU_BIND[setBindGroup/Pipeline]
+        GPU_DRAW[draw]
+        GPU_END[end]
+        GPU_SUBMIT[queue.submit]
 
         GPU_ENCODER --> GPU_PASS
         GPU_PASS --> GPU_BIND
