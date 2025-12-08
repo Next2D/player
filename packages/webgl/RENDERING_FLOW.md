@@ -247,43 +247,45 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    subgraph "Input / 入力"
+    subgraph Input["Input / 入力"]
         MOVE[moveTo x,y]
         LINE[lineTo x,y]
         QUAD[quadraticCurveTo<br/>cx,cy, x,y]
         CUBIC[bezierCurveTo<br/>c1x,c1y, c2x,c2y, x,y]
         ARC[arc<br/>cx,cy, r, start, end]
-        RECT[rect<br/>x,y, w,h]
     end
 
-    subgraph "PathCommand Processing / PathCommand処理"
-        BEGIN[beginPath<br/>$currentPath = []<br/>$vertices = []]
-
-        MOVE --> ADD_MOVE["$currentPath.push(x, y, 0)"]
-        LINE --> ADD_LINE["$currentPath.push(x, y, 0)"]
-
-        QUAD --> ADD_QUAD["$currentPath.push(<br/>cx, cy, 1,<br/>x, y, 0)"]
-
-        CUBIC --> CONVERT_CUBIC[Cubic→Quadratic変換<br/>8分割]
-        CONVERT_CUBIC --> ADD_QUADS["8個のQuadratic追加"]
-
-        ARC --> CONVERT_ARC[Arc→Cubic変換<br/>4分割]
-        CONVERT_ARC --> CONVERT_CUBIC
+    subgraph Process["PathCommand Processing / PathCommand処理"]
+        BEGIN[beginPath<br/>currentPath = empty<br/>vertices = empty]
+        ADD_MOVE["currentPath.push x, y, 0"]
+        ADD_LINE["currentPath.push x, y, 0"]
+        ADD_QUAD["currentPath.push<br/>cx, cy, 1<br/>x, y, 0"]
+        CONVERT_CUBIC[Cubic to Quadratic変換<br/>8分割]
+        ADD_QUADS["8個のQuadratic追加"]
+        CONVERT_ARC[Arc to Cubic変換<br/>4分割]
     end
 
-    subgraph "Output / 出力"
+    subgraph Output["Output / 出力"]
         CLOSE[closePath]
-        CLOSE --> STORE["$vertices.push($currentPath)<br/>$currentPath = []"]
-
-        OUTPUT["$vertices = [<br/>[x,y,0, x,y,0, ...],<br/>[x,y,0, cx,cy,1, x,y,0, ...],<br/>...]"]
+        STORE["vertices.push currentPath<br/>currentPath = empty"]
+        RESULT["vertices = array of paths<br/>each path = x,y,flag triplets"]
     end
 
     BEGIN --> MOVE
+    MOVE --> ADD_MOVE
     ADD_MOVE --> LINE
+    LINE --> ADD_LINE
     ADD_LINE --> QUAD
+    QUAD --> ADD_QUAD
     ADD_QUAD --> CUBIC
+    CUBIC --> CONVERT_CUBIC
+    CONVERT_CUBIC --> ADD_QUADS
     ADD_QUADS --> ARC
-    STORE --> OUTPUT
+    ARC --> CONVERT_ARC
+    CONVERT_ARC --> CONVERT_CUBIC
+    ADD_QUADS --> CLOSE
+    CLOSE --> STORE
+    STORE --> RESULT
 ```
 
 ### Cubic to Quadratic Conversion / Cubic→Quadratic変換

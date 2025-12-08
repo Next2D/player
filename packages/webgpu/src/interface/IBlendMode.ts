@@ -12,4 +12,5 @@ export type IBlendMode =
     | "alpha"
     | "erase"
     | "overlay"
-    | "hardlight";
+    | "hardlight"
+    | "copy";

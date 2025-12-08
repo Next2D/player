@@ -3,7 +3,7 @@ import type { IBlendMode } from "./interface/IBlendMode";
 import type { IBounds } from "./interface/IBounds";
 import type { Node } from "@next2d/texture-packer";
 import { TexturePacker } from "@next2d/texture-packer";
-import { WebGPUUtil } from "./WebGPUUtil";
+import { WebGPUUtil, $setContext } from "./WebGPUUtil";
 import { PathCommand } from "./PathCommand";
 import { BufferManager } from "./BufferManager";
 import { TextureManager } from "./TextureManager";
@@ -18,6 +18,7 @@ import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskSer
 import { execute as maskSetMaskBoundsService } from "./Mask/service/MaskSetMaskBoundsService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
 import { execute as maskLeaveMaskUseCase } from "./Mask/usecase/MaskLeaveMaskUseCase";
+import { execute as meshFillGenerateUseCase } from "./Mesh/usecase/MeshFillGenerateUseCase";
 
 /**
  * @description WebGPU版、Next2Dのコンテキスト
@@ -138,6 +139,9 @@ export class Context
         this.frameBufferManager = new FrameBufferManager(device, preferred_format);
         this.pipelineManager = new PipelineManager(device, preferred_format);
         this.attachmentManager = new AttachmentManager(device);
+
+        // コンテキストをグローバル変数にセット
+        $setContext(this);
     }
 
     /**
@@ -470,13 +474,13 @@ export class Context
     }
 
     /**
-     * @description 塗りつぶしを実行
+     * @description 塗りつぶしを実行（Loop-Blinn方式対応）
      * @return {void}
      */
     fill (): void
     {
-        const vertices = this.pathCommand.generateVertices();
-        if (vertices.length === 0) return;
+        const pathVertices = this.pathCommand.$getVertices;
+        if (pathVertices.length === 0) return;
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
@@ -491,7 +495,7 @@ export class Context
 
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
-        
+
         // 現在のレンダーターゲットを取得（メインまたはオフスクリーン）
         const textureView = this.getCurrentTextureView();
 
@@ -502,69 +506,44 @@ export class Context
         );
 
         this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-        
-        // 頂点バッファを作成
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            `fill_${Date.now()}`,
-            vertices
-        );
 
-        // Uniformバッファを作成
+        // ビューポートサイズ
         const canvasWidth = this.canvasContext.canvas.width;
         const canvasHeight = this.canvasContext.canvas.height;
-        
-        // WebGL互換: matrixをビューポートで正規化
-        const normalizedMatrix = [
-            this.$matrix[0] / canvasWidth,
-            this.$matrix[1] / canvasHeight,
-            this.$matrix[2],
-            this.$matrix[3] / canvasWidth,
-            this.$matrix[4] / canvasHeight,
-            this.$matrix[5],
-            this.$matrix[6] / canvasWidth,
-            this.$matrix[7] / canvasHeight,
-            this.$matrix[8]
-        ];
-        
-        // Uniform data (96 bytes aligned)
-        const uniformData = new Float32Array(24);
-        let offset = 0;
-        
-        // viewport size (vec2) + padding
-        uniformData[offset++] = canvasWidth;
-        uniformData[offset++] = canvasHeight;
-        uniformData[offset++] = 0;
-        uniformData[offset++] = 0;
-        
-        // matrix column 0 (vec3 → vec4)
-        uniformData[offset++] = normalizedMatrix[0];
-        uniformData[offset++] = normalizedMatrix[1];
-        uniformData[offset++] = normalizedMatrix[2];
-        uniformData[offset++] = 0;
-        
-        // matrix column 1 (vec3 → vec4)
-        uniformData[offset++] = normalizedMatrix[3];
-        uniformData[offset++] = normalizedMatrix[4];
-        uniformData[offset++] = normalizedMatrix[5];
-        uniformData[offset++] = 0;
-        
-        // matrix column 2 (vec3 → vec4)
-        uniformData[offset++] = normalizedMatrix[6];
-        uniformData[offset++] = normalizedMatrix[7];
-        uniformData[offset++] = normalizedMatrix[8];
-        uniformData[offset++] = 0;
-        
-        // color (vec4)
-        uniformData[offset++] = this.$fillStyle[0];
-        uniformData[offset++] = this.$fillStyle[1];
-        uniformData[offset++] = this.$fillStyle[2];
-        uniformData[offset++] = this.$fillStyle[3];
-        
-        // alpha + padding
-        uniformData[offset++] = this.globalAlpha;
-        uniformData[offset++] = 0;
-        uniformData[offset++] = 0;
-        uniformData[offset++] = 0;
+
+        // 色（プリマルチプライドアルファ）
+        const red = this.$fillStyle[0] * this.globalAlpha;
+        const green = this.$fillStyle[1] * this.globalAlpha;
+        const blue = this.$fillStyle[2] * this.globalAlpha;
+        const alpha = this.$fillStyle[3] * this.globalAlpha;
+
+        // MeshFillGenerateUseCaseでLoop-Blinn対応頂点データを生成
+        const mesh = meshFillGenerateUseCase(
+            pathVertices,
+            this.$matrix[0], this.$matrix[1],
+            this.$matrix[3], this.$matrix[4],
+            this.$matrix[6], this.$matrix[7],
+            red, green, blue, alpha
+        );
+
+        if (mesh.indexCount === 0) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+            return;
+        }
+
+        // 頂点バッファを作成（17 floats per vertex）
+        const vertexBuffer = this.bufferManager.createVertexBuffer(
+            `fill_${Date.now()}`,
+            mesh.buffer
+        );
+
+        // Uniform data: viewport size only (8 bytes → 16 bytes aligned)
+        const uniformData = new Float32Array(4);
+        uniformData[0] = canvasWidth;
+        uniformData[1] = canvasHeight;
+        uniformData[2] = 0;
+        uniformData[3] = 0;
 
         const uniformBuffer = this.bufferManager.createUniformBuffer(
             `fill_uniform_${Date.now()}`,
@@ -601,8 +580,8 @@ export class Context
         this.renderPassEncoder.setPipeline(pipeline);
         this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
         this.renderPassEncoder.setBindGroup(0, bindGroup);
-        this.renderPassEncoder.draw(vertices.length / 2, 1, 0, 0);
-        
+        this.renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+
         this.renderPassEncoder.end();
         this.renderPassEncoder = null;
     }

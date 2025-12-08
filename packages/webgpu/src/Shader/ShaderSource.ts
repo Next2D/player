@@ -5,7 +5,7 @@
 export class ShaderSource
 {
     /**
-     * @description 単色塗りつぶし用頂点シェーダー（WebGL互換）
+     * @description 単色塗りつぶし用頂点シェーダー（Loop-Blinn対応・17 floats頂点フォーマット）
      * @return {string}
      */
     static getFillVertexShader(): string
@@ -13,27 +13,21 @@ export class ShaderSource
         return /* wgsl */`
             struct VertexInput {
                 @location(0) position: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+                @location(3) matrix0: vec3<f32>,
+                @location(4) matrix1: vec3<f32>,
+                @location(5) matrix2: vec3<f32>,
             }
 
             struct VertexOutput {
                 @builtin(position) position: vec4<f32>,
-                @location(0) color: vec4<f32>,
+                @location(0) bezier: vec2<f32>,
+                @location(1) color: vec4<f32>,
             }
 
             struct Uniforms {
                 viewportSize: vec2<f32>,
-                _padding0: vec2<f32>,
-                matrixCol0: vec3<f32>,
-                _padding1: f32,
-                matrixCol1: vec3<f32>,
-                _padding2: f32,
-                matrixCol2: vec3<f32>,
-                _padding3: f32,
-                color: vec4<f32>,
-                alpha: f32,
-                _padding4: f32,
-                _padding5: f32,
-                _padding6: f32,
             }
 
             @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -41,50 +35,75 @@ export class ShaderSource
             @vertex
             fn main(input: VertexInput) -> VertexOutput {
                 var output: VertexOutput;
-                
-                // Build matrix (already normalized by viewport in CPU)
+
+                // Build matrix from vertex attributes
                 let matrix = mat3x3<f32>(
-                    uniforms.matrixCol0,
-                    uniforms.matrixCol1,
-                    uniforms.matrixCol2
+                    input.matrix0,
+                    input.matrix1,
+                    input.matrix2
                 );
-                
-                // Apply matrix transformation (result is in 0-1 normalized space)
+
+                // Apply matrix transformation
                 let transformed = matrix * vec3<f32>(input.position, 1.0);
-                let pos = transformed.xy;
-                
-                // Convert to NDC: 0-1 → -1 to 1 (WebGL compatible)
+
+                // Normalize by viewport size
+                let pos = transformed.xy / uniforms.viewportSize;
+
+                // Convert to NDC: 0-1 → -1 to 1
                 let ndc = pos * 2.0 - 1.0;
-                
-                // Flip Y axis (WebGL compatible: gl_Position = vec4(pos.x, -pos.y, 0.0, 1.0))
+
+                // Flip Y axis (WebGL compatible)
                 output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
-                
-                // Premultiplied alpha (WebGL compatible)
+
+                // Pass through bezier coordinates for fragment shader
+                output.bezier = input.bezier;
+
+                // Premultiplied alpha
                 output.color = vec4<f32>(
-                    uniforms.color.rgb * uniforms.color.a * uniforms.alpha,
-                    uniforms.color.a * uniforms.alpha
+                    input.color.rgb * input.color.a,
+                    input.color.a
                 );
-                
+
                 return output;
             }
         `;
     }
 
     /**
-     * @description 単色塗りつぶし用フラグメントシェーダー
+     * @description 単色塗りつぶし用フラグメントシェーダー（Loop-Blinnアンチエイリアシング対応）
      * @return {string}
      */
     static getFillFragmentShader(): string
     {
         return /* wgsl */`
-            struct VertexOutput {
+            struct FragmentInput {
                 @builtin(position) position: vec4<f32>,
-                @location(0) color: vec4<f32>,
+                @location(0) bezier: vec2<f32>,
+                @location(1) color: vec4<f32>,
             }
 
             @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                return input.color;
+            fn main(input: FragmentInput) -> @location(0) vec4<f32> {
+                // Loop-Blinn法による2次ベジエ曲線のアンチエイリアシング
+                // 暗黙的関数: f(u, v) = u² - v
+                let f_val = input.bezier.x * input.bezier.x - input.bezier.y;
+
+                // スクリーン空間での勾配を計算
+                let dx = dpdx(f_val);
+                let dy = dpdy(f_val);
+
+                // 符号付き距離（勾配で正規化）
+                let dist = f_val / length(vec2<f32>(dx, dy));
+
+                // smoothstepによるアンチエイリアシング（約1ピクセル幅の遷移）
+                let aa = smoothstep(0.5, -0.5, dist);
+
+                // アルファを適用
+                if (aa <= 0.001) {
+                    discard;
+                }
+
+                return vec4<f32>(input.color.rgb * aa, input.color.a * aa);
             }
         `;
     }

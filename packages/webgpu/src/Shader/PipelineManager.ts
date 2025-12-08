@@ -42,7 +42,7 @@ export class PipelineManager
     }
 
     /**
-     * @description 単色塗りつぶし用パイプラインを作成
+     * @description 単色塗りつぶし用パイプラインを作成（Loop-Blinn対応・17 floats頂点フォーマット）
      * @return {void}
      */
     private createFillPipeline(): void
@@ -71,18 +71,44 @@ export class PipelineManager
             code: ShaderSource.getFillFragmentShader()
         });
 
+        // 17 floats per vertex: position(2) + bezier(2) + color(4) + matrix(3+3+3)
         const pipeline = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
                 module: vertexShaderModule,
                 entryPoint: "main",
                 buffers: [{
-                    arrayStride: 2 * 4, // 2 floats (x, y)
+                    arrayStride: 17 * 4, // 17 floats (68 bytes)
                     attributes: [
                         {
                             shaderLocation: 0,
                             offset: 0,
-                            format: "float32x2" // position
+                            format: "float32x2" // position (2 floats)
+                        },
+                        {
+                            shaderLocation: 1,
+                            offset: 2 * 4,
+                            format: "float32x2" // bezier (2 floats)
+                        },
+                        {
+                            shaderLocation: 2,
+                            offset: 4 * 4,
+                            format: "float32x4" // color (4 floats)
+                        },
+                        {
+                            shaderLocation: 3,
+                            offset: 8 * 4,
+                            format: "float32x3" // matrix row 0 (3 floats)
+                        },
+                        {
+                            shaderLocation: 4,
+                            offset: 11 * 4,
+                            format: "float32x3" // matrix row 1 (3 floats)
+                        },
+                        {
+                            shaderLocation: 5,
+                            offset: 14 * 4,
+                            format: "float32x3" // matrix row 2 (3 floats)
                         }
                     ]
                 }]
