@@ -1369,6 +1369,39 @@ BlendVariants.$collection: Map<string, ShaderManager | ShaderInstancedManager>
 FilterVariants.$collection: Map<string, ShaderManager>
 ```
 
+### Shader Variant Services / シェーダーバリアントサービス
+
+```
+Variants/
+├── Shape/service/                    # 3 services
+│   ├── VariantsShapeSolidColorShaderService.ts  # 単色シェーダー
+│   ├── VariantsShapeRectShaderService.ts        # 矩形シェーダー
+│   └── VariantsShapeMaskShaderService.ts        # マスクシェーダー
+│
+├── Gradient/                         # 1 service, 1 usecase
+│   ├── service/VariantsGradientCreateCollectionKeyService.ts  # コレクションキー生成
+│   └── usecase/VariantsGradientShapeShaderUseCase.ts          # グラデーションシェーダー取得
+│
+├── GradientLUT/service/              # 1 service
+│   └── VariantsGradientLUTShaderService.ts      # LUTシェーダー
+│
+├── Bitmap/service/                   # 1 service
+│   └── VariantsBitmapShaderService.ts           # ビットマップシェーダー
+│
+├── Blend/service/                    # 4 services
+│   ├── VariantsBlendDrawShaderService.ts        # 描画シェーダー
+│   ├── VariantsBlendInstanceShaderService.ts    # インスタンスシェーダー
+│   ├── VariantsBlendMatrixTextureShaderService.ts  # 行列テクスチャシェーダー
+│   └── VariantsBlendTextureShaderService.ts     # テクスチャシェーダー
+│
+└── Filter/service/                   # 5 services
+    ├── VariantsBlurFilterShaderService.ts       # ブラーフィルタ
+    ├── VariantsBitmapFilterShaderService.ts     # ビットマップフィルタ
+    ├── VariantsColorMatrixFilterShaderService.ts  # 色行列フィルタ
+    ├── VariantsConvolutionFilterShaderService.ts  # 畳み込みフィルタ
+    └── VariantsDisplacementMapFilterShaderService.ts  # 変位マップフィルタ
+```
+
 ### Shader Template Functions / シェーダーテンプレート関数
 
 ```typescript
@@ -1590,6 +1623,17 @@ flowchart TB
 
 **FrameBufferManager State Functions / フレームバッファ状態関数:**
 ```typescript
+// フレームバッファオブジェクト
+$readFrameBuffer: WebGLFramebuffer          // READ_FRAMEBUFFER専用
+$drawFrameBuffer: WebGLFramebuffer | null   // DRAW_FRAMEBUFFER専用
+$atlasFrameBuffer: WebGLFramebuffer | null  // アトラス専用
+$objectPool: IAttachmentObject[]            // AttachmentObjectプール
+
+// フレームバッファ初期化
+$setReadFrameBuffer(gl: WebGL2RenderingContext): void
+$setDrawFrameBuffer(gl: WebGL2RenderingContext): void
+$setAtlasFrameBuffer(gl: WebGL2RenderingContext, texture_object: ITextureObject): void
+
 // ビットマップ専用フレームバッファ
 $setBitmapFrameBuffer(gl: WebGL2RenderingContext): void
 $getReadBitmapFrameBuffer(): WebGLFramebuffer
@@ -2457,19 +2501,39 @@ packages/webgl/src/
 │
 ├── Context/
 │   ├── service/                  # 14 service files
-│   │   ├── ContextSaveService.ts
-│   │   ├── ContextRestoreService.ts
-│   │   ├── ContextSetTransformService.ts
-│   │   ├── ContextTransformService.ts
-│   │   ├── ContextResetService.ts
-│   │   └── ...
+│   │   ├── ContextSaveService.ts              # 行列スタック保存
+│   │   ├── ContextRestoreService.ts           # 行列スタック復元
+│   │   ├── ContextSetTransformService.ts      # 変換行列設定
+│   │   ├── ContextTransformService.ts         # 変換適用
+│   │   ├── ContextResetService.ts             # コンテキストリセット
+│   │   ├── ContextResetStyleService.ts        # スタイルリセット
+│   │   ├── ContextCreateImageBitmapService.ts # ImageBitmap作成
+│   │   ├── ContextUseGridService.ts           # グリッド機能
+│   │   ├── ContextFillBackgroundColorService.ts  # 背景色フィル
+│   │   ├── ContextUpdateBackgroundColorService.ts  # 背景色更新
+│   │   ├── ContextUpdateTransferBoundsService.ts   # 転送範囲更新
+│   │   ├── ContextUpdateAllTransferBoundsService.ts  # 全転送範囲更新
+│   │   ├── ContextBeginNodeRenderingService.ts  # ノードレンダリング開始
+│   │   └── ContextEndNodeRenderingService.ts    # ノードレンダリング終了
 │   └── usecase/                  # 18 usecase files
-│       ├── ContextFillUseCase.ts
-│       ├── ContextStrokeUseCase.ts
-│       ├── ContextClipUseCase.ts
-│       ├── ContextGradientFillUseCase.ts
-│       ├── ContextBitmapFillUseCase.ts
-│       └── ...
+│       ├── ContextFillUseCase.ts              # メインフィル処理
+│       ├── ContextNormalFillUseCase.ts        # 単色フィル
+│       ├── ContextLinearGradientFillUseCase.ts   # リニアグラデーションフィル
+│       ├── ContextRadialGradientFillUseCase.ts   # ラジアルグラデーションフィル
+│       ├── ContextPatternBitmapFillUseCase.ts    # ビットマップパターンフィル
+│       ├── ContextDrawFillUseCase.ts          # フィル描画実行
+│       ├── ContextStrokeUseCase.ts            # ストローク処理
+│       ├── ContextGradientStrokeUseCase.ts    # グラデーションストローク
+│       ├── ContextBitmapStrokeUseCase.ts      # ビットマップストローク
+│       ├── ContextClipUseCase.ts              # クリップ処理
+│       ├── ContextGradientFillUseCase.ts      # グラデーションフィル（LUT）
+│       ├── ContextBitmapFillUseCase.ts        # ビットマップフィル
+│       ├── ContextBindUseCase.ts              # FBOバインド
+│       ├── ContextResizeUseCase.ts            # リサイズ処理
+│       ├── ContextClearRectUseCase.ts         # 矩形クリア
+│       ├── ContextApplyFilterUseCase.ts       # フィルタ適用
+│       ├── ContextDrawElementUseCase.ts       # エレメント描画
+│       └── ContextDrawPixelsUseCase.ts        # ピクセル描画
 │
 ├── Mesh/
 │   ├── service/                  # 10 service files
@@ -2498,35 +2562,63 @@ packages/webgl/src/
 │   ├── Vertex/                   # 頂点シェーダー
 │   └── Variants/                 # シェーダーバリアント
 │
-├── Filter/                       # 10 filter types
-│   ├── BevelFilter/
-│   ├── BitmapFilter/
-│   ├── BlurFilter/
-│   ├── ColorMatrixFilter/
-│   ├── ConvolutionFilter/
-│   ├── DisplacementMapFilter/
-│   ├── DropShadowFilter/
-│   ├── GlowFilter/
-│   ├── GradientBevelFilter/
-│   └── GradientGlowFilter/
+├── Filter/                       # 10 filter types (11 usecases)
+│   ├── BevelFilter/              # FilterApplyBevelFilterUseCase
+│   ├── BitmapFilter/             # FilterApplyBitmapFilterUseCase
+│   ├── BlurFilter/               # 2 usecases
+│   │   ├── FilterApplyBlurFilterUseCase.ts          # 全方向ブラー
+│   │   └── FilterApplyDirectionalBlurFilterUseCase.ts  # 指定方向ブラー
+│   ├── ColorMatrixFilter/        # FilterApplyColorMatrixFilterUseCase
+│   ├── ConvolutionFilter/        # FilterApplyConvolutionFilterUseCase
+│   ├── DisplacementMapFilter/    # FilterApplyDisplacementMapFilterUseCase
+│   ├── DropShadowFilter/         # FilterApplyDropShadowFilterUseCase
+│   ├── GlowFilter/               # FilterApplyGlowFilterUseCase
+│   ├── GradientBevelFilter/      # FilterApplyGradientBevelFilterUseCase
+│   └── GradientGlowFilter/       # FilterApplyGradientGlowFilterUseCase
 │
 ├── Blend/
-│   ├── service/                  # 16 service files
-│   │   ├── BlendAddService.ts
-│   │   ├── BlendAlphaService.ts
-│   │   └── ...
+│   ├── service/                  # 8 service files
+│   │   ├── BlendAddService.ts           # add ブレンド
+│   │   ├── BlendAlphaService.ts         # alpha ブレンド
+│   │   ├── BlendEraseService.ts         # erase ブレンド
+│   │   ├── BlendOneZeroService.ts       # ONE/ZERO ブレンド
+│   │   ├── BlendResetService.ts         # ブレンドリセット
+│   │   ├── BlendScreenService.ts        # screen ブレンド
+│   │   ├── BlendSourceAtopService.ts    # source-atop ブレンド
+│   │   └── BlendSourceInService.ts      # source-in ブレンド
 │   └── usecase/                  # 6 usecase files
-│       ├── BlendBootUseCase.ts
-│       ├── BlnedDrawDisplayObjectUseCase.ts
-│       └── ...
+│       ├── BlendBootUseCase.ts                   # 初期化
+│       ├── BlendOperationUseCase.ts              # ブレンド操作実行
+│       ├── BlendDrawFilterToMainUseCase.ts       # フィルタ結果をメインに描画
+│       ├── BlnedDrawDisplayObjectUseCase.ts      # DisplayObject描画
+│       ├── BlnedDrawArraysInstancedUseCase.ts    # インスタンス配列描画
+│       └── BlnedClearArraysInstancedUseCase.ts   # インスタンス配列クリア
 │
 ├── Mask/
-│   ├── service/                  # 4 files
-│   └── usecase/                  # 2 files
+│   ├── service/                  # 4 service files
+│   │   ├── MaskBeginMaskService.ts      # マスク開始
+│   │   ├── MaskEndMaskService.ts        # マスク終了
+│   │   ├── MaskSetMaskBoundsService.ts  # マスク境界設定
+│   │   └── MaskUnionMaskService.ts      # マスク結合
+│   └── usecase/                  # 2 usecase files
+│       ├── MaskBindUseCase.ts           # マスクバインド
+│       └── MaskLeaveMaskUseCase.ts      # マスク解除
 │
 ├── PathCommand/
-│   ├── service/                  # 5 files
-│   └── usecase/                  # 6 files
+│   ├── service/                  # 5 service files
+│   │   ├── PathCommandBeginPathService.ts              # パス開始
+│   │   ├── PathCommandCreateRectVerticesService.ts     # 矩形頂点作成
+│   │   ├── PathCommandEqualsToLastPointService.ts      # 最後の点との比較
+│   │   ├── PathCommandPushCurrentPathToVerticesService.ts  # 現在パスを頂点に追加
+│   │   └── PathCommandPushPointToCurrentPathService.ts     # 点を現在パスに追加
+│   └── usecase/                  # 7 usecase files
+│       ├── PathCommandMoveToUseCase.ts             # moveTo
+│       ├── PathCommandLineToUseCase.ts             # lineTo
+│       ├── PathCommandQuadraticCurveToUseCase.ts   # quadraticCurveTo
+│       ├── PathCommandBezierCurveToUseCase.ts      # bezierCurveTo
+│       ├── PathCommandArcUseCase.ts                # arc
+│       ├── PathCommandClosePathUseCase.ts          # closePath
+│       └── ...
 │
 ├── BezierConverter/
 │   ├── service/                  # 2 service files
@@ -2601,10 +2693,10 @@ packages/webgl/src/
 |--------|----------|----------|---------|
 | **Context** | 14 | 18 | メインWebGLレンダリングコンテキスト |
 | **Mesh** | 10 | 11 | メッシュ生成・操作 |
-| **Blend** | 16 | 6 | ブレンドモード・合成 |
+| **Blend** | 8 | 6 | ブレンドモード・合成 |
 | **Mask** | 4 | 2 | マスク・クリッピング |
 | **Stencil** | 5 | 0 | ステンシルバッファ管理 |
-| **PathCommand** | 5 | 6 | パス描画コマンド |
+| **PathCommand** | 5 | 7 | パス描画コマンド |
 | **BezierConverter** | 2 | 2 | ベジェ曲線変換 |
 | **TextureManager** | 3 | 10 | テクスチャ管理 |
 | **VertexArrayObject** | 3 | 8 | VAO管理 |
