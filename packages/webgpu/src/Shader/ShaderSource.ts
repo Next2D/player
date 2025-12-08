@@ -58,11 +58,8 @@ export class ShaderSource
                 // Pass through bezier coordinates for fragment shader
                 output.bezier = input.bezier;
 
-                // Premultiplied alpha
-                output.color = vec4<f32>(
-                    input.color.rgb * input.color.a,
-                    input.color.a
-                );
+                // Pass color as-is (premultiplication happens in fragment shader after AA)
+                output.color = input.color;
 
                 return output;
             }
@@ -103,7 +100,9 @@ export class ShaderSource
                     discard;
                 }
 
-                return vec4<f32>(input.color.rgb * aa, input.color.a * aa);
+                // input.color is already premultiplied (RGB = baseRGB * alpha)
+                // Apply AA by multiplying the entire premultiplied color
+                return input.color * aa;
             }
         `;
     }
@@ -376,20 +375,16 @@ export class ShaderSource
             @fragment
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
                 var src = textureSample(textureData, textureSampler, input.texCoord);
-                
-                // Unpremultiply, apply color transform, then premultiply again
-                // This matches WebGL behavior for correct color handling with premultiplied alpha
-                if (input.mulColor.r != 1.0 || input.mulColor.g != 1.0 || input.mulColor.b != 1.0 || input.mulColor.a != 1.0
-                    || input.addColor.r != 0.0 || input.addColor.g != 0.0 || input.addColor.b != 0.0) {
-                    // Unpremultiply: divide RGB by alpha
-                    src = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
-                    // Apply color transform: multiply + add
-                    src = clamp(src * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
-                    // Premultiply again: multiply RGB by alpha
-                    src = vec4<f32>(src.rgb * src.a, src.a);
-                }
-                
-                return src;
+
+                // Always apply color transform (matches WebGL behavior)
+                // Unpremultiply: divide RGB by alpha
+                let unpremultiplied = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
+
+                // Apply color transform: multiply + add
+                var transformed = clamp(unpremultiplied * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
+
+                // Premultiply again: multiply RGB by alpha
+                return vec4<f32>(transformed.rgb * transformed.a, transformed.a);
             }
         `;
     }

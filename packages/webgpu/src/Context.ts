@@ -1226,14 +1226,14 @@ export class Context
 
         try {
             this.device.queue.copyExternalImageToTexture(
-                { 
+                {
                     source: element as ImageBitmap,
                     flipY: false
                 },
                 {
                     texture: attachment.texture,
                     origin: { x: node.x, y: node.y, z: 0 },
-                    premultipliedAlpha: false  // Bitmap data is not premultiplied
+                    premultipliedAlpha: true  // Use premultiplied alpha for consistency
                 },
                 {
                     width: element.width || node.w,
