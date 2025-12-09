@@ -1,10 +1,7 @@
 export class WebGPUUtil
 {
     private static device: GPUDevice | null = null;
-    private static context: GPUCanvasContext | null = null;
-    private static preferredFormat: GPUTextureFormat = "bgra8unorm";
     private static devicePixelRatio: number = 1;
-    private static maxTextureSize: number = 8192;
     private static renderMaxSize: number = 8192;
     private static float32Array4Pool: Float32Array[] = [];
 
@@ -16,7 +13,6 @@ export class WebGPUUtil
     public static setDevice(gpu_device: GPUDevice): void
     {
         WebGPUUtil.device = gpu_device;
-        WebGPUUtil.maxTextureSize = gpu_device.limits.maxTextureDimension2D;
     }
 
     /**
@@ -29,47 +25,6 @@ export class WebGPUUtil
             throw new Error("GPUDevice is not initialized");
         }
         return WebGPUUtil.device;
-    }
-
-    /**
-     * @description Set GPUCanvasContext
-     * @param {GPUCanvasContext} gpu_context
-     * @return {void}
-     */
-    public static setContext(gpu_context: GPUCanvasContext): void
-    {
-        WebGPUUtil.context = gpu_context;
-    }
-
-    /**
-     * @description Get GPUCanvasContext
-     * @return {GPUCanvasContext}
-     */
-    public static getContext(): GPUCanvasContext
-    {
-        if (!WebGPUUtil.context) {
-            throw new Error("GPUCanvasContext is not initialized");
-        }
-        return WebGPUUtil.context;
-    }
-
-    /**
-     * @description Set preferred texture format
-     * @param {GPUTextureFormat} format
-     * @return {void}
-     */
-    public static setPreferredFormat(format: GPUTextureFormat): void
-    {
-        WebGPUUtil.preferredFormat = format;
-    }
-
-    /**
-     * @description Get preferred texture format
-     * @return {GPUTextureFormat}
-     */
-    public static getPreferredFormat(): GPUTextureFormat
-    {
-        return WebGPUUtil.preferredFormat;
     }
 
     /**
@@ -89,15 +44,6 @@ export class WebGPUUtil
     public static getDevicePixelRatio(): number
     {
         return WebGPUUtil.devicePixelRatio;
-    }
-
-    /**
-     * @description Get max texture size
-     * @return {number}
-     */
-    public static getMaxTextureSize(): number
-    {
-        return WebGPUUtil.maxTextureSize;
     }
 
     /**
@@ -136,24 +82,6 @@ export class WebGPUUtil
     public static createArray<T>(): T[]
     {
         return [];
-    }
-
-    /**
-     * @description Create Float32Array with 6 elements
-     * @return {Float32Array}
-     */
-    public static createFloat32Array6(): Float32Array
-    {
-        return new Float32Array(6);
-    }
-
-    /**
-     * @description Create Float32Array with 9 elements
-     * @return {Float32Array}
-     */
-    public static createFloat32Array9(): Float32Array
-    {
-        return new Float32Array(9);
     }
 
     /**

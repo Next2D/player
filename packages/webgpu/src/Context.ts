@@ -125,8 +125,6 @@ export class Context
         this.preferredFormat = preferred_format;
 
         WebGPUUtil.setDevice(device);
-        WebGPUUtil.setContext(canvas_context);
-        WebGPUUtil.setPreferredFormat(preferred_format);
         WebGPUUtil.setDevicePixelRatio(device_pixel_ratio);
         
         // Set render max size similar to WebGL (half of max texture size, capped at 4096)

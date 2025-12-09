@@ -13,24 +13,6 @@ export const $gridDataMap: Map<number, Float32Array | null> = new Map();
 export let $fillBufferIndex: number = 0;
 
 /**
- * @description フィルバッファインデックスをインクリメント
- *              Increment fill buffer index
- * @return {void}
- */
-export const $incrementFillBufferIndex = (): void => {
-    $fillBufferIndex++;
-};
-
-/**
- * @description フィルバッファインデックスをリセット
- *              Reset fill buffer index
- * @return {void}
- */
-export const $resetFillBufferIndex = (): void => {
-    $fillBufferIndex = 0;
-};
-
-/**
  * @description グリッド情報を初期化
  *              Initialize grid information
  * @return {void}
