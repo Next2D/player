@@ -334,53 +334,6 @@ export const $poolFloat32Array6 = (array: Float32Array): void =>
 };
 
 /**
- * @type {Int32Array[]}
- * @private
- */
-const $int32Array4: Int32Array[] = [];
-
-/**
- * @description プールしたInt32Arrayがあれば再利用、なければ新規作成
- *              Reuse the pooled Int32Array if available, otherwise create a new one.
- *
- * @param  {number} [f0=0]
- * @param  {number} [f1=0]
- * @param  {number} [f2=0]
- * @param  {number} [f3=0]
- * @return {Float32Array}
- * @method
- * @protected
- */
-export const $getInt32Array4 = (
-    f0: number = 0, f1: number = 0,
-    f2: number = 0, f3: number = 0
-): Int32Array => {
-
-    const array: Int32Array = $int32Array4.pop() || new Int32Array(4);
-
-    array[0] = f0;
-    array[1] = f1;
-    array[2] = f2;
-    array[3] = f3;
-
-    return array;
-};
-
-/**
- * @description 使用済みのInt32Arrayをプールに保管
- *              Store the used Int32Array in the pool.
- *
- * @param  {Float32Array} array
- * @return {void}
- * @method
- * @protected
- */
-export const $poolInt32Array4 = (array: Int32Array): void =>
-{
-    $int32Array4.push(array);
-};
-
-/**
  * @description 逆行列を取得
  *              Get the inverse matrix
  *
