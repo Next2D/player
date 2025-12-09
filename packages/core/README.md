@@ -79,6 +79,7 @@ src/
 │       ├── CanvasPointerLeaveEventUseCase.ts       # Pointer leave processing / ポインター離脱処理
 │       ├── CanvasPointerMoveEventUseCase.ts        # Pointer move processing / ポインター移動処理
 │       ├── CanvasPointerUpEventUseCase.ts          # Pointer up processing / ポインター離し処理
+│       ├── CanvasRegisterEventUseCase.ts           # Event registration / イベント登録
 │       └── CanvasWheelEventUseCase.ts              # Wheel event processing / ホイールイベント処理
 │
 ├── Display.ts                        # Display package facade / Display パッケージファサード
@@ -104,7 +105,10 @@ src/
     ├── IPlayerOptions.ts
     ├── IRemoveCacheMessage.ts
     ├── IRenderMessage.ts
-    └── IResizeMessage.ts
+    ├── IResizeMessage.ts
+    ├── IStageData.ts
+    ├── IText.ts
+    └── IUI.ts
 ```
 
 ## Boot Flow / 起動フロー

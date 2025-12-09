@@ -70,7 +70,26 @@ src/
     ├── IAjaxEvent.ts                 # AJAX events / AJAXイベント
     ├── IURLRequestMethod.ts          # URL request methods / URLリクエストメソッド
     ├── IURLRequestHeader.ts          # URL request headers / URLリクエストヘッダー
-    └── ... (other interfaces)
+    ├── IURLLoaderDataFormat.ts       # URL loader data format / URLローダーデータフォーマット
+    ├── IBlendMode.ts                 # Blend mode types / ブレンドモード型
+    ├── IBounds.ts                    # Bounds interface / バウンズインターフェース
+    ├── ICharacter.ts                 # Character interface / キャラクターインターフェース
+    ├── IDictionaryTag.ts             # Dictionary tag interface / 辞書タグインターフェース
+    ├── IFilterArray.ts               # Filter array interface / フィルター配列インターフェース
+    ├── IGrid.ts                      # Grid interface / グリッドインターフェース
+    ├── ILoopConfig.ts                # Loop config interface / ループ設定インターフェース
+    ├── ILoopType.ts                  # Loop type interface / ループタイプインターフェース
+    ├── IMovieClipActionObject.ts     # MovieClip action object / MovieClipアクションオブジェクト
+    ├── IMovieClipCharacter.ts        # MovieClip character / MovieClipキャラクター
+    ├── IMovieClipLabelObject.ts      # MovieClip label object / MovieClipラベルオブジェクト
+    ├── IMovieClipSoundObject.ts      # MovieClip sound object / MovieClipサウンドオブジェクト
+    ├── IPlaceObject.ts               # Place object interface / 配置オブジェクトインターフェース
+    ├── IShapeCharacter.ts            # Shape character / Shapeキャラクター
+    ├── ISoundTag.ts                  # Sound tag interface / サウンドタグインターフェース
+    ├── ISurfaceFilter.ts             # Surface filter interface / サーフェスフィルターインターフェース
+    ├── ITextFieldCharacter.ts        # TextField character / TextFieldキャラクター
+    ├── ITextFieldType.ts             # TextField type / TextFieldタイプ
+    └── ITextFormatAlign.ts           # TextFormat align / TextFormat配置
 ```
 
 ## API Overview / API概要

@@ -60,6 +60,7 @@ src/
 ├── TextureManager.ts               # Texture management / テクスチャ管理
 ├── ColorBufferObject.ts            # Color buffer management / カラーバッファ管理
 ├── StencilBufferObject.ts          # Stencil buffer management / ステンシルバッファ管理
+├── Stencil.ts                      # Stencil operations / ステンシル操作
 ├── Gradient.ts                     # Gradient processing / グラデーション処理
 ├── Grid.ts                         # Grid system for rendering / レンダリング用グリッドシステム
 ├── Bitmap.ts                       # Bitmap handling / ビットマップ処理

@@ -104,17 +104,33 @@ src/
 │
 └── interface/                      # TypeScript interfaces / TypeScriptインターフェース
     ├── IAttributeObject.ts
+    ├── IBlendMode.ts
     ├── IBounds.ts
+    ├── ICharacter.ts
+    ├── IDictionaryTag.ts
     ├── IElementPosition.ts
+    ├── IFilterArray.ts
+    ├── IGrid.ts
+    ├── ILoopConfig.ts
+    ├── ILoopType.ts
+    ├── IMovieClipActionObject.ts
+    ├── IMovieClipCharacter.ts
+    ├── IMovieClipLabelObject.ts
+    ├── IMovieClipSoundObject.ts
     ├── IOptions.ts
+    ├── IPlaceObject.ts
     ├── IRGBA.ts
+    ├── IShapeCharacter.ts
+    ├── ISoundTag.ts
+    ├── ISurfaceFilter.ts
     ├── ITextFieldAutoSize.ts
     ├── ITextFieldCharacter.ts
     ├── ITextFieldType.ts
     ├── ITextFormatAlign.ts
     ├── ITextFormatObject.ts
     ├── ITextObject.ts
-    └── ITextObjectMode.ts
+    ├── ITextObjectMode.ts
+    └── IVideoCharacter.ts
 ```
 
 ## Text Processing Flow / テキスト処理フロー

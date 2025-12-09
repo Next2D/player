@@ -63,16 +63,26 @@ src/
 ├── Tween.ts                    # Tween class / Tweenクラス
 ├── Job.ts                      # Job class / Jobクラス
 │   ├── service/                # Job service layer / Jobサービスレイヤー
-│   │   ├── JobStopService.ts
-│   │   └── ...
+│   │   ├── JobStopService.ts           # Stop animation / アニメーション停止
+│   │   ├── JobEntriesService.ts        # Property entries management / プロパティエントリ管理
+│   │   ├── JobUpdateFrameService.ts    # Frame update processing / フレーム更新処理
+│   │   └── JobUpdatePropertyService.ts # Property update processing / プロパティ更新処理
 │   └── usecase/                # Job use case layer / Jobユースケースレイヤー
-│       ├── JobStartUseCase.ts
-│       └── ...
+│       ├── JobStartUseCase.ts          # Start animation / アニメーション開始
+│       └── JobBootUseCase.ts           # Boot animation loop / アニメーションループ起動
 ├── Easing.ts                   # Easing class / Easingクラス
-│   └── service/                # All easing implementations / 全イージング実装
+│   └── service/                # All easing implementations (32 functions) / 全イージング実装（32関数）
 │       ├── EasingLinearService.ts
-│       ├── EasingInQuadService.ts
-│       └── ...
+│       ├── EasingInQuadService.ts / EasingOutQuadService.ts / EasingInOutQuadService.ts
+│       ├── EasingInCubicService.ts / EasingOutCubicService.ts / EasingInOutCubicService.ts
+│       ├── EasingInQuartService.ts / EasingOutQuartService.ts / EasingInOutQuartService.ts
+│       ├── EasingInQuintService.ts / EasingOutQuintService.ts / EasingInOutQuintService.ts
+│       ├── EasingInSineService.ts / EasingOutSineService.ts / EasingInOutSineService.ts
+│       ├── EasingInExpoService.ts / EasingOutExpoService.ts / EasingInOutExpoService.ts
+│       ├── EasingInCircService.ts / EasingOutCircService.ts / EasingInOutCircService.ts
+│       ├── EasingInElasticService.ts / EasingOutElasticService.ts / EasingInOutElasticService.ts
+│       ├── EasingInBackService.ts / EasingOutBackService.ts / EasingInOutBackService.ts
+│       └── EasingInBounceService.ts / EasingOutBounceService.ts / EasingInOutBounceService.ts
 ├── interface/                  # TypeScript interfaces / TypeScriptインターフェース
 │   ├── IObject.ts
 │   └── IEntriesObject.ts

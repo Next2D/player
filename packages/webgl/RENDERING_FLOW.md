@@ -2225,6 +2225,7 @@ clearTransferBounds(): void
 updateBackgroundColor(red: number, green: number, blue: number, alpha: number): void
 fillBackgroundColor(): void
 resize(width: number, height: number, cache_clear?: boolean): void
+clearRect(x: number, y: number, w: number, h: number): void
 reset(): void
 
 // 変換管理
@@ -2659,8 +2660,7 @@ packages/webgl/src/
 │       ├── PathCommandQuadraticCurveToUseCase.ts   # quadraticCurveTo
 │       ├── PathCommandBezierCurveToUseCase.ts      # bezierCurveTo
 │       ├── PathCommandArcUseCase.ts                # arc
-│       ├── PathCommandClosePathUseCase.ts          # closePath
-│       └── ...
+│       └── PathCommandClosePathUseCase.ts          # closePath
 │
 ├── BezierConverter/
 │   ├── service/                  # 2 service files
@@ -2789,6 +2789,7 @@ packages/webgl/src/
 | Context | ContextClipUseCase | マスク処理実行 |
 | Context | ContextBindUseCase | FBOバインド |
 | Context | ContextResizeUseCase | リサイズ処理 |
+| Context | ContextClearRectUseCase | 矩形クリア |
 | Mesh | MeshFillGenerateUseCase | フィルメッシュ生成 |
 | Mesh | MeshStrokeGenerateUseCase | ストロークメッシュ生成 |
 | Mesh | MeshGenerateStrokeOutlineUseCase | ストロークアウトライン生成 |
