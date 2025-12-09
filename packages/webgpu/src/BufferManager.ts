@@ -1,12 +1,39 @@
 /**
+ * @description プールされたバッファのエントリ
+ *              Pooled buffer entry
+ */
+interface IPooledBuffer {
+    buffer: GPUBuffer;
+    size: number;
+}
+
+/**
  * @description WebGPUバッファマネージャー
- *              WebGPU buffer manager
+ *              WebGPU buffer manager with buffer pooling support
  */
 export class BufferManager
 {
     private device: GPUDevice;
     private vertexBuffers: Map<string, GPUBuffer>;
     private uniformBuffers: Map<string, GPUBuffer>;
+
+    /**
+     * @description 頂点バッファプール（サイズごとにグループ化）
+     *              Vertex buffer pool (grouped by size)
+     */
+    private vertexBufferPool: IPooledBuffer[];
+
+    /**
+     * @description ユニフォームバッファプール（サイズごとにグループ化）
+     *              Uniform buffer pool (grouped by size)
+     */
+    private uniformBufferPool: IPooledBuffer[];
+
+    /**
+     * @description プールの最大サイズ
+     *              Maximum pool size
+     */
+    private static readonly MAX_POOL_SIZE: number = 32;
 
     /**
      * @param {GPUDevice} device
@@ -17,6 +44,8 @@ export class BufferManager
         this.device = device;
         this.vertexBuffers = new Map();
         this.uniformBuffers = new Map();
+        this.vertexBufferPool = [];
+        this.uniformBufferPool = [];
     }
 
     /**

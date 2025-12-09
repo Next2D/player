@@ -34,6 +34,19 @@ import { execute as filterApplyConvolutionFilterUseCase } from "./Filter/Convolu
 import { execute as filterApplyGradientBevelFilterUseCase } from "./Filter/GradientBevelFilter/FilterApplyGradientBevelFilterUseCase";
 import { execute as filterApplyGradientGlowFilterUseCase } from "./Filter/GradientGlowFilter/FilterApplyGradientGlowFilterUseCase";
 import { execute as filterApplyDisplacementMapFilterUseCase } from "./Filter/DisplacementMapFilter/FilterApplyDisplacementMapFilterUseCase";
+import {
+    $gridDataMap,
+    $fillBufferIndex,
+    $terminateGrid
+} from "./Grid";
+import {
+    $advanceFrame as $advanceLUTCacheFrame,
+    $clearLUTCache
+} from "./Gradient/GradientLUTCache";
+import {
+    $advanceFilterLUTFrame,
+    $clearFilterLUTCache
+} from "./Filter/FilterGradientLUTCache";
 
 /**
  * @description WebGPU版、Next2Dのコンテキスト
@@ -254,7 +267,8 @@ export class Context
 
         // キャッシュをクリア
         if (cache_clear) {
-            // TODO: キャッシュクリア実装
+            $clearLUTCache();
+            $clearFilterLUTCache();
         }
 
         // canvasContextを再設定
@@ -1754,9 +1768,9 @@ export class Context
      * @param {Float32Array | null} grid_data
      * @return {void}
      */
-    useGrid (_grid_data: Float32Array | null): void
+    useGrid (grid_data: Float32Array | null): void
     {
-        // TODO: Grid/9-slice transformation implementation
+        $gridDataMap.set($fillBufferIndex, grid_data);
     }
 
     /**
@@ -1859,6 +1873,9 @@ export class Context
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
+
+        // グリッドデータをクリア
+        $terminateGrid();
     }
 
     /**
@@ -2842,6 +2859,10 @@ export class Context
             this.ensureMainTexture();
             this.ensureCommandEncoder();
             this.frameStarted = true;
+
+            // LUTキャッシュのフレームカウンターを進める
+            $advanceLUTCacheFrame();
+            $advanceFilterLUTFrame();
         }
     }
 

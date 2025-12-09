@@ -1,3 +1,9 @@
+import {
+    $generateCacheKey,
+    $getCachedLUT,
+    $setCachedLUT
+} from "../Gradient/GradientLUTCache";
+
 /**
  * @description グラデーションLUT（Look Up Table）ジェネレーター
  *              Gradient LUT Generator
@@ -17,12 +23,19 @@ export class GradientLUTGenerator
 
     /**
      * @description グラデーションLUTテクスチャを生成
+     *              キャッシュが存在する場合はキャッシュから返却
      * @param {number[]} stops - [ratio, r, g, b, a, ratio, r, g, b, a, ...]
      * @param {number} interpolation - 0: RGB, 1: Linear RGB
      * @return {GPUTexture}
      */
     generateLUT(stops: number[], interpolation: number): GPUTexture
     {
+        // キャッシュキーを生成してキャッシュを確認
+        const cacheKey = $generateCacheKey(stops, interpolation);
+        const cachedTexture = $getCachedLUT(cacheKey);
+        if (cachedTexture) {
+            return cachedTexture;
+        }
         const width = 256;
         const height = 1;
         const pixels = new Uint8Array(width * height * 4);
@@ -109,6 +122,9 @@ export class GradientLUTGenerator
             { bytesPerRow: width * 4, offset: pixels.byteOffset },
             { width, height }
         );
+
+        // キャッシュに保存
+        $setCachedLUT(cacheKey, texture);
 
         return texture;
     }

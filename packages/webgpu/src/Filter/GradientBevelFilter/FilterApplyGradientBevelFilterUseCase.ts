@@ -2,6 +2,11 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import { $offset } from "../index";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 import { generateFilterGradientLUT } from "../../Gradient/GradientLUTGenerator";
+import {
+    $generateFilterLUTCacheKey,
+    $getCachedFilterLUT,
+    $setCachedFilterLUT
+} from "../FilterGradientLUTCache";
 
 /**
  * @description 度からラジアンへの変換係数
@@ -136,19 +141,25 @@ export const execute = (
     // サンプラーを作成
     const sampler = textureManager.createSampler("gradient_bevel_sampler", true);
 
-    // グラデーションLUTテクスチャを作成
-    const lutData = generateFilterGradientLUT(ratios, colors, alphas);
-    const lutTexture = device.createTexture({
-        size: { width: 256, height: 1 },
-        format: "rgba8unorm",
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-    });
-    device.queue.writeTexture(
-        { texture: lutTexture },
-        lutData.buffer,
-        { bytesPerRow: 256 * 4, offset: lutData.byteOffset },
-        { width: 256, height: 1 }
-    );
+    // グラデーションLUTテクスチャを取得（キャッシュから、またはキャッシュに新規追加）
+    const lutCacheKey = $generateFilterLUTCacheKey(ratios, colors, alphas);
+    let lutTexture = $getCachedFilterLUT(lutCacheKey);
+
+    if (!lutTexture) {
+        const lutData = generateFilterGradientLUT(ratios, colors, alphas);
+        lutTexture = device.createTexture({
+            size: { width: 256, height: 1 },
+            format: "rgba8unorm",
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+        });
+        device.queue.writeTexture(
+            { texture: lutTexture },
+            lutData.buffer,
+            { bytesPerRow: 256 * 4, offset: lutData.byteOffset },
+            { width: 256, height: 1 }
+        );
+        $setCachedFilterLUT(lutCacheKey, lutTexture);
+    }
 
     // ユニフォームバッファを作成
     // strength: f32 (4 bytes)
@@ -251,9 +262,8 @@ export const execute = (
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
 
-    // クリーンアップ
+    // クリーンアップ（LUTテクスチャはキャッシュで管理されるため破棄しない）
     uniformBuffer.destroy();
-    lutTexture.destroy();
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
     frameBufferManager.releaseTemporaryAttachment(baseTextureForComposite);
     frameBufferManager.releaseTemporaryAttachment(blurTextureForComposite);
