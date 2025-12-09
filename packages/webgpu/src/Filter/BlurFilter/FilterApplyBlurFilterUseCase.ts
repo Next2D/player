@@ -182,12 +182,12 @@ const copyTextureToAttachment = (
         entries: [
             { binding: 0, resource: { buffer: uniformBuffer } },
             { binding: 1, resource: sampler },
-            { binding: 2, resource: source.textureView }
+            { binding: 2, resource: source.texture!.view }
         ]
     });
 
     const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
-        dest.textureView, 0, 0, 0, 0, "clear"
+        dest.texture!.view, 0, 0, 0, 0, "clear"
     );
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
@@ -243,12 +243,12 @@ const applyDirectionalBlur = (
         entries: [
             { binding: 0, resource: { buffer: uniformBuffer } },
             { binding: 1, resource: sampler },
-            { binding: 2, resource: source.textureView }
+            { binding: 2, resource: source.texture!.view }
         ]
     });
 
     const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
-        dest.textureView, 0, 0, 0, 0, "clear"
+        dest.texture!.view, 0, 0, 0, 0, "clear"
     );
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
@@ -295,12 +295,12 @@ const upscaleTexture = (
         entries: [
             { binding: 0, resource: { buffer: uniformBuffer } },
             { binding: 1, resource: sampler },
-            { binding: 2, resource: source.textureView }
+            { binding: 2, resource: source.texture!.view }
         ]
     });
 
     const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
-        dest.textureView, 0, 0, 0, 0, "clear"
+        dest.texture!.view, 0, 0, 0, 0, "clear"
     );
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);

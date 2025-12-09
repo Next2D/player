@@ -196,11 +196,11 @@ export const execute = (
         baseX + baseWidth <= width && baseY + baseHeight <= height) {
         commandEncoder.copyTextureToTexture(
             {
-                texture: sourceAttachment.texture,
+                texture: sourceAttachment.texture!.resource,
                 origin: { x: 0, y: 0, z: 0 }
             },
             {
-                texture: baseTextureForComposite.texture,
+                texture: baseTextureForComposite.texture!.resource,
                 origin: { x: baseX, y: baseY, z: 0 }
             },
             {
@@ -225,11 +225,11 @@ export const execute = (
     if (copyWidth > 0 && copyHeight > 0) {
         commandEncoder.copyTextureToTexture(
             {
-                texture: blurAttachment.texture,
+                texture: blurAttachment.texture!.resource,
                 origin: { x: srcX, y: srcY, z: 0 }
             },
             {
-                texture: blurTextureForComposite.texture,
+                texture: blurTextureForComposite.texture!.resource,
                 origin: { x: dstX, y: dstY, z: 0 }
             },
             {
@@ -245,15 +245,15 @@ export const execute = (
         entries: [
             { binding: 0, resource: { buffer: uniformBuffer } },
             { binding: 1, resource: sampler },
-            { binding: 2, resource: blurTextureForComposite.textureView },
-            { binding: 3, resource: baseTextureForComposite.textureView },
+            { binding: 2, resource: blurTextureForComposite.texture!.view },
+            { binding: 3, resource: baseTextureForComposite.texture!.view },
             { binding: 4, resource: lutTexture.createView() }
         ]
     });
 
     // レンダーパスを実行
     const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
-        destAttachment.textureView, 0, 0, 0, 0, "clear"
+        destAttachment.texture!.view, 0, 0, 0, 0, "clear"
     );
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);

@@ -71,8 +71,6 @@ const splitCubicAt = (
  * @description 3次ベジエを2次ベジエに近似
  *              Approximate cubic Bezier as quadratic Bezier
  *
- * @param  {number} p0x
- * @param  {number} p0y
  * @param  {number} p1x
  * @param  {number} p1y
  * @param  {number} p2x
@@ -86,7 +84,6 @@ const splitCubicAt = (
  * @private
  */
 const cubicToQuad = (
-    p0x: number, p0y: number,
     p1x: number, p1y: number,
     p2x: number, p2y: number,
     p3x: number, p3y: number,
@@ -149,15 +146,13 @@ export const execute = (
         splitCubicAt(from_x, from_y, cx1, cy1, cx2, cy2, x, y, 0.5, $tempLeft, $tempRight);
 
         cubicToQuad(
-            $tempLeft[0], $tempLeft[1], $tempLeft[2], $tempLeft[3],
-            $tempLeft[4], $tempLeft[5], $tempLeft[6], $tempLeft[7],
+            $tempLeft[2], $tempLeft[3], $tempLeft[4], $tempLeft[5], $tempLeft[6], $tempLeft[7],
             $adaptiveBuffer, offset
         );
         offset += 4;
 
         cubicToQuad(
-            $tempRight[0], $tempRight[1], $tempRight[2], $tempRight[3],
-            $tempRight[4], $tempRight[5], $tempRight[6], $tempRight[7],
+            $tempRight[2], $tempRight[3], $tempRight[4], $tempRight[5], $tempRight[6], $tempRight[7],
             $adaptiveBuffer, offset
         );
         offset += 4;
@@ -180,13 +175,13 @@ export const execute = (
         splitCubicAt(temp1[0], temp1[1], temp1[2], temp1[3], temp1[4], temp1[5], temp1[6], temp1[7], 0.5, left1, left2);
         splitCubicAt(temp2[0], temp2[1], temp2[2], temp2[3], temp2[4], temp2[5], temp2[6], temp2[7], 0.5, right1, right2);
 
-        cubicToQuad(left1[0], left1[1], left1[2], left1[3], left1[4], left1[5], left1[6], left1[7], $adaptiveBuffer, offset);
+        cubicToQuad(left1[2], left1[3], left1[4], left1[5], left1[6], left1[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(left2[0], left2[1], left2[2], left2[3], left2[4], left2[5], left2[6], left2[7], $adaptiveBuffer, offset);
+        cubicToQuad(left2[2], left2[3], left2[4], left2[5], left2[6], left2[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(right1[0], right1[1], right1[2], right1[3], right1[4], right1[5], right1[6], right1[7], $adaptiveBuffer, offset);
+        cubicToQuad(right1[2], right1[3], right1[4], right1[5], right1[6], right1[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(right2[0], right2[1], right2[2], right2[3], right2[4], right2[5], right2[6], right2[7], $adaptiveBuffer, offset);
+        cubicToQuad(right2[2], right2[3], right2[4], right2[5], right2[6], right2[7], $adaptiveBuffer, offset);
         offset += 4;
     } else {
         // 8分割: 3段階で8分割（既存の方法と同等）
@@ -221,7 +216,7 @@ export const execute = (
         const segments = [c1, c2, c3, c4, c5, c6, c7, c8];
         for (let i = 0; i < 8; i++) {
             const seg = segments[i];
-            cubicToQuad(seg[0], seg[1], seg[2], seg[3], seg[4], seg[5], seg[6], seg[7], $adaptiveBuffer, offset);
+            cubicToQuad(seg[2], seg[3], seg[4], seg[5], seg[6], seg[7], $adaptiveBuffer, offset);
             offset += 4;
         }
     }

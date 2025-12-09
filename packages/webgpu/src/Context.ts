@@ -562,7 +562,7 @@ export class Context
 
         // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
         const attachment = this.frameBufferManager.getAttachment("atlas");
-        if (this.currentRenderTarget && attachment?.stencilView) {
+        if (this.currentRenderTarget && attachment?.stencil?.view) {
             // 2パスステンシルフィル（WebGL版と同じアルゴリズム）
             this.fillWithStencil(vertexBuffer, mesh.indexCount, red, green, blue, alpha);
         } else {
@@ -687,10 +687,12 @@ export class Context
     bindAttachment(attachment: IAttachmentObject): void
     {
         this.attachmentManager.bindAttachment(attachment);
-        
+
         // 現在のレンダーターゲットをオフスクリーンに切り替え
-        if (attachment.colorTexture) {
-            this.currentRenderTarget = attachment.colorTexture.view;
+        // color?.view または texture?.view を使用
+        const view = attachment.color?.view ?? attachment.texture?.view;
+        if (view) {
+            this.currentRenderTarget = view;
         }
     }
 
@@ -1794,8 +1796,8 @@ export class Context
 
         // アトラステクスチャの該当箇所をレンダーターゲットに設定
         const attachment = this.frameBufferManager.getAttachment("atlas");
-        if (attachment) {
-            this.currentRenderTarget = attachment.textureView;
+        if (attachment && attachment.texture) {
+            this.currentRenderTarget = attachment.texture.view;
 
             // WebGL版と同じ: ビューポートサイズはアトラスのサイズを使用
             this.viewportWidth = attachment.width;
@@ -1805,10 +1807,10 @@ export class Context
             this.ensureCommandEncoder();
 
             // ステンシルバッファ付きレンダーパス（2パスステンシルフィル用）
-            if (attachment.stencilView) {
+            if (attachment.stencil?.view) {
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    attachment.textureView,
-                    attachment.stencilView,
+                    attachment.texture.view,
+                    attachment.stencil.view,
                     "load", // カラーは既存の内容を保持
                     "clear" // ステンシルはクリア
                 );
@@ -1816,7 +1818,7 @@ export class Context
             } else {
                 // ステンシルがない場合は通常のレンダーパス（フォールバック）
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    attachment.textureView,
+                    attachment.texture.view,
                     0, 0, 0, 0,
                     "load"
                 );
@@ -2012,7 +2014,7 @@ export class Context
                 },
                 {
                     binding: 1,
-                    resource: atlasAttachment.textureView
+                    resource: atlasAttachment.texture!.view
                 }
             ]
         });
@@ -2068,11 +2070,11 @@ export class Context
             const srcAttachment = this.frameBufferManager.createTemporaryAttachment(node.w, node.h);
             this.commandEncoder!.copyTextureToTexture(
                 {
-                    texture: atlasAttachment.texture,
+                    texture: atlasAttachment.texture!.resource,
                     origin: { x: node.x, y: node.y, z: 0 }
                 },
                 {
-                    texture: srcAttachment.texture,
+                    texture: srcAttachment.texture!.resource,
                     origin: { x: 0, y: 0, z: 0 }
                 },
                 {
@@ -2097,7 +2099,7 @@ export class Context
                             origin: { x: dstX, y: dstY, z: 0 }
                         },
                         {
-                            texture: dstAttachment.texture,
+                            texture: dstAttachment.texture!.resource,
                             origin: { x: 0, y: 0, z: 0 }
                         },
                         {
@@ -2142,7 +2144,7 @@ export class Context
                 if (copyWidth > 0 && copyHeight > 0) {
                     this.commandEncoder!.copyTextureToTexture(
                         {
-                            texture: blendedAttachment.texture,
+                            texture: blendedAttachment.texture!.resource,
                             origin: { x: 0, y: 0, z: 0 }
                         },
                         {
@@ -2192,9 +2194,11 @@ export class Context
         if (!attachment) return;
 
         // ピクセルデータをテクスチャにコピー
+        if (!attachment.texture) return;
+
         this.device.queue.writeTexture(
             {
-                texture: attachment.texture,
+                texture: attachment.texture.resource,
                 origin: { x: node.x, y: node.y, z: 0 }
             },
             pixels.buffer,
@@ -2222,7 +2226,7 @@ export class Context
         // WebGPU draw element
         // OffscreenCanvasまたはImageBitmapをアトラステクスチャにコピー
         const attachment = this.frameBufferManager.getAttachment("atlas");
-        if (!attachment) return;
+        if (!attachment || !attachment.texture) return;
 
         try {
             this.device.queue.copyExternalImageToTexture(
@@ -2231,7 +2235,7 @@ export class Context
                     flipY: false
                 },
                 {
-                    texture: attachment.texture,
+                    texture: attachment.texture.resource,
                     origin: { x: node.x, y: node.y, z: 0 },
                     premultipliedAlpha: true
                 },
@@ -2692,15 +2696,15 @@ export class Context
 
         // アトラステクスチャから該当部分をコピー
         const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
-        if (atlasAttachment) {
+        if (atlasAttachment && atlasAttachment.texture && attachment.texture) {
             // commandEncoderを使ってコピー
             this.commandEncoder!.copyTextureToTexture(
                 {
-                    texture: atlasAttachment.texture,
+                    texture: atlasAttachment.texture.resource,
                     origin: { x: node.x, y: node.y, z: 0 }
                 },
                 {
-                    texture: attachment.texture,
+                    texture: attachment.texture.resource,
                     origin: { x: 0, y: 0, z: 0 }
                 },
                 {
@@ -2760,12 +2764,12 @@ export class Context
         const sampler = this.textureManager.createSampler("filter_output_sampler", false);
         const bindGroupLayout = this.pipelineManager.getBindGroupLayout("instanced");
 
-        if (bindGroupLayout) {
+        if (bindGroupLayout && filterAttachment.texture) {
             const bindGroup = this.device.createBindGroup({
                 layout: bindGroupLayout,
                 entries: [
                     { binding: 0, resource: sampler },
-                    { binding: 1, resource: filterAttachment.textureView }
+                    { binding: 1, resource: filterAttachment.texture.view }
                 ]
             });
 
@@ -3002,9 +3006,13 @@ export class Context
         const commandEncoder = this.device.createCommandEncoder();
         
         // アトラステクスチャからピクセルバッファにコピー
+        if (!attachment.texture) {
+            throw new Error("Attachment texture is null");
+        }
+
         commandEncoder.copyTextureToBuffer(
             {
-                texture: attachment.texture,
+                texture: attachment.texture.resource,
                 mipLevel: 0,
                 origin: { x: 0, y: 0, z: 0 }
             },

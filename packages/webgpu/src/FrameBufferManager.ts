@@ -1,4 +1,6 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
+import type { ITextureObject } from "./interface/ITextureObject";
+import type { IStencilBufferObject } from "./interface/IStencilBufferObject";
 
 /**
  * @description WebGPUフレームバッファマネージャー
@@ -11,6 +13,8 @@ export class FrameBufferManager
     private attachments: Map<string, IAttachmentObject>;
     private currentAttachment: IAttachmentObject | null;
     private nextId: number = 1;
+    private textureId: number = 1;
+    private stencilId: number = 1;
 
     /**
      * @param {GPUDevice} device
@@ -23,7 +27,7 @@ export class FrameBufferManager
         this.format = format;
         this.attachments = new Map();
         this.currentAttachment = null;
-        
+
         // アトラス用のテクスチャを初期化（4096x4096）
         const atlasSize = 4096;
         this.createAttachment("atlas", atlasSize, atlasSize);
@@ -49,7 +53,7 @@ export class FrameBufferManager
         // アトラステクスチャはRGBA8フォーマットを使用（copyExternalImageToTextureとの互換性のため）
         const textureFormat = name === "atlas" ? "rgba8unorm" : this.format;
 
-        const texture = this.device.createTexture({
+        const gpuTexture = this.device.createTexture({
             size: { width, height },
             format: textureFormat,
             usage: GPUTextureUsage.RENDER_ATTACHMENT |
@@ -58,19 +62,39 @@ export class FrameBufferManager
                    GPUTextureUsage.COPY_DST
         });
 
-        const textureView = texture.createView();
+        const textureView = gpuTexture.createView();
+
+        // ITextureObject形式で格納
+        const texture: ITextureObject = {
+            id: this.textureId++,
+            resource: gpuTexture,
+            view: textureView,
+            width,
+            height,
+            area: width * height,
+            smooth: true
+        };
 
         // アトラス用にステンシルテクスチャを作成（2パスフィルレンダリング用）
-        let stencilTexture: GPUTexture | null = null;
-        let stencilView: GPUTextureView | null = null;
+        let stencil: IStencilBufferObject | null = null;
 
         if (name === "atlas") {
-            stencilTexture = this.device.createTexture({
+            const stencilTexture = this.device.createTexture({
                 size: { width, height },
                 format: "stencil8",
                 usage: GPUTextureUsage.RENDER_ATTACHMENT
             });
-            stencilView = stencilTexture.createView();
+            const stencilView = stencilTexture.createView();
+
+            stencil = {
+                id: this.stencilId++,
+                resource: stencilTexture,
+                view: stencilView,
+                width,
+                height,
+                area: width * height,
+                dirty: false
+            };
         }
 
         const attachment: IAttachmentObject = {
@@ -80,13 +104,9 @@ export class FrameBufferManager
             clipLevel: 0,
             msaa,
             mask,
-            texture,
-            textureView,
             color: null,
-            stencil: null,
-            colorTexture: null,
-            stencilTexture,
-            stencilView
+            texture,
+            stencil
         };
 
         this.attachments.set(name, attachment);
@@ -189,7 +209,12 @@ export class FrameBufferManager
     {
         const attachment = this.attachments.get(name);
         if (attachment) {
-            attachment.texture.destroy();
+            if (attachment.texture) {
+                attachment.texture.resource.destroy();
+            }
+            if (attachment.stencil) {
+                attachment.stencil.resource.destroy();
+            }
             this.attachments.delete(name);
         }
     }
@@ -231,7 +256,12 @@ export class FrameBufferManager
         // 名前を検索して削除
         for (const [name, att] of this.attachments.entries()) {
             if (att.id === attachment.id) {
-                att.texture.destroy();
+                if (att.texture) {
+                    att.texture.resource.destroy();
+                }
+                if (att.stencil) {
+                    att.stencil.resource.destroy();
+                }
                 this.attachments.delete(name);
                 break;
             }
@@ -245,7 +275,12 @@ export class FrameBufferManager
     dispose(): void
     {
         for (const attachment of this.attachments.values()) {
-            attachment.texture.destroy();
+            if (attachment.texture) {
+                attachment.texture.resource.destroy();
+            }
+            if (attachment.stencil) {
+                attachment.stencil.resource.destroy();
+            }
         }
         this.attachments.clear();
         this.currentAttachment = null;

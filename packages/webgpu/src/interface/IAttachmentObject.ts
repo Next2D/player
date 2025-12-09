@@ -1,18 +1,23 @@
+import type { IColorBufferObject } from "./IColorBufferObject";
 import type { ITextureObject } from "./ITextureObject";
+import type { IStencilBufferObject } from "./IStencilBufferObject";
 
+/**
+ * @description WebGL互換のアタッチメントオブジェクトインターフェース
+ *              WebGL-compatible attachment object interface
+ *
+ * WebGLと同じ構造を持つことで、rendererパッケージで両方のContextを
+ * 同じように扱うことができます。
+ */
 export interface IAttachmentObject
 {
-    readonly id: number;
+    id: number;
     width: number;
     height: number;
     clipLevel: number;
     msaa: boolean;
     mask: boolean;
-    texture: GPUTexture;
-    textureView: GPUTextureView;
-    color: GPUTexture | null;
-    stencil: GPUTexture | null;
-    colorTexture: ITextureObject | null;
-    stencilTexture: GPUTexture | null;
-    stencilView: GPUTextureView | null;
+    color: IColorBufferObject | null;
+    texture: ITextureObject | null;
+    stencil: IStencilBufferObject | null;
 }

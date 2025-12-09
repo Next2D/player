@@ -79,12 +79,15 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             // fixed logic
             const currentAttachment = $context.currentAttachmentObject;
-            $context.bind($context.atlasAttachmentObject);
+            const atlasAttachment = $context.atlasAttachmentObject;
+            if (atlasAttachment) {
+                $context.bind(atlasAttachment as any);
+            }
 
             $context.reset();
             $context.beginNodeRendering(node);
 
-            const offsetY = $context.atlasAttachmentObject.height - node.y - height;
+            const offsetY = atlasAttachment ? atlasAttachment.height - node.y - height : 0;
             $context.setTransform(1, 0, 0, 1,
                 node.x,
                 offsetY
@@ -100,7 +103,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             $context.endNodeRendering();
 
             if (currentAttachment) {
-                $context.bind(currentAttachment);
+                $context.bind(currentAttachment as any);
             }
 
         } else {
@@ -114,14 +117,17 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             // fixed logic
             const currentAttachment = $context.currentAttachmentObject;
-            $context.bind($context.atlasAttachmentObject);
+            const atlasAttachment2 = $context.atlasAttachmentObject;
+            if (atlasAttachment2) {
+                $context.bind(atlasAttachment2 as any);
+            }
 
             // 初期化して、描画範囲を初期化
             $context.reset();
             $context.beginNodeRendering(node);
 
             // matrix設定
-            const offsetY = $context.atlasAttachmentObject.height - node.y - height;
+            const offsetY = atlasAttachment2 ? atlasAttachment2.height - node.y - height : 0;
             $context.setTransform(
                 xScale, 0, 0, yScale,
                 -xMin * xScale + node.x,
@@ -143,7 +149,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             $context.endNodeRendering();
 
             if (currentAttachment) {
-                $context.bind(currentAttachment);
+                $context.bind(currentAttachment as any);
             }
         }
 

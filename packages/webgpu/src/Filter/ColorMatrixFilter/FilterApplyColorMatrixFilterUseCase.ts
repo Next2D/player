@@ -99,13 +99,13 @@ export const execute = (
         entries: [
             { binding: 0, resource: { buffer: uniformBuffer } },
             { binding: 1, resource: sampler },
-            { binding: 2, resource: sourceAttachment.textureView }
+            { binding: 2, resource: sourceAttachment.texture!.view }
         ]
     });
 
     // レンダーパスを実行
     const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
-        destAttachment.textureView, 0, 0, 0, 0, "clear"
+        destAttachment.texture!.view, 0, 0, 0, 0, "clear"
     );
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
