@@ -2,11 +2,7 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import { $offset } from "../index";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 import { generateFilterGradientLUT } from "../../Gradient/GradientLUTGenerator";
-import {
-    $generateFilterLUTCacheKey,
-    $getCachedFilterLUT,
-    $setCachedFilterLUT
-} from "../FilterGradientLUTCache";
+import { $getFilterGradientAttachmentObject } from "../FilterGradientLUTCache";
 
 /**
  * @description 度からラジアンへの変換係数
@@ -41,6 +37,10 @@ interface IGradientGlowConfig {
 /**
  * @description グラデーショングローフィルターを適用
  *              Apply gradient glow filter
+ *              注意: グラデーションLUTは共有テクスチャに描画されるため、
+ *              キャッシュは使用しません。各フレームで再描画が必要です。
+ *              Note: Gradient LUT is drawn to a shared texture, so caching
+ *              is not used. Re-drawing is required each frame.
  *
  * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ
  * @param  {Float32Array} matrix - 変換行列
@@ -139,25 +139,17 @@ export const execute = (
     // サンプラーを作成
     const sampler = textureManager.createSampler("gradient_glow_sampler", true);
 
-    // グラデーションLUTテクスチャを取得（キャッシュから、またはキャッシュに新規追加）
-    const lutCacheKey = $generateFilterLUTCacheKey(ratios, colors, alphas);
-    let lutTexture = $getCachedFilterLUT(lutCacheKey);
+    // グラデーションLUTテクスチャを生成（共有テクスチャを使用、キャッシュなし）
+    const lutData = generateFilterGradientLUT(ratios, colors, alphas);
+    const lutAttachment = $getFilterGradientAttachmentObject();
 
-    if (!lutTexture) {
-        const lutData = generateFilterGradientLUT(ratios, colors, alphas);
-        lutTexture = device.createTexture({
-            size: { width: 256, height: 1 },
-            format: "rgba8unorm",
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-        });
-        device.queue.writeTexture(
-            { texture: lutTexture },
-            lutData.buffer,
-            { bytesPerRow: 256 * 4, offset: lutData.byteOffset },
-            { width: 256, height: 1 }
-        );
-        $setCachedFilterLUT(lutCacheKey, lutTexture);
-    }
+    // 共有テクスチャにLUTデータを書き込み
+    device.queue.writeTexture(
+        { texture: lutAttachment.texture!.resource },
+        lutData.buffer,
+        { bytesPerRow: 256 * 4, offset: lutData.byteOffset },
+        { width: 256, height: 1 }
+    );
 
     // ユニフォームバッファを作成
     // strength: f32 (4 bytes)
@@ -238,7 +230,7 @@ export const execute = (
             { binding: 1, resource: sampler },
             { binding: 2, resource: blurTextureForComposite.texture!.view },
             { binding: 3, resource: baseTextureForComposite.texture!.view },
-            { binding: 4, resource: lutTexture.createView() }
+            { binding: 4, resource: lutAttachment.texture!.view }
         ]
     });
 
@@ -253,7 +245,7 @@ export const execute = (
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
 
-    // クリーンアップ（LUTテクスチャはキャッシュで管理されるため破棄しない）
+    // クリーンアップ（LUTは共有テクスチャなので破棄しない）
     uniformBuffer.destroy();
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
     frameBufferManager.releaseTemporaryAttachment(baseTextureForComposite);

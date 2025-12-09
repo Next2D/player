@@ -1,167 +1,94 @@
-/**
- * @description フィルター用グラデーションLUTテクスチャのキャッシュエントリ
- *              Cache entry for filter gradient LUT texture
- */
-interface IFilterLUTCacheEntry {
-    texture: GPUTexture;
-    lastUsed: number;
-}
+import type { IAttachmentObject } from "../interface/IAttachmentObject";
 
 /**
- * @description フィルター用グラデーションLUTテクスチャのキャッシュ
- *              Cache for filter gradient LUT textures
+ * @description フィルター用グラデーションLUTの共有アタッチメント
+ *              Shared attachment for filter gradient LUT
+ *              注意: グラデーションLUTは共有テクスチャに描画されるため、
+ *              キャッシュは使用しません。各フレームで再描画が必要です。
+ *              Note: Gradient LUT is drawn to a shared texture, so caching
+ *              is not used. Re-drawing is required each frame.
  *
- * @type {Map<string, IFilterLUTCacheEntry>}
+ * @type {IAttachmentObject | null}
  * @private
  */
-const $filterLutCache: Map<string, IFilterLUTCacheEntry> = new Map();
+let $filterGradientAttachment: IAttachmentObject | null = null;
 
 /**
- * @description キャッシュの最大サイズ
- *              Maximum cache size
- *
- * @type {number}
- * @const
- */
-const MAX_CACHE_SIZE: number = 16;
-
-/**
- * @description 現在のフレーム番号
- *              Current frame number
- *
- * @type {number}
+ * @description GPUDeviceの参照
  * @private
  */
-let $currentFrame: number = 0;
+let $device: GPUDevice | null = null;
 
 /**
- * @description フィルターグラデーションパラメータからキャッシュキーを生成
- *              Generate cache key from filter gradient parameters
+ * @description GPUDeviceを設定
+ *              Set GPUDevice
  *
- * @param  {Float32Array} ratios - 比率配列
- * @param  {Float32Array} colors - 色配列
- * @param  {Float32Array} alphas - アルファ配列
- * @return {string}
- * @method
- * @protected
- */
-export const $generateFilterLUTCacheKey = (
-    ratios: Float32Array,
-    colors: Float32Array,
-    alphas: Float32Array
-): string =>
-{
-    // 全ての値を含むキーを生成
-    const parts: string[] = [];
-    const length = ratios.length;
-
-    for (let i = 0; i < length; i++) {
-        // ratio, color, alpha を組み合わせてキーを生成
-        parts.push(
-            `${(ratios[i] | 0).toString(36)}_${(colors[i] | 0).toString(36)}_${(alphas[i] * 1000 | 0).toString(36)}`
-        );
-    }
-
-    return parts.join(":");
-};
-
-/**
- * @description キャッシュからフィルターLUTテクスチャを取得
- *              Get filter LUT texture from cache
- *
- * @param  {string} key
- * @return {GPUTexture | null}
- * @method
- * @protected
- */
-export const $getCachedFilterLUT = (key: string): GPUTexture | null =>
-{
-    const entry = $filterLutCache.get(key);
-    if (entry) {
-        entry.lastUsed = $currentFrame;
-        return entry.texture;
-    }
-    return null;
-};
-
-/**
- * @description フィルターLUTテクスチャをキャッシュに追加
- *              Add filter LUT texture to cache
- *
- * @param  {string} key
- * @param  {GPUTexture} texture
+ * @param  {GPUDevice} device
  * @return {void}
  * @method
  * @protected
  */
-export const $setCachedFilterLUT = (key: string, texture: GPUTexture): void =>
+export const $setFilterGradientLUTDevice = (device: GPUDevice): void =>
 {
-    // キャッシュサイズ制限を超える場合、最も古いエントリを削除
-    if ($filterLutCache.size >= MAX_CACHE_SIZE) {
-        let oldestKey: string | null = null;
-        let oldestFrame = Infinity;
-
-        for (const [k, v] of $filterLutCache) {
-            if (v.lastUsed < oldestFrame) {
-                oldestFrame = v.lastUsed;
-                oldestKey = k;
-            }
-        }
-
-        if (oldestKey) {
-            const oldEntry = $filterLutCache.get(oldestKey);
-            if (oldEntry) {
-                oldEntry.texture.destroy();
-            }
-            $filterLutCache.delete(oldestKey);
-        }
-    }
-
-    $filterLutCache.set(key, {
-        texture,
-        lastUsed: $currentFrame
-    });
+    $device = device;
 };
 
 /**
- * @description フレームを進める（キャッシュの有効期限管理用）
- *              Advance frame (for cache expiration management)
+ * @description フィルター用グラデーションLUTのAttachmentObjectを返却
+ *              Returns AttachmentObject for filter gradient LUT
+ *
+ * @return {IAttachmentObject}
+ * @method
+ * @protected
+ */
+export const $getFilterGradientAttachmentObject = (): IAttachmentObject =>
+{
+    if (!$filterGradientAttachment && $device) {
+        const resolution = 256;
+
+        // 1xN テクスチャを作成
+        const texture = $device.createTexture({
+            size: { width: resolution, height: 1 },
+            format: "rgba8unorm",
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+        });
+
+        $filterGradientAttachment = {
+            id: -256, // フィルター用に負のIDを使用
+            width: resolution,
+            height: 1,
+            clipLevel: 0,
+            msaa: false,
+            mask: false,
+            color: null,
+            texture: {
+                id: -256,
+                resource: texture,
+                view: texture.createView(),
+                width: resolution,
+                height: 1,
+                area: resolution,
+                smooth: true
+            },
+            stencil: null
+        };
+    }
+
+    return $filterGradientAttachment as NonNullable<IAttachmentObject>;
+};
+
+/**
+ * @description フィルター用グラデーションLUTの共有アタッチメントを破棄してクリア
+ *              Destroy and clear filter gradient LUT shared attachment
  *
  * @return {void}
  * @method
  * @protected
  */
-export const $advanceFilterLUTFrame = (): void =>
+export const $clearFilterGradientAttachment = (): void =>
 {
-    $currentFrame++;
-};
-
-/**
- * @description キャッシュをクリア
- *              Clear cache
- *
- * @return {void}
- * @method
- * @protected
- */
-export const $clearFilterLUTCache = (): void =>
-{
-    // 全てのテクスチャを破棄
-    for (const entry of $filterLutCache.values()) {
-        entry.texture.destroy();
+    if ($filterGradientAttachment?.texture?.resource) {
+        $filterGradientAttachment.texture.resource.destroy();
     }
-    $filterLutCache.clear();
-};
-
-/**
- * @description キャッシュサイズを返却
- *              Returns cache size
- *
- * @return {number}
- * @method
- * @protected
- */
-export const $getFilterLUTCacheSize = (): number =>
-{
-    return $filterLutCache.size;
+    $filterGradientAttachment = null;
 };

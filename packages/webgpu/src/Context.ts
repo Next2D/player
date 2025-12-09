@@ -40,12 +40,12 @@ import {
     $terminateGrid
 } from "./Grid";
 import {
-    $advanceFrame as $advanceLUTCacheFrame,
-    $clearLUTCache
+    $setGradientLUTDevice,
+    $clearGradientAttachmentObjects
 } from "./Gradient/GradientLUTCache";
 import {
-    $advanceFilterLUTFrame,
-    $clearFilterLUTCache
+    $setFilterGradientLUTDevice,
+    $clearFilterGradientAttachment
 } from "./Filter/FilterGradientLUTCache";
 
 /**
@@ -176,6 +176,10 @@ export class Context
         this.pipelineManager = new PipelineManager(device, preferred_format);
         this.attachmentManager = new AttachmentManager(device);
 
+        // グラデーションLUT共有アタッチメントにGPUDeviceを設定
+        $setGradientLUTDevice(device);
+        $setFilterGradientLUTDevice(device);
+
         // コンテキストをグローバル変数にセット
         $setContext(this);
     }
@@ -265,10 +269,10 @@ export class Context
             (canvas as any).height = height;
         }
 
-        // キャッシュをクリア
+        // 共有アタッチメントをクリア
         if (cache_clear) {
-            $clearLUTCache();
-            $clearFilterLUTCache();
+            $clearGradientAttachmentObjects();
+            $clearFilterGradientAttachment();
         }
 
         // canvasContextを再設定
@@ -2864,9 +2868,8 @@ export class Context
             this.ensureCommandEncoder();
             this.frameStarted = true;
 
-            // LUTキャッシュのフレームカウンターを進める
-            $advanceLUTCacheFrame();
-            $advanceFilterLUTFrame();
+            // 注意: グラデーションLUTは共有テクスチャに描画されるため、
+            // キャッシュは使用しません。各フレームで再描画が必要です。
         }
     }
 
