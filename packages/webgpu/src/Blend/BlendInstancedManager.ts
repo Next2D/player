@@ -1,27 +1,9 @@
 import type { Node } from "@next2d/texture-packer";
+import type { IComplexBlendItem } from "../interface/IComplexBlendItem";
 import { ShaderInstancedManager } from "../Shader/ShaderInstancedManager";
 import { $getCurrentBlendMode, $setCurrentBlendMode } from "../Blend";
 import { $getCurrentAtlasIndex, $setCurrentAtlasIndex, $setActiveAtlasIndex } from "../AtlasManager";
 import { renderQueue } from "@next2d/render-queue";
-
-/**
- * @description 複雑なブレンドモードの描画キュー
- *              Complex blend mode rendering queue
- */
-interface IComplexBlendItem {
-    node: Node;
-    x_min: number;
-    y_min: number;
-    x_max: number;
-    y_max: number;
-    color_transform: Float32Array;
-    matrix: Float32Array;
-    blend_mode: string;
-    viewport_width: number;
-    viewport_height: number;
-    render_max_size: number;
-    global_alpha: number;
-}
 
 /**
  * @description 複雑なブレンドモード描画キュー

@@ -1,26 +1,6 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
+import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { ShaderSource } from "../../Shader/ShaderSource";
-
-/**
- * @description コンボリューションフィルター処理の設定
- *              Convolution filter processing configuration
- */
-interface IConvolutionConfig {
-    device: GPUDevice;
-    commandEncoder: GPUCommandEncoder;
-    frameBufferManager: {
-        createTemporaryAttachment(width: number, height: number): IAttachmentObject;
-        releaseTemporaryAttachment(attachment: IAttachmentObject): void;
-        createRenderPassDescriptor(
-            view: GPUTextureView,
-            r: number, g: number, b: number, a: number,
-            loadOp: GPULoadOp
-        ): GPURenderPassDescriptor;
-    };
-    textureManager: {
-        createSampler(name: string, smooth: boolean): GPUSampler;
-    };
-}
 
 /**
  * @description 32bit整数からRGB値を抽出
@@ -60,7 +40,7 @@ export const execute = (
     clamp: boolean,
     color: number,
     alpha: number,
-    config: IConvolutionConfig
+    config: IFilterConfig
 ): IAttachmentObject => {
 
     const { device, commandEncoder, frameBufferManager, textureManager } = config;

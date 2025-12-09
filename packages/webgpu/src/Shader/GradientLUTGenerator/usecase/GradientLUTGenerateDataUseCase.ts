@@ -1,15 +1,7 @@
+import type { IGradientLUTData } from "../../../interface/IGradientLUTData";
 import { execute as gradientLUTParseStopsService } from "../service/GradientLUTParseStopsService";
 import { execute as gradientLUTCalculateResolutionService } from "../service/GradientLUTCalculateResolutionService";
 import { execute as gradientLUTGeneratePixelsService } from "../service/GradientLUTGeneratePixelsService";
-
-/**
- * @description グラデーションLUTデータを生成する結果型
- *              Result type for generated gradient LUT data
- */
-export interface IGradientLUTData {
-    pixels: Uint8Array;
-    resolution: number;
-}
 
 /**
  * @description グラデーションLUTのピクセルデータを生成

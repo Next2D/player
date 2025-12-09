@@ -1,31 +1,7 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
+import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../index";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
-
-/**
- * @description グローフィルター処理の設定
- *              Glow filter processing configuration
- */
-interface IGlowConfig {
-    device: GPUDevice;
-    commandEncoder: GPUCommandEncoder;
-    frameBufferManager: {
-        createTemporaryAttachment(width: number, height: number): IAttachmentObject;
-        releaseTemporaryAttachment(attachment: IAttachmentObject): void;
-        createRenderPassDescriptor(
-            view: GPUTextureView,
-            r: number, g: number, b: number, a: number,
-            loadOp: GPULoadOp
-        ): GPURenderPassDescriptor;
-    };
-    pipelineManager: {
-        getPipeline(name: string): GPURenderPipeline | undefined;
-        getBindGroupLayout(name: string): GPUBindGroupLayout | undefined;
-    };
-    textureManager: {
-        createSampler(name: string, smooth: boolean): GPUSampler;
-    };
-}
 
 /**
  * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ対応）
@@ -67,7 +43,7 @@ export const execute = (
     inner: boolean,
     knockout: boolean,
     devicePixelRatio: number,
-    config: IGlowConfig
+    config: IFilterConfig
 ): IAttachmentObject => {
 
     const { device, commandEncoder, frameBufferManager, pipelineManager, textureManager } = config;

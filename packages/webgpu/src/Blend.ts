@@ -1,4 +1,7 @@
 import type { IBlendMode } from "./interface/IBlendMode";
+import type { IBlendState } from "./interface/IBlendState";
+
+export type { IBlendState };
 
 /**
  * @description 現在設定されているブレンドモード
@@ -72,15 +75,6 @@ export const $getFuncCode = (): number =>
 {
     return $funcCode;
 };
-
-/**
- * @description WebGPUブレンドステート定義
- *              WebGPU blend state definitions
- */
-export interface IBlendState {
-    color: GPUBlendComponent;
-    alpha: GPUBlendComponent;
-}
 
 /**
  * @description ブレンドモードからWebGPUブレンドステートを取得

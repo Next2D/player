@@ -20,10 +20,10 @@ import { execute as maskSetMaskBoundsService } from "./Mask/service/MaskSetMaskB
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
 import { execute as maskLeaveMaskUseCase } from "./Mask/usecase/MaskLeaveMaskUseCase";
 import { execute as meshFillGenerateUseCase } from "./Mesh/usecase/MeshFillGenerateUseCase";
-import { $clipBounds, $clipLevels } from "./Mask";
-import { generateGradientLUT, getAdaptiveResolution } from "./Gradient/GradientLUTGenerator";
 import { execute as meshGradientStrokeGenerateUseCase } from "./Mesh/usecase/MeshGradientStrokeGenerateUseCase";
 import { execute as meshBitmapStrokeGenerateUseCase } from "./Mesh/usecase/MeshBitmapStrokeGenerateUseCase";
+import { $clipBounds, $clipLevels } from "./Mask";
+import { generateGradientLUT, getAdaptiveResolution } from "./Gradient/GradientLUTGenerator";
 import { $offset } from "./Filter";
 import { execute as filterApplyBlurFilterUseCase } from "./Filter/BlurFilter/FilterApplyBlurFilterUseCase";
 import { execute as filterApplyColorMatrixFilterUseCase } from "./Filter/ColorMatrixFilter/FilterApplyColorMatrixFilterUseCase";
@@ -47,6 +47,13 @@ import {
     $setFilterGradientLUTDevice,
     $clearFilterGradientAttachment
 } from "./Filter/FilterGradientLUTCache";
+
+// Context services
+import { execute as contextFillWithStencilService } from "./Context/service/ContextFillWithStencilService";
+import { execute as contextFillSimpleService } from "./Context/service/ContextFillSimpleService";
+
+// Context usecases
+import { execute as contextGradientFillUseCase } from "./Context/usecase/ContextGradientFillUseCase";
 
 /**
  * @description WebGPU版、Next2Dのコンテキスト
@@ -568,7 +575,7 @@ export class Context
         const attachment = this.frameBufferManager.getAttachment("atlas");
         if (this.currentRenderTarget && attachment?.stencil?.view) {
             // 2パスステンシルフィル（WebGL版と同じアルゴリズム）
-            this.fillWithStencil(vertexBuffer, mesh.indexCount, red, green, blue, alpha);
+            this.fillWithStencil(vertexBuffer, mesh.indexCount);
         } else {
             // キャンバスへの描画またはステンシルなしの場合は単純なフィル
             this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight);
@@ -582,47 +589,21 @@ export class Context
      *              Pass 1: Front面でインクリメント、Back面でデクリメント（1回の描画で両面処理）
      *              Pass 2: ステンシル値 != 0 の部分に色を描画
      *
-     *              WebGL版:
-     *              - stencilOpSeparate(FRONT, INCR_WRAP) + stencilOpSeparate(BACK, DECR_WRAP)
-     *              - stencilFunc(NOTEQUAL, 0) + stencilOp(KEEP, ZERO, ZERO)
-     *
      * @param {GPUBuffer} vertexBuffer
      * @param {number} vertexCount
-     * @param {number} red
-     * @param {number} green
-     * @param {number} blue
-     * @param {number} alpha
      * @return {void}
      */
     private fillWithStencil(
         vertexBuffer: GPUBuffer,
-        vertexCount: number,
-        _red: number,
-        _green: number,
-        _blue: number,
-        _alpha: number
+        vertexCount: number
     ): void
     {
-        // === Pass 1: ステンシル書き込み（両面を1回で処理） ===
-        // Front面: INCR_WRAP, Back面: DECR_WRAP
-        const stencilWritePipeline = this.pipelineManager.getPipeline("stencil_write");
-        if (stencilWritePipeline) {
-            this.renderPassEncoder!.setPipeline(stencilWritePipeline);
-            this.renderPassEncoder!.setStencilReference(0); // ステンシル参照値を設定
-            this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
-            this.renderPassEncoder!.draw(vertexCount, 1, 0, 0);
-        }
-
-        // === Pass 2: ステンシルフィル（色描画） ===
-        // WebGL版と同じ: 同じメッシュデータを使って描画
-        // ステンシル値 != 0 の部分に色を描画し、ステンシルをクリア
-        const fillPipeline = this.pipelineManager.getPipeline("stencil_fill");
-        if (fillPipeline) {
-            this.renderPassEncoder!.setPipeline(fillPipeline);
-            this.renderPassEncoder!.setStencilReference(0); // ステンシル参照値を0に設定（not-equal to 0）
-            this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
-            this.renderPassEncoder!.draw(vertexCount, 1, 0, 0);
-        }
+        contextFillWithStencilService(
+            this.renderPassEncoder!,
+            this.pipelineManager,
+            vertexBuffer,
+            vertexCount
+        );
     }
 
     /**
@@ -640,46 +621,17 @@ export class Context
         viewportHeight: number
     ): void
     {
-        // Uniform data: viewport size only (8 bytes → 16 bytes aligned)
-        const uniformData = new Float32Array(4);
-        uniformData[0] = viewportWidth;
-        uniformData[1] = viewportHeight;
-        uniformData[2] = 0;
-        uniformData[3] = 0;
-
-        const uniformBuffer = this.bufferManager.createUniformBuffer(
-            `fill_uniform_${Date.now()}`,
-            uniformData.byteLength
+        contextFillSimpleService(
+            this.device,
+            this.renderPassEncoder!,
+            this.bufferManager,
+            this.pipelineManager,
+            vertexBuffer,
+            vertexCount,
+            viewportWidth,
+            viewportHeight,
+            !!this.currentRenderTarget
         );
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
-
-        // バインドグループを作成
-        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("fill");
-        if (!bindGroupLayout) {
-            console.error("[WebGPU] Fill bind group layout not found");
-            return;
-        }
-
-        const bindGroup = this.device.createBindGroup({
-            layout: bindGroupLayout,
-            entries: [{
-                binding: 0,
-                resource: { buffer: uniformBuffer }
-            }]
-        });
-
-        // パイプラインを取得して描画
-        const pipelineName = this.currentRenderTarget ? "fill" : "fill_bgra";
-        const pipeline = this.pipelineManager.getPipeline(pipelineName);
-        if (!pipeline) {
-            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-            return;
-        }
-
-        this.renderPassEncoder!.setPipeline(pipeline);
-        this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
-        this.renderPassEncoder!.setBindGroup(0, bindGroup);
-        this.renderPassEncoder!.draw(vertexCount, 1, 0, 0);
     }
 
     /**
@@ -894,143 +846,24 @@ export class Context
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         }
 
-        // WebGL版と同じ: 現在のビューポートサイズを使用
-        const viewportWidth = this.viewportWidth;
-        const viewportHeight = this.viewportHeight;
-
-        // 色（グラデーション描画ではアルファ乗算用に使用）
-        const red = this.$fillStyle[0];
-        const green = this.$fillStyle[1];
-        const blue = this.$fillStyle[2];
-        const alpha = this.$fillStyle[3];
-
-        // 行列を取得
-        const a  = this.$matrix[0];
-        const b  = this.$matrix[1];
-        const c  = this.$matrix[3];
-        const d  = this.$matrix[4];
-        const tx = this.$matrix[6];
-        const ty = this.$matrix[7];
-
-        // MeshFillGenerateUseCaseで頂点データを生成
-        const mesh = meshFillGenerateUseCase(
+        contextGradientFillUseCase(
+            this.device,
+            this.renderPassEncoder!,
+            this.bufferManager,
+            this.pipelineManager,
             pathVertices,
-            a, b, c, d, tx, ty,
-            red, green, blue, alpha,
-            viewportWidth, viewportHeight
+            this.$matrix,
+            this.$fillStyle,
+            type,
+            stops,
+            matrix,
+            spread,
+            interpolation,
+            focal,
+            this.viewportWidth,
+            this.viewportHeight,
+            !!this.currentRenderTarget
         );
-
-        if (mesh.indexCount === 0) {
-            return;
-        }
-
-        // 頂点バッファを作成
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            `gradient_fill_${Date.now()}`,
-            mesh.buffer
-        );
-
-        // グラデーションLUTテクスチャを生成
-        const lutData = generateGradientLUT(stops, spread, interpolation);
-        const stopsLength = stops.length / 5;
-        const lutResolution = getAdaptiveResolution(stopsLength);
-
-        // LUTテクスチャを作成
-        const lutTexture = this.device.createTexture({
-            size: { width: lutResolution, height: 1 },
-            format: "rgba8unorm",
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-        });
-
-        // LUTデータをテクスチャに転送
-        this.device.queue.writeTexture(
-            { texture: lutTexture },
-            lutData.buffer,
-            { bytesPerRow: lutResolution * 4, rowsPerImage: 1, offset: lutData.byteOffset },
-            { width: lutResolution, height: 1 }
-        );
-
-        // グラデーション変換行列を計算
-        // WebGL版と同様: 逆行列を使ってグラデーション空間に変換
-        const gradientMatrix = this.computeGradientMatrix(matrix, type);
-
-        // Uniformバッファを作成
-        // GradientUniforms構造体:
-        // - gradientMatrix: mat3x3<f32> (各列がvec4にパディング = 48 bytes)
-        // - gradientType: f32 (4 bytes)
-        // - focal: f32 (4 bytes)
-        // - spread: f32 (4 bytes)
-        // - _pad: f32 (4 bytes)
-        // 合計: 64 bytes
-        const uniformData = new Float32Array(16);
-        // mat3x3 (各列がvec4にパディング)
-        uniformData[0] = gradientMatrix[0];
-        uniformData[1] = gradientMatrix[1];
-        uniformData[2] = gradientMatrix[2];
-        uniformData[3] = 0; // padding
-        uniformData[4] = gradientMatrix[3];
-        uniformData[5] = gradientMatrix[4];
-        uniformData[6] = gradientMatrix[5];
-        uniformData[7] = 0; // padding
-        uniformData[8] = gradientMatrix[6];
-        uniformData[9] = gradientMatrix[7];
-        uniformData[10] = gradientMatrix[8];
-        uniformData[11] = 0; // padding
-        // グラデーションパラメータ
-        uniformData[12] = type; // gradientType
-        uniformData[13] = focal; // focal
-        uniformData[14] = spread; // spread
-        uniformData[15] = 0; // padding
-
-        const uniformBuffer = this.bufferManager.createUniformBuffer(
-            `gradient_uniform_${Date.now()}`,
-            uniformData.byteLength
-        );
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
-
-        // サンプラーを作成
-        const sampler = this.device.createSampler({
-            magFilter: "linear",
-            minFilter: "linear",
-            addressModeU: "clamp-to-edge",
-            addressModeV: "clamp-to-edge"
-        });
-
-        // バインドグループを作成
-        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("gradient_fill");
-        if (!bindGroupLayout) {
-            console.error("[WebGPU] gradient_fill bind group layout not found");
-            lutTexture.destroy();
-            return;
-        }
-
-        const bindGroup = this.device.createBindGroup({
-            layout: bindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: uniformBuffer } },
-                { binding: 1, resource: sampler },
-                { binding: 2, resource: lutTexture.createView() }
-            ]
-        });
-
-        // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
-        const pipelineName = this.currentRenderTarget ? "gradient_fill" : "gradient_fill_bgra";
-        const pipeline = this.pipelineManager.getPipeline(pipelineName);
-        if (!pipeline) {
-            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-            lutTexture.destroy();
-            return;
-        }
-
-        // 描画
-        this.renderPassEncoder!.setPipeline(pipeline);
-        this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
-        this.renderPassEncoder!.setBindGroup(0, bindGroup);
-        this.renderPassEncoder!.draw(mesh.indexCount, 1, 0, 0);
-
-        // LUTテクスチャは描画後に解放（次フレームで再作成）
-        // Note: GPUQueueにコマンドがsubmitされた後に解放する必要がある
-        // 現在は即座に解放せず、フレーム終了時に自動解放される
     }
 
     /**
@@ -1705,10 +1538,18 @@ export class Context
         }
 
         // シザーレクトを設定
-        const scissorX = Math.max(0, xMin);
-        const scissorY = Math.max(0, currentAttachment.height - yMin - height);
-        const scissorW = Math.min(width, currentAttachment.width - scissorX);
-        const scissorH = Math.min(height, currentAttachment.height - scissorY);
+        // シェーダーでY軸反転(-ndc.y)しているため、描画結果はWebGPU座標系になる
+        // WebGPUのシザーは左上原点なのでyMinをそのまま使用
+        let scissorX = Math.max(0, xMin);
+        let scissorY = Math.max(0, yMin);
+        let scissorW = Math.min(width, currentAttachment.width - scissorX);
+        let scissorH = Math.min(height, currentAttachment.height - scissorY);
+
+        // レンダーターゲット範囲内にクランプ
+        scissorX = Math.min(scissorX, currentAttachment.width);
+        scissorY = Math.min(scissorY, currentAttachment.height);
+        scissorW = Math.max(0, Math.min(scissorW, currentAttachment.width - scissorX));
+        scissorH = Math.max(0, Math.min(scissorH, currentAttachment.height - scissorY));
 
         if (scissorW > 0 && scissorH > 0 && this.renderPassEncoder) {
             this.renderPassEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
@@ -1830,14 +1671,18 @@ export class Context
             }
 
             // シザーレクトで描画範囲を制限
-            // WebGPU座標系: Y軸が上から下（node.yをそのまま使用）
-            // ただし、ShapeRenderUseCaseでoffsetY = atlasHeight - node.y - heightを計算
-            // しているため、描画位置はWebGL座標系（下から上）になっている
-            // シザーレクトもそれに合わせてY座標を変換
-            const scissorX = Math.max(0, node.x);
-            const scissorY = Math.max(0, attachment.height - node.y - node.h);
-            const scissorW = Math.min(node.w, attachment.width - scissorX);
-            const scissorH = Math.min(node.h, attachment.height - scissorY);
+            // シェーダーでY軸反転(-ndc.y)しているため、描画結果はWebGPU座標系でnode.y位置になる
+            // WebGPUのシザーは左上原点なのでnode.yをそのまま使用
+            let scissorX = Math.max(0, node.x);
+            let scissorY = Math.max(0, node.y);
+            let scissorW = Math.min(node.w, attachment.width - scissorX);
+            let scissorH = Math.min(node.h, attachment.height - scissorY);
+
+            // レンダーターゲット範囲内にクランプ
+            scissorX = Math.min(scissorX, attachment.width);
+            scissorY = Math.min(scissorY, attachment.height);
+            scissorW = Math.max(0, Math.min(scissorW, attachment.width - scissorX));
+            scissorH = Math.max(0, Math.min(scissorH, attachment.height - scissorY));
 
             if (scissorW > 0 && scissorH > 0) {
                 this.renderPassEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
@@ -2429,6 +2274,7 @@ export class Context
                             device: this.device,
                             commandEncoder: this.commandEncoder!,
                             frameBufferManager: this.frameBufferManager,
+                            pipelineManager: this.pipelineManager,
                             textureManager: this.textureManager
                         };
 
@@ -2471,6 +2317,7 @@ export class Context
                             device: this.device,
                             commandEncoder: this.commandEncoder!,
                             frameBufferManager: this.frameBufferManager,
+                            pipelineManager: this.pipelineManager,
                             textureManager: this.textureManager
                         };
 
@@ -2900,12 +2747,15 @@ export class Context
                 console.error("Failed to submit frame commands:", e);
             }
         }
-        
+
+        // submit後に一時テクスチャを解放
+        this.frameBufferManager.flushPendingReleases();
+
         // 次のフレーム用にクリア
         this.commandEncoder = null;
         this.renderPassEncoder = null;
         this.currentRenderTarget = null;
-        
+
         // テクスチャ参照をクリア（次フレームで新しく取得）
         this.mainTexture = null;
         this.mainTextureView = null;

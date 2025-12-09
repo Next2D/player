@@ -1,31 +1,7 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
+import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../index";
 import { calculateBlurParams, calculateDirectionalBlurParams } from "../BlurFilterUseCase";
-
-/**
- * @description ブラー処理の設定
- *              Blur processing configuration
- */
-interface IBlurConfig {
-    device: GPUDevice;
-    commandEncoder: GPUCommandEncoder;
-    frameBufferManager: {
-        createTemporaryAttachment(width: number, height: number): IAttachmentObject;
-        releaseTemporaryAttachment(attachment: IAttachmentObject): void;
-        createRenderPassDescriptor(
-            view: GPUTextureView,
-            r: number, g: number, b: number, a: number,
-            loadOp: GPULoadOp
-        ): GPURenderPassDescriptor;
-    };
-    pipelineManager: {
-        getPipeline(name: string): GPURenderPipeline | undefined;
-        getBindGroupLayout(name: string): GPUBindGroupLayout | undefined;
-    };
-    textureManager: {
-        createSampler(name: string, smooth: boolean): GPUSampler;
-    };
-}
 
 /**
  * @description ブラーフィルターを適用
@@ -37,7 +13,7 @@ interface IBlurConfig {
  * @param  {number} blurY - Y方向のブラー量
  * @param  {number} quality - クオリティ (1-15)
  * @param  {number} devicePixelRatio - デバイスピクセル比
- * @param  {IBlurConfig} config - WebGPUリソース設定
+ * @param  {IFilterConfig} config - WebGPUリソース設定
  * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
@@ -47,7 +23,7 @@ export const execute = (
     blurY: number,
     quality: number,
     devicePixelRatio: number,
-    config: IBlurConfig
+    config: IFilterConfig
 ): IAttachmentObject => {
 
     const { device, commandEncoder, frameBufferManager, pipelineManager, textureManager } = config;
@@ -148,8 +124,8 @@ export const execute = (
 const copyTextureToAttachment = (
     device: GPUDevice,
     commandEncoder: GPUCommandEncoder,
-    frameBufferManager: IBlurConfig["frameBufferManager"],
-    pipelineManager: IBlurConfig["pipelineManager"],
+    frameBufferManager: IFilterConfig["frameBufferManager"],
+    pipelineManager: IFilterConfig["pipelineManager"],
     source: IAttachmentObject,
     dest: IAttachmentObject,
     sampler: GPUSampler,
@@ -205,8 +181,8 @@ const copyTextureToAttachment = (
 const applyDirectionalBlur = (
     device: GPUDevice,
     commandEncoder: GPUCommandEncoder,
-    frameBufferManager: IBlurConfig["frameBufferManager"],
-    pipelineManager: IBlurConfig["pipelineManager"],
+    frameBufferManager: IFilterConfig["frameBufferManager"],
+    pipelineManager: IFilterConfig["pipelineManager"],
     source: IAttachmentObject,
     dest: IAttachmentObject,
     sampler: GPUSampler,
@@ -266,8 +242,8 @@ const applyDirectionalBlur = (
 const upscaleTexture = (
     device: GPUDevice,
     commandEncoder: GPUCommandEncoder,
-    frameBufferManager: IBlurConfig["frameBufferManager"],
-    pipelineManager: IBlurConfig["pipelineManager"],
+    frameBufferManager: IFilterConfig["frameBufferManager"],
+    pipelineManager: IFilterConfig["pipelineManager"],
     source: IAttachmentObject,
     dest: IAttachmentObject,
     sampler: GPUSampler,

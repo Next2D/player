@@ -1,14 +1,6 @@
 import type { IPoint } from "../../interface/IPoint";
+import type { IMeshResult } from "../../interface/IMeshResult";
 import { generateStrokeOutline } from "./MeshStrokeGenerateUseCase";
-
-/**
- * @description グラデーションストロークメッシュの結果インターフェース
- *              Gradient stroke mesh result interface
- */
-export interface IGradientStrokeMesh {
-    buffer: Float32Array;
-    indexCount: number;
-}
 
 /**
  * @description グラデーションストローク用のメッシュを生成する
@@ -36,7 +28,7 @@ export interface IGradientStrokeMesh {
  * @param  {number} alpha
  * @param  {number} viewportWidth - ビューポート幅
  * @param  {number} viewportHeight - ビューポート高さ
- * @return {IGradientStrokeMesh}
+ * @return {IMeshResult}
  * @method
  * @protected
  */
@@ -55,7 +47,7 @@ export const execute = (
     alpha: number,
     viewportWidth: number,
     viewportHeight: number
-): IGradientStrokeMesh => {
+): IMeshResult => {
 
     // WebGL版と同じ: 行列をビューポートサイズで正規化
     const normalizedA  = a / viewportWidth;

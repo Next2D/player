@@ -1,4 +1,5 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
+import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../index";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 
@@ -6,31 +7,6 @@ import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApp
  * @description 度からラジアンへの変換係数
  */
 const DEG_TO_RAD: number = Math.PI / 180;
-
-/**
- * @description ベベルフィルター処理の設定
- *              Bevel filter processing configuration
- */
-interface IBevelConfig {
-    device: GPUDevice;
-    commandEncoder: GPUCommandEncoder;
-    frameBufferManager: {
-        createTemporaryAttachment(width: number, height: number): IAttachmentObject;
-        releaseTemporaryAttachment(attachment: IAttachmentObject): void;
-        createRenderPassDescriptor(
-            view: GPUTextureView,
-            r: number, g: number, b: number, a: number,
-            loadOp: GPULoadOp
-        ): GPURenderPassDescriptor;
-    };
-    pipelineManager: {
-        getPipeline(name: string): GPURenderPipeline | undefined;
-        getBindGroupLayout(name: string): GPUBindGroupLayout | undefined;
-    };
-    textureManager: {
-        createSampler(name: string, smooth: boolean): GPUSampler;
-    };
-}
 
 /**
  * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ対応）
@@ -80,7 +56,7 @@ export const execute = (
     type: number,
     knockout: boolean,
     devicePixelRatio: number,
-    config: IBevelConfig
+    config: IFilterConfig
 ): IAttachmentObject => {
 
     const { device, commandEncoder, frameBufferManager, pipelineManager, textureManager } = config;

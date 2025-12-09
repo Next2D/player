@@ -1,14 +1,6 @@
 import type { IPath } from "../../interface/IPath";
+import type { IMeshResult } from "../../interface/IMeshResult";
 import { execute as meshFillGenerateService } from "../service/MeshFillGenerateService";
-
-/**
- * @description 塗りメッシュの結果インターフェース
- *              Fill mesh result interface
- */
-export interface IFillMesh {
-    buffer: Float32Array;
-    indexCount: number;
-}
 
 /**
  * @description 塗りのメッシュを生成する（WebGL版と同じ行列正規化を行う）
@@ -27,7 +19,7 @@ export interface IFillMesh {
  * @param  {number} alpha
  * @param  {number} viewportWidth - ビューポート幅
  * @param  {number} viewportHeight - ビューポート高さ
- * @return {IFillMesh}
+ * @return {IMeshResult}
  * @method
  * @protected
  */
@@ -45,7 +37,7 @@ export const execute = (
     alpha: number,
     viewportWidth: number,
     viewportHeight: number
-): IFillMesh => {
+): IMeshResult => {
 
     // WebGL版と同じ: 行列をビューポートサイズで正規化
     const normalizedA  = a / viewportWidth;

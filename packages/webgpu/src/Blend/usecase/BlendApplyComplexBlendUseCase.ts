@@ -1,29 +1,5 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
-
-/**
- * @description 複雑なブレンドモード処理の設定
- *              Complex blend mode processing configuration
- */
-interface IComplexBlendConfig {
-    device: GPUDevice;
-    commandEncoder: GPUCommandEncoder;
-    frameBufferManager: {
-        createTemporaryAttachment(width: number, height: number): IAttachmentObject;
-        releaseTemporaryAttachment(attachment: IAttachmentObject): void;
-        createRenderPassDescriptor(
-            view: GPUTextureView,
-            r: number, g: number, b: number, a: number,
-            loadOp: GPULoadOp
-        ): GPURenderPassDescriptor;
-    };
-    pipelineManager: {
-        getPipeline(name: string): GPURenderPipeline | undefined;
-        getBindGroupLayout(name: string): GPUBindGroupLayout | undefined;
-    };
-    textureManager: {
-        createSampler(name: string, smooth: boolean): GPUSampler;
-    };
-}
+import type { IFilterConfig } from "../../interface/IFilterConfig";
 
 /**
  * @description 複雑なブレンドモードを適用
@@ -33,7 +9,7 @@ interface IComplexBlendConfig {
  * @param  {IAttachmentObject} dstAttachment - デスティネーションテクスチャ（描画先の現在の内容）
  * @param  {string} blendMode - ブレンドモード
  * @param  {Float32Array} colorTransform - カラートランスフォーム [mulR, mulG, mulB, mulA, addR, addG, addB, addA]
- * @param  {IComplexBlendConfig} config - WebGPUリソース設定
+ * @param  {IFilterConfig} config - WebGPUリソース設定
  * @return {IAttachmentObject} - ブレンド結果のアタッチメント
  */
 export const execute = (
@@ -41,7 +17,7 @@ export const execute = (
     dstAttachment: IAttachmentObject,
     blendMode: string,
     colorTransform: Float32Array,
-    config: IComplexBlendConfig
+    config: IFilterConfig
 ): IAttachmentObject => {
 
     const { device, commandEncoder, frameBufferManager, pipelineManager, textureManager } = config;

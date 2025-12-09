@@ -58,8 +58,9 @@ export class ShaderSource
                 // Convert to NDC: 0-1 → -1 to 1
                 let ndc = transformed.xy * 2.0 - 1.0;
 
-                // Y軸反転なし - WebGPU座標系
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
+                // WebGL互換: Y軸反転
+                // WebGLと同じ: gl_Position = vec4(pos.x, -pos.y, 0.0, 1.0);
+                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 
                 // Pass through bezier coordinates for fragment shader
                 output.bezier = input.bezier;
@@ -157,8 +158,8 @@ export class ShaderSource
                 // Convert to NDC: 0-1 → -1 to 1
                 let ndc = transformed.xy * 2.0 - 1.0;
 
-                // Y軸反転なし - WebGPU座標系（getFillVertexShaderと統一）
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
+                // WebGL互換: Y軸反転
+                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 
                 // ベジェ曲線座標を渡す（Loop-Blinn法で使用）
                 output.bezier = input.bezier;
@@ -246,8 +247,8 @@ export class ShaderSource
                 // Convert to NDC: 0-1 → -1 to 1
                 let ndc = transformed.xy * 2.0 - 1.0;
 
-                // Y軸反転なし - WebGPU座標系（Pass1と一致させる）
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
+                // WebGL互換: Y軸反転（Pass1と一致）
+                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 
                 // 頂点カラーを渡す
                 output.color = input.color;
@@ -330,9 +331,9 @@ export class ShaderSource
                 // Convert to NDC: 0-1 → -1 to 1
                 let ndc = pos * 2.0 - 1.0;
 
-                // Y軸反転なし（他のシェーダーと統一）
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
-                
+                // WebGL互換: Y軸反転
+                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
+
                 // Pass through bezier coordinates
                 output.bezier = input.bezier;
                 
@@ -495,11 +496,25 @@ export class ShaderSource
                 var output: VertexOutput;
 
                 // テクスチャ座標を計算
-                let texW = instance.textureRect.z;
-                let texH = instance.textureRect.w;
-                let texX = instance.textureRect.x + input.texCoord.x * texW;
-                let texY = instance.textureRect.y + input.texCoord.y * texH;
+                // アトラスへの描画時にシェーダーで-ndc.yしているため、
+                // テクスチャ内の画像は上下反転して格納されている
+                // サンプリング時にY座標を反転して正しい向きで取得
+                let texX = instance.textureRect.x + input.texCoord.x * instance.textureRect.z;
+                // Y反転: rect内でtexCoordを反転
+                let texY = instance.textureRect.y + (1.0 - input.texCoord.y) * instance.textureRect.w;
                 output.texCoord = vec2<f32>(texX, texY);
+
+                // WebGL版と同じ構造:
+                // vec2 position = vec2(a_vertex.x, 1.0 - a_vertex.y);
+                // position = position * a_size.xy;
+                // position = (matrix * vec3(position, 1.0)).xy;
+                // position /= a_size.zw;
+                // position = position * 2.0 - 1.0;
+                // gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
+
+                // 入力Y座標を反転
+                var pos = vec2<f32>(input.position.x, 1.0 - input.position.y);
+                pos = pos * vec2<f32>(instance.textureDim.x, instance.textureDim.y);
 
                 // 変換行列を適用
                 let scale0 = instance.matrixScale.x;
@@ -507,22 +522,17 @@ export class ShaderSource
                 let scale1 = instance.matrixScale.z;
                 let rotate1 = instance.matrixScale.w;
 
-                let pos = vec2<f32>(
-                    input.position.x * instance.textureDim.x,
-                    input.position.y * instance.textureDim.y
-                );
-
                 let transformedX = pos.x * scale0 + pos.y * scale1 + instance.matrixTx.x;
                 let transformedY = pos.x * rotate0 + pos.y * rotate1 + instance.matrixTx.y;
 
-                // NDC座標に変換
-                // WebGPUのNDC: Y軸は上向き（+1が上、-1が下）
-                // 画面座標系: Y軸は下向き（0が上、heightが下）
-                // メインキャンバスへの描画時はY軸を反転
-                let ndcX = (transformedX / instance.textureDim.z) * 2.0 - 1.0;
-                let ndcY = 1.0 - (transformedY / instance.textureDim.w) * 2.0;
+                // ビューポートで正規化
+                var position = vec2<f32>(transformedX, transformedY) / vec2<f32>(instance.textureDim.z, instance.textureDim.w);
 
-                output.position = vec4<f32>(ndcX, ndcY, 0.0, 1.0);
+                // NDC座標に変換
+                position = position * 2.0 - 1.0;
+
+                // 出力Y座標を反転（WebGL版と同じ）
+                output.position = vec4<f32>(position.x, -position.y, 0.0, 1.0);
 
                 // カラー変換
                 output.mulColor = instance.mulColor;
@@ -628,7 +638,8 @@ export class ShaderSource
                 // NDC座標に変換
                 let pos = matrix * vec3<f32>(input.position, 1.0);
                 let ndc = vec2<f32>(pos.x * 2.0 - 1.0, pos.y * 2.0 - 1.0);
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
+                // WebGL互換: Y軸反転
+                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 
                 // グラデーション座標を計算（グラデーション行列で変換）
                 let gradPos = gradient.gradientMatrix * vec3<f32>(input.position, 1.0);

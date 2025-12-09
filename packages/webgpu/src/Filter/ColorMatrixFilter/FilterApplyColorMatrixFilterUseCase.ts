@@ -1,29 +1,5 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
-
-/**
- * @description カラーマトリックスフィルター処理の設定
- *              Color matrix filter processing configuration
- */
-interface IColorMatrixConfig {
-    device: GPUDevice;
-    commandEncoder: GPUCommandEncoder;
-    frameBufferManager: {
-        createTemporaryAttachment(width: number, height: number): IAttachmentObject;
-        releaseTemporaryAttachment(attachment: IAttachmentObject): void;
-        createRenderPassDescriptor(
-            view: GPUTextureView,
-            r: number, g: number, b: number, a: number,
-            loadOp: GPULoadOp
-        ): GPURenderPassDescriptor;
-    };
-    pipelineManager: {
-        getPipeline(name: string): GPURenderPipeline | undefined;
-        getBindGroupLayout(name: string): GPUBindGroupLayout | undefined;
-    };
-    textureManager: {
-        createSampler(name: string, smooth: boolean): GPUSampler;
-    };
-}
+import type { IFilterConfig } from "../../interface/IFilterConfig";
 
 /**
  * @description カラーマトリックスフィルターを適用
@@ -31,13 +7,13 @@ interface IColorMatrixConfig {
  *
  * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ（アタッチメント）
  * @param  {Float32Array} matrix - 4x5カラーマトリックス (20 floats)
- * @param  {IColorMatrixConfig} config - WebGPUリソース設定
+ * @param  {IFilterConfig} config - WebGPUリソース設定
  * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
     sourceAttachment: IAttachmentObject,
     matrix: Float32Array,
-    config: IColorMatrixConfig
+    config: IFilterConfig
 ): IAttachmentObject => {
 
     const { device, commandEncoder, frameBufferManager, pipelineManager, textureManager } = config;

@@ -1,4 +1,4 @@
-import type { IGradientStop } from "./GradientLUTParseStopsService";
+import type { IGradientStop } from "../../../interface/IGradientStop";
 
 /**
  * @description 2つのストップ間で色を補間

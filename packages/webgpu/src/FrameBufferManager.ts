@@ -17,6 +17,12 @@ export class FrameBufferManager
     private stencilId: number = 1;
 
     /**
+     * @description フレーム終了時に遅延解放するアタッチメント
+     *              Attachments to be released at end of frame
+     */
+    private pendingReleases: IAttachmentObject[] = [];
+
+    /**
      * @param {GPUDevice} device
      * @param {GPUTextureFormat} format
      * @constructor
@@ -248,24 +254,39 @@ export class FrameBufferManager
     /**
      * @description 一時的なアタッチメントを解放（フィルター処理用）
      *              Releases a temporary attachment after filter processing
+     *              テクスチャは即座に破棄せず、フレーム終了時に遅延解放します
      * @param {IAttachmentObject} attachment
      * @return {void}
      */
     releaseTemporaryAttachment(attachment: IAttachmentObject): void
     {
-        // 名前を検索して削除
+        // 名前を検索して削除（Map から削除するが、テクスチャは破棄しない）
         for (const [name, att] of this.attachments.entries()) {
             if (att.id === attachment.id) {
-                if (att.texture) {
-                    att.texture.resource.destroy();
-                }
-                if (att.stencil) {
-                    att.stencil.resource.destroy();
-                }
                 this.attachments.delete(name);
+                // フレーム終了時に遅延解放するためキューに追加
+                this.pendingReleases.push(att);
                 break;
             }
         }
+    }
+
+    /**
+     * @description フレーム終了時に保留中のテクスチャを解放
+     *              Release pending textures at end of frame (after submit)
+     * @return {void}
+     */
+    flushPendingReleases(): void
+    {
+        for (const att of this.pendingReleases) {
+            if (att.texture) {
+                att.texture.resource.destroy();
+            }
+            if (att.stencil) {
+                att.stencil.resource.destroy();
+            }
+        }
+        this.pendingReleases = [];
     }
 
     /**

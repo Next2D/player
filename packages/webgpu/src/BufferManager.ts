@@ -1,11 +1,4 @@
-/**
- * @description プールされたバッファのエントリ
- *              Pooled buffer entry
- */
-interface IPooledBuffer {
-    buffer: GPUBuffer;
-    size: number;
-}
+import type { IPooledBuffer } from "./interface/IPooledBuffer";
 
 /**
  * @description WebGPUバッファマネージャー

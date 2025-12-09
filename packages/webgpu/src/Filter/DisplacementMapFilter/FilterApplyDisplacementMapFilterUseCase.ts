@@ -1,26 +1,6 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
+import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { ShaderSource } from "../../Shader/ShaderSource";
-
-/**
- * @description ディスプレイスメントマップフィルター処理の設定
- *              Displacement map filter processing configuration
- */
-interface IDisplacementMapConfig {
-    device: GPUDevice;
-    commandEncoder: GPUCommandEncoder;
-    frameBufferManager: {
-        createTemporaryAttachment(width: number, height: number): IAttachmentObject;
-        releaseTemporaryAttachment(attachment: IAttachmentObject): void;
-        createRenderPassDescriptor(
-            view: GPUTextureView,
-            r: number, g: number, b: number, a: number,
-            loadOp: GPULoadOp
-        ): GPURenderPassDescriptor;
-    };
-    textureManager: {
-        createSampler(name: string, smooth: boolean): GPUSampler;
-    };
-}
 
 /**
  * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ）
@@ -70,7 +50,7 @@ export const execute = (
     color: number,
     alpha: number,
     devicePixelRatio: number,
-    config: IDisplacementMapConfig
+    config: IFilterConfig
 ): IAttachmentObject => {
 
     const { device, commandEncoder, frameBufferManager, textureManager } = config;

@@ -1,14 +1,6 @@
 import type { IPoint } from "../../interface/IPoint";
+import type { IMeshResult } from "../../interface/IMeshResult";
 import { generateStrokeOutline } from "./MeshStrokeGenerateUseCase";
-
-/**
- * @description ビットマップストロークメッシュの結果インターフェース
- *              Bitmap stroke mesh result interface
- */
-export interface IBitmapStrokeMesh {
-    buffer: Float32Array;
-    indexCount: number;
-}
 
 /**
  * @description ビットマップストローク用のメッシュを生成する
@@ -36,7 +28,7 @@ export interface IBitmapStrokeMesh {
  * @param  {number} alpha
  * @param  {number} viewportWidth - ビューポート幅
  * @param  {number} viewportHeight - ビューポート高さ
- * @return {IBitmapStrokeMesh}
+ * @return {IMeshResult}
  * @method
  * @protected
  */
@@ -55,7 +47,7 @@ export const execute = (
     alpha: number,
     viewportWidth: number,
     viewportHeight: number
-): IBitmapStrokeMesh => {
+): IMeshResult => {
 
     // WebGL版と同じ: 行列をビューポートサイズで正規化
     const normalizedA  = a / viewportWidth;

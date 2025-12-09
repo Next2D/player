@@ -1,4 +1,4 @@
-import type { IGradientStop } from "./GradientLUTParseStopsService";
+import type { IGradientStop } from "../../../interface/IGradientStop";
 import { execute as gradientLUTInterpolateColorService } from "./GradientLUTInterpolateColorService";
 
 /**
