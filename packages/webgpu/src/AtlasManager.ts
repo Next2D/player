@@ -1,4 +1,5 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
+import type { ITextureObject } from "./interface/ITextureObject";
 import type { TexturePacker } from "@next2d/texture-packer";
 
 /**
@@ -121,6 +122,42 @@ export const $hasAtlasAttachmentObject = (): boolean =>
  * @protected
  */
 export const $rootNodes: TexturePacker[] = [];
+
+/**
+ * @description アトラス専用のテクスチャ
+ *              Texture for atlas only
+ *
+ * @type {ITextureObject | null}
+ * @private
+ */
+export let $atlasTexture: ITextureObject | null = null;
+
+/**
+ * @description アトラステクスチャオブジェクトをセット
+ *              Set the atlas texture object
+ *
+ * @param  {ITextureObject | null} texture_object
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setAtlasTexture = (texture_object: ITextureObject | null): void =>
+{
+    $atlasTexture = texture_object;
+};
+
+/**
+ * @description アトラステクスチャオブジェクトを返却
+ *              Return the atlas texture object
+ *
+ * @return {ITextureObject | null}
+ * @method
+ * @protected
+ */
+export const $getAtlasTexture = (): ITextureObject | null =>
+{
+    return $atlasTexture;
+};
 
 /**
  * @type {Float32Array[]}

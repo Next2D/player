@@ -1,6 +1,9 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
-import type { ITextureObject } from "./interface/ITextureObject";
-import type { IStencilBufferObject } from "./interface/IStencilBufferObject";
+import { execute as frameBufferManagerCreateAttachmentUseCase } from "./FrameBufferManager/usecase/FrameBufferManagerCreateAttachmentUseCase";
+import { execute as frameBufferManagerReleaseTemporaryAttachmentUseCase } from "./FrameBufferManager/usecase/FrameBufferManagerReleaseTemporaryAttachmentUseCase";
+import { execute as frameBufferManagerCreateRenderPassDescriptorService } from "./FrameBufferManager/service/FrameBufferManagerCreateRenderPassDescriptorService";
+import { execute as frameBufferManagerCreateStencilRenderPassDescriptorService } from "./FrameBufferManager/service/FrameBufferManagerCreateStencilRenderPassDescriptorService";
+import { execute as frameBufferManagerFlushPendingReleasesService } from "./FrameBufferManager/service/FrameBufferManagerFlushPendingReleasesService";
 
 /**
  * @description WebGPUフレームバッファマネージャー
@@ -12,9 +15,7 @@ export class FrameBufferManager
     private format: GPUTextureFormat;
     private attachments: Map<string, IAttachmentObject>;
     private currentAttachment: IAttachmentObject | null;
-    private nextId: number = 1;
-    private textureId: number = 1;
-    private stencilId: number = 1;
+    private idCounter: { nextId: number; textureId: number; stencilId: number };
 
     /**
      * @description フレーム終了時に遅延解放するアタッチメント
@@ -33,6 +34,7 @@ export class FrameBufferManager
         this.format = format;
         this.attachments = new Map();
         this.currentAttachment = null;
+        this.idCounter = { nextId: 1, textureId: 1, stencilId: 1 };
 
         // アトラス用のテクスチャを初期化（4096x4096）
         const atlasSize = 4096;
@@ -56,67 +58,17 @@ export class FrameBufferManager
         mask: boolean = false
     ): IAttachmentObject
     {
-        // アトラステクスチャはRGBA8フォーマットを使用（copyExternalImageToTextureとの互換性のため）
-        const textureFormat = name === "atlas" ? "rgba8unorm" : this.format;
-
-        const gpuTexture = this.device.createTexture({
-            size: { width, height },
-            format: textureFormat,
-            usage: GPUTextureUsage.RENDER_ATTACHMENT |
-                   GPUTextureUsage.TEXTURE_BINDING |
-                   GPUTextureUsage.COPY_SRC |
-                   GPUTextureUsage.COPY_DST
-        });
-
-        const textureView = gpuTexture.createView();
-
-        // ITextureObject形式で格納
-        const texture: ITextureObject = {
-            id: this.textureId++,
-            resource: gpuTexture,
-            view: textureView,
+        return frameBufferManagerCreateAttachmentUseCase(
+            this.device,
+            this.format,
+            this.attachments,
+            name,
             width,
             height,
-            area: width * height,
-            smooth: true
-        };
-
-        // アトラス用にステンシルテクスチャを作成（2パスフィルレンダリング用）
-        let stencil: IStencilBufferObject | null = null;
-
-        if (name === "atlas") {
-            const stencilTexture = this.device.createTexture({
-                size: { width, height },
-                format: "stencil8",
-                usage: GPUTextureUsage.RENDER_ATTACHMENT
-            });
-            const stencilView = stencilTexture.createView();
-
-            stencil = {
-                id: this.stencilId++,
-                resource: stencilTexture,
-                view: stencilView,
-                width,
-                height,
-                area: width * height,
-                dirty: false
-            };
-        }
-
-        const attachment: IAttachmentObject = {
-            id: this.nextId++,
-            width,
-            height,
-            clipLevel: 0,
             msaa,
             mask,
-            color: null,
-            texture,
-            stencil
-        };
-
-        this.attachments.set(name, attachment);
-        return attachment;
+            this.idCounter
+        );
     }
 
     /**
@@ -166,14 +118,7 @@ export class FrameBufferManager
         a: number = 0,
         loadOp: GPULoadOp = "clear"
     ): GPURenderPassDescriptor {
-        return {
-            colorAttachments: [{
-                view: view,
-                clearValue: { r, g, b, a },
-                loadOp: loadOp,
-                storeOp: "store"
-            }]
-        };
+        return frameBufferManagerCreateRenderPassDescriptorService(view, r, g, b, a, loadOp);
     }
 
     /**
@@ -190,20 +135,12 @@ export class FrameBufferManager
         colorLoadOp: GPULoadOp = "load",
         stencilLoadOp: GPULoadOp = "clear"
     ): GPURenderPassDescriptor {
-        return {
-            colorAttachments: [{
-                view: colorView,
-                clearValue: { r: 0, g: 0, b: 0, a: 0 },
-                loadOp: colorLoadOp,
-                storeOp: "store"
-            }],
-            depthStencilAttachment: {
-                view: stencilView,
-                stencilClearValue: 0,
-                stencilLoadOp: stencilLoadOp,
-                stencilStoreOp: "store"
-            }
-        };
+        return frameBufferManagerCreateStencilRenderPassDescriptorService(
+            colorView,
+            stencilView,
+            colorLoadOp,
+            stencilLoadOp
+        );
     }
 
     /**
@@ -247,7 +184,7 @@ export class FrameBufferManager
      */
     createTemporaryAttachment(width: number, height: number): IAttachmentObject
     {
-        const name = `temp_${this.nextId}`;
+        const name = `temp_${this.idCounter.nextId}`;
         return this.createAttachment(name, width, height, false, false);
     }
 
@@ -260,15 +197,11 @@ export class FrameBufferManager
      */
     releaseTemporaryAttachment(attachment: IAttachmentObject): void
     {
-        // 名前を検索して削除（Map から削除するが、テクスチャは破棄しない）
-        for (const [name, att] of this.attachments.entries()) {
-            if (att.id === attachment.id) {
-                this.attachments.delete(name);
-                // フレーム終了時に遅延解放するためキューに追加
-                this.pendingReleases.push(att);
-                break;
-            }
-        }
+        frameBufferManagerReleaseTemporaryAttachmentUseCase(
+            this.attachments,
+            this.pendingReleases,
+            attachment
+        );
     }
 
     /**
@@ -278,14 +211,7 @@ export class FrameBufferManager
      */
     flushPendingReleases(): void
     {
-        for (const att of this.pendingReleases) {
-            if (att.texture) {
-                att.texture.resource.destroy();
-            }
-            if (att.stencil) {
-                att.stencil.resource.destroy();
-            }
-        }
+        frameBufferManagerFlushPendingReleasesService(this.pendingReleases);
         this.pendingReleases = [];
     }
 

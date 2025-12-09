@@ -1,30 +1,12 @@
+import { execute as samplerCacheGetOrCreateService } from "./SamplerCache/service/SamplerCacheGetOrCreateService";
+import { execute as samplerCacheCreateCommonSamplersService } from "./SamplerCache/service/SamplerCacheCreateCommonSamplersService";
+
 /**
  * @description サンプラーキャッシュマネージャー
  *              Sampler cache manager for WebGPU optimization
  *
  *              WebGPUではサンプラーの作成コストが高いため、
  *              同じパラメータの組み合わせでキャッシュを再利用する
- */
-
-/**
- * @description サンプラーのキーを生成
- * @param {GPUFilterMode} minFilter
- * @param {GPUFilterMode} magFilter
- * @param {GPUAddressMode} addressModeU
- * @param {GPUAddressMode} addressModeV
- * @return {string}
- */
-const generateSamplerKey = (
-    minFilter: GPUFilterMode,
-    magFilter: GPUFilterMode,
-    addressModeU: GPUAddressMode,
-    addressModeV: GPUAddressMode
-): string => {
-    return `${minFilter}_${magFilter}_${addressModeU}_${addressModeV}`;
-};
-
-/**
- * @description サンプラーキャッシュマネージャー
  */
 export class SamplerCache
 {
@@ -41,30 +23,7 @@ export class SamplerCache
         this.cache = new Map();
 
         // 頻繁に使用されるサンプラーを事前に作成
-        this.createCommonSamplers();
-    }
-
-    /**
-     * @description 頻繁に使用されるサンプラーを事前に作成
-     * @return {void}
-     * @private
-     */
-    private createCommonSamplers(): void
-    {
-        // リニアクランプ（最も一般的）
-        this.getOrCreate("linear", "linear", "clamp-to-edge", "clamp-to-edge");
-
-        // ニアレストクランプ
-        this.getOrCreate("nearest", "nearest", "clamp-to-edge", "clamp-to-edge");
-
-        // リニアリピート
-        this.getOrCreate("linear", "linear", "repeat", "repeat");
-
-        // ニアレストリピート
-        this.getOrCreate("nearest", "nearest", "repeat", "repeat");
-
-        // リニアミラーリピート
-        this.getOrCreate("linear", "linear", "mirror-repeat", "mirror-repeat");
+        samplerCacheCreateCommonSamplersService(device, this.cache);
     }
 
     /**
@@ -81,22 +40,14 @@ export class SamplerCache
         addressModeU: GPUAddressMode,
         addressModeV: GPUAddressMode
     ): GPUSampler {
-        const key = generateSamplerKey(minFilter, magFilter, addressModeU, addressModeV);
-
-        const cached = this.cache.get(key);
-        if (cached) {
-            return cached;
-        }
-
-        const sampler = this.device.createSampler({
+        return samplerCacheGetOrCreateService(
+            this.device,
+            this.cache,
             minFilter,
             magFilter,
             addressModeU,
             addressModeV
-        });
-
-        this.cache.set(key, sampler);
-        return sampler;
+        );
     }
 
     /**

@@ -1,15 +1,6 @@
-/**
- * @description BindGroupキャッシュマネージャー
- *              BindGroup cache manager for WebGPU optimization
- *
- *              WebGPUではBindGroupの作成コストが高いため、
- *              同じリソースの組み合わせでキャッシュを再利用する
- */
-
-interface ICachedBindGroup {
-    bindGroup: GPUBindGroup;
-    lastUsedFrame: number;
-}
+import type { ICachedBindGroup } from "./BindGroupCache/interface/ICachedBindGroup";
+import { execute as bindGroupCacheGetOrCreateUseCase } from "./BindGroupCache/usecase/BindGroupCacheGetOrCreateUseCase";
+import { execute as bindGroupCacheCleanupService } from "./BindGroupCache/service/BindGroupCacheCleanupService";
 
 /**
  * @description BindGroupキャッシュのフレームベースのクリーンアップ閾値
@@ -23,6 +14,10 @@ const MAX_CACHE_ENTRIES = 256;
 
 /**
  * @description BindGroupキャッシュマネージャー
+ *              BindGroup cache manager for WebGPU optimization
+ *
+ *              WebGPUではBindGroupの作成コストが高いため、
+ *              同じリソースの組み合わせでキャッシュを再利用する
  */
 export class BindGroupCache
 {
@@ -51,7 +46,7 @@ export class BindGroupCache
 
         // 定期的にキャッシュをクリーンアップ
         if (this.currentFrame % 60 === 0) {
-            this.cleanup();
+            bindGroupCacheCleanupService(this.cache, this.currentFrame, CACHE_CLEANUP_THRESHOLD);
         }
     }
 
@@ -67,30 +62,15 @@ export class BindGroupCache
         layout: GPUBindGroupLayout,
         entries: GPUBindGroupEntry[]
     ): GPUBindGroup {
-        const cached = this.cache.get(key);
-
-        if (cached) {
-            cached.lastUsedFrame = this.currentFrame;
-            return cached.bindGroup;
-        }
-
-        // 新規作成
-        const bindGroup = this.device.createBindGroup({
+        return bindGroupCacheGetOrCreateUseCase(
+            this.device,
+            this.cache,
+            key,
             layout,
-            entries
-        });
-
-        // キャッシュが満杯なら最も古いエントリを削除
-        if (this.cache.size >= MAX_CACHE_ENTRIES) {
-            this.evictOldest();
-        }
-
-        this.cache.set(key, {
-            bindGroup,
-            lastUsedFrame: this.currentFrame
-        });
-
-        return bindGroup;
+            entries,
+            this.currentFrame,
+            MAX_CACHE_ENTRIES
+        );
     }
 
     /**
@@ -134,44 +114,6 @@ export class BindGroupCache
             { binding: 1, resource: sampler },
             { binding: 2, resource: textureView }
         ]);
-    }
-
-    /**
-     * @description 古いキャッシュエントリをクリーンアップ
-     * @return {void}
-     * @private
-     */
-    private cleanup(): void
-    {
-        const threshold = this.currentFrame - CACHE_CLEANUP_THRESHOLD;
-
-        for (const [key, entry] of this.cache.entries()) {
-            if (entry.lastUsedFrame < threshold) {
-                this.cache.delete(key);
-            }
-        }
-    }
-
-    /**
-     * @description 最も古いエントリを削除
-     * @return {void}
-     * @private
-     */
-    private evictOldest(): void
-    {
-        let oldestKey: string | null = null;
-        let oldestFrame = Infinity;
-
-        for (const [key, entry] of this.cache.entries()) {
-            if (entry.lastUsedFrame < oldestFrame) {
-                oldestFrame = entry.lastUsedFrame;
-                oldestKey = key;
-            }
-        }
-
-        if (oldestKey) {
-            this.cache.delete(oldestKey);
-        }
     }
 
     /**

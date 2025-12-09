@@ -1,3 +1,7 @@
+import { execute as textureManagerInitializeSamplersService } from "./TextureManager/service/TextureManagerInitializeSamplersService";
+import { execute as textureManagerCreateTextureFromPixelsUseCase } from "./TextureManager/usecase/TextureManagerCreateTextureFromPixelsUseCase";
+import { execute as textureManagerCreateTextureFromImageBitmapUseCase } from "./TextureManager/usecase/TextureManagerCreateTextureFromImageBitmapUseCase";
+
 /**
  * @description WebGPUテクスチャマネージャー
  *              WebGPU texture manager
@@ -12,50 +16,13 @@ export class TextureManager
      * @param {GPUDevice} device
      * @constructor
      */
-    constructor(device: GPUDevice)
+    constructor (device: GPUDevice)
     {
         this.device = device;
         this.textures = new Map();
         this.samplers = new Map();
-        
-        this.initializeSamplers();
-    }
 
-    /**
-     * @description サンプラーを初期化
-     * @return {void}
-     */
-    private initializeSamplers(): void
-    {
-        // デフォルトサンプラー（リニアフィルタリング）
-        const linearSampler = this.device.createSampler({
-            magFilter: "linear",
-            minFilter: "linear",
-            mipmapFilter: "linear",
-            addressModeU: "clamp-to-edge",
-            addressModeV: "clamp-to-edge"
-        });
-        this.samplers.set("linear", linearSampler);
-
-        // ニアレストサンプラー
-        const nearestSampler = this.device.createSampler({
-            magFilter: "nearest",
-            minFilter: "nearest",
-            mipmapFilter: "nearest",
-            addressModeU: "clamp-to-edge",
-            addressModeV: "clamp-to-edge"
-        });
-        this.samplers.set("nearest", nearestSampler);
-
-        // リピートサンプラー
-        const repeatSampler = this.device.createSampler({
-            magFilter: "linear",
-            minFilter: "linear",
-            mipmapFilter: "linear",
-            addressModeU: "repeat",
-            addressModeV: "repeat"
-        });
-        this.samplers.set("repeat", repeatSampler);
+        textureManagerInitializeSamplersService(device, this.samplers);
     }
 
     /**
@@ -66,7 +33,7 @@ export class TextureManager
      * @param {GPUTextureFormat} format
      * @return {GPUTexture}
      */
-    createTexture(
+    createTexture (
         name: string,
         width: number,
         height: number,
@@ -92,22 +59,20 @@ export class TextureManager
      * @param {number} height
      * @return {GPUTexture}
      */
-    createTextureFromPixels(
+    createTextureFromPixels (
         name: string,
         pixels: Uint8Array,
         width: number,
         height: number
     ): GPUTexture {
-        const texture = this.createTexture(name, width, height);
-
-        this.device.queue.writeTexture(
-            { texture },
-            pixels.buffer,
-            { bytesPerRow: width * 4, offset: pixels.byteOffset },
-            { width, height }
+        return textureManagerCreateTextureFromPixelsUseCase(
+            this.device,
+            this.textures,
+            name,
+            pixels,
+            width,
+            height
         );
-
-        return texture;
     }
 
     /**
@@ -116,27 +81,14 @@ export class TextureManager
      * @param {ImageBitmap} imageBitmap
      * @return {GPUTexture}
      */
-    createTextureFromImageBitmap(name: string, imageBitmap: ImageBitmap): GPUTexture
+    createTextureFromImageBitmap (name: string, imageBitmap: ImageBitmap): GPUTexture
     {
-        const texture = this.createTexture(
+        return textureManagerCreateTextureFromImageBitmapUseCase(
+            this.device,
+            this.textures,
             name,
-            imageBitmap.width,
-            imageBitmap.height
+            imageBitmap
         );
-
-        this.device.queue.copyExternalImageToTexture(
-            {
-                source: imageBitmap,
-                flipY: true
-            },
-            {
-                texture,
-                premultipliedAlpha: true
-            },
-            { width: imageBitmap.width, height: imageBitmap.height }
-        );
-
-        return texture;
     }
 
     /**
@@ -147,7 +99,7 @@ export class TextureManager
      * @param {number} height
      * @return {void}
      */
-    updateTexture(
+    updateTexture (
         name: string,
         pixels: Uint8Array,
         width: number,
@@ -169,7 +121,7 @@ export class TextureManager
      * @param {string} name
      * @return {GPUTexture | undefined}
      */
-    getTexture(name: string): GPUTexture | undefined
+    getTexture (name: string): GPUTexture | undefined
     {
         return this.textures.get(name);
     }
@@ -179,7 +131,7 @@ export class TextureManager
      * @param {string} name
      * @return {GPUSampler | undefined}
      */
-    getSampler(name: string): GPUSampler | undefined
+    getSampler (name: string): GPUSampler | undefined
     {
         return this.samplers.get(name);
     }
@@ -190,7 +142,7 @@ export class TextureManager
      * @param {boolean} smooth
      * @return {GPUSampler}
      */
-    createSampler(name: string, smooth: boolean = true): GPUSampler
+    createSampler (name: string, smooth: boolean = true): GPUSampler
     {
         const existing = this.samplers.get(name);
         if (existing) {
@@ -214,7 +166,7 @@ export class TextureManager
      * @param {string} name
      * @return {void}
      */
-    destroyTexture(name: string): void
+    destroyTexture (name: string): void
     {
         const texture = this.textures.get(name);
         if (texture) {
@@ -227,7 +179,7 @@ export class TextureManager
      * @description すべてのリソースを解放
      * @return {void}
      */
-    dispose(): void
+    dispose (): void
     {
         for (const texture of this.textures.values()) {
             texture.destroy();

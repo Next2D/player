@@ -1,19 +1,7 @@
-/**
- * @description テクスチャプールマネージャー
- *              Texture pool manager for WebGPU optimization
- *
- *              WebGPUではテクスチャの作成コストが高いため、
- *              同じサイズ・フォーマットのテクスチャをプールして再利用する
- */
-
-interface IPooledTexture {
-    texture: GPUTexture;
-    width: number;
-    height: number;
-    format: GPUTextureFormat;
-    lastUsedFrame: number;
-    inUse: boolean;
-}
+import type { IPooledTexture } from "./TexturePool/interface/IPooledTexture";
+import { execute as texturePoolAcquireUseCase } from "./TexturePool/usecase/TexturePoolAcquireUseCase";
+import { execute as texturePoolReleaseService } from "./TexturePool/service/TexturePoolReleaseService";
+import { execute as texturePoolCleanupService } from "./TexturePool/service/TexturePoolCleanupService";
 
 /**
  * @description プールの最大サイズ
@@ -27,6 +15,10 @@ const CACHE_CLEANUP_THRESHOLD = 180; // 3秒（60FPS想定）
 
 /**
  * @description テクスチャプールマネージャー
+ *              Texture pool manager for WebGPU optimization
+ *
+ *              WebGPUではテクスチャの作成コストが高いため、
+ *              同じサイズ・フォーマットのテクスチャをプールして再利用する
  */
 export class TexturePool
 {
@@ -55,7 +47,7 @@ export class TexturePool
 
         // 定期的にプールをクリーンアップ
         if (this.currentFrame % 60 === 0) {
-            this.cleanup();
+            texturePoolCleanupService(this.pool, this.currentFrame, CACHE_CLEANUP_THRESHOLD);
         }
     }
 
@@ -75,65 +67,16 @@ export class TexturePool
                                       GPUTextureUsage.COPY_DST |
                                       GPUTextureUsage.RENDER_ATTACHMENT
     ): GPUTexture {
-        // プールから適切なテクスチャを検索
-        // サイズ完全一致を優先、なければ大きいサイズを許容（2倍以内）
-        let bestIndex = -1;
-        let bestSizeMatch = Infinity;
-
-        for (let i = 0; i < this.pool.length; i++) {
-            const entry = this.pool[i];
-            if (entry.inUse || entry.format !== format) {
-                continue;
-            }
-
-            // サイズの一致度を計算
-            if (entry.width === width && entry.height === height) {
-                // 完全一致
-                bestIndex = i;
-                break;
-            } else if (
-                entry.width >= width && entry.width <= width * 2 &&
-                entry.height >= height && entry.height <= height * 2
-            ) {
-                // サイズが大きいが許容範囲内
-                const sizeMatch = (entry.width - width) + (entry.height - height);
-                if (sizeMatch < bestSizeMatch) {
-                    bestSizeMatch = sizeMatch;
-                    bestIndex = i;
-                }
-            }
-        }
-
-        if (bestIndex >= 0) {
-            // プールから取得
-            const entry = this.pool[bestIndex];
-            entry.inUse = true;
-            entry.lastUsedFrame = this.currentFrame;
-            return entry.texture;
-        }
-
-        // 新規作成
-        const texture = this.device.createTexture({
-            size: { width, height },
-            format,
-            usage
-        });
-
-        // プールに追加（満杯なら最も古いものを削除）
-        if (this.pool.length >= MAX_POOL_SIZE) {
-            this.evictOldest();
-        }
-
-        this.pool.push({
-            texture,
+        return texturePoolAcquireUseCase(
+            this.device,
+            this.pool,
             width,
             height,
             format,
-            lastUsedFrame: this.currentFrame,
-            inUse: true
-        });
-
-        return texture;
+            usage,
+            this.currentFrame,
+            MAX_POOL_SIZE
+        );
     }
 
     /**
@@ -143,55 +86,7 @@ export class TexturePool
      */
     release(texture: GPUTexture): void
     {
-        for (const entry of this.pool) {
-            if (entry.texture === texture) {
-                entry.inUse = false;
-                entry.lastUsedFrame = this.currentFrame;
-                return;
-            }
-        }
-    }
-
-    /**
-     * @description 古いプールエントリをクリーンアップ
-     * @return {void}
-     * @private
-     */
-    private cleanup(): void
-    {
-        const threshold = this.currentFrame - CACHE_CLEANUP_THRESHOLD;
-
-        for (let i = this.pool.length - 1; i >= 0; i--) {
-            const entry = this.pool[i];
-            if (!entry.inUse && entry.lastUsedFrame < threshold) {
-                entry.texture.destroy();
-                this.pool.splice(i, 1);
-            }
-        }
-    }
-
-    /**
-     * @description 最も古い未使用エントリを削除
-     * @return {void}
-     * @private
-     */
-    private evictOldest(): void
-    {
-        let oldestIndex = -1;
-        let oldestFrame = Infinity;
-
-        for (let i = 0; i < this.pool.length; i++) {
-            const entry = this.pool[i];
-            if (!entry.inUse && entry.lastUsedFrame < oldestFrame) {
-                oldestFrame = entry.lastUsedFrame;
-                oldestIndex = i;
-            }
-        }
-
-        if (oldestIndex >= 0) {
-            this.pool[oldestIndex].texture.destroy();
-            this.pool.splice(oldestIndex, 1);
-        }
+        texturePoolReleaseService(this.pool, texture, this.currentFrame);
     }
 
     /**
