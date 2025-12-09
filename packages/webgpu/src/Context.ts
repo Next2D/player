@@ -11,29 +11,18 @@ import { FrameBufferManager } from "./FrameBufferManager";
 import { AttachmentManager } from "./AttachmentManager";
 import { PipelineManager } from "./Shader/PipelineManager";
 import { $rootNodes } from "./AtlasManager";
-import { addDisplayObjectToInstanceArray, getInstancedShaderManager, getComplexBlendQueue, clearComplexBlendQueue } from "./Blend/BlendInstancedManager";
-import { execute as blendApplyComplexBlendUseCase } from "./Blend/usecase/BlendApplyComplexBlendUseCase";
-import { renderQueue } from "@next2d/render-queue";
-import { generateStrokeMesh } from "./Mesh/usecase/MeshStrokeGenerateUseCase";
+import { addDisplayObjectToInstanceArray, getInstancedShaderManager } from "./Blend/BlendInstancedManager";
+// Note: MeshStrokeGenerateUseCase is now used via ContextStrokeUseCase
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
 import { execute as maskSetMaskBoundsService } from "./Mask/service/MaskSetMaskBoundsService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
 import { execute as maskLeaveMaskUseCase } from "./Mask/usecase/MaskLeaveMaskUseCase";
 import { execute as meshFillGenerateUseCase } from "./Mesh/usecase/MeshFillGenerateUseCase";
-import { execute as meshGradientStrokeGenerateUseCase } from "./Mesh/usecase/MeshGradientStrokeGenerateUseCase";
-import { execute as meshBitmapStrokeGenerateUseCase } from "./Mesh/usecase/MeshBitmapStrokeGenerateUseCase";
-import { $clipBounds, $clipLevels } from "./Mask";
-import { generateGradientLUT, getAdaptiveResolution } from "./Gradient/GradientLUTGenerator";
-import { $offset } from "./Filter";
-import { execute as filterApplyBlurFilterUseCase } from "./Filter/BlurFilter/FilterApplyBlurFilterUseCase";
-import { execute as filterApplyColorMatrixFilterUseCase } from "./Filter/ColorMatrixFilter/FilterApplyColorMatrixFilterUseCase";
-import { execute as filterApplyGlowFilterUseCase } from "./Filter/GlowFilter/FilterApplyGlowFilterUseCase";
-import { execute as filterApplyDropShadowFilterUseCase } from "./Filter/DropShadowFilter/FilterApplyDropShadowFilterUseCase";
-import { execute as filterApplyBevelFilterUseCase } from "./Filter/BevelFilter/FilterApplyBevelFilterUseCase";
-import { execute as filterApplyConvolutionFilterUseCase } from "./Filter/ConvolutionFilter/FilterApplyConvolutionFilterUseCase";
-import { execute as filterApplyGradientBevelFilterUseCase } from "./Filter/GradientBevelFilter/FilterApplyGradientBevelFilterUseCase";
-import { execute as filterApplyGradientGlowFilterUseCase } from "./Filter/GradientGlowFilter/FilterApplyGradientGlowFilterUseCase";
-import { execute as filterApplyDisplacementMapFilterUseCase } from "./Filter/DisplacementMapFilter/FilterApplyDisplacementMapFilterUseCase";
+// Note: MeshGradientStrokeGenerateUseCase and MeshBitmapStrokeGenerateUseCase
+// are now used via ContextGradientStrokeUseCase and ContextBitmapStrokeUseCase
+// Note: Filter usecases are now used via ContextApplyFilterUseCase
+// Note: $clipBounds, $clipLevels are used via ContextClipUseCase
+// Note: generateGradientLUT, getAdaptiveResolution are used via ContextGradientFillUseCase
 import {
     $gridDataMap,
     $fillBufferIndex,
@@ -51,9 +40,19 @@ import {
 // Context services
 import { execute as contextFillWithStencilService } from "./Context/service/ContextFillWithStencilService";
 import { execute as contextFillSimpleService } from "./Context/service/ContextFillSimpleService";
+// Note: contextComputeGradientMatrixService and contextComputeBitmapMatrixService
+// are now used via ContextGradientFillUseCase and ContextBitmapFillUseCase
 
 // Context usecases
 import { execute as contextGradientFillUseCase } from "./Context/usecase/ContextGradientFillUseCase";
+import { execute as contextBitmapFillUseCase } from "./Context/usecase/ContextBitmapFillUseCase";
+import { execute as contextGradientStrokeUseCase } from "./Context/usecase/ContextGradientStrokeUseCase";
+import { execute as contextBitmapStrokeUseCase } from "./Context/usecase/ContextBitmapStrokeUseCase";
+import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStrokeUseCase";
+import { execute as contextClipUseCase } from "./Context/usecase/ContextClipUseCase";
+import { execute as contextDrawArraysInstancedUseCase } from "./Context/usecase/ContextDrawArraysInstancedUseCase";
+import { execute as contextProcessComplexBlendQueueUseCase } from "./Context/usecase/ContextProcessComplexBlendQueueUseCase";
+import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
 
 /**
  * @description WebGPU版、Next2Dのコンテキスト
@@ -693,7 +692,6 @@ export class Context
      */
     stroke (): void
     {
-        // WebGPU stroke implementation
         const paths = this.pathCommand.getAllPaths();
         if (paths.length === 0) return;
 
@@ -701,12 +699,6 @@ export class Context
         if (!this.frameStarted) {
             this.beginFrame();
         }
-
-        // ストロークメッシュを生成
-        const thickness = this.thickness / 2;
-        const vertices = generateStrokeMesh(paths, thickness);
-
-        if (vertices.length === 0) return;
 
         // 既存のレンダーパスを終了
         if (this.renderPassEncoder) {
@@ -725,82 +717,19 @@ export class Context
         );
 
         this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-        
-        // 頂点バッファを作成
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            `stroke_${Date.now()}`,
-            vertices
+
+        contextStrokeUseCase(
+            this.device,
+            this.renderPassEncoder,
+            this.bufferManager,
+            this.pipelineManager,
+            paths,
+            this.thickness / 2,
+            this.$matrix,
+            this.$strokeStyle,
+            this.globalAlpha,
+            !!this.currentRenderTarget
         );
-
-        // Uniformバッファを作成（WGSLのアライメントに合わせる）
-        // mat3x3<f32>は各列がvec4にパディングされる: 3 x vec4 = 48 bytes (12 floats)
-        // color: vec4<f32> = 16 bytes (4 floats)
-        // alpha: f32 + padding = 16 bytes (4 floats)
-        // 合計: 80 bytes (20 floats)
-        const uniformData = new Float32Array(20);
-        // matrix row 0 (vec4 padded)
-        uniformData[0] = this.$matrix[0];
-        uniformData[1] = this.$matrix[1];
-        uniformData[2] = this.$matrix[2];
-        uniformData[3] = 0; // padding
-        // matrix row 1 (vec4 padded)
-        uniformData[4] = this.$matrix[3];
-        uniformData[5] = this.$matrix[4];
-        uniformData[6] = this.$matrix[5];
-        uniformData[7] = 0; // padding
-        // matrix row 2 (vec4 padded)
-        uniformData[8] = this.$matrix[6];
-        uniformData[9] = this.$matrix[7];
-        uniformData[10] = this.$matrix[8];
-        uniformData[11] = 0; // padding
-        // color (vec4)
-        uniformData[12] = this.$strokeStyle[0];
-        uniformData[13] = this.$strokeStyle[1];
-        uniformData[14] = this.$strokeStyle[2];
-        uniformData[15] = this.$strokeStyle[3];
-        // alpha + padding
-        uniformData[16] = this.globalAlpha;
-        uniformData[17] = 0; // padding
-        uniformData[18] = 0; // padding
-        uniformData[19] = 0; // padding
-
-        const uniformBuffer = this.bufferManager.createUniformBuffer(
-            `stroke_uniform_${Date.now()}`,
-            uniformData.byteLength
-        );
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
-
-        // バインドグループを作成
-        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("basic");
-        if (!bindGroupLayout) {
-            console.error("[WebGPU] Basic bind group layout not found");
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-            return;
-        }
-
-        const bindGroup = this.device.createBindGroup({
-            layout: bindGroupLayout,
-            entries: [{
-                binding: 0,
-                resource: { buffer: uniformBuffer }
-            }]
-        });
-
-        // パイプラインを取得して描画（アトラス用かキャンバス用かで切り替え）
-        const pipelineName = this.currentRenderTarget ? "basic" : "basic_bgra";
-        const pipeline = this.pipelineManager.getPipeline(pipelineName);
-        if (!pipeline) {
-            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-            return;
-        }
-
-        this.renderPassEncoder.setPipeline(pipeline);
-        this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-        this.renderPassEncoder.setBindGroup(0, bindGroup);
-        this.renderPassEncoder.draw(vertices.length / 4, 1, 0, 0);
 
         this.renderPassEncoder.end();
         this.renderPassEncoder = null;
@@ -867,64 +796,6 @@ export class Context
     }
 
     /**
-     * @description グラデーション変換行列を計算
-     *              WebGL版と同様の計算: 逆行列を使ってグラデーション空間に変換
-     * @param {Float32Array} matrix - グラデーション行列 [a, b, c, d, tx, ty]
-     * @param {number} type - グラデーションタイプ (0: linear, 1: radial)
-     * @return {Float32Array} - 3x3行列
-     */
-    private computeGradientMatrix(matrix: Float32Array, type: number): Float32Array
-    {
-        // グラデーション行列の逆行列を計算
-        // matrix = [a, b, c, d, tx, ty]
-        const a = matrix[0];
-        const b = matrix[1];
-        const c = matrix[2];
-        const d = matrix[3];
-        const tx = matrix[4];
-        const ty = matrix[5];
-
-        // 行列式
-        const det = a * d - b * c;
-        if (Math.abs(det) < 1e-10) {
-            // 特異行列の場合は単位行列を返す
-            return new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
-        }
-
-        const invDet = 1 / det;
-
-        // 逆行列を計算
-        const ia = d * invDet;
-        const ib = -b * invDet;
-        const ic = -c * invDet;
-        const id = a * invDet;
-        const itx = (c * ty - d * tx) * invDet;
-        const ity = (b * tx - a * ty) * invDet;
-
-        // WebGL版のグラデーション座標系:
-        // Linear: x = -819.2 to 819.2 → 0 to 1
-        // Radial: 中心(0, 0)、半径819.2
-        const scale = 1 / 819.2;
-
-        if (type === 0) {
-            // Linear gradient: xを0-1に正規化
-            // x' = (x + 819.2) / 1638.4 = x * scale * 0.5 + 0.5
-            return new Float32Array([
-                ia * scale * 0.5, ib * scale * 0.5, 0,
-                ic * scale * 0.5, id * scale * 0.5, 0,
-                itx * scale * 0.5 + 0.5, ity * scale * 0.5 + 0.5, 1
-            ]);
-        } else {
-            // Radial gradient: 距離を0-1に正規化
-            return new Float32Array([
-                ia * scale, ib * scale, 0,
-                ic * scale, id * scale, 0,
-                itx * scale, ity * scale, 1
-            ]);
-        }
-    }
-
-    /**
      * @description ビットマップの塗りつぶしを実行
      * @param {Uint8Array} pixels
      * @param {Float32Array} matrix - ビットマップ変換行列 [a, b, c, d, tx, ty]
@@ -964,171 +835,24 @@ export class Context
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         }
 
-        // WebGL版と同じ: 現在のビューポートサイズを使用
-        const viewportWidth = this.viewportWidth;
-        const viewportHeight = this.viewportHeight;
-
-        // 色（ビットマップ描画ではアルファ乗算用に使用）
-        const red = this.$fillStyle[0];
-        const green = this.$fillStyle[1];
-        const blue = this.$fillStyle[2];
-        const alpha = this.$fillStyle[3];
-
-        // 行列を取得
-        const a  = this.$matrix[0];
-        const b  = this.$matrix[1];
-        const c  = this.$matrix[3];
-        const d  = this.$matrix[4];
-        const tx = this.$matrix[6];
-        const ty = this.$matrix[7];
-
-        // MeshFillGenerateUseCaseで頂点データを生成
-        const mesh = meshFillGenerateUseCase(
+        contextBitmapFillUseCase(
+            this.device,
+            this.renderPassEncoder!,
+            this.bufferManager,
+            this.pipelineManager,
             pathVertices,
-            a, b, c, d, tx, ty,
-            red, green, blue, alpha,
-            viewportWidth, viewportHeight
+            this.$matrix,
+            this.$fillStyle,
+            pixels,
+            matrix,
+            width,
+            height,
+            repeat,
+            smooth,
+            this.viewportWidth,
+            this.viewportHeight,
+            !!this.currentRenderTarget
         );
-
-        if (mesh.indexCount === 0) {
-            return;
-        }
-
-        // 頂点バッファを作成
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            `bitmap_fill_${Date.now()}`,
-            mesh.buffer
-        );
-
-        // ビットマップテクスチャを作成
-        const bitmapTexture = this.device.createTexture({
-            size: { width, height },
-            format: "rgba8unorm",
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-        });
-
-        // ピクセルデータをテクスチャに転送
-        this.device.queue.writeTexture(
-            { texture: bitmapTexture },
-            pixels.buffer,
-            { bytesPerRow: width * 4, rowsPerImage: height, offset: pixels.byteOffset },
-            { width, height }
-        );
-
-        // ビットマップ変換行列を計算（逆行列）
-        const bitmapMatrix = this.computeBitmapMatrix(matrix);
-
-        // Uniformバッファを作成
-        // BitmapUniforms構造体:
-        // - bitmapMatrix: mat3x3<f32> (各列がvec4にパディング = 48 bytes)
-        // - textureWidth: f32 (4 bytes)
-        // - textureHeight: f32 (4 bytes)
-        // - repeat: f32 (4 bytes)
-        // - _pad: f32 (4 bytes)
-        // 合計: 64 bytes
-        const uniformData = new Float32Array(16);
-        // mat3x3 (各列がvec4にパディング)
-        uniformData[0] = bitmapMatrix[0];
-        uniformData[1] = bitmapMatrix[1];
-        uniformData[2] = bitmapMatrix[2];
-        uniformData[3] = 0; // padding
-        uniformData[4] = bitmapMatrix[3];
-        uniformData[5] = bitmapMatrix[4];
-        uniformData[6] = bitmapMatrix[5];
-        uniformData[7] = 0; // padding
-        uniformData[8] = bitmapMatrix[6];
-        uniformData[9] = bitmapMatrix[7];
-        uniformData[10] = bitmapMatrix[8];
-        uniformData[11] = 0; // padding
-        // ビットマップパラメータ
-        uniformData[12] = width;
-        uniformData[13] = height;
-        uniformData[14] = repeat ? 1.0 : 0.0;
-        uniformData[15] = 0; // padding
-
-        const uniformBuffer = this.bufferManager.createUniformBuffer(
-            `bitmap_uniform_${Date.now()}`,
-            uniformData.byteLength
-        );
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
-
-        // サンプラーを作成
-        const sampler = this.device.createSampler({
-            magFilter: smooth ? "linear" : "nearest",
-            minFilter: smooth ? "linear" : "nearest",
-            addressModeU: repeat ? "repeat" : "clamp-to-edge",
-            addressModeV: repeat ? "repeat" : "clamp-to-edge"
-        });
-
-        // バインドグループを作成
-        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("bitmap_fill");
-        if (!bindGroupLayout) {
-            console.error("[WebGPU] bitmap_fill bind group layout not found");
-            bitmapTexture.destroy();
-            return;
-        }
-
-        const bindGroup = this.device.createBindGroup({
-            layout: bindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: uniformBuffer } },
-                { binding: 1, resource: sampler },
-                { binding: 2, resource: bitmapTexture.createView() }
-            ]
-        });
-
-        // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
-        const pipelineName = this.currentRenderTarget ? "bitmap_fill" : "bitmap_fill_bgra";
-        const pipeline = this.pipelineManager.getPipeline(pipelineName);
-        if (!pipeline) {
-            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-            bitmapTexture.destroy();
-            return;
-        }
-
-        // 描画
-        this.renderPassEncoder!.setPipeline(pipeline);
-        this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
-        this.renderPassEncoder!.setBindGroup(0, bindGroup);
-        this.renderPassEncoder!.draw(mesh.indexCount, 1, 0, 0);
-    }
-
-    /**
-     * @description ビットマップ変換行列を計算（逆行列）
-     * @param {Float32Array} matrix - ビットマップ行列 [a, b, c, d, tx, ty]
-     * @return {Float32Array} - 3x3行列
-     */
-    private computeBitmapMatrix(matrix: Float32Array): Float32Array
-    {
-        const a = matrix[0];
-        const b = matrix[1];
-        const c = matrix[2];
-        const d = matrix[3];
-        const tx = matrix[4];
-        const ty = matrix[5];
-
-        // 行列式
-        const det = a * d - b * c;
-        if (Math.abs(det) < 1e-10) {
-            // 特異行列の場合は単位行列を返す
-            return new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
-        }
-
-        const invDet = 1 / det;
-
-        // 逆行列を計算
-        const ia = d * invDet;
-        const ib = -b * invDet;
-        const ic = -c * invDet;
-        const id = a * invDet;
-        const itx = (c * ty - d * tx) * invDet;
-        const ity = (b * tx - a * ty) * invDet;
-
-        return new Float32Array([
-            ia, ib, 0,
-            ic, id, 0,
-            itx, ity, 1
-        ]);
     }
 
     /**
@@ -1171,135 +895,25 @@ export class Context
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         }
 
-        // WebGL版と同じ: 現在のビューポートサイズを使用
-        const viewportWidth = this.viewportWidth;
-        const viewportHeight = this.viewportHeight;
-
-        // 色（グラデーション描画ではアルファ乗算用に使用）
-        const red = this.$strokeStyle[0];
-        const green = this.$strokeStyle[1];
-        const blue = this.$strokeStyle[2];
-        const alpha = this.$strokeStyle[3];
-
-        // 行列を取得
-        const a  = this.$matrix[0];
-        const b  = this.$matrix[1];
-        const c  = this.$matrix[3];
-        const d  = this.$matrix[4];
-        const tx = this.$matrix[6];
-        const ty = this.$matrix[7];
-
-        // ストロークの太さ
-        const thickness = this.thickness / 2;
-
-        // グラデーションストローク用メッシュを生成
-        const mesh = meshGradientStrokeGenerateUseCase(
+        contextGradientStrokeUseCase(
+            this.device,
+            this.renderPassEncoder!,
+            this.bufferManager,
+            this.pipelineManager,
             paths,
-            thickness,
-            a, b, c, d, tx, ty,
-            red, green, blue, alpha,
-            viewportWidth, viewportHeight
+            this.thickness / 2,
+            this.$matrix,
+            this.$strokeStyle,
+            type,
+            stops,
+            matrix,
+            spread,
+            interpolation,
+            focal,
+            this.viewportWidth,
+            this.viewportHeight,
+            !!this.currentRenderTarget
         );
-
-        if (mesh.indexCount === 0) {
-            return;
-        }
-
-        // 頂点バッファを作成
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            `gradient_stroke_${Date.now()}`,
-            mesh.buffer
-        );
-
-        // グラデーションLUTテクスチャを生成
-        const lutData = generateGradientLUT(stops, spread, interpolation);
-        const stopsLength = stops.length / 5;
-        const lutResolution = getAdaptiveResolution(stopsLength);
-
-        // LUTテクスチャを作成
-        const lutTexture = this.device.createTexture({
-            size: { width: lutResolution, height: 1 },
-            format: "rgba8unorm",
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-        });
-
-        // LUTデータをテクスチャに転送
-        this.device.queue.writeTexture(
-            { texture: lutTexture },
-            lutData.buffer,
-            { bytesPerRow: lutResolution * 4, rowsPerImage: 1, offset: lutData.byteOffset },
-            { width: lutResolution, height: 1 }
-        );
-
-        // グラデーション変換行列を計算
-        const gradientMatrix = this.computeGradientMatrix(matrix, type);
-
-        // Uniformバッファを作成
-        const uniformData = new Float32Array(16);
-        // mat3x3 (各列がvec4にパディング)
-        uniformData[0] = gradientMatrix[0];
-        uniformData[1] = gradientMatrix[1];
-        uniformData[2] = gradientMatrix[2];
-        uniformData[3] = 0; // padding
-        uniformData[4] = gradientMatrix[3];
-        uniformData[5] = gradientMatrix[4];
-        uniformData[6] = gradientMatrix[5];
-        uniformData[7] = 0; // padding
-        uniformData[8] = gradientMatrix[6];
-        uniformData[9] = gradientMatrix[7];
-        uniformData[10] = gradientMatrix[8];
-        uniformData[11] = 0; // padding
-        // グラデーションパラメータ
-        uniformData[12] = type; // gradientType
-        uniformData[13] = focal; // focal
-        uniformData[14] = spread; // spread
-        uniformData[15] = 0; // padding
-
-        const uniformBuffer = this.bufferManager.createUniformBuffer(
-            `gradient_stroke_uniform_${Date.now()}`,
-            uniformData.byteLength
-        );
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
-
-        // サンプラーを作成
-        const sampler = this.device.createSampler({
-            magFilter: "linear",
-            minFilter: "linear",
-            addressModeU: "clamp-to-edge",
-            addressModeV: "clamp-to-edge"
-        });
-
-        // バインドグループを作成
-        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("gradient_fill");
-        if (!bindGroupLayout) {
-            console.error("[WebGPU] gradient_fill bind group layout not found");
-            lutTexture.destroy();
-            return;
-        }
-
-        const bindGroup = this.device.createBindGroup({
-            layout: bindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: uniformBuffer } },
-                { binding: 1, resource: sampler },
-                { binding: 2, resource: lutTexture.createView() }
-            ]
-        });
-
-        // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
-        const pipelineName = this.currentRenderTarget ? "gradient_fill" : "gradient_fill_bgra";
-        const pipeline = this.pipelineManager.getPipeline(pipelineName);
-        if (!pipeline) {
-            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-            lutTexture.destroy();
-            return;
-        }
-
-        // 描画
-        this.renderPassEncoder!.setPipeline(pipeline);
-        this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
-        this.renderPassEncoder!.setBindGroup(0, bindGroup);
-        this.renderPassEncoder!.draw(mesh.indexCount, 1, 0, 0);
     }
 
     /**
@@ -1342,130 +956,25 @@ export class Context
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         }
 
-        // WebGL版と同じ: 現在のビューポートサイズを使用
-        const viewportWidth = this.viewportWidth;
-        const viewportHeight = this.viewportHeight;
-
-        // 色（ビットマップ描画ではアルファ乗算用に使用）
-        const red = this.$strokeStyle[0];
-        const green = this.$strokeStyle[1];
-        const blue = this.$strokeStyle[2];
-        const alpha = this.$strokeStyle[3];
-
-        // 行列を取得
-        const a  = this.$matrix[0];
-        const b  = this.$matrix[1];
-        const c  = this.$matrix[3];
-        const d  = this.$matrix[4];
-        const tx = this.$matrix[6];
-        const ty = this.$matrix[7];
-
-        // ストロークの太さ
-        const thickness = this.thickness / 2;
-
-        // ビットマップストローク用メッシュを生成
-        const mesh = meshBitmapStrokeGenerateUseCase(
+        contextBitmapStrokeUseCase(
+            this.device,
+            this.renderPassEncoder!,
+            this.bufferManager,
+            this.pipelineManager,
             paths,
-            thickness,
-            a, b, c, d, tx, ty,
-            red, green, blue, alpha,
-            viewportWidth, viewportHeight
+            this.thickness / 2,
+            this.$matrix,
+            this.$strokeStyle,
+            pixels,
+            matrix,
+            width,
+            height,
+            repeat,
+            smooth,
+            this.viewportWidth,
+            this.viewportHeight,
+            !!this.currentRenderTarget
         );
-
-        if (mesh.indexCount === 0) {
-            return;
-        }
-
-        // 頂点バッファを作成
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            `bitmap_stroke_${Date.now()}`,
-            mesh.buffer
-        );
-
-        // ビットマップテクスチャを作成
-        const bitmapTexture = this.device.createTexture({
-            size: { width, height },
-            format: "rgba8unorm",
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-        });
-
-        // ピクセルデータをテクスチャに転送
-        this.device.queue.writeTexture(
-            { texture: bitmapTexture },
-            pixels.buffer,
-            { bytesPerRow: width * 4, rowsPerImage: height, offset: pixels.byteOffset },
-            { width, height }
-        );
-
-        // ビットマップ変換行列を計算（逆行列）
-        const bitmapMatrix = this.computeBitmapMatrix(matrix);
-
-        // Uniformバッファを作成
-        const uniformData = new Float32Array(16);
-        // mat3x3 (各列がvec4にパディング)
-        uniformData[0] = bitmapMatrix[0];
-        uniformData[1] = bitmapMatrix[1];
-        uniformData[2] = bitmapMatrix[2];
-        uniformData[3] = 0; // padding
-        uniformData[4] = bitmapMatrix[3];
-        uniformData[5] = bitmapMatrix[4];
-        uniformData[6] = bitmapMatrix[5];
-        uniformData[7] = 0; // padding
-        uniformData[8] = bitmapMatrix[6];
-        uniformData[9] = bitmapMatrix[7];
-        uniformData[10] = bitmapMatrix[8];
-        uniformData[11] = 0; // padding
-        // ビットマップパラメータ
-        uniformData[12] = width;
-        uniformData[13] = height;
-        uniformData[14] = repeat ? 1.0 : 0.0;
-        uniformData[15] = 0; // padding
-
-        const uniformBuffer = this.bufferManager.createUniformBuffer(
-            `bitmap_stroke_uniform_${Date.now()}`,
-            uniformData.byteLength
-        );
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
-
-        // サンプラーを作成
-        const sampler = this.device.createSampler({
-            magFilter: smooth ? "linear" : "nearest",
-            minFilter: smooth ? "linear" : "nearest",
-            addressModeU: repeat ? "repeat" : "clamp-to-edge",
-            addressModeV: repeat ? "repeat" : "clamp-to-edge"
-        });
-
-        // バインドグループを作成
-        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("bitmap_fill");
-        if (!bindGroupLayout) {
-            console.error("[WebGPU] bitmap_fill bind group layout not found");
-            bitmapTexture.destroy();
-            return;
-        }
-
-        const bindGroup = this.device.createBindGroup({
-            layout: bindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: uniformBuffer } },
-                { binding: 1, resource: sampler },
-                { binding: 2, resource: bitmapTexture.createView() }
-            ]
-        });
-
-        // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
-        const pipelineName = this.currentRenderTarget ? "bitmap_fill" : "bitmap_fill_bgra";
-        const pipeline = this.pipelineManager.getPipeline(pipelineName);
-        if (!pipeline) {
-            console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-            bitmapTexture.destroy();
-            return;
-        }
-
-        // 描画
-        this.renderPassEncoder!.setPipeline(pipeline);
-        this.renderPassEncoder!.setVertexBuffer(0, vertexBuffer);
-        this.renderPassEncoder!.setBindGroup(0, bindGroup);
-        this.renderPassEncoder!.draw(mesh.indexCount, 1, 0, 0);
     }
 
     /**
@@ -1480,101 +989,25 @@ export class Context
             return;
         }
 
-        // クリップ境界を取得
-        const bounds = $clipBounds.get(currentAttachment.clipLevel);
-        if (!bounds) {
-            return;
-        }
-
-        const xMin = bounds[0];
-        const yMin = bounds[1];
-        const xMax = bounds[2];
-        const yMax = bounds[3];
-
-        const width = Math.ceil(Math.abs(xMax - xMin));
-        const height = Math.ceil(Math.abs(yMax - yMin));
-
-        // メッシュを生成
-        const viewportWidth = currentAttachment.width;
-        const viewportHeight = currentAttachment.height;
-
-        const red = this.$fillStyle[0];
-        const green = this.$fillStyle[1];
-        const blue = this.$fillStyle[2];
-        const alpha = this.$fillStyle[3] * this.globalAlpha;
-
         const pathVertices = this.pathCommand.$getVertices;
         if (pathVertices.length === 0) {
             return;
         }
 
-        const mesh = meshFillGenerateUseCase(
+        if (!this.renderPassEncoder) {
+            return;
+        }
+
+        contextClipUseCase(
+            this.renderPassEncoder,
+            this.bufferManager,
+            this.pipelineManager,
+            currentAttachment,
             pathVertices,
-            this.$matrix[0], this.$matrix[1],
-            this.$matrix[3], this.$matrix[4],
-            this.$matrix[6], this.$matrix[7],
-            red, green, blue, alpha,
-            viewportWidth, viewportHeight
+            this.$matrix,
+            this.$fillStyle,
+            this.globalAlpha
         );
-
-        if (mesh.indexCount === 0) {
-            return;
-        }
-
-        // 頂点バッファを作成
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            `clip_${Date.now()}`,
-            mesh.buffer
-        );
-
-        // クリップレベルを取得
-        let level = $clipLevels.get(currentAttachment.clipLevel) || 1;
-
-        // ステンシルパイプラインを取得
-        const pipeline = this.pipelineManager.getPipeline("clip_write");
-        if (!pipeline) {
-            console.error("[WebGPU] clip_write pipeline not found");
-            return;
-        }
-
-        // シザーレクトを設定
-        // シェーダーでY軸反転(-ndc.y)しているため、描画結果はWebGPU座標系になる
-        // WebGPUのシザーは左上原点なのでyMinをそのまま使用
-        let scissorX = Math.max(0, xMin);
-        let scissorY = Math.max(0, yMin);
-        let scissorW = Math.min(width, currentAttachment.width - scissorX);
-        let scissorH = Math.min(height, currentAttachment.height - scissorY);
-
-        // レンダーターゲット範囲内にクランプ
-        scissorX = Math.min(scissorX, currentAttachment.width);
-        scissorY = Math.min(scissorY, currentAttachment.height);
-        scissorW = Math.max(0, Math.min(scissorW, currentAttachment.width - scissorX));
-        scissorH = Math.max(0, Math.min(scissorH, currentAttachment.height - scissorY));
-
-        if (scissorW > 0 && scissorH > 0 && this.renderPassEncoder) {
-            this.renderPassEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
-        }
-
-        // ステンシルマスクをビット単位で設定（WebGL版: stencilMask(1 << level - 1)）
-        const stencilMask = 1 << (level - 1);
-
-        if (this.renderPassEncoder) {
-            this.renderPassEncoder.setPipeline(pipeline);
-            this.renderPassEncoder.setStencilReference(stencilMask);
-            this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-            this.renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
-        }
-
-        // レベルをインクリメント
-        level++;
-        if (level > 7) {
-            // ユニオンマスク処理（レベルが7を超えた場合）
-            // TODO: MaskUnionMaskService相当の処理
-            level = currentAttachment.clipLevel + 1;
-        }
-
-        // クリップレベルを更新
-        $clipLevels.set(currentAttachment.clipLevel, level);
     }
 
     /**
@@ -1772,13 +1205,6 @@ export class Context
      */
     drawArraysInstanced (): void
     {
-        // WebGPU instanced arrays drawing
-        const shaderManager = getInstancedShaderManager();
-        
-        if (shaderManager.count === 0) {
-            return;
-        }
-
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
             this.beginFrame();
@@ -1792,94 +1218,18 @@ export class Context
 
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
-        
-        // メインテクスチャにレンダリング
-        const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+
+        // UseCaseでインスタンス描画を実行
+        this.renderPassEncoder = contextDrawArraysInstancedUseCase(
+            this.device,
+            this.commandEncoder!,
+            this.renderPassEncoder,
             this.mainTextureView!,
-            0, 0, 0, 0,
-            "load" // 既存の内容を保持
+            this.bufferManager,
+            this.frameBufferManager,
+            this.textureManager,
+            this.pipelineManager
         );
-
-        this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-
-        // パイプラインを取得
-        const pipeline = this.pipelineManager.getPipeline("instanced");
-        if (!pipeline) {
-            console.error("[WebGPU] Instanced pipeline not found");
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-            return;
-        }
-
-        this.renderPassEncoder.setPipeline(pipeline);
-
-        // インスタンスバッファを作成
-        // renderQueue.offsetは配列のインデックスなので、そのまま使用
-        const instanceData = new Float32Array(
-            renderQueue.buffer.buffer,
-            renderQueue.buffer.byteOffset,
-            renderQueue.offset  // 要素数
-        );
-
-        const instanceBuffer = this.bufferManager.createVertexBuffer(
-            `instance_${Date.now()}`,
-            instanceData
-        );
-
-        // 頂点バッファ（矩形）を作成
-        const vertices = this.bufferManager.createRectVertices(0, 0, 1, 1);
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            `vertex_${Date.now()}`,
-            vertices
-        );
-
-        // アトラステクスチャをバインド
-        const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
-        if (!atlasAttachment) {
-            console.error("[WebGPU] Atlas attachment not found");
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-            return;
-        }
-
-        // サンプラーを作成
-        const sampler = this.textureManager.createSampler("atlas_sampler", false);
-        
-        // バインドグループを作成
-        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("instanced");
-        if (!bindGroupLayout) {
-            console.error("[WebGPU] Instanced bind group layout not found");
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-            return;
-        }
-
-        const bindGroup = this.device.createBindGroup({
-            layout: bindGroupLayout,
-            entries: [
-                {
-                    binding: 0,
-                    resource: sampler
-                },
-                {
-                    binding: 1,
-                    resource: atlasAttachment.texture!.view
-                }
-            ]
-        });
-
-        // 描画
-        this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-        this.renderPassEncoder.setVertexBuffer(1, instanceBuffer);
-        this.renderPassEncoder.setBindGroup(0, bindGroup);
-        this.renderPassEncoder.draw(6, shaderManager.count, 0, 0);
-
-        // レンダーパスを終了
-        this.renderPassEncoder.end();
-        this.renderPassEncoder = null;
-
-        // インスタンスデータをクリア
-        shaderManager.clear();
 
         // 複雑なブレンドモードの処理
         this.processComplexBlendQueue();
@@ -1891,131 +1241,17 @@ export class Context
      */
     private processComplexBlendQueue (): void
     {
-        const queue = getComplexBlendQueue();
-        if (queue.length === 0) {
-            return;
-        }
-
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
-        const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
-        if (!atlasAttachment) {
-            clearComplexBlendQueue();
-            return;
-        }
-
-        for (const item of queue) {
-            const { node, x_min, y_min, x_max, y_max, color_transform, matrix, blend_mode, global_alpha } = item;
-
-            const width = Math.ceil(Math.abs(x_max - x_min));
-            const height = Math.ceil(Math.abs(y_max - y_min));
-
-            if (width <= 0 || height <= 0) {
-                continue;
-            }
-
-            // ソーステクスチャを作成（ノードからコピー）
-            const srcAttachment = this.frameBufferManager.createTemporaryAttachment(node.w, node.h);
-            this.commandEncoder!.copyTextureToTexture(
-                {
-                    texture: atlasAttachment.texture!.resource,
-                    origin: { x: node.x, y: node.y, z: 0 }
-                },
-                {
-                    texture: srcAttachment.texture!.resource,
-                    origin: { x: 0, y: 0, z: 0 }
-                },
-                {
-                    width: node.w,
-                    height: node.h
-                }
-            );
-
-            // デスティネーションテクスチャを作成（現在の描画先からコピー）
-            const dstX = Math.floor(matrix[6]);
-            const dstY = Math.floor(matrix[7]);
-            const dstAttachment = this.frameBufferManager.createTemporaryAttachment(width, height);
-
-            // メインテクスチャから描画領域をコピー
-            if (this.mainTexture && dstX >= 0 && dstY >= 0) {
-                const copyWidth = Math.min(width, this.mainTexture.width - dstX);
-                const copyHeight = Math.min(height, this.mainTexture.height - dstY);
-                if (copyWidth > 0 && copyHeight > 0) {
-                    this.commandEncoder!.copyTextureToTexture(
-                        {
-                            texture: this.mainTexture,
-                            origin: { x: dstX, y: dstY, z: 0 }
-                        },
-                        {
-                            texture: dstAttachment.texture!.resource,
-                            origin: { x: 0, y: 0, z: 0 }
-                        },
-                        {
-                            width: copyWidth,
-                            height: copyHeight
-                        }
-                    );
-                }
-            }
-
-            // カラートランスフォームを準備
-            const ct = new Float32Array([
-                color_transform[0],
-                color_transform[1],
-                color_transform[2],
-                global_alpha,
-                color_transform[4] / 255,
-                color_transform[5] / 255,
-                color_transform[6] / 255,
-                0
-            ]);
-
-            // 複雑なブレンドを適用
-            const blendedAttachment = blendApplyComplexBlendUseCase(
-                srcAttachment,
-                dstAttachment,
-                blend_mode,
-                ct,
-                {
-                    device: this.device,
-                    commandEncoder: this.commandEncoder!,
-                    frameBufferManager: this.frameBufferManager,
-                    pipelineManager: this.pipelineManager,
-                    textureManager: this.textureManager
-                }
-            );
-
-            // 結果をメインテクスチャにコピー
-            if (this.mainTexture && dstX >= 0 && dstY >= 0) {
-                const copyWidth = Math.min(blendedAttachment.width, this.mainTexture.width - dstX);
-                const copyHeight = Math.min(blendedAttachment.height, this.mainTexture.height - dstY);
-                if (copyWidth > 0 && copyHeight > 0) {
-                    this.commandEncoder!.copyTextureToTexture(
-                        {
-                            texture: blendedAttachment.texture!.resource,
-                            origin: { x: 0, y: 0, z: 0 }
-                        },
-                        {
-                            texture: this.mainTexture,
-                            origin: { x: dstX, y: dstY, z: 0 }
-                        },
-                        {
-                            width: copyWidth,
-                            height: copyHeight
-                        }
-                    );
-                }
-            }
-
-            // 一時テクスチャを解放
-            this.frameBufferManager.releaseTemporaryAttachment(srcAttachment);
-            this.frameBufferManager.releaseTemporaryAttachment(dstAttachment);
-            this.frameBufferManager.releaseTemporaryAttachment(blendedAttachment);
-        }
-
-        // キューをクリア
-        clearComplexBlendQueue();
+        contextProcessComplexBlendQueueUseCase(
+            this.device,
+            this.commandEncoder!,
+            this.mainTexture,
+            this.frameBufferManager,
+            this.textureManager,
+            this.pipelineManager
+        );
     }
 
     /**
@@ -2144,518 +1380,29 @@ export class Context
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
-        // オフセットを初期化
-        $offset.x = 0;
-        $offset.y = 0;
+        const config = {
+            device: this.device,
+            commandEncoder: this.commandEncoder!,
+            frameBufferManager: this.frameBufferManager,
+            pipelineManager: this.pipelineManager,
+            textureManager: this.textureManager
+        };
 
-        // 描画元のテクスチャをアタッチメントとして取得
-        let filterAttachment = this.getTextureFromNode(node, width, height);
-
-        const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
-
-        // フィルターを適用
-        for (let idx = 0; params.length > idx; ) {
-            const type = params[idx++];
-
-            switch (type) {
-                case 0: // BevelFilter
-                    {
-                        const bevelDistance = params[idx++];
-                        const bevelAngle = params[idx++];
-                        const bevelHighlightColor = params[idx++];
-                        const bevelHighlightAlpha = params[idx++];
-                        const bevelShadowColor = params[idx++];
-                        const bevelShadowAlpha = params[idx++];
-                        const bevelBlurX = params[idx++];
-                        const bevelBlurY = params[idx++];
-                        const bevelStrength = params[idx++];
-                        const bevelQuality = params[idx++];
-                        const bevelType = params[idx++];
-                        const bevelKnockout = Boolean(params[idx++]);
-
-                        const config = {
-                            device: this.device,
-                            commandEncoder: this.commandEncoder!,
-                            frameBufferManager: this.frameBufferManager,
-                            pipelineManager: this.pipelineManager,
-                            textureManager: this.textureManager
-                        };
-
-                        const newAttachment = filterApplyBevelFilterUseCase(
-                            filterAttachment, matrix,
-                            bevelDistance, bevelAngle,
-                            bevelHighlightColor, bevelHighlightAlpha,
-                            bevelShadowColor, bevelShadowAlpha,
-                            bevelBlurX, bevelBlurY, bevelStrength, bevelQuality,
-                            bevelType, bevelKnockout,
-                            devicePixelRatio, config
-                        );
-
-                        if (filterAttachment !== newAttachment) {
-                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
-                        }
-                        filterAttachment = newAttachment;
-                    }
-                    break;
-
-                case 1: // BlurFilter
-                    {
-                        const blurX = params[idx++];
-                        const blurY = params[idx++];
-                        const quality = params[idx++];
-
-                        const config = {
-                            device: this.device,
-                            commandEncoder: this.commandEncoder!,
-                            frameBufferManager: this.frameBufferManager,
-                            pipelineManager: this.pipelineManager,
-                            textureManager: this.textureManager
-                        };
-
-                        const newAttachment = filterApplyBlurFilterUseCase(
-                            filterAttachment, matrix,
-                            blurX, blurY, quality,
-                            devicePixelRatio, config
-                        );
-
-                        // 前のアタッチメントを解放
-                        if (filterAttachment !== newAttachment) {
-                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
-                        }
-                        filterAttachment = newAttachment;
-                    }
-                    break;
-
-                case 2: // ColorMatrixFilter
-                    {
-                        const colorMatrix = new Float32Array([
-                            params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++], params[idx++]
-                        ]);
-
-                        const config = {
-                            device: this.device,
-                            commandEncoder: this.commandEncoder!,
-                            frameBufferManager: this.frameBufferManager,
-                            pipelineManager: this.pipelineManager,
-                            textureManager: this.textureManager
-                        };
-
-                        const newAttachment = filterApplyColorMatrixFilterUseCase(
-                            filterAttachment, colorMatrix, config
-                        );
-
-                        if (filterAttachment !== newAttachment) {
-                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
-                        }
-                        filterAttachment = newAttachment;
-                    }
-                    break;
-
-                case 3: // ConvolutionFilter
-                    {
-                        const convMatrixX = params[idx++];
-                        const convMatrixY = params[idx++];
-                        const convLength = convMatrixX * convMatrixY;
-                        const convMatrix = new Float32Array(convLength);
-                        for (let i = 0; i < convLength; i++) {
-                            convMatrix[i] = params[idx++];
-                        }
-                        const convDivisor = params[idx++];
-                        const convBias = params[idx++];
-                        const convPreserveAlpha = Boolean(params[idx++]);
-                        const convClamp = Boolean(params[idx++]);
-                        const convColor = params[idx++];
-                        const convAlpha = params[idx++];
-
-                        const config = {
-                            device: this.device,
-                            commandEncoder: this.commandEncoder!,
-                            frameBufferManager: this.frameBufferManager,
-                            pipelineManager: this.pipelineManager,
-                            textureManager: this.textureManager
-                        };
-
-                        const newAttachment = filterApplyConvolutionFilterUseCase(
-                            filterAttachment,
-                            convMatrixX, convMatrixY, convMatrix,
-                            convDivisor, convBias, convPreserveAlpha, convClamp,
-                            convColor, convAlpha,
-                            config
-                        );
-
-                        if (filterAttachment !== newAttachment) {
-                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
-                        }
-                        filterAttachment = newAttachment;
-                    }
-                    break;
-
-                case 4: // DisplacementMapFilter
-                    {
-                        const dmBufferLength = params[idx++];
-                        const dmBuffer = new Uint8Array(dmBufferLength);
-                        for (let i = 0; i < dmBufferLength; i++) {
-                            dmBuffer[i] = params[idx++];
-                        }
-
-                        const dmBitmapWidth = params[idx++];
-                        const dmBitmapHeight = params[idx++];
-                        const dmMapPointX = params[idx++];
-                        const dmMapPointY = params[idx++];
-                        const dmComponentX = params[idx++];
-                        const dmComponentY = params[idx++];
-                        const dmScaleX = params[idx++];
-                        const dmScaleY = params[idx++];
-                        const dmMode = params[idx++];
-                        const dmColor = params[idx++];
-                        const dmAlpha = params[idx++];
-
-                        const config = {
-                            device: this.device,
-                            commandEncoder: this.commandEncoder!,
-                            frameBufferManager: this.frameBufferManager,
-                            pipelineManager: this.pipelineManager,
-                            textureManager: this.textureManager
-                        };
-
-                        const newAttachment = filterApplyDisplacementMapFilterUseCase(
-                            filterAttachment, matrix,
-                            dmBuffer, dmBitmapWidth, dmBitmapHeight,
-                            dmMapPointX, dmMapPointY,
-                            dmComponentX, dmComponentY,
-                            dmScaleX, dmScaleY,
-                            dmMode, dmColor, dmAlpha,
-                            devicePixelRatio, config
-                        );
-
-                        if (filterAttachment !== newAttachment) {
-                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
-                        }
-                        filterAttachment = newAttachment;
-                    }
-                    break;
-
-                case 5: // DropShadowFilter
-                    {
-                        const dsDistance = params[idx++];
-                        const dsAngle = params[idx++];
-                        const dsColor = params[idx++];
-                        const dsAlpha = params[idx++];
-                        const dsBlurX = params[idx++];
-                        const dsBlurY = params[idx++];
-                        const dsStrength = params[idx++];
-                        const dsQuality = params[idx++];
-                        const dsInner = Boolean(params[idx++]);
-                        const dsKnockout = Boolean(params[idx++]);
-                        const dsHideObject = Boolean(params[idx++]);
-
-                        const config = {
-                            device: this.device,
-                            commandEncoder: this.commandEncoder!,
-                            frameBufferManager: this.frameBufferManager,
-                            pipelineManager: this.pipelineManager,
-                            textureManager: this.textureManager
-                        };
-
-                        const newAttachment = filterApplyDropShadowFilterUseCase(
-                            filterAttachment, matrix,
-                            dsDistance, dsAngle, dsColor, dsAlpha,
-                            dsBlurX, dsBlurY, dsStrength, dsQuality,
-                            dsInner, dsKnockout, dsHideObject,
-                            devicePixelRatio, config
-                        );
-
-                        if (filterAttachment !== newAttachment) {
-                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
-                        }
-                        filterAttachment = newAttachment;
-                    }
-                    break;
-
-                case 6: // GlowFilter
-                    {
-                        const glowColor = params[idx++];
-                        const glowAlpha = params[idx++];
-                        const glowBlurX = params[idx++];
-                        const glowBlurY = params[idx++];
-                        const glowStrength = params[idx++];
-                        const glowQuality = params[idx++];
-                        const glowInner = Boolean(params[idx++]);
-                        const glowKnockout = Boolean(params[idx++]);
-
-                        const config = {
-                            device: this.device,
-                            commandEncoder: this.commandEncoder!,
-                            frameBufferManager: this.frameBufferManager,
-                            pipelineManager: this.pipelineManager,
-                            textureManager: this.textureManager
-                        };
-
-                        const newAttachment = filterApplyGlowFilterUseCase(
-                            filterAttachment, matrix,
-                            glowColor, glowAlpha, glowBlurX, glowBlurY,
-                            glowStrength, glowQuality, glowInner, glowKnockout,
-                            devicePixelRatio, config
-                        );
-
-                        if (filterAttachment !== newAttachment) {
-                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
-                        }
-                        filterAttachment = newAttachment;
-                    }
-                    break;
-
-                case 7: // GradientBevelFilter
-                    {
-                        const gbDistance = params[idx++];
-                        const gbAngle = params[idx++];
-
-                        let gbColorsLen = params[idx++];
-                        const gbColors = new Float32Array(gbColorsLen);
-                        for (let i = 0; i < gbColorsLen; i++) {
-                            gbColors[i] = params[idx++];
-                        }
-
-                        let gbAlphasLen = params[idx++];
-                        const gbAlphas = new Float32Array(gbAlphasLen);
-                        for (let i = 0; i < gbAlphasLen; i++) {
-                            gbAlphas[i] = params[idx++];
-                        }
-
-                        let gbRatiosLen = params[idx++];
-                        const gbRatios = new Float32Array(gbRatiosLen);
-                        for (let i = 0; i < gbRatiosLen; i++) {
-                            gbRatios[i] = params[idx++];
-                        }
-
-                        const gbBlurX = params[idx++];
-                        const gbBlurY = params[idx++];
-                        const gbStrength = params[idx++];
-                        const gbQuality = params[idx++];
-                        const gbType = params[idx++];
-                        const gbKnockout = Boolean(params[idx++]);
-
-                        const config = {
-                            device: this.device,
-                            commandEncoder: this.commandEncoder!,
-                            frameBufferManager: this.frameBufferManager,
-                            pipelineManager: this.pipelineManager,
-                            textureManager: this.textureManager
-                        };
-
-                        const newAttachment = filterApplyGradientBevelFilterUseCase(
-                            filterAttachment, matrix,
-                            gbDistance, gbAngle, gbColors, gbAlphas, gbRatios,
-                            gbBlurX, gbBlurY, gbStrength, gbQuality, gbType, gbKnockout,
-                            devicePixelRatio, config
-                        );
-
-                        if (filterAttachment !== newAttachment) {
-                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
-                        }
-                        filterAttachment = newAttachment;
-                    }
-                    break;
-
-                case 8: // GradientGlowFilter
-                    {
-                        const ggDistance = params[idx++];
-                        const ggAngle = params[idx++];
-
-                        let ggColorsLen = params[idx++];
-                        const ggColors = new Float32Array(ggColorsLen);
-                        for (let i = 0; i < ggColorsLen; i++) {
-                            ggColors[i] = params[idx++];
-                        }
-
-                        let ggAlphasLen = params[idx++];
-                        const ggAlphas = new Float32Array(ggAlphasLen);
-                        for (let i = 0; i < ggAlphasLen; i++) {
-                            ggAlphas[i] = params[idx++];
-                        }
-
-                        let ggRatiosLen = params[idx++];
-                        const ggRatios = new Float32Array(ggRatiosLen);
-                        for (let i = 0; i < ggRatiosLen; i++) {
-                            ggRatios[i] = params[idx++];
-                        }
-
-                        const ggBlurX = params[idx++];
-                        const ggBlurY = params[idx++];
-                        const ggStrength = params[idx++];
-                        const ggQuality = params[idx++];
-                        const ggType = params[idx++];
-                        const ggKnockout = Boolean(params[idx++]);
-
-                        const config = {
-                            device: this.device,
-                            commandEncoder: this.commandEncoder!,
-                            frameBufferManager: this.frameBufferManager,
-                            pipelineManager: this.pipelineManager,
-                            textureManager: this.textureManager
-                        };
-
-                        const newAttachment = filterApplyGradientGlowFilterUseCase(
-                            filterAttachment, matrix,
-                            ggDistance, ggAngle, ggColors, ggAlphas, ggRatios,
-                            ggBlurX, ggBlurY, ggStrength, ggQuality, ggType, ggKnockout,
-                            devicePixelRatio, config
-                        );
-
-                        if (filterAttachment !== newAttachment) {
-                            this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
-                        }
-                        filterAttachment = newAttachment;
-                    }
-                    break;
-            }
-        }
-
-        // フィルター適用後のテクスチャをメインキャンバスに描画
-        const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-        const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
-        const xMin = bounds[0] * (scaleX / devicePixelRatio);
-        const yMin = bounds[1] * (scaleY / devicePixelRatio);
-
-        this.drawFilterToMain(
-            filterAttachment,
+        contextApplyFilterUseCase(
+            node,
+            width,
+            height,
+            matrix,
             color_transform,
             blend_mode,
-            -$offset.x + xMin + matrix[4],
-            -$offset.y + yMin + matrix[5]
-        );
-
-        // フィルター用アタッチメントを解放
-        this.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
-    }
-
-    /**
-     * @description ノードからテクスチャをアタッチメントとして取得
-     * @param {Node} node
-     * @param {number} _width - 未使用（node.wを使用）
-     * @param {number} _height - 未使用（node.hを使用）
-     * @return {IAttachmentObject}
-     * @private
-     */
-    private getTextureFromNode(node: Node, _width: number, _height: number): IAttachmentObject
-    {
-        // 一時アタッチメントを作成（ノードのサイズを使用）
-        const attachment = this.frameBufferManager.createTemporaryAttachment(node.w, node.h);
-
-        // アトラステクスチャから該当部分をコピー
-        const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
-        if (atlasAttachment && atlasAttachment.texture && attachment.texture) {
-            // commandEncoderを使ってコピー
-            this.commandEncoder!.copyTextureToTexture(
-                {
-                    texture: atlasAttachment.texture.resource,
-                    origin: { x: node.x, y: node.y, z: 0 }
-                },
-                {
-                    texture: attachment.texture.resource,
-                    origin: { x: 0, y: 0, z: 0 }
-                },
-                {
-                    width: node.w,
-                    height: node.h
-                }
-            );
-        }
-
-        return attachment;
-    }
-
-    /**
-     * @description フィルター結果をメインキャンバスに描画
-     * @param {IAttachmentObject} filterAttachment
-     * @param {Float32Array} colorTransform
-     * @param {IBlendMode} blendMode
-     * @param {number} x
-     * @param {number} y
-     * @private
-     */
-    private drawFilterToMain(
-        filterAttachment: IAttachmentObject,
-        colorTransform: Float32Array,
-        blendMode: IBlendMode,
-        x: number,
-        y: number
-    ): void {
-        // メインテクスチャにレンダリング
-        const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+            bounds,
+            params,
+            config,
             this.mainTextureView!,
-            0, 0, 0, 0,
-            "load"
+            this.bufferManager,
+            this.canvasContext.canvas.width,
+            this.canvasContext.canvas.height
         );
-
-        this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-
-        // インスタンス描画パイプラインを使用
-        const pipeline = this.pipelineManager.getPipeline("instanced");
-        if (!pipeline) {
-            console.error("[WebGPU] Instanced pipeline not found for filter output");
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-            return;
-        }
-
-        // フィルター結果をインスタンス配列に追加
-        const canvasWidth = this.canvasContext.canvas.width;
-        const canvasHeight = this.canvasContext.canvas.height;
-
-        // 保存した状態を使って描画
-        this.reset();
-        this.setTransform(1, 0, 0, 1, x, y);
-        this.globalCompositeOperation = blendMode;
-
-        // フィルターテクスチャをサンプラーとバインドグループで描画
-        const sampler = this.textureManager.createSampler("filter_output_sampler", false);
-        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("instanced");
-
-        if (bindGroupLayout && filterAttachment.texture) {
-            const bindGroup = this.device.createBindGroup({
-                layout: bindGroupLayout,
-                entries: [
-                    { binding: 0, resource: sampler },
-                    { binding: 1, resource: filterAttachment.texture.view }
-                ]
-            });
-
-            // シンプルな矩形描画
-            const vertices = this.bufferManager.createRectVertices(0, 0, 1, 1);
-            const vertexBuffer = this.bufferManager.createVertexBuffer(`filter_vertex_${Date.now()}`, vertices);
-
-            // インスタンスデータ（1つのインスタンス）
-            const instanceData = new Float32Array([
-                // position (2)
-                0, 0,
-                // size (2)
-                filterAttachment.width / canvasWidth * 2,
-                filterAttachment.height / canvasHeight * 2,
-                // offset (2) - NDC空間への変換
-                (x / canvasWidth) * 2 - 1,
-                1 - (y / canvasHeight) * 2,
-                // texCoord (4)
-                0, 0, 1, 1,
-                // colorTransform (8)
-                colorTransform[0], colorTransform[1], colorTransform[2], colorTransform[3],
-                colorTransform[4], colorTransform[5], colorTransform[6], colorTransform[7]
-            ]);
-
-            const instanceBuffer = this.bufferManager.createVertexBuffer(`filter_instance_${Date.now()}`, instanceData);
-
-            this.renderPassEncoder.setPipeline(pipeline);
-            this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-            this.renderPassEncoder.setVertexBuffer(1, instanceBuffer);
-            this.renderPassEncoder.setBindGroup(0, bindGroup);
-            this.renderPassEncoder.draw(6, 1, 0, 0);
-        }
-
-        this.renderPassEncoder.end();
-        this.renderPassEncoder = null;
     }
 
     /**
