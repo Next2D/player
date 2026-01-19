@@ -1,3 +1,4 @@
+import type { ICubicConverterReturnObject } from "../../interface/ICubicConverterReturnObject";
 import {
     $adaptiveBuffer,
     $adaptiveSegmentCount,
@@ -118,7 +119,7 @@ const $tempRight: Float32Array = new Float32Array(8);
  * @param  {number} cy2
  * @param  {number} x
  * @param  {number} y
- * @return {{ buffer: Float32Array, count: number }}
+ * @return {ICubicConverterReturnObject}
  * @method
  * @protected
  */
@@ -127,7 +128,7 @@ export const execute = (
     cx1: number, cy1: number,
     cx2: number, cy2: number,
     x: number, y: number
-): { buffer: Float32Array; count: number } => {
+): ICubicConverterReturnObject => {
 
     // 曲率に基づいて分割数を決定
     const subdivisions = $getAdaptiveSubdivisionCount(
@@ -224,7 +225,7 @@ export const execute = (
     $setAdaptiveSegmentCount(offset / 4);
 
     return {
-        buffer: $adaptiveBuffer,
-        count: $adaptiveSegmentCount
+        "buffer": $adaptiveBuffer,
+        "count": $adaptiveSegmentCount
     };
 };
