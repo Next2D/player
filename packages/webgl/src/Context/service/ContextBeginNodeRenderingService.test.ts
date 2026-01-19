@@ -1,43 +1,65 @@
 import { execute } from "./ContextBeginNodeRenderingService";
 import { describe, expect, it, vi } from "vitest";
 
+let scissorCallCount = 0;
+let clearColorCallCount = 0;
+
+vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "SCISSOR_TEST": "SCISSOR_TEST",
+            "COLOR_BUFFER_BIT": 1,
+            "STENCIL_BUFFER_BIT": 2,
+            "enable": vi.fn((v) => {
+                expect(v).toBe("SCISSOR_TEST");
+            }),
+            "scissor": vi.fn((x, y, w, h) => {
+                expect(x).toBe(1);
+                expect(y).toBe(2);
+                if (scissorCallCount === 0) {
+                    expect(w).toBe(4);
+                    expect(h).toBe(5);
+                } else {
+                    expect(w).toBe(3);
+                    expect(h).toBe(4);
+                }
+                scissorCallCount++;
+            }),
+            "clearColor": vi.fn((r, g, b, a) => {
+                if (clearColorCallCount === 0) {
+                    expect(r).toBe(0);
+                    expect(g).toBe(0);
+                    expect(b).toBe(0);
+                    expect(a).toBe(0);
+                }
+                clearColorCallCount++;
+            }),
+            "clear": vi.fn((v) => {
+                expect(v).toBe(3);
+            }),
+            "viewport": vi.fn((x, y, w, h) => {
+                expect(x).toBe(1);
+                expect(y).toBe(2);
+                expect(w).toBe(3);
+                expect(h).toBe(4);
+            })
+        },
+        $context: {
+            "$clearColorR": 0,
+            "$clearColorG": 0,
+            "$clearColorB": 0,
+            "$clearColorA": 0
+        }
+    }
+});
+
 describe("ContextBeginNodeRenderingService.js method test", () =>
 {
     it("test case", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "SCISSOR_TEST": "SCISSOR_TEST",
-                    "enable": vi.fn((v) => {
-                        expect(v).toBe("SCISSOR_TEST");
-                    }),
-                    "scissor": vi.fn((x, y, w, h) => {
-                        expect(x).toBe(1);
-                        expect(y).toBe(2);
-                        if (w === 3) {
-                            expect(w).toBe(3);
-                            expect(h).toBe(4);
-                        } else {
-                            expect(w).toBe(4);
-                            expect(h).toBe(5);
-                        }
-
-                    }),
-                    "clear": vi.fn((v) => { return "clear"; }),
-                    "viewport": vi.fn((x, y, w, h) => {
-                        expect(x).toBe(1);
-                        expect(y).toBe(2);
-                        expect(w).toBe(3);
-                        expect(h).toBe(4);
-                    })
-                }
-            }
-        });
+        execute(1, 2, 3, 4);
     });
-
-    execute(1, 2, 3, 4);
 });
