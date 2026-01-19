@@ -109,7 +109,7 @@ void main() {
     float alpha = smoothstep(0.5, -0.5, dist);
 
     if (alpha > 0.001) {
-        o_color = vec4(alpha);
+        o_color = vec4(min(alpha, 1.0));
     } else {
         discard;
     }

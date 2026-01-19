@@ -79,7 +79,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             // fixed logic
             const currentAttachment = $context.currentAttachmentObject;
-            const atlasAttachment = $context.atlasAttachmentObject;
+            const atlasAttachment   = $context.atlasAttachmentObject;
             if (atlasAttachment) {
                 $context.bind(atlasAttachment as any);
             }
@@ -117,9 +117,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             // fixed logic
             const currentAttachment = $context.currentAttachmentObject;
-            const atlasAttachment2 = $context.atlasAttachmentObject;
-            if (atlasAttachment2) {
-                $context.bind(atlasAttachment2 as any);
+            const atlasAttachment = $context.atlasAttachmentObject;
+            if (atlasAttachment) {
+                $context.bind(atlasAttachment as any);
             }
 
             // 初期化して、描画範囲を初期化
@@ -127,7 +127,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             $context.beginNodeRendering(node);
 
             // matrix設定
-            const offsetY = atlasAttachment2 ? atlasAttachment2.height - node.y - height : 0;
+            const offsetY = atlasAttachment ? atlasAttachment.height - node.y - height : 0;
             $context.setTransform(
                 xScale, 0, 0, yScale,
                 -xMin * xScale + node.x,
