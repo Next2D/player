@@ -21,14 +21,14 @@ export const execute = (buffer: Float32Array): number =>
         // 32bitを4バイトに分解してFNV-1aハッシュ
         hash ^= bits & 0xff;
         hash = Math.imul(hash, 16777619);
-        hash ^= (bits >>> 8) & 0xff;
+        hash ^= bits >>> 8 & 0xff;
         hash = Math.imul(hash, 16777619);
-        hash ^= (bits >>> 16) & 0xff;
+        hash ^= bits >>> 16 & 0xff;
         hash = Math.imul(hash, 16777619);
-        hash ^= (bits >>> 24) & 0xff;
+        hash ^= bits >>> 24 & 0xff;
         hash = Math.imul(hash, 16777619);
     }
 
     // 32bitハッシュ値を24bitに圧縮
-    return ((hash >>> 8) ^ (hash & 0xff)) & 0xffffff;
+    return hash >>> 8 ^ hash & 0xff & 0xffffff;
 };
