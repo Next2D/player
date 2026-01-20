@@ -9,24 +9,72 @@
  */
 export const execute = (buffer: Float32Array): number =>
 {
+    // Float32ArrayのバッファをUint32Arrayとして直接参照（DataView不要）
+    const bits = new Uint32Array(buffer.buffer, buffer.byteOffset, buffer.length);
+    const len = bits.length;
+
     let hash = 2166136261; // FNV-1aオフセット basis
+    let idx = 0;
 
-    const view = new DataView(new ArrayBuffer(4));
-    for (let idx = 0; idx < buffer.length; ++idx) {
+    // 8要素ずつ処理（ループアンローリング）
+    const unrolledEnd = len & ~7; // len - (len % 8)
+    while (idx < unrolledEnd) {
+        let b = bits[idx++];
+        hash = Math.imul(hash ^ (b & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >>> 24), 16777619);
 
-        // Float32の値をそのままビット表現として使用
-        view.setFloat32(0, buffer[idx], true);
-        const bits = view.getUint32(0, true);
+        b = bits[idx++];
+        hash = Math.imul(hash ^ (b & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >>> 24), 16777619);
 
-        // 32bitを4バイトに分解してFNV-1aハッシュ
-        hash ^= bits & 0xff;
-        hash = Math.imul(hash, 16777619);
-        hash ^= bits >>> 8 & 0xff;
-        hash = Math.imul(hash, 16777619);
-        hash ^= bits >>> 16 & 0xff;
-        hash = Math.imul(hash, 16777619);
-        hash ^= bits >>> 24 & 0xff;
-        hash = Math.imul(hash, 16777619);
+        b = bits[idx++];
+        hash = Math.imul(hash ^ (b & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+
+        b = bits[idx++];
+        hash = Math.imul(hash ^ (b & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+
+        b = bits[idx++];
+        hash = Math.imul(hash ^ (b & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+
+        b = bits[idx++];
+        hash = Math.imul(hash ^ (b & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+
+        b = bits[idx++];
+        hash = Math.imul(hash ^ (b & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+
+        b = bits[idx++];
+        hash = Math.imul(hash ^ (b & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+    }
+
+    // 残り (0〜7要素)
+    while (idx < len) {
+        const b = bits[idx++];
+        hash = Math.imul(hash ^ (b & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
+        hash = Math.imul(hash ^ (b >>> 24), 16777619);
     }
 
     // 32bitハッシュ値を24bitに圧縮
