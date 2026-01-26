@@ -1,11 +1,15 @@
 import { execute } from "./MeshFillGenerateUseCase";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("../../Mesh.ts", () => ({
+    "$getMeshTempBuffer": (size: number) => new Float32Array(size)
+}));
+
 describe("MeshFillGenerateUseCase.js method test", () =>
 {
     it("test case", async () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
+        vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
         {
             const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
             return {

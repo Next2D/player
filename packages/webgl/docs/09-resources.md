@@ -211,8 +211,7 @@ $currentAtlasIndex: number = 0;                         // 現在のアトラス
 $atlasAttachmentObjects: IAttachmentObject[] = [];      // アタッチメントオブジェクト配列
 $rootNodes: TexturePacker[] = [];                       // ルートノード配列
 $atlasTexture: ITextureObject | null = null;            // アトラステクスチャ
-$transferBounds: Float32Array[] = [];                   // 転送範囲（ノード描画時）
-$allTransferBounds: Float32Array[] = [];                // 全転送範囲（切り替え時）
+$transferBounds: Float32Array[] = [];                   // 転送範囲
 
 // AtlasManager.ts - 状態関数
 $setActiveAtlasIndex(index: number): void
@@ -222,7 +221,6 @@ $getCurrentAtlasIndex(): number
 
 // 転送範囲管理
 $getActiveTransferBounds(index: number): Float32Array
-$getActiveAllTransferBounds(index: number): Float32Array
 $clearTransferBounds(): void
 
 // アタッチメント管理
@@ -304,8 +302,8 @@ sequenceDiagram
 
     Note over CTX,GL: DisplayObject rendering
     CTX->>CTX: drawDisplayObject(node, ...)
-    CTX->>CTX: contextUpdateAllTransferBoundsService(node)
-    CTX->>CTX: blnedDrawDisplayObjectUseCase
+    CTX->>CTX: contextUpdateTransferBoundsService(node)
+    CTX->>CTX: blendDrawDisplayObjectUseCase
 
     Note over CTX,GL: Final instanced draw
     CTX->>CTX: drawArraysInstanced()
@@ -322,7 +320,6 @@ flowchart TB
         ROOT_NODES[$rootNodes]
         ATLAS_OBJS[$atlasAttachmentObjects]
         TRANSFER[$transferBounds]
-        ALL_TRANSFER[$allTransferBounds]
     end
 
     subgraph "Index Management"

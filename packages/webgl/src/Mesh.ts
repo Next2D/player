@@ -118,3 +118,29 @@ export const $clearFillBufferSetting = (): void =>
     $fillBufferOffset = 0;
     $fillBufferIndexes.length = 0;
 };
+
+/**
+ * @description メッシュ生成用の再利用可能な一時バッファ（GC回避）
+ *              Reusable temporary buffer for mesh generation (avoid GC)
+ *
+ * @type {Float32Array}
+ * @private
+ */
+let $meshTempBuffer: Float32Array = new Float32Array(32);
+
+/**
+ * @description 必要なサイズの一時バッファを取得（必要に応じて拡張）
+ *              Get temporary buffer of required size (expand if necessary)
+ *
+ * @param  {number} size
+ * @return {Float32Array}
+ * @method
+ * @protected
+ */
+export const $getMeshTempBuffer = (size: number): Float32Array =>
+{
+    if ($meshTempBuffer.length < size) {
+        $meshTempBuffer = new Float32Array($upperPowerOfTwo(size));
+    }
+    return $meshTempBuffer;
+};

@@ -30,6 +30,15 @@ import {
 } from "../../WebGLUtil";
 
 /**
+ * @description ColorMatrixFilter用の再利用可能なバッファ（GC回避）
+ *              Reusable buffer for ColorMatrixFilter (avoid GC)
+ *
+ * @type {Float32Array}
+ * @private
+ */
+const $colorMatrixBuffer: Float32Array = new Float32Array(20);
+
+/**
  * @description フィルターを適用します。
  *              Apply the filter.
  *
@@ -179,15 +188,13 @@ export const execute = (
                     break;
 
                 case 2: // ColorMatrixFilter
+                    // 再利用可能なバッファを使用（GC回避）
+                    for (let i = 0; i < 20; ++i) {
+                        $colorMatrixBuffer[i] = params[idx++];
+                    }
                     textureObject = filterApplyColorMatrixFilterUseCase(
                         textureObject,
-                        new Float32Array([
-                            params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++]
-                        ])
+                        $colorMatrixBuffer
                     );
                     break;
 

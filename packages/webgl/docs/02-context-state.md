@@ -106,7 +106,6 @@ flowchart TB
         F4[$float32Array4]
         F6[$float32Array6]
         F9[$float32Array9]
-        I4[$int32Array4]
     end
 
     subgraph "Operations"
@@ -118,12 +117,10 @@ flowchart TB
     GET --> F4
     GET --> F6
     GET --> F9
-    GET --> I4
     POOL --> ARR
     POOL --> F4
     POOL --> F6
     POOL --> F9
-    POOL --> I4
 ```
 
 ---

@@ -101,7 +101,6 @@ Shader/
 ├── ShaderManager.ts              # メインシェーダー管理クラス
 ├── ShaderInstancedManager.ts     # インスタンス描画用
 ├── GradientLUTGenerator.ts       # グラデーションLUT生成
-├── GradientLUTCache.ts           # LUTキャッシュ
 │
 ├── ShaderManager/
 │   ├── service/                  # 18 service files
@@ -262,49 +261,30 @@ FUNCTION_GRID_ON(index: number): string
 
 ```mermaid
 flowchart TB
-    subgraph "GradientLUT Cache"
-        LUT_CACHE[$lutCache Map]
-        LUT_MAX[MAX_SIZE = 32]
-        LUT_FRAME[currentFrame]
-        LUT_KEY[generateCacheKey]
-    end
-
     subgraph "Shader Variant Cache"
         SHADER_CACHE[$collection Map]
         SHADER_MAX[MAX_SIZE = 16]
-        SHADER_ORDER[usageOrder LRU]
+        SHADER_ORDER[$usageOrder LRU]
     end
 
     subgraph "Operations"
-        GET[getCachedLUT/getFromCache]
-        SET[setCachedLUT/addToCache]
+        GET[$getFromCache]
+        SET[$addToCache]
         EVICT[auto evict old entries]
     end
 
-    GET --> LUT_CACHE
     GET --> SHADER_CACHE
     SET --> EVICT
-    EVICT --> LUT_MAX
     EVICT --> SHADER_MAX
 ```
 
 **Cache Implementation / キャッシュ実装:**
 ```typescript
-// GradientLUTCache.ts - LUTテクスチャキャッシュ
-interface IGradientLUTCacheEntry {
-    texture: ITextureObject;
-    lastUsed: number;           // フレーム番号
-}
-MAX_CACHE_SIZE = 32
-$generateCacheKey(stops, interpolation): string  // 衝突防止のためbase36キー生成
-$getCachedLUT(key): ITextureObject | null        // キャッシュから取得
-$setCachedLUT(key, texture): void                // キャッシュに追加
-$advanceFrame(): void                            // フレームカウンタ進行
-$clearLUTCache(): void                           // キャッシュクリア
-$getLUTCacheSize(): number                       // キャッシュサイズ取得
-
 // GradientLUTVariants.ts - シェーダーバリアントキャッシュ
 MAX_SHADER_CACHE_SIZE = 16
+$collection: Map<string, ShaderManager>  // シェーダーキャッシュ
+$usageOrder: string[]                    // 使用順序追跡キュー
+
 $addToCache(key, shader)        // LRU方式で追加
 $getFromCache(key)              // 使用順序を更新して取得
 ```

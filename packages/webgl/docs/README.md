@@ -110,5 +110,4 @@ graph TB
 | `$RENDER_MAX_SIZE` | 2048 (max: 4096) | 最大レンダリングサイズ |
 | `$samples` | 4 | MSAAサンプリング数 |
 | `FLATNESS_THRESHOLD` | 0.5 | ベジェ平坦度閾値 |
-| `MAX_CACHE_SIZE` | 32 | LUTキャッシュサイズ |
 | `MAX_SHADER_CACHE_SIZE` | 16 | シェーダーキャッシュサイズ |

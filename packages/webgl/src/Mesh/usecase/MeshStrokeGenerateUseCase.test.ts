@@ -11,7 +11,13 @@ vi.mock("../../WebGLUtil.ts", () => ({
         "$matrix": new Float32Array([1, 0, 0, 1, 0, 0, 0, 0, 1])
     },
     "$getViewportWidth": () => 1024,
-    "$getViewportHeight": () => 1024
+    "$getViewportHeight": () => 1024,
+    "$getArray": () => [],
+    "$poolArray": () => {}
+}));
+
+vi.mock("../../Mesh.ts", () => ({
+    "$getMeshTempBuffer": (size: number) => new Float32Array(size)
 }));
 
 describe("MeshStrokeGenerateUseCase.js method test", () =>

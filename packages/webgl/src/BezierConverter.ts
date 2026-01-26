@@ -145,3 +145,48 @@ export const $ensureAdaptiveBufferSize = (size: number): void => {
 export const $setAdaptiveSegmentCount = (count: number): void => {
     $adaptiveSegmentCount = count;
 };
+
+/**
+ * @description 分割処理用の再利用可能なFloat32Array(8)バッファプール
+ *              Reusable Float32Array(8) buffer pool for split operations
+ *
+ * @type {Float32Array[]}
+ * @private
+ */
+const $splitBufferPool: Float32Array[] = [];
+
+/**
+ * @description プールの現在の使用インデックス
+ *              Current usage index of the pool
+ *
+ * @type {number}
+ * @private
+ */
+let $splitBufferIndex: number = 0;
+
+/**
+ * @description 分割用バッファプールをリセット
+ *              Reset split buffer pool
+ *
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $resetSplitBufferPool = (): void => {
+    $splitBufferIndex = 0;
+};
+
+/**
+ * @description 分割用Float32Array(8)を取得（プールから再利用）
+ *              Get Float32Array(8) for split (reuse from pool)
+ *
+ * @return {Float32Array}
+ * @method
+ * @protected
+ */
+export const $getSplitBuffer = (): Float32Array => {
+    if ($splitBufferIndex >= $splitBufferPool.length) {
+        $splitBufferPool.push(new Float32Array(8));
+    }
+    return $splitBufferPool[$splitBufferIndex++];
+};

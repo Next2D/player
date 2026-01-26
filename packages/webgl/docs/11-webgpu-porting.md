@@ -150,7 +150,6 @@ fn main(input: VertexInput) -> @builtin(position) vec4<f32> {
 | **Bezier** | `MIN_SUBDIVISIONS` | 2 | 最小分割数 |
 | **Bezier** | `MAX_SUBDIVISIONS` | 8 | 最大分割数 |
 | **Gradient** | Adaptive Resolution | 256/512/1024 | ストップ数に応じた解像度 |
-| **LUT Cache** | `MAX_CACHE_SIZE` | 32 | LUTテクスチャキャッシュ |
 | **Shader Cache** | `MAX_SHADER_CACHE_SIZE` | 16 | シェーダーバリアントキャッシュ |
 | **Texture** | Bound Slots | 3 | テクスチャスロット数 |
 | **Filter** | Types | 10 | フィルター種類数 |

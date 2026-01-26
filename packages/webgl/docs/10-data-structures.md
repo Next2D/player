@@ -244,8 +244,6 @@ $getArray(...args: any[]): any[]
 $poolArray(array: any[]): void
 $getFloat32Array4/6/9(...): Float32Array
 $poolFloat32Array4/6/9(array: Float32Array): void
-$getInt32Array4(...): Int32Array
-$poolInt32Array4(array: Int32Array): void
 
 // 行列操作
 $inverseMatrix(m: Float32Array): Float32Array

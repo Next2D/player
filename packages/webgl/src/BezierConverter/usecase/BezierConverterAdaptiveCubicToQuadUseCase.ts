@@ -4,7 +4,9 @@ import {
     $adaptiveSegmentCount,
     $getAdaptiveSubdivisionCount,
     $ensureAdaptiveBufferSize,
-    $setAdaptiveSegmentCount
+    $setAdaptiveSegmentCount,
+    $resetSplitBufferPool,
+    $getSplitBuffer
 } from "../../BezierConverter";
 
 /**
@@ -159,19 +161,19 @@ export const execute = (
         offset += 4;
     } else if (subdivisions <= 4) {
         // 4分割: t=0.25, 0.5, 0.75で分割
-        const curves: Float32Array[] = [];
-        curves.push(new Float32Array([from_x, from_y, cx1, cy1, cx2, cy2, x, y]));
+        // バッファプールをリセットして再利用
+        $resetSplitBufferPool();
 
         // 2段階で4分割
-        const temp1 = new Float32Array(8);
-        const temp2 = new Float32Array(8);
+        const temp1 = $getSplitBuffer();
+        const temp2 = $getSplitBuffer();
 
         splitCubicAt(from_x, from_y, cx1, cy1, cx2, cy2, x, y, 0.5, temp1, temp2);
 
-        const left1 = new Float32Array(8);
-        const left2 = new Float32Array(8);
-        const right1 = new Float32Array(8);
-        const right2 = new Float32Array(8);
+        const left1 = $getSplitBuffer();
+        const left2 = $getSplitBuffer();
+        const right1 = $getSplitBuffer();
+        const right2 = $getSplitBuffer();
 
         splitCubicAt(temp1[0], temp1[1], temp1[2], temp1[3], temp1[4], temp1[5], temp1[6], temp1[7], 0.5, left1, left2);
         splitCubicAt(temp2[0], temp2[1], temp2[2], temp2[3], temp2[4], temp2[5], temp2[6], temp2[7], 0.5, right1, right2);
@@ -186,40 +188,53 @@ export const execute = (
         offset += 4;
     } else {
         // 8分割: 3段階で8分割（既存の方法と同等）
+        // バッファプールをリセットして再利用
+        $resetSplitBufferPool();
+
         // 最初の分割
-        const a1 = new Float32Array(8);
-        const a2 = new Float32Array(8);
+        const a1 = $getSplitBuffer();
+        const a2 = $getSplitBuffer();
         splitCubicAt(from_x, from_y, cx1, cy1, cx2, cy2, x, y, 0.5, a1, a2);
 
         // 2段階目
-        const b1 = new Float32Array(8);
-        const b2 = new Float32Array(8);
-        const b3 = new Float32Array(8);
-        const b4 = new Float32Array(8);
+        const b1 = $getSplitBuffer();
+        const b2 = $getSplitBuffer();
+        const b3 = $getSplitBuffer();
+        const b4 = $getSplitBuffer();
         splitCubicAt(a1[0], a1[1], a1[2], a1[3], a1[4], a1[5], a1[6], a1[7], 0.5, b1, b2);
         splitCubicAt(a2[0], a2[1], a2[2], a2[3], a2[4], a2[5], a2[6], a2[7], 0.5, b3, b4);
 
         // 3段階目
-        const c1 = new Float32Array(8);
-        const c2 = new Float32Array(8);
-        const c3 = new Float32Array(8);
-        const c4 = new Float32Array(8);
-        const c5 = new Float32Array(8);
-        const c6 = new Float32Array(8);
-        const c7 = new Float32Array(8);
-        const c8 = new Float32Array(8);
+        const c1 = $getSplitBuffer();
+        const c2 = $getSplitBuffer();
+        const c3 = $getSplitBuffer();
+        const c4 = $getSplitBuffer();
+        const c5 = $getSplitBuffer();
+        const c6 = $getSplitBuffer();
+        const c7 = $getSplitBuffer();
+        const c8 = $getSplitBuffer();
 
         splitCubicAt(b1[0], b1[1], b1[2], b1[3], b1[4], b1[5], b1[6], b1[7], 0.5, c1, c2);
         splitCubicAt(b2[0], b2[1], b2[2], b2[3], b2[4], b2[5], b2[6], b2[7], 0.5, c3, c4);
         splitCubicAt(b3[0], b3[1], b3[2], b3[3], b3[4], b3[5], b3[6], b3[7], 0.5, c5, c6);
         splitCubicAt(b4[0], b4[1], b4[2], b4[3], b4[4], b4[5], b4[6], b4[7], 0.5, c7, c8);
 
-        const segments = [c1, c2, c3, c4, c5, c6, c7, c8];
-        for (let i = 0; i < 8; i++) {
-            const seg = segments[i];
-            cubicToQuad(seg[2], seg[3], seg[4], seg[5], seg[6], seg[7], $adaptiveBuffer, offset);
-            offset += 4;
-        }
+        cubicToQuad(c1[2], c1[3], c1[4], c1[5], c1[6], c1[7], $adaptiveBuffer, offset);
+        offset += 4;
+        cubicToQuad(c2[2], c2[3], c2[4], c2[5], c2[6], c2[7], $adaptiveBuffer, offset);
+        offset += 4;
+        cubicToQuad(c3[2], c3[3], c3[4], c3[5], c3[6], c3[7], $adaptiveBuffer, offset);
+        offset += 4;
+        cubicToQuad(c4[2], c4[3], c4[4], c4[5], c4[6], c4[7], $adaptiveBuffer, offset);
+        offset += 4;
+        cubicToQuad(c5[2], c5[3], c5[4], c5[5], c5[6], c5[7], $adaptiveBuffer, offset);
+        offset += 4;
+        cubicToQuad(c6[2], c6[3], c6[4], c6[5], c6[6], c6[7], $adaptiveBuffer, offset);
+        offset += 4;
+        cubicToQuad(c7[2], c7[3], c7[4], c7[5], c7[6], c7[7], $adaptiveBuffer, offset);
+        offset += 4;
+        cubicToQuad(c8[2], c8[3], c8[4], c8[5], c8[6], c8[7], $adaptiveBuffer, offset);
+        offset += 4;
     }
 
     $setAdaptiveSegmentCount(offset / 4);

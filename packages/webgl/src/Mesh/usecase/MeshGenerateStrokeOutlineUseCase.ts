@@ -10,6 +10,18 @@ import { execute as meshGenerateCalculateMiterJoinUseCase } from "../usecase/Mes
 import { $context } from "../../WebGLUtil";
 
 /**
+ * @description 再利用可能なPointオブジェクト（GC回避）
+ *              Reusable Point objects (avoid GC)
+ *
+ * @type {IPoint}
+ * @private
+ */
+const $startPoint: IPoint = { "x": 0, "y": 0 };
+const $controlPoint: IPoint = { "x": 0, "y": 0 };
+const $endPoint: IPoint = { "x": 0, "y": 0 };
+const $prevPoint: IPoint = { "x": 0, "y": 0 };
+
+/**
  * @description 線の外周を算出して塗りのフォーマットで返却
  *              Calculate the outer circumference of the line and return it in the format of the fill
  *
@@ -21,25 +33,22 @@ import { $context } from "../../WebGLUtil";
  */
 export const execute = (vertices: IPath, thickness: number): IPath[] =>
 {
-    const startPoint: IPoint = {
-        "x": vertices[0] as number,
-        "y": vertices[1] as number
-    };
+    // 再利用可能なオブジェクトを使用
+    const startPoint = $startPoint;
+    startPoint.x = vertices[0] as number;
+    startPoint.y = vertices[1] as number;
 
-    const controlPoint: IPoint = {
-        "x": 0,
-        "y": 0
-    };
+    const controlPoint = $controlPoint;
+    controlPoint.x = 0;
+    controlPoint.y = 0;
 
-    const endPoint: IPoint = {
-        "x": 0,
-        "y": 0
-    };
+    const endPoint = $endPoint;
+    endPoint.x = 0;
+    endPoint.y = 0;
 
-    const prevPoint: IPoint = {
-        "x": 0,
-        "y": 0
-    };
+    const prevPoint = $prevPoint;
+    prevPoint.x = 0;
+    prevPoint.y = 0;
 
     const rectangles: IPath[] = [];
     for (let idx = 3; idx < vertices.length; idx += 3) {
