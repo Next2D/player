@@ -60,6 +60,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const hasCache = render_queue[index++];
     if (!hasCache) {
 
+        // 個別の描画があったので、フラグを立てる
+        $context.newDrawState = true;
+
         const width  = Math.ceil(Math.abs(xMax - xMin) * xScale);
         const height = Math.ceil(Math.abs(yMax - yMin) * yScale);
 

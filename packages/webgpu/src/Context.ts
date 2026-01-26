@@ -106,6 +106,8 @@ export class Context
     private pipelineManager: PipelineManager;
     private attachmentManager: AttachmentManager;
 
+    public newDrawState: boolean = false;
+
     /**
      * @param {GPUDevice} device
      * @param {GPUCanvasContext} canvas_context

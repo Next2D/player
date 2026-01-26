@@ -46,7 +46,6 @@ import { execute as contextBitmapStrokeUseCase } from "./Context/usecase/Context
 import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStrokeUseCase";
 import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
 import { execute as contextUpdateTransferBoundsService } from "./Context/service/ContextUpdateTransferBoundsService";
-import { execute as contextUpdateAllTransferBoundsService } from "./Context/service/ContextUpdateAllTransferBoundsService";
 import { execute as contextDrawFillUseCase } from "./Context/usecase/ContextDrawFillUseCase";
 import { execute as contextCreateImageBitmapService } from "./Context/service/ContextCreateImageBitmapService";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
@@ -248,6 +247,16 @@ export class Context
      * @public
      */
     public miterLimit: number;
+
+    /**
+     * @description 新しい描画がフレームバッファに書き込まれたかの状態管理フラグ
+     *              State management flag to check if new drawing has been written to the frame buffer
+     *
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public newDrawState: boolean = false;
 
     /**
      * @param {WebGL2RenderingContext} gl
@@ -869,10 +878,6 @@ export class Context
      */
     beginNodeRendering (node: Node): void
     {
-        // 転送範囲を更新
-        contextUpdateTransferBoundsService(node);
-
-        // ノードの描画を開始
         contextBeginNodeRenderingService(node.x, node.y, node.w, node.h);
     }
 
@@ -923,7 +928,7 @@ export class Context
         y_max: number,
         color_transform: Float32Array
     ): void {
-        contextUpdateAllTransferBoundsService(node);
+        contextUpdateTransferBoundsService(node);
         blnedDrawDisplayObjectUseCase(
             node, x_min, y_min, x_max, y_max, color_transform
         );

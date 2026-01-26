@@ -53,6 +53,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const hasCache = render_queue[index++];
     if (!hasCache) {
 
+        // 個別の描画があったので、フラグを立てる
+        $context.newDrawState = true;
+
         const gridData = isGridEnabled
             ? new Float32Array(28)
             : null;

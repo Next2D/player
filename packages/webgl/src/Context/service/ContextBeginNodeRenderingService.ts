@@ -1,5 +1,5 @@
 
-import { $gl, $context } from "../../WebGLUtil";
+import { $gl } from "../../WebGLUtil";
 
 /**
  * @description 描画範囲を設定
@@ -22,12 +22,6 @@ export const execute = (x: number, y: number, w: number, h: number): void =>
     // 初期化
     $gl.clearColor(0, 0, 0, 0);
     $gl.clear($gl.COLOR_BUFFER_BIT | $gl.STENCIL_BUFFER_BIT);
-    $gl.clearColor(
-        $context.$clearColorR,
-        $context.$clearColorG,
-        $context.$clearColorB,
-        $context.$clearColorA
-    );
 
     // 描画領域をあらためて設定
     $gl.scissor(x, y, w, h);

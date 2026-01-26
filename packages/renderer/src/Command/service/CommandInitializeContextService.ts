@@ -51,8 +51,8 @@ export const execute = async (
         }
 
         const preferredFormat = gpu.getPreferredCanvasFormat();
-        $setContext(new WebGPUContext(device, context, preferredFormat, device_pixel_ratio))    ;
-    
+        $setContext(new WebGPUContext(device, context, preferredFormat, device_pixel_ratio));
+
     } else {
         const gl: WebGL2RenderingContext | null = canvas.getContext("webgl2", {
             "stencil": true,

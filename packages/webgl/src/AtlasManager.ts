@@ -182,34 +182,6 @@ export const $getActiveTransferBounds = (index: number): Float32Array =>
 };
 
 /**
- * @type {Float32Array[]}
- * @private
- */
-const $allTransferBounds: Float32Array[] = [];
-
-/**
- * @description アトラステクスチャの切り替え時の転送範囲を返却
- *              Return the transfer range when switching the atlas texture
- *
- * @param  {number} index
- * @return {Float32Array}
- * @method
- * @protected
- */
-export const $getActiveAllTransferBounds = (index: number): Float32Array =>
-{
-    if (!(index in $allTransferBounds)) {
-        $allTransferBounds[index] = new Float32Array([
-            $MAX_VALUE,
-            $MAX_VALUE,
-            $MIN_VALUE,
-            $MIN_VALUE
-        ]);
-    }
-    return $allTransferBounds[index];
-};
-
-/**
  * @description アトラステクスチャの転送範囲をクリア
  *              Clear the transfer range of the atlas texture
  *
@@ -221,16 +193,6 @@ export const $clearTransferBounds = (): void =>
 {
     for (let idx = 0; idx < $transferBounds.length; ++idx) {
         const bounds = $transferBounds[idx];
-        if (!bounds) {
-            continue;
-        }
-
-        bounds[0] = bounds[1] = $MAX_VALUE;
-        bounds[2] = bounds[3] = $MIN_VALUE;
-    }
-
-    for (let idx = 0; idx < $allTransferBounds.length; ++idx) {
-        const bounds = $allTransferBounds[idx];
         if (!bounds) {
             continue;
         }
