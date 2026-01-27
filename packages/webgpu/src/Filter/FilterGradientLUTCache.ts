@@ -70,7 +70,9 @@ export const $getFilterGradientAttachmentObject = (): IAttachmentObject =>
                 area: resolution,
                 smooth: true
             },
-            stencil: null
+            stencil: null,
+            msaaTexture: null,
+            msaaStencil: null
         };
     }
 

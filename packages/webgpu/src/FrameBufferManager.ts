@@ -102,12 +102,13 @@ export class FrameBufferManager
 
     /**
      * @description レンダーパス記述子を作成
-     * @param {GPUTextureView} view
+     * @param {GPUTextureView} view - テクスチャビュー（MSAAの場合はMSAAテクスチャビュー）
      * @param {number} r
      * @param {number} g
      * @param {number} b
      * @param {number} a
      * @param {GPULoadOp} loadOp
+     * @param {GPUTextureView | null} resolveTarget - MSAA解決先テクスチャビュー
      * @return {GPURenderPassDescriptor}
      */
     createRenderPassDescriptor(
@@ -116,30 +117,34 @@ export class FrameBufferManager
         g: number = 0,
         b: number = 0,
         a: number = 0,
-        loadOp: GPULoadOp = "clear"
+        loadOp: GPULoadOp = "clear",
+        resolveTarget: GPUTextureView | null = null
     ): GPURenderPassDescriptor {
-        return frameBufferManagerCreateRenderPassDescriptorService(view, r, g, b, a, loadOp);
+        return frameBufferManagerCreateRenderPassDescriptorService(view, r, g, b, a, loadOp, resolveTarget);
     }
 
     /**
      * @description ステンシル付きレンダーパス記述子を作成（2パスフィルレンダリング用）
-     * @param {GPUTextureView} colorView - カラーテクスチャビュー
-     * @param {GPUTextureView} stencilView - ステンシルテクスチャビュー
+     * @param {GPUTextureView} colorView - カラーテクスチャビュー（MSAAの場合はMSAAテクスチャビュー）
+     * @param {GPUTextureView} stencilView - ステンシルテクスチャビュー（MSAAの場合はMSAAステンシルビュー）
      * @param {GPULoadOp} colorLoadOp - カラーのロードオペレーション
      * @param {GPULoadOp} stencilLoadOp - ステンシルのロードオペレーション
+     * @param {GPUTextureView | null} resolveTarget - MSAA解決先テクスチャビュー
      * @return {GPURenderPassDescriptor}
      */
     createStencilRenderPassDescriptor(
         colorView: GPUTextureView,
         stencilView: GPUTextureView,
         colorLoadOp: GPULoadOp = "load",
-        stencilLoadOp: GPULoadOp = "clear"
+        stencilLoadOp: GPULoadOp = "clear",
+        resolveTarget: GPUTextureView | null = null
     ): GPURenderPassDescriptor {
         return frameBufferManagerCreateStencilRenderPassDescriptorService(
             colorView,
             stencilView,
             colorLoadOp,
-            stencilLoadOp
+            stencilLoadOp,
+            resolveTarget
         );
     }
 

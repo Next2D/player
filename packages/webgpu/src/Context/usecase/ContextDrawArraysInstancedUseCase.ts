@@ -31,7 +31,7 @@ export const execute = (
     mainAttachment: IAttachmentObject,
     bufferManager: BufferManager,
     frameBufferManager: FrameBufferManager,
-    textureManager: TextureManager,
+    _textureManager: TextureManager,
     pipelineManager: PipelineManager
 ): GPURenderPassEncoder | null => {
     const shaderManager = getInstancedShaderManager();
@@ -122,8 +122,16 @@ export const execute = (
         return null;
     }
 
-    // サンプラーを作成
-    const sampler = textureManager.createSampler("atlas_sampler", false);
+    // アトラス用サンプラーを作成（WebGL版と同様の設定）
+    // MIN_FILTER: linear（縮小時・回転時にスムーズ）
+    // MAG_FILTER: nearest（拡大時にシャープ）
+    const sampler = device.createSampler({
+        minFilter: "linear",
+        magFilter: "nearest",
+        mipmapFilter: "nearest",
+        addressModeU: "clamp-to-edge",
+        addressModeV: "clamp-to-edge"
+    });
 
     // バインドグループを作成
     const bindGroupLayout = pipelineManager.getBindGroupLayout("instanced");

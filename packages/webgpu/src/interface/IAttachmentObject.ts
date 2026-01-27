@@ -20,4 +20,14 @@ export interface IAttachmentObject
     color: IColorBufferObject | null;
     texture: ITextureObject | null;
     stencil: IStencilBufferObject | null;
+    /**
+     * @description MSAAテクスチャ（sampleCount > 1 の場合に使用）
+     *              MSAA texture (used when sampleCount > 1)
+     */
+    msaaTexture: ITextureObject | null;
+    /**
+     * @description MSAAステンシルテクスチャ（sampleCount > 1 の場合に使用）
+     *              MSAA stencil texture (used when sampleCount > 1)
+     */
+    msaaStencil: IStencilBufferObject | null;
 }

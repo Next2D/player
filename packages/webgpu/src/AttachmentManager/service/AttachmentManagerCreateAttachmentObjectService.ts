@@ -21,6 +21,8 @@ export const execute = (
         mask: false,
         color: null,
         texture: null,
-        stencil: null
+        stencil: null,
+        msaaTexture: null,
+        msaaStencil: null
     };
 };

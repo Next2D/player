@@ -282,3 +282,26 @@ export const $getCurrentAtlasIndex = (): number =>
 {
     return $currentAtlasIndex;
 };
+
+/**
+ * @description アトラス専用の座標マップ、フレームバッファをリセット
+ *              Reset the coordinate map and frame buffer dedicated to the atlas
+ *
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $resetAtlas = (): void =>
+{
+    // ルートノードをリセット
+    $rootNodes.length = 0;
+
+    // アクティブインデックスをリセット
+    $setActiveAtlasIndex(0);
+
+    // アトラスアタッチメントオブジェクトをリセット
+    $atlasAttachmentObjects.length = 0;
+
+    // 転送範囲をクリア
+    $clearTransferBounds();
+};

@@ -324,6 +324,20 @@ export class PathCommand
     }
 
     /**
+     * @description WebGL互換形式でパスを取得（ストローク用）
+     *              [x, y, isCurve, x, y, isCurve, ...] 形式
+     * @return {IPath[]}
+     */
+    getVerticesForStroke(): IPath[]
+    {
+        const vertices = [...this.$vertices];
+        if (this.$currentPath.length >= 6) {
+            vertices.push(this.$currentPath);
+        }
+        return vertices;
+    }
+
+    /**
      * @description リセット
      * @return {void}
      */

@@ -69,7 +69,9 @@ export const $getGradientAttachmentObjectWithResolution = (resolution: number): 
                 area: resolution,
                 smooth: true
             },
-            stencil: null
+            stencil: null,
+            msaaTexture: null,
+            msaaStencil: null
         };
 
         $gradientAttachmentObjects.set(resolution, attachment);

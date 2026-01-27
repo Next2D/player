@@ -1,4 +1,5 @@
 import { ShaderSource } from "./ShaderSource";
+import { $samples } from "../WebGPUUtil";
 
 /**
  * @description WebGPUのパイプライン管理クラス
@@ -10,6 +11,7 @@ export class PipelineManager
     private format: GPUTextureFormat;
     private pipelines: Map<string, GPURenderPipeline>;
     private bindGroupLayouts: Map<string, GPUBindGroupLayout>;
+    private sampleCount: number;
 
     /**
      * @param {GPUDevice} device
@@ -22,7 +24,8 @@ export class PipelineManager
         this.format = format;
         this.pipelines = new Map();
         this.bindGroupLayouts = new Map();
-        
+        this.sampleCount = $samples;
+
         this.initialize();
     }
 
@@ -134,7 +137,7 @@ export class PipelineManager
             }
         };
 
-        // アトラステクスチャ用パイプライン（rgba8unorm）
+        // アトラステクスチャ用パイプライン（rgba8unorm）- MSAA対応
         const pipelineRGBA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
@@ -153,6 +156,9 @@ export class PipelineManager
             primitive: {
                 topology: "triangle-list",
                 cullMode: "none"
+            },
+            multisample: {
+                count: this.sampleCount
             }
         });
 
@@ -320,6 +326,9 @@ export class PipelineManager
                 },
                 stencilReadMask: 0xFF,
                 stencilWriteMask: 0xFF
+            },
+            multisample: {
+                count: this.sampleCount
             }
         });
         this.pipelines.set("stencil_write", stencilWritePipeline);
@@ -377,6 +386,9 @@ export class PipelineManager
                 },
                 stencilReadMask: 0xFF,
                 stencilWriteMask: 0xFF
+            },
+            multisample: {
+                count: this.sampleCount
             }
         });
         this.pipelines.set("stencil_fill", stencilFillPipeline);
@@ -437,6 +449,9 @@ export class PipelineManager
                 },
                 stencilReadMask: 0xFF,
                 stencilWriteMask: 0xFF // ステンシル書き込み有効（maskValueにリセット）
+            },
+            multisample: {
+                count: this.sampleCount
             }
         });
         this.pipelines.set("stencil_fill_masked", stencilFillMaskedPipeline);
@@ -505,6 +520,9 @@ export class PipelineManager
                 },
                 stencilReadMask: 0xFF,
                 stencilWriteMask: 0xFF
+            },
+            multisample: {
+                count: this.sampleCount
             }
         });
         this.pipelines.set("clip_write", clipWritePipeline);
@@ -695,7 +713,7 @@ export class PipelineManager
             }
         };
 
-        // アトラステクスチャ用パイプライン（rgba8unorm）
+        // アトラステクスチャ用パイプライン（rgba8unorm）- MSAA対応
         const pipelineRGBA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
@@ -714,6 +732,9 @@ export class PipelineManager
             primitive: {
                 topology: "triangle-list",
                 cullMode: "none"
+            },
+            multisample: {
+                count: this.sampleCount
             }
         });
 
@@ -1104,7 +1125,7 @@ export class PipelineManager
             }
         };
 
-        // アトラステクスチャ用（rgba8unorm）- ステンシルなし
+        // アトラステクスチャ用（rgba8unorm）- ステンシルなし - MSAA対応
         const pipelineRGBA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
@@ -1123,6 +1144,9 @@ export class PipelineManager
             primitive: {
                 topology: "triangle-list",
                 cullMode: "none"
+            },
+            multisample: {
+                count: this.sampleCount
             }
         });
 
@@ -1194,6 +1218,9 @@ export class PipelineManager
                 },
                 stencilReadMask: 0x00,
                 stencilWriteMask: 0x00
+            },
+            multisample: {
+                count: this.sampleCount
             }
         });
         this.pipelines.set("gradient_fill_stencil", pipelineRGBAStencil);
@@ -1307,7 +1334,7 @@ export class PipelineManager
             }
         };
 
-        // アトラステクスチャ用（rgba8unorm）- ステンシルなし
+        // アトラステクスチャ用（rgba8unorm）- ステンシルなし - MSAA対応
         const pipelineRGBA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
@@ -1326,6 +1353,9 @@ export class PipelineManager
             primitive: {
                 topology: "triangle-list",
                 cullMode: "none"
+            },
+            multisample: {
+                count: this.sampleCount
             }
         });
 
@@ -1397,6 +1427,9 @@ export class PipelineManager
                 },
                 stencilReadMask: 0x00,
                 stencilWriteMask: 0x00
+            },
+            multisample: {
+                count: this.sampleCount
             }
         });
         this.pipelines.set("bitmap_fill_stencil", pipelineRGBAStencil);

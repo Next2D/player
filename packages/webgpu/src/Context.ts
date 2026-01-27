@@ -10,7 +10,7 @@ import { TextureManager } from "./TextureManager";
 import { FrameBufferManager } from "./FrameBufferManager";
 import { AttachmentManager } from "./AttachmentManager";
 import { PipelineManager } from "./Shader/PipelineManager";
-import { $rootNodes } from "./AtlasManager";
+import { $rootNodes, $resetAtlas } from "./AtlasManager";
 import { addDisplayObjectToInstanceArray, getInstancedShaderManager } from "./Blend/BlendInstancedManager";
 // Note: MeshStrokeGenerateUseCase is now used via ContextStrokeUseCase
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
@@ -302,6 +302,8 @@ export class Context
         if (cache_clear) {
             $clearGradientAttachmentObjects();
             $clearFilterGradientAttachment();
+            // アトラスをリセット（WebGL版と同じ）
+            $resetAtlas();
         }
 
         // canvasContextを再設定
@@ -560,20 +562,32 @@ export class Context
             const textureView = this.getCurrentTextureView();
             const attachment = this.frameBufferManager.getAttachment("atlas");
 
+            // MSAAテクスチャを使用するかどうか
+            const useMsaa = attachment?.msaa && attachment?.msaaTexture?.view;
+            const colorView = useMsaa ? attachment!.msaaTexture!.view : textureView;
+            const resolveTarget = useMsaa ? textureView : null;
+
             // アトラスへの描画でステンシルが必要な場合はステンシル付きレンダーパスを作成
             if (this.currentRenderTarget && attachment?.stencil?.view) {
+                // MSAAステンシルテクスチャを使用
+                const stencilView = useMsaa && attachment?.msaaStencil?.view
+                    ? attachment.msaaStencil.view
+                    : attachment.stencil.view;
+
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    textureView,
-                    attachment.stencil.view,
+                    colorView,
+                    stencilView,
                     "load",
-                    "load"
+                    "load",
+                    resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             } else {
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    textureView,
+                    colorView,
                     0, 0, 0, 0,
-                    "load"
+                    "load",
+                    resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             }
@@ -740,13 +754,14 @@ export class Context
     }
 
     /**
-     * @description 線の描画を実行
+     * @description 線の描画を実行（WebGL版と同じ仕様）
      * @return {void}
      */
     stroke (): void
     {
-        const paths = this.pathCommand.getAllPaths();
-        if (paths.length === 0) return;
+        // WebGL版と同じ: IPath[]形式で頂点を取得
+        const vertices = this.pathCommand.getVerticesForStroke();
+        if (vertices.length === 0) return;
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
@@ -771,13 +786,14 @@ export class Context
 
         this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
 
+        // WebGL版と同じ: thicknessをそのまま渡し、内部で/2される
         contextStrokeUseCase(
             this.device,
             this.renderPassEncoder,
             this.bufferManager,
             this.pipelineManager,
-            paths,
-            this.thickness / 2,
+            vertices,
+            this.thickness,
             this.$matrix,
             this.$strokeStyle,
             this.globalAlpha,
@@ -956,8 +972,9 @@ export class Context
         interpolation: number,
         focal: number
     ): void {
-        const paths = this.pathCommand.getAllPaths();
-        if (paths.length === 0) return;
+        // WebGL版と同じ: IPath[]形式で頂点を取得
+        const vertices = this.pathCommand.getVerticesForStroke();
+        if (vertices.length === 0) return;
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
@@ -978,13 +995,14 @@ export class Context
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         }
 
+        // WebGL版と同じ: thicknessをそのまま渡し、内部で/2される
         contextGradientStrokeUseCase(
             this.device,
             this.renderPassEncoder!,
             this.bufferManager,
             this.pipelineManager,
-            paths,
-            this.thickness / 2,
+            vertices,
+            this.thickness,
             this.$matrix,
             this.$strokeStyle,
             type,
@@ -1017,8 +1035,9 @@ export class Context
         repeat: boolean,
         smooth: boolean
     ): void {
-        const paths = this.pathCommand.getAllPaths();
-        if (paths.length === 0) return;
+        // WebGL版と同じ: IPath[]形式で頂点を取得
+        const vertices = this.pathCommand.getVerticesForStroke();
+        if (vertices.length === 0) return;
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
@@ -1039,13 +1058,14 @@ export class Context
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         }
 
+        // WebGL版と同じ: thicknessをそのまま渡し、内部で/2される
         contextBitmapStrokeUseCase(
             this.device,
             this.renderPassEncoder!,
             this.bufferManager,
             this.pipelineManager,
-            paths,
-            this.thickness / 2,
+            vertices,
+            this.thickness,
             this.$matrix,
             this.$strokeStyle,
             pixels,
@@ -1183,21 +1203,33 @@ export class Context
             // コマンドエンコーダーを確保
             this.ensureCommandEncoder();
 
+            // MSAAテクスチャを使用するかどうか
+            const useMsaa = attachment.msaa && attachment.msaaTexture?.view;
+            const colorView = useMsaa ? attachment.msaaTexture!.view : attachment.texture.view;
+            const resolveTarget = useMsaa ? attachment.texture.view : null;
+
             // ステンシルバッファ付きレンダーパス（2パスステンシルフィル用）
             if (attachment.stencil?.view) {
+                // MSAAステンシルテクスチャを使用
+                const stencilView = useMsaa && attachment.msaaStencil?.view
+                    ? attachment.msaaStencil.view
+                    : attachment.stencil.view;
+
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    attachment.texture.view,
-                    attachment.stencil.view,
+                    colorView,
+                    stencilView,
                     "load", // カラーは既存の内容を保持
-                    "clear" // ステンシルはクリア
+                    "clear", // ステンシルはクリア
+                    resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             } else {
                 // ステンシルがない場合は通常のレンダーパス（フォールバック）
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    attachment.texture.view,
+                    colorView,
                     0, 0, 0, 0,
-                    "load"
+                    "load",
+                    resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             }

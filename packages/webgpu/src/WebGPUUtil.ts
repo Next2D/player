@@ -1,3 +1,31 @@
+/**
+ * @description 描画のサンプリング数（MSAA）
+ *              Number of samples for drawing (MSAA)
+ *
+ * @type {number}
+ * @default 1
+ * @protected
+ *
+ * @note MSAAはメモリを大量に消費するため、デフォルトは1（無効）
+ *       シェーダーでのアンチエイリアス（Loop-Blinn法）が主な手法
+ *       必要に応じて$setSamples(4)で有効化可能
+ */
+export let $samples: number = 1;
+
+/**
+ * @description 描画のサンプリング数を変更
+ *              Change the number of samples for drawing
+ *
+ * @param  {number} samples
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setSamples = (samples: number): void =>
+{
+    $samples = samples;
+};
+
 export class WebGPUUtil
 {
     private static device: GPUDevice | null = null;

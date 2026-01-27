@@ -1,18 +1,18 @@
-import type { IPoint } from "../../interface/IPoint";
+import type { IPath } from "../../interface/IPath";
 import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { generateStrokeMesh } from "../../Mesh/usecase/MeshStrokeGenerateUseCase";
 
 /**
- * @description 線の描画を実行
- *              Execute stroke rendering
+ * @description 線の描画を実行（WebGL版と同じ仕様）
+ *              Execute stroke rendering (same specification as WebGL)
  *
  * @param {GPUDevice} device
  * @param {GPURenderPassEncoder} renderPassEncoder
  * @param {BufferManager} bufferManager
  * @param {PipelineManager} pipelineManager
- * @param {IPoint[][]} paths - パス配列
- * @param {number} thickness - 線の太さ（半分の値）
+ * @param {IPath[]} vertices - パス配列 [x, y, isCurve, ...]
+ * @param {number} thickness - 線の太さ（フル値、内部で/2される）
  * @param {Float32Array} contextMatrix - コンテキストの変換行列
  * @param {Float32Array} strokeStyle - 線スタイル [r, g, b, a]
  * @param {number} globalAlpha - グローバルアルファ値
@@ -26,7 +26,7 @@ export const execute = (
     renderPassEncoder: GPURenderPassEncoder,
     bufferManager: BufferManager,
     pipelineManager: PipelineManager,
-    paths: IPoint[][],
+    vertices: IPath[],
     thickness: number,
     contextMatrix: Float32Array,
     strokeStyle: Float32Array,
@@ -35,15 +35,19 @@ export const execute = (
     viewportHeight: number,
     useAtlasTarget: boolean
 ): void => {
-    // ストロークメッシュを生成
-    const vertices = generateStrokeMesh(paths, thickness);
+    if (!vertices.length) {
+        return;
+    }
 
-    if (vertices.length === 0) return;
+    // ストロークメッシュを生成（WebGL版と同じ: 内部でthickness/2される）
+    const meshVertices = generateStrokeMesh(vertices, thickness);
+
+    if (meshVertices.length === 0) return;
 
     // 頂点バッファを作成
     const vertexBuffer = bufferManager.createVertexBuffer(
         `stroke_${Date.now()}`,
-        vertices
+        meshVertices
     );
 
     // WebGL版と同じ: 行列をビューポートサイズで正規化
@@ -125,5 +129,5 @@ export const execute = (
     renderPassEncoder.setPipeline(pipeline);
     renderPassEncoder.setVertexBuffer(0, vertexBuffer);
     renderPassEncoder.setBindGroup(0, bindGroup);
-    renderPassEncoder.draw(vertices.length / 4, 1, 0, 0);
+    renderPassEncoder.draw(meshVertices.length / 4, 1, 0, 0);
 };

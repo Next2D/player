@@ -1,10 +1,10 @@
-import type { IPoint } from "../../interface/IPoint";
+import type { IPath } from "../../interface/IPath";
 import type { IMeshResult } from "../../interface/IMeshResult";
 import { generateStrokeOutline } from "./MeshStrokeGenerateUseCase";
 
 /**
- * @description ビットマップストローク用のメッシュを生成する
- *              Generate a mesh for bitmap stroke
+ * @description ビットマップストローク用のメッシュを生成する（WebGL版と同じ仕様）
+ *              Generate a mesh for bitmap stroke (same specification as WebGL)
  *
  * 頂点フォーマット（17 floats per vertex）:
  * - position: x, y (2 floats)
@@ -14,8 +14,8 @@ import { generateStrokeOutline } from "./MeshStrokeGenerateUseCase";
  * - matrix row 1: c, d, 0 (3 floats)
  * - matrix row 2: tx, ty, 0 (3 floats)
  *
- * @param  {IPoint[][]} paths
- * @param  {number} thickness
+ * @param  {IPath[]} vertices - パス頂点配列 [x, y, isCurve, ...]
+ * @param  {number} thickness - 線の太さ（フル値、内部で/2される）
  * @param  {number} a - 行列要素
  * @param  {number} b - 行列要素
  * @param  {number} c - 行列要素
@@ -33,7 +33,7 @@ import { generateStrokeOutline } from "./MeshStrokeGenerateUseCase";
  * @protected
  */
 export const execute = (
-    paths: IPoint[][],
+    vertices: IPath[],
     thickness: number,
     a: number,
     b: number,
@@ -49,6 +49,9 @@ export const execute = (
     viewportHeight: number
 ): IMeshResult => {
 
+    // WebGL版と同じ: 内部で半分にする
+    const halfThickness = thickness / 2;
+
     // WebGL版と同じ: 行列をビューポートサイズで正規化
     const normalizedA  = a / viewportWidth;
     const normalizedC  = c / viewportWidth;
@@ -57,17 +60,17 @@ export const execute = (
     const normalizedD  = d / viewportHeight;
     const normalizedTy = ty / viewportHeight;
 
-    // 各パスのアウトラインを生成して頂点数をカウント
-    const allOutlines: IPoint[][] = [];
+    // 各パスの矩形を生成して頂点数をカウント
+    const allRectangles: IPath[] = [];
     let totalVertices = 0;
 
-    for (const path of paths) {
-        const outlines = generateStrokeOutline(path, thickness);
-        for (const outline of outlines) {
-            if (outline.length >= 3) {
-                allOutlines.push(outline);
-                // 扇形三角形分割: (n - 2) 三角形 × 3 頂点
-                totalVertices += (outline.length - 2) * 3;
+    for (const path of vertices) {
+        const rectangles = generateStrokeOutline(path, halfThickness);
+        for (const rect of rectangles) {
+            if (rect.length >= 15) {
+                allRectangles.push(rect);
+                // 各矩形は2つの三角形 = 6頂点
+                totalVertices += 6;
             }
         }
     }
@@ -83,29 +86,26 @@ export const execute = (
     const buffer = new Float32Array(totalVertices * 17);
 
     let index = 0;
-    for (const outline of allOutlines) {
-        // 単純な三角形分割（扇形）
-        for (let i = 1; i < outline.length - 1; i++) {
-            // 三角形の3頂点を追加
-            index = writeVertex(
-                buffer, index,
-                outline[0].x, outline[0].y,
-                normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy,
-                red, green, blue, alpha
-            );
-            index = writeVertex(
-                buffer, index,
-                outline[i].x, outline[i].y,
-                normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy,
-                red, green, blue, alpha
-            );
-            index = writeVertex(
-                buffer, index,
-                outline[i + 1].x, outline[i + 1].y,
-                normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy,
-                red, green, blue, alpha
-            );
-        }
+    for (const rect of allRectangles) {
+        // 矩形の頂点を取得
+        const p0x = rect[0] as number;
+        const p0y = rect[1] as number;
+        const p1x = rect[3] as number;
+        const p1y = rect[4] as number;
+        const p2x = rect[6] as number;
+        const p2y = rect[7] as number;
+        const p3x = rect[9] as number;
+        const p3y = rect[10] as number;
+
+        // Triangle 1: p0, p1, p2
+        index = writeVertex(buffer, index, p0x, p0y, normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy, red, green, blue, alpha);
+        index = writeVertex(buffer, index, p1x, p1y, normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy, red, green, blue, alpha);
+        index = writeVertex(buffer, index, p2x, p2y, normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy, red, green, blue, alpha);
+
+        // Triangle 2: p0, p2, p3
+        index = writeVertex(buffer, index, p0x, p0y, normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy, red, green, blue, alpha);
+        index = writeVertex(buffer, index, p2x, p2y, normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy, red, green, blue, alpha);
+        index = writeVertex(buffer, index, p3x, p3y, normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy, red, green, blue, alpha);
     }
 
     return {

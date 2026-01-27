@@ -723,6 +723,7 @@ export class ShaderSource
 
     /**
      * @description インスタンス描画用フラグメントシェーダー（アトラステクスチャから描画）
+     *              WebGL版と完全に同じロジック
      * @return {string}
      */
     static getInstancedFragmentShader(): string
@@ -742,22 +743,15 @@ export class ShaderSource
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
                 var src = textureSample(textureData, textureSampler, input.texCoord);
 
-                // カラートランスフォームが必要かチェック
-                let needsTransform =
-                    input.mulColor.x != 1.0 || input.mulColor.y != 1.0 ||
-                    input.mulColor.z != 1.0 || input.mulColor.w != 1.0 ||
-                    input.addColor.x != 0.0 || input.addColor.y != 0.0 || input.addColor.z != 0.0;
+                // 常にcolorTransformを適用（WebGL版と同じロジック）
+                // プリマルチプライドからストレートアルファに変換
+                src = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
 
-                if (needsTransform) {
-                    // Unpremultiply
-                    src = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
+                // colorTransform適用: src * mulColor + addColor
+                src = clamp(src * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
 
-                    // Apply color transform
-                    src = clamp(src * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
-
-                    // Premultiply
-                    src = vec4<f32>(src.rgb * src.a, src.a);
-                }
+                // ストレートアルファからプリマルチプライドに変換
+                src = vec4<f32>(src.rgb * src.a, src.a);
 
                 return src;
             }
