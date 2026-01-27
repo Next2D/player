@@ -3,7 +3,7 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillGenerateUseCase";
-import { $clipBounds, $clipLevels } from "../../Mask";
+import { $clipBounds } from "../../Mask";
 
 /**
  * @description マスク処理を実行
@@ -18,6 +18,7 @@ import { $clipBounds, $clipLevels } from "../../Mask";
  * @param {Float32Array} contextMatrix - コンテキストの変換行列
  * @param {Float32Array} fillStyle - 塗りつぶしスタイル [r, g, b, a]
  * @param {number} globalAlpha - グローバルアルファ値
+ * @param {boolean} isMainAttachment - メインアタッチメントへの描画かどうか
  * @return {void}
  */
 export const execute = (
@@ -28,7 +29,8 @@ export const execute = (
     pathVertices: IPath[],
     contextMatrix: Float32Array,
     fillStyle: Float32Array,
-    globalAlpha: number
+    globalAlpha: number,
+    isMainAttachment: boolean = false
 ): void => {
     // クリップ境界を取得
     const bounds = $clipBounds.get(currentAttachment.clipLevel);
@@ -76,21 +78,30 @@ export const execute = (
         mesh.buffer
     );
 
-    // クリップレベルを取得
-    let level = $clipLevels.get(currentAttachment.clipLevel) || 1;
-
     // ステンシルパイプラインを取得
-    const pipeline = pipelineManager.getPipeline("clip_write");
+    // メインアタッチメント（BGRA8Unorm等）とアトラス（RGBA8Unorm）で異なるパイプラインを使用
+    const pipelineName = isMainAttachment ? "clip_write_main" : "clip_write";
+    const pipeline = pipelineManager.getPipeline(pipelineName);
     if (!pipeline) {
-        console.error("[WebGPU] clip_write pipeline not found");
+        console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         return;
     }
 
     // シザーレクトを設定
-    // シェーダーでY軸反転(-ndc.y)しているため、描画結果はWebGPU座標系になる
-    // WebGPUのシザーは左上原点なのでyMinをそのまま使用
+    // WebGPUのシザーは左上原点
     let scissorX = Math.max(0, xMin);
-    let scissorY = Math.max(0, yMin);
+    let scissorY: number;
+
+    if (isMainAttachment) {
+        // メインアタッチメント: シェーダーでY軸反転(-ndc.y)しているため、
+        // シザーのY座標も反転する必要がある
+        // WebGL版と同じ計算: height - yMin - height = height - yMax
+        scissorY = Math.max(0, currentAttachment.height - yMax);
+    } else {
+        // アトラス: Y軸反転なしなのでyMinをそのまま使用
+        scissorY = Math.max(0, yMin);
+    }
+
     let scissorW = Math.min(width, currentAttachment.width - scissorX);
     let scissorH = Math.min(height, currentAttachment.height - scissorY);
 
@@ -104,22 +115,11 @@ export const execute = (
         renderPassEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
     }
 
-    // ステンシルマスクをビット単位で設定（WebGL版: stencilMask(1 << level - 1)）
-    const stencilMask = 1 << (level - 1);
-
+    // INVERT操作でマスク形状を描画
+    // カバーされたピクセルのステンシル値が反転される（0 → 0xFF）
+    // 奇数回カバーされたピクセルのみがマスク領域となる
     renderPassEncoder.setPipeline(pipeline);
-    renderPassEncoder.setStencilReference(stencilMask);
+    renderPassEncoder.setStencilReference(0); // INVERT操作では参照値は使用されないが、設定は必要
     renderPassEncoder.setVertexBuffer(0, vertexBuffer);
     renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
-
-    // レベルをインクリメント
-    level++;
-    if (level > 7) {
-        // ユニオンマスク処理（レベルが7を超えた場合）
-        // TODO: MaskUnionMaskService相当の処理
-        level = currentAttachment.clipLevel + 1;
-    }
-
-    // クリップレベルを更新
-    $clipLevels.set(currentAttachment.clipLevel, level);
 };

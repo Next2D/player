@@ -223,4 +223,23 @@ export class BufferManager
             uniformPoolSize: this.uniformBufferPool.length
         };
     }
+
+    /**
+     * @description フレームごとの一時バッファをクリア
+     *              endFrame()で呼び出す
+     * @return {void}
+     */
+    clearFrameBuffers (): void
+    {
+        // 一時バッファを解放
+        for (const buffer of this.vertexBuffers.values()) {
+            buffer.destroy();
+        }
+        this.vertexBuffers.clear();
+
+        for (const buffer of this.uniformBuffers.values()) {
+            buffer.destroy();
+        }
+        this.uniformBuffers.clear();
+    }
 }

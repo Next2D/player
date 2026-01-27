@@ -24,7 +24,8 @@ import { execute as contextComputeBitmapMatrixService } from "../service/Context
  * @param {number} viewportWidth
  * @param {number} viewportHeight
  * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
- * @return {void}
+ * @param {boolean} useStencilPipeline - マスクモード時にステンシル付きパイプラインを使用
+ * @return {GPUTexture | null} - ビットマップテクスチャ（フレーム終了時に解放が必要）
  */
 export const execute = (
     device: GPUDevice,
@@ -42,8 +43,9 @@ export const execute = (
     smooth: boolean,
     viewportWidth: number,
     viewportHeight: number,
-    useAtlasTarget: boolean
-): void => {
+    useAtlasTarget: boolean,
+    useStencilPipeline: boolean = false
+): GPUTexture | null => {
     // 色（ビットマップ描画ではアルファ乗算用に使用）
     const red = fillStyle[0];
     const green = fillStyle[1];
@@ -67,7 +69,7 @@ export const execute = (
     );
 
     if (mesh.indexCount === 0) {
-        return;
+        return null;
     }
 
     // 頂点バッファを作成
@@ -141,7 +143,7 @@ export const execute = (
     if (!bindGroupLayout) {
         console.error("[WebGPU] bitmap_fill bind group layout not found");
         bitmapTexture.destroy();
-        return;
+        return null;
     }
 
     const bindGroup = device.createBindGroup({
@@ -153,13 +155,25 @@ export const execute = (
         ]
     });
 
-    // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
-    const pipelineName = useAtlasTarget ? "bitmap_fill" : "bitmap_fill_bgra";
+    // パイプラインを取得
+    // - アトラス用: "bitmap_fill" (rgba8unorm, ステンシルなし)
+    // - アトラス用ステンシル: "bitmap_fill_stencil" (rgba8unorm, ステンシルあり)
+    // - キャンバス用: "bitmap_fill_bgra" (bgra8unorm, ステンシルなし)
+    // - マスクモード時: "bitmap_fill_bgra_stencil" (bgra8unorm, ステンシルあり)
+    let pipelineName: string;
+    if (useAtlasTarget) {
+        // アトラス描画時、ステンシル付きレンダーパスかどうかで分岐
+        pipelineName = useStencilPipeline ? "bitmap_fill_stencil" : "bitmap_fill";
+    } else if (useStencilPipeline) {
+        pipelineName = "bitmap_fill_bgra_stencil";
+    } else {
+        pipelineName = "bitmap_fill_bgra";
+    }
     const pipeline = pipelineManager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         bitmapTexture.destroy();
-        return;
+        return null;
     }
 
     // 描画
@@ -167,4 +181,7 @@ export const execute = (
     renderPassEncoder.setVertexBuffer(0, vertexBuffer);
     renderPassEncoder.setBindGroup(0, bindGroup);
     renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+
+    // ビットマップテクスチャを返す（Context.tsでフレーム終了時に解放）
+    return bitmapTexture;
 };

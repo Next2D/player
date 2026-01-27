@@ -58,8 +58,68 @@ export class ShaderSource
                 // Convert to NDC: 0-1 → -1 to 1
                 let ndc = transformed.xy * 2.0 - 1.0;
 
-                // WebGL互換: Y軸反転
-                // WebGLと同じ: gl_Position = vec4(pos.x, -pos.y, 0.0, 1.0);
+                // アトラス用: Y軸反転なし（インスタンス描画時に反転される）
+                // 2パスステンシルフィルと同じ座標系にする
+                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
+
+                // Pass through bezier coordinates for fragment shader
+                output.bezier = input.bezier;
+
+                // Pass color as-is (premultiplication happens in fragment shader)
+                output.color = input.color;
+
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description 単色塗りつぶし用頂点シェーダー（メインアタッチメント用）
+     *              Y軸反転あり - インスタンス描画と同じ座標系
+     * @return {string}
+     */
+    static getFillMainVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexInput {
+                @location(0) position: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+                @location(3) matrix0: vec3<f32>,
+                @location(4) matrix1: vec3<f32>,
+                @location(5) matrix2: vec3<f32>,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) bezier: vec2<f32>,
+                @location(1) color: vec4<f32>,
+            }
+
+            struct Uniforms {
+                viewportSize: vec2<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+            @vertex
+            fn main(input: VertexInput) -> VertexOutput {
+                var output: VertexOutput;
+
+                // Build matrix from vertex attributes
+                let matrix = mat3x3<f32>(
+                    input.matrix0,
+                    input.matrix1,
+                    input.matrix2
+                );
+
+                // Apply matrix transformation (result is in 0-1 normalized space)
+                let transformed = matrix * vec3<f32>(input.position, 1.0);
+
+                // Convert to NDC: 0-1 → -1 to 1
+                let ndc = transformed.xy * 2.0 - 1.0;
+
+                // メインアタッチメント用: Y軸反転（インスタンス描画と同じ座標系）
                 output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 
                 // Pass through bezier coordinates for fragment shader
@@ -124,6 +184,11 @@ export class ShaderSource
      *              シェーダーでのY軸反転は不要（二重反転を避ける）
      * @return {string}
      */
+    /**
+     * @description ステンシル書き込み用頂点シェーダー（アトラス用）
+     *              Y軸反転なし - インスタンス描画時にテクスチャ座標で調整
+     * @return {string}
+     */
     static getStencilWriteVertexShader(): string
     {
         return /* wgsl */`
@@ -158,7 +223,57 @@ export class ShaderSource
                 // Convert to NDC: 0-1 → -1 to 1
                 let ndc = transformed.xy * 2.0 - 1.0;
 
-                // WebGL互換: Y軸反転
+                // アトラス用: Y軸反転なし（インスタンス描画時にテクスチャ座標で調整）
+                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
+
+                // ベジェ曲線座標を渡す（Loop-Blinn法で使用）
+                output.bezier = input.bezier;
+
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description ステンシル書き込み用頂点シェーダー（メインアタッチメント用）
+     *              Y軸反転あり - インスタンス描画と同じ座標系
+     * @return {string}
+     */
+    static getStencilWriteMainVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexInput {
+                @location(0) position: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+                @location(3) matrix0: vec3<f32>,
+                @location(4) matrix1: vec3<f32>,
+                @location(5) matrix2: vec3<f32>,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) bezier: vec2<f32>,
+            }
+
+            @vertex
+            fn main(input: VertexInput) -> VertexOutput {
+                var output: VertexOutput;
+
+                // Build matrix from vertex attributes
+                let matrix = mat3x3<f32>(
+                    input.matrix0,
+                    input.matrix1,
+                    input.matrix2
+                );
+
+                // Apply matrix transformation (result is in 0-1 normalized space)
+                let transformed = matrix * vec3<f32>(input.position, 1.0);
+
+                // Convert to NDC: 0-1 → -1 to 1
+                let ndc = transformed.xy * 2.0 - 1.0;
+
+                // メイン用: Y軸反転（インスタンス描画と同じ座標系）
                 output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 
                 // ベジェ曲線座標を渡す（Loop-Blinn法で使用）
@@ -247,8 +362,8 @@ export class ShaderSource
                 // Convert to NDC: 0-1 → -1 to 1
                 let ndc = transformed.xy * 2.0 - 1.0;
 
-                // WebGL互換: Y軸反転（Pass1と一致）
-                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
+                // アトラス用: Y軸反転なし（Pass1と一致）
+                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
 
                 // 頂点カラーを渡す
                 output.color = input.color;
@@ -376,7 +491,8 @@ export class ShaderSource
     }
 
     /**
-     * @description 基本的な頂点シェーダー（テクスチャ用、後方互換性のため残す）
+     * @description 基本的な頂点シェーダー（ストローク用、アトラスターゲット）
+     *              行列は正規化済み（0-1空間）、NDCに変換してY軸反転なし
      * @return {string}
      */
     static getBasicVertexShader(): string
@@ -404,12 +520,77 @@ export class ShaderSource
             @vertex
             fn main(input: VertexInput) -> VertexOutput {
                 var output: VertexOutput;
-                
+
+                // 行列は正規化済み（0-1空間）
                 let pos = uniforms.matrix * vec3<f32>(input.position, 1.0);
-                output.position = vec4<f32>(pos.xy, 0.0, 1.0);
+
+                // 0-1空間からNDC（-1～1）に変換
+                let ndc = pos.xy * 2.0 - 1.0;
+
+                // アトラス用: Y軸反転なし（fill shaderと同じ）
+                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
                 output.texCoord = input.texCoord;
-                output.color = uniforms.color * uniforms.alpha;
-                
+
+                // プリマルチプライドアルファ
+                let premultipliedColor = vec4<f32>(
+                    uniforms.color.rgb * uniforms.color.a * uniforms.alpha,
+                    uniforms.color.a * uniforms.alpha
+                );
+                output.color = premultipliedColor;
+
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description 基本的な頂点シェーダー（ストローク用、メインアタッチメント）
+     *              行列は正規化済み（0-1空間）、NDCに変換してY軸反転あり
+     * @return {string}
+     */
+    static getBasicMainVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexInput {
+                @location(0) position: vec2<f32>,
+                @location(1) texCoord: vec2<f32>,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+                @location(1) color: vec4<f32>,
+            }
+
+            struct Uniforms {
+                matrix: mat3x3<f32>,
+                color: vec4<f32>,
+                alpha: f32,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+            @vertex
+            fn main(input: VertexInput) -> VertexOutput {
+                var output: VertexOutput;
+
+                // 行列は正規化済み（0-1空間）
+                let pos = uniforms.matrix * vec3<f32>(input.position, 1.0);
+
+                // 0-1空間からNDC（-1～1）に変換
+                let ndc = pos.xy * 2.0 - 1.0;
+
+                // メインアタッチメント用: Y軸反転（fill shaderと同じ）
+                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
+                output.texCoord = input.texCoord;
+
+                // プリマルチプライドアルファ
+                let premultipliedColor = vec4<f32>(
+                    uniforms.color.rgb * uniforms.color.a * uniforms.alpha,
+                    uniforms.color.a * uniforms.alpha
+                );
+                output.color = premultipliedColor;
+
                 return output;
             }
         `;
@@ -496,12 +677,9 @@ export class ShaderSource
                 var output: VertexOutput;
 
                 // テクスチャ座標を計算
-                // アトラスへの描画時にシェーダーで-ndc.yしているため、
-                // テクスチャ内の画像は上下反転して格納されている
-                // サンプリング時にY座標を反転して正しい向きで取得
+                // WebGL版と同じ: v_coord = a_vertex * a_rect.zw + a_rect.xy;
                 let texX = instance.textureRect.x + input.texCoord.x * instance.textureRect.z;
-                // Y反転: rect内でtexCoordを反転
-                let texY = instance.textureRect.y + (1.0 - input.texCoord.y) * instance.textureRect.w;
+                let texY = instance.textureRect.y + input.texCoord.y * instance.textureRect.w;
                 output.texCoord = vec2<f32>(texX, texY);
 
                 // WebGL版と同じ構造:
@@ -638,10 +816,70 @@ export class ShaderSource
                 // NDC座標に変換
                 let pos = matrix * vec3<f32>(input.position, 1.0);
                 let ndc = vec2<f32>(pos.x * 2.0 - 1.0, pos.y * 2.0 - 1.0);
-                // WebGL互換: Y軸反転
-                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
+                // アトラス用: Y軸反転なし（インスタンス描画時に反転される）
+                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
 
                 // グラデーション座標を計算（グラデーション行列で変換）
+                let gradPos = gradient.gradientMatrix * vec3<f32>(input.position, 1.0);
+                output.gradientCoord = gradPos.xy;
+
+                output.bezier = input.bezier;
+                output.color = input.color;
+
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description グラデーションフィル用頂点シェーダー（メインアタッチメント用）
+     *              Y軸反転あり - インスタンス描画と同じ座標系
+     * @return {string}
+     */
+    static getGradientFillMainVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexInput {
+                @location(0) position: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+                @location(3) matrixRow0: vec3<f32>,
+                @location(4) matrixRow1: vec3<f32>,
+                @location(5) matrixRow2: vec3<f32>,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) gradientCoord: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+            }
+
+            struct GradientUniforms {
+                gradientMatrix: mat3x3<f32>,
+                gradientType: f32,
+                focal: f32,
+                spread: f32,
+                _pad: f32,
+            }
+
+            @group(0) @binding(0) var<uniform> gradient: GradientUniforms;
+
+            @vertex
+            fn main(input: VertexInput) -> VertexOutput {
+                var output: VertexOutput;
+
+                let matrix = mat3x3<f32>(
+                    input.matrixRow0,
+                    input.matrixRow1,
+                    input.matrixRow2
+                );
+
+                let pos = matrix * vec3<f32>(input.position, 1.0);
+                let ndc = vec2<f32>(pos.x * 2.0 - 1.0, pos.y * 2.0 - 1.0);
+                // メインアタッチメント用: Y軸反転
+                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
+
                 let gradPos = gradient.gradientMatrix * vec3<f32>(input.position, 1.0);
                 output.gradientCoord = gradPos.xy;
 
@@ -820,8 +1058,60 @@ export class ShaderSource
                 let transformedPos = matrix * vec3<f32>(input.position, 1.0);
 
                 // クリップ空間に変換 (0~1 → -1~1)
+                // アトラス用: Y軸反転なし（インスタンス描画時に反転される）
                 let clipX = transformedPos.x * 2.0 - 1.0;
-                let clipY = 1.0 - transformedPos.y * 2.0;
+                let clipY = transformedPos.y * 2.0 - 1.0;
+
+                output.position = vec4<f32>(clipX, clipY, 0.0, 1.0);
+                output.bezier = input.bezier;
+                output.color = input.color;
+                output.worldPos = input.position;
+
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description ビットマップフィル用頂点シェーダー（メインアタッチメント用）
+     *              Y軸反転あり - インスタンス描画と同じ座標系
+     * @return {string}
+     */
+    static getBitmapFillMainVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexInput {
+                @location(0) position: vec2<f32>,
+                @location(1) bezier: vec2<f32>,
+                @location(2) color: vec4<f32>,
+                @location(3) matrix0: vec3<f32>,
+                @location(4) matrix1: vec3<f32>,
+                @location(5) matrix2: vec3<f32>,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) bezier: vec2<f32>,
+                @location(1) color: vec4<f32>,
+                @location(2) worldPos: vec2<f32>,
+            }
+
+            @vertex
+            fn main(input: VertexInput) -> VertexOutput {
+                var output: VertexOutput;
+
+                let matrix = mat3x3<f32>(
+                    input.matrix0,
+                    input.matrix1,
+                    input.matrix2
+                );
+
+                let transformedPos = matrix * vec3<f32>(input.position, 1.0);
+
+                // クリップ空間に変換 (0~1 → -1~1)
+                // メインアタッチメント用: Y軸反転
+                let clipX = transformedPos.x * 2.0 - 1.0;
+                let clipY = -(transformedPos.y * 2.0 - 1.0);
 
                 output.position = vec4<f32>(clipX, clipY, 0.0, 1.0);
                 output.bezier = input.bezier;

@@ -1,6 +1,8 @@
 import { execute as maskEndMaskService } from "../service/MaskEndMaskService";
 import {
     $setMaskDrawing,
+    $setMaskTestEnabled,
+    $setMaskStencilReference,
     $clipBounds,
     $clipLevels
 } from "../../Mask";
@@ -26,13 +28,13 @@ export const execute = (): void =>
 
     const clipLevel = currentAttachmentObject.clipLevel;
     const bounds = $clipBounds.get(clipLevel);
-    
+
     if (bounds) {
         // レベルと描画範囲を削除
         $clipBounds.delete(clipLevel);
         $poolFloat32Array4(bounds);
     }
-    
+
     $clipLevels.delete(clipLevel);
 
     // 単体のマスクであれば終了
@@ -41,10 +43,15 @@ export const execute = (): void =>
         currentAttachmentObject.mask = false;
         $setMaskDrawing(false);
 
+        // マスクテストを無効化
+        $setMaskTestEnabled(false);
+        $setMaskStencilReference(0);
+
         $clipLevels.clear();
         $clipBounds.clear();
         return;
     }
 
+    // ネストされたマスクの場合、親マスクの設定に戻す
     maskEndMaskService();
 };

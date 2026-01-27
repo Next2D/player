@@ -55,10 +55,12 @@ export const execute = (
         smooth: true
     };
 
-    // アトラス用にステンシルテクスチャを作成（2パスフィルレンダリング用）
+    // アトラスとメインアタッチメント用にステンシルテクスチャを作成
+    // アトラス: 2パスフィルレンダリング用
+    // メイン: マスク描画用
     let stencil: IStencilBufferObject | null = null;
 
-    if (name === "atlas") {
+    if (name === "atlas" || name === "main") {
         const stencilTexture = device.createTexture({
             size: { width, height },
             format: "stencil8",

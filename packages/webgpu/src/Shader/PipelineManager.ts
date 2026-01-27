@@ -156,11 +156,15 @@ export class PipelineManager
             }
         });
 
-        // キャンバス用パイプライン（bgra8unorm）
+        // キャンバス用パイプライン（bgra8unorm）- Y軸反転シェーダーを使用
+        const vertexShaderModuleMain = this.device.createShaderModule({
+            code: ShaderSource.getFillMainVertexShader()
+        });
+
         const pipelineBGRA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
-                module: vertexShaderModule,
+                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
                 entryPoint: "main",
                 buffers: [vertexBufferLayout]
             },
@@ -180,6 +184,47 @@ export class PipelineManager
 
         this.pipelines.set("fill", pipelineRGBA);      // アトラス用（デフォルト）
         this.pipelines.set("fill_bgra", pipelineBGRA); // キャンバス用
+
+        // === メインアタッチメントのステンシル付きレンダーパス用 ===
+        // マスクモード時に使用（ステンシルテスト: not-equal 0 でマスク領域のみ描画）
+        const pipelineBGRAStencil = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
+                entryPoint: "main",
+                buffers: [vertexBufferLayout]
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: this.format,
+                    blend: blendState
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            },
+            depthStencil: {
+                format: "stencil8",
+                stencilFront: {
+                    compare: "not-equal", // ステンシル値 != 0 の部分のみ描画（マスク領域）
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep" // ステンシル値は変更しない
+                },
+                stencilBack: {
+                    compare: "not-equal",
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep"
+                },
+                stencilReadMask: 0xFF,
+                stencilWriteMask: 0x00
+            }
+        });
+        this.pipelines.set("fill_bgra_stencil", pipelineBGRAStencil); // マスク付きキャンバス用
     }
 
     /**
@@ -335,6 +380,66 @@ export class PipelineManager
             }
         });
         this.pipelines.set("stencil_fill", stencilFillPipeline);
+
+        // === Pass 2 (Masked): マスク領域内のみ描画 ===
+        // マスクモード時の2パスフィル:
+        // 1. clip_writeでマスク領域にmaskValue(例:1)を書き込み済み
+        // 2. stencil_writeでINCR/DECRを実行（奇数カバレッジ: maskValue+1, 偶数: maskValue）
+        // 3. このパイプラインで stencil > maskValue の部分のみ描画
+        // passOpでステンシルをmaskValueにリセットし、後続の描画でもマスクが機能するようにする
+        const stencilFillMaskedPipeline = this.device.createRenderPipeline({
+            layout: "auto",
+            vertex: {
+                module: this.device.createShaderModule({
+                    code: ShaderSource.getStencilFillVertexShader()
+                }),
+                entryPoint: "main",
+                buffers: [vertexBufferLayout]
+            },
+            fragment: {
+                module: this.device.createShaderModule({
+                    code: ShaderSource.getStencilFillFragmentShader()
+                }),
+                entryPoint: "main",
+                targets: [{
+                    format: "rgba8unorm",
+                    blend: {
+                        color: {
+                            srcFactor: "one",
+                            dstFactor: "one-minus-src-alpha",
+                            operation: "add"
+                        },
+                        alpha: {
+                            srcFactor: "one",
+                            dstFactor: "one-minus-src-alpha",
+                            operation: "add"
+                        }
+                    }
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            },
+            depthStencil: {
+                format: "stencil8",
+                stencilFront: {
+                    compare: "greater", // ステンシル値 > 参照値（maskValue）の部分のみ描画
+                    failOp: "keep",
+                    depthFailOp: "replace", // マスク値にリセット
+                    passOp: "replace" // 描画後、ステンシルをmaskValueにリセット
+                },
+                stencilBack: {
+                    compare: "greater",
+                    failOp: "keep",
+                    depthFailOp: "replace",
+                    passOp: "replace"
+                },
+                stencilReadMask: 0xFF,
+                stencilWriteMask: 0xFF // ステンシル書き込み有効（maskValueにリセット）
+            }
+        });
+        this.pipelines.set("stencil_fill_masked", stencilFillMaskedPipeline);
     }
 
     /**
@@ -358,8 +463,9 @@ export class PipelineManager
             ]
         };
 
-        // マスク書き込みパイプライン（ステンシル値を replace で書き込み）
-        // WebGL版: gl.stencilOp(KEEP, KEEP, REPLACE)
+        // マスク書き込みパイプライン（ステンシル値を INVERT で書き込み）
+        // WebGL版: gl.stencilOp(ZERO, INVERT, INVERT)
+        // INVERT操作により、奇偶フィルルールでマスク形状を正しく処理
         const clipWritePipeline = this.device.createRenderPipeline({
             layout: "auto",
             vertex: {
@@ -387,21 +493,67 @@ export class PipelineManager
                 format: "stencil8",
                 stencilFront: {
                     compare: "always",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "replace" // ステンシル参照値で置き換え
+                    failOp: "zero",    // WebGL: ZERO
+                    depthFailOp: "invert", // WebGL: INVERT
+                    passOp: "invert"   // WebGL: INVERT
                 },
                 stencilBack: {
                     compare: "always",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "replace"
+                    failOp: "zero",
+                    depthFailOp: "invert",
+                    passOp: "invert"
                 },
                 stencilReadMask: 0xFF,
-                stencilWriteMask: 0xFF // setStencilReferenceで動的に設定
+                stencilWriteMask: 0xFF
             }
         });
         this.pipelines.set("clip_write", clipWritePipeline);
+
+        // メインアタッチメント用マスク書き込みパイプライン（BGRA8Unorm等のデバイスフォーマット用）
+        // Y軸反転シェーダーを使用（インスタンス描画と同じ座標系）
+        // WebGL版と同様にINVERT操作を使用
+        const clipWriteMainPipeline = this.device.createRenderPipeline({
+            layout: "auto",
+            vertex: {
+                module: this.device.createShaderModule({
+                    code: ShaderSource.getStencilWriteMainVertexShader()
+                }),
+                entryPoint: "main",
+                buffers: [vertexBufferLayout]
+            },
+            fragment: {
+                module: this.device.createShaderModule({
+                    code: ShaderSource.getStencilWriteFragmentShader()
+                }),
+                entryPoint: "main",
+                targets: [{
+                    format: this.format, // デバイスの推奨フォーマット（BGRA8Unorm等）
+                    writeMask: 0 // カラー書き込み無効
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            },
+            depthStencil: {
+                format: "stencil8",
+                stencilFront: {
+                    compare: "always",
+                    failOp: "zero",    // WebGL: ZERO
+                    depthFailOp: "invert", // WebGL: INVERT
+                    passOp: "invert"   // WebGL: INVERT
+                },
+                stencilBack: {
+                    compare: "always",
+                    failOp: "zero",
+                    depthFailOp: "invert",
+                    passOp: "invert"
+                },
+                stencilReadMask: 0xFF,
+                stencilWriteMask: 0xFF
+            }
+        });
+        this.pipelines.set("clip_write_main", clipWriteMainPipeline);
     }
 
     /**
@@ -565,11 +717,15 @@ export class PipelineManager
             }
         });
 
-        // キャンバス用パイプライン（bgra8unorm）
+        // キャンバス用パイプライン（bgra8unorm）- Y軸反転シェーダーを使用
+        const vertexShaderModuleBGRA = this.device.createShaderModule({
+            code: ShaderSource.getBasicMainVertexShader()
+        });
+
         const pipelineBGRA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
-                module: vertexShaderModule,
+                module: vertexShaderModuleBGRA,
                 entryPoint: "main",
                 buffers: [vertexBufferLayout]
             },
@@ -588,7 +744,7 @@ export class PipelineManager
         });
 
         this.pipelines.set("basic", pipelineRGBA);      // アトラス用（デフォルト）
-        this.pipelines.set("basic_bgra", pipelineBGRA); // キャンバス用
+        this.pipelines.set("basic_bgra", pipelineBGRA); // キャンバス用（Y軸反転）
     }
 
     /**
@@ -803,6 +959,81 @@ export class PipelineManager
         });
 
         this.pipelines.set("instanced", pipeline);
+
+        // === マスク付きインスタンス描画パイプライン ===
+        // ステンシルテスト: stencil != 0 の部分のみ描画（INVERT操作後の非ゼロ領域）
+        const maskedPipeline = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModule,
+                entryPoint: "main",
+                buffers: [
+                    // Vertex buffer
+                    {
+                        arrayStride: 4 * 4,
+                        stepMode: "vertex",
+                        attributes: [
+                            { shaderLocation: 0, offset: 0, format: "float32x2" },
+                            { shaderLocation: 1, offset: 2 * 4, format: "float32x2" }
+                        ]
+                    },
+                    // Instance buffer
+                    {
+                        arrayStride: 4 * 24,
+                        stepMode: "instance",
+                        attributes: [
+                            { shaderLocation: 2, offset: 0, format: "float32x4" },
+                            { shaderLocation: 3, offset: 4 * 4, format: "float32x4" },
+                            { shaderLocation: 4, offset: 8 * 4, format: "float32x4" },
+                            { shaderLocation: 5, offset: 12 * 4, format: "float32x4" },
+                            { shaderLocation: 6, offset: 16 * 4, format: "float32x4" },
+                            { shaderLocation: 7, offset: 20 * 4, format: "float32x4" }
+                        ]
+                    }
+                ]
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: this.format,
+                    blend: {
+                        color: {
+                            srcFactor: "one",
+                            dstFactor: "one-minus-src-alpha",
+                            operation: "add"
+                        },
+                        alpha: {
+                            srcFactor: "one",
+                            dstFactor: "one-minus-src-alpha",
+                            operation: "add"
+                        }
+                    }
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            },
+            depthStencil: {
+                format: "stencil8",
+                stencilFront: {
+                    compare: "not-equal", // ステンシル値 != 0 の部分のみ描画（マスク領域）
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep" // ステンシル値は変更しない
+                },
+                stencilBack: {
+                    compare: "not-equal",
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep"
+                },
+                stencilReadMask: 0xFF,
+                stencilWriteMask: 0x00 // 描画時はステンシル書き込み無効
+            }
+        });
+        this.pipelines.set("instanced_masked", maskedPipeline);
     }
 
     /**
@@ -873,26 +1104,7 @@ export class PipelineManager
             }
         };
 
-        // ステンシル読み取り設定（ステンシルテスト対応）
-        const depthStencilState: GPUDepthStencilState = {
-            format: "stencil8",
-            stencilFront: {
-                compare: "always",
-                failOp: "keep",
-                depthFailOp: "keep",
-                passOp: "keep"
-            },
-            stencilBack: {
-                compare: "always",
-                failOp: "keep",
-                depthFailOp: "keep",
-                passOp: "keep"
-            },
-            stencilReadMask: 0xFF,
-            stencilWriteMask: 0x00 // ステンシル書き込み無効
-        };
-
-        // アトラステクスチャ用（rgba8unorm）
+        // アトラステクスチャ用（rgba8unorm）- ステンシルなし
         const pipelineRGBA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
@@ -911,15 +1123,87 @@ export class PipelineManager
             primitive: {
                 topology: "triangle-list",
                 cullMode: "none"
-            },
-            depthStencil: depthStencilState
+            }
         });
 
-        // キャンバス用（bgra8unorm）
+        // キャンバス用（bgra8unorm）- ステンシルなし
+        // Y軸反転シェーダーを使用
+        const vertexShaderModuleMain = this.device.createShaderModule({
+            code: ShaderSource.getGradientFillMainVertexShader()
+        });
+
         const pipelineBGRA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
-                module: vertexShaderModule,
+                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
+                entryPoint: "main",
+                buffers: [vertexBufferLayout]
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: this.format,
+                    blend: blendState
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            }
+            // Note: キャンバス描画時はステンシルバッファがないためdepthStencilは設定しない
+        });
+
+        this.pipelines.set("gradient_fill", pipelineRGBA);
+        this.pipelines.set("gradient_fill_bgra", pipelineBGRA);
+
+        // === アトラスのステンシル付きレンダーパス用 ===
+        // 2パスステンシルフィルのレンダーパス内でgradientFillが呼ばれた場合に使用
+        const pipelineRGBAStencil = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModule, // Y軸反転なしシェーダー
+                entryPoint: "main",
+                buffers: [vertexBufferLayout]
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: "rgba8unorm",
+                    blend: blendState
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            },
+            depthStencil: {
+                format: "stencil8",
+                stencilFront: {
+                    compare: "always",
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep"
+                },
+                stencilBack: {
+                    compare: "always",
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep"
+                },
+                stencilReadMask: 0x00,
+                stencilWriteMask: 0x00
+            }
+        });
+        this.pipelines.set("gradient_fill_stencil", pipelineRGBAStencil);
+
+        // === メインアタッチメントのステンシル付きレンダーパス用 ===
+        // マスクモード時に使用
+        const pipelineBGRAStencil = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
                 entryPoint: "main",
                 buffers: [vertexBufferLayout]
             },
@@ -935,11 +1219,25 @@ export class PipelineManager
                 topology: "triangle-list",
                 cullMode: "none"
             },
-            depthStencil: depthStencilState
+            depthStencil: {
+                format: "stencil8",
+                stencilFront: {
+                    compare: "not-equal", // ステンシル値 != 0 の部分のみ描画（マスク領域）
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep"
+                },
+                stencilBack: {
+                    compare: "not-equal",
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep"
+                },
+                stencilReadMask: 0xFF,
+                stencilWriteMask: 0x00
+            }
         });
-
-        this.pipelines.set("gradient_fill", pipelineRGBA);
-        this.pipelines.set("gradient_fill_bgra", pipelineBGRA);
+        this.pipelines.set("gradient_fill_bgra_stencil", pipelineBGRAStencil);
     }
 
     /**
@@ -1009,26 +1307,7 @@ export class PipelineManager
             }
         };
 
-        // ステンシル読み取り設定（ステンシルテスト対応）
-        const depthStencilState: GPUDepthStencilState = {
-            format: "stencil8",
-            stencilFront: {
-                compare: "always",
-                failOp: "keep",
-                depthFailOp: "keep",
-                passOp: "keep"
-            },
-            stencilBack: {
-                compare: "always",
-                failOp: "keep",
-                depthFailOp: "keep",
-                passOp: "keep"
-            },
-            stencilReadMask: 0xFF,
-            stencilWriteMask: 0x00 // ステンシル書き込み無効
-        };
-
-        // アトラステクスチャ用（rgba8unorm）
+        // アトラステクスチャ用（rgba8unorm）- ステンシルなし
         const pipelineRGBA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
@@ -1047,15 +1326,87 @@ export class PipelineManager
             primitive: {
                 topology: "triangle-list",
                 cullMode: "none"
-            },
-            depthStencil: depthStencilState
+            }
         });
 
-        // キャンバス用（bgra8unorm）
+        // キャンバス用（bgra8unorm）- ステンシルなし
+        // Y軸反転シェーダーを使用
+        const vertexShaderModuleMain = this.device.createShaderModule({
+            code: ShaderSource.getBitmapFillMainVertexShader()
+        });
+
         const pipelineBGRA = this.device.createRenderPipeline({
             layout: pipelineLayout,
             vertex: {
-                module: vertexShaderModule,
+                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
+                entryPoint: "main",
+                buffers: [vertexBufferLayout]
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: this.format,
+                    blend: blendState
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            }
+            // Note: キャンバス描画時はステンシルバッファがないためdepthStencilは設定しない
+        });
+
+        this.pipelines.set("bitmap_fill", pipelineRGBA);
+        this.pipelines.set("bitmap_fill_bgra", pipelineBGRA);
+
+        // === アトラスのステンシル付きレンダーパス用 ===
+        // 2パスステンシルフィルのレンダーパス内でbitmapFillが呼ばれた場合に使用
+        const pipelineRGBAStencil = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModule, // Y軸反転なしシェーダー
+                entryPoint: "main",
+                buffers: [vertexBufferLayout]
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: "rgba8unorm",
+                    blend: blendState
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            },
+            depthStencil: {
+                format: "stencil8",
+                stencilFront: {
+                    compare: "always",
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep"
+                },
+                stencilBack: {
+                    compare: "always",
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep"
+                },
+                stencilReadMask: 0x00,
+                stencilWriteMask: 0x00
+            }
+        });
+        this.pipelines.set("bitmap_fill_stencil", pipelineRGBAStencil);
+
+        // === メインアタッチメントのステンシル付きレンダーパス用 ===
+        // マスクモード時に使用
+        const pipelineBGRAStencil = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
                 entryPoint: "main",
                 buffers: [vertexBufferLayout]
             },
@@ -1071,11 +1422,25 @@ export class PipelineManager
                 topology: "triangle-list",
                 cullMode: "none"
             },
-            depthStencil: depthStencilState
+            depthStencil: {
+                format: "stencil8",
+                stencilFront: {
+                    compare: "not-equal", // ステンシル値 != 0 の部分のみ描画（マスク領域）
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep"
+                },
+                stencilBack: {
+                    compare: "not-equal",
+                    failOp: "keep",
+                    depthFailOp: "keep",
+                    passOp: "keep"
+                },
+                stencilReadMask: 0xFF,
+                stencilWriteMask: 0x00
+            }
         });
-
-        this.pipelines.set("bitmap_fill", pipelineRGBA);
-        this.pipelines.set("bitmap_fill_bgra", pipelineBGRA);
+        this.pipelines.set("bitmap_fill_bgra_stencil", pipelineBGRAStencil);
     }
 
     /**
@@ -1335,6 +1700,40 @@ export class PipelineManager
         });
 
         this.pipelines.set("texture_copy", pipeline);
+
+        // スワップチェーン用（bgra8unorm）
+        const pipelineBGRA = this.device.createRenderPipeline({
+            layout: pipelineLayout,
+            vertex: {
+                module: vertexShaderModule,
+                entryPoint: "main",
+                buffers: []
+            },
+            fragment: {
+                module: fragmentShaderModule,
+                entryPoint: "main",
+                targets: [{
+                    format: this.format,
+                    blend: {
+                        color: {
+                            srcFactor: "one",
+                            dstFactor: "zero",
+                            operation: "add"
+                        },
+                        alpha: {
+                            srcFactor: "one",
+                            dstFactor: "zero",
+                            operation: "add"
+                        }
+                    }
+                }]
+            },
+            primitive: {
+                topology: "triangle-list",
+                cullMode: "none"
+            }
+        });
+        this.pipelines.set("texture_copy_bgra", pipelineBGRA);
     }
 
     /**

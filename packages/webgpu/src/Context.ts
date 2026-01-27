@@ -91,6 +91,9 @@ export class Context
     private mainTexture: GPUTexture | null = null;
     private mainTextureView: GPUTextureView | null = null;
     private frameStarted: boolean = false;
+
+    // フレームごとの一時テクスチャ（endFrame()で解放）
+    private frameTextures: GPUTexture[] = [];
     
     // Current rendering target (could be main or atlas)
     private currentRenderTarget: GPUTextureView | null = null;
@@ -107,6 +110,9 @@ export class Context
     private attachmentManager: AttachmentManager;
 
     public newDrawState: boolean = false;
+
+    // マスク描画モードフラグ（beginMask〜endMask間でtrue）
+    private inMaskMode: boolean = false;
 
     /**
      * @param {GPUDevice} device
@@ -218,11 +224,17 @@ export class Context
     }
 
     /**
-     * @description 背景色で塗りつぶす（メインキャンバス）
+     * @description 背景色で塗りつぶす（メインアタッチメント）
      * @return {void}
      */
     fillBackgroundColor (): void
     {
+        // メインアタッチメントがない場合はスキップ
+        if (!this.$mainAttachmentObject || !this.$mainAttachmentObject.texture) {
+            console.warn("[WebGPU] fillBackgroundColor: main attachment not initialized");
+            return;
+        }
+
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
             this.beginFrame();
@@ -237,9 +249,10 @@ export class Context
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
+        // メインアタッチメントにステンシルがある場合はステンシル付きレンダーパスを使用
         const renderPassDescriptor: GPURenderPassDescriptor = {
             colorAttachments: [{
-                view: this.mainTextureView!,
+                view: this.$mainAttachmentObject.texture.view,
                 clearValue: {
                     r: this.$clearColorR,
                     g: this.$clearColorG,
@@ -250,6 +263,16 @@ export class Context
                 storeOp: "store"
             }]
         };
+
+        // ステンシルバッファもクリア
+        if (this.$mainAttachmentObject.stencil?.view) {
+            renderPassDescriptor.depthStencilAttachment = {
+                view: this.$mainAttachmentObject.stencil.view,
+                stencilClearValue: 0,
+                stencilLoadOp: "clear",
+                stencilStoreOp: "store"
+            };
+        }
 
         // 背景クリア用のレンダーパスを開始して即座に終了
         this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
@@ -268,7 +291,7 @@ export class Context
     {
         // キャンバスのサイズを更新
         const canvas = this.canvasContext.canvas;
-        
+
         // 型チェックを安全に実行（Worker環境対応）
         if (canvas && 'width' in canvas && 'height' in canvas) {
             (canvas as any).width = width;
@@ -287,6 +310,20 @@ export class Context
             format: this.preferredFormat,
             alphaMode: "premultiplied"
         });
+
+        // 既存のメインアタッチメントを破棄
+        if (this.$mainAttachmentObject) {
+            this.frameBufferManager.destroyAttachment("main");
+        }
+
+        // メインアタッチメントを作成（ステンシル付き、マスク描画用）
+        // WebGL版と同じ: $mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, true)
+        this.$mainAttachmentObject = this.frameBufferManager.createAttachment(
+            "main", width, height, false, false
+        );
+
+        // メインアタッチメントをバインド
+        this.bind(this.$mainAttachmentObject);
     }
 
     /**
@@ -521,14 +558,25 @@ export class Context
         if (!this.renderPassEncoder) {
             // 現在のレンダーターゲットを取得（メインまたはオフスクリーン）
             const textureView = this.getCurrentTextureView();
+            const attachment = this.frameBufferManager.getAttachment("atlas");
 
-            const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                textureView,
-                0, 0, 0, 0,
-                "load"
-            );
-
-            this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            // アトラスへの描画でステンシルが必要な場合はステンシル付きレンダーパスを作成
+            if (this.currentRenderTarget && attachment?.stencil?.view) {
+                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                    textureView,
+                    attachment.stencil.view,
+                    "load",
+                    "load"
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            } else {
+                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                    textureView,
+                    0, 0, 0, 0,
+                    "load"
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            }
         }
 
         // WebGL版と同じ: 現在のビューポートサイズを使用（アトラス描画時はアトラスサイズ）
@@ -577,7 +625,9 @@ export class Context
             this.fillWithStencil(vertexBuffer, mesh.indexCount);
         } else {
             // キャンバスへの描画またはステンシルなしの場合は単純なフィル
-            this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight);
+            // マスクモード時はステンシル付きパイプラインを使用
+            const useStencilPipeline = this.inMaskMode && !!this.$mainAttachmentObject?.stencil?.view;
+            this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight, useStencilPipeline);
         }
 
         // レンダーパスは終了しない（drawFill()またはendNodeRendering()で終了する）
@@ -611,13 +661,15 @@ export class Context
      * @param {number} vertexCount
      * @param {number} viewportWidth
      * @param {number} viewportHeight
+     * @param {boolean} useStencilPipeline - マスクモード時にステンシル付きパイプラインを使用
      * @return {void}
      */
     private fillSimple(
         vertexBuffer: GPUBuffer,
         vertexCount: number,
         viewportWidth: number,
-        viewportHeight: number
+        viewportHeight: number,
+        useStencilPipeline: boolean = false
     ): void
     {
         contextFillSimpleService(
@@ -629,7 +681,8 @@ export class Context
             vertexCount,
             viewportWidth,
             viewportHeight,
-            !!this.currentRenderTarget
+            !!this.currentRenderTarget,
+            useStencilPipeline
         );
     }
 
@@ -728,6 +781,8 @@ export class Context
             this.$matrix,
             this.$strokeStyle,
             this.globalAlpha,
+            this.viewportWidth,
+            this.viewportHeight,
             !!this.currentRenderTarget
         );
 
@@ -775,7 +830,15 @@ export class Context
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         }
 
-        contextGradientFillUseCase(
+        // ステンシル付きレンダーパスかどうかを判定
+        // - マスクモード時（メインアタッチメントへの描画）
+        // - アトラス描画時（ステンシル付きレンダーパス）
+        const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
+        const useAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
+        const useMainStencil = this.inMaskMode && this.$mainAttachmentObject?.stencil?.view;
+        const useStencilPipeline = useAtlasStencil || useMainStencil;
+
+        const lutTexture = contextGradientFillUseCase(
             this.device,
             this.renderPassEncoder!,
             this.bufferManager,
@@ -791,8 +854,14 @@ export class Context
             focal,
             this.viewportWidth,
             this.viewportHeight,
-            !!this.currentRenderTarget
+            !!this.currentRenderTarget,
+            !!useStencilPipeline
         );
+
+        // LUTテクスチャをフレーム終了時に解放するリストに追加
+        if (lutTexture) {
+            this.addFrameTexture(lutTexture);
+        }
     }
 
     /**
@@ -835,7 +904,15 @@ export class Context
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         }
 
-        contextBitmapFillUseCase(
+        // ステンシル付きレンダーパスかどうかを判定
+        // - マスクモード時（メインアタッチメントへの描画）
+        // - アトラス描画時（ステンシル付きレンダーパス）
+        const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
+        const useAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
+        const useMainStencil = this.inMaskMode && this.$mainAttachmentObject?.stencil?.view;
+        const useStencilPipeline = useAtlasStencil || useMainStencil;
+
+        const bitmapTexture = contextBitmapFillUseCase(
             this.device,
             this.renderPassEncoder!,
             this.bufferManager,
@@ -851,8 +928,14 @@ export class Context
             smooth,
             this.viewportWidth,
             this.viewportHeight,
-            !!this.currentRenderTarget
+            !!this.currentRenderTarget,
+            !!useStencilPipeline
         );
+
+        // ビットマップテクスチャをフレーム終了時に解放するリストに追加
+        if (bitmapTexture) {
+            this.addFrameTexture(bitmapTexture);
+        }
     }
 
     /**
@@ -980,12 +1063,24 @@ export class Context
     /**
      * @description マスク処理を実行
      *              WebGL版と同様にステンシルバッファを使用したクリッピング
+     *              Note: ステンシルバッファが必要なため、アトラスへの描画時のみ動作
      * @return {void}
      */
     clip (): void
     {
         const currentAttachment = this.frameBufferManager.getCurrentAttachment();
         if (!currentAttachment) {
+            console.warn("[WebGPU] clip() skipped: no current attachment");
+            return;
+        }
+
+        // 現在のアタッチメントにステンシルバッファがない場合はスキップ（メインキャンバスなど）
+        if (!currentAttachment.stencil) {
+            console.warn("[WebGPU] clip() skipped: current attachment has no stencil buffer", {
+                attachmentId: currentAttachment.id,
+                width: currentAttachment.width,
+                height: currentAttachment.height
+            });
             return;
         }
 
@@ -998,6 +1093,9 @@ export class Context
             return;
         }
 
+        // メインアタッチメントかどうかを判定
+        const isMainAttachment = currentAttachment === this.$mainAttachmentObject;
+
         contextClipUseCase(
             this.renderPassEncoder,
             this.bufferManager,
@@ -1006,7 +1104,8 @@ export class Context
             pathVertices,
             this.$matrix,
             this.$fillStyle,
-            this.globalAlpha
+            this.globalAlpha,
+            isMainAttachment
         );
     }
 
@@ -1220,11 +1319,17 @@ export class Context
         this.ensureCommandEncoder();
 
         // UseCaseでインスタンス描画を実行
+        // メインアタッチメントがない場合は初期化が必要
+        if (!this.$mainAttachmentObject) {
+            console.warn("[WebGPU] drawArraysInstanced: main attachment not initialized");
+            return;
+        }
+
         this.renderPassEncoder = contextDrawArraysInstancedUseCase(
             this.device,
             this.commandEncoder!,
             this.renderPassEncoder,
-            this.mainTextureView!,
+            this.$mainAttachmentObject,
             this.bufferManager,
             this.frameBufferManager,
             this.textureManager,
@@ -1267,6 +1372,8 @@ export class Context
 
     /**
      * @description ピクセルバッファをNodeの指定箇所に転送
+     *              WebGPUでは、Shapeのシェーダーが-ndc.yでY軸反転しているため、
+     *              Bitmapも同じ方向になるよう画像を上下反転して書き込む
      * @param {Node} node
      * @param {Uint8Array} pixels
      * @return {void}
@@ -1281,20 +1388,37 @@ export class Context
         // ピクセルデータをテクスチャにコピー
         if (!attachment.texture) return;
 
+        // ピクセルデータを上下反転してコピー（Shapeの描画方向と一致させる）
+        // Shapeはシェーダーで-ndc.yにより上下反転されるため、
+        // Bitmapも同様に上下反転して書き込む
+        const width = node.w;
+        const height = node.h;
+        const rowBytes = width * 4;
+        const flippedPixels = new Uint8Array(pixels.length);
+
+        for (let y = 0; y < height; y++) {
+            const srcOffset = pixels.byteOffset + y * rowBytes;
+            const dstOffset = (height - 1 - y) * rowBytes;
+            flippedPixels.set(
+                new Uint8Array(pixels.buffer, srcOffset, rowBytes),
+                dstOffset
+            );
+        }
+
         this.device.queue.writeTexture(
             {
                 texture: attachment.texture.resource,
                 origin: { x: node.x, y: node.y, z: 0 }
             },
-            pixels.buffer,
+            flippedPixels.buffer,
             {
-                bytesPerRow: node.w * 4, // RGBA
-                rowsPerImage: node.h,
-                offset: pixels.byteOffset
+                bytesPerRow: rowBytes,
+                rowsPerImage: height,
+                offset: 0
             },
             {
-                width: node.w,
-                height: node.h,
+                width: width,
+                height: height,
                 depthOrArrayLayers: 1
             }
         );
@@ -1302,6 +1426,8 @@ export class Context
 
     /**
      * @description OffscreenCanvasをNodeの指定箇所に転送
+     *              WebGPUでは、Shapeのシェーダーが-ndc.yでY軸反転しているため、
+     *              Bitmapも同じ方向になるよう画像を上下反転して書き込む
      * @param {Node} node
      * @param {OffscreenCanvas | ImageBitmap} element
      * @return {void}
@@ -1317,7 +1443,7 @@ export class Context
             this.device.queue.copyExternalImageToTexture(
                 {
                     source: element as ImageBitmap,
-                    flipY: false
+                    flipY: true  // 画像を上下反転してShapeの描画方向と一致させる
                 },
                 {
                     texture: attachment.texture.resource,
@@ -1468,6 +1594,16 @@ export class Context
     }
 
     /**
+     * @description フレームごとの一時テクスチャを追加（endFrame()で解放）
+     * @param {GPUTexture} texture
+     * @return {void}
+     */
+    addFrameTexture (texture: GPUTexture): void
+    {
+        this.frameTextures.push(texture);
+    }
+
+    /**
      * @description フレーム終了とコマンド送信（レンダリング完了後に呼ぶ）
      * @return {void}
      * @public
@@ -1497,6 +1633,15 @@ export class Context
 
         // submit後に一時テクスチャを解放
         this.frameBufferManager.flushPendingReleases();
+
+        // フレームごとの一時バッファを解放
+        this.bufferManager.clearFrameBuffers();
+
+        // フレームごとの一時テクスチャを解放
+        for (const texture of this.frameTextures) {
+            texture.destroy();
+        }
+        this.frameTextures = [];
 
         // 次のフレーム用にクリア
         this.commandEncoder = null;
@@ -1562,11 +1707,77 @@ export class Context
 
     /**
      * @description フレームバッファの描画情報をキャンバスに転送
+     *              スワップチェーンはCopyDstをサポートしないため、レンダーパスでブリット
      * @return {void}
      */
     transferMainCanvas (): void
     {
-        // WebGPUでは明示的な転送は不要
+        // メインアタッチメントの内容をスワップチェーン（キャンバス）にコピー
+        if (!this.$mainAttachmentObject || !this.$mainAttachmentObject.texture) {
+            console.warn("[WebGPU] transferMainCanvas: main attachment not initialized");
+            this.endFrame();
+            return;
+        }
+
+        // 既存のレンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
+        // コマンドエンコーダーを確保
+        this.ensureCommandEncoder();
+
+        // メインテクスチャビューを確保
+        this.ensureMainTexture();
+
+        // スワップチェーンはCopyDstをサポートしないため、レンダーパスでブリット
+        const pipeline = this.pipelineManager.getPipeline("texture_copy_bgra");
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("texture_copy");
+
+        if (!pipeline || !bindGroupLayout) {
+            console.error("[WebGPU] texture_copy_bgra pipeline not found");
+            this.endFrame();
+            return;
+        }
+
+        // Uniform: scale = (1, 1), offset = (0, 0) で 1:1 コピー
+        const uniformData = new Float32Array([1.0, 1.0, 0.0, 0.0]);
+        const uniformBuffer = this.bufferManager.createUniformBuffer(
+            `transfer_uniform_${Date.now()}`,
+            uniformData.byteLength
+        );
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
+
+        // サンプラーを作成
+        const sampler = this.textureManager.createSampler("transfer_sampler", false);
+
+        // バインドグループを作成
+        const bindGroup = this.device.createBindGroup({
+            layout: bindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: uniformBuffer } },
+                { binding: 1, resource: sampler },
+                { binding: 2, resource: this.$mainAttachmentObject.texture.view }
+            ]
+        });
+
+        // スワップチェーンへのレンダーパスを作成
+        const renderPassDescriptor: GPURenderPassDescriptor = {
+            colorAttachments: [{
+                view: this.mainTextureView!,
+                clearValue: { r: 0, g: 0, b: 0, a: 0 },
+                loadOp: "clear",
+                storeOp: "store"
+            }]
+        };
+
+        const passEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        passEncoder.setPipeline(pipeline);
+        passEncoder.setBindGroup(0, bindGroup);
+        passEncoder.draw(6, 1, 0, 0); // フルスクリーンクワッド（6頂点）
+        passEncoder.end();
+
         // endFrame()でsubmitされる
         this.endFrame();
     }
@@ -1694,7 +1905,48 @@ export class Context
      */
     beginMask(): void
     {
+        // メインアタッチメントをバインド（マスクはメインアタッチメントのステンシルに書き込む）
+        if (this.$mainAttachmentObject) {
+            this.bind(this.$mainAttachmentObject);
+        }
+
+        // マスクモードではメインアタッチメントに描画するため、currentRenderTargetをnullに設定
+        // これにより、fill()等がメイン用シェーダー（Y反転あり）を使用する
+        this.currentRenderTarget = null;
+
+        // 既存のレンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
+        // フレームが開始されていない場合は開始
+        if (!this.frameStarted) {
+            this.beginFrame();
+        }
+
+        // コマンドエンコーダーを確保
+        this.ensureCommandEncoder();
+
+        // ステンシル付きレンダーパスを開始（マスク描画用）
+        if (this.$mainAttachmentObject?.texture && this.$mainAttachmentObject?.stencil?.view) {
+            const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                this.$mainAttachmentObject.texture.view,
+                this.$mainAttachmentObject.stencil.view,
+                "load", // カラーは既存の内容を保持
+                "load"  // ステンシルも既存の内容を保持（前回のフレームのマスク情報をクリアしない）
+            );
+            this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+
+            // ビューポートサイズを更新
+            this.viewportWidth = this.$mainAttachmentObject.width;
+            this.viewportHeight = this.$mainAttachmentObject.height;
+        }
+
         maskBeginMaskService();
+
+        // マスクモードフラグを設定
+        this.inMaskMode = true;
     }
 
     /**
@@ -1728,7 +1980,16 @@ export class Context
      */
     endMask(): void
     {
+        // マスク描画用のレンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
         maskEndMaskService();
+
+        // マスクモードフラグをクリア
+        this.inMaskMode = false;
     }
 
     /**
@@ -1742,6 +2003,39 @@ export class Context
     leaveMask(): void
     {
         this.drawArraysInstanced();
+
+        // 現在のclipLevelを保存（leaveMaskUseCase内でデクリメントされる）
+        const currentAttachment = this.frameBufferManager.getCurrentAttachment();
+        const wasLastMask = currentAttachment?.clipLevel === 1;
+
         maskLeaveMaskUseCase();
+
+        // 単体マスク（最後のマスク）の場合、ステンシルバッファをクリア
+        // WebGL: gl.clear(STENCIL_BUFFER_BIT)
+        if (wasLastMask && this.$mainAttachmentObject?.stencil) {
+            // 現在のレンダーパスを終了
+            if (this.renderPassEncoder) {
+                this.renderPassEncoder.end();
+                this.renderPassEncoder = null;
+            }
+
+            // ステンシルクリア用のレンダーパスを開始・終了
+            this.ensureCommandEncoder();
+            const clearPassDescriptor: GPURenderPassDescriptor = {
+                colorAttachments: [{
+                    view: this.$mainAttachmentObject.texture!.view,
+                    loadOp: "load", // カラーは保持
+                    storeOp: "store"
+                }],
+                depthStencilAttachment: {
+                    view: this.$mainAttachmentObject.stencil.view,
+                    stencilLoadOp: "clear", // ステンシルをクリア
+                    stencilStoreOp: "store",
+                    stencilClearValue: 0
+                }
+            };
+            const clearPass = this.commandEncoder!.beginRenderPass(clearPassDescriptor);
+            clearPass.end();
+        }
     }
 }

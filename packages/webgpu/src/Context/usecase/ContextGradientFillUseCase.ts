@@ -25,7 +25,8 @@ import { execute as contextComputeGradientMatrixService } from "../service/Conte
  * @param {number} viewportWidth
  * @param {number} viewportHeight
  * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
- * @return {void}
+ * @param {boolean} useStencilPipeline - マスクモード時にステンシル付きパイプラインを使用
+ * @return {GPUTexture | null} - LUTテクスチャ（フレーム終了時に解放が必要）
  */
 export const execute = (
     device: GPUDevice,
@@ -43,8 +44,9 @@ export const execute = (
     focal: number,
     viewportWidth: number,
     viewportHeight: number,
-    useAtlasTarget: boolean
-): void => {
+    useAtlasTarget: boolean,
+    useStencilPipeline: boolean = false
+): GPUTexture | null => {
     // 色（グラデーション描画ではアルファ乗算用に使用）
     const red = fillStyle[0];
     const green = fillStyle[1];
@@ -68,7 +70,7 @@ export const execute = (
     );
 
     if (mesh.indexCount === 0) {
-        return;
+        return null;
     }
 
     // 頂点バッファを作成
@@ -147,7 +149,7 @@ export const execute = (
     if (!bindGroupLayout) {
         console.error("[WebGPU] gradient_fill bind group layout not found");
         lutTexture.destroy();
-        return;
+        return null;
     }
 
     const bindGroup = device.createBindGroup({
@@ -159,13 +161,25 @@ export const execute = (
         ]
     });
 
-    // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
-    const pipelineName = useAtlasTarget ? "gradient_fill" : "gradient_fill_bgra";
+    // パイプラインを取得
+    // - アトラス用: "gradient_fill" (rgba8unorm, ステンシルなし)
+    // - アトラス用ステンシル: "gradient_fill_stencil" (rgba8unorm, ステンシルあり)
+    // - キャンバス用: "gradient_fill_bgra" (bgra8unorm, ステンシルなし)
+    // - マスクモード時: "gradient_fill_bgra_stencil" (bgra8unorm, ステンシルあり)
+    let pipelineName: string;
+    if (useAtlasTarget) {
+        // アトラス描画時、ステンシル付きレンダーパスかどうかで分岐
+        pipelineName = useStencilPipeline ? "gradient_fill_stencil" : "gradient_fill";
+    } else if (useStencilPipeline) {
+        pipelineName = "gradient_fill_bgra_stencil";
+    } else {
+        pipelineName = "gradient_fill_bgra";
+    }
     const pipeline = pipelineManager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         lutTexture.destroy();
-        return;
+        return null;
     }
 
     // 描画
@@ -174,7 +188,6 @@ export const execute = (
     renderPassEncoder.setBindGroup(0, bindGroup);
     renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
 
-    // LUTテクスチャは描画後に解放（次フレームで再作成）
-    // Note: GPUQueueにコマンドがsubmitされた後に解放する必要がある
-    // 現在は即座に解放せず、フレーム終了時に自動解放される
+    // LUTテクスチャを返す（Context.tsでフレーム終了時に解放）
+    return lutTexture;
 };

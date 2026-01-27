@@ -16,6 +16,8 @@ import { generateStrokeMesh } from "../../Mesh/usecase/MeshStrokeGenerateUseCase
  * @param {Float32Array} contextMatrix - コンテキストの変換行列
  * @param {Float32Array} strokeStyle - 線スタイル [r, g, b, a]
  * @param {number} globalAlpha - グローバルアルファ値
+ * @param {number} viewportWidth - ビューポート幅
+ * @param {number} viewportHeight - ビューポート高さ
  * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
  * @return {void}
  */
@@ -29,6 +31,8 @@ export const execute = (
     contextMatrix: Float32Array,
     strokeStyle: Float32Array,
     globalAlpha: number,
+    viewportWidth: number,
+    viewportHeight: number,
     useAtlasTarget: boolean
 ): void => {
     // ストロークメッシュを生成
@@ -42,26 +46,41 @@ export const execute = (
         vertices
     );
 
+    // WebGL版と同じ: 行列をビューポートサイズで正規化
+    const a  = contextMatrix[0];
+    const b  = contextMatrix[1];
+    const c  = contextMatrix[3];
+    const d  = contextMatrix[4];
+    const tx = contextMatrix[6];
+    const ty = contextMatrix[7];
+
+    const normalizedA  = a / viewportWidth;
+    const normalizedB  = b / viewportHeight;
+    const normalizedC  = c / viewportWidth;
+    const normalizedD  = d / viewportHeight;
+    const normalizedTx = tx / viewportWidth;
+    const normalizedTy = ty / viewportHeight;
+
     // Uniformバッファを作成（WGSLのアライメントに合わせる）
     // mat3x3<f32>は各列がvec4にパディングされる: 3 x vec4 = 48 bytes (12 floats)
     // color: vec4<f32> = 16 bytes (4 floats)
     // alpha: f32 + padding = 16 bytes (4 floats)
     // 合計: 80 bytes (20 floats)
     const uniformData = new Float32Array(20);
-    // matrix row 0 (vec4 padded)
-    uniformData[0] = contextMatrix[0];
-    uniformData[1] = contextMatrix[1];
-    uniformData[2] = contextMatrix[2];
+    // matrix column 0 (vec4 padded) - 正規化された行列
+    uniformData[0] = normalizedA;
+    uniformData[1] = normalizedB;
+    uniformData[2] = 0;
     uniformData[3] = 0; // padding
-    // matrix row 1 (vec4 padded)
-    uniformData[4] = contextMatrix[3];
-    uniformData[5] = contextMatrix[4];
-    uniformData[6] = contextMatrix[5];
+    // matrix column 1 (vec4 padded)
+    uniformData[4] = normalizedC;
+    uniformData[5] = normalizedD;
+    uniformData[6] = 0;
     uniformData[7] = 0; // padding
-    // matrix row 2 (vec4 padded)
-    uniformData[8] = contextMatrix[6];
-    uniformData[9] = contextMatrix[7];
-    uniformData[10] = contextMatrix[8];
+    // matrix column 2 (vec4 padded)
+    uniformData[8] = normalizedTx;
+    uniformData[9] = normalizedTy;
+    uniformData[10] = 1;
     uniformData[11] = 0; // padding
     // color (vec4)
     uniformData[12] = strokeStyle[0];
