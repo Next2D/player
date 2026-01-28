@@ -15,11 +15,11 @@ export const execute = (stops: number[]): IGradientStop[] =>
 
     for (let i = 0; i < stops.length; i += 5) {
         gradientStops.push({
-            ratio: stops[i],
-            r: stops[i + 1],
-            g: stops[i + 2],
-            b: stops[i + 3],
-            a: stops[i + 4]
+            "ratio": stops[i],
+            "r": stops[i + 1],
+            "g": stops[i + 2],
+            "b": stops[i + 3],
+            "a": stops[i + 4]
         });
     }
 

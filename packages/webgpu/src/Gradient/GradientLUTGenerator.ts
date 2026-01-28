@@ -22,14 +22,16 @@ export const getAdaptiveResolution = (stopsLength: number): number =>
 /**
  * @description グラデーションLUTテクスチャデータを生成
  *              stops配列: [offset, R, G, B, A, offset, R, G, B, A, ...]
+ *              注意: R, G, B, A は 0-255 範囲
+ *              LUTは0-1の範囲の色を生成し、spread処理はシェーダー側で行う
  * @param {number[]} stops - グラデーションストップ配列
- * @param {number} spread - スプレッドメソッド (0: pad, 1: reflect, 2: repeat)
- * @param {number} interpolation - 補間方法 (0: RGB, 1: linearRGB)
+ * @param {number} _spread - スプレッドメソッド（未使用、シェーダー側で処理）
+ * @param {number} interpolation - 補間方法 (0: linearRGB, 1: RGB) ※WebGL互換
  * @return {Uint8Array}
  */
 export const generateGradientLUT = (
     stops: number[],
-    spread: number,
+    _spread: number,
     interpolation: number
 ): Uint8Array =>
 {
@@ -41,51 +43,37 @@ export const generateGradientLUT = (
     const lutData = new Uint8Array(resolution * 4);
 
     // 各ピクセルの色を補間
+    // spread処理はシェーダー側で行うため、LUTは単純に0-1の範囲を生成
     for (let i = 0; i < resolution; i++) {
-        let t = i / (resolution - 1);
+        const t = i / (resolution - 1);
 
-        // スプレッドメソッドを適用
-        t = applySpread(t, spread);
-
-        // 色を補間
+        // 色を補間（色は0-255範囲で返される）
         const color = interpolateColor(stops, t, interpolation);
+
+        // WebGL版と同じ: プリマルチプライドアルファを適用
+        // color.rgb *= color.a (0-255範囲で計算)
+        const alpha = color.a / 255; // 0-1に正規化
+        const premulR = color.r * alpha;
+        const premulG = color.g * alpha;
+        const premulB = color.b * alpha;
 
         // LUTデータに書き込み
         const offset = i * 4;
-        lutData[offset + 0] = Math.round(color.r * 255);
-        lutData[offset + 1] = Math.round(color.g * 255);
-        lutData[offset + 2] = Math.round(color.b * 255);
-        lutData[offset + 3] = Math.round(color.a * 255);
+        lutData[offset + 0] = Math.round(Math.max(0, Math.min(255, premulR)));
+        lutData[offset + 1] = Math.round(Math.max(0, Math.min(255, premulG)));
+        lutData[offset + 2] = Math.round(Math.max(0, Math.min(255, premulB)));
+        lutData[offset + 3] = Math.round(Math.max(0, Math.min(255, color.a)));
     }
 
     return lutData;
 };
 
 /**
- * @description スプレッドメソッドを適用
- * @param {number} t
- * @param {number} spread
- * @return {number}
- */
-const applySpread = (t: number, spread: number): number =>
-{
-    switch (spread) {
-        case 0: // pad
-            return Math.max(0, Math.min(1, t));
-        case 1: // reflect
-            return 1 - Math.abs((t % 2) - 1);
-        case 2: // repeat
-            return t - Math.floor(t);
-        default:
-            return Math.max(0, Math.min(1, t));
-    }
-};
-
-/**
  * @description 色を補間
+ *              色は0-255範囲で入力され、0-255範囲で出力される
  * @param {number[]} stops
  * @param {number} t
- * @param {number} interpolation
+ * @param {number} interpolation - 0: linearRGB, 1: RGB（WebGL互換）
  * @return {{ r: number, g: number, b: number, a: number }}
  */
 const interpolateColor = (
@@ -101,7 +89,8 @@ const interpolateColor = (
     let endIdx = 0;
 
     for (let i = 0; i < stopsLength; i++) {
-        const offset = stops[i * 5];
+        // offset は 0-255 範囲なので、0-1 に正規化
+        const offset = stops[i * 5] / 255;
         if (offset <= t) {
             startIdx = i;
         }
@@ -116,23 +105,23 @@ const interpolateColor = (
         endIdx = stopsLength - 1;
     }
 
-    // 同じストップの場合
+    // 同じストップの場合（色は0-255範囲）
     if (startIdx === endIdx) {
         const idx = startIdx * 5;
         return {
-            r: stops[idx + 1],
-            g: stops[idx + 2],
-            b: stops[idx + 3],
-            a: stops[idx + 4]
+            "r": stops[idx + 1],
+            "g": stops[idx + 2],
+            "b": stops[idx + 3],
+            "a": stops[idx + 4]
         };
     }
 
-    // 補間係数を計算
-    const startOffset = stops[startIdx * 5];
-    const endOffset = stops[endIdx * 5];
+    // 補間係数を計算（offset は 0-255 範囲なので、0-1 に正規化）
+    const startOffset = stops[startIdx * 5] / 255;
+    const endOffset = stops[endIdx * 5] / 255;
     const localT = (t - startOffset) / (endOffset - startOffset);
 
-    // 色を取得
+    // 色を取得（0-255範囲）
     const startR = stops[startIdx * 5 + 1];
     const startG = stops[startIdx * 5 + 2];
     const startB = stops[startIdx * 5 + 3];
@@ -143,23 +132,24 @@ const interpolateColor = (
     const endB = stops[endIdx * 5 + 3];
     const endA = stops[endIdx * 5 + 4];
 
-    // 補間
-    if (interpolation === 1) {
+    // 補間（WebGL互換: interpolation === 0 がlinearRGB）
+    if (interpolation === 0) {
         // linearRGB補間（ガンマ補正）
+        // 0-255 → 0-1に正規化してからリニア変換
         return {
-            r: linearToSRGB(lerp(sRGBToLinear(startR), sRGBToLinear(endR), localT)),
-            g: linearToSRGB(lerp(sRGBToLinear(startG), sRGBToLinear(endG), localT)),
-            b: linearToSRGB(lerp(sRGBToLinear(startB), sRGBToLinear(endB), localT)),
-            a: lerp(startA, endA, localT)
+            "r": linearToSRGB(lerp(sRGBToLinear(startR / 255), sRGBToLinear(endR / 255), localT)) * 255,
+            "g": linearToSRGB(lerp(sRGBToLinear(startG / 255), sRGBToLinear(endG / 255), localT)) * 255,
+            "b": linearToSRGB(lerp(sRGBToLinear(startB / 255), sRGBToLinear(endB / 255), localT)) * 255,
+            "a": lerp(startA, endA, localT)
         };
     }
 
-    // RGB補間（リニア）
+    // RGB補間（リニア、デフォルト）- 0-255範囲でそのまま補間
     return {
-        r: lerp(startR, endR, localT),
-        g: lerp(startG, endG, localT),
-        b: lerp(startB, endB, localT),
-        a: lerp(startA, endA, localT)
+        "r": lerp(startR, endR, localT),
+        "g": lerp(startG, endG, localT),
+        "b": lerp(startB, endB, localT),
+        "a": lerp(startA, endA, localT)
     };
 };
 
@@ -172,19 +162,27 @@ const lerp = (a: number, b: number, t: number): number =>
 };
 
 /**
- * @description sRGBからリニアへ変換
+ * @description sRGBからリニアへ変換（入力: 0-1正規化値）
  */
 const sRGBToLinear = (value: number): number =>
 {
-    return Math.pow(value, 2.2);
+    // より正確なsRGB→リニア変換
+    if (value <= 0.04045) {
+        return value / 12.92;
+    }
+    return Math.pow((value + 0.055) / 1.055, 2.4);
 };
 
 /**
- * @description リニアからsRGBへ変換
+ * @description リニアからsRGBへ変換（出力: 0-1正規化値）
  */
 const linearToSRGB = (value: number): number =>
 {
-    return Math.pow(value, 1 / 2.2);
+    // より正確なリニア→sRGB変換
+    if (value <= 0.0031308) {
+        return value * 12.92;
+    }
+    return 1.055 * Math.pow(value, 1 / 2.4) - 0.055;
 };
 
 /**
@@ -210,11 +208,11 @@ export const generateFilterGradientLUT = (
     for (let i = 0; i < stopsLength; i++) {
         const color = colors[i];
         stops.push({
-            offset: ratios[i] / 255,
-            r: ((color >> 16) & 0xFF) / 255,
-            g: ((color >> 8) & 0xFF) / 255,
-            b: (color & 0xFF) / 255,
-            a: alphas[i]
+            "offset": ratios[i] / 255,
+            "r": (color >> 16 & 0xFF) / 255,
+            "g": (color >> 8 & 0xFF) / 255,
+            "b": (color & 0xFF) / 255,
+            "a": alphas[i]
         });
     }
 

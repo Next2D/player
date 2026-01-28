@@ -45,7 +45,7 @@ export const execute = (
 
     cache.set(key, {
         bindGroup,
-        lastUsedFrame: currentFrame
+        "lastUsedFrame": currentFrame
     });
 
     return bindGroup;

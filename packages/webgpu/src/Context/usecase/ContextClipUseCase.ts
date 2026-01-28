@@ -3,11 +3,12 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillGenerateUseCase";
-import { $clipBounds } from "../../Mask";
+import { $clipBounds, $clipLevels } from "../../Mask";
 
 /**
  * @description マスク処理を実行
  *              WebGL版と同様にステンシルバッファを使用したクリッピング
+ *              ビット単位のステンシル操作でネストされたマスクをサポート
  *              Execute clipping using stencil buffer (same as WebGL version)
  *
  * @param {GPURenderPassEncoder} renderPassEncoder
@@ -33,7 +34,8 @@ export const execute = (
     isMainAttachment: boolean = false
 ): void => {
     // クリップ境界を取得
-    const bounds = $clipBounds.get(currentAttachment.clipLevel);
+    const clipLevel = currentAttachment.clipLevel;
+    const bounds = $clipBounds.get(clipLevel);
     if (!bounds) {
         return;
     }
@@ -78,9 +80,22 @@ export const execute = (
         mesh.buffer
     );
 
+    // 現在のマスクレベルを取得（WebGL版: $clipLevels.get(clipLevel)）
+    // レベルは1から始まり、各パスごとにインクリメントされる
+    let level = $clipLevels.get(clipLevel) ?? clipLevel;
+
     // ステンシルパイプラインを取得
-    // メインアタッチメント（BGRA8Unorm等）とアトラス（RGBA8Unorm）で異なるパイプラインを使用
-    const pipelineName = isMainAttachment ? "clip_write_main" : "clip_write";
+    // メインアタッチメント: レベルに対応するパイプライン（stencilWriteMask = 1 << (level - 1)）
+    // アトラス: 通常のクリップパイプライン
+    let pipelineName: string;
+    if (isMainAttachment) {
+        // レベルを1-8の範囲にクランプ（8レベルまでサポート）
+        const clampedLevel = Math.min(8, Math.max(1, level));
+        pipelineName = `clip_write_main_${clampedLevel}`;
+    } else {
+        pipelineName = "clip_write";
+    }
+
     const pipeline = pipelineManager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
@@ -116,10 +131,14 @@ export const execute = (
     }
 
     // INVERT操作でマスク形状を描画
-    // カバーされたピクセルのステンシル値が反転される（0 → 0xFF）
+    // カバーされたピクセルのステンシル値が反転される（ビット単位）
     // 奇数回カバーされたピクセルのみがマスク領域となる
     renderPassEncoder.setPipeline(pipeline);
     renderPassEncoder.setStencilReference(0); // INVERT操作では参照値は使用されないが、設定は必要
     renderPassEncoder.setVertexBuffer(0, vertexBuffer);
     renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+
+    // レベルをインクリメント（WebGL版: ++level）
+    level++;
+    $clipLevels.set(clipLevel, level);
 };

@@ -6,8 +6,8 @@ import { ShaderSource } from "../../Shader/ShaderSource";
  * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ）
  */
 const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
-    const r = ((color >> 16) & 0xFF) / 255 * alpha;
-    const g = ((color >> 8) & 0xFF) / 255 * alpha;
+    const r = (color >> 16 & 0xFF) / 255 * alpha;
+    const g = (color >> 8 & 0xFF) / 255 * alpha;
     const b = (color & 0xFF) / 255 * alpha;
     return [r, g, b, alpha];
 };
@@ -70,15 +70,15 @@ export const execute = (
 
     // マップテクスチャを作成
     const mapTexture = device.createTexture({
-        size: { width: bitmapWidth, height: bitmapHeight },
-        format: "rgba8unorm",
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+        "size": { "width": bitmapWidth, "height": bitmapHeight },
+        "format": "rgba8unorm",
+        "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
     });
     device.queue.writeTexture(
-        { texture: mapTexture },
+        { "texture": mapTexture },
         bitmapBuffer.buffer,
-        { bytesPerRow: bitmapWidth * 4, offset: bitmapBuffer.byteOffset },
-        { width: bitmapWidth, height: bitmapHeight }
+        { "bytesPerRow": bitmapWidth * 4, "offset": bitmapBuffer.byteOffset },
+        { "width": bitmapWidth, "height": bitmapHeight }
     );
 
     // 動的にシェーダーを生成
@@ -87,73 +87,73 @@ export const execute = (
     );
 
     const vertexShaderModule = device.createShaderModule({
-        code: ShaderSource.getBlurFilterVertexShader()
+        "code": ShaderSource.getBlurFilterVertexShader()
     });
 
     const fragmentShaderModule = device.createShaderModule({
-        code: fragmentShaderCode
+        "code": fragmentShaderCode
     });
 
     // バインドグループレイアウトを作成
     const bindGroupLayout = device.createBindGroupLayout({
-        entries: [
+        "entries": [
             {
-                binding: 0,
-                visibility: GPUShaderStage.FRAGMENT,
-                buffer: { type: "uniform" }
+                "binding": 0,
+                "visibility": GPUShaderStage.FRAGMENT,
+                "buffer": { "type": "uniform" }
             },
             {
-                binding: 1,
-                visibility: GPUShaderStage.FRAGMENT,
-                sampler: {}
+                "binding": 1,
+                "visibility": GPUShaderStage.FRAGMENT,
+                "sampler": {}
             },
             {
-                binding: 2,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {}
+                "binding": 2,
+                "visibility": GPUShaderStage.FRAGMENT,
+                "texture": {}
             },
             {
-                binding: 3,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {}
+                "binding": 3,
+                "visibility": GPUShaderStage.FRAGMENT,
+                "texture": {}
             }
         ]
     });
 
     const pipelineLayout = device.createPipelineLayout({
-        bindGroupLayouts: [bindGroupLayout]
+        "bindGroupLayouts": [bindGroupLayout]
     });
 
     // パイプラインを作成
     const pipeline = device.createRenderPipeline({
-        layout: pipelineLayout,
-        vertex: {
-            module: vertexShaderModule,
-            entryPoint: "main",
-            buffers: []
+        "layout": pipelineLayout,
+        "vertex": {
+            "module": vertexShaderModule,
+            "entryPoint": "main",
+            "buffers": []
         },
-        fragment: {
-            module: fragmentShaderModule,
-            entryPoint: "main",
-            targets: [{
-                format: "rgba8unorm",
-                blend: {
-                    color: {
-                        srcFactor: "one",
-                        dstFactor: "one-minus-src-alpha",
-                        operation: "add"
+        "fragment": {
+            "module": fragmentShaderModule,
+            "entryPoint": "main",
+            "targets": [{
+                "format": "rgba8unorm",
+                "blend": {
+                    "color": {
+                        "srcFactor": "one",
+                        "dstFactor": "one-minus-src-alpha",
+                        "operation": "add"
                     },
-                    alpha: {
-                        srcFactor: "one",
-                        dstFactor: "one-minus-src-alpha",
-                        operation: "add"
+                    "alpha": {
+                        "srcFactor": "one",
+                        "dstFactor": "one-minus-src-alpha",
+                        "operation": "add"
                     }
                 }
             }]
         },
-        primitive: {
-            topology: "triangle-list",
-            cullMode: "none"
+        "primitive": {
+            "topology": "triangle-list",
+            "cullMode": "none"
         }
     });
 
@@ -197,19 +197,19 @@ export const execute = (
     }
 
     const uniformBuffer = device.createBuffer({
-        size: uniformData.byteLength,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        "size": uniformData.byteLength,
+        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     // バインドグループを作成
     const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
-            { binding: 0, resource: { buffer: uniformBuffer } },
-            { binding: 1, resource: sampler },
-            { binding: 2, resource: sourceAttachment.texture!.view },
-            { binding: 3, resource: mapTexture.createView() }
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": sourceAttachment.texture!.view },
+            { "binding": 3, "resource": mapTexture.createView() }
         ]
     });
 

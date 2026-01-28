@@ -51,16 +51,16 @@ const getTextureFromNode = (
         // commandEncoderを使ってコピー
         commandEncoder.copyTextureToTexture(
             {
-                texture: atlasAttachment.texture.resource,
-                origin: { x: node.x, y: node.y, z: 0 }
+                "texture": atlasAttachment.texture.resource,
+                "origin": { "x": node.x, "y": node.y, "z": 0 }
             },
             {
-                texture: attachment.texture.resource,
-                origin: { x: 0, y: 0, z: 0 }
+                "texture": attachment.texture.resource,
+                "origin": { "x": 0, "y": 0, "z": 0 }
             },
             {
-                width: node.w,
-                height: node.h
+                "width": node.w,
+                "height": node.h
             }
         );
     }
@@ -119,10 +119,10 @@ const drawFilterToMain = (
 
     if (bindGroupLayout && filterAttachment.texture) {
         const bindGroup = config.device.createBindGroup({
-            layout: bindGroupLayout,
-            entries: [
-                { binding: 0, resource: sampler },
-                { binding: 1, resource: filterAttachment.texture.view }
+            "layout": bindGroupLayout,
+            "entries": [
+                { "binding": 0, "resource": sampler },
+                { "binding": 1, "resource": filterAttachment.texture.view }
             ]
         });
 
@@ -138,8 +138,8 @@ const drawFilterToMain = (
             filterAttachment.width / canvasWidth * 2,
             filterAttachment.height / canvasHeight * 2,
             // offset (2) - NDC空間への変換
-            (x / canvasWidth) * 2 - 1,
-            1 - (y / canvasHeight) * 2,
+            x / canvasWidth * 2 - 1,
+            1 - y / canvasHeight * 2,
             // texCoord (4)
             0, 0, 1, 1,
             // colorTransform (8)
@@ -405,19 +405,19 @@ export const execute = (
                     const gbDistance = params[idx++];
                     const gbAngle = params[idx++];
 
-                    let gbColorsLen = params[idx++];
+                    const gbColorsLen = params[idx++];
                     const gbColors = new Float32Array(gbColorsLen);
                     for (let i = 0; i < gbColorsLen; i++) {
                         gbColors[i] = params[idx++];
                     }
 
-                    let gbAlphasLen = params[idx++];
+                    const gbAlphasLen = params[idx++];
                     const gbAlphas = new Float32Array(gbAlphasLen);
                     for (let i = 0; i < gbAlphasLen; i++) {
                         gbAlphas[i] = params[idx++];
                     }
 
-                    let gbRatiosLen = params[idx++];
+                    const gbRatiosLen = params[idx++];
                     const gbRatios = new Float32Array(gbRatiosLen);
                     for (let i = 0; i < gbRatiosLen; i++) {
                         gbRatios[i] = params[idx++];
@@ -449,19 +449,19 @@ export const execute = (
                     const ggDistance = params[idx++];
                     const ggAngle = params[idx++];
 
-                    let ggColorsLen = params[idx++];
+                    const ggColorsLen = params[idx++];
                     const ggColors = new Float32Array(ggColorsLen);
                     for (let i = 0; i < ggColorsLen; i++) {
                         ggColors[i] = params[idx++];
                     }
 
-                    let ggAlphasLen = params[idx++];
+                    const ggAlphasLen = params[idx++];
                     const ggAlphas = new Float32Array(ggAlphasLen);
                     for (let i = 0; i < ggAlphasLen; i++) {
                         ggAlphas[i] = params[idx++];
                     }
 
-                    let ggRatiosLen = params[idx++];
+                    const ggRatiosLen = params[idx++];
                     const ggRatios = new Float32Array(ggRatiosLen);
                     for (let i = 0; i < ggRatiosLen; i++) {
                         ggRatios[i] = params[idx++];

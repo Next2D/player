@@ -655,9 +655,9 @@ export class ShaderSource
             struct InstanceInput {
                 @location(2) textureRect: vec4<f32>,     // x, y, w, h (normalized)
                 @location(3) textureDim: vec4<f32>,      // w, h, viewportW, viewportH
-                @location(4) matrixTx: vec4<f32>,        // tx, ty, _pad, _pad
+                @location(4) matrixTx: vec4<f32>,        // tx, ty, 0, 0 (padding)
                 @location(5) matrixScale: vec4<f32>,     // scale0, rotate0, scale1, rotate1
-                @location(6) mulColor: vec4<f32>,        // r, g, b, a
+                @location(6) mulColor: vec4<f32>,        // r, g, b, a (a = globalAlpha)
                 @location(7) addColor: vec4<f32>,        // r, g, b, a
             }
 
@@ -712,7 +712,7 @@ export class ShaderSource
                 // 出力Y座標を反転（WebGL版と同じ）
                 output.position = vec4<f32>(position.x, -position.y, 0.0, 1.0);
 
-                // カラー変換
+                // カラー変換（mulColor.w = globalAlpha）
                 output.mulColor = instance.mulColor;
                 output.addColor = instance.addColor;
 
@@ -743,15 +743,20 @@ export class ShaderSource
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
                 var src = textureSample(textureData, textureSampler, input.texCoord);
 
-                // 常にcolorTransformを適用（WebGL版と同じロジック）
-                // プリマルチプライドからストレートアルファに変換
-                src = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
+                // WebGL版と同じ条件分岐: colorTransformが必要な場合のみ処理
+                // mulColor.w（globalAlpha）が1.0でない場合も処理が必要
+                if (input.mulColor.x != 1.0 || input.mulColor.y != 1.0 || input.mulColor.z != 1.0 || input.mulColor.w != 1.0
+                    || input.addColor.x != 0.0 || input.addColor.y != 0.0 || input.addColor.z != 0.0
+                ) {
+                    // プリマルチプライドからストレートアルファに変換
+                    src = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
 
-                // colorTransform適用: src * mulColor + addColor
-                src = clamp(src * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
+                    // colorTransform適用: src * mulColor + addColor
+                    src = clamp(src * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
 
-                // ストレートアルファからプリマルチプライドに変換
-                src = vec4<f32>(src.rgb * src.a, src.a);
+                    // ストレートアルファからプリマルチプライドに変換
+                    src = vec4<f32>(src.rgb * src.a, src.a);
+                }
 
                 return src;
             }
@@ -760,6 +765,9 @@ export class ShaderSource
 
     /**
      * @description グラデーションフィル用頂点シェーダー（行列変換でUV座標を計算）
+     *              WebGL版と同じ処理:
+     *              - Linear: v_uv = position（生の座標、inverseMatrix = I）
+     *              - Radial: v_uv = (gradientMatrix^(-1) * position).xy
      * @return {string}
      */
     static getGradientFillVertexShader(): string
@@ -776,22 +784,26 @@ export class ShaderSource
 
             struct VertexOutput {
                 @builtin(position) position: vec4<f32>,
-                @location(0) gradientCoord: vec2<f32>,
+                @location(0) v_uv: vec2<f32>,
                 @location(1) bezier: vec2<f32>,
                 @location(2) color: vec4<f32>,
             }
 
             struct GradientUniforms {
-                // グラデーション行列（UV変換用）
-                gradientMatrix: mat3x3<f32>,
+                // 逆行列（UV変換用）
+                // Linear: 単位行列（v_uv = position）
+                // Radial: グラデーション行列の逆行列
+                inverseMatrix: mat3x3<f32>,
                 // グラデーションタイプ (0: linear, 1: radial)
                 gradientType: f32,
-                // focal point for radial gradient
+                // focal point for radial gradient (-0.975 ~ 0.975)
                 focal: f32,
-                // spread method (0: pad, 1: reflect, 2: repeat)
+                // spread method (0: reflect, 1: repeat, 2: pad)
                 spread: f32,
-                // padding
-                _pad: f32,
+                // radius for radial gradient (819.2)
+                radius: f32,
+                // Linear用の点a, b (a.x, a.y, b.x, b.y)
+                linearPoints: vec4<f32>,
             }
 
             @group(0) @binding(0) var<uniform> gradient: GradientUniforms;
@@ -800,22 +812,24 @@ export class ShaderSource
             fn main(input: VertexInput) -> VertexOutput {
                 var output: VertexOutput;
 
-                // 頂点変換行列を構築
-                let matrix = mat3x3<f32>(
+                // 頂点変換行列を構築（正規化されたコンテキスト行列）
+                let contextMatrix = mat3x3<f32>(
                     input.matrixRow0,
                     input.matrixRow1,
                     input.matrixRow2
                 );
 
                 // NDC座標に変換
-                let pos = matrix * vec3<f32>(input.position, 1.0);
+                let pos = contextMatrix * vec3<f32>(input.position, 1.0);
                 let ndc = vec2<f32>(pos.x * 2.0 - 1.0, pos.y * 2.0 - 1.0);
                 // アトラス用: Y軸反転なし（インスタンス描画時に反転される）
                 output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
 
-                // グラデーション座標を計算（グラデーション行列で変換）
-                let gradPos = gradient.gradientMatrix * vec3<f32>(input.position, 1.0);
-                output.gradientCoord = gradPos.xy;
+                // WebGL版と同じ:
+                // Linear: inverseMatrix = I なので v_uv = position
+                // Radial: inverseMatrix = gradientMatrix^(-1) なので v_uv = (gradientMatrix^(-1) * position).xy
+                let uvPos = gradient.inverseMatrix * vec3<f32>(input.position, 1.0);
+                output.v_uv = uvPos.xy;
 
                 output.bezier = input.bezier;
                 output.color = input.color;
@@ -844,17 +858,18 @@ export class ShaderSource
 
             struct VertexOutput {
                 @builtin(position) position: vec4<f32>,
-                @location(0) gradientCoord: vec2<f32>,
+                @location(0) v_uv: vec2<f32>,
                 @location(1) bezier: vec2<f32>,
                 @location(2) color: vec4<f32>,
             }
 
             struct GradientUniforms {
-                gradientMatrix: mat3x3<f32>,
+                inverseMatrix: mat3x3<f32>,
                 gradientType: f32,
                 focal: f32,
                 spread: f32,
-                _pad: f32,
+                radius: f32,
+                linearPoints: vec4<f32>,
             }
 
             @group(0) @binding(0) var<uniform> gradient: GradientUniforms;
@@ -863,19 +878,21 @@ export class ShaderSource
             fn main(input: VertexInput) -> VertexOutput {
                 var output: VertexOutput;
 
-                let matrix = mat3x3<f32>(
+                let contextMatrix = mat3x3<f32>(
                     input.matrixRow0,
                     input.matrixRow1,
                     input.matrixRow2
                 );
 
-                let pos = matrix * vec3<f32>(input.position, 1.0);
+                let pos = contextMatrix * vec3<f32>(input.position, 1.0);
                 let ndc = vec2<f32>(pos.x * 2.0 - 1.0, pos.y * 2.0 - 1.0);
                 // メインアタッチメント用: Y軸反転
                 output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 
-                let gradPos = gradient.gradientMatrix * vec3<f32>(input.position, 1.0);
-                output.gradientCoord = gradPos.xy;
+                // Linear: inverseMatrix = I なので v_uv = position（生の座標）
+                // Radial: inverseMatrix = gradientMatrix^(-1) なので v_uv = 逆行列変換後の座標
+                let uvPos = gradient.inverseMatrix * vec3<f32>(input.position, 1.0);
+                output.v_uv = uvPos.xy;
 
                 output.bezier = input.bezier;
                 output.color = input.color;
@@ -887,6 +904,7 @@ export class ShaderSource
 
     /**
      * @description グラデーションフィル用フラグメントシェーダー
+     *              WebGL版と同じロジックを実装
      * @return {string}
      */
     static getGradientFillFragmentShader(): string
@@ -894,65 +912,81 @@ export class ShaderSource
         return /* wgsl */`
             struct VertexOutput {
                 @builtin(position) position: vec4<f32>,
-                @location(0) gradientCoord: vec2<f32>,
+                @location(0) v_uv: vec2<f32>,
                 @location(1) bezier: vec2<f32>,
                 @location(2) color: vec4<f32>,
             }
 
             struct GradientUniforms {
-                gradientMatrix: mat3x3<f32>,
+                inverseMatrix: mat3x3<f32>,
                 gradientType: f32,
                 focal: f32,
                 spread: f32,
-                _pad: f32,
+                radius: f32,
+                linearPoints: vec4<f32>,
             }
 
             @group(0) @binding(0) var<uniform> gradient: GradientUniforms;
             @group(0) @binding(1) var gradientSampler: sampler;
             @group(0) @binding(2) var gradientTexture: texture_2d<f32>;
 
+            // WebGL版と同じ: spread method
+            // 0: reflect, 1: repeat, 2(default): pad
             fn applySpread(t: f32, spread: f32) -> f32 {
                 if (spread < 0.5) {
-                    // pad
-                    return clamp(t, 0.0, 1.0);
-                } else if (spread < 1.5) {
-                    // reflect
+                    // reflect (spread == 0)
                     return 1.0 - abs(fract(t * 0.5) * 2.0 - 1.0);
-                } else {
-                    // repeat
+                } else if (spread < 1.5) {
+                    // repeat (spread == 1)
                     return fract(t);
+                } else {
+                    // pad (spread == 2, default)
+                    return clamp(t, 0.0, 1.0);
                 }
             }
 
             @fragment
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
                 // ベジェ曲線のディスカード（Loop-Blinn）
+                // fillシェーダーと同じロジック
                 let f = input.bezier.x * input.bezier.x - input.bezier.y;
-                if (f >= 0.0 && input.bezier.x != 0.0) {
+                if (f >= 0.0) {
                     discard;
                 }
 
                 var t: f32;
+                let p = input.v_uv;
 
                 if (gradient.gradientType < 0.5) {
-                    // Linear gradient: t = x座標
-                    t = input.gradientCoord.x;
+                    // === Linear gradient ===
+                    // WebGL版と同じ: t = dot(ab, ap) / dot(ab, ab)
+                    let a = gradient.linearPoints.xy;
+                    let b = gradient.linearPoints.zw;
+                    let ab = b - a;
+                    let ap = p - a;
+                    t = dot(ab, ap) / dot(ab, ab);
                 } else {
-                    // Radial gradient
-                    let x = input.gradientCoord.x;
-                    let y = input.gradientCoord.y;
+                    // === Radial gradient ===
+                    // WebGL版と同じ: coord = p / radius
+                    let radius = gradient.radius;
+                    let coord = p / radius;
                     let focal = gradient.focal;
 
                     if (abs(focal) < 0.001) {
-                        // 中心にフォーカル
-                        t = sqrt(x * x + y * y);
+                        // focal point なし: t = length(coord)
+                        t = length(coord);
                     } else {
-                        // フォーカルポイントがオフセットされている場合
-                        let fx = focal;
-                        let dx = x - fx;
-                        let dy = y;
-                        let d = sqrt(dx * dx + dy * dy);
-                        t = d / (1.0 - focal * focal);
+                        // focal point あり: WebGL版と同じ球面交差計算
+                        let focalVec = vec2<f32>(focal, 0.0);
+                        let dir = normalize(coord - focalVec);
+
+                        let a_coef = dot(dir, dir);
+                        let b_coef = 2.0 * dot(dir, focalVec);
+                        let c_coef = dot(focalVec, focalVec) - 1.0;
+                        let discriminant = b_coef * b_coef - 4.0 * a_coef * c_coef;
+                        let x = (-b_coef + sqrt(max(discriminant, 0.0))) / (2.0 * a_coef);
+
+                        t = distance(focalVec, coord) / distance(focalVec, focalVec + dir * x);
                     }
                 }
 
@@ -960,11 +994,12 @@ export class ShaderSource
                 t = applySpread(t, gradient.spread);
 
                 // LUTテクスチャからサンプリング
+                // LUTは既にプリマルチプライドアルファで格納されている
                 let gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(t, 0.5));
 
-                // プリマルチプライドアルファ
-                let alpha = gradientColor.a * input.color.a;
-                return vec4<f32>(gradientColor.rgb * input.color.a, alpha);
+                // WebGL版と同じ: LUTの色をそのまま返す
+                // input.color.aでの追加アルファ乗算は行わない（LUTで既に適用済み）
+                return gradientColor;
             }
         `;
     }
@@ -1715,7 +1750,7 @@ export class ShaderSource
                     uv = input.texCoord + vec2<f32>(f32(offsetX), f32(offsetY)) * rcpSize;
                     color = textureSample(srcTexture, textureSampler, uv);
                     color = vec4<f32>(color.rgb / max(0.0001, color.a), color.a);
-                    ${clamp ? "" : `color = mix(uniforms.substituteColor, color, isInside(uv));`}
+                    ${clamp ? "" : "color = mix(uniforms.substituteColor, color, isInside(uv));"}
                     result += color * weight;
 `;
         }

@@ -48,31 +48,31 @@ export const $getFilterGradientAttachmentObject = (): IAttachmentObject =>
 
         // 1xN テクスチャを作成
         const texture = $device.createTexture({
-            size: { width: resolution, height: 1 },
-            format: "rgba8unorm",
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+            "size": { "width": resolution, "height": 1 },
+            "format": "rgba8unorm",
+            "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
         });
 
         $filterGradientAttachment = {
-            id: -256, // フィルター用に負のIDを使用
-            width: resolution,
-            height: 1,
-            clipLevel: 0,
-            msaa: false,
-            mask: false,
-            color: null,
-            texture: {
-                id: -256,
-                resource: texture,
-                view: texture.createView(),
-                width: resolution,
-                height: 1,
-                area: resolution,
-                smooth: true
+            "id": -256, // フィルター用に負のIDを使用
+            "width": resolution,
+            "height": 1,
+            "clipLevel": 0,
+            "msaa": false,
+            "mask": false,
+            "color": null,
+            "texture": {
+                "id": -256,
+                "resource": texture,
+                "view": texture.createView(),
+                "width": resolution,
+                "height": 1,
+                "area": resolution,
+                "smooth": true
             },
-            stencil: null,
-            msaaTexture: null,
-            msaaStencil: null
+            "stencil": null,
+            "msaaTexture": null,
+            "msaaStencil": null
         };
     }
 

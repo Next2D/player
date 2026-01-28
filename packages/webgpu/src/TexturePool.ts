@@ -107,7 +107,7 @@ export class TexturePool
         }
 
         return {
-            total: this.pool.length,
+            "total": this.pool.length,
             inUse,
             available
         };

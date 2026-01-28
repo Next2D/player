@@ -299,9 +299,36 @@ export const $resetAtlas = (): void =>
     // アクティブインデックスをリセット
     $setActiveAtlasIndex(0);
 
+    // アトラスアタッチメントオブジェクトのGPUリソースを解放（WebGL版と同じ）
+    for (let idx = 0; idx < $atlasAttachmentObjects.length; idx++) {
+        const attachment = $atlasAttachmentObjects[idx];
+        if (!attachment) {
+            continue;
+        }
+        // テクスチャリソースを破棄
+        if (attachment.texture) {
+            attachment.texture.resource.destroy();
+        }
+        // ステンシルリソースを破棄
+        if (attachment.stencil) {
+            attachment.stencil.resource.destroy();
+        }
+        // MSAAテクスチャを破棄
+        if (attachment.msaaTexture) {
+            attachment.msaaTexture.resource.destroy();
+        }
+        // MSAAステンシルを破棄
+        if (attachment.msaaStencil) {
+            attachment.msaaStencil.resource.destroy();
+        }
+    }
+
     // アトラスアタッチメントオブジェクトをリセット
     $atlasAttachmentObjects.length = 0;
 
     // 転送範囲をクリア
     $clearTransferBounds();
+
+    // 現在のアトラスインデックスもリセット
+    $setCurrentAtlasIndex(0);
 };

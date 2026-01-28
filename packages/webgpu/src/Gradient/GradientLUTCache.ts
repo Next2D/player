@@ -47,31 +47,31 @@ export const $getGradientAttachmentObjectWithResolution = (resolution: number): 
     if (!$gradientAttachmentObjects.has(resolution) && $device) {
         // 1xN テクスチャを作成
         const texture = $device.createTexture({
-            size: { width: resolution, height: 1 },
-            format: "rgba8unorm",
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+            "size": { "width": resolution, "height": 1 },
+            "format": "rgba8unorm",
+            "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
         });
 
         const attachment: IAttachmentObject = {
-            id: resolution,
-            width: resolution,
-            height: 1,
-            clipLevel: 0,
-            msaa: false,
-            mask: false,
-            color: null,
-            texture: {
-                id: resolution,
-                resource: texture,
-                view: texture.createView(),
-                width: resolution,
-                height: 1,
-                area: resolution,
-                smooth: true
+            "id": resolution,
+            "width": resolution,
+            "height": 1,
+            "clipLevel": 0,
+            "msaa": false,
+            "mask": false,
+            "color": null,
+            "texture": {
+                "id": resolution,
+                "resource": texture,
+                "view": texture.createView(),
+                "width": resolution,
+                "height": 1,
+                "area": resolution,
+                "smooth": true
             },
-            stencil: null,
-            msaaTexture: null,
-            msaaStencil: null
+            "stencil": null,
+            "msaaTexture": null,
+            "msaaStencil": null
         };
 
         $gradientAttachmentObjects.set(resolution, attachment);

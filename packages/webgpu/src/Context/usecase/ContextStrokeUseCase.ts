@@ -42,7 +42,7 @@ export const execute = (
     // ストロークメッシュを生成（WebGL版と同じ: 内部でthickness/2される）
     const meshVertices = generateStrokeMesh(vertices, thickness);
 
-    if (meshVertices.length === 0) return;
+    if (meshVertices.length === 0) { return }
 
     // 頂点バッファを作成
     const vertexBuffer = bufferManager.createVertexBuffer(
@@ -111,10 +111,10 @@ export const execute = (
     }
 
     const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [{
-            binding: 0,
-            resource: { buffer: uniformBuffer }
+        "layout": bindGroupLayout,
+        "entries": [{
+            "binding": 0,
+            "resource": { "buffer": uniformBuffer }
         }]
     });
 

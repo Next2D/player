@@ -15,6 +15,10 @@ import {
  * @description マスクの終了処理
  *              End mask processing
  *
+ * WebGL版と同じ:
+ * - 単体マスク終了時: ステンシルバッファをクリア
+ * - ネストマスク終了時: 上位レベルのステンシルビットをクリア
+ *
  * @return {void}
  * @method
  * @protected
@@ -47,11 +51,21 @@ export const execute = (): void =>
         $setMaskTestEnabled(false);
         $setMaskStencilReference(0);
 
+        // WebGL版と同じ: ステンシルバッファをクリア
+        // WebGPUでは次のレンダーパス開始時にステンシルがクリアされる
+        // ステンシルクリアフラグを設定
+        currentAttachmentObject.needsStencilClear = true;
+
         $clipLevels.clear();
         $clipBounds.clear();
         return;
     }
 
-    // ネストされたマスクの場合、親マスクの設定に戻す
+    // ネストされたマスクの場合、上位レベルのステンシルビットをクリア
+    // WebGL版と同じ: stencilMask(1 << clipLevel), stencilOp(REPLACE, REPLACE, REPLACE)
+    // ステンシルクリアフラグを設定（特定のビットのみクリア）
+    currentAttachmentObject.pendingStencilClearLevel = currentAttachmentObject.clipLevel;
+
+    // 親マスクの設定に戻す
     maskEndMaskService();
 };

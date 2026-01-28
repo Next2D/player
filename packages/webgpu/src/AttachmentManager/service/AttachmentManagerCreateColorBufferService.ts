@@ -20,21 +20,21 @@ export const execute = (
     stencil: IStencilBufferObject
 ): IColorBufferObject => {
     const texture = device.createTexture({
-        size: { width, height },
-        format: "rgba8unorm",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT |
+        "size": { width, height },
+        "format": "rgba8unorm",
+        "usage": GPUTextureUsage.RENDER_ATTACHMENT |
                GPUTextureUsage.TEXTURE_BINDING |
                GPUTextureUsage.COPY_SRC |
                GPUTextureUsage.COPY_DST
     });
 
     return {
-        resource: texture,
-        view: texture.createView(),
+        "resource": texture,
+        "view": texture.createView(),
         stencil,
         width,
         height,
-        area: width * height,
-        dirty: false
+        "area": width * height,
+        "dirty": false
     };
 };

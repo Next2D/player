@@ -121,10 +121,10 @@ export const execute = (
 
     // 共有テクスチャにLUTデータを書き込み
     device.queue.writeTexture(
-        { texture: lutAttachment.texture!.resource },
+        { "texture": lutAttachment.texture!.resource },
         lutData.buffer,
-        { bytesPerRow: 256 * 4, offset: lutData.byteOffset },
-        { width: 256, height: 1 }
+        { "bytesPerRow": 256 * 4, "offset": lutData.byteOffset },
+        { "width": 256, "height": 1 }
     );
 
     // ユニフォームバッファを作成
@@ -141,8 +141,8 @@ export const execute = (
     ]);
 
     const uniformBuffer = device.createBuffer({
-        size: uniformData.byteLength,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        "size": uniformData.byteLength,
+        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
@@ -155,16 +155,16 @@ export const execute = (
         baseX + baseWidth <= width && baseY + baseHeight <= height) {
         commandEncoder.copyTextureToTexture(
             {
-                texture: sourceAttachment.texture!.resource,
-                origin: { x: 0, y: 0, z: 0 }
+                "texture": sourceAttachment.texture!.resource,
+                "origin": { "x": 0, "y": 0, "z": 0 }
             },
             {
-                texture: baseTextureForComposite.texture!.resource,
-                origin: { x: baseX, y: baseY, z: 0 }
+                "texture": baseTextureForComposite.texture!.resource,
+                "origin": { "x": baseX, "y": baseY, "z": 0 }
             },
             {
-                width: baseWidth,
-                height: baseHeight
+                "width": baseWidth,
+                "height": baseHeight
             }
         );
     }
@@ -184,29 +184,29 @@ export const execute = (
     if (copyWidth > 0 && copyHeight > 0) {
         commandEncoder.copyTextureToTexture(
             {
-                texture: blurAttachment.texture!.resource,
-                origin: { x: srcX, y: srcY, z: 0 }
+                "texture": blurAttachment.texture!.resource,
+                "origin": { "x": srcX, "y": srcY, "z": 0 }
             },
             {
-                texture: blurTextureForComposite.texture!.resource,
-                origin: { x: dstX, y: dstY, z: 0 }
+                "texture": blurTextureForComposite.texture!.resource,
+                "origin": { "x": dstX, "y": dstY, "z": 0 }
             },
             {
-                width: copyWidth,
-                height: copyHeight
+                "width": copyWidth,
+                "height": copyHeight
             }
         );
     }
 
     // バインドグループを作成
     const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
-            { binding: 0, resource: { buffer: uniformBuffer } },
-            { binding: 1, resource: sampler },
-            { binding: 2, resource: blurTextureForComposite.texture!.view },
-            { binding: 3, resource: baseTextureForComposite.texture!.view },
-            { binding: 4, resource: lutAttachment.texture!.view }
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": blurTextureForComposite.texture!.view },
+            { "binding": 3, "resource": baseTextureForComposite.texture!.view },
+            { "binding": 4, "resource": lutAttachment.texture!.view }
         ]
     });
 

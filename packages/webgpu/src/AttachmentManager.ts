@@ -31,7 +31,7 @@ export class AttachmentManager
         this.texturePool = new Map();
         this.colorBufferPool = [];
         this.stencilBufferPool = [];
-        this.idCounter = { attachmentId: 0, textureId: 0, stencilId: 0 };
+        this.idCounter = { "attachmentId": 0, "textureId": 0, "stencilId": 0 };
         this.currentAttachment = null;
     }
 

@@ -1,5 +1,6 @@
 import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
+import { $isMaskDrawing, $getMaskStencilReference } from "../../Mask";
 
 /**
  * @description 単純なフィル（ステンシルなし、キャンバス描画用）
@@ -15,6 +16,7 @@ import type { PipelineManager } from "../../Shader/PipelineManager";
  * @param {number} viewportHeight
  * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
  * @param {boolean} useStencilPipeline - マスクモード時にステンシル付きパイプラインを使用
+ * @param {number} clipLevel - マスク描画時のクリップレベル（1-8）
  * @return {void}
  */
 export const execute = (
@@ -27,7 +29,8 @@ export const execute = (
     viewportWidth: number,
     viewportHeight: number,
     useAtlasTarget: boolean,
-    useStencilPipeline: boolean = false
+    useStencilPipeline: boolean = false,
+    clipLevel: number = 1
 ): void => {
     // Uniform data: viewport size only (8 bytes → 16 bytes aligned)
     const uniformData = new Float32Array(4);
@@ -50,22 +53,32 @@ export const execute = (
     }
 
     const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [{
-            binding: 0,
-            resource: { buffer: uniformBuffer }
+        "layout": bindGroupLayout,
+        "entries": [{
+            "binding": 0,
+            "resource": { "buffer": uniformBuffer }
         }]
     });
 
     // パイプラインを取得して描画
     // - アトラス用: "fill" (rgba8unorm)
     // - キャンバス用: "fill_bgra" (bgra8unorm, ステンシルなし)
-    // - マスクモード時: "fill_bgra_stencil" (bgra8unorm, ステンシルあり)
+    // - マスク描画モード時: "clip_write_main_N" (ステンシル書き込み、カラー書き込みなし)
+    // - マスクテストモード時: "fill_bgra_stencil" (bgra8unorm, ステンシルテストあり)
     let pipelineName: string;
     if (useAtlasTarget) {
         pipelineName = "fill";
     } else if (useStencilPipeline) {
-        pipelineName = "fill_bgra_stencil";
+        if ($isMaskDrawing()) {
+            // マスク描画モード: ステンシルにINVERT操作で書き込み、カラーは書き込まない
+            // WebGL版: stencilOp(ZERO, INVERT, INVERT), colorMask(false, false, false, false)
+            const clampedLevel = Math.min(8, Math.max(1, clipLevel));
+            pipelineName = `clip_write_main_${clampedLevel}`;
+        } else {
+            // マスクテストモード: ステンシル値をテストしてカラーを描画
+            // WebGL版: stencilFunc(EQUAL, mask & 0xff, mask)
+            pipelineName = "fill_bgra_stencil";
+        }
     } else {
         pipelineName = "fill_bgra";
     }
@@ -78,5 +91,12 @@ export const execute = (
     renderPassEncoder.setPipeline(pipeline);
     renderPassEncoder.setVertexBuffer(0, vertexBuffer);
     renderPassEncoder.setBindGroup(0, bindGroup);
+
+    // マスクテストモード時はステンシル参照値を設定
+    // WebGL版: stencilFunc(EQUAL, mask & 0xff, mask)
+    if (useStencilPipeline && !useAtlasTarget && !$isMaskDrawing()) {
+        renderPassEncoder.setStencilReference($getMaskStencilReference());
+    }
+
     renderPassEncoder.draw(vertexCount, 1, 0, 0);
 };

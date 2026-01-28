@@ -29,7 +29,7 @@ export const execute = (
 
     // 新規作成
     return device.createBuffer({
-        size: alignedSize,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        "size": alignedSize,
+        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
 };

@@ -64,11 +64,11 @@ export class PipelineManager
     private createFillPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.VERTEX,
+                    "buffer": { "type": "uniform" }
                 }
             ]
         });
@@ -76,115 +76,115 @@ export class PipelineManager
         this.bindGroupLayouts.set("fill", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getFillVertexShader()
+            "code": ShaderSource.getFillVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getFillFragmentShader()
+            "code": ShaderSource.getFillFragmentShader()
         });
 
         // 17 floats per vertex: position(2) + bezier(2) + color(4) + matrix(3+3+3)
         const vertexBufferLayout: GPUVertexBufferLayout = {
-            arrayStride: 17 * 4, // 17 floats (68 bytes)
-            attributes: [
+            "arrayStride": 17 * 4, // 17 floats (68 bytes)
+            "attributes": [
                 {
-                    shaderLocation: 0,
-                    offset: 0,
-                    format: "float32x2" // position (2 floats)
+                    "shaderLocation": 0,
+                    "offset": 0,
+                    "format": "float32x2" // position (2 floats)
                 },
                 {
-                    shaderLocation: 1,
-                    offset: 2 * 4,
-                    format: "float32x2" // bezier (2 floats)
+                    "shaderLocation": 1,
+                    "offset": 2 * 4,
+                    "format": "float32x2" // bezier (2 floats)
                 },
                 {
-                    shaderLocation: 2,
-                    offset: 4 * 4,
-                    format: "float32x4" // color (4 floats)
+                    "shaderLocation": 2,
+                    "offset": 4 * 4,
+                    "format": "float32x4" // color (4 floats)
                 },
                 {
-                    shaderLocation: 3,
-                    offset: 8 * 4,
-                    format: "float32x3" // matrix row 0 (3 floats)
+                    "shaderLocation": 3,
+                    "offset": 8 * 4,
+                    "format": "float32x3" // matrix row 0 (3 floats)
                 },
                 {
-                    shaderLocation: 4,
-                    offset: 11 * 4,
-                    format: "float32x3" // matrix row 1 (3 floats)
+                    "shaderLocation": 4,
+                    "offset": 11 * 4,
+                    "format": "float32x3" // matrix row 1 (3 floats)
                 },
                 {
-                    shaderLocation: 5,
-                    offset: 14 * 4,
-                    format: "float32x3" // matrix row 2 (3 floats)
+                    "shaderLocation": 5,
+                    "offset": 14 * 4,
+                    "format": "float32x3" // matrix row 2 (3 floats)
                 }
             ]
         };
 
         const blendState: GPUBlendState = {
-            color: {
-                srcFactor: "one",
-                dstFactor: "one-minus-src-alpha",
-                operation: "add"
+            "color": {
+                "srcFactor": "one",
+                "dstFactor": "one-minus-src-alpha",
+                "operation": "add"
             },
-            alpha: {
-                srcFactor: "one",
-                dstFactor: "one-minus-src-alpha",
-                operation: "add"
+            "alpha": {
+                "srcFactor": "one",
+                "dstFactor": "one-minus-src-alpha",
+                "operation": "add"
             }
         };
 
         // アトラステクスチャ用パイプライン（rgba8unorm）- MSAA対応
         const pipelineRGBA = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            multisample: {
-                count: this.sampleCount
+            "multisample": {
+                "count": this.sampleCount
             }
         });
 
         // キャンバス用パイプライン（bgra8unorm）- Y軸反転シェーダーを使用
         const vertexShaderModuleMain = this.device.createShaderModule({
-            code: ShaderSource.getFillMainVertexShader()
+            "code": ShaderSource.getFillMainVertexShader()
         });
 
         const pipelineBGRA = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleMain, // Y軸反転ありシェーダー
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format, // 通常はbgra8unorm
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format, // 通常はbgra8unorm
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -192,42 +192,43 @@ export class PipelineManager
         this.pipelines.set("fill_bgra", pipelineBGRA); // キャンバス用
 
         // === メインアタッチメントのステンシル付きレンダーパス用 ===
-        // マスクモード時に使用（ステンシルテスト: not-equal 0 でマスク領域のみ描画）
+        // マスクモード時に使用（ステンシルテスト: equal で累積マスク値と一致する領域のみ描画）
+        // WebGL版: stencilFunc(EQUAL, mask & 0xff, mask)
         const pipelineBGRAStencil = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleMain, // Y軸反転ありシェーダー
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "not-equal", // ステンシル値 != 0 の部分のみ描画（マスク領域）
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep" // ステンシル値は変更しない
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "equal", // ステンシル値 == 参照値（累積マスク値）の部分のみ描画
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep" // ステンシル値は変更しない
                 },
-                stencilBack: {
-                    compare: "not-equal",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
+                "stencilBack": {
+                    "compare": "equal",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
                 },
-                stencilReadMask: 0xFF,
-                stencilWriteMask: 0x00
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0x00
             }
         });
         this.pipelines.set("fill_bgra_stencil", pipelineBGRAStencil); // マスク付きキャンバス用
@@ -248,37 +249,37 @@ export class PipelineManager
     {
         // 17 floats per vertex: position(2) + bezier(2) + color(4) + matrix(3+3+3)
         const vertexBufferLayout: GPUVertexBufferLayout = {
-            arrayStride: 17 * 4, // 17 floats (68 bytes)
-            attributes: [
+            "arrayStride": 17 * 4, // 17 floats (68 bytes)
+            "attributes": [
                 {
-                    shaderLocation: 0,
-                    offset: 0,
-                    format: "float32x2" // position (2 floats)
+                    "shaderLocation": 0,
+                    "offset": 0,
+                    "format": "float32x2" // position (2 floats)
                 },
                 {
-                    shaderLocation: 1,
-                    offset: 2 * 4,
-                    format: "float32x2" // bezier (2 floats)
+                    "shaderLocation": 1,
+                    "offset": 2 * 4,
+                    "format": "float32x2" // bezier (2 floats)
                 },
                 {
-                    shaderLocation: 2,
-                    offset: 4 * 4,
-                    format: "float32x4" // color (4 floats)
+                    "shaderLocation": 2,
+                    "offset": 4 * 4,
+                    "format": "float32x4" // color (4 floats)
                 },
                 {
-                    shaderLocation: 3,
-                    offset: 8 * 4,
-                    format: "float32x3" // matrix row 0 (3 floats)
+                    "shaderLocation": 3,
+                    "offset": 8 * 4,
+                    "format": "float32x3" // matrix row 0 (3 floats)
                 },
                 {
-                    shaderLocation: 4,
-                    offset: 11 * 4,
-                    format: "float32x3" // matrix row 1 (3 floats)
+                    "shaderLocation": 4,
+                    "offset": 11 * 4,
+                    "format": "float32x3" // matrix row 1 (3 floats)
                 },
                 {
-                    shaderLocation: 5,
-                    offset: 14 * 4,
-                    format: "float32x3" // matrix row 2 (3 floats)
+                    "shaderLocation": 5,
+                    "offset": 14 * 4,
+                    "format": "float32x3" // matrix row 2 (3 floats)
                 }
             ]
         };
@@ -287,48 +288,48 @@ export class PipelineManager
         // Front面: INCR_WRAP, Back面: DECR_WRAP
         // cullMode: none で両面を描画
         const stencilWritePipeline = this.device.createRenderPipeline({
-            layout: "auto",
-            vertex: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilWriteVertexShader()
+            "layout": "auto",
+            "vertex": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilWriteVertexShader()
                 }),
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilWriteFragmentShader()
+            "fragment": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilWriteFragmentShader()
                 }),
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    writeMask: 0 // カラー書き込み無効
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "writeMask": 0 // カラー書き込み無効
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none", // 両面を描画
-                frontFace: "ccw"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none", // 両面を描画
+                "frontFace": "ccw"
             },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "always",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "increment-wrap" // Front面（CCW）でインクリメント
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "increment-wrap" // Front面（CCW）でインクリメント
                 },
-                stencilBack: {
-                    compare: "always",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "decrement-wrap" // Back面（CW）でデクリメント
+                "stencilBack": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "decrement-wrap" // Back面（CW）でデクリメント
                 },
-                stencilReadMask: 0xFF,
-                stencilWriteMask: 0xFF
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
             },
-            multisample: {
-                count: this.sampleCount
+            "multisample": {
+                "count": this.sampleCount
             }
         });
         this.pipelines.set("stencil_write", stencilWritePipeline);
@@ -337,58 +338,58 @@ export class PipelineManager
         // WebGL版と同じ: stencilFunc(NOTEQUAL, 0) + stencilOp(KEEP, ZERO, ZERO)
         // WebGL版と同じく頂点バッファを使用（同じメッシュデータ）
         const stencilFillPipeline = this.device.createRenderPipeline({
-            layout: "auto",
-            vertex: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilFillVertexShader()
+            "layout": "auto",
+            "vertex": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilFillVertexShader()
                 }),
-                entryPoint: "main",
-                buffers: [vertexBufferLayout] // Pass 1と同じ頂点バッファを使用
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout] // Pass 1と同じ頂点バッファを使用
             },
-            fragment: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilFillFragmentShader()
+            "fragment": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilFillFragmentShader()
                 }),
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "not-equal", // ステンシル値 != 0 の部分に描画
-                    failOp: "keep",
-                    depthFailOp: "zero", // WebGL: ZERO
-                    passOp: "zero" // WebGL: ZERO - 描画後にステンシルをクリア
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "not-equal", // ステンシル値 != 0 の部分に描画
+                    "failOp": "keep",
+                    "depthFailOp": "zero", // WebGL: ZERO
+                    "passOp": "zero" // WebGL: ZERO - 描画後にステンシルをクリア
                 },
-                stencilBack: {
-                    compare: "not-equal",
-                    failOp: "keep",
-                    depthFailOp: "zero",
-                    passOp: "zero"
+                "stencilBack": {
+                    "compare": "not-equal",
+                    "failOp": "keep",
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
                 },
-                stencilReadMask: 0xFF,
-                stencilWriteMask: 0xFF
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
             },
-            multisample: {
-                count: this.sampleCount
+            "multisample": {
+                "count": this.sampleCount
             }
         });
         this.pipelines.set("stencil_fill", stencilFillPipeline);
@@ -400,58 +401,58 @@ export class PipelineManager
         // 3. このパイプラインで stencil > maskValue の部分のみ描画
         // passOpでステンシルをmaskValueにリセットし、後続の描画でもマスクが機能するようにする
         const stencilFillMaskedPipeline = this.device.createRenderPipeline({
-            layout: "auto",
-            vertex: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilFillVertexShader()
+            "layout": "auto",
+            "vertex": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilFillVertexShader()
                 }),
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilFillFragmentShader()
+            "fragment": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilFillFragmentShader()
                 }),
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "greater", // ステンシル値 > 参照値（maskValue）の部分のみ描画
-                    failOp: "keep",
-                    depthFailOp: "replace", // マスク値にリセット
-                    passOp: "replace" // 描画後、ステンシルをmaskValueにリセット
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "greater", // ステンシル値 > 参照値（maskValue）の部分のみ描画
+                    "failOp": "keep",
+                    "depthFailOp": "replace", // マスク値にリセット
+                    "passOp": "replace" // 描画後、ステンシルをmaskValueにリセット
                 },
-                stencilBack: {
-                    compare: "greater",
-                    failOp: "keep",
-                    depthFailOp: "replace",
-                    passOp: "replace"
+                "stencilBack": {
+                    "compare": "greater",
+                    "failOp": "keep",
+                    "depthFailOp": "replace",
+                    "passOp": "replace"
                 },
-                stencilReadMask: 0xFF,
-                stencilWriteMask: 0xFF // ステンシル書き込み有効（maskValueにリセット）
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF // ステンシル書き込み有効（maskValueにリセット）
             },
-            multisample: {
-                count: this.sampleCount
+            "multisample": {
+                "count": this.sampleCount
             }
         });
         this.pipelines.set("stencil_fill_masked", stencilFillMaskedPipeline);
@@ -467,14 +468,14 @@ export class PipelineManager
     {
         // 17 floats per vertex: position(2) + bezier(2) + color(4) + matrix(3+3+3)
         const vertexBufferLayout: GPUVertexBufferLayout = {
-            arrayStride: 17 * 4,
-            attributes: [
-                { shaderLocation: 0, offset: 0, format: "float32x2" },
-                { shaderLocation: 1, offset: 2 * 4, format: "float32x2" },
-                { shaderLocation: 2, offset: 4 * 4, format: "float32x4" },
-                { shaderLocation: 3, offset: 8 * 4, format: "float32x3" },
-                { shaderLocation: 4, offset: 11 * 4, format: "float32x3" },
-                { shaderLocation: 5, offset: 14 * 4, format: "float32x3" }
+            "arrayStride": 17 * 4,
+            "attributes": [
+                { "shaderLocation": 0, "offset": 0, "format": "float32x2" },
+                { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" },
+                { "shaderLocation": 2, "offset": 4 * 4, "format": "float32x4" },
+                { "shaderLocation": 3, "offset": 8 * 4, "format": "float32x3" },
+                { "shaderLocation": 4, "offset": 11 * 4, "format": "float32x3" },
+                { "shaderLocation": 5, "offset": 14 * 4, "format": "float32x3" }
             ]
         };
 
@@ -482,96 +483,149 @@ export class PipelineManager
         // WebGL版: gl.stencilOp(ZERO, INVERT, INVERT)
         // INVERT操作により、奇偶フィルルールでマスク形状を正しく処理
         const clipWritePipeline = this.device.createRenderPipeline({
-            layout: "auto",
-            vertex: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilWriteVertexShader()
+            "layout": "auto",
+            "vertex": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilWriteVertexShader()
                 }),
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilWriteFragmentShader()
+            "fragment": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilWriteFragmentShader()
                 }),
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    writeMask: 0 // カラー書き込み無効
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "writeMask": 0 // カラー書き込み無効
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "always",
-                    failOp: "zero",    // WebGL: ZERO
-                    depthFailOp: "invert", // WebGL: INVERT
-                    passOp: "invert"   // WebGL: INVERT
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "always",
+                    "failOp": "zero",    // WebGL: ZERO
+                    "depthFailOp": "invert", // WebGL: INVERT
+                    "passOp": "invert"   // WebGL: INVERT
                 },
-                stencilBack: {
-                    compare: "always",
-                    failOp: "zero",
-                    depthFailOp: "invert",
-                    passOp: "invert"
+                "stencilBack": {
+                    "compare": "always",
+                    "failOp": "zero",
+                    "depthFailOp": "invert",
+                    "passOp": "invert"
                 },
-                stencilReadMask: 0xFF,
-                stencilWriteMask: 0xFF
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
             },
-            multisample: {
-                count: this.sampleCount
+            "multisample": {
+                "count": this.sampleCount
             }
         });
         this.pipelines.set("clip_write", clipWritePipeline);
 
-        // メインアタッチメント用マスク書き込みパイプライン（BGRA8Unorm等のデバイスフォーマット用）
-        // Y軸反転シェーダーを使用（インスタンス描画と同じ座標系）
-        // WebGL版と同様にINVERT操作を使用
-        const clipWriteMainPipeline = this.device.createRenderPipeline({
-            layout: "auto",
-            vertex: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilWriteMainVertexShader()
-                }),
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
-            },
-            fragment: {
-                module: this.device.createShaderModule({
-                    code: ShaderSource.getStencilWriteFragmentShader()
-                }),
-                entryPoint: "main",
-                targets: [{
-                    format: this.format, // デバイスの推奨フォーマット（BGRA8Unorm等）
-                    writeMask: 0 // カラー書き込み無効
-                }]
-            },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
-            },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "always",
-                    failOp: "zero",    // WebGL: ZERO
-                    depthFailOp: "invert", // WebGL: INVERT
-                    passOp: "invert"   // WebGL: INVERT
-                },
-                stencilBack: {
-                    compare: "always",
-                    failOp: "zero",
-                    depthFailOp: "invert",
-                    passOp: "invert"
-                },
-                stencilReadMask: 0xFF,
-                stencilWriteMask: 0xFF
-            }
+        // メインアタッチメント用マスク書き込みパイプライン（レベル別、8レベルまでサポート）
+        // WebGL版: stencilMask(1 << level - 1) でビット単位のマスク
+        // 各レベルに対応するパイプラインを作成（stencilWriteMaskが異なる）
+        const vertexShaderModule = this.device.createShaderModule({
+            "code": ShaderSource.getStencilWriteMainVertexShader()
         });
-        this.pipelines.set("clip_write_main", clipWriteMainPipeline);
+        const fragmentShaderModule = this.device.createShaderModule({
+            "code": ShaderSource.getStencilWriteFragmentShader()
+        });
+
+        for (let level = 1; level <= 8; level++) {
+            const stencilWriteMask = 1 << level - 1; // level 1 → 0x01, level 2 → 0x02, ...
+            const clipWriteMainPipeline = this.device.createRenderPipeline({
+                "layout": "auto",
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": [vertexBufferLayout]
+                },
+                "fragment": {
+                    "module": fragmentShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "writeMask": 0 // カラー書き込み無効
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "depthStencil": {
+                    "format": "stencil8",
+                    "stencilFront": {
+                        "compare": "always",
+                        "failOp": "zero",
+                        "depthFailOp": "invert",
+                        "passOp": "invert"
+                    },
+                    "stencilBack": {
+                        "compare": "always",
+                        "failOp": "zero",
+                        "depthFailOp": "invert",
+                        "passOp": "invert"
+                    },
+                    "stencilReadMask": 0xFF,
+                    "stencilWriteMask": stencilWriteMask // レベルに応じたビットのみ書き込み
+                }
+            });
+            this.pipelines.set(`clip_write_main_${level}`, clipWriteMainPipeline);
+        }
+
+        // 後方互換性のため、clip_write_mainもlevel 1として登録
+        this.pipelines.set("clip_write_main", this.pipelines.get("clip_write_main_1")!);
+
+        // leaveMask用: 特定のビットをクリア（REPLACE操作で0に戻す）
+        // WebGL版: stencilMask(1 << clipLevel), stencilOp(REPLACE, REPLACE, REPLACE)
+        for (let level = 1; level <= 8; level++) {
+            const stencilWriteMask = 1 << level - 1;
+            const clipClearMainPipeline = this.device.createRenderPipeline({
+                "layout": "auto",
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": [vertexBufferLayout]
+                },
+                "fragment": {
+                    "module": fragmentShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "writeMask": 0
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "depthStencil": {
+                    "format": "stencil8",
+                    "stencilFront": {
+                        "compare": "always",
+                        "failOp": "replace",
+                        "depthFailOp": "replace",
+                        "passOp": "replace" // 参照値（0）で置き換え
+                    },
+                    "stencilBack": {
+                        "compare": "always",
+                        "failOp": "replace",
+                        "depthFailOp": "replace",
+                        "passOp": "replace"
+                    },
+                    "stencilReadMask": 0xFF,
+                    "stencilWriteMask": stencilWriteMask
+                }
+            });
+            this.pipelines.set(`clip_clear_main_${level}`, clipClearMainPipeline);
+        }
     }
 
     /**
@@ -581,11 +635,11 @@ export class PipelineManager
     private createMaskPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.VERTEX,
+                    "buffer": { "type": "uniform" }
                 }
             ]
         });
@@ -593,60 +647,60 @@ export class PipelineManager
         this.bindGroupLayouts.set("mask", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getMaskVertexShader()
+            "code": ShaderSource.getMaskVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getMaskFragmentShader()
+            "code": ShaderSource.getMaskFragmentShader()
         });
 
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: [{
-                    arrayStride: 4 * 4, // 2 floats (position) + 2 floats (bezier)
-                    attributes: [
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [{
+                    "arrayStride": 4 * 4, // 2 floats (position) + 2 floats (bezier)
+                    "attributes": [
                         {
-                            shaderLocation: 0,
-                            offset: 0,
-                            format: "float32x2" // position
+                            "shaderLocation": 0,
+                            "offset": 0,
+                            "format": "float32x2" // position
                         },
                         {
-                            shaderLocation: 1,
-                            offset: 2 * 4,
-                            format: "float32x2" // bezier
+                            "shaderLocation": 1,
+                            "offset": 2 * 4,
+                            "format": "float32x2" // bezier
                         }
                     ]
                 }]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
             // Note: Stencil support disabled for now (requires depth-stencil attachment)
             // TODO: Add depth-stencil configuration when implementing two-pass rendering
@@ -663,104 +717,104 @@ export class PipelineManager
     private createBasicPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [{
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                buffer: { type: "uniform" }
+            "entries": [{
+                "binding": 0,
+                "visibility": GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                "buffer": { "type": "uniform" }
             }]
         });
 
         this.bindGroupLayouts.set("basic", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBasicVertexShader()
+            "code": ShaderSource.getBasicVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBasicFragmentShader()
+            "code": ShaderSource.getBasicFragmentShader()
         });
 
         const vertexBufferLayout: GPUVertexBufferLayout = {
-            arrayStride: 4 * 4, // 2 floats for position + 2 floats for texCoord
-            attributes: [
+            "arrayStride": 4 * 4, // 2 floats for position + 2 floats for texCoord
+            "attributes": [
                 {
-                    shaderLocation: 0,
-                    offset: 0,
-                    format: "float32x2"
+                    "shaderLocation": 0,
+                    "offset": 0,
+                    "format": "float32x2"
                 },
                 {
-                    shaderLocation: 1,
-                    offset: 2 * 4,
-                    format: "float32x2"
+                    "shaderLocation": 1,
+                    "offset": 2 * 4,
+                    "format": "float32x2"
                 }
             ]
         };
 
         const blendState: GPUBlendState = {
-            color: {
-                srcFactor: "one",
-                dstFactor: "one-minus-src-alpha",
-                operation: "add"
+            "color": {
+                "srcFactor": "one",
+                "dstFactor": "one-minus-src-alpha",
+                "operation": "add"
             },
-            alpha: {
-                srcFactor: "one",
-                dstFactor: "one-minus-src-alpha",
-                operation: "add"
+            "alpha": {
+                "srcFactor": "one",
+                "dstFactor": "one-minus-src-alpha",
+                "operation": "add"
             }
         };
 
         // アトラステクスチャ用パイプライン（rgba8unorm）- MSAA対応
         const pipelineRGBA = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            multisample: {
-                count: this.sampleCount
+            "multisample": {
+                "count": this.sampleCount
             }
         });
 
         // キャンバス用パイプライン（bgra8unorm）- Y軸反転シェーダーを使用
         const vertexShaderModuleBGRA = this.device.createShaderModule({
-            code: ShaderSource.getBasicMainVertexShader()
+            "code": ShaderSource.getBasicMainVertexShader()
         });
 
         const pipelineBGRA = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModuleBGRA,
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleBGRA,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format, // 通常はbgra8unorm
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format, // 通常はbgra8unorm
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -775,21 +829,21 @@ export class PipelineManager
     private createTexturePipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -797,60 +851,60 @@ export class PipelineManager
         this.bindGroupLayouts.set("texture", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBasicVertexShader()
+            "code": ShaderSource.getBasicVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getTextureFragmentShader()
+            "code": ShaderSource.getTextureFragmentShader()
         });
 
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: [{
-                    arrayStride: 4 * 4,
-                    attributes: [
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [{
+                    "arrayStride": 4 * 4,
+                    "attributes": [
                         {
-                            shaderLocation: 0,
-                            offset: 0,
-                            format: "float32x2"
+                            "shaderLocation": 0,
+                            "offset": 0,
+                            "format": "float32x2"
                         },
                         {
-                            shaderLocation: 1,
-                            offset: 2 * 4,
-                            format: "float32x2"
+                            "shaderLocation": 1,
+                            "offset": 2 * 4,
+                            "format": "float32x2"
                         }
                     ]
                 }]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -859,21 +913,22 @@ export class PipelineManager
 
     /**
      * @description インスタンス描画用パイプラインを作成
+     *              WebGPU版は24 floats (96 bytes) per instance（padding含む）
      * @return {void}
      */
     private createInstancedPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -881,177 +936,174 @@ export class PipelineManager
         this.bindGroupLayouts.set("instanced", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getInstancedVertexShader()
+            "code": ShaderSource.getInstancedVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getInstancedFragmentShader()
+            "code": ShaderSource.getInstancedFragmentShader()
         });
 
+        // WebGPU版: 24 floats (96 bytes) per instance
+        // BlendInstancedManager.ts で padding (0, 0) を追加している
+        // textureRect: vec4 (offset 0)
+        // textureDim: vec4 (offset 16)
+        // matrixTx: vec4 (offset 32) - tx, ty, 0, 0 (padding)
+        // matrixScale: vec4 (offset 48)
+        // mulColor: vec4 (offset 64)
+        // addColor: vec4 (offset 80)
+        const instanceBufferLayout: GPUVertexBufferLayout = {
+            "arrayStride": 96, // 24 floats * 4 bytes = 96 bytes
+            "stepMode": "instance",
+            "attributes": [
+                {
+                    "shaderLocation": 2,
+                    "offset": 0,
+                    "format": "float32x4" // textureRect (4 floats)
+                },
+                {
+                    "shaderLocation": 3,
+                    "offset": 16,
+                    "format": "float32x4" // textureDim (4 floats)
+                },
+                {
+                    "shaderLocation": 4,
+                    "offset": 32,
+                    "format": "float32x4" // matrixTx + padding (4 floats)
+                },
+                {
+                    "shaderLocation": 5,
+                    "offset": 48,
+                    "format": "float32x4" // matrixScale (4 floats)
+                },
+                {
+                    "shaderLocation": 6,
+                    "offset": 64,
+                    "format": "float32x4" // mulColor (4 floats)
+                },
+                {
+                    "shaderLocation": 7,
+                    "offset": 80,
+                    "format": "float32x4" // addColor (4 floats)
+                }
+            ]
+        };
+
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: [
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [
                     // Vertex buffer
                     {
-                        arrayStride: 4 * 4, // 2 floats position + 2 floats texCoord
-                        stepMode: "vertex",
-                        attributes: [
+                        "arrayStride": 4 * 4, // 2 floats position + 2 floats texCoord
+                        "stepMode": "vertex",
+                        "attributes": [
                             {
-                                shaderLocation: 0,
-                                offset: 0,
-                                format: "float32x2" // position
+                                "shaderLocation": 0,
+                                "offset": 0,
+                                "format": "float32x2" // position
                             },
                             {
-                                shaderLocation: 1,
-                                offset: 2 * 4,
-                                format: "float32x2" // texCoord
+                                "shaderLocation": 1,
+                                "offset": 2 * 4,
+                                "format": "float32x2" // texCoord
                             }
                         ]
                     },
-                    // Instance buffer
-                    {
-                        arrayStride: 4 * 24, // 24 floats per instance (with padding)
-                        stepMode: "instance",
-                        attributes: [
-                            {
-                                shaderLocation: 2,
-                                offset: 0,
-                                format: "float32x4" // textureRect (4 floats)
-                            },
-                            {
-                                shaderLocation: 3,
-                                offset: 4 * 4,
-                                format: "float32x4" // textureDim (4 floats)
-                            },
-                            {
-                                shaderLocation: 4,
-                                offset: 8 * 4,
-                                format: "float32x4" // matrixTx (vec2) + padding (vec2) = 4 floats
-                            },
-                            {
-                                shaderLocation: 5,
-                                offset: 12 * 4,
-                                format: "float32x4" // matrixScale (4 floats)
-                            },
-                            {
-                                shaderLocation: 6,
-                                offset: 16 * 4,
-                                format: "float32x4" // mulColor (4 floats)
-                            },
-                            {
-                                shaderLocation: 7,
-                                offset: 20 * 4,
-                                format: "float32x4" // addColor (4 floats)
-                            }
-                        ]
-                    }
+                    instanceBufferLayout
                 ]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
         this.pipelines.set("instanced", pipeline);
 
         // === マスク付きインスタンス描画パイプライン ===
-        // ステンシルテスト: stencil != 0 の部分のみ描画（INVERT操作後の非ゼロ領域）
+        // ステンシルテスト: stencil == 参照値（累積マスク値）の部分のみ描画
         const maskedPipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: [
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [
                     // Vertex buffer
                     {
-                        arrayStride: 4 * 4,
-                        stepMode: "vertex",
-                        attributes: [
-                            { shaderLocation: 0, offset: 0, format: "float32x2" },
-                            { shaderLocation: 1, offset: 2 * 4, format: "float32x2" }
+                        "arrayStride": 4 * 4,
+                        "stepMode": "vertex",
+                        "attributes": [
+                            { "shaderLocation": 0, "offset": 0, "format": "float32x2" },
+                            { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" }
                         ]
                     },
-                    // Instance buffer
-                    {
-                        arrayStride: 4 * 24,
-                        stepMode: "instance",
-                        attributes: [
-                            { shaderLocation: 2, offset: 0, format: "float32x4" },
-                            { shaderLocation: 3, offset: 4 * 4, format: "float32x4" },
-                            { shaderLocation: 4, offset: 8 * 4, format: "float32x4" },
-                            { shaderLocation: 5, offset: 12 * 4, format: "float32x4" },
-                            { shaderLocation: 6, offset: 16 * 4, format: "float32x4" },
-                            { shaderLocation: 7, offset: 20 * 4, format: "float32x4" }
-                        ]
-                    }
+                    instanceBufferLayout
                 ]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "not-equal", // ステンシル値 != 0 の部分のみ描画（マスク領域）
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep" // ステンシル値は変更しない
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "equal", // ステンシル値 == 参照値（累積マスク値）の部分のみ描画
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep" // ステンシル値は変更しない
                 },
-                stencilBack: {
-                    compare: "not-equal",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
+                "stencilBack": {
+                    "compare": "equal",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
                 },
-                stencilReadMask: 0xFF,
-                stencilWriteMask: 0x00 // 描画時はステンシル書き込み無効
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0x00 // 描画時はステンシル書き込み無効
             }
         });
         this.pipelines.set("instanced_masked", maskedPipeline);
@@ -1066,21 +1118,21 @@ export class PipelineManager
     {
         // グラデーションフィル用バインドグループレイアウト
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" } // GradientUniforms
+                    "binding": 0,
+                    "visibility": GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" } // GradientUniforms
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {} // グラデーションLUTサンプラー
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {} // グラデーションLUTサンプラー
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {} // グラデーションLUTテクスチャ
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {} // グラデーションLUTテクスチャ
                 }
             ]
         });
@@ -1088,92 +1140,92 @@ export class PipelineManager
         this.bindGroupLayouts.set("gradient_fill", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getGradientFillVertexShader()
+            "code": ShaderSource.getGradientFillVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getGradientFillFragmentShader()
+            "code": ShaderSource.getGradientFillFragmentShader()
         });
 
         // 17 floats per vertex (fill用と同じ)
         const vertexBufferLayout: GPUVertexBufferLayout = {
-            arrayStride: 17 * 4,
-            attributes: [
-                { shaderLocation: 0, offset: 0, format: "float32x2" },      // position
-                { shaderLocation: 1, offset: 2 * 4, format: "float32x2" },  // bezier
-                { shaderLocation: 2, offset: 4 * 4, format: "float32x4" },  // color
-                { shaderLocation: 3, offset: 8 * 4, format: "float32x3" },  // matrix row 0
-                { shaderLocation: 4, offset: 11 * 4, format: "float32x3" }, // matrix row 1
-                { shaderLocation: 5, offset: 14 * 4, format: "float32x3" }  // matrix row 2
+            "arrayStride": 17 * 4,
+            "attributes": [
+                { "shaderLocation": 0, "offset": 0, "format": "float32x2" },      // position
+                { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" },  // bezier
+                { "shaderLocation": 2, "offset": 4 * 4, "format": "float32x4" },  // color
+                { "shaderLocation": 3, "offset": 8 * 4, "format": "float32x3" },  // matrix row 0
+                { "shaderLocation": 4, "offset": 11 * 4, "format": "float32x3" }, // matrix row 1
+                { "shaderLocation": 5, "offset": 14 * 4, "format": "float32x3" }  // matrix row 2
             ]
         };
 
         const blendState: GPUBlendState = {
-            color: {
-                srcFactor: "one",
-                dstFactor: "one-minus-src-alpha",
-                operation: "add"
+            "color": {
+                "srcFactor": "one",
+                "dstFactor": "one-minus-src-alpha",
+                "operation": "add"
             },
-            alpha: {
-                srcFactor: "one",
-                dstFactor: "one-minus-src-alpha",
-                operation: "add"
+            "alpha": {
+                "srcFactor": "one",
+                "dstFactor": "one-minus-src-alpha",
+                "operation": "add"
             }
         };
 
         // アトラステクスチャ用（rgba8unorm）- ステンシルなし - MSAA対応
         const pipelineRGBA = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            multisample: {
-                count: this.sampleCount
+            "multisample": {
+                "count": this.sampleCount
             }
         });
 
         // キャンバス用（bgra8unorm）- ステンシルなし
         // Y軸反転シェーダーを使用
         const vertexShaderModuleMain = this.device.createShaderModule({
-            code: ShaderSource.getGradientFillMainVertexShader()
+            "code": ShaderSource.getGradientFillMainVertexShader()
         });
 
         const pipelineBGRA = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleMain, // Y軸反転ありシェーダー
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
             // Note: キャンバス描画時はステンシルバッファがないためdepthStencilは設定しない
         });
@@ -1181,46 +1233,47 @@ export class PipelineManager
         this.pipelines.set("gradient_fill", pipelineRGBA);
         this.pipelines.set("gradient_fill_bgra", pipelineBGRA);
 
-        // === アトラスのステンシル付きレンダーパス用 ===
-        // 2パスステンシルフィルのレンダーパス内でgradientFillが呼ばれた場合に使用
+        // === アトラスのステンシル付きレンダーパス用（2パス処理のPass 2用） ===
+        // NOT_EQUAL 0テストでグラデーションを描画し、ステンシルをクリア
+        // WebGL版: stencilFunc(NOTEQUAL, 0) + stencilOp(KEEP, ZERO, ZERO)
         const pipelineRGBAStencil = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule, // Y軸反転なしシェーダー
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule, // Y軸反転なしシェーダー
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "always",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "not-equal", // ステンシル値 != 0 の部分に描画
+                    "failOp": "keep",
+                    "depthFailOp": "zero", // ステンシルをクリア
+                    "passOp": "zero"
                 },
-                stencilBack: {
-                    compare: "always",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
+                "stencilBack": {
+                    "compare": "not-equal",
+                    "failOp": "keep",
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
                 },
-                stencilReadMask: 0x00,
-                stencilWriteMask: 0x00
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
             },
-            multisample: {
-                count: this.sampleCount
+            "multisample": {
+                "count": this.sampleCount
             }
         });
         this.pipelines.set("gradient_fill_stencil", pipelineRGBAStencil);
@@ -1228,40 +1281,40 @@ export class PipelineManager
         // === メインアタッチメントのステンシル付きレンダーパス用 ===
         // マスクモード時に使用
         const pipelineBGRAStencil = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleMain, // Y軸反転ありシェーダー
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "not-equal", // ステンシル値 != 0 の部分のみ描画（マスク領域）
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "equal", // ステンシル値 == 参照値（累積マスク値）の部分のみ描画
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
                 },
-                stencilBack: {
-                    compare: "not-equal",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
+                "stencilBack": {
+                    "compare": "equal",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
                 },
-                stencilReadMask: 0xFF,
-                stencilWriteMask: 0x00
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0x00
             }
         });
         this.pipelines.set("gradient_fill_bgra_stencil", pipelineBGRAStencil);
@@ -1275,21 +1328,21 @@ export class PipelineManager
     private createBitmapFillPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -1297,92 +1350,92 @@ export class PipelineManager
         this.bindGroupLayouts.set("bitmap_fill", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBitmapFillVertexShader()
+            "code": ShaderSource.getBitmapFillVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBitmapFillFragmentShader()
+            "code": ShaderSource.getBitmapFillFragmentShader()
         });
 
         // 17 floats per vertex (fill用と同じ)
         const vertexBufferLayout: GPUVertexBufferLayout = {
-            arrayStride: 17 * 4,
-            attributes: [
-                { shaderLocation: 0, offset: 0, format: "float32x2" },      // position
-                { shaderLocation: 1, offset: 2 * 4, format: "float32x2" },  // bezier
-                { shaderLocation: 2, offset: 4 * 4, format: "float32x4" },  // color
-                { shaderLocation: 3, offset: 8 * 4, format: "float32x3" },  // matrix row 0
-                { shaderLocation: 4, offset: 11 * 4, format: "float32x3" }, // matrix row 1
-                { shaderLocation: 5, offset: 14 * 4, format: "float32x3" }  // matrix row 2
+            "arrayStride": 17 * 4,
+            "attributes": [
+                { "shaderLocation": 0, "offset": 0, "format": "float32x2" },      // position
+                { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" },  // bezier
+                { "shaderLocation": 2, "offset": 4 * 4, "format": "float32x4" },  // color
+                { "shaderLocation": 3, "offset": 8 * 4, "format": "float32x3" },  // matrix row 0
+                { "shaderLocation": 4, "offset": 11 * 4, "format": "float32x3" }, // matrix row 1
+                { "shaderLocation": 5, "offset": 14 * 4, "format": "float32x3" }  // matrix row 2
             ]
         };
 
         const blendState: GPUBlendState = {
-            color: {
-                srcFactor: "one",
-                dstFactor: "one-minus-src-alpha",
-                operation: "add"
+            "color": {
+                "srcFactor": "one",
+                "dstFactor": "one-minus-src-alpha",
+                "operation": "add"
             },
-            alpha: {
-                srcFactor: "one",
-                dstFactor: "one-minus-src-alpha",
-                operation: "add"
+            "alpha": {
+                "srcFactor": "one",
+                "dstFactor": "one-minus-src-alpha",
+                "operation": "add"
             }
         };
 
         // アトラステクスチャ用（rgba8unorm）- ステンシルなし - MSAA対応
         const pipelineRGBA = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            multisample: {
-                count: this.sampleCount
+            "multisample": {
+                "count": this.sampleCount
             }
         });
 
         // キャンバス用（bgra8unorm）- ステンシルなし
         // Y軸反転シェーダーを使用
         const vertexShaderModuleMain = this.device.createShaderModule({
-            code: ShaderSource.getBitmapFillMainVertexShader()
+            "code": ShaderSource.getBitmapFillMainVertexShader()
         });
 
         const pipelineBGRA = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleMain, // Y軸反転ありシェーダー
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
             // Note: キャンバス描画時はステンシルバッファがないためdepthStencilは設定しない
         });
@@ -1390,46 +1443,47 @@ export class PipelineManager
         this.pipelines.set("bitmap_fill", pipelineRGBA);
         this.pipelines.set("bitmap_fill_bgra", pipelineBGRA);
 
-        // === アトラスのステンシル付きレンダーパス用 ===
-        // 2パスステンシルフィルのレンダーパス内でbitmapFillが呼ばれた場合に使用
+        // === アトラスのステンシル付きレンダーパス用（2パス処理のPass 2用） ===
+        // NOT_EQUAL 0テストでビットマップを描画し、ステンシルをクリア
+        // WebGL版: stencilFunc(NOTEQUAL, 0) + stencilOp(KEEP, ZERO, ZERO)
         const pipelineRGBAStencil = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule, // Y軸反転なしシェーダー
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule, // Y軸反転なしシェーダー
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "always",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "not-equal", // ステンシル値 != 0 の部分に描画
+                    "failOp": "keep",
+                    "depthFailOp": "zero", // ステンシルをクリア
+                    "passOp": "zero"
                 },
-                stencilBack: {
-                    compare: "always",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
+                "stencilBack": {
+                    "compare": "not-equal",
+                    "failOp": "keep",
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
                 },
-                stencilReadMask: 0x00,
-                stencilWriteMask: 0x00
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
             },
-            multisample: {
-                count: this.sampleCount
+            "multisample": {
+                "count": this.sampleCount
             }
         });
         this.pipelines.set("bitmap_fill_stencil", pipelineRGBAStencil);
@@ -1437,40 +1491,40 @@ export class PipelineManager
         // === メインアタッチメントのステンシル付きレンダーパス用 ===
         // マスクモード時に使用
         const pipelineBGRAStencil = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModuleMain, // Y軸反転ありシェーダー
-                entryPoint: "main",
-                buffers: [vertexBufferLayout]
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleMain, // Y軸反転ありシェーダー
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: blendState
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": blendState
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             },
-            depthStencil: {
-                format: "stencil8",
-                stencilFront: {
-                    compare: "not-equal", // ステンシル値 != 0 の部分のみ描画（マスク領域）
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "equal", // ステンシル値 == 参照値（累積マスク値）の部分のみ描画
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
                 },
-                stencilBack: {
-                    compare: "not-equal",
-                    failOp: "keep",
-                    depthFailOp: "keep",
-                    passOp: "keep"
+                "stencilBack": {
+                    "compare": "equal",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
                 },
-                stencilReadMask: 0xFF,
-                stencilWriteMask: 0x00
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0x00
             }
         });
         this.pipelines.set("bitmap_fill_bgra_stencil", pipelineBGRAStencil);
@@ -1483,36 +1537,36 @@ export class PipelineManager
     private createBlendPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 3,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 3,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 },
                 {
-                    binding: 4,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 4,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 5,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 5,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -1520,60 +1574,60 @@ export class PipelineManager
         this.bindGroupLayouts.set("blend", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBasicVertexShader()
+            "code": ShaderSource.getBasicVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBlendFragmentShader()
+            "code": ShaderSource.getBlendFragmentShader()
         });
 
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: [{
-                    arrayStride: 4 * 4,
-                    attributes: [
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [{
+                    "arrayStride": 4 * 4,
+                    "attributes": [
                         {
-                            shaderLocation: 0,
-                            offset: 0,
-                            format: "float32x2"
+                            "shaderLocation": 0,
+                            "offset": 0,
+                            "format": "float32x2"
                         },
                         {
-                            shaderLocation: 1,
-                            offset: 2 * 4,
-                            format: "float32x2"
+                            "shaderLocation": 1,
+                            "offset": 2 * 4,
+                            "format": "float32x2"
                         }
                     ]
                 }]
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -1588,21 +1642,21 @@ export class PipelineManager
     private createBlurFilterPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -1611,47 +1665,47 @@ export class PipelineManager
 
         // 一般的なブラー値用のパイプラインを事前に作成（halfBlur = 1〜16）
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBlurFilterVertexShader()
+            "code": ShaderSource.getBlurFilterVertexShader()
         });
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         for (let halfBlur = 1; halfBlur <= 16; halfBlur++) {
             const fragmentShaderModule = this.device.createShaderModule({
-                code: ShaderSource.getBlurFilterFragmentShader(halfBlur)
+                "code": ShaderSource.getBlurFilterFragmentShader(halfBlur)
             });
 
             const pipeline = this.device.createRenderPipeline({
-                layout: pipelineLayout,
-                vertex: {
-                    module: vertexShaderModule,
-                    entryPoint: "main",
-                    buffers: [] // フルスクリーンクワッドなので頂点バッファ不要
+                "layout": pipelineLayout,
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": [] // フルスクリーンクワッドなので頂点バッファ不要
                 },
-                fragment: {
-                    module: fragmentShaderModule,
-                    entryPoint: "main",
-                    targets: [{
-                        format: "rgba8unorm",
-                        blend: {
-                            color: {
-                                srcFactor: "one",
-                                dstFactor: "zero",
-                                operation: "add"
+                "fragment": {
+                    "module": fragmentShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": "rgba8unorm",
+                        "blend": {
+                            "color": {
+                                "srcFactor": "one",
+                                "dstFactor": "zero",
+                                "operation": "add"
                             },
-                            alpha: {
-                                srcFactor: "one",
-                                dstFactor: "zero",
-                                operation: "add"
+                            "alpha": {
+                                "srcFactor": "one",
+                                "dstFactor": "zero",
+                                "operation": "add"
                             }
                         }
                     }]
                 },
-                primitive: {
-                    topology: "triangle-list",
-                    cullMode: "none"
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
                 }
             });
 
@@ -1667,21 +1721,21 @@ export class PipelineManager
     private createTextureCopyPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -1689,46 +1743,46 @@ export class PipelineManager
         this.bindGroupLayouts.set("texture_copy", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBlurFilterVertexShader() // 同じフルスクリーンクワッド
+            "code": ShaderSource.getBlurFilterVertexShader() // 同じフルスクリーンクワッド
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getTextureCopyFragmentShader()
+            "code": ShaderSource.getTextureCopyFragmentShader()
         });
 
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: []
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "zero",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "zero",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -1736,34 +1790,34 @@ export class PipelineManager
 
         // スワップチェーン用（bgra8unorm）
         const pipelineBGRA = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: []
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: this.format,
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "zero",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "zero",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
         this.pipelines.set("texture_copy_bgra", pipelineBGRA);
@@ -1776,21 +1830,21 @@ export class PipelineManager
     private createColorMatrixFilterPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -1798,46 +1852,46 @@ export class PipelineManager
         this.bindGroupLayouts.set("color_matrix_filter", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBlurFilterVertexShader() // 同じフルスクリーンクワッド
+            "code": ShaderSource.getBlurFilterVertexShader() // 同じフルスクリーンクワッド
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getColorMatrixFilterFragmentShader()
+            "code": ShaderSource.getColorMatrixFilterFragmentShader()
         });
 
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: []
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "zero",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "zero",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -1851,26 +1905,26 @@ export class PipelineManager
     private createGlowFilterPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 },
                 {
-                    binding: 3,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 3,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -1878,46 +1932,46 @@ export class PipelineManager
         this.bindGroupLayouts.set("glow_filter", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBlurFilterVertexShader()
+            "code": ShaderSource.getBlurFilterVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getGlowFilterFragmentShader()
+            "code": ShaderSource.getGlowFilterFragmentShader()
         });
 
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: []
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -1931,26 +1985,26 @@ export class PipelineManager
     private createDropShadowFilterPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 },
                 {
-                    binding: 3,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 3,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -1958,46 +2012,46 @@ export class PipelineManager
         this.bindGroupLayouts.set("drop_shadow_filter", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBlurFilterVertexShader()
+            "code": ShaderSource.getBlurFilterVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getDropShadowFilterFragmentShader()
+            "code": ShaderSource.getDropShadowFilterFragmentShader()
         });
 
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: []
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -2011,26 +2065,26 @@ export class PipelineManager
     private createBevelFilterPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 },
                 {
-                    binding: 3,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 3,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -2038,46 +2092,46 @@ export class PipelineManager
         this.bindGroupLayouts.set("bevel_filter", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBlurFilterVertexShader()
+            "code": ShaderSource.getBlurFilterVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBevelFilterFragmentShader()
+            "code": ShaderSource.getBevelFilterFragmentShader()
         });
 
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: []
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -2091,31 +2145,31 @@ export class PipelineManager
     private createGradientGlowFilterPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 },
                 {
-                    binding: 3,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 3,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 },
                 {
-                    binding: 4,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 4,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -2123,46 +2177,46 @@ export class PipelineManager
         this.bindGroupLayouts.set("gradient_glow_filter", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBlurFilterVertexShader()
+            "code": ShaderSource.getBlurFilterVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getGradientGlowFilterFragmentShader()
+            "code": ShaderSource.getGradientGlowFilterFragmentShader()
         });
 
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: []
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -2176,31 +2230,31 @@ export class PipelineManager
     private createGradientBevelFilterPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 },
                 {
-                    binding: 3,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 3,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 },
                 {
-                    binding: 4,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 4,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -2208,46 +2262,46 @@ export class PipelineManager
         this.bindGroupLayouts.set("gradient_bevel_filter", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBlurFilterVertexShader()
+            "code": ShaderSource.getBlurFilterVertexShader()
         });
 
         const fragmentShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getGradientBevelFilterFragmentShader()
+            "code": ShaderSource.getGradientBevelFilterFragmentShader()
         });
 
         const pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "main",
-                buffers: []
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
             },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "main",
-                targets: [{
-                    format: "rgba8unorm",
-                    blend: {
-                        color: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         },
-                        alpha: {
-                            srcFactor: "one",
-                            dstFactor: "one-minus-src-alpha",
-                            operation: "add"
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
                         }
                     }
                 }]
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none"
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
             }
         });
 
@@ -2262,26 +2316,26 @@ export class PipelineManager
     private createComplexBlendPipelines(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
+            "entries": [
                 {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
                 },
                 {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
                 },
                 {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 },
                 {
-                    binding: 3,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
+                    "binding": 3,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
             ]
         });
@@ -2289,11 +2343,11 @@ export class PipelineManager
         this.bindGroupLayouts.set("complex_blend", bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout]
+            "bindGroupLayouts": [bindGroupLayout]
         });
 
         const vertexShaderModule = this.device.createShaderModule({
-            code: ShaderSource.getBlurFilterVertexShader() // フルスクリーンクワッド
+            "code": ShaderSource.getBlurFilterVertexShader() // フルスクリーンクワッド
         });
 
         const blendModes = [
@@ -2309,38 +2363,38 @@ export class PipelineManager
 
         for (const blendMode of blendModes) {
             const fragmentShaderModule = this.device.createShaderModule({
-                code: ShaderSource.getComplexBlendFragmentShader(blendMode)
+                "code": ShaderSource.getComplexBlendFragmentShader(blendMode)
             });
 
             const pipeline = this.device.createRenderPipeline({
-                layout: pipelineLayout,
-                vertex: {
-                    module: vertexShaderModule,
-                    entryPoint: "main",
-                    buffers: []
+                "layout": pipelineLayout,
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": []
                 },
-                fragment: {
-                    module: fragmentShaderModule,
-                    entryPoint: "main",
-                    targets: [{
-                        format: this.format,
-                        blend: {
-                            color: {
-                                srcFactor: "one",
-                                dstFactor: "zero",
-                                operation: "add"
+                "fragment": {
+                    "module": fragmentShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "blend": {
+                            "color": {
+                                "srcFactor": "one",
+                                "dstFactor": "zero",
+                                "operation": "add"
                             },
-                            alpha: {
-                                srcFactor: "one",
-                                dstFactor: "zero",
-                                operation: "add"
+                            "alpha": {
+                                "srcFactor": "one",
+                                "dstFactor": "zero",
+                                "operation": "add"
                             }
                         }
                     }]
                 },
-                primitive: {
-                    topology: "triangle-list",
-                    cullMode: "none"
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
                 }
             });
 

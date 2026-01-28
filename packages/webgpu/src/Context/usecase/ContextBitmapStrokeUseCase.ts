@@ -81,16 +81,16 @@ export const execute = (
 
     // ビットマップテクスチャを作成
     const bitmapTexture = device.createTexture({
-        size: { width, height },
-        format: "rgba8unorm",
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+        "size": { width, height },
+        "format": "rgba8unorm",
+        "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
     });
 
     // ピクセルデータをテクスチャに転送
     device.queue.writeTexture(
-        { texture: bitmapTexture },
+        { "texture": bitmapTexture },
         pixels.buffer,
-        { bytesPerRow: width * 4, rowsPerImage: height, offset: pixels.byteOffset },
+        { "bytesPerRow": width * 4, "rowsPerImage": height, "offset": pixels.byteOffset },
         { width, height }
     );
 
@@ -99,18 +99,21 @@ export const execute = (
 
     // Uniformバッファを作成
     const uniformData = new Float32Array(16);
-    // mat3x3 (各列がvec4にパディング)
-    uniformData[0] = computedBitmapMatrix[0];
-    uniformData[1] = computedBitmapMatrix[1];
-    uniformData[2] = computedBitmapMatrix[2];
+    // mat3x3 (WGSL column-major: 各列がvec4にパディング)
+    // computedBitmapMatrixは行優先で格納されているため、列優先に変換
+    // Row-major: [row0: a,b,0] [row1: c,d,0] [row2: tx,ty,1]
+    // Column-major: [col0: a,c,tx] [col1: b,d,ty] [col2: 0,0,1]
+    uniformData[0] = computedBitmapMatrix[0];  // column 0, row 0 (a)
+    uniformData[1] = computedBitmapMatrix[3];  // column 0, row 1 (c)
+    uniformData[2] = computedBitmapMatrix[6];  // column 0, row 2 (tx)
     uniformData[3] = 0; // padding
-    uniformData[4] = computedBitmapMatrix[3];
-    uniformData[5] = computedBitmapMatrix[4];
-    uniformData[6] = computedBitmapMatrix[5];
+    uniformData[4] = computedBitmapMatrix[1];  // column 1, row 0 (b)
+    uniformData[5] = computedBitmapMatrix[4];  // column 1, row 1 (d)
+    uniformData[6] = computedBitmapMatrix[7];  // column 1, row 2 (ty)
     uniformData[7] = 0; // padding
-    uniformData[8] = computedBitmapMatrix[6];
-    uniformData[9] = computedBitmapMatrix[7];
-    uniformData[10] = computedBitmapMatrix[8];
+    uniformData[8] = computedBitmapMatrix[2];  // column 2, row 0 (0)
+    uniformData[9] = computedBitmapMatrix[5];  // column 2, row 1 (0)
+    uniformData[10] = computedBitmapMatrix[8]; // column 2, row 2 (1)
     uniformData[11] = 0; // padding
     // ビットマップパラメータ
     uniformData[12] = width;
@@ -126,10 +129,10 @@ export const execute = (
 
     // サンプラーを作成
     const sampler = device.createSampler({
-        magFilter: smooth ? "linear" : "nearest",
-        minFilter: smooth ? "linear" : "nearest",
-        addressModeU: repeat ? "repeat" : "clamp-to-edge",
-        addressModeV: repeat ? "repeat" : "clamp-to-edge"
+        "magFilter": smooth ? "linear" : "nearest",
+        "minFilter": smooth ? "linear" : "nearest",
+        "addressModeU": repeat ? "repeat" : "clamp-to-edge",
+        "addressModeV": repeat ? "repeat" : "clamp-to-edge"
     });
 
     // バインドグループを作成
@@ -141,11 +144,11 @@ export const execute = (
     }
 
     const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
-            { binding: 0, resource: { buffer: uniformBuffer } },
-            { binding: 1, resource: sampler },
-            { binding: 2, resource: bitmapTexture.createView() }
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": bitmapTexture.createView() }
         ]
     });
 

@@ -106,7 +106,7 @@ export class SamplerCache
     getStats(): { size: number }
     {
         return {
-            size: this.cache.size
+            "size": this.cache.size
         };
     }
 

@@ -169,3 +169,21 @@ export const $clipBounds: Map<number, Float32Array> = new Map();
  * @private
  */
 export const $clipLevels: Map<number, number> = new Map();
+
+/**
+ * @description マスク関連の状態をリセット
+ *              Reset all mask-related state
+ *
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $resetMaskState = (): void =>
+{
+    $maskDrawingState = false;
+    $maskTestEnabled = false;
+    $maskStencilReference = 0;
+    $maskAttachmentStack.length = 0;
+    $clipBounds.clear();
+    $clipLevels.clear();
+};

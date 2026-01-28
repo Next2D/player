@@ -1,6 +1,7 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IBounds } from "./interface/IBounds";
+import type { IPath } from "./interface/IPath";
 import type { Node } from "@next2d/texture-packer";
 import { TexturePacker } from "@next2d/texture-packer";
 import { WebGPUUtil, $setContext } from "./WebGPUUtil";
@@ -17,6 +18,11 @@ import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskSer
 import { execute as maskSetMaskBoundsService } from "./Mask/service/MaskSetMaskBoundsService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
 import { execute as maskLeaveMaskUseCase } from "./Mask/usecase/MaskLeaveMaskUseCase";
+import {
+    $isMaskTestEnabled,
+    $getMaskStencilReference,
+    $resetMaskState
+} from "./Mask";
 import { execute as meshFillGenerateUseCase } from "./Mesh/usecase/MeshFillGenerateUseCase";
 // Note: MeshGradientStrokeGenerateUseCase and MeshBitmapStrokeGenerateUseCase
 // are now used via ContextGradientStrokeUseCase and ContextBitmapStrokeUseCase
@@ -48,7 +54,7 @@ import { execute as contextGradientFillUseCase } from "./Context/usecase/Context
 import { execute as contextBitmapFillUseCase } from "./Context/usecase/ContextBitmapFillUseCase";
 import { execute as contextGradientStrokeUseCase } from "./Context/usecase/ContextGradientStrokeUseCase";
 import { execute as contextBitmapStrokeUseCase } from "./Context/usecase/ContextBitmapStrokeUseCase";
-import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStrokeUseCase";
+// Note: ContextStrokeUseCase is no longer used - stroke rendering is now inline in stroke() method
 import { execute as contextClipUseCase } from "./Context/usecase/ContextClipUseCase";
 import { execute as contextDrawArraysInstancedUseCase } from "./Context/usecase/ContextDrawArraysInstancedUseCase";
 import { execute as contextProcessComplexBlendQueueUseCase } from "./Context/usecase/ContextProcessComplexBlendQueueUseCase";
@@ -86,7 +92,7 @@ export class Context
     private preferredFormat: GPUTextureFormat;
     private commandEncoder: GPUCommandEncoder | null = null;
     private renderPassEncoder: GPURenderPassEncoder | null = null;
-    
+
     // Main canvas texture (for final display) - acquired once per frame
     private mainTexture: GPUTexture | null = null;
     private mainTextureView: GPUTextureView | null = null;
@@ -94,7 +100,7 @@ export class Context
 
     // フレームごとの一時テクスチャ（endFrame()で解放）
     private frameTextures: GPUTexture[] = [];
-    
+
     // Current rendering target (could be main or atlas)
     private currentRenderTarget: GPUTextureView | null = null;
 
@@ -134,7 +140,7 @@ export class Context
 
         WebGPUUtil.setDevice(device);
         WebGPUUtil.setDevicePixelRatio(device_pixel_ratio);
-        
+
         // Set render max size similar to WebGL (half of max texture size, capped at 4096)
         const maxTextureSize = device.limits.maxTextureDimension2D;
         const renderMaxSize = Math.min(4096, maxTextureSize / 2);
@@ -172,9 +178,9 @@ export class Context
         };
 
         canvas_context.configure({
-            device: device,
-            format: preferred_format,
-            alphaMode: "premultiplied"
+            "device": device,
+            "format": preferred_format,
+            "alphaMode": "premultiplied"
         });
 
         // 初期ビューポートサイズをキャンバスサイズに設定
@@ -251,26 +257,26 @@ export class Context
 
         // メインアタッチメントにステンシルがある場合はステンシル付きレンダーパスを使用
         const renderPassDescriptor: GPURenderPassDescriptor = {
-            colorAttachments: [{
-                view: this.$mainAttachmentObject.texture.view,
-                clearValue: {
-                    r: this.$clearColorR,
-                    g: this.$clearColorG,
-                    b: this.$clearColorB,
-                    a: this.$clearColorA
+            "colorAttachments": [{
+                "view": this.$mainAttachmentObject.texture.view,
+                "clearValue": {
+                    "r": this.$clearColorR,
+                    "g": this.$clearColorG,
+                    "b": this.$clearColorB,
+                    "a": this.$clearColorA
                 },
-                loadOp: "clear",
-                storeOp: "store"
+                "loadOp": "clear",
+                "storeOp": "store"
             }]
         };
 
         // ステンシルバッファもクリア
         if (this.$mainAttachmentObject.stencil?.view) {
             renderPassDescriptor.depthStencilAttachment = {
-                view: this.$mainAttachmentObject.stencil.view,
-                stencilClearValue: 0,
-                stencilLoadOp: "clear",
-                stencilStoreOp: "store"
+                "view": this.$mainAttachmentObject.stencil.view,
+                "stencilClearValue": 0,
+                "stencilLoadOp": "clear",
+                "stencilStoreOp": "store"
             };
         }
 
@@ -289,34 +295,89 @@ export class Context
      */
     resize (width: number, height: number, cache_clear: boolean = true): void
     {
+        // インスタンス配列をクリア（WebGL版と同じ）
+        this.clearArraysInstanced();
+
+        // フレームごとの一時テクスチャをクリア
+        for (const texture of this.frameTextures) {
+            texture.destroy();
+        }
+        this.frameTextures = [];
+
+        // フレーム状態をリセット（リサイズ中は新しいフレームを開始できるようにする）
+        this.frameStarted = false;
+        this.commandEncoder = null;
+        this.renderPassEncoder = null;
+        this.currentRenderTarget = null;
+
+        // マスク状態をリセット
+        $resetMaskState();
+
         // キャンバスのサイズを更新
         const canvas = this.canvasContext.canvas;
 
         // 型チェックを安全に実行（Worker環境対応）
-        if (canvas && 'width' in canvas && 'height' in canvas) {
+        if (canvas && "width" in canvas && "height" in canvas) {
             (canvas as any).width = width;
             (canvas as any).height = height;
+        }
+
+        // WebGL版と同じ: スタックにあるアタッチメントも解放
+        if (this.$stackAttachmentObject.length) {
+            for (let idx = 0; idx < this.$stackAttachmentObject.length; ++idx) {
+                const attachmentObject = this.$stackAttachmentObject[idx];
+                if (!attachmentObject) {
+                    continue;
+                }
+                // アタッチメントのリソースを直接解放
+                // Note: スタック内のアタッチメントは名前で管理されていないため、
+                // リソースを直接破棄する
+                if (attachmentObject.texture) {
+                    attachmentObject.texture.resource.destroy();
+                }
+                if (attachmentObject.stencil) {
+                    attachmentObject.stencil.resource.destroy();
+                }
+                if (attachmentObject.msaaTexture) {
+                    attachmentObject.msaaTexture.resource.destroy();
+                }
+                if (attachmentObject.msaaStencil) {
+                    attachmentObject.msaaStencil.resource.destroy();
+                }
+            }
+            this.$stackAttachmentObject.length = 0;
+        }
+
+        // 既存のメインアタッチメントを破棄
+        if (this.$mainAttachmentObject) {
+            this.frameBufferManager.destroyAttachment("main");
         }
 
         // 共有アタッチメントをクリア
         if (cache_clear) {
             $clearGradientAttachmentObjects();
             $clearFilterGradientAttachment();
-            // アトラスをリセット（WebGL版と同じ）
+            // アトラスのパッキングデータをリセット（WebGL版と同じ）
             $resetAtlas();
+            // FrameBufferManagerのアトラステクスチャを再作成（古いコンテンツをクリア）
+            this.frameBufferManager.destroyAttachment("atlas");
+            this.frameBufferManager.createAttachment("atlas", 4096, 4096);
         }
+
+        // アンバインド（WebGL版と同じ）
+        this.frameBufferManager.setCurrentAttachment(null);
 
         // canvasContextを再設定
         this.canvasContext.configure({
-            device: this.device,
-            format: this.preferredFormat,
-            alphaMode: "premultiplied"
+            "device": this.device,
+            "format": this.preferredFormat,
+            "alphaMode": "premultiplied"
         });
 
-        // 既存のメインアタッチメントを破棄
-        if (this.$mainAttachmentObject) {
-            this.frameBufferManager.destroyAttachment("main");
-        }
+        // リサイズ時にスワップチェーンテクスチャをリセット
+        // 古いテクスチャ参照を解放して、次のフレームで新しいサイズのテクスチャを取得
+        this.mainTexture = null;
+        this.mainTextureView = null;
 
         // メインアタッチメントを作成（ステンシル付き、マスク描画用）
         // WebGL版と同じ: $mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, true)
@@ -404,7 +465,7 @@ export class Context
     ): void {
         const m = this.$matrix;
         const m0 = m[0], m1 = m[1], m3 = m[3], m4 = m[4], m6 = m[6], m7 = m[7];
-        
+
         m[0] = a * m0 + b * m3;
         m[1] = a * m1 + b * m4;
         m[3] = c * m0 + d * m3;
@@ -546,7 +607,7 @@ export class Context
     fill (): void
     {
         const pathVertices = this.pathCommand.$getVertices;
-        if (pathVertices.length === 0) return;
+        if (pathVertices.length === 0) { return }
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
@@ -582,6 +643,17 @@ export class Context
                     resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            } else if (!this.currentRenderTarget && $isMaskTestEnabled() && this.$mainAttachmentObject?.stencil?.view) {
+                // マスクテスト有効時のメインアタッチメントへの描画（ステンシル付き）
+                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                    this.$mainAttachmentObject.texture!.view,
+                    this.$mainAttachmentObject.stencil.view,
+                    "load",
+                    "load"  // ステンシルは既存の値を保持（マスク情報）
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                // ステンシル参照値を設定
+                this.renderPassEncoder.setStencilReference($getMaskStencilReference());
             } else {
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
                     colorView,
@@ -639,8 +711,8 @@ export class Context
             this.fillWithStencil(vertexBuffer, mesh.indexCount);
         } else {
             // キャンバスへの描画またはステンシルなしの場合は単純なフィル
-            // マスクモード時はステンシル付きパイプラインを使用
-            const useStencilPipeline = this.inMaskMode && !!this.$mainAttachmentObject?.stencil?.view;
+            // マスクモード時またはマスクテスト有効時はステンシル付きパイプラインを使用
+            const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
             this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight, useStencilPipeline);
         }
 
@@ -686,6 +758,9 @@ export class Context
         useStencilPipeline: boolean = false
     ): void
     {
+        // マスク描画時のクリップレベルを取得
+        const clipLevel = this.$mainAttachmentObject?.clipLevel ?? 1;
+
         contextFillSimpleService(
             this.device,
             this.renderPassEncoder!,
@@ -696,7 +771,8 @@ export class Context
             viewportWidth,
             viewportHeight,
             !!this.currentRenderTarget,
-            useStencilPipeline
+            useStencilPipeline,
+            clipLevel
         );
     }
 
@@ -755,64 +831,400 @@ export class Context
 
     /**
      * @description 線の描画を実行（WebGL版と同じ仕様）
+     *              WebGL版と同様に、ストロークを塗りとして描画する
      * @return {void}
      */
     stroke (): void
     {
         // WebGL版と同じ: IPath[]形式で頂点を取得
         const vertices = this.pathCommand.getVerticesForStroke();
-        if (vertices.length === 0) return;
+        if (vertices.length === 0) { return }
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
             this.beginFrame();
         }
 
-        // 既存のレンダーパスを終了
-        if (this.renderPassEncoder) {
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-        }
-
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
-        const textureView = this.getCurrentTextureView();
 
-        const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-            textureView,
-            0, 0, 0, 0,
-            "load"
+        // 既存のレンダーパスがない場合のみ新規作成
+        if (!this.renderPassEncoder) {
+            // 現在のレンダーターゲットを取得（メインまたはオフスクリーン）
+            const textureView = this.getCurrentTextureView();
+            const attachment = this.frameBufferManager.getAttachment("atlas");
+
+            // MSAAテクスチャを使用するかどうか
+            const useMsaa = attachment?.msaa && attachment?.msaaTexture?.view;
+            const colorView = useMsaa ? attachment!.msaaTexture!.view : textureView;
+            const resolveTarget = useMsaa ? textureView : null;
+
+            // アトラスへの描画でステンシルが必要な場合はステンシル付きレンダーパスを作成
+            if (this.currentRenderTarget && attachment?.stencil?.view) {
+                // MSAAステンシルテクスチャを使用
+                const stencilView = useMsaa && attachment?.msaaStencil?.view
+                    ? attachment.msaaStencil.view
+                    : attachment.stencil.view;
+
+                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                    colorView,
+                    stencilView,
+                    "load",
+                    "load",
+                    resolveTarget
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            } else if (!this.currentRenderTarget && $isMaskTestEnabled() && this.$mainAttachmentObject?.stencil?.view) {
+                // マスクテスト有効時のメインアタッチメントへの描画（ステンシル付き）
+                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                    this.$mainAttachmentObject.texture!.view,
+                    this.$mainAttachmentObject.stencil.view,
+                    "load",
+                    "load"  // ステンシルは既存の値を保持（マスク情報）
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                // ステンシル参照値を設定
+                this.renderPassEncoder.setStencilReference($getMaskStencilReference());
+            } else {
+                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                    colorView,
+                    0, 0, 0, 0,
+                    "load",
+                    resolveTarget
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            }
+        }
+
+        // WebGL版と同じ: 現在のビューポートサイズを使用（アトラス描画時はアトラスサイズ）
+        const viewportWidth = this.viewportWidth;
+        const viewportHeight = this.viewportHeight;
+
+        // WebGL版と同じ: ストロークスタイルの色を使用
+        const red = this.$strokeStyle[0];
+        const green = this.$strokeStyle[1];
+        const blue = this.$strokeStyle[2];
+        const alpha = this.$strokeStyle[3];
+
+        // WebGL版と同じ: 行列はそのまま渡す（MeshFillGenerateUseCaseで正規化）
+        const a  = this.$matrix[0];
+        const b  = this.$matrix[1];
+        const c  = this.$matrix[3];
+        const d  = this.$matrix[4];
+        const tx = this.$matrix[6];
+        const ty = this.$matrix[7];
+
+        // WebGL版と同じ: ストロークの輪郭を塗りとして生成
+        // thickness/2はここで行う（generateStrokeOutlinesに半分の太さを渡す）
+        const strokeOutlines = this.generateStrokeOutlines(vertices, this.thickness / 2);
+        if (strokeOutlines.length === 0) { return }
+
+        // WebGL版と同じ: MeshFillGenerateUseCaseで頂点データを生成
+        const mesh = meshFillGenerateUseCase(
+            strokeOutlines,
+            a, b, c, d, tx, ty,
+            red, green, blue, alpha,
+            viewportWidth, viewportHeight
         );
 
-        this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        if (mesh.indexCount === 0) {
+            return;
+        }
 
-        // WebGL版と同じ: thicknessをそのまま渡し、内部で/2される
-        contextStrokeUseCase(
-            this.device,
-            this.renderPassEncoder,
-            this.bufferManager,
-            this.pipelineManager,
-            vertices,
-            this.thickness,
-            this.$matrix,
-            this.$strokeStyle,
-            this.globalAlpha,
-            this.viewportWidth,
-            this.viewportHeight,
-            !!this.currentRenderTarget
+        // 頂点バッファを作成（17 floats per vertex）
+        const vertexBuffer = this.bufferManager.createVertexBuffer(
+            `stroke_${Date.now()}`,
+            mesh.buffer
         );
 
-        this.renderPassEncoder.end();
-        this.renderPassEncoder = null;
+        // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
+        const attachment = this.frameBufferManager.getAttachment("atlas");
+        if (this.currentRenderTarget && attachment?.stencil?.view) {
+            // 2パスステンシルフィル（WebGL版と同じアルゴリズム）
+            this.fillWithStencil(vertexBuffer, mesh.indexCount);
+        } else {
+            // キャンバスへの描画またはステンシルなしの場合は単純なフィル
+            const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
+            this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight, useStencilPipeline);
+        }
+    }
+
+    /**
+     * @description ストロークの輪郭を生成（WebGL版のMeshGenerateStrokeOutlineUseCaseと同等）
+     * @param {IPath[]} vertices - パス頂点配列
+     * @param {number} thickness - 線の太さの半分
+     * @return {IPath[]} 輪郭パス配列
+     */
+    private generateStrokeOutlines(vertices: IPath[], thickness: number): IPath[]
+    {
+        const outlines: IPath[] = [];
+
+        for (const path of vertices) {
+            if (path.length < 6) { continue }
+
+            const pathOutlines = this.generateStrokeOutlineForPath(path, thickness);
+            for (const outline of pathOutlines) {
+                outlines.push(outline);
+            }
+        }
+
+        return outlines;
+    }
+
+    /**
+     * @description 単一パスのストローク輪郭を生成
+     * @param {IPath} path - 単一パス
+     * @param {number} thickness - 線の太さの半分
+     * @return {IPath[]} 輪郭パス配列
+     */
+    private generateStrokeOutlineForPath(path: IPath, thickness: number): IPath[]
+    {
+        const rectangles: IPath[] = [];
+
+        let startX = path[0] as number;
+        let startY = path[1] as number;
+        let prevEndUp: { x: number, y: number } | null = null;
+        let prevEndDown: { x: number, y: number } | null = null;
+
+        for (let idx = 3; idx < path.length; idx += 3) {
+            const x = path[idx] as number;
+            const y = path[idx + 1] as number;
+            const isCurve = path[idx + 2] as boolean;
+
+            if (isCurve) {
+                continue;
+            }
+
+            const endX = x;
+            const endY = y;
+
+            // 方向ベクトル
+            const dx = endX - startX;
+            const dy = endY - startY;
+            const magnitude = Math.sqrt(dx * dx + dy * dy);
+
+            if (magnitude < 0.0001) {
+                startX = endX;
+                startY = endY;
+                continue;
+            }
+
+            // 法線ベクトル
+            const nx = -(dy / magnitude) * thickness;
+            const ny = dx / magnitude * thickness;
+
+            // 矩形の4頂点
+            const startUpX = startX + nx;
+            const startUpY = startY + ny;
+            const startDownX = startX - nx;
+            const startDownY = startY - ny;
+            const endUpX = endX + nx;
+            const endUpY = endY + ny;
+            const endDownX = endX - nx;
+            const endDownY = endY - ny;
+
+            // IPath形式で矩形を追加（WebGL版と同じフォーマット）
+            const rectPath: IPath = [
+                startUpX, startUpY, false,
+                endUpX, endUpY, false,
+                endDownX, endDownY, false,
+                startDownX, startDownY, false,
+                startUpX, startUpY, false  // 閉じる
+            ];
+            rectangles.push(rectPath);
+
+            // 結合処理（前の線分がある場合）
+            if (prevEndUp && prevEndDown) {
+                const joinPath = this.generateJoin(
+                    prevEndUp.x, prevEndUp.y,
+                    prevEndDown.x, prevEndDown.y,
+                    startUpX, startUpY,
+                    startDownX, startDownY,
+                    startX, startY,
+                    thickness
+                );
+                if (joinPath) {
+                    rectangles.push(joinPath);
+                }
+            }
+
+            prevEndUp = { "x": endUpX, "y": endUpY };
+            prevEndDown = { "x": endDownX, "y": endDownY };
+
+            startX = endX;
+            startY = endY;
+        }
+
+        // パスが閉じている場合は最後と最初も結合
+        if (path[0] === path[path.length - 3] &&
+            path[1] === path[path.length - 2] &&
+            rectangles.length > 1 && prevEndUp && prevEndDown) {
+
+            // 最初の矩形の情報を取得
+            const firstRect = rectangles[0];
+            const firstStartUpX = firstRect[0] as number;
+            const firstStartUpY = firstRect[1] as number;
+            const firstStartDownX = firstRect[9] as number;
+            const firstStartDownY = firstRect[10] as number;
+            const centerX = path[0] as number;
+            const centerY = path[1] as number;
+
+            const joinPath = this.generateJoin(
+                prevEndUp.x, prevEndUp.y,
+                prevEndDown.x, prevEndDown.y,
+                firstStartUpX, firstStartUpY,
+                firstStartDownX, firstStartDownY,
+                centerX, centerY,
+                thickness
+            );
+            if (joinPath) {
+                rectangles.push(joinPath);
+            }
+        }
+
+        return rectangles;
+    }
+
+    /**
+     * @description 結合部分のパスを生成
+     * @return {IPath | null}
+     */
+    private generateJoin(
+        prevEndUpX: number, prevEndUpY: number,
+        prevEndDownX: number, prevEndDownY: number,
+        currStartUpX: number, currStartUpY: number,
+        currStartDownX: number, currStartDownY: number,
+        centerX: number, centerY: number,
+        thickness: number
+    ): IPath | null
+    {
+        switch (this.joints) {
+            case 0: // bevel
+                return this.generateBevelJoin(
+                    prevEndUpX, prevEndUpY,
+                    prevEndDownX, prevEndDownY,
+                    currStartUpX, currStartUpY,
+                    currStartDownX, currStartDownY,
+                    centerX, centerY
+                );
+
+            case 2: // round
+                return this.generateRoundJoin(
+                    prevEndUpX, prevEndUpY,
+                    prevEndDownX, prevEndDownY,
+                    currStartUpX, currStartUpY,
+                    currStartDownX, currStartDownY,
+                    centerX, centerY,
+                    thickness
+                );
+
+            case 1: // miter
+            default:
+                return this.generateBevelJoin(
+                    prevEndUpX, prevEndUpY,
+                    prevEndDownX, prevEndDownY,
+                    currStartUpX, currStartUpY,
+                    currStartDownX, currStartDownY,
+                    centerX, centerY
+                );
+        }
+    }
+
+    /**
+     * @description ベベル結合のパスを生成
+     */
+    private generateBevelJoin(
+        prevEndUpX: number, prevEndUpY: number,
+        prevEndDownX: number, prevEndDownY: number,
+        currStartUpX: number, currStartUpY: number,
+        currStartDownX: number, currStartDownY: number,
+        centerX: number, centerY: number
+    ): IPath
+    {
+        // 上側と下側の三角形を1つのパスとして結合
+        return [
+            centerX, centerY, false,
+            prevEndUpX, prevEndUpY, false,
+            currStartUpX, currStartUpY, false,
+            centerX, centerY, false,  // 閉じて次の三角形
+            currStartDownX, currStartDownY, false,
+            prevEndDownX, prevEndDownY, false,
+            centerX, centerY, false   // 閉じる
+        ];
+    }
+
+    /**
+     * @description ラウンド結合のパスを生成
+     */
+    private generateRoundJoin(
+        prevEndUpX: number, prevEndUpY: number,
+        prevEndDownX: number, prevEndDownY: number,
+        currStartUpX: number, currStartUpY: number,
+        currStartDownX: number, currStartDownY: number,
+        centerX: number, centerY: number,
+        thickness: number
+    ): IPath
+    {
+        const path: IPath = [];
+        const segments = 8;
+
+        // 上側の扇形
+        const angleA = Math.atan2(prevEndUpY - centerY, prevEndUpX - centerX);
+        const angleB = Math.atan2(currStartUpY - centerY, currStartUpX - centerX);
+        let angleDiff = angleB - angleA;
+        if (angleDiff > Math.PI) { angleDiff -= 2 * Math.PI }
+        else if (angleDiff < -Math.PI) { angleDiff += 2 * Math.PI }
+        const step = angleDiff / segments;
+
+        for (let i = 0; i < segments; i++) {
+            const a1 = angleA + i * step;
+            const a2 = angleA + (i + 1) * step;
+            const x1 = centerX + thickness * Math.cos(a1);
+            const y1 = centerY + thickness * Math.sin(a1);
+            const x2 = centerX + thickness * Math.cos(a2);
+            const y2 = centerY + thickness * Math.sin(a2);
+
+            path.push(centerX, centerY, false);
+            path.push(x1, y1, false);
+            path.push(x2, y2, false);
+        }
+
+        // 下側の扇形
+        const angleC = Math.atan2(prevEndDownY - centerY, prevEndDownX - centerX);
+        const angleD = Math.atan2(currStartDownY - centerY, currStartDownX - centerX);
+        let angleDiff2 = angleD - angleC;
+        if (angleDiff2 > Math.PI) { angleDiff2 -= 2 * Math.PI }
+        else if (angleDiff2 < -Math.PI) { angleDiff2 += 2 * Math.PI }
+        const step2 = angleDiff2 / segments;
+
+        for (let i = 0; i < segments; i++) {
+            const a1 = angleC + i * step2;
+            const a2 = angleC + (i + 1) * step2;
+            const x1 = centerX + thickness * Math.cos(a1);
+            const y1 = centerY + thickness * Math.sin(a1);
+            const x2 = centerX + thickness * Math.cos(a2);
+            const y2 = centerY + thickness * Math.sin(a2);
+
+            path.push(centerX, centerY, false);
+            path.push(x1, y1, false);
+            path.push(x2, y2, false);
+        }
+
+        // パスを閉じる
+        if (path.length > 0) {
+            path.push(path[0] as number, path[1] as number, false);
+        }
+
+        return path;
     }
 
     /**
      * @description グラデーションの塗りつぶしを実行
      * @param {number} type - 0: linear, 1: radial
-     * @param {number[]} stops - グラデーションストップ配列 [offset, R, G, B, A, ...]
+     * @param {number[]} stops - グラデーションストップ配列 [offset, R, G, B, A, ...] (R,G,B,A: 0-255)
      * @param {Float32Array} matrix - グラデーション変換行列 [a, b, c, d, tx, ty]
-     * @param {number} spread - スプレッドメソッド (0: pad, 1: reflect, 2: repeat)
-     * @param {number} interpolation - 補間方法 (0: RGB, 1: linearRGB)
+     * @param {number} spread - スプレッドメソッド (0: reflect, 1: repeat, 2: pad)
+     * @param {number} interpolation - 補間方法 (0: linearRGB, 1: RGB)
      * @param {number} focal - ラジアルグラデーションのフォーカルポイント
      * @return {void}
      */
@@ -825,7 +1237,7 @@ export class Context
         focal: number
     ): void {
         const pathVertices = this.pathCommand.$getVertices;
-        if (pathVertices.length === 0) return;
+        if (pathVertices.length === 0) { return }
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
@@ -838,21 +1250,37 @@ export class Context
         // 既存のレンダーパスがない場合のみ新規作成
         if (!this.renderPassEncoder) {
             const textureView = this.getCurrentTextureView();
-            const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                textureView,
-                0, 0, 0, 0,
-                "load"
-            );
-            this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            // マスクテスト有効時のメインアタッチメントへの描画（ステンシル付き）
+            if (!this.currentRenderTarget && $isMaskTestEnabled() && this.$mainAttachmentObject?.stencil?.view) {
+                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                    this.$mainAttachmentObject.texture!.view,
+                    this.$mainAttachmentObject.stencil.view,
+                    "load",
+                    "load"  // ステンシルは既存の値を保持（マスク情報）
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                // ステンシル参照値を設定
+                this.renderPassEncoder.setStencilReference($getMaskStencilReference());
+            } else {
+                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                    textureView,
+                    0, 0, 0, 0,
+                    "load"
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            }
         }
 
         // ステンシル付きレンダーパスかどうかを判定
-        // - マスクモード時（メインアタッチメントへの描画）
+        // - マスクモード時またはマスクテスト有効時（メインアタッチメントへの描画）
         // - アトラス描画時（ステンシル付きレンダーパス）
         const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
         const useAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
-        const useMainStencil = this.inMaskMode && this.$mainAttachmentObject?.stencil?.view;
+        const useMainStencil = (this.inMaskMode || $isMaskTestEnabled()) && this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
         const useStencilPipeline = useAtlasStencil || useMainStencil;
+
+        // マスク描画時のクリップレベルを取得
+        const clipLevel = this.$mainAttachmentObject?.clipLevel ?? 1;
 
         const lutTexture = contextGradientFillUseCase(
             this.device,
@@ -871,7 +1299,8 @@ export class Context
             this.viewportWidth,
             this.viewportHeight,
             !!this.currentRenderTarget,
-            !!useStencilPipeline
+            !!useStencilPipeline,
+            clipLevel
         );
 
         // LUTテクスチャをフレーム終了時に解放するリストに追加
@@ -899,7 +1328,7 @@ export class Context
         smooth: boolean
     ): void {
         const pathVertices = this.pathCommand.$getVertices;
-        if (pathVertices.length === 0) return;
+        if (pathVertices.length === 0) { return }
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
@@ -912,21 +1341,37 @@ export class Context
         // 既存のレンダーパスがない場合のみ新規作成
         if (!this.renderPassEncoder) {
             const textureView = this.getCurrentTextureView();
-            const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                textureView,
-                0, 0, 0, 0,
-                "load"
-            );
-            this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            // マスクテスト有効時のメインアタッチメントへの描画（ステンシル付き）
+            if (!this.currentRenderTarget && $isMaskTestEnabled() && this.$mainAttachmentObject?.stencil?.view) {
+                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                    this.$mainAttachmentObject.texture!.view,
+                    this.$mainAttachmentObject.stencil.view,
+                    "load",
+                    "load"  // ステンシルは既存の値を保持（マスク情報）
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                // ステンシル参照値を設定
+                this.renderPassEncoder.setStencilReference($getMaskStencilReference());
+            } else {
+                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                    textureView,
+                    0, 0, 0, 0,
+                    "load"
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            }
         }
 
         // ステンシル付きレンダーパスかどうかを判定
-        // - マスクモード時（メインアタッチメントへの描画）
+        // - マスクモード時またはマスクテスト有効時（メインアタッチメントへの描画）
         // - アトラス描画時（ステンシル付きレンダーパス）
         const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
         const useAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
-        const useMainStencil = this.inMaskMode && this.$mainAttachmentObject?.stencil?.view;
+        const useMainStencil = (this.inMaskMode || $isMaskTestEnabled()) && this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
         const useStencilPipeline = useAtlasStencil || useMainStencil;
+
+        // マスク描画時のクリップレベルを取得
+        const clipLevel = this.$mainAttachmentObject?.clipLevel ?? 1;
 
         const bitmapTexture = contextBitmapFillUseCase(
             this.device,
@@ -945,7 +1390,8 @@ export class Context
             this.viewportWidth,
             this.viewportHeight,
             !!this.currentRenderTarget,
-            !!useStencilPipeline
+            !!useStencilPipeline,
+            clipLevel
         );
 
         // ビットマップテクスチャをフレーム終了時に解放するリストに追加
@@ -957,10 +1403,10 @@ export class Context
     /**
      * @description グラデーション線の描画を実行
      * @param {number} type - 0: linear, 1: radial
-     * @param {number[]} stops - グラデーションストップ配列 [offset, R, G, B, A, ...]
+     * @param {number[]} stops - グラデーションストップ配列 [offset, R, G, B, A, ...] (R,G,B,A: 0-255)
      * @param {Float32Array} matrix - グラデーション変換行列 [a, b, c, d, tx, ty]
-     * @param {number} spread - スプレッドメソッド (0: pad, 1: reflect, 2: repeat)
-     * @param {number} interpolation - 補間方法 (0: RGB, 1: linearRGB)
+     * @param {number} spread - スプレッドメソッド (0: reflect, 1: repeat, 2: pad)
+     * @param {number} interpolation - 補間方法 (0: linearRGB, 1: RGB)
      * @param {number} focal - ラジアルグラデーションのフォーカルポイント
      * @return {void}
      */
@@ -974,7 +1420,7 @@ export class Context
     ): void {
         // WebGL版と同じ: IPath[]形式で頂点を取得
         const vertices = this.pathCommand.getVerticesForStroke();
-        if (vertices.length === 0) return;
+        if (vertices.length === 0) { return }
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
@@ -1037,7 +1483,7 @@ export class Context
     ): void {
         // WebGL版と同じ: IPath[]形式で頂点を取得
         const vertices = this.pathCommand.getVerticesForStroke();
-        if (vertices.length === 0) return;
+        if (vertices.length === 0) { return }
 
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
@@ -1097,9 +1543,9 @@ export class Context
         // 現在のアタッチメントにステンシルバッファがない場合はスキップ（メインキャンバスなど）
         if (!currentAttachment.stencil) {
             console.warn("[WebGPU] clip() skipped: current attachment has no stencil buffer", {
-                attachmentId: currentAttachment.id,
-                width: currentAttachment.width,
-                height: currentAttachment.height
+                "attachmentId": currentAttachment.id,
+                "width": currentAttachment.width,
+                "height": currentAttachment.height
             });
             return;
         }
@@ -1145,11 +1591,16 @@ export class Context
 
     /**
      * @description 現在のアタッチメントオブジェクトを取得
+     *              アトラスがバインドされていない場合はメインアタッチメントを返す
+     *              When no atlas is bound, returns the main attachment
      * @return {IAttachmentObject | null}
      */
     get currentAttachmentObject (): IAttachmentObject | null
     {
-        return this.frameBufferManager.getCurrentAttachment();
+        // WebGL版と同じ: currentAttachmentがない場合はmainAttachmentを返す
+        // これによりマスク操作がメインキャンバスでも正しく動作する
+        const current = this.frameBufferManager.getCurrentAttachment();
+        return current || this.$mainAttachmentObject;
     }
 
     /**
@@ -1415,10 +1866,10 @@ export class Context
         // WebGPU draw pixels
         // アトラステクスチャの指定位置にピクセルデータを書き込む
         const attachment = this.frameBufferManager.getAttachment("atlas");
-        if (!attachment) return;
+        if (!attachment) { return }
 
         // ピクセルデータをテクスチャにコピー
-        if (!attachment.texture) return;
+        if (!attachment.texture) { return }
 
         // ピクセルデータを上下反転してコピー（Shapeの描画方向と一致させる）
         // Shapeはシェーダーで-ndc.yにより上下反転されるため、
@@ -1439,19 +1890,19 @@ export class Context
 
         this.device.queue.writeTexture(
             {
-                texture: attachment.texture.resource,
-                origin: { x: node.x, y: node.y, z: 0 }
+                "texture": attachment.texture.resource,
+                "origin": { "x": node.x, "y": node.y, "z": 0 }
             },
             flippedPixels.buffer,
             {
-                bytesPerRow: rowBytes,
-                rowsPerImage: height,
-                offset: 0
+                "bytesPerRow": rowBytes,
+                "rowsPerImage": height,
+                "offset": 0
             },
             {
-                width: width,
-                height: height,
-                depthOrArrayLayers: 1
+                "width": width,
+                "height": height,
+                "depthOrArrayLayers": 1
             }
         );
     }
@@ -1469,23 +1920,23 @@ export class Context
         // WebGPU draw element
         // OffscreenCanvasまたはImageBitmapをアトラステクスチャにコピー
         const attachment = this.frameBufferManager.getAttachment("atlas");
-        if (!attachment || !attachment.texture) return;
+        if (!attachment || !attachment.texture) { return }
 
         try {
             this.device.queue.copyExternalImageToTexture(
                 {
-                    source: element as ImageBitmap,
-                    flipY: true  // 画像を上下反転してShapeの描画方向と一致させる
+                    "source": element as ImageBitmap,
+                    "flipY": true  // 画像を上下反転してShapeの描画方向と一致させる
                 },
                 {
-                    texture: attachment.texture.resource,
-                    origin: { x: node.x, y: node.y, z: 0 },
-                    premultipliedAlpha: true
+                    "texture": attachment.texture.resource,
+                    "origin": { "x": node.x, "y": node.y, "z": 0 },
+                    "premultipliedAlpha": true
                 },
                 {
-                    width: element.width || node.w,
-                    height: element.height || node.h,
-                    depthOrArrayLayers: 1
+                    "width": element.width || node.w,
+                    "height": element.height || node.h,
+                    "depthOrArrayLayers": 1
                 }
             );
         } catch (e) {
@@ -1539,11 +1990,11 @@ export class Context
         this.ensureCommandEncoder();
 
         const config = {
-            device: this.device,
-            commandEncoder: this.commandEncoder!,
-            frameBufferManager: this.frameBufferManager,
-            pipelineManager: this.pipelineManager,
-            textureManager: this.textureManager
+            "device": this.device,
+            "commandEncoder": this.commandEncoder!,
+            "frameBufferManager": this.frameBufferManager,
+            "pipelineManager": this.pipelineManager,
+            "textureManager": this.textureManager
         };
 
         contextApplyFilterUseCase(
@@ -1587,7 +2038,7 @@ export class Context
         if (this.currentRenderTarget) {
             return this.currentRenderTarget;
         }
-        
+
         // メインキャンバステクスチャを確保
         this.ensureMainTexture();
         return this.mainTextureView!;
@@ -1652,7 +2103,7 @@ export class Context
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
-        
+
         // コマンドをsubmit
         if (this.commandEncoder) {
             try {
@@ -1705,8 +2156,8 @@ export class Context
     {
         // WebGPU node creation implementation using texture-packer
         const index = 0; // For now, use single atlas
-        
-        if (!($rootNodes[index])) {
+
+        if (!$rootNodes[index]) {
             const maxSize = WebGPUUtil.getRenderMaxSize();
             $rootNodes[index] = new TexturePacker(index, maxSize, maxSize);
         }
@@ -1731,7 +2182,7 @@ export class Context
         // WebGPU node removal implementation
         const index = node.index;
         const rootNode = $rootNodes[index];
-        
+
         if (rootNode) {
             rootNode.dispose(node.x, node.y, node.w, node.h);
         }
@@ -1786,21 +2237,21 @@ export class Context
 
         // バインドグループを作成
         const bindGroup = this.device.createBindGroup({
-            layout: bindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: uniformBuffer } },
-                { binding: 1, resource: sampler },
-                { binding: 2, resource: this.$mainAttachmentObject.texture.view }
+            "layout": bindGroupLayout,
+            "entries": [
+                { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                { "binding": 1, "resource": sampler },
+                { "binding": 2, "resource": this.$mainAttachmentObject.texture.view }
             ]
         });
 
         // スワップチェーンへのレンダーパスを作成
         const renderPassDescriptor: GPURenderPassDescriptor = {
-            colorAttachments: [{
-                view: this.mainTextureView!,
-                clearValue: { r: 0, g: 0, b: 0, a: 0 },
-                loadOp: "clear",
-                storeOp: "store"
+            "colorAttachments": [{
+                "view": this.mainTextureView!,
+                "clearValue": { "r": 0, "g": 0, "b": 0, "a": 0 },
+                "loadOp": "clear",
+                "storeOp": "store"
             }]
         };
 
@@ -1827,27 +2278,27 @@ export class Context
         if (!attachment) {
             throw new Error("[WebGPU] Atlas attachment not found");
         }
-        
+
         // 描画を完了
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
-        
+
         // GPUバッファにピクセルデータを読み込み
         const bytesPerPixel = 4;
-        const bytesPerRow = Math.ceil((width * bytesPerPixel) / 256) * 256; // 256バイトアライメント
+        const bytesPerRow = Math.ceil(width * bytesPerPixel / 256) * 256; // 256バイトアライメント
         const bufferSize = bytesPerRow * height;
-        
+
         // ピクセルバッファを作成
         const pixelBuffer = this.device.createBuffer({
-            size: bufferSize,
-            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+            "size": bufferSize,
+            "usage": GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
         });
-        
+
         // コマンドエンコーダーを作成
         const commandEncoder = this.device.createCommandEncoder();
-        
+
         // アトラステクスチャからピクセルバッファにコピー
         if (!attachment.texture) {
             throw new Error("Attachment texture is null");
@@ -1855,30 +2306,30 @@ export class Context
 
         commandEncoder.copyTextureToBuffer(
             {
-                texture: attachment.texture.resource,
-                mipLevel: 0,
-                origin: { x: 0, y: 0, z: 0 }
+                "texture": attachment.texture.resource,
+                "mipLevel": 0,
+                "origin": { "x": 0, "y": 0, "z": 0 }
             },
             {
-                buffer: pixelBuffer,
-                bytesPerRow: bytesPerRow,
-                rowsPerImage: height
+                "buffer": pixelBuffer,
+                "bytesPerRow": bytesPerRow,
+                "rowsPerImage": height
             },
             {
-                width: width,
-                height: height,
-                depthOrArrayLayers: 1
+                "width": width,
+                "height": height,
+                "depthOrArrayLayers": 1
             }
         );
-        
+
         // コマンドを送信
         this.device.queue.submit([commandEncoder.finish()]);
-        
+
         // バッファをマップして読み込み
         await pixelBuffer.mapAsync(GPUMapMode.READ);
         const mappedRange = pixelBuffer.getMappedRange();
         const pixels = new Uint8Array(mappedRange);
-        
+
         // ピクセルデータをコピー（アライメントを考慮）
         const resultPixels = new Uint8Array(width * height * 4);
         for (let y = 0; y < height; y++) {
@@ -1889,42 +2340,42 @@ export class Context
                 dstOffset
             );
         }
-        
+
         pixelBuffer.unmap();
         pixelBuffer.destroy();
-        
+
         // プリマルチプライドアルファをストレートアルファに変換
         const inv = new Float32Array(256);
         for (let a = 1; a < 256; a++) {
             inv[a] = 255 / a;
         }
-        
+
         for (let idx = 0; idx < resultPixels.length; idx += 4) {
             const alpha = resultPixels[idx + 3];
-            
+
             if (alpha === 0 || alpha === 255) {
                 continue;
             }
-            
+
             const f = inv[alpha];
             resultPixels[idx    ] = Math.min(255, Math.round(resultPixels[idx    ] * f));
             resultPixels[idx + 1] = Math.min(255, Math.round(resultPixels[idx + 1] * f));
             resultPixels[idx + 2] = Math.min(255, Math.round(resultPixels[idx + 2] * f));
         }
-        
+
         // ImageBitmapを作成
         const imageData = new ImageData(new Uint8ClampedArray(resultPixels), width, height);
 
         // グローバルのcreateBitmapが存在するかチェック
-        if (typeof createImageBitmap !== 'undefined') {
+        if (typeof createImageBitmap !== "undefined") {
             return await createImageBitmap(imageData, {
-                premultiplyAlpha: "none",
-                colorSpaceConversion: "none"
+                "premultiplyAlpha": "none",
+                "colorSpaceConversion": "none"
             });
-        } else {
-            // Fallback: createImageBitmapがない環境用
-            throw new Error("[WebGPU] createImageBitmap not available in this environment");
         }
+        // Fallback: createImageBitmapがない環境用
+        throw new Error("[WebGPU] createImageBitmap not available in this environment");
+
     }
 
     /**
@@ -1962,11 +2413,16 @@ export class Context
 
         // ステンシル付きレンダーパスを開始（マスク描画用）
         if (this.$mainAttachmentObject?.texture && this.$mainAttachmentObject?.stencil?.view) {
+            // 最初のマスク（clipLevel == 0）の場合はステンシルをクリア
+            // ネストされたマスクの場合は既存のステンシル値を保持
+            const isFirstMask = this.$mainAttachmentObject.clipLevel === 0;
+            const stencilLoadOp = isFirstMask ? "clear" : "load";
+
             const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
                 this.$mainAttachmentObject.texture.view,
                 this.$mainAttachmentObject.stencil.view,
                 "load", // カラーは既存の内容を保持
-                "load"  // ステンシルも既存の内容を保持（前回のフレームのマスク情報をクリアしない）
+                stencilLoadOp  // 最初のマスク: クリア、ネスト: 保持
             );
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
 
@@ -2038,36 +2494,82 @@ export class Context
 
         // 現在のclipLevelを保存（leaveMaskUseCase内でデクリメントされる）
         const currentAttachment = this.frameBufferManager.getCurrentAttachment();
-        const wasLastMask = currentAttachment?.clipLevel === 1;
+        const currentClipLevel = currentAttachment?.clipLevel ?? 0;
+        const wasLastMask = currentClipLevel === 1;
 
         maskLeaveMaskUseCase();
 
-        // 単体マスク（最後のマスク）の場合、ステンシルバッファをクリア
-        // WebGL: gl.clear(STENCIL_BUFFER_BIT)
-        if (wasLastMask && this.$mainAttachmentObject?.stencil) {
-            // 現在のレンダーパスを終了
-            if (this.renderPassEncoder) {
-                this.renderPassEncoder.end();
-                this.renderPassEncoder = null;
-            }
+        // 現在のレンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
 
-            // ステンシルクリア用のレンダーパスを開始・終了
-            this.ensureCommandEncoder();
+        // コマンドエンコーダーを確保
+        this.ensureCommandEncoder();
+
+        if (wasLastMask && this.$mainAttachmentObject?.stencil) {
+            // 単体マスク（最後のマスク）の場合、ステンシルバッファをクリア
+            // WebGL: gl.clear(STENCIL_BUFFER_BIT)
             const clearPassDescriptor: GPURenderPassDescriptor = {
-                colorAttachments: [{
-                    view: this.$mainAttachmentObject.texture!.view,
-                    loadOp: "load", // カラーは保持
-                    storeOp: "store"
+                "colorAttachments": [{
+                    "view": this.$mainAttachmentObject.texture!.view,
+                    "loadOp": "load", // カラーは保持
+                    "storeOp": "store"
                 }],
-                depthStencilAttachment: {
-                    view: this.$mainAttachmentObject.stencil.view,
-                    stencilLoadOp: "clear", // ステンシルをクリア
-                    stencilStoreOp: "store",
-                    stencilClearValue: 0
+                "depthStencilAttachment": {
+                    "view": this.$mainAttachmentObject.stencil.view,
+                    "stencilLoadOp": "clear", // ステンシルをクリア
+                    "stencilStoreOp": "store",
+                    "stencilClearValue": 0
                 }
             };
             const clearPass = this.commandEncoder!.beginRenderPass(clearPassDescriptor);
             clearPass.end();
+        } else if (currentClipLevel > 1 && this.$mainAttachmentObject?.stencil) {
+            // ネストされたマスクの場合、上位レベルのステンシルビットをクリア
+            // WebGL: stencilMask(1 << clipLevel), stencilOp(REPLACE, REPLACE, REPLACE)
+            // 全画面矩形を描画してステンシルビットをクリア
+            const clearLevel = currentClipLevel; // デクリメント前のレベル
+            const clampedLevel = Math.min(8, Math.max(1, clearLevel));
+            const pipelineName = `clip_clear_main_${clampedLevel}`;
+            const pipeline = this.pipelineManager.getPipeline(pipelineName);
+
+            if (pipeline) {
+                // ステンシル付きレンダーパスを開始
+                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                    this.$mainAttachmentObject.texture!.view,
+                    this.$mainAttachmentObject.stencil.view,
+                    "load", // カラーは保持
+                    "load"  // ステンシルは保持（特定のビットのみクリア）
+                );
+                const passEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+
+                // 全画面矩形を描画（ステンシルビットをクリア）
+                // 17-float vertex buffer format for clip pipelines
+                // Format: position(2) + bezier(2) + color(4) + matrix(9) = 17 floats
+                // Matrix is identity: row0=(1,0,0), row1=(0,1,0), row2=(0,0,1)
+                const fullScreenMesh = new Float32Array([
+                    // Triangle 1: (0,0), (1,0), (0,1)
+                    0, 0, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+                    1, 0, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+                    0, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+                    // Triangle 2: (1,0), (1,1), (0,1)
+                    1, 0, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+                    1, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+                    0, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1
+                ]);
+                const meshBuffer = this.bufferManager.createVertexBuffer(
+                    `stencil_clear_mesh_${Date.now()}`,
+                    fullScreenMesh
+                );
+
+                passEncoder.setPipeline(pipeline);
+                passEncoder.setStencilReference(0); // 参照値0でREPLACE
+                passEncoder.setVertexBuffer(0, meshBuffer);
+                passEncoder.draw(6, 1, 0, 0);
+                passEncoder.end();
+            }
         }
     }
 }

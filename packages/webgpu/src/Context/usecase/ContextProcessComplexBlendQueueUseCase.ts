@@ -49,16 +49,16 @@ export const execute = (
         const srcAttachment = frameBufferManager.createTemporaryAttachment(node.w, node.h);
         commandEncoder.copyTextureToTexture(
             {
-                texture: atlasAttachment.texture!.resource,
-                origin: { x: node.x, y: node.y, z: 0 }
+                "texture": atlasAttachment.texture!.resource,
+                "origin": { "x": node.x, "y": node.y, "z": 0 }
             },
             {
-                texture: srcAttachment.texture!.resource,
-                origin: { x: 0, y: 0, z: 0 }
+                "texture": srcAttachment.texture!.resource,
+                "origin": { "x": 0, "y": 0, "z": 0 }
             },
             {
-                width: node.w,
-                height: node.h
+                "width": node.w,
+                "height": node.h
             }
         );
 
@@ -74,16 +74,16 @@ export const execute = (
             if (copyWidth > 0 && copyHeight > 0) {
                 commandEncoder.copyTextureToTexture(
                     {
-                        texture: mainTexture,
-                        origin: { x: dstX, y: dstY, z: 0 }
+                        "texture": mainTexture,
+                        "origin": { "x": dstX, "y": dstY, "z": 0 }
                     },
                     {
-                        texture: dstAttachment.texture!.resource,
-                        origin: { x: 0, y: 0, z: 0 }
+                        "texture": dstAttachment.texture!.resource,
+                        "origin": { "x": 0, "y": 0, "z": 0 }
                     },
                     {
-                        width: copyWidth,
-                        height: copyHeight
+                        "width": copyWidth,
+                        "height": copyHeight
                     }
                 );
             }
@@ -123,16 +123,16 @@ export const execute = (
             if (copyWidth > 0 && copyHeight > 0) {
                 commandEncoder.copyTextureToTexture(
                     {
-                        texture: blendedAttachment.texture!.resource,
-                        origin: { x: 0, y: 0, z: 0 }
+                        "texture": blendedAttachment.texture!.resource,
+                        "origin": { "x": 0, "y": 0, "z": 0 }
                     },
                     {
-                        texture: mainTexture,
-                        origin: { x: dstX, y: dstY, z: 0 }
+                        "texture": mainTexture,
+                        "origin": { "x": dstX, "y": dstY, "z": 0 }
                     },
                     {
-                        width: copyWidth,
-                        height: copyHeight
+                        "width": copyWidth,
+                        "height": copyHeight
                     }
                 );
             }

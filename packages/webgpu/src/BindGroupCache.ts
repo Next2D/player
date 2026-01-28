@@ -88,8 +88,8 @@ export class BindGroupCache
         textureView: GPUTextureView
     ): GPUBindGroup {
         return this.getOrCreate(cacheKey, layout, [
-            { binding: 0, resource: sampler },
-            { binding: 1, resource: textureView }
+            { "binding": 0, "resource": sampler },
+            { "binding": 1, "resource": textureView }
         ]);
     }
 
@@ -110,9 +110,9 @@ export class BindGroupCache
         textureView: GPUTextureView
     ): GPUBindGroup {
         return this.getOrCreate(cacheKey, layout, [
-            { binding: 0, resource: { buffer: uniformBuffer } },
-            { binding: 1, resource: sampler },
-            { binding: 2, resource: textureView }
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": textureView }
         ]);
     }
 
@@ -132,8 +132,8 @@ export class BindGroupCache
     getStats(): { size: number; currentFrame: number }
     {
         return {
-            size: this.cache.size,
-            currentFrame: this.currentFrame
+            "size": this.cache.size,
+            "currentFrame": this.currentFrame
         };
     }
 

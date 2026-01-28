@@ -40,6 +40,6 @@ export const execute = (
 
     pool.push({
         buffer,
-        size: buffer.size
+        "size": buffer.size
     });
 };

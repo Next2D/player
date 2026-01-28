@@ -126,11 +126,11 @@ export const execute = (
     // MIN_FILTER: linear（縮小時・回転時にスムーズ）
     // MAG_FILTER: nearest（拡大時にシャープ）
     const sampler = device.createSampler({
-        minFilter: "linear",
-        magFilter: "nearest",
-        mipmapFilter: "nearest",
-        addressModeU: "clamp-to-edge",
-        addressModeV: "clamp-to-edge"
+        "minFilter": "linear",
+        "magFilter": "nearest",
+        "mipmapFilter": "nearest",
+        "addressModeU": "clamp-to-edge",
+        "addressModeV": "clamp-to-edge"
     });
 
     // バインドグループを作成
@@ -142,15 +142,15 @@ export const execute = (
     }
 
     const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
+        "layout": bindGroupLayout,
+        "entries": [
             {
-                binding: 0,
-                resource: sampler
+                "binding": 0,
+                "resource": sampler
             },
             {
-                binding: 1,
-                resource: atlasAttachment.texture!.view
+                "binding": 1,
+                "resource": atlasAttachment.texture!.view
             }
         ]
     });

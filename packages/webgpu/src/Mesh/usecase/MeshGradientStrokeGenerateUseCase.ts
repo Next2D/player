@@ -66,7 +66,8 @@ export const execute = (
 
     for (const path of vertices) {
         const rectangles = generateStrokeOutline(path, halfThickness);
-        for (const rect of rectangles) {
+        for (const rectInfo of rectangles) {
+            const rect = rectInfo.path;
             if (rect.length >= 15) {
                 allRectangles.push(rect);
                 // 各矩形は2つの三角形 = 6頂点
@@ -77,8 +78,8 @@ export const execute = (
 
     if (totalVertices === 0) {
         return {
-            buffer: new Float32Array(0),
-            indexCount: 0
+            "buffer": new Float32Array(0),
+            "indexCount": 0
         };
     }
 
@@ -110,7 +111,7 @@ export const execute = (
 
     return {
         buffer,
-        indexCount: index
+        "indexCount": index
     };
 };
 

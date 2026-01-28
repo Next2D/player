@@ -34,7 +34,7 @@ export class FrameBufferManager
         this.format = format;
         this.attachments = new Map();
         this.currentAttachment = null;
-        this.idCounter = { nextId: 1, textureId: 1, stencilId: 1 };
+        this.idCounter = { "nextId": 1, "textureId": 1, "stencilId": 1 };
 
         // アトラス用のテクスチャを初期化（4096x4096）
         const atlasSize = 4096;
@@ -83,10 +83,10 @@ export class FrameBufferManager
 
     /**
      * @description 現在のアタッチメントを設定
-     * @param {IAttachmentObject} attachment
+     * @param {IAttachmentObject | null} attachment
      * @return {void}
      */
-    setCurrentAttachment(attachment: IAttachmentObject): void
+    setCurrentAttachment(attachment: IAttachmentObject | null): void
     {
         this.currentAttachment = attachment;
     }

@@ -20,61 +20,61 @@ export const execute = (buffer: Float32Array): number =>
     const unrolledEnd = len & ~7; // len - (len % 8)
     while (idx < unrolledEnd) {
         let b = bits[idx++];
-        hash = Math.imul(hash ^ (b & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+        hash = Math.imul(hash ^ b & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 8 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 16 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >>> 24, 16777619);
 
         b = bits[idx++];
-        hash = Math.imul(hash ^ (b & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+        hash = Math.imul(hash ^ b & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 8 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 16 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >>> 24, 16777619);
 
         b = bits[idx++];
-        hash = Math.imul(hash ^ (b & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+        hash = Math.imul(hash ^ b & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 8 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 16 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >>> 24, 16777619);
 
         b = bits[idx++];
-        hash = Math.imul(hash ^ (b & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+        hash = Math.imul(hash ^ b & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 8 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 16 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >>> 24, 16777619);
 
         b = bits[idx++];
-        hash = Math.imul(hash ^ (b & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+        hash = Math.imul(hash ^ b & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 8 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 16 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >>> 24, 16777619);
 
         b = bits[idx++];
-        hash = Math.imul(hash ^ (b & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+        hash = Math.imul(hash ^ b & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 8 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 16 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >>> 24, 16777619);
 
         b = bits[idx++];
-        hash = Math.imul(hash ^ (b & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+        hash = Math.imul(hash ^ b & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 8 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 16 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >>> 24, 16777619);
 
         b = bits[idx++];
-        hash = Math.imul(hash ^ (b & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+        hash = Math.imul(hash ^ b & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 8 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 16 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >>> 24, 16777619);
     }
 
     // 残り (0〜7要素)
     while (idx < len) {
         const b = bits[idx++];
-        hash = Math.imul(hash ^ (b & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 8 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >> 16 & 0xff), 16777619);
-        hash = Math.imul(hash ^ (b >>> 24), 16777619);
+        hash = Math.imul(hash ^ b & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 8 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >> 16 & 0xff, 16777619);
+        hash = Math.imul(hash ^ b >>> 24, 16777619);
     }
 
     // 32bitハッシュ値を24bitに圧縮

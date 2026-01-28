@@ -29,26 +29,26 @@ export const execute = (
     }
 
     const colorAttachment: GPURenderPassColorAttachment = {
-        view: colorView,
+        "view": colorView,
         loadOp,
-        storeOp: "store",
-        clearValue: { r, g, b, a }
+        "storeOp": "store",
+        "clearValue": { r, g, b, a }
     };
 
     const descriptor: GPURenderPassDescriptor = {
-        colorAttachments: [colorAttachment]
+        "colorAttachments": [colorAttachment]
     };
 
     // ステンシルアタッチメントを追加
     if (attachment.stencil?.view) {
         descriptor.depthStencilAttachment = {
-            view: attachment.stencil.view,
-            depthLoadOp: "clear",
-            depthStoreOp: "store",
-            depthClearValue: 1.0,
-            stencilLoadOp: "clear",
-            stencilStoreOp: "store",
-            stencilClearValue: 0
+            "view": attachment.stencil.view,
+            "depthLoadOp": "clear",
+            "depthStoreOp": "store",
+            "depthClearValue": 1.0,
+            "stencilLoadOp": "clear",
+            "stencilStoreOp": "store",
+            "stencilClearValue": 0
         };
     }
 

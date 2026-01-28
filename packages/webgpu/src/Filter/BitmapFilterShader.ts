@@ -63,7 +63,7 @@ export const getBitmapFilterFragmentShader = (
 `;
         }
     }
-    uniformsStruct += `}`;
+    uniformsStruct += "}";
 
     // テクスチャバインディング
     let textureBindings = `
@@ -183,7 +183,7 @@ export const getBitmapFilterFragmentShader = (
     }
 
     // base変数が必要かどうか
-    const needsBase = transformsBase || (type === "outer" || (type === "full" && !knockout));
+    const needsBase = transformsBase || (type === "outer" || type === "full" && !knockout);
     let baseDecl = "";
     if (needsBase && !transformsBase) {
         baseDecl = `

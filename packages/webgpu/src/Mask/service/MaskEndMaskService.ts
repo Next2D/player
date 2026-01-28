@@ -9,9 +9,11 @@ import {
  * @description マスクの描画を終了
  *              End mask drawing
  *
- * WebGPU版: INVERT操作後、NOT-EQUALテストで非ゼロステンシルの領域のみ描画
- * WebGL版はビット単位のマスキングを使用するが、WebGPUでは動的に変更できないため
- * シンプルなNOT-EQUAL 0テストを使用
+ * WebGPU版: ビット単位のマスキングを使用（WebGL版と同様）
+ * 各レベルに対応するビットが設定されたマスク値を計算し、
+ * EQUALテストで累積マスク値と一致する領域のみ描画
+ *
+ * WebGL版: stencilFunc(EQUAL, mask & 0xff, mask)
  *
  * @return {void}
  * @method
@@ -24,11 +26,24 @@ export const execute = (): void =>
         return;
     }
 
+    const clipLevel = currentAttachmentObject.clipLevel;
+
+    // 累積マスク値を計算（WebGL版と同じアルゴリズム）
+    // 各マスクレベルのビットを累積OR
+    // level 1: mask = 1 (0x01)
+    // level 2: mask = 3 (0x03)
+    // level 3: mask = 7 (0x07)
+    // ...
+    // 結果: mask = (1 << clipLevel) - 1
+    let mask = 0;
+    for (let idx = 0; idx < clipLevel; ++idx) {
+        mask |= (1 << clipLevel - idx) - 1;
+    }
+
     // マスクテストを有効化
-    // INVERT操作後、カバーされたピクセルはステンシル値が非ゼロ（0xFF）になる
-    // NOT-EQUAL 0テストで、非ゼロのピクセルのみ描画を許可
+    // EQUALテストで、累積マスク値と一致するピクセルのみ描画を許可
     $setMaskTestEnabled(true);
-    $setMaskStencilReference(0); // NOT-EQUAL 0 テスト用
+    $setMaskStencilReference(mask & 0xFF); // EQUAL テスト用の参照値
 
     // マスク描画フェーズは終了
     $setMaskDrawing(false);

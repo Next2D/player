@@ -39,9 +39,9 @@ export class BufferManager
     createVertexBuffer (name: string, data: Float32Array): GPUBuffer
     {
         const buffer = this.device.createBuffer({
-            size: data.byteLength,
-            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-            mappedAtCreation: true
+            "size": data.byteLength,
+            "usage": GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+            "mappedAtCreation": true
         });
 
         new Float32Array(buffer.getMappedRange()).set(data);
@@ -60,8 +60,8 @@ export class BufferManager
     createUniformBuffer (name: string, size: number): GPUBuffer
     {
         const buffer = this.device.createBuffer({
-            size: size,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            "size": size,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
         this.uniformBuffers.set(name, buffer);
@@ -219,8 +219,8 @@ export class BufferManager
     getPoolStats (): { vertexPoolSize: number; uniformPoolSize: number }
     {
         return {
-            vertexPoolSize: this.vertexBufferPool.length,
-            uniformPoolSize: this.uniformBufferPool.length
+            "vertexPoolSize": this.vertexBufferPool.length,
+            "uniformPoolSize": this.uniformBufferPool.length
         };
     }
 

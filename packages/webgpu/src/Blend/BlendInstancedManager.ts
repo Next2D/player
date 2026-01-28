@@ -90,7 +90,7 @@ export const addDisplayObjectToInstanceArray = (
 
     // シンプルなブレンドモード（インスタンス描画可能）
     const simpleBlendModes = ["normal", "layer", "add", "screen", "alpha", "erase", "copy"];
-    
+
     if (simpleBlendModes.includes(blend_mode)) {
         // ブレンドモードまたはアトラスインデックスが変わった場合
         if ($getCurrentBlendMode() !== blend_mode || $getCurrentAtlasIndex() !== node.index) {
@@ -129,8 +129,8 @@ export const addDisplayObjectToInstanceArray = (
             y_min,
             x_max,
             y_max,
-            color_transform: new Float32Array(color_transform),
-            matrix: new Float32Array(matrix),
+            "color_transform": new Float32Array(color_transform),
+            "matrix": new Float32Array(matrix),
             blend_mode,
             viewport_width,
             viewport_height,

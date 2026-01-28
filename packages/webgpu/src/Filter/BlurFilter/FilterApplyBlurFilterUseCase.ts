@@ -148,17 +148,17 @@ const copyTextureToAttachment = (
         offsetX / dest.width, offsetY / dest.height
     ]);
     const uniformBuffer = device.createBuffer({
-        size: uniformData.byteLength,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        "size": uniformData.byteLength,
+        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
-            { binding: 0, resource: { buffer: uniformBuffer } },
-            { binding: 1, resource: sampler },
-            { binding: 2, resource: source.texture!.view }
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": source.texture!.view }
         ]
     });
 
@@ -209,17 +209,17 @@ const applyDirectionalBlur = (
     // ユニフォームバッファ: offset(2) + fraction + samples
     const uniformData = new Float32Array([offsetX, offsetY, fraction, samples]);
     const uniformBuffer = device.createBuffer({
-        size: uniformData.byteLength,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        "size": uniformData.byteLength,
+        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
-            { binding: 0, resource: { buffer: uniformBuffer } },
-            { binding: 1, resource: sampler },
-            { binding: 2, resource: source.texture!.view }
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": source.texture!.view }
         ]
     });
 
@@ -261,17 +261,17 @@ const upscaleTexture = (
     // ユニフォームバッファ: scale(2) + offset(2)
     const uniformData = new Float32Array([scaleX, scaleY, 0, 0]);
     const uniformBuffer = device.createBuffer({
-        size: uniformData.byteLength,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        "size": uniformData.byteLength,
+        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
-            { binding: 0, resource: { buffer: uniformBuffer } },
-            { binding: 1, resource: sampler },
-            { binding: 2, resource: source.texture!.view }
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": source.texture!.view }
         ]
     });
 

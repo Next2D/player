@@ -19,18 +19,18 @@ export const execute = (
     idCounter: { stencilId: number }
 ): IStencilBufferObject => {
     const texture = device.createTexture({
-        size: { width, height },
-        format: "depth24plus-stencil8",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT
+        "size": { width, height },
+        "format": "depth24plus-stencil8",
+        "usage": GPUTextureUsage.RENDER_ATTACHMENT
     });
 
     return {
-        id: idCounter.stencilId++,
-        resource: texture,
-        view: texture.createView(),
+        "id": idCounter.stencilId++,
+        "resource": texture,
+        "view": texture.createView(),
         width,
         height,
-        area: width * height,
-        dirty: false
+        "area": width * height,
+        "dirty": false
     };
 };

@@ -21,9 +21,9 @@ export const execute = (
     idCounter: { textureId: number }
 ): ITextureObject => {
     const texture = device.createTexture({
-        size: { width, height },
-        format: "rgba8unorm",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT |
+        "size": { width, height },
+        "format": "rgba8unorm",
+        "usage": GPUTextureUsage.RENDER_ATTACHMENT |
                GPUTextureUsage.TEXTURE_BINDING |
                GPUTextureUsage.COPY_SRC |
                GPUTextureUsage.COPY_DST
@@ -32,12 +32,12 @@ export const execute = (
     const view = texture.createView();
 
     return {
-        id: idCounter.textureId++,
-        resource: texture,
+        "id": idCounter.textureId++,
+        "resource": texture,
         view,
         width,
         height,
-        area: width * height,
+        "area": width * height,
         smooth
     };
 };

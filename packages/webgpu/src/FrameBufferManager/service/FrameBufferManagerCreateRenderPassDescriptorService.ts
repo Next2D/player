@@ -23,12 +23,12 @@ export const execute = (
     resolveTarget: GPUTextureView | null = null
 ): GPURenderPassDescriptor => {
     const colorAttachment: GPURenderPassColorAttachment = {
-        view: view,
-        clearValue: { r, g, b, a },
-        loadOp: loadOp,
+        "view": view,
+        "clearValue": { r, g, b, a },
+        "loadOp": loadOp,
         // MSAAでもstoreOpは"store"を使用（次のレンダーパスでloadするため）
         // resolveTargetが設定されている場合、resolveは自動的に実行される
-        storeOp: "store"
+        "storeOp": "store"
     };
 
     // MSAAの場合はresolveTargetを設定
@@ -37,6 +37,6 @@ export const execute = (
     }
 
     return {
-        colorAttachments: [colorAttachment]
+        "colorAttachments": [colorAttachment]
     };
 };

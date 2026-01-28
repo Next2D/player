@@ -17,23 +17,23 @@ export const execute = (
     image_bitmap: ImageBitmap
 ): GPUTexture => {
     const texture = device.createTexture({
-        size: { width: image_bitmap.width, height: image_bitmap.height },
-        format: "rgba8unorm",
-        usage: GPUTextureUsage.TEXTURE_BINDING |
+        "size": { "width": image_bitmap.width, "height": image_bitmap.height },
+        "format": "rgba8unorm",
+        "usage": GPUTextureUsage.TEXTURE_BINDING |
                GPUTextureUsage.COPY_DST |
                GPUTextureUsage.RENDER_ATTACHMENT
     });
 
     device.queue.copyExternalImageToTexture(
         {
-            source: image_bitmap,
-            flipY: true
+            "source": image_bitmap,
+            "flipY": true
         },
         {
             texture,
-            premultipliedAlpha: true
+            "premultipliedAlpha": true
         },
-        { width: image_bitmap.width, height: image_bitmap.height }
+        { "width": image_bitmap.width, "height": image_bitmap.height }
     );
 
     textures.set(name, texture);

@@ -48,7 +48,7 @@ export const execute = (
             entry.height >= height && entry.height <= height * 2
         ) {
             // サイズが大きいが許容範囲内
-            const sizeMatch = (entry.width - width) + (entry.height - height);
+            const sizeMatch = entry.width - width + (entry.height - height);
             if (sizeMatch < bestSizeMatch) {
                 bestSizeMatch = sizeMatch;
                 bestIndex = i;
@@ -66,7 +66,7 @@ export const execute = (
 
     // 新規作成
     const texture = device.createTexture({
-        size: { width, height },
+        "size": { width, height },
         format,
         usage
     });
@@ -81,8 +81,8 @@ export const execute = (
         width,
         height,
         format,
-        lastUsedFrame: currentFrame,
-        inUse: true
+        "lastUsedFrame": currentFrame,
+        "inUse": true
     });
 
     return texture;

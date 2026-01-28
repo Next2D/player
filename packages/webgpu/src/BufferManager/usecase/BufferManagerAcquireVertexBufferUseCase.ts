@@ -43,8 +43,8 @@ export const execute = (
         // 新規作成（2のべき乗に切り上げ）
         const size = bufferManagerUpperPowerOfTwoService(required_size);
         buffer = device.createBuffer({
-            size: size,
-            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+            "size": size,
+            "usage": GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
         });
     }
 

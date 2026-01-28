@@ -51,19 +51,19 @@ export const execute = (
     ]);
 
     const uniformBuffer = device.createBuffer({
-        size: uniformData.byteLength,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        "size": uniformData.byteLength,
+        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     // バインドグループを作成
     const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
-            { binding: 0, resource: { buffer: uniformBuffer } },
-            { binding: 1, resource: sampler },
-            { binding: 2, resource: dstAttachment.texture!.view },
-            { binding: 3, resource: srcAttachment.texture!.view }
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": dstAttachment.texture!.view },
+            { "binding": 3, "resource": srcAttachment.texture!.view }
         ]
     });
 

@@ -13,16 +13,16 @@ export const execute = (
     idCounter: { attachmentId: number }
 ): IAttachmentObject => {
     return {
-        id: idCounter.attachmentId++,
-        width: 0,
-        height: 0,
-        clipLevel: 0,
-        msaa: false,
-        mask: false,
-        color: null,
-        texture: null,
-        stencil: null,
-        msaaTexture: null,
-        msaaStencil: null
+        "id": idCounter.attachmentId++,
+        "width": 0,
+        "height": 0,
+        "clipLevel": 0,
+        "msaa": false,
+        "mask": false,
+        "color": null,
+        "texture": null,
+        "stencil": null,
+        "msaaTexture": null,
+        "msaaStencil": null
     };
 };

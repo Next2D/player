@@ -40,9 +40,9 @@ export class TextureManager
         format: GPUTextureFormat = "rgba8unorm"
     ): GPUTexture {
         const texture = this.device.createTexture({
-            size: { width, height },
-            format: format,
-            usage: GPUTextureUsage.TEXTURE_BINDING |
+            "size": { width, height },
+            "format": format,
+            "usage": GPUTextureUsage.TEXTURE_BINDING |
                    GPUTextureUsage.COPY_DST |
                    GPUTextureUsage.RENDER_ATTACHMENT
         });
@@ -110,7 +110,7 @@ export class TextureManager
             this.device.queue.writeTexture(
                 { texture },
                 pixels.buffer,
-                { bytesPerRow: width * 4, offset: pixels.byteOffset },
+                { "bytesPerRow": width * 4, "offset": pixels.byteOffset },
                 { width, height }
             );
         }
@@ -150,11 +150,11 @@ export class TextureManager
         }
 
         const sampler = this.device.createSampler({
-            magFilter: smooth ? "linear" : "nearest",
-            minFilter: smooth ? "linear" : "nearest",
-            mipmapFilter: smooth ? "linear" : "nearest",
-            addressModeU: "clamp-to-edge",
-            addressModeV: "clamp-to-edge"
+            "magFilter": smooth ? "linear" : "nearest",
+            "minFilter": smooth ? "linear" : "nearest",
+            "mipmapFilter": smooth ? "linear" : "nearest",
+            "addressModeU": "clamp-to-edge",
+            "addressModeV": "clamp-to-edge"
         });
 
         this.samplers.set(name, sampler);

@@ -132,8 +132,8 @@ export class PathCommand
 
             // 二次ベジェの制御点を近似計算
             const ctrl = {
-                x: 2 * p1.x - 0.5 * (p0.x + p2.x),
-                y: 2 * p1.y - 0.5 * (p0.y + p2.y)
+                "x": 2 * p1.x - 0.5 * (p0.x + p2.x),
+                "y": 2 * p1.y - 0.5 * (p0.y + p2.y)
             };
 
             this.$currentPath.push(ctrl.x, ctrl.y, true);
@@ -162,8 +162,8 @@ export class PathCommand
         const t3 = t2 * t;
 
         return {
-            x: mt3 * x0 + 3 * mt2 * t * x1 + 3 * mt * t2 * x2 + t3 * x3,
-            y: mt3 * y0 + 3 * mt2 * t * y1 + 3 * mt * t2 * y2 + t3 * y3
+            "x": mt3 * x0 + 3 * mt2 * t * x1 + 3 * mt * t2 * x2 + t3 * x3,
+            "y": mt3 * y0 + 3 * mt2 * t * y1 + 3 * mt * t2 * y2 + t3 * y3
         };
     }
 
@@ -178,7 +178,7 @@ export class PathCommand
     {
         // 円を8つの二次ベジェ曲線で近似
         const segments = 8;
-        const angleStep = (Math.PI * 2) / segments;
+        const angleStep = Math.PI * 2 / segments;
 
         for (let i = 0; i < segments; i++) {
             const angle0 = i * angleStep;
@@ -249,12 +249,12 @@ export class PathCommand
         const triangles: number[] = [];
 
         for (const path of vertices) {
-            if (path.length < 9) continue; // 最低3点（9要素）必要
+            if (path.length < 9) { continue } // 最低3点（9要素）必要
 
             // 点を抽出
             const points: IPoint[] = [];
             for (let i = 0; i < path.length; i += 3) {
-                points.push({ x: path[i] as number, y: path[i + 1] as number });
+                points.push({ "x": path[i] as number, "y": path[i + 1] as number });
             }
 
             // Fan triangulation
@@ -279,8 +279,8 @@ export class PathCommand
         const points: IPoint[] = [];
         for (let i = 0; i < this.$currentPath.length; i += 3) {
             points.push({
-                x: this.$currentPath[i] as number,
-                y: this.$currentPath[i + 1] as number
+                "x": this.$currentPath[i] as number,
+                "y": this.$currentPath[i + 1] as number
             });
         }
         return points;
@@ -298,8 +298,8 @@ export class PathCommand
             const points: IPoint[] = [];
             for (let i = 0; i < path.length; i += 3) {
                 points.push({
-                    x: path[i] as number,
-                    y: path[i + 1] as number
+                    "x": path[i] as number,
+                    "y": path[i + 1] as number
                 });
             }
             if (points.length > 0) {
@@ -311,8 +311,8 @@ export class PathCommand
             const points: IPoint[] = [];
             for (let i = 0; i < this.$currentPath.length; i += 3) {
                 points.push({
-                    x: this.$currentPath[i] as number,
-                    y: this.$currentPath[i + 1] as number
+                    "x": this.$currentPath[i] as number,
+                    "y": this.$currentPath[i + 1] as number
                 });
             }
             if (points.length > 0) {
