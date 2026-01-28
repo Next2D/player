@@ -1,6 +1,7 @@
 import type { IPoint } from "../../interface/IPoint";
 import type { IPath } from "../../interface/IPath";
 import { $context } from "../../WebGPUUtil";
+import { isDebugEnabled, logStroke } from "../../Debug/DebugLogger";
 
 /**
  * @description 法線ベクトルを計算（WebGL版のMeshCalculateNormalVectorServiceと同じ）
@@ -356,6 +357,14 @@ export const generateStrokeMesh = (vertices: IPath[], thickness: number): Float3
 
     // WebGL版と同じ: $context.jointsを使用 (0: bevel, 1: miter, 2: round)
     const joints = $context.joints;
+
+    // デバッグ出力: ストローク厚さを追跡
+    if (isDebugEnabled()) {
+        logStroke("generateStrokeMesh", {
+            "thickness": thickness,
+            halfThickness
+        });
+    }
 
     for (const path of vertices) {
         if (path.length < 6) { continue }

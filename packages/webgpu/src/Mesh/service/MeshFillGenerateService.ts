@@ -52,8 +52,8 @@ export const execute = (
         let position = index * 17;
 
         if (vertex[idx + 2]) {
-            // ベジェ曲線セグメント
-            // 座標A（始点）: bezier = (0, 0)
+
+            // 座標A
             buffer[position++] = vertex[idx - 3] as number;
             buffer[position++] = vertex[idx - 2] as number;
             buffer[position++] = 0;
@@ -74,7 +74,7 @@ export const execute = (
             buffer[position++] = ty;
             buffer[position++] = 0;
 
-            // 座標B（制御点）: bezier = (0.5, 0)
+            // 座標B
             buffer[position++] = vertex[idx] as number;
             buffer[position++] = vertex[idx + 1] as number;
             buffer[position++] = 0.5;
@@ -95,7 +95,7 @@ export const execute = (
             buffer[position++] = ty;
             buffer[position++] = 0;
 
-            // 座標C（終点）: bezier = (1, 1)
+            // 座標C
             buffer[position++] = vertex[idx + 3] as number;
             buffer[position++] = vertex[idx + 4] as number;
             buffer[position++] = 1;
@@ -117,10 +117,8 @@ export const execute = (
             buffer[position++] = 0;
 
         } else if (vertex[idx + 5]) {
-            // 次がベジェ曲線の場合（内部三角形）
-            // bezier = (0.5, 0.5) → 曲線判定をスキップ
 
-            // 座標A（パス始点）
+            // 座標A
             buffer[position++] = vertex[0] as number;
             buffer[position++] = vertex[1] as number;
             buffer[position++] = 0.5;
@@ -162,7 +160,7 @@ export const execute = (
             buffer[position++] = ty;
             buffer[position++] = 0;
 
-            // 座標C（次のベジェ曲線の終点）
+            // 座標C
             buffer[position++] = vertex[idx + 6] as number;
             buffer[position++] = vertex[idx + 7] as number;
             buffer[position++] = 0.5;
@@ -184,10 +182,8 @@ export const execute = (
             buffer[position++] = 0;
 
         } else {
-            // 直線セグメント（内部三角形）
-            // bezier = (0.5, 0.5) → 曲線判定をスキップ
 
-            // 座標A（パス始点）
+            // 座標A
             buffer[position++] = vertex[0] as number;
             buffer[position++] = vertex[1] as number;
             buffer[position++] = 0.5;

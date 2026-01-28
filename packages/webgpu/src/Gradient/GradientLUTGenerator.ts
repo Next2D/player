@@ -163,26 +163,22 @@ const lerp = (a: number, b: number, t: number): number =>
 
 /**
  * @description sRGBからリニアへ変換（入力: 0-1正規化値）
+ *              WebGL版と同じガンマ値 2.23333333 を使用
  */
 const sRGBToLinear = (value: number): number =>
 {
-    // より正確なsRGB→リニア変換
-    if (value <= 0.04045) {
-        return value / 12.92;
-    }
-    return Math.pow((value + 0.055) / 1.055, 2.4);
+    // WebGL版と同じ簡易ガンマ補正
+    return Math.pow(value, 2.23333333);
 };
 
 /**
  * @description リニアからsRGBへ変換（出力: 0-1正規化値）
+ *              WebGL版と同じガンマ値 0.45454545 (= 1/2.2) を使用
  */
 const linearToSRGB = (value: number): number =>
 {
-    // より正確なリニア→sRGB変換
-    if (value <= 0.0031308) {
-        return value * 12.92;
-    }
-    return 1.055 * Math.pow(value, 1 / 2.4) - 0.055;
+    // WebGL版と同じ簡易ガンマ補正
+    return Math.pow(value, 0.45454545);
 };
 
 /**

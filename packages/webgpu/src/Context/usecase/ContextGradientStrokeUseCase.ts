@@ -26,7 +26,7 @@ import { execute as contextComputeGradientMatrixService } from "../service/Conte
  * @param {number} viewportWidth
  * @param {number} viewportHeight
  * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
- * @return {void}
+ * @return {GPUTexture | null} - LUTテクスチャ（フレーム終了時に解放が必要）
  */
 export const execute = (
     device: GPUDevice,
@@ -46,7 +46,7 @@ export const execute = (
     viewportWidth: number,
     viewportHeight: number,
     useAtlasTarget: boolean
-): void => {
+): GPUTexture | null => {
     // 色（グラデーション描画ではアルファ乗算用に使用）
     const red = strokeStyle[0];
     const green = strokeStyle[1];
@@ -71,7 +71,7 @@ export const execute = (
     );
 
     if (mesh.indexCount === 0) {
-        return;
+        return null;
     }
 
     // 頂点バッファを作成
@@ -167,7 +167,7 @@ export const execute = (
     if (!bindGroupLayout) {
         console.error("[WebGPU] gradient_fill bind group layout not found");
         lutTexture.destroy();
-        return;
+        return null;
     }
 
     const bindGroup = device.createBindGroup({
@@ -185,7 +185,7 @@ export const execute = (
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         lutTexture.destroy();
-        return;
+        return null;
     }
 
     // 描画
@@ -193,4 +193,7 @@ export const execute = (
     renderPassEncoder.setVertexBuffer(0, vertexBuffer);
     renderPassEncoder.setBindGroup(0, bindGroup);
     renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+
+    // LUTテクスチャを返す（Context.tsでフレーム終了時に解放）
+    return lutTexture;
 };

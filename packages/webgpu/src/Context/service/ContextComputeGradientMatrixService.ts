@@ -1,3 +1,9 @@
+import {
+    isDebugEnabled,
+    logGradient,
+    logMatrix3x3
+} from "../../Debug/DebugLogger";
+
 /**
  * @description グラデーション変換データを計算
  *              WebGL版と同様の計算を実装
@@ -82,6 +88,19 @@ export const execute = (
             0, 0, 1
         ]);
 
+        // デバッグ出力
+        if (isDebugEnabled()) {
+            logGradient("Linear Gradient Computed", {
+                "type": 0,
+                gradientMatrix,
+                contextMatrix,
+                inverseMatrix,
+                linearPoints
+            });
+            logMatrix3x3("Linear inverseMatrix", inverseMatrix);
+            logMatrix3x3("Linear linearPoints", linearPoints);
+        }
+
         return { inverseMatrix, linearPoints };
     }
     // === Radial gradient ===
@@ -151,6 +170,30 @@ export const execute = (
         finalC, finalD, 0,
         finalTx, finalTy, 1
     ]);
+
+    // デバッグ出力
+    if (isDebugEnabled()) {
+        logGradient("Radial Gradient Computed", {
+            "type": 1,
+            gradientMatrix,
+            contextMatrix,
+            inverseMatrix,
+            "linearPoints": null
+        });
+        logMatrix3x3("Radial inverseMatrix", inverseMatrix);
+        console.log("[Radial Debug] Combined matrix:", {
+            "a": combinedA, "b": combinedB, "c": combinedC, "d": combinedD,
+            "tx": combinedTx, "ty": combinedTy, det
+        });
+        console.log("[Radial Debug] Inverse combined:", {
+            "a": invCombinedA, "b": invCombinedB, "c": invCombinedC, "d": invCombinedD,
+            "tx": invCombinedTx, "ty": invCombinedTy
+        });
+        console.log("[Radial Debug] Final matrix:", {
+            "a": finalA, "b": finalB, "c": finalC, "d": finalD,
+            "tx": finalTx, "ty": finalTy
+        });
+    }
 
     return { inverseMatrix, "linearPoints": null };
 

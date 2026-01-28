@@ -4,6 +4,7 @@ import {
     $setMaskStencilReference,
     $setMaskDrawing
 } from "../../Mask";
+import { isDebugEnabled, logMask } from "../../Debug/DebugLogger";
 
 /**
  * @description マスクの描画を終了
@@ -29,15 +30,22 @@ export const execute = (): void =>
     const clipLevel = currentAttachmentObject.clipLevel;
 
     // 累積マスク値を計算（WebGL版と同じアルゴリズム）
-    // 各マスクレベルのビットを累積OR
+    // 簡略化: mask = (1 << clipLevel) - 1
     // level 1: mask = 1 (0x01)
     // level 2: mask = 3 (0x03)
     // level 3: mask = 7 (0x07)
     // ...
-    // 結果: mask = (1 << clipLevel) - 1
-    let mask = 0;
-    for (let idx = 0; idx < clipLevel; ++idx) {
-        mask |= (1 << clipLevel - idx) - 1;
+    const mask = (1 << clipLevel) - 1;
+
+    // デバッグ出力: マスク値を追跡
+    if (isDebugEnabled()) {
+        logMask("MaskEndMaskService execute", {
+            clipLevel,
+            "maskValue": mask,
+            "maskBinary": mask.toString(2).padStart(8, "0"),
+            "isMaskTestEnabled": true,
+            "isMaskDrawing": false
+        });
     }
 
     // マスクテストを有効化

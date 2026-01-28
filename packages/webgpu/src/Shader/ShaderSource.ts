@@ -305,6 +305,10 @@ export class ShaderSource
 
             @fragment
             fn main(input: FragmentInput) -> @location(0) vec4<f32> {
+                // デバッグ: ディスカードを無効化して全ピクセルでステンシル更新
+                // これで形状が表示されればステンシル処理は動作している
+                return vec4<f32>(0.0, 0.0, 0.0, 0.0);
+
                 // Loop-Blinn法: f(u,v) = u² - v
                 // f < 0: 曲線の内側（描画）
                 // f >= 0: 曲線の外側（ディスカード）
@@ -947,12 +951,12 @@ export class ShaderSource
 
             @fragment
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                // ベジェ曲線のディスカード（Loop-Blinn）
-                // fillシェーダーと同じロジック
-                let f = input.bezier.x * input.bezier.x - input.bezier.y;
-                if (f >= 0.0) {
-                    discard;
-                }
+                // デバッグ: 固定色を返す（緑色）
+                // これが表示されればパイプライン/ステンシル処理は正常
+                return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+
+                // Pass 1の stencil_write でベジェディスカードが行われ、
+                // Pass 2ではステンシルテスト（NOT_EQUAL 0）で内側のみを描画
 
                 var t: f32;
                 let p = input.v_uv;

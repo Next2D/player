@@ -30,7 +30,7 @@ export const execute = (
     viewportHeight: number,
     useAtlasTarget: boolean,
     useStencilPipeline: boolean = false,
-    clipLevel: number = 1
+    _clipLevel: number = 1
 ): void => {
     // Uniform data: viewport size only (8 bytes → 16 bytes aligned)
     const uniformData = new Float32Array(4);
@@ -63,22 +63,21 @@ export const execute = (
     // パイプラインを取得して描画
     // - アトラス用: "fill" (rgba8unorm)
     // - キャンバス用: "fill_bgra" (bgra8unorm, ステンシルなし)
-    // - マスク描画モード時: "clip_write_main_N" (ステンシル書き込み、カラー書き込みなし)
+    // - マスク描画モード時: 何もしない（clip()でステンシル書き込み）
     // - マスクテストモード時: "fill_bgra_stencil" (bgra8unorm, ステンシルテストあり)
     let pipelineName: string;
     if (useAtlasTarget) {
         pipelineName = "fill";
     } else if (useStencilPipeline) {
         if ($isMaskDrawing()) {
-            // マスク描画モード: ステンシルにINVERT操作で書き込み、カラーは書き込まない
-            // WebGL版: stencilOp(ZERO, INVERT, INVERT), colorMask(false, false, false, false)
-            const clampedLevel = Math.min(8, Math.max(1, clipLevel));
-            pipelineName = `clip_write_main_${clampedLevel}`;
-        } else {
-            // マスクテストモード: ステンシル値をテストしてカラーを描画
-            // WebGL版: stencilFunc(EQUAL, mask & 0xff, mask)
-            pipelineName = "fill_bgra_stencil";
+            // マスク描画モード: ステンシルへの書き込みはclip()で行うため、ここでは何もしない
+            // clip()がINVERTでステンシルを書き込み、重複書き込みによるINVERT打ち消しを防止
+            return;
         }
+        // マスクテストモード: ステンシル値をテストしてカラーを描画
+        // WebGL版: stencilFunc(EQUAL, mask & 0xff, mask)
+        pipelineName = "fill_bgra_stencil";
+
     } else {
         pipelineName = "fill_bgra";
     }

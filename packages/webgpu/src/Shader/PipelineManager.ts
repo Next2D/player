@@ -38,6 +38,7 @@ export class PipelineManager
         this.createFillPipeline();
         this.createStencilFillPipelines(); // 2パスステンシルフィル用
         this.createClipPipeline(); // マスククリッピング用
+        this.createMaskUnionPipelines(); // ネストされたマスク用
         this.createMaskPipeline();
         this.createBasicPipeline();
         this.createTexturePipeline();
@@ -625,6 +626,127 @@ export class PipelineManager
                 }
             });
             this.pipelines.set(`clip_clear_main_${level}`, clipClearMainPipeline);
+        }
+    }
+
+    /**
+     * @description ネストされたマスク用のパイプラインを作成
+     *              WebGL版と同様に、レベル7を超えたステンシルビットをマージ
+     *              Create pipelines for nested mask support (merging stencil bits when level exceeds 7)
+     * @return {void}
+     */
+    private createMaskUnionPipelines(): void
+    {
+        // 17 floats per vertex: position(2) + bezier(2) + color(4) + matrix(3+3+3)
+        const vertexBufferLayout: GPUVertexBufferLayout = {
+            "arrayStride": 17 * 4,
+            "attributes": [
+                { "shaderLocation": 0, "offset": 0, "format": "float32x2" },
+                { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" },
+                { "shaderLocation": 2, "offset": 4 * 4, "format": "float32x4" },
+                { "shaderLocation": 3, "offset": 8 * 4, "format": "float32x3" },
+                { "shaderLocation": 4, "offset": 11 * 4, "format": "float32x3" },
+                { "shaderLocation": 5, "offset": 14 * 4, "format": "float32x3" }
+            ]
+        };
+
+        const vertexShaderModule = this.device.createShaderModule({
+            "code": ShaderSource.getStencilWriteMainVertexShader()
+        });
+        const fragmentShaderModule = this.device.createShaderModule({
+            "code": ShaderSource.getStencilWriteFragmentShader()
+        });
+
+        // レベル1-8に対応するマージパイプラインとクリアパイプラインを作成
+        for (let level = 1; level <= 8; level++) {
+            const mask = 1 << level - 1;
+            // ~mask - 1 ではなく、mask より上位のビット全てをマスク
+            // WebGL版: stencilMask(~mask - 1) → level 1: 0xFE, level 2: 0xFC, ...
+            const upperBitsMask = ~mask & 0xFF;
+
+            // === mask_union_merge_N ===
+            // WebGL版: stencilFunc(LEQUAL, mask, 0xff), stencilOp(ZERO, REPLACE, REPLACE)
+            // ステンシル値がmask以下の場合にREPLACE（maskビットをセット）
+            const mergePipeline = this.device.createRenderPipeline({
+                "layout": "auto",
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": [vertexBufferLayout]
+                },
+                "fragment": {
+                    "module": fragmentShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "writeMask": 0 // カラー書き込み無効
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "depthStencil": {
+                    "format": "stencil8",
+                    "stencilFront": {
+                        "compare": "less-equal", // LEQUAL: stencil <= reference
+                        "failOp": "zero",     // WebGL: ZERO
+                        "depthFailOp": "replace", // WebGL: REPLACE
+                        "passOp": "replace"   // WebGL: REPLACE
+                    },
+                    "stencilBack": {
+                        "compare": "less-equal",
+                        "failOp": "zero",
+                        "depthFailOp": "replace",
+                        "passOp": "replace"
+                    },
+                    "stencilReadMask": 0xFF,
+                    "stencilWriteMask": upperBitsMask // 上位ビットにマージ
+                }
+            });
+            this.pipelines.set(`mask_union_merge_${level}`, mergePipeline);
+
+            // === mask_union_clear_N ===
+            // WebGL版: stencilFunc(ALWAYS, 0, 0xff), stencilOp(REPLACE, REPLACE, REPLACE)
+            // 上位ビットをクリア（参照値0でREPLACE）
+            const clearPipeline = this.device.createRenderPipeline({
+                "layout": "auto",
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": [vertexBufferLayout]
+                },
+                "fragment": {
+                    "module": fragmentShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "writeMask": 0 // カラー書き込み無効
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "depthStencil": {
+                    "format": "stencil8",
+                    "stencilFront": {
+                        "compare": "always",
+                        "failOp": "replace",
+                        "depthFailOp": "replace",
+                        "passOp": "replace" // 参照値（0）で置き換え
+                    },
+                    "stencilBack": {
+                        "compare": "always",
+                        "failOp": "replace",
+                        "depthFailOp": "replace",
+                        "passOp": "replace"
+                    },
+                    "stencilReadMask": 0xFF,
+                    "stencilWriteMask": 1 << level // clipLevelビットのみクリア
+                }
+            });
+            this.pipelines.set(`mask_union_clear_${level}`, clearPipeline);
         }
     }
 
@@ -1226,6 +1348,9 @@ export class PipelineManager
             "primitive": {
                 "topology": "triangle-list",
                 "cullMode": "none"
+            },
+            "multisample": {
+                "count": this.sampleCount
             }
             // Note: キャンバス描画時はステンシルバッファがないためdepthStencilは設定しない
         });
@@ -1260,7 +1385,7 @@ export class PipelineManager
                 "stencilFront": {
                     "compare": "not-equal", // ステンシル値 != 0 の部分に描画
                     "failOp": "keep",
-                    "depthFailOp": "zero", // ステンシルをクリア
+                    "depthFailOp": "zero",
                     "passOp": "zero"
                 },
                 "stencilBack": {
@@ -1315,6 +1440,9 @@ export class PipelineManager
                 },
                 "stencilReadMask": 0xFF,
                 "stencilWriteMask": 0x00
+            },
+            "multisample": {
+                "count": this.sampleCount
             }
         });
         this.pipelines.set("gradient_fill_bgra_stencil", pipelineBGRAStencil);

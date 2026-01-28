@@ -5,7 +5,6 @@ import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillG
 import { execute as contextComputeBitmapMatrixService } from "../service/ContextComputeBitmapMatrixService";
 import {
     $isMaskDrawing,
-    $isMaskTestEnabled,
     $getMaskStencilReference
 } from "../../Mask";
 
@@ -51,7 +50,7 @@ export const execute = (
     viewportHeight: number,
     useAtlasTarget: boolean,
     useStencilPipeline: boolean = false,
-    clipLevel: number = 1
+    _clipLevel: number = 1
 ): GPUTexture | null => {
     // 色（ビットマップ描画ではアルファ乗算用に使用）
     const red = fillStyle[0];
@@ -167,11 +166,9 @@ export const execute = (
 
     // アトラス描画時は2パスステンシル処理を使用（WebGL版と同じ）
     // Pass 1: ステンシルに書き込み
-    // Pass 2: ビットマップを描画（NOT_EQUAL 0またはマスクテスト）
+    // Pass 2: ビットマップを描画（NOT_EQUAL 0）
+    // 注意: アトラスのステンシルはメインキャンバスのマスク処理とは独立
     if (useAtlasTarget && useStencilPipeline) {
-        const isMasked = $isMaskTestEnabled();
-        const maskReference = $getMaskStencilReference();
-
         // === Pass 1: ステンシル書き込み（カラー書き込みなし） ===
         // Front面: INCR_WRAP, Back面: DECR_WRAP
         const stencilWritePipeline = pipelineManager.getPipeline("stencil_write");
@@ -183,24 +180,11 @@ export const execute = (
         }
 
         // === Pass 2: ビットマップ描画（NOT_EQUAL 0） ===
-        let bitmapPipelineName: string;
-        if (isMasked) {
-            // マスクモード: stencil > maskValue の部分のみ描画
-            bitmapPipelineName = "bitmap_fill_stencil_masked";
-        } else {
-            // 通常モード: stencil != 0 の部分に描画
-            bitmapPipelineName = "bitmap_fill_stencil";
-        }
-
-        let bitmapPipeline = pipelineManager.getPipeline(bitmapPipelineName);
-        if (!bitmapPipeline) {
-            // フォールバック: bitmap_fill_stencilを使用
-            bitmapPipeline = pipelineManager.getPipeline("bitmap_fill_stencil");
-        }
-
+        // アトラス描画時は常に通常モード（メインキャンバスのマスク状態を参照しない）
+        const bitmapPipeline = pipelineManager.getPipeline("bitmap_fill_stencil");
         if (bitmapPipeline) {
             renderPassEncoder.setPipeline(bitmapPipeline);
-            renderPassEncoder.setStencilReference(isMasked ? maskReference : 0);
+            renderPassEncoder.setStencilReference(0);
             renderPassEncoder.setVertexBuffer(0, vertexBuffer);
             renderPassEncoder.setBindGroup(0, bindGroup);
             renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
@@ -209,32 +193,18 @@ export const execute = (
         // パイプラインを取得
         // - アトラス用: "bitmap_fill" (rgba8unorm, ステンシルなし)
         // - キャンバス用: "bitmap_fill_bgra" (bgra8unorm, ステンシルなし)
-        // - マスク描画モード時: "clip_write_main_N" (ステンシル書き込み、カラー書き込みなし)
+        // - マスク描画モード時: 何もしない（clip()でステンシル書き込み）
         // - マスクテストモード時: "bitmap_fill_bgra_stencil" (bgra8unorm, ステンシルテストあり)
         let pipelineName: string;
         if (useAtlasTarget) {
             pipelineName = "bitmap_fill";
         } else if (useStencilPipeline) {
             if ($isMaskDrawing()) {
-                // マスク描画モード: ステンシルにシェイプを書き込み、ビットマップは描画しない
-                // WebGL版: stencilOp(ZERO, INVERT, INVERT), colorMask(false, false, false, false)
-                const clampedLevel = Math.min(8, Math.max(1, clipLevel));
-                pipelineName = `clip_write_main_${clampedLevel}`;
-
-                const pipeline = pipelineManager.getPipeline(pipelineName);
-                if (!pipeline) {
-                    console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-                    bitmapTexture.destroy();
-                    return null;
-                }
-
-                // ステンシルのみ書き込み（ビットマップは描画しない）
-                renderPassEncoder.setPipeline(pipeline);
-                renderPassEncoder.setStencilReference(0);
-                renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-                renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
-
-                return bitmapTexture;
+                // マスク描画モード: ステンシルへの書き込みはclip()で行うため、ここでは何もしない
+                // clip()がINVERTでステンシルを書き込み、重複書き込みによるINVERT打ち消しを防止
+                // ビットマップテクスチャは解放してnullを返す
+                bitmapTexture.destroy();
+                return null;
             }
             // マスクテストモード: ステンシル値をテストしてビットマップを描画
             pipelineName = "bitmap_fill_bgra_stencil";

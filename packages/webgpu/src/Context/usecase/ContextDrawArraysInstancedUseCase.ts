@@ -9,6 +9,7 @@ import {
     $isMaskTestEnabled,
     $getMaskStencilReference
 } from "../../Mask";
+import { isDebugEnabled, logInstanced } from "../../Debug/DebugLogger";
 
 /**
  * @description インスタンス配列を描画
@@ -57,6 +58,19 @@ export const execute = (
     // 実際にマスクを使用するか判定
     // maskedパイプラインが存在し、マスクが有効で、ステンシルがある場合のみ
     const useStencil = isMasked && maskedPipeline && mainAttachment.stencil?.view;
+
+    // デバッグ出力: インスタンス描画時のマスク状態を追跡
+    if (isDebugEnabled()) {
+        logInstanced("ContextDrawArraysInstancedUseCase execute", {
+            "isMasked": isMasked,
+            "maskReference": maskReference,
+            "hasMaskedPipeline": !!maskedPipeline,
+            "hasStencilView": !!mainAttachment.stencil?.view,
+            "useStencil": !!useStencil,
+            "instanceCount": shaderManager.count
+        });
+        console.log("[WebGPU Instanced] Stencil label:", mainAttachment.stencil?.resource?.label || "unknown");
+    }
 
     const pipeline = useStencil ? maskedPipeline : normalPipeline;
 

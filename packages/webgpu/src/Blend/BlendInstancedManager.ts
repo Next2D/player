@@ -4,6 +4,7 @@ import { ShaderInstancedManager } from "../Shader/ShaderInstancedManager";
 import { $getCurrentBlendMode, $setCurrentBlendMode } from "../Blend";
 import { $getCurrentAtlasIndex, $setCurrentAtlasIndex, $setActiveAtlasIndex } from "../AtlasManager";
 import { renderQueue } from "@next2d/render-queue";
+import { isDebugEnabled, logInstanced } from "../Debug/DebugLogger";
 
 /**
  * @description 複雑なブレンドモード描画キュー
@@ -87,6 +88,16 @@ export const addDisplayObjectToInstanceArray = (
     const ct5 = color_transform[5] / 255;
     const ct6 = color_transform[6] / 255;
     const ct7 = 0;
+
+    // デバッグ出力: インスタンス描画のColorTransformを追跡
+    if (isDebugEnabled()) {
+        logInstanced("addDisplayObjectToInstanceArray", {
+            "globalAlpha": global_alpha,
+            "mulColor": [ct0, ct1, ct2, ct3],
+            "addColor": [ct4, ct5, ct6, ct7],
+            "matrix": Array.from(matrix)
+        });
+    }
 
     // シンプルなブレンドモード（インスタンス描画可能）
     const simpleBlendModes = ["normal", "layer", "add", "screen", "alpha", "erase", "copy"];

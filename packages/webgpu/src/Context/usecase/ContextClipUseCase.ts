@@ -3,7 +3,9 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillGenerateUseCase";
+import { execute as maskUnionMaskService } from "../../Mask/service/MaskUnionMaskService";
 import { $clipBounds, $clipLevels } from "../../Mask";
+import { isDebugEnabled, logMask } from "../../Debug/DebugLogger";
 
 /**
  * @description マスク処理を実行
@@ -102,33 +104,20 @@ export const execute = (
         return;
     }
 
-    // シザーレクトを設定
-    // WebGPUのシザーは左上原点
+    // シザーレクトは一時的に無効化（マスク全体を描画）
+    // WebGL版ではシザーレクトを使用してステンシル書き込みを最適化しているが、
+    // 座標系の問題を調査するため一時的に無効化
+    // TODO: 座標系の問題を解決後、シザーレクトを再有効化
+
+    // デバッグ用: シザーレクトの計算値を保持（ログ出力用）
     let scissorX = Math.max(0, xMin);
-    let scissorY: number;
-
-    if (isMainAttachment) {
-        // メインアタッチメント: シェーダーでY軸反転(-ndc.y)しているため、
-        // シザーのY座標も反転する必要がある
-        // WebGL版と同じ計算: height - yMin - height = height - yMax
-        scissorY = Math.max(0, currentAttachment.height - yMax);
-    } else {
-        // アトラス: Y軸反転なしなのでyMinをそのまま使用
-        scissorY = Math.max(0, yMin);
-    }
-
+    let scissorY = Math.max(0, isMainAttachment ? currentAttachment.height - yMax : yMin);
     let scissorW = Math.min(width, currentAttachment.width - scissorX);
     let scissorH = Math.min(height, currentAttachment.height - scissorY);
-
-    // レンダーターゲット範囲内にクランプ
     scissorX = Math.min(scissorX, currentAttachment.width);
     scissorY = Math.min(scissorY, currentAttachment.height);
     scissorW = Math.max(0, Math.min(scissorW, currentAttachment.width - scissorX));
     scissorH = Math.max(0, Math.min(scissorH, currentAttachment.height - scissorY));
-
-    if (scissorW > 0 && scissorH > 0) {
-        renderPassEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
-    }
 
     // INVERT操作でマスク形状を描画
     // カバーされたピクセルのステンシル値が反転される（ビット単位）
@@ -138,7 +127,41 @@ export const execute = (
     renderPassEncoder.setVertexBuffer(0, vertexBuffer);
     renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
 
+    // デバッグ出力
+    if (isDebugEnabled()) {
+        logMask("ContextClipUseCase execute (mask shape drawn)", {
+            "clipLevel": clipLevel,
+            "maskValue": 1 << level - 1,
+            "isMaskDrawing": true
+        });
+        console.log("[WebGPU Mask] Clip pipeline used:", pipelineName);
+        console.log("[WebGPU Mask] Vertex count:", mesh.indexCount);
+        console.log("[WebGPU Mask] Scissor rect:", { scissorX, scissorY, scissorW, scissorH });
+        console.log("[WebGPU Mask] Bounds:", { xMin, yMin, xMax, yMax });
+        console.log("[WebGPU Mask] Attachment size:", currentAttachment.width, "x", currentAttachment.height);
+    }
+
     // レベルをインクリメント（WebGL版: ++level）
     level++;
+
+    // レベルが8を超えた場合、ステンシルビットをマージして再利用
+    // WebGL版: if (level > 7) { maskUnionMaskService(); level = clipLevel + 1; }
+    if (level > 8) {
+        maskUnionMaskService(
+            renderPassEncoder,
+            bufferManager,
+            pipelineManager,
+            currentAttachment
+        );
+        level = clipLevel + 1;
+
+        if (isDebugEnabled()) {
+            logMask("ContextClipUseCase maskUnion called", {
+                "clipLevel": clipLevel
+            });
+            console.log("[WebGPU Mask] New level:", level, "Reason: level exceeded 8");
+        }
+    }
+
     $clipLevels.set(clipLevel, level);
 };
