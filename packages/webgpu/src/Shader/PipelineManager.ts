@@ -395,6 +395,112 @@ export class PipelineManager
         });
         this.pipelines.set("stencil_fill", stencilFillPipeline);
 
+        // === アトラス用（非MSAA、sampleCount: 1） ===
+        // アトラスはMSAAを使用しないことがあるため、sampleCount: 1 のパイプラインを作成
+        const stencilWritePipelineAtlas = this.device.createRenderPipeline({
+            "layout": "auto",
+            "vertex": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilWriteVertexShader()
+                }),
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilWriteFragmentShader()
+                }),
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "writeMask": 0
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none",
+                "frontFace": "ccw"
+            },
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "increment-wrap"
+                },
+                "stencilBack": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "decrement-wrap"
+                },
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
+            },
+            "multisample": {
+                "count": 1 // アトラス用は常に1
+            }
+        });
+        this.pipelines.set("stencil_write_atlas", stencilWritePipelineAtlas);
+
+        const stencilFillPipelineAtlas = this.device.createRenderPipeline({
+            "layout": "auto",
+            "vertex": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilFillVertexShader()
+                }),
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilFillFragmentShader()
+                }),
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        }
+                    }
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "not-equal",
+                    "failOp": "keep",
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
+                },
+                "stencilBack": {
+                    "compare": "not-equal",
+                    "failOp": "keep",
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
+                },
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
+            },
+            "multisample": {
+                "count": 1 // アトラス用は常に1
+            }
+        });
+        this.pipelines.set("stencil_fill_atlas", stencilFillPipelineAtlas);
+
         // === Pass 2 (Masked): マスク領域内のみ描画 ===
         // マスクモード時の2パスフィル:
         // 1. clip_writeでマスク領域にmaskValue(例:1)を書き込み済み
@@ -1299,8 +1405,9 @@ export class PipelineManager
             }
         };
 
-        // アトラステクスチャ用（rgba8unorm）- ステンシルなし - MSAA対応
+        // アトラステクスチャ用（rgba8unorm）- ステンシルなし - sampleCount: 1（アトラスはMSAAなし）
         const pipelineRGBA = this.device.createRenderPipeline({
+            "label": "gradient_fill_no_stencil_pipeline",
             "layout": pipelineLayout,
             "vertex": {
                 "module": vertexShaderModule,
@@ -1320,7 +1427,7 @@ export class PipelineManager
                 "cullMode": "none"
             },
             "multisample": {
-                "count": this.sampleCount
+                "count": 1  // アトラスはMSAAを使用しない
             }
         });
 
@@ -1356,7 +1463,34 @@ export class PipelineManager
         });
 
         this.pipelines.set("gradient_fill", pipelineRGBA);
+        this.pipelines.set("gradient_fill_no_stencil", pipelineRGBA); // 明示的にステンシルなし
         this.pipelines.set("gradient_fill_bgra", pipelineBGRA);
+
+        // sampleCount: 1のbgra8unormパイプライン（MSAAなしのメインキャンバス用）
+        const pipelineBGRA_noMSAA = this.device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleMain,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": blendState
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "multisample": {
+                "count": 1
+            }
+        });
+        this.pipelines.set("gradient_fill_bgra_no_msaa", pipelineBGRA_noMSAA);
 
         // === アトラスのステンシル付きレンダーパス用（2パス処理のPass 2用） ===
         // NOT_EQUAL 0テストでグラデーションを描画し、ステンシルをクリア
@@ -1402,6 +1536,51 @@ export class PipelineManager
             }
         });
         this.pipelines.set("gradient_fill_stencil", pipelineRGBAStencil);
+
+        // === アトラス用ステンシル付きグラデーション（sampleCount: 1） ===
+        // ステンシルテストは "always" に設定して、全フラグメントを通過させる
+        // 2パスフィルのステンシル書き込みとは別の処理として、単純なグラデーション描画に使用
+        const pipelineRGBAStencilAtlas = this.device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": blendState
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
+                },
+                "stencilBack": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
+                },
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0x00
+            },
+            "multisample": {
+                "count": 1 // アトラス用は常に1
+            }
+        });
+        this.pipelines.set("gradient_fill_stencil_atlas", pipelineRGBAStencilAtlas);
 
         // === メインアタッチメントのステンシル付きレンダーパス用 ===
         // マスクモード時に使用

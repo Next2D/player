@@ -104,39 +104,15 @@ export const execute = (
         return { inverseMatrix, linearPoints };
     }
     // === Radial gradient ===
-    // WebGL版のフロー:
-    // 1. context.transform(gradient) で context行列にgradient行列を合成
-    // 2. prevMatrix = 合成前のcontext行列
-    // 3. inverseMatrix = inverse(context * gradient)
-    // 4. シェーダー: v_uv = (inverseMatrix * prevMatrix * position).xy
-    //    = inverse(context * gradient) * context * position
+    // WebGPU版: グラデーション行列の逆行列のみを使用
+    // シェーダーでは v_uv = inverse(gradient) * position
+    // これにより、ローカル座標をグラデーション空間（-819.2 to 819.2）に変換
     //
-    // これにより、position を context で変換した後、
-    // gradient のローカル座標系に変換する
+    // 注意: WebGL版とは異なり、contextMatrixにはアトラスオフセットが含まれているため、
+    // contextMatrixを使った合成は行わない
 
-    // コンテキスト行列を取得 (3x3: indices 0,1,3,4,6,7 が a,b,c,d,tx,ty)
-    const ca = contextMatrix[0];
-    const cb = contextMatrix[1];
-    const cc = contextMatrix[3];
-    const cd = contextMatrix[4];
-    const ctx = contextMatrix[6];
-    const cty = contextMatrix[7];
-
-    // context * gradient の合成行列を計算
-    // | ca cb | * | ga gb | = | ca*ga+cb*gc  ca*gb+cb*gd |
-    // | cc cd |   | gc gd |   | cc*ga+cd*gc  cc*gb+cd*gd |
-    //
-    // translation: | ca cb | * | gtx | + | ctx |
-    //              | cc cd |   | gty |   | cty |
-    const combinedA = ca * ga + cb * gc;
-    const combinedB = ca * gb + cb * gd;
-    const combinedC = cc * ga + cd * gc;
-    const combinedD = cc * gb + cd * gd;
-    const combinedTx = ca * gtx + cb * gty + ctx;
-    const combinedTy = cc * gtx + cd * gty + cty;
-
-    // 合成行列の行列式
-    const det = combinedA * combinedD - combinedB * combinedC;
+    // グラデーション行列の行列式
+    const det = ga * gd - gb * gc;
     if (Math.abs(det) < 1e-10) {
         return {
             "inverseMatrix": new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
@@ -146,29 +122,19 @@ export const execute = (
 
     const invDet = 1 / det;
 
-    // inverse(context * gradient) を計算
-    const invCombinedA = combinedD * invDet;
-    const invCombinedB = -combinedB * invDet;
-    const invCombinedC = -combinedC * invDet;
-    const invCombinedD = combinedA * invDet;
-    const invCombinedTx = (combinedC * combinedTy - combinedD * combinedTx) * invDet;
-    const invCombinedTy = (combinedB * combinedTx - combinedA * combinedTy) * invDet;
+    // inverse(gradient) を計算
+    const invA = gd * invDet;
+    const invB = -gb * invDet;
+    const invC = -gc * invDet;
+    const invD = ga * invDet;
+    const invTx = (gc * gty - gd * gtx) * invDet;
+    const invTy = (gb * gtx - ga * gty) * invDet;
 
-    // 次に inverseMatrix * contextMatrix を計算
-    // これが最終的なシェーダーに渡す逆行列
-    // inverse(context * gradient) * context
-    const finalA = invCombinedA * ca + invCombinedB * cc;
-    const finalB = invCombinedA * cb + invCombinedB * cd;
-    const finalC = invCombinedC * ca + invCombinedD * cc;
-    const finalD = invCombinedC * cb + invCombinedD * cd;
-    const finalTx = invCombinedA * ctx + invCombinedB * cty + invCombinedTx;
-    const finalTy = invCombinedC * ctx + invCombinedD * cty + invCombinedTy;
-
-    // 最終的な逆行列（シェーダーでは v_uv = finalMatrix * position）
+    // 逆行列（シェーダーでは v_uv = inverseMatrix * position）
     const inverseMatrix = new Float32Array([
-        finalA, finalB, 0,
-        finalC, finalD, 0,
-        finalTx, finalTy, 1
+        invA, invB, 0,
+        invC, invD, 0,
+        invTx, invTy, 1
     ]);
 
     // デバッグ出力
@@ -181,17 +147,13 @@ export const execute = (
             "linearPoints": null
         });
         logMatrix3x3("Radial inverseMatrix", inverseMatrix);
-        console.log("[Radial Debug] Combined matrix:", {
-            "a": combinedA, "b": combinedB, "c": combinedC, "d": combinedD,
-            "tx": combinedTx, "ty": combinedTy, det
+        console.log("[Radial Debug] Gradient matrix:", {
+            "a": ga, "b": gb, "c": gc, "d": gd,
+            "tx": gtx, "ty": gty, det
         });
-        console.log("[Radial Debug] Inverse combined:", {
-            "a": invCombinedA, "b": invCombinedB, "c": invCombinedC, "d": invCombinedD,
-            "tx": invCombinedTx, "ty": invCombinedTy
-        });
-        console.log("[Radial Debug] Final matrix:", {
-            "a": finalA, "b": finalB, "c": finalC, "d": finalD,
-            "tx": finalTx, "ty": finalTy
+        console.log("[Radial Debug] Inverse gradient:", {
+            "a": invA, "b": invB, "c": invC, "d": invD,
+            "tx": invTx, "ty": invTy
         });
     }
 

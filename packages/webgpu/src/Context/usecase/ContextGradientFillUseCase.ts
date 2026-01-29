@@ -76,13 +76,7 @@ export const execute = (
         viewportWidth, viewportHeight
     );
 
-    console.log("[GradientFill] mesh.indexCount:", mesh.indexCount);
-    console.log("[GradientFill] pathVertices.length:", pathVertices.length);
-    console.log("[GradientFill] useAtlasTarget:", useAtlasTarget);
-    console.log("[GradientFill] useStencilPipeline:", useStencilPipeline);
-
     if (mesh.indexCount === 0) {
-        console.log("[GradientFill] mesh is empty!");
         return null;
     }
 
@@ -105,10 +99,11 @@ export const execute = (
     });
 
     // LUTデータをテクスチャに転送
+    // Note: Use lutData directly instead of lutData.buffer to avoid potential issues
     device.queue.writeTexture(
         { "texture": lutTexture },
-        lutData.buffer,
-        { "bytesPerRow": lutResolution * 4, "rowsPerImage": 1, "offset": lutData.byteOffset },
+        lutData,
+        { "bytesPerRow": lutResolution * 4, "rowsPerImage": 1 },
         { "width": lutResolution, "height": 1 }
     );
 
@@ -140,20 +135,23 @@ export const execute = (
     // 合計: 80 bytes
     const uniformData = new Float32Array(20);
     // mat3x3 (WGSL column-major: 各列がvec4にパディング)
-    // inverseMatrixは行優先で格納されているため、列優先に変換
-    // Row-major: [row0: a,b,0] [row1: c,d,0] [row2: tx,ty,1]
-    // Column-major: [col0: a,c,tx] [col1: b,d,ty] [col2: 0,0,1]
+    // inverseMatrixは行優先で格納されている: [a,b,0, c,d,0, tx,ty,1]
+    // WGSL mat3x3 * vec3(x,y,1) で正しいaffine変換を行うための列優先形式:
+    // col0: [a, c, 0]
+    // col1: [b, d, 0]
+    // col2: [tx, ty, 1]
+    // 結果: x' = a*x + b*y + tx, y' = c*x + d*y + ty
     uniformData[0] = gradientData.inverseMatrix[0];  // column 0, row 0 (a)
     uniformData[1] = gradientData.inverseMatrix[3];  // column 0, row 1 (c)
-    uniformData[2] = gradientData.inverseMatrix[6];  // column 0, row 2 (tx)
+    uniformData[2] = 0;                              // column 0, row 2 (0)
     uniformData[3] = 0; // padding
     uniformData[4] = gradientData.inverseMatrix[1];  // column 1, row 0 (b)
     uniformData[5] = gradientData.inverseMatrix[4];  // column 1, row 1 (d)
-    uniformData[6] = gradientData.inverseMatrix[7];  // column 1, row 2 (ty)
+    uniformData[6] = 0;                              // column 1, row 2 (0)
     uniformData[7] = 0; // padding
-    uniformData[8] = gradientData.inverseMatrix[2];  // column 2, row 0 (0)
-    uniformData[9] = gradientData.inverseMatrix[5];  // column 2, row 1 (0)
-    uniformData[10] = gradientData.inverseMatrix[8]; // column 2, row 2 (1)
+    uniformData[8] = gradientData.inverseMatrix[6];  // column 2, row 0 (tx)
+    uniformData[9] = gradientData.inverseMatrix[7];  // column 2, row 1 (ty)
+    uniformData[10] = 1;                             // column 2, row 2 (1)
     uniformData[11] = 0; // padding
     // グラデーションパラメータ
     uniformData[12] = type; // gradientType
@@ -210,39 +208,13 @@ export const execute = (
         ]
     });
 
-    // アトラス描画時は2パスステンシル処理を使用（WebGL版と同じ）
-    // Pass 1: ステンシルに書き込み（INCR_WRAP/DECR_WRAP）
-    // Pass 2: ステンシルテスト（NOT_EQUAL 0）でグラデーションを描画
-    if (useAtlasTarget && useStencilPipeline) {
-        // === Pass 1: ステンシル書き込み（カラー書き込みなし） ===
-        const stencilWritePipeline = pipelineManager.getPipeline("stencil_write");
-        console.log("[GradientFill] stencil_write pipeline:", stencilWritePipeline ? "found" : "NOT FOUND");
-        if (stencilWritePipeline) {
-            renderPassEncoder.setPipeline(stencilWritePipeline);
-            renderPassEncoder.setStencilReference(0);
-            renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-            renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
-        }
+    // アトラス描画時
+    if (useAtlasTarget) {
+        // アトラスは常にステンシルバッファ付きなので、ステンシル対応パイプラインを使用
+        // gradient_fill_stencil_atlas: rgba8unorm + stencil8, sampleCount: 1
+        const pipelineName = "gradient_fill_stencil_atlas";
+        const gradientPipeline = pipelineManager.getPipeline(pipelineName);
 
-        // === Pass 2: テスト - stencil_fill（単色）で描画 ===
-        // これで表示されればステンシル処理は正常
-        const testPipeline = pipelineManager.getPipeline("stencil_fill");
-        console.log("[GradientFill] stencil_fill pipeline (test):", testPipeline ? "found" : "NOT FOUND");
-        if (testPipeline) {
-            renderPassEncoder.setPipeline(testPipeline);
-            renderPassEncoder.setStencilReference(0);
-            renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-            renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
-            console.log("[GradientFill] Pass 2 (stencil_fill test) draw called with indexCount:", mesh.indexCount);
-        } else {
-            console.error("[GradientFill] stencil_fill pipeline not found!");
-        }
-        return lutTexture;
-    }
-
-    // アトラス描画（ステンシルなし）- 単純なグラデーション描画
-    if (useAtlasTarget && !useStencilPipeline) {
-        const gradientPipeline = pipelineManager.getPipeline("gradient_fill");
         if (gradientPipeline) {
             renderPassEncoder.setPipeline(gradientPipeline);
             renderPassEncoder.setVertexBuffer(0, vertexBuffer);
@@ -252,44 +224,42 @@ export const execute = (
         return lutTexture;
     }
 
-    if (!useAtlasTarget) {
-        // キャンバスへの直接描画
-        // - キャンバス用: "gradient_fill_bgra" (bgra8unorm, ステンシルなし)
-        // - マスク描画モード時: 何もしない（clip()でステンシル書き込み）
-        // - マスクテストモード時: "gradient_fill_bgra_stencil" (bgra8unorm, ステンシルテストあり)
-        let pipelineName: string;
-        if (useStencilPipeline) {
-            if ($isMaskDrawing()) {
-                // マスク描画モード: ステンシルへの書き込みはclip()で行うため、ここでは何もしない
-                // clip()がINVERTでステンシルを書き込み、重複書き込みによるINVERT打ち消しを防止
-                // LUTテクスチャは解放してnullを返す
-                lutTexture.destroy();
-                return null;
-            }
-            // マスクテストモード: ステンシル値をテストしてグラデーションを描画
-            pipelineName = "gradient_fill_bgra_stencil";
-        } else {
-            pipelineName = "gradient_fill_bgra";
-        }
-
-        const pipeline = pipelineManager.getPipeline(pipelineName);
-        if (!pipeline) {
+    // キャンバスへの直接描画
+    // - キャンバス用: "gradient_fill_bgra_no_msaa" (bgra8unorm, ステンシルなし)
+    // - マスク描画モード時: 何もしない（clip()でステンシル書き込み）
+    // - マスクテストモード時: "gradient_fill_bgra_stencil" (bgra8unorm, ステンシルテストあり)
+    let pipelineName: string;
+    if (useStencilPipeline) {
+        if ($isMaskDrawing()) {
+            // マスク描画モード: ステンシルへの書き込みはclip()で行うため、ここでは何もしない
+            // clip()がINVERTでステンシルを書き込み、重複書き込みによるINVERT打ち消しを防止
+            // LUTテクスチャは解放してnullを返す
             lutTexture.destroy();
             return null;
         }
-
-        // 描画
-        renderPassEncoder.setPipeline(pipeline);
-        renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-        renderPassEncoder.setBindGroup(0, bindGroup);
-
-        // マスクテストモード時はステンシル参照値を設定
-        if (useStencilPipeline && !$isMaskDrawing()) {
-            renderPassEncoder.setStencilReference($getMaskStencilReference());
-        }
-
-        renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+        // マスクテストモード: ステンシル値をテストしてグラデーションを描画
+        pipelineName = "gradient_fill_bgra_stencil";
+    } else {
+        pipelineName = "gradient_fill_bgra_no_msaa";
     }
+
+    const pipeline = pipelineManager.getPipeline(pipelineName);
+    if (!pipeline) {
+        lutTexture.destroy();
+        return null;
+    }
+
+    // 描画
+    renderPassEncoder.setPipeline(pipeline);
+    renderPassEncoder.setVertexBuffer(0, vertexBuffer);
+    renderPassEncoder.setBindGroup(0, bindGroup);
+
+    // マスクテストモード時はステンシル参照値を設定
+    if (useStencilPipeline && !$isMaskDrawing()) {
+        renderPassEncoder.setStencilReference($getMaskStencilReference());
+    }
+
+    renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
 
     // LUTテクスチャを返す（Context.tsでフレーム終了時に解放）
     return lutTexture;

@@ -89,8 +89,8 @@ const interpolateColor = (
     let endIdx = 0;
 
     for (let i = 0; i < stopsLength; i++) {
-        // offset は 0-255 範囲なので、0-1 に正規化
-        const offset = stops[i * 5] / 255;
+        // offset は既に 0-1 範囲
+        const offset = stops[i * 5];
         if (offset <= t) {
             startIdx = i;
         }
@@ -116,9 +116,9 @@ const interpolateColor = (
         };
     }
 
-    // 補間係数を計算（offset は 0-255 範囲なので、0-1 に正規化）
-    const startOffset = stops[startIdx * 5] / 255;
-    const endOffset = stops[endIdx * 5] / 255;
+    // 補間係数を計算（offset は既に 0-1 範囲）
+    const startOffset = stops[startIdx * 5];
+    const endOffset = stops[endIdx * 5];
     const localT = (t - startOffset) / (endOffset - startOffset);
 
     // 色を取得（0-255範囲）

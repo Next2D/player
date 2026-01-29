@@ -305,10 +305,6 @@ export class ShaderSource
 
             @fragment
             fn main(input: FragmentInput) -> @location(0) vec4<f32> {
-                // デバッグ: ディスカードを無効化して全ピクセルでステンシル更新
-                // これで形状が表示されればステンシル処理は動作している
-                return vec4<f32>(0.0, 0.0, 0.0, 0.0);
-
                 // Loop-Blinn法: f(u,v) = u² - v
                 // f < 0: 曲線の内側（描画）
                 // f >= 0: 曲線の外側（ディスカード）
@@ -951,12 +947,15 @@ export class ShaderSource
 
             @fragment
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                // デバッグ: 固定色を返す（緑色）
-                // これが表示されればパイプライン/ステンシル処理は正常
-                return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-
-                // Pass 1の stencil_write でベジェディスカードが行われ、
-                // Pass 2ではステンシルテスト（NOT_EQUAL 0）で内側のみを描画
+                // Loop-Blinn法: f(u,v) = u² - v
+                // f < 0: 曲線の内側（描画）
+                // f >= 0: 曲線の外側（ディスカード）
+                // 内部三角形（直線セグメント）はbezier = (0.5, 0.5)で、
+                // u² - v = 0.25 - 0.5 = -0.25 < 0 なので曲線内部として描画される
+                let f = input.bezier.x * input.bezier.x - input.bezier.y;
+                if (f >= 0.0) {
+                    discard;
+                }
 
                 var t: f32;
                 let p = input.v_uv;
@@ -968,7 +967,12 @@ export class ShaderSource
                     let b = gradient.linearPoints.zw;
                     let ab = b - a;
                     let ap = p - a;
-                    t = dot(ab, ap) / dot(ab, ab);
+                    let dotAB = dot(ab, ab);
+                    if (dotAB < 0.0001) {
+                        t = 0.0;
+                    } else {
+                        t = dot(ab, ap) / dotAB;
+                    }
                 } else {
                     // === Radial gradient ===
                     // WebGL版と同じ: coord = p / radius
@@ -998,11 +1002,11 @@ export class ShaderSource
                 t = applySpread(t, gradient.spread);
 
                 // LUTテクスチャからサンプリング
-                // LUTは既にプリマルチプライドアルファで格納されている
-                let gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(t, 0.5));
+                let clampedT = clamp(t, 0.0, 1.0);
 
-                // WebGL版と同じ: LUTの色をそのまま返す
-                // input.color.aでの追加アルファ乗算は行わない（LUTで既に適用済み）
+                // textureSampleを使用
+                let gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(clampedT, 0.5));
+
                 return gradientColor;
             }
         `;

@@ -1263,10 +1263,9 @@ export class Context
             const textureView = this.getCurrentTextureView();
 
             // ステンシル付きレンダーパスが必要な場合を判定
-            // 1. メインアタッチメントへのマスク描画/テスト
+            // グラデーション塗りつぶしでは、マスクモード時のみステンシルが必要
+            // （アトラスへの描画時はステンシル不要 - clip操作でのみステンシルを使用）
             const needsMainStencil = !this.currentRenderTarget && ($isMaskTestEnabled() || $isMaskDrawing()) && this.$mainAttachmentObject?.stencil?.view;
-            // 2. アトラスへの描画（2パスフィルレンダリング用）
-            const needsAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
 
             if (needsMainStencil) {
                 // メインアタッチメント用ステンシルレンダーパス
@@ -1281,25 +1280,8 @@ export class Context
                 if ($isMaskTestEnabled()) {
                     this.renderPassEncoder.setStencilReference($getMaskStencilReference());
                 }
-            } else if (needsAtlasStencil) {
-                // アトラス用ステンシルレンダーパス（2パスフィルレンダリング用）
-                // MSAAテクスチャを使用するかどうか
-                const useMsaa = atlasAttachment.msaa && atlasAttachment.msaaTexture?.view;
-                const colorView = useMsaa ? atlasAttachment.msaaTexture!.view : textureView;
-                const atlasStencilView = useMsaa
-                    ? atlasAttachment.msaaStencil?.view || atlasAttachment.stencil!.view
-                    : atlasAttachment.stencil!.view;
-                const resolveTarget = useMsaa ? textureView : null;
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    colorView,
-                    atlasStencilView,
-                    "load",
-                    "clear",  // ステンシルはクリア（各描画で独立）
-                    resolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             } else {
-                // ステンシル無しレンダーパス
+                // ステンシル無しレンダーパス（アトラス描画時もステンシル不要）
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
                     textureView,
                     0, 0, 0, 0,
@@ -1309,15 +1291,17 @@ export class Context
             }
         }
 
-        // ステンシル付きレンダーパスかどうかを判定
-        // - マスクモード時またはマスクテスト有効時（メインアタッチメントへの描画）
-        // - アトラス描画時（ステンシル付きレンダーパス）
-        const useAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
-        const useMainStencil = (this.inMaskMode || $isMaskTestEnabled()) && this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
-        const useStencilPipeline = useAtlasStencil || useMainStencil;
+        // WebGL版と同じ: ビューポートサイズ
+        const viewportWidth = this.viewportWidth;
+        const viewportHeight = this.viewportHeight;
 
-        // マスク描画時のクリップレベルを取得
-        const clipLevel = this.$mainAttachmentObject?.clipLevel ?? 1;
+        // ステンシル付きパイプラインを使用するかどうかを判定
+        // グラデーション塗りつぶしでは、マスクモード時のみステンシルテストが必要
+        const useMainStencil = !!((this.inMaskMode || $isMaskTestEnabled()) && this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget);
+        const useStencilPipeline = useMainStencil;
+
+        // アトラスへの描画かどうか
+        const useAtlasTarget = !!this.currentRenderTarget;
 
         const lutTexture = contextGradientFillUseCase(
             this.device,
@@ -1333,17 +1317,19 @@ export class Context
             spread,
             interpolation,
             focal,
-            this.viewportWidth,
-            this.viewportHeight,
-            !!this.currentRenderTarget,
-            !!useStencilPipeline,
-            clipLevel
+            viewportWidth,
+            viewportHeight,
+            useAtlasTarget,
+            useStencilPipeline,
+            this.$mainAttachmentObject?.clipLevel ?? 1
         );
-
-        // LUTテクスチャをフレーム終了時に解放するリストに追加
         if (lutTexture) {
             this.addFrameTexture(lutTexture);
         }
+
+        // グラデーション描画後にパスをクリア
+        // これにより、後続のfill()呼び出しで同じパスが再描画されるのを防ぐ
+        this.beginPath();
     }
 
     /**
@@ -1432,8 +1418,8 @@ export class Context
         // ステンシル付きレンダーパスかどうかを判定
         // - マスクモード時またはマスクテスト有効時（メインアタッチメントへの描画）
         // - アトラス描画時（ステンシル付きレンダーパス）
-        const useAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
-        const useMainStencil = (this.inMaskMode || $isMaskTestEnabled()) && this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
+        const useAtlasStencil = !!(this.currentRenderTarget && atlasAttachment?.stencil?.view);
+        const useMainStencil = !!((this.inMaskMode || $isMaskTestEnabled()) && this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget);
         const useStencilPipeline = useAtlasStencil || useMainStencil;
 
         // マスク描画時のクリップレベルを取得
@@ -1464,6 +1450,10 @@ export class Context
         if (bitmapTexture) {
             this.addFrameTexture(bitmapTexture);
         }
+
+        // ビットマップ描画後にパスをクリア
+        // これにより、後続のfill()呼び出しで同じパスが再描画されるのを防ぐ
+        this.beginPath();
     }
 
     /**
