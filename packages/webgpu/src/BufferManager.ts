@@ -268,12 +268,32 @@ export class BufferManager
         }
         this.uniformBuffers.clear();
 
+        // 全てのStorage Bufferを解放（次フレームで再利用可能にする）
+        // GPUがsubmit()で描画を完了した後なので、安全に解放できる
+        this.releaseAllStorageBuffers();
+
         // フレーム番号をインクリメント
         this.frameNumber++;
 
         // 60フレームごとに古いStorage Bufferをクリーンアップ
         if (this.frameNumber % 60 === 0) {
             cleanupStorageBuffers(this.storageBufferPool, this.frameNumber);
+        }
+    }
+
+    /**
+     * @description 全てのStorage Bufferをプールに返却
+     *              Release all Storage Buffers back to pool
+     *
+     * フレーム終了時に呼び出す。GPUが描画を完了した後に
+     * 全てのバッファを次フレームで再利用可能にする。
+     *
+     * @return {void}
+     */
+    releaseAllStorageBuffers (): void
+    {
+        for (const entry of this.storageBufferPool) {
+            entry.inUse = false;
         }
     }
 
@@ -322,6 +342,9 @@ export class BufferManager
      * @description Indirect Bufferを作成または取得
      *              Create or get Indirect Buffer for draw indirect commands
      *
+     * 注意: この方法は1フレーム内で1回のdrawIndirect呼び出しの場合のみ使用可能。
+     * 複数回呼び出す場合は createIndirectBuffer() を使用すること。
+     *
      * @param {number} vertexCount - 頂点数
      * @param {number} instanceCount - インスタンス数
      * @param {number} [firstVertex=0] - 開始頂点インデックス
@@ -353,6 +376,35 @@ export class BufferManager
             );
         }
         return this.indirectBuffer;
+    }
+
+    /**
+     * @description 新しいIndirect Bufferを作成
+     *              Create a new Indirect Buffer for draw indirect commands
+     *
+     * 1フレーム内で複数回のdrawIndirect呼び出しがある場合に使用。
+     * 各呼び出しで独自のバッファを持つことで、
+     * queue.writeBufferによる更新競合を回避。
+     *
+     * @param {number} vertexCount - 頂点数
+     * @param {number} instanceCount - インスタンス数
+     * @param {number} [firstVertex=0] - 開始頂点インデックス
+     * @param {number} [firstInstance=0] - 開始インスタンスインデックス
+     * @return {GPUBuffer}
+     */
+    createIndirectBuffer (
+        vertexCount: number,
+        instanceCount: number,
+        firstVertex: number = 0,
+        firstInstance: number = 0
+    ): GPUBuffer {
+        return bufferManagerCreateIndirectBufferService(
+            this.device,
+            vertexCount,
+            instanceCount,
+            firstVertex,
+            firstInstance
+        );
     }
 
     /**

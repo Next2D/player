@@ -17,9 +17,9 @@ export interface IQuadraticSegment {
  *
  * この値は曲線がどの程度「平坦」であれば直接近似するかを決定。
  * 値が小さいほど高品質だが分割数が増加。
- * 2ピクセル相当の値をデフォルトとする。
+ * 0.5ピクセル相当の値をデフォルトとする（滑らかなストローク描画用）。
  */
-const DEFAULT_FLATNESS_THRESHOLD = 4.0; // 2px squared
+const DEFAULT_FLATNESS_THRESHOLD = 0.25; // 0.5px squared
 
 /**
  * @description 最大再帰深度
@@ -127,6 +127,7 @@ export const calculateAdaptiveThreshold = (scale: number): number => {
     // 最小値と最大値を設定して極端な値を防ぐ
     const adjustedThreshold = baseThreshold / (scale * scale);
 
-    // 閾値の範囲を制限（0.25〜16.0）
-    return Math.max(0.25, Math.min(16.0, adjustedThreshold));
+    // 閾値の範囲を制限（0.0625〜4.0）
+    // 0.0625 = 0.25px squared, 4.0 = 2px squared
+    return Math.max(0.0625, Math.min(4.0, adjustedThreshold));
 };

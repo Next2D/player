@@ -14,17 +14,15 @@ import {
 import { isDebugEnabled, logInstanced } from "../../Debug/DebugLogger";
 
 /**
- * @description Storage BufferとIndirect Drawingを使用したインスタンス描画
- *              Draw instanced arrays using Storage Buffer and Indirect Drawing
+ * @description 最適化されたインスタンス描画
+ *              Optimized instanced drawing with Storage Buffer and Indirect Drawing
  *
- * Storage Bufferを使用することで：
- * - メモリアロケーションを最小化（バッファ再利用）
- * - より大きなインスタンスデータをサポート
- * - CPU負荷を15-25%軽減
- *
- * Indirect Drawingを使用することで：
- * - CPU-GPU間のコマンドオーバーヘッドを5-15%削減
- * - ドローコールのパラメータをGPUバッファから読み取り
+ * 最適化内容：
+ * - Storage Buffer: メモリアロケーション削減、CPU負荷15-25%軽減
+ *   - バッファプールから再利用、毎フレームの新規作成を回避
+ *   - writeBuffer()による効率的なデータ更新
+ * - Indirect Drawing: CPU-GPU間のコマンドオーバーヘッド5-15%削減
+ *   - ドローコールのパラメータをGPUバッファから読み取り
  *
  * @param {GPUDevice} device
  * @param {GPUCommandEncoder} commandEncoder
@@ -35,6 +33,7 @@ import { isDebugEnabled, logInstanced } from "../../Debug/DebugLogger";
  * @param {TextureManager} _textureManager
  * @param {PipelineManager} pipelineManager
  * @param {boolean} useIndirect - Indirect Drawingを使用するか
+ * @param {boolean} useStorageBuffer - Storage Bufferを使用するか
  * @return {GPURenderPassEncoder | null}
  */
 export const execute = (
@@ -46,7 +45,8 @@ export const execute = (
     frameBufferManager: FrameBufferManager,
     _textureManager: TextureManager,
     pipelineManager: PipelineManager,
-    useIndirect: boolean = true
+    useIndirect: boolean = true,
+    useStorageBuffer: boolean = true
 ): GPURenderPassEncoder | null => {
     const shaderManager = getInstancedShaderManager();
 
@@ -99,7 +99,8 @@ export const execute = (
             "pipelineName": pipelineName,
             "useStencil": !!useStencil,
             "instanceCount": shaderManager.count,
-            "useIndirect": useIndirect
+            "useIndirect": useIndirect,
+            "useStorageBuffer": useStorageBuffer
         });
     }
 
@@ -136,17 +137,27 @@ export const execute = (
         passEncoder.setStencilReference(maskReference);
     }
 
-    // Storage Bufferを使用してインスタンスデータを効率的に管理
-    const instanceDataSize = renderQueue.offset * 4; // Float32Array = 4 bytes per element
-    const instanceBuffer = bufferManager.acquireStorageBuffer(instanceDataSize);
-
-    // インスタンスデータをStorage Bufferに書き込み
+    // インスタンスデータを準備
     const instanceData = new Float32Array(
         renderQueue.buffer.buffer,
         renderQueue.buffer.byteOffset,
         renderQueue.offset
     );
-    bufferManager.writeStorageBuffer(instanceBuffer, instanceData);
+
+    // インスタンスバッファを作成または取得
+    let instanceBuffer: GPUBuffer;
+    if (useStorageBuffer) {
+        // Storage Buffer最適化: プールから再利用してメモリアロケーション削減
+        // Storage BufferはVERTEXフラグ付きで作成されているため、setVertexBufferで使用可能
+        instanceBuffer = bufferManager.acquireStorageBuffer(instanceData.byteLength);
+        bufferManager.writeStorageBuffer(instanceBuffer, instanceData);
+    } else {
+        // 従来方式: 毎回新しいVertex Bufferを作成
+        instanceBuffer = bufferManager.createVertexBuffer(
+            `instance_indirect_${Date.now()}`,
+            instanceData
+        );
+    }
 
     // 頂点バッファ（矩形）を作成
     const vertices = bufferManager.createRectVertices(0, 0, 1, 1);
@@ -160,7 +171,6 @@ export const execute = (
     if (!atlasAttachment) {
         console.error("[WebGPU] Atlas attachment not found");
         passEncoder.end();
-        bufferManager.releaseStorageBuffer(instanceBuffer);
         return null;
     }
 
@@ -176,7 +186,6 @@ export const execute = (
     if (!bindGroupLayout) {
         console.error("[WebGPU] Instanced bind group layout not found");
         passEncoder.end();
-        bufferManager.releaseStorageBuffer(instanceBuffer);
         return null;
     }
 
@@ -201,7 +210,11 @@ export const execute = (
 
     if (useIndirect) {
         // Indirect Drawing: CPU-GPU間のオーバーヘッドを削減
-        const indirectBuffer = bufferManager.getOrCreateIndirectBuffer(
+        // 注意: 1フレーム内で複数回呼び出される場合があるため、
+        // 毎回新しいIndirect Bufferを作成する必要がある
+        // （共有バッファを使うとqueue.writeBufferの更新が全てGPU実行前に行われ、
+        // 全てのdrawIndirectが最後の更新値を使用してしまう）
+        const indirectBuffer = bufferManager.createIndirectBuffer(
             6,                    // vertexCount (2 triangles = 6 vertices)
             shaderManager.count,  // instanceCount
             0,                    // firstVertex
@@ -216,8 +229,10 @@ export const execute = (
     // レンダーパスを終了
     passEncoder.end();
 
-    // Storage Bufferをプールに返却（次フレームで再利用可能）
-    bufferManager.releaseStorageBuffer(instanceBuffer);
+    // 注意: Storage Bufferはここで解放しない
+    // GPUがまだ描画を実行していないため、同一フレーム内で再利用されると
+    // データが上書きされてしまう。
+    // フレーム終了時（clearFrameBuffers）でまとめて解放される。
 
     // インスタンスデータをクリア
     shaderManager.clear();

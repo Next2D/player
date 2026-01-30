@@ -1950,10 +1950,12 @@ export class Context
             // シザーレクトで描画範囲を制限
             // シェーダーでY軸反転(-ndc.y)しているため、描画結果はWebGPU座標系でnode.y位置になる
             // WebGPUのシザーは左上原点なのでnode.yをそのまま使用
-            let scissorX = Math.max(0, node.x);
-            let scissorY = Math.max(0, node.y);
-            let scissorW = Math.min(node.w, attachment.width - scissorX);
-            let scissorH = Math.min(node.h, attachment.height - scissorY);
+            // 1pxパディングを追加して境界のアーティファクトを防止
+            const padding = 1;
+            let scissorX = Math.max(0, node.x - padding);
+            let scissorY = Math.max(0, node.y - padding);
+            let scissorW = Math.min(node.w + padding * 2, attachment.width - scissorX);
+            let scissorH = Math.min(node.h + padding * 2, attachment.height - scissorY);
 
             // レンダーターゲット範囲内にクランプ
             scissorX = Math.min(scissorX, attachment.width);
@@ -2142,7 +2144,8 @@ export class Context
                 this.frameBufferManager,
                 this.textureManager,
                 this.pipelineManager,
-                true // useIndirect
+                true, // useIndirect
+                true  // useStorageBuffer
             );
         } else {
             // 従来版: 毎フレームVertex Buffer新規生成

@@ -105,14 +105,16 @@ describe("calculateAdaptiveThreshold", () =>
     it("should clamp to minimum threshold", () =>
     {
         // 非常に大きなスケールでも最小値を下回らない
+        // 最小値は0.0625（0.25px squared）
         const threshold = calculateAdaptiveThreshold(100.0);
-        expect(threshold).toBeGreaterThanOrEqual(0.25);
+        expect(threshold).toBeGreaterThanOrEqual(0.0625);
     });
 
     it("should clamp to maximum threshold", () =>
     {
         // 非常に小さなスケールでも最大値を超えない
+        // 最大値は4.0（2px squared）
         const threshold = calculateAdaptiveThreshold(0.01);
-        expect(threshold).toBeLessThanOrEqual(16.0);
+        expect(threshold).toBeLessThanOrEqual(4.0);
     });
 });

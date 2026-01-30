@@ -108,8 +108,9 @@ export class PathCommand
     /**
      * @description フラットネス閾値（スケールに応じて調整可能）
      *              Flatness threshold for adaptive tessellation
+     *              0.25 = 0.5px squared（滑らかなストローク描画用）
      */
-    private $flatnessThreshold: number = 4.0;
+    private $flatnessThreshold: number = 0.25;
 
     /**
      * @description フラットネス閾値を設定
