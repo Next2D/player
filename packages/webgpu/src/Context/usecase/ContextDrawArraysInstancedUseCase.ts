@@ -1,9 +1,11 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
+import type { IBlendMode } from "../../interface/IBlendMode";
 import type { BufferManager } from "../../BufferManager";
 import type { FrameBufferManager } from "../../FrameBufferManager";
 import type { TextureManager } from "../../TextureManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
+import { $getCurrentBlendMode } from "../../Blend";
 import { renderQueue } from "@next2d/render-queue";
 import {
     $isMaskTestEnabled,
@@ -50,10 +52,32 @@ export const execute = (
     const isMasked = $isMaskTestEnabled();
     const maskReference = $getMaskStencilReference();
 
-    // パイプラインを先に取得して、ステンシルが必要かどうかを判定
-    // マスク有効かつmaskedパイプラインが存在する場合のみステンシルを使用
+    // 現在のブレンドモードを取得
+    const blendMode: IBlendMode = $getCurrentBlendMode();
+
+    // ブレンドモードに応じたパイプライン名を生成
+    // simpleBlendModes: normal, layer, add, screen, alpha, erase, copy
+    const getPipelineName = (mode: IBlendMode): string => {
+        switch (mode) {
+            case "add":
+                return "instanced_add";
+            case "screen":
+                return "instanced_screen";
+            case "alpha":
+                return "instanced_alpha";
+            case "erase":
+                return "instanced_erase";
+            case "copy":
+            case "layer":
+                return "instanced_copy";
+            default:
+                return "instanced_normal";
+        }
+    };
+
+    const pipelineName = getPipelineName(blendMode);
+    const normalPipeline = pipelineManager.getPipeline(pipelineName);
     const maskedPipeline = pipelineManager.getPipeline("instanced_masked");
-    const normalPipeline = pipelineManager.getPipeline("instanced");
 
     // 実際にマスクを使用するか判定
     // maskedパイプラインが存在し、マスクが有効で、ステンシルがある場合のみ
@@ -64,6 +88,8 @@ export const execute = (
         logInstanced("ContextDrawArraysInstancedUseCase execute", {
             "isMasked": isMasked,
             "maskReference": maskReference,
+            "blendMode": blendMode,
+            "pipelineName": pipelineName,
             "hasMaskedPipeline": !!maskedPipeline,
             "hasStencilView": !!mainAttachment.stencil?.view,
             "useStencil": !!useStencil,

@@ -5,6 +5,7 @@ import { $getCurrentBlendMode, $setCurrentBlendMode } from "../Blend";
 import { $getCurrentAtlasIndex, $setCurrentAtlasIndex, $setActiveAtlasIndex } from "../AtlasManager";
 import { renderQueue } from "@next2d/render-queue";
 import { isDebugEnabled, logInstanced } from "../Debug/DebugLogger";
+import { $context } from "../WebGPUUtil";
 
 /**
  * @description 複雑なブレンドモード描画キュー
@@ -105,7 +106,13 @@ export const addDisplayObjectToInstanceArray = (
     if (simpleBlendModes.includes(blend_mode)) {
         // ブレンドモードまたはアトラスインデックスが変わった場合
         if ($getCurrentBlendMode() !== blend_mode || $getCurrentAtlasIndex() !== node.index) {
-            // 現在のバッチを描画してから切り替え
+            // 異なるブレンドモード/アトラスになるので、切り替え前にバッチを描画
+            if ($context) {
+                $setActiveAtlasIndex($getCurrentAtlasIndex());
+                $context.drawArraysInstanced();
+            }
+
+            // 新しいブレンドモードとアトラスインデックスをセット
             $setCurrentBlendMode(blend_mode as any);
             $setCurrentAtlasIndex(node.index);
             $setActiveAtlasIndex(node.index);
@@ -133,6 +140,12 @@ export const addDisplayObjectToInstanceArray = (
         shaderManager.count++;
     } else {
         // 複雑なブレンドモード（個別描画が必要）
+        // 先に現在のインスタンス配列を描画
+        if ($context) {
+            $setActiveAtlasIndex($getCurrentAtlasIndex());
+            $context.drawArraysInstanced();
+        }
+
         // キューに追加して後で処理
         $complexBlendQueue.push({
             node,

@@ -1425,6 +1425,44 @@ export class ShaderSource
     }
 
     /**
+     * @description ブラーフィルター用テクスチャコピーシェーダー
+     *              オフセット位置にソースをコピー、範囲外は透明
+     * @return {string}
+     */
+    static getBlurTextureCopyFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct CopyUniforms {
+                scale: vec2<f32>,
+                offset: vec2<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: CopyUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                // UV座標を計算: (texCoord - offset) * scale
+                // offsetはデスト座標系での開始位置、scaleはデスト/ソースのサイズ比
+                let uv = (input.texCoord - uniforms.offset) * uniforms.scale;
+
+                // UV座標が0-1の範囲外なら透明を返す
+                if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+                    return vec4<f32>(0.0, 0.0, 0.0, 0.0);
+                }
+
+                return textureSample(inputTexture, textureSampler, uv);
+            }
+        `;
+    }
+
+    /**
      * @description フィルター出力用フラグメントシェーダー
      *              フィルター結果をメインアタッチメントに合成する際に使用
      *              範囲外のピクセルは透明で出力
@@ -2337,6 +2375,92 @@ export class ShaderSource
             fn main() -> @location(0) vec4<f32> {
                 // 透明色でクリア（プリマルチプライドアルファ: 0,0,0,0）
                 return vec4<f32>(0.0, 0.0, 0.0, 0.0);
+            }
+        `;
+    }
+
+    /**
+     * @description 位置変換付きテクスチャ描画用頂点シェーダー
+     *              特定の位置にテクスチャを描画するためのシェーダー
+     *              WebGL版のBLEND_TEMPLATEに相当
+     * @return {string}
+     */
+    static getPositionedTextureVertexShader(): string
+    {
+        return /* wgsl */`
+            struct PositionUniforms {
+                offset: vec2<f32>,    // 描画位置
+                size: vec2<f32>,      // テクスチャサイズ
+                viewport: vec2<f32>,  // ビューポートサイズ
+                padding: vec2<f32>,   // パディング（16バイトアライメント用）
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: PositionUniforms;
+
+            @vertex
+            fn main(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {
+                var output: VertexOutput;
+
+                // クワッドの頂点座標を生成 (0-1 範囲)
+                var vertices = array<vec2<f32>, 6>(
+                    vec2<f32>(0.0, 0.0),
+                    vec2<f32>(1.0, 0.0),
+                    vec2<f32>(0.0, 1.0),
+                    vec2<f32>(0.0, 1.0),
+                    vec2<f32>(1.0, 0.0),
+                    vec2<f32>(1.0, 1.0)
+                );
+
+                // テクスチャ座標（Y軸反転）
+                var texCoords = array<vec2<f32>, 6>(
+                    vec2<f32>(0.0, 1.0),
+                    vec2<f32>(1.0, 1.0),
+                    vec2<f32>(0.0, 0.0),
+                    vec2<f32>(0.0, 0.0),
+                    vec2<f32>(1.0, 1.0),
+                    vec2<f32>(1.0, 0.0)
+                );
+
+                let vertex = vertices[vertexIndex];
+                output.texCoord = texCoords[vertexIndex];
+
+                // 位置変換: vertex(0-1) * size + offset -> pixel座標
+                var position = vertex * uniforms.size + uniforms.offset;
+                // pixel座標 -> NDC (-1 to 1)
+                position = position / uniforms.viewport;
+                position = position * 2.0 - 1.0;
+                // Y軸反転（WebGPUの座標系）
+                output.position = vec4<f32>(position.x, -position.y, 0.0, 1.0);
+
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description 位置変換付きテクスチャ描画用フラグメントシェーダー
+     *              シンプルにテクスチャをサンプリングして出力
+     * @return {string}
+     */
+    static getPositionedTextureFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                return textureSample(inputTexture, textureSampler, input.texCoord);
             }
         `;
     }

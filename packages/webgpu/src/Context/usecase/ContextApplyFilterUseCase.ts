@@ -95,10 +95,10 @@ const drawFilterToMain = (
     y: number,
     _mainTextureView: GPUTextureView,
     _bufferManager: BufferManager,
-    _canvasWidth: number,
-    _canvasHeight: number
+    canvasWidth: number,
+    canvasHeight: number
 ): void => {
-    // WebGL版と同じ: メインアタッチメントに描画
+    // メインアタッチメントに描画
     const mainAttachment = config.frameBufferManager.getAttachment("main");
     if (!mainAttachment || !mainAttachment.texture || !filterAttachment.texture) {
         return;
@@ -115,17 +115,51 @@ const drawFilterToMain = (
     // サンプラーを作成
     const sampler = config.textureManager.createSampler("filter_output_sampler", true);
 
-    // 描画位置とサイズ（ピクセル単位）
-    const drawX = Math.floor(x);
-    const drawY = Math.floor(y);
-    const drawWidth = filterAttachment.width;
-    const drawHeight = filterAttachment.height;
+    // 描画位置とサイズを計算
+    let drawX = Math.floor(x);
+    let drawY = Math.floor(y);
+    let drawWidth = filterAttachment.width;
+    let drawHeight = filterAttachment.height;
 
-    // texture_copyシェーダーは uv = texCoord * scale + offset でサンプリング
-    // フィルターテクスチャ全体からサンプリングするために scale=1, offset=0 を使用
-    const uniformData = new Float32Array([1.0, 1.0, 0.0, 0.0]);
+    // UV座標のオフセット（描画位置が負の場合に調整）
+    let uvOffsetX = 0;
+    let uvOffsetY = 0;
 
-    // ユニフォームバッファを作成（コマンドバッファ送信後まで保持される必要がある）
+    // 負の描画位置を処理（画面外の部分をクリップ）
+    if (drawX < 0) {
+        uvOffsetX = -drawX / filterAttachment.width;
+        drawWidth += drawX;
+        drawX = 0;
+    }
+    if (drawY < 0) {
+        uvOffsetY = -drawY / filterAttachment.height;
+        drawHeight += drawY;
+        drawY = 0;
+    }
+
+    // 描画サイズが0以下なら描画しない
+    if (drawWidth <= 0 || drawHeight <= 0) {
+        return;
+    }
+
+    // メインアタッチメントの範囲内にクランプ
+    const mainWidth = mainAttachment.width;
+    const mainHeight = mainAttachment.height;
+    if (drawX + drawWidth > mainWidth) {
+        drawWidth = mainWidth - drawX;
+    }
+    if (drawY + drawHeight > mainHeight) {
+        drawHeight = mainHeight - drawY;
+    }
+
+    // UV座標のスケール（クリップされた部分を考慮）
+    const uvScaleX = drawWidth / filterAttachment.width;
+    const uvScaleY = drawHeight / filterAttachment.height;
+
+    // ユニフォーム: scale(2) + offset(2)
+    const uniformData = new Float32Array([uvScaleX, uvScaleY, uvOffsetX, uvOffsetY]);
+
+    // ユニフォームバッファを作成
     const uniformBuffer = config.device.createBuffer({
         "size": 16,
         "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
@@ -152,15 +186,12 @@ const drawFilterToMain = (
     passEncoder.setPipeline(pipeline);
     passEncoder.setBindGroup(0, bindGroup);
 
-    // ビューポートとシザーを設定してフィルター領域のみに描画
+    // ビューポートとシザーを設定して、フィルター結果を正しい位置に描画
     passEncoder.setViewport(drawX, drawY, drawWidth, drawHeight, 0, 1);
     passEncoder.setScissorRect(drawX, drawY, drawWidth, drawHeight);
 
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
-
-    // Note: uniformBuffer is not destroyed here - it will be garbage collected
-    // after the command buffer is submitted. Destroying it early causes issues.
 };
 
 /**
@@ -494,20 +525,22 @@ export const execute = (
         }
     }
 
-
     // フィルター適用後のテクスチャをメインキャンバスに描画
     const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
     const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
     const xMin = bounds[0] * (scaleX / devicePixelRatio);
     const yMin = bounds[1] * (scaleY / devicePixelRatio);
 
+    const drawX = -$offset.x + xMin + matrix[4];
+    const drawY = -$offset.y + yMin + matrix[5];
+
     drawFilterToMain(
         config,
         filterAttachment,
         colorTransform,
         blendMode,
-        -$offset.x + xMin + matrix[4],
-        -$offset.y + yMin + matrix[5],
+        drawX,
+        drawY,
         mainTextureView,
         bufferManager,
         canvasWidth,

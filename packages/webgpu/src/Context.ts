@@ -1968,7 +1968,7 @@ export class Context
      */
     private ensureNodeAreaCleared (): void
     {
-        if (this.nodeAreaCleared) { return; }
+        if (this.nodeAreaCleared) { return }
         this.nodeAreaCleared = true;
         this.clearNodeArea();
     }
@@ -2141,10 +2141,11 @@ export class Context
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
+        // $mainAttachmentObjectを渡す（レンダーパスベースのコピーに必要）
         contextProcessComplexBlendQueueUseCase(
             this.device,
             this.commandEncoder!,
-            this.mainTexture,
+            this.$mainAttachmentObject,
             this.frameBufferManager,
             this.textureManager,
             this.pipelineManager

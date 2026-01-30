@@ -33,7 +33,8 @@ export const execute = (
 ): IAttachmentObject => {
     // アトラステクスチャと一時アタッチメントはRGBA8フォーマットを使用
     // （copyExternalImageToTextureとの互換性、およびcopyTextureToTextureでのフォーマット一致のため）
-    const textureFormat = (name === "atlas" || name.startsWith("temp_")) ? "rgba8unorm" : format;
+    // mainアタッチメントはスワップチェーンと同じbgra8unormフォーマットを使用
+    const textureFormat = name === "atlas" || name.startsWith("temp_") ? "rgba8unorm" : format;
 
     // MSAAを使用するかどうか（アトラスでmsaa有効かつ$samples > 1の場合）
     // 現在はアトラスのみにMSAAを適用（他のアタッチメントはmsaa=falseで呼び出される）

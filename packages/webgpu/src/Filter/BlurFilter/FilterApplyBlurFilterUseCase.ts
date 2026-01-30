@@ -119,7 +119,14 @@ export const execute = (
 };
 
 /**
- * @description テクスチャをアタッチメントにコピー
+ * @description テクスチャをアタッチメントにコピー（オフセット位置に配置、スケーリング対応）
+ *
+ * @param source - ソーステクスチャ
+ * @param dest - デストテクスチャ（ソースより大きい）
+ * @param bufferScaleX - X方向のバッファスケール
+ * @param bufferScaleY - Y方向のバッファスケール
+ * @param pixelOffsetX - デスト内でのX方向オフセット（ピクセル単位、スケーリング済み）
+ * @param pixelOffsetY - デスト内でのY方向オフセット（ピクセル単位、スケーリング済み）
  */
 const copyTextureToAttachment = (
     device: GPUDevice,
@@ -129,12 +136,12 @@ const copyTextureToAttachment = (
     source: IAttachmentObject,
     dest: IAttachmentObject,
     sampler: GPUSampler,
-    scaleX: number,
-    scaleY: number,
-    offsetX: number,
-    offsetY: number
+    bufferScaleX: number,
+    bufferScaleY: number,
+    pixelOffsetX: number,
+    pixelOffsetY: number
 ): void => {
-    // temp_アタッチメントはrgba8unormフォーマットなので、texture_copy_rgba8パイプラインを使用
+    // texture_copy_rgba8を使用し、ビューポートでオフセットを制御
     const pipeline = pipelineManager.getPipeline("texture_copy_rgba8");
     const bindGroupLayout = pipelineManager.getBindGroupLayout("texture_copy");
 
@@ -143,11 +150,19 @@ const copyTextureToAttachment = (
         return;
     }
 
+    // デスト内でのソース描画サイズ（スケーリング後）
+    const scaledSourceWidth = source.width * bufferScaleX;
+    const scaledSourceHeight = source.height * bufferScaleY;
+
+    // シェーダー: uv = texCoord * scale + offset
+    // ソース全体をサンプリングするので scale = 1, offset = 0
+    const scaleX = 1;
+    const scaleY = 1;
+    const offsetX = 0;
+    const offsetY = 0;
+
     // ユニフォームバッファ: scale(2) + offset(2)
-    const uniformData = new Float32Array([
-        scaleX, scaleY,
-        offsetX / dest.width, offsetY / dest.height
-    ]);
+    const uniformData = new Float32Array([scaleX, scaleY, offsetX, offsetY]);
     const uniformBuffer = device.createBuffer({
         "size": uniformData.byteLength,
         "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
@@ -170,6 +185,18 @@ const copyTextureToAttachment = (
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
     passEncoder.setPipeline(pipeline);
     passEncoder.setBindGroup(0, bindGroup);
+
+    // ビューポートを設定してオフセット位置に描画
+    passEncoder.setViewport(
+        pixelOffsetX, pixelOffsetY,
+        scaledSourceWidth, scaledSourceHeight,
+        0, 1
+    );
+    passEncoder.setScissorRect(
+        Math.floor(pixelOffsetX), Math.floor(pixelOffsetY),
+        Math.ceil(scaledSourceWidth), Math.ceil(scaledSourceHeight)
+    );
+
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
     // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
@@ -236,7 +263,7 @@ const applyDirectionalBlur = (
 };
 
 /**
- * @description テクスチャをアップスケール
+ * @description テクスチャをアップスケール（ソース全体をデスト全体にマッピング）
  */
 const upscaleTexture = (
     device: GPUDevice,
@@ -246,19 +273,22 @@ const upscaleTexture = (
     source: IAttachmentObject,
     dest: IAttachmentObject,
     sampler: GPUSampler,
-    scaleX: number,
-    scaleY: number
+    _scaleX: number,
+    _scaleY: number
 ): void => {
-    const pipeline = pipelineManager.getPipeline("texture_copy");
+    // temp_アタッチメントはrgba8unormフォーマットなので、texture_copy_rgba8パイプラインを使用
+    const pipeline = pipelineManager.getPipeline("texture_copy_rgba8");
     const bindGroupLayout = pipelineManager.getBindGroupLayout("texture_copy");
 
     if (!pipeline || !bindGroupLayout) {
-        console.error("[WebGPU BlurFilter] texture_copy pipeline not found");
+        console.error("[WebGPU BlurFilter] texture_copy_rgba8 pipeline not found");
         return;
     }
 
-    // ユニフォームバッファ: scale(2) + offset(2)
-    const uniformData = new Float32Array([scaleX, scaleY, 0, 0]);
+    // アップスケールではソース全体をデスト全体にマッピング
+    // シェーダー: uv = (texCoord - offset) * scale
+    // scale = 1, offset = 0 で uv = texCoord となり、ソース全体がデスト全体にマッピングされる
+    const uniformData = new Float32Array([1, 1, 0, 0]);
     const uniformBuffer = device.createBuffer({
         "size": uniformData.byteLength,
         "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
