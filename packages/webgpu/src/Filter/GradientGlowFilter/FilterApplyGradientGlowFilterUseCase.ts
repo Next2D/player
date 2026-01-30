@@ -222,7 +222,7 @@ export const execute = (
     passEncoder.end();
 
     // クリーンアップ（LUTは共有テクスチャなので破棄しない）
-    uniformBuffer.destroy();
+    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
     frameBufferManager.releaseTemporaryAttachment(baseTextureForComposite);
     frameBufferManager.releaseTemporaryAttachment(blurTextureForComposite);

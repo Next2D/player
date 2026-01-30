@@ -1425,6 +1425,49 @@ export class ShaderSource
     }
 
     /**
+     * @description フィルター出力用フラグメントシェーダー
+     *              フィルター結果をメインアタッチメントに合成する際に使用
+     *              範囲外のピクセルは透明で出力
+     * @return {string}
+     */
+    static getFilterOutputFragmentShader(): string
+    {
+        return /* wgsl */`
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) texCoord: vec2<f32>,
+            }
+
+            struct CopyUniforms {
+                scale: vec2<f32>,
+                offset: vec2<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: CopyUniforms;
+            @group(0) @binding(1) var textureSampler: sampler;
+            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
+
+            @fragment
+            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+                // フィルター領域内かどうかをチェック
+                // texCoord は 0-1 の範囲、offset とscaleでフィルター領域を定義
+                let filterStart = uniforms.offset;
+                let filterEnd = uniforms.offset + uniforms.scale;
+
+                // フィルター領域外の場合は透明を返す
+                if (input.texCoord.x < filterStart.x || input.texCoord.x > filterEnd.x ||
+                    input.texCoord.y < filterStart.y || input.texCoord.y > filterEnd.y) {
+                    return vec4<f32>(0.0, 0.0, 0.0, 0.0);
+                }
+
+                // フィルター領域内: UV座標を0-1にマッピング
+                let uv = (input.texCoord - filterStart) / uniforms.scale;
+                return textureSample(inputTexture, textureSampler, uv);
+            }
+        `;
+    }
+
+    /**
      * @description カラーマトリックスフィルター用フラグメントシェーダー
      *              4x4行列 + オフセットで色変換
      * @return {string}

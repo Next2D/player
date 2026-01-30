@@ -240,7 +240,7 @@ export const execute = (
     passEncoder.end();
 
     // クリーンアップ
-    uniformBuffer.destroy();
+    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
     frameBufferManager.releaseTemporaryAttachment(bevelBaseAttachment);
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
     frameBufferManager.releaseTemporaryAttachment(baseTextureForComposite);

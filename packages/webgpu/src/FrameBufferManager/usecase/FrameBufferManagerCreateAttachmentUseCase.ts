@@ -31,8 +31,9 @@ export const execute = (
     mask: boolean,
     idCounter: { nextId: number; textureId: number; stencilId: number }
 ): IAttachmentObject => {
-    // アトラステクスチャはRGBA8フォーマットを使用（copyExternalImageToTextureとの互換性のため）
-    const textureFormat = name === "atlas" ? "rgba8unorm" : format;
+    // アトラステクスチャと一時アタッチメントはRGBA8フォーマットを使用
+    // （copyExternalImageToTextureとの互換性、およびcopyTextureToTextureでのフォーマット一致のため）
+    const textureFormat = (name === "atlas" || name.startsWith("temp_")) ? "rgba8unorm" : format;
 
     // MSAAを使用するかどうか（アトラスでmsaa有効かつ$samples > 1の場合）
     // 現在はアトラスのみにMSAAを適用（他のアタッチメントはmsaa=falseで呼び出される）

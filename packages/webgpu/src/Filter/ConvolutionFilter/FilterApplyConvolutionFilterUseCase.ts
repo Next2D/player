@@ -186,8 +186,7 @@ export const execute = (
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
 
-    // クリーンアップ
-    uniformBuffer.destroy();
+    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
 
     return destAttachment;
 };

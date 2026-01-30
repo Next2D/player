@@ -2007,6 +2007,7 @@ export class PipelineManager
                 "code": ShaderSource.getBlurFilterFragmentShader(halfBlur)
             });
 
+            // ブラーフィルターはtemp_アタッチメント（rgba8unorm）にレンダリングする
             const pipeline = this.device.createRenderPipeline({
                 "layout": pipelineLayout,
                 "vertex": {
@@ -2095,7 +2096,7 @@ export class PipelineManager
                 "module": fragmentShaderModule,
                 "entryPoint": "main",
                 "targets": [{
-                    "format": "rgba8unorm",
+                    "format": this.format,
                     "blend": {
                         "color": {
                             "srcFactor": "one",
@@ -2118,7 +2119,76 @@ export class PipelineManager
 
         this.pipelines.set("texture_copy", pipeline);
 
-        // スワップチェーン用（bgra8unorm）
+        // RGBA8形式用テクスチャコピーパイプライン（フィルター内部処理用）
+        // temp_アタッチメントはrgba8unormフォーマットを使用するため
+        const pipelineRGBA8 = this.device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
+                        }
+                    }
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            }
+        });
+        this.pipelines.set("texture_copy_rgba8", pipelineRGBA8);
+
+        // フィルター出力用（アルファブレンド版）- texture_copyと同じシェーダー、ブレンドモードが異なる
+        const filterBlendPipeline = this.device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        }
+                    }
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            }
+        });
+        this.pipelines.set("filter_blend", filterBlendPipeline);
+
+        // スワップチェーン用（既存のthis.formatと同じなので削除候補だが互換性のため残す）
         const pipelineBGRA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
@@ -2151,6 +2221,44 @@ export class PipelineManager
             }
         });
         this.pipelines.set("texture_copy_bgra", pipelineBGRA);
+
+        // フィルター出力用パイプライン（アルファブレンド、範囲チェック付き）
+        const filterOutputShaderModule = this.device.createShaderModule({
+            "code": ShaderSource.getFilterOutputFragmentShader()
+        });
+
+        const filterOutputPipeline = this.device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
+            },
+            "fragment": {
+                "module": filterOutputShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        }
+                    }
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            }
+        });
+        this.pipelines.set("filter_output", filterOutputPipeline);
     }
 
     /**

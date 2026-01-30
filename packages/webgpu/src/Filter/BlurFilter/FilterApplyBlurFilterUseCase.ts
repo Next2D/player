@@ -134,11 +134,12 @@ const copyTextureToAttachment = (
     offsetX: number,
     offsetY: number
 ): void => {
-    const pipeline = pipelineManager.getPipeline("texture_copy");
+    // temp_アタッチメントはrgba8unormフォーマットなので、texture_copy_rgba8パイプラインを使用
+    const pipeline = pipelineManager.getPipeline("texture_copy_rgba8");
     const bindGroupLayout = pipelineManager.getBindGroupLayout("texture_copy");
 
     if (!pipeline || !bindGroupLayout) {
-        console.error("[WebGPU BlurFilter] texture_copy pipeline not found");
+        console.error("[WebGPU BlurFilter] texture_copy_rgba8 pipeline not found");
         return;
     }
 
@@ -171,8 +172,7 @@ const copyTextureToAttachment = (
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
-
-    uniformBuffer.destroy();
+    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
 };
 
 /**
@@ -232,8 +232,7 @@ const applyDirectionalBlur = (
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
-
-    uniformBuffer.destroy();
+    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
 };
 
 /**
@@ -284,6 +283,5 @@ const upscaleTexture = (
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
-
-    uniformBuffer.destroy();
+    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
 };
