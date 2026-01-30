@@ -55,6 +55,7 @@ export class PipelineManager
         this.createGradientGlowFilterPipeline(); // グラデーショングローフィルター用
         this.createGradientBevelFilterPipeline(); // グラデーションベベルフィルター用
         this.createComplexBlendPipelines(); // 複雑なブレンドモード用
+        this.createNodeClearPipeline(); // ノードクリア用
     }
 
     /**
@@ -139,6 +140,7 @@ export class PipelineManager
         };
 
         // アトラステクスチャ用パイプライン（rgba8unorm）- MSAA対応
+        // ステンシル付きレンダーパスと互換性を持たせるためdepthStencilを追加
         const pipelineRGBA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
@@ -157,6 +159,23 @@ export class PipelineManager
             "primitive": {
                 "topology": "triangle-list",
                 "cullMode": "none"
+            },
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
+                },
+                "stencilBack": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
+                },
+                "stencilReadMask": 0x00,
+                "stencilWriteMask": 0x00
             },
             "multisample": {
                 "count": this.sampleCount
@@ -467,9 +486,11 @@ export class PipelineManager
                             "operation": "add"
                         },
                         "alpha": {
+                            // アルファは max(src, dst) で最大値を取る
+                            // これにより、半透明Shapeのアルファが背景に上書きされずに保持される
                             "srcFactor": "one",
-                            "dstFactor": "one-minus-src-alpha",
-                            "operation": "add"
+                            "dstFactor": "one",
+                            "operation": "max"
                         }
                     }
                 }]
@@ -1537,9 +1558,11 @@ export class PipelineManager
         });
         this.pipelines.set("gradient_fill_stencil", pipelineRGBAStencil);
 
-        // === アトラス用ステンシル付きグラデーション（sampleCount: 1） ===
-        // ステンシルテストは "always" に設定して、全フラグメントを通過させる
-        // 2パスフィルのステンシル書き込みとは別の処理として、単純なグラデーション描画に使用
+        // === アトラス用ステンシルテスト付きグラデーション（sampleCount: 1） ===
+        // 2パスフィル処理のPass 2で使用:
+        // Pass 1: stencil_write_atlas でステンシルに書き込み（INCR/DECR）
+        // Pass 2: このパイプラインでステンシル != 0 の部分にグラデーションを描画
+        // これにより中抜き描画（hollow shape）が正しく機能する
         const pipelineRGBAStencilAtlas = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
@@ -1562,19 +1585,19 @@ export class PipelineManager
             "depthStencil": {
                 "format": "stencil8",
                 "stencilFront": {
-                    "compare": "always",
+                    "compare": "not-equal",
                     "failOp": "keep",
-                    "depthFailOp": "keep",
-                    "passOp": "keep"
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
                 },
                 "stencilBack": {
-                    "compare": "always",
+                    "compare": "not-equal",
                     "failOp": "keep",
-                    "depthFailOp": "keep",
-                    "passOp": "keep"
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
                 },
                 "stencilReadMask": 0xFF,
-                "stencilWriteMask": 0x00
+                "stencilWriteMask": 0xFF
             },
             "multisample": {
                 "count": 1 // アトラス用は常に1
@@ -2727,6 +2750,87 @@ export class PipelineManager
     getBindGroupLayout(name: string): GPUBindGroupLayout | undefined
     {
         return this.bindGroupLayouts.get(name);
+    }
+
+    /**
+     * @description ノードクリア用パイプラインを作成
+     *              アトラスノード領域を透明にクリアするために使用
+     * @return {void}
+     */
+    private createNodeClearPipeline(): void
+    {
+        // シンプルな頂点バッファレイアウト（position: vec2のみ）
+        const vertexBufferLayout: GPUVertexBufferLayout = {
+            "arrayStride": 2 * 4, // 2 floats (8 bytes)
+            "attributes": [
+                {
+                    "shaderLocation": 0,
+                    "offset": 0,
+                    "format": "float32x2" // position (2 floats)
+                }
+            ]
+        };
+
+        // ノードクリア用パイプライン（アトラス用、ステンシル付き）
+        const nodeClearPipeline = this.device.createRenderPipeline({
+            "layout": "auto",
+            "vertex": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getNodeClearVertexShader()
+                }),
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getNodeClearFragmentShader()
+                }),
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm", // アトラスフォーマット
+                    "blend": {
+                        // ソースで完全に上書き（クリア）
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
+                        }
+                    },
+                    "writeMask": GPUColorWrite.ALL
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "depthStencil": {
+                "format": "stencil8",
+                // ステンシルテストなし、ステンシルをクリア
+                "stencilFront": {
+                    "compare": "always",
+                    "failOp": "zero",
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
+                },
+                "stencilBack": {
+                    "compare": "always",
+                    "failOp": "zero",
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
+                },
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
+            },
+            "multisample": {
+                "count": this.sampleCount // アトラスのMSAA設定に合わせる
+            }
+        });
+        this.pipelines.set("node_clear_atlas", nodeClearPipeline);
     }
 
     /**

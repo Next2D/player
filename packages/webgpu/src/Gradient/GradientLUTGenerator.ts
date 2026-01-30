@@ -50,18 +50,16 @@ export const generateGradientLUT = (
         // 色を補間（色は0-255範囲で返される）
         const color = interpolateColor(stops, t, interpolation);
 
-        // WebGL版と同じ: プリマルチプライドアルファを適用
-        // color.rgb *= color.a (0-255範囲で計算)
-        const alpha = color.a / 255; // 0-1に正規化
-        const premulR = color.r * alpha;
-        const premulG = color.g * alpha;
-        const premulB = color.b * alpha;
+        // WebGL版と同じ: プリマルチプライドアルファは適用しない
+        // LUTにはストレート（非プリマルチプライド）の色を格納
+        // プリマルチプライドはシェーダー側でサンプリング後に行う
+        // これにより、線形補間時に正しい色が得られる
 
-        // LUTデータに書き込み
+        // LUTデータに書き込み（非プリマルチプライド）
         const offset = i * 4;
-        lutData[offset + 0] = Math.round(Math.max(0, Math.min(255, premulR)));
-        lutData[offset + 1] = Math.round(Math.max(0, Math.min(255, premulG)));
-        lutData[offset + 2] = Math.round(Math.max(0, Math.min(255, premulB)));
+        lutData[offset + 0] = Math.round(Math.max(0, Math.min(255, color.r)));
+        lutData[offset + 1] = Math.round(Math.max(0, Math.min(255, color.g)));
+        lutData[offset + 2] = Math.round(Math.max(0, Math.min(255, color.b)));
         lutData[offset + 3] = Math.round(Math.max(0, Math.min(255, color.a)));
     }
 

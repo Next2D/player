@@ -388,12 +388,10 @@ export class ShaderSource
 
             @fragment
             fn main(input: FragmentInput) -> @location(0) vec4<f32> {
-                // WebGL版のSOLID_FILL_COLORと同じ:
-                // o_color = vec4(v_color.rgb * v_color.a, v_color.a);
-                return vec4<f32>(
-                    input.color.rgb * input.color.a,
-                    input.color.a
-                );
+                // WebGL版と同じ: プリマルチプライドアルファで出力
+                // color は straight alpha (R, G, B, A) なので、RGB に alpha を乗算
+                let a = input.color.a;
+                return vec4<f32>(input.color.r * a, input.color.g * a, input.color.b * a, a);
             }
         `;
     }
@@ -1005,7 +1003,12 @@ export class ShaderSource
                 let clampedT = clamp(t, 0.0, 1.0);
 
                 // textureSampleを使用
-                let gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(clampedT, 0.5));
+                var gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(clampedT, 0.5));
+
+                // WebGL版と同じ: サンプリング後にプリマルチプライドアルファを適用
+                // LUTには非プリマルチプライドの色が格納されているため、
+                // 線形補間後にプリマルチプライドを行う
+                gradientColor = vec4<f32>(gradientColor.rgb * gradientColor.a, gradientColor.a);
 
                 return gradientColor;
             }
@@ -1049,7 +1052,10 @@ export class ShaderSource
                 }
 
                 t = clamp(t, 0.0, 1.0);
-                let gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(t, 0.5));
+                var gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(t, 0.5));
+
+                // プリマルチプライドアルファを適用（LUTは非プリマルチプライド）
+                gradientColor = vec4<f32>(gradientColor.rgb * gradientColor.a, gradientColor.a);
 
                 return gradientColor * input.color;
             }
@@ -2244,6 +2250,50 @@ export class ShaderSource
 
                 // マップがある範囲内でのみディスプレイスメントを適用
                 return mix(textureSample(srcTexture, textureSampler, input.texCoord), sourceColor, isInside(st));
+            }
+        `;
+    }
+
+    /**
+     * @description ノードクリア用頂点シェーダー
+     *              全画面を覆う四角形を描画（シザーレクトでクリップ）
+     * @return {string}
+     */
+    static getNodeClearVertexShader(): string
+    {
+        return /* wgsl */`
+            struct VertexInput {
+                @location(0) position: vec2<f32>,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+            }
+
+            @vertex
+            fn main(input: VertexInput) -> VertexOutput {
+                var output: VertexOutput;
+                // position は 0-1 空間、NDC (-1 to 1) に変換
+                let ndc = input.position * 2.0 - 1.0;
+                // アトラス用: Y軸反転なし（他のアトラスシェーダーと同じ）
+                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
+                return output;
+            }
+        `;
+    }
+
+    /**
+     * @description ノードクリア用フラグメントシェーダー
+     *              透明色を出力してノード領域をクリア
+     * @return {string}
+     */
+    static getNodeClearFragmentShader(): string
+    {
+        return /* wgsl */`
+            @fragment
+            fn main() -> @location(0) vec4<f32> {
+                // 透明色でクリア（プリマルチプライドアルファ: 0,0,0,0）
+                return vec4<f32>(0.0, 0.0, 0.0, 0.0);
             }
         `;
     }

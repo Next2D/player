@@ -70,6 +70,7 @@ export const execute = (
         );
     }
 
+
     return {
         buffer,
         "indexCount": index

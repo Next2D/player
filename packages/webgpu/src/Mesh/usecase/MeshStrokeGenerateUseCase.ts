@@ -204,7 +204,8 @@ const generateRoundJoin = (
         angleDiff += 2 * Math.PI;
     }
 
-    const segment = 8;
+    // セグメント数を16に増やして滑らかな結合部を生成
+    const segment = 16;
     const step = angleDiff / segment;
 
     // 扇形の三角形を生成

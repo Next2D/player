@@ -208,15 +208,26 @@ export const execute = (
         ]
     });
 
-    // アトラス描画時
+    // アトラス描画時：2パスステンシルフィル（WebGL版と同じアルゴリズム）
+    // これにより中抜き描画（hollow shape）が正しく機能する
     if (useAtlasTarget) {
-        // アトラスは常にステンシルバッファ付きなので、ステンシル対応パイプラインを使用
-        // gradient_fill_stencil_atlas: rgba8unorm + stencil8, sampleCount: 1
-        const pipelineName = "gradient_fill_stencil_atlas";
-        const gradientPipeline = pipelineManager.getPipeline(pipelineName);
+        // === Pass 1: ステンシル書き込み ===
+        // FRONT=INCR_WRAP, BACK=DECR_WRAP でステンシルに書き込み（colorMask=false）
+        // 非ゼロワインディングルールにより、外側パスと内側パスの重複部分は相殺される
+        const stencilWritePipeline = pipelineManager.getPipeline("stencil_write_atlas");
+        if (stencilWritePipeline) {
+            renderPassEncoder.setPipeline(stencilWritePipeline);
+            renderPassEncoder.setStencilReference(0);
+            renderPassEncoder.setVertexBuffer(0, vertexBuffer);
+            renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+        }
 
+        // === Pass 2: グラデーション描画（ステンシルテスト付き） ===
+        // ステンシル != 0 の部分にグラデーションを描画し、ステンシルをクリア
+        const gradientPipeline = pipelineManager.getPipeline("gradient_fill_stencil_atlas");
         if (gradientPipeline) {
             renderPassEncoder.setPipeline(gradientPipeline);
+            renderPassEncoder.setStencilReference(0);
             renderPassEncoder.setVertexBuffer(0, vertexBuffer);
             renderPassEncoder.setBindGroup(0, bindGroup);
             renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);

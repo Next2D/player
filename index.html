@@ -3,185 +3,173 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Next2D</title>
+    <title>Next2D - Hollow Shape (中抜き描画) Test</title>
     <script defer type="module" src="./src/index.ts"></script>
 </head>
-<body style="margin: 0; padding: 0;">
+<body style="margin: 0; padding: 0; background: #333333;">
 <script>
-    window.addEventListener("DOMContentLoaded", async () => 
+    window.addEventListener("DOMContentLoaded", async () =>
     {
-        await next2d.load("develop");
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { Matrix } = next2d.geom;
 
-        // const root = await next2d.createRootMovieClip(400, 400, 60, {
-        //     bgColor: "#0000ff"
-        // });
+        // 背景（緑）
+        const bgShape = root.addChild(new Shape());
+        bgShape.graphics
+            .beginFill(0x00FF00, 1.0)
+            .drawRect(0, 0, 800, 600)
+            .endFill();
 
-        // const { Shape, BitmapData } = next2d.display;
-        // const { TextField } = next2d.text;
-        // const { Video } = next2d.media;
-        // const { Event } = next2d.events;
-        // const { Matrix } = next2d.geom;
-        // const {
-        //     BlurFilter,
-        //     ColorMatrixFilter,
-        //     GlowFilter,
-        //     BevelFilter,
-        //     GradientBevelFilter,
-        //     GradientGlowFilter,
-        //     DropShadowFilter,
-        //     ConvolutionFilter,
-        //     DisplacementMapFilter
-        // } = next2d.filters;
+        // ===== テスト1: シンプルな中抜き矩形（直接root）=====
+        const shape1 = root.addChild(new Shape());
+        shape1.x = 50;
+        shape1.y = 50;
+        shape1.graphics
+            .beginFill(0xFF0000, 1.0)
+            // 外側の矩形（時計回り）
+            .moveTo(0, 0)
+            .lineTo(150, 0)
+            .lineTo(150, 100)
+            .lineTo(0, 100)
+            .lineTo(0, 0)
+            // 内側の矩形（反時計回り）- 中抜き
+            .moveTo(30, 30)
+            .lineTo(30, 70)
+            .lineTo(120, 70)
+            .lineTo(120, 30)
+            .lineTo(30, 30)
+            .endFill();
+        console.log("Test 1: シンプルな中抜き矩形（直接root）- 赤い枠（内側が透明）が見えるべき");
 
-        // const shape = root.addChild(new Shape());
-        // shape.x = 150;
-        // shape.y = 150;
+        // ===== テスト2: シンプルな中抜き矩形（Sprite内）=====
+        const sprite2 = root.addChild(new Sprite());
+        sprite2.x = 250;
+        sprite2.y = 50;
+        const shape2 = sprite2.addChild(new Shape());
+        shape2.graphics
+            .beginFill(0x0000FF, 1.0)
+            // 外側の矩形（時計回り）
+            .moveTo(0, 0)
+            .lineTo(150, 0)
+            .lineTo(150, 100)
+            .lineTo(0, 100)
+            .lineTo(0, 0)
+            // 内側の矩形（反時計回り）- 中抜き
+            .moveTo(30, 30)
+            .lineTo(30, 70)
+            .lineTo(120, 70)
+            .lineTo(120, 30)
+            .lineTo(30, 30)
+            .endFill();
+        console.log("Test 2: シンプルな中抜き矩形（Sprite内）- 青い枠（内側が透明）が見えるべき");
 
-        // shape.addEventListener(Event.COMPLETE, () => 
-        // {
-        //     shape.rotation = 190;
-        //     shape.scaleX = 0.25;
-        //     shape.scaleY = 0.25;
-        //     console.log(shape.rotation);
-        // });
+        // ===== テスト3: グラデーション中抜き矩形 =====
+        const sprite3 = root.addChild(new Sprite());
+        sprite3.x = 450;
+        sprite3.y = 50;
+        const shape3 = sprite3.addChild(new Shape());
+        const matrix3 = new Matrix();
+        matrix3.createGradientBox(150, 100, Math.PI / 2, 0, 0);
+        shape3.graphics
+            .beginGradientFill(
+                "linear",
+                [0x7F7F9C, 0x56567C],
+                [1, 1],
+                [0, 255],
+                matrix3
+            )
+            // 外側の矩形（時計回り）
+            .moveTo(0, 0)
+            .lineTo(150, 0)
+            .lineTo(150, 100)
+            .lineTo(0, 100)
+            .lineTo(0, 0)
+            // 内側の矩形（反時計回り）- 中抜き
+            .moveTo(30, 30)
+            .lineTo(30, 70)
+            .lineTo(120, 70)
+            .lineTo(120, 30)
+            .lineTo(30, 30)
+            .endFill();
+        console.log("Test 3: グラデーション中抜き矩形 - グラデーションの枠（内側が透明）が見えるべき");
 
-        // shape.src = "http://localhost:5173/json/image/logo.png";
+        // ===== テスト4: ExpressionSlotAtomと同じ構造の中抜きカプセル =====
+        const sprite4 = root.addChild(new Sprite());
+        sprite4.x = 50;
+        sprite4.y = 200;
+        const shape4 = sprite4.addChild(new Shape());
+        const matrix4 = new Matrix();
+        matrix4.createGradientBox(208, 58, Math.PI / 2, 0, 0);
+        shape4.graphics
+            .beginGradientFill(
+                "linear",
+                [0x7F7F9C, 0x56567C],
+                [1, 1],
+                [0, 255],
+                matrix4
+            )
+            // 内側のカプセル（小さい方）
+            .moveTo(204.67, 30.83)
+            .cubicCurveTo(204.67, 43.9, 194.04, 54.53, 180.97, 54.53)
+            .lineTo(26.7, 54.53)
+            .cubicCurveTo(13.63, 54.53, 3, 43.9, 3, 30.83)
+            .lineTo(3, 26.7)
+            .cubicCurveTo(3, 13.63, 13.63, 3, 26.7, 3)
+            .lineTo(180.97, 3)
+            .cubicCurveTo(194.04, 3, 204.67, 13.63, 204.67, 26.7)
+            .lineTo(204.67, 30.83)
+            // 外側のカプセル（大きい方）
+            .moveTo(180.97, 0)
+            .lineTo(26.7, 0)
+            .cubicCurveTo(11.97, 0, 0, 11.98, 0, 26.7)
+            .lineTo(0, 30.83)
+            .cubicCurveTo(0, 45.55, 11.98, 57.53, 26.7, 57.53)
+            .lineTo(180.97, 57.53)
+            .cubicCurveTo(195.69, 57.53, 207.67, 45.55, 207.67, 30.83)
+            .lineTo(207.67, 26.7)
+            .cubicCurveTo(207.67, 11.98, 195.69, 0, 180.97, 0)
+            .endFill();
+        console.log("Test 4: ExpressionSlotAtomと同じ構造の中抜きカプセル - 枠線のみが見えるべき");
 
-        // const shape1 = root.addChild(new Shape());
-        // shape1.x = 150;
-        // shape1.y = 150;
+        // ===== テスト5: 中抜きなし（比較用）=====
+        const sprite5 = root.addChild(new Sprite());
+        sprite5.x = 300;
+        sprite5.y = 200;
+        const shape5 = sprite5.addChild(new Shape());
+        shape5.graphics
+            .beginFill(0xFF00FF, 1.0)
+            // 外側の矩形のみ（中抜きなし）
+            .moveTo(0, 0)
+            .lineTo(150, 0)
+            .lineTo(150, 100)
+            .lineTo(0, 100)
+            .lineTo(0, 0)
+            .endFill();
+        console.log("Test 5: 中抜きなし（比較用）- 塗りつぶされた紫の矩形");
 
-        // shape1
-        //     .graphics
-        //     // .lineStyle(15, "#ff0000")
-        //     .beginFill("#ff0000")
-        //     .drawRect(0, 0, 100, 100);
+        // ===== テスト6: drawRoundRectで作った中抜き =====
+        const sprite6 = root.addChild(new Sprite());
+        sprite6.x = 500;
+        sprite6.y = 200;
+        const shape6 = sprite6.addChild(new Shape());
+        const matrix6 = new Matrix();
+        matrix6.createGradientBox(150, 100, Math.PI / 2, 0, 0);
+        shape6.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrix6
+            )
+            .drawRoundRect(0, 0, 150, 100, 20)
+            .drawRoundRect(10, 10, 130, 80, 15)
+            .endFill();
+        console.log("Test 6: drawRoundRectで作った中抜き - グラデーションの枠が見えるべき");
 
-        // const textField = root.addChild(new TextField());
-        // textField.x = 50;
-        // textField.y = 80;
-        // textField.width = 240;
-        // textField.border = true;
-        // textField.rotation = 35;
-
-        // const textFormat = textField.defaultTextFormat;
-        // textFormat.size  = 35;
-        // textFormat.color = "#00ff00";
-        // textField.defaultTextFormat = textFormat;
-
-        // textField.text = "Hello World!";
-
-        // textField.filters = [
-        //     new BlurFilter(10, 10, 1)
-        // ];
-
-        // textField.blendMode = "invert";
-
-        // const shape2 = root.addChild(new Shape());
-        // shape2.x = 100;
-        // shape2.y = 100;
-        // shape2.rotation = 25;
-        // shape2
-        //     .graphics
-        //     .beginFill("#00ff00")
-        //     .moveTo(0, 0)
-        //     .lineTo(100, 0)
-        //     .lineTo(100, 100)
-        //     .lineTo(0, 0)
-        //     .endFill();
-
-        // shape2.blendMode = "invert";
-        // shape2.filters = [
-        //     new BlurFilter(30, 30, 2),
-        // ];
-
-        // const shape3 = root.addChild(new Shape());
-
-        // shape3.x = 0;
-        // shape3.y = 0;
-        // shape3.scaleX = 0.5;
-        // shape3.scaleY = 0.5;
-        // shape3.rotation = 15;
-        // shape3.src = "http://localhost:5173/json/image/logo.png";
-
-        // shape3.filters = [
-        //     new BlurFilter(10, 10, 5),
-        // ];
-        // shape3.blendMode = "multiply";
-
-        // const video = root.addChild(new Video());
-        // video.x = 120;
-        // video.y = 50;
-        // video.rotation = 40;
-        // video.scaleX = 0.14;
-        // video.scaleY = 0.14; 
-        // video.src = "http://localhost:5173/json/image/video.mp4";
-        // video.blendMode = "multiply";
-
-        // video.filters = [
-        //     // new BlurFilter(40, 40, 3),
-        //     // new DropShadowFilter(180, 95, 0, 0.5),
-        //     new ColorMatrixFilter([
-        //         0.393, 0.769, 0.189, 0, 0,
-        //         0.349, 0.686, 0.168, 0, 0,
-        //         0.272, 0.534, 0.131, 0, 0,
-        //         0, 0, 0, 1, 0
-        //     ]),
-        // ];
-
-        // setTimeout(async () => 
-        // {
-        //     const canvas = await next2d.captureToCanvas(root, {
-        //         "matrix": new Matrix(2, 0, 0, 2, 0, 0)
-        //     });
-        //     console.log(canvas.toDataURL());
-        // }, 3000);
-
-        
-        // const count = 8000;
-        // const root = next2d
-        //     .createRootMovieClip(1000, 416, 60)
-        //     .then((root) => 
-        //     {
-        //         const { Shape } = next2d.display;
-                
-        //         const rects = [];
-        //         for (let i = 0; i < count; i++) {
-        //             const x = Math.random() * 1000;
-        //             const y = Math.random() * 416;
-        //             const size = 10 + Math.random() * 40;
-        //             const speed = 1 + Math.random();
-
-        //             var rect = new Shape();
-
-        //             rect
-        //                 .graphics
-        //                 .beginFill("#fff")
-        //                 .lineStyle(1, "#000")
-        //                 .drawRect(0, 0, size, size);
-
-        //             rect.x = x;
-        //             rect.y = y;
-
-        //             root.addChild(rect);
-
-        //             rects.push({ size, speed, el: rect });
-        //         }
-
-        //         root.addEventListener("enterFrame", () =>
-        //         {
-        //             for (let i = 0; i < count; i++) {
-        //                 const rect = rects[i];
-
-        //                 if (rect.el.x + rect.size < 0) {
-        //                     rect.el.x = 1000 + rect.size / 2;
-        //                 }
-
-        //                 rect.el.x -= rect.speed;
-        //             }
-        //         });
-        //     });
-
+        console.log("=== Row 1: 中抜き矩形のテスト ===");
+        console.log("=== Row 2: 複雑な中抜きとExpressionSlotAtom構造 ===");
     });
 </script>
 </body>

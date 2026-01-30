@@ -122,6 +122,9 @@ export class Context
     // マスク描画モードフラグ（beginMask〜endMask間でtrue）
     private inMaskMode: boolean = false;
 
+    // ノード領域クリア済みフラグ（beginNodeRendering〜endNodeRendering間で使用）
+    private nodeAreaCleared: boolean = false;
+
     /**
      * @param {GPUDevice} device
      * @param {GPUCanvasContext} canvas_context
@@ -671,6 +674,12 @@ export class Context
             }
         }
 
+        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
+        // renderPassEncoder作成後に呼び出す必要がある
+        if (this.currentRenderTarget) {
+            this.ensureNodeAreaCleared();
+        }
+
         // WebGL版と同じ: 現在のビューポートサイズを使用（アトラス描画時はアトラスサイズ）
         const viewportWidth = this.viewportWidth;
         const viewportHeight = this.viewportHeight;
@@ -904,6 +913,12 @@ export class Context
             }
         }
 
+        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
+        // renderPassEncoder作成後に呼び出す必要がある
+        if (this.currentRenderTarget) {
+            this.ensureNodeAreaCleared();
+        }
+
         // WebGL版と同じ: 現在のビューポートサイズを使用（アトラス描画時はアトラスサイズ）
         const viewportWidth = this.viewportWidth;
         const viewportHeight = this.viewportHeight;
@@ -945,16 +960,15 @@ export class Context
             mesh.buffer
         );
 
-        // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
-        const attachment = this.frameBufferManager.getAttachment("atlas");
-        if (this.currentRenderTarget && attachment?.stencil?.view) {
-            // 2パスステンシルフィル（WebGL版と同じアルゴリズム）
-            this.fillWithStencil(vertexBuffer, mesh.indexCount);
-        } else {
-            // キャンバスへの描画またはステンシルなしの場合は単純なフィル
-            const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
-            this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight, useStencilPipeline);
-        }
+        // ストロークは常に単純なfillで描画（ステンシルフィルは使用しない）
+        // 理由: ストロークは複数の重なり合う矩形として生成され、
+        // 2パスステンシルフィルでは重なり部分のステンシル値が相殺されて描画されないため
+        const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
+        this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight, useStencilPipeline);
+
+        // ストローク描画後はpathCommandをクリアする
+        // 理由: drawFill()がfill()を呼び出すため、クリアしないと同じパスが白で塗りつぶされる
+        this.pathCommand.reset();
     }
 
     /**
@@ -991,6 +1005,8 @@ export class Context
 
         let startX = path[0] as number;
         let startY = path[1] as number;
+        let controlX = 0;
+        let controlY = 0;
         let prevEndUp: { x: number, y: number } | null = null;
         let prevEndDown: { x: number, y: number } | null = null;
 
@@ -999,65 +1015,110 @@ export class Context
             const y = path[idx + 1] as number;
             const isCurve = path[idx + 2] as boolean;
 
+            // 現在のポイントが制御点（曲線の中間点）の場合は保存してスキップ
             if (isCurve) {
+                controlX = x;
+                controlY = y;
                 continue;
             }
 
             const endX = x;
             const endY = y;
 
-            // 方向ベクトル
-            const dx = endX - startX;
-            const dy = endY - startY;
-            const magnitude = Math.sqrt(dx * dx + dy * dy);
+            // 前のポイントが制御点だったかチェック（WebGL版と同じロジック）
+            const prevWasCurve = path[idx - 1] as boolean;
 
-            if (magnitude < 0.0001) {
-                startX = endX;
-                startY = endY;
-                continue;
-            }
-
-            // 法線ベクトル
-            const nx = -(dy / magnitude) * thickness;
-            const ny = dx / magnitude * thickness;
-
-            // 矩形の4頂点
-            const startUpX = startX + nx;
-            const startUpY = startY + ny;
-            const startDownX = startX - nx;
-            const startDownY = startY - ny;
-            const endUpX = endX + nx;
-            const endUpY = endY + ny;
-            const endDownX = endX - nx;
-            const endDownY = endY - ny;
-
-            // IPath形式で矩形を追加（WebGL版と同じフォーマット）
-            const rectPath: IPath = [
-                startUpX, startUpY, false,
-                endUpX, endUpY, false,
-                endDownX, endDownY, false,
-                startDownX, startDownY, false,
-                startUpX, startUpY, false  // 閉じる
-            ];
-            rectangles.push(rectPath);
-
-            // 結合処理（前の線分がある場合）
-            if (prevEndUp && prevEndDown) {
-                const joinPath = this.generateJoin(
-                    prevEndUp.x, prevEndUp.y,
-                    prevEndDown.x, prevEndDown.y,
-                    startUpX, startUpY,
-                    startDownX, startDownY,
+            if (prevWasCurve) {
+                // 曲線セグメント：ベジェ曲線をオフセットして描画
+                const curveOutline = this.generateCurveOutline(
                     startX, startY,
+                    controlX, controlY,
+                    endX, endY,
                     thickness
                 );
-                if (joinPath) {
-                    rectangles.push(joinPath);
-                }
-            }
+                rectangles.push(curveOutline);
 
-            prevEndUp = { "x": endUpX, "y": endUpY };
-            prevEndDown = { "x": endDownX, "y": endDownY };
+                // 結合処理
+                if (prevEndUp && prevEndDown && curveOutline.length >= 6) {
+                    const curveStartUpX = curveOutline[0] as number;
+                    const curveStartUpY = curveOutline[1] as number;
+                    // 曲線の始点の下側を推定（曲線輪郭の最後の方から取得）
+                    const joinPath = this.generateJoin(
+                        prevEndUp.x, prevEndUp.y,
+                        prevEndDown.x, prevEndDown.y,
+                        curveStartUpX, curveStartUpY,
+                        curveStartUpX, curveStartUpY, // 簡易的に同じ点を使用
+                        startX, startY,
+                        thickness
+                    );
+                    if (joinPath) {
+                        rectangles.push(joinPath);
+                    }
+                }
+
+                // 曲線の終点情報を更新
+                // 曲線輪郭の構造から終点の上下を取得
+                const curveLen = curveOutline.length;
+                if (curveLen >= 12) {
+                    // 左側の最後の点が終点上側に近い
+                    prevEndUp = { "x": curveOutline[curveLen - 9] as number, "y": curveOutline[curveLen - 8] as number };
+                    prevEndDown = { "x": curveOutline[curveLen - 6] as number, "y": curveOutline[curveLen - 5] as number };
+                }
+            } else {
+                // 直線セグメント
+                // 方向ベクトル
+                const dx = endX - startX;
+                const dy = endY - startY;
+                const magnitude = Math.sqrt(dx * dx + dy * dy);
+
+                if (magnitude < 0.0001) {
+                    startX = endX;
+                    startY = endY;
+                    continue;
+                }
+
+                // 法線ベクトル
+                const nx = -(dy / magnitude) * thickness;
+                const ny = dx / magnitude * thickness;
+
+                // 矩形の4頂点
+                const startUpX = startX + nx;
+                const startUpY = startY + ny;
+                const startDownX = startX - nx;
+                const startDownY = startY - ny;
+                const endUpX = endX + nx;
+                const endUpY = endY + ny;
+                const endDownX = endX - nx;
+                const endDownY = endY - ny;
+
+                // IPath形式で矩形を追加（WebGL版と同じフォーマット）
+                const rectPath: IPath = [
+                    startUpX, startUpY, false,
+                    endUpX, endUpY, false,
+                    endDownX, endDownY, false,
+                    startDownX, startDownY, false,
+                    startUpX, startUpY, false  // 閉じる
+                ];
+                rectangles.push(rectPath);
+
+                // 結合処理（前の線分がある場合）
+                if (prevEndUp && prevEndDown) {
+                    const joinPath = this.generateJoin(
+                        prevEndUp.x, prevEndUp.y,
+                        prevEndDown.x, prevEndDown.y,
+                        startUpX, startUpY,
+                        startDownX, startDownY,
+                        startX, startY,
+                        thickness
+                    );
+                    if (joinPath) {
+                        rectangles.push(joinPath);
+                    }
+                }
+
+                prevEndUp = { "x": endUpX, "y": endUpY };
+                prevEndDown = { "x": endDownX, "y": endDownY };
+            }
 
             startX = endX;
             startY = endY;
@@ -1227,6 +1288,75 @@ export class Context
     }
 
     /**
+     * @description 曲線セグメントの輪郭を生成（WebGL版のMeshCalculateCurveRectangleUseCaseと同等）
+     * @param {number} startX - 始点X
+     * @param {number} startY - 始点Y
+     * @param {number} controlX - 制御点X
+     * @param {number} controlY - 制御点Y
+     * @param {number} endX - 終点X
+     * @param {number} endY - 終点Y
+     * @param {number} thickness - 線の太さの半分
+     * @return {IPath}
+     */
+    private generateCurveOutline(
+        startX: number, startY: number,
+        controlX: number, controlY: number,
+        endX: number, endY: number,
+        thickness: number
+    ): IPath
+    {
+        // ベジェ曲線を複数の直線セグメントに分割
+        const segments = 8;
+        const leftPoints: Array<{ x: number, y: number }> = [];
+        const rightPoints: Array<{ x: number, y: number }> = [];
+
+        for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            const mt = 1 - t;
+
+            // ベジェ曲線上の点
+            const px = mt * mt * startX + 2 * mt * t * controlX + t * t * endX;
+            const py = mt * mt * startY + 2 * mt * t * controlY + t * t * endY;
+
+            // 接線ベクトル（ベジェ曲線の微分）
+            const tx = 2 * (mt * (controlX - startX) + t * (endX - controlX));
+            const ty = 2 * (mt * (controlY - startY) + t * (endY - controlY));
+
+            // 接線の長さ
+            const tLen = Math.sqrt(tx * tx + ty * ty);
+            if (tLen < 0.0001) { continue }
+
+            // 法線ベクトル（接線に垂直）
+            const nx = -ty / tLen * thickness;
+            const ny = tx / tLen * thickness;
+
+            // 左右のオフセット点
+            leftPoints.push({ "x": px + nx, "y": py + ny });
+            rightPoints.push({ "x": px - nx, "y": py - ny });
+        }
+
+        // 左側 → 右側（逆順）でパスを構成
+        const path: IPath = [];
+
+        // 左側の点を追加
+        for (let i = 0; i < leftPoints.length; i++) {
+            path.push(leftPoints[i].x, leftPoints[i].y, false);
+        }
+
+        // 右側の点を逆順で追加
+        for (let i = rightPoints.length - 1; i >= 0; i--) {
+            path.push(rightPoints[i].x, rightPoints[i].y, false);
+        }
+
+        // パスを閉じる
+        if (path.length > 0) {
+            path.push(path[0] as number, path[1] as number, false);
+        }
+
+        return path;
+    }
+
+    /**
      * @description グラデーションの塗りつぶしを実行
      * @param {number} type - 0: linear, 1: radial
      * @param {number[]} stops - グラデーションストップ配列 [offset, R, G, B, A, ...] (R,G,B,A: 0-255)
@@ -1289,6 +1419,12 @@ export class Context
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             }
+        }
+
+        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
+        // renderPassEncoder作成後に呼び出す必要がある
+        if (this.currentRenderTarget) {
+            this.ensureNodeAreaCleared();
         }
 
         // WebGL版と同じ: ビューポートサイズ
@@ -1415,6 +1551,12 @@ export class Context
             }
         }
 
+        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
+        // renderPassEncoder作成後に呼び出す必要がある
+        if (this.currentRenderTarget) {
+            this.ensureNodeAreaCleared();
+        }
+
         // ステンシル付きレンダーパスかどうかを判定
         // - マスクモード時またはマスクテスト有効時（メインアタッチメントへの描画）
         // - アトラス描画時（ステンシル付きレンダーパス）
@@ -1497,6 +1639,12 @@ export class Context
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         }
 
+        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
+        // renderPassEncoder作成後に呼び出す必要がある
+        if (this.currentRenderTarget) {
+            this.ensureNodeAreaCleared();
+        }
+
         // WebGL版と同じ: thicknessをそのまま渡し、内部で/2される
         const lutTexture = contextGradientStrokeUseCase(
             this.device,
@@ -1563,6 +1711,12 @@ export class Context
                 "load"
             );
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        }
+
+        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
+        // renderPassEncoder作成後に呼び出す必要がある
+        if (this.currentRenderTarget) {
+            this.ensureNodeAreaCleared();
         }
 
         // WebGL版と同じ: thicknessをそのまま渡し、内部で/2される
@@ -1728,6 +1882,9 @@ export class Context
      */
     beginNodeRendering (node: Node): void
     {
+        // ノード領域クリアフラグをリセット
+        this.nodeAreaCleared = false;
+
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
             this.beginFrame();
@@ -1798,8 +1955,62 @@ export class Context
 
             if (scissorW > 0 && scissorH > 0) {
                 this.renderPassEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
+                // clearNodeArea()は最初の描画操作で呼び出す（ensureNodeAreaCleared経由）
+                // drawPixelsはqueue.writeTextureを使うため、クリアは不要
             }
         }
+    }
+
+    /**
+     * @description ノード領域がまだクリアされていない場合にクリアを実行
+     *              最初の描画操作（fill, gradientFill, gradientStroke等）で呼び出される
+     * @return {void}
+     */
+    private ensureNodeAreaCleared (): void
+    {
+        if (this.nodeAreaCleared) { return; }
+        this.nodeAreaCleared = true;
+        this.clearNodeArea();
+    }
+
+    /**
+     * @description ノード領域をクリア（透明色 + ステンシル=0）
+     *              WebGL版の gl.clear(COLOR_BUFFER_BIT | STENCIL_BUFFER_BIT) と同等
+     * @return {void}
+     */
+    private clearNodeArea (): void
+    {
+        if (!this.renderPassEncoder) {
+            return;
+        }
+
+        // ノードクリア用パイプラインを取得
+        const clearPipeline = this.pipelineManager.getPipeline("node_clear_atlas");
+        if (!clearPipeline) {
+            return;
+        }
+
+        // フルスクリーンクワッド用の頂点データ（0-1空間）
+        // シェーダーで NDC (-1 to 1) に変換される
+        const quadVertices = new Float32Array([
+            0, 0,  // 左上
+            1, 0,  // 右上
+            0, 1,  // 左下
+            1, 0,  // 右上
+            1, 1,  // 右下
+            0, 1   // 左下
+        ]);
+
+        // 頂点バッファを作成
+        const vertexBuffer = this.bufferManager.createVertexBuffer(
+            "node_clear_quad",
+            quadVertices
+        );
+
+        // クリア描画を実行
+        this.renderPassEncoder.setPipeline(clearPipeline);
+        this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
+        this.renderPassEncoder.draw(6);
     }
 
     /**
@@ -1829,6 +2040,7 @@ export class Context
     drawFill (): void
     {
         // fill()で描画を実行（レンダーパスは継続）
+        // ノード領域のクリアはfill()内でensureNodeAreaCleared()経由で行われる
         this.fill();
 
         // drawFill()呼び出し後、レンダーパスを終了

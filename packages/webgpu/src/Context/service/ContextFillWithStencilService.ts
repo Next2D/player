@@ -30,7 +30,8 @@ export const execute = (
 
     // === Pass 1: ステンシル書き込み（両面を1回で処理） ===
     // Front面: INCR_WRAP, Back面: DECR_WRAP
-    const stencilWritePipeline = pipelineManager.getPipeline("stencil_write");
+    // アトラス用パイプライン（sampleCount: 1）を使用
+    const stencilWritePipeline = pipelineManager.getPipeline("stencil_write_atlas");
     if (stencilWritePipeline) {
         renderPassEncoder.setPipeline(stencilWritePipeline);
         renderPassEncoder.setStencilReference(0);
@@ -40,7 +41,8 @@ export const execute = (
 
     // === Pass 2: ステンシルフィル（色描画） ===
     // アトラス描画時は常に通常モード: ステンシル != 0 の部分に描画し、ステンシルをクリア
-    const fillPipeline = pipelineManager.getPipeline("stencil_fill");
+    // アトラス用パイプライン（sampleCount: 1）を使用
+    const fillPipeline = pipelineManager.getPipeline("stencil_fill_atlas");
     if (fillPipeline) {
         renderPassEncoder.setPipeline(fillPipeline);
         renderPassEncoder.setStencilReference(0);
