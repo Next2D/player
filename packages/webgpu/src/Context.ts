@@ -1385,9 +1385,6 @@ export class Context
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
-        // アトラスのアタッチメントを取得（レンダーパス作成とステンシル判定で使用）
-        const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
-
         // 既存のレンダーパスがない場合のみ新規作成
         if (!this.renderPassEncoder) {
             const textureView = this.getCurrentTextureView();
@@ -2318,9 +2315,7 @@ export class Context
             params,
             config,
             this.mainTextureView!,
-            this.bufferManager,
-            this.canvasContext.canvas.width,
-            this.canvasContext.canvas.height
+            this.bufferManager
         );
     }
 

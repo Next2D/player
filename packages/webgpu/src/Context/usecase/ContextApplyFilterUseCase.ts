@@ -76,14 +76,12 @@ const getTextureFromNode = (
  *
  * @param {IFilterConfig} config
  * @param {IAttachmentObject} filterAttachment
- * @param {Float32Array} colorTransform
- * @param {IBlendMode} blendMode
+ * @param {Float32Array} _colorTransform - 未使用（将来の拡張用）
+ * @param {IBlendMode} _blendMode - 未使用（将来の拡張用）
  * @param {number} x
  * @param {number} y
  * @param {GPUTextureView} _mainTextureView - 未使用（メインアタッチメントに描画）
- * @param {BufferManager} bufferManager
- * @param {number} canvasWidth
- * @param {number} canvasHeight
+ * @param {BufferManager} _bufferManager - 未使用（将来の拡張用）
  * @return {void}
  */
 const drawFilterToMain = (
@@ -94,9 +92,7 @@ const drawFilterToMain = (
     x: number,
     y: number,
     _mainTextureView: GPUTextureView,
-    _bufferManager: BufferManager,
-    canvasWidth: number,
-    canvasHeight: number
+    _bufferManager: BufferManager
 ): void => {
     // メインアタッチメントに描画
     const mainAttachment = config.frameBufferManager.getAttachment("main");
@@ -209,8 +205,6 @@ const drawFilterToMain = (
  * @param {IFilterConfig} config
  * @param {GPUTextureView} mainTextureView
  * @param {BufferManager} bufferManager
- * @param {number} canvasWidth
- * @param {number} canvasHeight
  * @return {void}
  */
 export const execute = (
@@ -224,9 +218,7 @@ export const execute = (
     params: Float32Array,
     config: IFilterConfig,
     mainTextureView: GPUTextureView,
-    bufferManager: BufferManager,
-    canvasWidth: number,
-    canvasHeight: number
+    bufferManager: BufferManager
 ): void => {
     // オフセットを初期化
     $offset.x = 0;
@@ -542,9 +534,7 @@ export const execute = (
         drawX,
         drawY,
         mainTextureView,
-        bufferManager,
-        canvasWidth,
-        canvasHeight
+        bufferManager
     );
 
     // フィルター用アタッチメントを解放

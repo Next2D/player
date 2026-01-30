@@ -1452,12 +1452,13 @@ export class ShaderSource
                 // offsetはデスト座標系での開始位置、scaleはデスト/ソースのサイズ比
                 let uv = (input.texCoord - uniforms.offset) * uniforms.scale;
 
-                // UV座標が0-1の範囲外なら透明を返す
-                if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-                    return vec4<f32>(0.0, 0.0, 0.0, 0.0);
-                }
+                // クランプしたUV座標でサンプリング（uniform control flowを維持）
+                let clampedUv = clamp(uv, vec2<f32>(0.0), vec2<f32>(1.0));
+                let color = textureSample(inputTexture, textureSampler, clampedUv);
 
-                return textureSample(inputTexture, textureSampler, uv);
+                // UV座標が0-1の範囲外なら透明を返す
+                let inBounds = uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
+                return select(vec4<f32>(0.0, 0.0, 0.0, 0.0), color, inBounds);
             }
         `;
     }
@@ -1492,15 +1493,17 @@ export class ShaderSource
                 let filterStart = uniforms.offset;
                 let filterEnd = uniforms.offset + uniforms.scale;
 
-                // フィルター領域外の場合は透明を返す
-                if (input.texCoord.x < filterStart.x || input.texCoord.x > filterEnd.x ||
-                    input.texCoord.y < filterStart.y || input.texCoord.y > filterEnd.y) {
-                    return vec4<f32>(0.0, 0.0, 0.0, 0.0);
-                }
-
                 // フィルター領域内: UV座標を0-1にマッピング
                 let uv = (input.texCoord - filterStart) / uniforms.scale;
-                return textureSample(inputTexture, textureSampler, uv);
+
+                // クランプしたUV座標でサンプリング（uniform control flowを維持）
+                let clampedUv = clamp(uv, vec2<f32>(0.0), vec2<f32>(1.0));
+                let color = textureSample(inputTexture, textureSampler, clampedUv);
+
+                // フィルター領域外の場合は透明を返す
+                let inBounds = input.texCoord.x >= filterStart.x && input.texCoord.x <= filterEnd.x &&
+                               input.texCoord.y >= filterStart.y && input.texCoord.y <= filterEnd.y;
+                return select(vec4<f32>(0.0, 0.0, 0.0, 0.0), color, inBounds);
             }
         `;
     }
