@@ -3,173 +3,74 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Next2D - Hollow Shape (中抜き描画) Test</title>
+    <title>Next2D - BlendMode Test</title>
     <script defer type="module" src="./src/index.ts"></script>
 </head>
 <body style="margin: 0; padding: 0; background: #333333;">
 <script>
     window.addEventListener("DOMContentLoaded", async () =>
     {
+        await next2d.load("develop");
+        return ;
         const root = await next2d.createRootMovieClip(800, 600, 60);
-        const { Shape, Sprite } = next2d.display;
-        const { Matrix } = next2d.geom;
+        const { Shape, BlendMode } = next2d.display;
 
-        // 背景（緑）
-        const bgShape = root.addChild(new Shape());
-        bgShape.graphics
-            .beginFill(0x00FF00, 1.0)
-            .drawRect(0, 0, 800, 600)
-            .endFill();
+        console.log("=== Full BlendMode Test ===");
 
-        // ===== テスト1: シンプルな中抜き矩形（直接root）=====
-        const shape1 = root.addChild(new Shape());
-        shape1.x = 50;
-        shape1.y = 50;
-        shape1.graphics
+        // 背景用の赤い矩形（上段）
+        const baseBg1 = root.addChild(new Shape());
+        baseBg1.graphics
             .beginFill(0xFF0000, 1.0)
-            // 外側の矩形（時計回り）
-            .moveTo(0, 0)
-            .lineTo(150, 0)
-            .lineTo(150, 100)
-            .lineTo(0, 100)
-            .lineTo(0, 0)
-            // 内側の矩形（反時計回り）- 中抜き
-            .moveTo(30, 30)
-            .lineTo(30, 70)
-            .lineTo(120, 70)
-            .lineTo(120, 30)
-            .lineTo(30, 30)
+            .drawRect(50, 50, 700, 100)
             .endFill();
-        console.log("Test 1: シンプルな中抜き矩形（直接root）- 赤い枠（内側が透明）が見えるべき");
 
-        // ===== テスト2: シンプルな中抜き矩形（Sprite内）=====
-        const sprite2 = root.addChild(new Sprite());
-        sprite2.x = 250;
-        sprite2.y = 50;
-        const shape2 = sprite2.addChild(new Shape());
-        shape2.graphics
-            .beginFill(0x0000FF, 1.0)
-            // 外側の矩形（時計回り）
-            .moveTo(0, 0)
-            .lineTo(150, 0)
-            .lineTo(150, 100)
-            .lineTo(0, 100)
-            .lineTo(0, 0)
-            // 内側の矩形（反時計回り）- 中抜き
-            .moveTo(30, 30)
-            .lineTo(30, 70)
-            .lineTo(120, 70)
-            .lineTo(120, 30)
-            .lineTo(30, 30)
+        // 背景用の赤い矩形（下段）
+        const baseBg2 = root.addChild(new Shape());
+        baseBg2.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawRect(50, 180, 700, 100)
             .endFill();
-        console.log("Test 2: シンプルな中抜き矩形（Sprite内）- 青い枠（内側が透明）が見えるべき");
 
-        // ===== テスト3: グラデーション中抜き矩形 =====
-        const sprite3 = root.addChild(new Sprite());
-        sprite3.x = 450;
-        sprite3.y = 50;
-        const shape3 = sprite3.addChild(new Shape());
-        const matrix3 = new Matrix();
-        matrix3.createGradientBox(150, 100, Math.PI / 2, 0, 0);
-        shape3.graphics
-            .beginGradientFill(
-                "linear",
-                [0x7F7F9C, 0x56567C],
-                [1, 1],
-                [0, 255],
-                matrix3
-            )
-            // 外側の矩形（時計回り）
-            .moveTo(0, 0)
-            .lineTo(150, 0)
-            .lineTo(150, 100)
-            .lineTo(0, 100)
-            .lineTo(0, 0)
-            // 内側の矩形（反時計回り）- 中抜き
-            .moveTo(30, 30)
-            .lineTo(30, 70)
-            .lineTo(120, 70)
-            .lineTo(120, 30)
-            .lineTo(30, 30)
-            .endFill();
-        console.log("Test 3: グラデーション中抜き矩形 - グラデーションの枠（内側が透明）が見えるべき");
+        // 上段のブレンドモード
+        const modes1 = [
+            { mode: BlendMode.NORMAL, name: "normal", x: 60 },
+            { mode: BlendMode.ADD, name: "add", x: 160 },
+            { mode: BlendMode.SCREEN, name: "screen", x: 260 },
+            { mode: BlendMode.ALPHA, name: "alpha", x: 360 },
+            { mode: BlendMode.ERASE, name: "erase", x: 460 },
+            { mode: BlendMode.COPY, name: "copy", x: 560 }
+        ];
 
-        // ===== テスト4: ExpressionSlotAtomと同じ構造の中抜きカプセル =====
-        const sprite4 = root.addChild(new Sprite());
-        sprite4.x = 50;
-        sprite4.y = 200;
-        const shape4 = sprite4.addChild(new Shape());
-        const matrix4 = new Matrix();
-        matrix4.createGradientBox(208, 58, Math.PI / 2, 0, 0);
-        shape4.graphics
-            .beginGradientFill(
-                "linear",
-                [0x7F7F9C, 0x56567C],
-                [1, 1],
-                [0, 255],
-                matrix4
-            )
-            // 内側のカプセル（小さい方）
-            .moveTo(204.67, 30.83)
-            .cubicCurveTo(204.67, 43.9, 194.04, 54.53, 180.97, 54.53)
-            .lineTo(26.7, 54.53)
-            .cubicCurveTo(13.63, 54.53, 3, 43.9, 3, 30.83)
-            .lineTo(3, 26.7)
-            .cubicCurveTo(3, 13.63, 13.63, 3, 26.7, 3)
-            .lineTo(180.97, 3)
-            .cubicCurveTo(194.04, 3, 204.67, 13.63, 204.67, 26.7)
-            .lineTo(204.67, 30.83)
-            // 外側のカプセル（大きい方）
-            .moveTo(180.97, 0)
-            .lineTo(26.7, 0)
-            .cubicCurveTo(11.97, 0, 0, 11.98, 0, 26.7)
-            .lineTo(0, 30.83)
-            .cubicCurveTo(0, 45.55, 11.98, 57.53, 26.7, 57.53)
-            .lineTo(180.97, 57.53)
-            .cubicCurveTo(195.69, 57.53, 207.67, 45.55, 207.67, 30.83)
-            .lineTo(207.67, 26.7)
-            .cubicCurveTo(207.67, 11.98, 195.69, 0, 180.97, 0)
-            .endFill();
-        console.log("Test 4: ExpressionSlotAtomと同じ構造の中抜きカプセル - 枠線のみが見えるべき");
+        for (const { mode, name, x } of modes1) {
+            const shape = root.addChild(new Shape());
+            shape.graphics
+                .beginFill(0x00FF00, 0.7)
+                .drawRect(x, 60, 80, 80)
+                .endFill();
+            shape.blendMode = mode;
+            console.log(`Test: ${name}`);
+        }
 
-        // ===== テスト5: 中抜きなし（比較用）=====
-        const sprite5 = root.addChild(new Sprite());
-        sprite5.x = 300;
-        sprite5.y = 200;
-        const shape5 = sprite5.addChild(new Shape());
-        shape5.graphics
-            .beginFill(0xFF00FF, 1.0)
-            // 外側の矩形のみ（中抜きなし）
-            .moveTo(0, 0)
-            .lineTo(150, 0)
-            .lineTo(150, 100)
-            .lineTo(0, 100)
-            .lineTo(0, 0)
-            .endFill();
-        console.log("Test 5: 中抜きなし（比較用）- 塗りつぶされた紫の矩形");
+        // 下段でmultiply, overlay等の複雑なブレンドモード
+        const modes2 = [
+            { mode: BlendMode.MULTIPLY, name: "multiply", x: 60 },
+            { mode: BlendMode.OVERLAY, name: "overlay", x: 160 },
+            { mode: BlendMode.DARKEN, name: "darken", x: 260 },
+            { mode: BlendMode.LIGHTEN, name: "lighten", x: 360 },
+            { mode: BlendMode.HARDLIGHT, name: "hardlight", x: 460 }
+        ];
 
-        // ===== テスト6: drawRoundRectで作った中抜き =====
-        const sprite6 = root.addChild(new Sprite());
-        sprite6.x = 500;
-        sprite6.y = 200;
-        const shape6 = sprite6.addChild(new Shape());
-        const matrix6 = new Matrix();
-        matrix6.createGradientBox(150, 100, Math.PI / 2, 0, 0);
-        shape6.graphics
-            .beginGradientFill(
-                "linear",
-                [0xFF0000, 0x0000FF],
-                [1, 1],
-                [0, 255],
-                matrix6
-            )
-            .drawRoundRect(0, 0, 150, 100, 20)
-            .drawRoundRect(10, 10, 130, 80, 15)
-            .endFill();
-        console.log("Test 6: drawRoundRectで作った中抜き - グラデーションの枠が見えるべき");
+        for (const { mode, name, x } of modes2) {
+            const shape = root.addChild(new Shape());
+            shape.graphics
+                .beginFill(0x00FF00, 0.7)
+                .drawRect(x, 190, 80, 80)
+                .endFill();
+            shape.blendMode = mode;
+            console.log(`Test: ${name}`);
+        }
 
-        console.log("=== Row 1: 中抜き矩形のテスト ===");
-        console.log("=== Row 2: 複雑な中抜きとExpressionSlotAtom構造 ===");
+        console.log("=== Test Complete ===");
     });
 </script>
 </body>

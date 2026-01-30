@@ -1,5 +1,9 @@
 import type { IPoint } from "./interface/IPoint";
 import type { IPath } from "./interface/IPath";
+import {
+    adaptiveCubicToQuad,
+    calculateAdaptiveThreshold
+} from "./BezierConverter";
 
 /**
  * @description WebGPU用パスコマンド（WebGL互換形式）
@@ -102,7 +106,29 @@ export class PathCommand
     }
 
     /**
-     * @description 三次ベジェ曲線を二次ベジェ曲線に近似
+     * @description フラットネス閾値（スケールに応じて調整可能）
+     *              Flatness threshold for adaptive tessellation
+     */
+    private $flatnessThreshold: number = 4.0;
+
+    /**
+     * @description フラットネス閾値を設定
+     *              Set flatness threshold for adaptive bezier tessellation
+     * @param {number} scale - 現在のスケール（行列のスケール成分）
+     * @return {void}
+     */
+    setScale(scale: number): void
+    {
+        this.$flatnessThreshold = calculateAdaptiveThreshold(scale);
+    }
+
+    /**
+     * @description 三次ベジェ曲線を二次ベジェ曲線に適応的に近似
+     *              Adaptively approximate cubic bezier with quadratic beziers
+     *
+     * フラットネス（平坦度）に基づいて動的に分割数を決定。
+     * 単純な曲線は少ない分割、複雑な曲線は多い分割を行う。
+     *
      * @param {number} cx1
      * @param {number} cy1
      * @param {number} cx2
@@ -116,55 +142,25 @@ export class PathCommand
         cx2: number, cy2: number,
         x: number, y: number
     ): void {
-        // 三次ベジェを複数の二次ベジェに分割して近似
-        const segments = 4;
-        const startX = this.$currentX;
-        const startY = this.$currentY;
+        // 適応的テッセレーションで三次ベジェを二次ベジェ群に変換
+        const p0: IPoint = { "x": this.$currentX, "y": this.$currentY };
+        const p1: IPoint = { "x": cx1, "y": cy1 };
+        const p2: IPoint = { "x": cx2, "y": cy2 };
+        const p3: IPoint = { "x": x, "y": y };
 
-        for (let i = 0; i < segments; i++) {
-            const t0 = i / segments;
-            const t1 = (i + 1) / segments;
+        const segments = adaptiveCubicToQuad(
+            p0, p1, p2, p3,
+            this.$flatnessThreshold
+        );
 
-            // 分割区間の始点、中点、終点を計算
-            const p0 = this.$getCubicPoint(startX, startY, cx1, cy1, cx2, cy2, x, y, t0);
-            const p1 = this.$getCubicPoint(startX, startY, cx1, cy1, cx2, cy2, x, y, (t0 + t1) / 2);
-            const p2 = this.$getCubicPoint(startX, startY, cx1, cy1, cx2, cy2, x, y, t1);
-
-            // 二次ベジェの制御点を近似計算
-            const ctrl = {
-                "x": 2 * p1.x - 0.5 * (p0.x + p2.x),
-                "y": 2 * p1.y - 0.5 * (p0.y + p2.y)
-            };
-
-            this.$currentPath.push(ctrl.x, ctrl.y, true);
-            this.$currentPath.push(p2.x, p2.y, false);
+        // 各二次ベジェセグメントをパスに追加
+        for (const segment of segments) {
+            this.$currentPath.push(segment.ctrl.x, segment.ctrl.y, true);
+            this.$currentPath.push(segment.end.x, segment.end.y, false);
         }
 
         this.$currentX = x;
         this.$currentY = y;
-    }
-
-    /**
-     * @description 三次ベジェ曲線上の点を計算
-     * @private
-     */
-    private $getCubicPoint(
-        x0: number, y0: number,
-        x1: number, y1: number,
-        x2: number, y2: number,
-        x3: number, y3: number,
-        t: number
-    ): IPoint {
-        const mt = 1 - t;
-        const mt2 = mt * mt;
-        const mt3 = mt2 * mt;
-        const t2 = t * t;
-        const t3 = t2 * t;
-
-        return {
-            "x": mt3 * x0 + 3 * mt2 * t * x1 + 3 * mt * t2 * x2 + t3 * x3,
-            "y": mt3 * y0 + 3 * mt2 * t * y1 + 3 * mt * t2 * y2 + t3 * y3
-        };
     }
 
     /**
