@@ -9,6 +9,7 @@ import type { IStorageBufferConfig } from "../../interface/IStorageBufferConfig"
  * - より大きなサイズをサポート
  * - 動的更新が効率的
  * - Compute Shaderでも使用可能
+ * - Vertex Bufferとしても使用可能（VERTEXフラグ付き）
  *
  * @param {GPUDevice} device - WebGPU device
  * @param {IStorageBufferConfig} config - バッファ設定
@@ -21,7 +22,7 @@ export const execute = (
 
     const buffer = device.createBuffer({
         "size": config.size,
-        "usage": config.usage | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        "usage": config.usage | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.VERTEX,
         "label": config.label || "storage_buffer"
     });
 

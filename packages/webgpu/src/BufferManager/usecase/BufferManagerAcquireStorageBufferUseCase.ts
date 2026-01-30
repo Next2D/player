@@ -51,7 +51,7 @@ export const execute = (
 
     const buffer = createStorageBufferService(device, {
         "size": createSize,
-        "usage": GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        "usage": GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.VERTEX,
         "label": `storage_buffer_${pool.length}`
     });
 
