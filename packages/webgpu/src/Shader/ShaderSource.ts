@@ -1,3 +1,36 @@
+import { FillVertex, FillMainVertex } from "./wgsl/vertex/FillVertex";
+import { StencilWriteVertex, StencilWriteMainVertex, StencilFillVertex } from "./wgsl/vertex/StencilVertex";
+import { MaskVertex } from "./wgsl/vertex/MaskVertex";
+import { BasicVertex, BasicMainVertex } from "./wgsl/vertex/BasicVertex";
+import { InstancedVertex } from "./wgsl/vertex/InstancedVertex";
+import { GradientFillVertex, GradientFillMainVertex } from "./wgsl/vertex/GradientVertex";
+import { BitmapFillVertex, BitmapFillMainVertex } from "./wgsl/vertex/BitmapVertex";
+import { BlurFilterVertex, NodeClearVertex, PositionedTextureVertex } from "./wgsl/vertex/FilterVertex";
+
+import { FillFragment } from "./wgsl/fragment/FillFragment";
+import { StencilWriteFragment, StencilFillFragment } from "./wgsl/fragment/StencilFragment";
+import { MaskFragment } from "./wgsl/fragment/MaskFragment";
+import { BasicFragment, TextureFragment } from "./wgsl/fragment/BasicFragment";
+import { InstancedFragment } from "./wgsl/fragment/InstancedFragment";
+import { GradientFillFragment, GradientFragment } from "./wgsl/fragment/GradientFragment";
+import { BitmapFillFragment } from "./wgsl/fragment/BitmapFragment";
+import {
+    TextureCopyFragment,
+    BlurTextureCopyFragment,
+    FilterOutputFragment,
+    ColorMatrixFilterFragment,
+    NodeClearFragment,
+    PositionedTextureFragment,
+    BlendGenericFragment
+} from "./wgsl/fragment/FilterFragment";
+import {
+    GlowFilterFragment,
+    DropShadowFilterFragment,
+    GradientGlowFilterFragment,
+    GradientBevelFilterFragment,
+    BevelFilterFragment
+} from "./wgsl/fragment/EffectFragment";
+
 /**
  * @description WebGPU用の基本的なシェーダーソース
  *              Basic shader sources for WebGPU
@@ -6,2224 +39,679 @@ export class ShaderSource
 {
     /**
      * @description 単色塗りつぶし用頂点シェーダー（17 floats頂点フォーマット）
-     *              行列はすでにビューポートサイズで正規化済み（WebGL版と同じ）
-     *
-     *              WebGL版のoffsetY調整: atlasHeight - node.y - height
-     *              これによりWebGL座標系（下から上）に変換されている
-     *
-     *              WebGPU座標系: 上から下（Y軸反転なし）
-     *              しかし、WebGL版のoffsetY調整がそのまま使われているため、
-     *              WebGL版と同じY軸反転を適用する
      * @return {string}
      */
-    static getFillVertexShader(): string
+    static getFillVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-                @location(3) matrix0: vec3<f32>,
-                @location(4) matrix1: vec3<f32>,
-                @location(5) matrix2: vec3<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) bezier: vec2<f32>,
-                @location(1) color: vec4<f32>,
-            }
-
-            struct Uniforms {
-                viewportSize: vec2<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                // Build matrix from vertex attributes
-                // 行列はすでにビューポートで正規化済み（MeshFillGenerateUseCaseで実施）
-                let matrix = mat3x3<f32>(
-                    input.matrix0,
-                    input.matrix1,
-                    input.matrix2
-                );
-
-                // Apply matrix transformation (result is in 0-1 normalized space)
-                let transformed = matrix * vec3<f32>(input.position, 1.0);
-
-                // Convert to NDC: 0-1 → -1 to 1
-                let ndc = transformed.xy * 2.0 - 1.0;
-
-                // アトラス用: Y軸反転なし（インスタンス描画時に反転される）
-                // 2パスステンシルフィルと同じ座標系にする
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
-
-                // Pass through bezier coordinates for fragment shader
-                output.bezier = input.bezier;
-
-                // Pass color as-is (premultiplication happens in fragment shader)
-                output.color = input.color;
-
-                return output;
-            }
-        `;
+        return FillVertex;
     }
 
     /**
      * @description 単色塗りつぶし用頂点シェーダー（メインアタッチメント用）
-     *              Y軸反転あり - インスタンス描画と同じ座標系
      * @return {string}
      */
-    static getFillMainVertexShader(): string
+    static getFillMainVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-                @location(3) matrix0: vec3<f32>,
-                @location(4) matrix1: vec3<f32>,
-                @location(5) matrix2: vec3<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) bezier: vec2<f32>,
-                @location(1) color: vec4<f32>,
-            }
-
-            struct Uniforms {
-                viewportSize: vec2<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                // Build matrix from vertex attributes
-                let matrix = mat3x3<f32>(
-                    input.matrix0,
-                    input.matrix1,
-                    input.matrix2
-                );
-
-                // Apply matrix transformation (result is in 0-1 normalized space)
-                let transformed = matrix * vec3<f32>(input.position, 1.0);
-
-                // Convert to NDC: 0-1 → -1 to 1
-                let ndc = transformed.xy * 2.0 - 1.0;
-
-                // メインアタッチメント用: Y軸反転（インスタンス描画と同じ座標系）
-                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
-
-                // Pass through bezier coordinates for fragment shader
-                output.bezier = input.bezier;
-
-                // Pass color as-is (premultiplication happens in fragment shader)
-                output.color = input.color;
-
-                return output;
-            }
-        `;
+        return FillMainVertex;
     }
 
     /**
      * @description 単色塗りつぶし用フラグメントシェーダー（1パスLoop-Blinn）
-     *              WebGL版は2パス（MASK + SOLID_FILL_COLOR）だが、
-     *              WebGPU版は1パスでLoop-Blinn曲線処理を行う
-     *
-     *              bezier座標:
-     *              - (0.5, 0.5): 内部三角形（直線）→ そのまま描画
-     *              - その他: ベジェ曲線三角形 → u² - v で曲線内外を判定
      * @return {string}
      */
-    static getFillFragmentShader(): string
+    static getFillFragmentShader (): string
     {
-        return /* wgsl */`
-            struct FragmentInput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) bezier: vec2<f32>,
-                @location(1) color: vec4<f32>,
-            }
-
-            @fragment
-            fn main(input: FragmentInput) -> @location(0) vec4<f32> {
-                // 内部三角形（直線セグメント）はbezier = (0.5, 0.5)
-                // この場合、u² - v = 0.25 - 0.5 = -0.25 < 0 なので曲線内部として描画される
-
-                // ベジェ曲線三角形の場合、Loop-Blinn法で曲線内外を判定
-                // 暗黙関数: f(u,v) = u² - v
-                // f < 0: 曲線の内側（描画）
-                // f >= 0: 曲線の外側（ディスカード）
-                let f = input.bezier.x * input.bezier.x - input.bezier.y;
-
-                if (f >= 0.0) {
-                    discard;
-                }
-
-                // プリマルチプライドアルファで出力
-                return vec4<f32>(input.color.rgb * input.color.a, input.color.a);
-            }
-        `;
+        return FillFragment;
     }
 
     /**
-     * @description ステンシル書き込み用頂点シェーダー（Pass1）
-     *              WebGL版のMASKシェーダーに相当
-     *
-     *              ShapeRenderUseCase.tsで offsetY = atlasHeight - node.y - height を計算
-     *              これはWebGL座標系（下から上）用の変換
-     *
-     *              WebGPU座標系（上から下）では、この変換後の座標をそのまま使用
-     *              シェーダーでのY軸反転は不要（二重反転を避ける）
-     * @return {string}
-     */
-    /**
      * @description ステンシル書き込み用頂点シェーダー（アトラス用）
-     *              Y軸反転なし - インスタンス描画時にテクスチャ座標で調整
      * @return {string}
      */
-    static getStencilWriteVertexShader(): string
+    static getStencilWriteVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-                @location(3) matrix0: vec3<f32>,
-                @location(4) matrix1: vec3<f32>,
-                @location(5) matrix2: vec3<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) bezier: vec2<f32>,
-            }
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                // Build matrix from vertex attributes
-                let matrix = mat3x3<f32>(
-                    input.matrix0,
-                    input.matrix1,
-                    input.matrix2
-                );
-
-                // Apply matrix transformation (result is in 0-1 normalized space)
-                let transformed = matrix * vec3<f32>(input.position, 1.0);
-
-                // Convert to NDC: 0-1 → -1 to 1
-                let ndc = transformed.xy * 2.0 - 1.0;
-
-                // アトラス用: Y軸反転なし（インスタンス描画時にテクスチャ座標で調整）
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
-
-                // ベジェ曲線座標を渡す（Loop-Blinn法で使用）
-                output.bezier = input.bezier;
-
-                return output;
-            }
-        `;
+        return StencilWriteVertex;
     }
 
     /**
      * @description ステンシル書き込み用頂点シェーダー（メインアタッチメント用）
-     *              Y軸反転あり - インスタンス描画と同じ座標系
      * @return {string}
      */
-    static getStencilWriteMainVertexShader(): string
+    static getStencilWriteMainVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-                @location(3) matrix0: vec3<f32>,
-                @location(4) matrix1: vec3<f32>,
-                @location(5) matrix2: vec3<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) bezier: vec2<f32>,
-            }
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                // Build matrix from vertex attributes
-                let matrix = mat3x3<f32>(
-                    input.matrix0,
-                    input.matrix1,
-                    input.matrix2
-                );
-
-                // Apply matrix transformation (result is in 0-1 normalized space)
-                let transformed = matrix * vec3<f32>(input.position, 1.0);
-
-                // Convert to NDC: 0-1 → -1 to 1
-                let ndc = transformed.xy * 2.0 - 1.0;
-
-                // メイン用: Y軸反転（インスタンス描画と同じ座標系）
-                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
-
-                // ベジェ曲線座標を渡す（Loop-Blinn法で使用）
-                output.bezier = input.bezier;
-
-                return output;
-            }
-        `;
+        return StencilWriteMainVertex;
     }
 
     /**
      * @description ステンシル書き込み用フラグメントシェーダー（Pass1）
-     *              WebGL版のMASKシェーダーに相当
-     *
-     *              Loop-Blinn法でベジェ曲線外のピクセルをディスカード
-     *              f(u,v) = u² - v >= 0 の場合、曲線の外側としてディスカード
-     *
-     *              内部三角形（直線セグメント）はbezier = (0.5, 0.5)
-     *              この場合 f = 0.25 - 0.5 = -0.25 < 0 なので描画される
      * @return {string}
      */
-    static getStencilWriteFragmentShader(): string
+    static getStencilWriteFragmentShader (): string
     {
-        return /* wgsl */`
-            struct FragmentInput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) bezier: vec2<f32>,
-            }
-
-            @fragment
-            fn main(input: FragmentInput) -> @location(0) vec4<f32> {
-                // Loop-Blinn法: f(u,v) = u² - v
-                // f < 0: 曲線の内側（描画）
-                // f >= 0: 曲線の外側（ディスカード）
-                let f = input.bezier.x * input.bezier.x - input.bezier.y;
-
-                if (f >= 0.0) {
-                    discard;
-                }
-
-                // ステンシルのみ更新、カラーは書き込まない（writeMaskで制御）
-                return vec4<f32>(0.0, 0.0, 0.0, 0.0);
-            }
-        `;
+        return StencilWriteFragment;
     }
 
     /**
      * @description ステンシルフィル用頂点シェーダー（Pass2）
-     *              WebGL版と同じ: 同じメッシュデータを使って描画
-     *              頂点カラーを使用（SOLID_FILL_COLORと同じ）
-     *
-     *              Y軸反転なし（Pass1と一致させる）
      * @return {string}
      */
-    static getStencilFillVertexShader(): string
+    static getStencilFillVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-                @location(3) matrix0: vec3<f32>,
-                @location(4) matrix1: vec3<f32>,
-                @location(5) matrix2: vec3<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) color: vec4<f32>,
-            }
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                // Build matrix from vertex attributes
-                let matrix = mat3x3<f32>(
-                    input.matrix0,
-                    input.matrix1,
-                    input.matrix2
-                );
-
-                // Apply matrix transformation (result is in 0-1 normalized space)
-                let transformed = matrix * vec3<f32>(input.position, 1.0);
-
-                // Convert to NDC: 0-1 → -1 to 1
-                let ndc = transformed.xy * 2.0 - 1.0;
-
-                // アトラス用: Y軸反転なし（Pass1と一致）
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
-
-                // 頂点カラーを渡す
-                output.color = input.color;
-
-                return output;
-            }
-        `;
+        return StencilFillVertex;
     }
 
     /**
      * @description ステンシルフィル用フラグメントシェーダー（Pass2）
-     *              WebGL版のSOLID_FILL_COLORと同じ: 頂点カラーをプリマルチプライドアルファで出力
      * @return {string}
      */
-    static getStencilFillFragmentShader(): string
+    static getStencilFillFragmentShader (): string
     {
-        return /* wgsl */`
-            struct FragmentInput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) color: vec4<f32>,
-            }
-
-            @fragment
-            fn main(input: FragmentInput) -> @location(0) vec4<f32> {
-                // WebGL版と同じ: プリマルチプライドアルファで出力
-                // color は straight alpha (R, G, B, A) なので、RGB に alpha を乗算
-                let a = input.color.a;
-                return vec4<f32>(input.color.r * a, input.color.g * a, input.color.b * a, a);
-            }
-        `;
+        return StencilFillFragment;
     }
 
     /**
      * @description マスク用頂点シェーダー（ベジェ曲線）
      * @return {string}
      */
-    static getMaskVertexShader(): string
+    static getMaskVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) bezier: vec2<f32>,
-            }
-
-            struct Uniforms {
-                viewportSize: vec2<f32>,
-                _padding0: vec2<f32>,
-                matrixCol0: vec3<f32>,
-                _padding1: f32,
-                matrixCol1: vec3<f32>,
-                _padding2: f32,
-                matrixCol2: vec3<f32>,
-                _padding3: f32,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-                
-                // Build matrix (already normalized by viewport in CPU)
-                let matrix = mat3x3<f32>(
-                    uniforms.matrixCol0,
-                    uniforms.matrixCol1,
-                    uniforms.matrixCol2
-                );
-                
-                // Apply matrix transformation (result is in 0-1 normalized space)
-                let transformed = matrix * vec3<f32>(input.position, 1.0);
-                let pos = transformed.xy;
-                
-                // Convert to NDC: 0-1 → -1 to 1
-                let ndc = pos * 2.0 - 1.0;
-
-                // WebGL互換: Y軸反転
-                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
-
-                // Pass through bezier coordinates
-                output.bezier = input.bezier;
-                
-                return output;
-            }
-        `;
+        return MaskVertex;
     }
 
     /**
      * @description マスク用フラグメントシェーダー（ベジェ曲線アンチエイリアシング）
      * @return {string}
      */
-    static getMaskFragmentShader(): string
+    static getMaskFragmentShader (): string
     {
-        return /* wgsl */`
-            struct FragmentInput {
-                @location(0) bezier: vec2<f32>,
-            }
-
-            @fragment
-            fn main(input: FragmentInput) -> @location(0) vec4<f32> {
-                // Calculate partial derivatives for anti-aliasing
-                let px = dpdx(input.bezier);
-                let py = dpdy(input.bezier);
-                
-                // Bezier curve equation: x^2 - y = 0
-                // Calculate gradient for anti-aliasing
-                let f = (2.0 * input.bezier.x) * vec2<f32>(px.x, py.x) - vec2<f32>(px.y, py.y);
-                let alpha = 0.5 - (input.bezier.x * input.bezier.x - input.bezier.y) / length(f);
-                
-                // Discard pixels outside the curve
-                if (alpha <= 0.0) {
-                    discard;
-                }
-                
-                // Output with anti-aliased alpha
-                return vec4<f32>(min(alpha, 1.0));
-            }
-        `;
+        return MaskFragment;
     }
 
     /**
      * @description 基本的な頂点シェーダー（ストローク用、アトラスターゲット）
-     *              行列は正規化済み（0-1空間）、NDCに変換してY軸反転なし
      * @return {string}
      */
-    static getBasicVertexShader(): string
+    static getBasicVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) texCoord: vec2<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-                @location(1) color: vec4<f32>,
-            }
-
-            struct Uniforms {
-                matrix: mat3x3<f32>,
-                color: vec4<f32>,
-                alpha: f32,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                // 行列は正規化済み（0-1空間）
-                let pos = uniforms.matrix * vec3<f32>(input.position, 1.0);
-
-                // 0-1空間からNDC（-1～1）に変換
-                let ndc = pos.xy * 2.0 - 1.0;
-
-                // アトラス用: Y軸反転なし（fill shaderと同じ）
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
-                output.texCoord = input.texCoord;
-
-                // プリマルチプライドアルファ
-                let premultipliedColor = vec4<f32>(
-                    uniforms.color.rgb * uniforms.color.a * uniforms.alpha,
-                    uniforms.color.a * uniforms.alpha
-                );
-                output.color = premultipliedColor;
-
-                return output;
-            }
-        `;
+        return BasicVertex;
     }
 
     /**
      * @description 基本的な頂点シェーダー（ストローク用、メインアタッチメント）
-     *              行列は正規化済み（0-1空間）、NDCに変換してY軸反転あり
      * @return {string}
      */
-    static getBasicMainVertexShader(): string
+    static getBasicMainVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) texCoord: vec2<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-                @location(1) color: vec4<f32>,
-            }
-
-            struct Uniforms {
-                matrix: mat3x3<f32>,
-                color: vec4<f32>,
-                alpha: f32,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                // 行列は正規化済み（0-1空間）
-                let pos = uniforms.matrix * vec3<f32>(input.position, 1.0);
-
-                // 0-1空間からNDC（-1～1）に変換
-                let ndc = pos.xy * 2.0 - 1.0;
-
-                // メインアタッチメント用: Y軸反転（fill shaderと同じ）
-                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
-                output.texCoord = input.texCoord;
-
-                // プリマルチプライドアルファ
-                let premultipliedColor = vec4<f32>(
-                    uniforms.color.rgb * uniforms.color.a * uniforms.alpha,
-                    uniforms.color.a * uniforms.alpha
-                );
-                output.color = premultipliedColor;
-
-                return output;
-            }
-        `;
+        return BasicMainVertex;
     }
 
     /**
      * @description 基本的なフラグメントシェーダー（単色塗りつぶし）
      * @return {string}
      */
-    static getBasicFragmentShader(): string
+    static getBasicFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-                @location(1) color: vec4<f32>,
-            }
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                return input.color;
-            }
-        `;
+        return BasicFragment;
     }
 
     /**
      * @description テクスチャ用フラグメントシェーダー
      * @return {string}
      */
-    static getTextureFragmentShader(): string
+    static getTextureFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-                @location(1) color: vec4<f32>,
-            }
-
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var textureData: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                let textureColor = textureSample(textureData, textureSampler, input.texCoord);
-                return textureColor * input.color;
-            }
-        `;
+        return TextureFragment;
     }
 
     /**
      * @description インスタンス描画用頂点シェーダー
      * @return {string}
      */
-    static getInstancedVertexShader(): string
+    static getInstancedVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) texCoord: vec2<f32>,
-            }
-
-            struct InstanceInput {
-                @location(2) textureRect: vec4<f32>,     // x, y, w, h (normalized)
-                @location(3) textureDim: vec4<f32>,      // w, h, viewportW, viewportH
-                @location(4) matrixTx: vec4<f32>,        // tx, ty, 0, 0 (padding)
-                @location(5) matrixScale: vec4<f32>,     // scale0, rotate0, scale1, rotate1
-                @location(6) mulColor: vec4<f32>,        // r, g, b, a (a = globalAlpha)
-                @location(7) addColor: vec4<f32>,        // r, g, b, a
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-                @location(1) mulColor: vec4<f32>,
-                @location(2) addColor: vec4<f32>,
-            }
-
-            @vertex
-            fn main(
-                input: VertexInput,
-                instance: InstanceInput,
-                @builtin(instance_index) instanceIdx: u32
-            ) -> VertexOutput {
-                var output: VertexOutput;
-
-                // テクスチャ座標を計算
-                // WebGL版と同じ: v_coord = a_vertex * a_rect.zw + a_rect.xy;
-                let texX = instance.textureRect.x + input.texCoord.x * instance.textureRect.z;
-                let texY = instance.textureRect.y + input.texCoord.y * instance.textureRect.w;
-                output.texCoord = vec2<f32>(texX, texY);
-
-                // WebGL版と同じ構造:
-                // vec2 position = vec2(a_vertex.x, 1.0 - a_vertex.y);
-                // position = position * a_size.xy;
-                // position = (matrix * vec3(position, 1.0)).xy;
-                // position /= a_size.zw;
-                // position = position * 2.0 - 1.0;
-                // gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
-
-                // 入力Y座標を反転
-                var pos = vec2<f32>(input.position.x, 1.0 - input.position.y);
-                pos = pos * vec2<f32>(instance.textureDim.x, instance.textureDim.y);
-
-                // 変換行列を適用
-                let scale0 = instance.matrixScale.x;
-                let rotate0 = instance.matrixScale.y;
-                let scale1 = instance.matrixScale.z;
-                let rotate1 = instance.matrixScale.w;
-
-                let transformedX = pos.x * scale0 + pos.y * scale1 + instance.matrixTx.x;
-                let transformedY = pos.x * rotate0 + pos.y * rotate1 + instance.matrixTx.y;
-
-                // ビューポートで正規化
-                var position = vec2<f32>(transformedX, transformedY) / vec2<f32>(instance.textureDim.z, instance.textureDim.w);
-
-                // NDC座標に変換
-                position = position * 2.0 - 1.0;
-
-                // 出力Y座標を反転（WebGL版と同じ）
-                output.position = vec4<f32>(position.x, -position.y, 0.0, 1.0);
-
-                // カラー変換（mulColor.w = globalAlpha）
-                output.mulColor = instance.mulColor;
-                output.addColor = instance.addColor;
-
-                return output;
-            }
-        `;
+        return InstancedVertex;
     }
 
     /**
      * @description インスタンス描画用フラグメントシェーダー（アトラステクスチャから描画）
-     *              WebGL版と完全に同じロジック
      * @return {string}
      */
-    static getInstancedFragmentShader(): string
+    static getInstancedFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-                @location(1) mulColor: vec4<f32>,
-                @location(2) addColor: vec4<f32>,
-            }
-
-            @group(0) @binding(0) var textureSampler: sampler;
-            @group(0) @binding(1) var textureData: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                var src = textureSample(textureData, textureSampler, input.texCoord);
-
-                // WebGL版と同じ条件分岐: colorTransformが必要な場合のみ処理
-                // mulColor.w（globalAlpha）が1.0でない場合も処理が必要
-                if (input.mulColor.x != 1.0 || input.mulColor.y != 1.0 || input.mulColor.z != 1.0 || input.mulColor.w != 1.0
-                    || input.addColor.x != 0.0 || input.addColor.y != 0.0 || input.addColor.z != 0.0
-                ) {
-                    // プリマルチプライドからストレートアルファに変換
-                    src = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
-
-                    // colorTransform適用: src * mulColor + addColor
-                    src = clamp(src * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
-
-                    // ストレートアルファからプリマルチプライドに変換
-                    src = vec4<f32>(src.rgb * src.a, src.a);
-                }
-
-                return src;
-            }
-        `;
+        return InstancedFragment;
     }
 
     /**
      * @description グラデーションフィル用頂点シェーダー（行列変換でUV座標を計算）
-     *              WebGL版と同じ処理:
-     *              - Linear: v_uv = position（生の座標、inverseMatrix = I）
-     *              - Radial: v_uv = (gradientMatrix^(-1) * position).xy
      * @return {string}
      */
-    static getGradientFillVertexShader(): string
+    static getGradientFillVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-                @location(3) matrixRow0: vec3<f32>,
-                @location(4) matrixRow1: vec3<f32>,
-                @location(5) matrixRow2: vec3<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) v_uv: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-            }
-
-            struct GradientUniforms {
-                // 逆行列（UV変換用）
-                // Linear: 単位行列（v_uv = position）
-                // Radial: グラデーション行列の逆行列
-                inverseMatrix: mat3x3<f32>,
-                // グラデーションタイプ (0: linear, 1: radial)
-                gradientType: f32,
-                // focal point for radial gradient (-0.975 ~ 0.975)
-                focal: f32,
-                // spread method (0: reflect, 1: repeat, 2: pad)
-                spread: f32,
-                // radius for radial gradient (819.2)
-                radius: f32,
-                // Linear用の点a, b (a.x, a.y, b.x, b.y)
-                linearPoints: vec4<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> gradient: GradientUniforms;
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                // 頂点変換行列を構築（正規化されたコンテキスト行列）
-                let contextMatrix = mat3x3<f32>(
-                    input.matrixRow0,
-                    input.matrixRow1,
-                    input.matrixRow2
-                );
-
-                // NDC座標に変換
-                let pos = contextMatrix * vec3<f32>(input.position, 1.0);
-                let ndc = vec2<f32>(pos.x * 2.0 - 1.0, pos.y * 2.0 - 1.0);
-                // アトラス用: Y軸反転なし（インスタンス描画時に反転される）
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
-
-                // WebGL版と同じ:
-                // Linear: inverseMatrix = I なので v_uv = position
-                // Radial: inverseMatrix = gradientMatrix^(-1) なので v_uv = (gradientMatrix^(-1) * position).xy
-                let uvPos = gradient.inverseMatrix * vec3<f32>(input.position, 1.0);
-                output.v_uv = uvPos.xy;
-
-                output.bezier = input.bezier;
-                output.color = input.color;
-
-                return output;
-            }
-        `;
+        return GradientFillVertex;
     }
 
     /**
      * @description グラデーションフィル用頂点シェーダー（メインアタッチメント用）
-     *              Y軸反転あり - インスタンス描画と同じ座標系
      * @return {string}
      */
-    static getGradientFillMainVertexShader(): string
+    static getGradientFillMainVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-                @location(3) matrixRow0: vec3<f32>,
-                @location(4) matrixRow1: vec3<f32>,
-                @location(5) matrixRow2: vec3<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) v_uv: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-            }
-
-            struct GradientUniforms {
-                inverseMatrix: mat3x3<f32>,
-                gradientType: f32,
-                focal: f32,
-                spread: f32,
-                radius: f32,
-                linearPoints: vec4<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> gradient: GradientUniforms;
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                let contextMatrix = mat3x3<f32>(
-                    input.matrixRow0,
-                    input.matrixRow1,
-                    input.matrixRow2
-                );
-
-                let pos = contextMatrix * vec3<f32>(input.position, 1.0);
-                let ndc = vec2<f32>(pos.x * 2.0 - 1.0, pos.y * 2.0 - 1.0);
-                // メインアタッチメント用: Y軸反転
-                output.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
-
-                // Linear: inverseMatrix = I なので v_uv = position（生の座標）
-                // Radial: inverseMatrix = gradientMatrix^(-1) なので v_uv = 逆行列変換後の座標
-                let uvPos = gradient.inverseMatrix * vec3<f32>(input.position, 1.0);
-                output.v_uv = uvPos.xy;
-
-                output.bezier = input.bezier;
-                output.color = input.color;
-
-                return output;
-            }
-        `;
+        return GradientFillMainVertex;
     }
 
     /**
      * @description グラデーションフィル用フラグメントシェーダー
-     *              WebGL版と同じロジックを実装
      * @return {string}
      */
-    static getGradientFillFragmentShader(): string
+    static getGradientFillFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) v_uv: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-            }
-
-            struct GradientUniforms {
-                inverseMatrix: mat3x3<f32>,
-                gradientType: f32,
-                focal: f32,
-                spread: f32,
-                radius: f32,
-                linearPoints: vec4<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> gradient: GradientUniforms;
-            @group(0) @binding(1) var gradientSampler: sampler;
-            @group(0) @binding(2) var gradientTexture: texture_2d<f32>;
-
-            // WebGL版と同じ: spread method
-            // 0: reflect, 1: repeat, 2(default): pad
-            fn applySpread(t: f32, spread: f32) -> f32 {
-                if (spread < 0.5) {
-                    // reflect (spread == 0)
-                    return 1.0 - abs(fract(t * 0.5) * 2.0 - 1.0);
-                } else if (spread < 1.5) {
-                    // repeat (spread == 1)
-                    return fract(t);
-                } else {
-                    // pad (spread == 2, default)
-                    return clamp(t, 0.0, 1.0);
-                }
-            }
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                // Loop-Blinn法: f(u,v) = u² - v
-                // f < 0: 曲線の内側（描画）
-                // f >= 0: 曲線の外側（ディスカード）
-                // 内部三角形（直線セグメント）はbezier = (0.5, 0.5)で、
-                // u² - v = 0.25 - 0.5 = -0.25 < 0 なので曲線内部として描画される
-                let f = input.bezier.x * input.bezier.x - input.bezier.y;
-                if (f >= 0.0) {
-                    discard;
-                }
-
-                var t: f32;
-                let p = input.v_uv;
-
-                if (gradient.gradientType < 0.5) {
-                    // === Linear gradient ===
-                    // WebGL版と同じ: t = dot(ab, ap) / dot(ab, ab)
-                    let a = gradient.linearPoints.xy;
-                    let b = gradient.linearPoints.zw;
-                    let ab = b - a;
-                    let ap = p - a;
-                    let dotAB = dot(ab, ab);
-                    if (dotAB < 0.0001) {
-                        t = 0.0;
-                    } else {
-                        t = dot(ab, ap) / dotAB;
-                    }
-                } else {
-                    // === Radial gradient ===
-                    // WebGL版と同じ: coord = p / radius
-                    let radius = gradient.radius;
-                    let coord = p / radius;
-                    let focal = gradient.focal;
-
-                    if (abs(focal) < 0.001) {
-                        // focal point なし: t = length(coord)
-                        t = length(coord);
-                    } else {
-                        // focal point あり: WebGL版と同じ球面交差計算
-                        let focalVec = vec2<f32>(focal, 0.0);
-                        let dir = normalize(coord - focalVec);
-
-                        let a_coef = dot(dir, dir);
-                        let b_coef = 2.0 * dot(dir, focalVec);
-                        let c_coef = dot(focalVec, focalVec) - 1.0;
-                        let discriminant = b_coef * b_coef - 4.0 * a_coef * c_coef;
-                        let x = (-b_coef + sqrt(max(discriminant, 0.0))) / (2.0 * a_coef);
-
-                        t = distance(focalVec, coord) / distance(focalVec, focalVec + dir * x);
-                    }
-                }
-
-                // スプレッドを適用
-                t = applySpread(t, gradient.spread);
-
-                // LUTテクスチャからサンプリング
-                let clampedT = clamp(t, 0.0, 1.0);
-
-                // textureSampleを使用
-                var gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(clampedT, 0.5));
-
-                // WebGL版と同じ: サンプリング後にプリマルチプライドアルファを適用
-                // LUTには非プリマルチプライドの色が格納されているため、
-                // 線形補間後にプリマルチプライドを行う
-                gradientColor = vec4<f32>(gradientColor.rgb * gradientColor.a, gradientColor.a);
-
-                return gradientColor;
-            }
-        `;
+        return GradientFillFragment;
     }
 
     /**
      * @description グラデーション用フラグメントシェーダー（レガシー）
      * @return {string}
      */
-    static getGradientFragmentShader(): string
+    static getGradientFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-                @location(1) color: vec4<f32>,
-            }
-
-            struct GradientUniforms {
-                gradientType: f32,
-                focal: f32,
-            }
-
-            @group(0) @binding(1) var<uniform> gradient: GradientUniforms;
-            @group(0) @binding(2) var gradientSampler: sampler;
-            @group(0) @binding(3) var gradientTexture: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                var t: f32;
-
-                if (gradient.gradientType < 0.5) {
-                    // Linear gradient
-                    t = input.texCoord.x;
-                } else {
-                    // Radial gradient
-                    let dx = input.texCoord.x - 0.5;
-                    let dy = input.texCoord.y - 0.5;
-                    t = sqrt(dx * dx + dy * dy) * 2.0;
-                }
-
-                t = clamp(t, 0.0, 1.0);
-                var gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(t, 0.5));
-
-                // プリマルチプライドアルファを適用（LUTは非プリマルチプライド）
-                gradientColor = vec4<f32>(gradientColor.rgb * gradientColor.a, gradientColor.a);
-
-                return gradientColor * input.color;
-            }
-        `;
+        return GradientFragment;
     }
 
     /**
-     * @description ビットマップフィル用頂点シェーダー
-     *              17 floats頂点フォーマット対応
+     * @description ビットマップフィル用頂点シェーダー（行列変換でUV座標を計算）
      * @return {string}
      */
-    static getBitmapFillVertexShader(): string
+    static getBitmapFillVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-                @location(3) matrix0: vec3<f32>,
-                @location(4) matrix1: vec3<f32>,
-                @location(5) matrix2: vec3<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) bezier: vec2<f32>,
-                @location(1) color: vec4<f32>,
-                @location(2) worldPos: vec2<f32>,
-            }
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                // 変換行列を構築
-                let matrix = mat3x3<f32>(
-                    input.matrix0,
-                    input.matrix1,
-                    input.matrix2
-                );
-
-                // 位置を変換
-                let transformedPos = matrix * vec3<f32>(input.position, 1.0);
-
-                // クリップ空間に変換 (0~1 → -1~1)
-                // アトラス用: Y軸反転なし（インスタンス描画時に反転される）
-                let clipX = transformedPos.x * 2.0 - 1.0;
-                let clipY = transformedPos.y * 2.0 - 1.0;
-
-                output.position = vec4<f32>(clipX, clipY, 0.0, 1.0);
-                output.bezier = input.bezier;
-                output.color = input.color;
-                output.worldPos = input.position;
-
-                return output;
-            }
-        `;
+        return BitmapFillVertex;
     }
 
     /**
      * @description ビットマップフィル用頂点シェーダー（メインアタッチメント用）
-     *              Y軸反転あり - インスタンス描画と同じ座標系
      * @return {string}
      */
-    static getBitmapFillMainVertexShader(): string
+    static getBitmapFillMainVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-                @location(1) bezier: vec2<f32>,
-                @location(2) color: vec4<f32>,
-                @location(3) matrix0: vec3<f32>,
-                @location(4) matrix1: vec3<f32>,
-                @location(5) matrix2: vec3<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) bezier: vec2<f32>,
-                @location(1) color: vec4<f32>,
-                @location(2) worldPos: vec2<f32>,
-            }
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-
-                let matrix = mat3x3<f32>(
-                    input.matrix0,
-                    input.matrix1,
-                    input.matrix2
-                );
-
-                let transformedPos = matrix * vec3<f32>(input.position, 1.0);
-
-                // クリップ空間に変換 (0~1 → -1~1)
-                // メインアタッチメント用: Y軸反転
-                let clipX = transformedPos.x * 2.0 - 1.0;
-                let clipY = -(transformedPos.y * 2.0 - 1.0);
-
-                output.position = vec4<f32>(clipX, clipY, 0.0, 1.0);
-                output.bezier = input.bezier;
-                output.color = input.color;
-                output.worldPos = input.position;
-
-                return output;
-            }
-        `;
+        return BitmapFillMainVertex;
     }
 
     /**
      * @description ビットマップフィル用フラグメントシェーダー
-     *              テクスチャマッピングとLoop-Blinn曲線discard
      * @return {string}
      */
-    static getBitmapFillFragmentShader(): string
+    static getBitmapFillFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) bezier: vec2<f32>,
-                @location(1) color: vec4<f32>,
-                @location(2) worldPos: vec2<f32>,
-            }
-
-            struct BitmapUniforms {
-                bitmapMatrix: mat3x3<f32>,
-                textureWidth: f32,
-                textureHeight: f32,
-                repeat: f32,
-                _pad: f32,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: BitmapUniforms;
-            @group(0) @binding(1) var bitmapSampler: sampler;
-            @group(0) @binding(2) var bitmapTexture: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                // Loop-Blinn 曲線判定
-                let u = input.bezier.x;
-                let v = input.bezier.y;
-
-                // u*u - v の符号で内外判定
-                // bezier = (0.5, 0.5) の場合はスキップ（直線部分）
-                if (abs(u - 0.5) > 0.001 || abs(v - 0.5) > 0.001) {
-                    let d = u * u - v;
-                    if (d > 0.0) {
-                        discard;
-                    }
-                }
-
-                // ビットマップ変換行列でUV座標を計算
-                let transformedPos = uniforms.bitmapMatrix * vec3<f32>(input.worldPos, 1.0);
-                var uv = vec2<f32>(
-                    transformedPos.x / uniforms.textureWidth,
-                    transformedPos.y / uniforms.textureHeight
-                );
-
-                // Y座標を反転
-                uv.y = 1.0 - uv.y;
-
-                // リピートモードの場合はfractでラップ
-                if (uniforms.repeat > 0.5) {
-                    uv = fract(uv);
-                } else {
-                    // クリップモード: 範囲外は透明
-                    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-                        discard;
-                    }
-                }
-
-                let bitmapColor = textureSample(bitmapTexture, bitmapSampler, uv);
-
-                // プリマルチプライドアルファ
-                let alpha = bitmapColor.a * input.color.a;
-                return vec4<f32>(bitmapColor.rgb * input.color.a, alpha);
-            }
-        `;
+        return BitmapFillFragment;
     }
 
     /**
      * @description ブレンドモード用フラグメントシェーダー
      * @return {string}
      */
-    static getBlendFragmentShader(): string
+    static getBlendFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-                @location(1) color: vec4<f32>,
-            }
-
-            struct BlendUniforms {
-                blendMode: f32,
-            }
-
-            @group(0) @binding(1) var<uniform> blend: BlendUniforms;
-            @group(0) @binding(2) var srcSampler: sampler;
-            @group(0) @binding(3) var srcTexture: texture_2d<f32>;
-            @group(0) @binding(4) var dstSampler: sampler;
-            @group(0) @binding(5) var dstTexture: texture_2d<f32>;
-
-            fn blendNormal(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                return src;
-            }
-
-            fn blendMultiply(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                return src * dst;
-            }
-
-            fn blendScreen(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                return src + dst - src * dst;
-            }
-
-            fn blendAdd(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                return min(src + dst, vec4<f32>(1.0));
-            }
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                let src = textureSample(srcTexture, srcSampler, input.texCoord);
-                let dst = textureSample(dstTexture, dstSampler, input.texCoord);
-                
-                var result: vec4<f32>;
-                
-                if (blend.blendMode < 0.5) {
-                    result = blendNormal(src, dst);
-                } else if (blend.blendMode < 1.5) {
-                    result = blendMultiply(src, dst);
-                } else if (blend.blendMode < 2.5) {
-                    result = blendScreen(src, dst);
-                } else {
-                    result = blendAdd(src, dst);
-                }
-                
-                return result * input.color;
-            }
-        `;
+        return BlendGenericFragment;
     }
 
     /**
      * @description ブラーフィルター用頂点シェーダー
-     *              フルスクリーンクワッド用
      * @return {string}
      */
-    static getBlurFilterVertexShader(): string
+    static getBlurFilterVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            @vertex
-            fn main(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {
-                var output: VertexOutput;
-
-                // フルスクリーンクワッドの頂点座標を生成
-                var positions = array<vec2<f32>, 6>(
-                    vec2<f32>(-1.0, -1.0),
-                    vec2<f32>( 1.0, -1.0),
-                    vec2<f32>(-1.0,  1.0),
-                    vec2<f32>(-1.0,  1.0),
-                    vec2<f32>( 1.0, -1.0),
-                    vec2<f32>( 1.0,  1.0)
-                );
-
-                var texCoords = array<vec2<f32>, 6>(
-                    vec2<f32>(0.0, 1.0),
-                    vec2<f32>(1.0, 1.0),
-                    vec2<f32>(0.0, 0.0),
-                    vec2<f32>(0.0, 0.0),
-                    vec2<f32>(1.0, 1.0),
-                    vec2<f32>(1.0, 0.0)
-                );
-
-                output.position = vec4<f32>(positions[vertexIndex], 0.0, 1.0);
-                output.texCoord = texCoords[vertexIndex];
-
-                return output;
-            }
-        `;
+        return BlurFilterVertex;
     }
 
     /**
      * @description ブラーフィルター用フラグメントシェーダー
-     *              WebGL版と同じボックスブラーアルゴリズム
      * @param {number} halfBlur - 半分のブラー値（サンプル数の決定に使用）
      * @return {string}
      */
-    static getBlurFilterFragmentShader(halfBlur: number): string
+    static getBlurFilterFragmentShader (halfBlur: number): string
     {
         const halfBlurFixed = halfBlur.toFixed(1);
 
         return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) texCoord: vec2<f32>,
+}
 
-            struct BlurUniforms {
-                offset: vec2<f32>,
-                fraction: f32,
-                samples: f32,
-            }
+struct BlurUniforms {
+    offset: vec2<f32>,
+    fraction: f32,
+    samples: f32,
+}
 
-            @group(0) @binding(0) var<uniform> uniforms: BlurUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
+@group(0) @binding(0) var<uniform> uniforms: BlurUniforms;
+@group(0) @binding(1) var textureSampler: sampler;
+@group(0) @binding(2) var inputTexture: texture_2d<f32>;
 
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                let offset = uniforms.offset;
-                let fraction = uniforms.fraction;
-                let samples = uniforms.samples;
-
-                var color = textureSample(inputTexture, textureSampler, input.texCoord);
-
-                // ブラーサンプリング
-                for (var i: f32 = 1.0; i < ${halfBlurFixed}; i += 1.0) {
-                    color += textureSample(inputTexture, textureSampler, input.texCoord + offset * i);
-                    color += textureSample(inputTexture, textureSampler, input.texCoord - offset * i);
-                }
-
-                // 端のサンプル（フラクション適用）
-                color += textureSample(inputTexture, textureSampler, input.texCoord + offset * ${halfBlurFixed}) * fraction;
-                color += textureSample(inputTexture, textureSampler, input.texCoord - offset * ${halfBlurFixed}) * fraction;
-
-                // サンプル数で平均化
-                color /= samples;
-
-                return color;
-            }
-        `;
+@fragment
+fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+    let offset = uniforms.offset;
+    let fraction = uniforms.fraction;
+    let samples = uniforms.samples;
+    var color = textureSample(inputTexture, textureSampler, input.texCoord);
+    for (var i: f32 = 1.0; i < ${halfBlurFixed}; i += 1.0) {
+        color += textureSample(inputTexture, textureSampler, input.texCoord + offset * i);
+        color += textureSample(inputTexture, textureSampler, input.texCoord - offset * i);
+    }
+    color += textureSample(inputTexture, textureSampler, input.texCoord + offset * ${halfBlurFixed}) * fraction;
+    color += textureSample(inputTexture, textureSampler, input.texCoord - offset * ${halfBlurFixed}) * fraction;
+    color /= samples;
+    return color;
+}
+`;
     }
 
     /**
      * @description テクスチャコピー用フラグメントシェーダー
-     *              フィルター間のテクスチャ転送に使用
      * @return {string}
      */
-    static getTextureCopyFragmentShader(): string
+    static getTextureCopyFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            struct CopyUniforms {
-                scale: vec2<f32>,
-                offset: vec2<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: CopyUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                let uv = input.texCoord * uniforms.scale + uniforms.offset;
-                return textureSample(inputTexture, textureSampler, uv);
-            }
-        `;
+        return TextureCopyFragment;
     }
 
     /**
      * @description ブラーフィルター用テクスチャコピーシェーダー
-     *              オフセット位置にソースをコピー、範囲外は透明
      * @return {string}
      */
-    static getBlurTextureCopyFragmentShader(): string
+    static getBlurTextureCopyFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            struct CopyUniforms {
-                scale: vec2<f32>,
-                offset: vec2<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: CopyUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                // UV座標を計算: (texCoord - offset) * scale
-                // offsetはデスト座標系での開始位置、scaleはデスト/ソースのサイズ比
-                let uv = (input.texCoord - uniforms.offset) * uniforms.scale;
-
-                // クランプしたUV座標でサンプリング（uniform control flowを維持）
-                let clampedUv = clamp(uv, vec2<f32>(0.0), vec2<f32>(1.0));
-                let color = textureSample(inputTexture, textureSampler, clampedUv);
-
-                // UV座標が0-1の範囲外なら透明を返す
-                let inBounds = uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
-                return select(vec4<f32>(0.0, 0.0, 0.0, 0.0), color, inBounds);
-            }
-        `;
+        return BlurTextureCopyFragment;
     }
 
     /**
      * @description フィルター出力用フラグメントシェーダー
-     *              フィルター結果をメインアタッチメントに合成する際に使用
-     *              範囲外のピクセルは透明で出力
      * @return {string}
      */
-    static getFilterOutputFragmentShader(): string
+    static getFilterOutputFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            struct CopyUniforms {
-                scale: vec2<f32>,
-                offset: vec2<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: CopyUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                // フィルター領域内かどうかをチェック
-                // texCoord は 0-1 の範囲、offset とscaleでフィルター領域を定義
-                let filterStart = uniforms.offset;
-                let filterEnd = uniforms.offset + uniforms.scale;
-
-                // フィルター領域内: UV座標を0-1にマッピング
-                let uv = (input.texCoord - filterStart) / uniforms.scale;
-
-                // クランプしたUV座標でサンプリング（uniform control flowを維持）
-                let clampedUv = clamp(uv, vec2<f32>(0.0), vec2<f32>(1.0));
-                let color = textureSample(inputTexture, textureSampler, clampedUv);
-
-                // フィルター領域外の場合は透明を返す
-                let inBounds = input.texCoord.x >= filterStart.x && input.texCoord.x <= filterEnd.x &&
-                               input.texCoord.y >= filterStart.y && input.texCoord.y <= filterEnd.y;
-                return select(vec4<f32>(0.0, 0.0, 0.0, 0.0), color, inBounds);
-            }
-        `;
+        return FilterOutputFragment;
     }
 
     /**
-     * @description カラーマトリックスフィルター用フラグメントシェーダー
-     *              4x4行列 + オフセットで色変換
+     * @description ColorMatrixフィルター用フラグメントシェーダー
      * @return {string}
      */
-    static getColorMatrixFilterFragmentShader(): string
+    static getColorMatrixFilterFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            struct ColorMatrixUniforms {
-                matrix: mat4x4<f32>,
-                offset: vec4<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: ColorMatrixUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                var color = textureSample(inputTexture, textureSampler, input.texCoord);
-
-                // カラーマトリックス適用: result = matrix * color + offset
-                var result = uniforms.matrix * color + uniforms.offset;
-
-                // 0-1にクランプ
-                result = clamp(result, vec4<f32>(0.0), vec4<f32>(1.0));
-
-                return result;
-            }
-        `;
+        return ColorMatrixFilterFragment;
     }
 
     /**
-     * @description グローフィルター用フラグメントシェーダー
-     *              ブラー結果に単色を適用
+     * @description Glowフィルター用フラグメントシェーダー
      * @return {string}
      */
-    static getGlowFilterFragmentShader(): string
+    static getGlowFilterFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            struct GlowUniforms {
-                color: vec4<f32>,
-                strength: f32,
-                inner: f32,
-                knockout: f32,
-                _padding: f32,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: GlowUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var blurTexture: texture_2d<f32>;
-            @group(0) @binding(3) var baseTexture: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                let blurColor = textureSample(blurTexture, textureSampler, input.texCoord);
-                let baseColor = textureSample(baseTexture, textureSampler, input.texCoord);
-
-                // グロー強度を適用
-                let glowAlpha = clamp(blurColor.a * uniforms.strength, 0.0, 1.0);
-                let glowColor = vec4<f32>(uniforms.color.rgb * glowAlpha, glowAlpha);
-
-                // inner/outer/knockout モードに応じた合成
-                if (uniforms.inner > 0.5) {
-                    // インナーグロー: 元画像のアルファ内にグローを適用
-                    let innerGlow = glowColor * baseColor.a;
-                    if (uniforms.knockout > 0.5) {
-                        return innerGlow;
-                    } else {
-                        return baseColor + innerGlow * (1.0 - baseColor.a);
-                    }
-                } else {
-                    // アウターグロー
-                    if (uniforms.knockout > 0.5) {
-                        return glowColor * (1.0 - baseColor.a);
-                    } else {
-                        return baseColor + glowColor * (1.0 - baseColor.a);
-                    }
-                }
-            }
-        `;
+        return GlowFilterFragment;
     }
 
     /**
-     * @description ドロップシャドウフィルター用フラグメントシェーダー
+     * @description DropShadowフィルター用フラグメントシェーダー
      * @return {string}
      */
-    static getDropShadowFilterFragmentShader(): string
+    static getDropShadowFilterFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            struct DropShadowUniforms {
-                color: vec4<f32>,
-                offset: vec2<f32>,
-                strength: f32,
-                inner: f32,
-                knockout: f32,
-                hideObject: f32,
-                _padding: vec2<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: DropShadowUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var blurTexture: texture_2d<f32>;
-            @group(0) @binding(3) var baseTexture: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                let baseColor = textureSample(baseTexture, textureSampler, input.texCoord);
-
-                // オフセットを適用してシャドウをサンプリング
-                let shadowUV = input.texCoord + uniforms.offset;
-                let blurColor = textureSample(blurTexture, textureSampler, shadowUV);
-
-                // シャドウ強度を適用
-                let shadowAlpha = clamp(blurColor.a * uniforms.strength, 0.0, 1.0);
-                let shadowColor = vec4<f32>(uniforms.color.rgb * shadowAlpha, shadowAlpha);
-
-                if (uniforms.inner > 0.5) {
-                    // インナーシャドウ
-                    let innerShadow = shadowColor * baseColor.a;
-                    if (uniforms.knockout > 0.5) {
-                        return innerShadow;
-                    } else {
-                        return baseColor * (1.0 - shadowAlpha) + innerShadow;
-                    }
-                } else {
-                    // アウターシャドウ（ドロップシャドウ）
-                    if (uniforms.hideObject > 0.5) {
-                        return shadowColor;
-                    } else if (uniforms.knockout > 0.5) {
-                        return shadowColor * (1.0 - baseColor.a);
-                    } else {
-                        // 通常のドロップシャドウ: シャドウの上に元画像を重ねる
-                        return shadowColor * (1.0 - baseColor.a) + baseColor;
-                    }
-                }
-            }
-        `;
+        return DropShadowFilterFragment;
     }
 
     /**
-     * @description グラデーショングローフィルター用フラグメントシェーダー
-     *              グラデーションLUTを使用したグロー効果
+     * @description GradientGlowフィルター用フラグメントシェーダー
      * @return {string}
      */
-    static getGradientGlowFilterFragmentShader(): string
+    static getGradientGlowFilterFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            struct GradientGlowUniforms {
-                strength: f32,
-                inner: f32,
-                knockout: f32,
-                glowType: f32, // 0: full, 1: inner, 2: outer
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: GradientGlowUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var blurTexture: texture_2d<f32>;
-            @group(0) @binding(3) var baseTexture: texture_2d<f32>;
-            @group(0) @binding(4) var gradientLUT: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                var blur = textureSample(blurTexture, textureSampler, input.texCoord);
-                let base = textureSample(baseTexture, textureSampler, input.texCoord);
-
-                // インナーモードの場合はアルファを反転
-                let isInner = uniforms.inner > 0.5;
-                if (isInner) {
-                    blur.a = 1.0 - blur.a;
-                }
-
-                // 強度を適用
-                blur.a = clamp(blur.a * uniforms.strength, 0.0, 1.0);
-
-                // グラデーションLUTから色を取得
-                let glowColor = textureSample(gradientLUT, textureSampler, vec2<f32>(blur.a, 0.5));
-
-                // タイプに応じた合成
-                var result: vec4<f32>;
-                let glowType = uniforms.glowType;
-                let knockout = uniforms.knockout > 0.5;
-
-                if (glowType < 0.5) {
-                    // full
-                    if (knockout) {
-                        result = glowColor;
-                    } else {
-                        result = base - base * glowColor.a + glowColor;
-                    }
-                } else if (glowType < 1.5) {
-                    // inner
-                    result = glowColor;
-                } else {
-                    // outer
-                    if (knockout) {
-                        result = glowColor - glowColor * base.a;
-                    } else {
-                        result = base + glowColor - glowColor * base.a;
-                    }
-                }
-
-                return result;
-            }
-        `;
+        return GradientGlowFilterFragment;
     }
 
     /**
-     * @description グラデーションベベルフィルター用フラグメントシェーダー
-     *              グラデーションLUTを使用したベベル効果
+     * @description GradientBevelフィルター用フラグメントシェーダー
      * @return {string}
      */
-    static getGradientBevelFilterFragmentShader(): string
+    static getGradientBevelFilterFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            struct GradientBevelUniforms {
-                strength: f32,
-                inner: f32,
-                knockout: f32,
-                bevelType: f32, // 0: full, 1: inner, 2: outer
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: GradientBevelUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var blurTexture: texture_2d<f32>;
-            @group(0) @binding(3) var baseTexture: texture_2d<f32>;
-            @group(0) @binding(4) var gradientLUT: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                let base = textureSample(baseTexture, textureSampler, input.texCoord);
-
-                // 正方向と逆方向のブラーをサンプリング
-                let blur1 = textureSample(blurTexture, textureSampler, input.texCoord);
-                let blur2 = textureSample(blurTexture, textureSampler, 1.0 - input.texCoord);
-
-                // ハイライトとシャドウのアルファを計算
-                var highlightAlpha = blur1.a - blur2.a;
-                var shadowAlpha = blur2.a - blur1.a;
-
-                // 強度を適用
-                highlightAlpha *= uniforms.strength;
-                shadowAlpha *= uniforms.strength;
-
-                // クランプ
-                highlightAlpha = clamp(highlightAlpha, 0.0, 1.0);
-                shadowAlpha = clamp(shadowAlpha, 0.0, 1.0);
-
-                // グラデーションLUTから色を取得
-                // 0.5を中心に、シャドウ側とハイライト側に分布
-                let lutCoord = 0.5019607843137255 - 0.5019607843137255 * shadowAlpha + 0.4980392156862745 * highlightAlpha;
-                let bevelColor = textureSample(gradientLUT, textureSampler, vec2<f32>(lutCoord, 0.5));
-
-                // タイプに応じた合成
-                var result: vec4<f32>;
-                let bevelType = uniforms.bevelType;
-                let knockout = uniforms.knockout > 0.5;
-
-                if (bevelType < 0.5) {
-                    // full
-                    if (knockout) {
-                        result = bevelColor;
-                    } else {
-                        result = base - base * bevelColor.a + bevelColor;
-                    }
-                } else if (bevelType < 1.5) {
-                    // inner
-                    result = bevelColor;
-                } else {
-                    // outer
-                    if (knockout) {
-                        result = bevelColor - bevelColor * base.a;
-                    } else {
-                        result = base + bevelColor - bevelColor * base.a;
-                    }
-                }
-
-                return result;
-            }
-        `;
+        return GradientBevelFilterFragment;
     }
 
     /**
-     * @description コンボリューションフィルター用フラグメントシェーダー
-     *              畳み込み行列を使用した画像処理
-     * @param {number} matrixX - 行列のX方向サイズ
-     * @param {number} matrixY - 行列のY方向サイズ
-     * @param {boolean} preserveAlpha - アルファを保持するか
-     * @param {boolean} clamp - 範囲外をクランプするか
+     * @description Bevelフィルター用フラグメントシェーダー
      * @return {string}
      */
-    static getConvolutionFilterFragmentShader(
+    static getBevelFilterFragmentShader (): string
+    {
+        return BevelFilterFragment;
+    }
+
+    /**
+     * @description ConvolutionFilter用フラグメントシェーダー
+     * @param {number} matrixX - カーネル行列の幅
+     * @param {number} matrixY - カーネル行列の高さ
+     * @param {boolean} preserveAlpha - アルファを保持するかどうか
+     * @param {boolean} clamp - 境界をクランプするかどうか
+     * @return {string}
+     */
+    static getConvolutionFilterFragmentShader (
         matrixX: number,
         matrixY: number,
-        preserveAlpha: boolean,
-        clamp: boolean
+        preserveAlpha: boolean = true,
+        clamp: boolean = true
     ): string
     {
         const halfX = Math.floor(matrixX * 0.5);
         const halfY = Math.floor(matrixY * 0.5);
         const size = matrixX * matrixY;
 
-        // マトリクス要素を取得するコードを生成
-        let matrixCode = "";
-        for (let i = 0; i < size; i++) {
-            const arrayIndex = Math.floor(i / 4);
-            const component = i % 4;
-            const componentStr = ["x", "y", "z", "w"][component];
-            matrixCode += `
-                    weight = uniforms.matrix[${arrayIndex}].${componentStr};
-                    offsetX = ${i % matrixX} - ${halfX};
-                    offsetY = ${halfY} - ${Math.floor(i / matrixX)};
-                    uv = input.texCoord + vec2<f32>(f32(offsetX), f32(offsetY)) * rcpSize;
-                    color = textureSample(srcTexture, textureSampler, uv);
-                    color = vec4<f32>(color.rgb / max(0.0001, color.a), color.a);
-                    ${clamp ? "" : "color = mix(uniforms.substituteColor, color, isInside(uv));"}
-                    result += color * weight;
-`;
+        let matrixStatement = "";
+        for (let idx = 0; idx < size; idx++) {
+            matrixStatement += `
+    result = result + getWeightedColor(${idx}, getMatrixWeight(${idx}));`;
         }
 
-        const preserveAlphaCode = preserveAlpha
-            ? "result.a = textureSample(srcTexture, textureSampler, input.texCoord).a;"
+        const preserveAlphaStatement = preserveAlpha
+            ? "result.a = textureSample(sourceTexture, sourceSampler, input.texCoord).a;"
             : "";
 
-        // マトリクスサイズに基づいて必要な配列サイズを計算
-        const matrixArraySize = Math.ceil(size / 4);
+        const clampStatement = clamp
+            ? ""
+            : `
+    let substituteColor = uniforms.substituteColor;
+    color = mix(substituteColor, color, isInside(uv));`;
 
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
+        return `
+struct ConvolutionUniforms {
+    rcpSize: vec2<f32>,
+    rcpDivisor: f32,
+    bias: f32,
+    substituteColor: vec4<f32>,
+    matrix: array<vec4<f32>, ${Math.ceil(size / 4)}>,
+}
 
-            struct ConvolutionUniforms {
-                rcpSize: vec2<f32>,
-                rcpDivisor: f32,
-                bias: f32,
-                substituteColor: vec4<f32>,
-                matrix: array<vec4<f32>, ${matrixArraySize}>,
-            }
+@group(0) @binding(0) var<uniform> uniforms: ConvolutionUniforms;
+@group(0) @binding(1) var sourceSampler: sampler;
+@group(0) @binding(2) var sourceTexture: texture_2d<f32>;
 
-            @group(0) @binding(0) var<uniform> uniforms: ConvolutionUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var srcTexture: texture_2d<f32>;
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) texCoord: vec2<f32>,
+}
 
-            fn isInside(uv: vec2<f32>) -> f32 {
-                let s = step(vec2<f32>(0.0), uv) - step(vec2<f32>(1.0), uv);
-                return s.x * s.y;
-            }
+fn isInside(uv: vec2<f32>) -> f32 {
+    let inside = step(vec2<f32>(0.0), uv) * step(uv, vec2<f32>(1.0));
+    return inside.x * inside.y;
+}
 
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                let rcpSize = uniforms.rcpSize;
-                var result = vec4<f32>(0.0);
-                var weight: f32;
-                var offsetX: i32;
-                var offsetY: i32;
-                var uv: vec2<f32>;
-                var color: vec4<f32>;
+fn getMatrixWeight(index: i32) -> f32 {
+    let vecIndex = index / 4;
+    let component = index % 4;
+    let vec = uniforms.matrix[vecIndex];
+    if (component == 0) { return vec.x; }
+    else if (component == 1) { return vec.y; }
+    else if (component == 2) { return vec.z; }
+    else { return vec.w; }
+}
 
-                ${matrixCode}
+fn getWeightedColor(i: i32, weight: f32) -> vec4<f32> {
+    let rcpSize = uniforms.rcpSize;
+    let iDivX = i / ${matrixX};
+    let iModX = i - ${matrixX} * iDivX;
+    let offset = vec2<f32>(f32(iModX - ${halfX}), f32(${halfY} - iDivX));
+    var uv = input.texCoord + offset * rcpSize;
+    var color = textureSample(sourceTexture, sourceSampler, uv);
+    color = vec4<f32>(color.rgb / max(0.0001, color.a), color.a);
+    ${clampStatement}
+    return color * weight;
+}
 
-                result = clamp(result * uniforms.rcpDivisor + uniforms.bias, vec4<f32>(0.0), vec4<f32>(1.0));
-                ${preserveAlphaCode}
-                result = vec4<f32>(result.rgb * result.a, result.a);
+var<private> input: VertexOutput;
 
-                return result;
-            }
-        `;
-    }
+@vertex
+fn vs_main(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {
+    var positions = array<vec2<f32>, 6>(
+        vec2<f32>(-1.0, -1.0),
+        vec2<f32>(1.0, -1.0),
+        vec2<f32>(-1.0, 1.0),
+        vec2<f32>(-1.0, 1.0),
+        vec2<f32>(1.0, -1.0),
+        vec2<f32>(1.0, 1.0)
+    );
+    var texCoords = array<vec2<f32>, 6>(
+        vec2<f32>(0.0, 1.0),
+        vec2<f32>(1.0, 1.0),
+        vec2<f32>(0.0, 0.0),
+        vec2<f32>(0.0, 0.0),
+        vec2<f32>(1.0, 1.0),
+        vec2<f32>(1.0, 0.0)
+    );
+    var output: VertexOutput;
+    output.position = vec4<f32>(positions[vertexIndex], 0.0, 1.0);
+    output.texCoord = texCoords[vertexIndex];
+    return output;
+}
 
-    /**
-     * @description ベベルフィルター用フラグメントシェーダー
-     *              ハイライトとシャドウを使用した立体効果
-     * @return {string}
-     */
-    static getBevelFilterFragmentShader(): string
-    {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            struct BevelUniforms {
-                highlightColor: vec4<f32>,
-                shadowColor: vec4<f32>,
-                strength: f32,
-                inner: f32,
-                knockout: f32,
-                bevelType: f32, // 0: full, 1: inner, 2: outer
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: BevelUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var blurTexture: texture_2d<f32>;
-            @group(0) @binding(3) var baseTexture: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                let baseColor = textureSample(baseTexture, textureSampler, input.texCoord);
-
-                // 正方向と逆方向のブラーをサンプリング
-                let blur1 = textureSample(blurTexture, textureSampler, input.texCoord);
-                let blur2 = textureSample(blurTexture, textureSampler, 1.0 - input.texCoord);
-
-                // ハイライトとシャドウのアルファを計算
-                var highlightAlpha = blur1.a - blur2.a;
-                var shadowAlpha = blur2.a - blur1.a;
-
-                // 強度を適用
-                highlightAlpha *= uniforms.strength;
-                shadowAlpha *= uniforms.strength;
-
-                // クランプ
-                highlightAlpha = clamp(highlightAlpha, 0.0, 1.0);
-                shadowAlpha = clamp(shadowAlpha, 0.0, 1.0);
-
-                // ベベルカラーを計算
-                let bevelColor = uniforms.highlightColor * highlightAlpha + uniforms.shadowColor * shadowAlpha;
-
-                // タイプに応じた合成
-                var result: vec4<f32>;
-                let typeVal = uniforms.bevelType;
-                let knockout = uniforms.knockout > 0.5;
-
-                if (typeVal < 0.5) {
-                    // full
-                    if (knockout) {
-                        result = bevelColor;
-                    } else {
-                        result = baseColor - baseColor * bevelColor.a + bevelColor;
-                    }
-                } else if (typeVal < 1.5) {
-                    // inner
-                    result = bevelColor;
-                } else {
-                    // outer
-                    if (knockout) {
-                        result = bevelColor - bevelColor * baseColor.a;
-                    } else {
-                        result = baseColor + bevelColor - bevelColor * baseColor.a;
-                    }
-                }
-
-                return result;
-            }
-        `;
+@fragment
+fn fs_main(fragInput: VertexOutput) -> @location(0) vec4<f32> {
+    input = fragInput;
+    let rcpDivisor = uniforms.rcpDivisor;
+    let bias = uniforms.bias;
+    var result = vec4<f32>(0.0);
+    ${matrixStatement}
+    result = clamp(result * rcpDivisor + bias, vec4<f32>(0.0), vec4<f32>(1.0));
+    ${preserveAlphaStatement}
+    result = vec4<f32>(result.rgb * result.a, result.a);
+    return result;
+}
+`;
     }
 
     /**
      * @description 複雑なブレンドモード用フラグメントシェーダーを取得
-     *              WebGL版と同じブレンド計算式を使用
      * @param {string} blendMode - ブレンドモード名
      * @return {string}
      */
-    static getComplexBlendFragmentShader(blendMode: string): string
+    static getComplexBlendFragmentShader (blendMode: string): string
     {
         let blendFunction: string;
 
         switch (blendMode) {
             case "subtract":
                 blendFunction = `
-                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                        if (src.a == 0.0) { return dst; }
-                        if (dst.a == 0.0) { return src; }
-
-                        let a = src - src * dst.a;
-                        let b = dst - dst * src.a;
-
-                        let srcRgb = src.rgb / src.a;
-                        let dstRgb = dst.rgb / dst.a;
-
-                        var c = vec4<f32>(dstRgb - srcRgb, src.a * dst.a);
-                        c = vec4<f32>(c.rgb * c.a, c.a);
-
-                        return a + b + c;
-                    }
-                `;
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+    if (src.a == 0.0) { return dst; }
+    if (dst.a == 0.0) { return src; }
+    let a = src - src * dst.a;
+    let b = dst - dst * src.a;
+    let srcRgb = src.rgb / src.a;
+    let dstRgb = dst.rgb / dst.a;
+    var c = vec4<f32>(dstRgb - srcRgb, src.a * dst.a);
+    c = vec4<f32>(c.rgb * c.a, c.a);
+    return a + b + c;
+}
+`;
                 break;
 
             case "multiply":
                 blendFunction = `
-                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                        let a = src - src * dst.a;
-                        let b = dst - dst * src.a;
-                        let c = src * dst;
-
-                        return a + b + c;
-                    }
-                `;
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+    let a = src - src * dst.a;
+    let b = dst - dst * src.a;
+    let c = src * dst;
+    return a + b + c;
+}
+`;
                 break;
 
             case "lighten":
                 blendFunction = `
-                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                        if (src.a == 0.0) { return dst; }
-                        if (dst.a == 0.0) { return src; }
-
-                        let a = src - src * dst.a;
-                        let b = dst - dst * src.a;
-
-                        let srcRgb = src.rgb / src.a;
-                        let dstRgb = dst.rgb / dst.a;
-
-                        // (src > dst) ? src : dst
-                        let mixed = mix(srcRgb, dstRgb, step(srcRgb, dstRgb));
-                        var c = vec4<f32>(mixed, src.a * dst.a);
-                        c = vec4<f32>(c.rgb * c.a, c.a);
-
-                        return a + b + c;
-                    }
-                `;
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+    if (src.a == 0.0) { return dst; }
+    if (dst.a == 0.0) { return src; }
+    let a = src - src * dst.a;
+    let b = dst - dst * src.a;
+    let srcRgb = src.rgb / src.a;
+    let dstRgb = dst.rgb / dst.a;
+    let mixed = mix(srcRgb, dstRgb, step(srcRgb, dstRgb));
+    var c = vec4<f32>(mixed, src.a * dst.a);
+    c = vec4<f32>(c.rgb * c.a, c.a);
+    return a + b + c;
+}
+`;
                 break;
 
             case "darken":
                 blendFunction = `
-                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                        if (src.a == 0.0) { return dst; }
-                        if (dst.a == 0.0) { return src; }
-
-                        let a = src - src * dst.a;
-                        let b = dst - dst * src.a;
-
-                        let srcRgb = src.rgb / src.a;
-                        let dstRgb = dst.rgb / dst.a;
-
-                        // (src < dst) ? src : dst
-                        let mixed = mix(srcRgb, dstRgb, step(dstRgb, srcRgb));
-                        var c = vec4<f32>(mixed, src.a * dst.a);
-                        c = vec4<f32>(c.rgb * c.a, c.a);
-
-                        return a + b + c;
-                    }
-                `;
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+    if (src.a == 0.0) { return dst; }
+    if (dst.a == 0.0) { return src; }
+    let a = src - src * dst.a;
+    let b = dst - dst * src.a;
+    let srcRgb = src.rgb / src.a;
+    let dstRgb = dst.rgb / dst.a;
+    let mixed = mix(srcRgb, dstRgb, step(dstRgb, srcRgb));
+    var c = vec4<f32>(mixed, src.a * dst.a);
+    c = vec4<f32>(c.rgb * c.a, c.a);
+    return a + b + c;
+}
+`;
                 break;
 
             case "overlay":
                 blendFunction = `
-                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                        if (src.a == 0.0) { return dst; }
-                        if (dst.a == 0.0) { return src; }
-
-                        let a = src - src * dst.a;
-                        let b = dst - dst * src.a;
-
-                        let srcRgb = src.rgb / src.a;
-                        let dstRgb = dst.rgb / dst.a;
-
-                        let mul = srcRgb * dstRgb;
-                        let c1 = 2.0 * mul;
-                        let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
-                        let mixed = mix(c1, c2, step(vec3<f32>(0.5), dstRgb));
-                        var c = vec4<f32>(mixed, src.a * dst.a);
-                        c = vec4<f32>(c.rgb * c.a, c.a);
-
-                        return a + b + c;
-                    }
-                `;
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+    if (src.a == 0.0) { return dst; }
+    if (dst.a == 0.0) { return src; }
+    let a = src - src * dst.a;
+    let b = dst - dst * src.a;
+    let srcRgb = src.rgb / src.a;
+    let dstRgb = dst.rgb / dst.a;
+    let mul = srcRgb * dstRgb;
+    let c1 = 2.0 * mul;
+    let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
+    let mixed = mix(c1, c2, step(vec3<f32>(0.5), dstRgb));
+    var c = vec4<f32>(mixed, src.a * dst.a);
+    c = vec4<f32>(c.rgb * c.a, c.a);
+    return a + b + c;
+}
+`;
                 break;
 
             case "hardlight":
                 blendFunction = `
-                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                        if (src.a == 0.0) { return dst; }
-                        if (dst.a == 0.0) { return src; }
-
-                        let a = src - src * dst.a;
-                        let b = dst - dst * src.a;
-
-                        let srcRgb = src.rgb / src.a;
-                        let dstRgb = dst.rgb / dst.a;
-
-                        let mul = srcRgb * dstRgb;
-                        let c1 = 2.0 * mul;
-                        let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
-                        let mixed = mix(c1, c2, step(vec3<f32>(0.5), srcRgb));
-                        var c = vec4<f32>(mixed, src.a * dst.a);
-                        c = vec4<f32>(c.rgb * c.a, c.a);
-
-                        return a + b + c;
-                    }
-                `;
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+    if (src.a == 0.0) { return dst; }
+    if (dst.a == 0.0) { return src; }
+    let a = src - src * dst.a;
+    let b = dst - dst * src.a;
+    let srcRgb = src.rgb / src.a;
+    let dstRgb = dst.rgb / dst.a;
+    let mul = srcRgb * dstRgb;
+    let c1 = 2.0 * mul;
+    let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
+    let mixed = mix(c1, c2, step(vec3<f32>(0.5), srcRgb));
+    var c = vec4<f32>(mixed, src.a * dst.a);
+    c = vec4<f32>(c.rgb * c.a, c.a);
+    return a + b + c;
+}
+`;
                 break;
 
             case "difference":
                 blendFunction = `
-                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                        if (src.a == 0.0) { return dst; }
-                        if (dst.a == 0.0) { return src; }
-
-                        let a = src - src * dst.a;
-                        let b = dst - dst * src.a;
-
-                        let srcRgb = src.rgb / src.a;
-                        let dstRgb = dst.rgb / dst.a;
-
-                        var c = vec4<f32>(abs(srcRgb - dstRgb), src.a * dst.a);
-                        c = vec4<f32>(c.rgb * c.a, c.a);
-
-                        return a + b + c;
-                    }
-                `;
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+    if (src.a == 0.0) { return dst; }
+    if (dst.a == 0.0) { return src; }
+    let a = src - src * dst.a;
+    let b = dst - dst * src.a;
+    let srcRgb = src.rgb / src.a;
+    let dstRgb = dst.rgb / dst.a;
+    var c = vec4<f32>(abs(srcRgb - dstRgb), src.a * dst.a);
+    c = vec4<f32>(c.rgb * c.a, c.a);
+    return a + b + c;
+}
+`;
                 break;
 
             case "invert":
                 blendFunction = `
-                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                        if (src.a == 0.0) { return dst; }
-                        if (dst.a == 0.0) { return src; }
-
-                        let b = dst - dst * src.a;
-                        let c = vec4<f32>(src.a - dst.rgb * src.a, src.a);
-
-                        return b + c;
-                    }
-                `;
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+    if (src.a == 0.0) { return dst; }
+    if (dst.a == 0.0) { return src; }
+    let b = dst - dst * src.a;
+    let c = vec4<f32>(src.a - dst.rgb * src.a, src.a);
+    return b + c;
+}
+`;
                 break;
 
-            default: // normal
+            default:
                 blendFunction = `
-                    fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-                        return src + dst - dst * src.a;
-                    }
-                `;
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
+    return src + dst - dst * src.a;
+}
+`;
                 break;
         }
 
         return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) texCoord: vec2<f32>,
+}
 
-            struct BlendUniforms {
-                mulColor: vec4<f32>,
-                addColor: vec4<f32>,
-            }
+struct BlendUniforms {
+    mulColor: vec4<f32>,
+    addColor: vec4<f32>,
+}
 
-            @group(0) @binding(0) var<uniform> uniforms: BlendUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var dstTexture: texture_2d<f32>;
-            @group(0) @binding(3) var srcTexture: texture_2d<f32>;
+@group(0) @binding(0) var<uniform> uniforms: BlendUniforms;
+@group(0) @binding(1) var textureSampler: sampler;
+@group(0) @binding(2) var dstTexture: texture_2d<f32>;
+@group(0) @binding(3) var srcTexture: texture_2d<f32>;
 
-            ${blendFunction}
+${blendFunction}
 
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                var dst = textureSample(dstTexture, textureSampler, input.texCoord);
-                var src = textureSample(srcTexture, textureSampler, input.texCoord);
-
-                // カラートランスフォームを適用
-                src = src * uniforms.mulColor + uniforms.addColor;
-                src = clamp(src, vec4<f32>(0.0), vec4<f32>(1.0));
-                src = vec4<f32>(src.rgb * src.a, src.a); // プリマルチプライドアルファに変換
-
-                return blend(src, dst);
-            }
-        `;
+@fragment
+fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+    var dst = textureSample(dstTexture, textureSampler, input.texCoord);
+    var src = textureSample(srcTexture, textureSampler, input.texCoord);
+    src = src * uniforms.mulColor + uniforms.addColor;
+    src = clamp(src, vec4<f32>(0.0), vec4<f32>(1.0));
+    src = vec4<f32>(src.rgb * src.a, src.a);
+    return blend(src, dst);
+}
+`;
     }
 
     /**
      * @description DisplacementMapFilterフラグメントシェーダー
-     *              component_x, component_y: 0=none, 1=RED, 2=GREEN, 4=BLUE, 8=ALPHA
-     *              mode: 0=clamp, 1=color, 2=wrap, 3=ignore
      * @param {number} componentX - X方向のチャンネル
      * @param {number} componentY - Y方向のチャンネル
      * @param {number} mode - モード
      * @return {string}
      */
-    static getDisplacementMapFilterFragmentShader(
+    static getDisplacementMapFilterFragmentShader (
         componentX: number,
         componentY: number,
         mode: number
     ): string
     {
-        // チャンネル選択コードを生成
         let cx: string;
         let cy: string;
 
         switch (componentX) {
-            case 1: // BitmapDataChannel.RED
+            case 1:
                 cx = "mapColor.r";
                 break;
-            case 2: // BitmapDataChannel.GREEN
+            case 2:
                 cx = "mapColor.g";
                 break;
-            case 4: // BitmapDataChannel.BLUE
+            case 4:
                 cx = "mapColor.b";
                 break;
-            case 8: // BitmapDataChannel.ALPHA
+            case 8:
                 cx = "mapColor.a";
                 break;
             default:
@@ -2232,16 +720,16 @@ export class ShaderSource
         }
 
         switch (componentY) {
-            case 1: // BitmapDataChannel.RED
+            case 1:
                 cy = "mapColor.r";
                 break;
-            case 2: // BitmapDataChannel.GREEN
+            case 2:
                 cy = "mapColor.g";
                 break;
-            case 4: // BitmapDataChannel.BLUE
+            case 4:
                 cy = "mapColor.b";
                 break;
-            case 8: // BitmapDataChannel.ALPHA
+            case 8:
                 cy = "mapColor.a";
                 break;
             default:
@@ -2249,222 +737,118 @@ export class ShaderSource
                 break;
         }
 
-        // モードごとの処理を生成
         let modeStatement: string;
         let needsSubstituteColor = false;
 
         switch (mode) {
-            case 0: // clamp
+            case 0:
                 modeStatement = `
-                    sourceColor = textureSample(srcTexture, textureSampler, uv);
-                `;
+sourceColor = textureSample(srcTexture, textureSampler, uv);
+`;
                 break;
-            case 1: // color
+            case 1:
                 needsSubstituteColor = true;
                 modeStatement = `
-                    sourceColor = mix(uniforms.substituteColor, textureSample(srcTexture, textureSampler, uv), isInside(uv));
-                `;
+sourceColor = mix(uniforms.substituteColor, textureSample(srcTexture, textureSampler, uv), isInside(uv));
+`;
                 break;
-            case 2: // wrap
+            case 2:
                 modeStatement = `
-                    sourceColor = textureSample(srcTexture, textureSampler, fract(uv));
-                `;
+sourceColor = textureSample(srcTexture, textureSampler, fract(uv));
+`;
                 break;
-            case 3: // ignore
+            case 3:
                 modeStatement = `
-                    let insideUV = step(abs(uv - vec2<f32>(0.5)), vec2<f32>(0.5));
-                    sourceColor = textureSample(srcTexture, textureSampler, mix(input.texCoord, uv, insideUV));
-                `;
+let insideUV = step(abs(uv - vec2<f32>(0.5)), vec2<f32>(0.5));
+sourceColor = textureSample(srcTexture, textureSampler, mix(input.texCoord, uv, insideUV));
+`;
                 break;
             default:
                 modeStatement = `
-                    sourceColor = textureSample(srcTexture, textureSampler, fract(uv));
-                `;
+sourceColor = textureSample(srcTexture, textureSampler, fract(uv));
+`;
                 break;
         }
 
         const uniformsStruct = needsSubstituteColor
             ? `struct DisplacementUniforms {
-                uvToStScale: vec2<f32>,
-                uvToStOffset: vec2<f32>,
-                scale: vec2<f32>,
-                padding: vec2<f32>,
-                substituteColor: vec4<f32>,
-            }`
+    uvToStScale: vec2<f32>,
+    uvToStOffset: vec2<f32>,
+    scale: vec2<f32>,
+    padding: vec2<f32>,
+    substituteColor: vec4<f32>,
+}`
             : `struct DisplacementUniforms {
-                uvToStScale: vec2<f32>,
-                uvToStOffset: vec2<f32>,
-                scale: vec2<f32>,
-                padding: vec2<f32>,
-            }`;
+    uvToStScale: vec2<f32>,
+    uvToStOffset: vec2<f32>,
+    scale: vec2<f32>,
+    padding: vec2<f32>,
+}`;
 
         return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) texCoord: vec2<f32>,
+}
 
-            ${uniformsStruct}
+${uniformsStruct}
 
-            @group(0) @binding(0) var<uniform> uniforms: DisplacementUniforms;
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var srcTexture: texture_2d<f32>;
-            @group(0) @binding(3) var mapTexture: texture_2d<f32>;
+@group(0) @binding(0) var<uniform> uniforms: DisplacementUniforms;
+@group(0) @binding(1) var textureSampler: sampler;
+@group(0) @binding(2) var srcTexture: texture_2d<f32>;
+@group(0) @binding(3) var mapTexture: texture_2d<f32>;
 
-            fn isInside(uv: vec2<f32>) -> f32 {
-                let s = step(vec2<f32>(0.0), uv) - step(vec2<f32>(1.0), uv);
-                return s.x * s.y;
-            }
+fn isInside(uv: vec2<f32>) -> f32 {
+    let s = step(vec2<f32>(0.0), uv) - step(vec2<f32>(1.0), uv);
+    return s.x * s.y;
+}
 
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                // マップテクスチャのUV座標を計算
-                let st = input.texCoord * uniforms.uvToStScale - uniforms.uvToStOffset;
-
-                // マップテクスチャをサンプリング
-                let mapColor = textureSample(mapTexture, textureSampler, st);
-
-                // ディスプレイスメントオフセットを計算
-                let offset = vec2<f32>(${cx}, ${cy}) - 0.5;
-                let uv = input.texCoord + offset * uniforms.scale;
-
-                // モードに応じたソースカラーの取得
-                var sourceColor: vec4<f32>;
-                ${modeStatement}
-
-                // マップがある範囲内でのみディスプレイスメントを適用
-                return mix(textureSample(srcTexture, textureSampler, input.texCoord), sourceColor, isInside(st));
-            }
-        `;
+@fragment
+fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+    let st = input.texCoord * uniforms.uvToStScale - uniforms.uvToStOffset;
+    let mapColor = textureSample(mapTexture, textureSampler, st);
+    let offset = vec2<f32>(${cx}, ${cy}) - 0.5;
+    let uv = input.texCoord + offset * uniforms.scale;
+    var sourceColor: vec4<f32>;
+    ${modeStatement}
+    return mix(textureSample(srcTexture, textureSampler, input.texCoord), sourceColor, isInside(st));
+}
+`;
     }
 
     /**
      * @description ノードクリア用頂点シェーダー
-     *              全画面を覆う四角形を描画（シザーレクトでクリップ）
      * @return {string}
      */
-    static getNodeClearVertexShader(): string
+    static getNodeClearVertexShader (): string
     {
-        return /* wgsl */`
-            struct VertexInput {
-                @location(0) position: vec2<f32>,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-            }
-
-            @vertex
-            fn main(input: VertexInput) -> VertexOutput {
-                var output: VertexOutput;
-                // position は 0-1 空間、NDC (-1 to 1) に変換
-                let ndc = input.position * 2.0 - 1.0;
-                // アトラス用: Y軸反転なし（他のアトラスシェーダーと同じ）
-                output.position = vec4<f32>(ndc.x, ndc.y, 0.0, 1.0);
-                return output;
-            }
-        `;
+        return NodeClearVertex;
     }
 
     /**
      * @description ノードクリア用フラグメントシェーダー
-     *              透明色を出力してノード領域をクリア
      * @return {string}
      */
-    static getNodeClearFragmentShader(): string
+    static getNodeClearFragmentShader (): string
     {
-        return /* wgsl */`
-            @fragment
-            fn main() -> @location(0) vec4<f32> {
-                // 透明色でクリア（プリマルチプライドアルファ: 0,0,0,0）
-                return vec4<f32>(0.0, 0.0, 0.0, 0.0);
-            }
-        `;
+        return NodeClearFragment;
     }
 
     /**
      * @description 位置変換付きテクスチャ描画用頂点シェーダー
-     *              特定の位置にテクスチャを描画するためのシェーダー
-     *              WebGL版のBLEND_TEMPLATEに相当
      * @return {string}
      */
-    static getPositionedTextureVertexShader(): string
+    static getPositionedTextureVertexShader (): string
     {
-        return /* wgsl */`
-            struct PositionUniforms {
-                offset: vec2<f32>,    // 描画位置
-                size: vec2<f32>,      // テクスチャサイズ
-                viewport: vec2<f32>,  // ビューポートサイズ
-                padding: vec2<f32>,   // パディング（16バイトアライメント用）
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: PositionUniforms;
-
-            @vertex
-            fn main(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {
-                var output: VertexOutput;
-
-                // クワッドの頂点座標を生成 (0-1 範囲)
-                var vertices = array<vec2<f32>, 6>(
-                    vec2<f32>(0.0, 0.0),
-                    vec2<f32>(1.0, 0.0),
-                    vec2<f32>(0.0, 1.0),
-                    vec2<f32>(0.0, 1.0),
-                    vec2<f32>(1.0, 0.0),
-                    vec2<f32>(1.0, 1.0)
-                );
-
-                // テクスチャ座標（Y軸反転）
-                var texCoords = array<vec2<f32>, 6>(
-                    vec2<f32>(0.0, 1.0),
-                    vec2<f32>(1.0, 1.0),
-                    vec2<f32>(0.0, 0.0),
-                    vec2<f32>(0.0, 0.0),
-                    vec2<f32>(1.0, 1.0),
-                    vec2<f32>(1.0, 0.0)
-                );
-
-                let vertex = vertices[vertexIndex];
-                output.texCoord = texCoords[vertexIndex];
-
-                // 位置変換: vertex(0-1) * size + offset -> pixel座標
-                var position = vertex * uniforms.size + uniforms.offset;
-                // pixel座標 -> NDC (-1 to 1)
-                position = position / uniforms.viewport;
-                position = position * 2.0 - 1.0;
-                // Y軸反転（WebGPUの座標系）
-                output.position = vec4<f32>(position.x, -position.y, 0.0, 1.0);
-
-                return output;
-            }
-        `;
+        return PositionedTextureVertex;
     }
 
     /**
      * @description 位置変換付きテクスチャ描画用フラグメントシェーダー
-     *              シンプルにテクスチャをサンプリングして出力
      * @return {string}
      */
-    static getPositionedTextureFragmentShader(): string
+    static getPositionedTextureFragmentShader (): string
     {
-        return /* wgsl */`
-            struct VertexOutput {
-                @builtin(position) position: vec4<f32>,
-                @location(0) texCoord: vec2<f32>,
-            }
-
-            @group(0) @binding(1) var textureSampler: sampler;
-            @group(0) @binding(2) var inputTexture: texture_2d<f32>;
-
-            @fragment
-            fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                return textureSample(inputTexture, textureSampler, input.texCoord);
-            }
-        `;
+        return PositionedTextureFragment;
     }
 }
