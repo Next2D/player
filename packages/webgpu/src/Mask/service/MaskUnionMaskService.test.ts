@@ -4,12 +4,6 @@ import type { PipelineManager } from "../../Shader/PipelineManager";
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import { execute } from "./MaskUnionMaskService";
 
-// Mock Debug logger
-vi.mock("../../Debug/DebugLogger", () => ({
-    "isDebugEnabled": vi.fn(() => false),
-    "logMask": vi.fn()
-}));
-
 describe("MaskUnionMaskService", () =>
 {
     const createMockRenderPassEncoder = () =>

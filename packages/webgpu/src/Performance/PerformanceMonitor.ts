@@ -1,33 +1,10 @@
 import type { IPerformanceResult } from "../interface/IPerformanceResult";
+import type { PerformanceLabel } from "../interface/IPerformanceLabel";
+import type { IPerformanceStats } from "../interface/IPerformanceStats";
 import { execute as createQuerySetService } from "./service/PerformanceMonitorCreateQuerySetService";
 import { execute as measurePassUseCase } from "./usecase/PerformanceMonitorMeasurePassUseCase";
 
-/**
- * @description パフォーマンス計測ラベル
- *              Performance measurement labels
- */
-export type PerformanceLabel =
-    | "frame"           // フレーム全体
-    | "fill"            // 塗りつぶし
-    | "stroke"          // ストローク
-    | "blur"            // ブラーフィルター
-    | "filter"          // その他フィルター
-    | "blend"           // ブレンド処理
-    | "instanced"       // インスタンス描画
-    | "custom";         // カスタム
-
-/**
- * @description 計測結果の統計情報
- *              Statistics for measurement results
- */
-export interface IPerformanceStats {
-    label: PerformanceLabel | string;
-    count: number;
-    totalMs: number;
-    avgMs: number;
-    minMs: number;
-    maxMs: number;
-}
+export type { PerformanceLabel, IPerformanceStats };
 
 /**
  * @description GPU処理時間を計測するパフォーマンスモニター
@@ -153,7 +130,6 @@ export class PerformanceMonitor
         }
 
         if (this.queryIndex >= PerformanceMonitor.MAX_QUERIES - 1) {
-            console.warn("PerformanceMonitor: Maximum query count reached");
             return;
         }
 

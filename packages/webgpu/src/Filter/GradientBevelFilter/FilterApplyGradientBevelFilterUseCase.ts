@@ -1,6 +1,6 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
-import { $offset } from "../index";
+import { $offset } from "../FilterOffset";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 import { generateFilterGradientLUT } from "../../Gradient/GradientLUTGenerator";
 import { $getFilterGradientAttachmentObject } from "../FilterGradientLUTCache";

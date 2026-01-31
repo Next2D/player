@@ -1,7 +1,7 @@
 import type { IAttachmentObject } from "../../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../../interface/IFilterConfig";
 import type { ComputePipelineManager } from "../../../Compute/ComputePipelineManager";
-import { $offset } from "../../index";
+import { $offset } from "../../FilterOffset";
 import { calculateBlurParams } from "../../BlurFilterUseCase";
 import {
     execute as blurComputeService,

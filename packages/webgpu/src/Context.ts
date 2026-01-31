@@ -3,7 +3,7 @@ import type { IBlendMode } from "./interface/IBlendMode";
 import type { IBounds } from "./interface/IBounds";
 import type { IPath } from "./interface/IPath";
 import type { Node } from "@next2d/texture-packer";
-import type { PerformanceLabel } from "./Performance";
+import type { PerformanceLabel } from "./Performance/PerformanceMonitor";
 import { TexturePacker } from "@next2d/texture-packer";
 import { WebGPUUtil, $setContext } from "./WebGPUUtil";
 import { PathCommand } from "./PathCommand";
@@ -12,9 +12,14 @@ import { TextureManager } from "./TextureManager";
 import { FrameBufferManager } from "./FrameBufferManager";
 import { AttachmentManager } from "./AttachmentManager";
 import { PipelineManager } from "./Shader/PipelineManager";
-import { PerformanceMonitor } from "./Performance";
-import { RenderBundleManager } from "./RenderBundle";
-import { $rootNodes, $resetAtlas } from "./AtlasManager";
+import { PerformanceMonitor } from "./Performance/PerformanceMonitor";
+import { RenderBundleManager } from "./RenderBundle/RenderBundleManager";
+import {
+    $rootNodes,
+    $resetAtlas,
+    $getActiveAtlasIndex,
+    $setActiveAtlasIndex
+} from "./AtlasManager";
 import { addDisplayObjectToInstanceArray, getInstancedShaderManager } from "./Blend/BlendInstancedManager";
 // Note: MeshStrokeGenerateUseCase is now used via ContextStrokeUseCase
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
@@ -64,7 +69,6 @@ import { execute as contextDrawArraysInstancedUseCase } from "./Context/usecase/
 import { execute as contextDrawIndirectUseCase } from "./Context/usecase/ContextDrawIndirectUseCase";
 import { execute as contextProcessComplexBlendQueueUseCase } from "./Context/usecase/ContextProcessComplexBlendQueueUseCase";
 import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
-import { isDebugEnabled } from "./Debug/DebugLogger";
 
 /**
  * @description WebGPU版、Next2Dのコンテキスト
@@ -155,9 +159,9 @@ export class Context
         WebGPUUtil.setDevice(device);
         WebGPUUtil.setDevicePixelRatio(device_pixel_ratio);
 
-        // Set render max size similar to WebGL (half of max texture size, capped at 4096)
+        // Set render max size same as WebGL (half of max texture size, minimum 2048)
         const maxTextureSize = device.limits.maxTextureDimension2D;
-        const renderMaxSize = Math.min(4096, maxTextureSize / 2);
+        const renderMaxSize = Math.max(2048, maxTextureSize / 2);
         WebGPUUtil.setRenderMaxSize(renderMaxSize);
 
         this.$stack = WebGPUUtil.createArray();
@@ -253,7 +257,6 @@ export class Context
     {
         // メインアタッチメントがない場合はスキップ
         if (!this.$mainAttachmentObject || !this.$mainAttachmentObject.texture) {
-            console.warn("[WebGPU] fillBackgroundColor: main attachment not initialized");
             return;
         }
 
@@ -1772,24 +1775,16 @@ export class Context
         }
 
         if (!currentAttachment) {
-            console.warn("[WebGPU] clip() skipped: no current attachment");
             return;
         }
 
         // ステンシルバッファがない場合はスキップ
         if (!currentAttachment.stencil) {
-            console.warn("[WebGPU] clip() skipped: current attachment has no stencil buffer", {
-                "attachmentId": currentAttachment.id,
-                "width": currentAttachment.width,
-                "height": currentAttachment.height,
-                "isMainAttachment": isMainAttachment
-            });
             return;
         }
 
         const pathVertices = this.pathCommand.$getVertices;
         if (pathVertices.length === 0) {
-            console.warn("[WebGPU] clip() skipped: no path vertices");
             return;
         }
 
@@ -1807,18 +1802,8 @@ export class Context
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             } else {
-                console.warn("[WebGPU] clip() skipped: could not create render pass");
                 return;
             }
-        }
-
-        if (isDebugEnabled()) {
-            console.log("[WebGPU Mask] clip() executing", {
-                "isMainAttachment": isMainAttachment,
-                "hasStencil": !!currentAttachment.stencil,
-                "pathVertexCount": pathVertices.length,
-                "stencilLabel": this.$mainAttachmentObject?.stencil?.resource?.label || "unknown"
-            });
         }
 
         contextClipUseCase(
@@ -2129,7 +2114,6 @@ export class Context
         // UseCaseでインスタンス描画を実行
         // メインアタッチメントがない場合は初期化が必要
         if (!this.$mainAttachmentObject) {
-            console.warn("[WebGPU] drawArraysInstanced: main attachment not initialized");
             return;
         }
 
@@ -2468,7 +2452,6 @@ export class Context
     endFrame(): void
     {
         if (!this.frameStarted) {
-            console.warn("[WebGPU] endFrame called without beginFrame");
             return;
         }
 
@@ -2527,6 +2510,7 @@ export class Context
 
     /**
      * @description ノードを作成
+     *              アトラスがいっぱいの場合は新しいアトラスを作成して再試行
      * @param {number} width
      * @param {number} height
      * @return {Node}
@@ -2534,7 +2518,7 @@ export class Context
     createNode (width: number, height: number): Node
     {
         // WebGPU node creation implementation using texture-packer
-        const index = 0; // For now, use single atlas
+        const index = $getActiveAtlasIndex();
 
         if (!$rootNodes[index]) {
             const maxSize = WebGPUUtil.getRenderMaxSize();
@@ -2545,7 +2529,9 @@ export class Context
         const node = rootNode.insert(width, height);
 
         if (!node) {
-            throw new Error(`Failed to create node: ${width}x${height} - atlas full`);
+            // アトラスがいっぱいの場合、新しいアトラスインデックスに切り替えて再試行
+            $setActiveAtlasIndex(index + 1);
+            return this.createNode(width, height);
         }
 
         return node;
@@ -2576,7 +2562,6 @@ export class Context
     {
         // メインアタッチメントの内容をスワップチェーン（キャンバス）にコピー
         if (!this.$mainAttachmentObject || !this.$mainAttachmentObject.texture) {
-            console.warn("[WebGPU] transferMainCanvas: main attachment not initialized");
             this.endFrame();
             return;
         }

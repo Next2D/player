@@ -3,7 +3,7 @@ import type { IPath } from "./interface/IPath";
 import {
     adaptiveCubicToQuad,
     calculateAdaptiveThreshold
-} from "./BezierConverter";
+} from "./BezierConverter/BezierConverter";
 
 /**
  * @description WebGPU用パスコマンド（WebGL互換形式）

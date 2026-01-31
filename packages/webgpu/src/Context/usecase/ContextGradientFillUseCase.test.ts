@@ -39,13 +39,6 @@ vi.mock("../../Mask", () => ({
     "$getMaskStencilReference": vi.fn(() => 5)
 }));
 
-// Mock Debug logger
-vi.mock("../../Debug/DebugLogger", () => ({
-    "isDebugEnabled": vi.fn(() => false),
-    "logGradient": vi.fn(),
-    "logUniformBuffer": vi.fn()
-}));
-
 import { $isMaskDrawing } from "../../Mask";
 import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillGenerateUseCase";
 

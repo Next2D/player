@@ -25,12 +25,6 @@ vi.mock("../../Mask", () => ({
     "$clipLevels": new Map<number, number>()
 }));
 
-// Mock Debug logger
-vi.mock("../../Debug/DebugLogger", () => ({
-    "isDebugEnabled": vi.fn(() => false),
-    "logMask": vi.fn()
-}));
-
 import { $clipLevels } from "../../Mask";
 
 describe("MaskBeginMaskService", () =>

@@ -11,7 +11,6 @@ import {
     $isMaskTestEnabled,
     $getMaskStencilReference
 } from "../../Mask";
-import { isDebugEnabled, logInstanced } from "../../Debug/DebugLogger";
 
 /**
  * @description 最適化されたインスタンス描画
@@ -90,19 +89,6 @@ export const execute = (
     const maskedPipeline = pipelineManager.getPipeline("instanced_masked");
 
     const useStencil = isMasked && maskedPipeline && mainAttachment.stencil?.view;
-
-    if (isDebugEnabled()) {
-        logInstanced("ContextDrawIndirectUseCase execute", {
-            "isMasked": isMasked,
-            "maskReference": maskReference,
-            "blendMode": blendMode,
-            "pipelineName": pipelineName,
-            "useStencil": !!useStencil,
-            "instanceCount": shaderManager.count,
-            "useIndirect": useIndirect,
-            "useStorageBuffer": useStorageBuffer
-        });
-    }
 
     const pipeline = useStencil ? maskedPipeline : normalPipeline;
 

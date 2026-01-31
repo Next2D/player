@@ -1,11 +1,9 @@
 import type { Node } from "@next2d/texture-packer";
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IBlendMode } from "../../interface/IBlendMode";
+import type { ILocalFilterConfig } from "../../interface/ILocalFilterConfig";
 import type { BufferManager } from "../../BufferManager";
-import type { FrameBufferManager } from "../../FrameBufferManager";
-import type { TextureManager } from "../../TextureManager";
-import type { PipelineManager } from "../../Shader/PipelineManager";
-import { $offset } from "../../Filter";
+import { $offset } from "../../Filter/FilterOffset";
 import { WebGPUUtil } from "../../WebGPUUtil";
 import { execute as filterApplyBlurFilterUseCase } from "../../Filter/BlurFilter/FilterApplyBlurFilterUseCase";
 import { execute as filterApplyColorMatrixFilterUseCase } from "../../Filter/ColorMatrixFilter/FilterApplyColorMatrixFilterUseCase";
@@ -16,17 +14,6 @@ import { execute as filterApplyConvolutionFilterUseCase } from "../../Filter/Con
 import { execute as filterApplyGradientBevelFilterUseCase } from "../../Filter/GradientBevelFilter/FilterApplyGradientBevelFilterUseCase";
 import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/GradientGlowFilter/FilterApplyGradientGlowFilterUseCase";
 import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter/DisplacementMapFilter/FilterApplyDisplacementMapFilterUseCase";
-
-/**
- * @description フィルター設定
- */
-interface IFilterConfig {
-    device: GPUDevice;
-    commandEncoder: GPUCommandEncoder;
-    frameBufferManager: FrameBufferManager;
-    pipelineManager: PipelineManager;
-    textureManager: TextureManager;
-}
 
 /**
  * @description ノードからテクスチャをアタッチメントとして取得
@@ -74,7 +61,7 @@ const getTextureFromNode = (
  * @description フィルター結果をメインアタッチメントに描画
  *              Draw filter result to main attachment (WebGL版と同じフロー)
  *
- * @param {IFilterConfig} config
+ * @param {ILocalFilterConfig} config
  * @param {IAttachmentObject} filterAttachment
  * @param {Float32Array} _colorTransform - 未使用（将来の拡張用）
  * @param {IBlendMode} _blendMode - 未使用（将来の拡張用）
@@ -85,7 +72,7 @@ const getTextureFromNode = (
  * @return {void}
  */
 const drawFilterToMain = (
-    config: IFilterConfig,
+    config: ILocalFilterConfig,
     filterAttachment: IAttachmentObject,
     _colorTransform: Float32Array,
     _blendMode: IBlendMode,
@@ -202,7 +189,7 @@ const drawFilterToMain = (
  * @param {IBlendMode} blendMode
  * @param {Float32Array} bounds
  * @param {Float32Array} params
- * @param {IFilterConfig} config
+ * @param {ILocalFilterConfig} config
  * @param {GPUTextureView} mainTextureView
  * @param {BufferManager} bufferManager
  * @return {void}
@@ -216,7 +203,7 @@ export const execute = (
     blendMode: IBlendMode,
     bounds: Float32Array,
     params: Float32Array,
-    config: IFilterConfig,
+    config: ILocalFilterConfig,
     mainTextureView: GPUTextureView,
     bufferManager: BufferManager
 ): void => {

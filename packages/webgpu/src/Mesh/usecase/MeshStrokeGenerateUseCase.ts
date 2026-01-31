@@ -1,7 +1,7 @@
 import type { IPoint } from "../../interface/IPoint";
 import type { IPath } from "../../interface/IPath";
+import type { IRectangleInfo } from "../../interface/IRectangleInfo";
 import { $context } from "../../WebGPUUtil";
-import { isDebugEnabled, logStroke } from "../../Debug/DebugLogger";
 
 /**
  * @description 法線ベクトルを計算（WebGL版のMeshCalculateNormalVectorServiceと同じ）
@@ -21,17 +21,6 @@ const calculateNormalVector = (x: number, y: number, thickness: number): IPoint 
         "y": x / magnitude * thickness
     };
 };
-
-/**
- * @description 矩形の情報を保持する型
- */
-interface IRectangleInfo {
-    path: IPath;
-    startUp: IPoint;
-    startDown: IPoint;
-    endUp: IPoint;
-    endDown: IPoint;
-}
 
 /**
  * @description 直線の矩形を計算（WebGL版のMeshCalculateLineRectangleUseCaseと同じ）
@@ -358,14 +347,6 @@ export const generateStrokeMesh = (vertices: IPath[], thickness: number): Float3
 
     // WebGL版と同じ: $context.jointsを使用 (0: bevel, 1: miter, 2: round)
     const joints = $context.joints;
-
-    // デバッグ出力: ストローク厚さを追跡
-    if (isDebugEnabled()) {
-        logStroke("generateStrokeMesh", {
-            "thickness": thickness,
-            halfThickness
-        });
-    }
 
     for (const path of vertices) {
         if (path.length < 6) { continue }

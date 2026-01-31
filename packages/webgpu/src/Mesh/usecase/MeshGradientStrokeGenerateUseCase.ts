@@ -1,7 +1,6 @@
 import type { IPath } from "../../interface/IPath";
 import type { IMeshResult } from "../../interface/IMeshResult";
 import { generateStrokeOutline } from "./MeshStrokeGenerateUseCase";
-import { isDebugEnabled, logStroke } from "../../Debug/DebugLogger";
 
 /**
  * @description グラデーションストローク用のメッシュを生成する（WebGL版と同じ仕様）
@@ -52,16 +51,6 @@ export const execute = (
 
     // WebGL版と同じ: 内部で半分にする
     const halfThickness = thickness / 2;
-
-    // デバッグ出力: グラデーションストロークの厚さを追跡
-    if (isDebugEnabled()) {
-        logStroke("GradientStroke execute", {
-            "thickness": thickness,
-            halfThickness,
-            viewportWidth,
-            viewportHeight
-        });
-    }
 
     // WebGL版と同じ: 行列をビューポートサイズで正規化
     const normalizedA  = a / viewportWidth;

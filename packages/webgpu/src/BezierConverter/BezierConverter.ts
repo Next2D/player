@@ -14,7 +14,7 @@ export {
     execute as adaptiveCubicToQuad,
     calculateAdaptiveThreshold
 } from "./usecase/BezierConverterAdaptiveCubicToQuadUseCase";
-export type { IQuadraticSegment } from "./usecase/BezierConverterAdaptiveCubicToQuadUseCase";
+export type { IQuadraticSegment } from "../interface/IQuadraticSegment";
 
 export { execute as calculateFlatness } from "./service/BezierConverterCalculateFlatnessService";
 export { execute as splitCubic } from "./service/BezierConverterSplitCubicService";

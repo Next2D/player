@@ -7,16 +7,11 @@ import {
     generateStrokeMeshFromPoints
 } from "./MeshStrokeGenerateUseCase";
 
-// Mock $context and Debug
+// Mock $context
 vi.mock("../../WebGPUUtil", () => ({
     "$context": {
         "joints": 0 // bevel by default
     }
-}));
-
-vi.mock("../../Debug/DebugLogger", () => ({
-    "isDebugEnabled": vi.fn(() => false),
-    "logStroke": vi.fn()
 }));
 
 describe("MeshStrokeGenerateUseCase", () =>

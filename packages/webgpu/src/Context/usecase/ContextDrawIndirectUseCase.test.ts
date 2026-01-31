@@ -30,11 +30,6 @@ vi.mock("../../Mask", () => ({
     "$getMaskStencilReference": vi.fn(() => 0)
 }));
 
-vi.mock("../../Debug/DebugLogger", () => ({
-    "isDebugEnabled": vi.fn(() => false),
-    "logInstanced": vi.fn()
-}));
-
 import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
 import { $getCurrentBlendMode } from "../../Blend";
 

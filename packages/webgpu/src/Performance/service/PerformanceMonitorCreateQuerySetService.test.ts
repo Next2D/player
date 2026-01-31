@@ -71,17 +71,6 @@ describe("PerformanceMonitorCreateQuerySetService", () =>
             expect(result).toBeNull();
         });
 
-        it("should log warning message", () =>
-        {
-            const device = createMockDevice(false);
-
-            execute(device, 4);
-
-            expect(console.warn).toHaveBeenCalledWith(
-                "PerformanceMonitor: timestamp-query feature is not supported on this device"
-            );
-        });
-
         it("should not attempt to create QuerySet", () =>
         {
             const device = createMockDevice(false);
@@ -101,18 +90,6 @@ describe("PerformanceMonitorCreateQuerySetService", () =>
             const result = execute(device, 4);
 
             expect(result).toBeNull();
-        });
-
-        it("should log warning when createQuerySet fails", () =>
-        {
-            const device = createMockDevice(true, true);
-
-            execute(device, 4);
-
-            expect(console.warn).toHaveBeenCalledWith(
-                "PerformanceMonitor: Failed to create QuerySet",
-                expect.any(Error)
-            );
         });
     });
 

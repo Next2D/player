@@ -1,15 +1,9 @@
 import type { IPoint } from "../../interface/IPoint";
+import type { IQuadraticSegment } from "../../interface/IQuadraticSegment";
 import { execute as calculateFlatness } from "../service/BezierConverterCalculateFlatnessService";
 import { execute as splitCubic } from "../service/BezierConverterSplitCubicService";
 
-/**
- * @description 二次ベジェ近似のセグメント
- *              Quadratic bezier segment approximation
- */
-export interface IQuadraticSegment {
-    ctrl: IPoint;
-    end: IPoint;
-}
+export type { IQuadraticSegment };
 
 /**
  * @description フラットネス閾値のデフォルト値

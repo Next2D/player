@@ -4,7 +4,6 @@ import {
     $setMaskStencilReference,
     $setMaskDrawing
 } from "../../Mask";
-import { isDebugEnabled, logMask } from "../../Debug/DebugLogger";
 
 /**
  * @description マスクの描画を終了
@@ -36,17 +35,6 @@ export const execute = (): void =>
     // level 3: mask = 7 (0x07)
     // ...
     const mask = (1 << clipLevel) - 1;
-
-    // デバッグ出力: マスク値を追跡
-    if (isDebugEnabled()) {
-        logMask("MaskEndMaskService execute", {
-            clipLevel,
-            "maskValue": mask,
-            "maskBinary": mask.toString(2).padStart(8, "0"),
-            "isMaskTestEnabled": true,
-            "isMaskDrawing": false
-        });
-    }
 
     // マスクテストを有効化
     // EQUALテストで、累積マスク値と一致するピクセルのみ描画を許可

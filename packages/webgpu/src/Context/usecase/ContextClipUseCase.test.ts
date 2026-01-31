@@ -25,11 +25,6 @@ vi.mock("../../Mask", () => ({
     "$clipLevels": new Map([[1, 1], [2, 2]])
 }));
 
-vi.mock("../../Debug/DebugLogger", () => ({
-    "isDebugEnabled": vi.fn(() => false),
-    "logMask": vi.fn()
-}));
-
 import { $clipBounds, $clipLevels } from "../../Mask";
 
 describe("ContextClipUseCase", () =>

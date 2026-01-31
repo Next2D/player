@@ -25,12 +25,6 @@ vi.mock("../../Mask", () => ({
     "$setMaskDrawing": (value: boolean) => mockSetMaskDrawing(value)
 }));
 
-// Mock Debug logger
-vi.mock("../../Debug/DebugLogger", () => ({
-    "isDebugEnabled": vi.fn(() => false),
-    "logMask": vi.fn()
-}));
-
 describe("MaskEndMaskService", () =>
 {
     beforeEach(() =>

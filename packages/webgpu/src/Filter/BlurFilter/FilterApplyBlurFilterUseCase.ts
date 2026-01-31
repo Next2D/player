@@ -1,6 +1,6 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
-import { $offset } from "../index";
+import { $offset } from "../FilterOffset";
 import { calculateBlurParams, calculateDirectionalBlurParams } from "../BlurFilterUseCase";
 
 /**

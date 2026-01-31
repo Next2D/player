@@ -12,11 +12,11 @@ const GPUBufferUsage = {
 (globalThis as any).GPUBufferUsage = GPUBufferUsage;
 
 // Mock offset - use object that will be imported
-vi.mock("../../index", () => ({
+vi.mock("../../FilterOffset", () => ({
     "$offset": { "x": 0, "y": 0 }
 }));
 
-import { $offset } from "../../index";
+import { $offset } from "../../FilterOffset";
 
 // Mock calculateBlurParams
 const mockCalculateBlurParams = vi.fn();

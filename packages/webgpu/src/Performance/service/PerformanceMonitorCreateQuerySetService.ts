@@ -13,7 +13,6 @@ export const execute = (
 
     // timestamp-query機能がサポートされているか確認
     if (!device.features.has("timestamp-query")) {
-        console.warn("PerformanceMonitor: timestamp-query feature is not supported on this device");
         return null;
     }
 
@@ -24,8 +23,7 @@ export const execute = (
         });
 
         return querySet;
-    } catch (error) {
-        console.warn("PerformanceMonitor: Failed to create QuerySet", error);
+    } catch (_error) {
         return null;
     }
 };

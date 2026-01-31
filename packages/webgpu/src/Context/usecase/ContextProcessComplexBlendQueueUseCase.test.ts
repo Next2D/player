@@ -146,7 +146,7 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
 
     describe("missing attachments", () =>
     {
-        it("should warn and clear queue when main attachment is null", () =>
+        it("should clear queue when main attachment is null", () =>
         {
             mockQueue.push({
                 "node": { "x": 0, "y": 0, "w": 100, "h": 100 },
@@ -172,11 +172,10 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
                 pipelineManager
             );
 
-            expect(console.warn).toHaveBeenCalled();
             expect(mockClearComplexBlendQueue).toHaveBeenCalled();
         });
 
-        it("should warn and clear queue when main attachment has no texture", () =>
+        it("should clear queue when main attachment has no texture", () =>
         {
             mockQueue.push({
                 "node": { "x": 0, "y": 0, "w": 100, "h": 100 },
@@ -203,11 +202,10 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
                 pipelineManager
             );
 
-            expect(console.warn).toHaveBeenCalled();
             expect(mockClearComplexBlendQueue).toHaveBeenCalled();
         });
 
-        it("should warn and clear queue when atlas attachment not available", () =>
+        it("should clear queue when atlas attachment not available", () =>
         {
             mockQueue.push({
                 "node": { "x": 0, "y": 0, "w": 100, "h": 100 },
@@ -235,7 +233,6 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
                 pipelineManager
             );
 
-            expect(console.warn).toHaveBeenCalled();
             expect(mockClearComplexBlendQueue).toHaveBeenCalled();
         });
     });

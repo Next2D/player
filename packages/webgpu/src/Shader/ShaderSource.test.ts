@@ -222,11 +222,12 @@ describe("ShaderSource", () =>
             expect(shader).toContain("@fragment");
         });
 
-        it("should include texture sampling", () =>
+        it("should include bezier curve handling for anti-aliasing", () =>
         {
             const shader = ShaderSource.getMaskFragmentShader();
 
-            expect(shader).toContain("textureLoad");
+            expect(shader).toContain("dpdx");
+            expect(shader).toContain("dpdy");
         });
     });
 
@@ -333,11 +334,11 @@ describe("ShaderSource", () =>
             expect(shader).toContain("@vertex");
         });
 
-        it("should define Uniforms struct", () =>
+        it("should define InstanceInput struct", () =>
         {
             const shader = ShaderSource.getInstancedVertexShader();
 
-            expect(shader).toContain("struct Uniforms");
+            expect(shader).toContain("struct InstanceInput");
         });
     });
 
@@ -523,11 +524,11 @@ describe("ShaderSource", () =>
             expect(shader).toContain("@fragment");
         });
 
-        it("should include color transform uniforms", () =>
+        it("should include color handling", () =>
         {
             const shader = ShaderSource.getBlendFragmentShader();
 
-            expect(shader).toContain("colorTransform");
+            expect(shader).toContain("color");
         });
     });
 
@@ -735,11 +736,11 @@ describe("ShaderSource", () =>
             expect(shader).toContain("struct GradientGlowUniforms");
         });
 
-        it("should include gradient texture sampling", () =>
+        it("should include gradient LUT texture sampling", () =>
         {
             const shader = ShaderSource.getGradientGlowFilterFragmentShader();
 
-            expect(shader).toContain("gradientTexture");
+            expect(shader).toContain("gradientLUT");
         });
     });
 
@@ -785,11 +786,11 @@ describe("ShaderSource", () =>
             expect(shader).toContain("@fragment");
         });
 
-        it("should define Uniforms struct", () =>
+        it("should define ConvolutionUniforms struct", () =>
         {
             const shader = ShaderSource.getConvolutionFilterFragmentShader(3, 3);
 
-            expect(shader).toContain("struct Uniforms");
+            expect(shader).toContain("struct ConvolutionUniforms");
         });
 
         it("should generate different shaders for different matrix sizes", () =>
@@ -934,11 +935,11 @@ describe("ShaderSource", () =>
             expect(shader).toContain("@fragment");
         });
 
-        it("should define Uniforms struct", () =>
+        it("should define DisplacementUniforms struct", () =>
         {
             const shader = ShaderSource.getDisplacementMapFilterFragmentShader(1, 2, 0);
 
-            expect(shader).toContain("struct Uniforms");
+            expect(shader).toContain("struct DisplacementUniforms");
         });
 
         it("should generate different shaders for different component channels", () =>

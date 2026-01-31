@@ -1,9 +1,3 @@
-import {
-    isDebugEnabled,
-    logGradient,
-    logMatrix3x3
-} from "../../Debug/DebugLogger";
-
 /**
  * @description グラデーション変換データを計算
  *              WebGL版と同様の計算を実装
@@ -88,19 +82,6 @@ export const execute = (
             0, 0, 1
         ]);
 
-        // デバッグ出力
-        if (isDebugEnabled()) {
-            logGradient("Linear Gradient Computed", {
-                "type": 0,
-                gradientMatrix,
-                contextMatrix,
-                inverseMatrix,
-                linearPoints
-            });
-            logMatrix3x3("Linear inverseMatrix", inverseMatrix);
-            logMatrix3x3("Linear linearPoints", linearPoints);
-        }
-
         return { inverseMatrix, linearPoints };
     }
     // === Radial gradient ===
@@ -137,26 +118,5 @@ export const execute = (
         invTx, invTy, 1
     ]);
 
-    // デバッグ出力
-    if (isDebugEnabled()) {
-        logGradient("Radial Gradient Computed", {
-            "type": 1,
-            gradientMatrix,
-            contextMatrix,
-            inverseMatrix,
-            "linearPoints": null
-        });
-        logMatrix3x3("Radial inverseMatrix", inverseMatrix);
-        console.log("[Radial Debug] Gradient matrix:", {
-            "a": ga, "b": gb, "c": gc, "d": gd,
-            "tx": gtx, "ty": gty, det
-        });
-        console.log("[Radial Debug] Inverse gradient:", {
-            "a": invA, "b": invB, "c": invC, "d": invD,
-            "tx": invTx, "ty": invTy
-        });
-    }
-
     return { inverseMatrix, "linearPoints": null };
-
 };

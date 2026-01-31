@@ -15,7 +15,7 @@ vi.mock("../index", () => ({
     "$offset": { "x": 0, "y": 0 }
 }));
 
-import { $offset } from "../index";
+import { $offset } from "../FilterOffset";
 
 // Mock FilterApplyBlurFilterUseCase
 vi.mock("../BlurFilter/FilterApplyBlurFilterUseCase", () => ({

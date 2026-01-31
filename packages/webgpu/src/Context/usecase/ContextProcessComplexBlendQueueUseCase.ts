@@ -183,14 +183,12 @@ export const execute = (
     }
 
     if (!mainAttachment || !mainAttachment.texture) {
-        console.warn("[WebGPU] Complex blend: main attachment not available");
         clearComplexBlendQueue();
         return;
     }
 
     const atlasAttachment = frameBufferManager.getAttachment("atlas");
     if (!atlasAttachment || !atlasAttachment.texture) {
-        console.warn("[WebGPU] Complex blend: atlas attachment not available");
         clearComplexBlendQueue();
         return;
     }

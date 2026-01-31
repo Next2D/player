@@ -1,7 +1,6 @@
 import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
-import { isDebugEnabled, logMask } from "../../Debug/DebugLogger";
 
 /**
  * @description マスクの合成処理（ネストされたマスク対応）
@@ -46,15 +45,6 @@ export const execute = (
 
     const clipLevel = currentAttachment.clipLevel;
     const mask = 1 << clipLevel - 1;
-
-    // デバッグ出力
-    if (isDebugEnabled()) {
-        logMask("MaskUnionMaskService execute", {
-            "clipLevel": clipLevel,
-            "maskValue": mask
-        });
-        console.log("[WebGPU Mask] Operation: merge_nested_masks");
-    }
 
     // フルスクリーン矩形の頂点データを作成
     // NDC座標系: -1 to 1
@@ -117,11 +107,6 @@ export const execute = (
         renderPassEncoder.setStencilReference(mask);
         renderPassEncoder.setVertexBuffer(0, vertexBuffer);
         renderPassEncoder.draw(6, 1, 0, 0);
-    } else {
-        // フォールバック: パイプラインがない場合はスキップ
-        if (isDebugEnabled()) {
-            console.warn(`[WebGPU Mask] mask_union_merge_${clipLevel} pipeline not found, skipping merge`);
-        }
     }
 
     // === Pass 2: 上位ビットのクリア ===
@@ -133,18 +118,5 @@ export const execute = (
         renderPassEncoder.setStencilReference(0);
         renderPassEncoder.setVertexBuffer(0, vertexBuffer);
         renderPassEncoder.draw(6, 1, 0, 0);
-    } else {
-        // フォールバック: パイプラインがない場合はスキップ
-        if (isDebugEnabled()) {
-            console.warn(`[WebGPU Mask] mask_union_clear_${clipLevel} pipeline not found, skipping clear`);
-        }
-    }
-
-    if (isDebugEnabled()) {
-        logMask("MaskUnionMaskService complete", {
-            "clipLevel": clipLevel,
-            "maskValue": mask
-        });
-        console.log("[WebGPU Mask] Operation: merge_complete");
     }
 };

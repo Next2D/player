@@ -8,7 +8,6 @@ import {
     $isMaskDrawing,
     $getMaskStencilReference
 } from "../../Mask";
-import { isDebugEnabled, logGradient, logUniformBuffer } from "../../Debug/DebugLogger";
 
 /**
  * @description グラデーションの塗りつぶしを実行
@@ -110,20 +109,6 @@ export const execute = (
     // WebGL版と同じ計算でグラデーション変換データを取得
     const gradientData = contextComputeGradientMatrixService(gradientMatrix, contextMatrix, type);
 
-    // デバッグ出力: グラデーション情報
-    if (isDebugEnabled()) {
-        logGradient("ContextGradientFillUseCase execute", {
-            type,
-            stops,
-            gradientMatrix,
-            contextMatrix,
-            "inverseMatrix": gradientData.inverseMatrix,
-            "linearPoints": gradientData.linearPoints,
-            spread,
-            focal
-        });
-    }
-
     // Uniformバッファを作成
     // GradientUniforms構造体:
     // - inverseMatrix: mat3x3<f32> (各列がvec4にパディング = 48 bytes)
@@ -170,11 +155,6 @@ export const execute = (
         uniformData[17] = 0;
         uniformData[18] = 0;
         uniformData[19] = 0;
-    }
-
-    // デバッグ出力: Uniformバッファの内容
-    if (isDebugEnabled()) {
-        logUniformBuffer("Gradient Uniform Buffer", uniformData);
     }
 
     const uniformBuffer = bufferManager.createUniformBuffer(
