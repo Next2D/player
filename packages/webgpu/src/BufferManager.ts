@@ -5,15 +5,11 @@ import { execute as bufferManagerAcquireVertexBufferUseCase } from "./BufferMana
 import { execute as bufferManagerAcquireUniformBufferUseCase } from "./BufferManager/usecase/BufferManagerAcquireUniformBufferUseCase";
 import { execute as bufferManagerReleaseVertexBufferService } from "./BufferManager/service/BufferManagerReleaseVertexBufferService";
 import { execute as bufferManagerReleaseUniformBufferService } from "./BufferManager/service/BufferManagerReleaseUniformBufferService";
-import {
-    execute as bufferManagerAcquireStorageBufferUseCase,
-    releaseStorageBuffer,
-    cleanupStorageBuffers
-} from "./BufferManager/usecase/BufferManagerAcquireStorageBufferUseCase";
-import {
-    execute as bufferManagerCreateIndirectBufferService,
-    update as updateIndirectBuffer
-} from "./BufferManager/service/BufferManagerCreateIndirectBufferService";
+import { execute as bufferManagerAcquireStorageBufferUseCase } from "./BufferManager/usecase/BufferManagerAcquireStorageBufferUseCase";
+import { execute as releaseStorageBufferUseCase } from "./BufferManager/usecase/BufferManagerReleaseStorageBufferUseCase";
+import { execute as cleanupStorageBuffersUseCase } from "./BufferManager/usecase/BufferManagerCleanupStorageBuffersUseCase";
+import { execute as bufferManagerCreateIndirectBufferService } from "./BufferManager/service/BufferManagerCreateIndirectBufferService";
+import { execute as updateIndirectBuffer } from "./BufferManager/service/BufferManagerUpdateIndirectBufferService";
 
 /**
  * @description WebGPUバッファマネージャー
@@ -277,7 +273,7 @@ export class BufferManager
 
         // 60フレームごとに古いStorage Bufferをクリーンアップ
         if (this.frameNumber % 60 === 0) {
-            cleanupStorageBuffers(this.storageBufferPool, this.frameNumber);
+            cleanupStorageBuffersUseCase(this.storageBufferPool, this.frameNumber);
         }
     }
 
@@ -324,7 +320,7 @@ export class BufferManager
      */
     releaseStorageBuffer (buffer: GPUBuffer): void
     {
-        releaseStorageBuffer(this.storageBufferPool, buffer);
+        releaseStorageBufferUseCase(this.storageBufferPool, buffer);
     }
 
     /**

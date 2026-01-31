@@ -88,6 +88,7 @@ describe("ContextDrawIndirectUseCase", () =>
     {
         return {
             "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
+            "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
             "createRectVertices": vi.fn(() => new Float32Array([0, 0, 1, 0, 1, 1, 0, 1])),
             "acquireStorageBuffer": vi.fn(() => ({ "label": "mockStorageBuffer" })),
             "writeStorageBuffer": vi.fn(),
@@ -220,10 +221,8 @@ describe("ContextDrawIndirectUseCase", () =>
             );
 
             expect(bufferManager.acquireStorageBuffer).not.toHaveBeenCalled();
-            expect(bufferManager.createVertexBuffer).toHaveBeenCalledWith(
-                expect.stringContaining("instance_indirect_"),
-                expect.anything()
-            );
+            // acquireVertexBufferはサイズとデータを引数に取る
+            expect(bufferManager.acquireVertexBuffer).toHaveBeenCalled();
         });
     });
 

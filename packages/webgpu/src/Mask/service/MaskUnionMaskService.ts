@@ -93,10 +93,7 @@ export const execute = (
         0, 0, 1
     ]);
 
-    const vertexBuffer = bufferManager.createVertexBuffer(
-        `mask_union_${Date.now()}`,
-        rectVertices
-    );
+    const vertexBuffer = bufferManager.acquireVertexBuffer(rectVertices.byteLength, rectVertices);
 
     // === Pass 1: ステンシルビットのマージ ===
     // レベル以上のビットをclipLevelビットにマージ

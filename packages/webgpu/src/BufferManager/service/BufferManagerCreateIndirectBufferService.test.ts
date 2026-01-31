@@ -28,7 +28,8 @@ const mockDevice = {
 };
 
 // Import after mocking
-import { execute, update } from "./BufferManagerCreateIndirectBufferService";
+import { execute } from "./BufferManagerCreateIndirectBufferService";
+import { execute as update } from "./BufferManagerUpdateIndirectBufferService";
 
 describe("BufferManagerCreateIndirectBufferService", () =>
 {

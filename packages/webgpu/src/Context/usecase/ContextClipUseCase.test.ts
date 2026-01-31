@@ -42,7 +42,8 @@ describe("ContextClipUseCase", () =>
     const createMockBufferManager = () =>
     {
         return {
-            "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" }))
+            "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
+            "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" }))
         } as unknown as BufferManager;
     };
 
@@ -228,7 +229,7 @@ describe("ContextClipUseCase", () =>
                 false
             );
 
-            expect(bufferManager.createVertexBuffer).toHaveBeenCalled();
+            expect(bufferManager.acquireVertexBuffer).toHaveBeenCalled();
             expect(renderPassEncoder.setPipeline).toHaveBeenCalled();
             expect(renderPassEncoder.setStencilReference).toHaveBeenCalledWith(0);
             expect(renderPassEncoder.setVertexBuffer).toHaveBeenCalledWith(0, expect.anything());

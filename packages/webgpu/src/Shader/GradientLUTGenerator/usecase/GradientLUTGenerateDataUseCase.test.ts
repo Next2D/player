@@ -90,4 +90,50 @@ describe("GradientLUTGenerateDataUseCase.ts method test", () =>
         expect(result.pixels[1]).toBe(0);    // g
         expect(result.pixels[2]).toBe(0);    // b
     });
+
+    it("test case - white gradient with varying alpha (0xffffff alpha 1.0 to 0.6)", () =>
+    {
+        // Issue: 0xffffff (white) colors and transparency/alpha gradients were not displaying
+        const stops = [
+            0, 1, 1, 1, 1,     // ratio=0, white with alpha=1.0
+            1, 1, 1, 1, 0.6    // ratio=1, white with alpha=0.6
+        ];
+
+        const result = execute(stops, 0);
+
+        // First pixel: white with full alpha
+        expect(result.pixels[0]).toBe(255);  // r
+        expect(result.pixels[1]).toBe(255);  // g
+        expect(result.pixels[2]).toBe(255);  // b
+        expect(result.pixels[3]).toBe(255);  // a (1.0)
+
+        // Last pixel: white with 60% alpha
+        const lastIndex = (result.resolution - 1) * 4;
+        expect(result.pixels[lastIndex]).toBe(255);      // r
+        expect(result.pixels[lastIndex + 1]).toBe(255);  // g
+        expect(result.pixels[lastIndex + 2]).toBe(255);  // b
+        expect(result.pixels[lastIndex + 3]).toBe(153);  // a (0.6 * 255 = 153)
+    });
+
+    it("test case - alpha-only gradient (same color, different alphas)", () =>
+    {
+        const stops = [
+            0, 0.8, 0.4, 0.2, 1,    // ratio=0, color with alpha=1.0
+            1, 0.8, 0.4, 0.2, 0     // ratio=1, same color with alpha=0.0
+        ];
+
+        const result = execute(stops, 0);
+
+        // First pixel: full alpha
+        expect(result.pixels[3]).toBe(255);  // a (1.0)
+
+        // Last pixel: zero alpha (fully transparent)
+        const lastIndex = (result.resolution - 1) * 4;
+        expect(result.pixels[lastIndex + 3]).toBe(0);  // a (0.0)
+
+        // Middle pixel should have ~50% alpha
+        const midIndex = Math.floor(result.resolution / 2) * 4;
+        expect(result.pixels[midIndex + 3]).toBeGreaterThan(100);
+        expect(result.pixels[midIndex + 3]).toBeLessThan(156);
+    });
 });

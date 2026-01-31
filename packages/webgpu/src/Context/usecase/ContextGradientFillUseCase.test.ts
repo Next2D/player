@@ -78,6 +78,8 @@ describe("ContextGradientFillUseCase", () =>
     {
         return {
             "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
+            "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
+            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
             "createUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
         } as unknown as BufferManager;
     };
@@ -256,9 +258,9 @@ describe("ContextGradientFillUseCase", () =>
         });
     });
 
-    describe("canvas target pipeline selection", () =>
+    describe("canvas target (2-pass stencil)", () =>
     {
-        it("should use gradient_fill_bgra_no_msaa pipeline for canvas without stencil", () =>
+        it("should use 2-pass stencil fill for canvas without mask", () =>
         {
             const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
@@ -284,10 +286,43 @@ describe("ContextGradientFillUseCase", () =>
                 false   // useStencilPipeline
             );
 
-            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill_bgra_no_msaa");
+            // Pass 1: ステンシル書き込み
+            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("stencil_write_main");
+            // Pass 2: グラデーション描画
+            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill_stencil_main");
         });
 
-        it("should use gradient_fill_bgra_stencil pipeline for mask test mode", () =>
+        it("should draw twice for canvas target (2-pass stencil fill)", () =>
+        {
+            const device = createMockDevice();
+            const renderPassEncoder = createMockRenderPassEncoder();
+            const bufferManager = createMockBufferManager();
+            const pipelineManager = createMockPipelineManager();
+            const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
+            const stops = [0, 1, 0, 0, 1, 1, 0, 1, 0, 1];
+
+            execute(
+                device,
+                renderPassEncoder,
+                bufferManager,
+                pipelineManager,
+                pathVertices,
+                new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+                new Float32Array([1, 1, 1, 1]),
+                0,
+                stops,
+                new Float32Array([1, 0, 0, 1, 0, 0]),
+                0, 0, 0,
+                800, 600,
+                false,  // useAtlasTarget
+                false   // useStencilPipeline
+            );
+
+            // 2パス: ステンシル書き込み + グラデーション描画
+            expect(renderPassEncoder.draw).toHaveBeenCalledTimes(2);
+        });
+
+        it("should use gradient_fill_bgra_stencil_masked pipeline for mask test mode", () =>
         {
             const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
@@ -313,7 +348,10 @@ describe("ContextGradientFillUseCase", () =>
                 true    // useStencilPipeline
             );
 
-            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill_bgra_stencil");
+            // Pass 1: ステンシル書き込み
+            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("stencil_write_main");
+            // Pass 2: マスクテスト付きグラデーション描画
+            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill_bgra_stencil_masked");
         });
 
         it("should return null when mask drawing and stencil pipeline", () =>
@@ -437,6 +475,148 @@ describe("ContextGradientFillUseCase", () =>
             );
 
             expect(device.queue.writeBuffer).toHaveBeenCalled();
+        });
+    });
+
+    describe("white gradient colors (0xffffff) and alpha gradients", () =>
+    {
+        it("should use white color (1,1,1,1) for mesh regardless of fill_style color", () =>
+        {
+            const device = createMockDevice();
+            const renderPassEncoder = createMockRenderPassEncoder();
+            const bufferManager = createMockBufferManager();
+            const pipelineManager = createMockPipelineManager();
+            const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
+            // White gradient with varying alpha: 0xFFFFFF at alpha 1.0 to 0xFFFFFF at alpha 0.6
+            const stops = [0, 1, 1, 1, 1, 1, 1, 1, 1, 0.6];
+
+            execute(
+                device,
+                renderPassEncoder,
+                bufferManager,
+                pipelineManager,
+                pathVertices,
+                new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+                new Float32Array([0, 0, 0, 1]),  // fill_style: black with alpha 1
+                0,
+                stops,
+                new Float32Array([1, 0, 0, 1, 0, 0]),
+                2, 0, 0,  // spread: pad
+                800, 600,
+                true
+            );
+
+            // meshFillGenerateUseCase should be called with white color (1,1,1) and alpha from fill_style
+            expect(meshFillGenerateUseCase).toHaveBeenCalledWith(
+                pathVertices,
+                expect.any(Number), expect.any(Number), expect.any(Number),
+                expect.any(Number), expect.any(Number), expect.any(Number),
+                1, 1, 1, 1,  // red=1, green=1, blue=1, alpha=1
+                800, 600
+            );
+        });
+
+        it("should use fill_style alpha when positive", () =>
+        {
+            const device = createMockDevice();
+            const renderPassEncoder = createMockRenderPassEncoder();
+            const bufferManager = createMockBufferManager();
+            const pipelineManager = createMockPipelineManager();
+            const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
+            const stops = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+            execute(
+                device,
+                renderPassEncoder,
+                bufferManager,
+                pipelineManager,
+                pathVertices,
+                new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+                new Float32Array([1, 0, 0, 0.5]),  // fill_style with alpha 0.5
+                0,
+                stops,
+                new Float32Array([1, 0, 0, 1, 0, 0]),
+                0, 0, 0,
+                800, 600,
+                true
+            );
+
+            expect(meshFillGenerateUseCase).toHaveBeenCalledWith(
+                pathVertices,
+                expect.any(Number), expect.any(Number), expect.any(Number),
+                expect.any(Number), expect.any(Number), expect.any(Number),
+                1, 1, 1, 0.5,  // alpha should be 0.5 from fill_style
+                800, 600
+            );
+        });
+
+        it("should default alpha to 1 when fill_style alpha is 0", () =>
+        {
+            const device = createMockDevice();
+            const renderPassEncoder = createMockRenderPassEncoder();
+            const bufferManager = createMockBufferManager();
+            const pipelineManager = createMockPipelineManager();
+            const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
+            const stops = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+            execute(
+                device,
+                renderPassEncoder,
+                bufferManager,
+                pipelineManager,
+                pathVertices,
+                new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+                new Float32Array([1, 1, 1, 0]),  // fill_style with alpha 0
+                0,
+                stops,
+                new Float32Array([1, 0, 0, 1, 0, 0]),
+                0, 0, 0,
+                800, 600,
+                true
+            );
+
+            expect(meshFillGenerateUseCase).toHaveBeenCalledWith(
+                pathVertices,
+                expect.any(Number), expect.any(Number), expect.any(Number),
+                expect.any(Number), expect.any(Number), expect.any(Number),
+                1, 1, 1, 1,  // alpha should default to 1 when fill_style alpha is 0
+                800, 600
+            );
+        });
+
+        it("should handle alpha gradient (same color, different alphas) correctly", () =>
+        {
+            const device = createMockDevice();
+            const renderPassEncoder = createMockRenderPassEncoder();
+            const bufferManager = createMockBufferManager();
+            const pipelineManager = createMockPipelineManager();
+            const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
+            // Gradient from white alpha=1 to white alpha=0.6
+            const stops = [
+                0, 1, 1, 1, 1,      // stop 1: position=0, r=1, g=1, b=1, a=1
+                1, 1, 1, 1, 0.6    // stop 2: position=1, r=1, g=1, b=1, a=0.6
+            ];
+
+            const result = execute(
+                device,
+                renderPassEncoder,
+                bufferManager,
+                pipelineManager,
+                pathVertices,
+                new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+                new Float32Array([1, 1, 1, 1]),
+                0,  // linear
+                stops,
+                new Float32Array([1, 0, 0, 1, 0, 0]),
+                2, 0, 0,  // spread: pad (for gradient edge handling)
+                800, 600,
+                true
+            );
+
+            // Should return LUT texture (not null)
+            expect(result).not.toBe(null);
+            // LUT texture should be created
+            expect(device.createTexture).toHaveBeenCalled();
         });
     });
 });

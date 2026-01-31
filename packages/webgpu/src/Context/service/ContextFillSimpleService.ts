@@ -21,32 +21,29 @@ import { $isMaskDrawing, $getMaskStencilReference } from "../../Mask";
  */
 export const execute = (
     device: GPUDevice,
-    renderPassEncoder: GPURenderPassEncoder,
-    bufferManager: BufferManager,
-    pipelineManager: PipelineManager,
-    vertexBuffer: GPUBuffer,
-    vertexCount: number,
-    viewportWidth: number,
-    viewportHeight: number,
-    useAtlasTarget: boolean,
-    useStencilPipeline: boolean = false,
-    _clipLevel: number = 1
+    render_pass_encoder: GPURenderPassEncoder,
+    buffer_manager: BufferManager,
+    pipeline_manager: PipelineManager,
+    vertex_buffer: GPUBuffer,
+    vertex_count: number,
+    viewport_width: number,
+    viewport_height: number,
+    use_atlas_target: boolean,
+    use_stencil_pipeline: boolean = false,
+    _clip_level: number = 1
 ): void => {
     // Uniform data: viewport size only (8 bytes → 16 bytes aligned)
     const uniformData = new Float32Array(4);
-    uniformData[0] = viewportWidth;
-    uniformData[1] = viewportHeight;
+    uniformData[0] = viewport_width;
+    uniformData[1] = viewport_height;
     uniformData[2] = 0;
     uniformData[3] = 0;
 
-    const uniformBuffer = bufferManager.createUniformBuffer(
-        `fill_uniform_${Date.now()}`,
-        uniformData.byteLength
-    );
+    const uniformBuffer = buffer_manager.acquireUniformBuffer(uniformData.byteLength);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
     // バインドグループを作成
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("fill");
+    const bindGroupLayout = pipeline_manager.getBindGroupLayout("fill");
     if (!bindGroupLayout) {
         console.error("[WebGPU] Fill bind group layout not found");
         return;
@@ -66,9 +63,9 @@ export const execute = (
     // - マスク描画モード時: 何もしない（clip()でステンシル書き込み）
     // - マスクテストモード時: "fill_bgra_stencil" (bgra8unorm, ステンシルテストあり)
     let pipelineName: string;
-    if (useAtlasTarget) {
+    if (use_atlas_target) {
         pipelineName = "fill";
-    } else if (useStencilPipeline) {
+    } else if (use_stencil_pipeline) {
         if ($isMaskDrawing()) {
             // マスク描画モード: ステンシルへの書き込みはclip()で行うため、ここでは何もしない
             // clip()がINVERTでステンシルを書き込み、重複書き込みによるINVERT打ち消しを防止
@@ -81,21 +78,21 @@ export const execute = (
     } else {
         pipelineName = "fill_bgra";
     }
-    const pipeline = pipelineManager.getPipeline(pipelineName);
+    const pipeline = pipeline_manager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         return;
     }
 
-    renderPassEncoder.setPipeline(pipeline);
-    renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-    renderPassEncoder.setBindGroup(0, bindGroup);
+    render_pass_encoder.setPipeline(pipeline);
+    render_pass_encoder.setVertexBuffer(0, vertex_buffer);
+    render_pass_encoder.setBindGroup(0, bindGroup);
 
     // マスクテストモード時はステンシル参照値を設定
     // WebGL版: stencilFunc(EQUAL, mask & 0xff, mask)
-    if (useStencilPipeline && !useAtlasTarget && !$isMaskDrawing()) {
-        renderPassEncoder.setStencilReference($getMaskStencilReference());
+    if (use_stencil_pipeline && !use_atlas_target && !$isMaskDrawing()) {
+        render_pass_encoder.setStencilReference($getMaskStencilReference());
     }
 
-    renderPassEncoder.draw(vertexCount, 1, 0, 0);
+    render_pass_encoder.draw(vertex_count, 1, 0, 0);
 };

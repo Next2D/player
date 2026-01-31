@@ -35,55 +35,54 @@ import {
  */
 export const execute = (
     device: GPUDevice,
-    renderPassEncoder: GPURenderPassEncoder,
-    bufferManager: BufferManager,
-    pipelineManager: PipelineManager,
-    pathVertices: IPath[],
-    contextMatrix: Float32Array,
-    fillStyle: Float32Array,
+    render_pass_encoder: GPURenderPassEncoder,
+    buffer_manager: BufferManager,
+    pipeline_manager: PipelineManager,
+    path_vertices: IPath[],
+    context_matrix: Float32Array,
+    fill_style: Float32Array,
     type: number,
     stops: number[],
-    gradientMatrix: Float32Array,
+    gradient_matrix: Float32Array,
     spread: number,
     interpolation: number,
     focal: number,
-    viewportWidth: number,
-    viewportHeight: number,
-    useAtlasTarget: boolean,
-    useStencilPipeline: boolean = false,
-    _clipLevel: number = 1
+    viewport_width: number,
+    viewport_height: number,
+    use_atlas_target: boolean,
+    use_stencil_pipeline: boolean = false,
+    _clip_level: number = 1
 ): GPUTexture | null => {
-    // 色（グラデーション描画ではアルファ乗算用に使用）
-    const red = fillStyle[0];
-    const green = fillStyle[1];
-    const blue = fillStyle[2];
-    const alpha = fillStyle[3];
+    // グラデーション描画では色は白（1, 1, 1, 1）を使用
+    // グラデーションの色はLUTテクスチャから取得される
+    // fill_styleのアルファのみ乗算用に使用（globalAlpha等）
+    const red = 1;
+    const green = 1;
+    const blue = 1;
+    const alpha = fill_style[3] > 0 ? fill_style[3] : 1;
 
     // 行列を取得
-    const a  = contextMatrix[0];
-    const b  = contextMatrix[1];
-    const c  = contextMatrix[3];
-    const d  = contextMatrix[4];
-    const tx = contextMatrix[6];
-    const ty = contextMatrix[7];
+    const a  = context_matrix[0];
+    const b  = context_matrix[1];
+    const c  = context_matrix[3];
+    const d  = context_matrix[4];
+    const tx = context_matrix[6];
+    const ty = context_matrix[7];
 
     // MeshFillGenerateUseCaseで頂点データを生成
     const mesh = meshFillGenerateUseCase(
-        pathVertices,
+        path_vertices,
         a, b, c, d, tx, ty,
         red, green, blue, alpha,
-        viewportWidth, viewportHeight
+        viewport_width, viewport_height
     );
 
     if (mesh.indexCount === 0) {
         return null;
     }
 
-    // 頂点バッファを作成
-    const vertexBuffer = bufferManager.createVertexBuffer(
-        `gradient_fill_${Date.now()}`,
-        mesh.buffer
-    );
+    // 頂点バッファを取得（プールから再利用）
+    const vertexBuffer = buffer_manager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
     // グラデーションLUTテクスチャを生成
     const lutData = generateGradientLUT(stops, spread, interpolation);
@@ -107,7 +106,7 @@ export const execute = (
     );
 
     // WebGL版と同じ計算でグラデーション変換データを取得
-    const gradientData = contextComputeGradientMatrixService(gradientMatrix, contextMatrix, type);
+    const gradientData = contextComputeGradientMatrixService(gradient_matrix, context_matrix, type);
 
     // Uniformバッファを作成
     // GradientUniforms構造体:
@@ -157,10 +156,7 @@ export const execute = (
         uniformData[19] = 0;
     }
 
-    const uniformBuffer = bufferManager.createUniformBuffer(
-        `gradient_uniform_${Date.now()}`,
-        uniformData.byteLength
-    );
+    const uniformBuffer = buffer_manager.acquireUniformBuffer(uniformData.byteLength);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
     // サンプラーを作成
@@ -172,7 +168,7 @@ export const execute = (
     });
 
     // バインドグループを作成
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("gradient_fill");
+    const bindGroupLayout = pipeline_manager.getBindGroupLayout("gradient_fill");
     if (!bindGroupLayout) {
         console.error("[WebGPU] gradient_fill bind group layout not found");
         lutTexture.destroy();
@@ -190,67 +186,68 @@ export const execute = (
 
     // アトラス描画時：2パスステンシルフィル（WebGL版と同じアルゴリズム）
     // これにより中抜き描画（hollow shape）が正しく機能する
-    if (useAtlasTarget) {
+    if (use_atlas_target) {
         // === Pass 1: ステンシル書き込み ===
         // FRONT=INCR_WRAP, BACK=DECR_WRAP でステンシルに書き込み（colorMask=false）
         // 非ゼロワインディングルールにより、外側パスと内側パスの重複部分は相殺される
-        const stencilWritePipeline = pipelineManager.getPipeline("stencil_write_atlas");
+        const stencilWritePipeline = pipeline_manager.getPipeline("stencil_write_atlas");
         if (stencilWritePipeline) {
-            renderPassEncoder.setPipeline(stencilWritePipeline);
-            renderPassEncoder.setStencilReference(0);
-            renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-            renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+            render_pass_encoder.setPipeline(stencilWritePipeline);
+            render_pass_encoder.setStencilReference(0);
+            render_pass_encoder.setVertexBuffer(0, vertexBuffer);
+            render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
         }
 
         // === Pass 2: グラデーション描画（ステンシルテスト付き） ===
         // ステンシル != 0 の部分にグラデーションを描画し、ステンシルをクリア
-        const gradientPipeline = pipelineManager.getPipeline("gradient_fill_stencil_atlas");
+        const gradientPipeline = pipeline_manager.getPipeline("gradient_fill_stencil_atlas");
         if (gradientPipeline) {
-            renderPassEncoder.setPipeline(gradientPipeline);
-            renderPassEncoder.setStencilReference(0);
-            renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-            renderPassEncoder.setBindGroup(0, bindGroup);
-            renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+            render_pass_encoder.setPipeline(gradientPipeline);
+            render_pass_encoder.setStencilReference(0);
+            render_pass_encoder.setVertexBuffer(0, vertexBuffer);
+            render_pass_encoder.setBindGroup(0, bindGroup);
+            render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
         }
         return lutTexture;
     }
 
     // キャンバスへの直接描画
-    // - キャンバス用: "gradient_fill_bgra_no_msaa" (bgra8unorm, ステンシルなし)
-    // - マスク描画モード時: 何もしない（clip()でステンシル書き込み）
-    // - マスクテストモード時: "gradient_fill_bgra_stencil" (bgra8unorm, ステンシルテストあり)
-    let pipelineName: string;
-    if (useStencilPipeline) {
-        if ($isMaskDrawing()) {
-            // マスク描画モード: ステンシルへの書き込みはclip()で行うため、ここでは何もしない
-            // clip()がINVERTでステンシルを書き込み、重複書き込みによるINVERT打ち消しを防止
-            // LUTテクスチャは解放してnullを返す
-            lutTexture.destroy();
-            return null;
-        }
-        // マスクテストモード: ステンシル値をテストしてグラデーションを描画
-        pipelineName = "gradient_fill_bgra_stencil";
-    } else {
-        pipelineName = "gradient_fill_bgra_no_msaa";
-    }
-
-    const pipeline = pipelineManager.getPipeline(pipelineName);
-    if (!pipeline) {
+    // マスク描画モード時: 何もしない（clip()でステンシル書き込み）
+    if (use_stencil_pipeline && $isMaskDrawing()) {
+        // マスク描画モード: ステンシルへの書き込みはclip()で行うため、ここでは何もしない
+        // clip()がINVERTでステンシルを書き込み、重複書き込みによるINVERT打ち消しを防止
+        // LUTテクスチャは解放してnullを返す
         lutTexture.destroy();
         return null;
     }
 
-    // 描画
-    renderPassEncoder.setPipeline(pipeline);
-    renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-    renderPassEncoder.setBindGroup(0, bindGroup);
+    // === メインキャンバス直接描画: 2パスステンシルフィル ===
+    // 中抜き描画（hollow shape）を正しく処理するため
 
-    // マスクテストモード時はステンシル参照値を設定
-    if (useStencilPipeline && !$isMaskDrawing()) {
-        renderPassEncoder.setStencilReference($getMaskStencilReference());
+    // === Pass 1: ステンシル書き込み ===
+    // FRONT=INCR_WRAP, BACK=DECR_WRAP でステンシルに書き込み（colorMask=false）
+    const stencilWritePipeline = pipeline_manager.getPipeline("stencil_write_main");
+    if (stencilWritePipeline) {
+        render_pass_encoder.setPipeline(stencilWritePipeline);
+        render_pass_encoder.setStencilReference(0);
+        render_pass_encoder.setVertexBuffer(0, vertexBuffer);
+        render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
     }
 
-    renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+    // === Pass 2: グラデーション描画（ステンシルテスト付き） ===
+    // ステンシル != 0 の部分にグラデーションを描画し、ステンシルをクリア
+    const pipelineName = use_stencil_pipeline
+        ? "gradient_fill_bgra_stencil_masked"  // マスクテスト + 中抜き
+        : "gradient_fill_stencil_main";        // 中抜きのみ
+
+    const gradientPipeline = pipeline_manager.getPipeline(pipelineName);
+    if (gradientPipeline) {
+        render_pass_encoder.setPipeline(gradientPipeline);
+        render_pass_encoder.setStencilReference(use_stencil_pipeline ? $getMaskStencilReference() : 0);
+        render_pass_encoder.setVertexBuffer(0, vertexBuffer);
+        render_pass_encoder.setBindGroup(0, bindGroup);
+        render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
+    }
 
     // LUTテクスチャを返す（Context.tsでフレーム終了時に解放）
     return lutTexture;

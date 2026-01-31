@@ -50,17 +50,26 @@ vi.mock("./BufferManager/usecase/BufferManagerAcquireStorageBufferUseCase", () =
         const buffer = { "size": requiredSize, "destroy": vi.fn(), "label": "storageBuffer" };
         pool.push({ buffer, "size": requiredSize, "inUse": true, "lastUsedFrame": frameNumber });
         return buffer;
-    }),
-    "releaseStorageBuffer": vi.fn((pool, buffer) => {
+    })
+}));
+
+vi.mock("./BufferManager/usecase/BufferManagerReleaseStorageBufferUseCase", () => ({
+    "execute": vi.fn((pool, buffer) => {
         const entry = pool.find((e: any) => e.buffer === buffer);
         if (entry) entry.inUse = false;
-    }),
-    "cleanupStorageBuffers": vi.fn()
+    })
+}));
+
+vi.mock("./BufferManager/usecase/BufferManagerCleanupStorageBuffersUseCase", () => ({
+    "execute": vi.fn()
 }));
 
 vi.mock("./BufferManager/service/BufferManagerCreateIndirectBufferService", () => ({
-    "execute": vi.fn(() => ({ "label": "indirectBuffer", "destroy": vi.fn() })),
-    "update": vi.fn()
+    "execute": vi.fn(() => ({ "label": "indirectBuffer", "destroy": vi.fn() }))
+}));
+
+vi.mock("./BufferManager/service/BufferManagerUpdateIndirectBufferService", () => ({
+    "execute": vi.fn()
 }));
 
 describe("BufferManager", () =>

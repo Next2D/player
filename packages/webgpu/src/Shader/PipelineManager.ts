@@ -463,6 +463,55 @@ export class PipelineManager
         });
         this.pipelines.set("stencil_write_atlas", stencilWritePipelineAtlas);
 
+        // === メインキャンバス用ステンシル書き込み（bgra8unorm、Y軸反転あり） ===
+        // 中抜き描画（hollow shape）のPass 1で使用
+        const stencilWritePipelineMain = this.device.createRenderPipeline({
+            "layout": "auto",
+            "vertex": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilWriteMainVertexShader() // Y軸反転あり
+                }),
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilWriteFragmentShader()
+                }),
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format, // bgra8unorm
+                    "writeMask": 0
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none",
+                "frontFace": "ccw"
+            },
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "increment-wrap"
+                },
+                "stencilBack": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "decrement-wrap"
+                },
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
+            },
+            "multisample": {
+                "count": 1 // メインキャンバス用
+            }
+        });
+        this.pipelines.set("stencil_write_main", stencilWritePipelineMain);
+
         const stencilFillPipelineAtlas = this.device.createRenderPipeline({
             "layout": "auto",
             "vertex": {
@@ -1608,6 +1657,11 @@ export class PipelineManager
             "code": ShaderSource.getGradientFillFragmentShader()
         });
 
+        // 2パスステンシルフィル用フラグメントシェーダー（bezierチェックなし）
+        const stencilFragmentShaderModule = this.device.createShaderModule({
+            "code": ShaderSource.getGradientFillStencilFragmentShader()
+        });
+
         // 17 floats per vertex (fill用と同じ)
         const vertexBufferLayout: GPUVertexBufferLayout = {
             "arrayStride": 17 * 4,
@@ -1771,6 +1825,7 @@ export class PipelineManager
         // Pass 1: stencil_write_atlas でステンシルに書き込み（INCR/DECR）
         // Pass 2: このパイプラインでステンシル != 0 の部分にグラデーションを描画
         // これにより中抜き描画（hollow shape）が正しく機能する
+        // stencilFragmentShaderModule: bezierチェックなし（ステンシルで形状は決定済み）
         const pipelineRGBAStencilAtlas = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
@@ -1779,7 +1834,7 @@ export class PipelineManager
                 "buffers": [vertexBufferLayout]
             },
             "fragment": {
-                "module": fragmentShaderModule,
+                "module": stencilFragmentShaderModule, // bezierチェックなし
                 "entryPoint": "main",
                 "targets": [{
                     "format": "rgba8unorm",
@@ -1812,6 +1867,52 @@ export class PipelineManager
             }
         });
         this.pipelines.set("gradient_fill_stencil_atlas", pipelineRGBAStencilAtlas);
+
+        // === メインキャンバス用ステンシルテスト付きグラデーション（Pass 2） ===
+        // 中抜き描画（hollow shape）のPass 2で使用:
+        // ステンシル != 0 の部分にグラデーションを描画し、ステンシルをクリア
+        // stencilFragmentShaderModule: bezierチェックなし（ステンシルで形状は決定済み）
+        const pipelineStencilMain = this.device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleMain, // Y軸反転ありシェーダー
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": stencilFragmentShaderModule, // bezierチェックなし
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format, // bgra8unorm
+                    "blend": blendState
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "not-equal", // ステンシル値 != 0 の部分に描画
+                    "failOp": "keep",
+                    "depthFailOp": "zero",
+                    "passOp": "zero" // 描画後にステンシルをクリア
+                },
+                "stencilBack": {
+                    "compare": "not-equal",
+                    "failOp": "keep",
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
+                },
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
+            },
+            "multisample": {
+                "count": 1 // メインキャンバス用
+            }
+        });
+        this.pipelines.set("gradient_fill_stencil_main", pipelineStencilMain);
 
         // === メインアタッチメントのステンシル付きレンダーパス用 ===
         // マスクモード時に使用

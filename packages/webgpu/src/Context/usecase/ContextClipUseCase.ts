@@ -24,18 +24,18 @@ import { $clipBounds, $clipLevels } from "../../Mask";
  * @return {void}
  */
 export const execute = (
-    renderPassEncoder: GPURenderPassEncoder,
-    bufferManager: BufferManager,
-    pipelineManager: PipelineManager,
-    currentAttachment: IAttachmentObject,
-    pathVertices: IPath[],
-    contextMatrix: Float32Array,
-    fillStyle: Float32Array,
-    globalAlpha: number,
-    isMainAttachment: boolean = false
+    render_pass_encoder: GPURenderPassEncoder,
+    buffer_manager: BufferManager,
+    pipeline_manager: PipelineManager,
+    current_attachment: IAttachmentObject,
+    path_vertices: IPath[],
+    context_matrix: Float32Array,
+    fill_style: Float32Array,
+    global_alpha: number,
+    is_main_attachment: boolean = false
 ): void => {
     // クリップ境界を取得
-    const clipLevel = currentAttachment.clipLevel;
+    const clipLevel = current_attachment.clipLevel;
     const bounds = $clipBounds.get(clipLevel);
     if (!bounds) {
         return;
@@ -50,23 +50,23 @@ export const execute = (
     const height = Math.ceil(Math.abs(yMax - yMin));
 
     // メッシュを生成
-    const viewportWidth = currentAttachment.width;
-    const viewportHeight = currentAttachment.height;
+    const viewportWidth = current_attachment.width;
+    const viewportHeight = current_attachment.height;
 
-    const red = fillStyle[0];
-    const green = fillStyle[1];
-    const blue = fillStyle[2];
-    const alpha = fillStyle[3] * globalAlpha;
+    const red = fill_style[0];
+    const green = fill_style[1];
+    const blue = fill_style[2];
+    const alpha = fill_style[3] * global_alpha;
 
-    if (pathVertices.length === 0) {
+    if (path_vertices.length === 0) {
         return;
     }
 
     const mesh = meshFillGenerateUseCase(
-        pathVertices,
-        contextMatrix[0], contextMatrix[1],
-        contextMatrix[3], contextMatrix[4],
-        contextMatrix[6], contextMatrix[7],
+        path_vertices,
+        context_matrix[0], context_matrix[1],
+        context_matrix[3], context_matrix[4],
+        context_matrix[6], context_matrix[7],
         red, green, blue, alpha,
         viewportWidth, viewportHeight
     );
@@ -75,11 +75,8 @@ export const execute = (
         return;
     }
 
-    // 頂点バッファを作成
-    const vertexBuffer = bufferManager.createVertexBuffer(
-        `clip_${Date.now()}`,
-        mesh.buffer
-    );
+    // 頂点バッファを取得（プールから再利用）
+    const vertexBuffer = buffer_manager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
     // 現在のマスクレベルを取得（WebGL版: $clipLevels.get(clipLevel)）
     // レベルは1から始まり、各パスごとにインクリメントされる
@@ -89,7 +86,7 @@ export const execute = (
     // メインアタッチメント: レベルに対応するパイプライン（stencilWriteMask = 1 << (level - 1)）
     // アトラス: 通常のクリップパイプライン
     let pipelineName: string;
-    if (isMainAttachment) {
+    if (is_main_attachment) {
         // レベルを1-8の範囲にクランプ（8レベルまでサポート）
         const clampedLevel = Math.min(8, Math.max(1, level));
         pipelineName = `clip_write_main_${clampedLevel}`;
@@ -97,7 +94,7 @@ export const execute = (
         pipelineName = "clip_write";
     }
 
-    const pipeline = pipelineManager.getPipeline(pipelineName);
+    const pipeline = pipeline_manager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         return;
@@ -106,10 +103,10 @@ export const execute = (
     // INVERT操作でマスク形状を描画
     // カバーされたピクセルのステンシル値が反転される（ビット単位）
     // 奇数回カバーされたピクセルのみがマスク領域となる
-    renderPassEncoder.setPipeline(pipeline);
-    renderPassEncoder.setStencilReference(0); // INVERT操作では参照値は使用されないが、設定は必要
-    renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-    renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+    render_pass_encoder.setPipeline(pipeline);
+    render_pass_encoder.setStencilReference(0); // INVERT操作では参照値は使用されないが、設定は必要
+    render_pass_encoder.setVertexBuffer(0, vertexBuffer);
+    render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
 
     // レベルをインクリメント（WebGL版: ++level）
     level++;
@@ -118,10 +115,10 @@ export const execute = (
     // WebGL版: if (level > 7) { maskUnionMaskService(); level = clipLevel + 1; }
     if (level > 8) {
         maskUnionMaskService(
-            renderPassEncoder,
-            bufferManager,
-            pipelineManager,
-            currentAttachment
+            render_pass_encoder,
+            buffer_manager,
+            pipeline_manager,
+            current_attachment
         );
         level = clipLevel + 1;
     }

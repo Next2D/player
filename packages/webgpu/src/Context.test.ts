@@ -390,4 +390,206 @@ describe("Context", () =>
             expect(context.miterLimit).toBe(1);
         });
     });
+
+    describe("beginNodeRendering", () =>
+    {
+        it("should set scissor with +1px extension for clearing (WebGL compatible)", () =>
+        {
+            // Prepare mock attachment with stencil
+            const mockAttachment = {
+                "texture": {
+                    "view": {},
+                    "resource": mockTexture
+                },
+                "stencil": {
+                    "view": {}
+                },
+                "width": 4096,
+                "height": 4096,
+                "msaa": false
+            };
+
+            // Mock getAttachment to return atlas
+            vi.spyOn(context["frameBufferManager"], "getAttachment").mockReturnValue(mockAttachment);
+            vi.spyOn(context["frameBufferManager"], "createStencilRenderPassDescriptor").mockReturnValue({
+                "colorAttachments": [{ "view": {}, "loadOp": "load", "storeOp": "store" }],
+                "depthStencilAttachment": { "view": {}, "stencilLoadOp": "clear", "stencilStoreOp": "store" }
+            } as unknown as GPURenderPassDescriptor);
+
+            // Mock pipeline manager
+            vi.spyOn(context["pipelineManager"], "getPipeline").mockReturnValue({} as GPURenderPipeline);
+
+            // Mock buffer manager
+            vi.spyOn(context["bufferManager"], "createVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
+
+            const mockNode = { "x": 100, "y": 200, "w": 50, "h": 30 };
+
+            // Begin frame first
+            context.beginFrame();
+
+            // Clear mocks to track calls during beginNodeRendering
+            mockRenderPassEncoder.setScissorRect.mockClear();
+
+            // Call beginNodeRendering
+            context.beginNodeRendering(mockNode as any);
+
+            // Verify scissor was set with +1px extension for clearing (WebGL compatible)
+            // Scissor should be: (x, y, w+1, h+1) = (100, 200, 51, 31)
+            expect(mockRenderPassEncoder.setScissorRect).toHaveBeenCalledWith(100, 200, 51, 31);
+
+            // Verify currentNodeScissor is stored for later reset
+            expect(context["currentNodeScissor"]).toEqual({ "x": 100, "y": 200, "w": 50, "h": 30 });
+        });
+
+        it("should store node scissor info for clear reset", () =>
+        {
+            const mockAttachment = {
+                "texture": {
+                    "view": {},
+                    "resource": mockTexture
+                },
+                "stencil": {
+                    "view": {}
+                },
+                "width": 4096,
+                "height": 4096,
+                "msaa": false
+            };
+
+            vi.spyOn(context["frameBufferManager"], "getAttachment").mockReturnValue(mockAttachment);
+            vi.spyOn(context["frameBufferManager"], "createStencilRenderPassDescriptor").mockReturnValue({
+                "colorAttachments": [{ "view": {}, "loadOp": "load", "storeOp": "store" }],
+                "depthStencilAttachment": { "view": {}, "stencilLoadOp": "clear", "stencilStoreOp": "store" }
+            } as unknown as GPURenderPassDescriptor);
+            vi.spyOn(context["pipelineManager"], "getPipeline").mockReturnValue({} as GPURenderPipeline);
+            vi.spyOn(context["bufferManager"], "createVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
+
+            const mockNode = { "x": 0, "y": 0, "w": 100, "h": 100 };
+
+            context.beginFrame();
+            context.beginNodeRendering(mockNode as any);
+
+            // Verify node scissor is stored
+            expect(context["currentNodeScissor"]).toEqual({ "x": 0, "y": 0, "w": 100, "h": 100 });
+
+            // nodeAreaCleared should be false (lazy clear)
+            expect(context["nodeAreaCleared"]).toBe(false);
+        });
+    });
+
+    describe("drawPixels", () =>
+    {
+        it("should clear node area and end render pass before writing texture", () =>
+        {
+            const mockAttachment = {
+                "texture": {
+                    "view": {},
+                    "resource": mockTexture
+                },
+                "stencil": {
+                    "view": {}
+                },
+                "width": 4096,
+                "height": 4096,
+                "msaa": false
+            };
+
+            vi.spyOn(context["frameBufferManager"], "getAttachment").mockReturnValue(mockAttachment);
+            vi.spyOn(context["frameBufferManager"], "createStencilRenderPassDescriptor").mockReturnValue({
+                "colorAttachments": [{ "view": {}, "loadOp": "load", "storeOp": "store" }],
+                "depthStencilAttachment": { "view": {}, "stencilLoadOp": "clear", "stencilStoreOp": "store" }
+            } as unknown as GPURenderPassDescriptor);
+            vi.spyOn(context["pipelineManager"], "getPipeline").mockReturnValue({} as GPURenderPipeline);
+            vi.spyOn(context["bufferManager"], "createVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
+
+            const mockNode = { "x": 0, "y": 0, "w": 10, "h": 10 };
+            const mockPixels = new Uint8Array(10 * 10 * 4);
+
+            context.beginFrame();
+            context.beginNodeRendering(mockNode as any);
+
+            // Verify render pass is active and node area not cleared yet
+            expect(context["renderPassEncoder"]).not.toBeNull();
+            expect(context["nodeAreaCleared"]).toBe(false);
+
+            // Clear mocks
+            mockRenderPassEncoder.end.mockClear();
+            mockRenderPassEncoder.draw.mockClear();
+            mockQueue.submit.mockClear();
+            mockQueue.writeTexture.mockClear();
+
+            // Call drawPixels
+            context.drawPixels(mockNode as any, mockPixels);
+
+            // Verify node area was cleared (draw(6) for quad)
+            expect(mockRenderPassEncoder.draw).toHaveBeenCalledWith(6);
+
+            // Verify render pass was ended after clearing
+            expect(mockRenderPassEncoder.end).toHaveBeenCalled();
+            expect(mockQueue.submit).toHaveBeenCalled();
+            expect(mockQueue.writeTexture).toHaveBeenCalled();
+
+            // Verify render pass is now null
+            expect(context["renderPassEncoder"]).toBeNull();
+        });
+    });
+
+    describe("drawElement", () =>
+    {
+        it("should clear node area and end render pass before copying external image", () =>
+        {
+            const mockAttachment = {
+                "texture": {
+                    "view": {},
+                    "resource": mockTexture
+                },
+                "stencil": {
+                    "view": {}
+                },
+                "width": 4096,
+                "height": 4096,
+                "msaa": false
+            };
+
+            vi.spyOn(context["frameBufferManager"], "getAttachment").mockReturnValue(mockAttachment);
+            vi.spyOn(context["frameBufferManager"], "createStencilRenderPassDescriptor").mockReturnValue({
+                "colorAttachments": [{ "view": {}, "loadOp": "load", "storeOp": "store" }],
+                "depthStencilAttachment": { "view": {}, "stencilLoadOp": "clear", "stencilStoreOp": "store" }
+            } as unknown as GPURenderPassDescriptor);
+            vi.spyOn(context["pipelineManager"], "getPipeline").mockReturnValue({} as GPURenderPipeline);
+            vi.spyOn(context["bufferManager"], "createVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
+
+            // Mock copyExternalImageToTexture
+            mockQueue.copyExternalImageToTexture = vi.fn();
+
+            const mockNode = { "x": 0, "y": 0, "w": 10, "h": 10 };
+            const mockImageBitmap = { "width": 10, "height": 10 } as ImageBitmap;
+
+            context.beginFrame();
+            context.beginNodeRendering(mockNode as any);
+
+            // Verify render pass is active and node area not cleared yet
+            expect(context["renderPassEncoder"]).not.toBeNull();
+            expect(context["nodeAreaCleared"]).toBe(false);
+
+            // Clear mocks
+            mockRenderPassEncoder.end.mockClear();
+            mockRenderPassEncoder.draw.mockClear();
+            mockQueue.submit.mockClear();
+
+            // Call drawElement
+            context.drawElement(mockNode as any, mockImageBitmap);
+
+            // Verify node area was cleared (draw(6) for quad)
+            expect(mockRenderPassEncoder.draw).toHaveBeenCalledWith(6);
+
+            // Verify render pass was ended after clearing
+            expect(mockRenderPassEncoder.end).toHaveBeenCalled();
+            expect(mockQueue.submit).toHaveBeenCalled();
+            expect(mockQueue.copyExternalImageToTexture).toHaveBeenCalled();
+
+            // Verify render pass is now null
+            expect(context["renderPassEncoder"]).toBeNull();
+        });
+    });
 });

@@ -19,7 +19,8 @@ describe("MaskUnionMaskService", () =>
     const createMockBufferManager = () =>
     {
         return {
-            "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" }))
+            "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
+            "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" }))
         } as unknown as BufferManager;
     };
 
@@ -72,11 +73,10 @@ describe("MaskUnionMaskService", () =>
 
             execute(renderPassEncoder, bufferManager, pipelineManager, attachment);
 
-            expect(bufferManager.createVertexBuffer).toHaveBeenCalled();
-            const callArgs = (bufferManager.createVertexBuffer as ReturnType<typeof vi.fn>).mock.calls[0];
-            expect(callArgs[0]).toContain("mask_union_");
-
-            // Check vertex data (Float32Array with 6 vertices * 17 floats each = 102 floats)
+            expect(bufferManager.acquireVertexBuffer).toHaveBeenCalled();
+            const callArgs = (bufferManager.acquireVertexBuffer as ReturnType<typeof vi.fn>).mock.calls[0];
+            // Check vertex data size (Float32Array with 6 vertices * 17 floats each = 102 floats = 408 bytes)
+            expect(callArgs[0]).toBe(408);
             const vertexData = callArgs[1] as Float32Array;
             expect(vertexData.length).toBe(102);
         });
@@ -183,7 +183,7 @@ describe("MaskUnionMaskService", () =>
 
             execute(renderPassEncoder, bufferManager, pipelineManager, null as unknown as IAttachmentObject);
 
-            expect(bufferManager.createVertexBuffer).not.toHaveBeenCalled();
+            expect(bufferManager.acquireVertexBuffer).not.toHaveBeenCalled();
             expect(renderPassEncoder.draw).not.toHaveBeenCalled();
         });
     });

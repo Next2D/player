@@ -10,19 +10,19 @@ import { execute as createStorageBufferService } from "../service/BufferManagerC
  *
  * @param {GPUDevice} device - WebGPU device
  * @param {IPooledStorageBuffer[]} pool - Storage Bufferプール
- * @param {number} requiredSize - 必要なサイズ（バイト）
- * @param {number} currentFrame - 現在のフレーム番号
+ * @param {number} required_size - 必要なサイズ（バイト）
+ * @param {number} current_frame - 現在のフレーム番号
  * @return {GPUBuffer} 取得されたStorage Buffer
  */
 export const execute = (
     device: GPUDevice,
     pool: IPooledStorageBuffer[],
-    requiredSize: number,
-    currentFrame: number
+    required_size: number,
+    current_frame: number
 ): GPUBuffer => {
 
     // アライメントを考慮（256バイト境界）
-    const alignedSize = Math.ceil(requiredSize / 256) * 256;
+    const alignedSize = Math.ceil(required_size / 256) * 256;
 
     // プールから適切なサイズの未使用バッファを検索
     // 最もサイズが近いバッファを選択（メモリ効率）
@@ -41,7 +41,7 @@ export const execute = (
 
     if (bestMatch) {
         bestMatch.inUse = true;
-        bestMatch.lastUsedFrame = currentFrame;
+        bestMatch.lastUsedFrame = current_frame;
         return bestMatch.buffer;
     }
 
@@ -59,54 +59,8 @@ export const execute = (
         "buffer": buffer,
         "size": createSize,
         "inUse": true,
-        "lastUsedFrame": currentFrame
+        "lastUsedFrame": current_frame
     });
 
     return buffer;
-};
-
-/**
- * @description Storage Bufferをプールに返却
- *              Release Storage Buffer back to pool
- *
- * @param {IPooledStorageBuffer[]} pool - Storage Bufferプール
- * @param {GPUBuffer} buffer - 返却するバッファ
- */
-export const releaseStorageBuffer = (
-    pool: IPooledStorageBuffer[],
-    buffer: GPUBuffer
-): void => {
-
-    for (const entry of pool) {
-        if (entry.buffer === buffer) {
-            entry.inUse = false;
-            return;
-        }
-    }
-};
-
-/**
- * @description 古いStorage Bufferをクリーンアップ
- *              Cleanup old Storage Buffers
- *
- * 一定フレーム数使用されていないバッファを解放。
- *
- * @param {IPooledStorageBuffer[]} pool - Storage Bufferプール
- * @param {number} currentFrame - 現在のフレーム番号
- * @param {number} maxAge - 最大保持フレーム数
- */
-export const cleanupStorageBuffers = (
-    pool: IPooledStorageBuffer[],
-    currentFrame: number,
-    maxAge: number = 60
-): void => {
-
-    // 古いバッファを削除
-    for (let i = pool.length - 1; i >= 0; i--) {
-        const entry = pool[i];
-        if (!entry.inUse && currentFrame - entry.lastUsedFrame > maxAge) {
-            entry.buffer.destroy();
-            pool.splice(i, 1);
-        }
-    }
 };

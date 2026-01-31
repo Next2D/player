@@ -28,24 +28,24 @@ import {
  */
 export const execute = (
     device: GPUDevice,
-    commandEncoder: GPUCommandEncoder,
-    renderPassEncoder: GPURenderPassEncoder | null,
-    mainAttachment: IAttachmentObject,
-    bufferManager: BufferManager,
-    frameBufferManager: FrameBufferManager,
-    _textureManager: TextureManager,
-    pipelineManager: PipelineManager
+    command_encoder: GPUCommandEncoder,
+    render_pass_encoder: GPURenderPassEncoder | null,
+    main_attachment: IAttachmentObject,
+    buffer_manager: BufferManager,
+    frame_buffer_manager: FrameBufferManager,
+    _texture_manager: TextureManager,
+    pipeline_manager: PipelineManager
 ): GPURenderPassEncoder | null => {
     const shaderManager = getInstancedShaderManager();
 
     if (shaderManager.count === 0) {
-        return renderPassEncoder;
+        return render_pass_encoder;
     }
 
     // 既存のレンダーパスを終了
-    if (renderPassEncoder) {
-        renderPassEncoder.end();
-        renderPassEncoder = null;
+    if (render_pass_encoder) {
+        render_pass_encoder.end();
+        render_pass_encoder = null;
     }
 
     const isMasked = $isMaskTestEnabled();
@@ -75,12 +75,12 @@ export const execute = (
     };
 
     const pipelineName = getPipelineName(blendMode);
-    const normalPipeline = pipelineManager.getPipeline(pipelineName);
-    const maskedPipeline = pipelineManager.getPipeline("instanced_masked");
+    const normalPipeline = pipeline_manager.getPipeline(pipelineName);
+    const maskedPipeline = pipeline_manager.getPipeline("instanced_masked");
 
     // 実際にマスクを使用するか判定
     // maskedパイプラインが存在し、マスクが有効で、ステンシルがある場合のみ
-    const useStencil = isMasked && maskedPipeline && mainAttachment.stencil?.view;
+    const useStencil = isMasked && maskedPipeline && main_attachment.stencil?.view;
 
     const pipeline = useStencil ? maskedPipeline : normalPipeline;
 
@@ -94,21 +94,21 @@ export const execute = (
 
     if (useStencil) {
         // ステンシル付きレンダーパス（マスク用）
-        const renderPassDescriptor = frameBufferManager.createStencilRenderPassDescriptor(
-            mainAttachment.texture!.view,
-            mainAttachment.stencil!.view,
+        const renderPassDescriptor = frame_buffer_manager.createStencilRenderPassDescriptor(
+            main_attachment.texture!.view,
+            main_attachment.stencil!.view,
             "load", // カラーは既存の内容を保持
             "load"  // ステンシルも既存の内容を保持（マスク情報）
         );
-        passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+        passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
     } else {
         // 通常のレンダーパス
-        const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
-            mainAttachment.texture!.view,
+        const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
+            main_attachment.texture!.view,
             0, 0, 0, 0,
             "load" // 既存の内容を保持
         );
-        passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+        passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
     }
 
     passEncoder.setPipeline(pipeline);
@@ -126,20 +126,14 @@ export const execute = (
         renderQueue.offset  // 要素数
     );
 
-    const instanceBuffer = bufferManager.createVertexBuffer(
-        `instance_${Date.now()}`,
-        instanceData
-    );
+    const instanceBuffer = buffer_manager.acquireVertexBuffer(instanceData.byteLength, instanceData);
 
-    // 頂点バッファ（矩形）を作成
-    const vertices = bufferManager.createRectVertices(0, 0, 1, 1);
-    const vertexBuffer = bufferManager.createVertexBuffer(
-        `vertex_${Date.now()}`,
-        vertices
-    );
+    // 頂点バッファ（矩形）を取得（プールから再利用）
+    const vertices = buffer_manager.createRectVertices(0, 0, 1, 1);
+    const vertexBuffer = buffer_manager.acquireVertexBuffer(vertices.byteLength, vertices);
 
     // アトラステクスチャをバインド
-    const atlasAttachment = frameBufferManager.getAttachment("atlas");
+    const atlasAttachment = frame_buffer_manager.getAttachment("atlas");
     if (!atlasAttachment) {
         console.error("[WebGPU] Atlas attachment not found");
         passEncoder.end();
@@ -158,7 +152,7 @@ export const execute = (
     });
 
     // バインドグループを作成
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("instanced");
+    const bindGroupLayout = pipeline_manager.getBindGroupLayout("instanced");
     if (!bindGroupLayout) {
         console.error("[WebGPU] Instanced bind group layout not found");
         passEncoder.end();

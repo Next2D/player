@@ -23,11 +23,9 @@ vi.mock("../service/BufferManagerCreateStorageBufferService", () => ({
     }))
 }));
 
-import {
-    execute,
-    releaseStorageBuffer,
-    cleanupStorageBuffers
-} from "./BufferManagerAcquireStorageBufferUseCase";
+import { execute } from "./BufferManagerAcquireStorageBufferUseCase";
+import { execute as releaseStorageBuffer } from "./BufferManagerReleaseStorageBufferUseCase";
+import { execute as cleanupStorageBuffers } from "./BufferManagerCleanupStorageBuffersUseCase";
 
 describe("BufferManagerAcquireStorageBufferUseCase", () =>
 {

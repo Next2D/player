@@ -35,17 +35,17 @@ export const execute = (
     green: number,
     blue: number,
     alpha: number,
-    viewportWidth: number,
-    viewportHeight: number
+    viewport_width: number,
+    viewport_height: number
 ): IMeshResult => {
 
     // WebGL版と同じ: 行列をビューポートサイズで正規化
-    const normalizedA  = a / viewportWidth;
-    const normalizedC  = c / viewportWidth;
-    const normalizedTx = tx / viewportWidth;
-    const normalizedB  = b / viewportHeight;
-    const normalizedD  = d / viewportHeight;
-    const normalizedTy = ty / viewportHeight;
+    const normalizedA  = a / viewport_width;
+    const normalizedC  = c / viewport_width;
+    const normalizedTx = tx / viewport_width;
+    const normalizedB  = b / viewport_height;
+    const normalizedD  = d / viewport_height;
+    const normalizedTy = ty / viewport_height;
 
     // 頂点数を計算（各パスの三角形数 × 3）
     let totalVertices = 0;

@@ -30,36 +30,36 @@ import { execute as contextComputeGradientMatrixService } from "../service/Conte
  */
 export const execute = (
     device: GPUDevice,
-    renderPassEncoder: GPURenderPassEncoder,
-    bufferManager: BufferManager,
-    pipelineManager: PipelineManager,
+    render_pass_encoder: GPURenderPassEncoder,
+    buffer_manager: BufferManager,
+    pipeline_manager: PipelineManager,
     vertices: IPath[],
     thickness: number,
-    contextMatrix: Float32Array,
-    strokeStyle: Float32Array,
+    context_matrix: Float32Array,
+    stroke_style: Float32Array,
     type: number,
     stops: number[],
-    gradientMatrix: Float32Array,
+    gradient_matrix: Float32Array,
     spread: number,
     interpolation: number,
     focal: number,
-    viewportWidth: number,
-    viewportHeight: number,
-    useAtlasTarget: boolean
+    viewport_width: number,
+    viewport_height: number,
+    use_atlas_target: boolean
 ): GPUTexture | null => {
     // 色（グラデーション描画ではアルファ乗算用に使用）
-    const red = strokeStyle[0];
-    const green = strokeStyle[1];
-    const blue = strokeStyle[2];
-    const alpha = strokeStyle[3];
+    const red = stroke_style[0];
+    const green = stroke_style[1];
+    const blue = stroke_style[2];
+    const alpha = stroke_style[3];
 
     // 行列を取得
-    const a  = contextMatrix[0];
-    const b  = contextMatrix[1];
-    const c  = contextMatrix[3];
-    const d  = contextMatrix[4];
-    const tx = contextMatrix[6];
-    const ty = contextMatrix[7];
+    const a  = context_matrix[0];
+    const b  = context_matrix[1];
+    const c  = context_matrix[3];
+    const d  = context_matrix[4];
+    const tx = context_matrix[6];
+    const ty = context_matrix[7];
 
     // グラデーションストローク用メッシュを生成
     const mesh = meshGradientStrokeGenerateUseCase(
@@ -67,18 +67,15 @@ export const execute = (
         thickness,
         a, b, c, d, tx, ty,
         red, green, blue, alpha,
-        viewportWidth, viewportHeight
+        viewport_width, viewport_height
     );
 
     if (mesh.indexCount === 0) {
         return null;
     }
 
-    // 頂点バッファを作成
-    const vertexBuffer = bufferManager.createVertexBuffer(
-        `gradient_stroke_${Date.now()}`,
-        mesh.buffer
-    );
+    // 頂点バッファを取得（プールから再利用）
+    const vertexBuffer = buffer_manager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
     // グラデーションLUTテクスチャを生成
     const lutData = generateGradientLUT(stops, spread, interpolation);
@@ -101,7 +98,7 @@ export const execute = (
     );
 
     // WebGL版と同じ計算でグラデーション変換データを取得
-    const gradientData = contextComputeGradientMatrixService(gradientMatrix, contextMatrix, type);
+    const gradientData = contextComputeGradientMatrixService(gradient_matrix, context_matrix, type);
 
     // Uniformバッファを作成
     // GradientUniforms構造体:
@@ -148,10 +145,7 @@ export const execute = (
         uniformData[19] = 0;
     }
 
-    const uniformBuffer = bufferManager.createUniformBuffer(
-        `gradient_stroke_uniform_${Date.now()}`,
-        uniformData.byteLength
-    );
+    const uniformBuffer = buffer_manager.acquireUniformBuffer(uniformData.byteLength);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
     // サンプラーを作成
@@ -163,7 +157,7 @@ export const execute = (
     });
 
     // バインドグループを作成
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("gradient_fill");
+    const bindGroupLayout = pipeline_manager.getBindGroupLayout("gradient_fill");
     if (!bindGroupLayout) {
         console.error("[WebGPU] gradient_fill bind group layout not found");
         lutTexture.destroy();
@@ -180,8 +174,8 @@ export const execute = (
     });
 
     // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
-    const pipelineName = useAtlasTarget ? "gradient_fill" : "gradient_fill_bgra";
-    const pipeline = pipelineManager.getPipeline(pipelineName);
+    const pipelineName = use_atlas_target ? "gradient_fill" : "gradient_fill_bgra";
+    const pipeline = pipeline_manager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         lutTexture.destroy();
@@ -189,10 +183,10 @@ export const execute = (
     }
 
     // 描画
-    renderPassEncoder.setPipeline(pipeline);
-    renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-    renderPassEncoder.setBindGroup(0, bindGroup);
-    renderPassEncoder.draw(mesh.indexCount, 1, 0, 0);
+    render_pass_encoder.setPipeline(pipeline);
+    render_pass_encoder.setVertexBuffer(0, vertexBuffer);
+    render_pass_encoder.setBindGroup(0, bindGroup);
+    render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
 
     // LUTテクスチャを返す（Context.tsでフレーム終了時に解放）
     return lutTexture;

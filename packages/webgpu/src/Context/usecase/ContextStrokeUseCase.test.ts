@@ -42,7 +42,9 @@ describe("ContextStrokeUseCase", () =>
         const mockBuffer = { "label": "mockBuffer" };
         return {
             "createVertexBuffer": vi.fn(() => mockBuffer),
-            "createUniformBuffer": vi.fn(() => mockBuffer)
+            "createUniformBuffer": vi.fn(() => mockBuffer),
+            "acquireVertexBuffer": vi.fn(() => mockBuffer),
+            "acquireUniformBuffer": vi.fn(() => mockBuffer)
         } as unknown as BufferManager;
     };
 
@@ -108,7 +110,7 @@ describe("ContextStrokeUseCase", () =>
                 true
             );
 
-            expect(bufferManager.createVertexBuffer).toHaveBeenCalled();
+            expect(bufferManager.acquireVertexBuffer).toHaveBeenCalled();
         });
 
         it("should create uniform buffer with matrix and color data", () =>
@@ -134,10 +136,7 @@ describe("ContextStrokeUseCase", () =>
             );
 
             // Uniform buffer: 20 floats = 80 bytes
-            expect(bufferManager.createUniformBuffer).toHaveBeenCalledWith(
-                expect.stringContaining("stroke_uniform_"),
-                80
-            );
+            expect(bufferManager.acquireUniformBuffer).toHaveBeenCalledWith(80);
         });
     });
 

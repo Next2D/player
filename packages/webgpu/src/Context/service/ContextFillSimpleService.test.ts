@@ -38,7 +38,8 @@ describe("ContextFillSimpleService", () =>
     {
         const mockBuffer = { "label": "mockUniformBuffer" };
         return {
-            "createUniformBuffer": vi.fn(() => mockBuffer)
+            "createUniformBuffer": vi.fn(() => mockBuffer),
+            "acquireUniformBuffer": vi.fn(() => mockBuffer)
         } as unknown as BufferManager;
     };
 
@@ -74,10 +75,7 @@ describe("ContextFillSimpleService", () =>
 
             execute(device, renderPassEncoder, bufferManager, pipelineManager, vertexBuffer, 12, 800, 600, true);
 
-            expect(bufferManager.createUniformBuffer).toHaveBeenCalledWith(
-                expect.stringContaining("fill_uniform_"),
-                16 // 4 * sizeof(float)
-            );
+            expect(bufferManager.acquireUniformBuffer).toHaveBeenCalledWith(16); // 4 * sizeof(float)
         });
 
         it("should write viewport dimensions to uniform buffer", () =>

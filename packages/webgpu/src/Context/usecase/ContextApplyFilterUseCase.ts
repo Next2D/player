@@ -26,17 +26,17 @@ import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter
  */
 const getTextureFromNode = (
     node: Node,
-    commandEncoder: GPUCommandEncoder,
-    frameBufferManager: FrameBufferManager
+    command_encoder: GPUCommandEncoder,
+    frame_buffer_manager: FrameBufferManager
 ): IAttachmentObject => {
     // 一時アタッチメントを作成（ノードのサイズを使用）
-    const attachment = frameBufferManager.createTemporaryAttachment(node.w, node.h);
+    const attachment = frame_buffer_manager.createTemporaryAttachment(node.w, node.h);
 
     // アトラステクスチャから該当部分をコピー
-    const atlasAttachment = frameBufferManager.getAttachment("atlas");
+    const atlasAttachment = frame_buffer_manager.getAttachment("atlas");
     if (atlasAttachment && atlasAttachment.texture && attachment.texture) {
-        // commandEncoderを使ってコピー
-        commandEncoder.copyTextureToTexture(
+        // command_encoderを使ってコピー
+        command_encoder.copyTextureToTexture(
             {
                 "texture": atlasAttachment.texture.resource,
                 "origin": { "x": node.x, "y": node.y, "z": 0 }
@@ -73,17 +73,17 @@ const getTextureFromNode = (
  */
 const drawFilterToMain = (
     config: ILocalFilterConfig,
-    filterAttachment: IAttachmentObject,
-    _colorTransform: Float32Array,
-    _blendMode: IBlendMode,
+    filter_attachment: IAttachmentObject,
+    _color_transform: Float32Array,
+    _blend_mode: IBlendMode,
     x: number,
     y: number,
-    _mainTextureView: GPUTextureView,
-    _bufferManager: BufferManager
+    _main_texture_view: GPUTextureView,
+    _buffer_manager: BufferManager
 ): void => {
     // メインアタッチメントに描画
     const mainAttachment = config.frameBufferManager.getAttachment("main");
-    if (!mainAttachment || !mainAttachment.texture || !filterAttachment.texture) {
+    if (!mainAttachment || !mainAttachment.texture || !filter_attachment.texture) {
         return;
     }
 
@@ -101,8 +101,8 @@ const drawFilterToMain = (
     // 描画位置とサイズを計算
     let drawX = Math.floor(x);
     let drawY = Math.floor(y);
-    let drawWidth = filterAttachment.width;
-    let drawHeight = filterAttachment.height;
+    let drawWidth = filter_attachment.width;
+    let drawHeight = filter_attachment.height;
 
     // UV座標のオフセット（描画位置が負の場合に調整）
     let uvOffsetX = 0;
@@ -110,12 +110,12 @@ const drawFilterToMain = (
 
     // 負の描画位置を処理（画面外の部分をクリップ）
     if (drawX < 0) {
-        uvOffsetX = -drawX / filterAttachment.width;
+        uvOffsetX = -drawX / filter_attachment.width;
         drawWidth += drawX;
         drawX = 0;
     }
     if (drawY < 0) {
-        uvOffsetY = -drawY / filterAttachment.height;
+        uvOffsetY = -drawY / filter_attachment.height;
         drawHeight += drawY;
         drawY = 0;
     }
@@ -136,8 +136,8 @@ const drawFilterToMain = (
     }
 
     // UV座標のスケール（クリップされた部分を考慮）
-    const uvScaleX = drawWidth / filterAttachment.width;
-    const uvScaleY = drawHeight / filterAttachment.height;
+    const uvScaleX = drawWidth / filter_attachment.width;
+    const uvScaleY = drawHeight / filter_attachment.height;
 
     // ユニフォーム: scale(2) + offset(2)
     const uniformData = new Float32Array([uvScaleX, uvScaleY, uvOffsetX, uvOffsetY]);
@@ -154,7 +154,7 @@ const drawFilterToMain = (
         "entries": [
             { "binding": 0, "resource": { "buffer": uniformBuffer } },
             { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": filterAttachment.texture.view }
+            { "binding": 2, "resource": filter_attachment.texture.view }
         ]
     });
 
@@ -199,13 +199,13 @@ export const execute = (
     _width: number,
     _height: number,
     matrix: Float32Array,
-    colorTransform: Float32Array,
-    blendMode: IBlendMode,
+    color_transform: Float32Array,
+    blend_mode: IBlendMode,
     bounds: Float32Array,
     params: Float32Array,
     config: ILocalFilterConfig,
-    mainTextureView: GPUTextureView,
-    bufferManager: BufferManager
+    main_texture_view: GPUTextureView,
+    buffer_manager: BufferManager
 ): void => {
     // オフセットを初期化
     $offset.x = 0;
@@ -516,12 +516,12 @@ export const execute = (
     drawFilterToMain(
         config,
         filterAttachment,
-        colorTransform,
-        blendMode,
+        color_transform,
+        blend_mode,
         drawX,
         drawY,
-        mainTextureView,
-        bufferManager
+        main_texture_view,
+        buffer_manager
     );
 
     // フィルター用アタッチメントを解放

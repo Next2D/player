@@ -12,7 +12,7 @@ import { StencilWriteFragment, StencilFillFragment } from "./wgsl/fragment/Stenc
 import { MaskFragment } from "./wgsl/fragment/MaskFragment";
 import { BasicFragment, TextureFragment } from "./wgsl/fragment/BasicFragment";
 import { InstancedFragment } from "./wgsl/fragment/InstancedFragment";
-import { GradientFillFragment, GradientFragment } from "./wgsl/fragment/GradientFragment";
+import { GradientFillFragment, GradientFillStencilFragment, GradientFragment } from "./wgsl/fragment/GradientFragment";
 import { BitmapFillFragment } from "./wgsl/fragment/BitmapFragment";
 import {
     TextureCopyFragment,
@@ -206,6 +206,16 @@ export class ShaderSource
     static getGradientFillFragmentShader (): string
     {
         return GradientFillFragment;
+    }
+
+    /**
+     * @description 2パスステンシルフィル用グラデーションフラグメントシェーダー（bezierチェックなし）
+     *              Pass 1でステンシルに書き込み済みのため、Pass 2ではbezierチェックは不要
+     * @return {string}
+     */
+    static getGradientFillStencilFragmentShader (): string
+    {
+        return GradientFillStencilFragment;
     }
 
     /**

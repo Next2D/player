@@ -135,6 +135,9 @@ export class Context
     // ノード領域クリア済みフラグ（beginNodeRendering〜endNodeRendering間で使用）
     private nodeAreaCleared: boolean = false;
 
+    // 現在のノードのシザー範囲（クリア後に戻すため）
+    private currentNodeScissor: { x: number; y: number; w: number; h: number } | null = null;
+
     // Storage Buffer + Indirect Drawing を使用するかどうか
     private useOptimizedInstancing: boolean = true;
 
@@ -379,8 +382,9 @@ export class Context
             // アトラスのパッキングデータをリセット（WebGL版と同じ）
             $resetAtlas();
             // FrameBufferManagerのアトラステクスチャを再作成（古いコンテンツをクリア）
+            // ステンシルバッファを有効にする（2パスステンシルフィル用）
             this.frameBufferManager.destroyAttachment("atlas");
-            this.frameBufferManager.createAttachment("atlas", 4096, 4096);
+            this.frameBufferManager.createAttachment("atlas", 4096, 4096, false, true);
         }
 
         // アンバインド（WebGL版と同じ）
@@ -400,8 +404,10 @@ export class Context
 
         // メインアタッチメントを作成（ステンシル付き、マスク描画用）
         // WebGL版と同じ: $mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, true)
+        // 最後のパラメータ(mask=true)でステンシルバッファを有効化
+        // グラデーション塗りつぶしの中抜き描画（hollow shape）にも必要
         this.$mainAttachmentObject = this.frameBufferManager.createAttachment(
-            "main", width, height, false, false
+            "main", width, height, false, true
         );
 
         // メインアタッチメントをバインド
@@ -654,11 +660,13 @@ export class Context
                     ? attachment.msaaStencil.view
                     : attachment.stencil.view;
 
+                // ステンシルは常にクリア（2パスフィル描画のため）
+                // 各描画ごとにステンシルを0からスタートする必要がある
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
                     colorView,
                     stencilView,
                     "load",
-                    "load",
+                    "clear",  // ステンシルをクリア
                     resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
@@ -727,11 +735,8 @@ export class Context
             return;
         }
 
-        // 頂点バッファを作成（17 floats per vertex）
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            `fill_${Date.now()}`,
-            mesh.buffer
-        );
+        // 頂点バッファを取得（プールから再利用）
+        const vertexBuffer = this.bufferManager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
         // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
         const attachment = this.frameBufferManager.getAttachment("atlas");
@@ -895,11 +900,13 @@ export class Context
                     ? attachment.msaaStencil.view
                     : attachment.stencil.view;
 
+                // ステンシルは常にクリア（2パスフィル描画のため）
+                // 各描画ごとにステンシルを0からスタートする必要がある
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
                     colorView,
                     stencilView,
                     "load",
-                    "load",
+                    "clear",  // ステンシルをクリア
                     resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
@@ -968,11 +975,8 @@ export class Context
             return;
         }
 
-        // 頂点バッファを作成（17 floats per vertex）
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            `stroke_${Date.now()}`,
-            mesh.buffer
-        );
+        // 頂点バッファを取得（プールから再利用）
+        const vertexBuffer = this.bufferManager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
         // ストロークは常に単純なfillで描画（ステンシルフィルは使用しない）
         // 理由: ストロークは複数の重なり合う矩形として生成され、
@@ -1403,10 +1407,13 @@ export class Context
         if (!this.renderPassEncoder) {
             const textureView = this.getCurrentTextureView();
 
-            // ステンシル付きレンダーパスが必要な場合を判定
-            // グラデーション塗りつぶしでは、マスクモード時のみステンシルが必要
-            // （アトラスへの描画時はステンシル不要 - clip操作でのみステンシルを使用）
-            const needsMainStencil = !this.currentRenderTarget && ($isMaskTestEnabled() || $isMaskDrawing()) && this.$mainAttachmentObject?.stencil?.view;
+            // メインキャンバス直接描画時はステンシル付きレンダーパスが必要
+            // 中抜き描画（hollow shape）を正しく処理するため
+            const needsMainStencil = !this.currentRenderTarget && this.$mainAttachmentObject?.stencil?.view;
+
+            // アトラス描画時もステンシル付きレンダーパスが必要（2パスステンシルフィル用）
+            const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
+            const needsAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
 
             if (needsMainStencil) {
                 // メインアタッチメント用ステンシルレンダーパス
@@ -1414,15 +1421,24 @@ export class Context
                     this.$mainAttachmentObject!.texture!.view,
                     this.$mainAttachmentObject!.stencil!.view,
                     "load",
-                    "load"  // ステンシルは既存の値を保持（マスク情報）
+                    "clear"  // ステンシルをクリア（中抜き描画用）
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
                 // マスクテスト時はステンシル参照値を設定
                 if ($isMaskTestEnabled()) {
                     this.renderPassEncoder.setStencilReference($getMaskStencilReference());
                 }
+            } else if (needsAtlasStencil) {
+                // アトラス描画時：ステンシル付きレンダーパス（2パスステンシルフィル用）
+                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                    textureView,
+                    atlasAttachment!.stencil!.view,
+                    "load",
+                    "clear"  // ステンシルをクリア（中抜き描画用）
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             } else {
-                // ステンシル無しレンダーパス（アトラス描画時もステンシル不要）
+                // ステンシル不要の通常レンダーパス
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
                     textureView,
                     0, 0, 0, 0,
@@ -1935,12 +1951,12 @@ export class Context
             // シザーレクトで描画範囲を制限
             // シェーダーでY軸反転(-ndc.y)しているため、描画結果はWebGPU座標系でnode.y位置になる
             // WebGPUのシザーは左上原点なのでnode.yをそのまま使用
-            // 1pxパディングを追加して境界のアーティファクトを防止
-            const padding = 1;
-            let scissorX = Math.max(0, node.x - padding);
-            let scissorY = Math.max(0, node.y - padding);
-            let scissorW = Math.min(node.w + padding * 2, attachment.width - scissorX);
-            let scissorH = Math.min(node.h + padding * 2, attachment.height - scissorY);
+
+            // WebGL版と同じ: 描画範囲は (x, y, w, h)
+            let scissorX = Math.max(0, node.x);
+            let scissorY = Math.max(0, node.y);
+            let scissorW = Math.min(node.w, attachment.width - scissorX);
+            let scissorH = Math.min(node.h, attachment.height - scissorY);
 
             // レンダーターゲット範囲内にクランプ
             scissorX = Math.min(scissorX, attachment.width);
@@ -1948,10 +1964,15 @@ export class Context
             scissorW = Math.max(0, Math.min(scissorW, attachment.width - scissorX));
             scissorH = Math.max(0, Math.min(scissorH, attachment.height - scissorY));
 
+            // ノードのシザー範囲を保存（クリア後に戻すため）
+            this.currentNodeScissor = { "x": scissorX, "y": scissorY, "w": scissorW, "h": scissorH };
+
             if (scissorW > 0 && scissorH > 0) {
-                this.renderPassEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
-                // clearNodeArea()は最初の描画操作で呼び出す（ensureNodeAreaCleared経由）
-                // drawPixelsはqueue.writeTextureを使うため、クリアは不要
+                // WebGL版と同じ: クリア時は +1px 拡張（右下方向のみ）
+                const clearW = Math.min(scissorW + 1, attachment.width - scissorX);
+                const clearH = Math.min(scissorH + 1, attachment.height - scissorY);
+                this.renderPassEncoder.setScissorRect(scissorX, scissorY, clearW, clearH);
+                // クリアは ensureNodeAreaCleared() で遅延実行
             }
         }
     }
@@ -2002,10 +2023,20 @@ export class Context
             quadVertices
         );
 
-        // クリア描画を実行
+        // クリア描画を実行（シザーは+1pxで設定済み）
         this.renderPassEncoder.setPipeline(clearPipeline);
         this.renderPassEncoder.setVertexBuffer(0, vertexBuffer);
         this.renderPassEncoder.draw(6);
+
+        // WebGL版と同じ: クリア後にシザーを元のサイズに戻す
+        if (this.currentNodeScissor) {
+            this.renderPassEncoder.setScissorRect(
+                this.currentNodeScissor.x,
+                this.currentNodeScissor.y,
+                this.currentNodeScissor.w,
+                this.currentNodeScissor.h
+            );
+        }
     }
 
     /**
@@ -2022,6 +2053,9 @@ export class Context
 
         // メインテクスチャに戻す
         this.currentRenderTarget = null;
+
+        // ノードシザー範囲をクリア
+        this.currentNodeScissor = null;
 
         // ビューポートをキャンバスサイズに戻す
         this.viewportWidth = this.canvasContext.canvas.width;
@@ -2225,6 +2259,19 @@ export class Context
         // ピクセルデータをテクスチャにコピー
         if (!attachment.texture) { return }
 
+        // レンダーパスがアクティブな場合は、まずノード領域をクリアしてから終了
+        // queue.writeTextureはレンダーパスと同時に同じテクスチャに書き込めない
+        if (this.renderPassEncoder) {
+            // WebGL版と同じ: +1px領域をクリア（残像防止）
+            this.ensureNodeAreaCleared();
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+        if (this.commandEncoder) {
+            this.device.queue.submit([this.commandEncoder.finish()]);
+            this.commandEncoder = null;
+        }
+
         // ピクセルデータを上下反転してコピー（Shapeの描画方向と一致させる）
         // Shapeはシェーダーで-ndc.yにより上下反転されるため、
         // Bitmapも同様に上下反転して書き込む
@@ -2275,6 +2322,19 @@ export class Context
         // OffscreenCanvasまたはImageBitmapをアトラステクスチャにコピー
         const attachment = this.frameBufferManager.getAttachment("atlas");
         if (!attachment || !attachment.texture) { return }
+
+        // レンダーパスがアクティブな場合は、まずノード領域をクリアしてから終了
+        // queue.copyExternalImageToTextureはレンダーパスと同時に同じテクスチャに書き込めない
+        if (this.renderPassEncoder) {
+            // WebGL版と同じ: +1px領域をクリア（残像防止）
+            this.ensureNodeAreaCleared();
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+        if (this.commandEncoder) {
+            this.device.queue.submit([this.commandEncoder.finish()]);
+            this.commandEncoder = null;
+        }
 
         try {
             this.device.queue.copyExternalImageToTexture(
@@ -2590,10 +2650,7 @@ export class Context
 
         // Uniform: scale = (1, 1), offset = (0, 0) で 1:1 コピー
         const uniformData = new Float32Array([1.0, 1.0, 0.0, 0.0]);
-        const uniformBuffer = this.bufferManager.createUniformBuffer(
-            `transfer_uniform_${Date.now()}`,
-            uniformData.byteLength
-        );
+        const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
         // サンプラーを作成
@@ -2923,10 +2980,7 @@ export class Context
                     1, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
                     0, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1
                 ]);
-                const meshBuffer = this.bufferManager.createVertexBuffer(
-                    `stencil_clear_mesh_${Date.now()}`,
-                    fullScreenMesh
-                );
+                const meshBuffer = this.bufferManager.acquireVertexBuffer(fullScreenMesh.byteLength, fullScreenMesh);
 
                 passEncoder.setPipeline(pipeline);
                 passEncoder.setStencilReference(0); // 参照値0でREPLACE

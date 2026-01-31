@@ -138,19 +138,13 @@ export const execute = (
         instanceBuffer = bufferManager.acquireStorageBuffer(instanceData.byteLength);
         bufferManager.writeStorageBuffer(instanceBuffer, instanceData);
     } else {
-        // 従来方式: 毎回新しいVertex Bufferを作成
-        instanceBuffer = bufferManager.createVertexBuffer(
-            `instance_indirect_${Date.now()}`,
-            instanceData
-        );
+        // 従来方式: プールから再利用
+        instanceBuffer = bufferManager.acquireVertexBuffer(instanceData.byteLength, instanceData);
     }
 
-    // 頂点バッファ（矩形）を作成
+    // 頂点バッファ（矩形）を取得（プールから再利用）
     const vertices = bufferManager.createRectVertices(0, 0, 1, 1);
-    const vertexBuffer = bufferManager.createVertexBuffer(
-        `vertex_indirect_${Date.now()}`,
-        vertices
-    );
+    const vertexBuffer = bufferManager.acquireVertexBuffer(vertices.byteLength, vertices);
 
     // アトラステクスチャをバインド
     const atlasAttachment = frameBufferManager.getAttachment("atlas");

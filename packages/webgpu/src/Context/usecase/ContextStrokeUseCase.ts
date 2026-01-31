@@ -23,17 +23,17 @@ import { generateStrokeMesh } from "../../Mesh/usecase/MeshStrokeGenerateUseCase
  */
 export const execute = (
     device: GPUDevice,
-    renderPassEncoder: GPURenderPassEncoder,
-    bufferManager: BufferManager,
-    pipelineManager: PipelineManager,
+    render_pass_encoder: GPURenderPassEncoder,
+    buffer_manager: BufferManager,
+    pipeline_manager: PipelineManager,
     vertices: IPath[],
     thickness: number,
-    contextMatrix: Float32Array,
-    strokeStyle: Float32Array,
-    globalAlpha: number,
-    viewportWidth: number,
-    viewportHeight: number,
-    useAtlasTarget: boolean
+    context_matrix: Float32Array,
+    stroke_style: Float32Array,
+    global_alpha: number,
+    viewport_width: number,
+    viewport_height: number,
+    use_atlas_target: boolean
 ): void => {
     if (!vertices.length) {
         return;
@@ -44,26 +44,23 @@ export const execute = (
 
     if (meshVertices.length === 0) { return }
 
-    // 頂点バッファを作成
-    const vertexBuffer = bufferManager.createVertexBuffer(
-        `stroke_${Date.now()}`,
-        meshVertices
-    );
+    // 頂点バッファを取得（プールから再利用）
+    const vertexBuffer = buffer_manager.acquireVertexBuffer(meshVertices.byteLength, meshVertices);
 
     // WebGL版と同じ: 行列をビューポートサイズで正規化
-    const a  = contextMatrix[0];
-    const b  = contextMatrix[1];
-    const c  = contextMatrix[3];
-    const d  = contextMatrix[4];
-    const tx = contextMatrix[6];
-    const ty = contextMatrix[7];
+    const a  = context_matrix[0];
+    const b  = context_matrix[1];
+    const c  = context_matrix[3];
+    const d  = context_matrix[4];
+    const tx = context_matrix[6];
+    const ty = context_matrix[7];
 
-    const normalizedA  = a / viewportWidth;
-    const normalizedB  = b / viewportHeight;
-    const normalizedC  = c / viewportWidth;
-    const normalizedD  = d / viewportHeight;
-    const normalizedTx = tx / viewportWidth;
-    const normalizedTy = ty / viewportHeight;
+    const normalizedA  = a / viewport_width;
+    const normalizedB  = b / viewport_height;
+    const normalizedC  = c / viewport_width;
+    const normalizedD  = d / viewport_height;
+    const normalizedTx = tx / viewport_width;
+    const normalizedTy = ty / viewport_height;
 
     // Uniformバッファを作成（WGSLのアライメントに合わせる）
     // mat3x3<f32>は各列がvec4にパディングされる: 3 x vec4 = 48 bytes (12 floats)
@@ -87,24 +84,21 @@ export const execute = (
     uniformData[10] = 1;
     uniformData[11] = 0; // padding
     // color (vec4)
-    uniformData[12] = strokeStyle[0];
-    uniformData[13] = strokeStyle[1];
-    uniformData[14] = strokeStyle[2];
-    uniformData[15] = strokeStyle[3];
+    uniformData[12] = stroke_style[0];
+    uniformData[13] = stroke_style[1];
+    uniformData[14] = stroke_style[2];
+    uniformData[15] = stroke_style[3];
     // alpha + padding
-    uniformData[16] = globalAlpha;
+    uniformData[16] = global_alpha;
     uniformData[17] = 0; // padding
     uniformData[18] = 0; // padding
     uniformData[19] = 0; // padding
 
-    const uniformBuffer = bufferManager.createUniformBuffer(
-        `stroke_uniform_${Date.now()}`,
-        uniformData.byteLength
-    );
+    const uniformBuffer = buffer_manager.acquireUniformBuffer(uniformData.byteLength);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
     // バインドグループを作成
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("basic");
+    const bindGroupLayout = pipeline_manager.getBindGroupLayout("basic");
     if (!bindGroupLayout) {
         console.error("[WebGPU] Basic bind group layout not found");
         return;
@@ -119,15 +113,15 @@ export const execute = (
     });
 
     // パイプラインを取得して描画（アトラス用かキャンバス用かで切り替え）
-    const pipelineName = useAtlasTarget ? "basic" : "basic_bgra";
-    const pipeline = pipelineManager.getPipeline(pipelineName);
+    const pipelineName = use_atlas_target ? "basic" : "basic_bgra";
+    const pipeline = pipeline_manager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         return;
     }
 
-    renderPassEncoder.setPipeline(pipeline);
-    renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-    renderPassEncoder.setBindGroup(0, bindGroup);
-    renderPassEncoder.draw(meshVertices.length / 4, 1, 0, 0);
+    render_pass_encoder.setPipeline(pipeline);
+    render_pass_encoder.setVertexBuffer(0, vertexBuffer);
+    render_pass_encoder.setBindGroup(0, bindGroup);
+    render_pass_encoder.draw(meshVertices.length / 4, 1, 0, 0);
 };
