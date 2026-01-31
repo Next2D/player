@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import type { ICachedBindGroup } from "../interface/ICachedBindGroup";
+import type { ICachedBindGroup } from "../../interface/ICachedBindGroup";
 import { execute } from "./BindGroupCacheCleanupService";
 
 describe("BindGroupCacheCleanupService", () =>

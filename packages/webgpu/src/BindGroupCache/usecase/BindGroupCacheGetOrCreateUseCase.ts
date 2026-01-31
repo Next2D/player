@@ -1,4 +1,4 @@
-import type { ICachedBindGroup } from "../interface/ICachedBindGroup";
+import type { ICachedBindGroup } from "../../interface/ICachedBindGroup";
 import { execute as bindGroupCacheEvictOldestService } from "../service/BindGroupCacheEvictOldestService";
 
 /**

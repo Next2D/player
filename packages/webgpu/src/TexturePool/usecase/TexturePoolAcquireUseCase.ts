@@ -1,4 +1,4 @@
-import type { IPooledTexture } from "../interface/IPooledTexture";
+import type { IPooledTexture } from "../../interface/IPooledTexture";
 import { execute as texturePoolEvictOldestService } from "../service/TexturePoolEvictOldestService";
 
 /**

@@ -1,4 +1,4 @@
-import type { IPerformanceResult } from "./interface/IPerformanceResult";
+import type { IPerformanceResult } from "../interface/IPerformanceResult";
 import { execute as createQuerySetService } from "./service/PerformanceMonitorCreateQuerySetService";
 import { execute as measurePassUseCase } from "./usecase/PerformanceMonitorMeasurePassUseCase";
 

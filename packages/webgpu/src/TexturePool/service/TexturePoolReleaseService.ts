@@ -1,4 +1,4 @@
-import type { IPooledTexture } from "../interface/IPooledTexture";
+import type { IPooledTexture } from "../../interface/IPooledTexture";
 
 /**
  * @description テクスチャをプールに返却

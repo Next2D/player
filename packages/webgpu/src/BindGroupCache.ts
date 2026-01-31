@@ -1,4 +1,4 @@
-import type { ICachedBindGroup } from "./BindGroupCache/interface/ICachedBindGroup";
+import type { ICachedBindGroup } from "./interface/ICachedBindGroup";
 import { execute as bindGroupCacheGetOrCreateUseCase } from "./BindGroupCache/usecase/BindGroupCacheGetOrCreateUseCase";
 import { execute as bindGroupCacheCleanupService } from "./BindGroupCache/service/BindGroupCacheCleanupService";
 

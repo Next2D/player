@@ -1,4 +1,4 @@
-import type { IPerformanceResult } from "../interface/IPerformanceResult";
+import type { IPerformanceResult } from "../../interface/IPerformanceResult";
 
 /**
  * @description パフォーマンス計測結果を解析

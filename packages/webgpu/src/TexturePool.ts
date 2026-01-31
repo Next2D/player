@@ -1,4 +1,4 @@
-import type { IPooledTexture } from "./TexturePool/interface/IPooledTexture";
+import type { IPooledTexture } from "./interface/IPooledTexture";
 import { execute as texturePoolAcquireUseCase } from "./TexturePool/usecase/TexturePoolAcquireUseCase";
 import { execute as texturePoolReleaseService } from "./TexturePool/service/TexturePoolReleaseService";
 import { execute as texturePoolCleanupService } from "./TexturePool/service/TexturePoolCleanupService";

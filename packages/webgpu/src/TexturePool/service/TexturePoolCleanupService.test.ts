@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { IPooledTexture } from "../interface/IPooledTexture";
+import type { IPooledTexture } from "../../interface/IPooledTexture";
 import { execute } from "./TexturePoolCleanupService";
 
 describe("TexturePoolCleanupService", () =>

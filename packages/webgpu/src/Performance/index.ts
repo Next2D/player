@@ -3,4 +3,4 @@ export type {
     PerformanceLabel,
     IPerformanceStats
 } from "./PerformanceMonitor";
-export type { IPerformanceResult } from "./interface/IPerformanceResult";
+export type { IPerformanceResult } from "../interface/IPerformanceResult";
