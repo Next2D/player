@@ -161,7 +161,7 @@ export class Context
 
         // Set render max size same as WebGL (half of max texture size, minimum 2048)
         const maxTextureSize = device.limits.maxTextureDimension2D;
-        const renderMaxSize = Math.min(2048, maxTextureSize / 2);
+        const renderMaxSize = Math.max(2048, maxTextureSize / 2);
         WebGPUUtil.setRenderMaxSize(renderMaxSize);
 
         this.$stack = WebGPUUtil.createArray();
