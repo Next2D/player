@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Sprite Mask</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 700, 60);
+        const { Shape, Sprite, BlendMode } = next2d.display;
+        const { TextField, TextFormat } = next2d.text;
+        const { Video } = next2d.media;
+        const { GlowFilter, BevelFilter, DropShadowFilter, BlurFilter } = next2d.filters;
+
+        const videoPath = "/e2e/fixtures/videos/movie.mp4";
+
+        const titleFormat = new TextFormat();
+        titleFormat.size = 14;
+        titleFormat.color = 0xFFFFFF;
+        titleFormat.bold = true;
+
+        // ===== 円形マスク =====
+        const sectionTitle1 = new TextField();
+        sectionTitle1.x = 20;
+        sectionTitle1.y = 10;
+        sectionTitle1.width = 200;
+        sectionTitle1.height = 20;
+        sectionTitle1.defaultTextFormat = titleFormat;
+        sectionTitle1.text = "Circle Mask";
+        root.addChild(sectionTitle1);
+
+        const container1 = new Sprite();
+        container1.x = 20;
+        container1.y = 35;
+        root.addChild(container1);
+
+        // マスク対象（グラデーション背景）
+        const { Matrix } = next2d.geom;
+        const matrix1 = new Matrix();
+        matrix1.createGradientBox(150, 150, Math.PI / 4, 0, 0);
+        const target1 = new Shape();
+        target1.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x00FF00, 0x0000FF],
+                [1, 1, 1],
+                [0, 127, 255],
+                matrix1
+            )
+            .drawRect(0, 0, 150, 150)
+            .endFill();
+        container1.addChild(target1);
+
+        // 円形マスク
+        const circleMask = new Shape();
+        circleMask.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawCircle(75, 75, 60)
+            .endFill();
+        container1.addChild(circleMask);
+        target1.mask = circleMask;
+
+        // ===== 矩形マスク =====
+        const sectionTitle2 = new TextField();
+        sectionTitle2.x = 200;
+        sectionTitle2.y = 10;
+        sectionTitle2.width = 200;
+        sectionTitle2.height = 20;
+        sectionTitle2.defaultTextFormat = titleFormat;
+        sectionTitle2.text = "Rectangle Mask";
+        root.addChild(sectionTitle2);
+
+        const container2 = new Sprite();
+        container2.x = 200;
+        container2.y = 35;
+        root.addChild(container2);
+
+        const target2 = new Shape();
+        target2.graphics
+            .beginFill(0xFF6600, 1.0)
+            .drawRect(0, 0, 150, 150)
+            .endFill();
+        container2.addChild(target2);
+
+        // 矩形マスク
+        const rectMask = new Shape();
+        rectMask.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawRect(20, 20, 110, 110)
+            .endFill();
+        container2.addChild(rectMask);
+        target2.mask = rectMask;
+
+        // ===== 複雑なパスマスク =====
+        const sectionTitle3 = new TextField();
+        sectionTitle3.x = 380;
+        sectionTitle3.y = 10;
+        sectionTitle3.width = 200;
+        sectionTitle3.height = 20;
+        sectionTitle3.defaultTextFormat = titleFormat;
+        sectionTitle3.text = "Star Mask";
+        root.addChild(sectionTitle3);
+
+        const container3 = new Sprite();
+        container3.x = 380;
+        container3.y = 35;
+        root.addChild(container3);
+
+        const target3 = new Shape();
+        const matrix3 = new Matrix();
+        matrix3.createGradientBox(150, 150, 0, 0, 0);
+        target3.graphics
+            .beginGradientFill(
+                "radial",
+                [0xFFFF00, 0xFF00FF],
+                [1, 1],
+                [0, 255],
+                matrix3
+            )
+            .drawRect(0, 0, 150, 150)
+            .endFill();
+        container3.addChild(target3);
+
+        // 星形マスク
+        const starMask = new Shape();
+        const cx = 75, cy = 75;
+        const outerRadius = 60, innerRadius = 25;
+        const points = 5;
+        starMask.graphics.beginFill(0xFFFFFF, 1.0);
+        for (let i = 0; i < points * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const angle = (Math.PI / points) * i - Math.PI / 2;
+            const x = cx + Math.cos(angle) * radius;
+            const y = cy + Math.sin(angle) * radius;
+            if (i === 0) {
+                starMask.graphics.moveTo(x, y);
+            } else {
+                starMask.graphics.lineTo(x, y);
+            }
+        }
+        starMask.graphics.endFill();
+        container3.addChild(starMask);
+        target3.mask = starMask;
+
+        // ===== 角丸矩形マスク =====
+        const sectionTitle4 = new TextField();
+        sectionTitle4.x = 560;
+        sectionTitle4.y = 10;
+        sectionTitle4.width = 200;
+        sectionTitle4.height = 20;
+        sectionTitle4.defaultTextFormat = titleFormat;
+        sectionTitle4.text = "RoundRect Mask";
+        root.addChild(sectionTitle4);
+
+        const container4 = new Sprite();
+        container4.x = 560;
+        container4.y = 35;
+        root.addChild(container4);
+
+        const target4 = new Shape();
+        target4.graphics
+            .beginFill(0x00AAFF, 1.0)
+            .drawRect(0, 0, 150, 150)
+            .endFill();
+        container4.addChild(target4);
+
+        // 角丸矩形マスク
+        const roundRectMask = new Shape();
+        roundRectMask.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawRoundRect(10, 10, 130, 130, 30, 30)
+            .endFill();
+        container4.addChild(roundRectMask);
+        target4.mask = roundRectMask;
+
+        // ===== Videoにマスク =====
+        const sectionTitle5 = new TextField();
+        sectionTitle5.x = 20;
+        sectionTitle5.y = 200;
+        sectionTitle5.width = 200;
+        sectionTitle5.height = 20;
+        sectionTitle5.defaultTextFormat = titleFormat;
+        sectionTitle5.text = "Video with Circle Mask";
+        root.addChild(sectionTitle5);
+
+        const container5 = new Sprite();
+        container5.x = 20;
+        container5.y = 225;
+        root.addChild(container5);
+
+        // VideoをSpriteでラップしてマスク適用
+        const videoWrapper1 = new Sprite();
+        const video1 = new Video(150, 110);
+        video1.src = videoPath;
+        videoWrapper1.addChild(video1);
+        container5.addChild(videoWrapper1);
+
+        const videoCircleMask = new Shape();
+        videoCircleMask.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawCircle(75, 55, 50)
+            .endFill();
+        container5.addChild(videoCircleMask);
+        videoWrapper1.mask = videoCircleMask;
+
+        // ===== TextFieldにマスク =====
+        const sectionTitle6 = new TextField();
+        sectionTitle6.x = 200;
+        sectionTitle6.y = 200;
+        sectionTitle6.width = 200;
+        sectionTitle6.height = 20;
+        sectionTitle6.defaultTextFormat = titleFormat;
+        sectionTitle6.text = "TextField with Mask";
+        root.addChild(sectionTitle6);
+
+        const container6 = new Sprite();
+        container6.x = 200;
+        container6.y = 225;
+        root.addChild(container6);
+
+        // TextFieldをSpriteでラップしてマスク適用
+        const textWrapper1 = new Sprite();
+        const textField1 = new TextField();
+        textField1.width = 150;
+        textField1.height = 110;
+        textField1.background = true;
+        textField1.backgroundColor = 0x336699;
+        const textFormat = new TextFormat();
+        textFormat.size = 24;
+        textFormat.color = 0xFFFFFF;
+        textFormat.bold = true;
+        textFormat.align = "center";
+        textField1.defaultTextFormat = textFormat;
+        textField1.text = "MASKED TEXT";
+        textWrapper1.addChild(textField1);
+        container6.addChild(textWrapper1);
+
+        const textCircleMask = new Shape();
+        textCircleMask.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawCircle(75, 55, 50)
+            .endFill();
+        container6.addChild(textCircleMask);
+        textWrapper1.mask = textCircleMask;
+
+        // ===== マスク + フィルター =====
+        const sectionTitle7 = new TextField();
+        sectionTitle7.x = 380;
+        sectionTitle7.y = 200;
+        sectionTitle7.width = 200;
+        sectionTitle7.height = 20;
+        sectionTitle7.defaultTextFormat = titleFormat;
+        sectionTitle7.text = "Mask + GlowFilter";
+        root.addChild(sectionTitle7);
+
+        const container7 = new Sprite();
+        container7.x = 380;
+        container7.y = 225;
+        root.addChild(container7);
+
+        const target7 = new Shape();
+        target7.graphics
+            .beginFill(0xFF0066, 1.0)
+            .drawRect(0, 0, 150, 110)
+            .endFill();
+        target7.filters = [new GlowFilter(0x00FF00, 1, 15, 15, 2, 1)];
+        container7.addChild(target7);
+
+        const mask7 = new Shape();
+        mask7.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawCircle(75, 55, 45)
+            .endFill();
+        container7.addChild(mask7);
+        target7.mask = mask7;
+
+        // ===== マスク + BlendMode =====
+        const sectionTitle8 = new TextField();
+        sectionTitle8.x = 560;
+        sectionTitle8.y = 200;
+        sectionTitle8.width = 200;
+        sectionTitle8.height = 20;
+        sectionTitle8.defaultTextFormat = titleFormat;
+        sectionTitle8.text = "Mask + BlendMode";
+        root.addChild(sectionTitle8);
+
+        const container8 = new Sprite();
+        container8.x = 560;
+        container8.y = 225;
+        root.addChild(container8);
+
+        // 背景
+        const bg8 = new Shape();
+        bg8.graphics
+            .beginFill(0x0000FF, 1.0)
+            .drawRect(0, 0, 150, 110)
+            .endFill();
+        container8.addChild(bg8);
+
+        const target8 = new Shape();
+        target8.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawRect(0, 0, 150, 110)
+            .endFill();
+        target8.blendMode = BlendMode.ADD;
+        container8.addChild(target8);
+
+        const mask8 = new Shape();
+        mask8.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawCircle(75, 55, 45)
+            .endFill();
+        container8.addChild(mask8);
+        target8.mask = mask8;
+
+        // ===== 複数オブジェクトに同一マスク =====
+        const sectionTitle9 = new TextField();
+        sectionTitle9.x = 20;
+        sectionTitle9.y = 360;
+        sectionTitle9.width = 300;
+        sectionTitle9.height = 20;
+        sectionTitle9.defaultTextFormat = titleFormat;
+        sectionTitle9.text = "Multiple Objects with Same Mask";
+        root.addChild(sectionTitle9);
+
+        const container9 = new Sprite();
+        container9.x = 20;
+        container9.y = 385;
+        root.addChild(container9);
+
+        const shape9a = new Shape();
+        shape9a.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawRect(0, 0, 80, 100)
+            .endFill();
+        container9.addChild(shape9a);
+
+        const shape9b = new Shape();
+        shape9b.graphics
+            .beginFill(0x00FF00, 1.0)
+            .drawRect(60, 0, 80, 100)
+            .endFill();
+        container9.addChild(shape9b);
+
+        const shape9c = new Shape();
+        shape9c.graphics
+            .beginFill(0x0000FF, 1.0)
+            .drawRect(120, 0, 80, 100)
+            .endFill();
+        container9.addChild(shape9c);
+
+        const mask9 = new Shape();
+        mask9.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawCircle(100, 50, 40)
+            .endFill();
+        container9.addChild(mask9);
+
+        // 複数オブジェクトをSpriteでラップしてマスク
+        const wrapper9 = new Sprite();
+        wrapper9.addChild(shape9a);
+        wrapper9.addChild(shape9b);
+        wrapper9.addChild(shape9c);
+        container9.addChildAt(wrapper9, 0);
+        wrapper9.mask = mask9;
+
+        // ===== 楕円マスク =====
+        const sectionTitle10 = new TextField();
+        sectionTitle10.x = 250;
+        sectionTitle10.y = 360;
+        sectionTitle10.width = 200;
+        sectionTitle10.height = 20;
+        sectionTitle10.defaultTextFormat = titleFormat;
+        sectionTitle10.text = "Ellipse Mask";
+        root.addChild(sectionTitle10);
+
+        const container10 = new Sprite();
+        container10.x = 250;
+        container10.y = 385;
+        root.addChild(container10);
+
+        const target10 = new Shape();
+        target10.graphics
+            .beginFill(0xFFAA00, 1.0)
+            .drawRect(0, 0, 180, 100)
+            .endFill();
+        container10.addChild(target10);
+
+        const ellipseMask = new Shape();
+        ellipseMask.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawEllipse(20, 10, 140, 80)
+            .endFill();
+        container10.addChild(ellipseMask);
+        target10.mask = ellipseMask;
+
+        // ===== マスクの移動・スケール =====
+        const sectionTitle11 = new TextField();
+        sectionTitle11.x = 460;
+        sectionTitle11.y = 360;
+        sectionTitle11.width = 200;
+        sectionTitle11.height = 20;
+        sectionTitle11.defaultTextFormat = titleFormat;
+        sectionTitle11.text = "Scaled/Rotated Mask";
+        root.addChild(sectionTitle11);
+
+        const container11 = new Sprite();
+        container11.x = 460;
+        container11.y = 385;
+        root.addChild(container11);
+
+        const target11 = new Shape();
+        target11.graphics
+            .beginFill(0x9900FF, 1.0)
+            .drawRect(0, 0, 180, 100)
+            .endFill();
+        container11.addChild(target11);
+
+        // スケール・回転されたマスク
+        const transformMask = new Shape();
+        transformMask.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawRect(-40, -30, 80, 60)
+            .endFill();
+        transformMask.x = 90;
+        transformMask.y = 50;
+        transformMask.scaleX = 1.5;
+        transformMask.scaleY = 1.2;
+        transformMask.rotation = 15;
+        container11.addChild(transformMask);
+        target11.mask = transformMask;
+
+        // ===== Videoにマスク + フィルター =====
+        const sectionTitle12 = new TextField();
+        sectionTitle12.x = 20;
+        sectionTitle12.y = 510;
+        sectionTitle12.width = 250;
+        sectionTitle12.height = 20;
+        sectionTitle12.defaultTextFormat = titleFormat;
+        sectionTitle12.text = "Video + Mask + Filter";
+        root.addChild(sectionTitle12);
+
+        const container12 = new Sprite();
+        container12.x = 20;
+        container12.y = 535;
+        root.addChild(container12);
+
+        // VideoをSpriteでラップしてマスク適用（フィルターはラッパーに適用）
+        const videoWrapper2 = new Sprite();
+        const video2 = new Video(150, 100);
+        video2.src = videoPath;
+        videoWrapper2.addChild(video2);
+        videoWrapper2.filters = [new GlowFilter(0xFF00FF, 1, 10, 10, 2, 1)];
+        container12.addChild(videoWrapper2);
+
+        const videoMask2 = new Shape();
+        videoMask2.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawRoundRect(10, 10, 130, 80, 20, 20)
+            .endFill();
+        container12.addChild(videoMask2);
+        videoWrapper2.mask = videoMask2;
+
+        // ===== アルファ付きマスク =====
+        const sectionTitle13 = new TextField();
+        sectionTitle13.x = 200;
+        sectionTitle13.y = 510;
+        sectionTitle13.width = 200;
+        sectionTitle13.height = 20;
+        sectionTitle13.defaultTextFormat = titleFormat;
+        sectionTitle13.text = "Complex Path Mask";
+        root.addChild(sectionTitle13);
+
+        const container13 = new Sprite();
+        container13.x = 200;
+        container13.y = 535;
+        root.addChild(container13);
+
+        const target13 = new Shape();
+        target13.graphics
+            .beginFill(0x00FF88, 1.0)
+            .drawRect(0, 0, 150, 100)
+            .endFill();
+        container13.addChild(target13);
+
+        // 複雑なパスマスク（ハート型）
+        const heartMask = new Shape();
+        heartMask.graphics.beginFill(0xFFFFFF, 1.0);
+        heartMask.graphics.moveTo(75, 90);
+        heartMask.graphics.curveTo(15, 50, 15, 30);
+        heartMask.graphics.curveTo(15, 5, 45, 5);
+        heartMask.graphics.curveTo(75, 5, 75, 35);
+        heartMask.graphics.curveTo(75, 5, 105, 5);
+        heartMask.graphics.curveTo(135, 5, 135, 30);
+        heartMask.graphics.curveTo(135, 50, 75, 90);
+        heartMask.graphics.endFill();
+        container13.addChild(heartMask);
+        target13.mask = heartMask;
+
+        // ===== ドーナツ型マスク =====
+        const sectionTitle14 = new TextField();
+        sectionTitle14.x = 380;
+        sectionTitle14.y = 510;
+        sectionTitle14.width = 200;
+        sectionTitle14.height = 20;
+        sectionTitle14.defaultTextFormat = titleFormat;
+        sectionTitle14.text = "Donut Mask";
+        root.addChild(sectionTitle14);
+
+        const container14 = new Sprite();
+        container14.x = 380;
+        container14.y = 535;
+        root.addChild(container14);
+
+        const target14 = new Shape();
+        const matrix14 = new Matrix();
+        matrix14.createGradientBox(150, 100, 0, 0, 0);
+        target14.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrix14
+            )
+            .drawRect(0, 0, 150, 100)
+            .endFill();
+        container14.addChild(target14);
+
+        // ドーナツ型マスク（外円と内円）
+        const donutMask = new Shape();
+        donutMask.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawCircle(75, 50, 45)
+            .drawCircle(75, 50, 20)
+            .endFill();
+        container14.addChild(donutMask);
+        target14.mask = donutMask;
+
+        // ===== 三角形マスク =====
+        const sectionTitle15 = new TextField();
+        sectionTitle15.x = 560;
+        sectionTitle15.y = 510;
+        sectionTitle15.width = 200;
+        sectionTitle15.height = 20;
+        sectionTitle15.defaultTextFormat = titleFormat;
+        sectionTitle15.text = "Triangle Mask";
+        root.addChild(sectionTitle15);
+
+        const container15 = new Sprite();
+        container15.x = 560;
+        container15.y = 535;
+        root.addChild(container15);
+
+        // VideoをSpriteでラップしてマスク適用
+        const videoWrapper3 = new Sprite();
+        const video3 = new Video(150, 100);
+        video3.src = videoPath;
+        videoWrapper3.addChild(video3);
+        container15.addChild(videoWrapper3);
+
+        const triangleMask = new Shape();
+        triangleMask.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .moveTo(75, 10)
+            .lineTo(140, 90)
+            .lineTo(10, 90)
+            .lineTo(75, 10)
+            .endFill();
+        container15.addChild(triangleMask);
+        videoWrapper3.mask = triangleMask;
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

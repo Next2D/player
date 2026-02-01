@@ -15,4 +15,18 @@ test.describe("TextFieldテスト", () => {
 
         await expect(page).toHaveScreenshot("textfield-format.png");
     });
+
+    test("TextFieldBlendMode（全14種類）", async ({ page }) => {
+        await page.goto("/e2e/pages/textfield/blendmode.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("textfield-blendmode.png");
+    });
+
+    test("TextFieldFilter（全フィルター）", async ({ page }) => {
+        await page.goto("/e2e/pages/textfield/filter.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("textfield-filter.png");
+    });
 });
