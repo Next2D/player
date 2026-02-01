@@ -99,10 +99,11 @@ class RenderQueue
         g: number, h: number, i: number, j: number, k: number, l: number,
         m: number, n: number, o: number, p: number, q: number, r: number,
         s: number, t: number, u: number, v: number, w: number, x: number,
-        y: number, z: number, a1: number, b1: number, c1: number
+        y: number, z: number, a1: number, b1: number, c1: number,
+        d1: number, e1: number
     ): void {
-        if (this.buffer.length < this.offset + 29) {
-            this.resize(29);
+        if (this.buffer.length < this.offset + 31) {
+            this.resize(31);
         }
 
         this.buffer[this.offset++] = a;
@@ -134,6 +135,8 @@ class RenderQueue
         this.buffer[this.offset++] = a1;
         this.buffer[this.offset++] = b1;
         this.buffer[this.offset++] = c1;
+        this.buffer[this.offset++] = d1;
+        this.buffer[this.offset++] = e1;
     }
 
     /**
@@ -176,10 +179,10 @@ class RenderQueue
         g: number, h: number, i: number, j: number, k: number, l: number,
         m: number, n: number, o: number, p: number, q: number, r: number,
         s: number, t: number, u: number, v: number, w: number, x: number,
-        y: number, z: number, a1: number
+        y: number, z: number, a1: number, b1: number, c1: number
     ): void {
-        if (this.buffer.length < this.offset + 27) {
-            this.resize(27);
+        if (this.buffer.length < this.offset + 29) {
+            this.resize(29);
         }
 
         this.buffer[this.offset++] = a;
@@ -209,6 +212,8 @@ class RenderQueue
         this.buffer[this.offset++] = y;
         this.buffer[this.offset++] = z;
         this.buffer[this.offset++] = a1;
+        this.buffer[this.offset++] = b1;
+        this.buffer[this.offset++] = c1;
     }
 
     /**

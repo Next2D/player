@@ -26,11 +26,28 @@ export const execute = (width: number, height: number): Node =>
 
     const rootNode = $rootNodes[index] as NonNullable<TexturePacker>;
     const node = rootNode.insert(width, height);
-
-    if (!node) {
-        $setActiveAtlasIndex(index + 1);
-        return execute(width, height);
+    if (node) {
+        return node;
     }
 
-    return node;
+    for (let idx = 0; idx < 10; idx++) {
+        if (index === idx) {
+            continue;
+        }
+
+        $setActiveAtlasIndex(idx);
+        const rootNode = $rootNodes[idx] as NonNullable<TexturePacker>;
+        if (!rootNode) {
+            return execute(width, height);
+        }
+
+        const node = rootNode.insert(width, height);
+        if (!node) {
+            continue;
+        }
+
+        return node;
+    }
+
+    return execute(width, height);
 };

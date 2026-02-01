@@ -36,10 +36,8 @@ export class FrameBufferManager
         this.currentAttachment = null;
         this.idCounter = { "nextId": 1, "textureId": 1, "stencilId": 1 };
 
-        // アトラス用のテクスチャを初期化（4096x4096）
-        // ステンシルバッファ(mask=true)を有効化して中抜き描画（hollow shape）をサポート
-        const atlasSize = 4096;
-        this.createAttachment("atlas", atlasSize, atlasSize, false, true);
+        // 注意: アトラスはAtlasManagerが動的に管理する（複数アトラス対応）
+        // 初期アトラスはAtlasManagerの$getAtlasAttachmentObject()で自動生成される
     }
 
     /**

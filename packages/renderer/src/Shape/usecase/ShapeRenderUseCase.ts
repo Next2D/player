@@ -39,15 +39,8 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const uniqueKey = `${render_queue[index++]}`;
     const cacheKey  = render_queue[index++];
 
-    const xScale = Math.sqrt(
-        matrix[0] * matrix[0]
-        + matrix[1] * matrix[1]
-    );
-
-    const yScale = Math.sqrt(
-        matrix[2] * matrix[2]
-        + matrix[3] * matrix[3]
-    );
+    const xScale = render_queue[index++];
+    const yScale = render_queue[index++];
 
     let node: Node;
     const hasCache = render_queue[index++];

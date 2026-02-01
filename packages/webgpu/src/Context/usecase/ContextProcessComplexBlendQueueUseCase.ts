@@ -4,6 +4,7 @@ import type { TextureManager } from "../../TextureManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { getComplexBlendQueue, clearComplexBlendQueue } from "../../Blend/BlendInstancedManager";
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
+import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
 /**
  * @description レンダーパスベースでテクスチャ領域をコピー
@@ -187,7 +188,9 @@ export const execute = (
         return;
     }
 
-    const atlasAttachment = frameBufferManager.getAttachment("atlas");
+    // 複数アトラス対応
+    // AtlasManagerから取得、フォールバックとしてFrameBufferManagerから取得
+    const atlasAttachment = $getAtlasAttachmentObject() || frameBufferManager.getAttachment("atlas");
     if (!atlasAttachment || !atlasAttachment.texture) {
         clearComplexBlendQueue();
         return;

@@ -3,7 +3,6 @@ import type { IBlendMode } from "./interface/IBlendMode";
 import type { IBounds } from "./interface/IBounds";
 import type { IPath } from "./interface/IPath";
 import type { Node } from "@next2d/texture-packer";
-import type { PerformanceLabel } from "./Performance/PerformanceMonitor";
 import { TexturePacker } from "@next2d/texture-packer";
 import { WebGPUUtil, $setContext } from "./WebGPUUtil";
 import { PathCommand } from "./PathCommand";
@@ -12,13 +11,13 @@ import { TextureManager } from "./TextureManager";
 import { FrameBufferManager } from "./FrameBufferManager";
 import { AttachmentManager } from "./AttachmentManager";
 import { PipelineManager } from "./Shader/PipelineManager";
-import { PerformanceMonitor } from "./Performance/PerformanceMonitor";
-import { RenderBundleManager } from "./RenderBundle/RenderBundleManager";
 import {
     $rootNodes,
     $resetAtlas,
     $getActiveAtlasIndex,
-    $setActiveAtlasIndex
+    $setActiveAtlasIndex,
+    $setAtlasCreator,
+    $getAtlasAttachmentObject
 } from "./AtlasManager";
 import { addDisplayObjectToInstanceArray, getInstancedShaderManager } from "./Blend/BlendInstancedManager";
 // Note: MeshStrokeGenerateUseCase is now used via ContextStrokeUseCase
@@ -124,8 +123,6 @@ export class Context
     private frameBufferManager: FrameBufferManager;
     private pipelineManager: PipelineManager;
     private attachmentManager: AttachmentManager;
-    private performanceMonitor: PerformanceMonitor;
-    private renderBundleManager: RenderBundleManager;
 
     public newDrawState: boolean = false;
 
@@ -164,7 +161,7 @@ export class Context
 
         // Set render max size same as WebGL (half of max texture size, minimum 2048)
         const maxTextureSize = device.limits.maxTextureDimension2D;
-        const renderMaxSize = Math.max(2048, maxTextureSize / 2);
+        const renderMaxSize = Math.min(2048, maxTextureSize / 2);
         WebGPUUtil.setRenderMaxSize(renderMaxSize);
 
         this.$stack = WebGPUUtil.createArray();
@@ -214,12 +211,22 @@ export class Context
         this.frameBufferManager = new FrameBufferManager(device, preferred_format);
         this.pipelineManager = new PipelineManager(device, preferred_format);
         this.attachmentManager = new AttachmentManager(device);
-        this.performanceMonitor = new PerformanceMonitor(device);
-        this.renderBundleManager = new RenderBundleManager(device, preferred_format);
 
         // グラデーションLUT共有アタッチメントにGPUDeviceを設定
         $setGradientLUTDevice(device);
         $setFilterGradientLUTDevice(device);
+
+        // アトラス生成関数を登録（複数アトラス対応）
+        $setAtlasCreator((index: number): IAttachmentObject => {
+            const maxSize = WebGPUUtil.getRenderMaxSize();
+            return this.frameBufferManager.createAttachment(
+                `atlas_${index}`,
+                maxSize,
+                maxSize,
+                false,
+                true
+            );
+        });
 
         // コンテキストをグローバル変数にセット
         $setContext(this);
@@ -646,7 +653,7 @@ export class Context
         if (!this.renderPassEncoder) {
             // 現在のレンダーターゲットを取得（メインまたはオフスクリーン）
             const textureView = this.getCurrentTextureView();
-            const attachment = this.frameBufferManager.getAttachment("atlas");
+            const attachment = $getAtlasAttachmentObject();
 
             // MSAAテクスチャを使用するかどうか
             const useMsaa = attachment?.msaa && attachment?.msaaTexture?.view;
@@ -739,7 +746,7 @@ export class Context
         const vertexBuffer = this.bufferManager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
         // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
-        const attachment = this.frameBufferManager.getAttachment("atlas");
+        const attachment = $getAtlasAttachmentObject();
         if (this.currentRenderTarget && attachment?.stencil?.view) {
             // 2パスステンシルフィル（WebGL版と同じアルゴリズム）
             this.fillWithStencil(vertexBuffer, mesh.indexCount);
@@ -886,7 +893,7 @@ export class Context
         if (!this.renderPassEncoder) {
             // 現在のレンダーターゲットを取得（メインまたはオフスクリーン）
             const textureView = this.getCurrentTextureView();
-            const attachment = this.frameBufferManager.getAttachment("atlas");
+            const attachment = $getAtlasAttachmentObject();
 
             // MSAAテクスチャを使用するかどうか
             const useMsaa = attachment?.msaa && attachment?.msaaTexture?.view;
@@ -1412,7 +1419,7 @@ export class Context
             const needsMainStencil = !this.currentRenderTarget && this.$mainAttachmentObject?.stencil?.view;
 
             // アトラス描画時もステンシル付きレンダーパスが必要（2パスステンシルフィル用）
-            const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
+            const atlasAttachment = $getAtlasAttachmentObject();
             const needsAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
 
             if (needsMainStencil) {
@@ -1525,7 +1532,7 @@ export class Context
         this.ensureCommandEncoder();
 
         // アトラスのアタッチメントを取得（レンダーパス作成とステンシル判定で使用）
-        const atlasAttachment = this.frameBufferManager.getAttachment("atlas");
+        const atlasAttachment = $getAtlasAttachmentObject();
 
         // 既存のレンダーパスがない場合のみ新規作成
         if (!this.renderPassEncoder) {
@@ -1865,12 +1872,12 @@ export class Context
 
     /**
      * @description アトラス専用のアタッチメントオブジェクトを取得
+     *              複数アトラス対応: アクティブなアトラスを返却、存在しない場合は自動生成
      * @return {IAttachmentObject | null}
      */
     get atlasAttachmentObject (): IAttachmentObject | null
     {
-        const atlas = this.frameBufferManager.getAttachment("atlas");
-        return atlas || null;
+        return $getAtlasAttachmentObject();
     }
 
     /**
@@ -1906,7 +1913,7 @@ export class Context
         }
 
         // アトラステクスチャの該当箇所をレンダーターゲットに設定
-        const attachment = this.frameBufferManager.getAttachment("atlas");
+        const attachment = $getAtlasAttachmentObject();
         if (attachment && attachment.texture) {
             this.currentRenderTarget = attachment.texture.view;
 
@@ -2253,7 +2260,7 @@ export class Context
     {
         // WebGPU draw pixels
         // アトラステクスチャの指定位置にピクセルデータを書き込む
-        const attachment = this.frameBufferManager.getAttachment("atlas");
+        const attachment = $getAtlasAttachmentObject();
         if (!attachment) { return }
 
         // ピクセルデータをテクスチャにコピー
@@ -2320,7 +2327,7 @@ export class Context
     {
         // WebGPU draw element
         // OffscreenCanvasまたはImageBitmapをアトラステクスチャにコピー
-        const attachment = this.frameBufferManager.getAttachment("atlas");
+        const attachment = $getAtlasAttachmentObject();
         if (!attachment || !attachment.texture) { return }
 
         // レンダーパスがアクティブな場合は、まずノード領域をクリアしてから終了
@@ -2483,12 +2490,6 @@ export class Context
             this.ensureCommandEncoder();
             this.frameStarted = true;
 
-            // パフォーマンス計測のフレーム開始
-            this.performanceMonitor.beginFrame();
-
-            // Render Bundleのフレーム開始
-            this.renderBundleManager.beginFrame();
-
             // 注意: グラデーションLUTは共有テクスチャに描画されるため、
             // キャッシュは使用しません。各フレームで再描画が必要です。
         }
@@ -2519,11 +2520,6 @@ export class Context
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
-        }
-
-        // パフォーマンス計測結果を解決
-        if (this.commandEncoder) {
-            this.performanceMonitor.resolveQueries(this.commandEncoder);
         }
 
         // コマンドをsubmit
@@ -2695,7 +2691,7 @@ export class Context
     async createImageBitmap (width: number, height: number): Promise<ImageBitmap>
     {
         // アトラステクスチャから現在の描画内容を取得
-        const attachment = this.frameBufferManager.getAttachment("atlas");
+        const attachment = $getAtlasAttachmentObject();
         if (!attachment) {
             throw new Error("[WebGPU] Atlas attachment not found");
         }
@@ -2991,225 +2987,4 @@ export class Context
         }
     }
 
-    /**
-     * @description パフォーマンス計測を有効化
-     *              Enable performance measurement
-     *
-     * @return {boolean} 有効化に成功したかどうか
-     * @method
-     * @public
-     */
-    enablePerformanceMonitor(): boolean
-    {
-        return this.performanceMonitor.enable();
-    }
-
-    /**
-     * @description パフォーマンス計測を無効化
-     *              Disable performance measurement
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
-    disablePerformanceMonitor(): void
-    {
-        this.performanceMonitor.disable();
-    }
-
-    /**
-     * @description パフォーマンス計測が有効かどうか
-     *              Whether performance measurement is enabled
-     *
-     * @return {boolean}
-     * @method
-     * @public
-     */
-    isPerformanceMonitorEnabled(): boolean
-    {
-        return this.performanceMonitor.isEnabled();
-    }
-
-    /**
-     * @description パフォーマンス計測結果を取得
-     *              Get performance measurement results
-     *
-     * @return {Promise<import("./Performance").IPerformanceResult[]>}
-     * @method
-     * @public
-     */
-    async getPerformanceResults(): Promise<import("./Performance").IPerformanceResult[]>
-    {
-        return this.performanceMonitor.getResults();
-    }
-
-    /**
-     * @description パフォーマンス計測結果をコンソールに出力
-     *              Log performance measurement results to console
-     *
-     * @return {Promise<void>}
-     * @method
-     * @public
-     */
-    async logPerformanceResults(): Promise<void>
-    {
-        const results = await this.performanceMonitor.getResults();
-        this.performanceMonitor.logResults(results);
-    }
-
-    /**
-     * @description RenderPass用のタイムスタンプ設定を取得
-     *              Get timestamp settings for RenderPass
-     *
-     * @param {PerformanceLabel | string} label - 計測ラベル
-     * @return {GPURenderPassTimestampWrites | undefined}
-     * @method
-     * @public
-     */
-    getPerformanceTimestamps(
-        label: PerformanceLabel | string
-    ): GPURenderPassTimestampWrites | undefined {
-        return this.performanceMonitor.getRenderPassTimestamps(label);
-    }
-
-    /**
-     * @description 計測区間の開始
-     *              Begin measurement
-     *
-     * @param {PerformanceLabel | string} label - 計測ラベル
-     * @return {void}
-     * @method
-     * @public
-     */
-    beginPerformanceMeasure(label: PerformanceLabel | string): void
-    {
-        if (this.commandEncoder) {
-            this.performanceMonitor.beginMeasure(this.commandEncoder, label);
-        }
-    }
-
-    /**
-     * @description 計測区間の終了
-     *              End measurement
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
-    endPerformanceMeasure(): void
-    {
-        if (this.commandEncoder) {
-            this.performanceMonitor.endMeasure(this.commandEncoder);
-        }
-    }
-
-    /**
-     * @description Render Bundleを作成またはキャッシュから取得
-     *              Create or get Render Bundle from cache
-     *
-     * 静的なジオメトリをバンドル化して再利用可能。
-     * 毎フレーム同じ描画コマンドを再生成する必要がなくなり、
-     * 10-15%のパフォーマンス向上が期待できる。
-     *
-     * @param {string} id - バンドルID
-     * @param {number} contentHash - コンテンツのハッシュ値（変更検知用）
-     * @param {(encoder: GPURenderBundleEncoder) => void} recordCallback - 描画コマンドを記録するコールバック
-     * @return {GPURenderBundle} Render Bundle
-     * @method
-     * @public
-     */
-    getOrCreateRenderBundle (
-        id: string,
-        contentHash: number,
-        recordCallback: (encoder: GPURenderBundleEncoder) => void
-    ): GPURenderBundle {
-        return this.renderBundleManager.getOrCreateBundle(id, contentHash, recordCallback);
-    }
-
-    /**
-     * @description Render Bundleを実行
-     *              Execute Render Bundle
-     *
-     * @param {GPURenderPassEncoder} passEncoder - レンダーパスエンコーダー
-     * @param {GPURenderBundle} bundle - 実行するバンドル
-     * @return {void}
-     * @method
-     * @public
-     */
-    executeRenderBundle (passEncoder: GPURenderPassEncoder, bundle: GPURenderBundle): void
-    {
-        this.renderBundleManager.executeBundle(passEncoder, bundle);
-    }
-
-    /**
-     * @description 複数のRender Bundleを実行
-     *              Execute multiple Render Bundles
-     *
-     * @param {GPURenderPassEncoder} passEncoder - レンダーパスエンコーダー
-     * @param {string[]} bundleIds - 実行するバンドルIDの配列
-     * @return {void}
-     * @method
-     * @public
-     */
-    executeRenderBundles (passEncoder: GPURenderPassEncoder, bundleIds: string[]): void
-    {
-        this.renderBundleManager.executeBundles(passEncoder, bundleIds);
-    }
-
-    /**
-     * @description Render Bundleを無効化
-     *              Invalidate Render Bundle
-     *
-     * コンテンツが変更された場合に呼び出す。
-     *
-     * @param {string} id - バンドルID
-     * @return {void}
-     * @method
-     * @public
-     */
-    invalidateRenderBundle (id: string): void
-    {
-        this.renderBundleManager.invalidateBundle(id);
-    }
-
-    /**
-     * @description すべてのRender Bundleを無効化
-     *              Invalidate all Render Bundles
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
-    invalidateAllRenderBundles (): void
-    {
-        this.renderBundleManager.invalidateAll();
-    }
-
-    /**
-     * @description Render Bundleのキャッシュ統計を取得
-     *              Get Render Bundle cache statistics
-     *
-     * @return {{ totalBundles: number, validBundles: number }}
-     * @method
-     * @public
-     */
-    getRenderBundleStats (): { totalBundles: number; validBundles: number }
-    {
-        return this.renderBundleManager.getStats();
-    }
-
-    /**
-     * @description コンテンツハッシュを計算するヘルパー
-     *              Helper to calculate content hash
-     *
-     * @param {number[]} values - ハッシュ化する値の配列
-     * @return {number} ハッシュ値
-     * @method
-     * @public
-     * @static
-     */
-    static calculateRenderBundleHash (values: number[]): number
-    {
-        return RenderBundleManager.calculateHash(values);
-    }
 }

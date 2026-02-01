@@ -126,15 +126,14 @@ describe("FrameBufferManager", () =>
             expect(manager.getCurrentAttachment()).toBeNull();
         });
 
-        it("should create atlas attachment on initialization", () =>
+        it("should not create atlas attachment on initialization (managed by AtlasManager)", () =>
         {
             const device = createMockDevice();
             const manager = new FrameBufferManager(device, "bgra8unorm");
 
+            // アトラスはAtlasManagerが動的に管理するため、初期化時には作成されない
             const atlas = manager.getAttachment("atlas");
-            expect(atlas).toBeDefined();
-            expect(atlas!.width).toBe(4096);
-            expect(atlas!.height).toBe(4096);
+            expect(atlas).toBeUndefined();
         });
     });
 

@@ -82,7 +82,9 @@ export const execute = (
 
                     const currentOperation = $context.globalCompositeOperation;
                     $context.globalCompositeOperation = $getCurrentBlendMode();
+                    $context.newDrawState = true;
                     $context.drawArraysInstanced();
+                    $context.newDrawState = true;
 
                     // ブレンドモードをセット
                     $context.globalCompositeOperation = currentOperation;

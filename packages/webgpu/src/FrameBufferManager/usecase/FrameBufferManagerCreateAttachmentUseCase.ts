@@ -31,14 +31,17 @@ export const execute = (
     mask: boolean,
     idCounter: { nextId: number; textureId: number; stencilId: number }
 ): IAttachmentObject => {
+    // アトラスかどうか判定（atlas, atlas_0, atlas_1, ...）
+    const isAtlas = name === "atlas" || name.startsWith("atlas_");
+
     // アトラステクスチャと一時アタッチメントはRGBA8フォーマットを使用
     // （copyExternalImageToTextureとの互換性、およびcopyTextureToTextureでのフォーマット一致のため）
     // mainアタッチメントはスワップチェーンと同じbgra8unormフォーマットを使用
-    const textureFormat = name === "atlas" || name.startsWith("temp_") ? "rgba8unorm" : format;
+    const textureFormat = isAtlas || name.startsWith("temp_") ? "rgba8unorm" : format;
 
     // MSAAを使用するかどうか（アトラスでmsaa有効かつ$samples > 1の場合）
     // 現在はアトラスのみにMSAAを適用（他のアタッチメントはmsaa=falseで呼び出される）
-    const useMsaa = msaa || name === "atlas" && $samples > 1;
+    const useMsaa = msaa || isAtlas && $samples > 1;
     const sampleCount = useMsaa ? $samples : 1;
 
     const gpuTexture = device.createTexture({
@@ -91,7 +94,7 @@ export const execute = (
     let stencil: IStencilBufferObject | null = null;
     let msaaStencil: IStencilBufferObject | null = null;
 
-    if (name === "atlas" || name === "main") {
+    if (isAtlas || name === "main") {
         const stencilTexture = device.createTexture({
             "size": { width, height },
             "format": "stencil8",

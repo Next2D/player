@@ -86,6 +86,35 @@ export const $setAtlasAttachmentObject = (attachment_object: IAttachmentObject):
 };
 
 /**
+ * @description アトラス生成関数の型
+ *              Type of atlas creation function
+ */
+type AtlasCreator = (index: number) => IAttachmentObject;
+
+/**
+ * @description アトラス生成関数
+ *              Atlas creation function
+ *
+ * @type {AtlasCreator | null}
+ * @private
+ */
+let $atlasCreator: AtlasCreator | null = null;
+
+/**
+ * @description アトラス生成関数を登録
+ *              Register atlas creation function
+ *
+ * @param  {AtlasCreator} creator
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setAtlasCreator = (creator: AtlasCreator): void =>
+{
+    $atlasCreator = creator;
+};
+
+/**
  * @description アトラステクスチャオブジェクトを返却
  *              Return the atlas texture object
  *
@@ -96,7 +125,13 @@ export const $setAtlasAttachmentObject = (attachment_object: IAttachmentObject):
 export const $getAtlasAttachmentObject = (): IAttachmentObject | null =>
 {
     if (!($activeAtlasIndex in $atlasAttachmentObjects)) {
-        return null;
+        // アトラスが存在しない場合は自動生成
+        if ($atlasCreator) {
+            const attachment = $atlasCreator($activeAtlasIndex);
+            $setAtlasAttachmentObject(attachment);
+        } else {
+            return null;
+        }
     }
     return $atlasAttachmentObjects[$activeAtlasIndex];
 };

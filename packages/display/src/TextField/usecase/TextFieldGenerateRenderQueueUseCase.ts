@@ -143,25 +143,28 @@ export const execute = (
         }
     }
 
-    const xScale = Math.round(Math.sqrt(
+    const xScale = Math.sqrt(
         tMatrix[0] * tMatrix[0]
         + tMatrix[1] * tMatrix[1]
-    ) * 100) / 100;
+    );
 
-    const yScale = Math.round(Math.sqrt(
+    const yScale = Math.sqrt(
         tMatrix[2] * tMatrix[2]
         + tMatrix[3] * tMatrix[3]
-    ) * 100) / 100;
+    );
+
+    const xScaleRounded = Math.round(xScale * 100) / 100;
+    const yScaleRounded = Math.round(yScale * 100) / 100;
 
     if (text_field.changed
         && !text_field.cacheKey
-        || text_field.cacheParams[0] !== xScale
-        || text_field.cacheParams[1] !== yScale
+        || text_field.cacheParams[0] !== xScaleRounded
+        || text_field.cacheParams[1] !== yScaleRounded
         || text_field.cacheParams[2] !== tColorTransform[7]
     ) {
-        text_field.cacheKey = $cacheStore.generateKeys(xScale, yScale, tColorTransform[7]);
-        text_field.cacheParams[0] = xScale;
-        text_field.cacheParams[1] = yScale;
+        text_field.cacheKey = $cacheStore.generateKeys(xScaleRounded, yScaleRounded, tColorTransform[7]);
+        text_field.cacheParams[0] = xScaleRounded;
+        text_field.cacheParams[1] = yScaleRounded;
         text_field.cacheParams[2] = tColorTransform[7];
     }
 
@@ -176,7 +179,8 @@ export const execute = (
         xMin, yMin, xMax, yMax,
         text_field.xMin, text_field.yMin,
         text_field.xMax, text_field.yMax,
-        +text_field.uniqueKey, cacheKey, +text_field.changed
+        +text_field.uniqueKey, cacheKey, +text_field.changed,
+        xScale, yScale
     );
 
     if (text_field.$cache && !text_field.$cache.has(text_field.uniqueKey)) {

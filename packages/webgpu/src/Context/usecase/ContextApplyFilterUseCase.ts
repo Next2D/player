@@ -3,6 +3,8 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IBlendMode } from "../../interface/IBlendMode";
 import type { ILocalFilterConfig } from "../../interface/ILocalFilterConfig";
 import type { BufferManager } from "../../BufferManager";
+import type { FrameBufferManager } from "../../FrameBufferManager";
+import { $getAtlasAttachmentObject } from "../../AtlasManager";
 import { $offset } from "../../Filter/FilterOffset";
 import { WebGPUUtil } from "../../WebGPUUtil";
 import { execute as filterApplyBlurFilterUseCase } from "../../Filter/BlurFilter/FilterApplyBlurFilterUseCase";
@@ -32,8 +34,9 @@ const getTextureFromNode = (
     // 一時アタッチメントを作成（ノードのサイズを使用）
     const attachment = frame_buffer_manager.createTemporaryAttachment(node.w, node.h);
 
-    // アトラステクスチャから該当部分をコピー
-    const atlasAttachment = frame_buffer_manager.getAttachment("atlas");
+    // アトラステクスチャから該当部分をコピー（複数アトラス対応）
+    // AtlasManagerから取得、フォールバックとしてFrameBufferManagerから取得
+    const atlasAttachment = $getAtlasAttachmentObject() || frame_buffer_manager.getAttachment("atlas");
     if (atlasAttachment && atlasAttachment.texture && attachment.texture) {
         // command_encoderを使ってコピー
         command_encoder.copyTextureToTexture(

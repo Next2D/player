@@ -11,6 +11,7 @@ import {
     $isMaskTestEnabled,
     $getMaskStencilReference
 } from "../../Mask";
+import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
 /**
  * @description 最適化されたインスタンス描画
@@ -146,8 +147,9 @@ export const execute = (
     const vertices = bufferManager.createRectVertices(0, 0, 1, 1);
     const vertexBuffer = bufferManager.acquireVertexBuffer(vertices.byteLength, vertices);
 
-    // アトラステクスチャをバインド
-    const atlasAttachment = frameBufferManager.getAttachment("atlas");
+    // アトラステクスチャをバインド（複数アトラス対応）
+    // AtlasManagerから取得、フォールバックとしてFrameBufferManagerから取得
+    const atlasAttachment = $getAtlasAttachmentObject() || frameBufferManager.getAttachment("atlas");
     if (!atlasAttachment) {
         console.error("[WebGPU] Atlas attachment not found");
         passEncoder.end();

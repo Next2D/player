@@ -6,6 +6,13 @@ import { execute as playerRenderingPostMessageService } from "../service/PlayerR
 import { execute as playerRemoveCachePostMessageService } from "../service/PlayerRemoveCachePostMessageService";
 
 /**
+ * @private
+ * @constant
+ * @type {Event}
+ */
+const enterFrameEvent: Event = new Event(Event.ENTER_FRAME);
+
+/**
  * @description Playerの定期処理
  *              Regular processing of Player
  *
@@ -35,7 +42,7 @@ export const execute = (timestamp: number): void =>
 
         // enter frame event
         if (stage.hasEventListener(Event.ENTER_FRAME)) {
-            stage.dispatchEvent(new Event(Event.ENTER_FRAME));
+            stage.dispatchEvent(enterFrameEvent);
         }
 
         // 描画情報を生成してworkerに送る

@@ -156,25 +156,28 @@ export const execute = (
         }
     }
 
-    const xScale = Math.round(Math.sqrt(
+    const xScale = Math.sqrt(
         tMatrix[0] * tMatrix[0]
         + tMatrix[1] * tMatrix[1]
-    ) * 100) / 100;
+    );
 
-    const yScale = Math.round(Math.sqrt(
+    const yScale = Math.sqrt(
         tMatrix[2] * tMatrix[2]
         + tMatrix[3] * tMatrix[3]
-    ) * 100) / 100;
+    );
+
+    const xScaleRounded = Math.round(xScale * 100) / 100;
+    const yScaleRounded = Math.round(yScale * 100) / 100;
 
     if (!shape.isBitmap
         && !shape.cacheKey
-        || shape.cacheParams[0] !== xScale
-        || shape.cacheParams[1] !== yScale
+        || shape.cacheParams[0] !== xScaleRounded
+        || shape.cacheParams[1] !== yScaleRounded
         || shape.cacheParams[2] !== tColorTransform[7]
     ) {
-        shape.cacheKey = $cacheStore.generateKeys(xScale, yScale, tColorTransform[7]);
-        shape.cacheParams[0] = xScale;
-        shape.cacheParams[1] = yScale;
+        shape.cacheKey = $cacheStore.generateKeys(xScaleRounded, yScaleRounded, tColorTransform[7]);
+        shape.cacheParams[0] = xScaleRounded;
+        shape.cacheParams[1] = yScaleRounded;
         shape.cacheParams[2] = tColorTransform[7];
     }
 
@@ -192,7 +195,8 @@ export const execute = (
         graphics.xMin, graphics.yMin,
         graphics.xMax, graphics.yMax,
         +isGridEnabled, +isDrawable, +shape.isBitmap,
-        +shape.uniqueKey, cacheKey
+        +shape.uniqueKey, cacheKey,
+        xScale, yScale
     );
 
     if (shape.$cache && !shape.$cache.has(shape.uniqueKey)) {
