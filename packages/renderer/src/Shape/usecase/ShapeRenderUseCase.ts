@@ -42,6 +42,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const xScale = render_queue[index++];
     const yScale = render_queue[index++];
 
+    // フィルターキャッシュ用のユニークキー（instanceId）
+    const filterKey = `${render_queue[index++]}`;
+
     let node: Node;
     const hasCache = render_queue[index++];
     if (!hasCache) {
@@ -171,7 +174,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
 
         $context.applyFilter(
-            node, uniqueKey, updated,
+            node, filterKey, updated,
             width, height, isBitmap,
             matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
             filterBounds, params

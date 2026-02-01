@@ -11,109 +11,52 @@
     window.addEventListener("DOMContentLoaded", async () =>
     {
         await next2d.load("develop");
-        return
-        // グラデーションテスト
-        const root = await next2d.createRootMovieClip(800, 600, 60);
-        const { Shape, Sprite } = next2d.display;
-        const { Matrix } = next2d.geom;
+        return ;
 
-        const sprite = new Sprite();
+        const count = 8000;
+        const root = next2d
+            .createRootMovieClip(1000, 416, 60)
+            .then((root) => 
+            {
+                const { Shape } = next2d.display;
+                
 
-        // スロットの影を描画
-        (sprite.addChild(new Shape()))
-            .graphics
-            .beginFill(0x000000, 0.2)
-            .moveTo(27.32, 0)
-            .lineTo(183.77, 0)
-            .cubicCurveTo(198.85001, 0, 211.09, 12.24, 211.09, 27.32)
-            .lineTo(211.09, 27.32)
-            .lineTo(211.09, 33.21)
-            .cubicCurveTo(211.09, 48.29, 198.85001, 60.53, 183.77, 60.53)
-            .lineTo(183.77, 60.53)
-            .lineTo(27.32, 60.53)
-            .cubicCurveTo(12.24, 60.53, 0, 48.29, 0, 33.21)
-            .lineTo(0, 33.21)
-            .lineTo(0, 27.32)
-            .cubicCurveTo(0, 12.24, 12.24, 0, 27.32, 0)
-            .endFill();
+                const rects = [];
+                for (let i = 0; i < count; i++) {
+                    const x = Math.random() * 1000;
+                    const y = Math.random() * 416;
+                    const size = 10 + Math.random() * 40;
+                    const speed = 1 + Math.random();
 
-        const borderMatrix2 = new Matrix();
-        borderMatrix2.createGradientBox(206, 56, Math.PI / 2, 0, 0);
+                    var rect = new Shape();
 
-        // 枠2を描画
-        const borderShape2 = new Shape();
-        borderShape2
-            .graphics
-            .beginGradientFill(
-                "linear",
-                [0xFFFFFF, 0xFFFFFF],
-                [1, 0.6],
-                [0, 255],
-                borderMatrix2
-            )
-            .moveTo(203.67, 29.83)
-            .cubicCurveTo(203.67, 42.9, 193.03999, 53.53, 179.97, 53.53)
-            .lineTo(179.97, 53.53)
-            .lineTo(25.7, 53.53)
-            .cubicCurveTo(12.63, 53.53, 2, 42.9, 2, 29.83)
-            .lineTo(2, 29.83)
-            .lineTo(2, 25.7)
-            .cubicCurveTo(2, 12.63, 12.63, 2, 25.7, 2)
-            .lineTo(25.7, 2)
-            .lineTo(179.97, 2)
-            .cubicCurveTo(193.03999, 2, 203.67, 12.63, 203.67, 25.7)
-            .lineTo(203.67, 25.7)
-            .lineTo(203.67, 29.83)
-            .moveTo(179.97, 0)
-            .lineTo(25.7, 0)
-            .cubicCurveTo(11.53, 0, 0, 11.53, 0, 25.7)
-            .lineTo(0, 25.7)
-            .lineTo(0, 29.83)
-            .cubicCurveTo(0, 44, 11.53, 55.53, 25.7, 55.53)
-            .lineTo(25.7, 55.53)
-            .lineTo(179.97, 55.53)
-            .cubicCurveTo(194.14, 55.53, 205.67, 44, 205.67, 29.83)
-            .lineTo(205.67, 29.83)
-            .lineTo(205.67, 25.7)
-            .cubicCurveTo(205.67, 11.53, 194.14, 0, 179.97, 0)
-            .endFill();
+                    rect
+                        .graphics
+                        .beginFill("#fff")
+                        .lineStyle(1, "#000")
+                        .drawRect(0, 0, size, size);
 
-        borderShape2.x = 2.71;
-        borderShape2.y = 1;
-        sprite.addChild(borderShape2);
+                    rect.x = x;
+                    rect.y = y;
 
-        const btnMatrix = new Matrix();
-        btnMatrix.createGradientBox(202, 52, Math.PI / 2, 0, 0);
+                    root.addChild(rect);
 
-        const btnShape = new Shape();
-        btnShape
-            .graphics
-            .beginGradientFill(
-                "linear",
-                [0xFFFFFF, 0xFFFFFF],
-                [0.9, 0.6],
-                [0, 255],
-                btnMatrix
-            )
-            .moveTo(177.98, 0)
-            .lineTo(23.7, 0)
-            .cubicCurveTo(10.6109, 0, 0, 10.6109, 0, 23.7)
-            .lineTo(0, 23.7)
-            .lineTo(0, 27.83)
-            .cubicCurveTo(0, 40.9191, 10.6109, 51.53, 23.7, 51.53)
-            .lineTo(23.7, 51.53)
-            .lineTo(177.98, 51.53)
-            .cubicCurveTo(191.069, 51.53, 201.67999, 40.9191, 201.67999, 27.83)
-            .lineTo(201.67999, 27.83)
-            .lineTo(201.67999, 23.7)
-            .cubicCurveTo(201.67999, 10.6109, 191.069, 0, 177.98, 0)
-            .endFill();
-        btnShape.x = 4.71;
-        btnShape.y = 2.9;
-        sprite.addChild(btnShape);
+                    rects.push({ size, speed, el: rect });
+                }
 
+                root.addEventListener("enterFrame", () =>
+                {
+                    for (let i = 0; i < count; i++) {
+                        const rect = rects[i];
 
-        root.addChild(sprite);
+                        if (rect.el.x + rect.size < 0) {
+                            rect.el.x = 1000 + rect.size / 2;
+                        }
+
+                        rect.el.x -= rect.speed;
+                    }
+                });
+            });
     });
 </script>
 </body>

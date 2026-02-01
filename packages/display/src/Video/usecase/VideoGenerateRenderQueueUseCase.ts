@@ -151,7 +151,8 @@ export const execute = (
         tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
         xMin, yMin, xMax, yMax,
         0, 0, video.videoWidth, video.videoHeight,
-        +video.uniqueKey, +video.changed
+        +video.uniqueKey, +video.changed,
+        video.instanceId // フィルターキャッシュ用のユニークキー
     );
 
     if (video.$cache && !video.$cache.has(video.uniqueKey)) {

@@ -26,6 +26,18 @@
             return shape;
         };
 
+        // ===== 円を最初に追加してテスト =====
+        const circleFirst = new Shape();
+        circleFirst.graphics
+            .beginFill(0x999999, 1.0)
+            .drawCircle(0, 0, 30)
+            .endFill();
+        circleFirst.x = 510;
+        circleFirst.y = 60;
+        circleFirst.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "inner")];
+        root.addChild(circleFirst);
+        console.log("circleFirst added");
+
         // ===== フィルターなし（参照用）=====
         const noFilter = createTestShape();
         noFilter.x = 30;
@@ -68,7 +80,7 @@
         root.addChild(fullBevel);
 
         // ===== カラフルなベベル =====
-        const colorBevel = createTestShape(0x666666);
+        const colorBevel = createTestShape(0x888888);  // 0x666666から変更
         colorBevel.x = 280;
         colorBevel.y = 120;
         colorBevel.filters = [new BevelFilter(4, 45, 0xFF0000, 1, 0x0000FF, 1, 4, 4, 1, 1, "inner")];
@@ -88,26 +100,26 @@
         knockout.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "inner", true)];
         root.addChild(knockout);
 
-        // ===== 円への適用 =====
+        // ===== 円への適用（異なる色でテスト）=====
         const circleShape = new Shape();
         circleShape.graphics
-            .beginFill(0x888888, 1.0)
-            .drawCircle(45, 30, 30)
+            .beginFill(0x999999, 1.0)  // 異なる色
+            .drawCircle(0, 0, 30)
             .endFill();
-        circleShape.x = 150;
-        circleShape.y = 210;
+        circleShape.x = 195;
+        circleShape.y = 240;
         circleShape.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "inner")];
         root.addChild(circleShape);
 
-        // ===== ボタン風 =====
+        // ===== ボタン風（色を0x888888でテスト）=====
         const buttonShape = new Shape();
         buttonShape.graphics
-            .beginFill(0x3366CC, 1.0)
-            .drawRoundRect(0, 0, 100, 40, 8)
+            .beginFill(0x888888, 1.0)  // 色を0x888888に変更
+            .drawRoundRect(0, 0, 80, 50, 8)
             .endFill();
         buttonShape.x = 280;
         buttonShape.y = 215;
-        buttonShape.filters = [new BevelFilter(2, 45, 0xFFFFFF, 0.5, 0x000000, 0.5, 4, 4, 1, 1, "inner")];
+        buttonShape.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "inner")];
         root.addChild(buttonShape);
 
         // ===== 質感 高 =====

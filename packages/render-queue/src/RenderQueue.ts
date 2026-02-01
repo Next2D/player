@@ -100,10 +100,10 @@ class RenderQueue
         m: number, n: number, o: number, p: number, q: number, r: number,
         s: number, t: number, u: number, v: number, w: number, x: number,
         y: number, z: number, a1: number, b1: number, c1: number,
-        d1: number, e1: number
+        d1: number, e1: number, f1: number
     ): void {
-        if (this.buffer.length < this.offset + 31) {
-            this.resize(31);
+        if (this.buffer.length < this.offset + 32) {
+            this.resize(32);
         }
 
         this.buffer[this.offset++] = a;
@@ -137,6 +137,7 @@ class RenderQueue
         this.buffer[this.offset++] = c1;
         this.buffer[this.offset++] = d1;
         this.buffer[this.offset++] = e1;
+        this.buffer[this.offset++] = f1;
     }
 
     /**
@@ -179,10 +180,10 @@ class RenderQueue
         g: number, h: number, i: number, j: number, k: number, l: number,
         m: number, n: number, o: number, p: number, q: number, r: number,
         s: number, t: number, u: number, v: number, w: number, x: number,
-        y: number, z: number, a1: number, b1: number, c1: number
+        y: number, z: number, a1: number, b1: number, c1: number, d1: number
     ): void {
-        if (this.buffer.length < this.offset + 29) {
-            this.resize(29);
+        if (this.buffer.length < this.offset + 30) {
+            this.resize(30);
         }
 
         this.buffer[this.offset++] = a;
@@ -214,6 +215,7 @@ class RenderQueue
         this.buffer[this.offset++] = a1;
         this.buffer[this.offset++] = b1;
         this.buffer[this.offset++] = c1;
+        this.buffer[this.offset++] = d1;
     }
 
     /**
@@ -255,10 +257,10 @@ class RenderQueue
         g: number, h: number, i: number, j: number, k: number, l: number,
         m: number, n: number, o: number, p: number, q: number, r: number,
         s: number, t: number, u: number, v: number, w: number, x: number,
-        y: number, z: number
+        y: number, z: number, a1: number
     ): void {
-        if (this.buffer.length < this.offset + 26) {
-            this.resize(26);
+        if (this.buffer.length < this.offset + 27) {
+            this.resize(27);
         }
 
         this.buffer[this.offset++] = a;
@@ -287,6 +289,7 @@ class RenderQueue
         this.buffer[this.offset++] = x;
         this.buffer[this.offset++] = y;
         this.buffer[this.offset++] = z;
+        this.buffer[this.offset++] = a1;
     }
 
     /**

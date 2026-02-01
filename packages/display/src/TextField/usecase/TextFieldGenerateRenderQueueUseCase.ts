@@ -180,7 +180,8 @@ export const execute = (
         text_field.xMin, text_field.yMin,
         text_field.xMax, text_field.yMax,
         +text_field.uniqueKey, cacheKey, +text_field.changed,
-        xScale, yScale
+        xScale, yScale,
+        text_field.instanceId // フィルターキャッシュ用のユニークキー
     );
 
     if (text_field.$cache && !text_field.$cache.has(text_field.uniqueKey)) {

@@ -138,21 +138,16 @@ export const execute = (
 
     if (!shape.uniqueKey) {
         if (shape.characterId && shape.loaderInfo) {
-
             const values = $getArray(
                 shape.loaderInfo.id,
                 shape.characterId
             );
-
             shape.uniqueKey = `${displayObjectGenerateHashService(new Float32Array(values))}`;
             $poolArray(values);
-
         } else {
-
             shape.uniqueKey = shape.isBitmap
                 ? `${displayObjectGenerateHashService(new Float32Array((shape.$bitmapBuffer as Uint8Array).buffer))}`
                 : `${displayObjectGenerateHashService(graphics.buffer)}`;
-
         }
     }
 
@@ -196,7 +191,8 @@ export const execute = (
         graphics.xMax, graphics.yMax,
         +isGridEnabled, +isDrawable, +shape.isBitmap,
         +shape.uniqueKey, cacheKey,
-        xScale, yScale
+        xScale, yScale,
+        shape.instanceId // フィルターキャッシュ用のユニークキー
     );
 
     if (shape.$cache && !shape.$cache.has(shape.uniqueKey)) {
