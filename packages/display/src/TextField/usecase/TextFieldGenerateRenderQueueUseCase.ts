@@ -168,7 +168,7 @@ export const execute = (
     const cacheKey = text_field.cacheKey;
 
     // rennder on
-    renderQueue.push(
+    renderQueue.pushTextFieldBuffer(
         1, $RENDERER_TEXT_TYPE,
         tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],

@@ -144,7 +144,7 @@ export const execute = (
     }
 
     // rennder on
-    renderQueue.push(
+    renderQueue.pushVideoBuffer(
         1, $RENDERER_VIDEO_TYPE,
         tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
