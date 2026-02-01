@@ -4,6 +4,7 @@ import { execute as shapeClipRenderUseCase } from "../../Shape/usecase/ShapeClip
 import { execute as textFieldRenderUseCase } from "../../TextField/usecase/TextFieldRenderUseCase";
 import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUseCase";
 import { execute as displayObjectContainerClipRenderUseCase } from "./DisplayObjectContainerClipRenderUseCase";
+import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
 
 /**
  * @description DisplayObjectContainerの描画を実行します。
@@ -62,6 +63,16 @@ export const execute = (
 
     let endClipDepth = 0;
     let canRenderMask = true;
+
+    const blendMode = displayObjectGetBlendModeService(render_queue[index++]);
+
+    const useBlendMode = blendMode !== "normal";
+    const useFilter = Boolean(render_queue[index++]);
+
+    // use new attachment
+    if (useBlendMode || useFilter) {
+        // todo
+    }
 
     const length = render_queue[index++];
     for (let idx = 0; length > idx; idx++) {
@@ -167,6 +178,11 @@ export const execute = (
     if (endClipDepth || useMaskDisplayObject) {
         $context.restore();
         $context.leaveMask();
+    }
+
+    // end new attachment
+    if (useBlendMode || useFilter) {
+        // todo
     }
 
     return index;

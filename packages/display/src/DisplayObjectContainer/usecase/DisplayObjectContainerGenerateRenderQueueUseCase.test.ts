@@ -21,17 +21,19 @@ describe("DisplayObjectContainerGenerateRenderQueueUseCase.js test", () =>
 
         execute(
             movieClip, [], matrix, colorTransform,
-            0, 0, 0, 0
+            0, 0
         );
 
         expect(renderQueue.buffer[0]).toBe(1);
         expect(renderQueue.buffer[1]).toBe($RENDERER_CONTAINER_TYPE);
         expect(renderQueue.buffer[2]).toBe(0);
-        expect(renderQueue.buffer[3]).toBe(movieClip.children.length);
-        expect(renderQueue.buffer[4]).toBe(-1);
-        expect(renderQueue.buffer[5]).toBe(0);
-        expect(renderQueue.buffer[6]).toBe(0);
-        expect(renderQueue.offset).toBe(7);
+        expect(renderQueue.buffer[3]).toBe(11); // normal blendMode
+        expect(renderQueue.buffer[4]).toBe(0);
+        expect(renderQueue.buffer[5]).toBe(movieClip.children.length);
+        expect(renderQueue.buffer[6]).toBe(-1);
+        expect(renderQueue.buffer[7]).toBe(0);
+        expect(renderQueue.buffer[8]).toBe(0);
+        expect(renderQueue.offset).toBe(9);
 
         renderQueue.buffer.fill(0);
         renderQueue.offset = 0;

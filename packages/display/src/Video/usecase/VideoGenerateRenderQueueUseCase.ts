@@ -243,6 +243,8 @@ export const execute = (
                 params.length
             );
             renderQueue.set(new Float32Array(params));
+        } else {
+            renderQueue.push(0);
         }
 
         $poolBoundsArray(bounds);

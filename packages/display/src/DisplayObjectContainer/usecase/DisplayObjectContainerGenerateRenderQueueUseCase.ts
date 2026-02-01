@@ -11,9 +11,12 @@ import { execute as textFieldGenerateRenderQueueUseCase } from "../../TextField/
 import { execute as videoGenerateRenderQueueUseCase } from "../../Video/usecase/VideoGenerateRenderQueueUseCase";
 import { execute as displayObjectIsMaskReflectedInDisplayUseCase } from "../../DisplayObject/usecase/DisplayObjectIsMaskReflectedInDisplayUseCase";
 import { execute as displayObjectContainerGenerateClipQueueUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerGenerateClipQueueUseCase";
+import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
 import { renderQueue } from "@next2d/render-queue";
 import {
     $clamp,
+    $getBoundsArray,
+    $poolBoundsArray,
     $RENDERER_CONTAINER_TYPE
 } from "../../DisplayObjectUtil";
 import {
@@ -139,6 +142,57 @@ export const execute = <P extends DisplayObjectContainer>(
         renderQueue.push(0);
     }
 
+    // blendMode
+    renderQueue.push(
+        displayObjectBlendToNumberService(display_object_container.blendMode)
+    );
+
+    // filters
+    const filters = display_object_container.filters;
+    if (filters) {
+        let updated = false;
+        const params = [];
+        const bounds = $getBoundsArray(0, 0, 0, 0);
+        for (let idx = 0; idx < filters.length; idx++) {
+
+            const filter = filters[idx];
+            if (!filter || !filter.canApplyFilter()) {
+                continue;
+            }
+
+            // フィルターが更新されたかをチェック
+            if (filter.$updated) {
+                updated = true;
+            }
+            filter.$updated = false;
+
+            filter.getBounds(bounds);
+
+            const buffer = filter.toNumberArray();
+
+            for (let idx = 0; idx < buffer.length; idx += 4096) {
+                params.push(...buffer.subarray(idx, idx + 4096));
+            }
+        }
+
+        const useFilfer = params.length > 0;
+        if (useFilfer) {
+            renderQueue.push(
+                +useFilfer, +updated,
+                bounds[0], bounds[1], bounds[2], bounds[3],
+                params.length
+            );
+            renderQueue.set(new Float32Array(params));
+        } else {
+            renderQueue.push(0);
+        }
+
+        $poolBoundsArray(bounds);
+    } else {
+        renderQueue.push(0);
+    }
+
+    // children
     renderQueue.push(children.length);
 
     let clipDepth = 0;

@@ -317,14 +317,15 @@ export const execute = (
         displayObjectBlendToNumberService(shape.blendMode)
     );
 
-    if (shape.filters?.length) {
+    const filters = shape.filters;
+    if (filters) {
 
         let updated = false;
         const params = [];
         const bounds = $getBoundsArray(0, 0, 0, 0);
-        for (let idx = 0; idx < shape.filters.length; idx++) {
+        for (let idx = 0; idx < filters.length; idx++) {
 
-            const filter = shape.filters[idx];
+            const filter = filters[idx];
             if (!filter || !filter.canApplyFilter()) {
                 continue;
             }
