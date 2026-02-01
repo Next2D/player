@@ -198,7 +198,7 @@ class RenderQueue
         this.buffer[this.offset++] = n;
         this.buffer[this.offset++] = o;
         this.buffer[this.offset++] = p;
-        this.buffer[this.offset++] = q; 
+        this.buffer[this.offset++] = q;
         this.buffer[this.offset++] = r;
         this.buffer[this.offset++] = s;
         this.buffer[this.offset++] = t;

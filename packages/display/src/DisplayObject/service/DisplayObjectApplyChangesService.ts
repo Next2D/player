@@ -11,11 +11,11 @@ import type { DisplayObject } from "../../DisplayObject";
  */
 export const execute = <D extends DisplayObject>(display_object: D): void =>
 {
-    display_object.changed = true; 
+    display_object.changed = true;
 
-    let parent = display_object.parent as D | null;                                                                                                                   
-    while (parent && !parent.changed) {                                                                                                                      
-        parent.changed = true;                                                                                                                              
-        parent = parent.parent as D | null;                                                                                                                              
+    let parent = display_object.parent as D | null;
+    while (parent && !parent.changed) {
+        parent.changed = true;
+        parent = parent.parent as D | null;
     }
 };

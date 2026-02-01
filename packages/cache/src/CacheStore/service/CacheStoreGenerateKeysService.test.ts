@@ -12,4 +12,9 @@ describe("CacheStoreGenerateKeysService.js test", () =>
     {
         expect(execute(0.25, 0.5, 0.3)).toBe(763280);
     });
+
+    it("test case3", () =>
+    {
+        expect(execute(Math.PI, 0.21111, 0.3333)).toBe(11162592);
+    });
 });
