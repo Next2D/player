@@ -18,62 +18,62 @@ const isCI = !!process.env.CI;
 const forceHeadless = process.env.HEADLESS === "true";
 
 export default defineConfig({
-    testDir: "./tests",
-    fullyParallel: true,
-    forbidOnly: isCI,
-    retries: isCI ? 2 : 0,
-    workers: isCI ? 1 : undefined,
-    reporter: "html",
-    timeout: 60000,
-    expect: {
-        toHaveScreenshot: {
-            maxDiffPixels: 100,
-            threshold: 0.1,
-            timeout: 30000
+    "testDir": "./tests",
+    "fullyParallel": true,
+    "forbidOnly": isCI,
+    "retries": isCI ? 2 : 0,
+    "workers": isCI ? 1 : undefined,
+    "reporter": "html",
+    "timeout": 60000,
+    "expect": {
+        "toHaveScreenshot": {
+            "maxDiffPixels": 100,
+            "threshold": 0.1,
+            "timeout": 30000
         }
     },
-    use: {
-        baseURL: "http://localhost:5173",
-        trace: "on-first-retry",
-        video: "on-first-retry"
+    "use": {
+        "baseURL": "http://localhost:5173",
+        "trace": "on-first-retry",
+        "video": "on-first-retry"
     },
-    projects: [
+    "projects": [
         {
-            name: "webgl",
-            use: {
+            "name": "webgl",
+            "use": {
                 ...devices["Desktop Chrome"],
                 // デフォルトでヘッド付きモード（WebGLの正確な描画のため）
-                headless: forceHeadless,
-                launchOptions: {
-                    args: [
+                "headless": forceHeadless,
+                "launchOptions": {
+                    "args": [
                         "--use-gl=angle",
                         "--use-angle=default"
                     ]
                 }
             },
-            snapshotDir: "./snapshots/webgl"
+            "snapshotDir": "./snapshots/webgl"
         },
         {
-            name: "webgpu",
-            use: {
+            "name": "webgpu",
+            "use": {
                 ...devices["Desktop Chrome"],
                 // WebGPUはヘッド付きモードが必須
-                headless: forceHeadless,
-                launchOptions: {
-                    args: [
+                "headless": forceHeadless,
+                "launchOptions": {
+                    "args": [
                         "--enable-unsafe-webgpu",
                         "--enable-features=Vulkan"
                     ]
                 }
             },
-            snapshotDir: "./snapshots/webgpu"
+            "snapshotDir": "./snapshots/webgpu"
         }
     ],
-    webServer: {
-        command: "npm start",
-        url: "http://localhost:5173",
-        reuseExistingServer: !isCI,
-        timeout: 120000,
-        cwd: ".."
+    "webServer": {
+        "command": "npm start",
+        "url": "http://localhost:5173",
+        "reuseExistingServer": !isCI,
+        "timeout": 120000,
+        "cwd": ".."
     }
 });
